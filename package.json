@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Cross device user interface experiments",
   "main": "index.js",
   "scripts": {
@@ -15,5 +15,10 @@
   "bugs": {
     "url": "https://github.com/codepolitan/material/issues"
   },
-  "homepage": "https://github.com/codepolitan/material"
+  "homepage": "https://github.com/codepolitan/material",
+  "keywords": [
+    "material",
+    "user",
+    "interface"
+  ]
 }
