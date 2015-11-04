@@ -1,8 +1,8 @@
 {
   "name": "material",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "ui toolkit",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -24,6 +24,7 @@
   "dependencies": {
     "express": "3.x",
     "prime": "0.5.x",
+    "prime-util": "0.5.x",
     "elements": "0.6.x",
     "mout": "0.11.x"
   },
