@@ -1,7 +1,7 @@
 {
   "name": "material",
   "version": "0.0.1",
-  "description": "Cross device user interface experiments",
+  "description": "ui toolkit",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -20,5 +20,24 @@
     "material",
     "user",
     "interface"
-  ]
+  ],
+  "dependencies": {
+    "express": "3.x",
+    "prime": "0.5.x",
+    "elements": "0.6.x",
+    "mout": "0.11.x"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-browserify": "^4.0.1",
+    "grunt-contrib-clean": "^0.6.0",
+    "grunt-contrib-concat": "^0.5.1",
+    "grunt-contrib-less": "^1.0.1",
+    "grunt-contrib-requirejs": "^0.4.4",
+    "grunt-contrib-uglify": "^0.9.1",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-jsdoc": "0.5.8",
+    "grunt-notify": "^0.4.1",
+    "grunt-plato": "^1.2.1"
+  }
 }
