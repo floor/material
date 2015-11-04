@@ -1,0 +1,154 @@
+
+
+
+@import '../floor/styles.css';
+
+@background-color: #444;
+
+body {
+	//background-image: url(/vendors/background/tube.jpg);
+}
+
+.ui-container.container-desk {
+	background-color: transparent;
+	> .container-head {
+		background-color: @background-color;
+		margin-bottom: 2px;
+	}
+	> .ui-container {
+		background-color: #333;
+		margin-top: 2px;
+		&.container-desktop {
+			background-color: transparent;
+		}
+	}
+}
+
+.ui-container {
+	background-color: transparent;
+	&> .container-head, .container-foot {
+		background-color: rgba(0,0,0,.8);
+		background-color: @background-color;
+	}
+
+	&.state-focus {
+		&> .container-head, .container-foot {
+			background-color: rgba(0, 0, 0, 0.3);;
+		}
+		&> .minimal-view  {
+			background-color: @background-color;
+		}
+	}
+}
+
+.sick-view {
+	color: rgba(255,255,255,.9);
+	background-color: @background-color;
+	input[type='text'] {
+		color: rgba(255,255,255,1);
+		font-family: 'Open Sans', sans-serif;
+		font-size: 1em;
+		&::-webkit-input-placeholder {
+		    color: rgba(0,0,0,.2);
+		}
+		&:-moz-placeholder {
+		    color: rgba(0,0,0,.2);
+		}
+		&::-moz-placeholder {
+		    color: rgba(0,0,0,.2);
+		}
+		&:-ms-input-placeholder {
+		    color: rgba(0,0,0,.2);
+		}
+	}
+	.list-item.item-selected {
+		background-color: rgba(0,134,202,.5);
+	}
+}
+
+ul.tree li {
+	&.selected {
+		> span {
+			color: rgba(255,255,255,1);
+			background-color: rgba(113, 211, 126, .5);
+		}
+	}
+}
+
+ul.collapse a.expand {
+	&:before {
+		content: "\f0fe";
+	}
+	display: inline-block;
+	color: rgba(113, 211, 126, .5);
+}
+
+.ui-window {
+	background-color: @background-color;
+	> .container-head {
+		background-color: @background-color;
+	}
+	> .container-foot {
+		background-color: @background-color;
+	}
+}
+
+.view-detail .ui-apply.ui-button {
+	background-color: orange;
+	&.state-active {
+		background-color: orange;
+	}
+}
+
+.ui-container > .container-head .ui-search input {
+	background-color: rgba(255,255,255,.2);
+}
+
+.view-detail .fieldset .group .ui-field textarea {
+	color: rgba(255,255,255,1);
+}
+
+.ui-choice {
+	display: inline-block;
+	vertical-align: top;
+	input {
+		display: none;
+	}
+	.choice-wrapper {
+		display: none;
+	}
+	.choice-list {
+		li {
+
+			&.selected {
+				color: rgba(255,255,255,1);
+				background-color: rgba(0, 134, 202, 0.5);
+			}
+
+		}
+	}
+}
+
+.ui-tab .tab-bar {
+	.ui-button {
+		margin-left:3px;
+		&.state-active {
+			background-color: #444;
+			border-radius: 3px;
+		}
+	}
+}
+
+.ui-field input[type=text]::-webkit-input-placeholder {
+	color: rgba(255,255,255,.2);
+}
+ui-field input[type=text]:-moz-placeholder {
+	color: rgba(255,255,255,.2);
+}
+ui-field input[type=text]::-moz-placeholder {
+	color: rgba(255,255,255,.2);
+}
+.ui-field input[type=text]:-ms-input-placeholder {
+	color: rgba(255,255,255,.2);
+}
+
