@@ -9,7 +9,7 @@ module.exports = function(grunt) {
 			  'public/demo/bundle.js': 'public/demo/main.js'
 			},
 			options: {
-
+				debug: 'd'
 			}
 		  }
 		}
