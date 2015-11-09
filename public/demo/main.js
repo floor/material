@@ -24,6 +24,7 @@ domready(function() {
 				flex: '1'
 			},
 			navi: {
+				size: 280,
 				theme: 'dark'
 			}
 		}
@@ -33,8 +34,19 @@ domready(function() {
 
 	var button = new Button({
 		//type: 'action',
-		text: 'button',
+		label: 'one'
+	}).inject(layout.navi);
+
+	var button2 = new Button({
+		type: 'raised',
+		primary: true,
+		label: 'two',
 		klass: 'is-primary'
+	}).inject(layout.navi);
+
+	var button3 = new Button({
+		type: 'raised',
+		label: 'two',
 	}).inject(layout.navi);
 
 	button.on('press', function(e) {
