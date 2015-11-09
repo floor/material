@@ -1,24 +1,51 @@
 
 var prime = require('prime'),
-	ready = require('elements/domready');
+	domready = require('elements/domready');
 
 var Component = require('../../lib/component.js');
 var Container = require('../../lib/container.js');
-var Layout = require('../../lib/layout/layout.js');
+var Layout = require('../../lib/layout.js');
 var Button = require('../../lib/control/button.js');
+var Field = require('../../lib/control/field.js');
 
-ready(function() {
+domready(function() {
 	console.log('ready', document.body);
 
+	var container = new Container().inject(document.body);
+
+	console.log('container', container);
+
 	var layout = new Layout({
-		container: document.body
+		container: container,
+		node: {
+			_name: 'standard',
+			_list: ['navi', 'main', 'side'],
+			main: {
+				flex: '1'
+			},
+			navi: {
+				theme: 'dark'
+			}
+		}
+	});
+	
+	console.log('layout', layout);
+
+	var button = new Button({
+		//type: 'action',
+		text: 'button',
+		klass: 'is-primary'
+	}).inject(layout.navi);
+
+	button.on('press', function(e) {
+		console.log('press', e);
+		var field = new Field({
+			name: 'field'
+		}).inject(layout.main);
 	});
 
-	var component = new Component().inject(document.body);
-	var button = new Button({
-		type: 'action',
-		klass: 'is-primary'
-	}).inject(document.body);
 
-	var container = new Container().inject(document.body);
+	
+
+	
 });
