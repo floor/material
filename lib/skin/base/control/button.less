@@ -7,68 +7,14 @@ button {
 	font-family: @button-font-family;
 }
 
-/*
-.ui-button.type-action {
-	label {
-		display: none;
-	}
-	input  {
-		color: rgb(136, 136, 136);
-		margin: 4px;
-		padding: 4px 0;
-		font-size: 1.3em;
-		line-height: 1.4em;
-		text-overflow: ellipsis;
-		display: inline-block;
-		width: 100%;
-		height: 32px;
-		white-space: nowrap;
-		overflow: hidden;
-		margin-left: 0;
-	}
-	input.date-text {
-		display: none;
-	}
-}*/
-
-.ui-button.type-action.is-primary {
-	padding: 12px;
-	width: 56px;
-	height: 56px;
-	box-shadow: 0 0 4px rgba(0, 0, 0, 0.24);
-	border-radius: 50%;
-	&:hover {
-		transform: scale(1.1);
-	}
-	.ui-sensor {
-		border-radius: 50%;
-	}
-	.ui-icon {
-		font-size: 1.7em;
-		line-height: 1.2em;
-		color: #fff;
-	}
-}
-
-.ui-button.is-primary {
-	color: @primary-font-color;
-	background-color: @primary-bg-color;
-	.ui-sensor {
-		border-radius: 50%;
-	}
-	.ui-icon {
-		font-size: 1.7em;
-		color: #fff;
-	}
-	&:hover {
-		transform: scale(1.1);
-	}
-}
 
 /**
  * 
  */
 .ui-button {
+
+	
+
 	text-align:center;
 	position: relative;
 	display: inline-block;
@@ -80,6 +26,14 @@ button {
 	margin: 4px 2px;
 	overflow: hidden;
 	background-color: transparent;
+
+	color: #FFF;
+	padding: 6px 24px;
+	border-radius: 2px;
+	background-color: #4891F4;
+	margin: 3px;
+	box-shadow: 0 0 2px 2px rgba(0, 0, 0, 0.1);
+
 	.ui-sensor {
 		position: absolute;
 		z-index: 10;
@@ -198,6 +152,66 @@ button {
 		.ui-icon {
 			//font-size: 1.5em;
 		}
+	}
+}
+
+
+/*
+.ui-button.type-action {
+	label {
+		display: none;
+	}
+	input  {
+		color: rgb(136, 136, 136);
+		margin: 4px;
+		padding: 4px 0;
+		font-size: 1.3em;
+		line-height: 1.4em;
+		text-overflow: ellipsis;
+		display: inline-block;
+		width: 100%;
+		height: 32px;
+		white-space: nowrap;
+		overflow: hidden;
+		margin-left: 0;
+	}
+	input.date-text {
+		display: none;
+	}
+}*/
+
+
+.ui-button.type-action.is-primary {
+	padding: 12px;
+	width: 56px;
+	height: 56px;
+	box-shadow: 0 0 4px rgba(0, 0, 0, 0.24);
+	border-radius: 50%;
+	&:hover {
+		transform: scale(1.1);
+	}
+	.ui-sensor {
+		border-radius: 50%;
+	}
+	.ui-icon {
+		font-size: 1.7em;
+		line-height: 1.2em;
+		color: #fff;
+	}
+}
+
+.ui-button.is-primary {
+	color: @primary-font-color;
+	background-color: @primary-bg-color;
+	.ui-sensor {
+		border-radius: 50%;
+	}
+	.ui-icon {
+		font-size: 1.7em;
+		color: #fff;
+	}
+	&:hover {
+		transform: scale(1.1);
 	}
 }
 
