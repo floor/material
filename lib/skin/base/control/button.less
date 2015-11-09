@@ -23,17 +23,11 @@ button {
 	padding: 0;
 	border: none;
 	border-radius: 3px;
-	margin: 4px 2px;
+	margin: 8px;
 	overflow: hidden;
 	background-color: transparent;
-
-	color: #FFF;
-	padding: 6px 24px;
+	padding: 8px 24px;
 	border-radius: 2px;
-	background-color: #4891F4;
-	margin: 3px;
-	box-shadow: 0 0 2px 2px rgba(0, 0, 0, 0.1);
-
 	.ui-sensor {
 		position: absolute;
 		z-index: 10;
@@ -93,10 +87,10 @@ button {
 		color:rgba(255,255,255,.7);
 	}
 	&:active {
-		//background-color: @background;
-		//background-color: lighten(@background, 70%);
-		//background-color: rgba(118,131,153, 1);
-		//color:rgba(255,255,255,.7);
+		background-color: #CCCCCC;
+	}
+	&:hover {
+		background-color: #DDDDDD;
 	}
 	&.state-active {
 		background-color: @background;
@@ -156,6 +150,14 @@ button {
 }
 
 
+.ui-button.type-raised {
+	background-color: #E0E0E0;
+	box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.3);
+	&:hover {
+		background-color: #E0E0E0;
+	}
+}
+
 /*
 .ui-button.type-action {
 	label {
@@ -188,7 +190,7 @@ button {
 	box-shadow: 0 0 4px rgba(0, 0, 0, 0.24);
 	border-radius: 50%;
 	&:hover {
-		transform: scale(1.1);
+		//transform: scale(1.1);
 	}
 	.ui-sensor {
 		border-radius: 50%;
@@ -211,7 +213,8 @@ button {
 		color: #fff;
 	}
 	&:hover {
-		transform: scale(1.1);
+		//transform: scale(1.1);
+		background-color: @primary-bg-color;
 	}
 }
 
