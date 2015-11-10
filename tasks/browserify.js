@@ -6,7 +6,7 @@ module.exports = function(grunt) {
 		browserify: {
 		  dist: {
 			files: {
-			  'public/demo/bundle.js': 'public/demo/main.js'
+			  'dist/demo/bundle.js': 'dist/demo/main.js'
 			},
 			options: {
 				debug: 'd'
