@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "ui toolkit",
   "main": "app.js",
   "scripts": {
@@ -26,7 +26,8 @@
     "prime": "0.5.x",
     "prime-util": "0.5.x",
     "elements": "0.6.x",
-    "mout": "0.11.x"
+    "mout": "0.11.x",
+    "js-logger": "1.x"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
@@ -39,6 +40,7 @@
     "grunt-contrib-watch": "^0.6.1",
     "grunt-jsdoc": "0.5.8",
     "grunt-notify": "^0.4.1",
-    "grunt-plato": "^1.2.1"
+    "grunt-plato": "^1.2.1",
+    "grunt-watchify": "^0.1.0"
   }
 }
