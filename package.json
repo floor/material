@@ -4,7 +4,16 @@
   "description": "ui toolkit",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build-prime": "browserify -r prime -r prime/emitter -r prime-util/prime/options > build/prime.js",
+    "build-elements": "browserify -r elements > build/elements.js",
+    "build-moofx": "browserify -r moofx > build/moofx.js",
+    "build-vendor": "npm run build-prime & npm build build-elements & npm run build-moofx & npm run build-mustache",
+    "build-demo": "browserify -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x moofx -x js-logger dist/demo/app.js --debug | exorcist build/demo.js.map > build/demo.js",
+    "build-css": "lessc lib/skin/material/index.less > dist/skin/material.css",
+    "watch-lib": "watchify -x mout -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x moofx -x js-logger --debug dist/demo/main.js -o 'exorcist build/demo.js.map > build/demo.js' -v",
+    "watch": "npm run watch-lib & npm run watch-css",
+    "start": "node app.js",
+    "test": "tap test/*.js"
   },
   "repository": {
     "type": "git",
@@ -22,25 +31,18 @@
     "interface"
   ],
   "dependencies": {
-    "express": "3.x",
-    "prime": "0.5.x",
-    "prime-util": "0.5.x",
-    "elements": "0.6.x",
-    "mout": "0.11.x",
-    "js-logger": "1.x"
+    "express": "^3.0",
+    "mout": "^0.11.0",
+    "prime": "^0.5.0",
+    "prime-util": "^0.5.0",
+    "elements": "^0.6.0",
+    "moofx": "^0.6.0",
+    "js-logger": "^1.0"
   },
   "devDependencies": {
-    "grunt": "^0.4.5",
-    "grunt-browserify": "^4.0.1",
-    "grunt-contrib-clean": "^0.6.0",
-    "grunt-contrib-concat": "^0.5.1",
-    "grunt-contrib-less": "^1.0.1",
-    "grunt-contrib-requirejs": "^0.4.4",
-    "grunt-contrib-uglify": "^0.9.1",
-    "grunt-contrib-watch": "^0.6.1",
-    "grunt-jsdoc": "0.5.8",
-    "grunt-notify": "^0.4.1",
-    "grunt-plato": "^1.2.1",
-    "grunt-watchify": "^0.1.0"
+    "exorcist": "^0.4.0",
+    "gulp": "^3.9.0",
+    "gulp-browserify": "^0.5.1",
+    "gulp-less": "^3.0.5"
   }
 }
