@@ -5,15 +5,18 @@
 
 .ui-list {
 	.ui-button {
-	.display(flex);
-	.flex-direction(raw);
-	.flex-wrap(nowrap);
+		.display(flex);
+		.flex-direction(raw);
+		.flex-wrap(nowrap);
+		display: block;
 		margin: 0 12px 0 12px;
 		.ui-icon {
+			.flex(none);
 			padding: 24px;
 		}
 		.ui-text {
-			padding: 16px 12px 16px 8px;
+			.flex(1);
+			padding: 16px 12px 16px 0;
 		}
 	}
 	.ui-separator {
@@ -23,7 +26,6 @@
 		background-color: #DDD;
 	}
 }
-
 
 .view-listtwo {
 	cursor: default;
