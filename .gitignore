@@ -45,6 +45,9 @@ node_modules
 docs
 reports/*
 build/*
+.gitignore
+.jscsrc
+.jshintrc
 *-min*
 public/js/*
 dist/*
