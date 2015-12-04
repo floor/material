@@ -1,0 +1,89 @@
+
+
+.ui-item.item-icon {
+	width: 80px;
+	height: 74px;
+	text-align: center;
+	position: relative;
+	display: inline-block;
+	overflow: hidden;
+	padding: 8px 4px 4px;
+	border:0;
+	border-radius: 3px;
+	margin: 0x;
+	//border: 1px solid transparent;
+	&:hover {
+		//border: 1px dotted rgba(0,0,0,.5);
+		background-color: rgba(0,0,0,.1);
+	}
+	.ui-image {
+		font-size: 2.2em;
+		color: rgb(51, 51, 51);
+		background-size: contain;
+		background-repeat: no-repeat;
+		background-position: center;
+		display: inline-block;
+		width: 56px;
+		height: 34px;
+		padding: 4px 0 0 0;
+		text-align: center;
+		border-radius: 50%;
+
+	}
+	.ui-icon {
+		font-size: 2.2em;
+		color: rgb(51, 51, 51);
+		background-size: contain;
+		background-repeat: no-repeat;
+		background-position: center;
+		display: inline-block;
+		width: 56px;
+		height: 34px;
+		padding: 4px 0 0 0;
+		text-align: center;
+		border-radius: 50%;
+
+	}
+	.ui-text {
+		font-size: .85em;
+		color: rgb(51, 51, 51);
+		text-align: center;
+		overflow: hidden;
+		display: inline-block;
+		height: 28px;
+		padding: 0;
+		margin: 0;
+	}
+	&.item-selected,
+	&.is-selected {
+		background-color: transparent;
+		.icon {
+			background-color: #768399;
+		}
+		.text {
+			border-radius: 2px;
+			background-color: #768399;
+		}
+	}
+	&.item-separator {
+		text-align: left;
+		display: block;
+		height: 24px;
+		width: 100%;
+		padding:0;
+		border-bottom: 1px solid rgba(0,0,0,.2);
+		border-radius: 0;
+		margin:8px 0;
+		.item-text {
+			text-transform: capitalize;
+			font-size: 1em;
+			height: 32px;
+		}
+		&:hover {
+			//border: 1px dotted rgba(0,0,0,.5);
+			background-color: transparent;
+		}
+	}
+}
+
+

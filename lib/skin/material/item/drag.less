@@ -1,0 +1,45 @@
+
+
+
+/**
+ * 
+ */
+.ui-drag {
+	z-index: 1000;
+	cursor: default;
+	position: absolute;
+	//color: rgba(255,255,255,1);
+	//background-color: rgba(0, 0, 0, 0.5);
+	
+	>.ui-item {
+		zoom: .5;
+		background-color: white;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+		&.item.item-list.item-selected {
+			background-color: rgba(224, 224, 224, 0.8);
+		}
+		&.type-card {
+			box-shadow: none;
+		}
+	}
+	&.is-droppable {
+		//color: rgba(255, 255, 255, 1);
+		//background-color: rgba(0, 134, 202, 1);
+		//border: 2px solid rgba(0, 134, 202, 1);
+		>.ui-item {
+			//border: 2px solid rgba(0, 134, 202, 1);
+			color: rgba(255, 255, 255, 1);
+			background-color: rgba(0, 134, 202, 1);
+			&.type-card {
+				background-color: transparent;
+				.item-card {
+					.card-head {
+						color: rgba(255, 255, 255, 1);
+						background-color: rgba(0, 134, 202, 1);
+					}	
+				}
+			
+			}
+		}
+	}
+}
