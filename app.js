@@ -14,6 +14,7 @@ var port = 3000;
 
 app.use(express.compress());
 //app.use('/', express.static(__dirname + '/dist'));
+app.use('/element', express.static(__dirname + '/dist/element'));
 app.use('/demo', express.static(__dirname + '/dist/demo'));
 app.use('/vendor', express.static(__dirname + '/dist/vendor'));
 app.use('/reports', express.static(__dirname + '/dist/reports'));
