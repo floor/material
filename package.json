@@ -10,7 +10,8 @@
     "build-vendor": "npm run build-prime & npm build build-elements & npm run build-moofx & npm run build-mustache",
     "build-demo": "browserify -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x moofx -x js-logger dist/demo/app.js --debug | exorcist build/demo.js.map > build/demo.js",
     "build-css": "lessc lib/skin/material/index.less > dist/skin/material.css",
-    "watch-lib": "watchify -x mout -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x moofx -x js-logger --debug dist/demo/main.js -o 'exorcist build/demo.js.map > build/demo.js' -v",
+    "watch-demo": "watchify -x slick -x mout/array/forEach -x mout/time/now -x mout/array/indexOf -x mout/lang/kindOf -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x moofx -x js-logger --debug dist/demo/main.js -o 'exorcist build/demo.js.map > build/demo.js' -v",
+    "watch-element": "watchify -x mout -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x slick -x moofx -x js-logger --debug dist/element/main.js -o 'exorcist dist/element/main.js.map > dist/element/bundle.js' -v",
     "watch": "npm run watch-lib & npm run watch-css",
     "start": "node app.js",
     "test": "tap test/*.js"
@@ -31,15 +32,17 @@
     "interface"
   ],
   "dependencies": {
+    "elements": "^0.6.0",
+    "event-emitter": "^0.3.4",
     "express": "^3.0",
+    "js-logger": "^1.0",
+    "moofx": "^0.6.0",
     "mout": "^0.11.0",
     "prime": "^0.5.0",
-    "prime-util": "^0.5.0",
-    "elements": "^0.6.0",
-    "moofx": "^0.6.0",
-    "js-logger": "^1.0"
+    "prime-util": "^0.5.0"
   },
   "devDependencies": {
+    "babelify": "^7.2.0",
     "exorcist": "^0.4.0",
     "gulp": "^3.9.0",
     "gulp-browserify": "^0.5.1",
