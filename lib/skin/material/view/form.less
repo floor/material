@@ -1,22 +1,39 @@
 
 form {
-	.fieldset-legend {
-		width: 100%;
-		color: #888888;
+	.form-fieldset {
+		//display: hidden;
 		position: relative;
-		font-weight: light;
-		cursor: default;
-		display: inline-block;
-		text-transform: uppercase;
-		//font-size: .85em;
-		//border-bottom: 1px solid rgba(0,0,0,.1);
-		
-		margin: 0;
-		padding: 0;
-		padding-left: 16px;
-		padding-top: 10px;
-		padding-bottom: 8px;
-		//border-top: 1px solid rgba(100,100,100,.3);
+		padding: 0 0 10px 0;
+		margin: 0 0 4px 0;
+		vertical-align: top;
+		&.zebra:nth-child(even) {
+			background-color: rgba(0,0,0,.03);
+		}
+		&:first-child {
+			padding-top: 16px;
+		}
+		&:last-child {
+			margin:0;
+			padding:0;
+		}
+		.fieldset-legend {
+			width: 100%;
+			color: #888888;
+			position: relative;
+			font-weight: light;
+			cursor: default;
+			display: inline-block;
+			text-transform: uppercase;
+			//font-size: .85em;
+			//border-bottom: 1px solid rgba(0,0,0,.1);
+			
+			margin: 0;
+			padding: 0;
+			padding-left: 12px;
+			padding-top: 10px;
+			padding-bottom: 8px;
+			//border-top: 1px solid rgba(100,100,100,.3);
+		}
 	}
 }
 
