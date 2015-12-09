@@ -1,7 +1,7 @@
 {
   "name": "material",
   "version": "0.0.5",
-  "description": "ui toolkit",
+  "description": "Object Oriented User Interface Components",
   "main": "app.js",
   "scripts": {
     "build-prime": "browserify -r prime -r prime/emitter -r prime-util/prime/options > build/prime.js",
@@ -23,7 +23,7 @@
     "url": "https://github.com/codepolitan/material.git"
   },
   "author": "Code Politan <codepolitan@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/codepolitan/material/issues"
   },
@@ -34,13 +34,10 @@
     "interface"
   ],
   "dependencies": {
-    "elements": "^0.6.0",
-    "event-emitter": "^0.3.4",
     "express": "^3.0",
+    "elements": "^0.6.0",
     "moofx": "^0.6.0",
-    "mout": "^0.11.0",
-    "prime": "^0.5.0",
-    "prime-util": "^0.5.0"
+    "mout": "^0.11.0"
   },
   "devDependencies": {
     "babelify": "^7.2.0",
