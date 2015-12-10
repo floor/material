@@ -1,14 +1,13 @@
 {
   "name": "material",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Object Oriented User Interface Components",
   "main": "app.js",
   "scripts": {
-    "build-prime": "browserify -r prime -r prime/emitter -r prime-util/prime/options > build/prime.js",
+    "build-prime": "browserify -r prime -r prime/emitter > build/prime.js",
     "build-elements": "browserify -r elements > build/elements.js",
     "build-moofx": "browserify -r moofx > build/moofx.js",
     "build-mout": "browserify -r mout > build/mout.js",
-     "build-mout": "browserify -r slick > build/slick.js",
     "build-vendor": "npm run build-prime & npm build build-elements & npm run build-moofx & npm run build-mustache",
     "build-demo": "browserify -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x moofx dist/demo/app.js --debug | exorcist build/demo.js.map > build/demo.js",
     "build-css": "lessc lib/skin/material/index.less > dist/skin/material.css",
@@ -36,7 +35,7 @@
   "dependencies": {
     "express": "^3.0",
     "elements": "^0.6.0",
-    "moofx": "^0.6.0",
+    "moofx": "^3.2.0",
     "mout": "^0.11.0"
   },
   "devDependencies": {
