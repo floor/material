@@ -1,11 +1,7 @@
 
 /**
- * material demo
- * @type {[type]}
+ * app.js
  */
-
-var Logger = require('js-logger');
-Logger.useDefaults();
 
 var express = require('express');
 var app = express();
@@ -23,9 +19,8 @@ app.use('/skin', express.static(__dirname + '/dist/skin'));
 app.use('/build', express.static(__dirname + '/build'));
 app.use('/docs', express.static(__dirname + '/docs'));
 
-Logger.info('dist', __dirname + '/dist');
+console.info('dist', __dirname + '/dist');
 
 app.listen(process.env.PORT || port);
 
-Logger.info('app running on port', port);
-
+console.info('app running on port', port);
