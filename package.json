@@ -1,22 +1,8 @@
 {
   "name": "material",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Object Oriented User Interface Components",
-  "main": "app.js",
-  "scripts": {
-    "build-prime": "browserify -r prime -r prime/emitter > build/prime.js",
-    "build-elements": "browserify -r elements > build/elements.js",
-    "build-moofx": "browserify -r moofx > build/moofx.js",
-    "build-mout": "browserify -r mout > build/mout.js",
-    "build-vendor": "npm run build-prime & npm build build-elements & npm run build-moofx & npm run build-mustache",
-    "build-demo": "browserify -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x moofx dist/demo/app.js --debug | exorcist build/demo.js.map > build/demo.js",
-    "build-css": "lessc lib/skin/material/index.less > dist/skin/material.css",
-    "watch-demo": "watchify -x slick -x mout -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x moofx --debug dist/demo/main.js -o 'exorcist build/demo.js.map > build/demo.js' -v",
-    "watch-element": "watchify -x mout/array/forEach -x mout/time/now -x mout -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x slick -x moofx --debug dist/element/main.js -o 'exorcist dist/element/main.js.map > dist/element/bundle.js' -v",
-    "watch": "npm run watch-lib & npm run watch-css",
-    "start": "node app.js",
-    "test": "tap test/*.js"
-  },
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/codepolitan/material.git"
@@ -33,7 +19,6 @@
     "interface"
   ],
   "dependencies": {
-    "express": "^3.0",
     "elements": "^0.6.0",
     "moofx": "^3.2.0",
     "mout": "^0.11.0"
@@ -43,6 +28,38 @@
     "exorcist": "^0.4.0",
     "gulp": "^3.9.0",
     "gulp-browserify": "^0.5.1",
-    "gulp-less": "^3.0.5"
+    "gulp-concat": "^2.6.0",
+    "gulp-hub": "^0.7.1",
+    "gulp-less": "^3.0.5",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-util": "^3.0.7",
+    "require-dir": "^0.3.0",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0"
+  },
+  "scripts": {
+    "build-prime": "browserify -r prime -r prime/emitter > build/prime.js",
+    "build-elements": "browserify -r elements > build/elements.js",
+    "build-moofx": "browserify -r moofx > build/moofx.js",
+    "build-mout": "browserify -r mout > build/mout.js",
+    "build-material": "browserify -r material -x mout -x elements/zen -x elements/base -x prime -x mout -x mout/array/every -x mout/array/indexOf -x mout/lang/toString -x mout/array/filter -x mout/array/forEach -x mout/array/map -x mout/array/every -x mout/lang/kindOf -x mout/number/toInt -x mout/time/now -x mout/string/pascalCase -x elements -x moofx -t [ babelify --presets es2015 ] --debug | exorcist build/material.js.map > build/material.js",
+    "build-demo": "browserify dist/demo/app.js -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x moofx --debug -o 'exorcist build/demo.js.map > build/demo.js' -v",
+    "build-css": "lessc lib/skin/material/material.less > dist/skin/material.css",
+    "watch-demo": "watchify -x slick -x mout -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x moofx --debug dist/demo/main.js -o 'exorcist build/demo.js.map > build/demo.js' -v",
+    "watch-element": "watchify -x lib/component -x mout -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x slick -x moofx --debug dist/element/main.js -o -b 'exorcist dist/element/main.js.map > dist/element/bundle.js' -v",
+    "watch": "npm run watch-lib & npm run watch-css",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "browserify": {
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            "es2015"
+          ]
+        }
+      ]
+    ]
   }
 }
