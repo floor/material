@@ -9,13 +9,7 @@ var watchify = require('watchify');
 var babel = require('babelify');
 
 function compile(watch) {
-// browserify -r material -x mout -x elements/zen -x elements/base -x prime -x mout -x mout/array/every -x mout/array/indexOf -x mout/lang/toString -x mout/array/filter -x mout/array/forEach -x mout/array/map -x mout/array/every -x mout/lang/kindOf -x mout/number/toInt -x mout/time/now -x mout/string/pascalCase -x elements -x moofx 
 	var bundler = watchify(browserify('./dist/demo/main.js', { debug: true })
-	//.ignore('material')
-	// .ignore('mout')
-	// .ignore('prime')
-	// .ignore('elements')
-	// .ignore('moofx')
 	.transform(babel));
 
 	function rebundle() {

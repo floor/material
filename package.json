@@ -20,6 +20,7 @@
   ],
   "dependencies": {
     "elements": "^0.6.0",
+    "lodash": "^3.10.1",
     "moofx": "^3.2.0",
     "mout": "^0.11.0"
   },
@@ -38,15 +39,10 @@
     "vinyl-source-stream": "^1.1.0"
   },
   "scripts": {
-    "build-prime": "browserify -r prime -r prime/emitter > build/prime.js",
-    "build-elements": "browserify -r elements > build/elements.js",
-    "build-moofx": "browserify -r moofx > build/moofx.js",
-    "build-mout": "browserify -r mout > build/mout.js",
-    "build-material": "browserify -r material -x mout -x elements/zen -x elements/base -x prime -x mout -x mout/array/every -x mout/array/indexOf -x mout/lang/toString -x mout/array/filter -x mout/array/forEach -x mout/array/map -x mout/array/every -x mout/lang/kindOf -x mout/number/toInt -x mout/time/now -x mout/string/pascalCase -x elements -x moofx -t [ babelify --presets es2015 ] --debug | exorcist build/material.js.map > build/material.js",
-    "build-demo": "browserify dist/demo/app.js -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x moofx --debug -o 'exorcist build/demo.js.map > build/demo.js' -v",
+    "build-material": "browserify -r material -t [ babelify --presets es2015 ] --debug | exorcist build/material.js.map > build/material.js",
+    "build-demo": "browserify dist/demo/app.js --debug -o 'exorcist build/demo.js.map > build/demo.js' -v",
     "build-css": "lessc lib/skin/material/material.less > dist/skin/material.css",
-    "watch-demo": "watchify -x slick -x mout -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x moofx --debug dist/demo/main.js -o 'exorcist build/demo.js.map > build/demo.js' -v",
-    "watch-element": "watchify -x lib/component -x mout -x prime -x prime-util/prime/options -x prime/emitter -x mout -x elements -x slick -x moofx --debug dist/element/main.js -o -b 'exorcist dist/element/main.js.map > dist/element/bundle.js' -v",
+    "watch-demo": "watchify --debug dist/demo/main.js -o 'exorcist build/demo.js.map > build/demo.js' -v",
     "watch": "npm run watch-lib & npm run watch-css",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
