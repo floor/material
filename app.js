@@ -17,7 +17,7 @@ app.use('/reports', express.static(__dirname + '/dist/reports'));
 app.use('/vendor', express.static(__dirname + '/dist/report'));
 app.use('/skin', express.static(__dirname + '/dist/skin'));
 app.use('/build', express.static(__dirname + '/build'));
-app.use('/docs', express.static(__dirname + '/docs'));
+app.use('/docs', express.static(__dirname + '/node_modules/material/docs'));
 
 console.info('dist', __dirname + '/dist');
 
