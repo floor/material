@@ -75,10 +75,18 @@
 	}
 	.field-ink{
 		position: absolute;
+		left: 50%;
 		bottom: 11px;
 		height: 2px;
 		width: 2px;
+		display: none;
 		background-color: #4891F4;
+		&.display {
+			display: block;
+			width:100%;
+			left: 0;
+			.transition(.2s);
+		}
 	}
 
 	.error-message {
