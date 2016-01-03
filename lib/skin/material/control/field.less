@@ -12,6 +12,13 @@
 		label {
 			color: #4891F4;
 		}
+		.field-underline {
+			opacity: 1;
+			display: block;
+			width:100%;
+			left: 0;
+			.transition(.3s);
+		}
 	}
 	label {
 		//position: absolute;
@@ -75,18 +82,13 @@
 	}
 	.field-underline {
 		position: absolute;
+		opacity:0;
 		left: 50%;
-		bottom: 11px;
+		bottom: 0px;
 		height: 2px;
 		width: 2px;
-		display: none;
 		background-color: #4891F4;
-		&.display {
-			display: block;
-			width:100%;
-			left: 0;
-			.transition(.2s);
-		}
+		.transition(.3s);
 	}
 
 	.error-message {
@@ -154,7 +156,6 @@
 			// border: none;
 		}
 	}
-	
 	
 	span.field{
 		float:none;
