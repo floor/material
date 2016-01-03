@@ -1,43 +1,62 @@
 
 .ui-switch {
-	.switch-wrapper {
-		.display(flex);
-		.flex-direction(row);
-		.flex-wrap(nowrap);
+	display: block;
+	position: relative;
+	margin-left: 12px;
+	margin-right: 16px;
+	padding-top: 8px;
+	margin-bottom: 16px;
+	vertical-align: top;
+
+	.display(flex);
+	.flex-direction(row);
+	.flex-wrap(nowrap);
+	overflow: hidden;
+	padding: 0;
+	border-bottom: 1px solid rgba(100, 100, 100, 0.1);
+	.switch-label {
+		.flex(1);
+		.order(1);
+		cursor: default;
+		padding: 8px 0;
+		margin: 0px 2px 0px 0;
 		overflow: hidden;
-		padding: 0;
-		border-bottom: 1px solid rgba(100, 100, 100, 0.1);
-		.switch-label {
-			.flex(1);
-			.order(1);
+	}
+	.switch-track {
+		//.flex(none);
+		.order(2);
+		position: relative;
+		padding: 2px;
+		border-radius: 7px;
+		background-color: rgba(34,31,31,.26);
+		margin: 10px 10px 10px 4px;
+		height: 14px;
+		width: 32px;
+		.transition(.3s);
+		.switch-knob {
+			position: absolute;
+			top: -3px;
+			left: -2px;
 			cursor: default;
-			padding: 8px 0;
-			margin: 0px 2px 0px 0;
-			overflow: hidden;
+			display: block;
+			height:  20px;
+			width: 20px;
+			margin: 0;
+			border-radius: 10px;
+			background-color: rgba(241,241,241,100);
+			box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24), 0 0 2px 0 rgba(0, 0, 0, 0.12);
+			.transition(.3s);
 		}
-		.switch-control {
-			//.flex(none);
-			.order(2);
-			position: relative;
-			padding: 2px;
-			border-radius: 7px;
-			background-color: rgba(34,31,31,.26);
-			margin: 10px 10px 10px 4px;
-			height: 14px;
-			width: 32px;
-			//box-shadow: inset 0 0 1px 1px rgba(0,0,0,.2);
+	}
+	&.is-checked {
+
+		.switch-track {
+			background-color: rgba(0,150,136,.5);
+			.transition(.3s);
 			.switch-knob {
-				position: absolute;
-				top: -3px;
-				left: -2px;
-				cursor: default;
-				display: block;
-				height:  20px;
-				width: 20px;
-				margin: 0;
-				border-radius: 10px;
-				background-color: rgba(241,241,241,100);
-				box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24), 0 0 2px 0 rgba(0, 0, 0, 0.12);
+				background-color: rgba(0,150,136,1);
+				left: 14px;
+				.transition(.3s);
 			}
 		}
 	}
