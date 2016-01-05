@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Object Oriented User Interface Components",
   "main": "index.js",
   "repository": {
@@ -18,12 +18,6 @@
     "user",
     "interface"
   ],
-  "dependencies": {
-    "elements": "^0.6.0",
-    "lodash": "^3.10.1",
-    "moofx": "^3.2.0",
-    "mout": "^0.11.0"
-  },
   "devDependencies": {
     "babelify": "^7.2.0",
     "exorcist": "^0.4.0",
