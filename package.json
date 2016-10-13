@@ -1,18 +1,18 @@
 {
   "name": "material",
   "version": "0.1.1",
-  "description": "Object Oriented User Interface Components",
+  "description": "Vanilla Implementation of Material Design Components",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/codepolitan/material.git"
+    "url": "https://github.com/floor/material.git"
   },
   "author": "Code Politan <codepolitan@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/codepolitan/material/issues"
+    "url": "https://github.com/floor/material/issues"
   },
-  "homepage": "https://github.com/codepolitan/material",
+  "homepage": "https://github.com/floor/material",
   "keywords": [
     "material",
     "user",
