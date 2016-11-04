@@ -9,22 +9,27 @@
   //border-right: 2px solid #fff;
   &.state-focus {
     label {
+      .transition(.1s);
       color: #4891F4;
+      font-size: .7em;
+      top: 0;
     }
     .field-underline {
       opacity: 1;
       display: block;
       width: 100%;
       left: 0;
-      .transition(.3s);
+      .transition(.1s);
     }
   }
   label {
-    //position: absolute;
-    top: 3px;
-    right: 10px;
+    pointer-events: none;
+    .transition(.1s);
+    position: absolute;
+    top: 16px;
+    left: 0;
     display: block;
-    font-size: .7em;
+    font-size: 1em;
     color: rgba(0, 0, 0, .3);
     padding: 0 2px 0 0;
   }
@@ -88,7 +93,7 @@
     height: 2px;
     width: 2px;
     background-color: #4891F4;
-    .transition(.3s);
+    .transition(.1s);
   }
   .error-message {
     font-size: .7em;
