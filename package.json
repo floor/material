@@ -19,6 +19,8 @@
     "interface"
   ],
   "devDependencies": {
+    "babel-core": "^6.18.2",
+    "babel-loader": "^6.2.7",
     "babelify": "^7.2.0",
     "exorcist": "^0.4.0",
     "gulp": "^3.9.0",
@@ -30,7 +32,8 @@
     "gulp-util": "^3.0.7",
     "require-dir": "^0.3.0",
     "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0"
+    "vinyl-source-stream": "^1.1.0",
+    "webpack": "^1.13.3"
   },
   "scripts": {
     "build-material": "browserify -r material -t [ babelify --presets es2015 ] --debug | exorcist build/material.js.map > build/material.js",
