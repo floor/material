@@ -1,6 +1,6 @@
 @color: rgba(255, 255, 255, 0.5);
 @background: rgba(135, 135, 135, .1);
-.ui-button {
+.material-button {
   position: relative;
   //text-transform: uppercase;
   display: inline-block;
@@ -16,9 +16,9 @@
   border-radius: 2px;
   white-space: nowrap;
   .transition(.2s);
-  // .display(flex);
-  // .flex-direction(raw);
-  // .flex-wrap(nowrap);
+  //.display(flex);
+  //.flex-direction(raw);
+  //.flex-wrap(nowrap);
   //.display(flex);
   .flex-direction(raw);
   .flex-wrap(nowrap);
@@ -42,13 +42,14 @@
     z-index: 2;
     text-transform: uppercase;
     padding: 10px 16px 9px 16px;
+    margin: 0;
   }
   .ui-ripple {
     // display: none;
     pointer-events: none;
     z-index: 1;
     position: absolute;
-    background-color: rgba(0, 0, 0, .5);
+    background-color: rgba(0, 0, 0, .1);
     height: 10px;
     width: 10px;
     border-radius: 50%;
@@ -69,13 +70,11 @@
     background-color: rgba(0, 0, 0, 0.1);
   }
   &:focus {
-    //color:rgba(255,255,255,.7);
-  }
-  &:hover {
     cursor: pointer;
     background-color: rgba(0, 0, 0, 0.05);
     .transition(.2s);
   }
+  &:hover {}
   &.state-active {
     background-color: @background;
     color: rgb(136, 136, 136);
@@ -106,7 +105,7 @@
   }
 }
 
-.ui-button.icon-text {
+.material-button.icon-text {
   .ui-icon {
     .order(1);
   }
@@ -119,7 +118,7 @@
   }
 }
 
-.ui-button.type-action {
+.material-button.type-action {
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -134,15 +133,15 @@
   }
 }
 
-.ui-button.type-raised {
-  background-color: #E0E0E0;
+.material-button.type-raised {
+  //background-color: #E0E0E0;
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12);
   &:hover {
-    background-color: #E0E0E0;
+    //background-color: #E0E0E0;
   }
   &:active,
   &.is-active {
-    box-shadow: 0 4px 5px 0 rgba(0, 0, 0, .14), 0 1px 10px 0 rgba(0, 0, 0, .12), 0 2px 4px -1px rgba(0, 0, 0, .2);
+    box-shadow: 0px 5px 5px -3px rgba(0, 0, 0, 0.2), 0px 8px 10px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12);
     .transition(.2s);
   }
   .ui-ripple {
@@ -150,7 +149,7 @@
   }
 }
 
-.ui-button.is-primary {
+.material-button.is-primary {
   color: @primary-font-color;
   background-color: @primary-bg-color;
   .ui-sensor {}
@@ -160,7 +159,7 @@
   }
 }
 
-.ui-button.type-file {
+.material-button.type-file {
   overflow: hidden;
   position: relative;
   vertical-align: middle;
