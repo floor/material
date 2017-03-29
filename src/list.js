@@ -1,6 +1,5 @@
 'use strict';
 
-import Component from './component';
 import display from './container/display';
 import insert from './component/insert';
 import merge from './module/merge';
