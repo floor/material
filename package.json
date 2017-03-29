@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Vanilla Implementation of Material Design Components",
   "main": "index.js",
   "repository": {
@@ -46,8 +46,7 @@
   "browserify": {
     "transform": [
       [
-        "babelify",
-        {
+        "babelify", {
           "presets": [
             "es2015"
           ]
