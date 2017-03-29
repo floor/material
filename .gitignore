@@ -43,6 +43,7 @@ Thumbs.db
 *.sublime-workspace
 node_modules
 docs
+doc
 report/*
 build/*
 .gitignore
