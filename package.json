@@ -32,13 +32,12 @@
     "gulp-util": "^3.0.7",
     "require-dir": "^0.3.0",
     "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0",
-    "webpack": "^1.13.3"
+    "vinyl-source-stream": "^1.1.0"
   },
   "scripts": {
     "build-material": "browserify -r material -t [ babelify --presets es2015 ] --debug | exorcist build/material.js.map > build/material.js",
     "build-demo": "browserify dist/demo/app.js --debug -o 'exorcist build/demo.js.map > build/demo.js' -v",
-    "build-css": "lessc lib/skin/material/material.less > dist/skin/material.css",
+    "build-css": "lessc src/skin/material/material.less > dist/skin/material.css",
     "watch-demo": "watchify --debug dist/demo/main.js -o 'exorcist build/demo.js.map > build/demo.js' -v",
     "watch": "npm run watch-lib & npm run watch-css",
     "test": "echo \"Error: no test specified\" && exit 1"
