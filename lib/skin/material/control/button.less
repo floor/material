@@ -9,7 +9,7 @@
   padding: 0;
   border: none;
   border-radius: 2px;
-  margin: 8px;
+  margin-right: 16px;
   overflow: hidden;
   background-color: transparent;
   //padding: 8px 12px;
@@ -63,16 +63,18 @@
     }
   }
   &.focus {
+    .transition(.3s);
     background: rgba(113, 170, 211, .8);
     color: rgba(255, 255, 255, .7);
   }
   &:active {
+    .transition(.3s);
     background-color: rgba(0, 0, 0, 0.1);
   }
   &:focus {
+    .transition(.3s);
     cursor: pointer;
     background-color: rgba(0, 0, 0, 0.05);
-    .transition(.2s);
   }
   &:hover {}
   &.state-active {

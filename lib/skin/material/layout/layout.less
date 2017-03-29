@@ -1,89 +1,15 @@
-@border: rgba(163, 163, 163, .5);
-@navi-max-width: 320px;
-@navi-width: 200px;
-@side-min-width: 100px;
-@list-min-width: 80px;
-@list-width: 300px;
-// layout base
 .material-layout {
-  overflow: hidden;
-  padding: 0;
-  margin: 0;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  // .display(flex);
-  // .flex-direction(column);
-  // .flex-wrap(nowrap);
-  .component-main {
-    overflow: scroll;
-  }
-  > .component-head {
-    z-index: 3;
-    .flex(none);
-    .display(flex);
-    .flex-direction(row);
-    .flex-wrap(nowrap);
-    background-color: #4285F4;
-    //box-shadow: 0 0 4px rgba(0, 0, 0, 0.14),0 4px 8px rgba(0, 0, 0, 0.28);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.14);
-    padding: 0 8px;
-    // -webkit-box-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
-    // box-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
-    // &:before {
-    //  box-shadow: 0 0 4px rgba(0, 0, 0, 0.14),0 4px 8px rgba(0, 0, 0, 0.28);
-    //  content: "";
-    //  height: 56px;
-    //  left: -2%;
-    //  position: fixed;
-    //  width: 104%;
-    //  will-change: top,left;
-    // }
-  }
-  > .component-foot {
-    z-index: 3;
-    text-align: right;
-    .flex(none);
-    // .display(flex);
-    // .flex-direction(row);
-    //.flex-wrap(nowrap);
-  }
-  > .container-main {
-    .display(block);
-    padding-top: 16px;
-    overflow: scroll;
-  }
-  > .layout-body {
-    position: relative;
-    .flex(1);
-  }
-  > .layout-foot {
-    .flex(none);
-  }
-  > .layout-mask {
-    z-index: 20;
-    display: none;
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    //background-color: rgba(255,0,0,.1);
-  }
-}
+  // overflow: hidden;
+  // padding: 0;
+  // margin: 0;
+  // height: 100%;
+  // position: absolute;
+  // top: 0;
+  // bottom: 0;
+  // left: 0;
+  // right: 0;
 
-.material-layout {
-  .list-navi {
-    background-color: #EEE;
-    border-right: 1px solid @border;
-    width: 200px;
-  }
-  .component-main {
-    background-color: rgba(255, 255, 255, 1);
-  }
+
 }
 
 .flex-raw {
