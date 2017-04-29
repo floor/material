@@ -1,17 +1,17 @@
 'use strict';
 
 // base class
-import Component from '../component';
+import Component from 'component';
 
-import Text from '../text';
-import Image from '../image';
+import Text from 'text';
+import Image from 'image';
 
-import classify from '../component/classify';
-import merge from '../module/merge';
+import classify from 'component/classify';
+import merge from 'module/merge';
 
 // modules
-import control from '../control';
-import ripple from '../component/ripple';
+import control from 'control';
+import ripple from 'component/ripple';
 
 var defaults = {
   base: 'ui',

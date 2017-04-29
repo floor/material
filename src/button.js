@@ -1,11 +1,11 @@
 'use strict';
 
 // base class
-import Component from '../component';
+import Component from 'component';
 
 // modules
-import control from '../control';
-import ripple from '../component/ripple';
+import control from 'control';
+import ripple from 'component/ripple';
 
 var defaults = {
   prefix: 'material',
