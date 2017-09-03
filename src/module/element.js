@@ -1,64 +1,82 @@
-'use strict';
+/**
+ * This method returns  className from the element's attribute class
+ *
+ * @since 0.0.6
+ * @category Element
+ * @param {HTMLElement} element Related element
+ * @param {String} className the className to add
+ *  grouped values.
+ * @returns {HTMLElement} The modified element
+ * @example
+ *
+ * offset(element);
+ * // => {
+ *   width: 640,
+ *   height: 400,
+ *   top: 0,
+ *   left: 0,
+ *   bottom: 0,
+ *   right: 0
+ *   
+ * }
+ * offset(element, 'width');
+ * // => 640
+ */
+function offset(element, prop) {
 
-module.exports = {
-  /**
-   * Returns current coordinates of the element,
-   * relative to the document
-   *
-   * @param {HTMLElement} element
-   * @returns {*}
-   */
-  offset(element, prop) {
+  var rect = element.getBoundingClientRect();
 
-    var rect = element.getBoundingClientRect();
+  var offs = {
+    width: rect.width ? Math.round(rect.width) : Math.round(element.offsWidth),
+    height: rect.height ? Math.round(rect.height) : Math.round(element.offsHeight),
+    top: Math.round(rect.top),
+    left: Math.round(rect.right),
+    bottom: Math.round(rect.bottom),
+    right: Math.round(rect.left)
+  };
 
-    var offs = {
-      top: Math.round(rect.top),
-      right: Math.round(rect.right),
-      bottom: Math.round(rect.bottom),
-      left: Math.round(rect.left),
-      width: rect.width ? Math.round(rect.width) : Math.round(element.offsWidth),
-      height: rect.height ? Math.round(rect.height) : Math.round(element.offsHeight)
-    };
+  console.log('offs', oofs);
 
-    //fallback to css width and height
-    if (offs.width <= 0) {
-      offs.width = parseFloat(this._getComputedStyle(element, 'width'));
-    }
-    if (offs.height <= 0) {
-      offs.height = parseFloat(this._getComputedStyle(element, 'height'));
-    }
+  //fallback to css width and height
+  if (offs.width <= 0) {
+    offs.width = parseFloat(computed(element, 'width'));
+  }
+  if (offs.height <= 0) {
+    offs.height = parseFloat(computed(element, 'height'));
+  }
 
-    if (prop) {
-      return offs[prop];
-    } else {
-      return offs;
-    }
-  },
+  if (prop) {
+    return offs[prop];
+  } else {
+    return offs;
+  }
+}
 
 
-  /**
-   * Gets element's computed style
-   * @param {string} prop
-   * @returns {*}
-   * @private
-   */
-  _getComputedStyle(element, prop) {
+/**
+ * Gets element's computed style
+ * @param {string} prop
+ * @returns {*}
+ * @private
+ */
+function computed(element, prop) {
 
-    var computedStyle;
+  var computedStyle;
 
-    if (typeof window.getComputedStyle === 'function') { //normal browsers
-      computedStyle = window.getComputedStyle(element);
-    } else if (typeof document.currentStyle !== undefined) { //other browsers
-      computedStyle = element.currentStyle;
-    } else {
-      computedStyle = element.style;
-    }
+  if (typeof window.getComputedStyle === 'function') { //normal browsers
+    computedStyle = window.getComputedStyle(element);
+  } else if (typeof document.currentStyle !== undefined) { //other browsers
+    computedStyle = element.currentStyle;
+  } else {
+    computedStyle = element.style;
+  }
 
-    if (prop) {
-      return computedStyle[prop];
-    } else {
-      return computedStyle;
-    }
-  },
-};
+  if (prop) {
+    return computedStyle[prop];
+  } else {
+    return computedStyle;
+  }
+}
+
+
+export default { offset, computed };

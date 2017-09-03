@@ -1,9 +1,7 @@
-import animate from 'morpheus';
-
 /**
  * display container class
  */
-module.exports = {
+export default {
 
   /**
    * [_initDisplay description]
@@ -14,7 +12,7 @@ module.exports = {
 
     var direction = '';
 
-    //var direction = this.container.element.style('flex-direction');
+    //var direction = this.container.wrapper.style('flex-direction');
 
     if (direction === 'column')
       this._modifier = 'height';
@@ -56,7 +54,7 @@ module.exports = {
    * @return {Object} The class instance
    */
   toggle() {
-    console.log('toggle');
+    //console.log('toggle');
     if (this._display === 'normalized') {
       this.minimize();
     } else {
@@ -71,27 +69,14 @@ module.exports = {
    * @return {Object} The class instance
    */
   minimize() {
-    console.log('minimize');
+    //console.log('minimize');
     if (!this.display) {
       this._initDisplay();
     }
 
     this.emit('minimize');
 
-    var prop = {
-      //stop: () => {},
-      duration: 200,
-      easing: 'ease-in',
-      complete: () => {
-        this.emit('display', 'minimized');
-      }
-    };
-
-    prop[this._modifier] = 0;
-
-    if (this.animation) this.animation.stop();
-
-    this.animation = animate(this.element, prop);
+    this.wrapper.style[this._modifier] = 0;
 
     this._display = 'minimized';
 
@@ -105,7 +90,7 @@ module.exports = {
    * @return {Object} The class instance
    */
   normalize() {
-    console.log('normalize');
+    //console.log('normalize');
     if (!this.display) {
       this._initDisplay();
     }
@@ -114,22 +99,8 @@ module.exports = {
 
     var size = this[this._modifier];
 
-    var property = {
-      //stop: () => {},
-      duration: 200,
-      easing: 'ease-in',
-      complete: () => {
-        this.emit('display', 'normalized');
-      }
-    };
+    this.wrapper.style[this._modifier] = size + 'px';
 
-    property[this._modifier] = size;
-
-    if (this.animation) {
-      this.animation.stop();
-    }
-
-    this.animation = animate(this.element, property);
     this._display = 'normalized';
     this.emit('display', this._display);
 

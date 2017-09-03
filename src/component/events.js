@@ -1,4 +1,4 @@
-module.exports = {
+export default {
 
   /**
    * cross browser addEvent
@@ -7,7 +7,7 @@ module.exports = {
    */
   addEvent(event, fn) {
     var self = this;
-    var element = this.element;
+    var element = this.wrapper;
     // avoid memory overhead of new anonymous functions for every event handler that's installed
     // by using local functions
     function listenHandler(e) {
@@ -22,7 +22,7 @@ module.exports = {
     function attachHandler() {
       // set the this pointer same as addEventListener when fn is called
       // and make sure the event is passed to the fn also so that works the same too
-      var ret = fn.call(self.element, window.event);
+      var ret = fn.call(element, window.event);
       if (ret === false) {
         window.event.returnValue = false;
         window.event.cancelBubble = true;
@@ -46,7 +46,7 @@ module.exports = {
    * @return {Object}         [description]
    */
   removeEvent(event, fn) {
-    var element = this.element;
+    var element = this.wrapper;
 
     if (element.removeEventListener) {
       element.removeEventListener(event, fn, false);

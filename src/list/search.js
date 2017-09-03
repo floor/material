@@ -124,7 +124,7 @@ class Search {
     }
 
     // for (var i = 0; i < words.length; i++) {
-    // 	words[i] = string.removeAccents(words[i]);
+    //  words[i] = string.removeAccents(words[i]);
     // }
 
     return this.searchKeys(words, infos);
@@ -198,4 +198,4 @@ class Search {
   }
 }
 
-module.exports = Search;
+export default Search;

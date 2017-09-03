@@ -1,13 +1,12 @@
 'use strict';
 
 import Layout from './layout';
-import Component from './component';
 import Text from './text';
 import Button from './button';
 import merge from './module/merge';
 import events from './component/events';
 import Emitter from './module/emitter';
-import Controller from './component/controller';
+import controller from './component/controller';
 import bind from './module/bind';
 import insert from './component/insert';
 //import Element from './element/element';
@@ -19,8 +18,9 @@ import event from './element/event.js';
 
 let defaults = {
   prefix: 'material',
+  class: 'dialog',
   bind: {
-    'element.click': 'close'
+    'wrapper.click': 'close'
   }
 };
 
@@ -40,7 +40,7 @@ class Dialog {
       this.bind(this.options.bind);
     }
 
-    this.element.style.display = 'none';
+    this.wrapper.style.display = 'none';
 
     return this;
   }
@@ -55,7 +55,7 @@ class Dialog {
     options = options || {};
     this.options = merge(defaults, options);
 
-    this.class = this._name = this.constructor.name.toLowerCase();
+
     this.name = this.options.name;
     this.value = this.options.value;
     this.checked = this.options.checked;
@@ -64,7 +64,7 @@ class Dialog {
     // implement modules
     Object.assign(this, events, Emitter, bind, insert);
 
-    this.controller = new Controller();
+    this.controller = controller;
 
 
 
@@ -78,20 +78,21 @@ class Dialog {
    */
   build() {
     var tag = this.options.tag || 'div';
-    //this.element = new Element(this.options.element);
-    this.element = document.createElement(tag);
+    //this.wrapper = new Element(this.options.element);
+    this.wrapper = document.createElement(tag);
 
-    css.add(this.element, 'material-dialog');
-    if (this.options.class)
-      css.add(this.element, this.options.class);
+    css.add(this.wrapper, 'material-dialog');
+    if (this.options.css) {
+      css.add(this.wrapper, this.options.css);
+    }
 
     this.surface = document.createElement(tag);
 
     css.add(this.surface, 'dialog-surface');
 
-    this.insertElement(this.surface, this.element);
+    this.insertElement(this.surface, this.wrapper);
 
-    this.options.layout.element = this.surface;
+    this.options.layout.wrapper = this.surface;
     this.layout = new Layout(this.options.layout);
 
 
@@ -100,32 +101,30 @@ class Dialog {
     });
 
 
-    // this.element = element.createElement(tag);
+    // this.wrapper = element.createElement(tag);
 
   }
 
   close() {
-    css.add(this.element, 'dialog-closing');
+    css.add(this.wrapper, 'dialog-closing');
 
     var delayMillis = 200; //1 second
-    var self = this;
-    setTimeout(function() {
-      self.element.style.display = 'none';
-      css.remove(self.element, 'dialog-closing');
-      css.remove(self.element, 'dialog-show');
+    setTimeout(() => {
+      this.wrapper.style.display = 'none';
+      css.remove(this.wrapper, 'dialog-closing');
+      css.remove(this.wrapper, 'dialog-show');
     }, delayMillis);
   }
 
   show() {
-    this.element.style.display = 'flex';
-    //css.add(this.element, 'dialog-showing');
+    this.wrapper.style.display = 'flex';
+    //css.add(this.wrapper, 'dialog-showing');
 
     var delayMillis = 100; //1 second
 
-    var self = this;
-    setTimeout(function() {
-      css.add(self.element, 'dialog-show');
-      //css.remove(self.element, 'dialog-showing');
+    setTimeout(() => {
+      css.add(this.wrapper, 'dialog-show');
+      //css.remove(this.wrapper, 'dialog-showing');
     }, delayMillis);
 
 
@@ -133,4 +132,4 @@ class Dialog {
 
 }
 
-module.exports = Dialog;
+export default Dialog;

@@ -1,1 +1,1 @@
-ES2015 Implementation of Material Design
+ES2015 Implementation of Material Design Components

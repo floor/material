@@ -1,4 +1,4 @@
-module.exports = {
+export default {
 
   /**
    * [delegate description]
@@ -7,7 +7,7 @@ module.exports = {
    * @param  {Function} handle   [description]
    */
   delegate(event, selector, handle) {
-    var self = this.element;
+    var self = this.wrapper;
 
     var delegation = self._delegation || (self._delegation = {});
     var events = delegation[event] || (delegation[event] = {});

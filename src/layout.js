@@ -1,7 +1,7 @@
 'use strict';
 
-import Emitter from './module/emitter';
-import Controller from './component/controller';
+import emitter from './module/emitter';
+import controller from './component/controller';
 import insert from './component/insert';
 
 import css from './module/css';
@@ -20,7 +20,7 @@ import defaults from './layout/options';
  * The Layout view
  * @class
  */
-module.exports = class Layout {
+export default class Layout {
 
   /**
    * The init method of the Button class
@@ -49,10 +49,10 @@ module.exports = class Layout {
   init(options) {
     options = options || this.options;
 
-    Object.assign(this, Emitter, component, resizer, insert);
+    Object.assign(this, emitter, component, resizer, insert);
 
-    this._name = this.constructor.name.toLowerCase();
-    this.element = this.options.element;
+
+    this.wrapper = this.options.wrapper;
     this.container = this.options.container;
 
     this.component = {};
@@ -62,7 +62,7 @@ module.exports = class Layout {
     // this.settings = this.controller.getSettings('app-' + this.options.appname);
     // //console.log('settings', this.settings);
 
-    this.controller = new Controller();
+    this.controller = controller;
 
     window.addEventListener('resize', () => {
       this.emit('resize');
@@ -78,20 +78,20 @@ module.exports = class Layout {
   build(options) {
     options = options || this.options;
 
-    if (!this.element) {
-      this.element = document.createElement(options.tag);
+    if (!this.wrapper) {
+      this.wrapper = document.createElement(options.tag);
     }
 
-    console.log('build', this.element);
+    //console.log('build', this.element);
 
-    css.add(this.element, 'material' + '-' + this._name);
-    css.add(this.element, this._name + '-' + options.name);
-    //component.addClass(component._name + '-' + component.name);
-    //console.log('build', options, this.element);
+    css.add(this.wrapper, 'material' + '-' + this.options.class);
+    css.add(this.wrapper, this.options.class + '-' + options.name);
+    //component.addClass(component.class + '-' + component.name);
+    //console.log('build', options, this.wrapper);
 
     this.resizer = {};
 
-    options.container = this.element;
+    options.container = this.wrapper;
 
     if (this.container) {
       this.insert(this.container, this.context);
@@ -100,6 +100,10 @@ module.exports = class Layout {
     this._render(options);
 
     return this;
+  }
+
+  get(value) {
+    return this.component[value];
   }
 
   /**
@@ -132,12 +136,15 @@ module.exports = class Layout {
    */
   _renderComponents(component, level) {
     var components = component.components;
+
+    var wrapper = component.wrapper || component.wrapper;
+
     var container = component.container;
     //console.log('_renderComponents', components, type, level);
     for (var i = 0, len = components.length; i < len; i++) {
       var property = components[i];
 
-      //console.log('property', property.name);
+      // console.log('property', property.name);
 
       var options = property.options || {};
 
@@ -181,12 +188,12 @@ module.exports = class Layout {
       var component = this._initComponent(options);
 
       if (component.options.name) {
-        css.add(component.element, component._name + '-' + component.options.name);
+        css.add(wrapper, component.class + '-' + component.options.name);
       }
-      // component.addClass(this._name + '-' + 'component');
+      // component.addClass(this.options.class + '-' + 'component');
       // component.addClass('component-' + property.name);
 
-      property.container = component.element;
+      property.container = component.wrapper;
 
       //console.log('property.components', options.name, property);
 
@@ -212,6 +219,12 @@ module.exports = class Layout {
     });
   }
 
+  /**
+   * [_initStyles description]
+   * @param  {[type]} element [description]
+   * @param  {[type]} styles  [description]
+   * @return {[type]}         [description]
+   */
   _initStyles(element, styles) {
     if (!styles) return;
     //console.log('_initStyles', element, styles);

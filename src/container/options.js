@@ -1,10 +1,9 @@
 /**
  * Container class options
  */
-module.exports = {
-  name: 'container',
+export default {
   prefix: 'material',
-
+  class: 'container',
   type: null,
 
   element: {

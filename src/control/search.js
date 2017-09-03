@@ -71,7 +71,7 @@ class Search extends Field {
     this.reset = new Button({
       name: 'clear',
       icon: icon,
-    }).insert(this.element).on('press', function() {
+    }).insert(this.wrapper).on('press', function() {
       self.empty();
     });
   }
@@ -125,4 +125,4 @@ class Search extends Field {
   }
 }
 
-module.exports = Search;
+export default Search;

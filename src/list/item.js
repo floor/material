@@ -9,6 +9,7 @@ import css from '../module/css';
 
 var defaults = {
   prefix: 'material',
+  class: 'item',
   tag: {
     default: 'span',
     display4: 'h1',
@@ -33,7 +34,7 @@ var defaults = {
  * @return {Object} The class instance
  * @example new Item(object);
  */
-module.exports = class Item {
+export default class Item {
 
   /**
    * init
@@ -57,8 +58,8 @@ module.exports = class Item {
     // merge options
     this.options = merge(defaults, options);
 
-    // define _name
-    this._name = this.constructor.name.toLowerCase();
+    // define class
+
 
     // assign modules
     Object.assign(this, insert);
@@ -75,16 +76,16 @@ module.exports = class Item {
     // define main tag
     var tag = options.tag[options.type] || options.tag.default;
 
-    this.element = document.createElement(tag);
+    this.wrapper = document.createElement(tag);
 
     if (options.text) {
       this.set(options.text);
     }
 
-    css.add(this.element, this.options.prefix + '-' + this._name);
+    css.add(this.wrapper, this.options.prefix + '-' + this.options.class);
 
     if (options.type) {
-      css.add(this.element, this._name + '-' + options.type);
+      css.add(this.wrapper, this.options.class + '-' + options.type);
     }
 
     if (this.options.container) {
@@ -99,10 +100,10 @@ module.exports = class Item {
    */
   set(value) {
     if (value) {
-      if (this.element.innerText) {
-        this.element.innerText = value;
+      if (this.wrapper.innerText) {
+        this.wrapper.innerText = value;
       } else {
-        this.element.textContent = value;
+        this.wrapper.textContent = value;
       }
 
       return this;

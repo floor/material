@@ -11,7 +11,7 @@ const defaults = {
  *
  * @class
  */
-module.exports = {
+export default {
 
   /**
    * Setter
@@ -26,7 +26,6 @@ module.exports = {
         break;
       default:
         this.setValue(prop);
-
     }
 
     return this;
@@ -60,7 +59,7 @@ module.exports = {
    */
   getValue: function() {
     console.log('getValue', this);
-    return this.component.input.element.value;
+    return this.component.input.wrapper.value;
   },
 
   /**
@@ -69,7 +68,7 @@ module.exports = {
    */
   setValue: function(value) {
     //console.log('setValue', value, this.component.input);
-    this.component.input.element.value = value;
+    this.component.input.wrapper.value = value;
     this.emit('change', value);
   },
 
@@ -100,6 +99,10 @@ module.exports = {
   },
 
   focus() {
-    this.element.focus();
+    this.wrapper.focus();
+  },
+
+  blur() {
+    this.wrapper.blur();
   }
-}
+};

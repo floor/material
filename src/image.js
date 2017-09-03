@@ -1,15 +1,14 @@
 'use strict';
 
-import Component from './component';
-import classify from './component/classify';
+//import Component from './component';
 import merge from './module/merge';
+import insert from './component/insert';
+import css from './module/css';
 
 var defaults = {
-  prefix: 'ui',
-  component: ['name'],
-  element: {
-    tag: 'span'
-  }
+  prefix: 'material',
+  class: 'image',
+  tag: 'div'
 };
 
 /**
@@ -20,19 +19,16 @@ var defaults = {
  * @return {Object} The class instance
  * @example new Item(object);
  */
-module.exports = class Image {
+export default class Image {
 
   /**
    * init
    * @return {Object} The class options
    */
   constructor(options) {
-    console.log('field options', options);
-    //super.init(defaults);
+    //console.log('text options', options);
 
     this.options = merge(defaults, options);
-    console.log('this.options', this.options);
-
 
     this.init();
     this.build();
@@ -40,10 +36,14 @@ module.exports = class Image {
     return this;
   }
 
-  init(options) {
-    Object.assign(this, classify);
+  /**
+   * [init description]
+   * @param  {[type]} options [description]
+   * @return {[type]}         [description]
+   */
+  init() {
+    Object.assign(this, insert);
 
-    this._name = this.constructor.name.toLowerCase();
   }
 
   /**
@@ -53,52 +53,41 @@ module.exports = class Image {
   build(options) {
     options = options || this.options;
 
-    this._component = new Component(options);
+    var tag = options.tag || 'img';
 
-    this.element = this._component.element;
+    this.wrapper = document.createElement(tag);
 
-    if (options.text) {
-      this.set(options.text);
+    if (options.src) {
+      this.wrapper.setAttribute('style', 'background-image: url(' + options.src + ')');
     }
 
-    this._component.addClass(this.options.prefix + '-' + this._name);
-    this._component.addClass(this._name + '-' + options.type);
+    css.add(this.wrapper, this.options.prefix + '-' + this.options.class);
 
+    if (options.css)
+      css.add(this.wrapper, options.css);
+    //css.add(this.wrapper, this.options.class + '-adjust');
 
-
-    // super.build();
-
-    // var text = this.options.text || this.options.label;
-
-    // console.log('-!-', this.options.type);
-
-    // if (this.options.type) {
-
-    //   this.addClass(this._name + '-' + this.options.type);
-    // }
-
-    // if (text) {
-    //   this.set(text);
-    // }
-
-    // return this;
-  }
-
-  insert(container, context, debug) {
-    this._component.insert(container, context, debug);
-  }
-
-  style(style) {
-    this._component.style(style);
+    if (this.options.container) {
+      this.insert(this.options.container);
+    }
   }
 
   /**
-   * [focus description]
-   * @return {void}
+   * Get or set text value of the element
+   * @param {string} value The text to set
+   * @returns {*}
    */
   set(value) {
-    this._component.text(value);
+    if (value) {
+      if (this.wrapper.innerText) {
+        this.wrapper.innerText = value;
+      } else {
+        this.wrapper.textContent = value;
+      }
+
+      return this;
+    }
 
     return this;
   }
-};
+}

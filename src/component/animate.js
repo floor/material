@@ -1,13 +1,13 @@
 'use strict';
 
 // dependencies
-import morpheus from 'morpheus';
+import morpheus from 'material/dist/vendor/morpheus';
 
 /**
  * Animation related methods
  * @module component/animate
  */
-module.exports = {
+export default {
 
   /**
    * [animate description]

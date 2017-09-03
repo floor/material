@@ -1,45 +1,45 @@
 'use strict';
 
-// base class
-import Text from './text';
-import Image from './image';
-
+import init from './component/init';
 import events from './component/events';
-import Emitter from './module/emitter';
+import classify from './component/classify';
+
+import emitter from './module/emitter';
+import create from './element/create';
 import css from './module/css';
 import merge from './module/merge';
 import insert from './element/insert';
 import bind from './module/bind';
-
 // modules
 import control from './control';
 import ripple from './component/ripple';
 
 var defaults = {
   prefix: 'material',
+  class: 'button',
   tag: 'button',
   ripple: {
     duration: '500',
     equation: 'ease-out'
   },
+  modules: [control, ripple, events, emitter, bind],
   bind: {
-    'click': '_onClick',
-    'mousedown': ['_onMouseDown', '_showRipple'],
-    'mouseup': ['_onMouseUp', '_hideRipple'],
-    'mouseout': ['_onMouseOut', '_hideRipple']
+    'wrapper.click': 'click',
+    'wrapper.mousedown': ['_onMouseDown', '_showRipple'],
+    'wrapper.mouseup': ['_onMouseUp', '_hideRipple'],
+    'wrapper.mouseout': ['_onMouseOut', '_hideRipple']
   }
 };
 
 /**
- * Button control class
+ * Button component
  * @class
- * @extends Control
  * @since 0.0.1
  * @example
  * var button = new Button({
- *   label: 'Primary raised button',
+ *   label: 'Button raised',
  *   type: 'raised',
- *   primary: true
+ *   color: 'primary'
  * }).on('press', function(e) {
  *   console.log('button press', e);
  * }).insert(document.body);
@@ -55,7 +55,7 @@ class Button {
   constructor(options) {
     this.options = merge(defaults, options);
 
-    this.init();
+    init(this);
     this.build();
 
     if (this.options.bind) {
@@ -70,17 +70,8 @@ class Button {
    * @param  {[type]} options [description]
    * @return {[type]}         [description]
    */
-  init(options) {
-    Object.assign(
-      this,
-      control,
-      ripple,
-      events,
-      Emitter,
-      bind
-    );
+  init() {
 
-    this.class = this._name = this.constructor.name.toLowerCase();
     this.name = this.options.name;
     this.label = this.options.text || this.options.label;
 
@@ -96,53 +87,47 @@ class Button {
     options = options || this.options;
 
     var tag = this.options.tag || 'div';
-    this.element = document.createElement(tag);
+    this.wrapper = create(tag, this.options.prefix + '-' + this.options.class);
 
-    css.add(this.element, this.options.prefix + '-' + this.class);
 
-    if (this.options.css) {
-      css.add(this.element, this.options.css);
+    classify(this.wrapper, this.options);
+
+
+
+    if (this.options.name) {
+      //console.log('name', this.options.name);
+      this.wrapper.dataset.name = this.options.name;
+    }
+
+    if (this.label) {
+      this.wrapper.title = this.label;
     }
 
     if (this.options.icon) {
       this.buildIcon(this.options.type, this.options.icon || this.options.name);
     }
 
-
-    if (this.options.name) {
-      console.log('name', this.options.name);
-      this.element.dataset.name = this.options.name;
-    }
-
-    if (this.label) {
-      this.element.title = this.label;
-    }
-
     this.buildLabel();
 
     if (this.options.type) {
-      css.add(this.element, 'type-' + this.options.type);
+      css.add(this.wrapper, 'type-' + this.options.type);
     }
 
     if (this.options.style) {
       var styles = this.options.style.split(/\ /);
       for (var i = 0; i < styles.length; i++) {
-        css.add(this.element, 'style-' + styles[i]);
+        css.add(this.wrapper, 'style-' + styles[i]);
       }
     }
 
-    if (this.options.color) {
-      css.add(this.element, this.options.color + '-color');
-    }
-
     if (this.options.content) {
-      this.element.innerHTML = this.options.content;
+      this.wrapper.innerHTML = this.options.content;
     }
 
     // insert if container options is given
     if (this.options.container) {
       //console.log(this.name, opts.container);
-      insert(this.element, this.options.container);
+      insert(this.wrapper, this.options.container);
     }
 
     return this;
@@ -159,10 +144,13 @@ class Button {
 
     let text = this.options.label || this.options.text;
 
-    this.label = document.createElement('label');
-    css.add(this.label, this.class + '-label');
-    this.label.textContent = text;
-    insert(this.label, this.element);
+    this.label = create('label', this.options.class + '-label');
+
+    if (text) {
+      this.label.textContent = text;
+    }
+
+    insert(this.label, this.wrapper);
   }
 
   /**
@@ -180,11 +168,11 @@ class Button {
     var tag = 'i';
     this.icon = document.createElement(tag);
 
-    insert(this.icon, this.element);
+    insert(this.icon, this.wrapper);
 
-    css.add(this.icon, this.class + '-icon');
+    css.add(this.icon, this.options.class + '-icon');
 
-    css.add(this.element, 'icon-text');
+    css.add(this.wrapper, 'icon-text');
 
     if (name)
       css.add(this.icon, name);
@@ -219,9 +207,9 @@ class Button {
     this.disabled = value;
 
     if (this.disabled) {
-      css.add(this.element, 'is-disabled');
+      css.add(this.wrapper, 'is-disabled');
     } else {
-      css.remove(this.element, 'is-disabled');
+      css.remove(this.wrapper, 'is-disabled');
     }
   }
 
@@ -235,13 +223,14 @@ class Button {
 
     if (this.state === 'disabled') return;
 
+    console.log('emit press', e);
     this.emit('press', e);
 
     return this;
   }
 
   insert(container, context) {
-    insert(this.element, container, context);
+    insert(this.wrapper, container, context);
 
     return this;
   }
@@ -250,7 +239,7 @@ class Button {
    * _onClick
    * @param  {Event} e The related event
    */
-  _onClick(e) {
+  click(e) {
     // e.preventDefault();
     // e.stopPropagation();
 
@@ -260,7 +249,6 @@ class Button {
     this.press(e);
   }
 
-
   // /**
   //  * _onMouseDown description
   //  * @param  {Event} e The related event
@@ -269,7 +257,7 @@ class Button {
   //   //console.log('_onMouseDown');
   //   e.preventDefault();
   //   e.stopPropagation();
-  //   css.add(this.element, 'is-active');
+  //   css.add(this.wrapper, 'is-active');
   // }
 
   /**
@@ -281,7 +269,7 @@ class Button {
     // e.preventDefault();
     // e.stopPropagation();
 
-    css.remove(this.element, 'is-active');
+    css.remove(this.wrapper, 'is-active');
   }
 
   /**
@@ -291,8 +279,8 @@ class Button {
   _onMouseOut(e) {
     e.preventDefault();
     e.stopPropagation();
-    css.remove(this.element, 'is-active');
+    css.remove(this.wrapper, 'is-active');
   }
 }
 
-module.exports = Button;
+export default Button;

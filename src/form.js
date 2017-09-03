@@ -1,15 +1,21 @@
 'use strict';
 
-import Layout from './layout';
 import merge from './module/merge';
-import defaults from './form/options';
-
-import dom from './module/dom';
 import insert from './component/insert';
 import css from './module/css';
 import Emitter from './module/emitter';
 import bind from './module/bind';
-import Controller from './component/controller';
+import controller from './component/controller';
+
+// import component
+import Layout from './layout';
+
+const defaults = {
+  prefix: 'material',
+  class: 'form',
+  tag: 'div',
+  controls: ['field', 'checkbox', 'slider', 'switch']
+};
 
 /**
  * Form class
@@ -26,7 +32,7 @@ class Form {
    * @return {Object} Class instance 
    */
   constructor(options) {
-    console.log('form constructor');
+    this.options = merge(defaults, options);
 
     this.init(options);
     this.build();
@@ -42,9 +48,8 @@ class Form {
     // initOPtions
 
     // init intanciate name
-    this._name = this.constructor.name.toLowerCase();
 
-    this.options = merge(defaults, options);
+    this.name = this.options.name;
 
     // merge options
 
@@ -56,7 +61,7 @@ class Form {
     );
 
     this.document = window.document;
-    this.controller = new Controller();
+    this.controller = controller;
 
 
     //need to remove the options template to have a reference
@@ -78,8 +83,8 @@ class Form {
 
     var tag = this.options.tag || 'div';
 
-    this.element = document.createElement(tag);
-    css.add(this.element, this.options.prefix + '-' + this._name);
+    this.wrapper = document.createElement(tag);
+    css.add(this.wrapper, this.options.prefix + '-' + this.options.class);
 
     this._initLayout(this.options.layout);
 
@@ -92,16 +97,14 @@ class Form {
    * @return {[type]}         [description]
    */
   _initLayout(options) {
-    console.log('_initLayout', options);
-    //
     // complete layout options
-    options.element = this.element;
+    options.wrapper = this.wrapper;
     options.controls = this.options.controls;
     //console.log('control keys', this.options.controls);
 
     this.layout = new Layout(options);
 
-    //console.log('control', this.layout.controls);
+    console.log('this.layout.controls', this.layout.controls);
     this._initControls(this.layout.controls);
   }
 
@@ -118,11 +121,11 @@ class Form {
     for (var i = 0; i < controls.length; i++) {
       var control = controls[i];
       //control.setAttribute('data-key', control.name);
-      //console.log('keys', control.name, control);
+      console.log('keys', control.name, control);
 
       this.key[control.name] = control;
 
-      control.on('change', function(value) {
+      control.on('change', function( /*value*/ ) {
         //console.log('change', this.name, value);
       });
     }
@@ -151,7 +154,7 @@ class Form {
       this.key[name] = control;
       control.insert(section);
       control.addEvent('keyup', function() {
-        console.log('change', name, control.get('value'));
+        //console.log('change', name, control.get('value'));
       });
 
       control.setAttribute('data-key', name);
@@ -171,8 +174,8 @@ class Form {
         return this.setInfo(value);
       case 'schema':
         return this.setSchema(value);
-      default: //default will replace the old method see up
-        return this.setInfo(info);
+      default:
+        return this.setInfo(prop);
     }
   }
 
@@ -181,8 +184,8 @@ class Form {
    * @param {[type]} info [description]
    */
   setInfo(info) {
+    console.log('setInfo', info);
     this.info = this.original = info;
-
 
     this.parseInfo(info);
 
@@ -196,37 +199,33 @@ class Form {
    * @return {[type]}      [description]
    */
   parseInfo(obj, name, i) {
-    //console.log('parseInfo', name, i);
-    var count = i || 0;
-    count = count + 1;
-    var k;
+    //console.log('parseInfo', obj, name, 'level ' + i);
+    var level = i || 0;
+    level = level + 1;
+    var key;
 
     if (obj instanceof Object) {
-      for (k in obj) {
-        if (obj.hasOwnProperty(k)) {
-          //console.log('key', k, count);
+      for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          console.log('key', key, level);
           //recursive call to scan property
           var n = null;
           if (name) {
-            n = name + '.' + k;
+            n = name + '.' + key;
           } else {
-            n = k;
+            n = key;
           }
-          //console.log('recall', n, count - 1);
-          this.parseInfo(obj[k], n, count);
+          console.log('recall', n, level - 1);
+          this.parseInfo(obj[key], n, level);
         }
       }
     } else {
-      //console.log('key value', name, obj);
       if (this.key[name] && this.key[name].set) {
-        //console.log('control', this.key[name]);
+        console.log();
         this.key[name].set(obj);
       }
-
-      //not an Object so obj[k] here is a value
-    };
-
-  };
+    }
+  }
 
   /**
    * Getter
@@ -247,50 +246,48 @@ class Form {
         return this.options;
       default: //default will replace the old method see up
         return this.getInfo();
-        /*case 'model':
-          return this.getSelectedModel();*/
     }
   }
 
+  // /**
+  //  * Get Value for the given key
+  //  * @param  {string} name defined in dot notation
+  //  * @param  {Object} info
+  //  * @return {Mixin} The Value of the given key
+  //  */
+  // getValue(name, info) {
+  //   var keys = name.split(/\./);
+  //   var value = null;
 
-  /**
-   * Get Value for the given key
-   * @param  {string} name defined in dot notation
-   * @param  {Object} info
-   * @return {Mixin} The Value of the given key
-   */
-  getValue(name, info) {
-    var keys = name.split(/\./);
-    var value = null;
+  //   if (!name || !info) {
+  //     return;
+  //   }
 
-    if (!name || !info) {
-      return;
-    }
+  //   //_log.debug('getValueFromKey', name, info);
 
-    //_log.debug('getValueFromKey', name, info);
+  //   if (keys.length === 1) {
+  //     value = info[keys[0]];
+  //   }
+  //   if (keys.length === 2 && info[keys[0]]) {
+  //     if (info[keys[0]]) {
+  //       value = info[keys[0]][keys[1]];
+  //     }
+  //   }
+  //   if (keys.length === 3) {
+  //     if (info[keys[0]]) {
+  //       if (info[keys[0]][keys[1]]) {
+  //         value = info[keys[0]][keys[1]][keys[2]];
+  //       }
+  //     }
+  //   }
 
-    if (keys.length === 1) {
-      value = info[keys[0]];
-    }
-    if (keys.length === 2 && info[keys[0]]) {
-      if (info[keys[0]]) {
-        value = info[keys[0]][keys[1]];
-      }
-    }
-    if (keys.length === 3) {
-      if (info[keys[0]]) {
-        if (info[keys[0]][keys[1]]) {
-          value = info[keys[0]][keys[1]][keys[2]];
-        }
-      }
-    }
+  //   return value;
+  // }
 
-    return value;
-  }
 
   getInfo() {
     return this.info;
   }
 }
 
-module.exports = Form;
+export default Form;

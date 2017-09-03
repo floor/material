@@ -1,82 +1,87 @@
-(function(root, factory) {
-  if (typeof define === 'function' && define.amd) {
-    define(factory);
-  } else if (typeof exports === 'object') {
-    module.exports = factory();
-  } else {
-    root.deepmerge = factory();
-  }
-}(this, function() {
+/**
+ * This function checks if the element className passed in parameters
+ *
+ * @since 0.0.6
+ * @category Array
+ * @param {...Array} [arrays] The arrays to process.
+ * @param {Function} iteratee The function to combine
+ *  grouped values.
+ * @returns {Array} Returns the new array of grouped elements.
+ * @see unzip, unzipWith, zip, zipObject, zipObjectDeep, zipWith
+ * @example
+ *
+ * has(element, 'show');
+ * // => [111, 222]
+ */
+function isMergeableObject(val) {
+  var nonNullObject = val && typeof val === 'object';
 
-  function isMergeableObject(val) {
-    var nonNullObject = val && typeof val === 'object'
+  return nonNullObject &&
+    Object.prototype.toString.call(val) !== '[object RegExp]' &&
+    Object.prototype.toString.call(val) !== '[object Date]';
+}
 
-    return nonNullObject && Object.prototype.toString.call(val) !== '[object RegExp]' && Object.prototype.toString.call(val) !== '[object Date]'
-  }
+function emptyTarget(val) {
+  return Array.isArray(val) ? [] : {};
+}
 
-  function emptyTarget(val) {
-    return Array.isArray(val) ? [] : {}
-  }
+function cloneIfNecessary(value, optionsArgument) {
+  var clone = optionsArgument && optionsArgument.clone === true;
+  return (clone && isMergeableObject(value)) ? deepmerge(emptyTarget(value), value, optionsArgument) : value;
+}
 
-  function cloneIfNecessary(value, optionsArgument) {
-    var clone = optionsArgument && optionsArgument.clone === true
-    return (clone && isMergeableObject(value)) ? deepmerge(emptyTarget(value), value, optionsArgument) : value
-  }
-
-  function defaultArrayMerge(target, source, optionsArgument) {
-    var destination = target.slice()
-    source.forEach(function(e, i) {
-      if (typeof destination[i] === 'undefined') {
-        destination[i] = cloneIfNecessary(e, optionsArgument)
-      } else if (isMergeableObject(e)) {
-        destination[i] = deepmerge(target[i], e, optionsArgument)
-      } else if (target.indexOf(e) === -1) {
-        destination.push(cloneIfNecessary(e, optionsArgument))
-      }
-    })
-    return destination
-  }
-
-  function mergeObject(target, source, optionsArgument) {
-    var destination = {}
-    if (isMergeableObject(target)) {
-      Object.keys(target).forEach(function(key) {
-        destination[key] = cloneIfNecessary(target[key], optionsArgument)
-      })
+function defaultArrayMerge(target, source, optionsArgument) {
+  var destination = target.slice();
+  source.forEach(function(e, i) {
+    if (typeof destination[i] === 'undefined') {
+      destination[i] = cloneIfNecessary(e, optionsArgument);
+    } else if (isMergeableObject(e)) {
+      destination[i] = deepmerge(target[i], e, optionsArgument);
+    } else if (target.indexOf(e) === -1) {
+      destination.push(cloneIfNecessary(e, optionsArgument));
     }
-    Object.keys(source).forEach(function(key) {
-      if (!isMergeableObject(source[key]) || !target[key]) {
-        destination[key] = cloneIfNecessary(source[key], optionsArgument)
-      } else {
-        destination[key] = deepmerge(target[key], source[key], optionsArgument)
-      }
-    })
-    return destination
+  })
+  return destination;
+}
+
+function mergeObject(target, source, optionsArgument) {
+  var destination = {};
+  if (isMergeableObject(target)) {
+    Object.keys(target).forEach(function(key) {
+      destination[key] = cloneIfNecessary(target[key], optionsArgument);
+    });
   }
-
-  function deepmerge(target, source, optionsArgument) {
-    var array = Array.isArray(source);
-    var options = optionsArgument || { arrayMerge: defaultArrayMerge }
-    var arrayMerge = options.arrayMerge || defaultArrayMerge
-
-    if (array) {
-      return Array.isArray(target) ? arrayMerge(target, source, optionsArgument) : cloneIfNecessary(source, optionsArgument)
+  Object.keys(source).forEach(function(key) {
+    if (!isMergeableObject(source[key]) || !target[key]) {
+      destination[key] = cloneIfNecessary(source[key], optionsArgument);
     } else {
-      return mergeObject(target, source, optionsArgument)
+      destination[key] = deepmerge(target[key], source[key], optionsArgument);
     }
+  });
+  return destination;
+}
+
+function deepmerge(target, source, optionsArgument) {
+  var array = Array.isArray(source);
+  var options = optionsArgument || { arrayMerge: defaultArrayMerge };
+  var arrayMerge = options.arrayMerge || defaultArrayMerge;
+
+  if (array) {
+    return Array.isArray(target) ? arrayMerge(target, source, optionsArgument) : cloneIfNecessary(source, optionsArgument);
+  } else {
+    return mergeObject(target, source, optionsArgument);
+  }
+}
+
+deepmerge.all = function deepmergeAll(array, optionsArgument) {
+  if (!Array.isArray(array) || array.length < 2) {
+    throw new Error('first argument should be an array with at least two elements');
   }
 
-  deepmerge.all = function deepmergeAll(array, optionsArgument) {
-    if (!Array.isArray(array) || array.length < 2) {
-      throw new Error('first argument should be an array with at least two elements')
-    }
+  // we are sure there are at least 2 values, so it is safe to have no initial value
+  return array.reduce(function(prev, next) {
+    return deepmerge(prev, next, optionsArgument);
+  });
+};
 
-    // we are sure there are at least 2 values, so it is safe to have no initial value
-    return array.reduce(function(prev, next) {
-      return deepmerge(prev, next, optionsArgument)
-    })
-  }
-
-  return deepmerge
-
-}));
+export default deepmerge;

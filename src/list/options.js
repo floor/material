@@ -1,6 +1,6 @@
 /**
  * [defaults description]
  */
-module.exports = {
+export default {
   prefix: 'material'
 };

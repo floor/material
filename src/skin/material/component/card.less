@@ -1,0 +1,128 @@
+.material-card {
+  width: 320px;
+  -webkit-box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+  box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-box-pack: end;
+  -ms-flex-pack: end;
+  justify-content: flex-end;
+  padding: 0;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.view-card {
+  .material-card {
+    display: inline-block;
+    margin: 24px;
+  }
+}
+
+.layout-simple-card {
+  .component-head {
+    background-image: url(../demo/media/bg-card.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 209px;
+    background-color: #014689;
+  }
+  .component-body {
+    padding: 16px;
+    h2,
+    h3 {
+      margin: 0;
+      padding-top: 8px;
+    }
+  }
+  .component-action {
+    padding: 8px;
+    .material-button {
+      font-size: 14px;
+      padding: 0;
+      label {
+        padding: 8px;
+      }
+    }
+  }
+}
+
+.layout-simple-card-orange {
+  .component-head {
+    background-image: url(../demo/media/bg-card-orange.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 209px;
+    background-color: #014689;
+  }
+  .component-body {
+    padding: 16px;
+    h2,
+    h3 {
+      margin: 0;
+      padding-top: 8px;
+    }
+  }
+  .component-action {
+    padding: 8px;
+    .material-button {
+      font-size: 14px;
+      padding: 0;
+      label {
+        padding: 8px;
+      }
+    }
+  }
+}
+
+.layout-little-card-orange {
+  .component-head {
+    background-repeat: no-repeat;
+    background-size: cover;
+    padding: 16px;
+    .component-image {
+      background-image: url(../demo/media/bg-card-orange.jpg);
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+  }
+  .component-action {
+    padding: 8px;
+    .material-button {
+      font-size: 14px;
+      padding: 0;
+      label {
+        padding: 8px;
+      }
+    }
+  }
+}
+
+.layout-head-card-text {
+  .component-head {
+    height: 185px;
+    background-image: url(../demo/media/bg-card-orange.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    padding: 16px;
+    justify-content: flex-end;
+    .material-text {
+      margin: 0;
+      padding: 0;
+    }
+  }
+  .component-action {
+    padding: 8px;
+    .material-button {
+      font-size: 14px;
+      padding: 0;
+      label {
+        padding: 8px;
+      }
+    }
+  }
+}

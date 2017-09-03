@@ -5,7 +5,7 @@
  * @module component/
  */
 
-module.exports = {
+export default {
 
 
   /**
@@ -41,9 +41,9 @@ module.exports = {
    */
   setAttribute(name, value) {
     if (value !== null) {
-      this.element.setAttribute(name, '' + value);
+      this.wrapper.setAttribute(name, '' + value);
     } else {
-      this.element.removeAttribute(name);
+      this.wrapper.removeAttribute(name);
     }
   },
 
@@ -54,7 +54,7 @@ module.exports = {
    * @return {Object} This class instance
    */
   getAttribute(name) {
-    return this.element.getAttribute(name) || null;
+    return this.wraper.getAttribute(name) || null;
   },
 
 
@@ -85,15 +85,15 @@ module.exports = {
   text(value) {
     //console.log('text', value);
     if (value) {
-      if (this.element.innerText) {
-        this.element.innerText = value;
+      if (this.wrapper.innerText) {
+        this.wrapper.innerText = value;
       } else {
-        this.element.textContent = value;
+        this.wrapper.textContent = value;
       }
 
       return this;
     }
 
-    return this.element.textContent;
+    return this.wrapper.textContent;
   }
 };

@@ -1,12 +1,17 @@
 'use strict';
 
 //import Component from './component';
+import init from './component/init';
 import merge from './module/merge';
 import insert from './component/insert';
+import classify from './component/classify';
+import create from './element/create';
 import css from './module/css';
 
 var defaults = {
   prefix: 'material',
+  class: 'text',
+  modules: [insert],
   tag: {
     default: 'span',
     display4: 'h1',
@@ -24,38 +29,36 @@ var defaults = {
 };
 
 /**
- * The item class is used for example as item list
+ * this class creates a text component
  *
- * @class
- * @extends {Component}
- * @return {Object} The class instance
- * @example new Item(object);
+ * @since 0.0.6
+ * @category Element
+ * @param {HTMLElement} element Related element
+ * @param {String} className the className to add
+ *  grouped values.
+ * @returns {HTMLElement} The modified element
+ * @example
+ *
+ * var text = new Text({
+ *   text: 'hello',
+ *   type: 'title'
+ * }).insert(document.body);
+ * 
+ * // => Hello
  */
-module.exports = class Text {
+class Text {
 
   /**
    * init
    * @return {Object} The class options
    */
   constructor(options) {
-    console.log('text options', options);
-
     this.options = merge(defaults, options);
 
-    this.init();
-    this.build();
+    init(this);
+    this.build(this.options);
 
     return this;
-  }
-
-  /**
-   * [init description]
-   * @param  {[type]} options [description]
-   * @return {[type]}         [description]
-   */
-  init() {
-    Object.assign(this, insert);
-    this._name = this.constructor.name.toLowerCase();
   }
 
   /**
@@ -67,19 +70,21 @@ module.exports = class Text {
 
     var tag = options.tag[options.type] || options.tag.default;
 
-    this.element = document.createElement(tag);
+    this.wrapper = create(tag, options.prefix + '-' + options.class);
+
+    classify(this.wrapper, this.options);
 
     if (options.text) {
       this.set(options.text);
     }
 
-    css.add(this.element, this.options.prefix + '-' + this._name);
-    css.add(this.element, this._name + '-' + options.type);
-    //css.add(this.element, this._name + '-adjust');
+    if (options.type)
+      css.add(this.wrapper, options.class + '-' + options.type);
 
-    if (this.options.container) {
-      this.insert(this.options.container);
+    if (options.container) {
+      this.insert(options.container);
     }
+    return this;
   }
 
   /**
@@ -89,10 +94,10 @@ module.exports = class Text {
    */
   set(value) {
     if (value) {
-      if (this.element.innerText) {
-        this.element.innerText = value;
+      if (this.wrapper.innerText) {
+        this.wrapper.innerText = value;
       } else {
-        this.element.textContent = value;
+        this.wrapper.textContent = value;
       }
 
       return this;
@@ -100,4 +105,6 @@ module.exports = class Text {
 
     return this;
   }
-};
+}
+
+export default Text;

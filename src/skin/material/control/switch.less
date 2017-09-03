@@ -8,7 +8,7 @@
   .display(flex);
   .flex-direction(row);
   .flex-wrap(nowrap);
-  overflow: hidden;
+  //overflow: hidden;
   //border-bottom: 1px solid rgba(100, 100, 100, 0.1);
   input {
     position: absolute;
@@ -29,10 +29,10 @@
     height: 48px;
     padding: 17px 7px;
     border-radius: 50%;
-    .transition(.3s);
+    //.transition(.3s);
     &:active {
-      background-color: #D6E5E4;
-      .transition(.1s);
+      //background-color: #D6E5E4;
+      //.transition(.1s);
     }
     .switch-track {
       cursor: pointer;
@@ -42,19 +42,25 @@
       padding: 2px;
       background-color: rgba(34, 31, 31, .26);
       border-radius: 7px;
-      .transition(.3s);
+      .transition(.1s);
       .switch-knob {
         &::before {
+          //.transition(.3s);
           position: absolute;
-          top: -23px;
-          left: -22px;
-          display: block;
-          height: 48px;
+          top: -14px;
+          left: -14px;
           width: 48px;
-          margin: 0;
-          border-radius: 50%;
-          background-color: rgba(241, 241, 241, 50);
-          .transition(.3s);
+          height: 48px;
+          // -webkit-transform: scale(0);
+          // transform: scale(0);
+          // -webkit-transition: background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
+          // transition: background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
+          // transition: transform 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1);
+          // transition: transform 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
+          border-radius: 24px;
+          background-color: rgba(0, 0, 0, .5);
+          content: "";
+          opacity: .2;
         }
         cursor: pointer;
         position: absolute;
@@ -68,30 +74,18 @@
         background-color: rgba(241, 241, 241, 100);
         box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24),
         0 0 2px 0 rgba(0, 0, 0, 0.12);
-        .transition(.3s);
+        .transition(.1s);
       }
     }
   }
   &.is-checked {
     .switch-track {
-      background-color: rgba(0, 150, 136, .5);
-      .transition(.3s);
+      background-color: lighten(@primary-color, 20%);
+      .transition(.1s);
       .switch-knob {
-        &::before {
-          position: absolute;
-          top: -23px;
-          left: -22px;
-          display: block;
-          height: 48px;
-          width: 48px;
-          margin: 0;
-          border-radius: 50%;
-          background-color: rgba(0, 150, 136, 1);
-          .transition(.3s);
-        }
-        background-color: rgba(0, 150, 136, 1);
+        background-color: @primary-color;
         left: 15px;
-        .transition(.3s);
+        .transition(.1s);
       }
     }
   }
@@ -105,10 +99,10 @@
       width: 48px;
       height: 48px;
       padding: 17px 7px;
-      border-radius: 50%;
-      .transition(.3s);
+      //border-radius: 50%;
+      //.transition(.1s);
       &:active {
-        background-color: rgba(34, 31, 31, .05);
+        //background-color: rgba(34, 31, 31, .05);
         .transition(.1s);
       }
       .switch-track {

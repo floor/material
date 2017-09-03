@@ -1,8 +1,21 @@
 'use strict';
 
 import Component from './component';
-import defaults from './container/options';
-import display from './container/display';
+import merge from './module/merge';
+import create from './element/create';
+import css from './module/css';
+import insert from './element/insert';
+import emitter from './module/emitter';
+
+const defaults = {
+  prefix: 'material',
+  class: 'container',
+  type: null,
+  element: {
+    tag: 'span',
+    type: null
+  }
+};
 
 /**
  * Class representing a UI Container. Can add components.
@@ -13,7 +26,24 @@ import display from './container/display';
  *   container: document.body
  * });
  */
-class Container extends Component {
+class Container {
+
+  /**
+   * Constructor
+   * @param  {Object} options - Component options
+   * @return {Object} Class instance 
+   */
+  constructor(options) {
+    // init and build
+    this.init(options);
+    this.build();
+
+    if (this.options.bind) {
+      this.bind(this.options.bind);
+    }
+
+    return this;
+  }
 
   /**
    * Init class
@@ -21,13 +51,17 @@ class Container extends Component {
    * @return {Object} This class instance
    */
   init(options) {
-    super.init(options);
-    this.name = 'container';
+    // init options and merge options to defaults
+    options = options || {};
+    this.options = merge(defaults, options);
 
-    // merge options
-    this.options = [defaults, options].reduce(Object.assign, {});
 
-    Object.assign(this, display);
+    this.name = this.options.name;
+
+    // implement modules
+    Object.assign(this, emitter);
+
+    //this.controller = controller;
 
     return this;
   }
@@ -37,58 +71,30 @@ class Container extends Component {
    * @return {Object} This class  instance
    */
   build(props) {
-    super.build(props);
+    var tag = this.options.tag || 'div';
 
-    var component = this.options.component;
+    this.wrapper = create(tag, this.options.prefix + '-' + this.options.class);
 
-    if (component) {
-      this._initComponent(component);
+    if (this.options.name) {
+      css.add(this.wrapper, this.options.class + '-' + this.name);
+    }
+
+    if (this.options.css) {
+      css.add(this.wrapper, this.options.css);
+    }
+
+    if (this.options.container) {
+      //console.log(this.name, opts.container);
+      insert(this.wrapper, this.options.container);
     }
 
     return this;
   }
 
-  /**
-   * Initialize internal container components
-   * @param  {Mixin} component Compenent description
-   * @return {void}
-   */
-  _initComponent(component) {
-
-    this.component = this.c = {};
-    this.components = [];
-
-    if (typeof component === 'string') {
-      this.add(component);
-    } else {
-      for (var i = 0; i < component.length; i++) {
-        this.add(component[i]);
-      }
-    }
-  }
-
-  /**
-   * [_initComp description]
-   * @param  {string} name
-   * @param  {string} position
-   * @param  {DOMElement} element
-   * @return {DOMElement|void}
-   */
-  add(name, position, element) {
-    //console.log(name, position, element);
-    position = position || 'bottom';
-    element = element || this.element;
-
-    if (!element) {
-      return;
-    }
-
-    this.component[name] = new Component()
-      .addClass(this.name + '-' + name)
-      .insert(element);
-
-    return this.component[name];
+  insert(container, context) {
+    insert(this.wrapper, container, context);
+    return this;
   }
 }
 
-module.exports = Container;
+export default Container;

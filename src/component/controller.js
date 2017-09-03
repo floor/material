@@ -2,7 +2,6 @@
 
 import mediator from '../module/mediator';
 import merge from '../module/merge';
-import Cookies from '../module/cookies';
 
 let instance = null;
 
@@ -19,7 +18,7 @@ class Controller {
   constructor() {
     if (!instance) {
       instance = this;
-    };
+    }
 
     this.components = this.components || [];
     this.component = this.component || {};
@@ -32,47 +31,49 @@ class Controller {
     return instance;
   }
 
+
+
   init() {
 
     this.subscribe('settings', (message) => {
       //console.log('settings', message);
-      this.setSettings(message.key, message.value);
+      //this.setSettings(message.key, message.value);
     });
 
   }
 
-  setSettings(key, value) {
-    var text = Cookies.get(key);
+  // setSettings(key, value) {
+  //   var text = Cookies.get(key);
 
-    var current = {};
+  //   var current = {};
 
-    if (text) {
-      current = JSON.parse(text);
-    }
+  //   if (text) {
+  //     current = JSON.parse(text);
+  //   }
 
-    console.log('settings value', current, value);
-    //settings = [settings, value].reduce(Object.assign, {});
-    var settings = merge(current, value);
+  //   console.log('settings value', current, value);
+  //   //settings = [settings, value].reduce(Object.assign, {});
+  //   var settings = merge(current, value);
 
-    console.log('settings ' + key, settings);
+  //   console.log('settings ' + key, settings);
 
-    Cookies.set(key, JSON.stringify(settings));
+  //   Cookies.set(key, JSON.stringify(settings));
 
-  }
+  // }
 
-  getSettings(key) {
-    var json = Cookies.get(key);
+  // getSettings(key) {
+  //   var json = Cookies.get(key);
 
-    if (!json) {
-      return null;
-    }
-    var value = JSON.parse(json);
+  //   if (!json) {
+  //     return null;
+  //   }
+  //   var value = JSON.parse(json);
 
-    console.log('settings' + key, value);
+  //   console.log('settings' + key, value);
 
-    return value;
+  //   return value;
 
-  }
+  // }
 
 
   /**
@@ -81,7 +82,7 @@ class Controller {
    * @return {Object} The class instance
    */
   register(component) {
-    //console.log('register', component._name);
+    //console.log('register', component.class);
     this.components.push(component);
 
     this.component[component.name] = this.component[component.name] || [];
@@ -124,4 +125,6 @@ class Controller {
   }
 }
 
-module.exports = Controller;
+var controller = new Controller();
+
+export default controller;

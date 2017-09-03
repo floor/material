@@ -20,6 +20,17 @@ sans-serif;
 @button-font-family: @font-family;
 @primary-bg-color: #4891F4; // rgba(67, 76, 89, 1);
 @primary-font-color: rgba(255, 255, 255, 0.95);
+@accent-bg-color: #8DE157; // rgba(67, 76, 89, 1);
+@accent-font-color: rgba(255, 255, 255, 0.95);
+
+
+
+
+
+
+
+
+
 
 /**
  * View
@@ -33,11 +44,14 @@ sans-serif;
 @menu-color: rgba(113, 170, 211, .8);
 // HTML Tags General Defintion
 html {
+  font-size: 90%;
+  line-height: 1.15;
   width: 100%;
   height: 100%;
 }
 
 body {
+  font-size: 100%;
   position: relative;
   display: block;
   height: 100%;
@@ -47,16 +61,6 @@ body {
   padding: 0;
   font-family: Roboto, arial, serif;
   color: rgba(0, 0, 0, 0.67);
-}
-
-iframe {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  overflow: auto;
-  height: 100%;
-  width: 100%;
-  background-color: #fff;
 }
 
 input,
@@ -111,6 +115,15 @@ button {
 }
 
 
+
+
+
+
+
+
+
+
+
 /*
 @font-face {
     font-family: 'OpenSansRegular';
@@ -137,6 +150,11 @@ button {
 }
 */
 
+.dark-theme {
+  background-color: rgb(51, 51, 51);
+  color: rgba(255, 255, 255, 0.95);
+}
+
 // Less Variables
 @base-font: "Helvetica Neue",
 Arial;
@@ -156,8 +174,7 @@ Arial;
 
 .gradient (@start, @end) {
   background-image: -moz-linear-gradient(top, @start, @end);
-  background-image: -webkit-gradient(linear, left top, left bottom, from(@start), to(@end));
-  //filter: progid: DXImageTransform.Microsoft.Gradient(startColorStr=@start, endColorStr=@end);
+  background-image: -webkit-gradient(linear, left top, left bottom, from(@start), to(@end)); //filter: progid: DXImageTransform.Microsoft.Gradient(startColorStr=@start, endColorStr=@end);
 }
 
 .border-radius (@radius) {
@@ -178,16 +195,14 @@ a {
   -webkit-user-select: none;
   -khtml-user-select: none;
   -moz-user-select: none;
-  -ms-user-select: none;
-  //  user-select: none;
+  -ms-user-select: none; //  user-select: none;
 }
 
 .enableselect {
   -webkit-user-select: text;
   -khtml-user-select: text;
   -moz-user-select: text;
-  -o-user-select: text;
-  //  user-select: text;
+  -o-user-select: text; //  user-select: text;
 }
 
 // disable everything

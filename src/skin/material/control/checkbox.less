@@ -15,7 +15,7 @@
   //border-bottom: 1px solid rgba(100, 100, 100, 0.1);
   input {
     position: absolute;
-    left: -100px;
+    left: -10000px;
     .order(2);
   }
   .checkbox-control {
@@ -59,10 +59,20 @@
       }
     }
   }
+  &.is-focused {
+    .checkbox-control {
+      background-color: #D6E5E4;
+    }
+  }
+  &.is-focus {
+    .checkbox-control {
+      background-color: #D6E5E4;
+    }
+  }
   &:active {
     .checkbox-control {
       .transition(.1s);
-      background-color: #D6E5E4;
+      background-color: transparent;
     }
   }
 }

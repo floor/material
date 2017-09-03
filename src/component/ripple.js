@@ -1,16 +1,21 @@
 'use strict';
 
 import Component from '../component';
-import animate from 'morpheus';
+import animate from 'material/dist/vendor/morpheus';
+import offset from '../element/offset';
+import css from '../module/css';
+import dom from '../module/dom';
+import create from '../element/create';
+import insert from '../element/insert';
+import style from '../element/style';
 
 /**
  * Module fieldset
  * @module component/
  */
-
-module.exports = {
+export default {
   /**
-   * _showRipple methosd
+   * _showRipple method
    * @param  {string} ripple
    * @param  {string} x
    * @param  {string} y
@@ -19,13 +24,12 @@ module.exports = {
    */
   _showRipple(e) {
     if (!this.size) {
-      this.size = this.offset();
+      this.size = offset(this.wrapper);
     }
 
     if (!this.ripple) {
-      this.ripple = new Component({
-        tag: 'span.ui-ripple'
-      }).insert(this, 'top');
+      this.ripple = create('span', 'material-ripple');
+      insert(this.ripple, this.wrapper, 'top');
     }
 
     var rippleCoord = this._rippleCoord(this.size);
@@ -34,7 +38,7 @@ module.exports = {
     var startLeft = (e.offsetX || this.size.width / 2);
     var startTop = (e.offsetY || this.size.height / 2);
 
-    this.ripple.style({
+    style.set(this.ripple, {
       left: startLeft + 'px',
       top: startTop + 'px',
       width: '5px',
@@ -47,7 +51,7 @@ module.exports = {
     // stop animation if exists
     if (this.animation) { this.animation.stop(); }
 
-    this.animation = animate(this.ripple.element, {
+    this.animation = animate(this.ripple, {
       width: rippleCoord.size,
       height: rippleCoord.size,
       left: rippleCoord.left,
@@ -57,7 +61,7 @@ module.exports = {
       easing: options.equation,
       complete: () => {
         this.rippleActive = false;
-        if (!this.hasClass('is-active'))
+        if (!css.has(this.wrapper, 'is-active'))
           this._hideRipple();
       }
     });
@@ -75,13 +79,13 @@ module.exports = {
       this.animation.stop();
     }
 
-    this.animation = animate(this.ripple.element, {
+    this.animation = animate(this.ripple, {
       opacity: 0,
       duration: '200',
       easing: this.options.equation,
       complete: () => {
         if (this.ripple) {
-          this.ripple.destroy();
+          dom.destroy(this.ripple);
           this.ripple = null;
         }
       }

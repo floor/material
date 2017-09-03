@@ -27,5 +27,4 @@
   return function(fn) {
     loaded ? setTimeout(fn, 0) : fns.push(fn);
   };
-
 });

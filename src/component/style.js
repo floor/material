@@ -11,7 +11,7 @@ import {
   _each
 } from '../module/utils';
 
-module.exports = {
+export default {
 
   /**
    * Returns current coordinates of the element,
@@ -22,15 +22,15 @@ module.exports = {
    */
   offset(prop) {
 
-    var rect = this.element.getBoundingClientRect();
+    var rect = this.wrapper.getBoundingClientRect();
 
     var offs = {
       top: Math.round(rect.top),
       right: Math.round(rect.right),
       bottom: Math.round(rect.bottom),
       left: Math.round(rect.left),
-      width: rect.width ? Math.round(rect.width) : Math.round(this.element.offsWidth),
-      height: rect.height ? Math.round(rect.height) : Math.round(this.element.offsHeight)
+      width: rect.width ? Math.round(rect.width) : Math.round(this.wrapper.offsWidth),
+      height: rect.height ? Math.round(rect.height) : Math.round(this.wrapper.offsHeight)
     };
 
     //fallback to css width and height
@@ -59,11 +59,11 @@ module.exports = {
     var computedStyle;
 
     if (typeof window.getComputedStyle === 'function') { //normal browsers
-      computedStyle = window.getComputedStyle(this.element);
+      computedStyle = window.getComputedStyle(this.wrapper);
     } else if (typeof document.currentStyle !== undefined) { //other browsers
-      computedStyle = this.element.currentStyle;
+      computedStyle = this.wrapper.currentStyle;
     } else {
-      computedStyle = this.element.style;
+      computedStyle = this.wrapper.style;
     }
 
     if (prop) {
@@ -83,19 +83,19 @@ module.exports = {
   style(style) {
     //console.log('sytle', style);
 
-    if (_isIterable(this.element) && _isLiteralObject(style)) {
-      _each(this.element, function(e) {
+    if (_isIterable(this.wrapper) && _isLiteralObject(style)) {
+      _each(this.wrapper, function(e) {
         this.style(e, style);
       });
       return this;
     }
 
-    //get one this.element
+    //get one this.wrapper
     if (typeof style === "string") {
       return this._getComputedStyle(style);
     }
 
-    //get array of this.elements
+    //get array of this.wrappers
     if (_isArray(style)) {
       var css = {};
       for (var i in style) {
@@ -107,7 +107,7 @@ module.exports = {
     if (_isLiteralObject(style)) {
       //set csses
       for (var j in style) {
-        this.element.style[j] = style[j];
+        this.wrapper.style[j] = style[j];
       }
       return style;
     }

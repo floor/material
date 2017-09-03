@@ -1,0 +1,81 @@
+'use strict';
+
+//import Component from './component';
+import merge from './module/merge';
+import insert from './component/insert';
+import css from './module/css';
+// import bind from '../module/bind';
+
+
+var defaults = {
+  prefix: 'material',
+  class: 'separator',
+  tag: 'span'
+};
+
+/**
+ * The item class is used for example as item list
+ *
+ * @class
+ * @extends {Component}
+ * @return {Object} The class instance
+ * @example new Item(object);
+ */
+export default class Separator {
+
+  /**
+   * init
+   * @return {Object} The class options
+   */
+  constructor(options) {
+
+    this.init(options);
+    this.build();
+
+    return this;
+  }
+
+  /**
+   * [init description]
+   * @param  {[type]} options [description]
+   * @return {[type]}         [description]
+   */
+  init(options) {
+    options = options || {};
+    // merge options
+    this.options = merge(defaults, options);
+
+    // define class
+
+
+    // assign modules
+    Object.assign(this, insert);
+
+  }
+
+  /**
+   * Build function for item
+   * @return {Object} This class instance
+   */
+  build(options) {
+    options = options || this.options;
+
+    // define main tag
+
+    this.wrapper = document.createElement(this.options.tag);
+
+    css.add(this.wrapper, this.options.prefix + '-' + this.options.class);
+
+    if (options.type) {
+      css.add(this.wrapper, this.options.class + '-' + options.type);
+    }
+
+    if (this.options.text) {
+      this.wrapper.textContent = this.options.text;
+    }
+
+    if (this.options.container) {
+      this.insert(this.options.container);
+    }
+  }
+};

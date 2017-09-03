@@ -1,8 +1,9 @@
 /**
  * Element options
  */
-module.exports = {
+export default {
   prefix: 'material',
+  class: 'layout',
   tag: 'div',
   settings: {
     list: {

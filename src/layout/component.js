@@ -3,7 +3,7 @@
 import style from '../element/style';
 import css from '../module/css';
 
-module.exports = {
+export default {
 
   /**
    * Instanciate the given object comp
@@ -26,10 +26,7 @@ module.exports = {
 
     this.components.push(component);
 
-    //console.log('component instance', component);
-
     // register component
-
     this._componentRegister(name, component);
 
     //settings
@@ -49,21 +46,18 @@ module.exports = {
    * @param  {component} component [description]
    */
   _componentRegister(name, component) {
-    //console.log('_componentRegister', name, component._name);
+    //console.log('_componentRegister', name, component.class);
     this.components = this.components || [];
     this.components.push(component);
-    var _name = component._name;
+    var className = component.class;
 
     this.controls = this.controls || [];
 
     var controls = this.options.controls;
 
-    //console.log('control', component.name, _name, controls);
-
-    if (controls && controls.indexOf(_name) >= 0) {
+    if (controls && controls.indexOf(className) >= 0) {
       this.controls.push(component);
     }
-
   },
 
   /**
@@ -73,7 +67,7 @@ module.exports = {
   // _initComponentSettings(component) {
   //
   //  var name = component.getName();
-  //  var element = component.element;
+  //  var element = component.wrapper;
   // },
 
   /**
@@ -83,7 +77,7 @@ module.exports = {
   _setComponentStyles(component) {
 
     if (component.options.flex) {
-      css.add(component.element, 'flex-' + component.options.flex);
+      css.add(component.wrapper, 'flex-' + component.options.flex);
     } else {
 
       //console.log('not flex', component.options.name, component.options);
@@ -99,27 +93,26 @@ module.exports = {
 
           size = this.settings.layout.section[component.name].width;
 
-
-
-          style.set(component.element, {
+          style.set(component.wrapper, {
             'width': size + 'px'
           });
         }
       } else {
-        style.set(component.element, {
+        var wrapper = component.wrapper || component.wrapper || null;
+        style.set(wrapper, {
           height: component.options.size + 'px'
         });
       }
     }
 
     if (component.options.hide) {
-      style.set(component.element, {
+      style.set(component.wrapper, {
         display: 'none'
       });
     }
 
     if (component.options.theme) {
-      css.add(component.element, 'theme' + '-' + component.options.theme);
+      css.add(component.wrapper, 'theme' + '-' + component.options.theme);
     }
   },
 
@@ -154,7 +147,7 @@ module.exports = {
   //  var display = 'normalized';
 
   //  var name = component.getName();
-  //  var element = component.element;
+  //  var element = component.wrapper;
 
   //  if (component.options.flex) {
 
@@ -189,6 +182,18 @@ module.exports = {
    */
   _attachComponentEvents(component) {
     var name = component.name || component.options.name;
+
+    if (!component.on) {
+      console.log('missing on', component.class, component.name);
+      return;
+    }
+
+    if (!this.on) {
+      console.log('this missong on', component.class, component.name);
+      return;
+    }
+
+
 
     /**
      *  toggled

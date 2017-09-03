@@ -4,7 +4,7 @@
  * Element location related methods
  * @module component/location
  */
-module.exports = {
+export default {
 
   /**
    * [_initLocation description]
@@ -20,7 +20,7 @@ module.exports = {
       }
     }
 
-    this.element.styles(location);
+    this.wrapper.styles(location);
   },
 
   /**
@@ -31,14 +31,14 @@ module.exports = {
    */
   setLocation(left, top, morph) {
     var opts = this.options;
-    var el = this.element;
+    var el = this.wrapper;
 
-    this.element.left = left || opts.left || el.getCoordinates().x;
-    this.element.top = top || opts.top || el.getCoordinates().y;
+    this.wrapper.left = left || opts.left || el.getCoordinates().x;
+    this.wrapper.top = top || opts.top || el.getCoordinates().y;
 
-    this.element[morph ? 'morph' : 'setStyles']({
-      top: this.element.top,
-      left: this.element.left
+    this.wrapper[morph ? 'morph' : 'setStyles']({
+      top: this.wrapper.top,
+      left: this.wrapper.left
     });
 
     return this;
@@ -114,12 +114,12 @@ module.exports = {
       needed = true;
     }
 
-    if (coordinates.left.toInt() + this.element.getStyle('width').toInt() < 0) {
-      location.left = Number.random(25, 75) - this.element.getStyle('width').toInt();
+    if (coordinates.left.toInt() + this.wrapper.getStyle('width').toInt() < 0) {
+      location.left = Number.random(25, 75) - this.wrapper.getStyle('width').toInt();
       needed = true;
     }
 
-    if (this.element.getStyle('left').toInt() > window.getWidth()) {
+    if (this.wrapper.getStyle('left').toInt() > window.getWidth()) {
       location.left = window.getWidth() - Number.random(25, 75);
       needed = true;
     }

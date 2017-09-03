@@ -4,7 +4,7 @@
  * Element related methods
  * @module component/element
  */
-module.exports = {
+export default {
 
   /**
    * create dom element

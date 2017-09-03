@@ -1,0 +1,544 @@
+'use strict';
+
+import display from './container/display';
+import insert from './element/insert';
+import merge from './module/merge';
+import css from './module/css';
+import bind from './module/bind';
+import moment from 'moment';
+
+import Button from './button';
+
+import Emitter from './module/emitter';
+
+const defaults = {
+  prefix: 'material',
+  class: 'calendar',
+  functions: ['newEvent'],
+  target: '.week-day',
+  days: 21,
+  months: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
+  mode: 'view',
+  range: [8, 18],
+  display: 'three',
+  displays: [{
+    name: 'day',
+    days: 1
+  }, {
+    name: 'work',
+    days: 5
+  }, {
+    name: 'one',
+    days: 7
+  }, {
+    name: 'tow',
+    days: 14
+  }, {
+    name: 'four',
+    days: 28
+  }, {
+    name: 'eight',
+    days: 56
+  }],
+  bind: {
+    'wrapper.dblclick': 'onDblClick'
+  }
+};
+
+/**
+ * List view class 
+ * @class
+ * @param {Object} options Default options for view
+ * @extends {View}
+ * @since 0.0.4
+ * @author Jerome Vial
+ *
+ * @type {prime}
+ */
+class Calendar {
+
+  /**
+   * init
+   * @return {Object} The class options
+   */
+  constructor(options) {
+    // boot sequence
+    this.init(options);
+    this.build();
+
+    if (this.options.bind) {
+      //console.log('vind', this.options.bind);
+      this.bind(this.options.bind);
+    }
+
+    return this;
+  }
+
+  /**
+   * [_initView description]
+   * @return  Class instance
+   */
+  init(options) {
+    options = options || {};
+    // init this
+    // 
+    console.log('merge', defaults, options);
+    this.options = merge(defaults, options);
+
+    this.name = this.options.name;
+
+    // assign modules
+    Object.assign(this, Emitter, display, bind);
+
+    // init function
+    this._initFunction(this.options.functions);
+
+    this.date = this.options.date || new Date();
+
+    this.firstDay = this.getFirstDayOfWeek(this.date);
+
+    this.firstDay.setHours(0);
+    this.firstDay.setMinutes(0);
+    this.firstDay.setSeconds(0);
+
+    return this;
+  }
+
+
+  /**
+   * getMonday
+   * @param  {Date} d
+   * @return {Date}
+   */
+  getFirstDayOfWeek(d) {
+    d = new Date(d);
+    var day = d.getDay();
+    var diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+
+    return new Date(d.setDate(diff));
+  }
+
+  /**
+   * [_initFunction description]
+   * @param  {[type]} functions [description]
+   * @return {[type]}           [description]
+   */
+  _initFunction(functions) {
+
+    for (var i = 0; i < functions.length; i++) {
+      var name = functions[i];
+      if (this.options[name]) {
+        this[name] = this.options[name];
+      }
+    }
+  }
+
+  /**
+   * [_initList description]
+   * @param  {Object} options this class options
+   * @return {Object} The class instance  
+   */
+  build() {
+
+    // define main tag
+    var tag = this.options.tag || 'div';
+
+    this.wrapper = document.createElement(tag);
+    css.add(this.wrapper, this.options.prefix + '-' + this.options.class);
+
+    if (this.options.container) {
+      insert(this.wrapper, this.options.container);
+    }
+
+    this.buildWeek();
+
+    return this;
+  }
+
+  buildWeek() {
+    this.buildHeader();
+    this.buildAllDay();
+    this.buildBody();
+
+    this.body.scrollTop = 480;
+
+    return this;
+
+  }
+
+  buildHeader() {
+    this.header = document.createElement('header');
+    insert(this.header, this.wrapper);
+
+    this.buildHeadline();
+
+
+    var element = document.createElement('div');
+    insert(element, this.header);
+    css.add(element, 'header-days');
+
+    var date = new Date(this.firstDay);
+    var days = this.options.days;
+
+    var month = this.options.months[this.firstDay.getMonth()];
+
+    var margin = document.createElement('div');
+    css.add(margin, 'margin');
+    insert(margin, element);
+
+    for (var i = 0; i < days; i++) {
+      //var formatted = date.getDate();
+      //var month = this.options.months[dow.getMonth()];
+
+      var dow = moment(date).format("ddd");
+      var dom = moment(date).format("M/D");
+
+      var cell = document.createElement('div');
+      cell.innerHTML = '<div class="first">' + dow + '</div><div class="second">' + dom + '</div>';
+      css.add(cell, 'date');
+      insert(cell, element);
+
+      date.setDate(date.getDate() + 1);
+    }
+  }
+
+  buildHeadline() {
+    this.headline = document.createElement('div');
+    css.add(this.headline, this.options.class + '-headline');
+    insert(this.headline, this.header);
+
+
+    var week_number = moment(this.firstDay).isoWeek();
+    var year = this.firstDay.getFullYear();
+    var month = this.options.months[this.firstDay.getMonth()];
+
+    this.week_id = year.toString() + week_number.toString();
+
+    var monthIndex = document.createElement('div');
+    insert(monthIndex, this.headline);
+    css.add(monthIndex, 'month-year');
+    monthIndex.innerHTML = '<b>' + month + '</b> ' + year;
+
+    // var weekIndex = document.createElement('div');
+    // insert(weekIndex, this.headline);
+    // css.add(weekIndex, 'week-number');
+    // weekIndex.innerHTML = '<b>semaine</b> ' + week_number;
+
+    this.buildNavigation();
+  }
+
+  buildNavigation() {
+    var navigation = document.createElement('div');
+    insert(navigation, this.headline);
+    css.add(navigation, this.options.prefix + '-toolbar');
+
+    var back = new Button({
+      icon: 'mdi-arrow-back',
+      label: null
+    }).on('press', () => {
+      this.back();
+    }).insert(navigation);
+
+    css.add(back.wrapper, 'compact');
+
+    var today = new Button({
+      style: 'dense',
+      label: 'today'
+    }).on('press', () => {
+      this.goto();
+    }).insert(navigation);
+
+    css.add(today.wrapper, 'compact');
+
+    var next = new Button({
+      icon: 'mdi-arrow-forward',
+      label: null
+    }).on('press', () => {
+      this.next();
+    }).insert(navigation);
+
+    css.add(next.wrapper, 'compact');
+  }
+
+  /**
+   * [_initAllDay description]
+   * @param  {[type]} head [description]
+   * @return {[type]}      [description]
+   */
+  buildAllDay() {
+    var allday = document.createElement('div');
+    insert(allday, this.header);
+    css.add(allday, 'allday');
+
+    var dow = new Date(this.firstDay);
+    var days = this.options.days;
+
+    var label = document.createElement('label');
+    label.innerHTML = 'all-day';
+    css.add(label, 'label');
+    insert(label, allday);
+
+    for (var i = 0; i < days; i++) {
+
+      var day = document.createElement('div');
+      day.setAttribute('data-date', this.dateToString(dow));
+      css.add(day, 'date');
+      insert(day, allday);
+
+      dow.setDate(dow.getDate() + 1);
+    }
+  }
+
+
+  /**
+   * [_initBody description]
+   * @param  {[type]} content [description]
+   * @return {[type]}         [description]
+   */
+  buildBody() {
+    var cells = [];
+
+
+    var firstDay = this.firstDay;
+
+    var days = this.options.days;
+
+    this.body = document.createElement('div');
+    css.add(this.body, this.options.class + '-body');
+    insert(this.body, this.wrapper);
+
+    var hours = document.createElement('div');
+    css.add(hours, 'hours');
+    insert(hours, this.body);
+
+    this.initCanvas();
+
+    for (var i = 0; i < 24; i++) {
+
+      var hour = document.createElement('div');
+      css.add(hour, 'hour');
+      insert(hour, hours);
+
+      hour.innerHTML = i + ':00';
+    }
+
+    var sday = new Date(firstDay);
+    for (var k = 0; k < days; k++) {
+      //console.log('days', k);
+      var day = document.createElement('div');
+      css.add(day, 'week-day');
+      day.setAttribute('data-date', this.dateToString(sday));
+      insert(day, this.body);
+
+      sday.setDate(sday.getDate() + 1);
+    }
+
+    this.cells = cells;
+
+    //content.scrollTop = 460;
+  }
+
+  /**
+   * _dateToString
+   * @param  {Date} d
+   * @return {Date}
+   */
+  dateToString(d) {
+    var day = d.getDate();
+    var month = d.getMonth() + 1;
+    var year = d.getFullYear();
+
+    if (day < 10) {
+      day = '0' + day;
+    }
+    if (month < 10) {
+      month = '0' + month;
+    }
+
+    var date = year + '-' + month + '-' + day;
+
+    return date;
+  }
+
+  /**
+   * [_initCanvas description]
+   * @param  {[type]} content [description]
+   * @return {[type]}         [description]
+   */
+  initCanvas() {
+    var canvas = document.createElement('canvas');
+    css.add(canvas, 'canvas');
+    canvas.width = '2000';
+    canvas.height = '1440';
+    insert(canvas, this.body);
+
+    var ctx = canvas.getContext('2d');
+    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = '#dedbdb';
+
+    var offset = 6;
+
+    for (var j = 0; j <= 24; j++) {
+      ctx.beginPath();
+
+      if (j < this.options.range[0] || j > this.options.range[1]) {
+        ctx.strokeStyle = '#F2F2F2';
+      } else {
+        ctx.strokeStyle = '#D9D9D9';
+      }
+
+      var y = j * 60 + 0.5;
+
+      ctx.moveTo(0, y + 60 + offset);
+      ctx.lineTo(2000, y + 60 + offset);
+      ctx.stroke();
+    }
+  }
+
+  getOptions() {
+    console.log(this.options);
+  }
+
+  /**
+   * [onSelect description]
+   * @param  {[type]} e [description]
+   * @return {[type]}   [description]
+   */
+  onDblClick(e) {
+
+    var self = this;
+    if (e.target && e.target.matches(this.options.target)) {
+      console.log('click', e.target, e);
+      // console.log('offset', e.offsetX, e.offsetY);
+      // console.log('layer', e.layerX, e.layerX);
+      var date = e.target.getAttribute('data-date');
+
+      var d = date.split(/-/);
+
+
+      var h = self.roundTime(e.offsetY / 60);
+
+      //date = new Date(d[0], d[1] - 1, d[2], '15', '00', '00');
+
+      console.log("h ", date, d, h);
+
+      self.newEvent(date);
+
+    }
+
+    if (e.target && e.target.matches('.allday .date')) {
+      console.log('click', e.target, e);
+      // console.log('offset', e.offsetX, e.offsetY);
+      // console.log('layer', e.layerX, e.layerX);
+      var date = e.target.getAttribute('data-date');
+
+      var d = date.split(/-/);
+
+
+      var h = self.roundTime(e.offsetY / 60);
+
+      //date = new Date(d[0], d[1] - 1, d[2], '15', '00', '00');
+
+      console.log("h ", date, d, h);
+
+      self.newEvent(date);
+
+    }
+  }
+
+  roundTime(value) {
+
+    var step = 0.5;
+    var inv = 1.0 / step;
+    return Math.round(value * inv) / inv;
+  }
+
+  /**
+   * Setter
+   * @param {string} prop
+   * @param {string} value
+   */
+  set(prop, value, options) {
+    switch (prop) {
+      case 'week':
+        this.setWeek(value, options);
+        break;
+      default:
+        this.setWeek(value, options);
+    }
+
+    return this;
+  }
+
+  /**
+   * Set list
+   * @param {Array} list List of info object
+   * @return {Object} The class instance
+   */
+  setWeek(data) {
+
+    this.buildWeek(data);
+    return this;
+
+  }
+
+
+  /**
+   * next
+   * @return {void}
+   */
+  next() {
+    this.firstDay.setDate(this.firstDay.getDate() + this.options.days);
+
+    this.wrapper.innerHTML = '';
+
+    this.buildWeek();
+  }
+
+  /**
+   * back
+   * @return {void}
+   */
+  back() {
+    this.firstDay.setDate(this.firstDay.getDate() - this.options.days);
+
+    this.wrapper.innerHTML = '';
+
+    this.buildWeek();
+  }
+
+  /**
+   * [goto description]
+   * @param  {[type]} date [description]
+   * @return {[type]}      [description]
+   */
+  goto(date) {
+    date = date || new Date();
+
+    this.firstDay = this.getFirstDayOfWeek(this.date);
+
+    this.wrapper.innerHTML = '';
+
+    this.buildWeek();
+
+  }
+
+
+  insert(container, context) {
+    insert(this.wrapper, container, context);
+
+    return this;
+  }
+
+
+  newEvent(date) {
+    console.log('new Event', date);
+  }
+
+  empty() {
+    console.log('empty');
+    this.wrapper.innerHTML = '';
+  }
+}
+
+export default Calendar;

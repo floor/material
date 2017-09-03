@@ -4,7 +4,7 @@
  * Element storage related methods
  * @module component/storage
  */
-module.exports = {
+export default {
   /**
    * [store description]
    * @param  {string} key   [description]

@@ -7,8 +7,7 @@
   vertical-align: top;
   .display(flex);
   .flex-direction(column);
-  .flex-wrap(nowrap);
-  //overflow: hidden;
+  .flex-wrap(nowrap); //overflow: hidden;
   //border-bottom: 1px solid rgba(100, 100, 100, 0.1);
   input {
     position: absolute;
@@ -27,13 +26,15 @@
     position: relative;
     cursor: pointer;
     width: 100%;
-    padding: 7px;
+    height: 48px;
     .slider-track {
+      position: absolute;
+      top: 50%;
       z-index: 1;
       cursor: pointer;
       position: relative;
       display: block;
-      height: 4px;
+      height: 2px;
       padding: 0;
       background-color: rgba(34, 31, 31, .26);
       border-radius: 7px;
@@ -42,11 +43,11 @@
     .slider-track-value {
       position: absolute;
       width: 0;
-      top: 7px;
+      top: 50%;
       z-index: 2;
       cursor: pointer;
       display: block;
-      height: 4px;
+      height: 2px;
       padding: 0;
       background-color: #4054B2;
       border-radius: 7px;
@@ -59,7 +60,7 @@
       position: absolute;
       width: 32px;
       height: 32px;
-      top: -37px;
+      top: -17px;
       z-index: 2;
       cursor: pointer;
       margin: auto;
@@ -71,16 +72,16 @@
       z-index: 3;
       cursor: pointer;
       position: absolute;
-      top: 2px;
+      top: 50%;
       left: 0px;
       display: block;
-      height: 14px;
-      width: 14px;
+      height: 12px;
+      width: 12px;
       margin: 0;
+      transform: translateY(-5px);
       border-radius: 50%;
       background-color: white;
-      border: 2px solid rgba(241, 241, 241, 100);
-      //box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24), 0 0 2px 0 rgba(0, 0, 0, 0.12);
+      border: 2px solid rgba(241, 241, 241, 100); //box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24), 0 0 2px 0 rgba(0, 0, 0, 0.12);
       &.notnull {
         background-color: #4054B2;
         border: 2px solid #4054B2;
@@ -99,8 +100,8 @@
         display: block;
       }
       .slider-knob {
-        // height: 18px;
-        // width: 18px;
+        transform: scale(1.4) translateY(-4px);
+        top: 50%;
         background-color: #4054B2;
       }
     }
@@ -119,24 +120,29 @@
       opacity: .5;
     }
     .slider-control {
+      pointer-events: none;
       .order(3);
-      cursor: pointer;
-      width: 48px;
-      height: 48px;
-      padding: 17px 7px;
-      border-radius: 50%;
-      .transition(.3s);
+      cursor: pointer; // width: 48px;
+      // height: 48px;
+      // padding: 17px 7px;
+      //border-radius: 50%;
+      //.transition(.3s);
       &:active {
         background-color: rgba(34, 31, 31, .05);
         .transition(.1s);
       }
       .slider-track {
-        background-color: rgba(34, 31, 31, .1);
-        .slider-knob {
-          background-color: rgba(241, 241, 241, 1);
-          box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.12), 0 0 1px 0 rgba(0, 0, 0, 0.06);
-        }
+        pointer-events: none;
       }
+      .slider-knob {
+        pointer-events: none;
+      } // .slider-track {
+      //   background-color: rgba(34, 31, 31, .1);
+      //   .slider-knob {
+      //     background-color: rgba(241, 241, 241, 1);
+      //     box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.12), 0 0 1px 0 rgba(0, 0, 0, 0.06);
+      //   }
+      // }
     }
   }
 }

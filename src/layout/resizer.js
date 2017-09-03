@@ -1,8 +1,8 @@
 'use strict';
 
-var Component = require("../component");
-var element = require("../module/element");
-var DragDrop = require("material/dist/vendor/dragdrop");
+import Component from '../component';
+import offset from '../element/offset';
+import DragDrop from 'material/dist/vendor/dragdrop';
 
 var resize = {
 
@@ -85,60 +85,6 @@ var resize = {
     return draggable;
   },
 
-
-  /**
-   * [_onDrag description]
-   */
-  _onDrag(resizer, modifier, component, end) {
-    //self.mask.style('display', 'block');
-    var from = modifier.from;
-    var size = modifier.size;
-    var container = component.container;
-    var last = component.options.last;
-    var style = {};
-    let coord = {};
-
-    let c = {};
-    c[from] = resizer.offset(from);
-    coord[from] = component.offset(from);
-
-    var value;
-
-    if (last) {
-      var csize = element.offset(container, size);
-      value = csize - c[from];
-      style[size] = csize - c[from] + 'px';
-      //console.log('resize', component, style);
-      component.style(style);
-    } else {
-      value = c[from] - coord[from]
-      style[size] = (c[from] - coord[from]) + 'px';
-      component.style(style);
-    }
-
-    // console.log('settings', component.name, size, value, this.options.appname, this.options.name, component.name);
-
-
-
-    if (end) {
-
-      var settings = {
-        key: 'app-' + this.options.appname,
-        value: {},
-        layout: {
-          section: {}
-        }
-      };
-
-      settings.value.layout.section[component.name] = {};
-      settings.value.layout.section[component.name][size] = value;
-
-      this.controller.publish('settings', settings);
-    }
-    //this._updateSize(component, resizer, modifier);
-    this.emit('drag');
-  },
-
   /**
    * [_onDrag description]
    */
@@ -158,24 +104,21 @@ var resize = {
     var value;
 
     if (last) {
-      var csize = element.offset(container, size);
+      var csize = offset(container, size);
       value = csize - c[from];
       style[size] = csize - c[from] + 'px';
       //console.log('resize', component, style);
       component.style(style);
     } else {
-      value = c[from] - coord[from]
+      value = c[from] - coord[from];
       style[size] = (c[from] - coord[from]) + 'px';
       component.style(style);
     }
 
-    // console.log('settings', component.name, size, value, this.options.appname, this.options.name, component.name);
-    var name = this.options
-
     var settings = {};
     settings = {
       key: 'app-' + this.options.appname,
-    }
+    };
 
     settings.value = {
       layout: {
@@ -229,7 +172,7 @@ var resize = {
     // for the last component
     // the resizer is on the left or on the top
     if (component.options.last) {
-      var csize = element.offset(container, size);
+      var csize = offset(container, size);
       style[from] = csize - coord[size] - 3 + 'px';
       resizer.style(style);
     } else {
@@ -241,4 +184,4 @@ var resize = {
   }
 };
 
-module.exports = resize;
+export default resize;

@@ -8,7 +8,7 @@ import dom from '../module/dom';
  * @param  {string} context - Injection context
  * @return {Object} This class intance
  */
-module.exports = {
+export default {
 
   /**
    * [insert description]
@@ -18,7 +18,10 @@ module.exports = {
    * @return {[type]}           [description]
    */
   insert(container, context) {
-    this.insertElement(this.element, container, context);
+
+    var element = this.wrapper;
+
+    this.insertElement(element, container, context);
 
     return this;
   },
@@ -33,8 +36,8 @@ module.exports = {
    * @return {[type]}           [description]
    */
   insertElement(element, container, context) {
-    if (container && container.element) {
-      container = container.element;
+    if (container && container.wrapper) {
+      container = container.wrapper;
     }
 
     this.container = container;
@@ -66,6 +69,7 @@ module.exports = {
     //this.emit('insert');
 
     // insert component element to the dom tree using Dom
+    //console.log('dom', method, element);
     dom[method](container, element);
     //this.emit('injected');
     //
