@@ -2,7 +2,7 @@
 
 /**
  * Module fieldset
- * @module component/
+ * @module attribute
  */
 
 export default {

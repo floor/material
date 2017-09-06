@@ -1,6 +1,5 @@
 'use strict';
 
-//import Component from './component';
 import merge from './module/merge';
 import insert from './component/insert';
 import css from './module/css';
@@ -38,8 +37,8 @@ export default class Image {
 
   /**
    * [init description]
-   * @param  {[type]} options [description]
-   * @return {[type]}         [description]
+   * @param  {?} options [description]
+   * @return {?}         [description]
    */
   init() {
     Object.assign(this, insert);

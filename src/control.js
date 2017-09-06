@@ -44,7 +44,7 @@ export default {
         value = this.getValue();
         break;
       case 'name':
-        value = this.name;
+        value = this.options.name;
         break;
       default:
         return this.getValue();
@@ -59,7 +59,7 @@ export default {
    */
   getValue: function() {
     console.log('getValue', this);
-    return this.component.input.wrapper.value;
+    return this.element.input.value;
   },
 
   /**
@@ -68,7 +68,7 @@ export default {
    */
   setValue: function(value) {
     //console.log('setValue', value, this.component.input);
-    this.component.input.wrapper.value = value;
+    this.element.input.value = value;
     this.emit('change', value);
   },
 
@@ -86,8 +86,8 @@ export default {
 
   /**
    * build checkbox label
-   * @param  {[type]} label [description]
-   * @return {[type]}       [description]
+   * @param  {?} label [description]
+   * @return {?}       [description]
    */
   setLabel(text) {
     //console.log('setLabel', this.options);

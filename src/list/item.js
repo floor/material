@@ -27,10 +27,9 @@ var defaults = {
 };
 
 /**
- * The item class is used for example as item list
+ * The class represents an item ie for list
  *
  * @class
- * @extends {Component}
  * @return {Object} The class instance
  * @example new Item(object);
  */
@@ -50,8 +49,8 @@ export default class Item {
 
   /**
    * [init description]
-   * @param  {[type]} options [description]
-   * @return {[type]}         [description]
+   * @param  {?} options [description]
+   * @return {?}         [description]
    */
   init(options) {
 

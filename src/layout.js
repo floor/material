@@ -7,20 +7,16 @@ import insert from './component/insert';
 import css from './module/css';
 import merge from './module/merge';
 import bind from './module/bind';
-
 import style from './element/style';
 
-//import container from './layout/container';
-import component from './layout/component';
-import resizer from './layout/resizer';
-
 import defaults from './layout/options';
+import component from './layout/component';
 
 /**
  * The Layout view
  * @class
  */
-export default class Layout {
+class Layout {
 
   /**
    * The init method of the Button class
@@ -49,7 +45,7 @@ export default class Layout {
   init(options) {
     options = options || this.options;
 
-    Object.assign(this, emitter, component, resizer, insert);
+    Object.assign(this, emitter, component, insert);
 
 
     this.wrapper = this.options.wrapper;
@@ -129,10 +125,10 @@ export default class Layout {
 
   /**
    * [renderSection description]
-   * @param  {[type]} component [description]
-   * @param  {[type]} type    [description]
-   * @param  {[type]} level   [description]
-   * @return {[type]}         [description]
+   * @param  {?} component [description]
+   * @param  {?} type    [description]
+   * @param { ?} level   [description]
+   * @return {?}         [description]
    */
   _renderComponents(component, level) {
     var components = component.components;
@@ -205,7 +201,7 @@ export default class Layout {
 
   /**
    * [_resize description]
-   * @return {[type]} [description]
+   * @return {?} [description]
    */
   _resize() {
     console.log('resize');
@@ -221,9 +217,9 @@ export default class Layout {
 
   /**
    * [_initStyles description]
-   * @param  {[type]} element [description]
-   * @param  {[type]} styles  [description]
-   * @return {[type]}         [description]
+   * @param  {?} element [description]
+   * @param  {?} styles  [description]
+   * @return {?}         [description]
    */
   _initStyles(element, styles) {
     if (!styles) return;
@@ -250,3 +246,5 @@ export default class Layout {
     }
   }
 }
+
+export default Layout;

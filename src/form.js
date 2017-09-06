@@ -3,7 +3,7 @@
 import merge from './module/merge';
 import insert from './component/insert';
 import css from './module/css';
-import Emitter from './module/emitter';
+import emitter from './module/emitter';
 import bind from './module/bind';
 import controller from './component/controller';
 
@@ -21,7 +21,6 @@ const defaults = {
  * Form class
  *
  * @class
- * @extends {Component}
  * @return {Class} This class instance
  */
 class Form {
@@ -55,7 +54,7 @@ class Form {
 
     // implement module
     Object.assign(this,
-      Emitter,
+      emitter,
       bind,
       insert
     );
@@ -93,8 +92,8 @@ class Form {
 
   /**
    * Instanciate layout
-   * @param  {[type]} options [description]
-   * @return {[type]}         [description]
+   * @param  {?} options [description]
+   * @return {?}         [description]
    */
   _initLayout(options) {
     // complete layout options
@@ -110,8 +109,8 @@ class Form {
 
   /**
    * [_initControls description]
-   * @param  {[type]} controls [description]
-   * @return {[type]}          [description]
+   * @param  {?} controls [description]
+   * @return {?}          [description]
    */
   _initControls(controls) {
     if (!controls) return;
@@ -141,9 +140,9 @@ class Form {
 
   /**
    * [initControl description]
-   * @param  {[type]} key     [description]
-   * @param  {[type]} section [description]
-   * @return {[type]}         [description]
+   * @param  {?} key     [description]
+   * @param  {?} section [description]
+   * @return {?}         [description]
    */
   initControl(key, section) {
     var name = key.name || 'undefined';
@@ -193,10 +192,10 @@ class Form {
 
   /**
    * [parseInfo description]
-   * @param  {[type]} obj  [description]
-   * @param  {[type]} name [description]
-   * @param  {[type]} i    [description]
-   * @return {[type]}      [description]
+   * @param  {?} obj  [description]
+   * @param  {?} name [description]
+   * @param  {?} i    [description]
+   * @return {?}      [description]
    */
   parseInfo(obj, name, i) {
     //console.log('parseInfo', obj, name, 'level ' + i);

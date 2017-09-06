@@ -25,11 +25,12 @@ var controller = {
     return this;
   },
 
+
   /**
-   * [sunscribe description]
-   * @param  {[type]}   topic    [description]
-   * @param  {Function} callback [description]
-   * @return {[type]}            [description]
+   * This method subscribes to a specific topic
+   * @param  {string}   topic
+   * @param  {Function} callback
+   * @return {boolean} true
    */
   subscribe(topic, callback) {
     this._topics = this._topics || {};
@@ -44,10 +45,10 @@ var controller = {
   },
 
   /**
-   * [unsunscribe description]
-   * @param  {[type]}   topic    [description]
-   * @param  {Function} callback [description]
-   * @return {[type]}            [description]
+   * This method unsubscribes to a specific topic
+   * @param  {string}   topic
+   * @param  {Function} callback
+   * @return {boolean} true
    */
   unsunscribe(topic, callback) {
     this._topics = this._topics || {};
@@ -68,7 +69,7 @@ var controller = {
 
   /**
    * [publish description]
-   * @return {[type]} [description]
+   * @return {?} [description]
    */
   publish() {
     this._topics = this._topics || {};
@@ -84,43 +85,7 @@ var controller = {
       this._topics[topic][i].apply(undefined, args);
     }
     return true;
-  },
-
-
-  // setSettings(key, value) {
-  //   var text = Cookies.get(key);
-
-  //   var current = {};
-
-  //   if (text) {
-  //     current = JSON.parse(text);
-  //   }
-
-  //   console.log('settings value', current, value);
-  //   //settings = [settings, value].reduce(Object.assign, {});
-  //   var settings = merge(current, value);
-
-  //   console.log('settings ' + key, settings);
-
-  //   Cookies.set(key, JSON.stringify(settings));
-
-  // }
-
-  // getSettings(key) {
-  //   var json = Cookies.get(key);
-
-  //   if (!json) {
-  //     return null;
-  //   }
-  //   var value = JSON.parse(json);
-
-  //   console.log('settings' + key, value);
-
-  //   return value;
-
-  // }
-
-
+  }
 };
 
 export default controller;

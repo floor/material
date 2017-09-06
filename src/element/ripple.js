@@ -1,4 +1,4 @@
-import animate from 'material/dist/vendor/morpheus';
+//import animate from 'material/dist/vendor/morpheus';
 import offset from './offset';
 import css from '../module/css';
 import insert from './insert';
@@ -22,6 +22,7 @@ const DEFAULT = {
  * @return {void}
  */
 function show(element, e) {
+  console.log('shoe');
   this.size = offset(element);
 
   if (!this.ripple) {
@@ -45,25 +46,38 @@ function show(element, e) {
     opacity: 1
   });
 
+  this.ripple.style.left = startLeft + 'px';
+  this.ripple.style.top = startTop + 'px';
+  this.ripple.style.height = '5px';
+  this.ripple.style.width = '5px';
+  this.ripple.style.opacity = '.2';
+
   this.rippleActive = true;
 
   // stop animation if exists
   if (this.animation) { this.animation.stop(); }
 
-  this.animation = animate(ripple, {
-    width: rippleCoord.size,
-    height: rippleCoord.size,
-    left: rippleCoord.left,
-    top: rippleCoord.top,
-    opacity: 0.2,
-    duration: options.duration,
-    easing: options.equation,
-    complete: () => {
-      this.rippleActive = false;
-      if (!this.hasClass('is-active'))
-        this.hide();
-    }
-  });
+  this.ripple.style.left = rippleCoord.left;
+  this.ripple.style.top = rippleCoord.top;
+  this.ripple.style.width = rippleCoord.size;
+  this.ripple.style.height = rippleCoord.size;
+  this.ripple.style.left = rippleCoord.left;
+
+  this.ripple.style.opacity = '.2';
+  // this.animation = animate(ripple, {
+  //   width: rippleCoord.size,
+  //   height: rippleCoord.size,
+  //   left: rippleCoord.left,
+  //   top: rippleCoord.top,
+  //   opacity: 0.2,
+  //   duration: options.duration,
+  //   easing: options.equation,
+  //   complete: () => {
+  //     this.rippleActive = false;
+  //     if (!this.hasClass('is-active'))
+  //       this.hide();
+  //   }
+  // });
 }
 
 /**

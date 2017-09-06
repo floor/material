@@ -3,6 +3,7 @@
 import init from './component/init';
 import events from './component/events';
 import classify from './component/classify';
+import ripple from './component/ripple';
 
 import emitter from './module/emitter';
 import create from './element/create';
@@ -12,22 +13,15 @@ import insert from './element/insert';
 import bind from './module/bind';
 // modules
 import control from './control';
-import ripple from './component/ripple';
 
-var defaults = {
+const defaults = {
   prefix: 'material',
   class: 'button',
   tag: 'button',
-  ripple: {
-    duration: '500',
-    equation: 'ease-out'
-  },
-  modules: [control, ripple, events, emitter, bind],
+  modules: [events, control, emitter, bind, ripple],
+  build: [],
   bind: {
-    'wrapper.click': 'click',
-    'wrapper.mousedown': ['_onMouseDown', '_showRipple'],
-    'wrapper.mouseup': ['_onMouseUp', '_hideRipple'],
-    'wrapper.mouseout': ['_onMouseOut', '_hideRipple']
+    'wrapper.click': 'click'
   }
 };
 
@@ -55,27 +49,23 @@ class Button {
   constructor(options) {
     this.options = merge(defaults, options);
 
-    init(this);
-    this.build();
-
-    if (this.options.bind) {
-      this.bind(this.options.bind);
-    }
+    this.init();
+    this.emit('ready');
 
     return this;
   }
 
   /**
    * [init description]
-   * @param  {[type]} options [description]
-   * @return {[type]}         [description]
+   * @param  {?} options [description]
+   * @return {?}         [description]
    */
   init() {
-
-    this.name = this.options.name;
-    this.label = this.options.text || this.options.label;
-
-    return this;
+    init(this);
+    this.build();
+    this.setup();
+    this.bind(this.options.bind);
+    this.emit('init');
   }
 
   /**
@@ -83,25 +73,12 @@ class Button {
    * @override
    * @return {void}
    */
-  build(options) {
-    options = options || this.options;
+  build() {
 
     var tag = this.options.tag || 'div';
     this.wrapper = create(tag, this.options.prefix + '-' + this.options.class);
 
-
     classify(this.wrapper, this.options);
-
-
-
-    if (this.options.name) {
-      //console.log('name', this.options.name);
-      this.wrapper.dataset.name = this.options.name;
-    }
-
-    if (this.label) {
-      this.wrapper.title = this.label;
-    }
 
     if (this.options.icon) {
       this.buildIcon(this.options.type, this.options.icon || this.options.name);
@@ -111,6 +88,33 @@ class Button {
 
     if (this.options.type) {
       css.add(this.wrapper, 'type-' + this.options.type);
+    }
+
+    // insert if container options is given
+    if (this.options.container) {
+      insert(this.wrapper, this.options.container);
+      this.emit('injected', this.wrapper);
+    }
+
+    this.emit('built', this.wrapper);
+
+    return this;
+  }
+
+  insert(container, context) {
+    insert(this.wrapper, container, context);
+
+    return this;
+  }
+
+  setup() {
+    if (this.options.name) {
+      //console.log('name', this.options.name);
+      this.wrapper.dataset.name = this.options.name;
+    }
+
+    if (this.label) {
+      this.wrapper.title = this.label;
     }
 
     if (this.options.style) {
@@ -124,22 +128,15 @@ class Button {
       this.wrapper.innerHTML = this.options.content;
     }
 
-    // insert if container options is given
-    if (this.options.container) {
-      //console.log(this.name, opts.container);
-      insert(this.wrapper, this.options.container);
-    }
 
-    return this;
   }
 
   /**
    * [initLabel description]
-   * @return {[type]} [description]
+   * @return {?} [description]
    */
   buildLabel(label) {
     label = label || this.label;
-
     if (this.options.label === null) return;
 
     let text = this.options.label || this.options.text;
@@ -166,13 +163,9 @@ class Button {
     }
 
     var tag = 'i';
-    this.icon = document.createElement(tag);
-
-    insert(this.icon, this.wrapper);
-
-    css.add(this.icon, this.options.class + '-icon');
-
+    this.icon = create(tag, this.options.class + '-icon');
     css.add(this.wrapper, 'icon-text');
+    insert(this.icon, this.wrapper);
 
     if (name)
       css.add(this.icon, name);
@@ -188,7 +181,7 @@ class Button {
 
     switch (prop) {
       case 'disabled':
-        this.setDisabled(value);
+        this.disable(value);
         break;
       case 'value':
         this.setValue(value);
@@ -203,14 +196,28 @@ class Button {
     return this;
   }
 
-  setDisabled(value) {
-    this.disabled = value;
+  /**
+   * [disable description]
+   * @param  {?} boolean [description]
+   * @return {?}         [description]
+   */
+  disable() {
+    this.disabled = true;
+    css.add(this.wrapper, 'is-disabled');
 
-    if (this.disabled) {
-      css.add(this.wrapper, 'is-disabled');
-    } else {
-      css.remove(this.wrapper, 'is-disabled');
-    }
+    return this;
+  }
+
+  /**
+   * [disable description]
+   * @param  {?} boolean [description]
+   * @return {?}         [description]
+   */
+  enable() {
+    this.disabled = false;
+    css.remove(this.wrapper, 'is-disabled');
+
+    return this;
   }
 
   /**
@@ -223,14 +230,7 @@ class Button {
 
     if (this.state === 'disabled') return;
 
-    console.log('emit press', e);
     this.emit('press', e);
-
-    return this;
-  }
-
-  insert(container, context) {
-    insert(this.wrapper, container, context);
 
     return this;
   }
@@ -247,39 +247,6 @@ class Button {
     if (this.options.upload) return;
 
     this.press(e);
-  }
-
-  // /**
-  //  * _onMouseDown description
-  //  * @param  {Event} e The related event
-  //  */
-  // _onMouseDown(e) {
-  //   //console.log('_onMouseDown');
-  //   e.preventDefault();
-  //   e.stopPropagation();
-  //   css.add(this.wrapper, 'is-active');
-  // }
-
-  /**
-   * _onMouseDown description
-   * @param  {Event} e The related event
-   */
-  _onMouseUp(e) {
-    //console.log('_onMouseUp');
-    // e.preventDefault();
-    // e.stopPropagation();
-
-    css.remove(this.wrapper, 'is-active');
-  }
-
-  /**
-   * _onMouseDown description
-   * @param  {Event} e The related event
-   */
-  _onMouseOut(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    css.remove(this.wrapper, 'is-active');
   }
 }
 

@@ -1,11 +1,8 @@
 'use strict';
 
-//import Component from './component';
 import merge from './module/merge';
 import insert from './component/insert';
 import css from './module/css';
-// import bind from '../module/bind';
-
 
 var defaults = {
   prefix: 'material',
@@ -37,20 +34,15 @@ export default class Separator {
 
   /**
    * [init description]
-   * @param  {[type]} options [description]
-   * @return {[type]}         [description]
+   * @param  {?} options [description]
+   * @return {?}         [description]
    */
   init(options) {
     options = options || {};
     // merge options
     this.options = merge(defaults, options);
 
-    // define class
-
-
-    // assign modules
     Object.assign(this, insert);
-
   }
 
   /**

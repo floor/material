@@ -12,9 +12,6 @@ import bind from './module/bind';
 import merge from './module/merge';
 import emitter from './module/emitter';
 
-
-
-// options
 const defaults = {
   prefix: 'material',
   class: 'component',
@@ -25,11 +22,21 @@ const defaults = {
 /**
  * Base class for all ui components
  * @class
- * @namespace Material
  * @param {Object} options - The component options
  * @return {Object} The class Instance
  */
-export default class Component {
+
+
+/**
+ * Class representing a UI Container. Can add components.
+ *
+ * @extends Component
+ * @return {parent} The class instance
+ * @example new Container({
+ *   container: document.body
+ * });
+ */
+class Component {
 
   /**
    * Constructor
@@ -45,6 +52,8 @@ export default class Component {
     if (this.options.bind) {
       this.bind(this.options.bind);
     }
+
+    this.emit('ready');
 
     return this;
   }
@@ -64,6 +73,10 @@ export default class Component {
       this.insert(options.container);
     }
 
+    this.emit('built', this.wrapper);
+
     return this;
   }
 }
+
+export default Component;

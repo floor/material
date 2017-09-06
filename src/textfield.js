@@ -1,10 +1,10 @@
 'use strict';
 
-import Emitter from './module/emitter';
-import controller from './component/controller';
-
-import element from './component/element';
+import init from './component/init';
+import create from './element/create';
 import insert from './component/insert';
+
+import emitter from './module/emitter';
 import css from './module/css';
 import merge from './module/merge';
 import bind from './module/bind';
@@ -14,6 +14,7 @@ var defaults = {
   class: 'textfield',
   type: 'control',
   tag: 'div',
+  modules: [emitter, bind, insert],
   bind: {
     //'change': '_onChange',
     'input.focus': '_onInputFocus',
@@ -31,7 +32,7 @@ var defaults = {
  * @class
  * @extends {Control}
  */
-export default class Field {
+export default class Textfield {
 
   /**
    * Constructor
@@ -39,10 +40,7 @@ export default class Field {
    * @return {Object} Class instance 
    */
   constructor(options) {
-    //super();
-
-    //this.emit('init');
-    //this.options = merge(defaults, options);
+    this.options = merge(defaults, options);
 
     this.init(options);
     this.build();
@@ -61,18 +59,9 @@ export default class Field {
    */
   init(options) {
 
+    init(this);
     // init options and merge options to defaults
-    options = options || {};
-    this.options = merge(defaults, options);
 
-
-
-    // implement modules
-    Object.assign(this, Emitter, bind, insert);
-
-    this.document = window.document;
-
-    this.controller = controller;
     this.value = this.options.value;
 
     return this;
@@ -82,30 +71,65 @@ export default class Field {
    * [build description]
    * @return {Object} The class instance
    */
-  build() {
+  build(options) {
+    options = options || this.options;
     //create a new div as input element
     var tag = this.options.tag || 'div';
-    this.wrapper = element.createElement(tag);
-    css.add(this.wrapper, this.options.prefix + '-' + this.options.class);
+    this.wrapper = create(tag, options.prefix + '-' + options.class);
 
-
-    this._initLabel();
-    this._initInput();
-    this._initUnderline();
-
-    //this._initControls();
-
-
+    this.buildLabel();
+    this.buildInput();
+    this.buildUnderline();
 
     if (this.disabled) {
       css.add(this.wrapper, 'is-disabled');
     }
 
     // insert if container options is given
-    if (this.options.container) {
+    if (options.container) {
       //console.log(this.name, opts.container);
-      this.insert(this.options.container);
+      this.insert(options.container);
     }
+  }
+
+  buildLabel() {
+    this.label = create('label', this.options.class + '-label');
+    this.insertElement(this.label, this.wrapper);
+
+    if (this.options.label !== false) {
+      this.setLabel();
+    }
+  }
+
+  /**
+   * [_initInput description]
+   * @return {Object} The class instance
+   */
+  buildInput() {
+
+    this.input = create('input', this.options.class + '-input');
+    this.input.setAttribute('type', 'text');
+    this.insertElement(this.input, this.wrapper);
+
+    if (!this.options.value) {
+      css.add(this.wrapper, 'is-empty');
+    }
+
+    if (this.readonly) {
+      this.input.setAttribute('readonly', 'readonly');
+      this.input.setAttribute('tabindex', '-1');
+    }
+
+    return this.input;
+  }
+
+  /**
+   * _initUnderline
+   * @return {Object} The class instance
+   */
+  buildUnderline() {
+    this.underline = create('span', this.options.class + '-underline');
+    this.insertElement(this.underline, this.wrapper);
   }
 
   /**
@@ -130,7 +154,7 @@ export default class Field {
   }
 
   /**
-   * [_initLabel description]
+   * [buildLabel description]
    * @return {Object} The class instance
    */
   setLabel(label) {
@@ -214,50 +238,6 @@ export default class Field {
     this.emit('state', state);
 
     return this;
-  }
-
-  _initLabel() {
-    this.label = element.createElement('label');
-    css.add(this.label, this.options.class + '-label');
-    this.insertElement(this.label, this.wrapper);
-
-    if (this.options.label !== false) {
-      this.setLabel();
-    }
-  }
-
-  /**
-   * [_initInput description]
-   * @return {Object} The class instance
-   */
-  _initInput() {
-
-    this.input = element.createElement('input');
-    this.input.setAttribute('type', 'text');
-    css.add(this.input, this.options.class + '-input');
-
-    this.insertElement(this.input, this.wrapper);
-
-    if (!this.options.value) {
-      css.add(this.wrapper, 'is-empty');
-    }
-
-    if (this.readonly) {
-      this.input.setAttribute('readonly', 'readonly');
-      this.input.setAttribute('tabindex', '-1');
-    }
-
-    return this.input;
-  }
-
-  /**
-   * _initUnderline
-   * @return {Object} The class instance
-   */
-  _initUnderline() {
-    this.underline = element.createElement('span');
-    css.add(this.underline, this.options.class + '-underline');
-    this.insertElement(this.underline, this.wrapper);
   }
 
   /**

@@ -2,7 +2,7 @@
 
 /**
  * Element insertion related methods
- * @module module/insertion
+ * @module module/dom
  */
 
 /**

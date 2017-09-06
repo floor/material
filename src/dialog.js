@@ -1,20 +1,16 @@
 'use strict';
 
-import Layout from './layout';
-import Text from './text';
-import Button from './button';
+// dialog related modules
 import merge from './module/merge';
 import events from './component/events';
-import Emitter from './module/emitter';
+import emitter from './module/emitter';
 import controller from './component/controller';
 import bind from './module/bind';
 import insert from './component/insert';
-//import Element from './element/element';
-import build from './element/build';
-import css from './module/css';
 import event from './element/event.js';
-// element related modules
+import css from './module/css';
 
+import Layout from './layout';
 
 let defaults = {
   prefix: 'material',
@@ -55,21 +51,12 @@ class Dialog {
     options = options || {};
     this.options = merge(defaults, options);
 
-
-    this.name = this.options.name;
-    this.value = this.options.value;
-    this.checked = this.options.checked;
-    this.disabled = this.options.disabled;
-
     // implement modules
-    Object.assign(this, events, Emitter, bind, insert);
+    Object.assign(this, events, emitter, bind, insert);
 
     this.controller = controller;
 
-
-
     return this;
-
   }
 
   /**
@@ -95,14 +82,11 @@ class Dialog {
     this.options.layout.wrapper = this.surface;
     this.layout = new Layout(this.options.layout);
 
-
     event.add(this.surface, 'click', function(ev) {
       ev.stopPropagation();
     });
 
-
     // this.wrapper = element.createElement(tag);
-
   }
 
   close() {

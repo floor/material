@@ -2,6 +2,7 @@
 
 //import control from '../control';
 import init from './component/init';
+import control from './component/control';
 import merge from './module/merge';
 import build from './element/build';
 import emitter from './module/emitter';
@@ -9,8 +10,6 @@ import insert from './component/insert';
 import bind from './module/bind';
 import css from './module/css';
 import classify from './component/classify';
-
-import Component from './component';
 
 let defaults = {
   prefix: 'material',
@@ -20,28 +19,24 @@ let defaults = {
   checked: false,
   error: false,
   value: false,
-  modules: [emitter, bind, insert],
-  build: ['wrapper', 'div', 'material-switch', {},
-    [
-      ['input', 'input', 'switch-input', { type: 'checkbox' }],
-      ['control', 'span', 'switch-control', {},
-        [
-          ['track', 'span', 'switch-track', {},
-            [
-              ['knob', 'span', 'switch-knob', {}]
-            ]
-          ]
-        ]
-      ],
-      ['label', 'label', 'switch-label'],
-    ]
+  disabled: false,
+  modules: [emitter, control, bind, insert],
+  build: ['$wrapper.material-switch', {},
+    ['input$input$switch-input', { type: 'checkbox' }],
+    ['span$control.switch-control', {},
+      ['span$track.switch-track', {},
+        ['span$knob.switch-knob', {}]
+      ]
+    ],
+    ['label$label.switch-label']
   ],
   bind: {
-    'element.control.click': 'toggle',
-    //'label.click': 'toggle',
+    'element.control.click': ['toggle', 'focus'],
+    'element.label.click': ['toggle', 'focus'],
     // for accessibility purpose
-    'element.input.focus': '_onInputFocus',
-    'element.input.blur': '_onInputBlur'
+    'element.input.click': 'toggle',
+    'element.input.focus': 'focus',
+    'element.input.blur': 'blur'
   }
 };
 
@@ -55,7 +50,7 @@ class Switch {
   /**
    * Constructor
    * @param  {Object} options
-- Component options
+  - Component options
    * @return {Object} Class instance 
    */
   constructor(options) {
@@ -64,9 +59,8 @@ class Switch {
     this.init(this);
     this.build(this.options);
 
-    if (this.options.bind) {
+    if (this.options.bind)
       this.bind(this.options.bind);
-    }
 
     return this;
   }
@@ -99,16 +93,8 @@ class Switch {
 
     classify(this.wrapper, options);
 
-    console.log('wrapper', this.wrapper);
-
-    // var tag = this.options.tag || 'div';
-    // this.wrapper = create(tag, this.options.prefix + '-' + this.options.class);
-
-
     if (options.disabled) {
-      this.element.input.setAttribute('disabled', 'disabled');
-      this.disabled = true;
-      css.add(this.wrapper, 'is-disabled');
+      this.disable();
     }
 
     if (this.value) {
@@ -130,11 +116,6 @@ class Switch {
     }
   }
 
-
-  _onInputFocus(e) {
-
-  }
-
   /**
    * Setter
    * @param {string} prop
@@ -147,12 +128,13 @@ class Switch {
       case 'value':
         this.setValue(value);
         break;
-      case 'state':
-        if (value === 'enabled') {
-          this.enable();
-        } else if (value === 'disabled') {
+      case 'disabled':
+        if (value === true) {
           this.disable();
+        } else if (value === false) {
+          this.enable();
         }
+        break;
       default:
         this.setValue(prop);
     }
@@ -169,7 +151,7 @@ class Switch {
    * set switch value
    * @param {boolean} value [description]
    */
-  getValue(value) {
+  getValue() {
     return this.value;
   }
 
@@ -190,7 +172,7 @@ class Switch {
    * @return {Object} The class instance
    */
   toggle() {
-    console.log('toggle');
+    if (this.disabled) return this;
 
     if (this.value) {
       this.unCheck(true);
@@ -206,9 +188,8 @@ class Switch {
    * setTrue
    */
   check() {
-    if (this.disabled) {
-      return this;
-    }
+    if (this.disabled) return this;
+
     this.value = true;
     css.add(this.wrapper, 'is-checked');
     this.element.input.checked = true;
@@ -221,9 +202,7 @@ class Switch {
    * setFlas
    */
   unCheck() {
-    if (this.disabled) {
-      return this;
-    }
+    if (this.disabled) return this;
 
     this.value = false;
     css.remove(this.wrapper, 'is-checked');
@@ -231,18 +210,6 @@ class Switch {
     this.emit('change', this.value);
 
     return this;
-  }
-  disable() {
-
-    this.input.setAttribute('disabled', 'disabled');
-    css.add(this.wrapper, 'is-disabled');
-    this.disabled = true;
-  }
-
-  enable() {
-    this.element.input.setAttribute('disabled', null);
-    css.remove(this.wrapper, 'is-disabled');
-    this.disabled = false;
   }
 }
 

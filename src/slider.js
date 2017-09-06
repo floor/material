@@ -1,18 +1,18 @@
 'use strict';
 
-//import control from '../control';
-import Component from './component';
-import DragDrop from 'material/dist/vendor/dragdrop';
-import Emitter from './module/emitter';
+import init from './component/init';
+import build from './element/build';
 import events from './component/events';
 import insert from './element/insert';
 import offset from './element/offset';
+import classify from './component/classify';
 //import control from './control';
 import merge from './module/merge';
 import bind from './module/bind';
-import create from './element/create';
 import css from './module/css';
+import emitter from './module/emitter';
 
+import icon from './skin/material/svg/pin.svg';
 
 let defaults = {
   prefix: 'material',
@@ -24,25 +24,20 @@ let defaults = {
   value: false,
   range: [0, 100],
   step: 5,
-  components: [{
-    tag: 'label.slider-label'
-  }, {
-    tag: 'input',
-    props: {
-      type: 'hidden'
-    }
-  }, {
-    ident: 'control',
-    tag: 'span.slider-control'
-  }],
-  // bind: {
-  //  'control.click': 'toggle',
-  //  'label.click': 'toggle',
-  //  // for accessibility purpose
-  //  //'input.click': 'toggle',
-  //  'input.focus': '_onInputFocus',
-  //  'input.blur': '_onInputBlur'
-  // }
+  build: ['$wrapper.material-slider', {},
+    ['label$label.slider-label', {}],
+    ['input$input', { type: 'hidden' }],
+    ['$control.slider-control', {},
+      ['$track.slider-track', {},
+        ['canvas$canvas.slider-canvas', {}],
+        ['$trackvalue.slider-track-value', {}],
+        ['$knob.slider-knob', {}],
+        ['$marker.slider-marker', {},
+          ['$value.slider-value', {}]
+        ]
+      ]
+    ]
+  ]
 };
 
 /**
@@ -60,10 +55,9 @@ class Slider {
     this.options = merge(defaults, options);
 
     this.init(options);
-    this.build();
+    this.build(this.options);
 
     if (this.options.bind) {
-      //console.log('vind', this.options.bind);
       this.bind(this.options.bind);
     }
 
@@ -76,140 +70,234 @@ class Slider {
    * @return {Object} This class instance
    */
   init(options) {
-    this.name = this.options.name;
-    this.value = this.options.value || 1;
-    this.disabled = this.options.disabled;
-
-
 
     Object.assign(
       this,
       events,
-      Emitter,
+      emitter,
       bind
     );
 
     return this;
   }
 
-
-
   /**
    * build method
    * @return {Object} The class instance
    */
-  build() {
-    var tag = this.options.tag || 'div';
+  build(options) {
 
-    this.wrapper = create(tag, this.options.prefix + '-' + this.options.class);
+    this.element = build(options.build);
+    this.wrapper = this.element.wrapper;
 
-    if (this.options.disabled) {
+    classify(this.wrapper, this.options);
+
+    if (options.container) {
+      insert(this.wrapper, options.container);
+    }
+
+    var value = this.element.marker.innerHTML;
+    this.element.marker.innerHTML = icon + value;
+
+    if (this.options.type) {
+      css.add(this.wrapper, 'type-' + this.options.type);
+    }
+
+    // init input
+    if (options.disabled) {
+      this.element.input.setAttribute('disabled', 'disabled');
+    }
+
+    if (this.options.name) {
+      this.name = name;
+      this.wrapper.dataset.name = name;
+      this.element.input.name = name;
+    }
+
+    // init text
+    let text = this.options.label || this.options.text;
+    this.element.label.textContent = text;
+
+    options.label = options.label || options.text;
+
+    if (options.disabled) {
       css.add(this.wrapper, 'is-disabled');
     }
+    this.initTrack();
 
-    this.options.label = this.options.label || this.options.text;
-    this.buildLabel();
+    var delay = 50;
 
-    this.initInput();
-    this.buildControl();
+    setTimeout(() => {
+      this.initCanvas();
+    }, delay);
 
-    if (this.options.container) {
-      insert(this.wrapper, this.options.container);
-    }
   }
 
+  initCanvas() {
 
-  /**
-   * [initLabel description]
-   * @return {[type]} [description]
-   */
-  buildLabel() {
-
-    if (this.options.label === null) return;
-
-    let text = this.options.label || this.options.text;
-
-    this.label = document.createElement('label');
-    css.add(this.label, this.options.class + '-label');
-    this.label.textContent = text;
-    insert(this.label, this.wrapper);
+    window.addEventListener("resize", () => {
+      console.log('resize');
+      this.drawCanvas();
+    }, false);
+    this.drawCanvas();
   }
 
+  drawCanvas() {
+    var width = offset(this.element.track, 'width');
+    var height = offset(this.element.track, 'height');
+
+    this.element.canvas.width = width;
+    this.element.canvas.height = height;
+
+    var context = this.element.canvas.getContext('2d');
+    context.lineWidth = 2;
+    context.beginPath();
+
+    context.moveTo(0, (height / 2) + 1);
+    context.lineTo(width, (height / 2) + 1);
+    context.strokeStyle = 'rgba(34, 31, 31, .26)';
+    context.stroke();
+  }
 
   /**
    * [buildControl description]
-   * @return {[type]} [description]
+   * @return {?} [description]
    */
-  buildControl() {
+  initTrack() {
 
-    this.control = document.createElement('span');
-    css.add(this.control, this.options.class + '-control');
-    insert(this.control, this.wrapper);
-
-    this.track = document.createElement('span');
-    css.add(this.track, this.options.class + '-track');
-    insert(this.track, this.control);
-
-
-    this.trackvalue = new Component({
-      tag: 'span',
-      css: 'slider-track-value'
-    }).insert(this.control);
-
-    this.control.addEventListener('click', (ev) => {
-      var position = ev.layerX - 3;
-      this.knob.style({
-        left: position + 'px'
-      });
-      this.updateControl(position);
+    this.element.track.addEventListener('mousedown', (ev) => {
+      this.initTrackSize();
+      var position = ev.layerX;
+      this.update(position);
     });
 
-    this.knob = new Component({
-      tag: 'span',
-      css: 'slider-knob'
-    }).insert(this.control);
-
-    this.vindicator = new Component({
-      tag: 'span',
-      css: 'slider-vindicator'
-    }).insert(this.control);
-
-    this.knob.addEvent('click', (ev) => {
+    this.element.knob.addEventListener('click', (ev) => {
       ev.stopPropagation();
     });
 
-    DragDrop.bind(this.knob.wrapper, {
-      //anchor: anotherElement,
-      boundingBox: 'offsetParent',
-      dragstart: (ev) => {
-        //console.log('dragstart', ev);
-        css.add(this.control, 'dragging');
-      },
-      dragend: () => {
-        var position = parseInt(this.knob.style('left'));
-        css.remove(this.control, 'dragging');
-        this.updateControl(position);
+    this.initDragging();
 
-      },
-      drag: () => {
-        var position = parseInt(this.knob.style('left'));
-        // this.knob.style({
-        //   'top': '2px'
-        // });
+    var delay = 100;
 
-        this.updateControl(position);
-
-      }
-    });
-
-    var delay = 10;
-
-    var self = this;
-    setTimeout(function() {
-      self.setValue(self.value);
+    setTimeout(() => {
+      this.setValue(this.options.value);
     }, delay);
   }
 
+  initTrackSize() {
+    this._tracksize = offset(this.element.track, 'width');
+    this._knobsize = offset(this.element.knob, 'width');
+    this._markersize = 32; /*offset(this.element.marker, 'width')*/ ;
+    this._trackleft = offset(this.element.track, 'left');
+    console.log('this.element.canvas', this._tracksize);
+    return this;
+  }
+
+  /**
+   * [initDragging description]
+   * @return {?} [description]
+   */
+  initDragging() {
+
+    this.element.knob.onmousedown = (e) => {
+      e.stopPropagation();
+      e = e || window.event;
+
+      css.add(this.element.control, 'dragging');
+
+      var size = 0,
+        start = 0,
+        position = 0;
+
+      if (e.pageX) start = e.pageX;
+      else if (e.clientX) start = e.clientX;
+
+      size = this._tracksize;
+      start = this._trackleft;
+      document.body.onmousemove = (e) => {
+        e = e || window.event;
+        var end = 0;
+        if (e.pageX) end = e.pageX;
+        else if (e.clientX) end = e.clientX;
+
+        position = end - start;
+        this.update(position);
+
+      };
+      document.body.onmouseup = (e) => {
+        document.body.onmousemove = document.body.onmouseup = null;
+
+        e = e || window.event;
+        var end = 0;
+        if (e.pageX) end = e.pageX;
+        else if (e.clientX) end = e.clientX;
+
+        position = end - start;
+        this.update(position);
+        css.remove(this.element.control, 'dragging');
+
+      };
+    };
+  }
+
+  update(position) {
+    var size = this._tracksize;
+    var range = this.options.range[1] - this.options.range[0];
+
+    if (position > size) {
+
+      position = size;
+    }
+
+    if (position < 0) {
+      position = 0;
+    }
+
+    var ratio = (size / position);
+    var value = Math.round((range / ratio)) + this.options.range[0];
+
+    if (position === 0) {
+      css.remove(this.element.knob, 'notnull');
+    }
+
+    this.element.knob.style.left = position - this._knobsize / 2 + 'px';
+    this.element.trackvalue.style.width = (position) + 'px';
+    this.element.marker.style.left = position - this._markersize / 2 + 'px';
+
+    this.element.value.textContent = value;
+
+    this.element.input.value = value;
+    if (value > this.options.range[0]) {
+      css.add(this.element.knob, 'notnull');
+    } else {
+      css.remove(this.element.knob, 'notnull');
+    }
+  }
+
+  updateValue(value) {
+    this.initTrackSize();
+    console.log('update value', this.wrapper.parentNode);
+    var size = offset(this.element.track, 'width');
+    size = parseInt(size);
+
+    var range = this.options.range[1] - this.options.range[0];
+    var ratio = value * 100 / range;
+    var position = Math.round(size * ratio / 100);
+
+    this.update(position);
+
+    return this;
+  }
+
+  /**
+   * [insert description]
+   * @param  {?} container [description]
+   * @param  {?} context   [description]
+   * @return {?}           [description]
+   */
+  insert(container, context) {
+    insert(this.wrapper, container, context);
+  }
 
   /**
    * Setter
@@ -221,6 +309,9 @@ class Slider {
     switch (prop) {
       case 'value':
         this.setValue(value);
+        break;
+      case 'label':
+        this.setLabel(value);
         break;
       default:
         this.setValue(prop);
@@ -257,7 +348,7 @@ class Slider {
    * @return {Object} The class instance
    */
   getValue() {
-    return this.input.value;
+    return this.element.input.value;
   }
 
   /**
@@ -265,106 +356,22 @@ class Slider {
    * @param {string} value [description]
    */
   setValue(value) {
-    this.input.value = value;
-    this.updateKnob(value);
-    //this.emit('change', value);
-  }
-
-  updateKnob(value) {
-    console.log('updateKnob-', value, this.control);
-
-    // var computedStyle = window.getComputedStyle(this.track.wrapper);
-
-    var size = window.getComputedStyle(this.control, null).getPropertyValue("width");
-
-    size = parseInt(size);
-
-    //var size = this.component.control.wrapper.style.width;
-
-    var range = this.options.range[1] - this.options.range[0];
-
-    var ratio = value * 100 / range;
-
-    var position = Math.round(size * ratio / 100);
-
-    this.knob.style({
-      left: position + 'px'
-    });
-
-    this.vindicator.style({
-      left: position - 10 + 'px'
-    });
-
-    this.vindicator.text(value);
-
-  }
-
-  updateControl(position) {
-
-    var size = parseInt(offset(this.track, 'width'));
-
-    if (position > size) {
-      position = size;
-      this.knob.style({
-        left: position + 'px'
-      });
-    };
-    var ratio = (size / position);
-    var value = Math.round((this.options.range[1] / ratio));
-
-    this.trackvalue.style({
-      width: position + 'px'
-    });
-
-    this.vindicator.style({
-      left: position - 10 + 'px'
-    });
-
-    this.vindicator.text(value);
-
-    //console.log('track knob', position, size);
-
-    //console.log('ratio', ratio, Math.round(value));
-    this.input.value = value;
-    if (value > this.options.range[0]) {
-      this.knob.addClass('notnull');
-    } else {
-      this.knob.removeClass('notnull');
-    }
-    // this.knob.style({
-    //   'top': '2px'
-    // });
-
+    value = value || this.options.range[0];
+    this.element.input.value = value;
+    this.updateValue(value);
   }
 
   /**
-   * [initInput description]
-   * @return {[type]} [description]
+   * [setLabel description]
+   * @param {[type]} text [description]
    */
-  initInput() {
-
-    this.input = document.createElement('input');
-    this.input.type = 'checkbox';
-    css.add(this.wrapper, this.options.prefix + '-' + this.options.class);
-
-    if (this.options.disabled) {
-      this.input.setAttribute('disabled', 'disabled');
-    }
-
-    if (this.value) {
-      this.input.setAttribute('checked', 'checked');
-    }
-  }
-
   setLabel(text) {
-    //console.log('setLabel', this.options);
     text = text || this.options.label || this.options.text;
 
-    if (text !== null && this.component.label) {
-      this.component.label.text(text);
+    if (text !== null && this.label) {
+      this.label.textContent = text;
     }
   }
-
 }
 
 export default Slider;

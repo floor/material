@@ -16,7 +16,7 @@ import {
  * @private
  */
 function get(element, style) {
-  console.log('get', element, style);
+  //console.log('get', element, style);
   //get array of elements
   if (_isArray(style)) {
     var css = {};
@@ -38,7 +38,6 @@ function get(element, style) {
 
 
     if (style) {
-      console.log(style, computedStyle[style]);
       return computedStyle[style];
     } else {
       return computedStyle;

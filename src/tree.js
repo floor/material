@@ -6,7 +6,7 @@ import merge from './module/merge';
 import css from './module/css';
 import bind from './module/bind';
 
-import Emitter from './module/emitter';
+import emitter from './module/emitter';
 
 const defaults = {
   prefix: 'material',
@@ -28,7 +28,7 @@ const defaults = {
  *
  * @type {prime}
  */
-export default class Tree {
+class Tree {
 
   /**
    * init
@@ -61,7 +61,7 @@ export default class Tree {
     this.items = [];
 
     // assign modules
-    Object.assign(this, Emitter, display, insert, bind);
+    Object.assign(this, emitter, display, insert, bind);
 
     // init function
     this._initFunction(this.options.functions);
@@ -71,8 +71,9 @@ export default class Tree {
 
   /**
    * [_initFunction description]
-   * @param  {[type]} functions [description]
-   * @return {[type]}           [description]
+   * @param  {?} functions [description]
+   * @return {
+  [type] }           [description]
    */
   _initFunction(functions) {
 
@@ -160,12 +161,11 @@ export default class Tree {
   }
 
   /**
-   * [onSelect description]
-   * @param  {[type]} e [description]
-   * @return {[type]}   [description]
+   * This method handles onSelect
+   * @param  {event} e [description]
+   * @return { ? }   [description]
    */
   onSelect(e) {
-
     console.log('click', e.target, this.options.target);
     if (e.target && e.target.matches(this.options.target)) {
       console.log("item clicked: ", e.target);
@@ -179,6 +179,8 @@ export default class Tree {
         this.select(this.item, e);
       }
     }
+
+    return this;
   }
 
   /**
@@ -247,4 +249,6 @@ export default class Tree {
     this.items = [];
     this.item = null;
   }
-};
+}
+
+export default Tree;

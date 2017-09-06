@@ -1,20 +1,20 @@
 'use strict';
 
+import init from './component/merge';
 import merge from './module/merge';
+import create from './element/create';
 import events from './component/events';
-import Emitter from './module/emitter';
-import controller from './component/controller';
+import emitter from './module/emitter';
 import bind from './module/bind';
 import insert from './component/insert';
-import css from './module/css';
 // element related modules
-import element from './component/element';
+
 
 var defaults = {
-  prefix: 'naterial',
+  prefix: 'material',
   class: 'item',
   node: null,
-  component: ['name'],
+  module: [events, emitter, bind, insert]
 };
 
 /**
@@ -33,33 +33,13 @@ class Item {
    * @return {Object} Class instance 
    */
   constructor(options) {
-    // init and build
-    this.init(options);
+    this.options = merge(defaults, options);
+    init(this);
     this.build();
 
     if (this.options.bind) {
       this.bind(this.options.bind);
     }
-
-    return this;
-  }
-
-  /**
-   * init
-   * @return {Object} The class options
-   */
-  init(options) {
-    console.log('init item');
-    // init options and merge options to defaults
-    options = options || {};
-    this.options = merge(defaults, options);
-
-
-
-    // implement modules
-    Object.assign(this, events, Emitter, bind, insert);
-
-    this.controller = controller;
 
     return this;
   }
@@ -75,9 +55,8 @@ class Item {
    */
   build() {
     var tag = this.options.tag || 'div';
-    this.wrapper = element.createElement(tag);
+    this.wrapper = create(tag, this.options.prefix + '-' + this.options.class);
 
-    css.add(this.wrapper, this.options.prefix + '-' + this.options.class);
   }
 
   /**

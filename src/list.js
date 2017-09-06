@@ -1,14 +1,12 @@
 'use strict';
 
+import init from './component/init';
 import display from './container/display';
 import emitter from './module/emitter';
 import insert from './component/insert';
-import init from './component/init';
 import merge from './module/merge';
 import css from './module/css';
 import bind from './module/bind';
-
-import Emitter from './module/emitter';
 
 const defaults = {
   prefix: 'material',
@@ -67,7 +65,7 @@ class List {
     this.items = [];
 
     // assign modules
-    Object.assign(this, Emitter, display, insert, bind);
+    Object.assign(this, emitter, display, insert, bind);
 
     // init function
     this._initFunction(options.functions);
@@ -77,8 +75,8 @@ class List {
 
   /**
    * [_initFunction description]
-   * @param  {[type]} functions [description]
-   * @return {[type]}           [description]
+   * @param  {?} functions [description]
+   * @return {?}           [description]
    */
   _initFunction(functions) {
 
@@ -121,8 +119,8 @@ class List {
 
   /**
    * [onSelect description]
-   * @param  {[type]} e [description]
-   * @return {[type]}   [description]
+   * @param  {?} e [description]
+   * @return {?}   [description]
    */
   onSelect(e) {
     //console.log('onSelect', e.target, this.options.target);
@@ -176,8 +174,6 @@ class List {
    * @return {Object} The class instance
    */
   setList(list) {
-    //console.log('setList', list);
-
     for (var i = 0; i < list.length; i++) {
       var item = this.render(list[i]);
 
@@ -208,7 +204,6 @@ class List {
   }
 
   empty() {
-    console.log('empty');
     this.wrapper.innerHTML = '';
     this.items = [];
     this.item = null;

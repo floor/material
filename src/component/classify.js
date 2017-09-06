@@ -1,13 +1,21 @@
 import css from '../module/css';
 
 /**
+ * Classify component related functions
+ * @module component/classify
+ * @category component
+ */
+
+/**
  * Init component class
- * @return {Object} This Class instance
+ * @param  {element} element The component wrapper element
+ * @param  {object} options component class options
+ * @return {Instance} The Class instance
  *
  */
 function classify(element, options) {
 
-  var classes = ['type', 'state'];
+  //var classes = ['type', 'state'];
   //css.add(element, options.prefix + '-' + name);
 
   css.add(element, options.prefix + '-' + options.class);
@@ -24,14 +32,14 @@ function classify(element, options) {
     css.add(element, options.css);
   }
 
-  for (var i = 0; i < classes.length; i++) {
-    var n = classes[i];
-    if (options[n]) {
-      css.add(element, options.name + '-' + options[n]);
-    }
-  }
+  // for (var i = 0; i < classes.length; i++) {
+  //   var n = classes[i];
+  //   if (options[n]) {
+  //     css.add(element, options.name + '-' + options[n]);
+  //   }
+  // }
 
-  return element;
+  return;
 }
 
 export default classify;

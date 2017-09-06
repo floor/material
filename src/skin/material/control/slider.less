@@ -27,18 +27,21 @@
     cursor: pointer;
     width: 100%;
     height: 48px;
+    padding: 0 8px;
     .slider-track {
       position: absolute;
-      top: 50%;
       z-index: 1;
       cursor: pointer;
       position: relative;
       display: block;
-      height: 2px;
-      padding: 0;
-      background-color: rgba(34, 31, 31, .26);
-      border-radius: 7px;
+      height: 48px;
+      padding: 0; //background-color: rgba(34, 31, 31, .26);
       .transition(.3s);
+    }
+    .slider-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
     }
     .slider-track-value {
       position: absolute;
@@ -52,11 +55,13 @@
       background-color: #4054B2;
       border-radius: 7px;
     }
-    .slider-vindicator {
+    .slider-marker {
+
+      opacity: 0;
+      transform: scale(.1) translateY(60px);
       text-align: center;
       font-size: 9px;
       color: white;
-      display: none;
       position: absolute;
       width: 32px;
       height: 32px;
@@ -64,9 +69,11 @@
       z-index: 2;
       cursor: pointer;
       margin: auto;
-      padding: 12px 0;
-      background-color: #4054B2;
       border-radius: 50%;
+      .transition(.2s);
+      .slider-pin {
+        fill: @primary-color;
+      }
     }
     .slider-knob {
       z-index: 3;
@@ -82,6 +89,7 @@
       border-radius: 50%;
       background-color: white;
       border: 2px solid rgba(241, 241, 241, 100); //box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24), 0 0 2px 0 rgba(0, 0, 0, 0.12);
+      .transition(.2s);
       &.notnull {
         background-color: #4054B2;
         border: 2px solid #4054B2;
@@ -96,13 +104,17 @@
       }
     }
     &.dragging {
-      .slider-vindicator {
-        display: block;
-      }
       .slider-knob {
-        transform: scale(1.4) translateY(-4px);
+        //.transition(.03s);
+        transform: scale(1.5) translateY(-4px);
         top: 50%;
-        background-color: #4054B2;
+        background-color: white;
+        border: 2px solid rgba(241, 241, 241, 100); //box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24), 0 0 2px 0 rgba(0, 0, 0, 0.12);
+        .transition(none);
+        &.notnull {
+          background-color: #4054B2;
+          border: 2px solid #4054B2;
+        }
       }
     }
   }
@@ -120,6 +132,11 @@
       opacity: .5;
     }
     .slider-control {
+      .slider-track {
+        .knob {
+          background-color: rgba(0, 0, 0, 0.26);
+        }
+      }
       pointer-events: none;
       .order(3);
       cursor: pointer; // width: 48px;
@@ -143,6 +160,34 @@
       //     box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.12), 0 0 1px 0 rgba(0, 0, 0, 0.06);
       //   }
       // }
+    }
+  }
+  &.type-discrete {
+    .slider-control {
+      &.dragging {
+        .slider-marker {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+          display: block;
+          .transition(none);
+        }
+        .slider-knob {
+          opacity: 0;
+          transform: scale(.2);
+          display: block;
+          .transition(.2s);
+        }
+      }
+    }
+  }
+}
+
+.dark-theme {
+  .material-slider {
+    .material-control {
+      .slider-track {
+        background-color: rgba(255, 255, 255, 0.3);
+      }
     }
   }
 }

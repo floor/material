@@ -1,6 +1,7 @@
 'use strict';
 
 import display from './container/display';
+import create from './element/create';
 import insert from './element/insert';
 import merge from './module/merge';
 import css from './module/css';
@@ -9,7 +10,7 @@ import moment from 'moment';
 
 import Button from './button';
 
-import Emitter from './module/emitter';
+import emitter from './module/emitter';
 
 const defaults = {
   prefix: 'material',
@@ -62,8 +63,10 @@ class Calendar {
    * @return {Object} The class options
    */
   constructor(options) {
-    // boot sequence
-    this.init(options);
+    this.options = merge(defaults, options || {});
+
+
+    this.init(this.options);
     this.build();
 
     if (this.options.bind) {
@@ -79,16 +82,12 @@ class Calendar {
    * @return  Class instance
    */
   init(options) {
-    options = options || {};
-    // init this
-    // 
-    console.log('merge', defaults, options);
-    this.options = merge(defaults, options);
+    options = options || this.options;
 
-    this.name = this.options.name;
+
 
     // assign modules
-    Object.assign(this, Emitter, display, bind);
+    Object.assign(this, emitter, display, bind);
 
     // init function
     this._initFunction(this.options.functions);
@@ -120,8 +119,8 @@ class Calendar {
 
   /**
    * [_initFunction description]
-   * @param  {[type]} functions [description]
-   * @return {[type]}           [description]
+   * @param  {?} functions [description]
+   * @return {?}           [description]
    */
   _initFunction(functions) {
 
@@ -262,8 +261,8 @@ class Calendar {
 
   /**
    * [_initAllDay description]
-   * @param  {[type]} head [description]
-   * @return {[type]}      [description]
+   * @param  {?} head [description]
+   * @return {?}      [description]
    */
   buildAllDay() {
     var allday = document.createElement('div');
@@ -292,8 +291,8 @@ class Calendar {
 
   /**
    * [_initBody description]
-   * @param  {[type]} content [description]
-   * @return {[type]}         [description]
+   * @param  {?} content [description]
+   * @return {?}         [description]
    */
   buildBody() {
     var cells = [];
@@ -362,8 +361,8 @@ class Calendar {
 
   /**
    * [_initCanvas description]
-   * @param  {[type]} content [description]
-   * @return {[type]}         [description]
+   * @param  {?} content [description]
+   * @return {?}         [description]
    */
   initCanvas() {
     var canvas = document.createElement('canvas');
@@ -401,8 +400,8 @@ class Calendar {
 
   /**
    * [onSelect description]
-   * @param  {[type]} e [description]
-   * @return {[type]}   [description]
+   * @param  {?} e [description]
+   * @return {?}   [description]
    */
   onDblClick(e) {
 
@@ -509,8 +508,8 @@ class Calendar {
 
   /**
    * [goto description]
-   * @param  {[type]} date [description]
-   * @return {[type]}      [description]
+   * @param  {?} date [description]
+   * @return {?}      [description]
    */
   goto(date) {
     date = date || new Date();

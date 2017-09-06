@@ -1,17 +1,17 @@
-var emitter = {
-  on: function(event, cb) {
+export default {
+  on(event, cb) {
     this.event = this.event || {};
     this.event[event] = this.event[event] || [];
     this.event[event].push(cb);
     return this;
   },
-  off: function(event, cb) {
+  off(event, cb) {
     this.event = this.event || {};
     if (event in this.event === false) return;
     this.event[event].splice(this.event[event].indexOf(cb), 1);
     return this;
   },
-  emit: function(event /* , args... */ ) {
+  emit(event /* , args... */ ) {
     this.event = this.event || {};
     if (event in this.event === false) return;
     for (var i = 0; i < this.event[event].length; i++) {
@@ -20,5 +20,3 @@ var emitter = {
     return this;
   }
 };
-
-export default emitter;

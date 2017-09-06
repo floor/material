@@ -1,8 +1,8 @@
 /**
- * This function checks if the element className passed in parameters
+ * Thees functions merge two objects
  *
- * @since 0.0.6
- * @category Array
+ * @since 0.1.2
+ * @category Object
  * @param {...Array} [arrays] The arrays to process.
  * @param {Function} iteratee The function to combine
  *  grouped values.
@@ -27,7 +27,7 @@ function emptyTarget(val) {
 
 function cloneIfNecessary(value, optionsArgument) {
   var clone = optionsArgument && optionsArgument.clone === true;
-  return (clone && isMergeableObject(value)) ? deepmerge(emptyTarget(value), value, optionsArgument) : value;
+  return (clone && isMergeableObject(value)) ? merge(emptyTarget(value), value, optionsArgument) : value;
 }
 
 function defaultArrayMerge(target, source, optionsArgument) {
@@ -36,7 +36,7 @@ function defaultArrayMerge(target, source, optionsArgument) {
     if (typeof destination[i] === 'undefined') {
       destination[i] = cloneIfNecessary(e, optionsArgument);
     } else if (isMergeableObject(e)) {
-      destination[i] = deepmerge(target[i], e, optionsArgument);
+      destination[i] = merge(target[i], e, optionsArgument);
     } else if (target.indexOf(e) === -1) {
       destination.push(cloneIfNecessary(e, optionsArgument));
     }
@@ -55,13 +55,13 @@ function mergeObject(target, source, optionsArgument) {
     if (!isMergeableObject(source[key]) || !target[key]) {
       destination[key] = cloneIfNecessary(source[key], optionsArgument);
     } else {
-      destination[key] = deepmerge(target[key], source[key], optionsArgument);
+      destination[key] = merge(target[key], source[key], optionsArgument);
     }
   });
   return destination;
 }
 
-function deepmerge(target, source, optionsArgument) {
+function merge(target, source, optionsArgument) {
   var array = Array.isArray(source);
   var options = optionsArgument || { arrayMerge: defaultArrayMerge };
   var arrayMerge = options.arrayMerge || defaultArrayMerge;
@@ -73,15 +73,15 @@ function deepmerge(target, source, optionsArgument) {
   }
 }
 
-deepmerge.all = function deepmergeAll(array, optionsArgument) {
+merge.all = function mergeAll(array, optionsArgument) {
   if (!Array.isArray(array) || array.length < 2) {
     throw new Error('first argument should be an array with at least two elements');
   }
 
   // we are sure there are at least 2 values, so it is safe to have no initial value
   return array.reduce(function(prev, next) {
-    return deepmerge(prev, next, optionsArgument);
+    return merge(prev, next, optionsArgument);
   });
 };
 
-export default deepmerge;
+export default merge;

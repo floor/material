@@ -56,7 +56,7 @@ class Container {
     this.options = merge(defaults, options);
 
 
-    this.name = this.options.name;
+    this.options.name = this.options.name;
 
     // implement modules
     Object.assign(this, emitter);
@@ -76,7 +76,7 @@ class Container {
     this.wrapper = create(tag, this.options.prefix + '-' + this.options.class);
 
     if (this.options.name) {
-      css.add(this.wrapper, this.options.class + '-' + this.name);
+      css.add(this.wrapper, this.options.class + '-' + this.options.name);
     }
 
     if (this.options.css) {
@@ -84,7 +84,7 @@ class Container {
     }
 
     if (this.options.container) {
-      //console.log(this.name, opts.container);
+      //console.log(this.options.name, opts.container);
       insert(this.wrapper, this.options.container);
     }
 

@@ -2,16 +2,16 @@
 
 
 import init from './component/init';
-import controller from './component/controller';
 import merge from './module/merge';
 import events from './component/events';
 import control from './component/control';
 import emitter from './module/emitter';
 import bind from './module/bind';
 import insert from './element/insert';
-//import Element from './element/element';
 import build from './element/build';
 import css from './module/css';
+
+import icon from './skin/material/svg/checkbox.svg';
 // element related modules
 
 let defaults = {
@@ -19,12 +19,9 @@ let defaults = {
   class: 'checkbox',
   type: 'control',
   modules: [events, control, emitter, bind],
-  build: ['wrapper', 'div', 'material-checkbox', {},
-    [
-      ['input', 'input'],
-      ['control', 'span', 'checkbox-control'],
-      ['label', 'label', 'checkbox-label']
-    ]
+  build: ['$wrapper.material-checkbox', ['input$input'],
+    ['span$control.checkbox-control'],
+    ['label$label.checkbox-label']
   ],
   binding: [
     ['element.control.click', 'click', {}],
@@ -33,9 +30,16 @@ let defaults = {
     ['element.input.click', 'toggle', {}],
     ['element.input.focus', 'focus'],
     ['element.input.blur', 'blur']
-  ]
+  ],
+  bind: {
+    'element.control.click': 'click',
+    'element.label.click': 'toggle',
+    // for accessibility purpose
+    'element.input.click': 'toggle',
+    'element.input.focus': 'focus',
+    'element.input.blur': 'blur'
+  }
 };
-
 /**
  * Checkbox control class
  * @class
@@ -60,8 +64,8 @@ class Checkbox {
   constructor(options) {
     this.options = merge(defaults, options);
     // init and build
-    this.init(this.options);
-    this.build(this.options);
+    this.init();
+    this.build();
 
     if (this.options.bind) {
       this.bind(this.options.bind);
@@ -75,15 +79,9 @@ class Checkbox {
    * @param  {Object} options The class options
    * @return {Object} This class instance
    */
-  init(options) {
+  init() {
     init(this);
     // init options and merge options to defaults
-    options = options || this.options;
-
-    this.name = this.options.name;
-    this.value = this.options.value;
-    this.checked = this.options.checked;
-    this.disabled = this.options.disabled;
 
     return this;
   }
@@ -92,25 +90,33 @@ class Checkbox {
    * build the component using the super method
    * @return {Object} The class instance
    */
-  build(options) {
+  build() {
     this.element = build(this.options.build);
     this.wrapper = this.element.wrapper;
+
+    this.element.control.innerHTML = icon;
 
     let text = this.options.label || this.options.text;
     this.element.label.textContent = text;
 
-    this.element.input.setAttribute('name', this.name);
-    this.element.input.setAttribute('value', this.value);
+    this.element.input.setAttribute('type', 'checkbox');
+    this.element.input.setAttribute('name', this.options.name);
+    this.element.input.setAttribute('value', this.options.value);
 
-    if (this.disabled) {
+    if (this.options.disabled) {
+      this.disabled = this.options.disabled;
       this.element.input.setAttribute('disabled', 'disabled');
+      css.add(this.wrapper, 'is-disabled');
     }
 
-    if (this.checked) {
-      this.element.input.setAttribute('checked', 'checked');
+    if (this.options.checked) {
+      this.check(true);
     }
 
-    this.set(this.value);
+    if (this.options.value) {
+      this.value = this.options.value;
+      this.set('value', this.value);
+    }
 
     // insert if container options is given
     if (this.options.container) {
@@ -150,30 +156,9 @@ class Checkbox {
     return this;
   }
 
-  click(ev) {
-    console.log('_onInputFocus', this.wrapper);
-    //css.add(this.element.wrapper, 'is-focused');
-    this.toggle();
+  click(e) {
+    this.toggle(e);
     this.element.input.focus();
-  }
-
-  /**
-   * [_onInputFocus description]
-   * @return {[type]} [description]
-   */
-  focus(ev) {
-    console.log('_onInputFocus', this.wrapper);
-    css.add(this.wrapper, 'is-focused');
-    //this.element.input.focus();
-  }
-
-  /**
-   * [_onInputBlur description]
-   * @return {[type]} [description]
-   */
-  blur(ev) {
-    console.log('blur', this.wrapper);
-    css.remove(this.wrapper, 'is-focused');
   }
 
   /**

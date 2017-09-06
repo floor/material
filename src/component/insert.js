@@ -12,10 +12,10 @@ export default {
 
   /**
    * [insert description]
-   * @param  {[type]} container [description]
-   * @param  {[type]} context   [description]
-   * @param  {[type]} debug     [description]
-   * @return {[type]}           [description]
+   * @param  {?} container [description]
+   * @param  {?} context   [description]
+   * @param  {?} debug     [description]
+   * @return {?}           [description]
    */
   insert(container, context) {
 
@@ -29,11 +29,11 @@ export default {
   /**
    * [insertElement description]
 
-   * @param  {[type]} element   [description]
-   * @param  {[type]} container [description]
-   * @param  {[type]} context   [description]
-   * @param  {[type]} debug     [description]
-   * @return {[type]}           [description]
+   * @param  {?} element   [description]
+   * @param  {?} container [description]
+   * @param  {?} context   [description]
+   * @param  {?} debug     [description]
+   * @return {?}           [description]
    */
   insertElement(element, container, context) {
     if (container && container.wrapper) {

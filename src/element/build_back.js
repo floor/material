@@ -6,7 +6,7 @@ export default {
 
   /**
    * build element and inner elements
-   * @return {[type]} [description]
+   * @return {?} [description]
    */
   element(options) {
     //console.log('buildComponents', this.options.class);

@@ -133,7 +133,6 @@ export default {
 
     if (component.options.flex) return;
 
-    //this._initResizer(component);
     this.emit('drag');
 
     this._attachComponentEvents(component);
@@ -192,31 +191,5 @@ export default {
       console.log('this missong on', component.class, component.name);
       return;
     }
-
-
-
-    /**
-     *  toggled
-     */
-    component.on('toggled', () => {
-      this.emit('resize');
-    }).on('resizing', () => {
-      this.emit('resize');
-    }).on('display', (state) => {
-      this.emit('resize');
-      this.emit('display', [name, state]);
-    });
-
-    this.on('resize', () => {
-      component.emit('resize');
-    }).on('drag:', () => {
-      component.emit('resize');
-    }).on('normalize', () => {
-      component.emit('resize');
-    }).on('maximize', () => {
-      component.emit('resize');
-    }).on('minimize', () => {
-      component.emit('resize');
-    });
   }
 };

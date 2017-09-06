@@ -1,6 +1,5 @@
 'use strict';
 
-//import Component from './component';
 import init from './component/init';
 import merge from './module/merge';
 import insert from './component/insert';

@@ -2,7 +2,7 @@
  * This function checks if the element className passed in parameters
  *
  * @since 0.0.6
- * @category Array
+ * @category Element
  * @param {...Array} [arrays] The arrays to process.
  * @param {Function} iteratee The function to combine
  *  grouped values.
@@ -77,7 +77,6 @@ function remove(element, className) {
   }
 
   element.classList.remove(className);
-
 
   return element;
 }
