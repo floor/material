@@ -14,11 +14,6 @@ export default {
     //console.log('_initComponent', options.name, options);
     options = options || {};
 
-    // shortcuts
-    // options.flex = options.flex || comp.flex;
-    // options.hide = options.hide || comp.hide;
-    // options.theme = options.theme || comp.theme;
-
     var name = options.name || 'main';
 
     //options.container = comp.container;
@@ -79,28 +74,14 @@ export default {
     if (component.options.flex) {
       css.add(component.wrapper, 'flex-' + component.options.flex);
     } else {
-
-      //console.log('not flex', component.options.name, component.options);
-
-
+      var size = component.options.size;
       if (component.options.size && component.options.width) {
-        var size = component.options.size;
-        if (this.settings &&
-          this.settings.layout &&
-          this.settings.layout.section &&
-          this.settings.layout.section[component.name] &&
-          this.settings.layout.section[component.name].width) {
-
-          size = this.settings.layout.section[component.name].width;
-
-          style.set(component.wrapper, {
-            'width': size + 'px'
-          });
-        }
+        style.set(component.wrapper, {
+          width: size + 'px'
+        });
       } else {
-        var wrapper = component.wrapper || component.wrapper || null;
-        style.set(wrapper, {
-          height: component.options.size + 'px'
+        style.set(component.wrapper, {
+          height: size + 'px'
         });
       }
     }
@@ -175,21 +156,4 @@ export default {
   //  }
   // },
 
-  /**
-   * [_attachComponentEvents description]
-   * @param  {component} component [description]
-   */
-  _attachComponentEvents(component) {
-    var name = component.name || component.options.name;
-
-    if (!component.on) {
-      console.log('missing on', component.class, component.name);
-      return;
-    }
-
-    if (!this.on) {
-      console.log('this missong on', component.class, component.name);
-      return;
-    }
-  }
 };
