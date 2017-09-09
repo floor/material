@@ -99,11 +99,9 @@ class Form {
     // complete layout options
     options.wrapper = this.wrapper;
     options.controls = this.options.controls;
-    //console.log('control keys', this.options.controls);
 
     this.layout = new Layout(options);
 
-    console.log('this.layout.controls', this.layout.controls);
     this._initControls(this.layout.controls);
   }
 
@@ -120,7 +118,6 @@ class Form {
     for (var i = 0; i < controls.length; i++) {
       var control = controls[i];
       //control.setAttribute('data-key', control.name);
-      console.log('keys', control.name, control);
 
       this.key[control.name] = control;
 
@@ -180,10 +177,9 @@ class Form {
 
   /**
    * [setInfo description]
-   * @param {[type]} info [description]
+   * @param {?} info [description]
    */
   setInfo(info) {
-    console.log('setInfo', info);
     this.info = this.original = info;
 
     this.parseInfo(info);
@@ -206,7 +202,6 @@ class Form {
     if (obj instanceof Object) {
       for (key in obj) {
         if (obj.hasOwnProperty(key)) {
-          console.log('key', key, level);
           //recursive call to scan property
           var n = null;
           if (name) {
@@ -214,13 +209,12 @@ class Form {
           } else {
             n = key;
           }
-          console.log('recall', n, level - 1);
+
           this.parseInfo(obj[key], n, level);
         }
       }
     } else {
       if (this.key[name] && this.key[name].set) {
-        console.log();
         this.key[name].set(obj);
       }
     }

@@ -2,6 +2,8 @@
 
 import init from './component/init';
 import build from './element/build';
+import control from './component/control';
+
 import events from './component/events';
 import insert from './element/insert';
 import offset from './element/offset';
@@ -12,7 +14,7 @@ import bind from './module/bind';
 import css from './module/css';
 import emitter from './module/emitter';
 
-import icon from './skin/material/svg/pin.svg';
+import icon from './skin/material/icon/pin.svg';
 
 let defaults = {
   prefix: 'material',
@@ -24,6 +26,8 @@ let defaults = {
   value: false,
   range: [0, 100],
   step: 5,
+  modules: [events, control, emitter, bind],
+  mixins: [],
   build: ['$wrapper.material-slider', {},
     ['label$label.slider-label', {}],
     ['input$input', { type: 'hidden' }],
@@ -54,7 +58,7 @@ class Slider {
   constructor(options) {
     this.options = merge(defaults, options);
 
-    this.init(options);
+    this.init(this.options);
     this.build(this.options);
 
     if (this.options.bind) {
@@ -70,13 +74,7 @@ class Slider {
    * @return {Object} This class instance
    */
   init(options) {
-
-    Object.assign(
-      this,
-      events,
-      emitter,
-      bind
-    );
+    init(this);
 
     return this;
   }
@@ -105,11 +103,10 @@ class Slider {
 
     // init input
     if (options.disabled) {
-      this.element.input.setAttribute('disabled', 'disabled');
+      this.disable(true);
     }
 
     if (this.options.name) {
-      this.name = name;
       this.wrapper.dataset.name = name;
       this.element.input.name = name;
     }
@@ -120,9 +117,6 @@ class Slider {
 
     options.label = options.label || options.text;
 
-    if (options.disabled) {
-      css.add(this.wrapper, 'is-disabled');
-    }
     this.initTrack();
 
     var delay = 50;
@@ -166,6 +160,7 @@ class Slider {
   initTrack() {
 
     this.element.track.addEventListener('mousedown', (ev) => {
+      if (this.disabled === true) return;
       this.initTrackSize();
       var position = ev.layerX;
       this.update(position);
@@ -187,9 +182,8 @@ class Slider {
   initTrackSize() {
     this._tracksize = offset(this.element.track, 'width');
     this._knobsize = offset(this.element.knob, 'width');
-    this._markersize = 32; /*offset(this.element.marker, 'width')*/ ;
+    this._markersize = 32; /*offset(this.element.marker, 'width')*/
     this._trackleft = offset(this.element.track, 'left');
-    console.log('this.element.canvas', this._tracksize);
     return this;
   }
 
@@ -198,8 +192,9 @@ class Slider {
    * @return {?} [description]
    */
   initDragging() {
-
     this.element.knob.onmousedown = (e) => {
+      if (this.disabled === true) return;
+
       e.stopPropagation();
       e = e || window.event;
 
@@ -215,6 +210,9 @@ class Slider {
       size = this._tracksize;
       start = this._trackleft;
       document.body.onmousemove = (e) => {
+        if (this.disabled === true) return;
+        console.log('mousedown', this.disabled);
+
         e = e || window.event;
         var end = 0;
         if (e.pageX) end = e.pageX;
@@ -241,6 +239,7 @@ class Slider {
   }
 
   update(position) {
+
     var size = this._tracksize;
     var range = this.options.range[1] - this.options.range[0];
 
@@ -276,7 +275,7 @@ class Slider {
 
   updateValue(value) {
     this.initTrackSize();
-    console.log('update value', this.wrapper.parentNode);
+
     var size = offset(this.element.track, 'width');
     size = parseInt(size);
 
@@ -363,7 +362,7 @@ class Slider {
 
   /**
    * [setLabel description]
-   * @param {[type]} text [description]
+   * @param {?} text [description]
    */
   setLabel(text) {
     text = text || this.options.label || this.options.text;

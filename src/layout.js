@@ -6,7 +6,7 @@ import insert from './component/insert';
 
 import css from './module/css';
 import merge from './module/merge';
-import bind from './module/bind';
+//import bind from './module/bind';
 import style from './element/style';
 
 import defaults from './layout/options';
@@ -55,14 +55,11 @@ class Layout {
     this.components = [];
     this.settings = this.options.settings || {};
 
-    // this.settings = this.controller.getSettings('app-' + this.options.appname);
-    // //console.log('settings', this.settings);
-
     this.controller = controller;
 
-    window.addEventListener('resize', () => {
-      this.emit('resize');
-    });
+    // window.addEventListener('resize', () => {
+    //   this.emit('resize');
+    // });
 
     return this;
   }
@@ -77,8 +74,6 @@ class Layout {
     if (!this.wrapper) {
       this.wrapper = document.createElement(options.tag);
     }
-
-    //console.log('build', this.element);
 
     css.add(this.wrapper, 'material' + '-' + this.options.class);
     css.add(this.wrapper, this.options.class + '-' + options.name);

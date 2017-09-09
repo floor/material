@@ -72,8 +72,7 @@ class Tree {
   /**
    * [_initFunction description]
    * @param  {?} functions [description]
-   * @return {
-  [type] }           [description]
+   * @return {}           [description]
    */
   _initFunction(functions) {
 
@@ -163,7 +162,7 @@ class Tree {
   /**
    * This method handles onSelect
    * @param  {event} e [description]
-   * @return { ? }   [description]
+   * @return {?}   [description]
    */
   onSelect(e) {
     console.log('click', e.target, this.options.target);

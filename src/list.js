@@ -1,7 +1,6 @@
 'use strict';
 
 import init from './component/init';
-import display from './container/display';
 import emitter from './module/emitter';
 import insert from './component/insert';
 import merge from './module/merge';
@@ -12,7 +11,7 @@ const defaults = {
   prefix: 'material',
   class: 'list',
   functions: ['render', 'select'],
-  modules: [emitter, display, insert, bind],
+  modules: [emitter, insert, bind],
   target: '.material-item',
   bind: {
     'wrapper.click': 'onSelect'
@@ -65,7 +64,7 @@ class List {
     this.items = [];
 
     // assign modules
-    Object.assign(this, emitter, display, insert, bind);
+    Object.assign(this, emitter, insert, bind);
 
     // init function
     this._initFunction(options.functions);

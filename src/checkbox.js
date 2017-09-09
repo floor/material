@@ -1,6 +1,5 @@
 'use strict';
 
-
 import init from './component/init';
 import merge from './module/merge';
 import events from './component/events';
@@ -11,7 +10,7 @@ import insert from './element/insert';
 import build from './element/build';
 import css from './module/css';
 
-import icon from './skin/material/svg/checkbox.svg';
+import icon from './skin/material/icon/checkbox.svg';
 // element related modules
 
 let defaults = {
@@ -19,15 +18,15 @@ let defaults = {
   class: 'checkbox',
   type: 'control',
   modules: [events, control, emitter, bind],
-  build: ['$wrapper.material-checkbox', ['input$input'],
-    ['span$control.checkbox-control'],
-    ['label$label.checkbox-label']
+  build: ['$wrapper.material-checkbox', {},
+    ['input$input', {}],
+    ['span$control.checkbox-control']
   ],
   binding: [
     ['element.control.click', 'click', {}],
     ['element.label.click', 'toggle', {}],
     // for accessibility purpose
-    ['element.input.click', 'toggle', {}],
+    //['element.input.click', 'toggle', {}],
     ['element.input.focus', 'focus'],
     ['element.input.blur', 'blur']
   ],
@@ -66,10 +65,7 @@ class Checkbox {
     // init and build
     this.init();
     this.build();
-
-    if (this.options.bind) {
-      this.bind(this.options.bind);
-    }
+    this.bind(this.options.bind);
 
     return this;
   }
@@ -96,8 +92,7 @@ class Checkbox {
 
     this.element.control.innerHTML = icon;
 
-    let text = this.options.label || this.options.text;
-    this.element.label.textContent = text;
+    this.label(this.options.label);
 
     this.element.input.setAttribute('type', 'checkbox');
     this.element.input.setAttribute('name', this.options.name);
@@ -114,7 +109,6 @@ class Checkbox {
     }
 
     if (this.options.value) {
-      this.value = this.options.value;
       this.set('value', this.value);
     }
 
@@ -156,6 +150,11 @@ class Checkbox {
     return this;
   }
 
+  /**
+   * [click description]
+   * @param  {[type]} e [description]
+   * @return {[type]}   [description]
+   */
   click(e) {
     this.toggle(e);
     this.element.input.focus();

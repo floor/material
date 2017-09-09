@@ -47,8 +47,8 @@ function get(element, style) {
 
 /**
  * set element style
- * @param {[type]} element [description]
- * @param {[type]} style   [description]
+ * @param { ? } element [description]
+ * @param {?} style   [description]
  */
 function set(element, style) {
 

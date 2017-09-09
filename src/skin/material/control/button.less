@@ -20,13 +20,13 @@
   } // .transition(1s);
   // .transition(.2s);
   .button-icon {
-    height: 100%;
+    pointer-events: none;
     z-index: 2;
     display: inline-block;
-    padding: 0 8px;
-    width: 20px;
-    pointer-events: none; //.flex(none);
     color: @icon-color;
+    width: 36px;
+    height: 36px;
+    padding: 0 8px; //.flex(none);
     vertical-align: bottom;
     padding: 18px 8px; //margin-left: 8px;
     background-repeat: no-repeat;
@@ -52,7 +52,6 @@
     width: 5px;
     border-radius: 50%;
   }
-  &.state-disabled,
   &.is-disabled {
     pointer-events: none;
     opacity: .3;
@@ -61,10 +60,6 @@
       background-color: transparent;
     }
   }
-  &.focus {
-    background: rgba(113, 170, 211, .8);
-    color: rgba(255, 255, 255, .7);
-  }
   &:active {
     //.transition(box-shaow 25s);
     background-color: rgba(0, 0, 0, 0.1);
@@ -72,7 +67,7 @@
   &:focus {
     //.transition(background-color .3s);
     cursor: pointer;
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: rgba(0, 0, 0, 0.08);
   }
   &:hover {}
   &.state-active {
@@ -104,52 +99,27 @@
   &.style-compact {
     padding: 0;
   }
-
   &.style-dense {
     font-size: 0.9rem;
     .button-label {
-      padding: 10px 8px 8px 8px;
+      padding: 8px 8px 8px 8px;
     }
-  }
-}
-
-.material-button.icon-text {
-  // .display(flex);
-  // .flex-direction(row);
-  // .flex-wrap(nowrap);
-  .button-icon {
-    .order(1);
-  }
-  .material-text {
-    .order(1);
-    .flex(1);
-    z-index: 2; //text-transform: lowercase;
-    padding-left: 0;
   }
 }
 
 .material-button.type-action {
   width: 36px;
   height: 36px;
+  padding: 6px;
   border-radius: 50%;
   .material-text {
     display: none;
   }
   .button-icon {
+    padding: 0;
+    height: 24px;
+    width: 24px;
     margin-left: 0; //padding-left: 20px;
-  }
-  .material-ripple {
-    background-color: rgba(255, 255, 255, .3);
-  }
-}
-
-.material-button.type-control {
-  .material-text {
-    text-transform: none;
-  }
-  .button-icon {
-    // margin-left: 16px;
-    // padding-left: 16px;
   }
   .material-ripple {
     background-color: rgba(255, 255, 255, .3);
@@ -161,10 +131,13 @@
   min-width: 88px;
   .transition(box-shadow .2s);
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14),
-0 3px 1px -2px rgba(0, 0, 0, .2),
-0 1px 5px 0 rgba(0, 0, 0, .12);
+  0 3px 1px -2px rgba(0, 0, 0, .2),
+  0 1px 5px 0 rgba(0, 0, 0, .12);
   &:hover {
     //background-color: #E0E0E0;
+  }
+  &:focus {
+    background-color: darken(rgba(255, 255, 255, .95), 5%);
   }
   &:active,
   &.is-active {
@@ -176,12 +149,31 @@
   &.primary-color {
     background-color: @primary-color;
     color: @primary-color-text;
+    &:focus {
+      background-color: lighten(@primary-color, 5%);
+      color: @primary-color-text;
+    }
   }
   &.accent-color {
     background-color: @accent-color;
     color: @accent-color-text;
+    &:focus {
+      background-color: lighten(@accent-color, 10%);
+      color: @accent-color-text;
+    }
   }
 }
+
+.material-button.type-file {
+  overflow: hidden;
+  position: relative;
+  vertical-align: middle;
+  .button-icon {
+    z-index: 1;
+    padding-right: 6px;
+  }
+}
+
 
 .dark-theme {
   .material-button {
@@ -197,37 +189,24 @@
     >.material-ripple {
       background-color: rgba(255, 255, 255, .3);
     }
+    &:focus {
+      background-color: rgba(255, 255, 255, .05);
+    }
     &.type-raised {
-      background-color: @primary-color-dark;
-      color: @primary-color-text-dark;
+      background-color: rgba(255, 255, 255, .95);
+      color: @default-color-text;
+      &:focus {
+        background-color: darken(rgba(255, 255, 255, .95), 5%);
+      }
       &.primary-color {
         background-color: @primary-color-dark;
         color: @primary-color-text-dark;
       }
-      &.accent-color {
+      &.accent-color,
+      &.secondary-color {
         background-color: @accent-color-dark;
         color: @accent-color-text-dark;
       }
     }
-  }
-}
-
-.material-button.is-primary {
-  color: @primary-color-text;
-  background-color: @primary-color;
-  &:hover {
-    //transform: scale(1.1);
-    background-color: @primary-color;
-  }
-}
-
-
-.material-button.type-file {
-  overflow: hidden;
-  position: relative;
-  vertical-align: middle;
-  .button-icon {
-    z-index: 1;
-    padding-right: 6px;
   }
 }

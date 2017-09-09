@@ -4,7 +4,6 @@ import init from './component/init';
 import events from './component/events';
 import classify from './component/classify';
 import ripple from './component/ripple';
-
 import emitter from './module/emitter';
 import create from './element/create';
 import css from './module/css';
@@ -12,7 +11,7 @@ import merge from './module/merge';
 import insert from './element/insert';
 import bind from './module/bind';
 // modules
-import control from './control';
+import control from './component/control';
 
 const defaults = {
   prefix: 'material',
@@ -50,6 +49,10 @@ class Button {
     this.options = merge(defaults, options);
 
     this.init();
+    this.build();
+    this.setup();
+    this.bind(this.options.bind);
+
     this.emit('ready');
 
     return this;
@@ -62,9 +65,6 @@ class Button {
    */
   init() {
     init(this);
-    this.build();
-    this.setup();
-    this.bind(this.options.bind);
     this.emit('init');
   }
 
@@ -80,11 +80,11 @@ class Button {
 
     classify(this.wrapper, this.options);
 
-    if (this.options.icon) {
-      this.buildIcon(this.options.type, this.options.icon || this.options.name);
-    }
+    this.options.label = this.options.label || this.options.text;
 
-    this.buildLabel();
+    this.label(this.options.label);
+    this.icon(this.options.icon);
+
 
     if (this.options.type) {
       css.add(this.wrapper, 'type-' + this.options.type);
@@ -113,8 +113,8 @@ class Button {
       this.wrapper.dataset.name = this.options.name;
     }
 
-    if (this.label) {
-      this.wrapper.title = this.label;
+    if (this.options.label) {
+      this.wrapper.title = this.options.label;
     }
 
     if (this.options.style) {
@@ -127,48 +127,6 @@ class Button {
     if (this.options.content) {
       this.wrapper.innerHTML = this.options.content;
     }
-
-
-  }
-
-  /**
-   * [initLabel description]
-   * @return {?} [description]
-   */
-  buildLabel(label) {
-    label = label || this.label;
-    if (this.options.label === null) return;
-
-    let text = this.options.label || this.options.text;
-
-    this.label = create('label', this.options.class + '-label');
-
-    if (text) {
-      this.label.textContent = text;
-    }
-
-    insert(this.label, this.wrapper);
-  }
-
-  /**
-   * [_initIcon description]
-   * @param  {string} type
-   * @return {string}
-   */
-  buildIcon(type, name) {
-
-    var position = 'top';
-    if (this.options.type === 'text-icon') {
-      position = 'bottom';
-    }
-
-    var tag = 'i';
-    this.icon = create(tag, this.options.class + '-icon');
-    css.add(this.wrapper, 'icon-text');
-    insert(this.icon, this.wrapper);
-
-    if (name)
-      css.add(this.icon, name);
   }
 
   /**

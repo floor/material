@@ -9,6 +9,8 @@ import bind from './module/bind';
 import moment from 'moment';
 
 import Button from './button';
+import iconBack from './skin/material/icon/back.svg';
+import iconForward from './skin/material/icon/forward.svg';
 
 import emitter from './module/emitter';
 
@@ -64,15 +66,11 @@ class Calendar {
    */
   constructor(options) {
     this.options = merge(defaults, options || {});
+    console.log('calendar contructor', options);
 
-
-    this.init(this.options);
+    this.init(options);
     this.build();
-
-    if (this.options.bind) {
-      //console.log('vind', this.options.bind);
-      this.bind(this.options.bind);
-    }
+    this.bind();
 
     return this;
   }
@@ -82,9 +80,6 @@ class Calendar {
    * @return  Class instance
    */
   init(options) {
-    options = options || this.options;
-
-
 
     // assign modules
     Object.assign(this, emitter, display, bind);
@@ -142,14 +137,13 @@ class Calendar {
     // define main tag
     var tag = this.options.tag || 'div';
 
-    this.wrapper = document.createElement(tag);
-    css.add(this.wrapper, this.options.prefix + '-' + this.options.class);
+    this.wrapper = create(tag, this.options.prefix + '-' + this.options.class);
+
+    this.buildWeek();
 
     if (this.options.container) {
       insert(this.wrapper, this.options.container);
     }
-
-    this.buildWeek();
 
     return this;
   }
@@ -162,7 +156,6 @@ class Calendar {
     this.body.scrollTop = 480;
 
     return this;
-
   }
 
   buildHeader() {
@@ -202,10 +195,9 @@ class Calendar {
   }
 
   buildHeadline() {
-    this.headline = document.createElement('div');
-    css.add(this.headline, this.options.class + '-headline');
-    insert(this.headline, this.header);
+    this.headline = create('div', this.options.class + '-headline');
 
+    insert(this.headline, this.header);
 
     var week_number = moment(this.firstDay).isoWeek();
     var year = this.firstDay.getFullYear();
@@ -213,10 +205,9 @@ class Calendar {
 
     this.week_id = year.toString() + week_number.toString();
 
-    var monthIndex = document.createElement('div');
-    insert(monthIndex, this.headline);
-    css.add(monthIndex, 'month-year');
+    var monthIndex = create('div', 'month-year');
     monthIndex.innerHTML = '<b>' + month + '</b> ' + year;
+    insert(monthIndex, this.headline);
 
     // var weekIndex = document.createElement('div');
     // insert(weekIndex, this.headline);
@@ -227,13 +218,12 @@ class Calendar {
   }
 
   buildNavigation() {
-    var navigation = document.createElement('div');
+    var navigation = create('div', this.options.prefix + '-toolbar');
     insert(navigation, this.headline);
-    css.add(navigation, this.options.prefix + '-toolbar');
 
     var back = new Button({
-      icon: 'mdi-arrow-back',
-      label: null
+      icon: iconBack,
+      style: 'dense'
     }).on('press', () => {
       this.back();
     }).insert(navigation);
@@ -250,8 +240,8 @@ class Calendar {
     css.add(today.wrapper, 'compact');
 
     var next = new Button({
-      icon: 'mdi-arrow-forward',
-      label: null
+      icon: iconForward,
+      style: 'dense'
     }).on('press', () => {
       this.next();
     }).insert(navigation);
@@ -265,23 +255,20 @@ class Calendar {
    * @return {?}      [description]
    */
   buildAllDay() {
-    var allday = document.createElement('div');
+    var allday = create('div', 'allday');
     insert(allday, this.header);
-    css.add(allday, 'allday');
 
     var dow = new Date(this.firstDay);
     var days = this.options.days;
 
-    var label = document.createElement('label');
+    var label = create('label', 'label');
     label.innerHTML = 'all-day';
-    css.add(label, 'label');
     insert(label, allday);
 
     for (var i = 0; i < days; i++) {
 
-      var day = document.createElement('div');
+      var day = create('div', 'date');
       day.setAttribute('data-date', this.dateToString(dow));
-      css.add(day, 'date');
       insert(day, allday);
 
       dow.setDate(dow.getDate() + 1);
@@ -458,6 +445,7 @@ class Calendar {
    * @param {string} value
    */
   set(prop, value, options) {
+    console.log('set calendart', prop, value);
     switch (prop) {
       case 'week':
         this.setWeek(value, options);
@@ -515,11 +503,9 @@ class Calendar {
     date = date || new Date();
 
     this.firstDay = this.getFirstDayOfWeek(this.date);
-
     this.wrapper.innerHTML = '';
 
     this.buildWeek();
-
   }
 
 

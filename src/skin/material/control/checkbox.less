@@ -41,9 +41,10 @@
       }
     }
   }
-  label {
+  .checkbox-label {
     .flex(1);
     .order(3);
+    line-height: 1.3rem;
     cursor: default;
     padding: 16px 0;
     margin: 0px 2px 0px 0;
@@ -69,6 +70,9 @@
     .checkbox-label {
       opacity: .5;
     }
+    .checkbox-icon {
+      border-color: #BDBDBD;
+    }
     .checkbox-control {
       .checkbox-icon {}
     }
@@ -87,6 +91,16 @@
 
 .dark-theme {
   .material-checkbox {
+    .material-control {
+      .checkbox-icon {
+        border: 2px solid rgba(255, 255, 255, 0.5);
+      }
+    }
+    &.is-focused {
+      .material-control {
+        background-color: rgba(255, 255, 255, 0.5);
+      }
+    }
     &.is-focused {
       .material-control {
         background-color: rgba(255, 255, 255, 0.5);
