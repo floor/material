@@ -110,10 +110,7 @@ class Dialog {
       css.add(this.wrapper, 'dialog-show');
       //css.remove(this.wrapper, 'dialog-showing');
     }, delayMillis);
-
-
   }
-
 }
 
 export default Dialog;
