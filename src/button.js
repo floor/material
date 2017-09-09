@@ -108,6 +108,8 @@ class Button {
   }
 
   setup() {
+    this.element.input = this.wrapper;
+
     if (this.options.name) {
       //console.log('name', this.options.name);
       this.wrapper.dataset.name = this.options.name;
