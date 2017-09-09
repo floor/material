@@ -5,7 +5,7 @@
   display: inline-block;
   vertical-align: middle;
   cursor: default;
-  padding: 0 8px 0 8px;
+  padding: 6px 8px 6px 8px;
   margin: 0 8px;
   border: none;
   border-radius: 3px;
@@ -24,11 +24,11 @@
     z-index: 2;
     display: inline-block;
     color: @icon-color;
-    width: 36px;
-    height: 36px;
+    width: 24px;
+    height: 24px;
     padding: 0 8px; //.flex(none);
     vertical-align: bottom;
-    padding: 18px 8px; //margin-left: 8px;
+    padding: 0;
     background-repeat: no-repeat;
     background-position: center center;
   }
@@ -39,7 +39,7 @@
     display: inline-block;
     z-index: 2;
     text-transform: uppercase;
-    padding: 10px 8px 10px 8px;
+    padding: 3px 8px 3px 8px;
     margin: 0;
   }
   .material-ripple {
@@ -52,6 +52,40 @@
     width: 5px;
     border-radius: 50%;
   }
+}
+
+// styles
+.material-button {
+  &.style-compact {
+    >.button-label {
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+  &.style-dense {
+    >.button-label {
+      font-size: 0.9rem;
+      padding-top: 2px;
+      padding-bottom: 2px;
+    }
+  }
+}
+
+// color
+.material-button {
+  &.primary-color {
+    //background-color: @primary-color;
+    color: @primary-color;
+  }
+  &.accent-color,
+  &.secondary-color {
+    //background-color: @accent-color;
+    color: @accent-color;
+  }
+}
+
+// states
+.material-button {
   &.is-disabled {
     pointer-events: none;
     opacity: .3;
@@ -74,39 +108,9 @@
     background-color: @background;
     color: rgb(136, 136, 136);
   }
-  input[type=file] {
-    z-index: 20;
-    position: absolute;
-    height: 48px;
-    width: 48px;
-    top: 0;
-    right: 0;
-    margin: 0;
-    padding: 0;
-    font-size: 10px;
-    cursor: pointer;
-    opacity: 0;
-    filter: alpha(opacity=0);
-  }
-  &.primary-color {
-    //background-color: @primary-color;
-    color: @primary-color;
-  }
-  &.accent-color {
-    //background-color: @accent-color;
-    color: @accent-color;
-  }
-  &.style-compact {
-    padding: 0;
-  }
-  &.style-dense {
-    font-size: 0.9rem;
-    .button-label {
-      padding: 8px 8px 8px 8px;
-    }
-  }
 }
 
+// types
 .material-button.type-action {
   width: 36px;
   height: 36px;
@@ -154,7 +158,8 @@
       color: @primary-color-text;
     }
   }
-  &.accent-color {
+  &.accent-color,
+  &.secondary-color {
     background-color: @accent-color;
     color: @accent-color-text;
     &:focus {
@@ -164,10 +169,26 @@
   }
 }
 
+
+// type file
 .material-button.type-file {
   overflow: hidden;
   position: relative;
   vertical-align: middle;
+  input[type=file] {
+    z-index: 20;
+    position: absolute;
+    height: 48px;
+    width: 48px;
+    top: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+    font-size: 10px;
+    cursor: pointer;
+    opacity: 0;
+    filter: alpha(opacity=0);
+  }
   .button-icon {
     z-index: 1;
     padding-right: 6px;
