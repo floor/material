@@ -11,7 +11,7 @@
   //border-bottom: 1px solid rgba(100, 100, 100, 0.1);
   input {
     position: absolute;
-    top: -1000px;
+    left: -10000px;
   }
   .slider-label {
     .flex(1);
@@ -145,6 +145,15 @@
       cursor: pointer;
       .slider-track {}
       .slider-knob {}
+    }
+  }
+  &.is-focused {
+    .slider-control {
+      .slider-knob {
+        height: 18px;
+        width: 18px;
+        border: 32px solid rgba(0, 0, 0, 0.05);
+      }
     }
   }
   &.type-discrete {

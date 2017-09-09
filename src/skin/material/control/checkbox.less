@@ -68,18 +68,20 @@
   }
   &.is-disabled {
     .checkbox-label {
-      opacity: .5;
+      opacity: .4;
     }
     .checkbox-icon {
-      border-color: #BDBDBD;
+      opacity: .4;
     }
     .checkbox-control {
-      .checkbox-icon {}
+      .checkbox-icon {
+        opacity: .4;
+      }
     }
   }
   &.is-focused {
     .checkbox-control {
-      background-color: rgba(34, 31, 31, .1);
+      background-color: rgba(34, 31, 31, .05);
     }
   }
   &:active {
@@ -97,8 +99,8 @@
       }
     }
     &.is-focused {
-      .material-control {
-        background-color: rgba(255, 255, 255, 0.5);
+      .checkbox-control {
+        background-color: rgba(255, 255, 255, 0.05);
       }
     }
     &.is-checked {
