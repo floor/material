@@ -128,7 +128,7 @@ class Layout {
   _renderComponents(component, level) {
     var components = component.components;
 
-    var wrapper = component.wrapper || component.wrapper;
+    var wrapper = component.wrapper;
 
     var container = component.container;
     //console.log('_renderComponents', components, type, level);
@@ -184,7 +184,7 @@ class Layout {
       // component.addClass(this.options.class + '-' + 'component');
       // component.addClass('component-' + property.name);
 
-      property.container = component.wrapper;
+      property.container = component.content || component.wrapper;
 
       //console.log('property.components', options.name, property);
 
