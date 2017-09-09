@@ -3,8 +3,9 @@
 
 import init from './component/init';
 import classify from './component/classify';
+import css from './module/css';
 import events from './component/events';
-import insert from './component/insert';
+import insert from './element/insert';
 import create from './element/create';
 import merge from './module/merge';
 import emitter from './module/emitter';
@@ -13,6 +14,7 @@ const defaults = {
   prefix: 'material',
   class: 'drawer',
   modifier: 'width',
+  size: '200px',
   tag: 'div',
   modules: [emitter, events, insert]
 };
@@ -34,7 +36,9 @@ class Drawer {
    * @return {Object} Class instance 
    */
   constructor(options) {
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
+
+    console.log('options.size', defaults.size, options.size, this.options.size);
 
     init(this);
     this.build(this.options);
@@ -54,8 +58,12 @@ class Drawer {
 
     classify(this.wrapper, options);
 
+    this.content = create('div', this.options.class + '-content');
+    this.content.style[this.options.modifier] = this.options.size;
+    insert(this.content, this.wrapper);
+
     if (options.container) {
-      this.insert(options.container);
+      insert(this.wrapper, options.container);
     }
 
     if (!this.options.display) {
@@ -73,9 +81,11 @@ class Drawer {
    * @return {Object} The class instance
    */
   toggle() {
+    console.log('toggle', this.display);
     if (this.display === 'opened') {
       this.close();
     } else {
+      console.log('open', this.display);
       this.open();
     }
 
@@ -87,8 +97,11 @@ class Drawer {
    * @return {Object} The class instance
    */
   close() {
+    css.add(this.wrapper, 'is-closed');
+    css.remove(this.wrapper, 'is-open');
     this.wrapper.style[this.options.modifier] = '0px';
     this.display = 'closed';
+
     this.emit(this.display);
 
     return this;
@@ -99,12 +112,21 @@ class Drawer {
    * @return {Object} The class instance
    */
   open() {
-    this.wrapper.style[this.options.modifier] = '200px';
+    css.add(this.wrapper, 'is-open');
+    css.remove(this.wrapper, 'is-closed');
+    this.wrapper.style[this.options.modifier] = this.options.size;
     this.display = 'opened';
     this.emit(this.display);
 
     return this;
   }
+
+  insert(container, context) {
+    insert(this.wrapper, container, context);
+
+    return this;
+  }
+
 }
 
 export default Drawer;
