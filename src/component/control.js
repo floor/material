@@ -50,8 +50,9 @@ var control = {
 
     if (!this.element.label) {
       this.element.label = create('label', this.options.class + '-label');
-      this.element.label.textContent = label;
     }
+
+    this.element.label.textContent = label;
 
     insert(this.element.label, this.wrapper);
   },
