@@ -3,8 +3,7 @@ import insert from '../element/insert';
 import offset from '../element/offset';
 
 const defaults = {
-  transition: '.5s',
-  equation: 'ease-out',
+  transition: '.5s cubic-bezier(0.4, 0.0, 0.2, 1)',
   opacity: ['1', '.3']
 };
 
