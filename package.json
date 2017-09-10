@@ -15,23 +15,5 @@
   "homepage": "https://github.com/codepolitan/material",
   "keywords": [
     "material"
-  ],
-  "scripts": {
-    "build-js": "browserify src/index.js  --debug -o 'exorcist dist/material.js.map > dist/material.js' -v",
-    "build-css": "lessc src/skin/material/material.less > dist/material.css",
-    "watch": "npm run watch-js & npm run watch-css",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "browserify": {
-    "transform": [
-      [
-        "babelify",
-        {
-          "presets": [
-            "es2015"
-          ]
-        }
-      ]
-    ]
-  }
+  ]
 }
