@@ -6,43 +6,24 @@ import insert from './element/insert';
 import merge from './module/merge';
 import css from './module/css';
 import bind from './module/bind';
-import moment from 'moment';
+import emitter from './module/emitter';
 
 import Button from './button';
 import iconBack from './skin/material/icon/back.svg';
 import iconForward from './skin/material/icon/forward.svg';
-
-import emitter from './module/emitter';
 
 const defaults = {
   prefix: 'material',
   class: 'calendar',
   functions: ['newEvent'],
   target: '.week-day',
-  days: 21,
-  months: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
+  rangedays: 7,
+  months: ['January', 'February', 'Mars', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+  days: ['Sunday', 'Monday', 'Tuesday', 'wednesday', 'Thursday', 'Friday', 'Saturday'],
   mode: 'view',
   range: [8, 18],
   display: 'three',
-  displays: [{
-    name: 'day',
-    days: 1
-  }, {
-    name: 'work',
-    days: 5
-  }, {
-    name: 'one',
-    days: 7
-  }, {
-    name: 'tow',
-    days: 14
-  }, {
-    name: 'four',
-    days: 28
-  }, {
-    name: 'eight',
-    days: 56
-  }],
+  weekend: [0, 1],
   bind: {
     'wrapper.dblclick': 'onDblClick'
   }
@@ -66,7 +47,6 @@ class Calendar {
    */
   constructor(options) {
     this.options = merge(defaults, options || {});
-    console.log('calendar contructor', options);
 
     this.init(options);
     this.build();
@@ -97,7 +77,6 @@ class Calendar {
 
     return this;
   }
-
 
   /**
    * getMonday
@@ -170,20 +149,15 @@ class Calendar {
     css.add(element, 'header-days');
 
     var date = new Date(this.firstDay);
-    var days = this.options.days;
-
-    var month = this.options.months[this.firstDay.getMonth()];
+    var days = this.options.rangedays;
 
     var margin = document.createElement('div');
     css.add(margin, 'margin');
     insert(margin, element);
 
     for (var i = 0; i < days; i++) {
-      //var formatted = date.getDate();
-      //var month = this.options.months[dow.getMonth()];
-
-      var dow = moment(date).format("ddd");
-      var dom = moment(date).format("M/D");
+      var dow = this.options.days[date.getDay()];
+      var dom = (date.getMonth() + 1) + '/' + date.getDate();
 
       var cell = document.createElement('div');
       cell.innerHTML = '<div class="first">' + dow + '</div><div class="second">' + dom + '</div>';
@@ -199,20 +173,13 @@ class Calendar {
 
     insert(this.headline, this.header);
 
-    var week_number = moment(this.firstDay).isoWeek();
     var year = this.firstDay.getFullYear();
     var month = this.options.months[this.firstDay.getMonth()];
-
-    this.week_id = year.toString() + week_number.toString();
 
     var monthIndex = create('div', 'month-year');
     monthIndex.innerHTML = '<b>' + month + '</b> ' + year;
     insert(monthIndex, this.headline);
 
-    // var weekIndex = document.createElement('div');
-    // insert(weekIndex, this.headline);
-    // css.add(weekIndex, 'week-number');
-    // weekIndex.innerHTML = '<b>semaine</b> ' + week_number;
 
     this.buildNavigation();
   }
@@ -259,7 +226,7 @@ class Calendar {
     insert(allday, this.header);
 
     var dow = new Date(this.firstDay);
-    var days = this.options.days;
+    var days = this.options.rangedays;
 
     var label = create('label', 'label');
     label.innerHTML = 'all-day';
@@ -287,7 +254,7 @@ class Calendar {
 
     var firstDay = this.firstDay;
 
-    var days = this.options.days;
+    var days = this.options.rangedays;
 
     this.body = document.createElement('div');
     css.add(this.body, this.options.class + '-body');
@@ -310,7 +277,6 @@ class Calendar {
 
     var sday = new Date(firstDay);
     for (var k = 0; k < days; k++) {
-      //console.log('days', k);
       var day = document.createElement('div');
       css.add(day, 'week-day');
       day.setAttribute('data-date', this.dateToString(sday));
@@ -367,7 +333,7 @@ class Calendar {
     for (var j = 0; j <= 24; j++) {
       ctx.beginPath();
 
-      if (j < this.options.range[0] || j > this.options.range[1]) {
+      if (j < this.options.range[0] - 1 || j > this.options.range[1] - 1) {
         ctx.strokeStyle = '#F2F2F2';
       } else {
         ctx.strokeStyle = '#D9D9D9';
@@ -381,53 +347,31 @@ class Calendar {
     }
   }
 
-  getOptions() {
-    console.log(this.options);
-  }
-
   /**
    * [onSelect description]
    * @param  {?} e [description]
    * @return {?}   [description]
    */
   onDblClick(e) {
+    var date;
 
     var self = this;
     if (e.target && e.target.matches(this.options.target)) {
       console.log('click', e.target, e);
-      // console.log('offset', e.offsetX, e.offsetY);
-      // console.log('layer', e.layerX, e.layerX);
-      var date = e.target.getAttribute('data-date');
-
+      date = e.target.getAttribute('data-date');
       var d = date.split(/-/);
-
-
       var h = self.roundTime(e.offsetY / 60);
-
-      //date = new Date(d[0], d[1] - 1, d[2], '15', '00', '00');
-
       console.log("h ", date, d, h);
-
       self.newEvent(date);
-
     }
 
     if (e.target && e.target.matches('.allday .date')) {
       console.log('click', e.target, e);
-      // console.log('offset', e.offsetX, e.offsetY);
-      // console.log('layer', e.layerX, e.layerX);
-      var date = e.target.getAttribute('data-date');
-
+      date = e.target.getAttribute('data-date');
       var d = date.split(/-/);
-
-
       var h = self.roundTime(e.offsetY / 60);
 
-      //date = new Date(d[0], d[1] - 1, d[2], '15', '00', '00');
-
-      console.log("h ", date, d, h);
-
-      self.newEvent(date);
+      self.newAllDayEvent(date);
 
     }
   }
@@ -475,7 +419,7 @@ class Calendar {
    * @return {void}
    */
   next() {
-    this.firstDay.setDate(this.firstDay.getDate() + this.options.days);
+    this.firstDay.setDate(this.firstDay.getDate() + this.options.rangedays);
 
     this.wrapper.innerHTML = '';
 
@@ -487,7 +431,7 @@ class Calendar {
    * @return {void}
    */
   back() {
-    this.firstDay.setDate(this.firstDay.getDate() - this.options.days);
+    this.firstDay.setDate(this.firstDay.getDate() - this.options.rangedays);
 
     this.wrapper.innerHTML = '';
 
