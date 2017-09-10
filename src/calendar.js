@@ -1,6 +1,5 @@
 'use strict';
 
-import display from './container/display';
 import create from './element/create';
 import insert from './element/insert';
 import merge from './module/merge';
@@ -62,7 +61,7 @@ class Calendar {
   init(options) {
 
     // assign modules
-    Object.assign(this, emitter, display, bind);
+    Object.assign(this, emitter, bind);
 
     // init function
     this._initFunction(this.options.functions);

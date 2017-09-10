@@ -1,6 +1,5 @@
 'use strict';
 
-import display from './container/display';
 import insert from './component/insert';
 import merge from './module/merge';
 import css from './module/css';
@@ -61,7 +60,7 @@ class Tree {
     this.items = [];
 
     // assign modules
-    Object.assign(this, emitter, display, insert, bind);
+    Object.assign(this, emitter, insert, bind);
 
     // init function
     this._initFunction(this.options.functions);
@@ -126,7 +125,6 @@ class Tree {
 
     function checkChildren(parentObj) {
       var level = (parentObj.path.split("/").length - 1);
-      console.log('checkChildren', parentObj.name, level);
 
       if (level > 0) {
         tree += '<li class="item-tree" data-path="' + parentObj.path + '">' + parentObj.name;
