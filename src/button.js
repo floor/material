@@ -65,6 +65,9 @@ class Button {
    */
   init() {
     init(this);
+
+    this.element = this.element || {};
+
     this.emit('init');
   }
 
