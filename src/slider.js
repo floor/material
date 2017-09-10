@@ -30,7 +30,7 @@ let defaults = {
   mixins: [],
   build: ['$wrapper.material-slider', {},
     ['label$label.slider-label', {}],
-    ['input$input', { type: 'hidden' }],
+    ['input$input'],
     ['$control.slider-control', {},
       ['$track.slider-track', {},
         ['canvas$canvas.slider-canvas', {}],
@@ -41,7 +41,11 @@ let defaults = {
         ]
       ]
     ]
-  ]
+  ],
+  bind: {
+    'element.input.focus': 'focus',
+    'element.input.blur': 'blur'
+  }
 };
 
 /**
@@ -60,10 +64,7 @@ class Slider {
 
     this.init(this.options);
     this.build(this.options);
-
-    if (this.options.bind) {
-      this.bind(this.options.bind);
-    }
+    this.bind(this.options.bind);
 
     return this;
   }
