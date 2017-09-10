@@ -157,30 +157,6 @@ class Button {
   }
 
   /**
-   * [disable description]
-   * @param  {?} boolean [description]
-   * @return {?}         [description]
-   */
-  disable() {
-    this.disabled = true;
-    css.add(this.wrapper, 'is-disabled');
-
-    return this;
-  }
-
-  /**
-   * [disable description]
-   * @param  {?} boolean [description]
-   * @return {?}         [description]
-   */
-  enable() {
-    this.disabled = false;
-    css.remove(this.wrapper, 'is-disabled');
-
-    return this;
-  }
-
-  /**
    * [_onElementMouseDown description]
    * @param  {event} e
    * @return {void}
@@ -188,7 +164,7 @@ class Button {
   press(e) {
     e.preventDefault();
 
-    if (this.state === 'disabled') return;
+    if (this.disabled === true) return;
 
     this.emit('press', e);
 
