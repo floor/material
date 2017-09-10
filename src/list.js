@@ -104,6 +104,9 @@ class List {
       css.add(this.wrapper, options.class + '-' + options.name);
 
 
+    if (this.options.list)
+      this.set('list', this.options.list);
+
     if (this.options.container) {
       this.insert(this.options.container);
     }
@@ -125,14 +128,12 @@ class List {
     //console.log('onSelect', e.target, this.options.target);
     if (e.target && e.target.matches(this.options.target)) {
       //console.log("item clicked: ", e.target);
-
-      css.remove(this.item, 'is-selected');
-      css.add(e.target, 'is-selected');
+      var current = this.item;
 
       this.item = e.target;
 
       if (this.select) {
-        this.select(this.item, e);
+        this.select(this.item, e, current);
       }
     }
   }
