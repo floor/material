@@ -86,10 +86,7 @@ class Menu {
           var item;
 
           if (info.type === 'divider') {
-            console.log('divider');
-            item = new Divider({
-              css: 'ui-separator'
-            });
+            item = new Divider();
           } else {
             console.log('item');
             var item = new Item({
