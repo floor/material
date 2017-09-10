@@ -38,8 +38,6 @@ class Drawer {
   constructor(options) {
     this.options = merge(defaults, options || {});
 
-    console.log('options.size', defaults.size, options.size, this.options.size);
-
     init(this);
     this.build(this.options);
 
@@ -81,11 +79,9 @@ class Drawer {
    * @return {Object} The class instance
    */
   toggle() {
-    console.log('toggle', this.display);
     if (this.display === 'opened') {
       this.close();
     } else {
-      console.log('open', this.display);
       this.open();
     }
 
