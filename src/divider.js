@@ -6,7 +6,7 @@ import css from './module/css';
 
 var defaults = {
   prefix: 'material',
-  class: 'separator',
+  class: 'divider',
   tag: 'span'
 };
 
