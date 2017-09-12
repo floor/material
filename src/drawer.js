@@ -1,6 +1,5 @@
 'use strict';
 
-
 import init from './component/init';
 import classify from './component/classify';
 import css from './module/css';
@@ -14,7 +13,8 @@ const defaults = {
   prefix: 'material',
   class: 'drawer',
   modifier: 'width',
-  size: '200px',
+  state: 'closed',
+  position: 'left',
   tag: 'div',
   modules: [emitter, events, insert]
 };
@@ -51,17 +51,15 @@ class Drawer {
    * @return {Object} This class instance
    */
   build(options) {
+    console.log('type', options.type);
 
-    this.wrapper = create('aside', options.css);
+    this.wrapper = create('aside');
+    this.underlay(options);
 
     classify(this.wrapper, options);
 
-    this.content = create('div', this.options.class + '-content');
-    this.content.style[this.options.modifier] = this.options.size;
-    insert(this.content, this.wrapper);
-
     if (options.container) {
-      insert(this.wrapper, options.container);
+      this.insert(options.container);
     }
 
     if (!this.options.display) {
@@ -73,6 +71,23 @@ class Drawer {
     return this;
   }
 
+  /**
+   * [underlay description]
+   * @param  {object} options [description]
+   * @return {object} this        [description]
+   */
+  underlay(options) {
+    this.underlay = create('div', 'drawer-underlay');
+    this.underlay.addEventListener('click', () => {
+      this.close();
+    });
+
+    this.on('open', () => {
+      css.remove(this.underlay, 'underlay-hidden');
+    });
+
+    return this;
+  }
 
   /**
    * [toggle description]
@@ -85,7 +100,7 @@ class Drawer {
       this.open();
     }
 
-    return this.display;
+    return this;
   }
 
   /**
@@ -93,9 +108,8 @@ class Drawer {
    * @return {Object} The class instance
    */
   close() {
-    css.add(this.wrapper, 'is-closed');
-    css.remove(this.wrapper, 'is-open');
-    this.wrapper.style[this.options.modifier] = '0px';
+    css.remove(this.wrapper, 'show');
+    css.remove(this.underlay, 'show');
     this.display = 'closed';
 
     this.emit(this.display);
@@ -108,17 +122,27 @@ class Drawer {
    * @return {Object} The class instance
    */
   open() {
-    css.add(this.wrapper, 'is-open');
-    css.remove(this.wrapper, 'is-closed');
-    this.wrapper.style[this.options.modifier] = this.options.size;
+    this.emit('open');
+    css.add(this.wrapper, 'show');
+    css.add(this.underlay, 'show');
     this.display = 'opened';
     this.emit(this.display);
 
     return this;
   }
 
+  /**
+   * [insert description]
+   * @param  {?} container [description]
+   * @param  {?} context   [description]
+   * @return {?}           [description]
+   */
   insert(container, context) {
+    console.log('insert');
     insert(this.wrapper, container, context);
+    setTimeout(() => {
+      insert(this.underlay, container);
+    }, 1000);
 
     return this;
   }
