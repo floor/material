@@ -52,7 +52,7 @@ class Text {
    * @return {Object} The class options
    */
   constructor(options) {
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
 
     init(this);
     this.build(this.options);

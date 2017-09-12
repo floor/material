@@ -40,7 +40,7 @@ export default class Separator {
   init(options) {
     options = options || {};
     // merge options
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
 
     Object.assign(this, insert);
   }

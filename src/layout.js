@@ -25,7 +25,7 @@ class Layout {
    * @return {Object} The class instance
    */
   constructor(options) {
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
 
     this.init();
     this.build();

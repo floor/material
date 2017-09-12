@@ -31,7 +31,7 @@ class Form {
    * @return {Object} Class instance 
    */
   constructor(options) {
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
 
     this.init(options);
     this.build();

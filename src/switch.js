@@ -54,7 +54,7 @@ class Switch {
    * @return {Object} Class instance 
    */
   constructor(options) {
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
 
     this.init(this);
     this.build(this.options);

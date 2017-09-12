@@ -61,7 +61,7 @@ class Checkbox {
    * @return {Object} Class instance 
    */
   constructor(options) {
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
     // init and build
     this.init();
     this.build();
@@ -152,12 +152,14 @@ class Checkbox {
 
   /**
    * [click description]
-   * @param  {[type]} e [description]
+   * @param  {event} e [description]
    * @return {[type]}   [description]
    */
   click(e) {
     this.toggle(e);
     this.element.input.focus();
+
+    return this;
   }
 
   /**
@@ -168,6 +170,8 @@ class Checkbox {
     console.log('setValue', value);
     this.value = value;
     this.element.input.setAttribute('value', value);
+
+    return this;
   }
 }
 

@@ -23,7 +23,7 @@ class Card {
    * @return {Object} Class instance 
    */
   constructor(options) {
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
 
     init(this);
     this.build();

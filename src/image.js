@@ -27,7 +27,7 @@ export default class Image {
   constructor(options) {
     //console.log('text options', options);
 
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
 
     this.init();
     this.build();

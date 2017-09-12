@@ -53,7 +53,7 @@ class Container {
   init(options) {
     // init options and merge options to defaults
     options = options || {};
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
 
 
     this.options.name = this.options.name;

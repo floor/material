@@ -6,7 +6,6 @@ import insert from '../component/insert';
 import css from '../module/css';
 // import bind from '../module/bind';
 
-
 var defaults = {
   prefix: 'material',
   class: 'item',
@@ -55,7 +54,7 @@ export default class Item {
   init(options) {
 
     // merge options
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
 
     // define class
 

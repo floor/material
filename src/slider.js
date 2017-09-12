@@ -60,7 +60,7 @@ class Slider {
    * @return {Object} The class options
    */
   constructor(options) {
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
 
     this.init(this.options);
     this.build(this.options);

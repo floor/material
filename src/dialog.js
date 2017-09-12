@@ -49,7 +49,7 @@ class Dialog {
   init(options) {
     // init options and merge options to defaults
     options = options || {};
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
 
     // implement modules
     Object.assign(this, events, emitter, bind, insert);

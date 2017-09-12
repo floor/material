@@ -52,7 +52,7 @@ class Tree {
    */
   init(options) {
     // init this
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
 
     this.name = this.options.name;
     this.filters = [];
