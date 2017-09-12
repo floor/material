@@ -2,8 +2,10 @@
 
 import init from './component/init';
 import classify from './component/classify';
+import css from './module/css';
 import events from './component/events';
 import insert from './component/insert';
+import offset from './element/offset';
 
 import create from './element/create';
 
@@ -12,7 +14,7 @@ import merge from './module/merge';
 import emitter from './module/emitter';
 
 import List from './list';
-import Item from './list/item';
+import Item from './item';
 import Divider from './divider';
 
 const defaults = {
@@ -47,7 +49,7 @@ class Menu {
    * @return {Object} Class instance 
    */
   constructor(options) {
-    this.options = merge(defaults, options);
+    this.options = merge(defaults, options || {});
 
     init(this);
     this.build(this.options);
@@ -78,6 +80,7 @@ class Menu {
 
     if (this.options.list) {
       new List({
+        wrapper: this.wrapper,
         list: this.options.list,
         height: 600,
         label: 'Flat',
@@ -101,11 +104,21 @@ class Menu {
           console.log('item...', item);
           this.selected = item;
         }
-      }).insert(this.wrapper);
+      });
     }
     this.emit('built', this.wrapper);
 
     return this;
+  }
+
+  show(e) {
+    css.add(this.wrapper, 'show');
+    var offs = offset(e.target);
+    console.log('show', e.target, offs);
+    var offsw = offset(this.wrapper);
+
+    this.wrapper.style.top = offs.top + 'px';
+    this.wrapper.style.left = offs.left - offsw.width + offs.width + 'px';
   }
 }
 
