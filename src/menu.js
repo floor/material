@@ -24,18 +24,10 @@ const defaults = {
   modules: [emitter, events, bind, insert]
 };
 
-/**
- * Base class for all ui components
- * @class
- * @param {Object} options - The component options
- * @return {Object} The class Instance
- */
-
 
 /**
- * Class representing a UI Container. Can add components.
+ * This Class represents a menu.
  *
- * @extends Component
  * @return {parent} The class instance
  * @example new Container({
  *   container: document.body
