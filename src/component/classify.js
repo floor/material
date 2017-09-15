@@ -21,6 +21,10 @@ function classify(element, options) {
     css.add(element, options.class + '-' + options.name);
   }
 
+  if (options.type) {
+    css.add(element, options.class + '-' + options.type);
+  }
+
   if (options.color) {
     css.add(element, options.color + '-color');
   }
