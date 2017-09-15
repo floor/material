@@ -77,6 +77,7 @@ class Button {
    * @return {void}
    */
   build() {
+    this.element = {};
 
     var tag = this.options.tag || 'div';
     this.wrapper = create(tag, this.options.prefix + '-' + this.options.class);
@@ -111,6 +112,7 @@ class Button {
   }
 
   setup() {
+
     this.element.input = this.wrapper;
 
     if (this.options.name) {
