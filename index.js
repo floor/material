@@ -1,6 +1,7 @@
 import Button from 'material/src/button';
-import Component from 'material/src/component';
+import Calendar from 'material/src/calendar';
 import Card from 'material/src/card';
+import Component from 'material/src/component';
 import Checkbox from 'material/src/checkbox';
 import Dialog from 'material/src/dialog';
 import Divider from 'material/src/divider';
@@ -20,9 +21,10 @@ import Toolbar from 'material/src/toolbar';
 
 export {
   Button,
-  Component,
+  Calendar,
   Card,
   Checkbox,
+  Component,
   Dialog,
   Divider,
   Drawer,
