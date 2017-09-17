@@ -2,6 +2,7 @@ import Button from 'material/src/button';
 import Calendar from 'material/src/calendar';
 import Card from 'material/src/card';
 import Component from 'material/src/component';
+import Container from 'material/src/container';
 import Checkbox from 'material/src/checkbox';
 import Dialog from 'material/src/dialog';
 import Divider from 'material/src/divider';
@@ -25,6 +26,7 @@ export {
   Card,
   Checkbox,
   Component,
+  Container,
   Dialog,
   Divider,
   Drawer,
