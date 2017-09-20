@@ -24,7 +24,6 @@ const defaults = {
   modules: [emitter, events, bind, insert]
 };
 
-
 /**
  * This Class represents a menu.
  *
@@ -45,6 +44,7 @@ class Menu {
 
     init(this);
     this.build(this.options);
+    this.setup();
 
     if (this.options.bind) {
       this.bind(this.options.bind);
@@ -74,6 +74,7 @@ class Menu {
       new List({
         wrapper: this.wrapper,
         list: this.options.list,
+        target: '.material-item',
         height: 600,
         label: 'Flat',
         render: (info) => {
@@ -95,6 +96,7 @@ class Menu {
         select: (item) => {
           console.log('item...', item);
           this.selected = item;
+          this.hide();
         }
       });
     }
@@ -103,14 +105,25 @@ class Menu {
     return this;
   }
 
+  setup() {
+    // this.subscribe('click', () => {
+    //   console.log('click');
+    //   this.close();
+    // });
+  }
+
   show(e) {
-    css.add(this.wrapper, 'show');
+    css.add(this.wrapper, this.class + '-show');
     var offs = offset(e.target);
-    console.log('show', e.target, offs);
+
     var offsw = offset(this.wrapper);
 
     this.wrapper.style.top = offs.top + 'px';
     this.wrapper.style.left = offs.left - offsw.width + offs.width + 'px';
+  }
+
+  hide() {
+    css.remove(this.wrapper, this.class + '-show');
   }
 }
 
