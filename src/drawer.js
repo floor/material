@@ -1,13 +1,14 @@
 'use strict';
 
 import init from './component/init';
+import insert from './element/insert';
 import classify from './component/classify';
 import css from './module/css';
 import events from './component/events';
-import insert from './element/insert';
 import create from './element/create';
 import merge from './module/merge';
 import emitter from './module/emitter';
+import controller from './module/controller';
 
 const defaults = {
   prefix: 'material',
@@ -16,7 +17,7 @@ const defaults = {
   state: 'closed',
   position: 'left',
   tag: 'div',
-  modules: [emitter, events, insert]
+  modules: [emitter, events]
 };
 
 /**
@@ -39,6 +40,7 @@ class Drawer {
     this.options = merge(defaults, options || {});
 
     init(this);
+
     this.build(this.options);
 
     this.emit('ready');
@@ -51,40 +53,33 @@ class Drawer {
    * @return {Object} This class instance
    */
   build(options) {
-    console.log('type', options.type);
 
     this.wrapper = create('aside');
-    this.underlay(options);
+
 
     classify(this.wrapper, options);
 
-    if (options.container) {
-      this.insert(options.container);
+    if (options.position) {
+      css.add(this.wrapper, 'position-' + options.position);
     }
 
-    if (!this.options.display) {
-      this.display = 'opened';
+    if (options.size) {
+      if (options.position === 'top' || options.position === 'bottom') {
+        this.wrapper.style = 'height: ' + options.size + 'px;';
+      } else {
+        this.wrapper.style = 'width: ' + options.size + 'px;';
+      }
+    }
+
+    if (options.container) {
+      insert(this.wrapper, options.container);
+    }
+
+    if (!this.options.state) {
+      this.state = 'opened';
     }
 
     this.emit('built', this.wrapper);
-
-    return this;
-  }
-
-  /**
-   * [underlay description]
-   * @param  {object} options [description]
-   * @return {object} this        [description]
-   */
-  underlay(options) {
-    this.underlay = create('div', 'drawer-underlay');
-    this.underlay.addEventListener('click', () => {
-      this.close();
-    });
-
-    this.on('open', () => {
-      css.remove(this.underlay, 'underlay-hidden');
-    });
 
     return this;
   }
@@ -94,7 +89,7 @@ class Drawer {
    * @return {Object} The class instance
    */
   toggle() {
-    if (this.display === 'opened') {
+    if (this.state === 'opened') {
       this.close();
     } else {
       this.open();
@@ -109,10 +104,9 @@ class Drawer {
    */
   close() {
     css.remove(this.wrapper, 'show');
-    css.remove(this.underlay, 'show');
-    this.display = 'closed';
+    this.state = 'closed';
 
-    this.emit(this.display);
+    this.emit(this.state);
 
     return this;
   }
@@ -124,9 +118,8 @@ class Drawer {
   open() {
     this.emit('open');
     css.add(this.wrapper, 'show');
-    css.add(this.underlay, 'show');
-    this.display = 'opened';
-    this.emit(this.display);
+    this.state = 'opened';
+    this.emit(this.state);
 
     return this;
   }
@@ -138,15 +131,10 @@ class Drawer {
    * @return {?}           [description]
    */
   insert(container, context) {
-    console.log('insert');
     insert(this.wrapper, container, context);
-    setTimeout(() => {
-      insert(this.underlay, container);
-    }, 1000);
 
     return this;
   }
-
 }
 
 export default Drawer;
