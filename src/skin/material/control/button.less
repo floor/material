@@ -1,10 +1,10 @@
 .material-button {
-  color: @default-color-text;
-  font-size: 1rem;
-  position: relative; //text-transform: uppercase;
   display: inline-block;
+  color: @default-color-text;
+  position: relative; //text-transform: uppercase;
   vertical-align: middle;
   cursor: default;
+  height: 36px;
   padding: 6px 8px 6px 8px;
   margin: 0 8px;
   border: none;
@@ -35,7 +35,9 @@
   .button-label {
     .order(2);
     pointer-events: none; //.flex(1);
+    font-size: 0.875rem;
     font-weight: 500;
+    line-height: 1.1rem;
     display: inline-block;
     z-index: 2;
     text-transform: uppercase;
@@ -63,8 +65,9 @@
     }
   }
   &.style-dense {
+    height: 32px;
     >.button-label {
-      font-size: 0.9rem;
+      font-size: 0.8125rem;
       padding-top: 2px;
       padding-bottom: 2px;
     }

@@ -34,6 +34,8 @@ html {
 }
 
 body {
+  color: rgba(0, 0, 0, 0.67);
+  font-family: Roboto, arial, serif;
   font-size: 100%;
   position: relative;
   display: block;
@@ -42,9 +44,10 @@ body {
   overflow: hidden;
   margin: 0;
   padding: 0;
-  font-family: Roboto, arial, serif;
-  color: rgba(0, 0, 0, 0.67);
+  user-select: none;
 }
+
+
 
 input,
 textarea,
@@ -64,7 +67,7 @@ p {
   font-weight: 400;
 }
 
-// get ride of outline
+// get rid of outline
 select,
 input,
 textarea,
@@ -96,6 +99,29 @@ button {
 .clearfix {
   display: inline-block;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -175,14 +201,16 @@ a {
   -webkit-user-select: none;
   -khtml-user-select: none;
   -moz-user-select: none;
-  -ms-user-select: none; //  user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .enableselect {
   -webkit-user-select: text;
   -khtml-user-select: text;
   -moz-user-select: text;
-  -o-user-select: text; //  user-select: text;
+  -o-user-select: text;
+  user-select: text;
 }
 
 // disable everything
@@ -194,8 +222,4 @@ a {
 input,
 textarea {
   .enableselect;
-}
-
-button {
-  .disableselect;
 }

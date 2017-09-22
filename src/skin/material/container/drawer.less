@@ -1,7 +1,6 @@
 .material-drawer {
   z-index: 16;
   position: relative;
-  transform: translateX(calc(-100% - 20px));
   will-change: transform;
   .transition(.2s cubic-bezier(0.4, 0.0, 0.6, 1));
   &.show {
@@ -10,7 +9,7 @@
   }
 }
 
-&.drawer-temporary {
+.material-drawer.drawer-temporary {
   position: fixed;
   height: 100%;
   width: 280px;
@@ -20,6 +19,13 @@
   &.show {
     transform: translateX(0);
     .transition(.3s cubic-bezier(0.0, 0.0, 0.2, 1));
+  }
+  &::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
   }
 }
 
