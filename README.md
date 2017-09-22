@@ -1,1 +1,1 @@
-Vanilla Implementation of Material Design Components
+Vanilla Implementation of Material Design Components - ES2015
