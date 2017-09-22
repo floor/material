@@ -23,6 +23,7 @@ function classify(element, options) {
 
   if (options.type) {
     css.add(element, options.class + '-' + options.type);
+    css.add(element, 'type-' + options.type);
   }
 
   if (options.color) {
@@ -32,6 +33,24 @@ function classify(element, options) {
   if (options.css) {
     css.add(element, options.css);
   }
+
+
+  if (options.name) {
+    //console.log('name', options.name);
+    element.dataset.name = options.name;
+  }
+
+  if (options.label) {
+    element.title = options.label;
+  }
+
+  if (options.style) {
+    var styles = options.style.split(/\ /);
+    for (var i = 0; i < styles.length; i++) {
+      css.add(element, 'style-' + styles[i]);
+    }
+  }
+
 
   return;
 }
