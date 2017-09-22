@@ -74,7 +74,6 @@ class Controller {
    * @return {Object} The class instance
    */
   register(component) {
-    //console.log('register', component.class);
     this.components.push(component);
 
     this.component[component.name] = this.component[component.name] || [];
