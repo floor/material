@@ -1,116 +1,76 @@
-//import animate from 'material/dist/vendor/morpheus';
-import offset from './offset';
-import css from '../module/css';
-import insert from './insert';
+import create from '../element/create';
+import insert from '../element/insert';
+import offset from '../element/offset';
 
-const DEFAULT = {
-  duration: '500',
-  equation: 'ease-out'
+const defaults = {
+  transition: '.5s cubic-bezier(0.4, 0.0, 0.2, 1)',
+  opacity: ['1', '.3']
 };
 
 /**
- * element ripple
- * @module element/ripple
- */
-
-/**
  * show method
- * @param  {string} ripple
- * @param  {string} x
- * @param  {string} y
+ * @param  {event} e The event related to the the touch
  * @param  {Object} coord
  * @return {void}
  */
-function show(element, e) {
-  console.log('shoe');
-  this.size = offset(element);
+function ripple(e, params) {
+  var options = Object.assign({},
+    defaults, params || {});
 
-  if (!this.ripple) {
-    var ripple = document.createElement('span');
-    css.add(ripple, 'material-ripple');
 
-    insert(ripple, element, 'top');
-  }
+  //console.log('show', e);
+  var container = e.target;
+  var offs = offset(container);
 
-  var rippleCoord = this._rippleCoord(this.size);
-  var options = this.options.ripple;
+  let ripple = create('div', 'material-ripple');
+  let end = coordinate(offs);
+  let initial = {
+    left: (e.offsetX || offs.width / 2) + 'px',
+    top: (e.offsetY || offs.height / 2) + 'px',
+  };
 
-  var startLeft = (e.offsetX || this.size.width / 2);
-  var startTop = (e.offsetY || this.size.height / 2);
+  ripple.style.left = initial.left;
+  ripple.style.top = initial.top;
+  ripple.style.opacity = options.opacity[1];
+  ripple.style.transition = options.transition;
 
-  this.ripple.style({
-    left: startLeft + 'px',
-    top: startTop + 'px',
-    width: '5px',
-    height: '5px',
-    opacity: 1
-  });
+  insert(ripple, container, 'top');
 
-  this.ripple.style.left = startLeft + 'px';
-  this.ripple.style.top = startTop + 'px';
-  this.ripple.style.height = '5px';
-  this.ripple.style.width = '5px';
-  this.ripple.style.opacity = '.2';
+  setTimeout(() => {
+    //console.log('style coord', end);
+    ripple.style.left = end.left;
+    ripple.style.top = end.top;
+    ripple.style.width = end.size;
+    ripple.style.height = end.size;
+    ripple.style.opacity = options.opacity[1];
+  }, 1);
 
-  this.rippleActive = true;
-
-  // stop animation if exists
-  if (this.animation) { this.animation.stop(); }
-
-  this.ripple.style.left = rippleCoord.left;
-  this.ripple.style.top = rippleCoord.top;
-  this.ripple.style.width = rippleCoord.size;
-  this.ripple.style.height = rippleCoord.size;
-  this.ripple.style.left = rippleCoord.left;
-
-  this.ripple.style.opacity = '.2';
-  // this.animation = animate(ripple, {
-  //   width: rippleCoord.size,
-  //   height: rippleCoord.size,
-  //   left: rippleCoord.left,
-  //   top: rippleCoord.top,
-  //   opacity: 0.2,
-  //   duration: options.duration,
-  //   easing: options.equation,
-  //   complete: () => {
-  //     this.rippleActive = false;
-  //     if (!this.hasClass('is-active'))
-  //       this.hide();
-  //   }
-  // });
+  document.body.onmouseup = () => {
+    destroy(ripple);
+  };
 }
 
 /**
- * [hide description]
+ * this method hides the given ripple
+ * @return {Object} Size and position
  */
-function hide(ripple) {
-  if (!this.ripple || this.rippleActive) {
-    return;
-  }
+function destroy(ripple) {
+  if (ripple.parentNode)
+    ripple.style.opacity = '0';
 
-  if (this.animation) {
-    this.animation.stop();
-  }
+  document.body.onmouseup = null;
 
-  this.animation = animate(ripple, {
-    opacity: 0,
-    duration: '200',
-    easing: defaults.equation,
-    complete: () => {
-      if (this.ripple) {
-        ripple.destroy();
-        ripple = null;
-      }
-    }
-  });
+  setTimeout(() => {
+    if (ripple.parentNode)
+      ripple.parentNode.removeChild(ripple);
+  }, 1000);
 }
 
 /**
- * Get ripple final coordiantes
- * @return {Object} Size and top
+ * Get ripple final coordinates
+ * @return {Object} Size and position
  */
-
-function coord(offset) {
+function coordinate(offset) {
   var size = offset.width;
   var top = -offset.height / 2;
 
@@ -123,10 +83,10 @@ function coord(offset) {
   }
 
   return {
-    size: size * 2,
-    top: top,
-    left: size / -2
+    size: (size * 2) + 'px',
+    top: top + 'px',
+    left: (size / -2) + 'px'
   };
 }
 
-export default { show, hide };
+export default ripple;
