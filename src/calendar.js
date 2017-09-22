@@ -2,7 +2,6 @@
 
 import create from './element/create';
 import insert from './element/insert';
-import merge from './module/merge';
 import css from './module/css';
 import bind from './module/bind';
 import emitter from './module/emitter';
@@ -14,8 +13,8 @@ import iconForward from './skin/material/icon/forward.svg';
 const defaults = {
   prefix: 'material',
   class: 'calendar',
-  functions: ['newEvent'],
   target: '.week-day',
+  functions: ['newEvent'],
   rangedays: 7,
   months: ['January', 'February', 'Mars', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
   days: ['Sunday', 'Monday', 'Tuesday', 'wednesday', 'Thursday', 'Friday', 'Saturday'],
@@ -24,7 +23,7 @@ const defaults = {
   display: 'three',
   weekend: [0, 1],
   bind: {
-    'wrapper.dblclick': 'onDblClick'
+    'wrapper.dblclick': 'add'
   }
 };
 
@@ -45,7 +44,6 @@ class Calendar {
    * @return {Object} The class options
    */
   constructor(options) {
-    this.options = merge(defaults, options || {});
 
     this.init(options);
     this.build();
@@ -59,6 +57,7 @@ class Calendar {
    * @return  Class instance
    */
   init(options) {
+    this.options = Object.assign(defaults, options);
 
     // assign modules
     Object.assign(this, emitter, bind);
@@ -96,6 +95,7 @@ class Calendar {
    * @return {?}           [description]
    */
   _initFunction(functions) {
+    functions = functions || [];
 
     for (var i = 0; i < functions.length; i++) {
       var name = functions[i];
@@ -111,7 +111,6 @@ class Calendar {
    * @return {Object} The class instance  
    */
   build() {
-
     // define main tag
     var tag = this.options.tag || 'div';
 
@@ -126,6 +125,10 @@ class Calendar {
     return this;
   }
 
+  /**
+   * [buildWeek description]
+   * @return {[type]} [description]
+   */
   buildWeek() {
     this.buildHeader();
     this.buildAllDay();
@@ -136,21 +139,25 @@ class Calendar {
     return this;
   }
 
+  /**
+   * [buildHeader description]
+   * @return {[type]} [description]
+   */
   buildHeader() {
-    this.header = document.createElement('header');
+    this.header = create('header');
     insert(this.header, this.wrapper);
 
     this.buildHeadline();
 
 
-    var element = document.createElement('div');
+    var element = create('div');
     insert(element, this.header);
     css.add(element, 'header-days');
 
     var date = new Date(this.firstDay);
     var days = this.options.rangedays;
 
-    var margin = document.createElement('div');
+    var margin = create('div');
     css.add(margin, 'margin');
     insert(margin, element);
 
@@ -158,7 +165,7 @@ class Calendar {
       var dow = this.options.days[date.getDay()];
       var dom = (date.getMonth() + 1) + '/' + date.getDate();
 
-      var cell = document.createElement('div');
+      var cell = create('div');
       cell.innerHTML = '<div class="first">' + dow + '</div><div class="second">' + dom + '</div>';
       css.add(cell, 'date');
       insert(cell, element);
@@ -167,12 +174,17 @@ class Calendar {
     }
   }
 
+  /**
+   * [buildHeadline description]
+   * @return {?} [description]
+   */
   buildHeadline() {
     this.headline = create('div', this.options.class + '-headline');
 
     insert(this.headline, this.header);
 
     var year = this.firstDay.getFullYear();
+
     var month = this.options.months[this.firstDay.getMonth()];
 
     var monthIndex = create('div', 'month-year');
@@ -183,6 +195,10 @@ class Calendar {
     this.buildNavigation();
   }
 
+  /**
+   * [buildNavigation description]
+   * @return {?} [description]
+   */
   buildNavigation() {
     var navigation = create('div', this.options.prefix + '-toolbar');
     insert(navigation, this.headline);
@@ -241,7 +257,6 @@ class Calendar {
     }
   }
 
-
   /**
    * [_initBody description]
    * @param  {?} content [description]
@@ -255,11 +270,11 @@ class Calendar {
 
     var days = this.options.rangedays;
 
-    this.body = document.createElement('div');
+    this.body = create('div');
     css.add(this.body, this.options.class + '-body');
     insert(this.body, this.wrapper);
 
-    var hours = document.createElement('div');
+    var hours = create('div');
     css.add(hours, 'hours');
     insert(hours, this.body);
 
@@ -267,7 +282,7 @@ class Calendar {
 
     for (var i = 0; i < 24; i++) {
 
-      var hour = document.createElement('div');
+      var hour = create('div');
       css.add(hour, 'hour');
       insert(hour, hours);
 
@@ -276,7 +291,7 @@ class Calendar {
 
     var sday = new Date(firstDay);
     for (var k = 0; k < days; k++) {
-      var day = document.createElement('div');
+      var day = create('div');
       css.add(day, 'week-day');
       day.setAttribute('data-date', this.dateToString(sday));
       insert(day, this.body);
@@ -317,7 +332,7 @@ class Calendar {
    * @return {?}         [description]
    */
   initCanvas() {
-    var canvas = document.createElement('canvas');
+    var canvas = create('canvas');
     css.add(canvas, 'canvas');
     canvas.width = '2000';
     canvas.height = '1440';
@@ -351,30 +366,31 @@ class Calendar {
    * @param  {?} e [description]
    * @return {?}   [description]
    */
-  onDblClick(e) {
-    var date;
+  add(e) {
+    if (e instanceof Event &&
+      e.target &&
+      e.target.matches(this.options.target)
+    ) {
+      var data = e.target.getAttribute('data-date');
 
-    var self = this;
-    if (e.target && e.target.matches(this.options.target)) {
-      console.log('click', e.target, e);
-      date = e.target.getAttribute('data-date');
-      var d = date.split(/-/);
-      var h = self.roundTime(e.offsetY / 60);
-      console.log("h ", date, d, h);
-      self.newEvent(date);
-    }
+      var d = data.split(/-/);
 
-    if (e.target && e.target.matches('.allday .date')) {
-      console.log('click', e.target, e);
-      date = e.target.getAttribute('data-date');
-      var d = date.split(/-/);
-      var h = self.roundTime(e.offsetY / 60);
+      var time = this.roundTime(e.offsetY / 60);
 
-      self.newAllDayEvent(date);
+      var h = parseInt(time);
+      var m = (time - h) * 60;
 
+      var date = new Date(d[0], d[1], d[2], h, m);
+
+      this.emit('add', date);
     }
   }
 
+  /**
+   * [roundTime description]
+   * @param  {?} value [description]
+   * @return {?}       [description]
+   */
   roundTime(value) {
 
     var step = 0.5;
@@ -411,7 +427,6 @@ class Calendar {
     return this;
 
   }
-
 
   /**
    * next
@@ -451,16 +466,8 @@ class Calendar {
     this.buildWeek();
   }
 
-
-  insert(container, context) {
-    insert(this.wrapper, container, context);
-
-    return this;
-  }
-
-
   newEvent(date) {
-    console.log('new Event', date);
+    //console.log('new Event', date);
   }
 
   empty() {
