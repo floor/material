@@ -15,11 +15,11 @@ export default function insert(element, container, context) {
   element = element.wrapper || element;
   container = container.wrapper || container;
 
-  if (container instanceof HTMLElement) {
-    container = container;
-  } else {
-    throw new Error("Can't insert " + container + " is not a HTMLElement object");
-  }
+  // if (container instanceof HTMLElement) {
+  //   container = container;
+  // } else {
+  //   throw new Error("Can't insert " + container + " is not a HTMLElement object");
+  // }
 
   context = context || 'bottom';
 
