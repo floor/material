@@ -10,6 +10,7 @@ import css from './module/css';
 import merge from './module/merge';
 import insert from './element/insert';
 import bind from './module/bind';
+
 // modules
 import control from './component/control';
 
@@ -105,12 +106,22 @@ class Button {
     return this;
   }
 
+  /**
+   * [insert description]
+   * @param  {?} container [description]
+   * @param  {?} context   [description]
+   * @return {?}           [description]
+   */
   insert(container, context) {
     insert(this.wrapper, container, context);
 
     return this;
   }
 
+  /**
+   * [setup description]
+   * @return {?} [description]
+   */
   setup() {
 
     this.element.input = this.wrapper;
@@ -166,28 +177,16 @@ class Button {
    * @param  {event} e
    * @return {void}
    */
-  press(e) {
+  click(e) {
     e.preventDefault();
 
     if (this.disabled === true) return;
+    if (this.options.upload) return;
 
+    //this.publish('click');
     this.emit('press', e);
 
     return this;
-  }
-
-  /**
-   * _onClick
-   * @param  {Event} e The related event
-   */
-  click(e) {
-    // e.preventDefault();
-    // e.stopPropagation();
-
-    if (this.disabled) return;
-    if (this.options.upload) return;
-
-    this.press(e);
   }
 }
 
