@@ -1,8 +1,10 @@
 'use strict';
 
+import { Item, Divider } from '../index';
+
 import init from './component/init';
 import emitter from './module/emitter';
-import insert from './component/insert';
+import insert from './element/insert';
 import merge from './module/merge';
 import css from './module/css';
 import bind from './module/bind';
@@ -11,7 +13,7 @@ const defaults = {
   prefix: 'material',
   class: 'list',
   functions: ['render', 'select'],
-  modules: [emitter, insert, bind],
+  modules: [emitter, bind],
   target: '.material-item',
   bind: {
     'wrapper.click': 'onSelect'
@@ -39,11 +41,7 @@ class List {
 
     this.init(this.options);
     this.build(this.options);
-
-    if (this.options.bind) {
-      //console.log('vind', this.options.bind);
-      this.bind(this.options.bind);
-    }
+    this.bind(this.options.bind);
 
     return this;
   }
@@ -64,7 +62,7 @@ class List {
     this.items = [];
 
     // assign modules
-    Object.assign(this, emitter, insert, bind);
+    Object.assign(this, emitter, bind);
 
     // init function
     this._initFunction(options.functions);
@@ -100,15 +98,17 @@ class List {
     this.wrapper = document.createElement(tag);
     css.add(this.wrapper, 'material-' + this.options.class);
 
-    if (options.name)
+    if (options.name) {
       css.add(this.wrapper, options.class + '-' + options.name);
+    }
 
 
-    if (this.options.list)
+    if (this.options.list) {
       this.set('list', this.options.list);
+    }
 
     if (this.options.container) {
-      this.insert(this.options.container);
+      insert(this.wrapper, this.options.container);
     }
 
     // this.wrapper.addEventListener("click", function(e) {
@@ -128,13 +128,11 @@ class List {
     //console.log('onSelect', e.target, this.options.target);
     if (e.target && e.target.matches(this.options.target)) {
       //console.log("item clicked: ", e.target);
-      var current = this.item;
+      css.remove(this.item, 'is-selected');
+      css.add(e.target, 'is-selected');
 
+      this.select(e.target, e, this.item);
       this.item = e.target;
-
-      if (this.select) {
-        this.select(this.item, e, current);
-      }
     }
   }
 
@@ -144,12 +142,30 @@ class List {
    * @param  {event} event The caller event
    * @return        [description]
    */
-  select(item, event) {
-    console.log('select', item, event);
-    this.item = item;
-
-    this.emit('selected', item[0]);
+  select(item, e, selected) {
+    this.emit('select', item);
   }
+
+  /**
+   * [render description]
+   * @param  {?} info [description]
+   * @return {?}      [description]
+   */
+  render(info) {
+    var item;
+
+    if (info.type === 'divider') {
+      item = new Divider();
+    } else {
+      item = new Item({
+        name: info.name,
+        text: info.name
+      });
+    }
+
+    return item;
+  }
+
 
   /**
    * Setter
@@ -175,11 +191,7 @@ class List {
    */
   setList(list) {
     for (var i = 0; i < list.length; i++) {
-      var item = this.render(list[i]);
-
-      //item.store('info', list[i]);
-
-      this.addItem(item, i);
+      this.addItem(this.render(list[i]), i);
     }
 
     return this;
@@ -196,8 +208,8 @@ class List {
     }
 
     var where = 'bottom';
-    this.insertElement(item.wrapper, this.wrapper, where);
-    //item.insert(this.wrapper, where);
+    insert(item.wrapper, this.wrapper, where);
+
     this.items.push(item);
 
     return item;
