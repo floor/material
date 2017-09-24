@@ -67,9 +67,7 @@
         top: 0;
       }
     }
-    textarea,
-    input[type=text],
-    input[type=password] {
+    .textfield-input {
       float: none;
       width: 100%;
       border: none;
@@ -88,18 +86,6 @@
     background-color: transparent;
     border-radius: 0;
     border-bottom: 1px solid rgba(0, 0, 0, 0.12); //outline:none;
-    &::-webkit-input-placeholder {
-      color: rgba(0, 0, 0, .2);
-    }
-    &:-moz-placeholder {
-      color: rgba(0, 0, 0, .2);
-    }
-    &::-moz-placeholder {
-      color: rgba(0, 0, 0, .2);
-    }
-    &:-ms-input-placeholder {
-      color: rgba(0, 0, 0, .2);
-    }
     &:hover {
       cursor: default; //background-color: rgba(100, 100, 100, .06);
     }
@@ -120,6 +106,18 @@
     &:active {
       cursor: text;
       border-bottom: 1px dashed rgba(0, 0, 0, .12) !important; //background-color: rgba(255,255,255,1);
+    }
+  }
+}
+
+.dark-theme {
+  .material-textfield {
+    .textfield-label {
+      .transition(.2s);
+      color: rgba(255, 255, 255, 0.3);
+    }
+    .textfield-input {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     }
   }
 }
