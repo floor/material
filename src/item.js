@@ -1,11 +1,10 @@
-'use strict';
+'use strict'
 
-//import Component from './component';
-import merge from './module/merge';
-import insert from './component/insert';
-import css from './module/css';
+// import Component from './component';
+import merge from './module/merge'
+import insert from './component/insert'
+import css from './module/css'
 // import bind from '../module/bind';
-
 
 var defaults = {
   prefix: 'material',
@@ -24,7 +23,7 @@ var defaults = {
     body2: 'aside',
     caption: 'span'
   }
-};
+}
 
 /**
  * The class represents an item ie for list
@@ -33,18 +32,16 @@ var defaults = {
  * @return {Object} The class instance
  * @example new Item(object);
  */
-export default class Item {
-
+class Item {
   /**
    * init
    * @return {Object} The class options
    */
   constructor(options) {
+    this.init(options)
+    this.build()
 
-    this.init(options);
-    this.build();
-
-    return this;
+    return this
   }
 
   /**
@@ -53,16 +50,13 @@ export default class Item {
    * @return {?}         [description]
    */
   init(options) {
-
     // merge options
-    this.options = merge(defaults, options || {});
+    this.options = merge(defaults, options || {})
 
     // define class
 
-
     // assign modules
-    Object.assign(this, insert);
-
+    Object.assign(this, insert)
   }
 
   /**
@@ -70,25 +64,25 @@ export default class Item {
    * @return {Object} This class instance
    */
   build(options) {
-    options = options || this.options;
+    options = options || this.options
 
     // define main tag
-    var tag = options.tag[options.type] || options.tag.default;
+    var tag = options.tag[options.type] || options.tag.default
 
-    this.wrapper = document.createElement(tag);
+    this.wrapper = document.createElement(tag)
 
     if (options.text) {
-      this.set(options.text);
+      this.set(options.text)
     }
 
-    css.add(this.wrapper, this.options.prefix + '-' + this.options.class);
+    css.add(this.wrapper, this.options.prefix + '-' + this.options.class)
 
     if (options.type) {
-      css.add(this.wrapper, this.options.class + '-' + options.type);
+      css.add(this.wrapper, this.options.class + '-' + options.type)
     }
 
     if (this.options.container) {
-      this.insert(this.options.container);
+      this.insert(this.options.container)
     }
   }
 
@@ -100,14 +94,16 @@ export default class Item {
   set(value) {
     if (value) {
       if (this.wrapper.innerText) {
-        this.wrapper.innerText = value;
+        this.wrapper.innerText = value
       } else {
-        this.wrapper.textContent = value;
+        this.wrapper.textContent = value
       }
 
-      return this;
+      return this
     }
 
-    return this;
+    return this
   }
 };
+
+export default Item

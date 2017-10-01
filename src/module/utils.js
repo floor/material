@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 /**
  * Utility functions
@@ -11,8 +11,8 @@
  * @returns {boolean}
  * @private
  */
-function _isArray(object) {
-  return Object.prototype.toString.call(object) === '[object Array]';
+function _isArray (object) {
+  return Object.prototype.toString.call(object) === '[object Array]'
 }
 
 /**
@@ -21,8 +21,8 @@ function _isArray(object) {
  * @returns {*|boolean}
  * @private
  */
-function _isLiteralObject(object) {
-  return object && typeof object === "object" && Object.getPrototypeOf(object) === Object.getPrototypeOf({});
+function _isLiteralObject (object) {
+  return object && typeof object === 'object' && Object.getPrototypeOf(object) === Object.getPrototypeOf({})
 }
 
 /**
@@ -31,14 +31,14 @@ function _isLiteralObject(object) {
  * @returns {boolean}
  * @private
  */
-function _isIterable(object) {
+function _isIterable (object) {
   var r = _isLiteralObject(object) ||
     _isArray(object) ||
     (typeof object === 'object' &&
       object !== null &&
-      object.length !== undefined);
+      object.length !== undefined)
 
-  return r;
+  return r
 }
 
 /**
@@ -47,17 +47,17 @@ function _isIterable(object) {
  * @param {Function} callback
  * @private
  */
-function _each(object, callback) {
+function _each (object, callback) {
   if (_isArray(object) || (typeof object === 'object' && object.length !== undefined)) {
     for (var i = 0, l = object.length; i < l; i++) {
-      callback.apply(object[i], [object[i], i]);
+      callback.apply(object[i], [object[i], i])
     }
-    return;
+    return
   }
 
   if (_isLiteralObject(object)) {
     for (var key in object) {
-      callback.apply(object[key], [object[key], key]);
+      callback.apply(object[key], [object[key], key])
     }
   }
 }
@@ -69,16 +69,16 @@ function _each(object, callback) {
  * @returns {number}
  * @private
  */
-function _indexOf(array, obj) {
+function _indexOf (array, obj) {
   if (Array.prototype.indexOf) {
-    return Array.prototype.indexOf.call(array, obj);
+    return Array.prototype.indexOf.call(array, obj)
   }
   for (var i = 0, j = array.length; i < j; i++) {
     if (array[i] === obj) {
-      return i;
+      return i
     }
   }
-  return -1;
+  return -1
 }
 
-export { _isArray, _isIterable, _isLiteralObject, _each, _indexOf };
+export { _isArray, _isIterable, _isLiteralObject, _each, _indexOf }

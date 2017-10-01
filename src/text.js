@@ -1,11 +1,11 @@
-'use strict';
+'use strict'
 
-import init from './component/init';
-import merge from './module/merge';
-import insert from './component/insert';
-import classify from './component/classify';
-import create from './element/create';
-import css from './module/css';
+import init from './component/init'
+import merge from './module/merge'
+import insert from './component/insert'
+import classify from './component/classify'
+import create from './element/create'
+import css from './module/css'
 
 var defaults = {
   prefix: 'material',
@@ -25,7 +25,7 @@ var defaults = {
     body2: 'aside',
     caption: 'span'
   }
-};
+}
 
 /**
  * this class creates a text component
@@ -42,48 +42,46 @@ var defaults = {
  *   text: 'hello',
  *   type: 'title'
  * }).insert(document.body);
- * 
+ *
  * // => Hello
  */
 class Text {
-
   /**
    * init
    * @return {Object} The class options
    */
-  constructor(options) {
-    this.options = merge(defaults, options || {});
+  constructor (options) {
+    this.options = merge(defaults, options || {})
 
-    init(this);
-    this.build(this.options);
+    init(this)
+    this.build(this.options)
 
-    return this;
+    return this
   }
 
   /**
    * Build function for item
    * @return {Object} This class instance
    */
-  build(options) {
-    options = options || this.options;
+  build (options) {
+    options = options || this.options
 
-    var tag = options.tag[options.type] || options.tag.default;
+    var tag = options.tag[options.type] || options.tag.default
 
-    this.wrapper = create(tag, options.prefix + '-' + options.class);
+    this.wrapper = create(tag, options.prefix + '-' + options.class)
 
-    classify(this.wrapper, this.options);
+    classify(this.wrapper, this.options)
 
     if (options.text) {
-      this.set(options.text);
+      this.set(options.text)
     }
 
-    if (options.type)
-      css.add(this.wrapper, options.class + '-' + options.type);
+    if (options.type) { css.add(this.wrapper, options.class + '-' + options.type) }
 
     if (options.container) {
-      this.insert(options.container);
+      this.insert(options.container)
     }
-    return this;
+    return this
   }
 
   /**
@@ -91,19 +89,19 @@ class Text {
    * @param {string} value The text to set
    * @returns {*}
    */
-  set(value) {
+  set (value) {
     if (value) {
       if (this.wrapper.innerText) {
-        this.wrapper.innerText = value;
+        this.wrapper.innerText = value
       } else {
-        this.wrapper.textContent = value;
+        this.wrapper.textContent = value
       }
 
-      return this;
+      return this
     }
 
-    return this;
+    return this
   }
 }
 
-export default Text;
+export default Text

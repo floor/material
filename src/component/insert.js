@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-import dom from '../module/dom';
+import dom from '../module/dom'
 
 /**
  * Inject method insert element to the domtree using Dom methods
@@ -17,13 +17,12 @@ export default {
    * @param  {?} debug     [description]
    * @return {?}           [description]
    */
-  insert(container, context) {
+  insert (container, context) {
+    var element = this.wrapper
 
-    var element = this.wrapper;
+    this.insertElement(element, container, context)
 
-    this.insertElement(element, container, context);
-
-    return this;
+    return this
   },
 
   /**
@@ -35,44 +34,38 @@ export default {
    * @param  {?} debug     [description]
    * @return {?}           [description]
    */
-  insertElement(element, container, context) {
+  insertElement (element, container, context) {
     if (container && container.wrapper) {
-      container = container.wrapper;
+      container = container.wrapper
     }
 
-    this.container = container;
+    this.container = container
 
     // if (debug) {
     // console.log('insert', container);
     // }
 
-    //this.emit('insert');
+    // this.emit('insert');
 
-    if (container instanceof HTMLElement) {
-      container = container;
-    } else {
-      throw new Error("Can't insert " + container + " is not a HTMLElement object");
-    }
+    context = context || 'bottom'
 
-    context = context || 'bottom';
+    var contexts = ['top', 'bottom', 'after', 'before']
+    var methods = ['prepend', 'append', 'after', 'before']
 
-    var contexts = ['top', 'bottom', 'after', 'before'];
-    var methods = ['prepend', 'append', 'after', 'before'];
-
-    var index = contexts.indexOf(context);
+    var index = contexts.indexOf(context)
     if (index === -1) {
-      return;
+      return
     }
 
-    var method = methods[index];
+    var method = methods[index]
 
-    //this.emit('insert');
+    // this.emit('insert');
 
     // insert component element to the dom tree using Dom
-    //console.log('dom', method, element);
-    dom[method](container, element);
-    //this.emit('injected');
+    // console.log('dom', method, element);
+    dom[method](container, element)
+    // this.emit('injected');
     //
-    return element;
+    return element
   }
-};
+}

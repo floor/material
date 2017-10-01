@@ -2,6 +2,7 @@
  * This function checks if the element className passed in parameters
  *
  * @since 0.0.6
+ * @module css/has
  * @category Element
  * @param {...Array} [arrays] The arrays to process.
  * @param {Function} iteratee The function to combine
@@ -15,17 +16,18 @@
  */
 function has(element, className) {
   if (!element || !className) {
-    return false;
+    return false
   }
 
-  return !!element.className.match(new RegExp('(\\s|^)' + className + '(\\s|$)'));
+  return !!element.className.match(new RegExp('(\\s|^)' + className + '(\\s|$)'))
 }
 
 /**
  * This function adds className to the element's attribute class
  *
  * @since 0.0.6
- * @category Array
+ * @module css/add
+ * @category css
  * @param {HTMLElement} element Related element
  * @param {String} className the className to add
  *  grouped values.
@@ -37,35 +39,29 @@ function has(element, className) {
  */
 function add(element, className) {
   if (!element || !className) {
-    return;
+    return
   }
 
-  let classNames = className.split(' ');
+  let classNames = className.split(' ')
 
   for (var i = 0; i < classNames.length; i++) {
-    var cn = classNames[i];
+    var cn = classNames[i]
     if (!has(element, cn)) {
-      element.classList.add(cn);
+      element.classList.add(cn)
     }
   }
-  return element;
+  return element
 }
-
-/**
- * this function removes the className from the element
- * @param  {HTMLElement} element [description]
- * @param  {string} className [description]
- * @return {object} This object
- */
 
 /**
  * This function removes className to the element's attribute class
  *
  * @since 0.0.6
- * @category Element
+ * @module css/remove
+ * @category css
  * @param {HTMLElement} element Related element
  * @param {String} className the className to add
- * @returns {HTMLElement} The augmented element
+ * @returns {HTMLElement} The element with the removed className
  * @example
  *
  * remove(element, 'hidden');
@@ -73,18 +69,19 @@ function add(element, className) {
  */
 function remove(element, className) {
   if (!element || !className) {
-    return;
+    return
   }
 
-  element.classList.remove(className);
+  element.classList.remove(className)
 
-  return element;
+  return element
 }
 
 /**
  * This function toggles className from the element's attribute class
  *
  * @since 0.0.6
+ * @module css/toggle
  * @category Element
  * @param {HTMLElement} element Related element
  * @param {String} className the className to add
@@ -99,12 +96,12 @@ function remove(element, className) {
  */
 function toggle(element, className) {
   if (has(element, className)) {
-    remove(element, className);
+    remove(element, className)
   } else {
-    add(element, className);
+    add(element, className)
   }
 
-  return element;
+  return element
 }
 
-export default { has, add, remove, toggle };
+export default { has, add, remove, toggle }

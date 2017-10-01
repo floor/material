@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-import style from '../element/style';
-import css from '../module/css';
+import style from '../element/style'
+import css from '../module/css'
 
 export default {
 
@@ -10,29 +10,29 @@ export default {
    * @param  {Object} comp list component
    * @return {component}
    */
-  _initComponent(options) {
-    //console.log('_initComponent', options.name, options);
-    options = options || {};
+  _initComponent (options) {
+    // console.log('_initComponent', options.name, options);
+    options = options || {}
 
-    var name = options.name || 'main';
+    var name = options.name || 'main'
 
-    //options.container = comp.container;
-    var component = this.component[name] = new options.component(options);
+    // options.container = comp.container;
+    options.Component = options.component
+    var component = this.component[name] = new options.component(options)
 
-    this.components.push(component);
+    this.components.push(component)
 
     // register component
-    this._componentRegister(name, component);
+    this._componentRegister(name, component)
 
-    //settings
-    //this._initComponentSettings(component);
+    // settings
+    // this._initComponentSettings(component);
 
     // style, size and event
-    this._setComponentStyles(component);
-    this._setComponentDisplay(component);
+    this._setComponentStyles(component)
+    this._setComponentDisplay(component)
 
-
-    return component;
+    return component
   },
 
   /**
@@ -40,18 +40,18 @@ export default {
    * @param  {string} name      [description]
    * @param  {component} component [description]
    */
-  _componentRegister(name, component) {
-    //console.log('_componentRegister', name, component.class);
-    this.components = this.components || [];
-    this.components.push(component);
-    var className = component.class;
+  _componentRegister (name, component) {
+    // console.log('_componentRegister', name, component.class);
+    this.components = this.components || []
+    this.components.push(component)
+    var className = component.class
 
-    this.controls = this.controls || [];
+    this.controls = this.controls || []
 
-    var controls = this.options.controls;
+    var controls = this.options.controls
 
     if (controls && controls.indexOf(className) >= 0) {
-      this.controls.push(component);
+      this.controls.push(component)
     }
   },
 
@@ -69,31 +69,30 @@ export default {
    * [_initComponentSettings description]
    * @param  {component} component [description]
    */
-  _setComponentStyles(component) {
-
+  _setComponentStyles (component) {
     if (component.options.flex) {
-      css.add(component.wrapper, 'flex-' + component.options.flex);
+      css.add(component.wrapper, 'flex-' + component.options.flex)
     } else {
-      var size = component.options.size;
+      var size = component.options.size
       if (component.options.size && component.options.width) {
         style.set(component.wrapper, {
           width: size + 'px'
-        });
+        })
       } else {
         style.set(component.wrapper, {
           height: size + 'px'
-        });
+        })
       }
     }
 
     if (component.options.hide) {
       style.set(component.wrapper, {
         display: 'none'
-      });
+      })
     }
 
     if (component.options.theme) {
-      css.add(component.wrapper, 'theme' + '-' + component.options.theme);
+      css.add(component.wrapper, 'theme' + '-' + component.options.theme)
     }
   },
 
@@ -101,23 +100,23 @@ export default {
    * [_initSize description]
    * @param  {component} component [description]
    */
-  _setComponentDisplay(component) {
-    var display = 'normalized';
+  _setComponentDisplay (component) {
+    var display = 'normalized'
 
     // var name = component.getName();
     // if (this.settings[name] && this.settings[name].display) {
     //  display = this.settings[name].display;
     // }
 
-    if (!component.setDisplay) return;
-    component.setDisplay(display, 'width');
+    if (!component.setDisplay) return
+    component.setDisplay(display, 'width')
 
-    if (component.options.flex) return;
+    if (component.options.flex) return
 
-    this.emit('drag');
+    this.emit('drag')
 
-    this._attachComponentEvents(component);
-  },
+    this._attachComponentEvents(component)
+  }
 
   /**
    * _setComponentSettings description
@@ -156,4 +155,4 @@ export default {
   //  }
   // },
 
-};
+}

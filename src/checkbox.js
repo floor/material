@@ -1,16 +1,16 @@
-'use strict';
+'use strict'
 
-import init from './component/init';
-import merge from './module/merge';
-import events from './component/events';
-import control from './component/control';
-import emitter from './module/emitter';
-import bind from './module/bind';
-import insert from './element/insert';
-import build from './element/build';
-import css from './module/css';
+import init from './component/init'
+import merge from './module/merge'
+import events from './component/events'
+import control from './component/control'
+import emitter from './module/emitter'
+import bind from './module/bind'
+import insert from './element/insert'
+import build from './element/build'
+import css from './module/css'
 
-import icon from './skin/material/icon/checkbox.svg';
+import icon from './skin/material/icon/checkbox.svg'
 // element related modules
 
 let defaults = {
@@ -26,7 +26,7 @@ let defaults = {
     ['element.control.click', 'click', {}],
     ['element.label.click', 'toggle', {}],
     // for accessibility purpose
-    //['element.input.click', 'toggle', {}],
+    // ['element.input.click', 'toggle', {}],
     ['element.input.focus', 'focus'],
     ['element.input.blur', 'blur']
   ],
@@ -38,14 +38,14 @@ let defaults = {
     'element.input.focus': 'focus',
     'element.input.blur': 'blur'
   }
-};
+}
 /**
  * Checkbox control class
  * @class
  * @extends Control
  * @since 0.0.1
  * @example
- * var button = new Button({
+ * var chkbox = checkbox({
  *   label: 'Primary raised button',
  *   type: 'raised',
  *   primary: true
@@ -54,20 +54,19 @@ let defaults = {
  * }).insert(document.body);
  */
 class Checkbox {
-
   /**
    * Constructor
    * @param  {Object} options - Component options
-   * @return {Object} Class instance 
+   * @return {Object} Class instance
    */
   constructor(options) {
-    this.options = merge(defaults, options || {});
+    this.options = merge(defaults, options || {})
     // init and build
-    this.init();
-    this.build();
-    this.bind(this.options.bind);
+    this.init()
+    this.build()
+    this.bind(this.options.bind)
 
-    return this;
+    return this
   }
 
   /**
@@ -76,10 +75,10 @@ class Checkbox {
    * @return {Object} This class instance
    */
   init() {
-    init(this);
+    init(this)
     // init options and merge options to defaults
 
-    return this;
+    return this
   }
 
   /**
@@ -87,37 +86,37 @@ class Checkbox {
    * @return {Object} The class instance
    */
   build() {
-    this.element = build(this.options.build);
-    this.wrapper = this.element.wrapper;
+    this.element = build(this.options.build)
+    this.wrapper = this.element.wrapper
 
-    this.element.control.innerHTML = icon;
+    this.element.control.innerHTML = icon
 
-    this.label(this.options.label);
+    this.label(this.options.label)
 
-    this.element.input.setAttribute('type', 'checkbox');
-    this.element.input.setAttribute('name', this.options.name);
-    this.element.input.setAttribute('value', this.options.value);
+    this.element.input.setAttribute('type', 'checkbox')
+    this.element.input.setAttribute('name', this.options.name)
+    this.element.input.setAttribute('value', this.options.value)
 
     if (this.options.disabled) {
-      this.disabled = this.options.disabled;
-      this.element.input.setAttribute('disabled', 'disabled');
-      css.add(this.wrapper, 'is-disabled');
+      this.disabled = this.options.disabled
+      this.element.input.setAttribute('disabled', 'disabled')
+      css.add(this.wrapper, 'is-disabled')
     }
 
     if (this.options.checked) {
-      this.check(true);
+      this.check(true)
     }
 
     if (this.options.value) {
-      this.set('value', this.value);
+      this.set('value', this.value)
     }
 
     // insert if container options is given
     if (this.options.container) {
-      insert(this.wrapper, this.options.container);
+      insert(this.wrapper, this.options.container)
     }
 
-    return this;
+    return this
   }
 
   /**
@@ -129,25 +128,25 @@ class Checkbox {
   set(prop, value) {
     switch (prop) {
       case 'checked':
-        this.check(value);
-        break;
+        this.check(value)
+        break
       case 'value':
-        this.setValue(value);
-        break;
+        this.setValue(value)
+        break
       case 'label':
-        this.setLabel(value);
-        break;
+        this.setLabel(value)
+        break
       default:
-        this.check(prop);
+        this.check(prop)
     }
 
-    return this;
+    return this
   }
 
   insert(container, context) {
-    insert(this.wrapper, container, context);
+    insert(this.wrapper, container, context)
 
-    return this;
+    return this
   }
 
   /**
@@ -156,10 +155,10 @@ class Checkbox {
    * @return {[type]}   [description]
    */
   click(e) {
-    this.toggle(e);
-    this.element.input.focus();
+    this.toggle(e)
+    this.element.input.focus()
 
-    return this;
+    return this
   }
 
   /**
@@ -167,12 +166,12 @@ class Checkbox {
    * @param {boolean} value [description]
    */
   setValue(value) {
-    console.log('setValue', value);
-    this.value = value;
-    this.element.input.setAttribute('value', value);
+    console.log('setValue', value)
+    this.value = value
+    this.element.input.setAttribute('value', value)
 
-    return this;
+    return this
   }
 }
 
-export default Checkbox;
+export default Checkbox

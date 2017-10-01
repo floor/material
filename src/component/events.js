@@ -5,38 +5,37 @@ export default {
    * @param {string}   event The event to add
    * @param {Function} fn    [description]
    */
-  addEvent(event, fn) {
-    var self = this;
-    var element = this.wrapper;
+  addEvent (event, fn) {
+    var element = this.wrapper
     // avoid memory overhead of new anonymous functions for every event handler that's installed
     // by using local functions
-    function listenHandler(e) {
-      var ret = fn.apply(this, arguments);
+    function listenHandler (e) {
+      var ret = fn.apply(this, arguments)
       if (ret === false) {
-        e.stopPropagation();
-        e.preventDefault();
+        e.stopPropagation()
+        e.preventDefault()
       }
-      return (ret);
+      return (ret)
     }
 
-    function attachHandler() {
+    function attachHandler () {
       // set the this pointer same as addEventListener when fn is called
       // and make sure the event is passed to the fn also so that works the same too
-      var ret = fn.call(element, window.event);
+      var ret = fn.call(element, window.event)
       if (ret === false) {
-        window.event.returnValue = false;
-        window.event.cancelBubble = true;
+        window.event.returnValue = false
+        window.event.cancelBubble = true
       }
-      return (ret);
+      return (ret)
     }
 
     if (element.addEventListener) {
-      element.addEventListener(event, listenHandler, false);
+      element.addEventListener(event, listenHandler, false)
     } else {
-      element.attachEvent("on" + event, attachHandler);
+      element.attachEvent('on' + event, attachHandler)
     }
 
-    return this;
+    return this
   },
 
   /**
@@ -45,18 +44,18 @@ export default {
    * @param  {Function} fn    [description]
    * @return {Object}         [description]
    */
-  removeEvent(event, fn) {
-    var element = this.wrapper;
+  removeEvent (event, fn) {
+    var element = this.wrapper
 
     if (element.removeEventListener) {
-      element.removeEventListener(event, fn, false);
+      element.removeEventListener(event, fn, false)
     } else if (element.detachEvent) {
-      element.detachEvent('on' + event, element[fn.toString() + event]);
-      element[fn.toString() + event] = null;
+      element.detachEvent('on' + event, element[fn.toString() + event])
+      element[fn.toString() + event] = null
     } else {
-      element['on' + event] = function() {};
+      element['on' + event] = function () {}
     }
 
-    return this;
+    return this
   }
-};
+}

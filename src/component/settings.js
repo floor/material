@@ -1,37 +1,35 @@
-import cookies from '../module/cookies';
-import merge from '../module/merge';
+import cookies from '../module/cookies'
+import merge from '../module/merge'
 
-function set(key, value) {
-  var text = cookies.get(key);
+function set (key, value) {
+  var text = cookies.get(key)
 
-  var current = {};
+  var current = {}
 
   if (text) {
-    current = JSON.parse(text);
+    current = JSON.parse(text)
   }
 
-  console.log('settings value', current, value);
-  //settings = [settings, value].reduce(Object.assign, {});
-  var settings = merge(current, value);
+  console.log('settings value', current, value)
+  // settings = [settings, value].reduce(Object.assign, {});
+  var settings = merge(current, value)
 
-  console.log('settings ' + key, settings);
+  console.log('settings ' + key, settings)
 
-  cookies.set(key, JSON.stringify(settings));
+  cookies.set(key, JSON.stringify(settings))
 }
 
-
-function get(key) {
-  var json = cookies.get(key);
+function get (key) {
+  var json = cookies.get(key)
 
   if (!json) {
-    return null;
+    return null
   }
-  var value = JSON.parse(json);
+  var value = JSON.parse(json)
 
-  console.log('settings' + key, value);
+  console.log('settings' + key, value)
 
-  return value;
-
+  return value
 }
 
-export default { set, get };
+export default { set, get }

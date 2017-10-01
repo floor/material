@@ -1,37 +1,34 @@
-'use strict';
+'use strict'
 
-import merge from '../module/merge';
-
-let instance = null;
+let instance = null
 
 /**
- * 
+ *
  */
 class Controller {
-
-  /** 
+  /**
    * Setting up block level variable to store class state
    * , set's to null by default.
    * credits: http://amanvirk.me/singleton-classes-in-es6/
    */
-  constructor() {
+  constructor () {
     if (!instance) {
-      instance = this;
+      instance = this
     }
 
-    this.components = this.components || [];
-    this.component = this.component || {};
+    this.components = this.components || []
+    this.component = this.component || {}
 
-    this.init();
+    this.init()
 
-    return instance;
+    return instance
   }
 
-  init() {
+  init () {
     this.subscribe('settings', (message) => {
-      //console.log('settings', message);
-      //this.setSettings(message.key, message.value);
-    });
+      // console.log('settings', message);
+      // this.setSettings(message.key, message.value);
+    })
   }
 
   // setSettings(key, value) {
@@ -67,22 +64,20 @@ class Controller {
 
   // }
 
-
   /**
    * [register description]
    * @param  {component} component [description]
    * @return {Object} The class instance
    */
-  register(component) {
-    this.components.push(component);
+  register (component) {
+    this.components.push(component)
 
-    this.component[component.name] = this.component[component.name] || [];
+    this.component[component.name] = this.component[component.name] || []
 
-    this.component[component.name].push(component);
+    this.component[component.name].push(component)
 
-    return this;
+    return this
   }
-
 
   /**
    * This method subscribes to a specific topic
@@ -90,16 +85,16 @@ class Controller {
    * @param  {Function} callback
    * @return {boolean} true
    */
-  subscribe(topic, callback) {
-    this._topics = this._topics || {};
+  subscribe (topic, callback) {
+    this._topics = this._topics || {}
 
-    //_log.debug('subscribe', topic);
+    // _log.debug('subscribe', topic);
     if (!this._topics.hasOwnProperty(topic)) {
-      this._topics[topic] = [];
+      this._topics[topic] = []
     }
 
-    this._topics[topic].push(callback);
-    return true;
+    this._topics[topic].push(callback)
+    return true
   }
 
   /**
@@ -108,44 +103,44 @@ class Controller {
    * @param  {Function} callback
    * @return {boolean} true
    */
-  unsunscribe(topic, callback) {
-    this._topics = this._topics || {};
-    //_log.debug('unsubscribe', topic);
+  unsunscribe (topic, callback) {
+    this._topics = this._topics || {}
+    // _log.debug('unsubscribe', topic);
     if (!this._topics.hasOwnProperty(topic)) {
-      return false;
+      return false
     }
 
     for (var i = 0, len = this._topics[topic].length; i < len; i++) {
       if (this._topics[topic][i] === callback) {
-        this._topics[topic].splice(i, 1);
-        return true;
+        this._topics[topic].splice(i, 1)
+        return true
       }
     }
 
-    return false;
+    return false
   }
 
   /**
    * [publish description]
    * @return {?} [description]
    */
-  publish() {
-    this._topics = this._topics || {};
+  publish () {
+    this._topics = this._topics || {}
 
-    var args = Array.prototype.slice.call(arguments);
-    var topic = args.shift();
-    //_log.debug('publish', topic);
+    var args = Array.prototype.slice.call(arguments)
+    var topic = args.shift()
+    // _log.debug('publish', topic);
     if (!this._topics.hasOwnProperty(topic)) {
-      return false;
+      return false
     }
 
     for (var i = 0, len = this._topics[topic].length; i < len; i++) {
-      this._topics[topic][i].apply(undefined, args);
+      this._topics[topic][i].apply(undefined, args)
     }
-    return true;
+    return true
   }
 }
 
-var controller = new Controller();
+var controller = new Controller()
 
-export default controller;
+export default controller

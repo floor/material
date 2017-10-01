@@ -1,12 +1,12 @@
-import css from '../module/css';
+import css from '../module/css'
 
-function create(tag, className) {
-  tag = tag || 'div';
+function create (tag, className) {
+  tag = tag || 'div'
 
-  var element = document.createElement(tag);
-  css.add(element, className);
+  var element = document.createElement(tag)
+  css.add(element, className)
 
-  return element;
+  return element
 }
 
-export default create;
+export default create

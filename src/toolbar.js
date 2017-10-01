@@ -1,23 +1,22 @@
-'use strict';
+'use strict'
 
+import init from './component/init'
+import classify from './component/classify'
+import events from './component/events'
+import insert from './component/insert'
 
-import init from './component/init';
-import classify from './component/classify';
-import events from './component/events';
-import insert from './component/insert';
+import create from './element/create'
 
-import create from './element/create';
-
-import bind from './module/bind';
-import merge from './module/merge';
-import emitter from './module/emitter';
+import bind from './module/bind'
+import merge from './module/merge'
+import emitter from './module/emitter'
 
 const defaults = {
   prefix: 'material',
   class: 'toolbar',
   tag: 'div',
   modules: [emitter, events, bind, insert]
-};
+}
 
 /**
  * Base class for all ui components
@@ -25,7 +24,6 @@ const defaults = {
  * @param {Object} options - The component options
  * @return {Object} The class Instance
  */
-
 
 /**
  * Class representing a UI Container. Can add components.
@@ -37,46 +35,44 @@ const defaults = {
  * });
  */
 class Component {
-
   /**
    * Constructor
    * @param  {Object} options - Component options
-   * @return {Object} Class instance 
+   * @return {Object} Class instance
    */
-  constructor(options) {
-    this.options = merge(defaults, options || {});
+  constructor (options) {
+    this.options = merge(defaults, options || {})
 
-    init(this);
-    this.build(this.options);
+    init(this)
+    this.build(this.options)
 
     if (this.options.bind) {
-      this.bind(this.options.bind);
+      this.bind(this.options.bind)
     }
 
-    this.emit('ready');
+    this.emit('ready')
 
-    return this;
+    return this
   }
 
   /**
    * Build Method
    * @return {Object} This class instance
    */
-  build(options) {
+  build (options) {
+    var tag = options.tag || 'div'
+    this.wrapper = create(tag, options.css)
 
-    var tag = options.tag || 'div';
-    this.wrapper = create(tag, options.css);
-
-    classify(this.wrapper, options);
+    classify(this.wrapper, options)
 
     if (options.container) {
-      this.insert(options.container);
+      this.insert(options.container)
     }
 
-    this.emit('built', this.wrapper);
+    this.emit('built', this.wrapper)
 
-    return this;
+    return this
   }
 }
 
-export default Component;
+export default Component

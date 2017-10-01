@@ -11,7 +11,7 @@ export default {
     },
     navi: {
       width: 230,
-      display: "normalized"
+      display: 'normalized'
     }
   },
   direction: 'horizontal',
@@ -34,4 +34,4 @@ export default {
       }
     }
   }
-};
+}

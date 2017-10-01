@@ -1,15 +1,15 @@
-'use strict';
+'use strict'
 
-//import control from '../control';
-import init from './component/init';
-import control from './component/control';
-import merge from './module/merge';
-import build from './element/build';
-import emitter from './module/emitter';
-import insert from './component/insert';
-import bind from './module/bind';
-import css from './module/css';
-import classify from './component/classify';
+// import control from '../control';
+import init from './component/init'
+import control from './component/control'
+import merge from './module/merge'
+import build from './element/build'
+import emitter from './module/emitter'
+import insert from './component/insert'
+import bind from './module/bind'
+import css from './module/css'
+import classify from './component/classify'
 
 let defaults = {
   prefix: 'material',
@@ -38,7 +38,7 @@ let defaults = {
     'element.input.focus': 'focus',
     'element.input.blur': 'blur'
   }
-};
+}
 
 /**
  * Switch class
@@ -46,73 +46,68 @@ let defaults = {
  * @extends Control
  */
 class Switch {
-
   /**
    * Constructor
    * @param  {Object} options
   - Component options
-   * @return {Object} Class instance 
+   * @return {Object} Class instance
    */
-  constructor(options) {
-    this.options = merge(defaults, options || {});
+  constructor (options) {
+    this.options = merge(defaults, options || {})
 
-    this.init(this);
-    this.build(this.options);
+    this.init(this)
+    this.build(this.options)
 
-    if (this.options.bind)
-      this.bind(this.options.bind);
+    if (this.options.bind) { this.bind(this.options.bind) }
 
-    return this;
+    return this
   }
-
 
   /**
    * Constructor
    * @param  {Object} options The class options
    * @return {Object} This class instance
    */
-  init(options) {
-    init(this);
+  init (options) {
+    init(this)
     // init options and merge options to defaults
-    options = options || this.options;
+    options = options || this.options
 
-    this.value = this.options.value;
+    this.value = this.options.value
 
-    return this;
-
+    return this
   }
 
   /**
    * build method
    * @return {Object} The class instance
    */
-  build(options) {
+  build (options) {
+    this.element = build(options.build)
+    this.wrapper = this.element.wrapper
 
-    this.element = build(options.build);
-    this.wrapper = this.element.wrapper;
-
-    classify(this.wrapper, options);
+    classify(this.wrapper, options)
 
     if (options.disabled) {
-      this.disable();
+      this.disable()
     }
 
     if (this.value) {
-      this.element.input.setAttribute('checked', 'checked');
+      this.element.input.setAttribute('checked', 'checked')
     }
 
-    let text = options.label || options.text || '';
+    let text = options.label || options.text || ''
 
-    this.element.label.textContent = text;
+    this.element.label.textContent = text
 
     if (this.value) {
-      this.check();
+      this.check()
     }
 
     // insert if container options is given
     if (options.container) {
-      //console.log(this.name, opts.container);
-      this.insert(options.container);
+      // console.log(this.name, opts.container);
+      this.insert(options.container)
     }
   }
 
@@ -122,48 +117,46 @@ class Switch {
    * @param {string} value
    * @return {Object} The class instance
    */
-  set(prop, value) {
-
+  set (prop, value) {
     switch (prop) {
       case 'value':
-        this.setValue(value);
-        break;
+        this.setValue(value)
+        break
       case 'disabled':
         if (value === true) {
-          this.disable();
+          this.disable()
         } else if (value === false) {
-          this.enable();
+          this.enable()
         }
-        break;
+        break
       default:
-        this.setValue(prop);
+        this.setValue(prop)
     }
 
-    return this;
+    return this
   }
 
-  get() {
-    return this.value;
-  }
-
-
-  /**
-   * set switch value
-   * @param {boolean} value [description]
-   */
-  getValue() {
-    return this.value;
+  get () {
+    return this.value
   }
 
   /**
    * set switch value
    * @param {boolean} value [description]
    */
-  setValue(value) {
+  getValue () {
+    return this.value
+  }
+
+  /**
+   * set switch value
+   * @param {boolean} value [description]
+   */
+  setValue (value) {
     if (value) {
-      this.check();
+      this.check()
     } else {
-      this.unCheck();
+      this.unCheck()
     }
   }
 
@@ -171,46 +164,45 @@ class Switch {
    * [toggle description]
    * @return {Object} The class instance
    */
-  toggle() {
-    if (this.disabled) return this;
+  toggle () {
+    if (this.disabled) return this
 
     if (this.value) {
-      this.unCheck(true);
+      this.unCheck(true)
     } else {
-      this.check();
+      this.check()
     }
 
-    return this;
+    return this
   }
-
 
   /**
    * setTrue
    */
-  check() {
-    if (this.disabled) return this;
+  check () {
+    if (this.disabled) return this
 
-    this.value = true;
-    css.add(this.wrapper, 'is-checked');
-    this.element.input.checked = true;
-    this.emit('change', this.value);
+    this.value = true
+    css.add(this.wrapper, 'is-checked')
+    this.element.input.checked = true
+    this.emit('change', this.value)
 
-    return this;
+    return this
   }
 
   /**
    * setFlas
    */
-  unCheck() {
-    if (this.disabled) return this;
+  unCheck () {
+    if (this.disabled) return this
 
-    this.value = false;
-    css.remove(this.wrapper, 'is-checked');
-    this.element.input.checked = false;
-    this.emit('change', this.value);
+    this.value = false
+    css.remove(this.wrapper, 'is-checked')
+    this.element.input.checked = false
+    this.emit('change', this.value)
 
-    return this;
+    return this
   }
 }
 
-export default Switch;
+export default Switch

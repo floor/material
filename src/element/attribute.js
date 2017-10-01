@@ -1,25 +1,25 @@
-'use strict';
+'use strict'
 
-function init(element, attribute) {
+function init (element, attribute) {
   for (var key in attribute) {
     if (attribute.hasOwnProperty(key)) {
-      element.setAttribute(key, attribute[key]);
+      element.setAttribute(key, attribute[key])
     }
   }
 
-  return element;
+  return element
 }
 
-function set(element, name, value) {
-  return element.setAttribute(name, '' + value);
+function set (element, name, value) {
+  return element.setAttribute(name, '' + value)
 }
 
-function get(element, name) {
-  return element.getAttribute(name) || null;
+function get (element, name) {
+  return element.getAttribute(name) || null
 }
 
-function remove(element, name) {
-  return element.removeAttribute(name);
+function remove (element, name) {
+  return element.removeAttribute(name)
 }
 
-export default { init, set, get, remove };
+export default { init, set, get, remove }

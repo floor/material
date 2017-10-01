@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-import event from '../module/event';
+import event from '../module/event'
 
 var standardNativeEvents = ['click', 'dblclick', 'mouseup', 'mousedown', 'contextmenu',
   'mousewheel', 'mousemultiwheel', 'DOMMouseScroll',
@@ -11,7 +11,7 @@ var standardNativeEvents = ['click', 'dblclick', 'mouseup', 'mousedown', 'contex
   'load', 'unload', 'beforeunload', 'resize', 'move', 'DOMContentLoaded',
   'readystatechange', 'message',
   'error', 'abort', 'scroll'
-];
+]
 
 /**
  * Bind module
@@ -32,25 +32,14 @@ export default {
    * @param {Object} options
    * @return {Object}      this.bind
    */
-  bind: function(options) {
-    options = options || this.options.bind;
+  bind: function (options) {
+    options = options || this.options.bind
 
-    if (!options) return;
+    if (!options) return
 
-    if (!options._list) {
-      this._bindObject(options);
-    } else {
-      var list = options._list;
+    this._bindObject(options)
 
-      for (var i = 0; list.length > i; i++) {
-        var bind = binding[list[i]];
-        this.binding = this.binding || {};
-
-        this._bindObject(bind);
-      }
-    }
-
-    return this;
+    return this
   },
 
   /**
@@ -58,16 +47,15 @@ export default {
    * @param  {Object} obj obj whit key and value to be bound
    * @return {void}
    */
-  _bindObject: function(obj) {
-
+  _bindObject: function (obj) {
     for (var key in obj) {
       if (obj.hasOwnProperty(key)) {
-        var value = obj[key];
+        var value = obj[key]
 
         if (typeof value !== 'object') {
-          this._bindKey(key, value);
+          this._bindKey(key, value)
         } else {
-          this._bindList(key, value);
+          this._bindList(key, value)
         }
       }
     }
@@ -79,10 +67,9 @@ export default {
    * @param  {Array} values List if values to bind
    * @return {void}
    */
-  _bindList: function(key, values) {
-
+  _bindList: function (key, values) {
     for (var i = 0; i < values.length; i++) {
-      this._bindKey(key, values[i]);
+      this._bindKey(key, values[i])
     }
   },
 
@@ -95,21 +82,21 @@ export default {
    * @param  {string} val Object path to be bound
    * @return {void}
    */
-  _bindKey: function(key, val) {
-    var eventKeys = key.split('.');
-    var ev = eventKeys[eventKeys.length - 1];
+  _bindKey: function (key, val) {
+    var eventKeys = key.split('.')
+    var ev = eventKeys[eventKeys.length - 1]
 
-    eventKeys.pop();
-    var listener = this._path(eventKeys.join('.'));
+    eventKeys.pop()
+    var listener = this._path(eventKeys.join('.'))
 
-    var valKeys = val.split('.');
+    var valKeys = val.split('.')
 
-    //Check if it's an event
+    // Check if it's an event
     if (valKeys[valKeys.length - 2] === 'emit') {
-      var emit = valKeys[valKeys.length - 1];
-      this._bindEvent(listener, ev, emit, val);
+      var emit = valKeys[valKeys.length - 1]
+      this._bindEvent(listener, ev, emit, val)
     } else {
-      this._bindMethod(listener, ev, val);
+      this._bindMethod(listener, ev, val)
     }
   },
 
@@ -121,17 +108,17 @@ export default {
    * @param  {string} val Method path to be bound
    * @return {void}
    */
-  _bindEvent: function(listener, ev, emit, val) {
-    console.log('_bindEvent', listener);
-    var valKeys = val.split('.');
-    valKeys.splice(-2, 2);
+  _bindEvent: function (listener, ev, emit, val) {
+    console.log('_bindEvent', listener)
+    var valKeys = val.split('.')
+    valKeys.splice(-2, 2)
 
-    var bound = this._path(valKeys.join('.'));
+    var bound = this._path(valKeys.join('.'))
 
     if (listener && listener.on && bound && bound.emit) {
-      listener.on(ev, bound.emit.bind(bound, emit));
+      listener.on(ev, bound.emit.bind(bound, emit))
     } else {
-      //console.log('--', listener, bound.emit);
+      // console.log('--', listener, bound.emit);
     }
   },
 
@@ -142,26 +129,26 @@ export default {
    * @param  {string} val Method path to be bound
    * @return {void}
    */
-  _bindMethod: function(listener, ev, val) {
-    //console.log('_bindMethod', listener);
-    var method = this._path(val);
+  _bindMethod: function (listener, ev, val) {
+    // console.log('_bindMethod', listener);
+    var method = this._path(val)
 
-    var valKeys = val.split('.');
-    valKeys.pop();
-    var bound = this._path(valKeys.join('.'));
+    var valKeys = val.split('.')
+    valKeys.pop()
+    var bound = this._path(valKeys.join('.'))
 
     if (listener && method && method.bind && bound) {
       if (standardNativeEvents.indexOf(ev) < 0) {
         // attach event to the instance
-        listener.on(ev, method.bind(bound));
+        listener.on(ev, method.bind(bound))
       } else if (listener.addEvent) {
         // attach event to the component
-        listener.addEvent(ev, method.bind(bound));
+        listener.addEvent(ev, method.bind(bound))
       } else if (listener.addEventListener) {
         // attach event to the component
-        listener.addEventListener(ev, method.bind(bound));
+        listener.addEventListener(ev, method.bind(bound))
       } else {
-        event.add(listener, ev, method.bind(bound));
+        event.add(listener, ev, method.bind(bound))
       }
     }
   },
@@ -171,20 +158,20 @@ export default {
    * @param  {string} str Object path for example key1.key2.key3
    * @return {value} The value of the last reference
    */
-  _path: function(str) {
-    if (!str) return this;
-    else if (!str.match(/\./)) return this[str];
-    var last;
+  _path: function (str) {
+    if (!str) return this
+    else if (!str.match(/\./)) return this[str]
+    var last
 
-    var keys = str.split('.');
+    var keys = str.split('.')
     for (var i = 0, l = keys.length; i < l; i++) {
-      var key = keys[i];
+      var key = keys[i]
 
-      last = last || this;
-      last = last[key];
+      last = last || this
+      last = last[key]
     }
 
-    return last;
+    return last
   }
 
-};
+}
