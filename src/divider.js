@@ -18,7 +18,7 @@ var defaults = {
  * @return {Object} The class instance
  * @example new Item(object);
  */
-class Separator {
+class Divider {
   /**
    * init
    * @return {Object} The class options
