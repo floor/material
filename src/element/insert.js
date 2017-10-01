@@ -9,17 +9,11 @@ import dom from '../module/dom'
  * @param  {string} context   [description]
  * @return {?}           [description]
  */
-export default function insert (element, container, context) {
+function insert(element, container, context) {
   if (!element || !container) return
 
   element = element.wrapper || element
   container = container.wrapper || container
-
-  // if (container instanceof HTMLElement) {
-  //   container = container;
-  // } else {
-  //   throw new Error("Can't insert " + container + " is not a HTMLElement object");
-  // }
 
   context = context || 'bottom'
 
@@ -38,3 +32,5 @@ export default function insert (element, container, context) {
 
   return element
 }
+
+export default insert
