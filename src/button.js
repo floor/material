@@ -33,8 +33,8 @@ const defaults = {
  *   label: 'Button raised',
  *   type: 'raised',
  *   color: 'primary'
- * }).on('press', function(e) {
- *   console.log('button press', e);
+ * }).on('click', function(e) {
+ *   console.log('button click', e);
  * }).insert(document.body);
  */
 class Button {
@@ -44,7 +44,7 @@ class Button {
    * @private
    * @return {Object} The class instance
    */
-  constructor(options) {
+  constructor (options) {
     this.options = merge(defaults, options || {})
 
     this.init()
@@ -62,7 +62,7 @@ class Button {
    * @param  {?} options [description]
    * @return {?}         [description]
    */
-  init() {
+  init () {
     init(this)
 
     this.element = this.element || {}
@@ -75,7 +75,7 @@ class Button {
    * @override
    * @return {void}
    */
-  build() {
+  build () {
     this.element = {}
 
     var tag = this.options.tag || 'div'
@@ -109,7 +109,7 @@ class Button {
    * @param  {?} context   [description]
    * @return {?}           [description]
    */
-  insert(container, context) {
+  insert (container, context) {
     insert(this.wrapper, container, context)
 
     return this
@@ -119,7 +119,7 @@ class Button {
    * [setup description]
    * @return {?} [description]
    */
-  setup() {
+  setup () {
     this.element.input = this.wrapper
 
     if (this.options.name) {
@@ -149,37 +149,36 @@ class Button {
    * @param {string} value
    * @return {Object} The class instance
    */
-  set(prop, value) {
-    switch (prop) {
-      case 'disabled':
-        this.disable(value)
-        break
-      case 'value':
-        this.setValue(value)
-        break
-      case 'label':
-        this.setLabel(value)
-        break
-      default:
-        this.setValue(prop)
-    }
+  set (prop, value) {
+    switch(prop) {
+  case 'disabled':
+    this.disable(value)
+    break
+  case 'value':
+    this.setValue(value)
+    break
+  case 'label':
+    this.setLabel(value)
+    break
+  default:
+    this.setValue(prop)
+}
 
-    return this
-  }
+return this }
 
   /**
    * [_onElementMouseDown description]
    * @param  {event} e
    * @return {void}
    */
-  click(e) {
+  click (e) {
     e.preventDefault()
 
     if (this.disabled === true) return
     if (this.options.upload) return
 
     // this.publish('click');
-    this.emit('press', e)
+    this.emit('click', e)
 
     return this
   }

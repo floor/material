@@ -42,7 +42,7 @@ class Calendar {
    * init
    * @return {Object} The class options
    */
-  constructor (options) {
+  constructor(options) {
     this.init(options)
     this.build()
     this.bind()
@@ -54,7 +54,7 @@ class Calendar {
    * [_initView description]
    * @return  Class instance
    */
-  init (options) {
+  init(options) {
     this.options = Object.assign(defaults, options)
 
     // assign modules
@@ -79,7 +79,7 @@ class Calendar {
    * @param  {Date} d
    * @return {Date}
    */
-  getFirstDayOfWeek (d) {
+  getFirstDayOfWeek(d) {
     d = new Date(d)
     var day = d.getDay()
     var diff = d.getDate() - day + (day === 0 ? -6 : 1) // adjust when day is sunday
@@ -92,7 +92,7 @@ class Calendar {
    * @param  {?} functions [description]
    * @return {?}           [description]
    */
-  _initFunction (functions) {
+  _initFunction(functions) {
     functions = functions || []
 
     for (var i = 0; i < functions.length; i++) {
@@ -108,7 +108,7 @@ class Calendar {
    * @param  {Object} options this class options
    * @return {Object} The class instance
    */
-  build () {
+  build() {
     // define main tag
     var tag = this.options.tag || 'div'
 
@@ -127,7 +127,7 @@ class Calendar {
    * [buildWeek description]
    * @return {[type]} [description]
    */
-  buildWeek () {
+  buildWeek() {
     this.buildHeader()
     this.buildAllDay()
     this.buildBody()
@@ -141,7 +141,7 @@ class Calendar {
    * [buildHeader description]
    * @return {[type]} [description]
    */
-  buildHeader () {
+  buildHeader() {
     this.header = create('header')
     insert(this.header, this.wrapper)
 
@@ -175,7 +175,7 @@ class Calendar {
    * [buildHeadline description]
    * @return {?} [description]
    */
-  buildHeadline () {
+  buildHeadline() {
     this.headline = create('div', this.options.class + '-headline')
 
     insert(this.headline, this.header)
@@ -195,14 +195,14 @@ class Calendar {
    * [buildNavigation description]
    * @return {?} [description]
    */
-  buildNavigation () {
+  buildNavigation() {
     var navigation = create('div', this.options.prefix + '-toolbar')
     insert(navigation, this.headline)
 
     var back = new Button({
       icon: iconBack,
       style: 'dense'
-    }).on('press', () => {
+    }).on('click', () => {
       this.back()
     }).insert(navigation)
 
@@ -211,7 +211,7 @@ class Calendar {
     var today = new Button({
       style: 'dense',
       label: 'today'
-    }).on('press', () => {
+    }).on('click', () => {
       this.goto()
     }).insert(navigation)
 
@@ -220,7 +220,7 @@ class Calendar {
     var next = new Button({
       icon: iconForward,
       style: 'dense'
-    }).on('press', () => {
+    }).on('click', () => {
       this.next()
     }).insert(navigation)
 
@@ -232,7 +232,7 @@ class Calendar {
    * @param  {?} head [description]
    * @return {?}      [description]
    */
-  buildAllDay () {
+  buildAllDay() {
     var allday = create('div', 'allday')
     insert(allday, this.header)
 
@@ -257,7 +257,7 @@ class Calendar {
    * @param  {?} content [description]
    * @return {?}         [description]
    */
-  buildBody () {
+  buildBody() {
     var cells = []
 
     var firstDay = this.firstDay
@@ -302,7 +302,7 @@ class Calendar {
    * @param  {Date} d
    * @return {Date}
    */
-  dateToString (d) {
+  dateToString(d) {
     var day = d.getDate()
     var month = d.getMonth() + 1
     var year = d.getFullYear()
@@ -324,7 +324,7 @@ class Calendar {
    * @param  {?} content [description]
    * @return {?}         [description]
    */
-  initCanvas () {
+  initCanvas() {
     var canvas = create('canvas')
     css.add(canvas, 'canvas')
     canvas.width = '2000'
@@ -359,7 +359,7 @@ class Calendar {
    * @param  {?} e [description]
    * @return {?}   [description]
    */
-  add (e) {
+  add(e) {
     if (e.target && e.target.matches(this.options.target)) {
       var data = e.target.getAttribute('data-date')
 
@@ -381,7 +381,7 @@ class Calendar {
    * @param  {?} value [description]
    * @return {?}       [description]
    */
-  roundTime (value) {
+  roundTime(value) {
     var step = 0.5
     var inv = 1.0 / step
     return Math.round(value * inv) / inv
@@ -392,7 +392,7 @@ class Calendar {
    * @param {string} prop
    * @param {string} value
    */
-  set (prop, value, options) {
+  set(prop, value, options) {
     console.log('set calendart', prop, value)
     switch (prop) {
       case 'week':
@@ -410,7 +410,7 @@ class Calendar {
    * @param {Array} list List of info object
    * @return {Object} The class instance
    */
-  setWeek (data) {
+  setWeek(data) {
     this.buildWeek(data)
     return this
   }
@@ -419,7 +419,7 @@ class Calendar {
    * next
    * @return {void}
    */
-  next () {
+  next() {
     this.firstDay.setDate(this.firstDay.getDate() + this.options.rangedays)
 
     this.wrapper.innerHTML = ''
@@ -431,7 +431,7 @@ class Calendar {
    * back
    * @return {void}
    */
-  back () {
+  back() {
     this.firstDay.setDate(this.firstDay.getDate() - this.options.rangedays)
 
     this.wrapper.innerHTML = ''
@@ -444,7 +444,7 @@ class Calendar {
    * @param  {?} date [description]
    * @return {?}      [description]
    */
-  goto (date) {
+  goto(date) {
     date = date || new Date()
 
     this.firstDay = this.getFirstDayOfWeek(this.date)
@@ -453,11 +453,11 @@ class Calendar {
     this.buildWeek()
   }
 
-  newEvent (date) {
+  newEvent(date) {
     // console.log('new Event', date);
   }
 
-  empty () {
+  empty() {
     console.log('empty')
     this.wrapper.innerHTML = ''
   }
