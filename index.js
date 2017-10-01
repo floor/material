@@ -11,7 +11,6 @@ import Form from 'material/src/form'
 import Image from 'material/src/image'
 import Item from 'material/src/item'
 import Layout from 'material/src/layout'
-import Layout2 from 'material/src/layout2'
 import List from 'material/src/list'
 import Menu from 'material/src/menu'
 import Slider from 'material/src/slider'
@@ -34,7 +33,6 @@ export {
   Image,
   Item,
   Layout,
-  Layout2,
   List,
   Menu,
   Slider,
