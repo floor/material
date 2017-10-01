@@ -52,7 +52,7 @@ build/*
 .jshintrc
 *-min*
 public/js/*
-dist/*
+dist/vendor/*
 README.*
 *.css
 *.codekit
