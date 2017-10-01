@@ -1,4 +1,4 @@
-import Button from 'material/src/button'
+import button from 'material/src/button'
 import Calendar from 'material/src/calendar'
 import Card from 'material/src/card'
 import Component from 'material/src/component'
@@ -20,7 +20,7 @@ import Textfield from 'material/src/textfield'
 import Toolbar from 'material/src/toolbar'
 
 export {
-  Button,
+  button,
   Calendar,
   Card,
   Checkbox,
