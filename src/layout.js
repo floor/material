@@ -1,218 +1,86 @@
-'use strict'
-
-import emitter from './module/emitter'
-import controller from './component/controller'
-import insert from './component/insert'
-
+import { is as isObject } from './module/object'
 import css from './module/css'
-import merge from './module/merge'
-// import bind from './module/bind';
-import style from './element/style'
-
-import defaults from './layout/options'
-import component from './layout/component'
+import insert from './element/insert'
 
 /**
- * The Layout view
- * @class
+ *
  */
 class Layout {
   /**
-   * The init method of the Button class
-   * @param  {Object} options [description]
-   * @private
-   * @return {Object} The class instance
+   * [constructor description]
+   * @param  {?} schema    [description]
+   * @param  {?} container [description]
+   * @return {?}           [description]
    */
-  constructor (options) {
-    this.options = merge(defaults, options || {})
-
-    this.init()
-    this.build()
-
-    // if (this.options.bind) {
-    //   this.bind(this.options.bind);
-    // }
+  constructor(schema, container) {
+    this.component = this.create(schema, container)
 
     return this
   }
 
   /**
-   * initiate class
-   * @param  {Object} options The class options
-   * @return {Object} The class instance
+   * [create description]
+   * @param  {?} schema    [description]
+   * @param  {?} container [description]
+   * @param  {?} structure [description]
+   * @return {?}           [description]
    */
-  init (options) {
-    options = options || this.options
+  create(schema, container, structure, level) {
+    level = level || 0
+    level++
 
-    Object.assign(this, emitter, component, insert)
+    structure = structure || {}
+    let component
 
-    this.wrapper = this.options.wrapper
-    this.container = this.options.container
+    // if (level === 1)
+    //   console.log('level', level);
 
-    this.component = {}
-    this.components = []
-    this.settings = this.options.settings || {}
+    for (var i = 0; i < schema.length; i++) {
+      var name
+      var options = {}
 
-    this.controller = controller
+      if (schema[i] instanceof Object &&
+        typeof schema[i] === 'function') {
+        if (isObject(schema[i + 2])) {
+          options = schema[i + 2]
+        }
 
-    // window.addEventListener('resize', () => {
-    //   this.emit('resize');
-    // });
+        if (typeof schema[i + 1] === 'string') {
+          name = schema[i + 1]
+          options.name = name
+        }
 
-    return this
-  }
+        if (this.isClass(schema[i])) { component = new schema[i](options) } else component = schema[i](options)
 
-  /**
-   * Build
-   * @return {Object} [description]
-   */
-  build (options) {
-    options = options || this.options
+        if (name) {
+          structure[name] = component
+        }
 
-    if (!this.wrapper) {
-      this.wrapper = document.createElement(options.tag)
-    }
+        if (component) {
+          this.display(component.wrapper, options)
+          this.style(component, options)
+        }
 
-    css.add(this.wrapper, 'material' + '-' + this.options.class)
-    css.add(this.wrapper, this.options.class + '-' + options.name)
-    // component.addClass(component.class + '-' + component.name);
-    // console.log('build', options, this.wrapper);
-
-    this.resizer = {}
-
-    options.container = this.wrapper
-
-    if (this.container) {
-      this.insert(this.container, this.context)
-    }
-
-    this._render(options)
-
-    return this
-  }
-
-  get (value) {
-    return this.component[value]
-  }
-
-  /**
-   * [_process description]
-   * @param  {Object} node Layout structure
-   * @return {string} type type of node e. tab
-   */
-  _render (component, level) {
-    level = level++ || 1
-
-    this._initPosition(component.container, component.position)
-    this._initStyles(component.container, component.styles)
-    this._initDisplay(component.container, component.display, component.direction)
-
-    if (component.components) {
-      this._renderComponents(component, level)
-    }
-
-    return this
-  }
-
-  /**
-   * [renderSection description]
-   * @param  {?} component [description]
-   * @param  {?} type    [description]
-   * @param { ?} level   [description]
-   * @return {?}         [description]
-   */
-  _renderComponents (component, level) {
-    var components = component.components
-
-    var wrapper = component.wrapper
-
-    var container = component.container
-    // console.log('_renderComponents', components, type, level);
-    for (var i = 0, len = components.length; i < len; i++) {
-      var property = components[i]
-
-      // console.log('property', property.name);
-
-      var options = property.options || {}
-
-      options.container = container
-      // manage shortcut
-
-      options.flex = options.flex || property.flex
-      options.hide = options.hide || property.hide
-      options.theme = options.theme || property.theme
-      options.size = options.size || property.size
-
-      if (component.direction === 'vertical' && options.size) {
-        options.height = options.size
-      } else if (options.size) {
-        options.width = options.size
-      }
-
-      if (!property.component) {
-        // console.log('property component', this.options.component);
-      }
-
-      options.component = property.component || this.options.component
-
-      // options.type = property.type || options.type;
-      options.name = options.name || property.name
-      options.text = options.text || property.text
-      options.type = options.type || property.type
-      options.position = i + 1
-      options.nComp = components.length
-
-      if (i === components.length - 1) {
-        options.last = true
-      }
-
-      // options.flex = options.flex || comp.flex;
-      // options.hide = options.hide || comp.hide;
-      // options.theme = options.theme || comp.theme;
-
-      // console.log('_initComponent', options);
-      var instance = this._initComponent(options)
-
-      if (instance.options.name) {
-        css.add(wrapper, instance.class + '-' + instance.options.name)
-      }
-
-      property.container = instance.content || instance.wrapper
-
-      // console.log('property.components', options.name, property);
-
-      if (property.components) {
-        this._render(property, level)
+        // if (level === 1) console.log('insert', component, container);
+        if (component && container) {
+          insert(component, container)
+        }
+      } else if (Array.isArray(schema[i])) {
+        this.create(schema[i], component, structure, level)
       }
     }
+
+    return structure
   }
 
-  /**
-   * [_resize description]
-   * @return {?} [description]
-   */
-  _resize () {
-    console.log('resize')
-  }
-
-  _initPosition (element, position) {
-    if (!position) return
-    // console.log('_initPosition', element, position);
-    style.set(element, {
-      position: position
-    })
-  }
-
-  /**
-   * [_initStyles description]
-   * @param  {?} element [description]
-   * @param  {?} styles  [description]
-   * @return {?}         [description]
-   */
-  _initStyles (element, styles) {
-    if (!styles) return
-    // console.log('_initStyles', element, styles);
-    style.set(element, styles)
+  isClass(F) {
+    try {
+      var object = new F()
+    } catch (err) {
+      // verify err is the expected error and then
+      return false
+    }
+    return object
   }
 
   /**
@@ -220,17 +88,56 @@ class Layout {
    * @param  {Element} container Init direction for the given container
    * @param  {string} direction (horizontal,vertical)
    */
-  _initDisplay (element, display, direction) {
-    if (!element || !display) return
-    // console.log('_initFlex', element, direction);
+  display(element, options) {
+    var display = options.display
+    var direction = options.direction || 'horizontal'
 
-    direction = direction || this.options.direction
+    if (!element || !display) return
 
     if (direction === 'horizontal') {
       element.className += ' ' + 'flex-raw'
     } else if (direction === 'vertical') {
       element.className += ' ' + 'flex-column'
     }
+  }
+
+  /**
+   * [style description]
+   * @param  {?} component [description]
+   * @return {?}           [description]
+   */
+  style(component) {
+    var options = component.options || {}
+
+    // console.log('component', component);
+
+    if (options.flex) {
+      css.add(component.wrapper, 'flex-' + options.flex)
+    } else {
+      var size = options.size
+      if (options.size && options.width) {
+        component.wrapper.width = size + 'px'
+      } else if (options.size && options.height) {
+        component.wrapper.height = size + 'px'
+      }
+    }
+
+    if (options.hide) {
+      component.wrapper.display = 'none'
+    }
+
+    if (options.theme) {
+      css.add(component.wrapper, 'theme' + '-' + options.theme)
+    }
+  }
+
+  /**
+   * [get description]
+   * @param  {?} name [description]
+   * @return {?}      [description]
+   */
+  get(name) {
+    return this.component[name]
   }
 }
 
