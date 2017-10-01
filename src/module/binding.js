@@ -19,7 +19,7 @@ var standardNativeEvents = ['click', 'dblclick', 'mouseup', 'mousedown', 'contex
  * @example
  * ```
  * var bind = {
- *  'button.click': 'press'
+ *  'button.click': 'click'
  * }
  *
  * this.bind(bind);
@@ -32,7 +32,7 @@ export default {
    * @param {Object} options
    * @return {Object}      this.bind
    */
-  bind: function (options) {
+  bind: function(options) {
     options = options || this.options.bind
 
     if (!options) return
@@ -47,7 +47,7 @@ export default {
    * @param  {Object} obj obj whit key and value to be bound
    * @return {void}
    */
-  _bindObject: function (obj) {
+  _bindObject: function(obj) {
     for (var key in obj) {
       if (obj.hasOwnProperty(key)) {
         var value = obj[key]
@@ -67,7 +67,7 @@ export default {
    * @param  {Array} values List if values to bind
    * @return {void}
    */
-  _bindList: function (key, values) {
+  _bindList: function(key, values) {
     for (var i = 0; i < values.length; i++) {
       this._bindKey(key, values[i])
     }
@@ -82,7 +82,7 @@ export default {
    * @param  {string} val Object path to be bound
    * @return {void}
    */
-  _bindKey: function (key, val) {
+  _bindKey: function(key, val) {
     var eventKeys = key.split('.')
     var ev = eventKeys[eventKeys.length - 1]
 
@@ -108,7 +108,7 @@ export default {
    * @param  {string} val Method path to be bound
    * @return {void}
    */
-  _bindEvent: function (listener, ev, emit, val) {
+  _bindEvent: function(listener, ev, emit, val) {
     console.log('_bindEvent', listener)
     var valKeys = val.split('.')
     valKeys.splice(-2, 2)
@@ -129,7 +129,7 @@ export default {
    * @param  {string} val Method path to be bound
    * @return {void}
    */
-  _bindMethod: function (listener, ev, val) {
+  _bindMethod: function(listener, ev, val) {
     // console.log('_bindMethod', listener);
     var method = this._path(val)
 
@@ -158,7 +158,7 @@ export default {
    * @param  {string} str Object path for example key1.key2.key3
    * @return {value} The value of the last reference
    */
-  _path: function (str) {
+  _path: function(str) {
     if (!str) return this
     else if (!str.match(/\./)) return this[str]
     var last

@@ -49,8 +49,8 @@ let defaults = {
  *   label: 'Primary raised button',
  *   type: 'raised',
  *   primary: true
- * }).on('press', function(e) {
- *   console.log('button press', e);
+ * }).on('click', function(e) {
+ *   console.log('button click', e);
  * }).insert(document.body);
  */
 class Checkbox {
