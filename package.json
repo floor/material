@@ -1,7 +1,7 @@
 {
   "name": "material",
   "version": "0.2.1",
-  "description": "Implementation of Material Design Components",
+  "description": "A lightweight implementation of Material Design Components - ES6",
   "main": "index.js",
   "repository": {
     "type": "git",
@@ -14,6 +14,6 @@
   },
   "homepage": "https://github.com/codepolitan/material",
   "keywords": [
-    "material design component es6 es2015 vanilla javascript"
+    "lightweight material design component es6 es2015 vanilla javascript"
   ]
 }
