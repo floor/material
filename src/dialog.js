@@ -10,7 +10,7 @@ import insert from './component/insert'
 import event from './element/event.js'
 import css from './module/css'
 
-import Layout from './layout2'
+import Layout from './layout'
 
 let defaults = {
   prefix: 'material',
@@ -26,7 +26,7 @@ class Dialog {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor (options) {
+  constructor(options) {
     // init and build
     this.init(options)
     this.build()
@@ -45,7 +45,7 @@ class Dialog {
    * @param  {Object} options The class options
    * @return {Object} This class instance
    */
-  init (options) {
+  init(options) {
     // init options and merge options to defaults
     options = options || {}
     this.options = merge(defaults, options || {})
@@ -62,7 +62,7 @@ class Dialog {
    * build the component using the super method
    * @return {Object} The class instance
    */
-  build () {
+  build() {
     var tag = this.options.tag || 'div'
     // this.wrapper = new Element(this.options.element);
     this.wrapper = document.createElement(tag)
@@ -81,14 +81,14 @@ class Dialog {
     this.options.layout.wrapper = this.surface
     this.layout = new Layout(this.options.layout)
 
-    event.add(this.surface, 'click', function (ev) {
+    event.add(this.surface, 'click', function(ev) {
       ev.stopPropagation()
     })
 
     // this.wrapper = element.createElement(tag);
   }
 
-  close () {
+  close() {
     css.add(this.wrapper, 'dialog-closing')
 
     var delayMillis = 200 // 1 second
@@ -99,7 +99,7 @@ class Dialog {
     }, delayMillis)
   }
 
-  show () {
+  show() {
     this.wrapper.style.display = 'flex'
     // css.add(this.wrapper, 'dialog-showing');
 
