@@ -39,12 +39,9 @@ Icon?
 ehthumbs.db
 Thumbs.db
 
-*.sublime-project
-*.sublime-workspace
 node_modules
 docs
 doc
-docsold
 report/*
 build/*
 .gitignore
@@ -54,5 +51,3 @@ build/*
 public/js/*
 dist/vendor/*
 README.*
-*.css
-*.codekit
