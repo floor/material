@@ -1,78 +1,43 @@
 'use strict'
 
-import init from './component/init'
-import classify from './component/classify'
-import events from './component/events'
-import insert from './component/insert'
-
 import create from './element/create'
-
-import bind from './module/bind'
-import merge from './module/merge'
-import emitter from './module/emitter'
+import insert from './element/insert'
+import classify from './component/classify'
 
 const defaults = {
   prefix: 'material',
   class: 'component',
-  tag: 'div',
-  modules: [emitter, events, bind, insert]
+  tag: 'div'
 }
 
 /**
- * Base class for all ui components
- * @class
- * @param {Object} options - The component options
- * @return {Object} The class Instance
+ * container function
+ * @function
+ * @since 0.0.1
  */
+const component = (params) => {
+  // init options
+  const options = Object.assign({}, defaults, params || {})
 
-/**
- * Class representing a UI Container. Can add components.
- *
- * @extends Component
- * @return {parent} The class instance
- * @example new Container({
- *   container: document.body
- * });
- */
-class Component {
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
-  constructor (options) {
-    this.options = merge(defaults, options || {})
+  // create button element and classify
+  var element = create(options.tag, options.css)
+  classify(element, options)
 
-    init(this)
-    this.build(this.options)
-
-    if (this.options.bind) {
-      this.bind(this.options.bind)
-    }
-
-    this.emit('ready')
-
-    return this
+  // insert into the container if exists
+  if (options.container) {
+    insert(element, options.container)
   }
 
-  /**
-   * Build Method
-   * @return {Object} This class instance
-   */
-  build (options) {
-    var tag = options.tag || 'div'
-    this.wrapper = create(tag, options.css)
-
-    classify(this.wrapper, options)
-
-    if (options.container) {
-      this.insert(options.container)
+  // public API
+  var api = {
+    wrapper: element,
+    insert: (container, context) => {
+      insert(element, container, context)
+      return api
     }
-
-    this.emit('built', this.wrapper)
-
-    return this
   }
+
+  return api
 }
 
-export default Component
+export default component
