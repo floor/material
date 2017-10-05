@@ -1,73 +1,47 @@
 'use strict'
 
-import merge from './module/merge'
-import insert from './component/insert'
-import css from './module/css'
+import create from './element/create'
+import insert from './element/insert'
+import classify from './component/classify'
 
-var defaults = {
+const defaults = {
   prefix: 'material',
   class: 'divider',
   tag: 'span'
 }
 
 /**
- * The item class is used for example as item list
- *
- * @class
- * @extends {Component}
- * @return {Object} The class instance
- * @example new Item(object);
+ * container function
+ * @function
+ * @since 0.0.1
  */
-class Divider {
-  /**
-   * init
-   * @return {Object} The class options
-   */
-  constructor(options) {
-    this.init(options)
-    this.build()
+const divider = (params) => {
+  // init options
+  const options = Object.assign({}, defaults, params || {})
 
-    return this
+  // create button element and classify
+  var element = create(options.tag, options.prefix + '-' + options.class)
+  classify(element, options)
+
+  // insert into the container if exists
+  if (options.container) {
+    insert(element, options.container)
   }
 
-  /**
-   * [init description]
-   * @param  {?} options [description]
-   * @return {?}         [description]
-   */
-  init(options) {
-    options = options || {}
-    // merge options
-    this.options = merge(defaults, options || {})
-
-    Object.assign(this, insert)
+  if (options.text) {
+    element.textContent = options.text
   }
 
-  /**
-   * Build function for item
-   * @return {Object} This class instance
-   */
-  build(options) {
-    options = options || this.options
-
-    // define main tag
-
-    this.wrapper = document.createElement(this.options.tag)
-
-    css.add(this.wrapper, this.options.prefix + '-' + this.options.class)
-
-    if (options.type) {
-      css.add(this.wrapper, this.options.class + '-' + options.type)
-    }
-
-    if (this.options.text) {
-      this.wrapper.textContent = this.options.text
-    }
-
-    if (this.options.container) {
-      this.insert(this.options.container)
+  // public API
+  var api = {
+    wrapper: element,
+    insert: (container, context) => {
+      insert(element, container, context)
+      return api
     }
   }
+
+  return api
 }
 
-export default Divider
+export default divider

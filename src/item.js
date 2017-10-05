@@ -1,12 +1,10 @@
 'use strict'
 
-// import Component from './component';
-import merge from './module/merge'
-import insert from './component/insert'
-import css from './module/css'
-// import bind from '../module/bind';
+import create from './element/create'
+import insert from './element/insert'
+import classify from './component/classify'
 
-var defaults = {
+const defaults = {
   prefix: 'material',
   class: 'item',
   tag: {
@@ -26,84 +24,48 @@ var defaults = {
 }
 
 /**
- * The class represents an item ie for list
- *
- * @class
- * @return {Object} The class instance
- * @example new Item(object);
+ * item function
+ * @function
+ * @since 0.0.1
  */
-class Item {
-  /**
-   * init
-   * @return {Object} The class options
-   */
-  constructor(options) {
-    this.init(options)
-    this.build()
+const item = (params) => {
+  // init options
+  const options = Object.assign({}, defaults, params || {})
 
-    return this
-  }
+  var tag = options.tag[options.type] || options.tag.default
 
-  /**
-   * [init description]
-   * @param  {?} options [description]
-   * @return {?}         [description]
-   */
-  init(options) {
-    // merge options
-    this.options = merge(defaults, options || {})
+  // create button element and classify
+  var element = create(tag)
+  classify(element, options)
 
-    // define class
-
-    // assign modules
-    Object.assign(this, insert)
-  }
-
-  /**
-   * Build function for item
-   * @return {Object} This class instance
-   */
-  build(options) {
-    options = options || this.options
-
-    // define main tag
-    var tag = options.tag[options.type] || options.tag.default
-
-    this.wrapper = document.createElement(tag)
-
-    if (options.text) {
-      this.set(options.text)
-    }
-
-    css.add(this.wrapper, this.options.prefix + '-' + this.options.class)
-
-    if (options.type) {
-      css.add(this.wrapper, this.options.class + '-' + options.type)
-    }
-
-    if (this.options.container) {
-      this.insert(this.options.container)
-    }
-  }
-
-  /**
-   * Get or set text value of the element
-   * @param {string} value The text to set
-   * @returns {*}
-   */
-  set(value) {
-    if (value) {
-      if (this.wrapper.innerText) {
-        this.wrapper.innerText = value
+  // public API
+  var api = {
+    wrapper: element,
+    insert: (container, context) => {
+      insert(element, container, context)
+      return api
+    },
+    set: (value) => {
+      if (!value) return
+      if (element.innerText) {
+        element.innerText = value
       } else {
-        this.wrapper.textContent = value
+        element.textContent = value
       }
 
-      return this
+      return api
     }
-
-    return this
   }
-};
 
-export default Item
+  // insert into the container if exists
+  if (options.container) {
+    insert(element, options.container)
+  }
+
+  // set text
+  api.set(options.text)
+
+  return api
+}
+
+export default item
