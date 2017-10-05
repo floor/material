@@ -4,16 +4,29 @@ import create from './element/create'
 import insert from './element/insert'
 import classify from './component/classify'
 import ripple from './element/ripple'
+import click from './component/click'
 import emitter from './module/emitter'
+import control from './element/control'
+import attach from './module/attach'
+import emit from './component/emit'
 import label from './component/label'
 import icon from './component/icon'
 
 const defaults = {
   prefix: 'material',
   class: 'button',
-  tag: 'button'
+  tag: 'button',
+  role: 'button',
+  events: [
+    ['wrapper.click', 'click'],
+    ['wrapper.mousedown', ripple]
+  ]
 }
-
+/**
+ * button component
+ * @module button
+ * @category component
+ */
 /**
  * button function
  * @function
@@ -23,29 +36,41 @@ const button = (params) => {
   // init options
   const options = Object.assign({}, defaults, params || {})
 
+  var element = {}
+  var component = {}
+
   // init vars
   var text = options.label || options.text
   var svg = options.icon
   var disabled = options.disabled || false
 
   // create button element and classify
-  var element = create(options.tag, options.prefix + '-' + options.class)
-  classify(element, options)
+  var wrapper = create(options.tag)
+  classify(wrapper, options)
 
   // create and insert label and icon
-  label(element, text, options)
-  icon(element, svg, options)
+  label(wrapper, text, options)
+  icon(wrapper, svg, options)
 
-  // insert into the container if exists
+  // insert inside the container
   if (options.container) {
-    insert(element, options.container)
+    insert(wrapper, options.container)
   }
 
-  // public API
+  /**
+   * Public API
+   * @type {Object}
+   */
   var api = {
-    wrapper: element,
+    wrapper: wrapper,
+    /**
+     * pubic insert method
+     * @param  {HTMLElement} container [description]
+     * @param  {string} context   where the element will be inserted
+     * @return {object}           return api
+     */
     insert: (container, context) => {
-      insert(element, container, context)
+      insert(wrapper, container, context)
       return api
     },
     disable: () => {
@@ -53,38 +78,16 @@ const button = (params) => {
     }
   }
 
-  // augment api with emitter
+  component.click = (e) => {
+    emit(api, 'click', e)
+  }
+
+  // assign emitter to api
   Object.assign(api, emitter)
+  // assign api to component
+  Object.assign(component, api)
 
-  // event related functions and listeners
-  /**
-   * on element click
-   * @param  {event} e click event
-   * @return {void}
-   */
-  function click(e) {
-    e.preventDefault()
-
-    if (disabled === true) return
-    if (options.upload) return
-
-    api.emit('click', e)
-  }
-
-  /**
-   * on element mousedown
-   * @param  {event} e click event
-   * @return {void}
-   */
-  function mousedown(e) {
-    if (disabled === true) return
-    if (options.upload) return
-
-    ripple(e, options.ripple)
-  }
-
-  element.addEventListener('click', click)
-  element.addEventListener('mousedown', mousedown)
+  attach(component, options.events)
 
   return api
 }
