@@ -13,7 +13,7 @@ import css from '../module/css'
  * @return {Instance} The Class instance
  *
  */
-function classify (element, options) {
+function classify(element, options) {
   css.add(element, options.prefix + '-' + options.class)
 
   if (options.name) {
@@ -40,6 +40,10 @@ function classify (element, options) {
 
   if (options.label) {
     element.title = options.label
+  }
+
+  if (options.role) {
+    element.setAttribute('role', options.role)
   }
 
   if (options.style) {
