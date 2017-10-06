@@ -6,7 +6,6 @@ import classify from './component/classify'
 import ripple from './element/ripple'
 import click from './component/click'
 import emitter from './module/emitter'
-import control from './element/control'
 import attach from './module/attach'
 import emit from './component/emit'
 import label from './component/label'
@@ -74,7 +73,7 @@ const button = (params) => {
       return api
     },
     disable: () => {
-
+      wrapper.setAttribute('disabled', 'disabled');
     }
   }
 
@@ -84,6 +83,7 @@ const button = (params) => {
 
   // assign emitter to api
   Object.assign(api, emitter)
+
   // assign api to component
   Object.assign(component, api)
 
