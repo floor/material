@@ -6,7 +6,7 @@ import css from './module/css'
 import bind from './module/bind'
 import emitter from './module/emitter'
 
-import button from './button'
+import Button from './button'
 import iconBack from './skin/material/icon/back.svg'
 import iconForward from './skin/material/icon/forward.svg'
 
@@ -199,7 +199,7 @@ class Calendar {
     var navigation = create('div', this.options.prefix + '-toolbar')
     insert(navigation, this.headline)
 
-    var back = button({
+    var back = new Button({
       icon: iconBack,
       style: 'dense'
     }).on('click', () => {
@@ -208,7 +208,7 @@ class Calendar {
 
     css.add(back.wrapper, 'compact')
 
-    var today = button({
+    var today = new Button({
       style: 'dense',
       label: 'today'
     }).on('click', () => {
@@ -217,7 +217,7 @@ class Calendar {
 
     css.add(today.wrapper, 'compact')
 
-    var next = button({
+    var next = new Button({
       icon: iconForward,
       style: 'dense'
     }).on('click', () => {
