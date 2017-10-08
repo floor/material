@@ -54,5 +54,4 @@ build/*
 public/js/*
 dist/vendor/*
 README.*
-*.css
 *.codekit
