@@ -1,5 +1,7 @@
 'use strict'
 
+import dom from '../module/dom'
+
 /**
  * insert element into dom
  * @param  {HTMLElement} element   [description]
@@ -23,22 +25,10 @@ function insert(element, container, context) {
     return
   }
 
-  switch (context) {
-    case 'top':
-      container.insertBefore(element, container.firstChild)
-      break
-    case 'bottom':
-      container.appendChild(element)
-      break
-    case 'after':
-      container.parentNode.insertBefore(element, container.nextSibling)
-      break
-    case 'before':
-      container.insertBefore(element, container)
-      break
-    default:
-      container.appendChild(element)
-  }
+  var method = methods[index]
+
+  // insert component element to the dom tree using dom
+  dom[method](container, element)
 
   return element
 }

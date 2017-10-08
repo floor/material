@@ -1,43 +1,78 @@
 'use strict'
 
-import create from './element/create'
-import insert from './element/insert'
+import init from './component/init'
 import classify from './component/classify'
+import events from './component/events'
+import insert from './component/insert'
+
+import create from './element/create'
+
+import bind from './module/bind'
+import merge from './module/merge'
+import emitter from './module/emitter'
 
 const defaults = {
   prefix: 'material',
   class: 'component',
-  tag: 'div'
+  tag: 'div',
+  modules: [emitter, events, bind, insert]
 }
 
 /**
- * container function
- * @function
- * @since 0.0.1
+ * Base class for all ui components
+ * @class
+ * @param {Object} options - The component options
+ * @return {Object} The class Instance
  */
-const component = (params) => {
-  // init options
-  const options = Object.assign({}, defaults, params || {})
 
-  // create button element and classify
-  var element = create(options.tag, options.css)
-  classify(element, options)
+/**
+ * Class representing a UI Container. Can add components.
+ *
+ * @extends Component
+ * @return {parent} The class instance
+ * @example new Container({
+ *   container: document.body
+ * });
+ */
+class Component {
+  /**
+   * Constructor
+   * @param  {Object} options - Component options
+   * @return {Object} Class instance
+   */
+  constructor (options) {
+    this.options = merge(defaults, options || {})
 
-  // insert into the container if exists
-  if (options.container) {
-    insert(element, options.container)
-  }
+    init(this)
+    this.build(this.options)
 
-  // public API
-  var api = {
-    wrapper: element,
-    insert: (container, context) => {
-      insert(element, container, context)
-      return api
+    if (this.options.bind) {
+      this.bind(this.options.bind)
     }
+
+    this.emit('ready')
+
+    return this
   }
 
-  return api
+  /**
+   * Build Method
+   * @return {Object} This class instance
+   */
+  build (options) {
+    var tag = options.tag || 'div'
+    this.wrapper = create(tag, options.css)
+
+    classify(this.wrapper, options)
+
+    if (options.container) {
+      this.insert(options.container)
+    }
+
+    this.emit('built', this.wrapper)
+
+    return this
+  }
 }
 
-export default component
+export default Component

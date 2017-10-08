@@ -14,6 +14,8 @@ import merge from './module/merge'
 import emitter from './module/emitter'
 
 import List from './list'
+import Item from './item'
+import Divider from './divider'
 
 const defaults = {
   prefix: 'material',
@@ -73,6 +75,20 @@ class Menu {
         target: '.material-item',
         height: 600,
         label: 'Flat',
+        render: (info) => {
+          var item
+
+          if (info.type === 'divider') {
+            item = new Divider()
+          } else {
+            item = new Item({
+              name: info.name,
+              text: info.name
+            })
+          }
+
+          return item
+        },
         select: (item) => {
           this.selected = item
           this.hide()
@@ -93,8 +109,7 @@ class Menu {
   }
 
   show (e) {
-    console.log('show', e);
-    css.add(this.wrapper, this.options.class + '-show')
+    css.add(this.wrapper, this.class + '-show')
     var offs = offset(e.target)
 
     var offsw = offset(this.wrapper)

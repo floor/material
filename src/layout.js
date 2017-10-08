@@ -12,7 +12,7 @@ class Layout {
    * @param  {?} container [description]
    * @return {?}           [description]
    */
-  constructor (schema, container) {
+  constructor(schema, container) {
     this.component = this.create(schema, container)
 
     return this
@@ -25,7 +25,7 @@ class Layout {
    * @param  {?} structure [description]
    * @return {?}           [description]
    */
-  create (schema, container, structure, level) {
+  create(schema, container, structure, level) {
     level = level || 0
     level++
 
@@ -58,7 +58,7 @@ class Layout {
 
         if (component) {
           this.display(component.wrapper, options)
-          this.style(component.wrapper, options)
+          this.style(component, options)
         }
 
         // if (level === 1) console.log('insert', component, container);
@@ -73,7 +73,7 @@ class Layout {
     return structure
   }
 
-  isClass (F) {
+  isClass(F) {
     try {
       var object = new F()
     } catch (err) {
@@ -88,7 +88,7 @@ class Layout {
    * @param  {Element} container Init direction for the given container
    * @param  {string} direction (horizontal,vertical)
    */
-  display (element, options) {
+  display(element, options) {
     var display = options.display
     var direction = options.direction || 'horizontal'
 
@@ -106,26 +106,28 @@ class Layout {
    * @param  {?} component [description]
    * @return {?}           [description]
    */
-  style (wrapper, options) {
+  style(component) {
+    var options = component.options || {}
+
     // console.log('component', component);
 
     if (options.flex) {
-      css.add(wrapper, 'flex-' + options.flex)
+      css.add(component.wrapper, 'flex-' + options.flex)
     } else {
       var size = options.size
       if (options.size && options.width) {
-        wrapper.width = size + 'px'
+        component.wrapper.width = size + 'px'
       } else if (options.size && options.height) {
-        wrapper.height = size + 'px'
+        component.wrapper.height = size + 'px'
       }
     }
 
     if (options.hide) {
-      wrapper.display = 'none'
+      component.wrapper.display = 'none'
     }
 
     if (options.theme) {
-      css.add(wrapper, 'theme' + '-' + options.theme)
+      css.add(component.wrapper, 'theme' + '-' + options.theme)
     }
   }
 
@@ -134,7 +136,7 @@ class Layout {
    * @param  {?} name [description]
    * @return {?}      [description]
    */
-  get (name) {
+  get(name) {
     return this.component[name]
   }
 }

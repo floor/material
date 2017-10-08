@@ -1,47 +1,73 @@
 'use strict'
 
-import create from './element/create'
-import insert from './element/insert'
-import classify from './component/classify'
+import merge from './module/merge'
+import insert from './component/insert'
+import css from './module/css'
 
-const defaults = {
+var defaults = {
   prefix: 'material',
   class: 'divider',
   tag: 'span'
 }
 
 /**
- * container function
- * @function
- * @since 0.0.1
+ * The item class is used for example as item list
+ *
+ * @class
+ * @extends {Component}
+ * @return {Object} The class instance
+ * @example new Item(object);
  */
-const divider = (params) => {
-  // init options
-  const options = Object.assign({}, defaults, params || {})
+class Divider {
+  /**
+   * init
+   * @return {Object} The class options
+   */
+  constructor(options) {
+    this.init(options)
+    this.build()
 
-  // create button element and classify
-  var element = create(options.tag, options.prefix + '-' + options.class)
-  classify(element, options)
-
-  // insert into the container if exists
-  if (options.container) {
-    insert(element, options.container)
+    return this
   }
 
-  if (options.text) {
-    element.textContent = options.text
+  /**
+   * [init description]
+   * @param  {?} options [description]
+   * @return {?}         [description]
+   */
+  init(options) {
+    options = options || {}
+    // merge options
+    this.options = merge(defaults, options || {})
+
+    Object.assign(this, insert)
   }
 
-  // public API
-  var api = {
-    wrapper: element,
-    insert: (container, context) => {
-      insert(element, container, context)
-      return api
+  /**
+   * Build function for item
+   * @return {Object} This class instance
+   */
+  build(options) {
+    options = options || this.options
+
+    // define main tag
+
+    this.wrapper = document.createElement(this.options.tag)
+
+    css.add(this.wrapper, this.options.prefix + '-' + this.options.class)
+
+    if (options.type) {
+      css.add(this.wrapper, this.options.class + '-' + options.type)
+    }
+
+    if (this.options.text) {
+      this.wrapper.textContent = this.options.text
+    }
+
+    if (this.options.container) {
+      this.insert(this.options.container)
     }
   }
-
-  return api
 }
 
-export default divider
+export default Divider

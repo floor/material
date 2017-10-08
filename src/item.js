@@ -1,10 +1,12 @@
 'use strict'
 
-import create from './element/create'
-import insert from './element/insert'
-import classify from './component/classify'
+// import Component from './component';
+import merge from './module/merge'
+import insert from './component/insert'
+import css from './module/css'
+// import bind from '../module/bind';
 
-const defaults = {
+var defaults = {
   prefix: 'material',
   class: 'item',
   tag: {
@@ -24,48 +26,84 @@ const defaults = {
 }
 
 /**
- * item function
- * @function
- * @since 0.0.1
+ * The class represents an item ie for list
+ *
+ * @class
+ * @return {Object} The class instance
+ * @example new Item(object);
  */
-const item = (params) => {
-  // init options
-  const options = Object.assign({}, defaults, params || {})
+class Item {
+  /**
+   * init
+   * @return {Object} The class options
+   */
+  constructor(options) {
+    this.init(options)
+    this.build()
 
-  var tag = options.tag[options.type] || options.tag.default
+    return this
+  }
 
-  // create button element and classify
-  var element = create(tag)
-  classify(element, options)
+  /**
+   * [init description]
+   * @param  {?} options [description]
+   * @return {?}         [description]
+   */
+  init(options) {
+    // merge options
+    this.options = merge(defaults, options || {})
 
-  // public API
-  var api = {
-    wrapper: element,
-    insert: (container, context) => {
-      insert(element, container, context)
-      return api
-    },
-    set: (value) => {
-      if (!value) return
-      if (element.innerText) {
-        element.innerText = value
-      } else {
-        element.textContent = value
-      }
+    // define class
 
-      return api
+    // assign modules
+    Object.assign(this, insert)
+  }
+
+  /**
+   * Build function for item
+   * @return {Object} This class instance
+   */
+  build(options) {
+    options = options || this.options
+
+    // define main tag
+    var tag = options.tag[options.type] || options.tag.default
+
+    this.wrapper = document.createElement(tag)
+
+    if (options.text) {
+      this.set(options.text)
+    }
+
+    css.add(this.wrapper, this.options.prefix + '-' + this.options.class)
+
+    if (options.type) {
+      css.add(this.wrapper, this.options.class + '-' + options.type)
+    }
+
+    if (this.options.container) {
+      this.insert(this.options.container)
     }
   }
 
-  // insert into the container if exists
-  if (options.container) {
-    insert(element, options.container)
+  /**
+   * Get or set text value of the element
+   * @param {string} value The text to set
+   * @returns {*}
+   */
+  set(value) {
+    if (value) {
+      if (this.wrapper.innerText) {
+        this.wrapper.innerText = value
+      } else {
+        this.wrapper.textContent = value
+      }
+
+      return this
+    }
+
+    return this
   }
+};
 
-  // set text
-  api.set(options.text)
-
-  return api
-}
-
-export default item
+export default Item
