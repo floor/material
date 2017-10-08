@@ -1,11 +1,10 @@
 'use strict'
 
 // dialog related modules
-import merge from './module/merge'
 import events from './component/events'
 import emitter from './module/emitter'
 import controller from './component/controller'
-import bind from './module/bind'
+import attach from './module/attach'
 import insert from './component/insert'
 import event from './element/event.js'
 import css from './module/css'
@@ -15,9 +14,9 @@ import Layout from './layout'
 let defaults = {
   prefix: 'material',
   class: 'dialog',
-  bind: {
-    'wrapper.click': 'close'
-  }
+  events: [
+    ['wrapper.click', 'close']
+  ]
 }
 
 class Dialog {
@@ -27,13 +26,10 @@ class Dialog {
    * @return {Object} Class instance
    */
   constructor(options) {
-    // init and build
-    this.init(options)
+    this.options = Object.assign({}, defaults, options || {})
+    this.init()
     this.build()
-
-    if (this.options.bind) {
-      this.bind(this.options.bind)
-    }
+    this.attach()
 
     this.wrapper.style.display = 'none'
 
@@ -45,13 +41,11 @@ class Dialog {
    * @param  {Object} options The class options
    * @return {Object} This class instance
    */
-  init(options) {
+  init() {
     // init options and merge options to defaults
-    options = options || {}
-    this.options = merge(defaults, options || {})
 
     // implement modules
-    Object.assign(this, events, emitter, bind, insert)
+    Object.assign(this, events, emitter, attach, insert)
 
     this.controller = controller
 

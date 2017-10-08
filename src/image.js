@@ -1,6 +1,5 @@
 'use strict'
 
-import merge from './module/merge'
 import insert from './component/insert'
 import css from './module/css'
 
@@ -26,7 +25,7 @@ class Image {
   constructor(options) {
     // console.log('text options', options);
 
-    this.options = merge(defaults, options || {})
+    this.options = Object.assign({}, defaults, options || {})
 
     this.init()
     this.build()

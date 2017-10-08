@@ -7,15 +7,13 @@ import insert from './component/insert'
 
 import create from './element/create'
 
-import bind from './module/bind'
-import merge from './module/merge'
 import emitter from './module/emitter'
 
 const defaults = {
   prefix: 'material',
   class: 'component',
   tag: 'div',
-  modules: [emitter, events, bind, insert]
+  modules: [emitter, events, insert]
 }
 
 /**
@@ -40,15 +38,11 @@ class Component {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor (options) {
-    this.options = merge(defaults, options || {})
+  constructor(options) {
+    this.options = Object.assign({}, defaults, options || {})
 
     init(this)
     this.build(this.options)
-
-    if (this.options.bind) {
-      this.bind(this.options.bind)
-    }
 
     this.emit('ready')
 
@@ -59,7 +53,7 @@ class Component {
    * Build Method
    * @return {Object} This class instance
    */
-  build (options) {
+  build(options) {
     var tag = options.tag || 'div'
     this.wrapper = create(tag, options.css)
 

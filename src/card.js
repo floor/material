@@ -2,7 +2,6 @@
 
 // import modules
 import init from './component/init'
-import merge from './module/merge'
 import create from './element/create'
 import insert from './component/insert'
 import classify from './component/classify'
@@ -21,8 +20,8 @@ class Card {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor (options) {
-    this.options = merge(defaults, options || {})
+  constructor(options) {
+    this.options = Object.assign({}, defaults, options || {})
 
     init(this)
     this.build()
@@ -32,7 +31,7 @@ class Card {
    * build the component using the super method
    * @return {Object} The class instance
    */
-  build () {
+  build() {
     var tag = this.options.tag || 'div'
 
     this.wrapper = create(tag)

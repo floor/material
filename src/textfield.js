@@ -6,25 +6,24 @@ import insert from './component/insert'
 
 import emitter from './module/emitter'
 import css from './module/css'
-import merge from './module/merge'
-import bind from './module/bind'
+import attach from './module/attach'
 
 var defaults = {
   prefix: 'material',
   class: 'textfield',
   type: 'control',
   tag: 'div',
-  modules: [emitter, bind, insert],
-  bind: {
+  modules: [emitter, attach, insert],
+  events: [
     // 'change': '_onChange',
-    'input.focus': '_onInputFocus',
-    'input.blur': '_onInputBlur',
-    // 'input.keypress': '_onInputKeyPress',
-    'input.keyup': '_onInputKeyPress',
-    'input.change': '_onChange'
+    ['input.focus', '_onInputFocus'],
+    ['input.blur', '_onInputBlur'],
+    // ['input.keypress', '_onInputKeyPress',
+    ['input.keyup', '_onInputKeyPress'],
+    ['input.change', '_onChange']
     // 'input.keydown': '_onInputKeyPress'
 
-  }
+  ]
 }
 
 /**
@@ -39,14 +38,11 @@ class Textfield {
    * @return {Object} Class instance
    */
   constructor(options) {
-    this.options = merge(defaults, options || {})
+    this.options = Object.assign({}, defaults, options || {})
 
     this.init(options)
     this.build()
-
-    if (this.options.bind) {
-      this.bind(this.options.bind)
-    }
+    this.attach()
 
     return this
   }
@@ -56,7 +52,7 @@ class Textfield {
    * @param  {Object} options The class options
    * @return {Object} The class instance
    */
-  init(options) {
+  init() {
     init(this)
     // init options and merge options to defaults
 
@@ -69,11 +65,10 @@ class Textfield {
    * [build description]
    * @return {Object} The class instance
    */
-  build(options) {
-    options = options || this.options
+  build() {
     // create a new div as input element
-    var tag = this.options.tag || 'div'
-    this.wrapper = create(tag, options.prefix + '-' + options.class)
+    var tag = this.this.options.tag || 'div'
+    this.wrapper = create(tag, this.options.prefix + '-' + this.options.class)
 
     this.buildLabel()
     this.buildInput()
@@ -83,10 +78,10 @@ class Textfield {
       css.add(this.wrapper, 'is-disabled')
     }
 
-    // insert if container options is given
-    if (options.container) {
+    // insert if container this.options is given
+    if (this.options.container) {
       // console.log(this.name, opts.container);
-      this.insert(options.container)
+      this.insert(this.options.container)
     }
   }
 

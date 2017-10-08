@@ -1,6 +1,5 @@
 'use strict'
 
-import merge from './module/merge'
 import insert from './component/insert'
 import css from './module/css'
 
@@ -24,6 +23,7 @@ class Divider {
    * @return {Object} The class options
    */
   constructor(options) {
+    this.options = Object.assign({}, defaults, options || {})
     this.init(options)
     this.build()
 
@@ -35,10 +35,8 @@ class Divider {
    * @param  {?} options [description]
    * @return {?}         [description]
    */
-  init(options) {
-    options = options || {}
+  init() {
     // merge options
-    this.options = merge(defaults, options || {})
 
     Object.assign(this, insert)
   }
@@ -47,17 +45,15 @@ class Divider {
    * Build function for item
    * @return {Object} This class instance
    */
-  build(options) {
-    options = options || this.options
-
+  build() {
     // define main tag
 
     this.wrapper = document.createElement(this.options.tag)
 
     css.add(this.wrapper, this.options.prefix + '-' + this.options.class)
 
-    if (options.type) {
-      css.add(this.wrapper, this.options.class + '-' + options.type)
+    if (this.options.type) {
+      css.add(this.wrapper, this.options.class + '-' + this.options.type)
     }
 
     if (this.options.text) {

@@ -1,6 +1,5 @@
 'use strict'
 
-import merge from './module/merge'
 import create from './element/create'
 import css from './module/css'
 import insert from './element/insert'
@@ -31,14 +30,11 @@ class Container {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor (options) {
+  constructor(options) {
+    this.options = Object.assign({}, defaults, options || {})
     // init and build
     this.init(options)
     this.build()
-
-    if (this.options.bind) {
-      this.bind(this.options.bind)
-    }
 
     return this
   }
@@ -48,11 +44,7 @@ class Container {
    * @params {Object} options The instance options
    * @return {Object} This class instance
    */
-  init (options) {
-    // init options and merge options to defaults
-    options = options || {}
-    this.options = merge(defaults, options || {})
-
+  init(options) {
     this.options.name = this.options.name
 
     // implement modules
@@ -67,7 +59,7 @@ class Container {
    * [build description]
    * @return {Object} This class  instance
    */
-  build (props) {
+  build(props) {
     var tag = this.options.tag || 'div'
 
     this.wrapper = create(tag, this.options.prefix + '-' + this.options.class)
@@ -88,7 +80,7 @@ class Container {
     return this
   }
 
-  insert (container, context) {
+  insert(container, context) {
     insert(this.wrapper, container, context)
     return this
   }

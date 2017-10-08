@@ -1,7 +1,6 @@
 'use strict'
 
 import init from './component/init'
-import merge from './module/merge'
 import insert from './component/insert'
 import classify from './component/classify'
 import create from './element/create'
@@ -50,8 +49,8 @@ class Text {
    * init
    * @return {Object} The class options
    */
-  constructor (options) {
-    this.options = merge(defaults, options || {})
+  constructor(options) {
+    this.options = Object.assign({}, defaults, options || {})
 
     init(this)
     this.build(this.options)
@@ -63,7 +62,7 @@ class Text {
    * Build function for item
    * @return {Object} This class instance
    */
-  build (options) {
+  build(options) {
     options = options || this.options
 
     var tag = options.tag[options.type] || options.tag.default
@@ -89,7 +88,7 @@ class Text {
    * @param {string} value The text to set
    * @returns {*}
    */
-  set (value) {
+  set(value) {
     if (value) {
       if (this.wrapper.innerText) {
         this.wrapper.innerText = value

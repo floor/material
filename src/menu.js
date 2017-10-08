@@ -9,8 +9,7 @@ import offset from './element/offset'
 
 import create from './element/create'
 
-import bind from './module/bind'
-import merge from './module/merge'
+import attach from './module/attach'
 import emitter from './module/emitter'
 
 import List from './list'
@@ -21,7 +20,7 @@ const defaults = {
   prefix: 'material',
   class: 'menu',
   tag: 'div',
-  modules: [emitter, events, bind, insert]
+  modules: [emitter, events, attach, insert]
 }
 
 /**
@@ -38,16 +37,14 @@ class Menu {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor (options) {
-    this.options = merge(defaults, options || {})
+  constructor(options) {
+    this.options = Object.assign({}, defaults, options || {})
 
     init(this)
     this.build(this.options)
     this.setup()
 
-    if (this.options.bind) {
-      this.bind(this.options.bind)
-    }
+    this.attach()
 
     this.emit('ready')
 
@@ -58,7 +55,7 @@ class Menu {
    * Build Method
    * @return {Object} This class instance
    */
-  build (options) {
+  build(options) {
     var tag = options.tag || 'div'
     this.wrapper = create(tag, options.css)
 
@@ -101,14 +98,14 @@ class Menu {
     return this
   }
 
-  setup () {
+  setup() {
     // this.subscribe('click', () => {
     //   console.log('click');
     //   this.close();
     // });
   }
 
-  show (e) {
+  show(e) {
     css.add(this.wrapper, this.class + '-show')
     var offs = offset(e.target)
 
@@ -118,7 +115,7 @@ class Menu {
     this.wrapper.style.left = offs.left - offsw.width + offs.width + 'px'
   }
 
-  hide () {
+  hide() {
     css.remove(this.wrapper, this.class + '-show')
   }
 }

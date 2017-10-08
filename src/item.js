@@ -1,10 +1,8 @@
 'use strict'
 
 // import Component from './component';
-import merge from './module/merge'
 import insert from './component/insert'
 import css from './module/css'
-// import bind from '../module/bind';
 
 var defaults = {
   prefix: 'material',
@@ -51,7 +49,7 @@ class Item {
    */
   init(options) {
     // merge options
-    this.options = merge(defaults, options || {})
+    this.options = Object.assign({}, defaults, options || {})
 
     // define class
 

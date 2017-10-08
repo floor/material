@@ -6,9 +6,8 @@ import ripple from './component/ripple'
 import emitter from './module/emitter'
 import create from './element/create'
 import css from './module/css'
-import merge from './module/merge'
 import insert from './element/insert'
-import bind from './module/bind'
+import attach from './module/attach'
 
 // modules
 import control from './component/control'
@@ -17,11 +16,11 @@ const defaults = {
   prefix: 'material',
   class: 'button',
   tag: 'button',
-  modules: [control, emitter, bind, ripple],
+  modules: [control, emitter, attach, ripple],
   build: [],
-  bind: {
-    'wrapper.click': 'click'
-  }
+  events: [
+    ['wrapper.click', '_handleClick']
+  ]
 }
 
 /**
@@ -45,12 +44,12 @@ class Button {
    * @return {Object} The class instance
    */
   constructor(options) {
-    this.options = merge(defaults, options || {})
+    this.options = Object.assign({}, defaults, options || {})
 
     this.init()
     this.build()
     this.setup()
-    this.bind(this.options.bind)
+    this.attach(this.options.events)
 
     this.emit('ready')
 
@@ -172,7 +171,7 @@ class Button {
    * @param  {event} e
    * @return {void}
    */
-  click(e) {
+  _handleClick(e) {
     e.preventDefault()
 
     if (this.disabled === true) return

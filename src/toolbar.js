@@ -7,15 +7,14 @@ import insert from './component/insert'
 
 import create from './element/create'
 
-import bind from './module/bind'
-import merge from './module/merge'
+import attach from './module/attach'
 import emitter from './module/emitter'
 
 const defaults = {
   prefix: 'material',
   class: 'toolbar',
   tag: 'div',
-  modules: [emitter, events, bind, insert]
+  modules: [emitter, events, attach, insert]
 }
 
 /**
@@ -40,15 +39,13 @@ class Component {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor (options) {
-    this.options = merge(defaults, options || {})
+  constructor(options) {
+    this.options = Object.assign({}, defaults, options || {})
 
     init(this)
-    this.build(this.options)
+    this.build()
 
-    if (this.options.bind) {
-      this.bind(this.options.bind)
-    }
+    this.attach()
 
     this.emit('ready')
 
@@ -59,14 +56,14 @@ class Component {
    * Build Method
    * @return {Object} This class instance
    */
-  build (options) {
-    var tag = options.tag || 'div'
-    this.wrapper = create(tag, options.css)
+  build() {
+    var tag = this.options.tag || 'div'
+    this.wrapper = create(tag, this.options.css)
 
-    classify(this.wrapper, options)
+    classify(this.wrapper, this.options)
 
-    if (options.container) {
-      this.insert(options.container)
+    if (this.options.container) {
+      this.insert(this.options.container)
     }
 
     this.emit('built', this.wrapper)

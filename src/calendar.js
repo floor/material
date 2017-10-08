@@ -3,7 +3,7 @@
 import create from './element/create'
 import insert from './element/insert'
 import css from './module/css'
-import bind from './module/bind'
+import attach from './module/attach'
 import emitter from './module/emitter'
 
 import Button from './button'
@@ -22,9 +22,9 @@ const defaults = {
   range: [8, 18],
   display: 'three',
   weekend: [0, 1],
-  bind: {
-    'wrapper.dblclick': 'add'
-  }
+  events: [
+    ['wrapper.dblclick', 'add']
+  ]
 }
 
 /**
@@ -43,9 +43,11 @@ class Calendar {
    * @return {Object} The class options
    */
   constructor(options) {
-    this.init(options)
+    this.options = Object.assign({}, defaults, options || {})
+
+    this.init()
     this.build()
-    this.bind()
+    this.attach()
 
     return this
   }
@@ -55,10 +57,8 @@ class Calendar {
    * @return  Class instance
    */
   init(options) {
-    this.options = Object.assign(defaults, options)
-
     // assign modules
-    Object.assign(this, emitter, bind)
+    Object.assign(this, emitter, attach)
 
     // init function
     this._initFunction(this.options.functions)

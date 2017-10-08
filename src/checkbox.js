@@ -1,11 +1,10 @@
 'use strict'
 
 import init from './component/init'
-import merge from './module/merge'
 import events from './component/events'
 import control from './component/control'
 import emitter from './module/emitter'
-import bind from './module/bind'
+import attach from './module/attach'
 import insert from './element/insert'
 import build from './element/build'
 import css from './module/css'
@@ -17,27 +16,19 @@ let defaults = {
   prefix: 'material',
   class: 'checkbox',
   type: 'control',
-  modules: [events, control, emitter, bind],
+  modules: [events, control, emitter, attach],
   build: ['$wrapper.material-checkbox', {},
     ['input$input', {}],
     ['span$control.checkbox-control']
   ],
-  binding: [
+  events: [
     ['element.control.click', 'click', {}],
     ['element.label.click', 'toggle', {}],
     // for accessibility purpose
     // ['element.input.click', 'toggle', {}],
     ['element.input.focus', 'focus'],
     ['element.input.blur', 'blur']
-  ],
-  bind: {
-    'element.control.click': 'click',
-    'element.label.click': 'toggle',
-    // for accessibility purpose
-    'element.input.click': 'toggle',
-    'element.input.focus': 'focus',
-    'element.input.blur': 'blur'
-  }
+  ]
 }
 /**
  * Checkbox control class
@@ -60,11 +51,11 @@ class Checkbox {
    * @return {Object} Class instance
    */
   constructor(options) {
-    this.options = merge(defaults, options || {})
+    this.options = Object.assign({}, defaults, options || {})
     // init and build
     this.init()
     this.build()
-    this.bind(this.options.bind)
+    this.attach()
 
     return this
   }

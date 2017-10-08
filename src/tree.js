@@ -1,9 +1,8 @@
 'use strict'
 
 import insert from './component/insert'
-import merge from './module/merge'
 import css from './module/css'
-import bind from './module/bind'
+import attach from './module/attach'
 
 import emitter from './module/emitter'
 
@@ -12,9 +11,9 @@ const defaults = {
   class: 'tree',
   functions: ['render', 'select'],
   target: '.item-tree',
-  bind: {
-    'wrapper.click': 'onSelect'
-  }
+  events: [
+    ['wrapper.click', 'onSelect']
+  ]
 }
 
 /**
@@ -32,15 +31,12 @@ class Tree {
    * init
    * @return {Object} The class options
    */
-  constructor (options) {
-    // boot sequence
-    this.init(options)
-    this.build()
+  constructor(options) {
+    this.options = Object.assign({}, defaults, options || {})
 
-    if (this.options.bind) {
-      // console.log('vind', this.options.bind);
-      this.bind(this.options.bind)
-    }
+    this.init()
+    this.build()
+    this.attach()
 
     return this
   }
@@ -49,9 +45,8 @@ class Tree {
    * [_initView description]
    * @return  Class instance
    */
-  init (options) {
+  init() {
     // init this
-    this.options = merge(defaults, options || {})
 
     this.name = this.options.name
     this.filters = []
@@ -72,7 +67,7 @@ class Tree {
    * @param  {?} functions [description]
    * @return {}           [description]
    */
-  _initFunction (functions) {
+  _initFunction(functions) {
     for (var i = 0; i < functions.length; i++) {
       var name = functions[i]
       if (this.options[name]) {
@@ -86,7 +81,7 @@ class Tree {
    * @param  {Object} options this class options
    * @return {Object} The class instance
    */
-  build () {
+  build() {
     // define main tag
     var tag = this.options.tag || 'div'
 
@@ -109,12 +104,12 @@ class Tree {
     return this
   }
 
-  buildTree (data) {
+  buildTree(data) {
     this.wrapper.innerHTML = ''
 
     var tree = ''
 
-    function checkChildren (parentObj) {
+    function checkChildren(parentObj) {
       var level = (parentObj.path.split('/').length - 1)
 
       if (level > 0) {
@@ -142,7 +137,7 @@ class Tree {
     return tree
   }
 
-  getOptions () {
+  getOptions() {
     console.log(this.options)
   }
 
@@ -151,7 +146,7 @@ class Tree {
    * @param  {event} e [description]
    * @return {?}   [description]
    */
-  onSelect (e) {
+  onSelect(e) {
     console.log('click', e.target, this.options.target)
     if (e.target && e.target.matches(this.options.target)) {
       console.log('item clicked: ', e.target)
@@ -175,7 +170,7 @@ class Tree {
    * @param  {event} event The caller event
    * @return        [description]
    */
-  select (item, event) {
+  select(item, event) {
     console.log('select', item, event)
     this.item = item
 
@@ -187,7 +182,7 @@ class Tree {
    * @param {string} prop
    * @param {string} value
    */
-  set (prop, value, options) {
+  set(prop, value, options) {
     switch (prop) {
       case 'tree':
         this.setTree(value, options)
@@ -204,7 +199,7 @@ class Tree {
    * @param {Array} list List of info object
    * @return {Object} The class instance
    */
-  setTree (data) {
+  setTree(data) {
     this.buildTree(data)
     return this
   }
@@ -213,7 +208,7 @@ class Tree {
    * [add description]
    * @param {Object} item [description]
    */
-  addItem (item /*, index */) {
+  addItem(item /*, index */ ) {
     if (!item) {
       return
     }
@@ -226,7 +221,7 @@ class Tree {
     return item
   }
 
-  empty () {
+  empty() {
     console.log('empty')
     this.wrapper.innerHTML = ''
     this.items = []

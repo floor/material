@@ -3,11 +3,10 @@
 // import control from '../control';
 import init from './component/init'
 import control from './component/control'
-import merge from './module/merge'
 import build from './element/build'
 import emitter from './module/emitter'
 import insert from './component/insert'
-import bind from './module/bind'
+import attach from './module/attach'
 import css from './module/css'
 import classify from './component/classify'
 
@@ -20,7 +19,7 @@ let defaults = {
   error: false,
   value: false,
   disabled: false,
-  modules: [emitter, control, bind, insert],
+  modules: [emitter, control, attach, insert],
   build: ['$wrapper.material-switch', {},
     ['input$input$switch-input', { type: 'checkbox' }],
     ['span$control.switch-control', {},
@@ -30,14 +29,14 @@ let defaults = {
     ],
     ['label$label.switch-label']
   ],
-  bind: {
-    'element.control.click': ['toggle', 'focus'],
-    'element.label.click': ['toggle', 'focus'],
+  events: [
+    ['element.control.click', 'toggle'],
+    ['element.label.click', 'toggle'],
     // for accessibility purpose
-    'element.input.click': 'toggle',
-    'element.input.focus': 'focus',
-    'element.input.blur': 'blur'
-  }
+    ['element.input.click', 'toggle'],
+    ['element.input.focus', 'focus'],
+    ['element.input.blur', 'blur']
+  ]
 }
 
 /**
@@ -52,13 +51,12 @@ class Switch {
   - Component options
    * @return {Object} Class instance
    */
-  constructor (options) {
-    this.options = merge(defaults, options || {})
+  constructor(options) {
+    this.options = Object.assign({}, defaults, options || {})
 
-    this.init(this)
-    this.build(this.options)
-
-    if (this.options.bind) { this.bind(this.options.bind) }
+    this.init()
+    this.build()
+    this.attach()
 
     return this
   }
@@ -68,10 +66,9 @@ class Switch {
    * @param  {Object} options The class options
    * @return {Object} This class instance
    */
-  init (options) {
+  init() {
     init(this)
     // init options and merge options to defaults
-    options = options || this.options
 
     this.value = this.options.value
 
@@ -82,13 +79,13 @@ class Switch {
    * build method
    * @return {Object} The class instance
    */
-  build (options) {
-    this.element = build(options.build)
+  build() {
+    this.element = build(this.options.build)
     this.wrapper = this.element.wrapper
 
-    classify(this.wrapper, options)
+    classify(this.wrapper, this.options)
 
-    if (options.disabled) {
+    if (this.options.disabled) {
       this.disable()
     }
 
@@ -96,7 +93,7 @@ class Switch {
       this.element.input.setAttribute('checked', 'checked')
     }
 
-    let text = options.label || options.text || ''
+    let text = this.options.label || this.options.text || ''
 
     this.element.label.textContent = text
 
@@ -104,10 +101,10 @@ class Switch {
       this.check()
     }
 
-    // insert if container options is given
-    if (options.container) {
+    // insert if container this.options is given
+    if (this.options.container) {
       // console.log(this.name, opts.container);
-      this.insert(options.container)
+      this.insert(this.options.container)
     }
   }
 
@@ -117,7 +114,7 @@ class Switch {
    * @param {string} value
    * @return {Object} The class instance
    */
-  set (prop, value) {
+  set(prop, value) {
     switch (prop) {
       case 'value':
         this.setValue(value)
@@ -136,7 +133,7 @@ class Switch {
     return this
   }
 
-  get () {
+  get() {
     return this.value
   }
 
@@ -144,7 +141,7 @@ class Switch {
    * set switch value
    * @param {boolean} value [description]
    */
-  getValue () {
+  getValue() {
     return this.value
   }
 
@@ -152,7 +149,7 @@ class Switch {
    * set switch value
    * @param {boolean} value [description]
    */
-  setValue (value) {
+  setValue(value) {
     if (value) {
       this.check()
     } else {
@@ -164,7 +161,7 @@ class Switch {
    * [toggle description]
    * @return {Object} The class instance
    */
-  toggle () {
+  toggle() {
     if (this.disabled) return this
 
     if (this.value) {
@@ -179,7 +176,7 @@ class Switch {
   /**
    * setTrue
    */
-  check () {
+  check() {
     if (this.disabled) return this
 
     this.value = true
@@ -193,7 +190,7 @@ class Switch {
   /**
    * setFlas
    */
-  unCheck () {
+  unCheck() {
     if (this.disabled) return this
 
     this.value = false

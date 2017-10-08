@@ -50,7 +50,7 @@ class Layout {
           options.name = name
         }
 
-        if (this.isClass(schema[i])) { component = new schema[i](options) } else component = schema[i](options)
+        component = new schema[i](options)
 
         if (name) {
           structure[name] = component

@@ -9,8 +9,7 @@ import insert from './element/insert'
 import offset from './element/offset'
 import classify from './component/classify'
 // import control from './control';
-import merge from './module/merge'
-import bind from './module/bind'
+import attach from './module/attach'
 import css from './module/css'
 import emitter from './module/emitter'
 
@@ -26,7 +25,7 @@ let defaults = {
   value: false,
   range: [0, 100],
   step: 5,
-  modules: [events, control, emitter, bind],
+  modules: [events, control, emitter, attach],
   mixins: [],
   build: ['$wrapper.material-slider', {},
     ['label$label.slider-label', {}],
@@ -42,10 +41,10 @@ let defaults = {
       ]
     ]
   ],
-  bind: {
-    'element.input.focus': 'focus',
-    'element.input.blur': 'blur'
-  }
+  events: [
+    ['element.input.focus', 'focus'],
+    ['element.input.blur', 'blur']
+  ]
 }
 
 /**
@@ -58,12 +57,12 @@ class Slider {
    * init
    * @return {Object} The class options
    */
-  constructor (options) {
-    this.options = merge(defaults, options || {})
+  constructor(options) {
+    this.options = Object.assign({}, defaults, options || {})
 
     this.init(this.options)
     this.build(this.options)
-    this.bind(this.options.bind)
+    this.attach()
 
     return this
   }
@@ -73,7 +72,7 @@ class Slider {
    * @param  {Object} options The class options
    * @return {Object} This class instance
    */
-  init (options) {
+  init(options) {
     init(this)
 
     return this
@@ -83,14 +82,14 @@ class Slider {
    * build method
    * @return {Object} The class instance
    */
-  build (options) {
-    this.element = build(options.build)
+  build() {
+    this.element = build(this.options.build)
     this.wrapper = this.element.wrapper
 
     classify(this.wrapper, this.options)
 
-    if (options.container) {
-      insert(this.wrapper, options.container)
+    if (this.options.container) {
+      insert(this.wrapper, this.options.container)
     }
 
     var value = this.element.marker.innerHTML
@@ -101,7 +100,7 @@ class Slider {
     }
 
     // init input
-    if (options.disabled) {
+    if (this.options.disabled) {
       this.disable(true)
     }
 
@@ -114,7 +113,7 @@ class Slider {
     let text = this.options.label || this.options.text
     this.element.label.textContent = text
 
-    options.label = options.label || options.text
+    this.options.label = this.options.label || this.options.text
 
     this.initTrack()
 
@@ -125,7 +124,7 @@ class Slider {
     }, delay)
   }
 
-  initCanvas () {
+  initCanvas() {
     window.addEventListener('resize', () => {
       console.log('resize')
       this.drawCanvas()
@@ -133,7 +132,7 @@ class Slider {
     this.drawCanvas()
   }
 
-  drawCanvas () {
+  drawCanvas() {
     var width = offset(this.element.track, 'width')
     var height = offset(this.element.track, 'height')
 
@@ -154,7 +153,7 @@ class Slider {
    * [buildControl description]
    * @return {?} [description]
    */
-  initTrack () {
+  initTrack() {
     this.element.track.addEventListener('mousedown', (ev) => {
       if (this.disabled === true) return
       this.initTrackSize()
@@ -175,7 +174,7 @@ class Slider {
     }, delay)
   }
 
-  initTrackSize () {
+  initTrackSize() {
     this._tracksize = offset(this.element.track, 'width')
     this._knobsize = offset(this.element.knob, 'width')
     this._markersize = 32 /* offset(this.element.marker, 'width') */
@@ -187,7 +186,7 @@ class Slider {
    * [initDragging description]
    * @return {?} [description]
    */
-  initDragging () {
+  initDragging() {
     this.element.knob.onmousedown = (e) => {
       if (this.disabled === true) return
 
@@ -230,7 +229,7 @@ class Slider {
     }
   }
 
-  update (position) {
+  update(position) {
     var size = this._tracksize
     var range = this.options.range[1] - this.options.range[0]
 
@@ -263,7 +262,7 @@ class Slider {
     }
   }
 
-  updateValue (value) {
+  updateValue(value) {
     this.initTrackSize()
 
     var size = offset(this.element.track, 'width')
@@ -284,7 +283,7 @@ class Slider {
    * @param  {?} context   [description]
    * @return {?}           [description]
    */
-  insert (container, context) {
+  insert(container, context) {
     insert(this.wrapper, container, context)
   }
 
@@ -293,7 +292,7 @@ class Slider {
    * @param {string} prop
    * @param {string} value
    */
-  set (prop, value) {
+  set(prop, value) {
     switch (prop) {
       case 'value':
         this.setValue(value)
@@ -313,7 +312,7 @@ class Slider {
    * @param {string} prop
    * @param {string} value
    */
-  get (prop) {
+  get(prop) {
     var value
 
     switch (prop) {
@@ -334,7 +333,7 @@ class Slider {
    * [getValue description]
    * @return {Object} The class instance
    */
-  getValue () {
+  getValue() {
     return this.element.input.value
   }
 
@@ -342,7 +341,7 @@ class Slider {
    * [setValue description]
    * @param {string} value [description]
    */
-  setValue (value) {
+  setValue(value) {
     value = value || this.options.range[0]
     this.element.input.value = value
     this.updateValue(value)
@@ -352,7 +351,7 @@ class Slider {
    * [setLabel description]
    * @param {?} text [description]
    */
-  setLabel (text) {
+  setLabel(text) {
     text = text || this.options.label || this.options.text
 
     if (text !== null && this.label) {

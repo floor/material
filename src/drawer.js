@@ -6,7 +6,6 @@ import classify from './component/classify'
 import css from './module/css'
 import events from './component/events'
 import create from './element/create'
-import merge from './module/merge'
 import emitter from './module/emitter'
 
 const defaults = {
@@ -34,12 +33,12 @@ class Drawer {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor (options) {
-    this.options = merge(defaults, options || {})
+  constructor(options) {
+    this.options = Object.assign({}, defaults, options || {})
 
     init(this)
 
-    this.build(this.options)
+    this.build()
 
     this.emit('ready')
 
@@ -50,22 +49,22 @@ class Drawer {
    * Build Method
    * @return {Object} This class instance
    */
-  build (options) {
+  build() {
     this.wrapper = create('aside')
 
-    classify(this.wrapper, options)
+    classify(this.wrapper, this.options)
 
-    if (options.position) { css.add(this.wrapper, 'position-' + options.position) }
+    if (this.options.position) { css.add(this.wrapper, 'position-' + this.options.position) }
 
-    if (options.size) {
-      if (options.position === 'top' || options.position === 'bottom') {
-        this.wrapper.style = 'height: ' + options.size + 'px;'
+    if (this.options.size) {
+      if (this.options.position === 'top' || this.options.position === 'bottom') {
+        this.wrapper.style = 'height: ' + this.options.size + 'px;'
       } else {
-        this.wrapper.style = 'width: ' + options.size + 'px;'
+        this.wrapper.style = 'width: ' + this.options.size + 'px;'
       }
     }
 
-    if (options.container) { insert(this.wrapper, options.container) }
+    if (this.options.container) { insert(this.wrapper, this.options.container) }
 
     if (!this.options.state) {
       this.state = 'opened'
@@ -80,7 +79,7 @@ class Drawer {
    * [toggle description]
    * @return {Object} The class instance
    */
-  toggle () {
+  toggle() {
     if (this.state === 'opened') {
       this.close()
     } else {
@@ -94,7 +93,7 @@ class Drawer {
    * [minimize description]
    * @return {Object} The class instance
    */
-  close () {
+  close() {
     css.remove(this.wrapper, 'show')
     css.remove(this.underlay, 'show')
     this.state = 'closed'
@@ -108,7 +107,7 @@ class Drawer {
    * [normalize description]
    * @return {Object} The class instance
    */
-  open () {
+  open() {
     this.emit('open')
     if (!this.underlay) { this.underlay = create('div', 'drawer-underlay') }
 
@@ -133,7 +132,7 @@ class Drawer {
    * @param  {?} context   [description]
    * @return {?}           [description]
    */
-  insert (container, context) {
+  insert(container, context) {
     insert(this.wrapper, container, context)
 
     return this

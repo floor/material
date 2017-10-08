@@ -1,10 +1,9 @@
 'use strict'
 
-import merge from './module/merge'
 import insert from './component/insert'
 import css from './module/css'
 import emitter from './module/emitter'
-import bind from './module/bind'
+import attach from './module/attach'
 import controller from './component/controller'
 
 // import component
@@ -29,11 +28,12 @@ class Form {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor (options) {
-    this.options = merge(defaults, options || {})
+  constructor(options) {
+    this.options = Object.assign({}, defaults, options || {})
 
-    this.init(options)
+    this.init()
     this.build()
+    this.attach()
 
     return this
   }
@@ -42,19 +42,17 @@ class Form {
    * Initialize View
    * @return {void}
    */
-  init (options) {
+  init() {
     // initOPtions
 
     // init intanciate name
-
-    this.name = this.options.name
 
     // merge options
 
     // implement module
     Object.assign(this,
       emitter,
-      bind,
+      attach,
       insert
     )
 
@@ -75,7 +73,7 @@ class Form {
    * [_initForm description]
    * @return {Object} This class instance
    */
-  build () {
+  build() {
     var tag = this.options.tag || 'div'
 
     this.wrapper = document.createElement(tag)
@@ -91,7 +89,7 @@ class Form {
    * @param  {?} options [description]
    * @return {?}         [description]
    */
-  _initLayout (options) {
+  _initLayout(options) {
     // complete layout options
     options.wrapper = this.wrapper
     options.controls = this.options.controls
@@ -106,7 +104,7 @@ class Form {
    * @param  {?} controls [description]
    * @return {?}          [description]
    */
-  _initControls (controls) {
+  _initControls(controls) {
     if (!controls) return
 
     this.key = this.key || {}
@@ -117,7 +115,7 @@ class Form {
 
       this.key[control.name] = control
 
-      control.on('change', function (/* value */) {
+      control.on('change', function( /* value */ ) {
         // console.log('change', this.name, value);
       })
     }
@@ -127,7 +125,7 @@ class Form {
    * [_onSubmit description]
    * @return {void}
    */
-  _onSubmit (e) {
+  _onSubmit(e) {
     e.preventDefault()
   }
 
@@ -137,7 +135,7 @@ class Form {
    * @param  {?} section [description]
    * @return {?}         [description]
    */
-  initControl (key, section) {
+  initControl(key, section) {
     var name = key.name || 'undefined'
 
     var control = this.render(key)
@@ -145,7 +143,7 @@ class Form {
     if (control) {
       this.key[name] = control
       control.insert(section)
-      control.addEvent('keyup', function () {
+      control.addEvent('keyup', function() {
         // console.log('change', name, control.get('value'));
       })
 
@@ -160,7 +158,7 @@ class Form {
    * @param {string} value
    * @return {Object|void}
    */
-  set (prop, value) {
+  set(prop, value) {
     switch (prop) {
       case 'info':
         return this.setInfo(value)
@@ -175,7 +173,7 @@ class Form {
    * [setInfo description]
    * @param {?} info [description]
    */
-  setInfo (info) {
+  setInfo(info) {
     this.info = this.original = info
 
     this.parseInfo(info)
@@ -188,7 +186,7 @@ class Form {
    * @param  {?} i    [description]
    * @return {?}      [description]
    */
-  parseInfo (obj, name, i) {
+  parseInfo(obj, name, i) {
     // console.log('parseInfo', obj, name, 'level ' + i);
     var level = i || 0
     level = level + 1
@@ -222,7 +220,7 @@ class Form {
    * @param {string} value
    * @return {Object|void}
    */
-  get (prop, value) {
+  get(prop, value) {
     switch (prop) {
       case 'key':
         return this.getValue(value)
@@ -272,7 +270,7 @@ class Form {
   //   return value;
   // }
 
-  getInfo () {
+  getInfo() {
     return this.info
   }
 }
