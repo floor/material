@@ -73,7 +73,7 @@ class Dialog {
     this.insertElement(this.surface, this.wrapper)
 
     this.options.layout.wrapper = this.surface
-    this.layout = new Layout(this.options.layout)
+    this.layout = new Layout(this.options.layout, this.surface)
 
     event.add(this.surface, 'click', function(ev) {
       ev.stopPropagation()
