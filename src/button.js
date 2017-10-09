@@ -1,10 +1,9 @@
 'use strict'
 
-import init from './component/init'
+import create from './element/create'
 import classify from './component/classify'
 import ripple from './component/ripple'
 import emitter from './module/emitter'
-import create from './element/create'
 import css from './module/css'
 import insert from './element/insert'
 import attach from './module/attach'
@@ -16,7 +15,6 @@ const defaults = {
   prefix: 'material',
   class: 'button',
   tag: 'button',
-  modules: [control, emitter, attach, ripple],
   build: [],
   events: [
     ['wrapper.click', '_handleClick']
@@ -49,7 +47,7 @@ class Button {
     this.init()
     this.build()
     this.setup()
-    this.attach(this.options.events)
+    this.attach()
 
     this.emit('ready')
 
@@ -62,7 +60,7 @@ class Button {
    * @return {?}         [description]
    */
   init() {
-    init(this)
+    Object.assign(this, control, emitter, attach, ripple)
 
     this.element = this.element || {}
 
@@ -94,7 +92,6 @@ class Button {
     // insert if container options is given
     if (this.options.container) {
       insert(this.wrapper, this.options.container)
-      this.emit('injected', this.wrapper)
     }
 
     this.emit('built', this.wrapper)
