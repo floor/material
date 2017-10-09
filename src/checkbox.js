@@ -134,6 +134,12 @@ class Checkbox {
     return this
   }
 
+  /**
+   * [insert description]
+   * @param  {?} container [description]
+   * @param  {?} context   [description]
+   * @return {?}           [description]
+   */
   insert(container, context) {
     insert(this.wrapper, container, context)
 
@@ -143,7 +149,7 @@ class Checkbox {
   /**
    * [click description]
    * @param  {event} e [description]
-   * @return {[type]}   [description]
+   * @return {?}   [description]
    */
   click(e) {
     this.toggle(e)
