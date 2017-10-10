@@ -14,20 +14,19 @@ var defaults = {
   tag: 'div',
   events: [
     // 'change': '_onChange',
-    ['input.focus', '_onInputFocus'],
-    ['input.blur', '_onInputBlur'],
-    // ['input.keypress', '_onInputKeyPress',
-    ['input.keyup', '_onInputKeyPress'],
-    ['input.change', '_onChange']
-    // 'input.keydown': '_onInputKeyPress'
+    ['input.focus', '_handleInputFocus'],
+    ['input.blur', '_handleInputBlur'],
+    // ['input.keypress', '_handleInputKeyPress',
+    ['input.keyup', '_handleInputKeyPress']
+    // ['input.change', '_onChange']
+    // 'input.keydown': '_handleInputKeyPress'
 
   ]
 }
 
 /**
- * Field class
+ * Textfield class
  * @class
- * @extends {Control}
  */
 class Textfield {
   /**
@@ -35,7 +34,7 @@ class Textfield {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
     this.init()
@@ -50,7 +49,7 @@ class Textfield {
    * @param  {Object} options The class options
    * @return {Object} The class instance
    */
-  init() {
+  init () {
     Object.assign(this, emitter, attach)
 
     this.value = this.options.value
@@ -62,7 +61,7 @@ class Textfield {
    * [build description]
    * @return {Object} The class instance
    */
-  build() {
+  build () {
     // create a new div as input element
     var tag = this.options.tag || 'div'
     this.wrapper = create(tag, this.options.prefix + '-' + this.options.class)
@@ -82,7 +81,7 @@ class Textfield {
     }
   }
 
-  buildLabel() {
+  buildLabel () {
     this.label = create('label', this.options.class + '-label')
     insert(this.label, this.wrapper)
 
@@ -95,7 +94,7 @@ class Textfield {
    * [_initInput description]
    * @return {Object} The class instance
    */
-  buildInput() {
+  buildInput () {
     this.input = create('input', this.options.class + '-input')
     this.input.setAttribute('type', 'text')
     insert(this.input, this.wrapper)
@@ -116,7 +115,7 @@ class Textfield {
    * _initUnderline
    * @return {Object} The class instance
    */
-  buildUnderline() {
+  buildUnderline () {
     this.underline = create('span', this.options.class + '-underline')
     insert(this.underline, this.wrapper)
   }
@@ -126,7 +125,7 @@ class Textfield {
    * @param {string} prop
    * @param {string} value
    */
-  set(prop, value) {
+  set (prop, value) {
     switch (prop) {
       case 'value':
         this.setValue(value)
@@ -145,7 +144,7 @@ class Textfield {
    * [buildLabel description]
    * @return {Object} The class instance
    */
-  setLabel(label) {
+  setLabel (label) {
     label = label || this.options.label
     var text
 
@@ -165,7 +164,7 @@ class Textfield {
    * @param {string} prop
    * @param {string} value
    */
-  get(prop) {
+  get (prop) {
     var value
 
     switch (prop) {
@@ -186,7 +185,7 @@ class Textfield {
    * [getValue description]
    * @return {Object} The class instance
    */
-  getValue() {
+  getValue () {
     // console.log('getValue', this);
     return this.input.value
   }
@@ -195,7 +194,7 @@ class Textfield {
    * [setValue description]
    * @param {string} value [description]
    */
-  setValue(value) {
+  setValue (value) {
     this.input.value = value
 
     if (value) {
@@ -211,7 +210,7 @@ class Textfield {
    * Setter for the state of the component
    * @param {string} state active/disable etc...
    */
-  setState(state) {
+  setState (state) {
     if (this.state) {
       css.remove(this.wrapper, 'state-' + this.state)
     }
@@ -230,7 +229,7 @@ class Textfield {
    * [_initValue description]
    * @return {Object} The class instance
    */
-  _initValue() {
+  _initValue () {
     var opts = this.options
 
     // create a new div as input element
@@ -243,8 +242,8 @@ class Textfield {
    * [_onFocus description]
    * @return {Object} The class instance
    */
-  _onInputFocus(e) {
-    // console.log('_onInputFocus');
+  _handleInputFocus (e) {
+    // console.log('_handleInputFocus');
     if (this.readonly) return
     this.setState('focus')
   }
@@ -253,8 +252,8 @@ class Textfield {
    * [_onBlur description]
    * @return {Object} The class instance
    */
-  _onInputBlur() {
-    // console.log('_onInputBlur', this.readonly);
+  _handleInputBlur () {
+    // console.log('_handleInputBlur', this.readonly);
     if (this.readonly) return
     this.setState(null)
   }
@@ -263,8 +262,8 @@ class Textfield {
    * [_onFocus description]
    * @return {Object} The class instance
    */
-  _onInputKeyPress(e) {
-    // console.log('_onInputKeyPress', e);
+  _handleInputKeyPress (e) {
+    // console.log('_handleInputKeyPress', e);
 
     if (this.get('value') === '') {
       css.add(this.wrapper, 'is-empty')
@@ -279,7 +278,7 @@ class Textfield {
    * [setError description]
    * @param {string} error Error description
    */
-  setError(error) {
+  setError (error) {
     if (error) {
       this.addClass('field-error')
       if (this.error) { this.error.set('html', error) }
@@ -289,7 +288,7 @@ class Textfield {
     }
   }
 
-  insert(container, context) {
+  insert (container, context) {
     insert(this.wrapper, container, context)
   }
 }
