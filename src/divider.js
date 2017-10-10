@@ -10,7 +10,7 @@ var defaults = {
 }
 
 /**
- * The item class is used for example as item list
+ * this class component represent an divider usually in a list
  *
  * @class
  * @extends {Component}
