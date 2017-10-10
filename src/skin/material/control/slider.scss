@@ -14,15 +14,15 @@
     left: -10000px;
   }
   .slider-label {
-    .flex(1);
-    .order(1);
+    flex: 1;
+    order: 1;
     cursor: default;
     padding: 16px 0;
     margin: 0px 2px 0px 0;
     overflow: hidden;
   }
   .slider-control {
-    .order(3);
+    order: 3;
     position: relative;
     cursor: pointer;
     width: 100%;
@@ -72,7 +72,7 @@
       border-radius: 50%;
       transition: .2s;
       .slider-pin {
-        fill: @primary-color;
+        fill: $primary-color;
       }
     }
     .slider-knob {
@@ -140,7 +140,7 @@
           background-color: #BDBDBD;
         }
       }
-      .order(3);
+      order: 3;
       cursor: pointer;
       .slider-track {}
       .slider-knob {}

@@ -19,11 +19,11 @@
       transition: .3s;
     }
     .ui-icon {
-      .flex(none);
+      flex: none;
       padding: 24px;
     }
     .ui-text {
-      .flex(1);
+      flex: 1;
       padding: 16px 12px 16px 0;
     }
   }
@@ -39,11 +39,11 @@
     -webkit-appearance: span;
     appearance: span;
     .ui-icon {
-      .flex(none);
+      flex: none;
       padding: 24px;
     }
     .ui-text {
-      .flex(1);
+      flex: 1;
       padding: 16px 12px 16px 0;
     }
   }

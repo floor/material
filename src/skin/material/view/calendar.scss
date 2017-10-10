@@ -5,7 +5,7 @@
   flex-direction: column;
   flex-wrap: nowrap;
   header {
-    .flex(none);
+    flex: none;
     .calendar-headline,
     .book-headline {
       font-family: 'Helvetica';
@@ -43,7 +43,7 @@
       border-bottom: 1px solid rgba(0, 0, 0, 0.1);
       .margin {
         width: 100px;
-        .flex(none);
+        flex: none;
         display: inline-block;
       }
       .date {
@@ -51,16 +51,16 @@
         overflow: hidden;
         .first {
           font-size: .8em;
-          .flex(1); //display: inline-block;
+          flex: 1; //display: inline-block;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .second {
           display: block;
-          .flex(none); //display: inline-block;
+          flex: none; //display: inline-block;
         }
 
-        .flex(15); //white-space: nowrap;
+        flex: 15; //white-space: nowrap;
         //display: inline-block;
         text-align: center;
       }
@@ -94,7 +94,7 @@
     flex-wrap: nowrap;
     position: relative;
     overflow: scroll;
-    .flex(1);
+    flex: 1;
     .hours {
       width: 100px;
       .hour {
@@ -117,7 +117,7 @@
       height: 1440px;
     }
     .week-day {
-      .flex(15);
+      flex: 15;
       position: relative; //width: 15%;
       height: 1440px; //float: left;
       border-right: 1px solid rgba(0, 0, 0, 0.1);
@@ -135,7 +135,7 @@
   .book-body {
     position: relative;
     overflow: scroll;
-    .flex(1);
+    flex: 1;
     .resource-folder {
       .type {
         .title {
@@ -166,7 +166,7 @@
         &.weekend {
           background-color: rgba(0, 0, 0, 0.01);
         }
-        .flex(15);
+        flex: 15;
         position: relative; //width: 15%;
         border-left: 1px solid rgba(0, 0, 0, 0.1);
         &[data-day='day-6'] {

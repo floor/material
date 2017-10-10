@@ -18,8 +18,8 @@
     }
   }
   .switch-label {
-    .flex(1);
-    .order(1);
+    flex: 1;
+    order: 1;
     cursor: default;
     font-size: 1rem;
     line-height: 1.2rem;
@@ -28,7 +28,7 @@
     overflow: hidden;
   }
   .switch-control {
-    .order(3);
+    order: 3;
     cursor: pointer;
     width: 48px;
     height: 48px;
@@ -78,9 +78,9 @@
   }
   &.is-checked {
     .switch-track {
-      background-color: lighten(@primary-color, 20%);
+      background-color: lighten($primary-color, 20%);
       .switch-knob {
-        background-color: @primary-color;
+        background-color: $primary-color;
         left: 15px;
       }
     }
@@ -107,7 +107,7 @@
       opacity: .5;
     }
     .switch-control {
-      .order(3);
+      order: 3;
       cursor: pointer;
       width: 48px;
       height: 48px;
@@ -133,7 +133,7 @@
     }
     &.is-checked {
       .switch-track {
-        background-color: lighten(@primary-color, 20%);
+        background-color: lighten($primary-color, 20%);
       }
     }
     &.is-focused {
