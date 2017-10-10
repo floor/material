@@ -1,6 +1,6 @@
 'use strict'
 
-import insert from './component/insert'
+import insert from './element/insert'
 import css from './module/css'
 import emitter from './module/emitter'
 import attach from './module/attach'
@@ -13,7 +13,7 @@ const defaults = {
   prefix: 'material',
   class: 'form',
   tag: 'div',
-  controls: ['field', 'checkbox', 'slider', 'switch']
+  controls: ['textfield', 'checkbox', 'slider', 'switch']
 }
 
 /**
@@ -48,7 +48,7 @@ class Form {
     // init intanciate name
 
     // merge options
-
+    console.log('attach', attach);
     // implement module
     Object.assign(this,
       emitter,
@@ -61,7 +61,7 @@ class Form {
 
     // need to remove the options template to have a reference
     if (this.options.render) {
-      this.render = options.render
+      this.render = this.options.render
     }
 
     // this.key = {};
@@ -79,24 +79,20 @@ class Form {
     this.wrapper = document.createElement(tag)
     css.add(this.wrapper, this.options.prefix + '-' + this.options.class)
 
-    this._initLayout(this.options.layout)
+    // complete layout options
+    this.options.wrapper = this.wrapper
+
+    this.layout = new Layout(this.options.layout, this.wrapper);
+
+    this._initControls(this.layout.controls)
 
     return this
   }
 
-  /**
-   * Instanciate layout
-   * @param  {?} options [description]
-   * @return {?}         [description]
-   */
-  _initLayout(options) {
-    // complete layout options
-    options.wrapper = this.wrapper
-    options.controls = this.options.controls
+  insert(container, context) {
+    insert(this.wrapper, container, context);
 
-    this.layout = new Layout(options)
-
-    this._initControls(this.layout.controls)
+    return this;
   }
 
   /**
@@ -149,6 +145,7 @@ class Form {
 
       control.setAttribute('data-key', name)
     }
+    return this
   }
 
   /**
