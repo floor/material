@@ -55,3 +55,4 @@ public/js/*
 dist/vendor/*
 README.*
 *.codekit
+.sass-cache
