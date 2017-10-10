@@ -1,0 +1,230 @@
+.material-button
+  display: inline-block
+  color: $default-color-text
+  position: relative
+
+  //text-transform: uppercase;
+  vertical-align: middle
+  cursor: default
+  height: 36px
+  padding: 6px 8px 6px 8px
+  margin: 0 8px
+  border: none
+  border-radius: 3px
+  overflow: hidden
+  background-color: transparent
+
+  //padding: 8px 12px;
+  -webkit-font-smoothing: antialiased
+  white-space: nowrap
+
+  // display: flex;
+  // flex-direction: column;
+  // flex-wrap: nowrap;
+  > *
+    pointer-events: none
+
+  // transition: 1s;
+  // transition: .2s;
+  .button-icon
+    pointer-events: none
+    z-index: 2
+    display: inline-block
+    color: $icon-color
+    width: 24px
+    height: 24px
+    padding: 0 8px
+
+    //flex: none;
+    vertical-align: bottom
+    padding: 0
+    background-repeat: no-repeat
+    background-position: center center
+
+  .button-label
+    order: 2
+    pointer-events: none
+
+    //flex: 1;
+    font-size: 0.875rem
+    font-weight: 500
+    line-height: 1.1rem
+    display: inline-block
+    z-index: 2
+    text-transform: uppercase
+    padding: 3px 8px 3px 8px
+    margin: 0
+
+  .material-ripple
+    opacity: 1
+    pointer-events: none
+    z-index: 1
+    position: absolute
+    background-color: rgba(0, 0, 0, 0.1)
+    height: 5px
+    width: 5px
+    border-radius: 50%
+
+// styles
+.material-button
+  &.style-compact
+    > .button-label
+      padding-left: 0
+      padding-right: 0
+
+  &.style-dense
+    height: 32px
+
+    > .button-label
+      font-size: 0.8125rem
+      padding-top: 2px
+      padding-bottom: 2px
+
+// color
+.material-button
+  &.primary-color
+    //background-color: $primary-color;
+    color: $primary-color
+
+  &.accent-color,
+  &.secondary-color
+    //background-color: $accent-color;
+    color: $accent-color
+
+// states
+.material-button
+  &.is-disabled
+    pointer-events: none
+    opacity: .3
+
+    &:hover
+      color: #999
+      background-color: transparent
+
+  &:active
+    background-color: rgba(0, 0, 0, 0.1)
+
+  &:focus
+    cursor: pointer
+    background-color: rgba(0, 0, 0, 0.05)
+
+  &:hover
+
+  &.state-active
+    background-color: $background
+    color: rgb(136, 136, 136)
+
+// types
+.material-button.type-action
+  width: 36px
+  height: 36px
+  padding: 6px
+  border-radius: 50%
+
+  .material-text
+    display: none
+
+  .button-icon
+    padding: 0
+    height: 24px
+    width: 24px
+    margin-left: 0
+
+    //padding-left: 20px;
+
+  .material-ripple
+    background-color: rgba(255, 255, 255, 0.3)
+
+.material-button.type-raised
+  //background-color: #E0E0E0;
+  min-width: 88px
+  transition: box-shadow .2s
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12)
+
+  &:hover
+    //background-color: #E0E0E0;
+
+  &:focus
+    background-color: darken(rgba(255, 255, 255, 0.95), 5%)
+
+  &:active,
+  &.is-active
+    box-shadow: 0px 4px 4px -3px rgba(0, 0, 0, 0.2), 0px 6px 8px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12)
+
+  .material-ripple
+    background-color: rgba(255, 255, 255, 1)
+
+  &.primary-color
+    background-color: $primary-color
+    color: $primary-color-text
+
+    &:focus
+      background-color: lighten($primary-color, 5%)
+      color: $primary-color-text
+
+  &.accent-color,
+  &.secondary-color
+    background-color: $accent-color
+    color: $accent-color-text
+
+    &:focus
+      background-color: lighten($accent-color, 10%)
+      color: $accent-color-text
+
+// type file
+.material-button.type-file
+  overflow: hidden
+  position: relative
+  vertical-align: middle
+
+  input[type=file]
+    z-index: 20
+    position: absolute
+    height: 48px
+    width: 48px
+    top: 0
+    right: 0
+    margin: 0
+    padding: 0
+    font-size: 10px
+    cursor: pointer
+    opacity: 0
+    filter: alpha(opacity = 0)
+
+  .button-icon
+    z-index: 1
+    padding-right: 6px
+
+.dark-theme
+  .material-button
+    color: $default-color-text-dark
+
+    &.primary-color
+      //background-color: $primary-color;
+      color: $primary-color-dark
+
+    &.accent-color
+      //background-color: $accent-color;
+      color: $accent-color-dark
+
+    > .material-ripple
+      background-color: rgba(255, 255, 255, 0.3)
+
+    &:focus
+      background-color: rgba(255, 255, 255, 0.05)
+
+    &.type-raised
+      background-color: rgba(255, 255, 255, 0.95)
+      color: $default-color-text
+
+      &:focus
+        background-color: darken(rgba(255, 255, 255, 0.95), 5%)
+
+      &.primary-color
+        background-color: $primary-color-dark
+        color: $primary-color-text-dark
+
+      &.accent-color,
+      &.secondary-color
+        background-color: $accent-color-dark
+        color: $accent-color-text-dark
