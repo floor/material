@@ -22,7 +22,7 @@ const defaults = {
 }
 
 /**
- * Button component
+ * Class acting as a button.
  * @class
  * @since 0.0.1
  * @example
@@ -41,7 +41,7 @@ class Button {
    * @private
    * @return {Object} The class instance
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
     this.init()
@@ -59,11 +59,11 @@ class Button {
    * @param  {?} options [description]
    * @return {?}         [description]
    */
-  init() {
+  init () {
     Object.assign(this, control, emitter, attach, ripple)
 
     this.element = this.element || {}
-    ripple(this);
+    ripple(this)
     this.emit('init')
   }
 
@@ -72,7 +72,7 @@ class Button {
    * @override
    * @return {void}
    */
-  build() {
+  build () {
     this.element = {}
 
     var tag = this.options.tag || 'div'
@@ -105,7 +105,7 @@ class Button {
    * @param  {?} context   [description]
    * @return {?}           [description]
    */
-  insert(container, context) {
+  insert (container, context) {
     insert(this.wrapper, container, context)
 
     return this
@@ -115,7 +115,7 @@ class Button {
    * [setup description]
    * @return {?} [description]
    */
-  setup() {
+  setup () {
     this.element.input = this.wrapper
 
     if (this.options.name) {
@@ -145,7 +145,7 @@ class Button {
    * @param {string} value
    * @return {Object} The class instance
    */
-  set(prop, value) {
+  set (prop, value) {
     switch (prop) {
       case 'disabled':
         this.disable(value)
@@ -168,7 +168,7 @@ class Button {
    * @param  {event} e
    * @return {void}
    */
-  _handleClick(e) {
+  _handleClick (e) {
     e.preventDefault()
 
     if (this.disabled === true) return
