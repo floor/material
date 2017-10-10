@@ -1,8 +1,7 @@
 'use strict'
 
-import init from './component/init'
 import create from './element/create'
-import insert from './component/insert'
+import insert from './element/insert'
 
 import emitter from './module/emitter'
 import css from './module/css'
@@ -13,7 +12,6 @@ var defaults = {
   class: 'textfield',
   type: 'control',
   tag: 'div',
-  modules: [emitter, attach, insert],
   events: [
     // 'change': '_onChange',
     ['input.focus', '_onInputFocus'],
@@ -40,7 +38,7 @@ class Textfield {
   constructor(options) {
     this.options = Object.assign({}, defaults, options || {})
 
-    this.init(options)
+    this.init()
     this.build()
     this.attach()
 
@@ -53,8 +51,7 @@ class Textfield {
    * @return {Object} The class instance
    */
   init() {
-    init(this)
-    // init options and merge options to defaults
+    Object.assign(this, emitter, attach)
 
     this.value = this.options.value
 
@@ -67,7 +64,7 @@ class Textfield {
    */
   build() {
     // create a new div as input element
-    var tag = this.this.options.tag || 'div'
+    var tag = this.options.tag || 'div'
     this.wrapper = create(tag, this.options.prefix + '-' + this.options.class)
 
     this.buildLabel()
@@ -81,13 +78,13 @@ class Textfield {
     // insert if container this.options is given
     if (this.options.container) {
       // console.log(this.name, opts.container);
-      this.insert(this.options.container)
+      insert(this.wrapper, this.options.container)
     }
   }
 
   buildLabel() {
     this.label = create('label', this.options.class + '-label')
-    this.insertElement(this.label, this.wrapper)
+    insert(this.label, this.wrapper)
 
     if (this.options.label !== false) {
       this.setLabel()
@@ -101,7 +98,7 @@ class Textfield {
   buildInput() {
     this.input = create('input', this.options.class + '-input')
     this.input.setAttribute('type', 'text')
-    this.insertElement(this.input, this.wrapper)
+    insert(this.input, this.wrapper)
 
     if (!this.options.value) {
       css.add(this.wrapper, 'is-empty')
@@ -121,7 +118,7 @@ class Textfield {
    */
   buildUnderline() {
     this.underline = create('span', this.options.class + '-underline')
-    this.insertElement(this.underline, this.wrapper)
+    insert(this.underline, this.wrapper)
   }
 
   /**
@@ -290,6 +287,10 @@ class Textfield {
       if (this.error) { this.removeClass('field-error') }
       if (this.error) { this.error.set('html', '') }
     }
+  }
+
+  insert(container, context) {
+    insert(this.wrapper, container, context)
   }
 }
 
