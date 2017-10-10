@@ -18,6 +18,7 @@ import Switch from 'material/src/switch'
 import Text from 'material/src/text'
 import Textfield from 'material/src/textfield'
 import Toolbar from 'material/src/toolbar'
+import View from 'material/src/view'
 
 export {
   Button,
@@ -39,5 +40,6 @@ export {
   Switch,
   Text,
   Textfield,
-  Toolbar
+  Toolbar,
+  View
 }
