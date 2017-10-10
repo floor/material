@@ -5,9 +5,9 @@
   padding-bottom: 16px;
   margin-right: 8px;
   vertical-align: top;
-  .display(flex);
-  .flex-direction(column);
-  .flex-wrap(nowrap); //overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap; //overflow: hidden;
   //border-bottom: 1px solid rgba(100, 100, 100, 0.1);
   input {
     position: absolute;
@@ -36,7 +36,7 @@
       display: block;
       height: 48px;
       padding: 0; //background-color: rgba(34, 31, 31, .26);
-      .transition(.3s);
+      transition: .3s;
     }
     .slider-canvas {
       position: absolute;
@@ -70,7 +70,7 @@
       cursor: pointer;
       margin: auto;
       border-radius: 50%;
-      .transition(.2s);
+      transition: .2s;
       .slider-pin {
         fill: @primary-color;
       }
@@ -89,7 +89,7 @@
       border-radius: 50%;
       background-color: white;
       border: 2px solid rgba(241, 241, 241, 100); //box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24), 0 0 2px 0 rgba(0, 0, 0, 0.12);
-      .transition(.2s);
+      transition: .2s;
       &.notnull {
         background-color: #4054B2;
         border: 2px solid #4054B2;
@@ -105,12 +105,11 @@
     }
     &.dragging {
       .slider-knob {
-        //.transition(.03s);
-        transform: scale(1.5) translateY(-4px);
         top: 50%;
         background-color: white;
         border: 2px solid rgba(241, 241, 241, 100); //box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24), 0 0 2px 0 rgba(0, 0, 0, 0.12);
-        .transition(none);
+        transition: none;
+        transform: scale(1.5) translateY(-4px);
         &.notnull {
           background-color: #4054B2;
           border: 2px solid #4054B2;
@@ -163,13 +162,13 @@
           opacity: 1;
           transform: scale(1) translateY(0);
           display: block;
-          .transition(none);
+          transition: none;
         }
         .slider-knob {
           opacity: 0;
           transform: scale(.2);
           display: block;
-          .transition(.2s);
+          transition: .2s;
         }
       }
     }

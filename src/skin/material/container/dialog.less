@@ -14,9 +14,9 @@
   //visibility: hidden;
   z-index: 2;
   opacity: 0; //z-index: -1;
-  .transition(.2s);
+  transition: .2s;
   .dialog-surface {
-    .transition(.1s);
+    transition: .1s;
     max-height: 600px;
     display: flex;
     opacity: 0; //margin-top: 200px;
@@ -67,14 +67,14 @@
     // display: flex;
     // width: 10;
     // height: 0;
-    //.transition(.2s);
-    .transition(.1s);
+    //transition: .2s;
+    transition: .1s;
     opacity: 1; //
     .dialog-surface {
       transform: translateY(0) scale(1);
       opacity: 1;
       margin-top: 0;
-      .transition(.1s);
+      transition: .1s;
     }
   }
   &.dialog-closing {
@@ -82,13 +82,13 @@
     opacity: 0; // display: flex;
     // width: 10;
     // height: 0;
-    .transition(.2s); // .transition(.2s);
+    transition: .2s; // transition: .2s;
     //opacity: 1;
     //
     .dialog-surface {
       opacity: 0;
       transform: translateY(150px) scale(0.8);
-      .transition(.1s);
+      transition: .1s;
     }
   }
 }

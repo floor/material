@@ -12,13 +12,13 @@
   overflow: hidden;
   background-color: transparent; //padding: 8px 12px;
   -webkit-font-smoothing: antialiased;
-  white-space: nowrap; // .display(flex);
-  // .flex-direction(column);
-  // .flex-wrap(nowrap);
+  white-space: nowrap; // display: flex;
+  // flex-direction: column;
+  // flex-wrap: nowrap;
   >* {
     pointer-events: none;
-  } // .transition(1s);
-  // .transition(.2s);
+  } // transition: 1s;
+  // transition: .2s;
   .button-icon {
     pointer-events: none;
     z-index: 2;
@@ -33,7 +33,7 @@
     background-position: center center;
   }
   .button-label {
-    .order(2);
+    order: 2;
     pointer-events: none; //.flex(1);
     font-size: 0.875rem;
     font-weight: 500;
@@ -98,11 +98,9 @@
     }
   }
   &:active {
-    //.transition(box-shaow 25s);
     background-color: rgba(0, 0, 0, 0.1);
   }
   &:focus {
-    //.transition(background-color .3s);
     cursor: pointer;
     background-color: rgba(0, 0, 0, 0.05);
   }
@@ -136,7 +134,7 @@
 .material-button.type-raised {
   //background-color: #E0E0E0;
   min-width: 88px;
-  .transition(box-shadow .2s);
+  transition: box-shadow .2s;
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14),
   0 3px 1px -2px rgba(0, 0, 0, .2),
   0 1px 5px 0 rgba(0, 0, 0, .12);

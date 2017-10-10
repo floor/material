@@ -1,9 +1,9 @@
 .material-calendar,
 .material-book {
   margin-left: 10px;
-  .display(flex);
-  .flex-direction(column);
-  .flex-wrap(nowrap);
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
   header {
     .flex(none);
     .calendar-headline,
@@ -36,9 +36,9 @@
       }
     }
     .header-days {
-      .display(flex);
-      .flex-direction(raw);
-      .flex-wrap(nowrap);
+      display: flex;
+      flex-direction: horizontal;
+      flex-wrap: nowrap;
       padding-bottom: 8px;
       border-bottom: 1px solid rgba(0, 0, 0, 0.1);
       .margin {
@@ -89,9 +89,9 @@
     }
   }
   .calendar-body {
-    .display(flex);
-    .flex-direction(raw);
-    .flex-wrap(nowrap);
+    display: flex;
+    flex-direction: horizontal;
+    flex-wrap: nowrap;
     position: relative;
     overflow: scroll;
     .flex(1);
@@ -146,9 +146,9 @@
           background-color: rgba(0, 0, 0, 0.01);
         }
         .item {
-          .display(flex);
-          .flex-direction(raw);
-          .flex-wrap(nowrap);
+          display: flex;
+          flex-direction: horizontal;
+          flex-wrap: nowrap;
           position: relative;
           text-align: left;
           border-right: 8px solid transaprent;
