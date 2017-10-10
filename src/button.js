@@ -63,7 +63,7 @@ class Button {
     Object.assign(this, control, emitter, attach, ripple)
 
     this.element = this.element || {}
-
+    ripple(this);
     this.emit('init')
   }
 
