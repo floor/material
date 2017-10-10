@@ -137,7 +137,8 @@ class Layout {
    * @return {?}      [description]
    */
   get(name) {
-    return this.component[name]
+    if (name) return this.component[name]
+      else return this.component
   }
 }
 
