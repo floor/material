@@ -95,18 +95,27 @@ class Menu {
     //   console.log('click');
     //   this.close();
     // });
+    // 
+    window.addEventListener('resize',()=> this.position())
   }
 
   show (e) {
     css.add(this.mask, 'mask-show')
 
+    if (e) this.caller = e.target
+    
     css.add(this.wrapper, this.options.class + '-show')
-    var offs = offset(e.target)
+    this.position(this.caller)
+  }
+  position() {
+    if (!this.caller) return
+    var offs = offset(this.caller)
 
     var offsw = offset(this.wrapper)
 
     this.wrapper.style.top = offs.top + 'px'
     this.wrapper.style.left = offs.left - offsw.width + offs.width + 'px'
+    //this.wrapper.style.right = offs.right + offs.width + offsw.width  + 'px'
   }
 
   hide () {
