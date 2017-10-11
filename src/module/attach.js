@@ -15,7 +15,7 @@ import extract from './extract'
  * @return {[type]}           [description]
  */
 export default {
-  attach: function(events) {
+  attach: function (events) {
     events = events || this.options.events
     if (!events) return
 
