@@ -74,16 +74,6 @@ class Layout {
     return structure
   }
 
-  isClass (F) {
-    try {
-      var object = new F()
-    } catch (err) {
-      // verify err is the expected error and then
-      return false
-    }
-    return object
-  }
-
   /**
    * [_initFlexDirection description]
    * @param  {Element} container Init direction for the given container
@@ -96,7 +86,7 @@ class Layout {
     if (!element || !display) return
 
     if (direction === 'horizontal') {
-      element.className += ' ' + 'flex-raw'
+      element.className += ' ' + 'flex-row'
     } else if (direction === 'vertical') {
       element.className += ' ' + 'flex-column'
     }
