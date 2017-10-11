@@ -28,7 +28,7 @@ class Form {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
     this.init()
@@ -42,13 +42,9 @@ class Form {
    * Initialize View
    * @return {void}
    */
-  init() {
-    // initOPtions
-
+  init () {
     // init intanciate name
 
-    // merge options
-    console.log('attach', attach);
     // implement module
     Object.assign(this,
       emitter,
@@ -73,7 +69,7 @@ class Form {
    * [_initForm description]
    * @return {Object} This class instance
    */
-  build() {
+  build () {
     var tag = this.options.tag || 'div'
 
     this.wrapper = document.createElement(tag)
@@ -82,17 +78,17 @@ class Form {
     // complete layout options
     this.options.wrapper = this.wrapper
 
-    this.layout = new Layout(this.options.layout, this.wrapper);
+    this.layout = new Layout(this.options.layout, this.wrapper)
 
     this._initControls(this.layout.controls)
 
     return this
   }
 
-  insert(container, context) {
-    insert(this.wrapper, container, context);
+  insert (container, context) {
+    insert(this.wrapper, container, context)
 
-    return this;
+    return this
   }
 
   /**
@@ -100,7 +96,7 @@ class Form {
    * @param  {?} controls [description]
    * @return {?}          [description]
    */
-  _initControls(controls) {
+  _initControls (controls) {
     if (!controls) return
 
     this.key = this.key || {}
@@ -111,7 +107,7 @@ class Form {
 
       this.key[control.name] = control
 
-      control.on('change', function( /* value */ ) {
+      control.on('change', function (/* value */) {
         // console.log('change', this.name, value);
       })
     }
@@ -121,7 +117,7 @@ class Form {
    * [_onSubmit description]
    * @return {void}
    */
-  _onSubmit(e) {
+  _onSubmit (e) {
     e.preventDefault()
   }
 
@@ -131,7 +127,7 @@ class Form {
    * @param  {?} section [description]
    * @return {?}         [description]
    */
-  initControl(key, section) {
+  initControl (key, section) {
     var name = key.name || 'undefined'
 
     var control = this.render(key)
@@ -139,7 +135,7 @@ class Form {
     if (control) {
       this.key[name] = control
       control.insert(section)
-      control.addEvent('keyup', function() {
+      control.addEvent('keyup', function () {
         // console.log('change', name, control.get('value'));
       })
 
@@ -155,7 +151,7 @@ class Form {
    * @param {string} value
    * @return {Object|void}
    */
-  set(prop, value) {
+  set (prop, value) {
     switch (prop) {
       case 'info':
         return this.setInfo(value)
@@ -170,7 +166,7 @@ class Form {
    * [setInfo description]
    * @param {?} info [description]
    */
-  setInfo(info) {
+  setInfo (info) {
     this.info = this.original = info
 
     this.parseInfo(info)
@@ -183,7 +179,7 @@ class Form {
    * @param  {?} i    [description]
    * @return {?}      [description]
    */
-  parseInfo(obj, name, i) {
+  parseInfo (obj, name, i) {
     // console.log('parseInfo', obj, name, 'level ' + i);
     var level = i || 0
     level = level + 1
@@ -217,7 +213,7 @@ class Form {
    * @param {string} value
    * @return {Object|void}
    */
-  get(prop, value) {
+  get (prop, value) {
     switch (prop) {
       case 'key':
         return this.getValue(value)
@@ -267,7 +263,7 @@ class Form {
   //   return value;
   // }
 
-  getInfo() {
+  getInfo () {
     return this.info
   }
 }
