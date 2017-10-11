@@ -33,7 +33,7 @@ class List {
    * init
    * @return {Object} The class options
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
     this.init(this.options)
@@ -47,7 +47,7 @@ class List {
    * [_initView description]
    * @return  Class instance
    */
-  init() {
+  init () {
     this.filters = []
     this.data = []
     this.items = []
@@ -66,7 +66,7 @@ class List {
    * @param  {?} functions [description]
    * @return {?}           [description]
    */
-  _initFunction(functions) {
+  _initFunction (functions) {
     for (var i = 0; i < functions.length; i++) {
       var name = functions[i]
       if (this.options[name]) {
@@ -80,7 +80,7 @@ class List {
    * @param  {Object} options this class options
    * @return {Object} The class instance
    */
-  build(options) {
+  build (options) {
     // define main tag
     var tag = this.options.tag || 'div'
 
@@ -112,7 +112,7 @@ class List {
    * @param  {?} e [description]
    * @return {?}   [description]
    */
-  handleSelect(e) {
+  handleSelect (e) {
     // console.log('onSelect', e.target, this.options.target);
     if (e.target && e.target.matches(this.options.target)) {
       // console.log("item clicked: ", e.target);
@@ -130,7 +130,7 @@ class List {
    * @param  {event} event The caller event
    * @return        [description]
    */
-  select(item, e, selected) {
+  select (item, e, selected) {
     this.emit('select', item)
   }
 
@@ -139,7 +139,7 @@ class List {
    * @param  {?} info [description]
    * @return {?}      [description]
    */
-  render(info) {
+  render (info) {
     var item
 
     if (info.type === 'divider') {
@@ -159,7 +159,7 @@ class List {
    * @param {string} prop
    * @param {string} value
    */
-  set(prop, value, options) {
+  set (prop, value, options) {
     switch (prop) {
       case 'list':
         this.setList(value, options)
@@ -176,7 +176,7 @@ class List {
    * @param {Array} list List of info object
    * @return {Object} The class instance
    */
-  setList(list) {
+  setList (list) {
     for (var i = 0; i < list.length; i++) {
       this.addItem(this.render(list[i]), i)
     }
@@ -188,7 +188,7 @@ class List {
    * [add description]
    * @param {Object} item [description]
    */
-  addItem(item /*, index */ ) {
+  addItem (item /*, index */) {
     if (!item) {
       return
     }
@@ -201,7 +201,11 @@ class List {
     return item
   }
 
-  empty() {
+  insert (container, context) {
+    insert(this.wrapper, container, context)
+  }
+
+  empty () {
     this.wrapper.innerHTML = ''
     this.items = []
     this.item = null
@@ -211,7 +215,7 @@ class List {
    * Reverse the list order
    * @return {Object} The class instance
    */
-  reverse() {
+  reverse () {
     this.list.reverse()
     this.update(this.list)
 
