@@ -2,8 +2,6 @@
   display: inline-block
   color: $default-color-text
   position: relative
-
-  //text-transform: uppercase;
   vertical-align: middle
   cursor: default
   height: 36px
@@ -31,7 +29,6 @@
     pointer-events: none
     z-index: 2
     display: inline-block
-    color: $icon-color
     width: 24px
     height: 24px
     padding: 0 8px
@@ -41,6 +38,8 @@
     padding: 0
     background-repeat: no-repeat
     background-position: center center
+    svg
+      fill: $default-color-text
 
   .button-label
     order: 2
@@ -84,20 +83,25 @@
 // color
 .material-button
 
-  &.accent-color,
-  &.secondary-color
-    color: $accent-color
-    &:focus
-      background-color: lighten($accent-color, 60%)
+ 
 
   &.primary-color
     color: $primary-color
+    .button-icon
+      svg
+        fill: $primary-color
     &:focus
       background-color: lighten($primary-color, 60%)
 
-  &.accent-color,
   &.secondary-color
-    color: $accent-color
+    color: $secondary-color
+    .button-icon
+      svg
+        fill: $secondary-color
+    &:focus
+      background-color: lighten($secondary-color, 60%)
+
+
 
 // states
 .material-button
@@ -120,7 +124,7 @@
   &:hover
 
   &.state-active
-    background-color: $background
+    //background-color: $background
     color: rgb(136, 136, 136)
 
 .material-button.type-raised
@@ -128,9 +132,6 @@
   min-width: 36px
   transition: box-shadow .2s
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12)
-  .button-icon
-    svg
-      fill: $default-color-text-dark
 
   &:hover
     //background-color: #E0E0E0;
@@ -148,19 +149,23 @@
   &.primary-color
     background-color: $primary-color
     color: $primary-color-text
-
+    .button-icon
+      svg
+        fill: $primary-color-text
     &:focus
       background-color: lighten($primary-color, 10%)
       color: $primary-color-text
 
-  &.accent-color,
   &.secondary-color
-    background-color: $accent-color
-    color: $accent-color-text
+    background-color: $secondary-color
+    color: $secondary-color-text
+    .button-icon
+      svg
+        fill: $secondary-color-text
 
     &:focus
-      background-color: lighten($accent-color, 5%)
-      color: $accent-color-text
+      background-color: lighten($secondary-color, 5%)
+      color: $secondary-color-text
 
 
 // // types
@@ -192,7 +197,6 @@
   border-radius: 18px
   padding: 6px
   .button-icon
-    
     padding: 0
     height: 24px
     width: 24px
@@ -200,14 +204,29 @@
     svg
       fill: $default-color-text
 
+  &.style-dense,
+  &.style-compact
+    height: 32px
+    width: 32px
+    min-width: 32px
+    border-radius: 16px
+    .button-icon
+      width: 20px
+      height: 20px
+      svg
+        width: 20px
+        height: 20px
+        viewbox: 0 0 20 20
+
+
   &:hover
     //background-color: #E0E0E0;
 
   &:focus
-    background-color: darken(rgba(255, 255, 255, 0.95), 5%)
+    //background-color: darken(rgba(255, 255, 255, 0.95), 5%)
 
   .material-ripple
-    background-color: rgba(255, 255, 255, 1)
+    //background-color: rgba(255, 255, 255, 1)
 
   &.primary-color
     background-color: $primary-color
@@ -217,17 +236,19 @@
         fill: $primary-color-text
 
     &:focus
-      background-color: lighten($primary-color, 5%)
+      background-color: lighten($primary-color, 10%)
       color: $primary-color-text
 
-  &.accent-color,
   &.secondary-color
-    background-color: $accent-color
-    color: $accent-color-text
+    background-color: $secondary-color
+    color: $secondary-color-text
+    .button-icon
+      svg
+        fill: $secondary-color-text
 
     &:focus
-      background-color: lighten($accent-color, 10%)
-      color: $accent-color-text
+      background-color: lighten($secondary-color, 5%)
+      color: $secondary-color-text
 
 .material-button.type-floating
   //background-color: #E0E0E0;
@@ -243,7 +264,6 @@
     display: none
 
   .button-icon
-    
     padding: 0
     height: 24px
     width: 24px
@@ -272,17 +292,19 @@
         fill: $primary-color-text
 
     &:focus
-      background-color: lighten($primary-color, 5%)
+      background-color: lighten($primary-color, 10%)
       color: $primary-color-text
 
-  &.accent-color,
   &.secondary-color
-    background-color: $accent-color
-    color: $accent-color-text
+    background-color: $secondary-color
+    color: $secondary-color-text
+    .button-icon
+      svg
+        fill: $secondary-color-text    
 
     &:focus
-      background-color: lighten($accent-color, 10%)
-      color: $accent-color-text
+      background-color: lighten($secondary-color, 5%)
+      color: $secondary-color-text
 
 
 
@@ -321,10 +343,13 @@
     &.primary-color
       //background-color: $primary-color;
       color: $primary-color-dark
+      .button-icon
+        svg
+          fill: $primary-color-dark
 
-    &.accent-color
-      //background-color: $accent-color;
-      color: $accent-color-dark
+    &.secondary-color
+      //background-color: $secondary-color;
+      color: $secondary-color-dark
 
     > .material-ripple
       background-color: rgba(255, 255, 255, 0.3)
@@ -332,18 +357,25 @@
     &:focus
       background-color: rgba(255, 255, 255, 0.05)
 
-    &.type-raised
-      background-color: rgba(255, 255, 255, 0.95)
-      color: $default-color-text
+    &.type-raised,
+    &.type-floating,
+    &.type-action
+      //background-color: rgba(255, 255, 255, 0.95)
+      color: $primary-color-text-dark
 
       &:focus
-        background-color: darken(rgba(255, 255, 255, 0.95), 5%)
+        //background-color: darken(rgba(255, 255, 255, 0.95), 5%)
 
       &.primary-color
         background-color: $primary-color-dark
         color: $primary-color-text-dark
+        .button-icon
+          svg
+            fill: $primary-color-text-dark
 
-      &.accent-color,
       &.secondary-color
-        background-color: $accent-color-dark
-        color: $accent-color-text-dark
+        background-color: $secondary-color-dark
+        color: $secondary-color-text-dark
+        .button-icon
+          svg
+            fill: $secondary-color-text-dark
