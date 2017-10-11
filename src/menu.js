@@ -4,7 +4,7 @@ import init from './component/init'
 import classify from './component/classify'
 import css from './module/css'
 import events from './component/events'
-import insert from './component/insert'
+import insert from './element/insert'
 import offset from './element/offset'
 
 import create from './element/create'
@@ -20,7 +20,11 @@ const defaults = {
   prefix: 'material',
   class: 'menu',
   tag: 'div',
-  modules: [emitter, events, attach, insert]
+  modules: [emitter, events, attach, insert],
+  events: [
+    ['wrapper.click', 'hide'],
+    ['mask.click', 'hide']
+  ]
 }
 
 /**
@@ -37,7 +41,7 @@ class Menu {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
     init(this)
@@ -55,42 +59,25 @@ class Menu {
    * Build Method
    * @return {Object} This class instance
    */
-  build(options) {
+  build (options) {
     var tag = options.tag || 'div'
     this.wrapper = create(tag, options.css)
+    this.mask = create(tag, this.options.class + '-mask')
 
     classify(this.wrapper, options)
 
-    if (options.container) {
-      this.insert(options.container)
-    }
-
     if (this.options.list) {
       this.list = new List({
-        wrapper: this.wrapper,
+        // wrapper: this.wrapper,
         list: this.options.list,
         target: '.material-item',
         height: 600,
         label: 'Flat',
-        render: (info) => {
-          var item
-
-          if (info.type === 'divider') {
-            item = new Divider()
-          } else {
-            item = new Item({
-              name: info.name,
-              text: info.name
-            })
-          }
-
-          return item
-        },
         select: (item) => {
           this.selected = item
           this.hide()
         }
-      })
+      }).insert(this.wrapper)
     }
 
     this.emit('built', this.wrapper)
@@ -98,15 +85,22 @@ class Menu {
     return this
   }
 
-  setup() {
+  insert () {
+    insert(this.mask, document.body)
+    insert(this.wrapper, document.body)
+  }
+
+  setup () {
     // this.subscribe('click', () => {
     //   console.log('click');
     //   this.close();
     // });
   }
 
-  show(e) {
-    css.add(this.wrapper, this.class + '-show')
+  show (e) {
+    css.add(this.mask, 'mask-show')
+
+    css.add(this.wrapper, this.options.class + '-show')
     var offs = offset(e.target)
 
     var offsw = offset(this.wrapper)
@@ -115,8 +109,10 @@ class Menu {
     this.wrapper.style.left = offs.left - offsw.width + offs.width + 'px'
   }
 
-  hide() {
-    css.remove(this.wrapper, this.class + '-show')
+  hide () {
+    console.log('hide')
+    css.remove(this.wrapper, this.options.class + '-show')
+    css.remove(this.mask, 'mask-show')
   }
 }
 
