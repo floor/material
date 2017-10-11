@@ -12,7 +12,7 @@ class Layout {
    * @param  {?} container [description]
    * @return {?}           [description]
    */
-  constructor(schema, container) {
+  constructor (schema, container) {
     this.component = this.create(schema, container)
 
     return this
@@ -25,7 +25,7 @@ class Layout {
    * @param  {?} structure [description]
    * @return {?}           [description]
    */
-  create(schema, container, structure, level) {
+  create (schema, container, structure, level) {
     level = level || 0
     level++
 
@@ -63,7 +63,8 @@ class Layout {
 
         // if (level === 1) console.log('insert', component, container);
         if (component && container) {
-          insert(component, container)
+          if (component.insert) component.insert(container)
+          else insert(component, container)
         }
       } else if (Array.isArray(schema[i])) {
         this.create(schema[i], component, structure, level)
@@ -73,7 +74,7 @@ class Layout {
     return structure
   }
 
-  isClass(F) {
+  isClass (F) {
     try {
       var object = new F()
     } catch (err) {
@@ -88,7 +89,7 @@ class Layout {
    * @param  {Element} container Init direction for the given container
    * @param  {string} direction (horizontal,vertical)
    */
-  display(element, options) {
+  display (element, options) {
     var display = options.display
     var direction = options.direction || 'horizontal'
 
@@ -106,7 +107,7 @@ class Layout {
    * @param  {?} component [description]
    * @return {?}           [description]
    */
-  style(component) {
+  style (component) {
     var options = component.options || {}
 
     // console.log('component', component);
@@ -136,9 +137,9 @@ class Layout {
    * @param  {?} name [description]
    * @return {?}      [description]
    */
-  get(name) {
+  get (name) {
     if (name) return this.component[name]
-      else return this.component
+    else return this.component
   }
 }
 
