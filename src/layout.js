@@ -6,6 +6,7 @@ import insert from './element/insert'
  *
  */
 class Layout {
+
   /**
    * [constructor description]
    * @param  {?} schema    [description]
@@ -96,7 +97,7 @@ class Layout {
     if (!element || !display) return
 
     if (direction === 'horizontal') {
-      element.className += ' ' + 'flex-raw'
+      element.className += ' ' + 'flex-row'
     } else if (direction === 'vertical') {
       element.className += ' ' + 'flex-column'
     }
