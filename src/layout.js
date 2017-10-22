@@ -75,16 +75,6 @@ class Layout {
     return structure
   }
 
-  isClass (F) {
-    try {
-      var object = new F()
-    } catch (err) {
-      // verify err is the expected error and then
-      return false
-    }
-    return object
-  }
-
   /**
    * [_initFlexDirection description]
    * @param  {Element} container Init direction for the given container
