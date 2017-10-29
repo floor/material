@@ -76,7 +76,7 @@ class Button {
     this.element = {}
 
     var tag = this.options.tag || 'div'
-    this.wrapper = create(tag, this.options.prefix + '-' + this.options.class)
+    this.wrapper = create(tag)
 
     classify(this.wrapper, this.options)
 
@@ -84,10 +84,6 @@ class Button {
 
     this.label(this.options.label)
     this.icon(this.options.icon)
-
-    if (this.options.type) {
-      css.add(this.wrapper, 'type-' + this.options.type)
-    }
 
     // insert if container options is given
     if (this.options.container) {

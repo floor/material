@@ -48,6 +48,10 @@ function classify (element, options) {
       css.add(element, 'style-' + styles[i])
     }
   }
+
+  if (options.theme) {
+    element.classList.add(options.theme + '-theme')
+  }
 }
 
 export default classify
