@@ -10,7 +10,9 @@ import Layout from './layout'
 
 let defaults = {
   prefix: 'material',
-  class: 'snackbar'
+  class: 'snackbar',
+  delay: 2000,
+  theme: 'dark'
 }
 
 class Snackbar {
@@ -24,6 +26,7 @@ class Snackbar {
 
     this.init()
     this.build()
+    this.show()
   }
 
   init () {
@@ -37,10 +40,28 @@ class Snackbar {
   build () {
     var tag = this.options.tag || 'div'
 
-    this.wrapper = create(tag, 'dark-theme')
+    this.wrapper = create(tag)
     classify(this.wrapper, this.options)
 
     this.layout = new Layout(this.options.layout, this.wrapper)
+  }
+
+  /**
+   *
+   * @return {[type]} [description]
+   */
+  show () {
+    this.wrapper.classList.add('show')
+
+    if (this.options.delay) {
+      setTimeout(() => {
+        this.hide()
+      }, this.options.delay)
+    }
+  }
+
+  hide () {
+    this.wrapper.classList.remove('show')
   }
 }
 
