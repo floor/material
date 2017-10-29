@@ -10,8 +10,7 @@ import Layout from './layout'
 
 let defaults = {
   prefix: 'material',
-  class: 'card',
-  modules: [insert]
+  class: 'card'
 }
 
 class Card {
@@ -20,25 +19,28 @@ class Card {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
-    init(this)
+    this.init()
     this.build()
+  }
+
+  init () {
+    Object.assign(this, insert)
   }
 
   /**
    * build the component using the super method
    * @return {Object} The class instance
    */
-  build() {
+  build () {
     var tag = this.options.tag || 'div'
 
     this.wrapper = create(tag)
     classify(this.wrapper, this.options)
 
-    this.options.layout.wrapper = this.wrapper
-    this.layout = new Layout(this.options.layout)
+    this.layout = new Layout(this.options.layout, this.wrapper)
   }
 }
 
