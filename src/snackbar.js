@@ -10,10 +10,10 @@ import Layout from './layout'
 
 let defaults = {
   prefix: 'material',
-  class: 'card'
+  class: 'snackbar'
 }
 
-class Card {
+class Snackbar {
   /**
    * Constructor
    * @param  {Object} options - Component options
@@ -37,11 +37,11 @@ class Card {
   build () {
     var tag = this.options.tag || 'div'
 
-    this.wrapper = create(tag)
+    this.wrapper = create(tag, 'dark-theme')
     classify(this.wrapper, this.options)
 
     this.layout = new Layout(this.options.layout, this.wrapper)
   }
 }
 
-export default Card
+export default Snackbar

@@ -1,8 +1,8 @@
 'use strict'
 
-import init from './component/init'
 import events from './component/events'
 import control from './component/control'
+import label from './component/label'
 import emitter from './module/emitter'
 import attach from './module/attach'
 import insert from './element/insert'
@@ -16,7 +16,7 @@ let defaults = {
   prefix: 'material',
   class: 'checkbox',
   type: 'control',
-  modules: [events, control, emitter, attach],
+  // modules: [events, control, emitter, attach],
   build: ['$wrapper.material-checkbox', {},
     ['input$input', {}],
     ['span$control.checkbox-control']
@@ -50,7 +50,7 @@ class Checkbox {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
     // init and build
     this.init()
@@ -65,8 +65,8 @@ class Checkbox {
    * @param  {Object} options The class options
    * @return {Object} This class instance
    */
-  init() {
-    init(this)
+  init () {
+    Object.assign(this, events, control, emitter, attach)
     // init options and merge options to defaults
 
     return this
@@ -76,13 +76,15 @@ class Checkbox {
    * build the component using the super method
    * @return {Object} The class instance
    */
-  build() {
+  build () {
     this.element = build(this.options.build)
     this.wrapper = this.element.wrapper
 
     this.element.control.innerHTML = icon
 
-    this.label(this.options.label)
+    var text = this.options.text || this.options.label
+
+    this.element.label = label(this.wrapper, text, this.options)
 
     this.element.input.setAttribute('type', 'checkbox')
     this.element.input.setAttribute('name', this.options.name)
@@ -116,7 +118,7 @@ class Checkbox {
    * @param {string} value
    * @return {Object} The class instance
    */
-  set(prop, value) {
+  set (prop, value) {
     switch (prop) {
       case 'checked':
         this.check(value)
@@ -140,7 +142,7 @@ class Checkbox {
    * @param  {?} context   [description]
    * @return {?}           [description]
    */
-  insert(container, context) {
+  insert (container, context) {
     insert(this.wrapper, container, context)
 
     return this
@@ -151,7 +153,7 @@ class Checkbox {
    * @param  {event} e [description]
    * @return {?}   [description]
    */
-  click(e) {
+  click (e) {
     this.toggle(e)
     this.element.input.focus()
 
@@ -162,7 +164,7 @@ class Checkbox {
    * Set checkbox value
    * @param {boolean} value [description]
    */
-  setValue(value) {
+  setValue (value) {
     console.log('setValue', value)
     this.value = value
     this.element.input.setAttribute('value', value)

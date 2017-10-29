@@ -14,6 +14,7 @@ import Layout from 'material/src/layout'
 import List from 'material/src/list'
 import Menu from 'material/src/menu'
 import Slider from 'material/src/slider'
+import Snackbar from 'material/src/snackbar'
 import Switch from 'material/src/switch'
 import Text from 'material/src/text'
 import Textfield from 'material/src/textfield'
@@ -41,5 +42,6 @@ export {
   Text,
   Textfield,
   Toolbar,
-  View
+  View,
+  Snackbar
 }
