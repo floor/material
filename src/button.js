@@ -42,9 +42,7 @@ class Button {
    * @return {Object} The class instance
    */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
-
-    this.init()
+    this.init(options)
     this.build()
     this.setup()
     this.attach()
@@ -59,7 +57,9 @@ class Button {
    * @param  {?} options [description]
    * @return {?}         [description]
    */
-  init () {
+  init (options) {
+    this.options = Object.assign({}, defaults, options || {})
+
     Object.assign(this, control, emitter, attach, ripple)
 
     this.element = this.element || {}
