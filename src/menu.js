@@ -1,6 +1,5 @@
 'use strict'
 
-import init from './component/init'
 import classify from './component/classify'
 import css from './module/css'
 import events from './component/events'
@@ -42,10 +41,8 @@ class Menu {
    * @return {Object} Class instance
    */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
-
-    init(this)
-    this.build(this.options)
+    this.init(options)
+    this.build()
     this.setup()
 
     this.attach()
@@ -56,15 +53,24 @@ class Menu {
   }
 
   /**
+   * [init description]
+   * @return {[type]} [description]
+   */
+  init (options) {
+    this.options = Object.assign({}, defaults, options || {})
+
+    Object.assign(this, emitter, events, attach, insert)
+  }
+
+  /**
    * Build Method
    * @return {Object} This class instance
    */
-  build (options) {
-    var tag = options.tag || 'div'
-    this.wrapper = create(tag, options.css)
-    this.mask = create(tag, this.options.class + '-mask')
+  build () {
+    this.wrapper = create(this.options.tag, this.options.css)
+    this.mask = create(this.options.tag, this.options.class + '-mask')
 
-    classify(this.wrapper, options)
+    classify(this.wrapper, this.options)
 
     if (this.options.list) {
       this.list = new List({
@@ -95,19 +101,19 @@ class Menu {
     //   console.log('click');
     //   this.close();
     // });
-    // 
-    window.addEventListener('resize',()=> this.position())
+    //
+    window.addEventListener('resize', () => this.position())
   }
 
   show (e) {
     css.add(this.mask, 'mask-show')
 
     if (e) this.caller = e.target
-    
+
     css.add(this.wrapper, this.options.class + '-show')
     this.position(this.caller)
   }
-  position() {
+  position () {
     if (!this.caller) return
     var offs = offset(this.caller)
 
@@ -115,7 +121,7 @@ class Menu {
 
     this.wrapper.style.top = offs.top + 'px'
     this.wrapper.style.left = offs.left - offsw.width + offs.width + 'px'
-    //this.wrapper.style.right = offs.right + offs.width + offsw.width  + 'px'
+    // this.wrapper.style.right = offs.right + offs.width + offsw.width  + 'px'
   }
 
   hide () {
