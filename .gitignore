@@ -56,3 +56,5 @@ dist/vendor/*
 README.*
 *.codekit
 .sass-cache
+dist/*
+dist/material.css
