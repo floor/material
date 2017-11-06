@@ -42,9 +42,7 @@ class Button {
    * @return {Object} The class instance
    */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
-
-    this.init()
+    this.init(options)
     this.build()
     this.setup()
     this.attach()
@@ -59,7 +57,9 @@ class Button {
    * @param  {?} options [description]
    * @return {?}         [description]
    */
-  init () {
+  init (options) {
+    this.options = Object.assign({}, defaults, options || {})
+
     Object.assign(this, control, emitter, attach, ripple)
 
     this.element = this.element || {}
@@ -123,12 +123,6 @@ class Button {
       this.wrapper.title = this.options.label
     }
 
-    if (this.options.style) {
-      var styles = this.options.style.split(' ')
-      for (var i = 0; i < styles.length; i++) {
-        css.add(this.wrapper, 'style-' + styles[i])
-      }
-    }
 
     if (this.options.content) {
       this.wrapper.innerHTML = this.options.content

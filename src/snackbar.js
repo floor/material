@@ -51,7 +51,9 @@ class Snackbar {
    * @return {[type]} [description]
    */
   show () {
-    this.wrapper.classList.add('show')
+    setTimeout(() => {
+      this.wrapper.classList.add('show')
+    }, 10)
 
     if (this.options.delay) {
       setTimeout(() => {

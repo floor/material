@@ -10,7 +10,8 @@ import Layout from './layout'
 
 let defaults = {
   prefix: 'material',
-  class: 'card'
+  class: 'card',
+  tag: 'div'
 }
 
 class Card {
@@ -20,13 +21,14 @@ class Card {
    * @return {Object} Class instance
    */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
+   
 
-    this.init()
+    this.init(options)
     this.build()
   }
 
-  init () {
+  init (options) {
+    this.options = Object.assign({}, defaults, options || {})
     Object.assign(this, insert)
   }
 
@@ -35,9 +37,8 @@ class Card {
    * @return {Object} The class instance
    */
   build () {
-    var tag = this.options.tag || 'div'
 
-    this.wrapper = create(tag)
+    this.wrapper = create(this.options.tag)
     classify(this.wrapper, this.options)
 
     this.layout = new Layout(this.options.layout, this.wrapper)

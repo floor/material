@@ -6,6 +6,7 @@ import insert from './element/insert'
  *
  */
 class Layout {
+
   /**
    * [constructor description]
    * @param  {?} schema    [description]
