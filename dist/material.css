@@ -1,7 +1,3 @@
-.dark-theme {
-  background-color: #333333;
-  color: rgba(255, 255, 255, 0.95); }
-
 html {
   font-size: 100%;
   line-height: 1.15;
@@ -136,6 +132,10 @@ a {
 .material-text.text-adjust.text-caption {
   line-height: 1.25rem; }
 
+.dark-theme {
+  background-color: #333333;
+  color: rgba(255, 255, 255, 0.95); }
+
 .material-ripple {
   opacity: 1;
   pointer-events: none;
@@ -238,6 +238,117 @@ a {
     height: 16px;
     border-bottom: none; }
 
+.material-progress {
+  width: 100%;
+  height: 4px;
+  background-color: #abb4e2; }
+  .material-progress .bar {
+    width: 0%;
+    height: 100%;
+    background-color: #3f51b5;
+    transition: width 3s; }
+
+.material-progress.type-indeterminate {
+  position: relative;
+  height: 4px;
+  display: block;
+  width: 100%;
+  background-color: #abb4e2;
+  overflow: hidden; }
+  .material-progress.type-indeterminate .determinate {
+    position: absolute;
+    background-color: inherit;
+    top: 0;
+    bottom: 0;
+    background-color: #3f51b5;
+    transition: width 0.3s linear; }
+  .material-progress.type-indeterminate .bar {
+    background-color: #3f51b5; }
+    .material-progress.type-indeterminate .bar:before {
+      content: "";
+      position: absolute;
+      background-color: inherit;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      will-change: left, right;
+      -webkit-animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+      animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite; }
+    .material-progress.type-indeterminate .bar:after {
+      content: "";
+      position: absolute;
+      background-color: inherit;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      will-change: left, right;
+      -webkit-animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+      animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+      -webkit-animation-delay: 1.15s;
+      animation-delay: 1.15s; }
+
+@-webkit-keyframes indeterminate {
+  0% {
+    left: -35%;
+    right: 100%; }
+  60% {
+    left: 100%;
+    right: -90%; }
+  100% {
+    left: 100%;
+    right: -90%; } }
+@keyframes indeterminate {
+  0% {
+    left: -35%;
+    right: 100%; }
+  60% {
+    left: 100%;
+    right: -90%; }
+  100% {
+    left: 100%;
+    right: -90%; } }
+@-webkit-keyframes indeterminate-short {
+  0% {
+    left: -200%;
+    right: 100%; }
+  60% {
+    left: 107%;
+    right: -8%; }
+  100% {
+    left: 107%;
+    right: -8%; } }
+@keyframes indeterminate-short {
+  0% {
+    left: -200%;
+    right: 100%; }
+  60% {
+    left: 107%;
+    right: -8%; }
+  100% {
+    left: 107%;
+    right: -8%; } }
+.material-progress.type-circular .progress {
+  animation: rotator 1.4s linear infinite; }
+@keyframes rotator {
+  0% {
+    transform: rotate(0deg); }
+  100% {
+    transform: rotate(270deg); } }
+.material-progress.type-circular .path {
+  stroke: #4285F4;
+  stroke-dasharray: 187;
+  stroke-dashoffset: 0;
+  transform-origin: center;
+  animation: dash 1.4s ease-in-out infinite; }
+@keyframes dash {
+  0% {
+    stroke-dashoffset: 187; }
+  50% {
+    stroke-dashoffset: 187/4;
+    transform: rotate(135deg); }
+  100% {
+    stroke-dashoffset: 187;
+    transform: rotate(450deg); } }
 .material-card {
   width: 320px;
   box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
@@ -255,80 +366,6 @@ a {
   display: inline-block;
   margin: 24px; }
 
-.layout-simple-card .component-head {
-  background-image: url(../demo/media/bg-card.jpg);
-  background-repeat: no-repeat;
-  background-size: cover;
-  height: 209px;
-  background-color: #014689; }
-.layout-simple-card .component-body {
-  padding: 16px; }
-  .layout-simple-card .component-body h2,
-  .layout-simple-card .component-body h3 {
-    margin: 0;
-    padding-top: 8px; }
-.layout-simple-card .component-action {
-  padding: 8px; }
-  .layout-simple-card .component-action .material-button {
-    font-size: 14px;
-    padding: 0; }
-    .layout-simple-card .component-action .material-button label {
-      padding: 8px; }
-
-.layout-simple-card-orange .component-head {
-  background-image: url(../demo/media/bg-card-orange.jpg);
-  background-repeat: no-repeat;
-  background-size: cover;
-  height: 209px;
-  background-color: #014689; }
-.layout-simple-card-orange .component-body {
-  padding: 16px; }
-  .layout-simple-card-orange .component-body h2,
-  .layout-simple-card-orange .component-body h3 {
-    margin: 0;
-    padding-top: 8px; }
-.layout-simple-card-orange .component-action {
-  padding: 8px; }
-  .layout-simple-card-orange .component-action .material-button {
-    font-size: 14px;
-    padding: 0; }
-    .layout-simple-card-orange .component-action .material-button label {
-      padding: 8px; }
-
-.layout-little-card-orange .component-head {
-  background-repeat: no-repeat;
-  background-size: cover;
-  padding: 16px; }
-  .layout-little-card-orange .component-head .component-image {
-    background-image: url(../demo/media/bg-card-orange.jpg);
-    background-repeat: no-repeat;
-    background-size: cover; }
-.layout-little-card-orange .component-action {
-  padding: 8px; }
-  .layout-little-card-orange .component-action .material-button {
-    font-size: 14px;
-    padding: 0; }
-    .layout-little-card-orange .component-action .material-button label {
-      padding: 8px; }
-
-.layout-head-card-text .component-head {
-  height: 185px;
-  background-image: url(../demo/media/bg-card-orange.jpg);
-  background-repeat: no-repeat;
-  background-size: cover;
-  padding: 16px;
-  justify-content: flex-end; }
-  .layout-head-card-text .component-head .material-text {
-    margin: 0;
-    padding: 0; }
-.layout-head-card-text .component-action {
-  padding: 8px; }
-  .layout-head-card-text .component-action .material-button {
-    font-size: 14px;
-    padding: 0; }
-    .layout-head-card-text .component-action .material-button label {
-      padding: 8px; }
-
 .material-menu {
   z-index: 50;
   position: absolute;
@@ -336,12 +373,12 @@ a {
   background-color: white;
   border-radius: 2px;
   box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
-  transition: 0.2s;
-  height: 0;
+  transform: translateY(-50%) scale(0);
+  transition: 0.1s;
   overflow: hidden; }
   .material-menu.menu-show {
-    transition: 5s;
-    height: initial; }
+    transition: 0.2s;
+    transform: translateY(0) scale(1); }
   .material-menu .material-list {
     position: relative;
     bottom: 0;
@@ -498,6 +535,25 @@ a {
   .material-toolbar > *:last-child {
     margin-right: 0; }
 
+.material-snackbar {
+  position: absolute;
+  display: inline-block;
+  bottom: 0;
+  left: 50%;
+  box-sizing: border-box;
+  border-radius: 2px;
+  overflow: hidden;
+  background-color: #323232;
+  padding: 8px 16px;
+  bottom: -56px;
+  transition: 0.3s; }
+  .material-snackbar.show {
+    bottom: 0;
+    transition: 0.3s; }
+  .material-snackbar .material-text {
+    line-height: 2.4rem;
+    color: rgba(255, 255, 255, 0.95); }
+
 .material-textfield {
   display: block;
   position: relative;
@@ -613,7 +669,6 @@ a {
     pointer-events: none;
     z-index: 2;
     display: inline-block;
-    color: #999;
     width: 24px;
     height: 24px;
     padding: 0 8px;
@@ -621,6 +676,8 @@ a {
     padding: 0;
     background-repeat: no-repeat;
     background-position: center center; }
+    .material-button .button-icon svg {
+      fill: rgba(0, 0, 0, 0.87); }
   .material-button .button-label {
     order: 2;
     pointer-events: none;
@@ -652,16 +709,18 @@ a {
     padding-top: 2px;
     padding-bottom: 2px; }
 
-.material-button.accent-color, .material-button.secondary-color {
-  color: #1A9989; }
-  .material-button.accent-color:focus, .material-button.secondary-color:focus {
-    background-color: #eafbf9; }
 .material-button.primary-color {
   color: #3f51b5; }
+  .material-button.primary-color .button-icon svg {
+    fill: #3f51b5; }
   .material-button.primary-color:focus {
     background-color: white; }
-.material-button.accent-color, .material-button.secondary-color {
+.material-button.secondary-color {
   color: #1A9989; }
+  .material-button.secondary-color .button-icon svg {
+    fill: #1A9989; }
+  .material-button.secondary-color:focus {
+    background-color: #eafbf9; }
 
 .material-button.is-disabled {
   pointer-events: none;
@@ -676,15 +735,12 @@ a {
   transition: background-color 0.3s;
   background-color: rgba(0, 0, 0, 0.05); }
 .material-button.state-active {
-  background-color: rgba(135, 135, 135, 0.1);
   color: #888888; }
 
 .material-button.type-raised {
   min-width: 36px;
   transition: box-shadow 0.2s;
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12); }
-  .material-button.type-raised .button-icon svg {
-    fill: rgba(255, 255, 255, 0.95); }
   .material-button.type-raised:focus {
     background-color: rgba(242, 242, 242, 0.95); }
   .material-button.type-raised:active, .material-button.type-raised.is-active {
@@ -694,13 +750,17 @@ a {
   .material-button.type-raised.primary-color {
     background-color: #3f51b5;
     color: rgba(255, 255, 255, 0.95); }
+    .material-button.type-raised.primary-color .button-icon svg {
+      fill: rgba(255, 255, 255, 0.95); }
     .material-button.type-raised.primary-color:focus {
       background-color: #606fc7;
       color: rgba(255, 255, 255, 0.95); }
-  .material-button.type-raised.accent-color, .material-button.type-raised.secondary-color {
+  .material-button.type-raised.secondary-color {
     background-color: #1A9989;
     color: rgba(255, 255, 255, 0.95); }
-    .material-button.type-raised.accent-color:focus, .material-button.type-raised.secondary-color:focus {
+    .material-button.type-raised.secondary-color .button-icon svg {
+      fill: rgba(255, 255, 255, 0.95); }
+    .material-button.type-raised.secondary-color:focus {
       background-color: #1eaf9d;
       color: rgba(255, 255, 255, 0.95); }
 
@@ -717,23 +777,33 @@ a {
     margin-left: 0; }
     .material-button.type-action .button-icon svg {
       fill: rgba(0, 0, 0, 0.87); }
-  .material-button.type-action:focus {
-    background-color: rgba(242, 242, 242, 0.95); }
-  .material-button.type-action .material-ripple {
-    background-color: white; }
+  .material-button.type-action.style-dense, .material-button.type-action.style-compact {
+    height: 32px;
+    width: 32px;
+    min-width: 32px;
+    border-radius: 16px; }
+    .material-button.type-action.style-dense .button-icon, .material-button.type-action.style-compact .button-icon {
+      width: 20px;
+      height: 20px; }
+      .material-button.type-action.style-dense .button-icon svg, .material-button.type-action.style-compact .button-icon svg {
+        width: 20px;
+        height: 20px;
+        viewbox: 0 0 20 20; }
   .material-button.type-action.primary-color {
     background-color: #3f51b5;
     color: rgba(255, 255, 255, 0.95); }
     .material-button.type-action.primary-color .button-icon svg {
       fill: rgba(255, 255, 255, 0.95); }
     .material-button.type-action.primary-color:focus {
-      background-color: #4d5ec1;
+      background-color: #606fc7;
       color: rgba(255, 255, 255, 0.95); }
-  .material-button.type-action.accent-color, .material-button.type-action.secondary-color {
+  .material-button.type-action.secondary-color {
     background-color: #1A9989;
     color: rgba(255, 255, 255, 0.95); }
-    .material-button.type-action.accent-color:focus, .material-button.type-action.secondary-color:focus {
-      background-color: #21c5b0;
+    .material-button.type-action.secondary-color .button-icon svg {
+      fill: rgba(255, 255, 255, 0.95); }
+    .material-button.type-action.secondary-color:focus {
+      background-color: #1eaf9d;
       color: rgba(255, 255, 255, 0.95); }
 
 .material-button.type-floating {
@@ -765,13 +835,15 @@ a {
     .material-button.type-floating.primary-color .button-icon svg {
       fill: rgba(255, 255, 255, 0.95); }
     .material-button.type-floating.primary-color:focus {
-      background-color: #4d5ec1;
+      background-color: #606fc7;
       color: rgba(255, 255, 255, 0.95); }
-  .material-button.type-floating.accent-color, .material-button.type-floating.secondary-color {
+  .material-button.type-floating.secondary-color {
     background-color: #1A9989;
     color: rgba(255, 255, 255, 0.95); }
-    .material-button.type-floating.accent-color:focus, .material-button.type-floating.secondary-color:focus {
-      background-color: #21c5b0;
+    .material-button.type-floating.secondary-color .button-icon svg {
+      fill: rgba(255, 255, 255, 0.95); }
+    .material-button.type-floating.secondary-color:focus {
+      background-color: #1eaf9d;
       color: rgba(255, 255, 255, 0.95); }
 
 .material-button.type-file {
@@ -801,23 +873,26 @@ a {
     fill: rgba(255, 255, 255, 0.95); }
   .dark-theme .material-button.primary-color {
     color: #3f51b5; }
-  .dark-theme .material-button.accent-color {
+    .dark-theme .material-button.primary-color .button-icon svg {
+      fill: #3f51b5; }
+  .dark-theme .material-button.secondary-color {
     color: #1A9989; }
   .dark-theme .material-button > .material-ripple {
     background-color: rgba(255, 255, 255, 0.3); }
   .dark-theme .material-button:focus {
     background-color: rgba(255, 255, 255, 0.05); }
-  .dark-theme .material-button.type-raised {
-    background-color: rgba(255, 255, 255, 0.95);
-    color: rgba(0, 0, 0, 0.87); }
-    .dark-theme .material-button.type-raised:focus {
-      background-color: rgba(242, 242, 242, 0.95); }
-    .dark-theme .material-button.type-raised.primary-color {
+  .dark-theme .material-button.type-raised, .dark-theme .material-button.type-floating, .dark-theme .material-button.type-action {
+    color: rgba(255, 255, 255, 0.95); }
+    .dark-theme .material-button.type-raised.primary-color, .dark-theme .material-button.type-floating.primary-color, .dark-theme .material-button.type-action.primary-color {
       background-color: #3f51b5;
       color: rgba(255, 255, 255, 0.95); }
-    .dark-theme .material-button.type-raised.accent-color, .dark-theme .material-button.type-raised.secondary-color {
+      .dark-theme .material-button.type-raised.primary-color .button-icon svg, .dark-theme .material-button.type-floating.primary-color .button-icon svg, .dark-theme .material-button.type-action.primary-color .button-icon svg {
+        fill: rgba(255, 255, 255, 0.95); }
+    .dark-theme .material-button.type-raised.secondary-color, .dark-theme .material-button.type-floating.secondary-color, .dark-theme .material-button.type-action.secondary-color {
       background-color: #1A9989;
       color: rgba(255, 255, 255, 0.95); }
+      .dark-theme .material-button.type-raised.secondary-color .button-icon svg, .dark-theme .material-button.type-floating.secondary-color .button-icon svg, .dark-theme .material-button.type-action.secondary-color .button-icon svg {
+        fill: rgba(255, 255, 255, 0.95); }
 
 .material-switch {
   display: block;
@@ -1120,6 +1195,14 @@ a {
 .dark-theme .material-slider .slider-control .slider-track .slider-tarck-value {
   background-color: #5C5C5C; }
 
+.material-view {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: scroll; }
+
 .material-list {
   padding: 16px 0;
   overflow: scroll; }
@@ -1411,10 +1494,12 @@ a {
       .material-book .book-body .resource-folder .date[data-day='day-6'] {
         background-color: rgba(196, 196, 196, 0.1); }
 
+.flex-row,
 .flex-raw {
   display: flex;
-  flew-direction: horizontal;
+  flex-direction: row;
   flex-wrap: nowrap; }
+  .flex-row > .ui-container,
   .flex-raw > .ui-container {
     height: inherit; }
 

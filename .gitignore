@@ -55,5 +55,3 @@ public/js/*
 dist/vendor/*
 README.*
 .sass-cache
-dist/*
-dist/material.css
