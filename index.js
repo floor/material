@@ -13,6 +13,7 @@ import Item from 'material/src/item'
 import Layout from 'material/src/layout'
 import List from 'material/src/list'
 import Menu from 'material/src/menu'
+import Progress from 'material/src/progress'
 import Slider from 'material/src/slider'
 import Snackbar from 'material/src/snackbar'
 import Switch from 'material/src/switch'
@@ -43,5 +44,6 @@ export {
   Textfield,
   Toolbar,
   View,
-  Snackbar
+  Snackbar,
+  Progress
 }
