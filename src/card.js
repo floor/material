@@ -21,8 +21,6 @@ class Card {
    * @return {Object} Class instance
    */
   constructor (options) {
-   
-
     this.init(options)
     this.build()
   }
@@ -37,11 +35,12 @@ class Card {
    * @return {Object} The class instance
    */
   build () {
-
     this.wrapper = create(this.options.tag)
     classify(this.wrapper, this.options)
 
-    this.layout = new Layout(this.options.layout, this.wrapper)
+    if (this.options.layout) {
+      this.layout = new Layout(this.options.layout, this.wrapper)
+    }
   }
 }
 
