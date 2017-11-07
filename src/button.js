@@ -4,7 +4,6 @@ import create from './element/create'
 import classify from './component/classify'
 import ripple from './component/ripple'
 import emitter from './module/emitter'
-import css from './module/css'
 import insert from './element/insert'
 import attach from './module/attach'
 
