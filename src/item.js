@@ -35,7 +35,7 @@ class Item {
    * init
    * @return {Object} The class options
    */
-  constructor(options) {
+  constructor (options) {
     this.init(options)
     this.build()
 
@@ -47,7 +47,7 @@ class Item {
    * @param  {?} options [description]
    * @return {?}         [description]
    */
-  init(options) {
+  init (options) {
     // merge options
     this.options = Object.assign({}, defaults, options || {})
 
@@ -61,22 +61,22 @@ class Item {
    * Build function for item
    * @return {Object} This class instance
    */
-  build(options) {
+  build (options) {
     options = options || this.options
 
     // define main tag
     var tag = options.tag[options.type] || options.tag.default
 
-    this.wrapper = document.createElement(tag)
+    this.root = document.createElement(tag)
 
     if (options.text) {
       this.set(options.text)
     }
 
-    css.add(this.wrapper, this.options.prefix + '-' + this.options.class)
+    css.add(this.root, this.options.prefix + '-' + this.options.class)
 
     if (options.type) {
-      css.add(this.wrapper, this.options.class + '-' + options.type)
+      css.add(this.root, this.options.class + '-' + options.type)
     }
 
     if (this.options.container) {
@@ -89,12 +89,12 @@ class Item {
    * @param {string} value The text to set
    * @returns {*}
    */
-  set(value) {
+  set (value) {
     if (value) {
-      if (this.wrapper.innerText) {
-        this.wrapper.innerText = value
+      if (this.root.innerText) {
+        this.root.innerText = value
       } else {
-        this.wrapper.textContent = value
+        this.root.textContent = value
       }
 
       return this

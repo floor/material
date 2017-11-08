@@ -15,7 +15,7 @@ let defaults = {
   prefix: 'material',
   class: 'dialog',
   events: [
-    ['wrapper.click', 'close']
+    ['root.click', 'close']
   ]
 }
 
@@ -25,13 +25,13 @@ class Dialog {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
     this.init()
     this.build()
     this.attach()
 
-    this.wrapper.style.display = 'none'
+    this.root.style.display = 'none'
 
     return this
   }
@@ -41,7 +41,7 @@ class Dialog {
    * @param  {Object} options The class options
    * @return {Object} This class instance
    */
-  init() {
+  init () {
     // init options and merge options to defaults
 
     // implement modules
@@ -56,52 +56,52 @@ class Dialog {
    * build the component using the super method
    * @return {Object} The class instance
    */
-  build() {
+  build () {
     var tag = this.options.tag || 'div'
-    // this.wrapper = new Element(this.options.element);
-    this.wrapper = document.createElement(tag)
+    // this.root = new Element(this.options.element);
+    this.root = document.createElement(tag)
 
-    css.add(this.wrapper, 'material-dialog')
+    css.add(this.root, 'material-dialog')
     if (this.options.css) {
-      css.add(this.wrapper, this.options.css)
+      css.add(this.root, this.options.css)
     }
 
     this.surface = document.createElement(tag)
 
     css.add(this.surface, 'dialog-surface')
 
-    this.insertElement(this.surface, this.wrapper)
+    this.insertElement(this.surface, this.root)
 
-    this.options.layout.wrapper = this.surface
+    this.options.layout.root = this.surface
     this.layout = new Layout(this.options.layout, this.surface)
 
-    event.add(this.surface, 'click', function(ev) {
+    event.add(this.surface, 'click', function (ev) {
       ev.stopPropagation()
     })
 
-    // this.wrapper = element.createElement(tag);
+    // this.root = element.createElement(tag);
   }
 
-  close() {
-    css.add(this.wrapper, 'dialog-closing')
+  close () {
+    css.add(this.root, 'dialog-closing')
 
     var delayMillis = 200 // 1 second
     setTimeout(() => {
-      this.wrapper.style.display = 'none'
-      css.remove(this.wrapper, 'dialog-closing')
-      css.remove(this.wrapper, 'dialog-show')
+      this.root.style.display = 'none'
+      css.remove(this.root, 'dialog-closing')
+      css.remove(this.root, 'dialog-show')
     }, delayMillis)
   }
 
-  show() {
-    this.wrapper.style.display = 'flex'
-    // css.add(this.wrapper, 'dialog-showing');
+  show () {
+    this.root.style.display = 'flex'
+    // css.add(this.root, 'dialog-showing');
 
     var delayMillis = 100 // 1 second
 
     setTimeout(() => {
-      css.add(this.wrapper, 'dialog-show')
-      // css.remove(this.wrapper, 'dialog-showing');
+      css.add(this.root, 'dialog-show')
+      // css.remove(this.root, 'dialog-showing');
     }, delayMillis)
   }
 }

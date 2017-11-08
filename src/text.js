@@ -49,7 +49,7 @@ class Text {
    * init
    * @return {Object} The class options
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
     init(this)
@@ -62,20 +62,20 @@ class Text {
    * Build function for item
    * @return {Object} This class instance
    */
-  build(options) {
+  build (options) {
     options = options || this.options
 
     var tag = options.tag[options.type] || options.tag.default
 
-    this.wrapper = create(tag, options.prefix + '-' + options.class)
+    this.root = create(tag, options.prefix + '-' + options.class)
 
-    classify(this.wrapper, this.options)
+    classify(this.root, this.options)
 
     if (options.text) {
       this.set(options.text)
     }
 
-    if (options.type) { css.add(this.wrapper, options.class + '-' + options.type) }
+    if (options.type) { css.add(this.root, options.class + '-' + options.type) }
 
     if (options.container) {
       this.insert(options.container)
@@ -88,12 +88,12 @@ class Text {
    * @param {string} value The text to set
    * @returns {*}
    */
-  set(value) {
+  set (value) {
     if (value) {
-      if (this.wrapper.innerText) {
-        this.wrapper.innerText = value
+      if (this.root.innerText) {
+        this.root.innerText = value
       } else {
-        this.wrapper.textContent = value
+        this.root.textContent = value
       }
 
       return this

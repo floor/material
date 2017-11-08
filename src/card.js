@@ -35,11 +35,11 @@ class Card {
    * @return {Object} The class instance
    */
   build () {
-    this.wrapper = create(this.options.tag)
-    classify(this.wrapper, this.options)
+    this.root = create(this.options.tag)
+    classify(this.root, this.options)
 
     if (this.options.layout) {
-      this.layout = new Layout(this.options.layout, this.wrapper)
+      this.layout = new Layout(this.options.layout, this.root)
     }
   }
 }

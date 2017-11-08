@@ -9,11 +9,11 @@ import dom from '../module/dom'
  * @param  {string} context   [description]
  * @return {?}           [description]
  */
-function insert(element, container, context) {
+function insert (element, container, context) {
   if (!element || !container) return
 
-  element = element.wrapper || element
-  container = container.wrapper || container
+  element = element.root || element
+  container = container.root || container
 
   context = context || 'bottom'
 

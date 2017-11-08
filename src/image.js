@@ -22,7 +22,7 @@ class Image {
    * init
    * @return {Object} The class options
    */
-  constructor(options) {
+  constructor (options) {
     // console.log('text options', options);
 
     this.options = Object.assign({}, defaults, options || {})
@@ -38,7 +38,7 @@ class Image {
    * @param  {?} options [description]
    * @return {?}         [description]
    */
-  init() {
+  init () {
     Object.assign(this, insert)
   }
 
@@ -46,21 +46,21 @@ class Image {
    * Build function for item
    * @return {Object} This class instance
    */
-  build(options) {
+  build (options) {
     options = options || this.options
 
     var tag = options.tag || 'img'
 
-    this.wrapper = document.createElement(tag)
+    this.root = document.createElement(tag)
 
     if (options.src) {
-      this.wrapper.setAttribute('style', 'background-image: url(' + options.src + ')')
+      this.root.setAttribute('style', 'background-image: url(' + options.src + ')')
     }
 
-    css.add(this.wrapper, this.options.prefix + '-' + this.options.class)
+    css.add(this.root, this.options.prefix + '-' + this.options.class)
 
-    if (options.css) { css.add(this.wrapper, options.css) }
-    // css.add(this.wrapper, this.options.class + '-adjust');
+    if (options.css) { css.add(this.root, options.css) }
+    // css.add(this.root, this.options.class + '-adjust');
 
     if (this.options.container) {
       this.insert(this.options.container)
@@ -72,12 +72,12 @@ class Image {
    * @param {string} value The text to set
    * @returns {*}
    */
-  set(value) {
+  set (value) {
     if (value) {
-      if (this.wrapper.innerText) {
-        this.wrapper.innerText = value
+      if (this.root.innerText) {
+        this.root.innerText = value
       } else {
-        this.wrapper.textContent = value
+        this.root.textContent = value
       }
 
       return this

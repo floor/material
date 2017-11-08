@@ -30,7 +30,7 @@ class Container {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
     // init and build
     this.init(options)
@@ -44,7 +44,7 @@ class Container {
    * @params {Object} options The instance options
    * @return {Object} This class instance
    */
-  init(options) {
+  init (options) {
     this.options.name = this.options.name
 
     // implement modules
@@ -59,29 +59,29 @@ class Container {
    * [build description]
    * @return {Object} This class  instance
    */
-  build(props) {
+  build (props) {
     var tag = this.options.tag || 'div'
 
-    this.wrapper = create(tag, this.options.prefix + '-' + this.options.class)
+    this.root = create(tag, this.options.prefix + '-' + this.options.class)
 
     if (this.options.name) {
-      css.add(this.wrapper, this.options.class + '-' + this.options.name)
+      css.add(this.root, this.options.class + '-' + this.options.name)
     }
 
     if (this.options.css) {
-      css.add(this.wrapper, this.options.css)
+      css.add(this.root, this.options.css)
     }
 
     if (this.options.container) {
       // console.log(this.options.name, opts.container);
-      insert(this.wrapper, this.options.container)
+      insert(this.root, this.options.container)
     }
 
     return this
   }
 
-  insert(container, context) {
-    insert(this.wrapper, container, context)
+  insert (container, context) {
+    insert(this.root, container, context)
     return this
   }
 }

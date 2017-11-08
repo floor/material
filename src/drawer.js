@@ -33,7 +33,7 @@ class Drawer {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
     init(this)
@@ -49,28 +49,28 @@ class Drawer {
    * Build Method
    * @return {Object} This class instance
    */
-  build() {
-    this.wrapper = create('aside')
+  build () {
+    this.root = create('aside')
 
-    classify(this.wrapper, this.options)
+    classify(this.root, this.options)
 
-    if (this.options.position) { css.add(this.wrapper, 'position-' + this.options.position) }
+    if (this.options.position) { css.add(this.root, 'position-' + this.options.position) }
 
     if (this.options.size) {
       if (this.options.position === 'top' || this.options.position === 'bottom') {
-        this.wrapper.style = 'height: ' + this.options.size + 'px;'
+        this.root.style = 'height: ' + this.options.size + 'px;'
       } else {
-        this.wrapper.style = 'width: ' + this.options.size + 'px;'
+        this.root.style = 'width: ' + this.options.size + 'px;'
       }
     }
 
-    if (this.options.container) { insert(this.wrapper, this.options.container) }
+    if (this.options.container) { insert(this.root, this.options.container) }
 
     if (!this.options.state) {
       this.state = 'opened'
     }
 
-    this.emit('built', this.wrapper)
+    this.emit('built', this.root)
 
     return this
   }
@@ -79,7 +79,7 @@ class Drawer {
    * [toggle description]
    * @return {Object} The class instance
    */
-  toggle() {
+  toggle () {
     if (this.state === 'opened') {
       this.close()
     } else {
@@ -93,8 +93,8 @@ class Drawer {
    * [minimize description]
    * @return {Object} The class instance
    */
-  close() {
-    css.remove(this.wrapper, 'show')
+  close () {
+    css.remove(this.root, 'show')
     css.remove(this.underlay, 'show')
     this.state = 'closed'
 
@@ -107,11 +107,11 @@ class Drawer {
    * [normalize description]
    * @return {Object} The class instance
    */
-  open() {
+  open () {
     this.emit('open')
     if (!this.underlay) { this.underlay = create('div', 'drawer-underlay') }
 
-    insert(this.underlay, this.wrapper.parentNode, 'top')
+    insert(this.underlay, this.root.parentNode, 'top')
     this.underlay.addEventListener('click', (e) => {
       this.close()
     })
@@ -119,7 +119,7 @@ class Drawer {
       css.add(this.underlay, 'show')
     }, 10)
 
-    css.add(this.wrapper, 'show')
+    css.add(this.root, 'show')
     this.state = 'opened'
     this.emit(this.state)
 
@@ -132,8 +132,8 @@ class Drawer {
    * @param  {?} context   [description]
    * @return {?}           [description]
    */
-  insert(container, context) {
-    insert(this.wrapper, container, context)
+  insert (container, context) {
+    insert(this.root, container, context)
 
     return this
   }

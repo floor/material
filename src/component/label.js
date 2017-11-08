@@ -7,7 +7,7 @@ const prefix = 'material'
  * [initLabel description]
  * @return {?} [description]
  */
-function label (wrapper, text, options) {
+function label (root, text, options) {
   text = text || null
 
   var prefix = options.class || options.prefix
@@ -15,7 +15,7 @@ function label (wrapper, text, options) {
   var label = create('label', prefix + '-label')
   label.textContent = text
 
-  insert(label, wrapper)
+  insert(label, root)
 
   return label
 }

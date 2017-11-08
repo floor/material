@@ -38,7 +38,7 @@ class Component {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
     init(this)
@@ -53,17 +53,17 @@ class Component {
    * Build Method
    * @return {Object} This class instance
    */
-  build(options) {
+  build (options) {
     var tag = options.tag || 'div'
-    this.wrapper = create(tag, options.css)
+    this.root = create(tag, options.css)
 
-    classify(this.wrapper, options)
+    classify(this.root, options)
 
     if (options.container) {
       this.insert(options.container)
     }
 
-    this.emit('built', this.wrapper)
+    this.emit('built', this.root)
 
     return this
   }

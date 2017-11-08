@@ -17,7 +17,7 @@ let defaults = {
   class: 'checkbox',
   type: 'control',
   // modules: [events, control, emitter, attach],
-  build: ['$wrapper.material-checkbox', {},
+  build: ['$root.material-checkbox', {},
     ['input$input', {}],
     ['span$control.checkbox-control']
   ],
@@ -78,13 +78,13 @@ class Checkbox {
    */
   build () {
     this.element = build(this.options.build)
-    this.wrapper = this.element.wrapper
+    this.root = this.element.root
 
     this.element.control.innerHTML = icon
 
     var text = this.options.text || this.options.label
 
-    this.element.label = label(this.wrapper, text, this.options)
+    this.element.label = label(this.root, text, this.options)
 
     this.element.input.setAttribute('type', 'checkbox')
     this.element.input.setAttribute('name', this.options.name)
@@ -93,7 +93,7 @@ class Checkbox {
     if (this.options.disabled) {
       this.disabled = this.options.disabled
       this.element.input.setAttribute('disabled', 'disabled')
-      css.add(this.wrapper, 'is-disabled')
+      css.add(this.root, 'is-disabled')
     }
 
     if (this.options.checked) {
@@ -106,7 +106,7 @@ class Checkbox {
 
     // insert if container options is given
     if (this.options.container) {
-      insert(this.wrapper, this.options.container)
+      insert(this.root, this.options.container)
     }
 
     return this
@@ -143,7 +143,7 @@ class Checkbox {
    * @return {?}           [description]
    */
   insert (container, context) {
-    insert(this.wrapper, container, context)
+    insert(this.root, container, context)
 
     return this
   }

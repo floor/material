@@ -16,7 +16,7 @@ const defaults = {
   tag: 'button',
   build: [],
   events: [
-    ['wrapper.click', '_handleClick']
+    ['root.click', '_handleClick']
   ]
 }
 
@@ -75,9 +75,9 @@ class Button {
     this.element = {}
 
     var tag = this.options.tag || 'div'
-    this.wrapper = create(tag)
+    this.root = create(tag)
 
-    classify(this.wrapper, this.options)
+    classify(this.root, this.options)
 
     this.options.label = this.options.label || this.options.text
 
@@ -86,10 +86,10 @@ class Button {
 
     // insert if container options is given
     if (this.options.container) {
-      insert(this.wrapper, this.options.container)
+      insert(this.root, this.options.container)
     }
 
-    this.emit('built', this.wrapper)
+    this.emit('built', this.root)
 
     return this
   }
@@ -101,7 +101,7 @@ class Button {
    * @return {?}           [description]
    */
   insert (container, context) {
-    insert(this.wrapper, container, context)
+    insert(this.root, container, context)
 
     return this
   }
@@ -111,20 +111,19 @@ class Button {
    * @return {?} [description]
    */
   setup () {
-    this.element.input = this.wrapper
+    this.element.input = this.root
 
     if (this.options.name) {
       // console.log('name', this.options.name);
-      this.wrapper.dataset.name = this.options.name
+      this.root.dataset.name = this.options.name
     }
 
     if (this.options.label) {
-      this.wrapper.title = this.options.label
+      this.root.title = this.options.label
     }
 
-
     if (this.options.content) {
-      this.wrapper.innerHTML = this.options.content
+      this.root.innerHTML = this.options.content
     }
   }
 

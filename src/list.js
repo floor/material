@@ -14,7 +14,7 @@ const defaults = {
   functions: ['render', 'select'],
   target: '.material-item',
   events: [
-    ['wrapper.click', 'handleSelect']
+    ['root.click', 'handleSelect']
   ]
 }
 
@@ -84,11 +84,11 @@ class List {
     // define main tag
     var tag = this.options.tag || 'div'
 
-    this.wrapper = document.createElement(tag)
-    css.add(this.wrapper, 'material-' + this.options.class)
+    this.root = document.createElement(tag)
+    css.add(this.root, 'material-' + this.options.class)
 
     if (options.name) {
-      css.add(this.wrapper, options.class + '-' + options.name)
+      css.add(this.root, options.class + '-' + options.name)
     }
 
     if (this.options.list) {
@@ -96,10 +96,10 @@ class List {
     }
 
     if (this.options.container) {
-      insert(this.wrapper, this.options.container)
+      insert(this.root, this.options.container)
     }
 
-    // this.wrapper.addEventListener("click", function(e) {
+    // this.root.addEventListener("click", function(e) {
     //   // console.log("list", this, e);
     //   // e.target was the clicked element
     // });
@@ -194,7 +194,7 @@ class List {
     }
 
     var where = 'bottom'
-    insert(item.wrapper, this.wrapper, where)
+    insert(item.root, this.root, where)
 
     this.items.push(item)
 
@@ -202,11 +202,11 @@ class List {
   }
 
   insert (container, context) {
-    insert(this.wrapper, container, context)
+    insert(this.root, container, context)
   }
 
   empty () {
-    this.wrapper.innerHTML = ''
+    this.root.innerHTML = ''
     this.items = []
     this.item = null
   }

@@ -22,7 +22,7 @@ class Divider {
    * init
    * @return {Object} The class options
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
     this.init(options)
     this.build()
@@ -35,7 +35,7 @@ class Divider {
    * @param  {?} options [description]
    * @return {?}         [description]
    */
-  init() {
+  init () {
     // merge options
 
     Object.assign(this, insert)
@@ -45,19 +45,19 @@ class Divider {
    * Build function for item
    * @return {Object} This class instance
    */
-  build() {
+  build () {
     // define main tag
 
-    this.wrapper = document.createElement(this.options.tag)
+    this.root = document.createElement(this.options.tag)
 
-    css.add(this.wrapper, this.options.prefix + '-' + this.options.class)
+    css.add(this.root, this.options.prefix + '-' + this.options.class)
 
     if (this.options.type) {
-      css.add(this.wrapper, this.options.class + '-' + this.options.type)
+      css.add(this.root, this.options.class + '-' + this.options.type)
     }
 
     if (this.options.text) {
-      this.wrapper.textContent = this.options.text
+      this.root.textContent = this.options.text
     }
 
     if (this.options.container) {

@@ -20,7 +20,7 @@ let defaults = {
   value: false,
   disabled: false,
   modules: [emitter, control, attach, insert],
-  build: ['$wrapper.material-switch', {},
+  build: ['$root.material-switch', {},
     ['input$input$switch-input', { type: 'checkbox' }],
     ['span$control.switch-control', {},
       ['span$track.switch-track', {},
@@ -51,7 +51,7 @@ class Switch {
   - Component options
    * @return {Object} Class instance
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
     this.init()
@@ -66,7 +66,7 @@ class Switch {
    * @param  {Object} options The class options
    * @return {Object} This class instance
    */
-  init() {
+  init () {
     init(this)
     // init options and merge options to defaults
 
@@ -79,11 +79,11 @@ class Switch {
    * build method
    * @return {Object} The class instance
    */
-  build() {
+  build () {
     this.element = build(this.options.build)
-    this.wrapper = this.element.wrapper
+    this.root = this.element.root
 
-    classify(this.wrapper, this.options)
+    classify(this.root, this.options)
 
     if (this.options.disabled) {
       this.disable()
@@ -114,7 +114,7 @@ class Switch {
    * @param {string} value
    * @return {Object} The class instance
    */
-  set(prop, value) {
+  set (prop, value) {
     switch (prop) {
       case 'value':
         this.setValue(value)
@@ -133,7 +133,7 @@ class Switch {
     return this
   }
 
-  get() {
+  get () {
     return this.value
   }
 
@@ -141,7 +141,7 @@ class Switch {
    * set switch value
    * @param {boolean} value [description]
    */
-  getValue() {
+  getValue () {
     return this.value
   }
 
@@ -149,7 +149,7 @@ class Switch {
    * set switch value
    * @param {boolean} value [description]
    */
-  setValue(value) {
+  setValue (value) {
     if (value) {
       this.check()
     } else {
@@ -161,7 +161,7 @@ class Switch {
    * [toggle description]
    * @return {Object} The class instance
    */
-  toggle() {
+  toggle () {
     if (this.disabled) return this
 
     if (this.value) {
@@ -176,11 +176,11 @@ class Switch {
   /**
    * setTrue
    */
-  check() {
+  check () {
     if (this.disabled) return this
 
     this.value = true
-    css.add(this.wrapper, 'is-checked')
+    css.add(this.root, 'is-checked')
     this.element.input.checked = true
     this.emit('change', this.value)
 
@@ -190,11 +190,11 @@ class Switch {
   /**
    * setFlas
    */
-  unCheck() {
+  unCheck () {
     if (this.disabled) return this
 
     this.value = false
-    css.remove(this.wrapper, 'is-checked')
+    css.remove(this.root, 'is-checked')
     this.element.input.checked = false
     this.emit('change', this.value)
 

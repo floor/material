@@ -72,13 +72,13 @@ class Form {
   build () {
     var tag = this.options.tag || 'div'
 
-    this.wrapper = document.createElement(tag)
-    css.add(this.wrapper, this.options.prefix + '-' + this.options.class)
+    this.root = document.createElement(tag)
+    css.add(this.root, this.options.prefix + '-' + this.options.class)
 
     // complete layout options
-    this.options.wrapper = this.wrapper
+    this.options.root = this.root
 
-    this.layout = new Layout(this.options.layout, this.wrapper)
+    this.layout = new Layout(this.options.layout, this.root)
 
     this._initControls(this.layout.controls)
 
@@ -86,7 +86,7 @@ class Form {
   }
 
   insert (container, context) {
-    insert(this.wrapper, container, context)
+    insert(this.root, container, context)
 
     return this
   }

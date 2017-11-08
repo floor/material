@@ -12,7 +12,7 @@ const defaults = {
   functions: ['render', 'select'],
   target: '.item-tree',
   events: [
-    ['wrapper.click', 'onSelect']
+    ['root.click', 'onSelect']
   ]
 }
 
@@ -31,7 +31,7 @@ class Tree {
    * init
    * @return {Object} The class options
    */
-  constructor(options) {
+  constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
     this.init()
@@ -45,7 +45,7 @@ class Tree {
    * [_initView description]
    * @return  Class instance
    */
-  init() {
+  init () {
     // init this
 
     this.name = this.options.name
@@ -67,7 +67,7 @@ class Tree {
    * @param  {?} functions [description]
    * @return {}           [description]
    */
-  _initFunction(functions) {
+  _initFunction (functions) {
     for (var i = 0; i < functions.length; i++) {
       var name = functions[i]
       if (this.options[name]) {
@@ -81,12 +81,12 @@ class Tree {
    * @param  {Object} options this class options
    * @return {Object} The class instance
    */
-  build() {
+  build () {
     // define main tag
     var tag = this.options.tag || 'div'
 
-    this.wrapper = document.createElement(tag)
-    css.add(this.wrapper, this.options.prefix + '-' + this.options.class)
+    this.root = document.createElement(tag)
+    css.add(this.root, this.options.prefix + '-' + this.options.class)
 
     if (this.options.container) {
       this.insert(this.options.container)
@@ -96,7 +96,7 @@ class Tree {
       this.buildTree(this.options.data)
     }
 
-    // this.wrapper.addEventListener("click", function(e) {
+    // this.root.addEventListener("click", function(e) {
     //   // console.log("list", this, e);
     //   // e.target was the clicked element
     // });
@@ -104,12 +104,12 @@ class Tree {
     return this
   }
 
-  buildTree(data) {
-    this.wrapper.innerHTML = ''
+  buildTree (data) {
+    this.root.innerHTML = ''
 
     var tree = ''
 
-    function checkChildren(parentObj) {
+    function checkChildren (parentObj) {
       var level = (parentObj.path.split('/').length - 1)
 
       if (level > 0) {
@@ -132,12 +132,12 @@ class Tree {
 
     checkChildren(data)
 
-    this.wrapper.innerHTML = tree
+    this.root.innerHTML = tree
 
     return tree
   }
 
-  getOptions() {
+  getOptions () {
     console.log(this.options)
   }
 
@@ -146,7 +146,7 @@ class Tree {
    * @param  {event} e [description]
    * @return {?}   [description]
    */
-  onSelect(e) {
+  onSelect (e) {
     console.log('click', e.target, this.options.target)
     if (e.target && e.target.matches(this.options.target)) {
       console.log('item clicked: ', e.target)
@@ -170,7 +170,7 @@ class Tree {
    * @param  {event} event The caller event
    * @return        [description]
    */
-  select(item, event) {
+  select (item, event) {
     console.log('select', item, event)
     this.item = item
 
@@ -182,7 +182,7 @@ class Tree {
    * @param {string} prop
    * @param {string} value
    */
-  set(prop, value, options) {
+  set (prop, value, options) {
     switch (prop) {
       case 'tree':
         this.setTree(value, options)
@@ -199,7 +199,7 @@ class Tree {
    * @param {Array} list List of info object
    * @return {Object} The class instance
    */
-  setTree(data) {
+  setTree (data) {
     this.buildTree(data)
     return this
   }
@@ -208,22 +208,22 @@ class Tree {
    * [add description]
    * @param {Object} item [description]
    */
-  addItem(item /*, index */ ) {
+  addItem (item /*, index */) {
     if (!item) {
       return
     }
 
     var where = 'bottom'
-    this.insertElement(item.wrapper, this.wrapper, where)
-    // item.insert(this.wrapper, where);
+    this.insertElement(item.root, this.root, where)
+    // item.insert(this.root, where);
     this.items.push(item)
 
     return item
   }
 
-  empty() {
+  empty () {
     console.log('empty')
-    this.wrapper.innerHTML = ''
+    this.root.innerHTML = ''
     this.items = []
     this.item = null
   }
