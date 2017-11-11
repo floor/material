@@ -1,6 +1,7 @@
 'use strict'
 
 // import Component from './component';
+import create from './component/create'
 import insert from './component/insert'
 import css from './module/css'
 
@@ -35,7 +36,7 @@ class Item {
    * init
    * @return {Object} The class options
    */
-  constructor(options) {
+  constructor (options) {
     this.init(options)
     this.build()
 
@@ -47,7 +48,7 @@ class Item {
    * @param  {?} options [description]
    * @return {?}         [description]
    */
-  init(options) {
+  init (options) {
     // merge options
     this.options = Object.assign({}, defaults, options || {})
 
@@ -61,13 +62,13 @@ class Item {
    * Build function for item
    * @return {Object} This class instance
    */
-  build(options) {
+  build (options) {
     options = options || this.options
 
     // define main tag
     var tag = options.tag[options.type] || options.tag.default
 
-    this.wrapper = document.createElement(tag)
+    this.wrapper = create(this.options)
 
     if (options.text) {
       this.set(options.text)
@@ -89,7 +90,7 @@ class Item {
    * @param {string} value The text to set
    * @returns {*}
    */
-  set(value) {
+  set (value) {
     if (value) {
       if (this.wrapper.innerText) {
         this.wrapper.innerText = value
