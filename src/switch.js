@@ -1,7 +1,6 @@
 'use strict'
 
 // import control from '../control';
-import init from './component/init'
 import control from './component/control'
 import build from './element/build'
 import emitter from './module/emitter'
@@ -19,7 +18,6 @@ let defaults = {
   error: false,
   value: false,
   disabled: false,
-  modules: [emitter, control, attach, insert],
   build: ['$root.material-switch', {},
     ['input$input$switch-input', { type: 'checkbox' }],
     ['span$control.switch-control', {},
@@ -36,6 +34,7 @@ let defaults = {
     ['element.input.click', 'toggle'],
     ['element.input.focus', 'focus'],
     ['element.input.blur', 'blur']
+    // ['element.input.keydown', 'keydown']
   ]
 }
 
@@ -52,9 +51,7 @@ class Switch {
    * @return {Object} Class instance
    */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
-
-    this.init()
+    this.init(options)
     this.build()
     this.attach()
 
@@ -66,9 +63,9 @@ class Switch {
    * @param  {Object} options The class options
    * @return {Object} This class instance
    */
-  init () {
-    init(this)
-    // init options and merge options to defaults
+  init (options) {
+    this.options = Object.assign({}, defaults, options || {})
+    Object.assign(this, emitter, control, attach, insert)
 
     this.value = this.options.value
 
@@ -93,17 +90,17 @@ class Switch {
       this.element.input.setAttribute('checked', 'checked')
     }
 
+    this.element.input.setAttribute('aria-label', this.options.name)
+
     let text = this.options.label || this.options.text || ''
 
     this.element.label.textContent = text
-
+    this.element.label.setAttribute('for', this.options.name)
     if (this.value) {
       this.check()
     }
 
-    // insert if container this.options is given
     if (this.options.container) {
-      // console.log(this.name, opts.container);
       this.insert(this.options.container)
     }
   }
@@ -155,50 +152,6 @@ class Switch {
     } else {
       this.unCheck()
     }
-  }
-
-  /**
-   * [toggle description]
-   * @return {Object} The class instance
-   */
-  toggle () {
-    if (this.disabled) return this
-
-    if (this.value) {
-      this.unCheck(true)
-    } else {
-      this.check()
-    }
-
-    return this
-  }
-
-  /**
-   * setTrue
-   */
-  check () {
-    if (this.disabled) return this
-
-    this.value = true
-    css.add(this.root, 'is-checked')
-    this.element.input.checked = true
-    this.emit('change', this.value)
-
-    return this
-  }
-
-  /**
-   * setFlas
-   */
-  unCheck () {
-    if (this.disabled) return this
-
-    this.value = false
-    css.remove(this.root, 'is-checked')
-    this.element.input.checked = false
-    this.emit('change', this.value)
-
-    return this
   }
 }
 

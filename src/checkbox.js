@@ -29,7 +29,8 @@ let defaults = {
     // for accessibility purpose
     // ['element.input.click', 'toggle', {}],
     ['element.input.focus', 'focus'],
-    ['element.input.blur', 'blur']
+    ['element.input.blur', 'blur'],
+    ['element.input.keydown', 'keydown', {}]
   ]
 }
 /**
@@ -88,7 +89,11 @@ class Checkbox {
 
     this.element.input.setAttribute('type', 'checkbox')
     this.element.input.setAttribute('name', this.options.name)
-    this.element.input.setAttribute('value', this.options.value)
+    this.element.input.setAttribute('aria-label', this.options.name)
+
+    if (this.options.value) {
+      this.element.label.setAttribute('value', this.options.value)
+    }
 
     if (this.options.disabled) {
       this.disabled = this.options.disabled
