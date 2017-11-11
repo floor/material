@@ -14,7 +14,7 @@ function label (root, text, options) {
 
   var label = create('label', prefix + '-label')
   label.textContent = text
-
+  label.setAttribute('for', options.name)
   insert(label, root)
 
   return label
