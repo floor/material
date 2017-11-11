@@ -34,7 +34,7 @@ function classify (element, options) {
   }
 
   if (options.name) {
-    // console.log('name', options.name);
+    // console.log('name', options.name)
     element.dataset.name = options.name
   }
 
