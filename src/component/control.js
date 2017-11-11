@@ -2,6 +2,11 @@ import create from '../element/create'
 import css from '../module/css'
 import insert from '../element/insert'
 
+const KEYCODE = {
+  ENTER: 13,
+  SPACE: 32
+}
+
 var control = {
   /**
    * [toggle description]
@@ -9,6 +14,8 @@ var control = {
    */
   toggle () {
     if (this.disabled) return
+
+    this.focus()
 
     if (this.checked) {
       this.check(false)
@@ -110,6 +117,17 @@ var control = {
     this.element.input.removeAttribute('disabled')
     css.remove(this.root, 'is-disabled')
     return this
+  },
+
+  keydown (e) {
+    if (e.altKey) return
+
+    switch (e.keyCode) {
+      case KEYCODE.ENTER:
+      case KEYCODE.SPACE:
+        e.preventDefault()
+        this.toggle(e)
+    }
   },
 
   /**
