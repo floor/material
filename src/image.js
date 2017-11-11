@@ -23,11 +23,7 @@ class Image {
    * @return {Object} The class options
    */
   constructor (options) {
-    // console.log('text options', options);
-
-    this.options = Object.assign({}, defaults, options || {})
-
-    this.init()
+    this.init(options)
     this.build()
 
     return this
@@ -38,7 +34,8 @@ class Image {
    * @param  {?} options [description]
    * @return {?}         [description]
    */
-  init () {
+  init (options) {
+    this.options = Object.assign({}, defaults, options || {})
     Object.assign(this, insert)
   }
 

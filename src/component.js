@@ -1,19 +1,15 @@
 'use strict'
 
-import init from './component/init'
-import classify from './component/classify'
+import create from './component/create'
 import events from './component/events'
 import insert from './component/insert'
-
-import create from './element/create'
 
 import emitter from './module/emitter'
 
 const defaults = {
   prefix: 'material',
   class: 'component',
-  tag: 'div',
-  modules: [emitter, events, insert]
+  tag: 'span'
 }
 
 /**
@@ -39,12 +35,21 @@ class Component {
    * @return {Object} Class instance
    */
   constructor (options) {
+    this.init(options)
+    this.build()
+
+    return this
+  }
+
+  /**
+   * init method
+   * @param  {Object} Options
+   * @return {Object} Instance
+   */
+  init (options) {
     this.options = Object.assign({}, defaults, options || {})
 
-    init(this)
-    this.build(this.options)
-
-    this.emit('ready')
+    Object.assign(this, emitter, events, insert)
 
     return this
   }
@@ -53,17 +58,12 @@ class Component {
    * Build Method
    * @return {Object} This class instance
    */
-  build (options) {
-    var tag = options.tag || 'div'
-    this.root = create(tag, options.css)
+  build () {
+    this.root = create(this.options)
 
-    classify(this.root, options)
-
-    if (options.container) {
-      this.insert(options.container)
+    if (this.options.container) {
+      this.insert(this.options.container)
     }
-
-    this.emit('built', this.root)
 
     return this
   }

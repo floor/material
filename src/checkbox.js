@@ -3,10 +3,12 @@
 import events from './component/events'
 import control from './component/control'
 import label from './component/label'
-import emitter from './module/emitter'
-import attach from './module/attach'
+
 import insert from './element/insert'
 import build from './element/build'
+
+import emitter from './module/emitter'
+import attach from './module/attach'
 import css from './module/css'
 
 import icon from './skin/material/icon/checkbox.svg'
@@ -51,9 +53,7 @@ class Checkbox {
    * @return {Object} Class instance
    */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
-    // init and build
-    this.init()
+    this.init(options)
     this.build()
     this.attach()
 
@@ -65,9 +65,9 @@ class Checkbox {
    * @param  {Object} options The class options
    * @return {Object} This class instance
    */
-  init () {
+  init (options) {
+    this.options = Object.assign({}, defaults, options || {})
     Object.assign(this, events, control, emitter, attach)
-    // init options and merge options to defaults
 
     return this
   }

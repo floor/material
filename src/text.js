@@ -1,16 +1,13 @@
 'use strict'
 
-import init from './component/init'
+import create from './component/create'
 import insert from './component/insert'
-import classify from './component/classify'
-import create from './element/create'
-import css from './module/css'
 
 var defaults = {
   prefix: 'material',
   class: 'text',
-  modules: [insert],
-  tag: {
+  type: 'default',
+  types: {
     default: 'span',
     display4: 'h1',
     display3: 'h1',
@@ -50,35 +47,33 @@ class Text {
    * @return {Object} The class options
    */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
-
-    init(this)
-    this.build(this.options)
+    this.init(options)
+    this.build()
 
     return this
+  }
+
+  init (options) {
+    this.options = Object.assign({}, defaults, options || {})
+
+    Object.assign(this, insert)
   }
 
   /**
    * Build function for item
    * @return {Object} This class instance
    */
-  build (options) {
-    options = options || this.options
+  build () {
+    this.options.tag = this.options.types[this.options.type]
 
-    var tag = options.tag[options.type] || options.tag.default
+    this.root = create(this.options)
 
-    this.root = create(tag, options.prefix + '-' + options.class)
-
-    classify(this.root, this.options)
-
-    if (options.text) {
-      this.set(options.text)
+    if (this.options.text) {
+      this.set(this.options.text)
     }
 
-    if (options.type) { css.add(this.root, options.class + '-' + options.type) }
-
-    if (options.container) {
-      this.insert(options.container)
+    if (this.options.container) {
+      this.insert(this.options.container)
     }
     return this
   }

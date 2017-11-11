@@ -1,10 +1,8 @@
 'use strict'
 
 // import modules
-import init from './component/init'
-import create from './element/create'
+import create from './component/create'
 import insert from './component/insert'
-import classify from './component/classify'
 // import components
 import Layout from './layout'
 
@@ -35,8 +33,7 @@ class Card {
    * @return {Object} The class instance
    */
   build () {
-    this.root = create(this.options.tag)
-    classify(this.root, this.options)
+    this.root = create(this.options)
 
     if (this.options.layout) {
       this.layout = new Layout(this.options.layout, this.root)

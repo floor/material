@@ -1,7 +1,7 @@
 'use strict'
 
+import create from './component/create'
 import insert from './component/insert'
-import css from './module/css'
 
 var defaults = {
   prefix: 'material',
@@ -23,7 +23,6 @@ class Divider {
    * @return {Object} The class options
    */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
     this.init(options)
     this.build()
 
@@ -35,8 +34,8 @@ class Divider {
    * @param  {?} options [description]
    * @return {?}         [description]
    */
-  init () {
-    // merge options
+  init (options) {
+    this.options = Object.assign({}, defaults, options || {})
 
     Object.assign(this, insert)
   }
@@ -46,15 +45,7 @@ class Divider {
    * @return {Object} This class instance
    */
   build () {
-    // define main tag
-
-    this.root = document.createElement(this.options.tag)
-
-    css.add(this.root, this.options.prefix + '-' + this.options.class)
-
-    if (this.options.type) {
-      css.add(this.root, this.options.class + '-' + this.options.type)
-    }
+    this.root = create(this.options)
 
     if (this.options.text) {
       this.root.textContent = this.options.text

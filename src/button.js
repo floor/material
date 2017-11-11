@@ -1,27 +1,25 @@
 'use strict'
 
-import create from './element/create'
-import classify from './component/classify'
-import ripple from './component/ripple'
-import emitter from './module/emitter'
-import insert from './element/insert'
-import attach from './module/attach'
-
-// modules
+import create from './component/create'
 import control from './component/control'
+import ripple from './component/ripple'
+
+import insert from './element/insert'
+
+import emitter from './module/emitter'
+import attach from './module/attach'
 
 const defaults = {
   prefix: 'material',
   class: 'button',
   tag: 'button',
-  build: [],
   events: [
-    ['root.click', '_handleClick']
+    ['root.click', '_clickHandler']
   ]
 }
 
 /**
- * Class acting as a button.
+ * Class that represents a button
  * @class
  * @since 0.0.1
  * @example
@@ -74,17 +72,15 @@ class Button {
   build () {
     this.element = {}
 
-    var tag = this.options.tag || 'div'
-    this.root = create(tag)
-
-    classify(this.root, this.options)
+    this.root = create(this.options)
 
     this.options.label = this.options.label || this.options.text
+
+    this.root.setAttribute('aria-label', this.options.label || this.options.name)
 
     this.label(this.options.label)
     this.icon(this.options.icon)
 
-    // insert if container options is given
     if (this.options.container) {
       insert(this.root, this.options.container)
     }
@@ -95,7 +91,7 @@ class Button {
   }
 
   /**
-   * [insert description]
+   * insert method
    * @param  {?} container [description]
    * @param  {?} context   [description]
    * @return {?}           [description]
@@ -114,13 +110,12 @@ class Button {
     this.element.input = this.root
 
     if (this.options.name) {
-      // console.log('name', this.options.name);
       this.root.dataset.name = this.options.name
     }
 
-    if (this.options.label) {
-      this.root.title = this.options.label
-    }
+    // if (this.options.label) {
+    //   this.root.title = this.options.label
+    // }
 
     if (this.options.content) {
       this.root.innerHTML = this.options.content
@@ -156,7 +151,7 @@ class Button {
    * @param  {event} e
    * @return {void}
    */
-  _handleClick (e) {
+  _clickHandler (e) {
     e.preventDefault()
 
     if (this.disabled === true) return

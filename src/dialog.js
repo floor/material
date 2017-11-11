@@ -26,8 +26,7 @@ class Dialog {
    * @return {Object} Class instance
    */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
-    this.init()
+    this.init(options)
     this.build()
     this.attach()
 
@@ -41,8 +40,9 @@ class Dialog {
    * @param  {Object} options The class options
    * @return {Object} This class instance
    */
-  init () {
-    // init options and merge options to defaults
+  init (options) {
+    // init options
+    this.options = Object.assign({}, defaults, options || {})
 
     // implement modules
     Object.assign(this, events, emitter, attach, insert)
@@ -57,7 +57,6 @@ class Dialog {
    * @return {Object} The class instance
    */
   build () {
-    var tag = this.options.tag || 'div'
     // this.root = new Element(this.options.element);
     this.root = document.createElement(tag)
 
