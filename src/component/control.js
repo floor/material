@@ -127,7 +127,38 @@ var control = {
       case KEYCODE.SPACE:
         e.preventDefault()
         this.toggle(e)
+        break
+      default:
+        break
     }
+  },
+
+  /**
+   * Setter
+   * @param {string} prop
+   * @param {string} value
+   * @return {Object} The class instance
+   */
+  get (prop) {
+    switch (prop) {
+      case 'name':
+        this.getName()
+        break
+      // case 'value':
+      //   this.setValue(prop)
+      //   break
+      // case 'label':
+      //   this.setLabel(prop)
+      //   break
+      default:
+        this.setValue(prop)
+    }
+
+    return this
+  },
+
+  getName () {
+    return this.root.dataset.name
   },
 
   /**
