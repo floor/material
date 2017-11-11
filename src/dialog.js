@@ -14,6 +14,7 @@ import Layout from './layout'
 let defaults = {
   prefix: 'material',
   class: 'dialog',
+  tag: 'div',
   events: [
     ['root.click', 'close']
   ]
@@ -57,15 +58,14 @@ class Dialog {
    * @return {Object} The class instance
    */
   build () {
-    // this.root = new Element(this.options.element);
-    this.root = document.createElement(tag)
+    this.root = document.createElement('div')
 
     css.add(this.root, 'material-dialog')
     if (this.options.css) {
       css.add(this.root, this.options.css)
     }
 
-    this.surface = document.createElement(tag)
+    this.surface = document.createElement('div')
 
     css.add(this.surface, 'dialog-surface')
 
@@ -90,9 +90,13 @@ class Dialog {
       css.remove(this.root, 'dialog-closing')
       css.remove(this.root, 'dialog-show')
     }, delayMillis)
+
+    this.previousActive.focus()
   }
 
   show () {
+    this.previousActive = document.activeElement
+
     this.root.style.display = 'flex'
     // css.add(this.root, 'dialog-showing');
 
@@ -102,6 +106,8 @@ class Dialog {
       css.add(this.root, 'dialog-show')
       // css.remove(this.root, 'dialog-showing');
     }, delayMillis)
+
+    this.root.querySelector('button').focus()
   }
 }
 
