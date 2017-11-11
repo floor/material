@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
     [Component, 'head', { display: 'flex', direction: 'horizontal' },
       [Toolbar, 'toolbar', { flex: 1, display: 'flex', direction: 'horizontal' },
         [Button, 'menu-navi', { icon: iconMenu, type: 'action' }],
-        [Text, 'app-title', { text: 'Material Components' }]
+        [Text, 'app-title', { text: 'Material' }]
       ],
       [Toolbar, 'desk', { display: 'flex', direction: 'horizontal' },
         [Button, 'menu-more', { icon: iconMore, type: 'action' }]
@@ -47,13 +47,13 @@ document.addEventListener('DOMContentLoaded', function () {
     ],
     [Drawer, 'navi', { css: 'drawer-temporary', type: 'temporary', size: '280px' },
       [Component, 'navi-head', { theme: 'dark' },
-        [Text, 'app-title', { text: 'Material Components' }]
+        [Text, 'app-title', { text: 'Components' }]
       ],
       [List, 'navi-list', { theme: 'dark' }]
     ],
     [Container, 'body', { flex: '1' },
       [Container, 'container-components', { },
-        [Text, 'text', { text: 'Material Components', type: 'title' }]
+        [Text, 'text', { text: 'Components', type: 'title' }]
       ],
       // Buttons
       [Card, 'buttons', { },
@@ -74,6 +74,8 @@ document.addEventListener('DOMContentLoaded', function () {
           [Text, 'buttons-title', { text: 'Floating Buttons'}]
         ],
         [Container, 'button-body', {},
+          [Button, 'fifth', { icon: iconStar, type: 'floating', color: 'primary' }],
+          [Button, 'six', { icon: iconHappy, type: 'floating', style: 'mini', color: 'primary' }],
           [Button, 'fifth', { icon: iconStar, type: 'floating', color: 'secondary' }],
           [Button, 'six', { icon: iconHappy, type: 'floating', style: 'mini', color: 'secondary' }]
         ]
