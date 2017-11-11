@@ -35,7 +35,7 @@ import iconHappy from './icon/happy.svg'
 console.log('log')
 
 document.addEventListener('DOMContentLoaded', function () {
-  var schema = [Component, 'demo', { display: 'flex', direction: 'vertical' },
+  var layout = new Layout([Component, 'demo', { display: 'flex', direction: 'vertical' },
     [Component, 'head', { display: 'flex', direction: 'horizontal' },
       [Toolbar, 'toolbar', { flex: 1, display: 'flex', direction: 'horizontal' },
         [Button, 'menu-navi', { icon: iconMenu, type: 'action' }],
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ],
         [Container, 'progress-body', {},
           [Progress, 'progress', { progress: '60%' }],
-          [Progress, 'progress-inderteminate', { type: 'inderteminate' }]
+          [Progress, 'progress-indeterminate', { type: 'indeterminate' }]
         ]
       ],
       [Card, 'sliders', { },
@@ -118,9 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ]
       ]
     ]
-  ]
-
-  var layout = new Layout(schema, document.body)
+  ], document.body)
 
   var moreButton = layout.get('menu-more').on('click', (e) => {
     layout.get('more-menu').show(e)
