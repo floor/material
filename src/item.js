@@ -8,7 +8,8 @@ import css from './module/css'
 var defaults = {
   prefix: 'material',
   class: 'item',
-  tag: {
+  type: 'default',
+  types: {
     default: 'span',
     display4: 'h1',
     display3: 'h1',
@@ -62,16 +63,14 @@ class Item {
    * Build function for item
    * @return {Object} This class instance
    */
-  build (options) {
-    options = options || this.options
-
+  build () {
     // define main tag
-    var tag = options.tag[options.type] || options.tag.default
+    this.options.tag = this.options.types[this.options.type]
 
-    this.wrapper = create(this.options)
+    this.root = create(this.options)
 
-    if (options.text) {
-      this.set(options.text)
+    if (this.options.text) {
+      this.set(this.options.text)
     }
 
     if (this.options.container) {
