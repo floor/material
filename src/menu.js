@@ -19,7 +19,6 @@ const defaults = {
   prefix: 'material',
   class: 'menu',
   tag: 'div',
-  modules: [emitter, events, attach, insert],
   events: [
     ['root.click', 'hide'],
     ['mask.click', 'hide']
@@ -113,6 +112,7 @@ class Menu {
     css.add(this.root, this.options.class + '-show')
     this.position(this.caller)
   }
+
   position () {
     if (!this.caller) return
     var offs = offset(this.caller)
