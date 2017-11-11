@@ -8,7 +8,7 @@ import css from '../module/css'
 
 /**
  * Init component class
- * @param  {element} element The component wrapper element
+ * @param  {element} element The component root element
  * @param  {object} options component class options
  * @return {Instance} The Class instance
  *

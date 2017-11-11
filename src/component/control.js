@@ -25,12 +25,12 @@ var control = {
    */
   check (checked) {
     if (checked) {
-      css.add(this.wrapper, 'is-checked')
+      css.add(this.root, 'is-checked')
       this.element.input.checked = true
       this.checked = true
       this.emit('change', this.checked)
     } else {
-      css.remove(this.wrapper, 'is-checked')
+      css.remove(this.root, 'is-checked')
       this.element.input.checked = false
       this.checked = false
       this.emit('change', this.checked)
@@ -53,7 +53,7 @@ var control = {
 
     this.element.label.textContent = label
 
-    insert(this.element.label, this.wrapper)
+    insert(this.element.label, this.root)
   },
 
   /**
@@ -72,7 +72,7 @@ var control = {
     this.element = this.element || {}
 
     this.element.icon = create('i', this.options.class + '-icon')
-    insert(this.element.icon, this.wrapper, position)
+    insert(this.element.icon, this.root, position)
 
     this.element.icon.innerHTML = icon
   },
@@ -93,14 +93,14 @@ var control = {
       this.element.error.textContent = text
     }
 
-    insert(this.element.error, this.wrapper, 'bottom')
+    insert(this.element.error, this.root, 'bottom')
   },
 
   disable () {
     this.disabled = true
 
     this.element.input.setAttribute('disabled', 'disabled')
-    css.add(this.wrapper, 'is-disabled')
+    css.add(this.root, 'is-disabled')
     return this
   },
 
@@ -108,7 +108,7 @@ var control = {
     this.disabled = false
 
     this.element.input.removeAttribute('disabled')
-    css.remove(this.wrapper, 'is-disabled')
+    css.remove(this.root, 'is-disabled')
     return this
   },
 
@@ -119,7 +119,7 @@ var control = {
   focus () {
     if (this.disabled === true) return this
 
-    css.add(this.wrapper, 'is-focused')
+    css.add(this.root, 'is-focused')
     if (this.element.input !== document.activeElement) { this.element.input.focus() }
     return this
   },
@@ -129,7 +129,7 @@ var control = {
    * @return {?} [description]
    */
   blur () {
-    css.remove(this.wrapper, 'is-focused')
+    css.remove(this.root, 'is-focused')
     return this
   }
 }

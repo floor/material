@@ -40,10 +40,10 @@ class Snackbar {
   build () {
     var tag = this.options.tag || 'div'
 
-    this.wrapper = create(tag)
-    classify(this.wrapper, this.options)
+    this.root = create(tag)
+    classify(this.root, this.options)
 
-    this.layout = new Layout(this.options.layout, this.wrapper)
+    this.layout = new Layout(this.options.layout, this.root)
   }
 
   /**
@@ -52,7 +52,7 @@ class Snackbar {
    */
   show () {
     setTimeout(() => {
-      this.wrapper.classList.add('show')
+      this.root.classList.add('show')
     }, 10)
 
     if (this.options.delay) {
@@ -63,7 +63,7 @@ class Snackbar {
   }
 
   hide () {
-    this.wrapper.classList.remove('show')
+    this.root.classList.remove('show')
   }
 }
 

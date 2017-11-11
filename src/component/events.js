@@ -6,7 +6,7 @@ export default {
    * @param {Function} fn    [description]
    */
   addEvent (event, fn) {
-    var element = this.wrapper
+    var element = this.root
     // avoid memory overhead of new anonymous functions for every event handler that's installed
     // by using local functions
     function listenHandler (e) {
@@ -45,7 +45,7 @@ export default {
    * @return {Object}         [description]
    */
   removeEvent (event, fn) {
-    var element = this.wrapper
+    var element = this.root
 
     if (element.removeEventListener) {
       element.removeEventListener(event, fn, false)

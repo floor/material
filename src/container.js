@@ -1,18 +1,13 @@
 'use strict'
 
-import create from './element/create'
-import css from './module/css'
+import create from './component/create'
 import insert from './element/insert'
 import emitter from './module/emitter'
 
 const defaults = {
   prefix: 'material',
   class: 'container',
-  type: null,
-  element: {
-    tag: 'span',
-    type: null
-  }
+  tag: 'div'
 }
 
 /**
@@ -30,8 +25,7 @@ class Container {
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
-  constructor(options) {
-    this.options = Object.assign({}, defaults, options || {})
+  constructor (options) {
     // init and build
     this.init(options)
     this.build()
@@ -44,13 +38,9 @@ class Container {
    * @params {Object} options The instance options
    * @return {Object} This class instance
    */
-  init(options) {
-    this.options.name = this.options.name
-
-    // implement modules
+  init (options) {
+    this.options = Object.assign({}, defaults, options || {})
     Object.assign(this, emitter)
-
-    // this.controller = controller;
 
     return this
   }
@@ -59,29 +49,18 @@ class Container {
    * [build description]
    * @return {Object} This class  instance
    */
-  build(props) {
-    var tag = this.options.tag || 'div'
-
-    this.wrapper = create(tag, this.options.prefix + '-' + this.options.class)
-
-    if (this.options.name) {
-      css.add(this.wrapper, this.options.class + '-' + this.options.name)
-    }
-
-    if (this.options.css) {
-      css.add(this.wrapper, this.options.css)
-    }
+  build () {
+    this.root = create(this.options)
 
     if (this.options.container) {
-      // console.log(this.options.name, opts.container);
-      insert(this.wrapper, this.options.container)
+      insert(this.root, this.options.container)
     }
 
     return this
   }
 
-  insert(container, context) {
-    insert(this.wrapper, container, context)
+  insert (container, context) {
+    insert(this.root, container, context)
     return this
   }
 }

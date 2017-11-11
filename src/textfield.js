@@ -64,26 +64,26 @@ class Textfield {
   build () {
     // create a new div as input element
     var tag = this.options.tag || 'div'
-    this.wrapper = create(tag, this.options.prefix + '-' + this.options.class)
+    this.root = create(tag, this.options.prefix + '-' + this.options.class)
 
     this.buildLabel()
     this.buildInput()
     this.buildUnderline()
 
     if (this.disabled) {
-      css.add(this.wrapper, 'is-disabled')
+      css.add(this.root, 'is-disabled')
     }
 
     // insert if container this.options is given
     if (this.options.container) {
       // console.log(this.name, opts.container);
-      insert(this.wrapper, this.options.container)
+      insert(this.root, this.options.container)
     }
   }
 
   buildLabel () {
     this.label = create('label', this.options.class + '-label')
-    insert(this.label, this.wrapper)
+    insert(this.label, this.root)
 
     if (this.options.label !== false) {
       this.setLabel()
@@ -97,10 +97,10 @@ class Textfield {
   buildInput () {
     this.input = create('input', this.options.class + '-input')
     this.input.setAttribute('type', 'text')
-    insert(this.input, this.wrapper)
+    insert(this.input, this.root)
 
     if (!this.options.value) {
-      css.add(this.wrapper, 'is-empty')
+      css.add(this.root, 'is-empty')
     }
 
     if (this.readonly) {
@@ -117,7 +117,7 @@ class Textfield {
    */
   buildUnderline () {
     this.underline = create('span', this.options.class + '-underline')
-    insert(this.underline, this.wrapper)
+    insert(this.underline, this.root)
   }
 
   /**
@@ -198,9 +198,9 @@ class Textfield {
     this.input.value = value
 
     if (value) {
-      css.remove(this.wrapper, 'is-empty')
+      css.remove(this.root, 'is-empty')
     } else {
-      css.add(this.wrapper, 'is-empty')
+      css.add(this.root, 'is-empty')
     }
 
     this.emit('change', value)
@@ -212,11 +212,11 @@ class Textfield {
    */
   setState (state) {
     if (this.state) {
-      css.remove(this.wrapper, 'state-' + this.state)
+      css.remove(this.root, 'state-' + this.state)
     }
 
     if (state) {
-      css.add(this.wrapper, 'state-' + state)
+      css.add(this.root, 'state-' + state)
     }
 
     this.state = state
@@ -266,9 +266,9 @@ class Textfield {
     // console.log('_handleInputKeyPress', e);
 
     if (this.get('value') === '') {
-      css.add(this.wrapper, 'is-empty')
+      css.add(this.root, 'is-empty')
     } else {
-      css.remove(this.wrapper, 'is-empty')
+      css.remove(this.root, 'is-empty')
     }
 
     this.emit('change', this.getValue())
@@ -289,7 +289,7 @@ class Textfield {
   }
 
   insert (container, context) {
-    insert(this.wrapper, container, context)
+    insert(this.root, container, context)
   }
 }
 

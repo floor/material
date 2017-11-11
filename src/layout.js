@@ -6,7 +6,6 @@ import insert from './element/insert'
  *
  */
 class Layout {
-
   /**
    * [constructor description]
    * @param  {?} schema    [description]
@@ -58,7 +57,7 @@ class Layout {
         }
 
         if (component) {
-          this.display(component.wrapper, options)
+          this.display(component.root, options)
           this.style(component, options)
         }
 
@@ -104,22 +103,22 @@ class Layout {
     // console.log('component', component);
 
     if (options.flex) {
-      css.add(component.wrapper, 'flex-' + options.flex)
+      css.add(component.root, 'flex-' + options.flex)
     } else {
       var size = options.size
       if (options.size && options.width) {
-        component.wrapper.width = size + 'px'
+        component.root.width = size + 'px'
       } else if (options.size && options.height) {
-        component.wrapper.height = size + 'px'
+        component.root.height = size + 'px'
       }
     }
 
     if (options.hide) {
-      component.wrapper.display = 'none'
+      component.root.display = 'none'
     }
 
     if (options.theme) {
-      css.add(component.wrapper, 'theme' + '-' + options.theme)
+      css.add(component.root, 'theme' + '-' + options.theme)
     }
   }
 

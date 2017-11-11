@@ -7,7 +7,7 @@ export default {
    */
   add (element, event, fn) {
     // check if element is a compoenent
-    element = element.wrapper || element
+    element = element.root || element
 
     // avoid memory overhead of new anonymous functions for every event handler that's installed
     // by using local functions
@@ -47,7 +47,7 @@ export default {
    * @return {Object}         [description]
    */
   remove (element, event, fn) {
-    element = element.wrapper || element
+    element = element.root || element
 
     if (element.removeEventListener) {
       element.removeEventListener(event, fn, false)

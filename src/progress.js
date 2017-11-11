@@ -28,7 +28,7 @@ class Spinner {
    * init
    * @return {Object} The class options
    */
-  constructor(options) {
+  constructor (options) {
     this.init(options)
     this.build()
 
@@ -40,7 +40,7 @@ class Spinner {
    * @param  {?} options [description]
    * @return {?}         [description]
    */
-  init(options) {
+  init (options) {
     // merge options
     this.options = Object.assign({}, defaults, options || {})
 
@@ -54,32 +54,31 @@ class Spinner {
    * Build function for item
    * @return {Object} This class instance
    */
-  build(options) {
-
-    this.wrapper = create(this.options.tag)
-    classify(this.wrapper, this.options)
+  build (options) {
+    this.root = create(this.options.tag)
+    classify(this.root, this.options)
 
     if (this.options.type === 'circular') {
-      this.wrapper.innerHTML = this.options.circular
+      this.root.innerHTML = this.options.circular
     } if (this.options.type === 'indeterminate') {
       this.bar = create('div', 'bar')
-      insert(this.bar, this.wrapper)
+      insert(this.bar, this.root)
     } else {
       this.bar = create('div', 'bar')
-      insert(this.bar, this.wrapper)
+      insert(this.bar, this.root)
 
       this.set(this.options.progress)
     }
 
     if (this.options.container) {
-      insert(this.wrapper, this.options.container)
+      insert(this.root, this.options.container)
     }
 
-    return this;
+    return this
   }
 
-  set(progress) {
-    this.bar.setAttribute('style', 'width: '+ progress)
+  set (progress) {
+    this.bar.setAttribute('style', 'width: ' + progress)
   }
 };
 

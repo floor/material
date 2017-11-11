@@ -18,7 +18,7 @@ export default {
    * @return {?}           [description]
    */
   insert (container, context) {
-    var element = this.wrapper
+    var element = this.root
 
     this.insertElement(element, container, context)
 
@@ -35,8 +35,8 @@ export default {
    * @return {?}           [description]
    */
   insertElement (element, container, context) {
-    if (container && container.wrapper) {
-      container = container.wrapper
+    if (container && container.root) {
+      container = container.root
     }
 
     this.container = container

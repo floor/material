@@ -74,12 +74,6 @@ class Item {
       this.set(options.text)
     }
 
-    css.add(this.wrapper, this.options.prefix + '-' + this.options.class)
-
-    if (options.type) {
-      css.add(this.wrapper, this.options.class + '-' + options.type)
-    }
-
     if (this.options.container) {
       this.insert(this.options.container)
     }
@@ -92,10 +86,10 @@ class Item {
    */
   set (value) {
     if (value) {
-      if (this.wrapper.innerText) {
-        this.wrapper.innerText = value
+      if (this.root.innerText) {
+        this.root.innerText = value
       } else {
-        this.wrapper.textContent = value
+        this.root.textContent = value
       }
 
       return this

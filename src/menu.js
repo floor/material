@@ -21,7 +21,7 @@ const defaults = {
   tag: 'div',
   modules: [emitter, events, attach, insert],
   events: [
-    ['wrapper.click', 'hide'],
+    ['root.click', 'hide'],
     ['mask.click', 'hide']
   ]
 }
@@ -67,14 +67,14 @@ class Menu {
    * @return {Object} This class instance
    */
   build () {
-    this.wrapper = create(this.options.tag, this.options.css)
+    this.root = create(this.options.tag, this.options.css)
     this.mask = create(this.options.tag, this.options.class + '-mask')
 
-    classify(this.wrapper, this.options)
+    classify(this.root, this.options)
 
     if (this.options.list) {
       this.list = new List({
-        // wrapper: this.wrapper,
+        // root: this.root,
         list: this.options.list,
         target: '.material-item',
         height: 600,
@@ -83,17 +83,17 @@ class Menu {
           this.selected = item
           this.hide()
         }
-      }).insert(this.wrapper)
+      }).insert(this.root)
     }
 
-    this.emit('built', this.wrapper)
+    this.emit('built', this.root)
 
     return this
   }
 
   insert () {
     insert(this.mask, document.body)
-    insert(this.wrapper, document.body)
+    insert(this.root, document.body)
   }
 
   setup () {
@@ -110,23 +110,23 @@ class Menu {
 
     if (e) this.caller = e.target
 
-    css.add(this.wrapper, this.options.class + '-show')
+    css.add(this.root, this.options.class + '-show')
     this.position(this.caller)
   }
   position () {
     if (!this.caller) return
     var offs = offset(this.caller)
 
-    var offsw = offset(this.wrapper)
+    var offsw = offset(this.root)
 
-    this.wrapper.style.top = offs.top + 'px'
-    this.wrapper.style.left = offs.left - offsw.width + offs.width + 'px'
-    // this.wrapper.style.right = offs.right + offs.width + offsw.width  + 'px'
+    this.root.style.top = offs.top + 'px'
+    this.root.style.left = offs.left - offsw.width + offs.width + 'px'
+    // this.root.style.right = offs.right + offs.width + offsw.width  + 'px'
   }
 
   hide () {
     console.log('hide')
-    css.remove(this.wrapper, this.options.class + '-show')
+    css.remove(this.root, this.options.class + '-show')
     css.remove(this.mask, 'mask-show')
   }
 }
