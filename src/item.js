@@ -1,9 +1,7 @@
 'use strict'
 
-// import Component from './component';
 import create from './component/create'
 import insert from './component/insert'
-import css from './module/css'
 
 var defaults = {
   prefix: 'material',
