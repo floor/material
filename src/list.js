@@ -147,7 +147,7 @@ class List {
     } else {
       item = new Item({
         name: info.name,
-        text: info.name
+        text: info.text || info.name
       })
     }
 
