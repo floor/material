@@ -33,6 +33,10 @@ function classify (element, options) {
     css.add(element, options.css)
   }
 
+  if (options.elevation) {
+    css.add(element, 'elevation-z' + options.elevation)
+  }
+
   if (options.name) {
     // console.log('name', options.name)
     element.dataset.name = options.name
