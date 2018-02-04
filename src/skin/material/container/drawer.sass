@@ -1,12 +1,15 @@
 .material-drawer
-  z-index: 16
+  z-index: 8
   position: relative
   will-change: transform
-  transition: 0.2s cubic-bezier(0.4, 0, 0.6, 1)
+  transition: 0.1s cubic-bezier(0.4, 0, 0.6, 1)
+  transform: translateX(calc(100% - 20px))
+  background-color: rgba(255, 255, 255, .3)
+  width: 0
 
   &.show
     transform: translateX(0)
-    transition: 0.3s cubic-bezier(0, 0, 0.2, 1)
+    transition: 0.2s cubic-bezier(0, 0, 0.2, 1)
 
 .material-drawer.drawer-temporary
   position: fixed
@@ -18,7 +21,7 @@
 
   &.show
     transform: translateX(0)
-    transition: 0.3s cubic-bezier(0, 0, 0.2, 1)
+    transition: 0.2s cubic-bezier(0, 0, 0.2, 1)
 
   &::before
     position: absolute

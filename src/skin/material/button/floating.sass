@@ -1,0 +1,82 @@
+
+// type floating
+.material-button.type-floating
+  //background-color: #E0E0E0;
+  min-width: 56px
+  min-height: 56px
+  transition: box-shadow .2s
+  box-shadow: none
+  border-radius: 28px
+  padding: 6px
+  box-shadow: 0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 6px 10px 0px rgba(0, 0, 0, 0.14), 0px 1px 18px 0px rgba(0, 0, 0, 0.12)
+
+  .button-label
+    display: none
+
+  .button-icon
+    padding: 0
+    height: 24px
+    width: 24px
+    margin-left: 0
+    svg
+      fill: $default-color-text
+
+  &:hover
+    //background-color: #E0E0E0;
+
+  &:focus
+    background-color: darken(rgba(255, 255, 255, 0.95), 5%)
+
+  &:active
+    box-shadow: 0px 7px 8px -4px rgba(0, 0, 0, 0.2), 0px 12px 17px 2px rgba(0, 0, 0, 0.14), 0px 5px 22px 4px rgba(0, 0, 0, 0.12)
+
+  .material-ripple
+    background-color: rgba(255, 255, 255, 1)
+
+  &.primary-color
+    background-color: $primary-color
+    color: $primary-color-text
+    .button-icon
+      svg
+        fill: $primary-color-text
+
+    &:focus
+      background-color: lighten($primary-color, 10%)
+      color: $primary-color-text
+
+  &.secondary-color
+    background-color: $secondary-color
+    color: $secondary-color-text
+    .button-icon
+      svg
+        fill: $secondary-color-text    
+
+    &:focus
+      background-color: lighten($secondary-color, 5%)
+      color: $secondary-color-text
+
+
+
+// theme
+.dark-theme .material-button.type-floating,
+.material-button.type-floating.dark-theme
+
+  //background-color: rgba(255, 255, 255, 0.95)
+  color: $primary-color-text-dark
+
+  &.primary-color
+    background-color: $primary-color-dark
+    color: $primary-color-text-dark
+    .button-icon
+      svg
+        fill: $primary-color-text-dark
+
+  &.secondary-color
+    background-color: $secondary-color-dark
+    color: $secondary-color-text-dark
+    .button-icon
+      svg
+        fill: $secondary-color-text-dark
+
+
+
