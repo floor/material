@@ -94,6 +94,6 @@ class Item {
 
     return this
   }
-};
+}
 
 export default Item
