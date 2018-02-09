@@ -47,7 +47,7 @@
     pointer-events: none
     z-index: 1
     position: absolute
-    background-color: rgba(0, 0, 0, 0.3)
+    background-color: rgba(0, 0, 0, 0.1)
     height: 5px
     width: 5px
     border-radius: 50%
@@ -97,9 +97,9 @@
   &.primary-color
     color: $primary-color
     &:focus
-      background-color: rgba($primary-color, .10)
+      background-color: rgba($primary-color, .1)
       &:hover
-        background-color: rgba($primary-color, .10)
+        background-color: rgba($primary-color, .1)
     &:hover
       background-color: rgba($primary-color, .05)
 
@@ -108,7 +108,7 @@
         fill: $primary-color
 
     .material-ripple
-      background-color: $primary-color
+      background-color: rgba($primary-color, .1)
     
     
 
@@ -118,7 +118,7 @@
       svg
         fill: $secondary-color
     .material-ripple
-      background-color: $secondary-color
+      background-color: rgba($secondary-color, .1)
     &:focus
       background-color: rgba($secondary-color, .10)
       &:hover
@@ -130,50 +130,47 @@
 .dark-theme .material-button,
 .material-button.dark-theme
   color: $default-color-text-dark
-
   .button-icon
     svg
       fill: $default-color-text-dark
-
-  > .material-ripple
-    background-color: $default-color-text-dark
-
+  .material-ripple
+    background-color: rgba($default-color-text-dark, .1)
   &:focus
       background-color: rgba($default-color-text-dark, .1)
-      &:active
-        background-color: transparent
+      &:hover
+        background-color: rgba($default-color-text-dark, .1)
+  &:hover
+    background-color: rgba($default-color-text-dark, .05)
 
+  // primary color
   &.primary-color
     //background-color: $primary-color;
     color: $primary-color-dark
     .button-icon
       svg
         fill: $primary-color-dark
-
+    .material-ripple
+      background-color: rgba($primary-color-dark, .3)
     &:focus
       background-color: rgba($primary-color-dark, .2)
-      &:active
+      &:hover
         background-color: rgba($primary-color-dark, .2)
-
     &:hover
       background-color: rgba($primary-color-dark, .1)
 
-    > .material-ripple
-      background-color: $primary-color-dark
-
+  // secondary color
   &.secondary-color
     color: $secondary-color-dark
     .button-icon
       svg
         fill: $secondary-color-dark
+    .material-ripple
+      background-color: rgba($secondary-color-dark, .3)
 
     &:focus
       background-color: rgba($secondary-color-dark, .2)
-      &:active
+      &:hover
         background-color: rgba($secondary-color-dark, .2)
 
     &:hover
       background-color: rgba($secondary-color-dark, .1)
-
-    > .material-ripple
-      background-color: $secondary-color-dark
