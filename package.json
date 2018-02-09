@@ -1,7 +1,7 @@
 {
   "name": "material",
-  "version": "0.1.1",
-  "description": "Object Oriented User Interface Components",
+  "version": "0.2.6",
+  "description": "A lightweight implementation of Material Design Components - ES6",
   "main": "index.js",
   "repository": {
     "type": "git",
@@ -14,42 +14,37 @@
   },
   "homepage": "https://github.com/codepolitan/material",
   "keywords": [
-    "material",
-    "user",
-    "interface"
+    "lightweight material design component es6 es2015 vanilla javascript"
   ],
   "devDependencies": {
-    "babelify": "^7.2.0",
-    "exorcist": "^0.4.0",
-    "gulp": "^3.9.0",
-    "gulp-browserify": "^0.5.1",
-    "gulp-concat": "^2.6.0",
-    "gulp-hub": "^0.7.1",
-    "gulp-less": "^3.0.5",
-    "gulp-sourcemaps": "^1.6.0",
-    "gulp-util": "^3.0.7",
+    "babel-core": "^6.26.0",
+    "babel-eslint": "^8.0.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-es2015-rollup": "^3.0.0",
+    "npm-run-all": "^4.1.1",
     "require-dir": "^0.3.0",
-    "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0"
+    "rollup": "^0.49.2",
+    "rollup-plugin-babel": "^3.0.2",
+    "rollup-plugin-commonjs": "^8.2.0",
+    "rollup-plugin-eslint": "^4.0.0",
+    "rollup-plugin-html": "^0.2.1",
+    "rollup-plugin-json": "^2.3.0",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-npm": "^2.0.0",
+    "rollup-plugin-replace": "^1.1.1",
+    "rollup-plugin-strip": "^1.1.1",
+    "rollup-plugin-svg": "^1.0.1",
+    "rollup-plugin-uglify": "^2.0.1",
+    "rollup-plugin-uglify-es": "0.0.1",
+    "standard": "^10.0.3",
+    "uglify-es": "^3.0.28",
+    "uglify-js": "github:mishoo/UglifyJS2#harmony-v2.8.0"
   },
   "scripts": {
-    "build-material": "browserify -r material -t [ babelify --presets es2015 ] --debug | exorcist build/material.js.map > build/material.js",
-    "build-demo": "browserify dist/demo/app.js --debug -o 'exorcist build/demo.js.map > build/demo.js' -v",
-    "build-css": "lessc lib/skin/material/material.less > dist/skin/material.css",
-    "watch-demo": "watchify --debug dist/demo/main.js -o 'exorcist build/demo.js.map > build/demo.js' -v",
-    "watch": "npm run watch-lib & npm run watch-css",
+    "dev": "rollup -c --watch",
+    "reload": "livereload 'dist/' -d",
+    "watch": "npm-run-all --parallel reload dev",
+    "docs": "jsdoc src -r -d docs",
     "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "browserify": {
-    "transform": [
-      [
-        "babelify",
-        {
-          "presets": [
-            "es2015"
-          ]
-        }
-      ]
-    ]
   }
 }
