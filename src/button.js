@@ -14,7 +14,7 @@ const defaults = {
   class: 'button',
   tag: 'button',
   events: [
-    ['root.click', '_clickHandler']
+    ['root.click', 'handleClick']
   ]
 }
 
@@ -151,7 +151,7 @@ class Button {
    * @param  {event} e
    * @return {void}
    */
-  _clickHandler (e) {
+  handleClick (e) {
     e.preventDefault()
 
     if (this.disabled === true) return
