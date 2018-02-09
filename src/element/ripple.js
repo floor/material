@@ -65,6 +65,7 @@ function destroy (ripple) {
 
 /**
  * Get ripple final coordinates
+ * @param  {Object} offset
  * @return {Object} Size and position
  */
 function coordinate (offset) {
