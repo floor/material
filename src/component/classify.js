@@ -21,7 +21,7 @@ function classify (element, options) {
   }
 
   if (options.type) {
-    css.add(element, options.class + '-' + options.type)
+    //css.add(element, options.class + '-' + options.type)
     css.add(element, 'type-' + options.type)
   }
 
