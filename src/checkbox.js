@@ -92,7 +92,7 @@ class Checkbox {
     this.element.input.setAttribute('aria-label', this.options.name)
 
     if (this.options.value) {
-      this.element.label.setAttribute('value', this.options.value)
+      this.element.input.setAttribute('value', this.options.value)
     }
 
     if (this.options.disabled) {

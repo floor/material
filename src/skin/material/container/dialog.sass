@@ -27,14 +27,10 @@
     max-height: 600px
     display: flex
     opacity: 0
-
-    //margin-top: 200px;
     overflow: hidden
     border-radius: 2px
+    background-color: $background-color
     overflow: scroll
-    background-color: rgb(255, 255, 255)
-    background-color: var(--mdc-theme-background, #fff)
-    -webkit-box-shadow: 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14), 0px 9px 46px 8px rgba(0, 0, 0, 0.12)
     box-shadow: 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14), 0px 9px 46px 8px rgba(0, 0, 0, 0.12)
     transform: translateY(150px) scale(0.8)
 
@@ -114,3 +110,8 @@
 
     .dialog-surface
       width: 600px
+
+.dark-theme .material-dialog,
+.material-dialog.dark-theme
+  .dialog-surface
+    background-color: $background-color-dark

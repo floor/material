@@ -1,11 +1,63 @@
 .material-toolbar
   display: flex
   flex-direction: row
-
-  //border-top: 1px solid rgba(0, 0, 0, 0.1);
+  
   > *
     &:first-child
       margin-left: 0
 
     &:last-child
       margin-right: 0
+
+  &.type-app
+    z-index: 3
+    flex: none
+    display: flex
+    flex-direction: row
+    flex-wrap: nowrap
+    background-color: $primary-color
+    padding: 14px 16px
+    transition: .3s
+
+    >.material-text
+      flex: 1
+      display: inline-block
+      font-size: 1.3rem
+      font-weight: 300
+      line-height: 2.3rem
+      color: $primary-color-text
+      padding: 0
+      margin-left: 16px
+      overflow: hidden
+      white-space: nowrap
+      text-overflow: ellipsis
+
+    >.material-checkbox
+      padding: 0
+      .checkbox-control
+        height: 36px
+        width: 36px
+        margin: 0
+        .checkbox-icon
+          border: 2px solid rgba(255, 255, 255, 0.95)
+      .checkbox-label
+        color: $primary-color-text
+        padding: 10px 0 6px
+
+
+    .material-button
+      .button-icon
+        svg
+          fill: $primary-color-text
+
+@media only screen and (max-width: 768px)
+  .material-toolbar
+    &.type-app
+      z-index: 3
+      flex: none
+      display: flex
+      flex-direction: row
+      flex-wrap: nowrap
+      background-color: $primary-color
+      padding: 10px 16px
+    

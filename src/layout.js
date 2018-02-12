@@ -13,6 +13,7 @@ class Layout {
    * @return {?}           [description]
    */
   constructor (schema, container) {
+    //console.log('layout', schema);
     this.component = this.create(schema, container)
 
     return this

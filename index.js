@@ -8,6 +8,7 @@ import Dialog from 'material/src/dialog'
 import Divider from 'material/src/divider'
 import Drawer from 'material/src/drawer'
 import Form from 'material/src/form'
+import Icon from 'material/src/icon'
 import Image from 'material/src/image'
 import Item from 'material/src/item'
 import Layout from 'material/src/layout'
@@ -22,6 +23,7 @@ import Text from 'material/src/text'
 import Textfield from 'material/src/textfield'
 import Toolbar from 'material/src/toolbar'
 import View from 'material/src/view'
+import Tree from 'material/src/tree'
 
 export {
   Button,
@@ -44,6 +46,8 @@ export {
   Text,
   Textfield,
   Toolbar,
+  Tree,
+  Tabs,
   View,
   Tabs,
   Snackbar,

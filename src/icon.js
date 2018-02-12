@@ -1,39 +1,23 @@
 'use strict'
 
-import Layout from './layout'
-
-import create from './component/create'
 import insert from './component/insert'
-
+import css from './module/css'
 
 var defaults = {
   prefix: 'material',
-  class: 'item',
-  type: 'default',
-  types: {
-    default: 'span',
-    display4: 'h1',
-    display3: 'h1',
-    display2: 'h1',
-    display1: 'h1',
-    headline: 'h1',
-    title: 'h2',
-    subheading2: 'h3',
-    subheading1: 'h4',
-    body: 'p',
-    body2: 'aside',
-    caption: 'span'
-  }
+  class: 'icon',
+  tag: 'div'
 }
 
 /**
- * The class represents an item ie for list
+ * The item class is used for example as item list
  *
  * @class
+ * @extends {Component}
  * @return {Object} The class instance
  * @example new Item(object);
  */
-class Item {
+class Icon {
   /**
    * init
    * @return {Object} The class options
@@ -51,12 +35,7 @@ class Item {
    * @return {?}         [description]
    */
   init (options) {
-    // merge options
     this.options = Object.assign({}, defaults, options || {})
-
-    // define class
-
-    // assign modules
     Object.assign(this, insert)
   }
 
@@ -64,22 +43,28 @@ class Item {
    * Build function for item
    * @return {Object} This class instance
    */
-  build () {
-    // define main tag
-    this.options.tag = this.options.types[this.options.type]
+  build (options) {
+    options = options || this.options
 
-    this.root = create(this.options)
+    var tag = options.tag || 'img'
 
-    if (this.options.text) {
-      this.set(this.options.text)
+
+    var position = 'top'
+    if (this.options.type === 'text-icon') {
+      position = 'bottom'
     }
 
-    if (this.options.layout) {
-      this.layout = new Layout(this.options.layout, this.root)
-    } else {
-      if (this.options.container) {
-        this.insert(this.options.container)
-      }
+    this.element = this.element || {}
+
+    this.root = document.createElement(tag)
+    css.add(this.root, this.options.prefix + '-' + this.options.class)
+
+
+    if (options.css) { css.add(this.root, options.css) }
+    // css.add(this.root, this.options.class + '-adjust');
+
+    if (this.options.container) {
+      this.insert(this.options.container)
     }
   }
 
@@ -103,4 +88,4 @@ class Item {
   }
 }
 
-export default Item
+export default Icon

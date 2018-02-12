@@ -21,7 +21,7 @@ function classify (element, options) {
   }
 
   if (options.type) {
-    css.add(element, options.class + '-' + options.type)
+    //css.add(element, options.class + '-' + options.type)
     css.add(element, 'type-' + options.type)
   }
 
@@ -31,6 +31,10 @@ function classify (element, options) {
 
   if (options.css) {
     css.add(element, options.css)
+  }
+
+  if (options.elevation) {
+    css.add(element, 'elevation-z' + options.elevation)
   }
 
   if (options.name) {

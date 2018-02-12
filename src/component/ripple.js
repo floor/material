@@ -18,11 +18,16 @@ function init (instance) {
   })
 }
 
+/**
+ * this function set the event listener
+ * @param {HTMLElement} container [description]
+ */
 function set (container) {
   container.addEventListener('mousedown', (e) => {
     show(e)
   })
 }
+
 /**
  * show method
  * @param  {event} e The event related to the the touch
@@ -43,7 +48,7 @@ function show (e) {
 
   ripple.style.left = initial.left
   ripple.style.top = initial.top
-  ripple.style.opacity = defaults.opacity[1]
+  //ripple.style.opacity = defaults.opacity[1]
   ripple.style.transition = defaults.transition
 
   insert(ripple, container, 'top')
@@ -54,7 +59,7 @@ function show (e) {
     ripple.style.top = end.top
     ripple.style.width = end.size
     ripple.style.height = end.size
-    ripple.style.opacity = defaults.opacity[1]
+    //ripple.style.opacity = defaults.opacity[1]
   }, 1)
 
   document.body.onmouseup = () => {
@@ -80,16 +85,12 @@ function destroy (ripple) {
  * Get ripple final coordinates
  * @return {Object} Size and position
  */
-function coordinate (offset) {
-  var size = offset.width
-  var top = -offset.height / 2
+function coordinate (o) {
+  var size = o.width
+  var top = -o.height / 2
 
-  if (offset.width > offset.height) {
-    size = offset.width
-    top = -(offset.width - offset.height / 2)
-  } else if (offset.width < offset.height) {
-    size = offset.height
-    top = (offset.width - offset.height) / 2
+  if (o.width > o.height) {
+    top = -(o.width - o.height / 2)
   }
 
   return {

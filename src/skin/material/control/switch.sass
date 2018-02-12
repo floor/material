@@ -62,7 +62,7 @@
         box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24), 0 0 2px 0 rgba(0, 0, 0, 0.12)
         transition: 0.2s cubic-bezier(0.46, 0, 0.24, 1)
 
-        &::before
+        &::after
           position: absolute
           top: -14px
           left: -14px
@@ -83,16 +83,16 @@
 
   &.is-checked
     .switch-track
-      background-color: lighten($primary-color, 20%)
+      background-color: rgba($secondary-color, .3)
 
       .switch-knob
-        background-color: $primary-color
+        background-color: $secondary-color
         left: 15px
 
   &.is-focused
     .switch-track
       .switch-knob
-        &::before
+        &::after
           transition: .2s
           position: absolute
           top: -14px
@@ -120,7 +120,7 @@
         background-color: rgba(34, 31, 31, 0.1)
 
         .switch-knob
-          background-color: rgba(241, 241, 241, 1)
+          background-color: rgb(189, 189, 189)
           box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.12), 0 0 1px 0 rgba(0, 0, 0, 0.06)
 
 .dark-theme
@@ -131,11 +131,11 @@
 
     &.is-checked
       .switch-track
-        background-color: lighten($primary-color, 20%)
+        background-color: rgba($secondary-color, .3)
 
     &.is-focused
       .switch-control
         .switch-track
           .switch-knob
-            &::before
+            &::after
               background-color: rgba(255, 255, 255, 0.05)

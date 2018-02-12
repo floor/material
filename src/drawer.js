@@ -15,6 +15,7 @@ const defaults = {
   state: 'closed',
   position: 'left',
   tag: 'div',
+  width: '340',
   modules: [emitter, events]
 }
 
@@ -66,10 +67,6 @@ class Drawer {
 
     if (this.options.container) { insert(this.root, this.options.container) }
 
-    if (!this.options.state) {
-      this.state = 'opened'
-    }
-
     this.emit('built', this.root)
 
     return this
@@ -80,7 +77,8 @@ class Drawer {
    * @return {Object} The class instance
    */
   toggle () {
-    if (this.state === 'opened') {
+    console.log('toggle', this.root);
+    if (this.root.classList.contains('show')) {
       this.close()
     } else {
       this.open()
@@ -94,11 +92,9 @@ class Drawer {
    * @return {Object} The class instance
    */
   close () {
+    console.log('close');
     css.remove(this.root, 'show')
     css.remove(this.underlay, 'show')
-    this.state = 'closed'
-
-    this.emit(this.state)
 
     return this
   }
@@ -108,22 +104,34 @@ class Drawer {
    * @return {Object} The class instance
    */
   open () {
-    this.emit('open')
-    if (!this.underlay) { this.underlay = create('div', 'drawer-underlay') }
+    console.log('open');
 
-    insert(this.underlay, this.root.parentNode, 'top')
+    css.add(this.root, 'show')
+
+    if (this.options.type === 'temporary') {
+      this.showUnderlay()
+    }
+
+    
+    return this
+  }
+
+  showUnderlay() {
+    console.log('showUnderlay');
+
+    if (!this.underlay) { 
+      this.underlay = create('div', 'drawer-underlay')
+      insert(this.underlay, this.root.parentNode, 'top')
+    }
+
     this.underlay.addEventListener('click', (e) => {
+      console.log('underlay click close');
       this.close()
     })
     setTimeout(() => {
       css.add(this.underlay, 'show')
     }, 10)
 
-    css.add(this.root, 'show')
-    this.state = 'opened'
-    this.emit(this.state)
-
-    return this
   }
 
   /**
