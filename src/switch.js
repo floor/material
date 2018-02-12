@@ -6,7 +6,6 @@ import build from './element/build'
 import emitter from './module/emitter'
 import insert from './component/insert'
 import attach from './module/attach'
-import css from './module/css'
 import classify from './component/classify'
 
 let defaults = {
@@ -96,8 +95,8 @@ class Switch {
 
     this.element.label.textContent = text
     this.element.label.setAttribute('for', this.options.name)
-    if (this.value) {
-      this.check()
+    if (this.options.checked) {
+      this.check(true)
     }
 
     if (this.options.container) {
