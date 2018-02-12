@@ -1,7 +1,10 @@
 'use strict'
 
+import Layout from './layout'
+
 import create from './component/create'
 import insert from './component/insert'
+
 
 var defaults = {
   prefix: 'material',
@@ -71,8 +74,12 @@ class Item {
       this.set(this.options.text)
     }
 
-    if (this.options.container) {
-      this.insert(this.options.container)
+    if (this.options.layout) {
+      this.layout = new Layout(this.options.layout, this.root)
+    } else {
+      if (this.options.container) {
+        this.insert(this.options.container)
+      }
     }
   }
 
