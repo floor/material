@@ -15,6 +15,7 @@ import {
   Item,
   Progress,
   Menu,
+  Tabs,
   Slider,
   Switch,
   Text,
@@ -22,6 +23,8 @@ import {
   Toolbar,
   Layout
 } from 'material'
+
+import css from '../src/module/css'
 
 // import Material from 'material';
 // console.log('Material', Material);
@@ -33,6 +36,19 @@ import iconStar from './icon/star.svg'
 import iconHappy from './icon/happy.svg'
 
 console.log('log')
+var list = [{
+  text: 'One',
+  name: 'one'
+}, {
+  text: 'Two',
+  name: 'two'
+}, {
+  text: 'Three',
+  name: 'three'
+}, {
+  text: 'Four',
+  name: 'four'
+}]
 
 document.addEventListener('DOMContentLoaded', function () {
   var layout = new Layout([Component, 'demo', { display: 'flex', direction: 'vertical' },
@@ -51,6 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
       ],
       [List, 'navi-list', { theme: 'dark' }]
     ],
+    [Tabs, 'tabs', { color: 'primary', list: list, flex: 'none' }],
     [Container, 'body', { flex: '1' },
       [Container, 'container-components', { },
         [Text, 'text', { text: 'Components', type: 'title' }]
@@ -124,6 +141,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var moreButton = layout.get('menu-more').on('click', (e) => {
     layout.get('more-menu').show(e)
+  })
+
+  layout.get('body').root.addEventListener('scroll', (e) => {
+    if (layout.get('body').root.scrollTop > 0) {
+      css.add(layout.get('tabs').root, 'head-shadow')
+    } else {
+      css.remove(layout.get('tabs').root, 'head-shadow')
+    }
   })
 
   var naviMenu = layout.get('menu-navi')
