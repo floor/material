@@ -1,11 +1,11 @@
 .material-checkbox
   display: block
   position: relative
-  padding-top: 8px
-  margin-left: -15px
-  margin-right: 16px
-  padding-top: 0px
-  padding-bottom: 0px
+  margin-left: 4px
+  margin-right: 12px
+  padding-top: 4px
+  padding-top: 4px
+  padding-bottom: 4px
   vertical-align: top
   overflow: hidden
   display: flex
@@ -22,19 +22,20 @@
     order: 1
     cursor: pointer
     position: relative
-    height: 48px
-    width: 48px
+    height: 40px
+    width: 40px
     padding: 0
+    margin: 4px
     border-radius: 50%
 
     //margin: 10px 10px 10px 4px;
     .checkbox-icon
-      transition: .3s
+      position: absolute
+      top: 11px
+      left: 11px
       border: 2px solid rgba(0, 0, 0, 0.5)
       border-radius: 2px
-      position: absolute
-      top: 15px
-      left: 15px
+      transition: .3s
 
       //stroke: rgba(0, 0, 0, 0.5);
       .checkbox-check
@@ -50,8 +51,8 @@
     font-size: 1rem
     line-height: 1.25rem
     cursor: default
-    padding: 14px 0
-    margin: 0px 2px 0px 0
+    padding: 15px 0 9px
+    margin: 0px 2px 0px 12px
     overflow: hidden
 
   &.is-checked
@@ -89,16 +90,16 @@
     .checkbox-control
       //background-color: transparent;
 
-.dark-theme
-  .material-checkbox
-    > .material-control
-      > .checkbox-icon
-        border: 2px solid rgba(255, 255, 255, 0.5)
+.dark-theme .material-checkbox,
+.material-checkbox.dark-theme
+  > .material-control
+    > .checkbox-icon
+      border: 2px solid rgba(255, 255, 255, 0.5)
 
-    &.is-focused
-      .checkbox-control
-        background-color: rgba(255, 255, 255, 0.05)
+  &.is-focused
+    .checkbox-control
+      background-color: rgba(255, 255, 255, 0.05)
 
-    &.is-checked
-      .material-control
-        background-color: rgba(255, 255, 255, 0.5)
+  &.is-checked
+    .material-control
+      background-color: rgba(255, 255, 255, 0.5)
