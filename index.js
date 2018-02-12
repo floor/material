@@ -17,6 +17,7 @@ import Progress from 'material/src/progress'
 import Slider from 'material/src/slider'
 import Snackbar from 'material/src/snackbar'
 import Switch from 'material/src/switch'
+import Tabs from 'material/src/tabs'
 import Text from 'material/src/text'
 import Textfield from 'material/src/textfield'
 import Toolbar from 'material/src/toolbar'
@@ -44,6 +45,7 @@ export {
   Textfield,
   Toolbar,
   View,
+  Tabs,
   Snackbar,
   Progress
 }
