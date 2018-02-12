@@ -43,6 +43,7 @@
   "scripts": {
     "dev": "rollup -c --watch",
     "reload": "livereload 'dist/' -d",
+    "styles": "sass --watch dist/styles/demo.sass:dist/demo.css",
     "watch": "npm-run-all --parallel reload dev",
     "docs": "jsdoc src -r -d docs",
     "test": "echo \"Error: no test specified\" && exit 1"
