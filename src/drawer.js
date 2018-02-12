@@ -15,6 +15,7 @@ const defaults = {
   state: 'closed',
   position: 'left',
   tag: 'div',
+  width: '340',
   modules: [emitter, events]
 }
 
