@@ -6,7 +6,7 @@
   right: 0
 
   //height: 0;
-  background-color: rgba(0, 0, 0, 0.1)
+  background-color: rgba(0, 0, 0, 0.5)
   display: -webkit-box
   display: -ms-flexbox
   display: flex
@@ -16,7 +16,7 @@
 
   //display: none;
   //visibility: hidden;
-  z-index: 2
+  z-index: 20
   opacity: 0
 
   //z-index: -1;
@@ -26,6 +26,9 @@
     transition: .1s
     max-height: 600px
     display: flex
+    min-width: 320px
+    flex-direction: column
+    flex-wrap: nowrap
     opacity: 0
     overflow: hidden
     border-radius: 2px
@@ -34,16 +37,23 @@
     box-shadow: 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14), 0px 9px 46px 8px rgba(0, 0, 0, 0.12)
     transform: translateY(150px) scale(0.8)
 
-    .component-head
-      position: relative
-      padding: 16px
-      flex: 'none'
-      display: 'flex'
+    .dialog-title
+      font-weight: bold
+      flex: none
+      margin: 24px 24px 24px 24px
+      padding: 0
 
-      h2
-        flex: 'none'
-        margin: 0
-        padding: 0
+    .dialog-content
+      padding: 0 24px 24px 24px
+      &.material-text
+        opacity: .7
+
+    .dialog-actions
+      display: block
+      text-align: right
+      padding: 8px
+      .material-button
+
 
     .component-body
       flex: 1
