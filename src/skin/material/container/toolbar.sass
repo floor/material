@@ -1,6 +1,54 @@
 .material-toolbar
   display: flex
   flex-direction: row
+  height: 64px
+
+  position: absolute
+  top: 0
+  left: 0
+  right: 0
+
+  z-index: 3
+  flex: none
+  display: flex
+  flex-direction: row
+  flex-wrap: nowrap
+  padding: 14px 16px
+
+  &.type-app
+    z-index: 5
+    padding: 14px 16px
+    position: fixed
+    &.is-flexible
+      position: fixed
+    &.is-scrolled
+      transition: box-shadow .3s
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.14),0 4px 8px rgba(0, 0, 0, 0.28)
+
+
+  &.is-flexible
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    //display: block
+
+  &.is-fixed
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    //display: block
+    &.is-scrolled
+      transition: box-shadow .3s
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.14),0 4px 8px rgba(0, 0, 0, 0.28)
+
+
+
+ 
+
+  
+
   
   > *
     &:first-child
@@ -10,7 +58,7 @@
       margin-right: 0
 
 
-  >.material-text
+  .material-text
     flex: 1
     display: inline-block
     font-size: 1.3rem
@@ -23,7 +71,7 @@
     white-space: nowrap
     text-overflow: ellipsis
 
-  >.material-checkbox
+  .material-checkbox
     padding: 0
     .checkbox-control
       height: 36px
@@ -45,13 +93,13 @@
 
   &.transparent-color
     background-color: transparent
-    >.material-text
+    .material-text
       color: $default-color-text
     .material-button
       .button-icon
         svg
           fill: $default-color-text
-    >.material-checkbox
+    .material-checkbox
       padding: 0
       .checkbox-control
         height: 36px
@@ -65,13 +113,13 @@
 
   &.primary-color
     background-color: $primary-color
-    >.material-text
+    .material-text
       color: $primary-color-text
     .material-button
       .button-icon
         svg
           fill: $primary-color-text
-    >.material-checkbox
+    .material-checkbox
       padding: 0
       .checkbox-control
         height: 36px
@@ -85,13 +133,13 @@
 
   &.secondary-color
     background-color: $secondary-color
-    >.material-text
+    .material-text
       color: $secondary-color-text
     .material-button
       .button-icon
         svg
           fill: $secondary-color-text
-    >.material-checkbox
+    .material-checkbox
       padding: 0
       .checkbox-control
         height: 36px
@@ -104,14 +152,6 @@
         padding: 10px 0 6px
 
 
-  &.type-app
-    z-index: 3
-    flex: none
-    display: flex
-    flex-direction: row
-    flex-wrap: nowrap
-    padding: 14px 16px
-    transition: .3s
 
 
 @media only screen and (max-width: 768px)

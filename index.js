@@ -49,7 +49,6 @@ export {
   Tree,
   Tabs,
   View,
-  Tabs,
   Snackbar,
   Progress
 }

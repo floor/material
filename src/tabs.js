@@ -64,6 +64,7 @@ class Tabs {
           return item
         },
         select: (item) => {
+          console.log('click')
           this.selected = item
           this.click(item)
         }
@@ -81,7 +82,6 @@ class Tabs {
   }
 
   click (item) {
-
     var or = offset(this.root)
     var o = offset(item)
     this.indicator.setAttribute('style', 'width: ' + o.width + 'px; left: ' + (o.left - or.left) + 'px;')

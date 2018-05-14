@@ -40,6 +40,7 @@ class Drawer {
     init(this)
 
     this.build()
+    this.attach()
 
     this.emit('ready')
 
@@ -51,11 +52,23 @@ class Drawer {
    * @return {Object} This class instance
    */
   build () {
+    this.wrapper = create('div')
+
+    classify(this.wrapper, this.options)
+
     this.root = create('aside')
 
-    classify(this.root, this.options)
+    css.add(this.root, 'drawer-panel')
 
-    if (this.options.position) { css.add(this.root, 'position-' + this.options.position) }
+    insert(this.root, this.wrapper)
+
+    if (this.options.position) {
+      css.add(this.root, 'position-' + this.options.position)
+    }
+
+    if (this.options.fixed) {
+      this.wrapper.classList.add('is-fixed')
+    }
 
     if (this.options.size) {
       if (this.options.position === 'top' || this.options.position === 'bottom') {
@@ -65,20 +78,26 @@ class Drawer {
       }
     }
 
-    if (this.options.container) { insert(this.root, this.options.container) }
+    if (this.options.container) { insert(this.wrapper, this.options.container) }
 
     this.emit('built', this.root)
 
     return this
   }
 
+  attach () {
+    this.wrapper.addEventListener('click', (e) => {
+      console.log(' click close')
+      this.close()
+    })
+  }
   /**
    * [toggle description]
    * @return {Object} The class instance
    */
   toggle () {
-    console.log('toggle', this.root);
-    if (this.root.classList.contains('show')) {
+    // console.log('toggle', this.root);
+    if (this.wrapper.classList.contains('show')) {
       this.close()
     } else {
       this.open()
@@ -92,9 +111,9 @@ class Drawer {
    * @return {Object} The class instance
    */
   close () {
-    console.log('close');
-    css.remove(this.root, 'show')
-    css.remove(this.underlay, 'show')
+    // console.log('close');
+    css.remove(this.wrapper, 'show')
+    // css.remove(this.underlay, 'show')
 
     return this
   }
@@ -104,44 +123,20 @@ class Drawer {
    * @return {Object} The class instance
    */
   open () {
-    console.log('open');
+    // console.log('open');
 
-    css.add(this.root, 'show')
+    css.add(this.wrapper, 'show')
 
-    if (this.options.type === 'temporary') {
-      this.showUnderlay()
-    }
-
-    
     return this
-  }
-
-  showUnderlay() {
-    console.log('showUnderlay');
-
-    if (!this.underlay) { 
-      this.underlay = create('div', 'drawer-underlay')
-      insert(this.underlay, this.root.parentNode, 'top')
-    }
-
-    this.underlay.addEventListener('click', (e) => {
-      console.log('underlay click close');
-      this.close()
-    })
-    setTimeout(() => {
-      css.add(this.underlay, 'show')
-    }, 10)
-
   }
 
   /**
    * [insert description]
    * @param  {?} container [description]
-   * @param  {?} context   [description]
    * @return {?}           [description]
    */
   insert (container, context) {
-    insert(this.root, container, context)
+    insert(this.wrapper, container, context)
 
     return this
   }

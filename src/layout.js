@@ -13,7 +13,6 @@ class Layout {
    * @return {?}           [description]
    */
   constructor (schema, container) {
-    //console.log('layout', schema);
     this.component = this.create(schema, container)
 
     return this
@@ -30,13 +29,14 @@ class Layout {
     level = level || 0
     level++
 
-    structure = structure || {}
-    let component
+    // console.log('level', level, schema)
+    // console.log('-------------')
 
-    // if (level === 1)
-    //   console.log('level', level);
+    structure = structure || {}
+    let component = null
 
     for (var i = 0; i < schema.length; i++) {
+      // console.log('index', i, typeof schema[i])
       var name
       var options = {}
 
@@ -62,12 +62,23 @@ class Layout {
           this.style(component, options)
         }
 
-        // if (level === 1) console.log('insert', component, container);
+        if (level === 1) {
+          var isClass = fn => /^\sclass/.test(schema[i].toString())
+
+          // console.log('isClass', isClass)
+          // console.log('root', component.root)
+          structure.root = component.root
+        }
+
         if (component && container) {
           if (component.insert) component.insert(container)
           else insert(component, container)
         }
       } else if (Array.isArray(schema[i])) {
+       // console.log('------', schema[i])
+        if (component == null) {
+          component = container
+        }
         this.create(schema[i], component, structure, level)
       }
     }
@@ -112,6 +123,14 @@ class Layout {
       } else if (options.size && options.height) {
         component.root.height = size + 'px'
       }
+    }
+
+    if (options.position) {
+      component.root.position = options.position
+    }
+
+    if (options.bottom) {
+      component.root.bottom = options.bottom
     }
 
     if (options.hide) {
