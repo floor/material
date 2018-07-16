@@ -48,17 +48,15 @@ class Icon {
 
     var tag = options.tag || 'img'
 
-
-    var position = 'top'
-    if (this.options.type === 'text-icon') {
-      position = 'bottom'
-    }
+    // var position = 'top'
+    // if (this.options.type === 'text-icon') {
+    //   position = 'bottom'
+    // }
 
     this.element = this.element || {}
 
     this.root = document.createElement(tag)
     css.add(this.root, this.options.prefix + '-' + this.options.class)
-
 
     if (options.css) { css.add(this.root, options.css) }
     // css.add(this.root, this.options.class + '-adjust');

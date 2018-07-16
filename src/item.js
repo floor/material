@@ -5,11 +5,11 @@ import Layout from './layout'
 import create from './component/create'
 import insert from './component/insert'
 
-
 var defaults = {
   prefix: 'material',
   class: 'item',
   type: 'default',
+  tag: 'li',
   types: {
     default: 'span',
     display4: 'h1',
@@ -66,7 +66,9 @@ class Item {
    */
   build () {
     // define main tag
-    this.options.tag = this.options.types[this.options.type]
+    this.options.tag = this.options.tag || this.options.types[this.options.type]
+
+    this.options.tag = this.options.tag
 
     this.root = create(this.options)
 
