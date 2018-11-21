@@ -1,4 +1,6 @@
+import AppBar from 'material/src/AppBar'
 import Button from 'material/src/Button'
+import Banner from 'material/src/Banner'
 import Calendar from 'material/src/calendar'
 import Card from 'material/src/card'
 import Component from 'material/src/component'
@@ -26,7 +28,9 @@ import View from 'material/src/view'
 import Tree from 'material/src/tree'
 
 export {
+  AppBar,
   Button,
+  Banner,
   Calendar,
   Card,
   Checkbox,
