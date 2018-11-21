@@ -426,6 +426,33 @@ a {
   100% {
     stroke-dashoffset: 187;
     transform: rotate(450deg); } }
+.material-banner {
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: white;
+  position: absolute;
+  overflow: hidden;
+  bottom: 0;
+  left: 0;
+  right: 0; }
+  .material-banner .material-toolbar {
+    padding-top: 16px; }
+
+.banner-wrapper {
+  position: relative;
+  overflow: hidden;
+  z-index: 4;
+  height: 0;
+  transition: height 0.2s; }
+  .banner-wrapper.is-fixed {
+    z-index: 4;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0; }
+  .banner-wrapper.is-shown {
+    transition: height 0.2s; }
+
 .material-card {
   box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
   flex-direction: column;
@@ -772,7 +799,7 @@ a {
   .material-tabs.small .material-list .material-button label {
     padding: 8px; }
 
-.material-toolbar {
+.material-appbar {
   display: flex;
   flex-direction: row;
   height: 64px;
@@ -786,6 +813,126 @@ a {
   flex-direction: row;
   flex-wrap: nowrap;
   padding: 14px 16px; }
+  .material-appbar.type-bottom {
+    bottom: 0;
+    top: inherit; }
+  .material-appbar.type-app {
+    z-index: 5;
+    padding: 14px 16px;
+    position: fixed; }
+    .material-appbar.type-app.is-flexible {
+      position: fixed; }
+    .material-appbar.type-app.is-scrolled {
+      transition: box-shadow 0.3s;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.14), 0 4px 8px rgba(0, 0, 0, 0.28); }
+  .material-appbar.is-flexible {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0; }
+  .material-appbar.is-fixed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0; }
+    .material-appbar.is-fixed.is-scrolled {
+      transition: box-shadow 0.3s;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.14), 0 4px 8px rgba(0, 0, 0, 0.28); }
+    .material-appbar.is-fixed.type-bottom {
+      bottom: 0;
+      top: inherit; }
+  .material-appbar > *:first-child {
+    margin-left: 0; }
+  .material-appbar > *:last-child {
+    margin-right: 0; }
+  .material-appbar .material-text {
+    flex: 1;
+    display: inline-block;
+    font-size: 1.3rem;
+    font-weight: 300;
+    line-height: 2.3rem;
+    color: rgba(255, 255, 255, 0.95);
+    padding: 0;
+    margin-left: 16px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis; }
+  .material-appbar .material-checkbox {
+    padding: 0; }
+    .material-appbar .material-checkbox .checkbox-control {
+      height: 36px;
+      width: 36px;
+      margin: 0; }
+      .material-appbar .material-checkbox .checkbox-control .checkbox-icon {
+        border: 2px solid rgba(255, 255, 255, 0.95); }
+    .material-appbar .material-checkbox .checkbox-label {
+      color: rgba(255, 255, 255, 0.95);
+      padding: 10px 0 6px; }
+  .material-appbar .material-button .button-icon svg {
+    fill: rgba(255, 255, 255, 0.95); }
+  .material-appbar.transparent-color {
+    background-color: transparent; }
+    .material-appbar.transparent-color .material-text {
+      color: rgba(0, 0, 0, 0.87); }
+    .material-appbar.transparent-color .material-button .button-icon svg {
+      fill: rgba(0, 0, 0, 0.87); }
+    .material-appbar.transparent-color .material-checkbox {
+      padding: 0; }
+      .material-appbar.transparent-color .material-checkbox .checkbox-control {
+        height: 36px;
+        width: 36px;
+        margin: 0; }
+        .material-appbar.transparent-color .material-checkbox .checkbox-control .checkbox-icon {
+          border: 2px solid rgba(255, 255, 255, 0.95); }
+      .material-appbar.transparent-color .material-checkbox .checkbox-label {
+        color: rgba(0, 0, 0, 0.87);
+        padding: 10px 0 6px; }
+  .material-appbar.primary-color {
+    background-color: #6200ee; }
+    .material-appbar.primary-color .material-text {
+      color: rgba(255, 255, 255, 0.95); }
+    .material-appbar.primary-color .material-button .button-icon svg {
+      fill: rgba(255, 255, 255, 0.95); }
+    .material-appbar.primary-color .material-checkbox {
+      padding: 0; }
+      .material-appbar.primary-color .material-checkbox .checkbox-control {
+        height: 36px;
+        width: 36px;
+        margin: 0; }
+        .material-appbar.primary-color .material-checkbox .checkbox-control .checkbox-icon {
+          border: 2px solid rgba(255, 255, 255, 0.95); }
+      .material-appbar.primary-color .material-checkbox .checkbox-label {
+        color: rgba(255, 255, 255, 0.95);
+        padding: 10px 0 6px; }
+  .material-appbar.secondary-color {
+    background-color: #1A9989; }
+    .material-appbar.secondary-color .material-text {
+      color: rgba(255, 255, 255, 0.95); }
+    .material-appbar.secondary-color .material-button .button-icon svg {
+      fill: rgba(255, 255, 255, 0.95); }
+    .material-appbar.secondary-color .material-checkbox {
+      padding: 0; }
+      .material-appbar.secondary-color .material-checkbox .checkbox-control {
+        height: 36px;
+        width: 36px;
+        margin: 0; }
+        .material-appbar.secondary-color .material-checkbox .checkbox-control .checkbox-icon {
+          border: 2px solid rgba(255, 255, 255, 0.95); }
+      .material-appbar.secondary-color .material-checkbox .checkbox-label {
+        color: rgba(255, 255, 255, 0.95);
+        padding: 10px 0 6px; }
+
+@media only screen and (max-width: 768px) {
+  .material-appbar.type-app {
+    padding: 10px 16px; } }
+.material-toolbar {
+  display: flex;
+  flex-direction: row;
+  z-index: 3;
+  flex: none;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap; }
   .material-toolbar.type-app {
     z-index: 5;
     padding: 14px 16px;
