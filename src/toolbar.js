@@ -7,7 +7,7 @@ import offset from './element/offset'
 const defaults = {
   prefix: 'material',
   class: 'toolbar',
-  tag: 'header'
+  tag: 'div'
 }
 
 class Toolbar {
@@ -27,7 +27,7 @@ class Toolbar {
     this.options = Object.assign({}, defaults, options || {})
     Object.assign(this, insert)
 
-    console.log('waterfALL', this.options.waterfall)
+    // console.log('waterfALL', this.options.waterfall)
 
     this.waterfall = this.options.waterfall
   }
@@ -39,14 +39,14 @@ class Toolbar {
   build () {
     this.root = create(this.options)
 
-    console.log(this.options.height, this.options.fixed)
+    // console.log(this.options.height, this.options.fixed)
 
     if (this.options.height) {
       this.root.style.height = this.options.height + 'px'
     }
 
     if (this.options.fixed) {
-      console.log('is-fixed')
+      // console.log('is-fixed')
       this.root.classList.add('is-fixed')
     }
 
@@ -70,7 +70,7 @@ class Toolbar {
 
       var view = this.view = this.root.parentNode
 
-      console.log('view', view)
+      // console.log('view', view)
 
       var padding = window.getComputedStyle(view)['padding-top']
       // console.log('paddingTop', padding)
@@ -88,11 +88,11 @@ class Toolbar {
       // console.log('ptop', ptop)
 
       if (document.body == view) {
-        console.log('toolbar container body')
+        // console.log('toolbar container body')
         this.root.classList.add('toolbar-body')
       }
 
-      view.setAttribute('style', 'padding-top: ' + ptop + 'px')
+      // view.setAttribute('style', 'padding-top: ' + ptop + 'px')
 
       this.scroll(view)
     })
