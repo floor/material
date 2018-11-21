@@ -105,7 +105,7 @@ class Button {
   }
 
   /**
-   * [setup description]
+   * Setup method
    * @return {?} [description]
    */
   setup () {
@@ -149,7 +149,7 @@ class Button {
   }
 
   /**
-   * [_onElementMouseDown description]
+   * method handleClick
    * @param  {event} e
    * @return {void}
    */
