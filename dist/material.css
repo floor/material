@@ -922,6 +922,12 @@ a {
         color: rgba(255, 255, 255, 0.95);
         padding: 10px 0 6px; }
 
+<<<<<<< HEAD
+=======
+@media only screen and (max-width: 768px) {
+  .material-appbar.type-app {
+    padding: 10px 16px; } }
+>>>>>>> 4f4deb3745335022049996776a40a5369bebaf8e
 .material-toolbar {
   display: flex;
   flex-direction: row;
