@@ -1,7 +1,13 @@
 .material-tabs
   position: relative
+  text-align: center
+  overflow: hidden
   .material-list
+    display: inline-block
+    white-space: nowrap
     padding: 0
+    text-align: center
+    white-space: nowrap
     .material-button
       font-size: 0.875rem
       font-weight: 500
@@ -50,3 +56,18 @@
         background-color: $secondary-color-text
     .material-indicator
       background-color: $secondary-color-text
+
+.material-tabs.small
+  .material-list
+    .material-button
+      font-size: 0.475rem
+      font-weight: 500
+      letter-spacing: 0.04em
+      line-height: 1rem
+      min-width: 80px
+      min-height: 18px
+      padding: 0 14px
+      margin: 0
+      background-color: transparent
+      label
+        padding: 8px

@@ -69,6 +69,10 @@ class Menu {
     this.root = create(this.options.tag, this.options.css)
     this.mask = create(this.options.tag, this.options.class + '-mask')
 
+    if (this.options.position) {
+      this.root.style.position = this.options.position
+    }
+
     classify(this.root, this.options)
 
     if (this.options.list) {
@@ -117,7 +121,10 @@ class Menu {
     if (!this.caller) return
     var offs = offset(this.caller)
 
-    var offsw = offset(this.root)
+    var offsw = this.offset = offset(this.root)
+
+    // console.log('offset')
+    // console.log('caller', this.caller, offs, screen.width)
 
     this.root.style.top = offs.top + 'px'
     this.root.style.left = offs.left - offsw.width + offs.width + 'px'
@@ -125,7 +132,7 @@ class Menu {
   }
 
   hide () {
-    console.log('hide')
+    // console.log('hide')
     css.remove(this.root, this.options.class + '-show')
     css.remove(this.mask, 'mask-show')
   }

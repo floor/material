@@ -54,7 +54,7 @@ class Tree {
     this.items = []
 
     // assign modules
-    Object.assign(this, emitter, insert, bind)
+    Object.assign(this, emitter, insert, attach)
 
     // init function
     this._initFunction(this.options.functions)
@@ -107,20 +107,40 @@ class Tree {
   buildTree (data) {
     this.root.innerHTML = ''
 
+    // console.log('buildTree', data);
+
     var tree = ''
 
-    function checkChildren (parentObj) {
-      var level = (parentObj.path.split('/').length - 1)
 
-      if (level > 0) {
-        tree += '<li class="item-tree" data-path="' + parentObj.path + '">' + parentObj.name
+    function checkChildren (parentObj, level) {
+      if (level) {
+        level++
+      } else {
+        level = 0
       }
+
+
+      level++;
+
+      // console.log('-- ', level, parentObj);
+      if (parentObj.path) { 
+        var level = (parentObj.path.split('/').length - 1)
+
+        if (level > 0) {
+          tree += '<li class="item-tree" data-path="' + parentObj.path + '">' + parentObj.name
+        }
+      } else {
+        if (level > 1) {
+          tree += '<li class="item-tree" data-id="'+parentObj._id+'">' + parentObj.name 
+        }
+      }
+
       if (parentObj.children && parentObj.children.length > 0) {
         tree += '<ul>'
         for (var i = 0; i < parentObj.children.length; i++) {
           var children = parentObj.children[i]
 
-          checkChildren(children)
+          checkChildren(children, level)
         }
         tree += '</ul>'
       }
@@ -130,7 +150,11 @@ class Tree {
       }
     }
 
+
+
     checkChildren(data)
+
+    // console.log('html tree', tree);
 
     this.root.innerHTML = tree
 
@@ -138,7 +162,7 @@ class Tree {
   }
 
   getOptions () {
-    console.log(this.options)
+    // console.log(this.options)
   }
 
   /**
@@ -147,9 +171,9 @@ class Tree {
    * @return {?}   [description]
    */
   onSelect (e) {
-    console.log('click', e.target, this.options.target)
+    // console.log('click', e.target, this.options.target)
     if (e.target && e.target.matches(this.options.target)) {
-      console.log('item clicked: ', e.target)
+      // console.log('item clicked: ', e.target)
 
       css.remove(this.item, 'is-selected')
       css.add(e.target, 'is-selected')
@@ -171,7 +195,7 @@ class Tree {
    * @return        [description]
    */
   select (item, event) {
-    console.log('select', item, event)
+    // console.log('select', item, event)
     this.item = item
 
     this.emit('selected', item[0])
@@ -188,7 +212,7 @@ class Tree {
         this.setTree(value, options)
         break
       default:
-        this.setTree(value, options)
+        this.setTree(prop)
     }
 
     return this
@@ -222,7 +246,7 @@ class Tree {
   }
 
   empty () {
-    console.log('empty')
+    // console.log('empty')
     this.root.innerHTML = ''
     this.items = []
     this.item = null

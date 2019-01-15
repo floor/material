@@ -11,6 +11,7 @@ import attach from './module/attach'
 const defaults = {
   prefix: 'material',
   class: 'list',
+  tag: 'ul',
   functions: ['render', 'select'],
   target: '.material-item',
   events: [
@@ -82,13 +83,21 @@ class List {
    */
   build (options) {
     // define main tag
-    var tag = this.options.tag || 'div'
+    var tag = this.options.tag || 'ul'
 
     this.root = document.createElement(tag)
     css.add(this.root, 'material-' + this.options.class)
 
     if (options.name) {
       css.add(this.root, options.class + '-' + options.name)
+    }
+
+    if (options.type) {
+      css.add(this.root, 'type-' + options.type)
+    }
+
+    if (options.layout) {
+      css.add(this.root, 'layout-' + options.layout)
     }
 
     if (this.options.list) {

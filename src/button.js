@@ -14,7 +14,7 @@ const defaults = {
   class: 'button',
   tag: 'button',
   events: [
-    ['root.click', '_clickHandler']
+    ['root.click', 'handleClick']
   ]
 }
 
@@ -56,11 +56,13 @@ class Button {
    */
   init (options) {
     this.options = Object.assign({}, defaults, options || {})
-
     Object.assign(this, control, emitter, attach, ripple)
 
     this.element = this.element || {}
+
+    // init module
     ripple(this)
+
     this.emit('init')
   }
 
@@ -103,7 +105,7 @@ class Button {
   }
 
   /**
-   * [setup description]
+   * Setup method
    * @return {?} [description]
    */
   setup () {
@@ -147,11 +149,11 @@ class Button {
   }
 
   /**
-   * [_onElementMouseDown description]
+   * method handleClick
    * @param  {event} e
    * @return {void}
    */
-  _clickHandler (e) {
+  handleClick (e) {
     e.preventDefault()
 
     if (this.disabled === true) return

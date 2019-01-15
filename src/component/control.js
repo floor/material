@@ -49,7 +49,7 @@ var control = {
    * [initLabel description]
    * @return {?} [description]
    */
-  label (label) {
+  label (label, container) {
     if (!label) return
 
     this.element = this.element || {}
@@ -60,7 +60,9 @@ var control = {
 
     this.element.label.textContent = label
 
-    insert(this.element.label, this.root)
+    container = container || this.root
+
+    insert(this.element.label, container)
   },
 
   /**
@@ -68,10 +70,12 @@ var control = {
    * @param  {string} type
    * @return {string}
    */
-  icon (icon) {
+  icon (icon, container, position) {
     if (!icon) return
 
-    var position = 'top'
+    container = container || this.root
+
+    position = position || 'top'
     if (this.options.type === 'text-icon') {
       position = 'bottom'
     }
@@ -79,7 +83,7 @@ var control = {
     this.element = this.element || {}
 
     this.element.icon = create('i', this.options.class + '-icon')
-    insert(this.element.icon, this.root, position)
+    insert(this.element.icon, container, position)
 
     this.element.icon.innerHTML = icon
   },

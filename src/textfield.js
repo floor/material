@@ -3,6 +3,7 @@
 import create from './element/create'
 import insert from './element/insert'
 
+import focus from './component/focus'
 import emitter from './module/emitter'
 import css from './module/css'
 import attach from './module/attach'
@@ -14,10 +15,10 @@ var defaults = {
   tag: 'div',
   events: [
     // 'change': '_onChange',
-    ['input.focus', '_handleInputFocus'],
-    ['input.blur', '_handleInputBlur'],
+    ['element.input.focus', 'focus'],
+    ['element.input.blur', 'blur'],
     // ['input.keypress', '_handleInputKeyPress',
-    ['input.keyup', '_handleInputKeyPress']
+    ['element.input.keyup', '_handleInputKeyPress']
     // ['input.change', '_onChange']
     // 'input.keydown': '_handleInputKeyPress'
 
@@ -50,8 +51,9 @@ class Textfield {
    * @return {Object} The class instance
    */
   init () {
-    Object.assign(this, emitter, attach)
+    Object.assign(this, focus, emitter, attach)
 
+    this.element = {}
     this.value = this.options.value
 
     return this
@@ -95,20 +97,20 @@ class Textfield {
    * @return {Object} The class instance
    */
   buildInput () {
-    this.input = create('input', this.options.class + '-input')
-    this.input.setAttribute('type', 'text')
-    insert(this.input, this.root)
+    this.element.input = create('input', this.options.class + '-input')
+    this.element.input.setAttribute('type', 'text')
+    insert(this.element.input, this.root)
 
     if (!this.options.value) {
       css.add(this.root, 'is-empty')
     }
 
     if (this.readonly) {
-      this.input.setAttribute('readonly', 'readonly')
-      this.input.setAttribute('tabindex', '-1')
+      this.element.input.setAttribute('readonly', 'readonly')
+      this.element.input.setAttribute('tabindex', '-1')
     }
 
-    return this.input
+    return this.element.input
   }
 
   /**
@@ -132,6 +134,13 @@ class Textfield {
         break
       case 'label':
         this.setLabel(value)
+        break
+      case 'disabled':
+        if (value === true) {
+          this.disable()
+        } else if (value === false) {
+          this.enable()
+        }
         break
       default:
         this.setValue(prop)
@@ -158,6 +167,24 @@ class Textfield {
 
     this.label.textContent = text
   }
+
+
+  disable () {
+    this.disabled = true
+
+    this.element.input.setAttribute('disabled', 'disabled')
+    css.add(this.root, 'is-disabled')
+    return this
+  }
+
+  enable () {
+    this.disabled = false
+
+    this.element.input.removeAttribute('disabled')
+    css.remove(this.root, 'is-disabled')
+    return this
+  }
+
 
   /**
    * Getter
@@ -187,7 +214,7 @@ class Textfield {
    */
   getValue () {
     // console.log('getValue', this);
-    return this.input.value
+    return this.element.input.value
   }
 
   /**
@@ -195,7 +222,7 @@ class Textfield {
    * @param {string} value [description]
    */
   setValue (value) {
-    this.input.value = value
+    this.element.input.value = value
 
     if (value) {
       css.remove(this.root, 'is-empty')
@@ -236,26 +263,6 @@ class Textfield {
     if (opts.value) {
       this.setValue(opts.value)
     }
-  }
-
-  /**
-   * [_onFocus description]
-   * @return {Object} The class instance
-   */
-  _handleInputFocus (e) {
-    // console.log('_handleInputFocus');
-    if (this.readonly) return
-    this.setState('focus')
-  }
-
-  /**
-   * [_onBlur description]
-   * @return {Object} The class instance
-   */
-  _handleInputBlur () {
-    // console.log('_handleInputBlur', this.readonly);
-    if (this.readonly) return
-    this.setState(null)
   }
 
   /**

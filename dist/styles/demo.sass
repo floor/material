@@ -35,7 +35,7 @@ $list-width: 300px
     padding: 10px 16px
 
     // -webkit-box-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.14), 0 4px 8px rgba(0, 0, 0, 0.28)
+    //box-shadow: 0 0 4px rgba(0, 0, 0, 0.14), 0 4px 8px rgba(0, 0, 0, 0.28)
 
     .text-app-title
       font-size: 1.5rem
@@ -84,6 +84,12 @@ $list-width: 300px
       .material-item
         left: 0
         padding: 8px 16px
+
+
+  >.material-tabs
+    &.head-shadow
+      transition: box-shadow .3s
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.14),0 4px 8px rgba(0, 0, 0, 0.28)
 
   >.container-body
     overflow: scroll

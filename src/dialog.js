@@ -8,8 +8,14 @@ import attach from './module/attach'
 import insert from './component/insert'
 import event from './element/event.js'
 import css from './module/css'
+import { _isArray } from './module/utils'
 
-import Layout from './layout'
+import {
+  Text,
+  Button,
+  Toolbar,
+  Layout
+} from 'material'
 
 let defaults = {
   prefix: 'material',
@@ -65,20 +71,92 @@ class Dialog {
       css.add(this.root, this.options.css)
     }
 
+    if (this.options.theme) {
+      css.add(this.root, this.options.theme + '-theme')
+    }
+
     this.surface = document.createElement('div')
 
     css.add(this.surface, 'dialog-surface')
 
     this.insertElement(this.surface, this.root)
 
-    this.options.layout.root = this.surface
-    this.layout = new Layout(this.options.layout, this.surface)
+    if (this.options.title) {
+      this.buildTitle()
+    }
+
+    if (this.options.content) {
+      this.buildContent()
+    }
+
+    this.buildActions()
 
     event.add(this.surface, 'click', function (ev) {
       ev.stopPropagation()
     })
+  }
 
-    // this.root = element.createElement(tag);
+  buildTitle () {
+    this.title = new Text({
+      type: 'title',
+      css: 'dialog-title',
+      text: this.options.title
+    })
+
+    this.insertElement(this.title.root, this.surface)
+
+    console.log('buildTitle', this.title)
+  }
+
+  buildContent () {
+    console.log('buildContent', typeof this.options.content)
+    if (typeof this.options.content === 'string') {
+      console.log('text content', this.options.content)
+      this.content = new Text({
+        type: 'content',
+        css: 'dialog-content',
+        text: this.options.content
+      })
+
+      this.insertElement(this.content.root, this.surface)
+    } else if (_isArray(this.options.content)) {
+      this.content = new Layout(this.options.content, this.surface)
+      console.log('layout content', this.content)
+    } else {
+      console.log('other content', this.content)
+    }
+  }
+
+  buildActions () {
+    if (this.options.actions) {
+      this.actions = new Layout(this.options.actions, this.surface)
+
+      css.add(this.actions.get('root'), 'dialog-actions')
+    } else {
+      var actions
+      if (this.options.accept || this.options.cancel) {
+        actions = new Toolbar({ css: 'dialog-actions' })
+        this.insertElement(actions.root, this.surface)
+      }
+
+      if (this.options.cancel) {
+        this.cancel = new Button(this.options.cancel)
+        .on('click', () => {
+          this.emit('canceled')
+          this.close()
+        })
+        this.insertElement(this.cancel.root, actions.root)
+      }
+
+      if (this.options.accept) {
+        this.accept = new Button(this.options.accept)
+        .on('click', () => {
+          this.emit('accepted')
+          this.close()
+        })
+        this.insertElement(this.accept.root, actions.root)
+      }
+    }
   }
 
   close () {
@@ -107,7 +185,9 @@ class Dialog {
       // css.remove(this.root, 'dialog-showing');
     }, delayMillis)
 
-    this.root.querySelector('button').focus()
+    // var button = this.root.querySelector('button')
+
+    // if (button) button.focus()
   }
 }
 

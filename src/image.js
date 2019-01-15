@@ -1,7 +1,9 @@
 'use strict'
 
-import insert from './component/insert'
+// import insert from './component/insert'
 import css from './module/css'
+import insert from './element/insert'
+import control from './component/control'
 
 var defaults = {
   prefix: 'material',
@@ -36,7 +38,7 @@ class Image {
    */
   init (options) {
     this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, insert)
+    Object.assign(this, control)
   }
 
   /**
@@ -46,13 +48,37 @@ class Image {
   build (options) {
     options = options || this.options
 
-    var tag = options.tag || 'img'
-
+    var tag = options.tag || 'div'
+    var text = options.text || options.label
     this.root = document.createElement(tag)
 
+    // if (options.src) {
+    //   this.root.setAttribute('style', 'background-image: url(' + options.src + ')')
+
     if (options.src) {
-      this.root.setAttribute('style', 'background-image: url(' + options.src + ')')
+      this.image = document.createElement('img')
+      this.image.setAttribute('src', options.src)
+      css.add(this.image, this.options.class + '-image')
+      insert(this.image, this.root)
     }
+
+    this.info = document.createElement('span')
+    css.add(this.info, this.options.class + '-info')
+
+    insert(this.info, this.root)
+
+    this.label(text, this.info)
+
+    // this.label = this.element.label
+
+    this.icon(this.options.icon, this.info, 'bottom')
+
+    // if (text) {
+    //   this.label = document.createElement('span')
+    //   this.label.innerText = text
+    //   css.add(this.label, this.options.class + '-label')
+    //   insert(this.label, this.root)
+    // }
 
     css.add(this.root, this.options.prefix + '-' + this.options.class)
 
@@ -62,6 +88,18 @@ class Image {
     if (this.options.container) {
       this.insert(this.options.container)
     }
+  }
+
+  /**
+   * [insert description]
+   * @param  {?} container [description]
+   * @param  {?} context   [description]
+   * @return {?}           [description]
+   */
+  insert (container, context) {
+    insert(this.root, container, context)
+
+    return this
   }
 
   /**

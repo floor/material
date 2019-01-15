@@ -19,8 +19,7 @@
     background-color: rgba(0, 0, 0, 0.7);
     background-color: #607D8B;
     background-color: #3f51b5;
-    padding: 10px 16px;
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.14), 0 4px 8px rgba(0, 0, 0, 0.28); }
+    padding: 10px 16px; }
     .component-demo > .component-head .text-app-title,
     .layout-demo > .component-head .text-app-title {
       font-size: 1.5rem;
@@ -65,6 +64,10 @@
       .layout-demo > .material-drawer .material-list.list-navi .material-item {
         left: 0;
         padding: 8px 16px; }
+  .component-demo > .material-tabs.head-shadow,
+  .layout-demo > .material-tabs.head-shadow {
+    transition: box-shadow 0.3s;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.14), 0 4px 8px rgba(0, 0, 0, 0.28); }
   .component-demo > .container-body,
   .layout-demo > .container-body {
     overflow: scroll; }
