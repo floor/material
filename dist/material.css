@@ -733,14 +733,16 @@ a {
 .material-tabs {
   position: relative;
   text-align: center;
-  overflow: hidden; }
-  .material-tabs .material-list {
+  overflow: hidden;
+  white-space: nowrap; }
+  .material-tabs > .material-list {
     display: inline-block;
     white-space: nowrap;
     padding: 0;
+    margin: 0;
     text-align: center;
     white-space: nowrap; }
-    .material-tabs .material-list .material-button {
+    .material-tabs > .material-list .material-button {
       font-size: 0.875rem;
       font-weight: 500;
       letter-spacing: 0.04em;
@@ -922,12 +924,6 @@ a {
         color: rgba(255, 255, 255, 0.95);
         padding: 10px 0 6px; }
 
-<<<<<<< HEAD
-=======
-@media only screen and (max-width: 768px) {
-  .material-appbar.type-app {
-    padding: 10px 16px; } }
->>>>>>> 4f4deb3745335022049996776a40a5369bebaf8e
 .material-toolbar {
   display: flex;
   flex-direction: row;
