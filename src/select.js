@@ -1,145 +1,306 @@
 'use strict'
 
-import create from './element/create'
-import classify from './component/classify'
-import css from './module/css'
-import events from './component/events'
-import insert from './element/insert'
-import offset from './element/offset'
-
-import attach from './module/attach'
 import emitter from './module/emitter'
+import attach from './module/attach'
 
-import List from './list'
-import Item from './item'
-import Divider from './divider'
-
-const defaults = {
+var defaults = {
   prefix: 'material',
-  class: 'menu',
-  tag: 'input',
+  class: 'textfield',
+  type: 'control',
+  tag: 'div',
   events: [
-    ['root.click', 'hide'],
-    ['mask.click', 'hide']
+    // 'change': '_onChange',
+    ['input.focus', 'focus'],
+    ['input.blur', 'blur'],
+    // ['input.keypress', '_handleInputKeyPress',
+    ['input.keyup', '_handleInputKeyPress']
+    // ['input.mouseover', 'mouseover']
+    // ['input.change', '_onChange']
+    // 'input.keydown': '_handleInputKeyPress'
+
   ]
 }
 
 /**
- * This Class represents a menu.
- *
- * @return {parent} The class instance
- * @example new Container({
- *   container: document.body
- * });
+ * Textfield class
+ * @class
  */
-class Menu {
+class Select {
   /**
    * Constructor
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
   constructor (options) {
-    this.init(options)
-    this.build()
-    this.setup()
-    this.attach()
-
-    this.emit('ready')
-
-    return this
-  }
-
-  /**
-   * [init description]
-   * @return {[type]} [description]
-   */
-  init (options) {
     this.options = Object.assign({}, defaults, options || {})
 
-    Object.assign(this, emitter, events, attach, insert)
-  }
-
-  /**
-   * Build Method
-   * @return {Object} This class instance
-   */
-  build (options) {
-    this.root = create(tag, options.css)
-    this.mask = create(tag, this.options.class + '-mask')
-
-    classify(this.root, options)
-
-    if (this.options.list) {
-      this.list = new List({
-        // root: this.root,
-        list: this.options.list,
-        target: '.material-item',
-        height: 600,
-        label: 'Flat',
-        select: (item) => {
-          this.selected = item
-          this.hide()
-        }
-      }).insert(this.root)
-    }
-
-    this.emit('built', this.root)
+    this.init()
+    this.build()
+    this.attach()
 
     return this
   }
 
-  insert () {
-    insert(this.mask, document.body)
-    insert(this.root, document.body)
+  /**
+   * init
+   * @param  {Object} options The class options
+   * @return {Object} The class instance
+   */
+  init () {
+    Object.assign(this, emitter, attach)
+
+    this.value = this.options.value
+
+    return this
   }
 
-  setup () {
-    // this.subscribe('click', () => {
-    //   console.log('click');
-    //   this.close();
-    // });
-    //
-    window.addEventListener('resize', () => this.position())
+  mouseover () {
+    // console.log('mouseover')
   }
 
   /**
-   * [show description]
-   * @param  {[type]} e [description]
-   * @return {[type]}   [description]
+   * [build description]
+   * @return {Object} The class instance
    */
-  show (e) {
-    css.add(this.mask, 'mask-show')
+  build () {
+    // create a new div as input element
+    var tag = this.options.tag || 'div'
+    this.root = document.createElement(tag)
+    this.root.classList.add(this.options.prefix + '-' + this.options.class)
 
-    if (e) this.caller = e.target
+    this.buildLabel()
+    this.buildInput()
+    this.buildUnderline()
 
-    css.add(this.root, this.options.class + '-show')
-    this.position(this.caller)
+    if (this.disabled) {
+      css.add(this.root, 'is-disabled')
+    }
+
+    // insert if container this.options is given
+    if (this.options.container) {
+      // console.log(this.name, opts.container);
+      insert(this.root, this.options.container)
+    }
+  }
+
+  buildLabel () {
+    this.label = document.createElement('label')
+    this.label.classList.add(this.options.class + '-label')
+    this.root.appendChild(this.label)
+
+    if (this.options.label !== false) {
+      this.setLabel()
+    }
   }
 
   /**
-   * [position description]
-   * @return {[type]} [description]
+   * [_initInput description]
+   * @return {Object} The class instance
    */
-  position () {
-    if (!this.caller) return
-    var offs = offset(this.caller)
+  buildInput () {
+    this.input = document.createElement('select')
+    this.input.classList.add(this.options.class + '-input')
+    // this.input.setAttribute('type', 'text')
+    this.root.appendChild(this.input)
 
-    var offsw = offset(this.root)
+    // if (!this.options.value) {
+    //   this.root.classList.add('is-empty')
+    // }
 
-    this.root.style.top = offs.top + 'px'
-    this.root.style.left = offs.left - offsw.width + offs.width + 'px'
-    // this.root.style.right = offs.right + offs.width + offsw.width  + 'px'
+    if (this.readonly) {
+      this.input.setAttribute('readonly', 'readonly')
+      this.input.setAttribute('tabindex', '-1')
+    }
+
+    return this.input
   }
 
   /**
-   * [hide description]
-   * @return {[type]} [description]
+   * _initUnderline
+   * @return {Object} The class instance
    */
-  hide () {
-    console.log('hide')
-    css.remove(this.root, this.options.class + '-show')
-    css.remove(this.mask, 'mask-show')
+  buildUnderline () {
+    this.underline = document.createElement('span')
+    this.underline.classList.add(this.options.class + '-underline')
+    this.root.appendChild(this.underline)
+  }
+
+  /**
+   * Setter
+   * @param {string} prop
+   * @param {string} value
+   */
+  set (prop, value) {
+    switch (prop) {
+      case 'value':
+        this.setValue(value)
+        break
+      case 'label':
+        this.setLabel(value)
+        break
+      case 'disabled':
+        if (value === true) {
+          this.disable()
+        } else if (value === false) {
+          this.enable()
+        }
+        break
+      default:
+        this.setValue(prop)
+    }
+
+    return this
+  }
+
+  /**
+   * [buildLabel description]
+   * @return {Object} The class instance
+   */
+  setLabel (label) {
+    label = label || this.options.label
+    var text
+
+    if (label === null || label === false) {
+      text = ''
+    } else if (this.options.label) {
+      text = label
+    } else {
+      text = this.options.name
+    }
+
+    this.label.textContent = text
+  }
+
+  disable () {
+    this.disabled = true
+
+    this.input.setAttribute('disabled', 'disabled')
+    this.root.classList.add('is-disabled')
+    return this
+  }
+
+  enable () {
+    this.disabled = false
+
+    this.element.input.removeAttribute('disabled')
+    this.root.classList.remove('is-disabled')
+    return this
+  }
+
+  /**
+   * Getter
+   * @param {string} prop
+   * @param {string} value
+   */
+  get (prop) {
+    var value
+
+    switch (prop) {
+      case 'value':
+        value = this.getValue()
+        break
+      case 'name':
+        value = this.name
+        break
+      default:
+        return this.getValue()
+    }
+
+    return value
+  }
+
+  /**
+   * [getValue description]
+   * @return {Object} The class instance
+   */
+  getValue () {
+    // console.log('getValue', this);
+    return this.input.value
+  }
+
+  /**
+   * [setValue description]
+   * @param {string} value [description]
+   */
+  setValue (value) {
+    this.input.value = value
+
+    if (value) {
+      this.root.classList.remove('is-empty')
+    } else {
+      this.root.classList.add('is-empty')
+    }
+
+    this.emit('change', value)
+  }
+
+  /**
+   * [_initValue description]
+   * @return {Object} The class instance
+   */
+  _initValue () {
+    var opts = this.options
+
+    // create a new div as input element
+    if (opts.value) {
+      this.setValue(opts.value)
+    }
+  }
+
+  /**
+   * [_onFocus description]
+   * @return {Object} The class instance
+   */
+  _handleInputKeyPress (e) {
+    // console.log('_handleInputKeyPress', e);
+
+    if (this.get('value') === '') {
+      this.root.classList.add('is-empty')
+    } else {
+      this.root.classList.remove('is-empty')
+    }
+
+    this.emit('change', this.getValue())
+  }
+
+  add (key, value) {
+    var select = this.input
+    select.options[select.options.length] = new Option(value, key)
+  }
+
+  /**
+   * focus method
+   * @return {?} [description]
+   */
+  focus () {
+    if (this.disabled === true) return this
+
+    this.root.classList.add('is-focused')
+    if (this.input !== document.activeElement) { this.input.focus() }
+    return this
+  }
+
+  /**
+   * blur method
+   * @return {?} [description]
+   */
+  blur () {
+    this.root.classList.remove('is-focused')
+    return this
+  }
+  /**
+   * [setError description]
+   * @param {string} error Error description
+   */
+  setError (error) {
+    if (error) {
+      this.addClass('field-error')
+      if (this.error) { this.error.set('html', error) }
+    } else {
+      if (this.error) { this.removeClass('field-error') }
+      if (this.error) { this.error.set('html', '') }
+    }
   }
 }
 
-export default Menu
+export default Select
