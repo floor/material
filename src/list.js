@@ -169,6 +169,7 @@ class List {
    * @param {string} value
    */
   set (prop, value, options) {
+    // console.log('set', prop, value)
     switch (prop) {
       case 'list':
         this.setList(value, options)
@@ -191,6 +192,10 @@ class List {
     }
 
     return this
+  }
+
+  scrollToBottom () {
+    this.root.scrollTop = this.root.scrollHeight - this.root.getBoundingClientRect().height
   }
 
   /**
