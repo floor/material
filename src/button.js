@@ -149,6 +149,27 @@ class Button {
   }
 
   /**
+   * [buildLabel description]
+   * @return {Object} The class instance
+   */
+  setLabel (label) {
+    label = label || this.options.label
+    var text
+
+    if (label === null || label === false) {
+      text = ''
+    } else if (label) {
+      text = label
+    } else if (this.options.label) {
+      text = label
+    } else {
+      text = this.options.name
+    }
+
+    this.label.textContent = text
+  }
+
+  /**
    * method handleClick
    * @param  {event} e
    * @return {void}
