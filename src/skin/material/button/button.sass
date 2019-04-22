@@ -1,6 +1,6 @@
 .material-button
-  display: inline-block
-  color: $default-color-text
+  display: flex
+  color: $default-color-button
   -webkit-font-smoothing: antialiased
   white-space: nowrap
   position: relative
@@ -17,6 +17,7 @@
     pointer-events: none
 
   .button-icon
+    flex: none
     pointer-events: none
     z-index: 2
     display: inline-block
@@ -31,6 +32,7 @@
       fill: $default-color-text
 
   .button-label
+    flex: 1
     order: 2
     pointer-events: none
     font-size: 0.875rem
@@ -51,6 +53,12 @@
     height: 5px
     width: 5px
     border-radius: 50%
+
+  &.iconend
+    .button-icon
+      order: 2
+    .button-label
+      order: 1
 
 // states
 .material-button
@@ -136,9 +144,9 @@
   .material-ripple
     background-color: rgba($default-color-text-dark, .1)
   &:focus
+    background-color: rgba($default-color-text-dark, .1)
+    &:hover
       background-color: rgba($default-color-text-dark, .1)
-      &:hover
-        background-color: rgba($default-color-text-dark, .1)
   &:hover
     background-color: rgba($default-color-text-dark, .05)
 

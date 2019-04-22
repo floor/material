@@ -5,13 +5,12 @@
   padding-top: 8px
   margin-bottom: 16px
   vertical-align: top
-
   .textfield-label
     transition: .2s
     color: rgba(0, 0, 0, 0.3)
     position: absolute
     font-size: .7em
-    top: 0
+    top: -2px
 
   .textfield-underline
     position: absolute
@@ -37,9 +36,7 @@
   &.is-focused
     .textfield-label
       transition: .2s
-      color: #4891F4
-      font-size: .7em
-      top: 0
+      color: $primary-color-text
 
     .textfield-underline
       opacity: 1
@@ -65,7 +62,7 @@
         transition: .2s
         color: #4891F4
         font-size: .7em
-        top: 0
+        top: -2px
 
     .textfield-input
       float: none
