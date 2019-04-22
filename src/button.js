@@ -154,7 +154,7 @@ class Button {
    */
   setLabel (label) {
     label = label || this.options.label
-    var text
+    var text = label
 
     if (label === null || label === false) {
       text = ''
@@ -166,7 +166,20 @@ class Button {
       text = this.options.name
     }
 
-    this.label.textContent = text
+    if (!this.element.label) {
+      this.label(text)
+    } else {
+      this.element.label.textContent = text
+    }
+  }
+
+  hide () {
+    console.log('hide')
+    this.root.style.display = 'none'
+  }
+
+  show () {
+    this.root.style.display = 'inherit'
   }
 
   /**
