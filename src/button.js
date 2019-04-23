@@ -84,6 +84,11 @@ class Button {
     this.icon(this.options.icon)
 
     if (this.options.container) {
+      if (this.options.container.root) {
+        this.container = this.options.container.root
+      } else {
+        this.container = this.options.container
+      }
       insert(this.root, this.options.container)
     }
 
@@ -173,13 +178,8 @@ class Button {
     }
   }
 
-  hide () {
-    console.log('hide')
-    this.root.style.display = 'none'
-  }
-
-  show () {
-    this.root.style.display = 'inherit'
+  destroy () {
+    this.container.removeChild(this.root)
   }
 
   /**
