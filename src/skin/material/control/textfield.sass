@@ -31,12 +31,14 @@
     input
       border-bottom: 1px solid #F44336
 
+
+
 // states
 .material-textfield
   &.is-focused
     .textfield-label
       transition: .2s
-      color: $primary-color-text
+      color: $primary-color
 
     .textfield-underline
       opacity: 1
@@ -44,6 +46,7 @@
       width: 100%
       left: 0
       transition: .1s
+      background-color: $primary-color
 
   &.is-empty
     .textfield-label
@@ -60,7 +63,7 @@
     &.is-focused
       .textfield-label
         transition: .2s
-        color: #4891F4
+        color: $primary-color
         font-size: .7em
         top: -2px
 
@@ -101,7 +104,7 @@
     //color: #9A9A9A;
     //color: rgba(0, 0, 0, 1);
     //background-color: rgba(255,255,255,1);
-    border-bottom: 1px dashed rgba(0, 0, 0, 0.12)
+    border-bottom: 1px solid transparent
 
     &:hover
       cursor: default
@@ -111,7 +114,7 @@
     &:focus,
     &:active
       cursor: text
-      border-bottom: 1px dashed rgba(0, 0, 0, 0.12) !important
+      border-bottom: 1px solid transparent !important
 
       //background-color: rgba(255,255,255,1);
 

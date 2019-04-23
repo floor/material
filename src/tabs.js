@@ -64,7 +64,7 @@ class Tabs {
           return item
         },
         select: (item) => {
-          console.log('click')
+          // console.log('click')
           this.selected = item
           this.click(item)
         }
