@@ -1,4 +1,3 @@
-import create from '../element/create'
 import insert from '../element/insert'
 import offset from '../element/offset'
 
@@ -39,7 +38,8 @@ function show (e) {
   var container = e.target
   var offs = offset(container)
 
-  let ripple = create('div', 'material-ripple')
+  let ripple = document.createElement('div')
+  ripple.classList.add('material-ripple')
   let end = coordinate(offs)
   let initial = {
     left: (e.offsetX || offs.width / 2) + 'px',
@@ -48,7 +48,7 @@ function show (e) {
 
   ripple.style.left = initial.left
   ripple.style.top = initial.top
-  //ripple.style.opacity = defaults.opacity[1]
+  // ripple.style.opacity = defaults.opacity[1]
   ripple.style.transition = defaults.transition
 
   insert(ripple, container, 'top')
@@ -59,7 +59,7 @@ function show (e) {
     ripple.style.top = end.top
     ripple.style.width = end.size
     ripple.style.height = end.size
-    //ripple.style.opacity = defaults.opacity[1]
+    // ripple.style.opacity = defaults.opacity[1]
   }, 1)
 
   document.body.onmouseup = () => {
@@ -86,11 +86,12 @@ function destroy (ripple) {
  * @return {Object} Size and position
  */
 function coordinate (o) {
-  var size = o.width
+  var size = o.height
   var top = -o.height / 2
 
   if (o.width > o.height) {
     top = -(o.width - o.height / 2)
+    size = o.width
   }
 
   return {
