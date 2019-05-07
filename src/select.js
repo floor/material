@@ -9,7 +9,7 @@ var defaults = {
   type: 'control',
   tag: 'div',
   events: [
-    // 'change': '_onChange',
+    ['input.change', '_onChange'],
     ['input.focus', 'focus'],
     ['input.blur', 'blur'],
     // ['input.keypress', '_handleInputKeyPress',
@@ -234,6 +234,12 @@ class Select {
     this.emit('change', value)
   }
 
+  _onChange (ev) {
+    console.log('change', ev)
+
+    this.emit('change', ev.target.value)
+  }
+
   /**
    * [_initValue description]
    * @return {Object} The class instance
@@ -263,9 +269,10 @@ class Select {
     this.emit('change', this.getValue())
   }
 
-  add (key, value) {
+  add (key, value, selected) {
+    selected = selected || false
     var select = this.input
-    select.options[select.options.length] = new Option(value, key)
+    select.options[select.options.length] = new Option(value, key, selected, selected)
   }
 
   /**
