@@ -54,6 +54,10 @@ class Dialog {
     // implement modules
     Object.assign(this, events, emitter, attach, insert)
 
+    this.layout = null
+    this.content = null
+    this.html = null
+
     this.controller = controller
 
     return this
@@ -67,6 +71,11 @@ class Dialog {
     this.root = document.createElement('div')
 
     css.add(this.root, 'material-dialog')
+
+    if (this.options.name) {
+      css.add(this.root, 'dialog-' + this.options.name)
+    }
+
     if (this.options.css) {
       css.add(this.root, this.options.css)
     }
@@ -89,6 +98,14 @@ class Dialog {
       this.buildContent()
     }
 
+    if (this.options.layout) {
+      this.buildLayout()
+    }
+
+    if (this.options.html) {
+      this.buildHTML()
+    }
+
     this.buildActions()
 
     event.add(this.surface, 'click', function (ev) {
@@ -108,23 +125,24 @@ class Dialog {
     console.log('buildTitle', this.title)
   }
 
-  buildContent () {
-    console.log('buildContent', typeof this.options.content)
-    if (typeof this.options.content === 'string') {
-      console.log('text content', this.options.content)
-      this.content = new Text({
-        type: 'content',
-        css: 'dialog-content',
-        text: this.options.content
-      })
+  buildLayout () {
+    this.layout = new Layout(this.options.layout, this.surface)
+  }
 
-      this.insertElement(this.content.root, this.surface)
-    } else if (_isArray(this.options.content)) {
-      this.content = new Layout(this.options.content, this.surface)
-      console.log('layout content', this.content)
-    } else {
-      console.log('other content', this.content)
-    }
+  buildHTML () {
+    this.html = new Container({
+      css: 'dialog-content'
+    })
+  }
+
+  buildContent () {
+    console.log('text content', this.options.content)
+    this.content = new Text({
+      type: 'content',
+      css: 'dialog-content',
+      text: this.options.content
+    })
+    this.insertElement(this.content.root, this.surface)
   }
 
   buildActions () {
@@ -170,6 +188,8 @@ class Dialog {
     }, delayMillis)
 
     this.previousActive.focus()
+
+    return this
   }
 
   show () {
@@ -184,6 +204,8 @@ class Dialog {
       css.add(this.root, 'dialog-show')
       // css.remove(this.root, 'dialog-showing');
     }, delayMillis)
+
+    return this
 
     // var button = this.root.querySelector('button')
 
