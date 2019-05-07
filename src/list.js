@@ -13,7 +13,7 @@ const defaults = {
   class: 'list',
   tag: 'ul',
   functions: ['render', 'select'],
-  target: '.material-item',
+  target: 'LI',
   events: [
     ['root.click', 'handleSelect']
   ]
@@ -122,14 +122,19 @@ class List {
    * @return {?}   [description]
    */
   handleSelect (e) {
-    // console.log('onSelect', e.target, this.options.target);
-    if (e.target && e.target.matches(this.options.target)) {
-      // console.log("item clicked: ", e.target);
-      css.remove(this.item, 'is-selected')
-      css.add(e.target, 'is-selected')
+    if (e && e.target) {
+      var el = e.target
 
-      this.select(e.target, e, this.item)
-      this.item = e.target
+      while (el && !el.matches(this.options.target)) {
+        el = el.parentNode
+      }
+
+      console.log('item clicked: ', el)
+      css.remove(this.item, 'is-selected')
+      css.add(el, 'is-selected')
+
+      this.select(el, e, this.item)
+      this.item = el
     }
   }
 
@@ -208,7 +213,11 @@ class List {
     }
 
     var where = 'bottom'
-    insert(item.root, this.root, where)
+    if (item.root) {
+      insert(item.root, this.root, where)
+    } else {
+      insert(item, this.root, where)
+    }
 
     this.items.push(item)
 
