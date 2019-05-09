@@ -48,7 +48,9 @@ class Layout {
 
         if (typeof schema[i + 1] === 'string') {
           name = schema[i + 1]
-          options.name = name
+          if (!schema[i].isElement) {
+            options.name = name
+          }
         }
 
         component = new schema[i](options)
