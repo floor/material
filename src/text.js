@@ -85,13 +85,9 @@ class Text {
    */
   set (value) {
     if (value) {
-      if (this.root.innerText) {
-        this.root.innerText = value
-      } else {
-        this.root.textContent = value
-      }
-
-      return this
+      this.root.textContent = value
+    } else {
+      this.root.textContent = ''
     }
 
     return this

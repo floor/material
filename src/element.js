@@ -24,12 +24,19 @@ class Element {
     var element = document.createElement(options.tag || 'div')
 
     delete options.tag
-    delete options.tag
 
     for (var property in options) {
       if (options.hasOwnProperty(property)) {
         element.setAttribute(property, options[property])
       }
+    }
+
+    if (options.html) {
+      element.innerHTML = options.html
+    }
+
+    if (options.text) {
+      element.textContent = options.text
     }
 
     return element
