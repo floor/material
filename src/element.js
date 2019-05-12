@@ -9,10 +9,12 @@
  *   class: 'mydiv',
  * })
  */
+
 class Element {
   static isElement () {
     return true
   }
+
   /**
    * The init method of the Button class
    * @param  {Object} The element attributes
@@ -20,23 +22,26 @@ class Element {
    * @return {DOMElement} The dom element
    */
   constructor (options) {
-    //  console.log('Element options', options)
-    var element = document.createElement(options.tag || 'div')
-
-    delete options.tag
-
-    for (var property in options) {
-      if (options.hasOwnProperty(property)) {
-        element.setAttribute(property, options[property])
-      }
-    }
+    this.options = Object.assign({}, options || {})
+    // console.log('element options', options)
+    var element = document.createElement(this.options.tag || 'div')
 
     if (options.html) {
-      element.innerHTML = options.html
+      element.innerHTML = this.options.html
     }
 
     if (options.text) {
-      element.textContent = options.text
+      element.textContent = this.options.text
+    }
+
+    delete this.options.tag
+    delete this.options.text
+    delete this.options.html
+
+    for (var property in this.options) {
+      if (this.options.hasOwnProperty(property)) {
+        element.setAttribute(property, this.options[property])
+      }
     }
 
     return element
