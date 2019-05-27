@@ -129,7 +129,7 @@ class List {
         el = el.parentNode
       }
 
-      console.log('item clicked: ', el)
+      //console.log('item clicked: ', el)
       css.remove(this.item, 'is-selected')
       css.add(el, 'is-selected')
 
