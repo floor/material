@@ -147,9 +147,9 @@ class Switch {
    */
   setValue (value) {
     if (value) {
-      this.check()
+      this.check(value)
     } else {
-      this.unCheck()
+      this.unCheck(value)
     }
   }
 }
