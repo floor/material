@@ -8,6 +8,7 @@ import offset from './element/offset'
 
 import List from './list'
 import Button from './button'
+import Divider from './divider'
 
 const defaults = {
   prefix: 'material',
@@ -55,11 +56,16 @@ class Tabs {
 
         render: (info) => {
           var item
+          if (info.type === 'divider') {
+            item = new Divider()
+          } else {
 
-          item = new Button({
-            name: info.name,
-            text: info.text || info.name
-          })
+            item = new Button({
+              name: info.name,
+              text: info.text || info.name
+            })
+          }
+
 
           return item
         },
