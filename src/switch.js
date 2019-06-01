@@ -148,8 +148,6 @@ class Switch {
   setValue (value) {
     if (value) {
       this.check(value)
-    } else {
-      this.unCheck(value)
     }
   }
 }
