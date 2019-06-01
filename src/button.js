@@ -14,7 +14,8 @@ const defaults = {
   class: 'button',
   tag: 'button',
   events: [
-    ['root.click', 'handleClick']
+    ['root.click', 'handleClick'],
+    ['root.mouseover', 'handleMouseOver']
   ]
 }
 
@@ -82,6 +83,10 @@ class Button {
 
     this.label(this.options.label)
     this.icon(this.options.icon)
+
+    if (this.options.tooltip) {
+      this.root.dataset.tooltip = this.options.tooltip
+    }
 
     if (this.options.container) {
       if (this.options.container.root) {
@@ -195,6 +200,24 @@ class Button {
 
     // this.publish('click');
     this.emit('click', e)
+
+    return this
+  }
+
+
+  /**
+   * method handleClick
+   * @param  {event} e
+   * @return {void}
+   */
+  handleMouseOver (e) {
+    e.preventDefault()
+
+    //console.log('mouse over', e.target)
+
+    if (e.target.dataset.tooltip) {
+      console.log(e.target.dataset.tooltip)
+    }
 
     return this
   }
