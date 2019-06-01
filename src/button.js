@@ -81,6 +81,10 @@ class Button {
 
     this.root.setAttribute('aria-label', this.options.label || this.options.name)
 
+    if (this.options.title) {
+      this.root.setAttribute('title', this.options.title)
+    }
+
     this.label(this.options.label)
     this.icon(this.options.icon)
 
@@ -216,7 +220,7 @@ class Button {
     //console.log('mouse over', e.target)
 
     if (e.target.dataset.tooltip) {
-      console.log(e.target.dataset.tooltip)
+      //console.log(e.target.dataset.tooltip)
     }
 
     return this
