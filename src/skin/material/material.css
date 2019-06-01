@@ -208,7 +208,7 @@ a {
   box-shadow: 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14), 0px 9px 46px 8px rgba(0, 0, 0, 0.12); }
 
 .theme-dark,
-.dark-theme {
+.dark-mode {
   background-color: #333333;
   color: rgba(255, 255, 255, 0.95); }
 
@@ -225,8 +225,8 @@ a {
 .material-component {
   background-color: white; }
 
-.dark-theme .material-component,
-.material-component.dark-theme {
+.dark-mode .material-component,
+.material-component.dark-mode {
   background-color: #333333; }
 
 .ui-text {
@@ -567,8 +567,8 @@ a {
   .view-dialog .material-dialog.simple-dialog .dialog-surface {
     width: 600px; }
 
-.dark-theme .material-dialog .dialog-surface,
-.material-dialog.dark-theme .dialog-surface {
+.dark-mode .material-dialog .dialog-surface,
+.material-dialog.dark-mode .dialog-surface {
   background-color: #333333; }
 
 .material-drawer {
@@ -854,59 +854,59 @@ a {
   .material-button.secondary-color:hover {
     background-color: rgba(26, 153, 137, 0.05); }
 
-.dark-theme .material-button,
-.material-button.dark-theme {
+.dark-mode .material-button,
+.material-button.dark-mode {
   color: rgba(255, 255, 255, 0.95); }
-  .dark-theme .material-button .button-icon svg,
-  .material-button.dark-theme .button-icon svg {
+  .dark-mode .material-button .button-icon svg,
+  .material-button.dark-mode .button-icon svg {
     fill: rgba(255, 255, 255, 0.95); }
-  .dark-theme .material-button .material-ripple,
-  .material-button.dark-theme .material-ripple {
+  .dark-mode .material-button .material-ripple,
+  .material-button.dark-mode .material-ripple {
     background-color: rgba(255, 255, 255, 0.1); }
-  .dark-theme .material-button:focus,
-  .material-button.dark-theme:focus {
+  .dark-mode .material-button:focus,
+  .material-button.dark-mode:focus {
     background-color: rgba(255, 255, 255, 0.1); }
-    .dark-theme .material-button:focus:hover,
-    .material-button.dark-theme:focus:hover {
+    .dark-mode .material-button:focus:hover,
+    .material-button.dark-mode:focus:hover {
       background-color: rgba(255, 255, 255, 0.1); }
-  .dark-theme .material-button:hover,
-  .material-button.dark-theme:hover {
+  .dark-mode .material-button:hover,
+  .material-button.dark-mode:hover {
     background-color: rgba(255, 255, 255, 0.05); }
-  .dark-theme .material-button.primary-color,
-  .material-button.dark-theme.primary-color {
+  .dark-mode .material-button.primary-color,
+  .material-button.dark-mode.primary-color {
     color: #6200ee; }
-    .dark-theme .material-button.primary-color .button-icon svg,
-    .material-button.dark-theme.primary-color .button-icon svg {
+    .dark-mode .material-button.primary-color .button-icon svg,
+    .material-button.dark-mode.primary-color .button-icon svg {
       fill: #6200ee; }
-    .dark-theme .material-button.primary-color .material-ripple,
-    .material-button.dark-theme.primary-color .material-ripple {
+    .dark-mode .material-button.primary-color .material-ripple,
+    .material-button.dark-mode.primary-color .material-ripple {
       background-color: rgba(98, 0, 238, 0.3); }
-    .dark-theme .material-button.primary-color:focus,
-    .material-button.dark-theme.primary-color:focus {
+    .dark-mode .material-button.primary-color:focus,
+    .material-button.dark-mode.primary-color:focus {
       background-color: rgba(98, 0, 238, 0.2); }
-      .dark-theme .material-button.primary-color:focus:hover,
-      .material-button.dark-theme.primary-color:focus:hover {
+      .dark-mode .material-button.primary-color:focus:hover,
+      .material-button.dark-mode.primary-color:focus:hover {
         background-color: rgba(98, 0, 238, 0.2); }
-    .dark-theme .material-button.primary-color:hover,
-    .material-button.dark-theme.primary-color:hover {
+    .dark-mode .material-button.primary-color:hover,
+    .material-button.dark-mode.primary-color:hover {
       background-color: rgba(98, 0, 238, 0.1); }
-  .dark-theme .material-button.secondary-color,
-  .material-button.dark-theme.secondary-color {
+  .dark-mode .material-button.secondary-color,
+  .material-button.dark-mode.secondary-color {
     color: #1A9989; }
-    .dark-theme .material-button.secondary-color .button-icon svg,
-    .material-button.dark-theme.secondary-color .button-icon svg {
+    .dark-mode .material-button.secondary-color .button-icon svg,
+    .material-button.dark-mode.secondary-color .button-icon svg {
       fill: #1A9989; }
-    .dark-theme .material-button.secondary-color .material-ripple,
-    .material-button.dark-theme.secondary-color .material-ripple {
+    .dark-mode .material-button.secondary-color .material-ripple,
+    .material-button.dark-mode.secondary-color .material-ripple {
       background-color: rgba(26, 153, 137, 0.3); }
-    .dark-theme .material-button.secondary-color:focus,
-    .material-button.dark-theme.secondary-color:focus {
+    .dark-mode .material-button.secondary-color:focus,
+    .material-button.dark-mode.secondary-color:focus {
       background-color: rgba(26, 153, 137, 0.2); }
-      .dark-theme .material-button.secondary-color:focus:hover,
-      .material-button.dark-theme.secondary-color:focus:hover {
+      .dark-mode .material-button.secondary-color:focus:hover,
+      .material-button.dark-mode.secondary-color:focus:hover {
         background-color: rgba(26, 153, 137, 0.2); }
-    .dark-theme .material-button.secondary-color:hover,
-    .material-button.dark-theme.secondary-color:hover {
+    .dark-mode .material-button.secondary-color:hover,
+    .material-button.dark-mode.secondary-color:hover {
       background-color: rgba(26, 153, 137, 0.1); }
 
 .material-button.type-raised {
@@ -957,57 +957,57 @@ a {
   .material-button.type-raised.secondary-color:hover {
     background-color: #1eaf9d; }
 
-.dark-theme .material-button.type-raised,
-.material-button.type-raised.dark-theme {
+.dark-mode .material-button.type-raised,
+.material-button.type-raised.dark-mode {
   background-color: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.95); }
-  .dark-theme .material-button.type-raised .material-ripple,
-  .material-button.type-raised.dark-theme .material-ripple {
+  .dark-mode .material-button.type-raised .material-ripple,
+  .material-button.type-raised.dark-mode .material-ripple {
     opacity: 0.1;
     background-color: white; }
-  .dark-theme .material-button.type-raised:focus,
-  .material-button.type-raised.dark-theme:focus {
+  .dark-mode .material-button.type-raised:focus,
+  .material-button.type-raised.dark-mode:focus {
     background-color: rgba(255, 255, 255, 0.2); }
-    .dark-theme .material-button.type-raised:focus:hover,
-    .material-button.type-raised.dark-theme:focus:hover {
+    .dark-mode .material-button.type-raised:focus:hover,
+    .material-button.type-raised.dark-mode:focus:hover {
       background-color: rgba(255, 255, 255, 0.2); }
-  .dark-theme .material-button.type-raised:hover,
-  .material-button.type-raised.dark-theme:hover {
+  .dark-mode .material-button.type-raised:hover,
+  .material-button.type-raised.dark-mode:hover {
     background-color: rgba(255, 255, 255, 0.15); }
-  .dark-theme .material-button.type-raised .button-icon svg,
-  .material-button.type-raised.dark-theme .button-icon svg {
+  .dark-mode .material-button.type-raised .button-icon svg,
+  .material-button.type-raised.dark-mode .button-icon svg {
     fill: rgba(255, 255, 255, 0.95); }
-  .dark-theme .material-button.type-raised.primary-color,
-  .material-button.type-raised.dark-theme.primary-color {
+  .dark-mode .material-button.type-raised.primary-color,
+  .material-button.type-raised.dark-mode.primary-color {
     background-color: #6200ee;
     color: rgba(255, 255, 255, 0.95); }
-    .dark-theme .material-button.type-raised.primary-color .button-icon svg,
-    .material-button.type-raised.dark-theme.primary-color .button-icon svg {
+    .dark-mode .material-button.type-raised.primary-color .button-icon svg,
+    .material-button.type-raised.dark-mode.primary-color .button-icon svg {
       fill: rgba(255, 255, 255, 0.95); }
-    .dark-theme .material-button.type-raised.primary-color:focus,
-    .material-button.type-raised.dark-theme.primary-color:focus {
+    .dark-mode .material-button.type-raised.primary-color:focus,
+    .material-button.type-raised.dark-mode.primary-color:focus {
       background-color: #8c3cff; }
-      .dark-theme .material-button.type-raised.primary-color:focus:hover,
-      .material-button.type-raised.dark-theme.primary-color:focus:hover {
+      .dark-mode .material-button.type-raised.primary-color:focus:hover,
+      .material-button.type-raised.dark-mode.primary-color:focus:hover {
         background-color: #8c3cff; }
-    .dark-theme .material-button.type-raised.primary-color:hover,
-    .material-button.type-raised.dark-theme.primary-color:hover {
+    .dark-mode .material-button.type-raised.primary-color:hover,
+    .material-button.type-raised.dark-mode.primary-color:hover {
       background-color: #7413ff; }
-  .dark-theme .material-button.type-raised.secondary-color,
-  .material-button.type-raised.dark-theme.secondary-color {
+  .dark-mode .material-button.type-raised.secondary-color,
+  .material-button.type-raised.dark-mode.secondary-color {
     background-color: #1A9989;
     color: rgba(255, 255, 255, 0.95); }
-    .dark-theme .material-button.type-raised.secondary-color .button-icon svg,
-    .material-button.type-raised.dark-theme.secondary-color .button-icon svg {
+    .dark-mode .material-button.type-raised.secondary-color .button-icon svg,
+    .material-button.type-raised.dark-mode.secondary-color .button-icon svg {
       fill: rgba(255, 255, 255, 0.95); }
-    .dark-theme .material-button.type-raised.secondary-color:focus,
-    .material-button.type-raised.dark-theme.secondary-color:focus {
+    .dark-mode .material-button.type-raised.secondary-color:focus,
+    .material-button.type-raised.dark-mode.secondary-color:focus {
       background-color: #21c5b0; }
-      .dark-theme .material-button.type-raised.secondary-color:focus:hover,
-      .material-button.type-raised.dark-theme.secondary-color:focus:hover {
+      .dark-mode .material-button.type-raised.secondary-color:focus:hover,
+      .material-button.type-raised.dark-mode.secondary-color:focus:hover {
         background-color: #21c5b0; }
-    .dark-theme .material-button.type-raised.secondary-color:hover,
-    .material-button.type-raised.dark-theme.secondary-color:hover {
+    .dark-mode .material-button.type-raised.secondary-color:hover,
+    .material-button.type-raised.dark-mode.secondary-color:hover {
       background-color: #1eaf9d; }
 
 .material-button.type-floating {
@@ -1070,57 +1070,57 @@ a {
   .material-button.type-floating.secondary-color:hover {
     background-color: #1eaf9d; }
 
-.dark-theme .material-button.type-floating,
-.material-button.type-floating.dark-theme {
+.dark-mode .material-button.type-floating,
+.material-button.type-floating.dark-mode {
   background-color: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.95); }
-  .dark-theme .material-button.type-floating .material-ripple,
-  .material-button.type-floating.dark-theme .material-ripple {
+  .dark-mode .material-button.type-floating .material-ripple,
+  .material-button.type-floating.dark-mode .material-ripple {
     opacity: 0.1;
     background-color: white; }
-  .dark-theme .material-button.type-floating:focus,
-  .material-button.type-floating.dark-theme:focus {
+  .dark-mode .material-button.type-floating:focus,
+  .material-button.type-floating.dark-mode:focus {
     background-color: rgba(255, 255, 255, 0.2); }
-    .dark-theme .material-button.type-floating:focus:hover,
-    .material-button.type-floating.dark-theme:focus:hover {
+    .dark-mode .material-button.type-floating:focus:hover,
+    .material-button.type-floating.dark-mode:focus:hover {
       background-color: rgba(255, 255, 255, 0.2); }
-  .dark-theme .material-button.type-floating:hover,
-  .material-button.type-floating.dark-theme:hover {
+  .dark-mode .material-button.type-floating:hover,
+  .material-button.type-floating.dark-mode:hover {
     background-color: rgba(255, 255, 255, 0.15); }
-  .dark-theme .material-button.type-floating .button-icon svg,
-  .material-button.type-floating.dark-theme .button-icon svg {
+  .dark-mode .material-button.type-floating .button-icon svg,
+  .material-button.type-floating.dark-mode .button-icon svg {
     fill: rgba(255, 255, 255, 0.95); }
-  .dark-theme .material-button.type-floating.primary-color,
-  .material-button.type-floating.dark-theme.primary-color {
+  .dark-mode .material-button.type-floating.primary-color,
+  .material-button.type-floating.dark-mode.primary-color {
     background-color: #6200ee;
     color: rgba(255, 255, 255, 0.95); }
-    .dark-theme .material-button.type-floating.primary-color .button-icon svg,
-    .material-button.type-floating.dark-theme.primary-color .button-icon svg {
+    .dark-mode .material-button.type-floating.primary-color .button-icon svg,
+    .material-button.type-floating.dark-mode.primary-color .button-icon svg {
       fill: rgba(255, 255, 255, 0.95); }
-    .dark-theme .material-button.type-floating.primary-color:focus,
-    .material-button.type-floating.dark-theme.primary-color:focus {
+    .dark-mode .material-button.type-floating.primary-color:focus,
+    .material-button.type-floating.dark-mode.primary-color:focus {
       background-color: #8c3cff; }
-      .dark-theme .material-button.type-floating.primary-color:focus:hover,
-      .material-button.type-floating.dark-theme.primary-color:focus:hover {
+      .dark-mode .material-button.type-floating.primary-color:focus:hover,
+      .material-button.type-floating.dark-mode.primary-color:focus:hover {
         background-color: #8c3cff; }
-    .dark-theme .material-button.type-floating.primary-color:hover,
-    .material-button.type-floating.dark-theme.primary-color:hover {
+    .dark-mode .material-button.type-floating.primary-color:hover,
+    .material-button.type-floating.dark-mode.primary-color:hover {
       background-color: #7413ff; }
-  .dark-theme .material-button.type-floating.secondary-color,
-  .material-button.type-floating.dark-theme.secondary-color {
+  .dark-mode .material-button.type-floating.secondary-color,
+  .material-button.type-floating.dark-mode.secondary-color {
     background-color: #1A9989;
     color: rgba(255, 255, 255, 0.95); }
-    .dark-theme .material-button.type-floating.secondary-color .button-icon svg,
-    .material-button.type-floating.dark-theme.secondary-color .button-icon svg {
+    .dark-mode .material-button.type-floating.secondary-color .button-icon svg,
+    .material-button.type-floating.dark-mode.secondary-color .button-icon svg {
       fill: rgba(255, 255, 255, 0.95); }
-    .dark-theme .material-button.type-floating.secondary-color:focus,
-    .material-button.type-floating.dark-theme.secondary-color:focus {
+    .dark-mode .material-button.type-floating.secondary-color:focus,
+    .material-button.type-floating.dark-mode.secondary-color:focus {
       background-color: #21c5b0; }
-      .dark-theme .material-button.type-floating.secondary-color:focus:hover,
-      .material-button.type-floating.dark-theme.secondary-color:focus:hover {
+      .dark-mode .material-button.type-floating.secondary-color:focus:hover,
+      .material-button.type-floating.dark-mode.secondary-color:focus:hover {
         background-color: #21c5b0; }
-    .dark-theme .material-button.type-floating.secondary-color:hover,
-    .material-button.type-floating.dark-theme.secondary-color:hover {
+    .dark-mode .material-button.type-floating.secondary-color:hover,
+    .material-button.type-floating.dark-mode.secondary-color:hover {
       background-color: #1eaf9d; }
 
 .material-button.type-action {
@@ -1167,22 +1167,22 @@ a {
     background-color: #1eaf9d;
     color: rgba(255, 255, 255, 0.95); }
 
-.dark-theme .material-button.type-action,
-.material-button.type-action.dark-theme {
+.dark-mode .material-button.type-action,
+.material-button.type-action.dark-mode {
   color: rgba(255, 255, 255, 0.95); }
-  .dark-theme .material-button.type-action.primary-color,
-  .material-button.type-action.dark-theme.primary-color {
+  .dark-mode .material-button.type-action.primary-color,
+  .material-button.type-action.dark-mode.primary-color {
     background-color: #6200ee;
     color: rgba(255, 255, 255, 0.95); }
-    .dark-theme .material-button.type-action.primary-color .button-icon svg,
-    .material-button.type-action.dark-theme.primary-color .button-icon svg {
+    .dark-mode .material-button.type-action.primary-color .button-icon svg,
+    .material-button.type-action.dark-mode.primary-color .button-icon svg {
       fill: rgba(255, 255, 255, 0.95); }
-  .dark-theme .material-button.type-action.secondary-color,
-  .material-button.type-action.dark-theme.secondary-color {
+  .dark-mode .material-button.type-action.secondary-color,
+  .material-button.type-action.dark-mode.secondary-color {
     background-color: #1A9989;
     color: rgba(255, 255, 255, 0.95); }
-    .dark-theme .material-button.type-action.secondary-color .button-icon svg,
-    .material-button.type-action.dark-theme.secondary-color .button-icon svg {
+    .dark-mode .material-button.type-action.secondary-color .button-icon svg,
+    .material-button.type-action.dark-mode.secondary-color .button-icon svg {
       fill: rgba(255, 255, 255, 0.95); }
 
 .material-button.type-file {
@@ -1294,10 +1294,10 @@ a {
     cursor: text;
     border-bottom: 1px dashed rgba(0, 0, 0, 0.12) !important; }
 
-.dark-theme .material-textfield .textfield-label {
+.dark-mode .material-textfield .textfield-label {
   transition: 0.2s;
   color: rgba(255, 255, 255, 0.3); }
-.dark-theme .material-textfield .textfield-input {
+.dark-mode .material-textfield .textfield-input {
   border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
 
 .material-switch {
@@ -1390,11 +1390,11 @@ a {
         background-color: #bdbdbd;
         box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.12), 0 0 1px 0 rgba(0, 0, 0, 0.06); }
 
-.dark-theme .material-switch .switch-control .switch-track {
+.dark-mode .material-switch .switch-control .switch-track {
   background-color: rgba(255, 255, 255, 0.5); }
-.dark-theme .material-switch.is-checked .switch-track {
+.dark-mode .material-switch.is-checked .switch-track {
   background-color: rgba(26, 153, 137, 0.3); }
-.dark-theme .material-switch.is-focused .switch-control .switch-track .switch-knob::after {
+.dark-mode .material-switch.is-focused .switch-control .switch-track .switch-knob::after {
   background-color: rgba(255, 255, 255, 0.05); }
 
 .material-checkbox {
@@ -1465,14 +1465,14 @@ a {
   .material-checkbox.is-focused .checkbox-control {
     background-color: rgba(34, 31, 31, 0.05); }
 
-.dark-theme .material-checkbox > .material-control > .checkbox-icon,
-.material-checkbox.dark-theme > .material-control > .checkbox-icon {
+.dark-mode .material-checkbox > .material-control > .checkbox-icon,
+.material-checkbox.dark-mode > .material-control > .checkbox-icon {
   border: 2px solid rgba(255, 255, 255, 0.5); }
-.dark-theme .material-checkbox.is-focused .checkbox-control,
-.material-checkbox.dark-theme.is-focused .checkbox-control {
+.dark-mode .material-checkbox.is-focused .checkbox-control,
+.material-checkbox.dark-mode.is-focused .checkbox-control {
   background-color: rgba(255, 255, 255, 0.05); }
-.dark-theme .material-checkbox.is-checked .material-control,
-.material-checkbox.dark-theme.is-checked .material-control {
+.dark-mode .material-checkbox.is-checked .material-control,
+.material-checkbox.dark-mode.is-checked .material-control {
   background-color: rgba(255, 255, 255, 0.5); }
 
 .material-slider {
@@ -1603,7 +1603,7 @@ a {
     display: block;
     transition: 0.2s; }
 
-.dark-theme .material-slider .slider-control .slider-track .slider-tarck-value {
+.dark-mode .material-slider .slider-control .slider-track .slider-tarck-value {
   background-color: #5C5C5C; }
 
 .material-list {
