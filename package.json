@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "0.3.14",
+  "version": "0.3.15",
   "description": "A lightweight implementation of Material Design Components - ES6",
   "main": "index.js",
   "repository": {
