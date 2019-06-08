@@ -127,13 +127,13 @@ class Textfield {
    * @param {string} prop
    * @param {string} value
    */
-  set (prop, value) {
+  set (prop, value, options) {
     switch (prop) {
       case 'value':
-        this.setValue(value)
+        this.setValue(value, options)
         break
       case 'label':
-        this.setLabel(value)
+        this.setLabel(value, options)
         break
       case 'disabled':
         if (value === true) {
@@ -143,7 +143,7 @@ class Textfield {
         }
         break
       default:
-        this.setValue(prop)
+        this.setValue(prop, value)
     }
 
     return this
@@ -219,7 +219,8 @@ class Textfield {
    * [setValue description]
    * @param {string} value [description]
    */
-  setValue (value) {
+  setValue (value, silent) {
+    // console.log('setValue', value, silent);
     this.input.value = value
 
     if (value) {
@@ -228,7 +229,7 @@ class Textfield {
       this.root.classList.add('is-empty')
     }
 
-    this.emit('change', value)
+    if (!silent) { this.emit('change', value) }
   }
 
   /**
