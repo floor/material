@@ -44,6 +44,10 @@ class Element {
       }
     }
 
+    if (this.options.container) {
+      this.options.container.appendChild(element)
+    }
+
     return element
   }
 }
