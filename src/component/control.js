@@ -31,7 +31,7 @@ var control = {
    * @param {boolean} value [description]
    */
   check (checked) {
-    if (checked) {
+    if (checked === true) {
       css.add(this.root, 'is-checked')
       this.element.input.checked = true
       this.checked = true
