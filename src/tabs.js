@@ -45,10 +45,11 @@ class Tabs {
    */
   build () {
     this.root = create(this.options)
-
+    this.tab = { }
     if (this.options.list) {
       this.list = new List({
         // root: this.root,
+        tag: 'div',
         list: this.options.list,
         target: '.material-button',
         height: 600,
@@ -59,18 +60,17 @@ class Tabs {
           if (info.type === 'divider') {
             item = new Divider()
           } else {
-
             item = new Button({
               name: info.name,
               text: info.text || info.name
             })
           }
 
+          this.tab[info.name] = item
 
           return item
         },
         select: (item) => {
-          // console.log('click')
           this.selected = item
           this.click(item)
         }
@@ -87,11 +87,19 @@ class Tabs {
     return this
   }
 
-  click (item) {
+  select (tab) {
+    // console.log('select', tab, this.tab)
+    this.selected = this.tab[tab]
+    this.click(this.selected.root, true)
+  }
+
+  click (item, silent) {
+    // console.log('clickitem', item, this.root);
     var or = offset(this.root)
     var o = offset(item)
     this.indicator.setAttribute('style', 'width: ' + o.width + 'px; left: ' + (o.left - or.left) + 'px;')
-    this.emit('select', item.dataset.name)
+
+    if (!silent) { this.emit('select', item.dataset.name) }
   }
 }
 
