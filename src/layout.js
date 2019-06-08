@@ -75,6 +75,7 @@ class Layout {
         if (component && container) {
           if (component.insert) component.insert(container)
           else insert(component, container)
+          component._container = container
         }
       } else if (Array.isArray(schema[i])) {
        // console.log('------', schema[i])
