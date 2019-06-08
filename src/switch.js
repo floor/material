@@ -1,7 +1,7 @@
 'use strict'
 
 // import control from '../control';
-import control from './component/control'
+// import control from './component/control'
 import build from './element/build'
 import emitter from './module/emitter'
 import insert from './component/insert'
@@ -64,7 +64,7 @@ class Switch {
    */
   init (options) {
     this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, emitter, control, attach, insert)
+    Object.assign(this, emitter, attach, insert)
 
     this.value = this.options.value
 
@@ -145,10 +145,68 @@ class Switch {
    * set switch value
    * @param {boolean} value [description]
    */
-  setValue (value) {
-    if (value) {
-      this.check(value)
+  setValue (value, silent) {
+    // console.log('setValue', value)
+    this.check(value)
+  }
+
+ /**
+   * [toggle description]
+   * @return {Object} The class instance
+   */
+  toggle () {
+    if (this.disabled) return
+
+    this.focus()
+
+    if (this.checked) {
+      this.check(false)
+    } else {
+      this.check(true)
     }
+
+    return this
+  }
+
+  /**
+   * Set checkbox value
+   * @param {boolean} value [description]
+   */
+  check (checked, silent) {
+    // console.log('check', checked, silent)
+    if (checked === true) {
+      this.root.classList.add('is-checked')
+      this.element.input.checked = true
+      this.checked = true
+      this.emit('change', this.checked)
+    } else {
+      this.root.classList.remove('is-checked')
+      this.element.input.checked = false
+      this.checked = false
+      this.emit('change', this.checked)
+    }
+    return this
+  }
+
+  /**
+   * [_onInputFocus description]
+   * @return {?} [description]
+   */
+  focus () {
+    if (this.disabled === true) return this
+
+    this.root.classList.add('is-focused')
+    if (this.element.input !== document.activeElement) { this.element.input.focus() }
+    return this
+  }
+
+  /**
+   * [_onInputBlur description]
+   * @return {?} [description]
+   */
+  blur () {
+    this.root.classList.remove('is-focused')
+    return this
   }
 }
 
