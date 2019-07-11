@@ -178,11 +178,13 @@ class Switch {
       this.root.classList.add('is-checked')
       this.element.input.checked = true
       this.checked = true
+      this.value = true
       this.emit('change', this.checked)
     } else {
       this.root.classList.remove('is-checked')
       this.element.input.checked = false
       this.checked = false
+      this.value = false
       this.emit('change', this.checked)
     }
     return this
