@@ -62,7 +62,8 @@ class Tabs {
           } else {
             item = new Button({
               name: info.name,
-              text: info.text || info.name
+              text: info.text || info.name,
+              tooltip: info.tootip
             })
           }
 
