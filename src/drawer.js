@@ -86,15 +86,22 @@ class Drawer {
   }
 
   attach () {
+    if (this.options.type === 'pesistent') return
+    if (this.options.type === 'permanent') return
+
     this.wrapper.addEventListener('click', (e) => {
-      console.log(' click close')
-      this.close()
+      console.log('target', e.currentTarget)
+      if (this.wrapper === e.currentTarget) {
+        this.close()
+      }
     })
   }
+
   /**
    * [toggle description]
    * @return {Object} The class instance
    */
+
   toggle () {
     // console.log('toggle', this.root);
     if (this.wrapper.classList.contains('show')) {
