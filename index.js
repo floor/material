@@ -1,6 +1,6 @@
-import AppBar from 'material/src/AppBar'
-import Button from 'material/src/Button'
-import Banner from 'material/src/Banner'
+import AppBar from 'material/src/appbar'
+import Button from 'material/src/button'
+import Banner from 'material/src/banner'
 import Calendar from 'material/src/calendar'
 import Card from 'material/src/card'
 import Component from 'material/src/component'
@@ -9,6 +9,7 @@ import Checkbox from 'material/src/checkbox'
 import Dialog from 'material/src/dialog'
 import Divider from 'material/src/divider'
 import Drawer from 'material/src/drawer'
+import Element from 'material/src/element'
 import Form from 'material/src/form'
 import Icon from 'material/src/icon'
 import Image from 'material/src/image'
@@ -39,7 +40,9 @@ export {
   Dialog,
   Divider,
   Drawer,
+  Element,
   Form,
+  Icon,
   Image,
   Item,
   Layout,
