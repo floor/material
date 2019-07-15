@@ -90,7 +90,7 @@ class Drawer {
     if (this.options.type === 'permanent') return
 
     this.wrapper.addEventListener('click', (e) => {
-      console.log('target', e.currentTarget)
+      // console.log('target', e.currentTarget)
       if (this.wrapper === e.currentTarget) {
         this.close()
       }
