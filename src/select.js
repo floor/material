@@ -235,7 +235,7 @@ class Select {
   }
 
   _onChange (ev) {
-    console.log('change', ev)
+    // console.log('change', ev)
 
     this.emit('change', ev.target.value)
   }
