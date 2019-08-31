@@ -52,6 +52,7 @@ class Drawer {
    * @return {Object} This class instance
    */
   build () {
+    // console.log('build')
     this.wrapper = create('div')
 
     classify(this.wrapper, this.options)
@@ -78,6 +79,10 @@ class Drawer {
       }
     }
 
+    if (this.options.open) {
+      this.open()
+    }
+
     if (this.options.container) { insert(this.wrapper, this.options.container) }
 
     this.emit('built', this.root)
@@ -86,7 +91,8 @@ class Drawer {
   }
 
   attach () {
-    if (this.options.type === 'pesistent') return
+    // console.log('attach', this.options.type)
+    if (this.options.type === 'persistent') return
     if (this.options.type === 'permanent') return
 
     this.wrapper.addEventListener('click', (e) => {
@@ -130,7 +136,7 @@ class Drawer {
    * @return {Object} The class instance
    */
   open () {
-    // console.log('open');
+    // console.log('open')
 
     css.add(this.wrapper, 'show')
 
