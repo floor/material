@@ -27,6 +27,7 @@ class Tooltip {
    * @return {DOMElement} The dom element
    */
   constructor (options) {
+    // console.log('constructor')
     this.options = Object.assign({}, defaults, options || {})
     // console.log('element options', options)
 
@@ -54,14 +55,14 @@ class Tooltip {
   }
 
   attach () {
-    // console.log('initTooltip', this.settings.tooltip)
+    // console.log('attach', this.options.targets)
     var targets = document.querySelectorAll(this.options.targets)
 
     for (var i = 0; i < targets.length; i++) {
       targets[i].addEventListener('mouseover', (e) => {
-        // console.log('tooltip', typeof this.settings.tooltip)
-        if (touch) return
-        if (this.disabled) return
+        // console.log('tooltip', touch(), this.disabled)
+        if (touch()) return
+        if (this.disabled === true) return
 
         this.label.innerHTML = e.currentTarget.dataset.tooltip
         var coord = this.offset(e.currentTarget)
@@ -92,13 +93,13 @@ class Tooltip {
   }
 
   disable () {
-    console.log('disable')
+    // console.log('disable')
     this.root.classList.remove('show')
     this.disabled = true
   }
 
   enable () {
-    console.log('enable')
+    // console.log('enable')
     this.disabled = false
   }
 }
