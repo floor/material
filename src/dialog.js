@@ -8,7 +8,6 @@ import attach from './module/attach'
 import insert from './component/insert'
 import event from './element/event.js'
 import css from './module/css'
-import { _isArray } from './module/utils'
 
 import {
   Text,
@@ -122,11 +121,12 @@ class Dialog {
 
     this.insertElement(this.title.root, this.surface)
 
-    console.log('buildTitle', this.title)
+    // console.log('buildTitle', this.title)
   }
 
   buildLayout () {
     this.layout = new Layout(this.options.layout, this.surface)
+    this.ui = this.layout.component
   }
 
   buildHTML () {
@@ -136,7 +136,7 @@ class Dialog {
   }
 
   buildContent () {
-    console.log('text content', this.options.content)
+    // console.log('text content', this.options.content)
     this.content = new Text({
       type: 'content',
       css: 'dialog-content',
