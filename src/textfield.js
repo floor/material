@@ -100,6 +100,10 @@ class Textfield {
     this.input.setAttribute('type', 'text')
     this.root.appendChild(this.input)
 
+    if (this.options.name) {
+      this.input.setAttribute('name', this.options.name)
+    }
+
     if (!this.options.value) {
       this.root.classList.add('is-empty')
     }
