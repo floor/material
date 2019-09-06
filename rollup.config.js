@@ -53,7 +53,7 @@ export default {
         conservativeCollapse: true,
         minifyJS: true
       }
-    }),
+    })
     // strip({
     //   // set this to `false` if you don't want to
     //   // remove debugger statements
@@ -67,6 +67,6 @@ export default {
     //   sourceMap: true
     // }),
     // svg(),
-    uglify()
+    // uglify()
   ]
 }
