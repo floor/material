@@ -14,6 +14,7 @@ class Layout {
    */
   constructor (schema, container) {
     this.component = this.create(schema, container)
+    // this.field = this.extractInfo(this.component)
 
     return this
   }
@@ -143,6 +144,27 @@ class Layout {
     if (options.theme) {
       css.add(component.root, 'theme' + '-' + options.theme)
     }
+  }
+
+  extractInfo (object) {
+    // console.log('extractField', object)
+
+    var field = {}
+
+    for (var property in object) {
+      if (object.hasOwnProperty(property)) {
+        var infos = property.split(/\./)
+
+        if (infos[0] === 'info' && infos[1] !== undefined) {
+          // console.log('field', infos[0], infos[1])
+          field[infos[1]] = object[property]
+        }
+      }
+    }
+
+    console.log('--- field', field)
+
+    return field
   }
 
   /**
