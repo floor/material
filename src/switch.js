@@ -28,7 +28,7 @@ let defaults = {
   ],
   events: [
     ['element.control.click', 'toggle'],
-    ['element.label.click', 'toggle'],
+    // ['element.label.click', 'toggle'],
     // for accessibility purpose
     ['element.input.click', 'toggle'],
     ['element.input.focus', 'focus'],
