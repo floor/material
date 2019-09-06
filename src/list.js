@@ -122,14 +122,19 @@ class List {
    * @return {?}   [description]
    */
   handleSelect (e) {
+    // console.log('handleSelect-', e.currentTarget, this.options.target)
+
+    if (e.target === e.currentTarget) {
+      return
+    }
+
     if (e && e.target) {
       var el = e.target
-
+      // console.log('el', el, el.matches(this.options.target))
       while (el && !el.matches(this.options.target)) {
         el = el.parentNode
       }
 
-      //console.log('item clicked: ', el)
       css.remove(this.item, 'is-selected')
       css.add(el, 'is-selected')
 
