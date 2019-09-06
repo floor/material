@@ -136,6 +136,10 @@ class Button {
     if (this.options.content) {
       this.root.innerHTML = this.options.content
     }
+
+    if (this.options.disabled === true) {
+      this.disable()
+    }
   }
 
   /**
@@ -208,7 +212,6 @@ class Button {
     return this
   }
 
-
   /**
    * method handleClick
    * @param  {event} e
@@ -217,10 +220,10 @@ class Button {
   handleMouseOver (e) {
     e.preventDefault()
 
-    //console.log('mouse over', e.target)
+    // console.log('mouse over', e.target)
 
     if (e.target.dataset.tooltip) {
-      //console.log(e.target.dataset.tooltip)
+      // console.log(e.target.dataset.tooltip)
     }
 
     return this
