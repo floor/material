@@ -103,6 +103,10 @@ class Select {
     // this.input.setAttribute('type', 'text')
     this.root.appendChild(this.input)
 
+    if (this.options.options) {
+      this.setOptions(this.options.options)
+    }
+
     // if (!this.options.value) {
     //   this.root.classList.add('is-empty')
     // }
@@ -113,6 +117,12 @@ class Select {
     }
 
     return this.input
+  }
+
+  setOptions (options) {
+    for (var i = 0; i < options.length; i++) {
+      this.add(options[i], options[i])
+    }
   }
 
   /**
@@ -223,6 +233,7 @@ class Select {
    * @param {string} value [description]
    */
   setValue (value) {
+    // console.log('setValue', this.options.name, value)
     this.input.value = value
 
     if (value) {
