@@ -34,6 +34,10 @@ class Element {
       element.textContent = this.options.text
     }
 
+    if (options.id) {
+      element.setAttribute('id', options.id)
+    }
+
     delete this.options.tag
     delete this.options.text
     delete this.options.html
