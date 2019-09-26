@@ -110,10 +110,10 @@ class Switch {
    * @param {string} value
    * @return {Object} The class instance
    */
-  set (prop, value) {
+  set (prop, value, silent) {
     switch (prop) {
       case 'value':
-        this.setValue(value)
+        this.setValue(value, silent)
         break
       case 'disabled':
         if (value === true) {
@@ -123,7 +123,7 @@ class Switch {
         }
         break
       default:
-        this.setValue(prop)
+        this.setValue(prop, silent)
     }
 
     return this
@@ -147,7 +147,7 @@ class Switch {
    */
   setValue (value, silent) {
     // console.log('setValue', value)
-    this.check(value)
+    this.check(value, silent)
   }
 
  /**
@@ -179,13 +179,17 @@ class Switch {
       this.element.input.checked = true
       this.checked = true
       this.value = true
-      this.emit('change', this.checked)
+      if (!silent) {
+        this.emit('change', this.checked)
+      }
     } else {
       this.root.classList.remove('is-checked')
       this.element.input.checked = false
       this.checked = false
       this.value = false
-      this.emit('change', this.checked)
+      if (!silent) {
+        this.emit('change', this.checked)
+      }
     }
     return this
   }
