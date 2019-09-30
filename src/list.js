@@ -123,6 +123,7 @@ class List {
    */
   handleSelect (e) {
     // console.log('handleSelect-', e.currentTarget, this.options.target)
+    e.stopPropagation()
 
     if (e.target === e.currentTarget) {
       return
