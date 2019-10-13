@@ -13,6 +13,7 @@ const defaults = {
   prefix: 'material',
   class: 'button',
   tag: 'button',
+  ripple: false,
   events: [
     ['root.click', 'handleClick'],
     ['root.mouseover', 'handleMouseOver']
@@ -57,12 +58,14 @@ class Button {
    */
   init (options) {
     this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, control, emitter, attach, ripple)
+    Object.assign(this, control, emitter, attach)
 
     this.element = this.element || {}
 
-    // init module
-    ripple(this)
+    // init module$
+    if (this.options.ripple) {
+      ripple(this)
+    }
 
     this.emit('init')
   }
