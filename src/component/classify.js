@@ -21,7 +21,7 @@ function classify (element, options) {
   }
 
   if (options.type) {
-    //css.add(element, options.class + '-' + options.type)
+    // css.add(element, options.class + '-' + options.type)
     css.add(element, 'type-' + options.type)
   }
 
@@ -50,6 +50,14 @@ function classify (element, options) {
     var styles = options.style.split(' ')
     for (var i = 0; i < styles.length; i++) {
       css.add(element, 'style-' + styles[i])
+    }
+  }
+
+  if (options.data) {
+    for (var property in options.data) {
+      if (options.data.hasOwnProperty(property)) {
+        element.dataset[property] = options.data[property]
+      }
     }
   }
 
