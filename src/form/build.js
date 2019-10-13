@@ -1,4 +1,4 @@
-import Layout from 'material/src/layout'
+import Layout from '../layout'
 
 export default {
   build () {

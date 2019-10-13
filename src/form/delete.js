@@ -1,4 +1,4 @@
-import Dialog from 'material/src/dialog'
+import Dialog from '../dialog'
 
 export default {
   del () {

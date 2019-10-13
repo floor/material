@@ -1,4 +1,4 @@
-import dot from '../../module/dot'
+import dot from '../module/dot'
 
 export default {
   render (object, option) {
