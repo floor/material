@@ -37,9 +37,14 @@ export default {
         e.element.addEventListener(e.name, f.bind(bound), o)
       } else if (e.element && e.element.on) {
         // console.log('on', e.name)
-        e.element.on(e.name, f.bind(bound))
+        if (!f) {
+          console.log('can\'t attach event', e.name, 'to', def[1])
+        } else {
+          e.element.on(e.name, f.bind(bound))
+        }
       } else {
-        console.log('can\'t attach', e.name)
+        console.log('can\'t attach', def[0], def[1])
+        // console.log('--', e, f)
       }
     })
 
