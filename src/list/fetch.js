@@ -1,27 +1,19 @@
 export default {
   fetch (page, size) {
-    // console.log('fetch')
     page = page || 1
     size = size || this.options.list.size
-    var params = '?'
-    var pagination = '&page=' + page + '&size=' + size
+    // console.log('fetch')
 
-    if (this.params) {
-      params = this.params()
-    }
+    var route = this.buildRoute(page, size)
 
-    if (page === 1) {
-      this.ui.body.scrolltop = 0
-    }
+    console.log('route', route)
 
-    var url = this.options.route.list + params + pagination
-
-    fetch(url).then((resp) => {
+    fetch(route).then((resp) => {
       return resp.json()
     }).then((data) => {
-      console.log('data', data, this.status)
+      console.log('data', data.length)
 
-      this.store(data)
+      // this.store(data)
 
       this.data = data
       if (this.status) {
@@ -34,8 +26,32 @@ export default {
         this.hideSearch()
       }
 
-      this.emit('fetched')
+      this.emit('fetched', data)
     })
+  },
+
+  buildRoute (page, size) {
+    page = page || 1
+    size = size || this.options.list.size
+    var params = '?'
+
+    var route = this.options.route.list
+
+    if (this.params) {
+      params = this.params() || ''
+    }
+
+    route = route + params
+
+    if (page === 1) {
+      this.ui.body.scrolltop = 0
+    }
+
+    if (this.options.pagination) {
+      route = route + 'page=' + page + '&size=' + size
+    }
+
+    return route
   },
 
   store (list) {

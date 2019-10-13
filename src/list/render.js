@@ -1,12 +1,12 @@
-import Element from 'material/src/element'
-import Layout from 'material/src/layout'
+import Element from '../element'
+import Layout from '../layout'
 
-import dot from '../../module/dot'
+import dot from '../module/dot'
 
 export default {
 
   render (list, option) {
-    // console.log('body', this.ui.body)
+    // console.log('render', list)
     this.virtual.set(list)
   },
 
