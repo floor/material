@@ -106,8 +106,11 @@ class Virtual {
   }
 
   set (items) {
-    // console.log('set', items)
-    if (!items) return
+    console.log('set', items)
+    if (!items || Array.isArray(items) === false) {
+      return
+    }
+
     this.root.innerHTML = ''
     this.root.scrollTop = 0
     if (items.length < 1 || items === undefined) return
