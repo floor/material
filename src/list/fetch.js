@@ -6,12 +6,12 @@ export default {
 
     var route = this.buildRoute(page, size)
 
-    console.log('route', route)
+    // console.log('route', route)
 
     fetch(route).then((resp) => {
       return resp.json()
     }).then((data) => {
-      console.log('data', data.length)
+      // console.log('data', route, data)
 
       // this.store(data)
 

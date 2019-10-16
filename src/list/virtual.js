@@ -106,7 +106,7 @@ class Virtual {
   }
 
   set (items) {
-    console.log('set', items)
+    // console.log('set', items)
     if (!items || Array.isArray(items) === false) {
       return
     }
