@@ -13,10 +13,6 @@ export default {
     this.emit('show')
   },
 
-  visible () {
-    return this.visible
-  },
-
   toggle () {
     this.visible ? this.hide() : this.show()
   }
