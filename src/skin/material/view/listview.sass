@@ -4,6 +4,10 @@
   flex-direction: column
   min-width: 260px
   
+  &.hide
+    display: none
+
+
   >.head
     position: relative
     display: flex
@@ -40,7 +44,7 @@
   >.body
     overflow: scroll
     flex: 1
-    height: 100%
+    // height: 100%
     .material-button
       margin: 0
     .item
@@ -73,14 +77,8 @@
       display: none
     .item
       .info
-        margin-bottom: 2px
         display: flex
         flex-direction: row
-        .surname
-          text-transform: uppercase
-        .date
-          font-size: .7em
-          opacity: .5
       &.selected
         background-color: rgba(0,0,0,.05)
 
