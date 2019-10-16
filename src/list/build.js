@@ -12,6 +12,10 @@ export default {
     this.root.classList.add('list')
     this.root.classList.add(this.options.class)
 
+    this.root.addEventListener('click', (e) => {
+      e.stopPropagation()
+    })
+
     if (this.options.data) {
       dataset(this.root, this.options.data)
     }
