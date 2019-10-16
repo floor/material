@@ -79,12 +79,12 @@ class TabView {
 
   hideView () {
     for (var i = 0; i < this.ui.views.length; i++) {
-      this.ui.views[i].style.display = 'none'
+      this.ui.views[i].classList.add('hide')
     }
   }
 
   click (button) {
-    // console.log('click', button, button.dataset.view)
+    // console.log('click', button.dataset.view)
     var view = this.ui.view.querySelector('[data-view="' + button.dataset.view + '"]')
     this.hideView()
 
@@ -98,7 +98,7 @@ class TabView {
 
     if (view) {
       // console.log('view block', view)
-      view.style.display = 'block'
+      view.classList.remove('hide')
     } else {
       console.log('view ', button.dataset.view, button, this.ui.views, ' not found')
     }
@@ -109,12 +109,6 @@ class TabView {
 
     return view
   }
-
-  // select (name) {
-  //   // console.log('select', name)
-  //   var button = this.ui.tabs.querySelector('[data-view="' + name + '"]')
-  //   return this.click(button)
-  // }
 
   indicator (button) {
     if (!this.ui.indicator) return
