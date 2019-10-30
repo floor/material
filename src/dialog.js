@@ -9,12 +9,10 @@ import insert from './component/insert'
 import event from './element/event.js'
 import css from './module/css'
 
-import {
-  Text,
-  Button,
-  Toolbar,
-  Layout
-} from 'material'
+import Text from './text'
+import Button from './button'
+import Toolbar from './toolbar'
+import Layout from './layout'
 
 let defaults = {
   prefix: 'material',

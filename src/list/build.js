@@ -1,7 +1,7 @@
 import observer from '../module/observer'
 import dataset from '../view/dataset'
 
-import Layout from 'material/src/layout'
+import Layout from '../layout'
 import Virtual from './virtual'
 
 export default {
