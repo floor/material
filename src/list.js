@@ -1,8 +1,9 @@
 'use strict'
 
-import { Item, Divider } from '../index'
+import Item from './item'
+import Divider from './divider'
 
-import init from './component/init'
+// import init from './component/init'
 import emitter from './module/emitter'
 import insert from './element/insert'
 import css from './module/css'
