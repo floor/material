@@ -37,7 +37,14 @@ export default {
     element.dataset.id = info._id
     element.dataset.info = this.options.info
 
-    var layout = new Layout(this.options.layout.item, element)
+    var layout = null
+
+    if (this.options.itemSwitch) {
+      var item = info[this.options.itemSwitch]
+      layout = new Layout(this.options.layout.item[item], element)
+    } else {
+      layout = new Layout(this.options.layout.item, element)
+    }
 
     this.renderInfo(layout, info)
 
@@ -63,17 +70,10 @@ export default {
 
     var f = this.extractInfo(layout.component)
 
-    // console.log('field', f, info)
-
     for (var field in f) {
       if (f.hasOwnProperty(field)) {
-        // console.log('field', field)
         if (f[field] && f[field].set) {
-          if (info[field] !== undefined) {
-            f[field].set(info[field])
-          } else {
-            f[field].set(this.objectValueByDotKey(object, field))
-          }
+          f[field].set(this.objectValueByDotKey(object, field))
         } else {
           // console.log('innerHTML', typeof f[field])
           f[field].innerHTML = info[field]
@@ -83,14 +83,12 @@ export default {
   },
 
   objectValueByDotKey (object, dotkey) {
-    // console.log('objectValueByDotKey', object, dotkey)
     var keys = dotkey.split(/\./)
 
-    var value
-    var o = object
+    var value = Object.assign({}, object)
 
     for (var i = 0; i < keys.length; i++) {
-      value = o[keys[i]]
+      value = value[keys[i]]
     }
 
     return value
