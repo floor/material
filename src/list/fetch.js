@@ -13,7 +13,9 @@ export default {
     }).then((data) => {
       // console.log('data', route, data)
 
-      // this.store(data)
+      if (this.options.store) {
+        this.storeData(data)
+      }
 
       this.data = data
       if (this.status) {
@@ -54,8 +56,9 @@ export default {
     return route
   },
 
-  store (list) {
-    this.dataStore = this.dataStore = {}
+  storeData (list) {
+    // console.log('storeData')
+    this.dataStore = this.dataStore || {}
     for (var i = 0; i < list.length; i++) {
       this.dataStore[list[i]._id] = list[i]
     }
