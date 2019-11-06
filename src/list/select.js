@@ -32,6 +32,13 @@ export default {
     }
   },
 
+  unselect () {
+    this.id = null
+    if (this.item) {
+      this.item.classList.remove('selected')
+    }
+  },
+
   next () {
     // console.log('next', this.item)
     if (this.item && this.item.nextSibling) {
