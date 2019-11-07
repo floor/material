@@ -51,7 +51,7 @@ class TabView {
     this.ui.view = this.root.querySelector('[class="views"]')
     this.ui.indicator = this.root.querySelector('[class="indicator"]')
 
-    this.ui.butttons = this.ui.tabs.childNodes
+    this.ui.buttons = this.ui.tabs.childNodes
     this.ui.views = this.ui.view.childNodes
 
     for (var i = 0; i < this.ui.views.length; i++) {
@@ -63,7 +63,7 @@ class TabView {
 
     this.hideView()
 
-    this.click(this.ui.butttons[0])
+    this.click(this.ui.buttons[0])
   }
 
   attach () {
@@ -75,6 +75,15 @@ class TabView {
         this.click(e.target)
       }
     })
+  }
+
+  select (view) {
+    // console.log('select', view, this.ui.tabs)
+    var button = this.ui.tabs.querySelector('[data-view="' + view + '"]')
+    // console.log('tab', button)
+    if (button) {
+      this.click(button)
+    }
   }
 
   hideView () {
