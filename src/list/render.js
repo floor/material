@@ -34,6 +34,10 @@ export default {
       class: 'item'
     })
 
+    if (this.id && this.id === info._id) {
+      element.classList.add('selected')
+    }
+
     element.dataset.id = info._id
     element.dataset.info = this.options.info
 

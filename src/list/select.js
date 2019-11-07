@@ -1,12 +1,14 @@
 export default {
   select (item) {
-    // console.log('select', this.mode)
+    console.log('select', this.mode)
 
     if (!item.dataset.id) return
 
     var id = item.dataset.id
 
-    if (this.id === id) return
+    if (this.options.preventSelectAgain && this.id === id) {
+      return
+    }
 
     if (this.mode === 'create') {
       // console.log('cancel create', this.newItem)
@@ -37,6 +39,7 @@ export default {
     if (this.item) {
       this.item.classList.remove('selected')
     }
+    this.item = null
   },
 
   next () {
