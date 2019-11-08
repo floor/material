@@ -4,12 +4,23 @@ export default {
   build () {
     // console.log('build', this.options.layout)
     this.root = document.createElement('div')
-    this.root.classList.add('form-view')
+    this.root.classList.add('form')
+
+    if (this.options.class !== 'form') {
+      this.root.classList.add(this.options.class)
+    }
 
     this.form = document.createElement('form')
     this.root.appendChild(this.form)
 
     this.buildLayout()
+
+    console.log('options container', this.options.container)
+    if (this.options.container) {
+      this.options.container.appendChild(this.root)
+
+      console.log('form', this.root)
+    }
   },
 
   buildLayout () {
@@ -20,12 +31,12 @@ export default {
 
     this.extractInfo(this.ui)
     this.extractFile(this.ui)
+    console.log('field', this.field)
     // console.log('file', this.file)
 
-    this.ui.submit.disable()
-    this.ui.cancel.disable()
-
-    // console.log('ui', this.ui)
+    if (this.disableControl) {
+      this.disableControl()
+    }
   },
 
   extractFile (object) {
