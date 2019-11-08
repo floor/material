@@ -3,7 +3,7 @@ export default {
   submit (ev) {
     // console.log('submit', this.ui, this.file, this.info)
     // ev.preventDefault()
-    if (!this.verify()) return
+    if (this.verify && !this.verify()) return
 
     // console.log('submit')
     this.ui.submit.disable()
