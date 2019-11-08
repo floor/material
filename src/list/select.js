@@ -1,6 +1,6 @@
 export default {
   select (item) {
-    console.log('select', this.mode)
+    // console.log('select')
 
     if (!item.dataset.id) return
 
