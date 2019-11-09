@@ -23,12 +23,22 @@ export default {
     this.layout = new Layout(this.options.layout.main, this.root)
     this.ui = this.layout.component
 
-    observer.insert(this.root, () => {
+    if (this.options.container) {
+      this.options.container.appendChild(this.root)
+      this.show()
       this.buildVirtual()
-    })
+      // console.log('form', this.root)
+    } else {
+      this.inserted = true
+      observer.insert(this.root, () => {
+        this.buildVirtual()
+        this.inserted = true
+      })
+    }
   },
 
   buildVirtual () {
+    // console.log('buildVirtual', this.options.class)
     var height = 80
 
     if (this.options.item && this.options.item.height) {
