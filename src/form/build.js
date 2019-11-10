@@ -10,16 +10,29 @@ export default {
       this.root.classList.add(this.options.class)
     }
 
-    this.form = document.createElement('form')
-    this.root.appendChild(this.form)
+    this.buildForm(this.options.form)
 
     this.buildLayout()
 
-    console.log('options container', this.options.container)
     if (this.options.container) {
       this.options.container.appendChild(this.root)
+    }
+  },
 
-      console.log('form', this.root)
+  buildForm (form) {
+    this.form = document.createElement('form')
+    this.root.appendChild(this.form)
+
+    if (form && form.method) {
+      this.form.setAttribute('method', form.method)
+    }
+
+    if (form && form.autocomplete) {
+      this.form.setAttribute('autocomplete', form.autocomplete)
+    }
+
+    if (form && form.action) {
+      this.form.setAttribute('action', form.action)
     }
   },
 
@@ -31,7 +44,6 @@ export default {
 
     this.extractInfo(this.ui)
     this.extractFile(this.ui)
-    console.log('field', this.field)
     // console.log('file', this.file)
 
     if (this.disableControl) {

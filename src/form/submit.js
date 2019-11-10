@@ -1,19 +1,24 @@
 export default {
 
   submit (ev) {
+    ev.preventDefault()
     // console.log('submit', this.ui, this.file, this.info)
     // ev.preventDefault()
     if (this.verify && !this.verify()) return
 
     // console.log('submit')
-    this.ui.submit.disable()
-    this.ui.cancel.disable()
+    if (this.disableControls) {
+      this.disableControls()
+    }
 
     var formData = new FormData()
 
     if (this.info && this.info._id) {
       formData.append('id', this.info._id)
-      formData.append('uuid', this.info.uuid)
+    }
+
+    if (this.info && this.info.uuid) {
+      formData.append('id', this.info.uuid)
     }
 
     // append field
@@ -43,24 +48,20 @@ export default {
       method = 'POST'
     }
 
-    fetch(this.options.route, {
-      method: method,
-      body: formData
-    }).then(r => r.json()).then(info => {
-      if (info.error) {
-        console.log('Error: ' + info.error)
-      } else {
-        // console.log('submit ok', info, this.mode)
-        this.ui.submit.setLabel('Apply')
+    if (this.fetch) {
+      this.fetch({
+        method: method,
+        formData: formData
+      })
+    }
 
-        if (this.mode === 'create') {
-          this.emit('created', info)
-          this.mode = null
-        } else {
-          this.info = info
-          this.emit('updated', info)
-        }
-      }
-    })
+    if (this.action) {
+      this.action({
+        method: method,
+        formData: formData
+      })
+    }
+
+    return false
   }
 }
