@@ -49,7 +49,7 @@ class Layout {
 
         if (typeof schema[i + 1] === 'string') {
           name = schema[i + 1]
-          if (!schema[i].isElement) {
+          if (!schema[i].isElement && !schema[i].isComponent) {
             options.name = name
           }
         }
