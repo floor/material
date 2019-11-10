@@ -1,19 +1,20 @@
 
 export default {
-  hide () {
-    this.root.classList.remove('show')
-    this.visible = false
-    this.emit('hide')
+  toggle () {
+    this.visible ? this.hide() : this.show()
   },
 
   show () {
-    // console.log('hide')
+    console.log('show')
     this.root.classList.add('show')
     this.visible = true
     this.emit('show')
   },
 
-  toggle () {
-    this.visible ? this.hide() : this.show()
+  hide () {
+    console.log('show')
+    this.root.classList.remove('show')
+    this.visible = false
+    this.emit('hide')
   }
 }
