@@ -1,3 +1,5 @@
+import dataset from '../view/dataset'
+
 import Layout from '../layout'
 
 export default {
@@ -8,6 +10,10 @@ export default {
 
     if (this.options.class !== 'form') {
       this.root.classList.add(this.options.class)
+    }
+
+    if (this.options.data) {
+      dataset(this.root, this.options.data)
     }
 
     this.buildForm(this.options.form)
