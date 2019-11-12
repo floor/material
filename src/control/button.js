@@ -132,6 +132,14 @@ class Button {
     return this.input.value
   }
 
+  disable () {
+    this.root.disabled = true
+  }
+
+  enable () {
+    this.root.disabled = false
+  }
+
   destroy () {
     this.root.parentNode.removeChild(this.root)
   }
