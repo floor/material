@@ -19,21 +19,16 @@ export default {
     for (var field in this.field) {
       if (this.field.hasOwnProperty(field)) {
         // console.log('field type', field)
-        if (
-        this.field[field] &&
-        this.field[field].set) {
-          if (info[field] !== undefined) {
-            this.field[field].set(info[field])
-          } else if (object[field] !== undefined) {
-            var value = this.objectValueByDotKey(object, field)
-            this.field[field].set(value)
-          }
+        if (this.field[field] &&
+            this.field[field].set) {
+          this.field[field].set(this.objectValueByDotKey(object, field))
         }
       }
     }
 
-    this.ui.submit.disable()
-    this.ui.cancel.disable()
+    if (this.disableControls) {
+      this.disableControls()
+    }
 
     this.emit('rendered')
 
@@ -44,14 +39,12 @@ export default {
   },
 
   objectValueByDotKey (object, dotkey) {
-    // console.log('objectValueByDotKey', object, dotkey)
     var keys = dotkey.split(/\./)
 
-    var value
-    var o = object
+    var value = Object.assign({}, object)
 
     for (var i = 0; i < keys.length; i++) {
-      value = o[keys[i]]
+      value = value[keys[i]]
     }
 
     return value

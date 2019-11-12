@@ -2,7 +2,7 @@
 export default {
 
   initControls () {
-    // console.log('setup')
+    console.log('initControls', this.field)
     for (var field in this.field) {
       if (this.field.hasOwnProperty(field)) {
         var control = this.field[field]
@@ -33,21 +33,23 @@ export default {
   },
 
   enableControls () {
+    console.log('enableControls')
     if (!this.options.controls) return
 
     for (var i = 0; i < this.options.controls.length; i++) {
-      if (this.options.controls[i].enable) {
-        this.options.controls[i].enable()
+      if (this.ui[this.options.controls[i]].enable) {
+        this.ui[this.options.controls[i]].enable()
       }
     }
   },
 
   disableControls () {
+    console.log('disableControls')
     if (!this.options.controls) return
 
     for (var i = 0; i < this.options.controls.length; i++) {
-      if (this.options.controls[i].disable) {
-        this.options.controls[i].disable()
+      if (this.ui[this.options.controls[i]].disable) {
+        this.ui[this.options.controls[i]].disable()
       }
     }
   }

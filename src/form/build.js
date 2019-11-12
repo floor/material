@@ -76,6 +76,7 @@ export default {
     // console.log('extractField', object)
 
     this.field = {}
+    this.fields = []
 
     for (var property in object) {
       if (object.hasOwnProperty(property)) {
@@ -84,7 +85,7 @@ export default {
         if (infos[0] === 'info' && infos[1] !== undefined) {
           var name = property.substr(5, property.length)
           // console.log('field', name, property)
-
+          this.fields.push(name)
           this.field[name] = object[property]
         }
       }
