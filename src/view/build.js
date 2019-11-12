@@ -11,8 +11,8 @@ export default {
       dataset(this.root, this.options.data)
     }
 
-    var container = this.options.container || document.body
-    container.appendChild(this.root)
+    this.container = this.options.container || document.body
+    this.container.appendChild(this.root)
 
     if (this.options.layout) {
       this.layout = new Layout(this.options.layout, this.root)
