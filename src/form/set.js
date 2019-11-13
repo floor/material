@@ -25,7 +25,7 @@ export default {
         this.ui.delete.enable()
       }
 
-      this.emit('fetched', id)
+      this.emit('setted', id)
     })
   }
 }
