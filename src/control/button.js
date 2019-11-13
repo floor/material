@@ -124,12 +124,44 @@ class Button {
     })
   }
 
-  set (value) {
-    this.input.value = value
+  /**
+   * Setter
+   * @param {string} prop
+   * @param {string} value
+   * @return {Object} The class instance
+   */
+  set (prop, value) {
+    switch (prop) {
+      case 'value':
+        this.root.value = value
+        break
+      case 'label':
+        if (this.ui.label) {
+          this.ui.label.innerHTML = value
+        }
+        break
+      default:
+        this.root.value = value
+    }
+
+    return this
   }
 
-  get () {
-    return this.input.value
+  /**
+   * Setter
+   * @param {string} prop
+   * @param {string} value
+   * @return {Object} The class instance
+   */
+  get (prop, value) {
+    switch (prop) {
+      case 'value':
+        return this.root.value
+      case 'label':
+        return this.ui.label.innerHTML
+      default:
+        return this.root.value
+    }
   }
 
   disable () {
