@@ -1,14 +1,19 @@
+const special = ['required', 'disabled']
 
-function attributes (element, options) {
-  for (var i = 0; i < options.attributes.length; i++) {
-    var attribute = attributes[i]
-    // console.log('attribute', attribute)
-    if (attribute === 'required') {
-      element.setAttribute(attribute, attribute)
-    } else if (options[attribute] && options[attribute] !== 'undefined') {
-      element.setAttribute(attribute, options[attribute])
+function setAttributes (element, o) {
+  // console.log('attributes', o.attributes, element)
+
+  for (var i = 0; i < o.attributes.length; i++) {
+    var attribute = o.attributes[i]
+
+    if (o[attribute] && o[attribute] !== 'undefined') {
+      if (special.indexOf(attribute) > -1) {
+        element.setAttribute(attribute, attribute)
+      } else {
+        element.setAttribute(attribute, o[attribute])
+      }
     }
   }
 }
 
-export default attributes
+export default setAttributes
