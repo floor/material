@@ -1,11 +1,13 @@
+
 import emitter from '../module/emitter'
 import attach from '../module/attach'
 import dataset from '../view/dataset'
+import attributes from './module/attributes'
 
 const defaults = {
   class: 'textfield',
   tag: 'div',
-  attributes: ['type', 'name', 'autocomplete', 'required'],
+  attributes: ['type', 'name', 'autocomplete', 'required', 'disabled'],
   events: [
     ['input.keyup', 'onKeyup']
   ]
@@ -37,7 +39,11 @@ class Text {
    */
   build () {
     this.root = document.createElement(this.options.tag)
-    this.root.classList.add(this.options.class)
+    this.root.classList.add('textfield')
+
+    if (this.options.class !== 'upload') {
+      this.root.classList.add(this.options.class)
+    }
 
     this.buildLabel()
     this.buildInput()
@@ -69,22 +75,10 @@ class Text {
     this.input = document.createElement('input')
     this.root.appendChild(this.input)
 
-    this.initAttributes()
+    attributes(this.input, this.options)
 
     if (this.options.focus) {
       this.input.focus()
-    }
-  }
-
-  initAttributes () {
-    for (var i = 0; i < this.options.attributes.length; i++) {
-      var attribute = this.options.attributes[i]
-      // console.log('attribute', attribute)
-      if (attribute === 'required') {
-        this.input.setAttribute(attribute, attribute)
-      } else if (this.options[attribute] && this.options[attribute] !== 'undefined') {
-        this.input.setAttribute(attribute, this.options[attribute])
-      }
     }
   }
 
