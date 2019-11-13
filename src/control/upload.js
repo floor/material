@@ -1,27 +1,12 @@
-'use strict'
-
 import emitter from '../module/emitter'
+import dataset from '../view/dataset'
+import attributes from './module/attributes'
 
 const defaults = {
-  class: 'upload'
+  class: 'upload',
+  attributes: ['name', 'accept', 'required', 'disabled']
 }
 
-/**
- * Base class for all ui components
- * @class
- * @param {Object} options - The component options
- * @return {Object} The class Instance
- */
-
-/**
- * Class representing a UI Container. Can add components.
- *
- * @extends Component
- * @return {parent} The class instance
- * @example new Container({
- *   container: document.body
- * });
- */
 class Upload {
   /**
    * Constructor
@@ -50,35 +35,16 @@ class Upload {
       this.root.classList.add(this.options.class)
     }
 
-    this.label = document.createElement('label')
-    this.label.innerHTML = this.options.name
+    this.buildLabel()
+    this.buildInput()
 
-    this.root.appendChild(this.label)
-
-    this.input = document.createElement('input')
-    this.input.setAttribute('type', 'file')
-
-    if (this.options.accept) {
-      this.input.setAttribute('accept', this.options.accept)
-    }
-
-    if (this.options.name) {
-      this.input.setAttribute('name', this.options.name)
-    }
-
-    if (this.options.required) {
-      this.input.setAttribute('required', 'required')
-    }
-
-    if (this.options.autocomplete) {
-      this.input.setAttribute('autocomplete', this.options.autocomplete)
+    if (this.options.data) {
+      dataset(this.root, this.options.data)
     }
 
     if (this.options.focus) {
       this.input.focus()
     }
-
-    this.root.appendChild(this.input)
 
     if (this.options.container) {
       this.options.container.appendChild(this.root)
@@ -87,19 +53,35 @@ class Upload {
     return this
   }
 
+  buildLabel () {
+    if (this.options.label) {
+      this.label = document.createElement('span')
+      this.label.innerHTML = this.options.label
+      this.root.appendChild(this.label)
+    }
+  }
+
+  buildInput () {
+    this.field = document.createElement('div')
+    this.field.classList.add('field')
+    this.root.appendChild(this.field)
+
+    this.input = document.createElement('input')
+    this.input.setAttribute('type', 'file')
+    this.root.appendChild(this.input)
+
+    attributes(this.input, this.options)
+
+    this.field.appendChild(this.input)
+
+    if (this.options.focus) {
+      this.input.focus()
+    }
+  }
+
   attach () {
     this.input.addEventListener('change', (e) => {
       this.emit('change', e)
-    })
-
-    this.input.addEventListener('focus', (e) => {
-      this.root.classList.add('is-focused')
-      this.emit('focus', e)
-    })
-
-    this.input.addEventListener('blur', (e) => {
-      this.root.classList.remove('is-focused')
-      this.emit('blur', e)
     })
   }
 
