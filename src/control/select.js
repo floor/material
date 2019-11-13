@@ -1,4 +1,3 @@
-'use strict'
 
 const defaults = {
   class: 'textfield',
@@ -14,7 +13,7 @@ class Text {
   constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
-    console.log('options', options)
+    // console.log('options', options)
 
     this.build()
 

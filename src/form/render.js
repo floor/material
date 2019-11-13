@@ -2,7 +2,7 @@ import dot from '../module/dot'
 
 export default {
   render (object, option) {
-    console.log('render', object)
+    // console.log('render', object)
 
     var info = dot(object)
 
