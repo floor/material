@@ -91,8 +91,10 @@ class Text {
 
   set (value) {
     // console.log('set', value)
-    this.value = value
-    this.input.value = value
+    if (value && value !== 'undefined') {
+      this.value = value
+      this.input.value = value
+    }
   }
 
   get () {
