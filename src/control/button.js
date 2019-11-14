@@ -70,6 +70,10 @@ class Button {
       this.root.setAttribute('name', this.options.name)
     }
 
+    if (this.options.tooltip) {
+      this.root.setAttribute('data-tooltip', this.options.tooltip)
+    }
+
     if (this.options.case) {
       this.root.classList.add(this.options.case + '-case')
     }
