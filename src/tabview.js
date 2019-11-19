@@ -37,7 +37,11 @@ class TabView {
 
   build () {
     this.root = document.createElement(this.options.tag || 'div')
-    this.root.classList.add(this.options.class)
+    this.root.classList.add('tabview')
+
+    if (this.options.class !== 'tabview') {
+      this.root.classList.add(this.options.class)
+    }
 
     this.ui = {}
   }
