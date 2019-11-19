@@ -1,6 +1,6 @@
+
 import { is as isObject } from './module/object'
 import css from './module/css'
-import insert from './element/insert'
 
 /**
  *
@@ -14,7 +14,6 @@ class Layout {
    */
   constructor (schema, container) {
     this.component = this.create(schema, container)
-    // this.field = this.extractInfo(this.component)
 
     return this
   }
@@ -30,9 +29,6 @@ class Layout {
     level = level || 0
     level++
 
-    // console.log('level', level, schema)
-    // console.log('-------------')
-
     structure = structure || {}
     let component = null
 
@@ -43,7 +39,9 @@ class Layout {
 
       if (schema[i] instanceof Object &&
         typeof schema[i] === 'function') {
-        if (isObject(schema[i + 2])) {
+        if (isObject(schema[i + 1])) {
+          options = schema[i + 1]
+        } else if (isObject(schema[i + 2])) {
           options = schema[i + 2]
         }
 
@@ -55,27 +53,29 @@ class Layout {
         }
 
         component = new schema[i](options)
+        var element = component.root || component
+
+        if (level === 1) {
+          structure.root = element
+        }
 
         if (name) {
           structure[name] = component
         }
 
-        if (component) {
-          this.display(component.root, options)
-          this.style(component, options)
-        }
-
-        if (level === 1) {
-          var isClass = fn => /^\sclass/.test(schema[i].toString())
-
-          // console.log('isClass', isClass)
-          // console.log('root', component.root)
-          structure.root = component.root
-        }
+        // if (component) {
+        //   this.display(component.root, options)
+        //   this.style(component, options)
+        // }
 
         if (component && container) {
-          if (component.insert) component.insert(container)
-          else insert(component, container)
+          if (component.insert) {
+            component.insert(container)
+          } else {
+            var wrapper = container.root || container
+
+            wrapper.appendChild(element)
+          }
           component._container = container
         }
       } else if (Array.isArray(schema[i])) {
