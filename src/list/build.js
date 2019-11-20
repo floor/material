@@ -26,12 +26,20 @@ export default {
     if (this.options.container) {
       this.options.container.appendChild(this.root)
       this.show()
-      this.buildVirtual()
+      if (this.options.virtual) {
+        this.buildVirtual()
+      } else {
+        this.ui.body.classList.add('scroll')
+      }
       // console.log('form', this.root)
     } else {
       this.inserted = true
       observer.insert(this.root, () => {
-        this.buildVirtual()
+        if (this.options.virtual) {
+          this.buildVirtual()
+        } else {
+          this.ui.body.classList.add('scroll')
+        }
         this.inserted = true
       })
     }

@@ -7,7 +7,14 @@ export default {
 
   render (list, option) {
     // console.log('render', list)
-    this.virtual.set(list)
+    if (this.options.virtual) {
+      this.virtual.set(list)
+    } else {
+      this.ui.body.innerHTML = ''
+      for (var i = 0; i < list.length; i++) {
+        this.renderItem(list[i])
+      }
+    }
   },
 
   /**
