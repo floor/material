@@ -2,7 +2,7 @@ import observer from '../module/observer'
 import dataset from '../view/dataset'
 
 import Layout from '../layout'
-import Virtual from './virtual'
+import Virtual from '../module/virtual'
 
 export default {
   build (data) {
