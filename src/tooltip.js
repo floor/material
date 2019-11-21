@@ -62,26 +62,35 @@ class Tooltip {
       targets[i].addEventListener('mouseover', (e) => {
         // console.log('tooltip', touch(), this.disabled)
         if (touch()) return
-        if (this.disabled === true) return
+
+        if (this.disabled === true) {
+          this.hide()
+          return
+        }
+
+        if (e.currentTarget.classList.contains('selected')) {
+          this.hide()
+          return
+        }
 
         this.label.innerHTML = e.currentTarget.dataset.tooltip
         var coord = this.offset(e.currentTarget)
 
-        this.root.classList.add('show')
+        this.show()
         this.root.style.top = (coord.top + this.options.offset.top) + 'px'
         this.root.style.left = coord.left - (this.root.offsetWidth / 2) + (e.currentTarget.offsetWidth / 2) + 'px'
       })
 
       targets[i].addEventListener('mouseleave', (e) => {
         this.label.innerHTML = ''
-        this.root.classList.remove('show')
+        this.hide()
       })
     }
 
     this.root.addEventListener('click', (e) => {
       e.preventDefault()
       e.stop()
-      this.root.classList.remove('show')
+      this.hide()
     })
   }
 
@@ -92,9 +101,17 @@ class Tooltip {
     return { top: rect.top + scrollTop, left: rect.left + scrollLeft }
   }
 
+  hide () {
+    this.root.classList.remove('show')
+  }
+
+  show () {
+    this.root.classList.add('show')
+  }
+
   disable () {
     // console.log('disable')
-    this.root.classList.remove('show')
+    this.hide()
     this.disabled = true
   }
 
