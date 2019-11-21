@@ -70,6 +70,8 @@ class Button {
       this.root.setAttribute('name', this.options.name)
     }
 
+    this.root.setAttribute('aria-label', this.options.text || this.options.label || this.options.class)
+
     if (this.options.tooltip) {
       this.root.setAttribute('data-tooltip', this.options.tooltip)
     }
