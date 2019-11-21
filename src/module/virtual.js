@@ -8,7 +8,9 @@ function VirtualList (options) {
   this.render = options.render
 
   this.scroller = VirtualList.createScroller()
-  this.container = this.options.container
+  this.container = options.container
+
+  this.container.classList.add('virtual')
 }
 
 VirtualList.prototype._renderChunk = function (node, from, number) {
@@ -43,8 +45,11 @@ VirtualList.prototype._renderChunk = function (node, from, number) {
 }
 
 VirtualList.prototype.set = function (items) {
+  // console.log('set', items)
   this.items = items
   this.totalRows = items.length
+
+  if (this.totalRows < 1 || this.totalRows === undefined) return
 
   this.container.innerHTML = ''
   this.container.scrollTop = 0
@@ -67,6 +72,10 @@ VirtualList.prototype.set = function (items) {
     // console.log('scroll', e.target.scrollTop, this.itemHeight, screenItemsLen)
     var scrollTop = e.target.scrollTop
 
+    // console.log('scrollTop', scrollTop)
+
+    if (scrollTop < 0) return
+
     var first = parseInt(scrollTop / self.itemHeight) - screenItemsLen
     first = first < 0 ? 0 : first
     if (!lastRepaintY || Math.abs(scrollTop - lastRepaintY) > maxBuffer) {
@@ -74,10 +83,18 @@ VirtualList.prototype.set = function (items) {
       lastRepaintY = scrollTop
     }
 
-    // e.preventDefault && e.preventDefault()
+    e.preventDefault && e.preventDefault()
   }
 
-  this.container.addEventListener('scroll', onScroll, passiveEvents() ? { passive: true } : false)
+  // this.container.addEventListener('scroll', onScroll, passiveEvents() ? { passive: true } : false)
+  this.container.addEventListener('scroll', onScroll)
+}
+
+VirtualList.createContainer = function () {
+  var container = document.createElement('div')
+  container.classList.add('virtual')
+  container.style.borderTop = '1px solid green'
+  return container
 }
 
 VirtualList.createScroller = function () {
