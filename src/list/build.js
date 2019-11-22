@@ -1,4 +1,3 @@
-import observer from '../module/observer'
 import dataset from '../view/dataset'
 
 import Layout from '../layout'
@@ -25,23 +24,17 @@ export default {
 
     if (this.options.container) {
       this.options.container.appendChild(this.root)
-      this.show()
       if (this.options.virtual) {
         this.buildVirtual()
       } else {
         this.ui.body.classList.add('scroll')
       }
-      // console.log('form', this.root)
     } else {
-      this.inserted = true
-      observer.insert(this.root, () => {
-        if (this.options.virtual) {
-          this.buildVirtual()
-        } else {
-          this.ui.body.classList.add('scroll')
-        }
-        this.inserted = true
-      })
+      if (this.options.virtual) {
+        this.buildVirtual()
+      } else {
+        this.ui.body.classList.add('scroll')
+      }
     }
   },
 
