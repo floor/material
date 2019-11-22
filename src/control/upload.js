@@ -85,6 +85,19 @@ class Upload {
     })
   }
 
+  image (e) {
+    console.log('image', e.target)
+    // if (input.files && input.files[0]) {
+    //   var reader = new FileReader()
+
+    //   reader.onload = (e) => {
+    //     cover.style.backgroundImage = 'url("' + e.target.result + '")'
+    //   }
+
+    //   reader.readAsDataURL(input.files[0])
+    // }
+  }
+
   reset () {
     // console.log('reset')
     this.input.value = ''
