@@ -19,6 +19,9 @@ export default {
       this.mode = null
     }
 
+    var selected = this.ui.body.querySelector('.selected')
+    if (selected) selected.classList.remove('selected')
+
     if (id) {
       this.highlight(item)
       this.item = item
@@ -27,10 +30,11 @@ export default {
       this.emit('select', id)
     } else {
       this.id = null
-      if (this.item) {
-        this.item.classList.remove('selected')
+      this.item = null
+
+      if (this.ui.delete) {
+        this.ui.delete.disable()
       }
-      this.ui.delete.disable()
     }
   },
 
