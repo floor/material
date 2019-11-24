@@ -2,7 +2,7 @@ import dot from '../module/dot'
 
 export default {
   render (object, option) {
-    // console.log('render', object)
+    console.log('render', object)
 
     var info = dot(object)
 
@@ -21,7 +21,7 @@ export default {
         // console.log('field type', field)
         if (this.field[field] &&
             this.field[field].set) {
-          this.field[field].set(this.objectValueByDotKey(object, field))
+          this.field[field].set(this.objectValueByDotKey(object, field), true)
         }
       }
     }
@@ -32,7 +32,7 @@ export default {
 
     this.emit('rendered')
 
-    // won't stay there
+    // won't stay here
     if (option === 'create' && this.field['name']) {
       this.focusNameOnRender(this.field['name'])
     }
