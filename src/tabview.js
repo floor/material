@@ -28,8 +28,11 @@ class TabView {
     this.build()
 
     observer.insert(this.root, () => {
+      // console.log('inserted')
       this.setup()
       this.attach()
+
+      this.emit('ready')
     })
 
     return this
