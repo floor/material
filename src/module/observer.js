@@ -3,7 +3,7 @@ const observer = {
   insert: (element, cb) => {
     var observer = new MutationObserver((mutations) => {
       if (document.contains(element)) {
-        if (typeof cb === 'function') {
+        if (typeof cb === 'function' && !element.classList.contains('inserted')) {
           cb()
         }
 
