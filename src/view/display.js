@@ -18,6 +18,7 @@ export default {
     }
 
     this.emit('show')
+    return this
   },
 
   hide () {
@@ -39,5 +40,6 @@ export default {
     // }, 1000)
 
     this.emit('hide')
+    return this
   }
 }
