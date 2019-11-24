@@ -83,11 +83,11 @@ VirtualList.prototype.set = function (items) {
       lastRepaintY = scrollTop
     }
 
-    e.preventDefault && e.preventDefault()
+    // e.preventDefault && e.preventDefault()
   }
 
-  // this.container.addEventListener('scroll', onScroll, passiveEvents() ? { passive: true } : false)
-  this.container.addEventListener('scroll', onScroll)
+  this.container.addEventListener('scroll', onScroll, passiveEvents() ? { passive: true } : false)
+  // this.container.addEventListener('scroll', onScroll)
 }
 
 VirtualList.createContainer = function () {
