@@ -11,6 +11,7 @@ export default {
 
     if (context === 'top') {
       this.data.unshift(info)
+      this.dataStore[info._id] = info
     } else {
       this.data.push(info)
       this.dataStore[info._id] = info
