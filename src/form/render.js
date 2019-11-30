@@ -2,7 +2,7 @@ import dot from '../module/dot'
 
 export default {
   render (object, option) {
-    console.log('render', object)
+    // console.log('render', object)
 
     var info = dot(object)
 
@@ -39,11 +39,13 @@ export default {
   },
 
   objectValueByDotKey (object, dotkey) {
+    // console.log('objectValueByDotKey', object, dotkey)
     var keys = dotkey.split(/\./)
 
     var value = Object.assign({}, object)
 
     for (var i = 0; i < keys.length; i++) {
+      // console.log('-', value, keys[i])
       value = value[keys[i]]
     }
 
