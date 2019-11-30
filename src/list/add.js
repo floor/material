@@ -13,6 +13,7 @@ export default {
       this.data.unshift(info)
     } else {
       this.data.push(info)
+      this.dataStore[info._id] = info
     }
     // console.log('data', this.data.length, this.data)
     this.render(this.data)
