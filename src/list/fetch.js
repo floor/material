@@ -57,7 +57,7 @@ export default {
   },
 
   storeData (list) {
-    // console.log('storeData')
+    // console.log('storeData', this.dataStore)
     this.dataStore = this.dataStore || {}
     for (var i = 0; i < list.length; i++) {
       this.dataStore[list[i]._id] = list[i]
