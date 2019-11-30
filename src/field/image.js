@@ -20,12 +20,16 @@ const defaults = {
  * });
  */
 class Image {
+  static isImage () {
+    return true
+  }
   /**
    * Constructor
    * @param  {Object} options - Component options
    * @return {Object} Class instance
    */
   constructor (options) {
+    // console.log('options', options)
     this.options = Object.assign({}, defaults, options || {})
 
     this.build()
@@ -48,8 +52,10 @@ class Image {
     return this
   }
 
-  set (src) {
-    // console.log('set', src)
+  set (src, asset) {
+    console.log('set', src, asset)
+
+    asset = asset || {}
 
     if (!src) return
 
@@ -70,7 +76,7 @@ class Image {
       url = url + format
     }
 
-    this.root.style.backgroundImage = 'url(' + url + src.filename + ')'
+    this.root.style.backgroundImage = 'url(' + asset.url + src.path + 'thumb/' + src.filename + ')'
   }
 
   sanitize (formats) {
