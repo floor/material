@@ -69,7 +69,7 @@ VirtualList.prototype.set = function (items) {
   var maxBuffer = screenItemsLen * this.itemHeight
 
   function onScroll (e) {
-    // console.log('scroll', e.target.scrollTop, this.itemHeight, screenItemsLen)
+    // console.log('scroll-----', e.target.scrollTop, this.itemHeight, screenItemsLen)
     var scrollTop = e.target.scrollTop
 
     // console.log('scrollTop', scrollTop)
@@ -86,9 +86,37 @@ VirtualList.prototype.set = function (items) {
     // e.preventDefault && e.preventDefault()
   }
 
-  this.container.addEventListener('scroll', onScroll, passiveEvents() ? { passive: true } : false)
+  // console.log('this.scrollEvents', this.scrollEvents)
+
+  if (!this.scrollEvents) {
+    this.container.addEventListener('scroll', onScroll, passiveEvents() ? { passive: true } : false)
+    this.scrollEvents = true
+  }
+
   // this.container.addEventListener('scroll', onScroll)
 }
+
+// prepare function add (not used)
+// VirtualList.prototype.add = function (info) {
+//   // console.log('set', items)
+//   this.items = items
+//   this.totalRows = items.length
+
+//   if (this.totalRows < 1 || this.totalRows === undefined) return
+
+//   this.container.innerHTML = ''
+//   this.container.scrollTop = 0
+
+//   var totalHeight = this.itemHeight * this.totalRows
+
+//   this.scroller.style.height = totalHeight + 'px'
+
+//   var screenItemsLen = Math.ceil(this.container.offsetHeight / this.itemHeight)
+
+//   // Cache 4 times the number of items that fit in the container viewport
+//   var cachedItemsLen = screenItemsLen * 3
+//   this._renderChunk(this.container, 0, cachedItemsLen / 2)
+// }
 
 VirtualList.createContainer = function () {
   var container = document.createElement('div')
