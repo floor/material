@@ -9,7 +9,7 @@ const defaults = {
   tag: 'div',
   attributes: ['type', 'name', 'autocomplete', 'required', 'disabled'],
   events: [
-    ['input.keyup', 'onKeyup']
+    ['input.input', 'onInput']
   ]
 }
 
@@ -82,11 +82,9 @@ class Text {
     }
   }
 
-  onKeyup (ev) {
+  onInput (ev) {
     // console.log('change', this.value, this.input.value)
-    if (this.value !== this.input.value) {
-      this.emit('change', ev)
-    }
+    this.emit('change', ev)
   }
 
   set (value) {
