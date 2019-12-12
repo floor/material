@@ -6,12 +6,12 @@ export default {
 
     var route = this.buildRoute(page, size)
 
-    // console.log('route', route)
+    console.log('route', route)
 
     fetch(route).then((resp) => {
       return resp.json()
     }).then((data) => {
-      // console.log('data', route, data)
+      console.log('data', route, data)
 
       if (this.options.store) {
         this.storeData(data)
@@ -50,7 +50,7 @@ export default {
     }
 
     if (this.options.pagination) {
-      route = route + 'page=' + page + '&size=' + size
+      route = route + '?page=' + page + '&size=' + size
     }
 
     return route
