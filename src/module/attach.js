@@ -35,7 +35,7 @@ export default {
       } else if (e && e.element && e.element.on && f && bound) {
         e.element.on(e.name, f.bind(bound))
       } else {
-        console.log('can\'t attach', def[0])
+        // console.log('can\'t attach', def[0])
       }
     })
 
