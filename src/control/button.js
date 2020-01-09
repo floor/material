@@ -4,22 +4,14 @@ import dataset from '../view/dataset'
 const defaults = {
   class: 'button',
   tag: 'button',
-  styles: ['style', 'color'],
-  components: ['label', 'icon'],
-  component: {
-    label: {
-      tag: 'label'
-    },
-    icon: {
-      tag: 'i'
-    }
-  }
+  styles: ['style', 'color']
 }
 
 class Button {
   static isComponent () {
     return true
   }
+
   /**
    * Constructor
    * @param  {Object} options - Component options
@@ -30,10 +22,19 @@ class Button {
     Object.assign(this, emitter)
     // console.log('options', options)
 
-    this.build()
-    this.attach()
+    this.init()
 
     return this
+  }
+
+  init () {
+    this.build()
+    this.setup()
+    this.attach()
+
+    if (this.options.container) {
+      this.append(this.options.container)
+    }
   }
 
   /**
@@ -42,23 +43,28 @@ class Button {
    */
   build () {
     this.root = document.createElement(this.options.tag)
+    this.root.classList.add(this.options.class)
 
     if (this.options.class !== 'button') {
       this.root.classList.add('button')
     }
 
-    this.root.classList.add(this.options.class)
     this.styleAttributes()
 
+    this.buildIcon()
+    this.buildLabel()
+
     if (this.options.text) {
-      this.root.innerHTML = this.options.text
+      this.root.innerHTML = this.root.innerHTML + this.options.text
     }
 
+    return this
+  }
+
+  setup () {
     if (this.options.data) {
       dataset(this.root, this.options.data)
     }
-
-    this.buildComponent()
 
     if (this.options.type) {
       this.root.setAttribute('type', this.options.type)
@@ -70,6 +76,10 @@ class Button {
       this.root.setAttribute('name', this.options.name)
     }
 
+    if (this.options.title) {
+      this.root.setAttribute('title', this.options.title)
+    }
+
     this.root.setAttribute('aria-label', this.options.text || this.options.label || this.options.class)
 
     if (this.options.tooltip) {
@@ -79,34 +89,35 @@ class Button {
     if (this.options.case) {
       this.root.classList.add(this.options.case + '-case')
     }
+  }
 
+  append (container) {
     if (this.options.container) {
       this.options.container.appendChild(this.root)
     }
-
-    return this
   }
 
-  buildComponent () {
-    this.ui = this.ui || {}
+  buildLabel () {
+    if (!this.options.label) return
 
-    for (var i = 0; i < this.options.components.length; i++) {
-      var component = this.options.components[i]
+    if (this.options.label) {
+      this.label = document.createElement('label')
+      this.label.classList.add('label')
+      this.label.innerHTML = this.options.label
 
-      if (!this.options[component]) continue
+      this.root.appendChild(this.label)
+    }
+  }
 
-      var tag = 'div'
-      if (this.options.component && this.options.component[component]) {
-        tag = this.options.component[component].tag || tag
-      }
+  buildIcon () {
+    if (!this.options.icon) return
 
-      this.ui[component] = document.createElement(tag)
+    if (this.options.icon) {
+      this.icon = document.createElement('i')
+      this.icon.classList.add('icon')
+      this.icon.innerHTML = this.options.icon
 
-      if (component === 'label' || component === 'icon') {
-        this.ui[component].innerHTML = this.options[component]
-      }
-
-      this.root.appendChild(this.ui[component])
+      this.root.appendChild(this.icon)
     }
   }
 
@@ -142,8 +153,16 @@ class Button {
         this.root.value = value
         break
       case 'label':
-        if (this.ui.label) {
-          this.ui.label.innerHTML = value
+        if (this.label) {
+          this.label.innerHTML = value
+        }
+        break
+      case 'text':
+        this.root.innerHTML = value
+        break
+      case 'icon':
+        if (this.label) {
+          this.icon.innerHTML = value
         }
         break
       default:
@@ -164,7 +183,7 @@ class Button {
       case 'value':
         return this.root.value
       case 'label':
-        return this.ui.label.innerHTML
+        return this.label.innerHTML
       default:
         return this.root.value
     }

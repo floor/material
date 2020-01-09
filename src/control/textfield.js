@@ -65,7 +65,7 @@ class Text {
 
   buildLabel () {
     if (this.options.label) {
-      this.label = document.createElement('span')
+      this.label = document.createElement('label')
       this.label.innerHTML = this.options.label
       this.root.appendChild(this.label)
     }
@@ -84,14 +84,17 @@ class Text {
 
   onInput (ev) {
     // console.log('change', this.value, this.input.value)
+
     this.emit('change', ev)
   }
 
   set (value) {
-    // console.log('set', value)
+    // console.log('set', typeof value, value)
     if (value && value !== 'undefined') {
       this.value = value
       this.input.value = value
+    } else {
+      this.input.value = ''
     }
   }
 
