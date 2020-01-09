@@ -15,14 +15,14 @@ export default {
       if (this.options.store) {
         this.storeData(list)
       }
-      console.log('list', list)
+      // console.log('list', list)
       this.ui['search-list'].innerHTML = ''
       this.renderSearch(list)
     })
   },
 
   renderSearch (list) {
-    console.log('render', list.length, list)
+    // console.log('render', list.length, list)
     for (var i = 0; i < list.length; i++) {
       var info = list[i]
       this.renderItem(info, 'search')
