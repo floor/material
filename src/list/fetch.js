@@ -6,16 +6,15 @@ export default {
 
     var route = this.buildRoute(page, size)
 
-    console.log('route', route)
+    this.ui.body.innerHTML = ''
+    // console.log('route', route)
 
     fetch(route).then((resp) => {
       return resp.json()
     }).then((data) => {
-      console.log('data', route, data)
+      // console.log('data', route, data)
 
-      if (this.options.store) {
-        this.storeData(data)
-      }
+      this.storeData(data)
 
       this.data = data
       if (this.status) {
@@ -35,7 +34,7 @@ export default {
   buildRoute (page, size) {
     page = page || 1
     size = size || this.options.list.size
-    var params = '?'
+    var params = ''
 
     var route = this.options.route.list
 
@@ -50,7 +49,13 @@ export default {
     }
 
     if (this.options.pagination) {
-      route = route + '?page=' + page + '&size=' + size
+      // console.log('pagination', route.indexOf('?'), route)
+
+      if (route.indexOf('?') > -1) {
+        route = route + '&page=' + page + '&size=' + size
+      } else {
+        route = route + '?page=' + page + '&size=' + size
+      }
     }
 
     return route

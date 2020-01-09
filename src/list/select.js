@@ -1,6 +1,6 @@
 export default {
   select (item) {
-    // console.log('select')
+    // console.log('select', item)
 
     if (!item.dataset.id) return
 
@@ -8,15 +8,6 @@ export default {
 
     if (this.options.preventSelectAgain && this.id === id) {
       return
-    }
-
-    if (this.mode === 'create') {
-      // console.log('cancel create', this.newItem)
-      if (this.newItem) {
-        this.ui.body.removeChild(this.newItem)
-        this.newItem = null
-      }
-      this.mode = null
     }
 
     var selected = this.ui.body.querySelector('.selected')
@@ -28,6 +19,7 @@ export default {
       this.id = id
       if (this.ui.delete) { this.ui.delete.enable() }
       this.emit('select', id)
+      this.emit('selectItem', item)
     } else {
       this.id = null
       this.item = null

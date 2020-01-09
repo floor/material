@@ -12,8 +12,10 @@ export default {
     fetch(this.options.route.search + '?search=' + keywords).then((resp) => {
       return resp.json()
     }).then((list) => {
-      // console.log('list', list)
-      this.store(list)
+      if (this.options.store) {
+        this.storeData(list)
+      }
+      console.log('list', list)
       this.ui['search-list'].innerHTML = ''
       this.renderSearch(list)
     })

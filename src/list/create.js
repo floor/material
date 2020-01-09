@@ -7,19 +7,29 @@ export default {
 
     this.mode = 'create'
 
-    if (this.options.item) {
-      this.newItem = this.renderItem(this.options.item.new, 'create')
+    if (this.options.virtual === true) {
+      this.data.unshift(this.options.item.new)
+      this.render(this.data)
+    } else {
+      if (this.options.item) {
+        this.newItem = this.renderItem(this.options.item.new, 'create')
+      }
     }
 
     this.emit('create', this.options.item.new)
   },
 
   created (data) {
-    console.log('created', data)
-    this.mode = null
-    this.info = data
-    this.ui.body.removeChild(this.newItem)
-    this.item = this.renderItem(data, 'top')
+    console.log('created', this.data.length, data)
+    if (this.options.virtual === true) {
+      this.data[0] = data
+      this.render(this.data)
+    } else {
+      this.mode = null
+      this.info = data
+      this.ui.body.removeChild(this.newItem)
+      this.item = this.renderItem(data, 'top')
+    }
   },
 
   createCancel () {

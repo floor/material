@@ -2,12 +2,13 @@ import Layout from '../layout'
 
 export default {
   update (info) {
-    console.log('update', info)
-    // console.log('selected', this.info, this.item)
+    // console.log('update', info)
 
     this.info = info
 
     var item = this.ui.body.querySelector('[data-id="' + info._id + '"]')
+
+    // console.log('item', item)
 
     item.innerHTML = ''
 

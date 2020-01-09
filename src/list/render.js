@@ -26,6 +26,8 @@ export default {
     // console.log('renderItem', context, this.options.layout.item)
     info = info || {}
 
+    var id = this.options.dataId || '_id'
+
     var container = this.ui.body
 
     if (context === 'create') {
@@ -41,11 +43,11 @@ export default {
       class: 'item'
     })
 
-    if (this.id && this.id === info._id) {
+    if (this.id && this.id === id) {
       element.classList.add('selected')
     }
 
-    element.dataset.id = info._id
+    element.dataset.id = info[id]
     element.dataset.info = this.options.info
 
     var layout = null
@@ -99,7 +101,9 @@ export default {
     var value = Object.assign({}, object)
 
     for (var i = 0; i < keys.length; i++) {
-      value = value[keys[i]]
+      if (value !== undefined) {
+        value = value[keys[i]]
+      }
     }
 
     return value

@@ -9,13 +9,13 @@ export default {
       return
     }
 
-    if (context === 'top') {
-      this.data.unshift(info)
-      this.dataStore[info._id] = info
-    } else {
+    if (context === 'bottom') {
       this.data.push(info)
-      this.dataStore[info._id] = info
+    } else {
+      this.data.unshift(info)
     }
+
+    this.dataStore[info._id] = info
     // console.log('data', this.data.length, this.data)
     this.render(this.data)
   }
