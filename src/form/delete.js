@@ -18,7 +18,7 @@ export default {
     // console.log('delete', this.info._id)
     if (!this.info._id) return
     this.setMode('delete')
-    fetch(this.options.route, {
+    fetch(this.options.action, {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'

@@ -21,13 +21,11 @@ export default {
         // console.log('field type', field)
         if (this.field[field] &&
             this.field[field].set) {
-          this.field[field].set(this.objectValueByDotKey(object, field), true)
+          var value = this.objectValueByDotKey(object, field)
+          // console.log('value', value)
+          this.field[field].set(value, true)
         }
       }
-    }
-
-    if (this.disableControls) {
-      this.disableControls()
     }
 
     this.emit('rendered')
@@ -45,15 +43,17 @@ export default {
     var value = Object.assign({}, object)
 
     for (var i = 0; i < keys.length; i++) {
-      // console.log('-', value, keys[i])
-      value = value[keys[i]]
+      if (value !== undefined) {
+        value = value[keys[i]]
+      }
     }
 
     return value
   },
 
   focusNameOnRender (field) {
-    field.focus()
+    // console.log('focusNameOnRender', field)
+    field.input.focus()
     field.input.select()
   }
 }

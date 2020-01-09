@@ -2,7 +2,7 @@ export default {
 
   submit (ev) {
     ev.preventDefault()
-    // console.log('submit', this.ui, this.file, this.info)
+    console.log('submit', this.ui, this.file, this.info)
     // ev.preventDefault()
     if (this.verify && !this.verify()) return
 
@@ -11,44 +11,36 @@ export default {
       this.disableControls()
     }
 
-    var formData = new FormData()
+    var data = new FormData()
 
     if (this.info && this.info._id) {
-      formData.append('id', this.info._id)
+      data.append('id', this.info._id)
     }
 
     if (this.info && this.info.uuid) {
-      formData.append('id', this.info.uuid)
+      data.append('uuid', this.info.uuid)
     }
 
-    // append field
+    this.appendFields(data)
+    this.appendFiles(data)
 
-    for (var field in this.field) {
-      if (this.field.hasOwnProperty(field)) {
-        // console.log('append field', field, this.field[field])
-        formData.append(field, this.field[field].get())
-      }
+    if (this.update) {
+      this.update(data)
+    } else {
+      this.setMethod(data)
     }
 
-    // append files
+    return false
+  },
 
-    for (var file in this.file) {
-      // console.log('this file', this.file, this.file[file].input)
-      // console.log('file', file, this.file[file])
-      if (this.file.hasOwnProperty(file) && this.file[file].input && this.file[file].input.value) {
-        // console.log('---- append file', this.file[file].input.value)
-        formData.append(file, this.file[file].input.files[0])
-      }
-    }
-
-    // console.log('formData', formData.keys())
-
+  setMethod (formData) {
     var method = 'PUT'
     if (this.mode === 'create') {
       method = 'POST'
     }
 
     if (this.fetch) {
+      // console.log('formData', formData.keys())
       this.fetch({
         method: method,
         formData: formData
@@ -61,7 +53,29 @@ export default {
         formData: formData
       })
     }
+  },
 
-    return false
+  appendFields (formData) {
+    for (var field in this.field) {
+      if (this.field.hasOwnProperty(field)) {
+        // console.log('append field', field, this.field[field].get())
+        if (this.field[field].get() !== null) {
+          formData.append(field, this.field[field].get())
+        }
+      }
+    }
+  },
+
+  appendFiles (formData) {
+    for (var file in this.file) {
+      // console.log('this file', this.file, this.file[file].input)
+      // console.log('file', file, this.file[file])
+      if (this.file.hasOwnProperty(file) && this.file[file].input && this.file[file].input.value) {
+        // console.log('---- append file', this.file[file].input.value)
+        if (this.file[file].input.value) {
+          formData.append(file, this.file[file].input.files[0])
+        }
+      }
+    }
   }
 }

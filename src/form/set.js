@@ -1,13 +1,13 @@
 export default {
   set (id) {
-    // console.log('set', info._id)
+    // console.log('set', id)
     if (!id) return
 
     this.emit('set', id)
 
     this.setMode('read')
     // this.render(info)
-    fetch(this.options.route + id, {
+    fetch(this.options.action + id, {
       headers: {
         'Accept': 'application/json'
       },
@@ -15,17 +15,11 @@ export default {
     }).then((resp) => {
       // console.log('resp', resp)
       return resp.json()
-    }).then((data) => {
-      // console.log('data', data)
-      this.form.style.display = 'flex'
-      this.info = data
-      this.render(data)
-
-      if (this.ui.delete) {
-        this.ui.delete.enable()
-      }
-
-      this.emit('setted', id)
+    }).then((info) => {
+      console.log('info', info)
+      this.info = info
+      this.render(info)
+      this.emit('setted', info)
     })
   }
 }

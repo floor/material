@@ -1,15 +1,13 @@
 
 export default {
 
-  create (info) {
-    console.log('create', info, this.info)
-    this.form.style.display = 'flex'
+  create () {
+    console.log('create')
 
+    var info = this.options.create.info || { name: 'New Item' }
+
+    this.render(info, 'create')
     this.setMode('create')
-    this.render(this.options.create, 'create')
-
-    if (this.controls) {
-      this.enableControls()
-    }
+    this.enableControls()
   }
 }

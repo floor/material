@@ -1,26 +1,37 @@
-const headers = {
-  'Accept': 'application/json',
-  'Content-Type': 'application/json'
-}
-
 export default {
-  update (data) {
-    // console.log('update', data)
-    var header = this.options.form.headers || headers
+  update (data, options) {
+    // console.log('update', data, options)
+    options = options || {}
 
-    fetch(this.options.form.action, {
-      method: this.options.form.method,
-      headers: header,
-      body: JSON.stringify(data)
-    }).then((resp) => {
-      return resp.json()
-    }).then((info) => {
-      // console.log('info', info)
+    // console.log('mode', this.mode)
+    var method = options.method ||
+        this.options[this.mode].method ||
+        'put'
+
+    var action = options.action ||
+        this.options[this.mode].action ||
+        this.options.action
+
+    fetch(action, {
+      method: method,
+      body: data
+    }).then(r => r.json()).then(info => {
       if (info.error) {
-        if (this.error) this.error(info)
+        console.log('Error: ' + info.error)
+        if (this.error) {
+          this.error(info)
+        }
       } else {
+        // console.log('updated', info)
+        if (this.mode === 'create') {
+          this.emit('created', info)
+          this.setMode('read')
+        } else {
+          this.emit('updated', info)
+          this.setMode('read')
+        }
+
         this.info = info
-        this.emit('updated', this.info)
       }
     })
   }

@@ -1,5 +1,6 @@
 export default {
   fetch (option) {
+    console.log('fetch', this.options.route, option.method)
     fetch(this.options.route, {
       method: option.method,
       body: option.formData
@@ -10,10 +11,10 @@ export default {
           this.error(info)
         }
       } else {
-        // console.log('submit ok', info, this.mode)
+        console.log('updated', info, this.mode)
         if (this.mode === 'create') {
           this.emit('created', info)
-          this.mode = null
+          this.mode = 'read'
         } else {
           this.info = info
           this.emit('updated', info)
