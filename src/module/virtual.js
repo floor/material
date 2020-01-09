@@ -118,13 +118,6 @@ VirtualList.prototype.set = function (items) {
 //   this._renderChunk(this.container, 0, cachedItemsLen / 2)
 // }
 
-VirtualList.createContainer = function () {
-  var container = document.createElement('div')
-  container.classList.add('virtual')
-  container.style.borderTop = '1px solid green'
-  return container
-}
-
 VirtualList.createScroller = function () {
   var scroller = document.createElement('div')
   scroller.classList.add('scroller')
