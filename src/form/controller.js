@@ -1,8 +1,8 @@
 
 export default {
 
-  initControls () {
-    // console.log('initControls', this.field)
+  initController () {
+    // console.log('initController', this.field)
 
     this.disableControls()
 
