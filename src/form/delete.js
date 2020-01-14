@@ -32,6 +32,7 @@ export default {
       return resp.json()
     }).then((data) => {
       // console.log('data', data)
+      this.form.reset()
       this.emit('deleted', this.info._id)
     })
   }
