@@ -54,6 +54,7 @@ export default {
 
     if (this.options.itemSwitch) {
       var item = info[this.options.itemSwitch]
+
       layout = new Layout(this.options.layout.item[item], element)
     } else {
       layout = new Layout(this.options.layout.item, element)
