@@ -10,6 +10,8 @@ export default {
       this.emit('cancel', 'create')
     }
 
+    this.setMode('read')
+
     return false
   }
 }
