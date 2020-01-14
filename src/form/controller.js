@@ -29,6 +29,7 @@ export default {
   },
 
   changeMode (mode) {
+    // console.log('changeMode');
     if (mode === 'update' && this.enableControls) {
       this.enableControls()
     } else if (mode === 'update' && this.disableControls) {
@@ -39,9 +40,10 @@ export default {
   },
 
   bindControl (control) {
+    // console.log('bindControl')
     if (control && control.on) {
       control.on('change', () => {
-        // console.log('change', control)
+        // console.log('change', control, this.mode)
         if (this.mode === 'read') {
           this.setMode('update')
         }
