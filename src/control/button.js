@@ -126,6 +126,10 @@ class Button {
       this.root.classList.add('style-' + this.options.style)
     }
 
+    if (this.options.size) {
+      this.root.classList.add(this.options.size + '-size')
+    }
+
     if (this.options.color) {
       this.root.classList.add('color-' + this.options.color)
     }
