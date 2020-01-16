@@ -1,6 +1,7 @@
 
 export default {
   click (e) {
+    // console.log('click', e.target)
     // e.stopPropagation()
 
     if (e.target === e.currentTarget) {
@@ -24,6 +25,8 @@ export default {
     if (this.select) {
       this.select(item)
     }
+
+    // console.log('item', item, e.target.dataset.name)
 
     if (e.target.matches('BUTTON') && e.target.dataset.name && item.dataset.id) {
       // console.log('button', e.target.dataset.name)
