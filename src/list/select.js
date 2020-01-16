@@ -1,8 +1,7 @@
 export default {
-  select (item) {
+  select (item, silent) {
     // console.log('select', item)
-
-    if (!item.dataset.id) return
+    if (!item || !item.dataset.id) return
 
     var id = item.dataset.id
 
@@ -18,8 +17,11 @@ export default {
       this.item = item
       this.id = id
       if (this.ui.delete) { this.ui.delete.enable() }
-      this.emit('select', id)
-      this.emit('selectItem', item)
+
+      if (silent !== true) {
+        this.emit('select', id)
+        this.emit('selectItem', item)
+      }
     } else {
       this.id = null
       this.item = null
@@ -28,6 +30,13 @@ export default {
         this.ui.delete.disable()
       }
     }
+  },
+
+  selectById (id, silent) {
+    // console.log('selectById', this.ui.body)
+    var item = this.ui.body.querySelector('[data-id="' + id + '"]')
+    // console.log('item', item)
+    this.select(item, silent)
   },
 
   unselect () {
