@@ -1,8 +1,10 @@
+import { byString } from '../module/object'
+
 export default {
 
   submit (ev) {
     ev.preventDefault()
-    console.log('submit', this.ui, this.file, this.info)
+    // console.log('submit', this.ui, this.file, this.info)
     // ev.preventDefault()
     if (this.verify && !this.verify()) return
 
@@ -14,6 +16,7 @@ export default {
     var data = new FormData()
 
     if (this.info && this.info._id) {
+      // console.log('id', this.info._id)
       data.append('id', this.info._id)
     }
 
@@ -58,9 +61,22 @@ export default {
   appendFields (formData) {
     for (var field in this.field) {
       if (this.field.hasOwnProperty(field)) {
-        // console.log('append field', field, this.field[field].get())
-        if (this.field[field].get() !== null) {
-          formData.append(field, this.field[field].get())
+        // console.log('check field', field)
+        var value = this.field[field].get()
+        if (value !== null) {
+          var initial = byString(this.info, field)
+
+          if (typeof initial === 'number') {
+            value = Number(value)
+          }
+
+          if (this.options.update && this.options.update.modifiedOnly &&
+              initial !== value) {
+            // console.log('field', field, typeof value, value)
+            formData.append(field, value)
+          } else {
+            formData.append(field, value)
+          }
         }
       }
     }
