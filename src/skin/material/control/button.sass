@@ -19,17 +19,26 @@
   background-color: transparent
   background-repeat: no-repeat
 
+  i
+    pointer-events: none
+    height: 24px
+    width: 24px
+    padding: 0
+
+  &.hide
+    display: none
+
   // pseudo class
   &:hover
-    background-color: rgba(255,255,255,.05)
+    background-color: rgba(0, 0, 0, .1)
     &:focus
-      background-color: rgba(255,255,255,.05)
+      background-color: rgba(0, 0, 0, .1)
 
   &:focus
-    background-color: rgba(255,255,255,.1)
+    background-color: rgba(0, 0, 0, .1)
 
   &:active
-    background-color: rgba(255,255,255,.05)
+    background-color: rgba(0, 0, 0, .1)
 
   &:disabled
     opacity: .5
@@ -40,6 +49,11 @@
   &[type="submit"]
     font-weight: 600
     padding: 6px 20px
+
+  // size
+  &.small-size
+    height: 36px
+    padding: 6px 12px
 
   // styles
   &.style-raised
@@ -52,10 +66,11 @@
     width: 40px
     height: 40px
     border-radius: 50%
-    padding: 6px
+    padding: 8px
     background-position: center
-    i 
-      padding: 0
+    i
+      pointer-events: none
+
       height: 24px
       width: 24px
       margin-left: 0
@@ -63,7 +78,12 @@
         fill: rgba(0, 0, 0, 0.67)
     
     &:hover
-      background-color: rgba(255,255,255,.2)
+      background-color: rgba(0,0,0,.1)
+
+    &.small-size
+      width: 36px
+      height: 36px
+      padding: 6px
 
   &.bold
     font-weight: 600
