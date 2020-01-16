@@ -1,0 +1,33 @@
+.search-input
+  position: relative
+  height: 40px
+  width: 100%
+  display: none
+  flex-direction: row
+  border-bottom: 1px solid rgba(0,0,0,.1)
+  background-color: rgba(0,0,0,.02)
+  &.show
+    display: flex
+  input
+    flex: 1
+    font-size: 1.2em
+    padding: 8px 16px 8px 24px
+    border: none
+    margin: 0
+    background-color: transparent
+  
+  .cancel
+    cursor: pointer
+    opacity: .4
+    flex: none
+    width: 46px
+    height: 40px
+    margin: 0
+    background-color: transparent
+    &:focus
+      opacity: .4
+      background-color: transparent
+    &:hover, &:active
+      opacity: .7
+      background-color: transparent
+      
