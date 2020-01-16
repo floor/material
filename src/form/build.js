@@ -33,12 +33,12 @@ export default {
       this.form.setAttribute('method', form.method)
     }
 
-    if (form && form.autocomplete) {
-      this.form.setAttribute('autocomplete', form.autocomplete)
+    if (this.options.autocomplete) {
+      this.form.setAttribute('autocomplete', this.options.autocomplete)
     }
 
-    if (form && form.action) {
-      this.form.setAttribute('action', form.action)
+    if (this.options.action) {
+      this.form.setAttribute('action', this.options.action)
     }
   },
 
