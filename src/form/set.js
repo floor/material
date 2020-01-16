@@ -16,7 +16,7 @@ export default {
       // console.log('resp', resp)
       return resp.json()
     }).then((info) => {
-      console.log('info', info)
+      // console.log('info', info)
       this.info = info
       this.render(info)
       this.emit('setted', info)
