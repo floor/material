@@ -25,14 +25,12 @@ export default {
         // console.log('updated', info)
         if (this.mode === 'create') {
           this.emit('created', info)
-          this.setMode('read')
         } else {
           this.emit('updated', info)
-          this.setMode('read')
         }
-
         this.info = info
       }
+      this.setMode('read')
     })
   }
 }
