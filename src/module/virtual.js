@@ -69,7 +69,7 @@ VirtualList.prototype.set = function (items) {
   var maxBuffer = screenItemsLen * this.itemHeight
 
   function onScroll (e) {
-    // console.log('scroll-----', e.target.scrollTop, this.itemHeight, screenItemsLen)
+    // console.log('scroll', e.target.scrollTop, totalHeight)
     var scrollTop = e.target.scrollTop
 
     // console.log('scrollTop', scrollTop)
@@ -78,6 +78,9 @@ VirtualList.prototype.set = function (items) {
 
     var first = parseInt(scrollTop / self.itemHeight) - screenItemsLen
     first = first < 0 ? 0 : first
+
+    // console.log('progress', e.target.scrollTop / self.itemHeight, self.totalRows)
+
     if (!lastRepaintY || Math.abs(scrollTop - lastRepaintY) > maxBuffer) {
       self._renderChunk(self.container, first, cachedItemsLen)
       lastRepaintY = scrollTop
@@ -96,27 +99,24 @@ VirtualList.prototype.set = function (items) {
   // this.container.addEventListener('scroll', onScroll)
 }
 
-// prepare function add (not used)
-// VirtualList.prototype.add = function (info) {
-//   // console.log('set', items)
-//   this.items = items
-//   this.totalRows = items.length
+VirtualList.prototype.update = function (items) {
+  this.items = items
 
-//   if (this.totalRows < 1 || this.totalRows === undefined) return
+  this.totalRows = this.items.length
 
-//   this.container.innerHTML = ''
-//   this.container.scrollTop = 0
+  var screenItemsLen = Math.ceil(this.container.offsetHeight / this.itemHeight)
+  var cachedItemsLen = screenItemsLen * 3
+  var scrollTop = this.container.scrollTop
 
-//   var totalHeight = this.itemHeight * this.totalRows
+  var totalHeight = this.itemHeight * this.totalRows
 
-//   this.scroller.style.height = totalHeight + 'px'
+  this.scroller.style.height = totalHeight + 'px'
 
-//   var screenItemsLen = Math.ceil(this.container.offsetHeight / this.itemHeight)
+  var first = parseInt(scrollTop / this.itemHeight) - screenItemsLen
+  first = first < 0 ? 0 : first
 
-//   // Cache 4 times the number of items that fit in the container viewport
-//   var cachedItemsLen = screenItemsLen * 3
-//   this._renderChunk(this.container, 0, cachedItemsLen / 2)
-// }
+  this._renderChunk(this.container, first, cachedItemsLen)
+}
 
 VirtualList.createScroller = function () {
   var scroller = document.createElement('div')
