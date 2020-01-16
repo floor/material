@@ -4,10 +4,8 @@ export default {
    * @param  {[type]} ev [description]
    * @return {[type]}    [description]
    */
-  search (ev) {
-    // console.log('search', ev)
-    var keywords = ev.target.value
-    if (keywords.length < 4) return
+  search (keywords) {
+    // console.log('search', keywords)
 
     fetch(this.options.route.search + '?search=' + keywords).then((resp) => {
       return resp.json()
@@ -29,6 +27,10 @@ export default {
     }
   },
 
+  cancelSearch () {
+    this.ui['search-list'].innerHTML = ''
+  },
+
   /**
    * [toggleSearch description]
    * @return {[type]} [description]
@@ -36,7 +38,7 @@ export default {
   toggleSearch (e) {
     e.stopPropagation()
     // console.log('toggle search', this.ui.body)
-    if (!this.ui['search-input'].classList.contains('show')) {
+    if (!this.ui['search-input'].root.classList.contains('show')) {
       this.showSearch()
       if (this.ui.delete) { this.ui.delete.disable() }
     } else {
@@ -53,10 +55,10 @@ export default {
     // console.log('showSearch')
 
     this.ui['search'].root.classList.add('selected')
-    this.ui['search-input'].classList.add('show')
+    this.ui['search-input'].root.classList.add('show')
     this.ui['search-list'].classList.add('show')
     this.ui.body.classList.add('hide')
-    this.ui['search-input'].focus()
+    this.ui['search-input'].input.focus()
   },
 
   /**
@@ -66,7 +68,7 @@ export default {
   hideSearch () {
     // console.log('hideSearch')
     this.ui['search'].root.classList.remove('selected')
-    this.ui['search-input'].classList.remove('show')
+    this.ui['search-input'].root.classList.remove('show')
     this.ui['search-list'].classList.remove('show')
     this.ui.body.classList.remove('hide')
   }
