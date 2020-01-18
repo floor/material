@@ -23,6 +23,8 @@ export default {
     if (this.options.container) {
       this.options.container.appendChild(this.root)
     }
+
+    this.setMode('read')
   },
 
   buildForm (form) {
