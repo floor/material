@@ -31,8 +31,8 @@ export default {
     })
   },
 
-  buildRoute (page, size) {
-    page = page || 1
+  buildRoute (index, size) {
+    index = index || 1
     size = size || this.options.list.size
     var params = ''
 
@@ -44,7 +44,7 @@ export default {
 
     route = route + params
 
-    if (page === 1) {
+    if (index === 1) {
       this.ui.body.scrolltop = 0
     }
 
@@ -52,9 +52,9 @@ export default {
       // console.log('pagination', route.indexOf('?'), route)
 
       if (route.indexOf('?') > -1) {
-        route = route + '&page=' + page + '&size=' + size
+        route = route + '&page=' + index + '&size=' + size
       } else {
-        route = route + '?page=' + page + '&size=' + size
+        route = route + '?page=' + index + '&size=' + size
       }
     }
 
