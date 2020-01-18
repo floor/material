@@ -4,7 +4,6 @@ import build from '../element/build'
 import emitter from '../module/emitter'
 import insert from '../component/insert'
 import attach from '../module/attach'
-import classify from '../component/classify'
 
 let defaults = {
   prefix: 'material',
@@ -15,14 +14,14 @@ let defaults = {
   error: false,
   value: false,
   disabled: false,
-  build: ['$root.material-switch', {},
+  build: ['$root.switch', {},
     ['input$input$switch-input', { type: 'checkbox' }],
-    ['span$control.switch-control', {},
-      ['span$track.switch-track', {},
-        ['span$knob.switch-knob', {}]
+    ['span$control.control', {},
+      ['span$track.track', {},
+        ['span$knob.knob', {}]
       ]
     ],
-    ['label$label.switch-label']
+    ['label$label.label']
   ],
   events: [
     ['element.control.click', 'toggle'],
@@ -77,7 +76,7 @@ class Switch {
     this.element = build(this.options.build)
     this.root = this.element.root
 
-    classify(this.root, this.options)
+    // classify(this.root, this.options)
 
     if (this.options.disabled) {
       this.disable()
@@ -163,6 +162,8 @@ class Switch {
       this.check(true)
     }
 
+    this.emit('change')
+
     return this
   }
 
@@ -171,23 +172,17 @@ class Switch {
    * @param {boolean} value [description]
    */
   check (checked, silent) {
-    // console.log('check', checked, silent)
+    console.log('check', checked, silent)
     if (checked === true) {
       this.root.classList.add('is-checked')
       this.element.input.checked = true
       this.checked = true
       this.value = true
-      if (!silent) {
-        this.emit('change', this.checked)
-      }
     } else {
       this.root.classList.remove('is-checked')
       this.element.input.checked = false
       this.checked = false
       this.value = false
-      if (!silent) {
-        this.emit('change', this.checked)
-      }
     }
     return this
   }
