@@ -17,12 +17,12 @@ export default {
       body: data
     }).then(r => r.json()).then(info => {
       if (info.error) {
-        console.log('Error: ' + info.error)
+        // console.log('Error: ' + info.error)
         if (this.error) {
           this.error(info)
         }
       } else {
-        // console.log('updated', info)
+        // console.log('info', this.mode, info)
         if (this.mode === 'create') {
           this.emit('created', info)
         } else {
