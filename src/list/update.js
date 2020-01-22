@@ -24,18 +24,24 @@ export default {
   getUpdatedInfo (id) {
     // console.log('getUpdatedInfo', id)
     var index = this.getUpdatedIndex(id)
-    var route = this.buildRoute(index, 1)
-
+    // console.log('index', index)
+    var route = this.buildRoute(index + 1, 1)
+    // console.log('roote', route)
     fetch(route).then((resp) => {
       return resp.json()
     }).then((data) => {
-      console.log('info', data)
-      this.updateUpdatedInfo(data[0], index)
+      // console.log('info', data)
+      this.updateUpdatedInfo(data[0], index, id)
     })
   },
 
-  updateUpdatedInfo (info, index) {
+  updateUpdatedInfo (info, index, id) {
     // console.log('updateUpdatedInfo', info, index)
+
+    if (info._id !== id) {
+      return
+    }
+
     this.info = info
 
     // update datalist

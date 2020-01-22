@@ -1,9 +1,11 @@
 export default {
   select (item, silent) {
-    // console.log('select', item)
+    // console.log('select', item.dataset.id)
     if (!item || !item.dataset.id) return
 
     var id = item.dataset.id
+
+    this.info = this.dataStore[id]
 
     if (this.options.preventSelectAgain && this.id === id) {
       return
@@ -16,6 +18,7 @@ export default {
       this.highlight(item)
       this.item = item
       this.id = id
+
       if (this.ui.delete) { this.ui.delete.enable() }
 
       if (silent !== true) {
@@ -45,6 +48,28 @@ export default {
       this.item.classList.remove('selected')
     }
     this.item = null
+  },
+
+  selectNext () {
+    // console.log('selectNext', this.id)
+    var idx = this.dataList.indexOf(this.id)
+
+    var id = this.dataList[idx + 1]
+
+    if (id) {
+      this.selectById(id)
+    }
+  },
+
+  selectPrevious () {
+    // console.log('selectNext', this.id)
+    var idx = this.dataList.indexOf(this.id)
+
+    var id = this.dataList[idx - 1]
+
+    if (id) {
+      this.selectById(id)
+    }
   },
 
   next () {

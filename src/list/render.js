@@ -23,7 +23,7 @@ export default {
    * @param {[type]} context [description]
    */
   renderItem (info, context) {
-    // console.log('renderItem', context, this.options.layout.item)
+    // console.log('renderItem', info)
     info = info || {}
 
     var id = this.options.dataId || '_id'
@@ -34,16 +34,18 @@ export default {
       container.scrolltop = 0
     }
 
-    if (context === 'search') {
-      container = this.ui['search-list']
-    }
+    // if (context === 'search') {
+    //   container = this.ui['search-list']
+    // }
 
     var element = new Element({
       tag: 'li',
       class: 'item'
     })
 
-    if (this.id && this.id === id) {
+    // console.log('---', this.id)
+
+    if (this.id && this.id === info[id]) {
       element.classList.add('selected')
     }
 

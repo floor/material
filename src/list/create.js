@@ -1,6 +1,6 @@
 export default {
   create () {
-    console.log('create', this.mode, this.options.item.new)
+    // console.log('create', this.mode, this.options.item.new)
     // console.log('selected', this.info, this.item)
 
     if (this.mode === 'create') return
@@ -20,7 +20,7 @@ export default {
   },
 
   created (data) {
-    console.log('created', this.data.length, data)
+    // console.log('created', this.data.length, data)
     if (this.options.virtual === true) {
       this.data[0] = data
       this.render(this.data)
@@ -33,9 +33,9 @@ export default {
   },
 
   createCancel () {
-    console.log('createCancel', this.newItem)
-    console.log('remove')
-    console.log('prepare reselect', this.info, this.item)
+    // console.log('createCancel', this.newItem)
+    // console.log('remove')
+    // console.log('prepare reselect', this.info, this.item)
     this.ui.body.removeChild(this.newItem)
     this.mode = null
     if (this.item && this.info) {

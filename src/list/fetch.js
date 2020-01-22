@@ -1,5 +1,12 @@
 export default {
   fetch (page, size) {
+    if (this.controller) {
+      this.controller.abort()
+    }
+
+    this.controller = new AbortController()
+    var signal = this.controller.signal
+
     page = page || 1
     size = size || this.options.list.size
     // console.log('fetch')
@@ -9,7 +16,7 @@ export default {
     this.ui.body.innerHTML = ''
     // console.log('route', route)
 
-    fetch(route).then((resp) => {
+    fetch(route, {signal}).then((resp) => {
       return resp.json()
     }).then((data) => {
       // console.log('data', route, data)
@@ -17,34 +24,35 @@ export default {
       this.storeData(data)
 
       this.data = data
-      if (this.status) {
-        // console.log('count', data.length)
-        this.status('count', data.length)
-      }
 
       this.render(data)
-      if (this.hideSearch) {
-        this.hideSearch()
-      }
 
       this.emit('fetched', data)
+    }).catch(function (e) {
+      // console.log('error', e.message)
     })
   },
 
-  buildRoute (index, size) {
-    index = index || 1
+  buildRoute (page, size, path) {
+    path = path || 'list'
+
+    page = page || 1
     size = size || this.options.list.size
     var params = ''
 
-    var route = this.options.route.list
+    var route = this.options.route[path]
 
     if (this.params) {
       params = this.params() || ''
     }
 
-    route = route + params
+    if (route.indexOf('?') > -1) {
+      route = route + params
+    } else {
+      route = route + '?' + params
+    }
 
-    if (index === 1) {
+    if (page === 1) {
       this.ui.body.scrolltop = 0
     }
 
@@ -52,9 +60,9 @@ export default {
       // console.log('pagination', route.indexOf('?'), route)
 
       if (route.indexOf('?') > -1) {
-        route = route + '&page=' + index + '&size=' + size
+        route = route + '&page=' + page + '&size=' + size
       } else {
-        route = route + '?page=' + index + '&size=' + size
+        route = route + '?page=' + page + '&size=' + size
       }
     }
 
@@ -62,9 +70,11 @@ export default {
   },
 
   storeData (list) {
+    this.dataList = []
     // console.log('storeData', this.dataStore)
     this.dataStore = this.dataStore || {}
     for (var i = 0; i < list.length; i++) {
+      this.dataList.push(list[i]._id)
       this.dataStore[list[i]._id] = list[i]
     }
   }
