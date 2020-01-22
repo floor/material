@@ -4,7 +4,7 @@ export default {
 
   submit (ev) {
     ev.preventDefault()
-    // console.log('submit', this.ui, this.file, this.info)
+    // console.log('submit', this.mode)
     // ev.preventDefault()
     if (this.verify && !this.verify()) return
 
@@ -64,16 +64,11 @@ export default {
         // console.log('check field', field)
         var value = this.field[field].get()
         if (value !== null) {
-          var initial = byString(this.info, field)
-
-          if (typeof initial === 'number') {
-            value = Number(value)
-          }
-
-          if (this.options.update && this.options.update.modifiedOnly &&
-              initial !== value) {
-            // console.log('field', field, typeof value, value)
-            formData.append(field, value)
+          if (this.mode === 'update' && this.options.update && this.options.update.modifiedOnly) {
+            var modified = this.isModified(field, value)
+            if (modified) {
+              formData.append(field, value)
+            }
           } else {
             formData.append(field, value)
           }
@@ -82,15 +77,28 @@ export default {
     }
   },
 
+  isModified (field, value) {
+    var initial = byString(this.info, field)
+
+    if (typeof initial === 'number') {
+      value = Number(value)
+    }
+
+    if (initial !== value) {
+      // console.log('field', field, typeof value, value)
+      return true
+    } else {
+      return false
+    }
+  },
+
   appendFiles (formData) {
+    // console.log('appendFiles', this.file)
     for (var file in this.file) {
       // console.log('this file', this.file, this.file[file].input)
       // console.log('file', file, this.file[file])
       if (this.file.hasOwnProperty(file) && this.file[file].input && this.file[file].input.value) {
-        // console.log('---- append file', this.file[file].input.value)
-        if (this.file[file].input.value) {
-          formData.append(file, this.file[file].input.files[0])
-        }
+        formData.append(file, this.file[file].input.files[0])
       }
     }
   }

@@ -21,5 +21,15 @@ export default {
       this.render(info)
       this.emit('setted', info)
     })
+  },
+
+  setInfo (info) {
+    // console.log('set', id)
+    if (!info) return
+
+    // console.log('info', info)
+    this.info = info
+    this.render(info)
+    this.emit('setted', info)
   }
 }

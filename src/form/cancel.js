@@ -1,6 +1,6 @@
 export default {
   cancel (ev) {
-    console.log('cancel', this.info, this.mode)
+    // console.log('cancel', this.info, this.mode)
     ev.preventDefault()
 
     this.render(this.info)

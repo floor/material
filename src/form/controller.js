@@ -23,13 +23,24 @@ export default {
     // console.log('setMode', mode)
     this.mode = mode
 
-    this.root.classList.add('mode-' + mode)
+    this.updateClassMode(mode)
 
     this.emit('mode', mode)
   },
 
+  updateClassMode (mode) {
+    var modes = ['read', 'create', 'update']
+
+    for (var i = 0; i < modes.length; i++) {
+      this.form.classList.remove(modes[i] + '-mode')
+    }
+
+    this.form.classList.add(mode + '-mode')
+  },
+
   changeMode (mode) {
-    // console.log('changeMode');
+    // console.log('changeMode', mode)
+
     if (mode === 'update' && this.enableControls) {
       this.enableControls()
     } else if (mode === 'update' && this.disableControls) {

@@ -15,7 +15,11 @@ export default {
     fetch(action, {
       method: method,
       body: data
-    }).then(r => r.json()).then(info => {
+    }).then((resp) => {
+      // console.log('resp', resp)
+      return resp.json()
+    }).then(info => {
+      // console.log('update', info)
       if (info.error) {
         // console.log('Error: ' + info.error)
         if (this.error) {
@@ -25,12 +29,13 @@ export default {
         // console.log('info', this.mode, info)
         if (this.mode === 'create') {
           this.emit('created', info)
+          this.setMode('read')
         } else {
           this.emit('updated', info)
+          this.setMode('read')
         }
         this.info = info
       }
-      this.setMode('read')
     })
   }
 }
