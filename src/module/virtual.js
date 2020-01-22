@@ -1,5 +1,9 @@
 import passiveEvents from '../module/passive'
 
+const defaults = {
+
+}
+
 function VirtualList (options) {
   this.options = options
   this.itemHeight = options.itemHeight
@@ -11,6 +15,10 @@ function VirtualList (options) {
   this.container = options.container
 
   this.container.classList.add('virtual')
+
+  window.addEventListener('resize', () => {
+    VirtualList.resize()
+  })
 }
 
 VirtualList.prototype._renderChunk = function (node, from, number) {
@@ -61,7 +69,7 @@ VirtualList.prototype.set = function (items) {
   var screenItemsLen = Math.ceil(this.container.offsetHeight / this.itemHeight)
 
   // Cache 4 times the number of items that fit in the container viewport
-  var cachedItemsLen = screenItemsLen * 3
+  var cachedItemsLen = screenItemsLen * 4
   this._renderChunk(this.container, 0, cachedItemsLen / 2)
 
   var self = this
@@ -116,6 +124,10 @@ VirtualList.prototype.update = function (items) {
   first = first < 0 ? 0 : first
 
   this._renderChunk(this.container, first, cachedItemsLen)
+}
+
+VirtualList.resize = function () {
+  console.log('resize')
 }
 
 VirtualList.createScroller = function () {
