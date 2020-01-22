@@ -1,4 +1,4 @@
-const special = ['required', 'disabled']
+const special = ['required', 'disabled', 'multiple']
 
 function setAttributes (element, o) {
   // console.log('attributes', o.attributes, element)

@@ -3,11 +3,11 @@ import dataset from '../view/dataset'
 import attributes from './module/attributes'
 
 const defaults = {
-  class: 'upload',
-  attributes: ['name', 'accept', 'required', 'disabled']
+  class: 'file',
+  attributes: ['name', 'accept', 'required', 'disabled', 'multiple']
 }
 
-class Upload {
+class File {
   /**
    * Constructor
    * @param  {Object} options - Component options
@@ -29,9 +29,9 @@ class Upload {
    */
   build () {
     this.root = document.createElement('div')
-    this.root.classList.add('upload')
+    this.root.classList.add('file')
 
-    if (this.options.class !== 'upload') {
+    if (this.options.class !== 'file') {
       this.root.classList.add(this.options.class)
     }
 
@@ -55,7 +55,8 @@ class Upload {
 
   buildLabel () {
     if (this.options.label) {
-      this.label = document.createElement('span')
+      this.label = document.createElement('label')
+      this.label.classList.add('label')
       this.label.innerHTML = this.options.label
       this.root.appendChild(this.label)
     }
@@ -108,4 +109,4 @@ class Upload {
   }
 }
 
-export default Upload
+export default File

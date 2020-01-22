@@ -66,6 +66,7 @@ class Text {
   buildLabel () {
     if (this.options.label) {
       this.label = document.createElement('label')
+      this.label.classList.add('label')
       this.label.innerHTML = this.options.label
       this.root.appendChild(this.label)
     }
@@ -73,6 +74,7 @@ class Text {
 
   buildInput () {
     this.input = document.createElement('input')
+    this.input.classList.add('input')
     this.root.appendChild(this.input)
 
     attributes(this.input, this.options)
