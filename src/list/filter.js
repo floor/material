@@ -20,11 +20,34 @@ export default {
     })
   },
 
+  getFilter () {
+    // console.log('getFilter')
+    var filter = null
+    for (var name in this.filter) {
+      if (this.filter.hasOwnProperty(name)) {
+        // console.log('--', typeof this.filter[name].get(), this.filter[name].get())
+        if (this.filter[name].get() !== '' && this.filter[name].get() !== []) {
+          if (filter) {
+            filter = filter + '&' + name + '=' + this.filter[name].get()
+          } else {
+            filter = name + '=' + this.filter[name].get()
+          }
+        }
+      }
+    }
+
+    // console.log('filter', filter)
+
+    return filter
+  },
+
   toggleFilter () {
-    if (this.ui['filter-input'].contains('show')) {
-      this.ui['filter-input'].remove('show')
+    // console.log('toggleFilter', this.ui['filter-input'])
+
+    if (this.ui['filter-input'].classList.contains('show')) {
+      this.hideFilter()
     } else {
-      this.ui['filter-input'].add('show')
+      this.showFilter()
     }
   },
 
@@ -33,13 +56,16 @@ export default {
    * @return {[type]} [description]
    */
   showFilter () {
+    if (this.hideSearch) {
+      this.hideSearch()
+    }
+
     // console.log('showSearch')
     this.ui['filter'].root.classList.add('selected')
-    this.ui['filter-input'].root.classList.add('show')
+    this.ui['filter-input'].classList.add('show')
 
     // this.ui['search-list'].classList.add('show')
     // this.ui.body.classList.add('hide')
-    this.ui['filter-input'].input.focus()
   },
 
   /**
@@ -49,9 +75,10 @@ export default {
   hideFilter () {
     // console.log('hideSearch')
     this.ui['filter'].root.classList.remove('selected')
-    this.ui['filter-input'].root.classList.remove('show')
+    this.ui['filter-input'].classList.remove('show')
     // this.ui['search-list'].classList.remove('show')
     // this.ui.body.classList.remove('hide')
+    this.clearFilter()
     this.fetch()
   },
 
@@ -76,7 +103,6 @@ export default {
 
         if (str[0] === 'filter' && str[1] !== undefined) {
           var name = property.substr(7, property.length)
-          console.log('field', name, property)
 
           filter[name] = object[property]
         }
