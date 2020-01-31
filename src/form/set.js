@@ -3,6 +3,8 @@ export default {
     // console.log('set', id)
     if (!id) return
 
+    this.clean()
+
     this.emit('set', id)
 
     this.setMode('read')
@@ -31,5 +33,10 @@ export default {
     this.info = info
     this.render(info)
     this.emit('setted', info)
+  },
+
+  clean (id) {
+    var info = this.options.create.info || { name: 'New Item' }
+    this.form.reset()
   }
 }
