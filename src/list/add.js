@@ -1,7 +1,7 @@
 
 export default {
   add (info, context) {
-    console.log('list add', info)
+    // console.log('list add', info)
 
     if (!this.dataStore) return
     context = context || null
