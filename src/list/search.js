@@ -7,46 +7,39 @@ export default {
   search (keywords, page, size) {
     // console.log('search', keywords)
 
-    if (this.controller) {
-      this.controller.abort()
+    this.ui.body.innerHTML = ''
+
+    if (this.abortController) {
+      this.abortController.abort()
     }
+
+    this.abortController = new AbortController()
+    var signal = this.abortController.signal
 
     page = page || 1
     size = size || this.options.list.size
 
-    this.controller = new AbortController()
-    var signal = this.controller.signal
-
     var route = this.buildRoute(page, size, 'search')
 
-    if (route.indexOf('?') > -1) {
-      route = route + '&search=' + keywords
-    } else {
-      route = route + '?search=' + keywords
-    }
+    route = this.addParams(route, 'search=' + keywords)
+
+    // console.log('route', route)
 
     fetch(route, {signal}).then((resp) => {
       return resp.json()
     }).then((data) => {
-      this.data = data
-
+      // console.log('data', data)
       this.storeData(data)
+
+      this.data = data
 
       // console.log('list', list)
 
-      this.renderSearch(data)
+      this.render(data)
+      this.emit('fetched', data)
     }).catch(function (e) {
       // console.log('error', e.message)
     })
-  },
-
-  renderSearch (list) {
-    this.ui.body.innerHTML = ''
-    // console.log('render', list.length, list)
-    for (var i = 0; i < list.length; i++) {
-      var info = list[i]
-      this.renderItem(info, 'search')
-    }
   },
 
   cancelSearch () {
@@ -73,8 +66,13 @@ export default {
    * @return {[type]} [description]
    */
   showSearch () {
+    if (this.hideFilter) {
+      this.hideFilter()
+    }
+
     // console.log('showSearch')
     this.mode = 'search'
+    this.root.classList.add('search-mode')
     this.ui['search'].root.classList.add('selected')
     this.ui['search-input'].input.value = ''
     this.ui['search-input'].root.classList.add('show')
@@ -93,6 +91,7 @@ export default {
   hideSearch () {
     // console.log('hideSearch')
     this.mode = 'standard'
+    this.root.classList.remove('search-mode')
     this.ui['search'].root.classList.remove('selected')
     this.ui['search-input'].root.classList.remove('show')
     this.ui['search-input'].input.value = ''
