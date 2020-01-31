@@ -5,6 +5,8 @@ export default {
 
     var id = item.dataset.id
 
+    this.index = this.dataList.indexOf(id)
+
     this.info = this.dataStore[id]
 
     if (this.options.preventSelectAgain && this.id === id) {
@@ -19,8 +21,6 @@ export default {
       this.item = item
       this.id = id
 
-      if (this.ui.delete) { this.ui.delete.enable() }
-
       if (silent !== true) {
         this.emit('select', id)
         this.emit('selectItem', item)
@@ -28,26 +28,50 @@ export default {
     } else {
       this.id = null
       this.item = null
-
-      if (this.ui.delete) {
-        this.ui.delete.disable()
-      }
     }
   },
 
-  selectById (id, silent) {
-    // console.log('selectById', this.ui.body)
-    var item = this.ui.body.querySelector('[data-id="' + id + '"]')
-    // console.log('item', item)
-    this.select(item, silent)
-  },
-
   unselect () {
+    console.log('unselect')
     this.id = null
     if (this.item) {
       this.item.classList.remove('selected')
     }
+    this.index = null
     this.item = null
+  },
+
+  selectById (id) {
+    // console.log('selectById', id, this.dataList)
+    //
+    var index = this.dataList.indexOf(id)
+    if (index < 0) {
+      console.log('can\'t selectid, not in the list')
+      return false
+    }
+
+    this.index = index
+    this.id = id
+
+    // console.log('item', item)
+    this.selectItemById(id)
+
+    return id
+  },
+
+  selectItemById (id) {
+    // console.log('select')
+    var item = this.ui.body.querySelector('[data-id="' + id + '"]')
+
+    if (!item) return
+
+    var selected = this.ui.body.querySelector('.selected')
+    if (selected) selected.classList.remove('selected')
+
+    this.item = item
+    item.classList.add('selected')
+
+    return item
   },
 
   selectNext () {
@@ -58,17 +82,23 @@ export default {
 
     if (id) {
       this.selectById(id)
+      return id
+    } else {
+      return false
     }
   },
 
   selectPrevious () {
-    // console.log('selectNext', this.id)
+    console.log('selectNext', this.id)
     var idx = this.dataList.indexOf(this.id)
 
     var id = this.dataList[idx - 1]
 
     if (id) {
       this.selectById(id)
+      return id
+    } else {
+      return false
     }
   },
 
