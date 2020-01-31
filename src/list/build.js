@@ -15,6 +15,10 @@ export default {
       e.stopPropagation()
     })
 
+    if (this.options.name) {
+      this.name = this.options.name
+    }
+
     if (this.options.data) {
       dataset(this.root, this.options.data)
     }
@@ -24,17 +28,10 @@ export default {
 
     if (this.options.container) {
       this.options.container.appendChild(this.root)
-      if (this.options.virtual) {
-        this.buildVirtual()
-      } else {
-        this.ui.body.classList.add('scroll')
-      }
+
+      this.buildVirtual()
     } else {
-      if (this.options.virtual) {
-        this.buildVirtual()
-      } else {
-        this.ui.body.classList.add('scroll')
-      }
+      this.buildVirtual()
     }
   },
 
@@ -54,5 +51,9 @@ export default {
         return this.renderItem(this.data[i])
       }
     })
+
+    // window.addEventListener('resize', () => {
+    //   this.virtual.update()
+    // })
   }
 }
