@@ -47,12 +47,20 @@ class Search {
       this.root.classList.add(this.options.class)
     }
 
+    if (this.options.icon) {
+      this.icon = document.createElement('i')
+      this.icon.classList.add('icon')
+      this.icon.innerHTML = this.options.icon
+      this.root.appendChild(this.icon)
+    }
+
     this.input = document.createElement('input')
+    this.input.classList.add('input')
     this.root.appendChild(this.input)
 
     this.cancel = new Button({
       container: this.root,
-      class: 'cancel',
+      class: 'clear',
       icon: this.options.iconCancel
     })
 
