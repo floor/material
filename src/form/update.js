@@ -1,6 +1,6 @@
 export default {
   update (data, options) {
-    // console.log('update', data, options)
+    console.log('update', data, options)
     options = options || {}
 
     // console.log('mode', this.mode)
@@ -19,7 +19,7 @@ export default {
       // console.log('resp', resp)
       return resp.json()
     }).then(info => {
-      // console.log('update', info)
+      console.log('update', info)
       if (info.error) {
         // console.log('Error: ' + info.error)
         if (this.error) {
