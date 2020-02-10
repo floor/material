@@ -1,10 +1,16 @@
+import emitter from '..//module/emitter'
+import attach from '../module/attach'
+import attributes from './module/attributes'
+import dataset from '../view/dataset'
 
 const defaults = {
-  class: 'textfield',
-  tag: 'div'
+  class: 'select',
+  tag: 'div',
+  first: null,
+  attributes: ['type', 'name', 'autocomplete', 'required']
 }
 
-class Text {
+class Select {
   /**
    * Constructor
    * @param  {Object} options - Component options
@@ -12,8 +18,7 @@ class Text {
    */
   constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
-
-    // console.log('options', options)
+    Object.assign(this, emitter, attach, dataset)
 
     this.build()
 
@@ -25,33 +30,16 @@ class Text {
    * @return {Object} This class instance
    */
   build () {
-    this.root = document.createElement(this.options.tag)
-    this.root.classList.add(this.options.class)
+    var tag = this.options.tag || 'span'
+    this.root = document.createElement(tag)
+    this.root.classList.add('select')
 
-    if (this.options.label) {
-      this.label = document.createElement('span')
-      this.label.innerHTML = this.options.label
-      this.root.appendChild(this.label)
+    if (this.options.class !== 'select') {
+      this.root.classList.add(this.options.class)
     }
 
-    this.input = document.createElement('input')
-    this.root.appendChild(this.input)
-
-    if (this.options.type) {
-      this.input.setAttribute('type', this.options.type)
-    }
-
-    if (this.options.name) {
-      this.input.setAttribute('name', this.options.name)
-    }
-
-    if (this.options.required) {
-      this.input.setAttribute('required', 'required')
-    }
-
-    if (this.options.autocomplete) {
-      this.input.setAttribute('autocomplete', this.options.autocomplete)
-    }
+    this.buildLabel()
+    this.buildInput()
 
     if (this.container) {
       this.container.appendChild(this.root)
@@ -60,13 +48,64 @@ class Text {
     return this
   }
 
+  buildLabel () {
+    if (this.options.label) {
+      this.label = document.createElement('span')
+      this.label.classList.add('label')
+      this.label.innerHTML = this.options.label
+      this.root.appendChild(this.label)
+    }
+  }
+
+  buildInput () {
+    this.input = document.createElement('select')
+    this.input.classList.add('input')
+    this.root.appendChild(this.input)
+
+    this.input.addEventListener('change', () => {
+      // console.log('change', this.input[this.input.selectedIndex].value)
+      this.emit('change', this.input[this.input.selectedIndex].value)
+    })
+
+    if (this.options.data) {
+      dataset(this.data, this.options.data)
+    }
+
+    attributes(this.input, this.options)
+
+    if (this.options.options) {
+      this.setOptions(this.options.options)
+    }
+  }
+
+  setOptions (options) {
+    // console.log('buildCountry', this.input)
+
+    var first = this.options.first
+
+    if (first && first[0] && first[1]) {
+      this.input.options[0] = new Option(first[1], first[0])
+    }
+
+    for (var i = 0; i < options.length; i++) {
+      this.addOption(options[i][1], options[i][0])
+    }
+  }
+
+  addOption (name, value) {
+    this.input.options[this.input.options.length] = new Option(name, value)
+  }
+
   set (value) {
+    // console.log('set', value)
     this.input.value = value
+
+    return this
   }
 
   get () {
-    return this.input.value
+    return this.input[this.input.selectedIndex].value
   }
 }
 
-export default Text
+export default Select
