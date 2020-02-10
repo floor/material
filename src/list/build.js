@@ -46,11 +46,29 @@ export default {
     this.virtual = new Virtual({
       container: this.ui.body,
       itemHeight: height,
+      size: this.options.list.size,
       render: (i) => {
         // console.log('render', this.data[i])
         return this.renderItem(this.data[i])
       }
     })
+
+    if (this.options.loading === 'dynamic') {
+      // console.log('dynamic')
+      this.virtual.on('scrollNext', (total) => {
+        // console.log('slide', total, this.options.list.size)
+        this.page = this.page || 1
+        // console.log('slide', total, this.options.list.size)
+        var page = Math.ceil(total / this.options.list.size) + 1
+
+        // console.log('page', page, this.page)
+
+        if (page > this.page) {
+          this.page = page
+          this.fetch(this.page, this.size, true)
+        }
+      })
+    }
 
     // window.addEventListener('resize', () => {
     //   this.virtual.update()
