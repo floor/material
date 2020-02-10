@@ -54,7 +54,11 @@ export default {
     if (this.options.itemSwitch) {
       var item = info[this.options.itemSwitch]
 
-      layout = new Layout(this.options.layout.item[item], element)
+      if (this.options.layout.item[item]) {
+        layout = new Layout(this.options.layout.item[item], element)
+      } else {
+        layout = new Layout(this.options.layout.item.base, element)
+      }
     } else {
       layout = new Layout(this.options.layout.item, element)
     }
@@ -67,6 +71,8 @@ export default {
     } else {
       container.appendChild(element)
     }
+
+    this.emit('infoRendered', info, element)
 
     return element
   },
