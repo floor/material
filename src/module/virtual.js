@@ -1,12 +1,12 @@
 import passiveEvents from '../module/passive'
-
-const defaults = {
-
-}
+import emitter from '../module/emitter'
 
 function VirtualList (options) {
   this.options = options
+
   this.itemHeight = options.itemHeight
+
+  this.size = options.size
 
   this.items = options.items
   this.render = options.render
@@ -14,15 +14,13 @@ function VirtualList (options) {
   this.scroller = VirtualList.createScroller()
   this.container = options.container
 
-  this.container.classList.add('virtual')
+  Object.assign(this, emitter)
 
-  window.addEventListener('resize', () => {
-    VirtualList.resize()
-  })
+  this.container.classList.add('virtual')
 }
 
 VirtualList.prototype._renderChunk = function (node, from, number) {
-  // console.log('_renderChunk', node, from, number)
+  // console.log('_renderChunk', from, number)
   var fragment = document.createDocumentFragment()
   fragment.appendChild(this.scroller)
 
@@ -50,10 +48,17 @@ VirtualList.prototype._renderChunk = function (node, from, number) {
 
   node.innerHTML = ''
   node.appendChild(fragment)
+
+  if (finalItem > this.totalRows - this.size / 2) {
+    // console.log('scrollNext', finalItem, this.totalRows, this.size)
+    this.emit('scrollNext', this.totalRows)
+  }
+
+  // console.log('finalItem', finalItem, this.totalRows)
 }
 
 VirtualList.prototype.set = function (items) {
-  // console.log('set', items)
+  // console.log('set', items.length)
   this.items = items
   this.totalRows = items.length
 
@@ -87,12 +92,14 @@ VirtualList.prototype.set = function (items) {
     var first = parseInt(scrollTop / self.itemHeight) - screenItemsLen
     first = first < 0 ? 0 : first
 
-    // console.log('progress', e.target.scrollTop / self.itemHeight, self.totalRows)
-
     if (!lastRepaintY || Math.abs(scrollTop - lastRepaintY) > maxBuffer) {
       self._renderChunk(self.container, first, cachedItemsLen)
       lastRepaintY = scrollTop
     }
+
+    var progress = Math.ceil((scrollTop / self.itemHeight) + screenItemsLen)
+    // console.log('progress', progress)
+    self.emit('progress', progress)
 
     // e.preventDefault && e.preventDefault()
   }
@@ -108,12 +115,14 @@ VirtualList.prototype.set = function (items) {
 }
 
 VirtualList.prototype.update = function (items) {
-  this.items = items
+  this.items = items || this.items
+
+  if (!this.items) return
 
   this.totalRows = this.items.length
 
   var screenItemsLen = Math.ceil(this.container.offsetHeight / this.itemHeight)
-  var cachedItemsLen = screenItemsLen * 3
+  var cachedItemsLen = screenItemsLen * 4
   var scrollTop = this.container.scrollTop
 
   var totalHeight = this.itemHeight * this.totalRows
@@ -126,8 +135,16 @@ VirtualList.prototype.update = function (items) {
   this._renderChunk(this.container, first, cachedItemsLen)
 }
 
-VirtualList.resize = function () {
-  console.log('resize')
+VirtualList.prototype.add = function (items) {
+  this.items = items || this.items
+
+  if (!this.items) return
+
+  this.totalRows = this.items.length
+
+  var totalHeight = this.itemHeight * this.totalRows
+
+  this.scroller.style.height = totalHeight + 'px'
 }
 
 VirtualList.createScroller = function () {
