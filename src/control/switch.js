@@ -6,7 +6,6 @@ import insert from '../component/insert'
 import attach from '../module/attach'
 
 let defaults = {
-  prefix: 'material',
   class: 'switch',
   type: 'control',
   label: null,
@@ -47,23 +46,13 @@ class Switch {
    * @return {Object} Class instance
    */
   constructor (options) {
-    this.init(options)
-    this.build()
-    this.attach()
-
-    return this
-  }
-
-  /**
-   * Constructor
-   * @param  {Object} options The class options
-   * @return {Object} This class instance
-   */
-  init (options) {
     this.options = Object.assign({}, defaults, options || {})
     Object.assign(this, emitter, attach, insert)
 
     this.value = this.options.value
+
+    this.build()
+    this.attach()
 
     return this
   }
@@ -120,7 +109,7 @@ class Switch {
         }
         break
       default:
-        this.setValue(prop, silent)
+        this.setValue(prop, value)
     }
 
     return this
@@ -143,7 +132,7 @@ class Switch {
    * @param {boolean} value [description]
    */
   setValue (value, silent) {
-    // console.log('setValue', value)
+    console.log('setValue', value)
     this.check(value, silent)
   }
 
@@ -172,17 +161,23 @@ class Switch {
    * @param {boolean} value [description]
    */
   check (checked, silent) {
-    console.log('check', checked, silent)
+    // console.log('check', checked, silent)
     if (checked === true) {
       this.root.classList.add('is-checked')
       this.element.input.checked = true
       this.checked = true
       this.value = true
+      if (!silent) {
+        this.emit('change', this.checked)
+      }
     } else {
       this.root.classList.remove('is-checked')
       this.element.input.checked = false
       this.checked = false
       this.value = false
+      if (!silent) {
+        this.emit('change', this.checked)
+      }
     }
     return this
   }
