@@ -90,5 +90,15 @@ export default {
         }
       }
     }
+  },
+
+  clean () {
+    for (var member in this.info) {
+      delete this.info[member]
+    }
+
+    this.form.reset()
+
+    this.emit('cleaned')
   }
 }
