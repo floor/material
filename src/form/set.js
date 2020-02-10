@@ -3,7 +3,9 @@ export default {
     // console.log('set', id)
     if (!id) return
 
-    this.clean()
+    if (this.clean) {
+      this.clean()
+    }
 
     this.emit('set', id)
 
@@ -18,7 +20,9 @@ export default {
       // console.log('resp', resp)
       return resp.json()
     }).then((info) => {
-      // console.log('info', info)
+      if (this.options.debug) {
+        console.log('info', info)
+      }
       this.info = info
       this.render(info)
       this.emit('setted', info)
@@ -33,10 +37,5 @@ export default {
     this.info = info
     this.render(info)
     this.emit('setted', info)
-  },
-
-  clean (id) {
-    var info = this.options.create.info || { name: 'New Item' }
-    this.form.reset()
   }
 }
