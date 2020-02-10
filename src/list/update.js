@@ -2,7 +2,7 @@ import Layout from '../layout'
 
 export default {
   update (info) {
-    // console.log('update', info)
+    console.log('update', info)
 
     this.getUpdatedInfo(info._id)
   },
@@ -38,9 +38,8 @@ export default {
   updateUpdatedInfo (info, index, id) {
     // console.log('updateUpdatedInfo', info, index)
 
-    if (info._id !== id) {
-      return
-    }
+    if (!info) return
+    if (info._id !== id) return
 
     this.info = info
 
