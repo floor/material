@@ -1,5 +1,4 @@
-'use strict'
-
+import passiveEvents from './module/passive'
 import create from './component/create'
 import insert from './component/insert'
 import offset from './element/offset'
