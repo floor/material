@@ -2,7 +2,7 @@
 export default {
   click (e) {
     // console.log('click', e.target)
-    // e.stopPropagation()
+    e.stopPropagation()
 
     if (e.target === e.currentTarget) {
       return
@@ -22,17 +22,19 @@ export default {
       i++
     }
 
+    if (e.target.matches('BUTTON') && e.target.dataset.name && item.dataset.id) {
+      // console.log('button', e.target.dataset.name)
+      this.emit(e.target.dataset.name, item.dataset.id)
+      return this
+    }
+
     if (this.select) {
       this.select(item)
     }
 
     // console.log('item', item, e.target.dataset.name)
 
-    if (e.target.matches('BUTTON') && e.target.dataset.name && item.dataset.id) {
-      // console.log('button', e.target.dataset.name)
-      this.emit(e.target.dataset.name, item.dataset.id)
-    }
-
+    return this
     // console.log(item)
   }
 }
