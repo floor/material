@@ -1,7 +1,9 @@
-const special = ['required', 'disabled', 'multiple']
+const special = ['required', 'disabled', 'multiple', 'checked']
 
 function setAttributes (element, o) {
   // console.log('attributes', o.attributes, element)
+
+  if (!element) return
 
   for (var i = 0; i < o.attributes.length; i++) {
     var attribute = o.attributes[i]
