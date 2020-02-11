@@ -100,7 +100,7 @@ class TabView {
   }
 
   click (button) {
-    // console.log('click', button.dataset.view)
+    // console.log('click', button.dataset.view, true)
     var view = this.ui.view.querySelector('[data-view="' + button.dataset.view + '"]')
     this.hideView()
 
