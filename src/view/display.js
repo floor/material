@@ -41,5 +41,11 @@ export default {
 
     this.emit('hide')
     return this
+  },
+
+  destroy () {
+    if (this.root && this.root.parentNode) {
+      this.root.parentNode.removeChild(this.root)
+    }
   }
 }
