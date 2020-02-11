@@ -42,6 +42,7 @@ class Tooltip {
 
     this.root = document.createElement('span')
     this.root.classList.add('tooltip')
+    this.root.classList.add('control')
 
     this.pointer = document.createElement('span')
     this.pointer.classList.add('pointer')
