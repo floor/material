@@ -1,35 +1,32 @@
-// import control from '../control';
-// import control from './component/control'
-import build from '../element/build'
-import emitter from '../module/emitter'
-import insert from '../component/insert'
+// module
+import dataset from '../view/dataset'
 import attach from '../module/attach'
+import emitter from '../module/emitter'
+import attributes from './module/attributes'
+import addClass from './module/addclass'
+
+// ui
+import Layout from '../layout'
+import Element from '../element'
 
 let defaults = {
   class: 'switch',
-  type: 'control',
-  label: null,
-  checked: false,
-  error: false,
-  value: false,
-  disabled: false,
-  build: ['$root.switch', {},
-    ['input$input$switch-input', { type: 'checkbox' }],
-    ['span$control.control', {},
-      ['span$track.track', {},
-        ['span$knob.knob', {}]
+  attributes: ['type', 'name', 'required', 'checked'],
+  layout: [
+    [Element, 'input', { class: 'input', type: 'checkbox' }],
+    [Element, 'control', { class: 'control' },
+      [Element, 'track', { class: 'track' },
+        [Element, 'knob', { class: 'knob' }]
       ]
-    ],
-    ['label$label.label']
+    ]
   ],
   events: [
-    ['element.control.click', 'toggle'],
-    // ['element.label.click', 'toggle'],
+    ['ui.control.click', 'toggle'],
+    // ['ui.label.click', 'toggle'],
     // for accessibility purpose
-    ['element.input.click', 'toggle'],
-    ['element.input.focus', 'focus'],
-    ['element.input.blur', 'blur']
-    // ['element.input.keydown', 'keydown']
+    ['ui.input.click', 'toggle'],
+    ['ui.input.focus', 'focus'],
+    ['ui.input.blur', 'blur']
   ]
 }
 
@@ -47,11 +44,12 @@ class Switch {
    */
   constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, emitter, attach, insert)
+    Object.assign(this, emitter, attach, dataset)
 
     this.value = this.options.value
 
     this.build()
+    this.setup()
     this.attach()
 
     return this
@@ -62,31 +60,96 @@ class Switch {
    * @return {Object} The class instance
    */
   build () {
-    this.element = build(this.options.build)
-    this.root = this.element.root
+    var tag = this.options.tag || 'span'
+    this.root = document.createElement(tag)
+    this.root.classList.add('switch')
 
-    // classify(this.root, this.options)
+    if (this.options.class !== 'switch') {
+      addClass(this.root, this.options.class)
+    }
 
-    if (this.options.disabled) {
-      this.disable()
+    this.layout = new Layout(this.options.layout, this.root)
+    this.ui = this.layout.component
+
+    // console.log('ui', this.ui)
+
+    this.styleAttributes()
+
+    this.buildIcon()
+    this.buildLabel()
+
+    if (this.options.container) {
+      this.options.container.appendChild(this.root)
+    }
+  }
+
+  setup () {
+    if (this.options.data) {
+      dataset(this.root, this.options.data)
+    }
+
+    // console.log('attribute', this.ui.input, this.options)
+    attributes(this.ui.input, this.options)
+
+    if (this.options.checked) {
+      this.check(true)
     }
 
     if (this.value) {
       this.element.input.setAttribute('checked', 'checked')
     }
 
-    this.element.input.setAttribute('aria-label', this.options.name)
-
-    let text = this.options.label || this.options.text || ''
-
-    this.element.label.textContent = text
-    this.element.label.setAttribute('for', this.options.name)
-    if (this.options.checked) {
-      this.check(true)
+    if (this.options.tooltip) {
+      this.root.setAttribute('data-tooltip', this.options.tooltip)
     }
 
-    if (this.options.container) {
-      this.insert(this.options.container)
+    this.ui.input.setAttribute('aria-label', this.options.name)
+
+    if (this.options.case) {
+      this.root.classList.add(this.options.case + '-case')
+    }
+  }
+
+  buildLabel () {
+    // console.log('buildLabel', this.options.label)
+    if (!this.options.label) return
+
+    this.ui.label = document.createElement('label')
+    this.ui.label.classList.add('label')
+    this.ui.label.innerHTML = this.options.label
+
+    if (this.options.name) {
+      this.ui.label.setAttribute('for', this.options.name)
+    }
+
+    this.root.insertBefore(this.ui.label, this.ui.input)
+  }
+
+  buildIcon () {
+    if (!this.options.icon) return
+
+    this.ui.icon = document.createElement('i')
+    this.ui.icon.classList.add('icon')
+    this.ui.icon.innerHTML = this.options.icon
+
+    this.root.insertBefore(this.ui.icon, this.ui.input)
+  }
+
+  styleAttributes () {
+    if (this.options.style) {
+      this.root.classList.add('style-' + this.options.style)
+    }
+
+    if (this.options.size) {
+      this.root.classList.add(this.options.size + '-size')
+    }
+
+    if (this.options.color) {
+      this.root.classList.add('color-' + this.options.color)
+    }
+
+    if (this.options.bold) {
+      this.root.classList.add('bold')
     }
   }
 
@@ -132,7 +195,7 @@ class Switch {
    * @param {boolean} value [description]
    */
   setValue (value, silent) {
-    console.log('setValue', value)
+    // console.log('setValue', value, typeof silent, silent)
     this.check(value, silent)
   }
 
@@ -141,6 +204,7 @@ class Switch {
    * @return {Object} The class instance
    */
   toggle () {
+    // console.log('toggle')
     if (this.disabled) return
 
     this.focus()
@@ -150,8 +214,6 @@ class Switch {
     } else {
       this.check(true)
     }
-
-    this.emit('change')
 
     return this
   }
@@ -164,7 +226,7 @@ class Switch {
     // console.log('check', checked, silent)
     if (checked === true) {
       this.root.classList.add('is-checked')
-      this.element.input.checked = true
+      this.ui.input.checked = true
       this.checked = true
       this.value = true
       if (!silent) {
@@ -172,7 +234,7 @@ class Switch {
       }
     } else {
       this.root.classList.remove('is-checked')
-      this.element.input.checked = false
+      this.ui.input.checked = false
       this.checked = false
       this.value = false
       if (!silent) {
@@ -190,7 +252,7 @@ class Switch {
     if (this.disabled === true) return this
 
     this.root.classList.add('is-focused')
-    if (this.element.input !== document.activeElement) { this.element.input.focus() }
+    if (this.ui.input !== document.activeElement) { this.ui.input.focus() }
     return this
   }
 

@@ -5,7 +5,6 @@ import dataset from '../view/dataset'
 
 const defaults = {
   class: 'select',
-  tag: 'div',
   first: null,
   attributes: ['type', 'name', 'autocomplete', 'required']
 }
