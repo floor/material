@@ -12,6 +12,7 @@ import Layout from '../layout'
 
 let defaults = {
   class: 'dialog',
+  close: true,
   layout: [
     [Element, 'head', { class: 'head' },
       [Text, 'title', { class: 'title' }],
@@ -21,7 +22,8 @@ let defaults = {
       [Text, 'content', { class: 'content' }]
     ],
     [Element, 'foot', { class: 'foot' },
-      [Button, 'ok', { class: 'ok', text: 'Ok' }]
+      [Element, { class: 'divider' }],
+      [Button, 'ok', { class: 'ok', text: 'Ok', color: 'primary' }]
     ]
   ],
   events: [
@@ -44,6 +46,7 @@ class Dialog {
     Object.assign(this, emitter, attach, display)
 
     this.build()
+    this.render()
     this.attach()
 
     return this
@@ -93,11 +96,11 @@ class Dialog {
     }
 
     if (this.options.content && this.ui.content) {
-      this.ui.body.set(this.options.body)
+      this.ui.content.set(this.options.content)
     }
 
     if (this.options.cancel && this.ui.cancel) {
-      this.ui.cancel.set(this.options.cancel)
+      this.ui.cancel.set('text', this.options.cancel)
     }
 
     if (this.options.ok && this.ui.ok) {
@@ -107,14 +110,25 @@ class Dialog {
 
   ok () {
     this.emit('ok')
+    if (this.options.close) {
+      this.destroy()
+    }
   }
 
   cancel () {
     this.emit('cancel')
+
+    if (this.options.close) {
+      this.destroy()
+    }
   }
 
   close () {
     this.hide()
+
+    if (this.options.close) {
+      this.destroy()
+    }
   }
 
   emphase () {
