@@ -40,6 +40,8 @@ class Text {
 
   set (text) {
     // console.log('set', text)
+    if (text === undefined) return
+
     this.root.innerHTML = text
 
     if (this.options.spaceAfter) {
