@@ -3,7 +3,10 @@ export default {
     // console.log('fetch', page, size, more)
     if (more !== true) {
       this.ui.body.innerHTML = ''
+      this.page = 1
+      this.stop = false
     }
+
     this.data = this.data || []
     var signal = null
 
@@ -33,6 +36,17 @@ export default {
     }).then((data) => {
       if (this.options.debug) {
         console.log('data', route, data.length, data)
+      }
+
+      data = data || []
+
+      if (data.error) {
+        console.log('error', data.error)
+        return
+      }
+
+      if (data.length < this.size && more) {
+        this.stop = true
       }
 
       if (more === true) {

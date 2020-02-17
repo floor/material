@@ -38,6 +38,8 @@ export default {
   buildVirtual () {
     // console.log('buildVirtual', this.options.class)
     var height = 80
+    this.size = this.options.list.size
+    this.stop = false
 
     if (this.options.item && this.options.item.height) {
       height = this.options.item.height
@@ -46,7 +48,7 @@ export default {
     this.virtual = new Virtual({
       container: this.ui.body,
       itemHeight: height,
-      size: this.options.list.size,
+      size: this.size,
       render: (i) => {
         // console.log('render', this.data[i])
         return this.renderItem(this.data[i])
@@ -55,18 +57,17 @@ export default {
 
     if (this.options.loading === 'dynamic') {
       // console.log('dynamic')
-      this.virtual.on('scrollNext', (total) => {
-        // console.log('slide', total, this.options.list.size)
+      this.virtual.on('next', (total) => {
+        if (this.stop) return
+
+        // console.log('next', total, this.page, this.size)
         this.page = this.page || 1
         // console.log('slide', total, this.options.list.size)
-        var page = Math.ceil(total / this.options.list.size) + 1
+        // var page = Math.ceil(total / this.size) + 1
 
-        // console.log('page', page, this.page)
+        this.page++
 
-        if (page > this.page) {
-          this.page = page
-          this.fetch(this.page, this.size, true)
-        }
+        this.fetch(this.page, this.size, true)
       })
     }
 
