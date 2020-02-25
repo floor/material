@@ -41,7 +41,11 @@ export default {
   },
 
   selectById (id, silent) {
-    // console.log('selectById', id)
+    console.log('selectById', id)
+
+    if (!this.dataList) {
+      return false
+    }
 
     var index = this.dataList.indexOf(id)
     if (index < 0) {
