@@ -27,9 +27,10 @@ let defaults = {
     ]
   ],
   events: [
-    ['ui.close', 'close'],
+    ['surface.click', 'onClick'],
     ['ui.ok.click', 'ok'],
-    ['ui.cancel.click', 'cancel']
+    ['ui.cancel.click', 'cancel'],
+    ['ui.close.click', 'close']
   ]
 }
 
@@ -50,16 +51,6 @@ class Dialog {
     this.attach()
 
     return this
-  }
-
-  /**
-   * Constructor
-   * @param  {Object} options The class options
-   * @return {Object} This class instance
-   */
-  init (options) {
-    // init options
-
   }
 
   /**
@@ -129,6 +120,10 @@ class Dialog {
     if (this.options.close) {
       this.destroy()
     }
+  }
+
+  onClick (e) {
+    e.stopPropagation()
   }
 
   emphase () {
