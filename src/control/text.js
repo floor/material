@@ -27,6 +27,10 @@ class Text {
     this.root = document.createElement(this.options.tag)
     this.root.classList.add(this.options.class)
 
+    if (this.options.class !== 'text') {
+      this.root.classList.add('text')
+    }
+
     if (this.options.text) {
       this.set(this.options.text)
     }
