@@ -27,6 +27,7 @@ let defaults = {
     ]
   ],
   events: [
+    ['root.click', 'onClickRoot'],
     ['surface.click', 'onClick'],
     ['ui.ok.click', 'ok'],
     ['ui.cancel.click', 'cancel'],
@@ -97,6 +98,18 @@ class Dialog {
     if (this.options.ok && this.ui.ok) {
       this.ui.ok.set('text', this.options.ok)
     }
+
+    if (this.options.target) {
+      this.setPosition()
+    }
+  }
+
+  setPosition () {
+    var coord = this.options.target.getBoundingClientRect()
+    var surface_coord = this.surface.getBoundingClientRect()
+
+    this.surface.style.top = coord.top + 'px'
+    this.surface.style.left = coord.left - surface_coord.width + 'px'
   }
 
   ok () {
@@ -124,6 +137,13 @@ class Dialog {
 
   onClick (e) {
     e.stopPropagation()
+  }
+
+  onClickRoot (e) {
+    e.stopPropagation()
+    if (!this.options.modal) {
+      this.destroy()
+    }
   }
 
   emphase () {
