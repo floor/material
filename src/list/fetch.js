@@ -3,6 +3,7 @@ export default {
     // console.log('fetch', page, size, more)
     if (more !== true) {
       this.ui.body.innerHTML = ''
+      this.virtual.reset()
       this.page = 1
       this.stop = false
     }
@@ -30,6 +31,10 @@ export default {
     }
 
     var route = this.buildRoute(page, size)
+
+    if (more !== true && this.options.count) {
+      this.fetchCount(route)
+    }
 
     fetch(route, {signal}).then((resp) => {
       return resp.json()
@@ -62,6 +67,19 @@ export default {
       }
 
       this.emit('fetched', data)
+    }).catch(function (e) {
+      // console.log('error', e.message)
+    })
+  },
+
+  fetchCount (route, signal) {
+    // console.log('fetchCount', route)
+    fetch(route + '&count=1', {signal}).then((resp) => {
+      return resp.json()
+    }).then((data) => {
+      // console.log('data', data.count)
+      this.count = data.count
+      this.statusDisplay('count', data.count)
     }).catch(function (e) {
       // console.log('error', e.message)
     })
@@ -108,7 +126,7 @@ export default {
       route = this.routeAddOn(route)
     }
 
-    if (this.params) {
+    if (this.params && this.params()) {
       // console.log('params', route, this.params())
       route = this.addParams(route, this.params())
     }

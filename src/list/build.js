@@ -58,6 +58,7 @@ export default {
     if (this.options.loading === 'dynamic') {
       // console.log('dynamic')
       this.virtual.on('next', (total) => {
+        // console.log('next', total)
         if (this.stop) return
 
         // console.log('next', total, this.page, this.size)
@@ -67,7 +68,19 @@ export default {
 
         this.page++
 
-        this.fetch(this.page, this.size, true)
+        if (this.mode === 'search') {
+          this.search(this.ui['search-input'].input.value, this.page, this.size, true)
+        } else {
+          this.fetch(this.page, this.size, true)
+        }
+      }).on('progress', (progress) => {
+        // console.log('progress', progress, this.count)
+        //
+        //
+        if (this.statusDisplay) {
+          var percent = parseInt(progress / this.count * 100)
+          this.statusDisplay('count', percent + '% | ' + progress + ' / ' + this.count)
+        }
       })
     }
 

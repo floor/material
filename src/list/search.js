@@ -1,23 +1,33 @@
 export default {
-  /**
-   * [search description]
-   * @param  {[type]} ev [description]
-   * @return {[type]}    [description]
-   */
-  search (keywords, page, size) {
-    // console.log('search', keywords)
+  search (keywords, page, size, more) {
+    // console.log('search', keywords, page, size, more)
 
-    this.ui.body.innerHTML = ''
+    if (more !== true) {
+      this.ui.body.innerHTML = ''
+      this.virtual.reset()
+      this.page = 1
+      this.stop = false
+    }
+
+    this.data = this.data || []
+    var signal = null
 
     if (this.abortController) {
       this.abortController.abort()
+      this.abortController = null
     }
 
-    this.abortController = new AbortController()
-    var signal = this.abortController.signal
+    if (more !== true) {
+      this.abortController = new AbortController()
+      signal = this.abortController.signal
+    }
 
     page = page || 1
     size = size || this.options.list.size
+
+    if (page === 1) {
+      this.ui.body.scrolltop = 0
+    }
 
     var route = this.buildRoute(page, size, 'search')
 
@@ -25,17 +35,41 @@ export default {
 
     // console.log('route', route)
 
+    if (more !== true && this.options.count) {
+      this.fetchCount(route)
+    }
+
     fetch(route, {signal}).then((resp) => {
       return resp.json()
     }).then((data) => {
       // console.log('data', data)
       this.storeData(data)
 
-      this.data = data
+      this.data = data || []
 
       // console.log('list', list)
 
-      this.render(data)
+      if (data.error) {
+        console.log('error', data.error)
+        return
+      }
+
+      if (data.length < this.size && more) {
+        this.stop = true
+      }
+
+      if (more === true) {
+        var a = this.data.concat(data)
+        this.data = a
+        this.storeData(data, more)
+        this.virtual.add(this.data)
+      } else {
+        this.data = []
+        this.data = data
+        this.storeData(data)
+        this.render(data)
+      }
+
       this.emit('fetched', data)
     }).catch(function (e) {
       // console.log('error', e.message)
@@ -43,7 +77,7 @@ export default {
   },
 
   cancelSearch () {
-    console.log('cancel search')
+    // console.log('cancel search')
     this.ui.body.innerHTML = ''
   },
 
