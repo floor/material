@@ -8,6 +8,8 @@ function VirtualList (options) {
 
   this.itemHeight = options.itemHeight
 
+  // console.log('itemHeight', this.itemHeight)
+
   this.size = options.size
 
   this.items = options.items
@@ -51,8 +53,9 @@ VirtualList.prototype._renderChunk = function (node, from, number) {
   node.innerHTML = ''
   node.appendChild(fragment)
 
-  // console.log('check next', last, this.count - this.size / 2)
-  if (last > this.count - this.size / 2) {
+  // console.log('check next', last, this.count, this.size)
+
+  if (/* this.count < this.size && */ last > this.count - this.size / 2) {
     // console.log('next', last, this.count, this.size)
     this.emit('next', this.count)
   }
@@ -78,6 +81,9 @@ VirtualList.prototype.set = function (items) {
 
   var itemsByScreen = Math.ceil(this.container.offsetHeight / this.itemHeight)
 
+  // console.log('offsetHeioght', this.container.offsetHeight)
+  // console.log('itemsByScreen', itemsByScreen)
+
   // Cache 4 times the number of items that fit in the container viewport
   var size = itemsByScreen * 4
   this._renderChunk(this.container, 0, size)
@@ -94,9 +100,18 @@ VirtualList.prototype.set = function (items) {
     // console.log('scroll', e.target.scrollTop, height)
     var scrollTop = e.target.scrollTop
 
+    // console.log('offsetHeight', self.container.offsetHeight)
+    // console.log('size', self.size)
+    if (itemsByScreen === 0) {
+      itemsByScreen = Math.ceil(self.container.offsetHeight / self.itemHeight)
+      size = self.size = itemsByScreen * 4
+    }
+
     // console.log('scrollTop', scrollTop)
 
     if (scrollTop < 0) return
+
+    // console.log('itemHeight', scrollTop, self.itemHeight, itemsByScreen)
 
     var first = parseInt(scrollTop / self.itemHeight) - itemsByScreen
     first = first < 0 ? 0 : first
@@ -106,9 +121,9 @@ VirtualList.prototype.set = function (items) {
       lastRepaintY = scrollTop
     }
 
-    // var progress = Math.ceil((scrollTop / self.itemHeight) + itemsByScreen) - 1
+    var progress = Math.ceil((scrollTop / self.itemHeight) + itemsByScreen) - 1
     // console.log('progress', progress, self.size, self.count)
-    // self.emit('progress', progress)
+    self.emit('progress', progress)
 
     // e.preventDefault && e.preventDefault()
   }
@@ -156,6 +171,14 @@ VirtualList.prototype.add = function (items) {
   var height = this.itemHeight * this.count
 
   this.scroller.style.height = height + 'px'
+}
+
+VirtualList.prototype.reset = function () {
+  // console.log('reset', items.length)
+  this.items = []
+  this.count = 0
+
+  this.scroller.style.height = 0
 }
 
 VirtualList.prototype.getSize = function () {
