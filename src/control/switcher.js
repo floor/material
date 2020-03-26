@@ -30,6 +30,10 @@ class Switcher {
     this.label.innerHTML = this.options.label
     this.root.appendChild(this.label)
 
+    if (this.options.size) {
+      this.root.classList.add(this.options.size + '-size')
+    }
+
     this.buildList()
 
     if (this.options.container) {
