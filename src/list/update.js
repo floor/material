@@ -2,7 +2,7 @@ import Layout from '../layout'
 
 export default {
   update (info) {
-    console.log('update', info)
+    // console.log('update', info)
 
     this.getUpdatedInfo(info._id)
   },

@@ -1,6 +1,6 @@
 export default {
   update (data, options) {
-    console.log('update', data, options)
+    // console.log('update', data, options)
     options = options || {}
 
     // console.log('mode', this.mode)

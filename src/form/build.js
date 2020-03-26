@@ -93,11 +93,14 @@ export default {
   },
 
   clean () {
+    // console.log('clean', this.info)
     for (var member in this.info) {
       delete this.info[member]
     }
 
     this.form.reset()
+
+    // console.log('cleaned', this.info)
 
     this.emit('cleaned')
   }
