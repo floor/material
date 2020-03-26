@@ -45,6 +45,10 @@ const mediator = ((() => {
     installTo: function (obj) {
       obj.subscribe = subscribe
       obj.publish = publish
+    },
+    init: function (obj) {
+      obj.subscribe = subscribe
+      obj.publish = publish
     }
   }
 })())
