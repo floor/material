@@ -66,6 +66,10 @@ class Dialog {
       this.root.classList.add(this.options.class)
     }
 
+    if (this.options.position) {
+      this.root.classList.add('position-' + this.options.position)
+    }
+
     if (this.options.display === 'show') {
       this.show()
     }
@@ -108,8 +112,13 @@ class Dialog {
     var coord = this.options.target.getBoundingClientRect()
     var surface_coord = this.surface.getBoundingClientRect()
 
-    this.surface.style.top = coord.top + 'px'
-    this.surface.style.left = coord.left - surface_coord.width + 'px'
+    if (this.options.position === 'right') {
+      this.surface.style.top = coord.top + 'px'
+      this.surface.style.left = coord.left + coord.width // surface_coord.width + 'px'
+    } else {
+      this.surface.style.top = coord.top + 'px'
+      this.surface.style.left = coord.left - surface_coord.width + 'px'
+    }
   }
 
   ok () {
