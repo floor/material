@@ -9,7 +9,7 @@ export default {
     // console.log('render', list)
     this.virtual.set(list)
 
-    if (this.status) {
+    if (this.status && this.options.count !== true) {
       this.status('count', list.length)
     }
   },
