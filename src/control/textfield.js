@@ -6,8 +6,7 @@ import attributes from './module/attributes'
 
 const defaults = {
   class: 'textfield',
-  tag: 'div',
-  attributes: ['type', 'name', 'autocomplete', 'required', 'disabled'],
+  attributes: ['type', 'name', 'title', 'maxlength', 'pattern', 'min', 'max', 'autocomplete', 'required', 'disabled'],
   events: [
     ['input.input', 'onInput']
   ]
@@ -38,10 +37,12 @@ class Text {
    * @return {Object} This class instance
    */
   build () {
-    this.root = document.createElement(this.options.tag)
+    var tag = this.options.tag || 'div'
+
+    this.root = document.createElement(tag)
     this.root.classList.add('textfield')
 
-    if (this.options.class !== 'upload') {
+    if (this.options.class !== 'textfield') {
       this.root.classList.add(this.options.class)
     }
 
