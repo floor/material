@@ -174,9 +174,12 @@ VirtualList.prototype.add = function (items) {
 }
 
 VirtualList.prototype.reset = function () {
-  // console.log('reset', items.length)
+  // console.log('reset')
   this.items = []
   this.count = 0
+
+  this.container.innerHTML = ''
+  this.container.scrollTop = 0
 
   this.scroller.style.height = 0
 }
