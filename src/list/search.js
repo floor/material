@@ -5,6 +5,9 @@ export default {
     if (more !== true) {
       this.ui.body.innerHTML = ''
       this.virtual.reset()
+      this.data = []
+      this.dataList = []
+      this.data = []
       this.page = 1
       this.stop = false
     }
