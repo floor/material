@@ -41,7 +41,7 @@ export default {
   },
 
   selectById (id, silent) {
-    console.log('selectById', id)
+    // console.log('selectById', id)
 
     if (!this.dataList) {
       return false
@@ -75,14 +75,16 @@ export default {
     this.item = item
     item.classList.add('selected')
 
-    this.selectPosition(item, direction)
+    if (this.options.updatePosition === true) {
+      this.selectPosition(item, direction)
+    }
 
     return item
   },
 
   selectPosition (item, direction) {
-    // console.log('selectPosition', direction)
-    return
+    // console.log('selectPosition', item, direction)
+    // return
     if (!this.coord) {
       this.coord = this.ui.body.getBoundingClientRect()
     }
@@ -139,24 +141,6 @@ export default {
       return false
     }
   },
-
-  // next () {
-  //   // console.log('next', this.item)
-  //   if (this.item && this.item.nextSibling) {
-  //     this.select(this.item.nextSibling)
-  //   } else {
-  //     if (!this.item && this.ui.body.firstChild) {
-  //       this.select(this.ui.body.firstChild)
-  //     }
-  //   }
-  // },
-
-  // previous () {
-  //   // console.log('previous', this.item)
-  //   if (this.item && this.item.previousSibling) {
-  //     this.select(this.item.previousSibling)
-  //   }
-  // },
 
   highlight (item) {
     if (this.item) {
