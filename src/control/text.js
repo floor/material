@@ -46,7 +46,9 @@ class Text {
     // console.log('set', text)
     if (text === undefined) return
 
-    this.root.innerHTML = text
+    var label = this.options.label || ''
+
+    this.root.innerHTML = label + text
 
     if (this.options.spaceAfter) {
       this.root.innerHTML = this.root.innerHTML + ' '
