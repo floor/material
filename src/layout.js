@@ -13,7 +13,10 @@ class Layout {
    * @return {?}           [description]
    */
   constructor (schema, container) {
+    this.components = []
     this.component = this.create(schema, container)
+
+    // console.log('this', this)
 
     return this
   }
@@ -61,6 +64,7 @@ class Layout {
 
         if (name) {
           structure[name] = component
+          this.components.push([name, component])
         }
 
         // if (component) {
@@ -162,7 +166,7 @@ class Layout {
       }
     }
 
-    console.log('--- field', field)
+    // console.log('--- field', field)
 
     return field
   }

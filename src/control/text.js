@@ -1,4 +1,4 @@
-'use strict'
+import addClass from './module/addclass'
 
 const defaults = {
   class: 'text',
@@ -14,6 +14,8 @@ class Text {
   constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
+    // console.log('options', this.options)
+
     this.build()
 
     return this
@@ -25,7 +27,7 @@ class Text {
    */
   build () {
     this.root = document.createElement(this.options.tag)
-    this.root.classList.add(this.options.class)
+    addClass(this.root, this.options.class)
 
     if (this.options.class !== 'text') {
       this.root.classList.add('text')
@@ -53,6 +55,11 @@ class Text {
     if (this.options.spaceAfter) {
       this.root.innerHTML = this.root.innerHTML + ' '
     }
+  }
+
+  setText (text) {
+    // console.log('setText', text)
+    this.root.innerHTML = text
   }
 }
 

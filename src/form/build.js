@@ -12,6 +12,10 @@ export default {
       this.root.classList.add(this.options.class)
     }
 
+    if (this.options.form) {
+      this.root.classList.add(this.options.form)
+    }
+
     if (this.options.data) {
       dataset(this.root, this.options.data)
     }
@@ -54,6 +58,11 @@ export default {
 
     if (this.disableControl) {
       this.disableControl()
+    }
+
+    if (this.language) {
+      // console.log('translate')
+      this.translate()
     }
   },
 

@@ -4,6 +4,7 @@ import attributes from './module/attributes'
 import dataset from '../view/dataset'
 
 const defaults = {
+  type: 'list', // native
   class: 'select',
   first: null,
   attributes: ['type', 'name', 'autocomplete', 'required']
@@ -20,6 +21,7 @@ class Select {
     Object.assign(this, emitter, attach, dataset)
 
     this.build()
+    this.attach()
 
     return this
   }
@@ -100,6 +102,17 @@ class Select {
     this.input.value = value
 
     return this
+  }
+
+  setLabel (value) {
+    console.log('setLabel', value)
+    if (this.label) {
+      this.label.innerHTML = value
+    }
+  }
+
+  setText (value) {
+    this.setLabel(value)
   }
 
   get () {

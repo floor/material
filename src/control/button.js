@@ -1,10 +1,21 @@
 import emitter from '../module/emitter'
+import attach from '../module/attach'
+
 import dataset from '../view/dataset'
 
 const defaults = {
   class: 'button',
   tag: 'button',
-  styles: ['style', 'color']
+  styles: ['style', 'color'],
+  events: [
+    ['root.click', 'click'],
+    ['root.mousedown', 'mousedown'],
+    ['root.mouseup', 'mouseup'],
+    ['root.mouseleave', 'mouseup'],
+    ['root.touchstart', 'mousedown'],
+    ['root.touchend', 'mouseup']
+  ]
+
 }
 
 class Button {
@@ -19,7 +30,7 @@ class Button {
    */
   constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, emitter)
+    Object.assign(this, emitter, attach)
     // console.log('options', options)
 
     this.init()
@@ -140,12 +151,6 @@ class Button {
     }
   }
 
-  attach () {
-    this.root.addEventListener('click', (ev) => {
-      this.emit('click', ev)
-    })
-  }
-
   /**
    * Setter
    * @param {string} prop
@@ -153,6 +158,7 @@ class Button {
    * @return {Object} The class instance
    */
   set (prop, value) {
+    // console.log('set', this.root, prop, value)
     switch (prop) {
       case 'value':
         this.root.value = value
@@ -171,10 +177,24 @@ class Button {
         }
         break
       default:
-        this.root.value = value
+        // console.log('prop', prop)
+        this.root.innerHTML = prop
     }
 
     return this
+  }
+
+  setLabel (value) {
+    // console.log('setLabel', value)
+    this.label.innerHTML = value
+  }
+
+  setText (value) {
+    if (this.label) {
+      this.setLabel(value)
+    } else {
+      this.root.innerHTML = value
+    }
   }
 
   /**
@@ -202,8 +222,30 @@ class Button {
     this.root.disabled = false
   }
 
+  hide () {
+    this.root.classList.add('hide')
+  }
+
+  show () {
+    this.root.classList.remove('hide')
+  }
+
   destroy () {
-    this.root.parentNode.removeChild(this.root)
+    if (this.root && this.root.parentNode) {
+      this.root.parentNode.removeChild(this.root)
+    }
+  }
+
+  click (ev) {
+    this.emit('click', ev)
+  }
+
+  mousedown (ev) {
+    this.root.classList.add('pushed')
+  }
+
+  mouseup (ev) {
+    this.root.classList.remove('pushed')
   }
 }
 

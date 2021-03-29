@@ -87,7 +87,7 @@ class File {
   }
 
   image (e) {
-    console.log('image', e.target)
+    // console.log('image', e.target)
     // if (input.files && input.files[0]) {
     //   var reader = new FileReader()
 
@@ -105,7 +105,18 @@ class File {
   }
 
   set (image) {
-    console.log('set', image)
+    // console.log('set', image)
+  }
+
+  setLabel (value) {
+    // console.log('setLabel', value)
+    if (this.label) {
+      this.label.innerHTML = value
+    }
+  }
+
+  setText (value) {
+    this.setLabel(value)
   }
 }
 

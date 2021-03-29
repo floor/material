@@ -164,6 +164,9 @@ class Switch {
       case 'value':
         this.setValue(value, silent)
         break
+      case 'text':
+        this.setValue(value)
+        break
       case 'disabled':
         if (value === true) {
           this.disable()
@@ -176,6 +179,17 @@ class Switch {
     }
 
     return this
+  }
+
+  setLabel (value) {
+    // console.log('setLabel', value)
+    if (this.ui.label) {
+      this.ui.label.innerHTML = value
+    }
+  }
+
+  setText (value) {
+    this.setLabel(value)
   }
 
   get () {

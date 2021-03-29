@@ -2,10 +2,15 @@
 export default {
   toggle () {
     this.visible ? this.hide() : this.show()
+
+    this.emit('toggle')
+    return this
   },
 
   show () {
     // console.log('show', this.display)
+
+    this.root.getBoundingClientRect()
 
     // clearTimeout(this.displayTimeout)
     // this.root.style.display = this._display
@@ -27,6 +32,8 @@ export default {
     // clearTimeout(this.displayTimeout)
     // this._display = getComputedStyle(this.root).display
 
+    if (!this.root) return
+
     this.root.classList.remove('show')
     this.visible = false
 
@@ -44,8 +51,35 @@ export default {
   },
 
   destroy () {
+    // console.log('destroy', this.options.transition)
+    if (this.options.transition && this.root) {
+      this.root.classList.remove('show')
+
+      if (this.underlay) {
+        this.underlay.classList.remove('show')
+      }
+
+      setTimeout(() => {
+        this.removeChild()
+      }, this.options.transition)
+    } else {
+      this.removeChild()
+    }
+
+    this.emit('destroy')
+  },
+
+  removeChild () {
     if (this.root && this.root.parentNode) {
       this.root.parentNode.removeChild(this.root)
+      this.root = null
     }
+
+    if (this.underlay && this.underlay.parentNode) {
+      this.underlay.parentNode.removeChild(this.underlay)
+    }
+
+    this.emit('remove')
+    return this
   }
 }

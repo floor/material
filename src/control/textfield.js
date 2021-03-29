@@ -6,9 +6,11 @@ import attributes from './module/attributes'
 
 const defaults = {
   class: 'textfield',
-  attributes: ['type', 'name', 'title', 'maxlength', 'pattern', 'min', 'max', 'autocomplete', 'required', 'disabled'],
+  attributes: ['type', 'name', 'title', 'maxlength', 'pattern', 'min', 'max', 'placeholder', 'autocomplete', 'required', 'disabled'],
   events: [
-    ['input.input', 'onInput']
+    ['input.input', 'onInput'],
+    ['input.focus', 'onFocus'],
+    ['input.blur', 'onBlur']
   ]
 }
 
@@ -91,7 +93,40 @@ class Text {
     this.emit('change', ev)
   }
 
-  set (value) {
+  onFocus (ev) {
+    this.root.classList.add('focused')
+    this.emit('change', ev)
+  }
+
+  onBlur (ev) {
+    this.root.classList.remove('focused')
+    this.emit('change', ev)
+  }
+
+  /**
+   * Setter
+   * @param {string} prop
+   * @param {string} value
+   * @return {Object} The class instance
+   */
+  set (prop, value) {
+    // console.log('set', this.root, prop, value)
+    switch (prop) {
+      case 'value':
+        this.setValue(value)
+        break
+      case 'label':
+        this.setLabel(value)
+        break
+      default:
+        // console.log('prop', prop)
+        this.setValue(prop)
+    }
+
+    return this
+  }
+
+  setValue (value) {
     // console.log('set', typeof value, value)
     if (value && value !== 'undefined') {
       this.value = value
@@ -99,6 +134,29 @@ class Text {
     } else {
       this.input.value = ''
     }
+  }
+
+  setLabel (value) {
+    // console.log('setLabel', value)
+    if (this.label) {
+      this.label.innerHTML = value
+    }
+  }
+
+  setText (value) {
+    this.setLabel(value)
+
+    if (this.options.placeholder) {
+      this.input.placeholder = value
+    }
+  }
+
+  hide () {
+    this.root.classList.add('hide')
+  }
+
+  show () {
+    this.root.classList.remove('hide')
   }
 
   get () {

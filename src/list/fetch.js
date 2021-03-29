@@ -1,5 +1,5 @@
 export default {
-  fetch (page, size, more) {
+  fetch (page, size, more, cb) {
     // console.log('fetch', page, size, more)
     if (more !== true) {
       this.ui.body.innerHTML = ''
@@ -7,7 +7,7 @@ export default {
       this.dataList = []
       this.data = []
       this.page = 1
-      this.stop = false
+      this.stop = true
     }
 
     this.data = this.data || []
@@ -19,7 +19,7 @@ export default {
       this.abortController = null
     }
 
-    if (more !== true) {
+    if (more !== true && window.AbortController) {
       this.abortController = new AbortController()
       signal = this.abortController.signal
     }
@@ -54,6 +54,8 @@ export default {
 
       if (data.length < this.size && more) {
         this.stop = true
+      } else {
+        this.stop = false
       }
 
       if (more === true) {
@@ -69,6 +71,10 @@ export default {
       }
 
       this.emit('fetched', data)
+      if (cb) {
+        cb()
+      }
+
     }).catch(function (e) {
       // console.log('error', e.message)
     })

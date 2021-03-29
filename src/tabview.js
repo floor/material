@@ -61,6 +61,8 @@ class TabView {
     this.ui.buttons = this.ui.tabs.childNodes
     this.ui.views = this.ui.view.childNodes
 
+    // console.log('views', this.ui.views)
+
     for (var i = 0; i < this.ui.views.length; i++) {
       if (this.ui.views[i].dataset) {
         this.views.push(this.ui.views[i].dataset.view)
@@ -86,15 +88,21 @@ class TabView {
 
   select (view) {
     // console.log('select', view, this.ui.tabs)
-    var button = this.ui.tabs.querySelector('[data-view="' + view + '"]')
-    // console.log('tab', button)
-    if (button) {
-      this.click(button)
+    if (this.ui && this.ui.tabs) {
+      var button = this.ui.tabs.querySelector('[data-view="' + view + '"]')
+      // console.log('tab', button)
+      if (button) {
+        this.click(button)
+      }
+    } else {
+      this.emit('notready')
     }
   }
 
   hideView () {
+    // console.log('hideView')
     for (var i = 0; i < this.ui.views.length; i++) {
+      // console.log('hide', this.ui.views[i])
       this.ui.views[i].classList.add('hide')
     }
   }

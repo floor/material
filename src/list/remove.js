@@ -1,9 +1,10 @@
 export default {
   remove (id) {
     // console.log('remove', id, this.dataList)
+    // console.log('datalist', this.dataList)
 
     if (!this.dataStore[id]) {
-      // console.log('not in the list')
+      console.log('not in the list')
       return
     }
 

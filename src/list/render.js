@@ -60,7 +60,8 @@ export default {
         layout = new Layout(this.options.layout.item.base, element)
       }
     } else {
-      layout = new Layout(this.options.layout.item, element)
+      var itemName = this.options.itemName || 'item'
+      layout = new Layout(this.options.layout[itemName], element)
     }
 
     this.renderInfo(layout, info)

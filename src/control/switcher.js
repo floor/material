@@ -1,4 +1,4 @@
-import emitter from 'material/src/module/emitter'
+import emitter from '../module/emitter'
 
 const defaults = {
   class: 'switcher',
@@ -24,11 +24,20 @@ class Switcher {
 
   build () {
     this.root = document.createElement(this.options.tag)
-    this.root.classList.add(this.options.class)
+
+    if (this.options.class !== 'button') {
+      this.root.setAttribute('class', 'switcher ' + this.options.class)
+    } else {
+      this.root.classList.add('switcher')
+    }
 
     this.label = document.createElement('label')
     this.label.innerHTML = this.options.label
     this.root.appendChild(this.label)
+
+    this.knob = document.createElement('span')
+    this.knob.classList.add('knob')
+    this.root.appendChild(this.knob)
 
     if (this.options.size) {
       this.root.classList.add(this.options.size + '-size')
@@ -108,6 +117,17 @@ class Switcher {
         this.root.querySelector('[data-switcher="' + list[i] + '"]').classList.add('selected')
       }
     }
+  }
+
+  setLabel (value) {
+    // console.log('setLabel', value)
+    if (this.label) {
+      this.label.innerHTML = value
+    }
+  }
+
+  setText (value) {
+    this.setLabel(value)
   }
 
   get () {
