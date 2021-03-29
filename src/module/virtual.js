@@ -178,7 +178,6 @@ VirtualList.prototype.reset = function () {
   this.items = []
   this.count = 0
 
-  this.container.innerHTML = ''
   this.container.scrollTop = 0
 
   this.scroller.style.height = 0
