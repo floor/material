@@ -3,7 +3,9 @@ import emitter from '../module/emitter'
 const defaults = {
   class: 'switcher',
   tag: 'div',
-  mode: 'unique'
+  first: false,
+  mode: 'unique',
+  allowEmpty: false
 }
 
 class Switcher {
@@ -31,9 +33,11 @@ class Switcher {
       this.root.classList.add('switcher')
     }
 
-    this.label = document.createElement('label')
-    this.label.innerHTML = this.options.label
-    this.root.appendChild(this.label)
+    if (this.options.label) {
+      this.label = document.createElement('label')
+      this.label.innerHTML = this.options.label
+      this.root.appendChild(this.label)
+    }
 
     this.knob = document.createElement('span')
     this.knob.classList.add('knob')
@@ -43,24 +47,20 @@ class Switcher {
       this.root.classList.add(this.options.size + '-size')
     }
 
-    this.buildList()
+    this.buildList(this.options.list)
+
+    if (this.options.list) {
+      this.setOptions(this.options.list)
+    }
 
     if (this.options.container) {
       this.options.container.appendChild(this.root)
     }
   }
 
-  buildList () {
+  buildList (list) {
     this.list = document.createElement('ul')
     this.root.appendChild(this.list)
-
-    for (var i = 0; i < this.options.list.length; i++) {
-      var item = document.createElement('li')
-      item.classList.add('item')
-      item.dataset.switcher = this.options.list[i]
-      item.innerHTML = this.options.list[i]
-      this.list.appendChild(item)
-    }
   }
 
   attach () {
@@ -78,7 +78,36 @@ class Switcher {
     }
   }
 
+  preselect (item) {
+    // console.log('preselect', item)
+    if (item) {
+      item.classList.add('preselected')
+    } else {
+      var items = this.list.childNodes
+      for (var i = 0; i < items.length; i++) {
+        items[i].classList.remove('preselected')
+      }
+    }
+  }
+
+  selectByName (name) {
+    // console.log('selectByName', name)
+    var item = this.root.querySelector('[data-switcher="' + name + '"]')
+    // console.log('item', item)
+    if (item) {
+      this.select(item)
+    }
+  }
+
+  preSelectByName (name) {
+    // console.log('selectByName', name)
+    var item = this.root.querySelector('[data-switcher="' + name + '"]')
+    // console.log('item', item)
+    this.preselect(item)
+  }
+
   unique (option) {
+    // console.log('option', option)
     if (!option.classList.contains('selected')) {
       var options = this.list.childNodes
 
@@ -89,6 +118,12 @@ class Switcher {
       option.classList.add('selected')
       this.selected = [option.dataset.switcher]
       this.emit('change', this.selected)
+    } else {
+      if (this.options.allowEmpty) {
+        option.classList.remove('selected')
+        this.selected = []
+        this.emit('change', this.selected)
+      }
     }
   }
 
@@ -119,6 +154,20 @@ class Switcher {
     }
   }
 
+  setOptions (list) {
+    // console.log('setOptions', list)
+
+    if (!list) return
+
+    for (var i = 0; i < list.length; i++) {
+      var item = document.createElement('li')
+      item.classList.add('item')
+      item.dataset.switcher = list[i]
+      item.innerHTML = list[i]
+      this.list.appendChild(item)
+    }
+  }
+
   setLabel (value) {
     // console.log('setLabel', value)
     if (this.label) {
@@ -127,11 +176,12 @@ class Switcher {
   }
 
   setText (value) {
+    // console.log('setText', value)
     this.setLabel(value)
   }
 
   get () {
-    console.log('get', this.selected)
+    // console.log('get', this.selected)
     return this.selected
   }
 }

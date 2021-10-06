@@ -84,8 +84,9 @@ export default {
       })
     }
 
-    // window.addEventListener('resize', () => {
-    //   this.virtual.update()
-    // })
+    window.addEventListener('resize', () => {
+      this.coord = this.ui.body.getBoundingClientRect()
+      // this.virtual.update()
+    })
   }
 }

@@ -3,7 +3,7 @@ import { byString } from '../module/object'
 export default {
 
   initData () {
-    console.log('submit', this.mode)
+    // console.log('submit', this.mode)
 
     var data = new FormData()
 
@@ -20,7 +20,7 @@ export default {
   appendSysinfo (data) {
     var sys = this.options.sysinfo
     for (var i = 0; i < sys.length; i++) {
-      console.log('sys', sys[i], this.info[sys[i]])
+      // console.log('sys', sys[i], this.info[sys[i]])
       var name = sys[i]
       if (sys[i] === '_id') name = 'id'
 

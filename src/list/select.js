@@ -83,20 +83,23 @@ export default {
   },
 
   selectPosition (item, direction) {
+    var offsetY = this.options.item.height
     // console.log('selectPosition', item, direction)
     // return
     if (!this.coord) {
       this.coord = this.ui.body.getBoundingClientRect()
     }
 
+    // console.log('coord', this.coord)
+
     var itemTop = item.offsetTop + this.coord.top - this.ui.body.scrollTop
 
-    if (direction === 'down' && itemTop + this.options.item.height > this.coord.height) {
-      this.ui.body.scrollTop = this.ui.body.scrollTop + itemTop - this.coord.height
+    if (direction === 'down' && itemTop + this.options.item.height + offsetY - this.coord.y > this.coord.height) {
+      this.ui.body.scrollTop = this.ui.body.scrollTop + itemTop - this.coord.height - this.coord.y + this.options.item.height + offsetY
     }
 
-    if (direction === 'up' && itemTop < this.coord.top) {
-      this.ui.body.scrollTop = this.ui.body.scrollTop + itemTop - this.coord.top
+    if (direction === 'up' && itemTop - offsetY < this.coord.top + this.coord.y) {
+      this.ui.body.scrollTop = this.ui.body.scrollTop + itemTop - this.coord.top - offsetY
     }
   },
 

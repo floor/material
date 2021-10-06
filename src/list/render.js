@@ -64,6 +64,13 @@ export default {
       layout = new Layout(this.options.layout[itemName], element)
     }
 
+    // console.log('translate', layout)
+
+    if (this.translate && this.options.item && this.options.item.translate) {
+      // console.log('----')
+      this.translate(layout)
+    }
+
     this.renderInfo(layout, info)
 
     if (context === 'top' || context === 'create') {

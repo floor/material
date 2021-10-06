@@ -110,31 +110,43 @@ export default {
     // console.log('showSearch')
     this.mode = 'search'
     this.root.classList.add('search-mode')
-    this.ui['search'].root.classList.add('selected')
-    this.ui['search-input'].input.value = ''
-    this.ui['search-input'].root.classList.add('show')
+
+    if (this.ui.search) {
+      this.ui.search.root.classList.add('selected')
+    }
+
+    if (this.ui['search-input']) {
+      this.ui['search-input'].input.value = ''
+      this.ui['search-input'].root.classList.add('show')
+      this.ui['search-input'].input.focus()
+    }
 
     this.ui.body.innerHTML = ''
 
     // this.ui['search-list'].classList.add('show')
     // this.ui.body.classList.add('hide')
-    this.ui['search-input'].input.focus()
   },
 
   /**
    * [hideSearch description]
    * @return {[type]} [description]
    */
-  hideSearch () {
+  hideSearch (notfetch) {
     // console.log('hideSearch')
     this.mode = 'standard'
     this.root.classList.remove('search-mode')
-    this.ui['search'].root.classList.remove('selected')
-    this.ui['search-input'].root.classList.remove('show')
-    this.ui['search-input'].input.value = ''
+
+    if (this.ui.search) {
+      this.ui.search.root.classList.remove('selected')
+    }
+    if (this.ui['search-input']) {
+      this.ui['search-input'].root.classList.remove('show')
+      this.ui['search-input'].input.value = ''
+    }
     // this.ui['search-list'].classList.remove('show')
     // this.ui.body.classList.remove('hide')
-    this.fetch()
+    if (!notfetch) {
+      this.fetch()
+    }
   }
-
 }

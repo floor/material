@@ -18,7 +18,7 @@ export default {
 
     for (var field in this.field) {
       if (this.field.hasOwnProperty(field)) {
-        // console.log('field type', field)
+        // console.log('field type', field, this.field[field])
         if (this.field[field] &&
             this.field[field].set) {
           var value = this.objectValueByDotKey(object, field)

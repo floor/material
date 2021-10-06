@@ -6,7 +6,7 @@ export default {
 
     var data = this.initData()
 
-    console.log('data', data)
+    // console.log('data', data)
 
     if (this.update) {
       this.update(data)

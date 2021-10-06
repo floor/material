@@ -66,7 +66,7 @@ class Selecter {
     }
 
     if (this.options.label) {
-      this.ui.label.innerHTML = this.options.label
+      this.setLabel(this.options.label)
     }
 
     this.ui.input.setAttribute('aria-label', this.options.name)
@@ -95,16 +95,16 @@ class Selecter {
 
     this.styleAttributes()
 
-    this.buildIcon()
-    this.buildList()
+    this.buildIcon(this.options.icon)
+    this.setList(this.options.list)
 
     if (this.options.container) {
       this.options.container.appendChild(this.root)
     }
   }
 
-  buildIcon () {
-    if (!this.options.icon) return
+  buildIcon (icon) {
+    if (!icon) return
 
     this.ui.icon = document.createElement('i')
     this.ui.icon.classList.add('icon')
@@ -130,8 +130,9 @@ class Selecter {
     attributes(this.input, this.options)
   }
 
-  buildList (list) {
-    var list = this.options.list
+  setList (list) {
+    // console.log('setList', list)
+    if (!list) return
 
     this.values = {}
 
@@ -186,6 +187,12 @@ class Selecter {
     e.preventDefault()
 
     if (e && e.target && e.target.dataset.value) {
+      if (this.selected) {
+        this.selected.classList.remove('selected')
+      }
+      this.selected = e.target
+      this.selected.classList.add('selected')
+
       this.value = e.target.dataset.value
       // console.log('value', e.target.dataset.value)
       this.ui.value.innerHTML = this.values[this.value]
@@ -201,9 +208,17 @@ class Selecter {
 
   set (value) {
     // console.log('set', value, this.values)
+
     this.ui.input.value = value
     if (this.values) {
       this.ui.value.innerHTML = this.values[value]
+    }
+
+    this.selected = this.root.querySelector('[data-value=' + value + ']')
+
+    // console.log('item', this.selected)
+    if (this.selected) {
+      this.selected.classList.add('selected')
     }
 
     return this
@@ -213,6 +228,7 @@ class Selecter {
     // console.log('setLabel', value)
     if (this.ui.label) {
       this.ui.label.innerHTML = value
+      this.ui.title.innerHTML = value
     }
   }
 

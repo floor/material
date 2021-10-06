@@ -1,28 +1,16 @@
 import emitter from '../module/emitter'
-import attach from '../module/attach'
-
 import dataset from '../view/dataset'
 
 const defaults = {
   class: 'button',
   tag: 'button',
-  styles: ['style', 'color'],
-  events: [
-    ['root.click', 'click'],
-    ['root.mousedown', 'mousedown'],
-    ['root.mouseup', 'mouseup'],
-    ['root.mouseleave', 'mouseup'],
-    ['root.touchstart', 'mousedown'],
-    ['root.touchend', 'mouseup']
-  ]
-
+  styles: ['style', 'color']
 }
 
 class Button {
   static isComponent () {
     return true
   }
-
   /**
    * Constructor
    * @param  {Object} options - Component options
@@ -30,7 +18,7 @@ class Button {
    */
   constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, emitter, attach)
+    Object.assign(this, emitter)
     // console.log('options', options)
 
     this.init()
@@ -56,18 +44,18 @@ class Button {
     this.root = document.createElement(this.options.tag)
 
     if (this.options.class !== 'button') {
-      this.root.setAttribute('class', 'button ' + this.options.class)
-    } else {
       this.root.classList.add('button')
     }
 
+    this.root.classList.add(this.options.class)
     this.styleAttributes()
 
-    this.buildIcon()
-    this.buildLabel()
-
     if (this.options.text) {
-      this.root.innerHTML = this.root.innerHTML + this.options.text
+      this.root.innerHTML = this.options.text
+    }
+
+    if (this.options.label) {
+      this.buildLabel()
     }
 
     return this
@@ -88,14 +76,6 @@ class Button {
       this.root.setAttribute('name', this.options.name)
     }
 
-    if (this.options.value) {
-      this.root.setAttribute('value', this.options.value)
-    }
-
-    if (this.options.title) {
-      this.root.setAttribute('title', this.options.title)
-    }
-
     this.root.setAttribute('aria-label', this.options.text || this.options.label || this.options.class)
 
     if (this.options.tooltip) {
@@ -114,36 +94,24 @@ class Button {
   }
 
   buildLabel () {
-    if (!this.options.label) return
-
     if (this.options.label) {
       this.label = document.createElement('label')
-      this.label.classList.add('label')
       this.label.innerHTML = this.options.label
-
       this.root.appendChild(this.label)
     }
   }
 
   buildIcon () {
-    if (!this.options.icon) return
-
     if (this.options.icon) {
-      this.icon = document.createElement('i')
-      this.icon.classList.add('icon')
-      this.icon.innerHTML = this.options.icon
-
-      this.root.appendChild(this.icon)
+      this.label = document.createElement('label')
+      this.label.innerHTML = this.options.label
+      this.root.appendChild(this.label)
     }
   }
 
   styleAttributes () {
     if (this.options.style) {
       this.root.classList.add('style-' + this.options.style)
-    }
-
-    if (this.options.size) {
-      this.root.classList.add(this.options.size + '-size')
     }
 
     if (this.options.color) {
@@ -155,6 +123,12 @@ class Button {
     }
   }
 
+  attach () {
+    this.root.addEventListener('click', (ev) => {
+      this.emit('click', ev)
+    })
+  }
+
   /**
    * Setter
    * @param {string} prop
@@ -162,44 +136,25 @@ class Button {
    * @return {Object} The class instance
    */
   set (prop, value) {
-    // console.log('set', this.root, prop, value)
     switch (prop) {
       case 'value':
         this.root.value = value
         break
       case 'label':
-        if (this.label) {
-          this.label.innerHTML = value
+        if (this.ui.label) {
+          this.ui.label.innerHTML = value
         }
         break
-      case 'text':
-        this.root.innerHTML = value
-        break
       case 'icon':
-        if (this.label) {
-          this.icon.innerHTML = value
+        if (this.ui.label) {
+          this.ui.icon.innerHTML = value
         }
         break
       default:
-        // console.log('prop', prop)
-        this.root.innerHTML = prop
+        this.root.value = value
     }
 
     return this
-  }
-
-  setLabel (value) {
-    // console.log('setLabel', value)
-    this.label.innerHTML = value
-  }
-
-  setText (value) {
-    // console.log('setText', value)
-    if (this.label) {
-      this.setLabel(value)
-    } else {
-      this.root.innerHTML = value
-    }
   }
 
   /**
@@ -213,7 +168,7 @@ class Button {
       case 'value':
         return this.root.value
       case 'label':
-        return this.label.innerHTML
+        return this.ui.label.innerHTML
       default:
         return this.root.value
     }
@@ -227,30 +182,8 @@ class Button {
     this.root.disabled = false
   }
 
-  hide () {
-    this.root.classList.add('hide')
-  }
-
-  show () {
-    this.root.classList.remove('hide')
-  }
-
   destroy () {
-    if (this.root && this.root.parentNode) {
-      this.root.parentNode.removeChild(this.root)
-    }
-  }
-
-  click (ev) {
-    this.emit('click', ev)
-  }
-
-  mousedown (ev) {
-    this.root.classList.add('pushed')
-  }
-
-  mouseup (ev) {
-    this.root.classList.remove('pushed')
+    this.root.parentNode.removeChild(this.root)
   }
 }
 

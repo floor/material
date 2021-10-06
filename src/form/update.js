@@ -1,6 +1,7 @@
 export default {
   update (data, options) {
     // console.log('update', data, options)
+    // console.log('mode', this.mode)
     options = options || {}
 
     // console.log('mode', this.mode)
@@ -12,6 +13,10 @@ export default {
         this.options[this.mode].action ||
         this.options.action
 
+    if (this.beforeCreate) {
+      this.beforeCreate(data)
+    }
+
     fetch(action, {
       method: method,
       body: data
@@ -19,7 +24,7 @@ export default {
       // console.log('resp', resp)
       return resp.json()
     }).then(info => {
-      console.log('update', info)
+      // console.log('update', info)
       if (info.error) {
         // console.log('Error: ' + info.error)
         if (this.error) {

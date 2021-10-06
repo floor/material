@@ -43,6 +43,10 @@ class Link {
       this.options.container.appendChild(this.root)
     }
 
+    if (this.options.text) {
+      this.root.innerHTML = this.options.text
+    }
+
     return this
   }
 

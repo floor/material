@@ -94,6 +94,7 @@ class Select {
   }
 
   addOption (name, value) {
+    // console.log('addOption', name, value)
     this.input.options[this.input.options.length] = new Option(name, value)
   }
 
@@ -116,7 +117,13 @@ class Select {
   }
 
   get () {
-    return this.input[this.input.selectedIndex].value
+    var value = null
+
+    if (this.input[this.input.selectedIndex]) {
+      value = this.input[this.input.selectedIndex].value
+    }
+
+    return value
   }
 }
 

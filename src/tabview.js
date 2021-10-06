@@ -1,5 +1,6 @@
 import emitter from './module/emitter'
 import observer from './module/observer'
+import display from './view/display'
 
 /**
  * Class Tab
@@ -22,17 +23,23 @@ class TabView {
    * @return {DOMElement} The dom element
    */
   constructor (options) {
+    // console.log('TabView')
     this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, emitter)
+    Object.assign(this, emitter, display)
 
     this.build()
 
-    observer.insert(this.root, () => {
-      // console.log('inserted')
-      this.setup()
-      this.attach()
+    var ready = false
 
-      this.emit('ready')
+    observer.insert(this.root, () => {
+      // console.log('!!! inserted')
+      if (!ready) {
+        ready = true
+        this.setup()
+        this.attach()
+
+        this.emit('ready')
+      }
     })
 
     return this
@@ -41,6 +48,8 @@ class TabView {
   build () {
     this.root = document.createElement(this.options.tag || 'div')
     this.root.classList.add('tabview')
+
+    this.root.classList.add('view')
 
     if (this.options.class !== 'tabview') {
       this.root.classList.add(this.options.class)
@@ -99,6 +108,33 @@ class TabView {
     }
   }
 
+  disable (view) {
+    // console.log('select', view)
+    if (this.ui && this.ui.tabs) {
+      var button = this.ui.tabs.querySelector('[data-view="' + view + '"]')
+      // console.log('tab', button)
+      if (button) {
+        button.disabled = 'disabled'
+      }
+    } else {
+      this.emit('notready')
+    }
+  }
+
+  enable (view) {
+    // console.log('select', view)
+
+    if (this.ui && this.ui.tabs) {
+      var button = this.ui.tabs.querySelector('[data-view="' + view + '"]')
+      // console.log('tab', button)
+      if (button) {
+        button.disabled = false
+      }
+    } else {
+      this.emit('notready')
+    }
+  }
+
   hideView () {
     // console.log('hideView')
     for (var i = 0; i < this.ui.views.length; i++) {
@@ -112,24 +148,23 @@ class TabView {
     var view = this.ui.view.querySelector('[data-view="' + button.dataset.view + '"]')
     this.hideView()
 
-    button.classList.add('selected')
-
     if (this.button) {
       this.button.classList.remove('selected')
     }
 
+    this.button = button
+
+    button.classList.add('selected')
+
     this.indicator(button)
 
     if (view) {
-      // console.log('view block', view)
       view.classList.remove('hide')
     } else {
       console.log('view ', button.dataset.view, button, this.ui.views, ' not found')
     }
 
     this.emit('select', button.dataset.view)
-
-    this.button = button
 
     return view
   }

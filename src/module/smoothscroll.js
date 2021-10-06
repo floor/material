@@ -1,5 +1,5 @@
 function smoothscroll (e, top, time) {
-  console.log('smoothscroll', top, e.scrollTop)
+  // console.log('smoothscroll', top, e.scrollTop)
 
   var start = top - e.scrollTop
 

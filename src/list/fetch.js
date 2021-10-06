@@ -26,7 +26,7 @@ export default {
 
     page = page || 1
     size = size || this.options.list.size
-    // console.log('fetch')
+    // console.log('size', this.options.name, size)
 
     if (page === 1) {
       this.ui.body.scrolltop = 0
@@ -38,12 +38,16 @@ export default {
       this.fetchCount(route)
     }
 
+    // console.log('route', route)
+
     fetch(route, {signal}).then((resp) => {
       return resp.json()
     }).then((data) => {
       if (this.options.debug) {
         console.log('data', route, data.length, data)
       }
+
+      // console.log('route', route);
 
       data = data || []
 
@@ -71,10 +75,14 @@ export default {
       }
 
       this.emit('fetched', data)
+
+      if (page === 1 && data.length < 1) {
+        this.emit('empty')
+      }
+
       if (cb) {
         cb()
       }
-
     }).catch(function (e) {
       // console.log('error', e.message)
     })
@@ -131,7 +139,7 @@ export default {
     }
 
     if (this.routeAddOn) {
-      route = this.routeAddOn(route)
+      route = this.routeAddOn(route, path)
     }
 
     if (this.params && this.params()) {
