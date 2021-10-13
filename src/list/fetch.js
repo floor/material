@@ -47,6 +47,8 @@ export default {
         console.log('data', route, data.length, data)
       }
 
+      /// console.log('data-length', data.length)
+
       // console.log('route', route);
 
       data = data || []
@@ -166,6 +168,7 @@ export default {
 
     // console.log('storeData', this.dataStore)
     this.dataStore = this.dataStore || {}
+
     for (var i = 0; i < list.length; i++) {
       this.dataList.push(list[i]._id)
       this.dataStore[list[i]._id] = list[i]

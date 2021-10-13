@@ -3,8 +3,10 @@ export default {
     // console.log('remove', id, this.dataList)
     // console.log('datalist', this.dataList)
 
+    if (!id) return
+
     if (!this.dataStore[id]) {
-      console.log('not in the list')
+      // console.log('not in the list')
       return
     }
 
@@ -12,6 +14,8 @@ export default {
 
     // remove id from the list
     this.data = this.data.filter((info) => { return info._id !== id })
+
+    // console.log('data', this.data)
 
     this.virtual.update(this.data)
   }

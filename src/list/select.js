@@ -32,12 +32,24 @@ export default {
 
   unselect () {
     // console.log('unselect')
+    var item = this.ui.body.querySelector('[data-id="' + this.id + '"]') || this.item
     this.id = null
-    if (this.item) {
-      this.item.classList.remove('selected')
+    if (item) {
+      item.classList.remove('selected')
     }
     this.index = null
     this.item = null
+  },
+
+  getItemById (id, silent) {
+    // console.log('selectItemById', id)
+    var item = this.ui.body.querySelector('[data-id="' + id + '"]')
+
+    if (!item) {
+      return null
+    } else {
+      return item
+    }
   },
 
   selectById (id, silent) {
@@ -49,7 +61,7 @@ export default {
 
     var index = this.dataList.indexOf(id)
     if (index < 0) {
-      console.log('can\'t selectid, not in the list')
+      // console.log('can\'t selectid, not in the list')
       return false
     }
 
@@ -62,10 +74,12 @@ export default {
   },
 
   selectItemById (id, direction) {
-    // console.log('select')
+    // console.log('selectItemById', id)
     var item = this.ui.body.querySelector('[data-id="' + id + '"]')
 
     if (!item) return
+
+    // console.log('item found', item)
 
     // if (this.item) this.item.classList.remove('selected')
 

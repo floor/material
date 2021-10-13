@@ -9,7 +9,10 @@ export default {
 
     this.root = document.createElement('div')
     this.root.classList.add('list')
-    this.root.classList.add(this.options.class)
+
+    if (this.options.class) {
+      this.addClass(this.options.class)
+    }
 
     this.root.addEventListener('click', (e) => {
       e.stopPropagation()
@@ -32,6 +35,14 @@ export default {
       this.buildVirtual()
     } else {
       this.buildVirtual()
+    }
+  },
+
+  addClass (c) {
+    var list = c.split(' ')
+
+    for (var i = 0; i < list.length; i++) {
+      this.root.classList.add(list[i])
     }
   },
 
