@@ -117,12 +117,12 @@ class Switcher {
 
       option.classList.add('selected')
       this.selected = [option.dataset.switcher]
-      this.emit('change', this.selected)
+      this.emit('change', this.selected[0])
     } else {
       if (this.options.allowEmpty) {
         option.classList.remove('selected')
         this.selected = []
-        this.emit('change', this.selected)
+        this.emit('change', this.selected[0])
       }
     }
   }
@@ -182,7 +182,11 @@ class Switcher {
 
   get () {
     // console.log('get', this.selected)
-    return this.selected
+    if (this.options.mode === 'unique') {
+      return this.selected[0]
+    } else {
+      return this.selected
+    }
   }
 }
 
