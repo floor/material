@@ -1,6 +1,6 @@
 export default {
   fetch (page, size, more, cb) {
-    // console.log('fetch', page, size, more)
+    // console.log('fetch', page, size, more, cb)
     if (more !== true) {
       this.ui.body.innerHTML = ''
       this.virtual.reset()
@@ -8,6 +8,11 @@ export default {
       this.data = []
       this.page = 1
       this.stop = true
+    } else {
+      if (this.dataList.length < size) {
+        // console.log('no more fetch needed, data ', this.dataList.length)
+        return
+      }
     }
 
     this.data = this.data || []
@@ -38,7 +43,7 @@ export default {
       this.fetchCount(route)
     }
 
-    // console.log('route', route)
+    // console.log('route - ', this.rand, route)
 
     fetch(route, {signal}).then((resp) => {
       return resp.json()
@@ -46,8 +51,6 @@ export default {
       if (this.options.debug) {
         console.log('data', route, data.length, data)
       }
-
-      /// console.log('data-length', data.length)
 
       // console.log('route', route);
 
@@ -76,14 +79,14 @@ export default {
         this.render(data)
       }
 
+      if (cb) cb()
+
       this.emit('fetched', data)
+
+      this.loaded = true
 
       if (page === 1 && data.length < 1) {
         this.emit('empty')
-      }
-
-      if (cb) {
-        cb()
       }
     }).catch(function (e) {
       // console.log('error', e.message)
@@ -147,6 +150,8 @@ export default {
     if (this.params && this.params()) {
       // console.log('params', route, this.params())
       route = this.addParams(route, this.params())
+    } else {
+
     }
 
     if (this.ui.filter && this.ui.filter.root.classList.contains('selected')) {
@@ -170,8 +175,8 @@ export default {
     this.dataStore = this.dataStore || {}
 
     for (var i = 0; i < list.length; i++) {
-      this.dataList.push(list[i]._id)
-      this.dataStore[list[i]._id] = list[i]
+      this.dataList.push(list[i][this.dataId])
+      this.dataStore[list[i][this.dataId]] = list[i]
     }
   }
 }

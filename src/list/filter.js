@@ -6,7 +6,7 @@ export default {
     for (var name in this.filter) {
       if (this.filter.hasOwnProperty(name)) {
         this.filter[name].on('change', () => {
-          this.fetch()
+          this.request()
         })
       }
     }
@@ -79,7 +79,7 @@ export default {
     // this.ui['search-list'].classList.remove('show')
     // this.ui.body.classList.remove('hide')
     this.clearFilter()
-    this.fetch()
+    this.request()
   },
 
   clearFilter () {
@@ -89,7 +89,7 @@ export default {
       }
     }
 
-    this.fetch()
+    this.request()
   },
 
   extractFilter (object) {

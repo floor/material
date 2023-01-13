@@ -13,7 +13,7 @@ export default {
     this.dataList.splice(this.dataList.indexOf(id), 1)
 
     // remove id from the list
-    this.data = this.data.filter((info) => { return info._id !== id })
+    this.data = this.data.filter((info) => { return info[this.dataId] !== id })
 
     // console.log('data', this.data)
 

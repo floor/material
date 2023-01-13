@@ -2,7 +2,7 @@ import Layout from '../layout'
 
 export default {
   update (info) {
-    console.log('update', info)
+    // console.log('update', info)
 
     this.getUpdatedInfo(info._id)
   },
@@ -11,8 +11,8 @@ export default {
     // console.log('getUpdatedIndex', id)
     var index = null
     for (var i = 0; i < this.data.length; i++) {
-      // console.log('--', this.data[i]._id, id)
-      if (this.data[i]._id === id) {
+      // console.log('--', this.data[i][this.dataId], id)
+      if (this.data[i][this.dataId] === id) {
         index = i
         break
       }
@@ -39,7 +39,7 @@ export default {
     // console.log('updateUpdatedInfo', info, index)
 
     if (!info) return
-    if (info._id !== id) return
+    if (info[this.dataId] !== id) return
 
     this.info = info
 
@@ -50,7 +50,7 @@ export default {
     this.dataStore[info._id] = info
 
     // update item if on the screen
-    var item = this.ui.body.querySelector('[data-id="' + info._id + '"]')
+    var item = this.ui.body.querySelector('[data-id="' + info[this.dataId] + '"]')
     if (item) {
       item.innerHTML = ''
       var layout = new Layout(this.options.layout.item, item)

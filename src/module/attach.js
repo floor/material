@@ -23,6 +23,7 @@ export default {
     events.map((def) => {
       var e = extract.e(instance, def[0])
       var f = extract.f(instance, def[1])
+      var option = def[2]
 
       var keys = def[1].split('.')
 
@@ -31,10 +32,16 @@ export default {
 
       if (f && bound && e && e.element && e.element.addEventListener) {
         if (!f) { console.log('error') }
-        e.element.addEventListener(e.name, f.bind(bound))
+
+        if (option) {
+          e.element.addEventListener(e.name, f.bind(bound), option)
+        } else {
+          e.element.addEventListener(e.name, f.bind(bound))
+        }
       } else if (e && e.element && e.element.on && f && bound) {
         e.element.on(e.name, f.bind(bound))
       } else {
+        // console.trace('can\'t attach', def[0])
         // console.log('can\'t attach', def[0])
       }
     })

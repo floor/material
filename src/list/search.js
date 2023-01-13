@@ -2,6 +2,8 @@ export default {
   search (keywords, page, size, more) {
     // console.log('search', keywords, page, size, more)
 
+    this.emit('searching')
+
     if (more !== true) {
       this.ui.body.innerHTML = ''
       this.virtual.reset()
@@ -39,7 +41,7 @@ export default {
     // console.log('route', route)
 
     if (more !== true && this.options.count) {
-      this.fetchCount(route)
+      this.requestCount(route)
     }
 
     fetch(route, {signal}).then((resp) => {
@@ -132,7 +134,7 @@ export default {
    * @return {[type]} [description]
    */
   hideSearch (notfetch) {
-    // console.log('hideSearch')
+    // console.log('hideSearch', notfetch)
     this.mode = 'standard'
     this.root.classList.remove('search-mode')
 
@@ -145,8 +147,9 @@ export default {
     }
     // this.ui['search-list'].classList.remove('show')
     // this.ui.body.classList.remove('hide')
+    // console.log('request', notfetch)
     if (!notfetch) {
-      this.fetch()
+      this.request()
     }
   }
 }

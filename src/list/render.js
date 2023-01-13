@@ -23,8 +23,6 @@ export default {
     // console.log('renderItem', info)
     info = info || {}
 
-    var id = this.options.dataId || '_id'
-
     var container = this.ui.body
 
     if (context === 'create') {
@@ -42,11 +40,11 @@ export default {
 
     // console.log('---', this.id)
 
-    if (this.id && this.id === info[id]) {
+    if (this.id && this.id === info[this.dataId]) {
       element.classList.add('selected')
     }
 
-    element.dataset.id = info[id]
+    element.dataset.id = info[this.dataId]
     element.dataset.info = this.options.info
 
     var layout = null

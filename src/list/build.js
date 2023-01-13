@@ -1,11 +1,15 @@
+import scrollbar from '../module/scrollbar'
 import dataset from '../view/dataset'
 
 import Layout from '../layout'
-import Virtual from '../module/virtual'
+import Virtual from './virtual'
+import Loading from '../control/loading'
 
 export default {
   build (data) {
-    // console.log('options', this.options.layout)
+    // console.log('options', this.options.name)
+
+    this.dataId = this.options.dataId || '_id'
 
     this.root = document.createElement('div')
     this.root.classList.add('list')
@@ -29,13 +33,23 @@ export default {
     this.layout = new Layout(this.options.layout.main, this.root)
     this.ui = this.layout.component
 
+    // prepare loading
+    // this.ui.loading = new Loading()
+
     if (this.options.container) {
       this.options.container.appendChild(this.root)
-
-      this.buildVirtual()
-    } else {
-      this.buildVirtual()
     }
+
+    var scrollbarOffset = scrollbar()
+
+    // console.log('scrollbarOffset', scrollbarOffset)
+    if (this.ui && this.ui.body) {
+      // console.log('body padding', 11 - scrollbarOffset + 'px')
+      this.ui.body.style['marginRight'] = 11 - scrollbarOffset + 'px'
+      this.ui.body.classList.add('offset' + scrollbarOffset)
+    }
+
+    this.buildVirtual()
   },
 
   addClass (c) {
@@ -57,6 +71,7 @@ export default {
     }
 
     this.virtual = new Virtual({
+      view: this.options.name,
       container: this.ui.body,
       itemHeight: height,
       size: this.size,
@@ -66,38 +81,61 @@ export default {
       }
     })
 
-    if (this.options.loading === 'dynamic') {
-      // console.log('dynamic')
-      this.virtual.on('next', (total) => {
-        // console.log('next', total)
-        if (this.stop) return
+    // console.log('dynamic')
+    this.virtual.on('next', (total) => {
+      // console.log('next', total)
+      if (this.stop) return
 
-        // console.log('next', total, this.page, this.size)
-        this.page = this.page || 1
-        // console.log('slide', total, this.options.list.size)
-        // var page = Math.ceil(total / this.size) + 1
+      // console.log('next', total, this.page, this.size)
+      this.page = this.page || 1
+      // console.log('slide', total, this.options.list.size)
+      // var page = Math.ceil(total / this.size) + 1
 
-        this.page++
+      this.page++
 
-        if (this.mode === 'search') {
-          this.search(this.ui['search-input'].input.value, this.page, this.size, true)
-        } else {
-          this.fetch(this.page, this.size, true)
-        }
-      }).on('progress', (progress) => {
-        // console.log('progress', progress, this.count)
-        //
-        //
-        if (this.statusDisplay) {
-          var percent = parseInt(progress / this.count * 100)
-          this.statusDisplay('count', percent + '% | ' + progress + ' / ' + this.count)
-        }
-      })
+      if (this.mode === 'search') {
+        this.search(this.ui['search-input'].input.value, this.page, this.size, true)
+      } else {
+        // console.log('request', this.page, this.size, true)
+        this.request(this.page, this.size, true)
+      }
+    }).on('progress', (progress) => {
+      // console.log('progress', progress, this.count)
+
+      if (this.statusDisplay) {
+        var percent = parseInt(progress / this.count * 100)
+        this.statusDisplay('count', percent + '% | ' + progress + ' / ' + this.count)
+      }
+
+      this.onProgress(progress)
+    })
+    // .on('size', (size) => {
+      // console.log('!!!!size', size)
+      // this.size = size
+    // })
+  },
+
+  onProgress (value) {
+    // console.log('progress', value, this._value)
+
+    if (this.ui.head) {
+      if (this.ui.body.scrollTop > 0 && this.ui.head) {
+        this.ui.head.classList.add('scrolled')
+      } else if (this.ui.head) {
+        this.ui.head.classList.remove('scrolled')
+      }
     }
 
-    window.addEventListener('resize', () => {
-      this.coord = this.ui.body.getBoundingClientRect()
-      // this.virtual.update()
-    })
+    if (value > this._value) {
+      // console.log('scrolling down')
+      this.emit('scrolling', 'down')
+    } else if (value < this._value) {
+      // console.log('scrolling up')
+      this.emit('scrolling', 'up')
+    }
+
+    this._value = value
+
+    this.scrollTop = this.ui.body.scrollTop
   }
 }

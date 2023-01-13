@@ -77,7 +77,19 @@ export default {
     // console.log('selectItemById', id)
     var item = this.ui.body.querySelector('[data-id="' + id + '"]')
 
-    if (!item) return
+    this.id = id
+
+    if (!item) {
+      var index = this.dataList.indexOf(id)
+      // console.log('not found in DOM, check in dataList', index)
+      if (index > -1) {
+        var listSize = this.options.list.size
+        var slice = listSize * index / listSize
+        // console.log('getSlice', slice)
+      }
+
+      return
+    }
 
     // console.log('item found', item)
 
@@ -98,22 +110,32 @@ export default {
 
   selectPosition (item, direction) {
     var offsetY = this.options.item.height
-    // console.log('selectPosition', item, direction)
-    // return
-    if (!this.coord) {
-      this.coord = this.ui.body.getBoundingClientRect()
-    }
+    direction = direction || 'down'
+    // console.log('selectPosition', this.ui.body, direction)
+
+    this.coord = this.ui.body.getBoundingClientRect()
 
     // console.log('coord', this.coord)
 
     var itemTop = item.offsetTop + this.coord.top - this.ui.body.scrollTop
 
     if (direction === 'down' && itemTop + this.options.item.height + offsetY - this.coord.y > this.coord.height) {
-      this.ui.body.scrollTop = this.ui.body.scrollTop + itemTop - this.coord.height - this.coord.y + this.options.item.height + offsetY
+      var top = this.ui.body.scrollTop + itemTop - this.coord.height - this.coord.y + this.options.item.height + offsetY
+      this.ui.body.scrollTo({
+        top: top,
+        left: 0
+        // behavior: 'smooth'
+      })
     }
 
     if (direction === 'up' && itemTop - offsetY < this.coord.top + this.coord.y) {
-      this.ui.body.scrollTop = this.ui.body.scrollTop + itemTop - this.coord.top - offsetY
+      var top = this.ui.body.scrollTop + itemTop - this.coord.top - offsetY
+      // console.lof('scrollTo', top, item)
+      this.ui.body.scrollTo({
+        left: 0,
+        top: top
+        // behavior: 'smooth'
+      })
     }
   },
 

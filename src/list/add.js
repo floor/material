@@ -9,16 +9,29 @@ export default {
     this.dataList = this.dataList || []
 
     if (context === 'bottom') {
-      this.data.push(info)
-      this.dataList.push(info._id)
+      if (this.data) { this.data.push(info) }
+      if (this.dataList) { this.dataList.push(info._id) }
     } else {
-      this.data.unshift(info)
-      this.dataList.unshift(info._id)
+      if (this.data) {
+        this.data.unshift(info)
+      } else {
+        console.log('error no data')
+      }
+
+      if (this.dataList) { this.dataList.unshift(info._id) }
     }
 
     this.dataStore[info._id] = info
     // console.log('data', this.data.length, this.data)
-    this.virtual.update(this.data)
+
+    if (window.getComputedStyle(this.root, null).display === 'none') {
+      this.virtual.items = this.data
+    } else {
+      this.virtual.update(this.data)
+    }
+
+    // this.ui.body.scrollTo(0, this.ui.body.scrollTop + 1)
+    // this.ui.body.scrollTo(0, this.ui.body.scrollTop - 1)
 
     return info
   }

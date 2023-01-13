@@ -4,13 +4,15 @@ import emitter from '../module/emitter'
 // based on https://sergimansilla.com/blog/virtual-scrolling/
 
 function VirtualList (options) {
-  this.options = options
+  this.options = Object.assign({}, options || {})
+  Object.assign(this, emitter)
 
   this.itemHeight = options.itemHeight
 
   // console.log('itemHeight', this.itemHeight)
-
+  this.next = false
   this.size = options.size
+  this.chunkSize = options.size
 
   this.items = options.items
   this.render = options.render
@@ -18,21 +20,25 @@ function VirtualList (options) {
   this.scroller = VirtualList.createScroller()
   this.container = options.container
 
-  this.offsetHeight = this.container.offsetHeight
-  this.itemsByScreen = Math.ceil(this.container.offsetHeight / this.itemHeight)
+  // get offset height
+  this.setOffset()
 
-  Object.assign(this, emitter)
+  // console.log('itemBySreen', this.itemsByScreen)
 
   window.addEventListener('resize', () => {
-    this.itemsByScreen = Math.ceil(this.container.offsetHeight / this.itemHeight)
-    console.log('itemsByScreen', this.itemsByScreen)
+    clearTimeout(this.resizeTimeout)
+
+    this.resizeTimeout = setTimeout(() => {
+      this.setOffset()
+    }, 50)
   })
 
   this.container.classList.add('virtual')
 }
 
 VirtualList.prototype._renderChunk = function (node, from, number) {
-  console.log('_renderChunk', from, number)
+  // console.log('_renderChunk', from, number, this.options.class)
+
   var fragment = document.createDocumentFragment()
   fragment.appendChild(this.scroller)
 
@@ -40,18 +46,7 @@ VirtualList.prototype._renderChunk = function (node, from, number) {
   if (last > this.count) last = this.count
 
   for (var i = from; i < last; i++) {
-    var item
-    if (this.render) item = this.render(i)
-    else {
-      if (typeof this.items[i] === 'string') {
-        var itemText = document.createTextNode(this.items[i])
-        item = document.createElement('div')
-        item.style.height = this.height
-        item.appendChild(itemText)
-      } else {
-        item = this.items[i]
-      }
-    }
+    var item = this.render(i)
 
     item.style.position = 'absolute'
     item.style.top = i * this.itemHeight + 'px'
@@ -61,18 +56,24 @@ VirtualList.prototype._renderChunk = function (node, from, number) {
   node.innerHTML = ''
   node.appendChild(fragment)
 
-  // console.log('check next', last, this.count, this.size)
+  // console.log('last', last, 'count', this.count, 'size', this.size, 'chunk')
+  // console.log('---------------------------------')
+  // console.log('last && last > (this.count - this.size / 2)')
+  // console.log(last + '>' + '(' + this.count + '-' + this.size + '/' + '2)' + (this.count - this.size / 2))
 
-  if (/* this.count < this.size && */ last > this.count - this.size / 2) {
-    // console.log('next', last, this.count, this.size)
+  if (this.next && last && last > (this.count - this.size / 2)) {
+    // console.log('emit next', last, this.count, this.size)
     this.emit('next', this.count)
   }
+
+  this.next = true
 
   // console.log('last', final, this.count)
 }
 
 VirtualList.prototype.set = function (items) {
-  console.log('set', items.length, this.count)
+  // console.log('set', items.length)
+  this.next = false
   this.items = items
   this.count = items.length
 
@@ -87,7 +88,7 @@ VirtualList.prototype.set = function (items) {
 
   this.scroller.style.height = height + 'px'
 
-  this.itemsByScreen = Math.ceil(this.container.offsetHeight / this.itemHeight)
+  this.itemsByScreen = Math.ceil(this.offsetHeight / this.itemHeight)
 
   // console.log('offsetHeioght', this.container.offsetHeight)
   // console.log('this.itemsByScreen', this.itemsByScreen)
@@ -98,6 +99,7 @@ VirtualList.prototype.set = function (items) {
 
   this.size = size
 
+  // console.log('emit size', size)
   this.emit('size', size)
 
   var self = this
@@ -120,19 +122,21 @@ VirtualList.prototype.set = function (items) {
 
     if (scrollTop < 0) return
 
-    // console.log('itemHeight', scrollTop, self.itemHeight, this.itemsByScreen)
+    // console.log('itemsByScreen', self.itemsByScreen)
 
     var first = parseInt(scrollTop / self.itemHeight) - self.itemsByScreen
     first = first < 0 ? 0 : first
+
+    size = self.itemsByScreen * 4
 
     if (!lastRepaintY || Math.abs(scrollTop - lastRepaintY) > maxBuffer) {
       self._renderChunk(self.container, first, size)
       lastRepaintY = scrollTop
     }
 
-    // var progress = Math.ceil((scrollTop / self.itemHeight) + self.itemsByScreen) - 1
-    // // console.log('progress', progress, self.size, self.count)
-    // self.emit('progress', progress)
+    var progress = Math.ceil((scrollTop / self.itemHeight) + self.itemsByScreen) - 1
+    // console.log('progress', progress)
+    self.emit('progress', progress)
 
     // e.preventDefault && e.preventDefault()
   }
@@ -148,7 +152,7 @@ VirtualList.prototype.set = function (items) {
 }
 
 VirtualList.prototype.update = function (items) {
-  // console.log('update', items.length)
+  // console.log('update', items)
   this.items = items || this.items
 
   if (!this.items) return
@@ -156,7 +160,7 @@ VirtualList.prototype.update = function (items) {
   this.count = this.items.length
 
   // var itemsByScreen = Math.ceil(this.container.offsetHeight / this.itemHeight)
-  var cachedItemsLen = itemsByScreen * 4
+  var cachedItemsLen = this.itemsByScreen * 4
   var scrollTop = this.container.scrollTop
 
   var height = this.itemHeight * this.count
@@ -165,6 +169,8 @@ VirtualList.prototype.update = function (items) {
 
   var first = parseInt(scrollTop / this.itemHeight) - this.itemsByScreen
   first = first < 0 ? 0 : first
+
+  // console.log('first', first, cachedItemsLen)
 
   this._renderChunk(this.container, first, cachedItemsLen)
 }
@@ -192,10 +198,21 @@ VirtualList.prototype.reset = function () {
   this.scroller.style.height = 0
 }
 
-VirtualList.prototype.getSize = function () {
-  // console.log('getSize')
+VirtualList.prototype.setOffset = function (info) {
+  // console.log('setOffset', info)
 
-  var itemsByScreen = Math.ceil(this.container.offsetHeight / this.itemHeight)
+  this.offsetHeight = this.container.offsetHeight
+  if (this.offsetHeight < 1) {
+    this.offsetHeight = window.innerHeight ||
+    document.documentElement.clientHeight ||
+    document.body.clientHeight
+  }
+
+  this.itemsByScreen = Math.ceil(this.offsetHeight / this.itemHeight)
+
+  // console.log('new itemsByScreen', this.itemsByScreen)
+
+  var itemsByScreen = Math.ceil(this.offsetHeight / this.itemHeight)
 
   // Cache 4 times the number of items that fit in the container viewport
   var size = itemsByScreen * 4
