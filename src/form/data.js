@@ -32,6 +32,7 @@ export default {
 
   appendFields (data) {
     for (var field in this.field) {
+      // console.log('field', field)
       if (this.field.hasOwnProperty(field)) {
         // console.log('check field', field)
         var value = this.field[field].get()

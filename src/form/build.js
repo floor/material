@@ -52,6 +52,8 @@ export default {
     this.layout = new Layout(this.options.layout, this.form)
     this.ui = this.layout.component
 
+    // console.log('ui', this.ui)
+
     this.extractInfo(this.ui)
     this.extractFile(this.ui)
     // console.log('file', this.file)

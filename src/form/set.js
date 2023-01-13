@@ -37,5 +37,10 @@ export default {
     this.info = info
     this.render(info)
     this.emit('setted', info)
+  },
+
+  updateInfo (info) {
+    Object.assign(this.info, info)
+    this.render(info)
   }
 }
