@@ -7,6 +7,7 @@ const defaults = {
   class: 'button',
   tag: 'button',
   styles: ['style', 'color'],
+  stopPropagation: false,
   events: [
     ['root.click', 'click'],
     ['root.mousedown', 'mousedown'],
@@ -108,8 +109,9 @@ class Button {
   }
 
   append (container) {
+    container = container || this.options.container
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      container.appendChild(this.root)
     }
   }
 
@@ -242,6 +244,10 @@ class Button {
   }
 
   click (ev) {
+    if (this.options.stopPropagation === true) {
+      ev.stopPropagation()
+    }
+
     this.emit('click', ev)
   }
 
