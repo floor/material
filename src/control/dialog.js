@@ -70,10 +70,6 @@ class Dialog {
       this.root.classList.add('position-' + this.options.position)
     }
 
-    if (this.options.display === 'show') {
-      this.show()
-    }
-
     this.surface = document.createElement('div')
     this.surface.classList.add('surface')
     this.root.appendChild(this.surface)
@@ -83,6 +79,10 @@ class Dialog {
 
     if (this.options.container) {
       this.options.container.appendChild(this.root)
+    }
+
+    if (this.options.display === 'show') {
+      this.show()
     }
   }
 
@@ -137,7 +137,7 @@ class Dialog {
   }
 
   close () {
-    this.hide()
+    // this.hide()
 
     if (this.options.close) {
       this.destroy()
