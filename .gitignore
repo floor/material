@@ -46,3 +46,4 @@ report/*
 .jshintrc
 *-min*
 .sass-cache
+material.bak
