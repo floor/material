@@ -1,18 +1,18 @@
 {
   "name": "material",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "A lightweight implementation of Material Design Components - ES6",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/floor/material.git"
+    "url": "git@gitlab.com:alkaloid/material.git"
   },
   "author": "Jérôme Vial <jerome.vial@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/floor/material/issues"
+    "url": "https://gitlab.com/alkaloid/material/issues"
   },
-  "homepage": "https://github.com/floor/material",
+  "homepage": "https://gitlab.com/alkaloid/material",
   "keywords": [
     "lightweight material design component es6 es2015 vanilla javascript"
   ],
