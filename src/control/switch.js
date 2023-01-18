@@ -30,18 +30,7 @@ let defaults = {
   ]
 }
 
-/**
- * Switch class
- * @class
- * @extends Control
- */
 class Switch {
-  /**
-   * Constructor
-   * @param  {Object} options
-  - Component options
-   * @return {Object} Class instance
-   */
   constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
     Object.assign(this, emitter, attach, dataset)
