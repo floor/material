@@ -10,7 +10,7 @@ export default {
 
     if (context === 'bottom') {
       if (this.data) { this.data.push(info) }
-      if (this.dataList) { this.dataList.push(info._id) }
+      if (this.dataList) { this.dataList.push(info[this.dataId]) }
     } else {
       if (this.data) {
         this.data.unshift(info)
@@ -18,10 +18,10 @@ export default {
         console.log('error no data')
       }
 
-      if (this.dataList) { this.dataList.unshift(info._id) }
+      if (this.dataList) { this.dataList.unshift(info[this.dataId]) }
     }
 
-    this.dataStore[info._id] = info
+    this.dataStore[info[this.dataId]] = info
     // console.log('data', this.data.length, this.data)
 
     if (window.getComputedStyle(this.root, null).display === 'none') {

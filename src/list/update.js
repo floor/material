@@ -4,7 +4,7 @@ export default {
   update (info) {
     // console.log('update', info)
 
-    this.getUpdatedInfo(info._id)
+    this.getUpdatedInfo(info[this.dataId])
   },
 
   getUpdatedIndex (id) {
@@ -47,7 +47,7 @@ export default {
     this.data[index] = info
 
     // update datastore
-    this.dataStore[info._id] = info
+    this.dataStore[info[this.dataId]] = info
 
     // update item if on the screen
     var item = this.ui.body.querySelector('[data-id="' + info[this.dataId] + '"]')
