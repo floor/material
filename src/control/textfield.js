@@ -6,11 +6,12 @@ import attributes from './module/attributes'
 
 const defaults = {
   class: 'textfield',
-  attributes: ['type', 'name', 'title', 'maxlength', 'pattern', 'min', 'max', 'placeholder', 'autocomplete', 'required', 'disabled'],
+  attributes: ['type', 'name', 'title', 'maxlength', 'pattern', 'min', 'max', 'placeholder', 'readonly', 'autocomplete', 'required', 'disabled'],
   events: [
     ['input.input', 'onInput'],
     ['input.focus', 'onFocus'],
-    ['input.blur', 'onBlur']
+    ['input.blur', 'onBlur'],
+    ['input.click', 'onClick']
   ]
 }
 
@@ -76,7 +77,11 @@ class Text {
   }
 
   buildInput () {
-    this.input = document.createElement('input')
+    let tag = 'input'
+    if (this.options.type === 'multiline') {
+      tag = 'textarea'
+    }
+    this.input = document.createElement(tag)
     this.input.classList.add('input')
     this.root.appendChild(this.input)
 
@@ -88,19 +93,24 @@ class Text {
   }
 
   onInput (ev) {
-    // console.log('change', this.value, this.input.value)
+    console.log('onInput', this.value, this.input.value)
 
     this.emit('change', ev)
   }
 
   onFocus (ev) {
     this.root.classList.add('focused')
-    this.emit('change', ev)
+    this.emit('focus', ev)
   }
 
   onBlur (ev) {
     this.root.classList.remove('focused')
-    this.emit('change', ev)
+    this.emit('blur', ev)
+  }
+
+  onClick (ev) {
+    console.log('click')
+    this.emit('click', ev)
   }
 
   /**
