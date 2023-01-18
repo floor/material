@@ -199,7 +199,9 @@ class Selecter {
       this.emit('change', this.value)
     }
 
-    this.hideList()
+    if (this.options.type !== 'listonly') {
+      this.hideList()
+    }
   }
 
   addOption (name, value) {
