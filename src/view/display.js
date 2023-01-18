@@ -8,7 +8,11 @@ export default {
   },
 
   show () {
-    // console.log('show', this.display)
+    // console.log('show', this.visible)
+
+    // if (this.options.transition) {
+    //   this.root.style.display = 'initial'
+    // }
 
     this.root.getBoundingClientRect()
 
@@ -41,17 +45,19 @@ export default {
       this.underlay.classList.remove('show')
     }
 
-    // this.displayTimeout = setTimeout(() => {
-    //   console.log('display: none', this._display)
-    //   this.root.style.display = 'none'
-    // }, 1000)
+    // if (this.options.transition) {
+    //   this.displayTimeout = setTimeout(() => {
+    //     console.log('display: none', this._display)
+    //     this.root.style.display = 'none'
+    //   }, this.options.transition)
+    // }
 
     this.emit('hide')
     return this
   },
 
   destroy () {
-    // console.log('destroy', this.options.transition)
+    // console.log('destroy', this.options.transition, this.root)
     if (this.options.transition && this.root) {
       this.root.classList.remove('show')
 
