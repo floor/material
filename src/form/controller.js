@@ -39,7 +39,7 @@ export default {
   },
 
   changeMode (mode) {
-    console.log('changeMode', mode)
+    // console.log('changeMode', mode)
 
     if (mode === 'update' && this.enableControls) {
       this.enableControls()
