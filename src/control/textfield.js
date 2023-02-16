@@ -93,7 +93,7 @@ class Text {
   }
 
   onInput (ev) {
-    console.log('onInput', this.value, this.input.value)
+    // console.log('onInput', this.value, this.input.value)
 
     this.emit('change', ev)
   }
