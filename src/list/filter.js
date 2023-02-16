@@ -21,12 +21,12 @@ export default {
   },
 
   getFilter () {
-    // console.log('getFilter')
+    console.log('getFilter')
     var filter = null
     for (var name in this.filter) {
       if (this.filter.hasOwnProperty(name)) {
-        // console.log('--', typeof this.filter[name].get(), this.filter[name].get())
-        if (this.filter[name].get() !== '' && this.filter[name].get() !== []) {
+        console.log('--', typeof this.filter[name].get(), this.filter[name].get())
+        if (this.filter[name].get() !== ''/* && this.filter[name].get() !== [] */) {
           if (filter) {
             filter = filter + '&' + name + '=' + this.filter[name].get()
           } else {
