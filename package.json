@@ -5,7 +5,7 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git@gitlab.com:alkaloid/material.git"
+    "url": "git+ssh://git@gitlab.com/alkaloid/material.git"
   },
   "author": "Jérôme Vial <jerome.vial@gmail.com>",
   "license": "MIT",
@@ -14,7 +14,7 @@
   },
   "homepage": "https://gitlab.com/alkaloid/material",
   "keywords": [
-    "lightweight material design component es6 es2015 vanilla javascript"
+    "lightweight material design ui component es6 vanilla javascript"
   ],
   "devDependencies": {
     "babel-core": "^6.26.0",
