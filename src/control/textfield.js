@@ -109,7 +109,7 @@ class Text {
   }
 
   onClick (ev) {
-    console.log('click')
+    // console.log('click')
     this.emit('click', ev)
   }
 
