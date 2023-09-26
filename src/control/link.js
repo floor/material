@@ -35,7 +35,7 @@ class Link {
       this.set(this.options.link)
     }
 
-    if (this.options.target) {
+    if (this.options.target !== 'blank') {
       this.root.target = this.options.target
     }
 
@@ -54,7 +54,15 @@ class Link {
     // console.log('set', text)
     if (link === undefined) return
 
-    this.root.href = link
+    if (this.options.target === 'blank') {
+      this.root.href = '#'
+      this.root.addEventListener('click', () => {
+        window.open(link)
+        return false
+      })
+    } else {
+      this.root.href = link
+    }
   }
 }
 
