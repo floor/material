@@ -79,10 +79,7 @@ export default {
         // console.log('render', this.data[i])
         return this.renderItem(this.data[i])
       }
-    })
-
-    // console.log('dynamic')
-    this.virtual.on('next', (total) => {
+    }).on('next', (total) => {
       // console.log('next', total)
       if (this.stop) return
 
@@ -113,6 +110,7 @@ export default {
       // console.log('!!!!size', size)
       // this.size = size
     // })
+    //
   },
 
   onProgress (value) {
