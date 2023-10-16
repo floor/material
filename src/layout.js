@@ -1,33 +1,14 @@
-
 import { is as isObject } from './module/object'
 import css from './module/css'
 
-/**
- *
- */
 class Layout {
-  /**
-   * [constructor description]
-   * @param  {?} schema    [description]
-   * @param  {?} container [description]
-   * @return {?}           [description]
-   */
   constructor (schema, container) {
     this.components = []
     this.component = this.create(schema, container)
 
-    // console.log('this', this)
-
     return this
   }
 
-  /**
-   * [create description]
-   * @param  {?} schema    [description]
-   * @param  {?} container [description]
-   * @param  {?} structure [description]
-   * @return {?}           [description]
-   */
   create (schema, container, structure, level) {
     level = level || 0
     level++
@@ -94,11 +75,6 @@ class Layout {
     return structure
   }
 
-  /**
-   * [_initFlexDirection description]
-   * @param  {Element} container Init direction for the given container
-   * @param  {string} direction (horizontal,vertical)
-   */
   display (element, options) {
     var display = options.display
     var direction = options.direction || 'horizontal'
@@ -112,11 +88,6 @@ class Layout {
     }
   }
 
-  /**
-   * [style description]
-   * @param  {?} component [description]
-   * @return {?}           [description]
-   */
   style (component) {
     var options = component.options || {}
 
@@ -166,16 +137,9 @@ class Layout {
       }
     }
 
-    // console.log('--- field', field)
-
     return field
   }
 
-  /**
-   * [get description]
-   * @param  {?} name [description]
-   * @return {?}      [description]
-   */
   get (name) {
     if (name) return this.component[name]
     else return this.component
