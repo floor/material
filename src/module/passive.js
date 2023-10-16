@@ -1,17 +1,22 @@
+function passiveEvents () {
+  let supportsPassive = false
 
-function passive () {
-  var supportsPassive = false
   try {
-    var opts = Object.defineProperty({}, 'passive', {
-      get: function () {
+    const opts = Object.defineProperty({}, 'passive', {
+      get () {
         supportsPassive = true
       }
     })
+
+    // Test if the browser supports passive event listeners
     window.addEventListener('testPassive', null, opts)
     window.removeEventListener('testPassive', null, opts)
-  } catch (e) {}
+  } catch (e) {
+    // If there was an error, it's safe to assume that passive event listeners are not supported
+    supportsPassive = false
+  }
 
   return supportsPassive
 }
 
-export default passive
+export default passiveEvents
