@@ -41,6 +41,14 @@ export default {
     this.item = null
   },
 
+  getInfoById (id) {
+    return this.dataStore[id]
+  },
+
+  getSelectedInfo () {
+    return this.dataStore[this.id]
+  },
+
   getItemById (id, silent) {
     // console.log('selectItemById', id)
     var item = this.ui.body.querySelector('[data-id="' + id + '"]')
@@ -102,6 +110,7 @@ export default {
     item.classList.add('selected')
 
     if (this.options.updatePosition === true) {
+      // console.log('selectPosition', item)
       this.selectPosition(item, direction)
     }
 
@@ -178,6 +187,15 @@ export default {
       return id
     } else {
       return false
+    }
+  },
+
+  scrollIntoView (item) {
+    // console.log('selectPrevious', this.id)
+    item = item || this.item
+
+    if (item) {
+      item.scrollIntoView({ behavior: 'instant', block: 'end', inline: 'nearest' })
     }
   },
 
