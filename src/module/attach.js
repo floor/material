@@ -6,11 +6,19 @@ import extract from './extract'
  * @category module
  */
 
+/**
+ * [attach description]
+ * @param  {object} component [description]
+ * @param  {[type]} events    [description]
+ * @return {[type]}           [description]
+ */
 export default {
   attach: function (events) {
+    // console.log('attach', events)
     events = events || this.options.events
     if (!events) return
 
+    // console.log('attach', events, this)
     var instance = this
     events.map((def) => {
       var e = extract.e(instance, def[0])
@@ -18,20 +26,21 @@ export default {
       var option = def[2]
 
       var keys = def[1].split('.')
+
       keys.pop()
       var bound = this.last(keys.join('.'))
 
       if (f && bound && e && e.element && e.element.addEventListener) {
         if (!f) { console.log('error') }
 
-        // Use passive: true for passive event listeners
-        var eventOptions = option || { passive: true }
-
-        e.element.addEventListener(e.name, f.bind(bound), eventOptions)
+        if (option) {
+          e.element.addEventListener(e.name, f.bind(bound), option)
+        } else {
+          e.element.addEventListener(e.name, f.bind(bound))
+        }
       } else if (e && e.element && e.element.on && f && bound) {
         e.element.on(e.name, f.bind(bound))
       } else {
-        // console.trace('can\'t attach', def[0])
         // console.log('can\'t attach', def[0])
       }
     })
@@ -45,14 +54,17 @@ export default {
    * @return {value} The value of the last reference
    */
   last: function (str) {
+    // console.log('_path', str)
     if (!str) return this
+    else if (!str.match(/\./)) return this[str]
+    var last
 
-    const keys = str.split('.')
-    let last = this
+    var keys = str.split('.')
+    for (var i = 0, l = keys.length; i < l; i++) {
+      var key = keys[i]
 
-    for (const key of keys) {
+      last = last || this
       last = last[key]
-      if (last === undefined) return undefined
     }
 
     return last
