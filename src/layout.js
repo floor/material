@@ -60,6 +60,10 @@ class Layout {
             var wrapper = container.root || container
 
             wrapper.appendChild(element)
+
+            if (component.onInserted) {
+              component.onInserted(wrapper)
+            }
           }
           component._container = container
         }
