@@ -8,7 +8,7 @@ export default {
   },
 
   show () {
-    console.log('show', this.visible)
+    // console.log('show', this.visible)
 
     // if (this.options.transition) {
     //   this.element.style.display = 'initial'
@@ -28,7 +28,7 @@ export default {
   },
 
   hide () {
-    console.log('hide')
+    // console.log('hide')
     // if (this.element.style.display === 'none') return
     // clearTimeout(this.displayTimeout)
     // this._display = getComputedStyle(this.root).display

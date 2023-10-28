@@ -149,7 +149,7 @@ class Dialog {
   }
 
   onClickRoot (e) {
-    console.log('onClickRoot')
+    // console.log('onClickRoot')
     e.stopPropagation()
     if (!this.options.modal) {
       this.destroy()

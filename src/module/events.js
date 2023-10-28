@@ -2,11 +2,11 @@ import extract from './extract'
 
 export default {
   bindEvents: function (events) {
-    console.log('bindEvents', events)
+    // console.log('bindEvents', events)
     events = events || this.options.events
     if (!events) return
 
-    console.log('attach', events, this)
+    // console.log('attach', events, this)
     var instance = this
     events.map((def) => {
       var e = extract.e(instance, def[0])

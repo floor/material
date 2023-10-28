@@ -31,7 +31,7 @@ export default {
   },
 
   hide () {
-    // console.log('hide')
+    // console.trace('hide')
     // if (this.root.style.display === 'none') return
     // clearTimeout(this.displayTimeout)
     // this._display = getComputedStyle(this.root).display

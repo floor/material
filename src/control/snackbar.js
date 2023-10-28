@@ -48,11 +48,11 @@ class Snackbar extends EventEmitter {
   }
 
   buildSnackbarContainer (container = document.body) {
-    console.log('buildSnackbarContainer', container)
+    // console.log('buildSnackbarContainer', container)
 
     let snackbarContainer = container.querySelector('.snackbars')
 
-    console.log('snackbarContainer', snackbarContainer)
+    // console.log('snackbarContainer', snackbarContainer)
 
     if (!snackbarContainer) {
       this.options.container = document.createElement('div')
@@ -65,6 +65,7 @@ class Snackbar extends EventEmitter {
 
   render () {
     this.ui.text.set(this.options.text)
+
     if (this.options.action) {
       this.ui.action.set(this.options.action)
       this.ui.action.element.classList.add('show')
@@ -76,6 +77,7 @@ class Snackbar extends EventEmitter {
   }
 
   action () {
+    // console.log('action')
     this.emit('action')
     this.destroy()
   }
