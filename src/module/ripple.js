@@ -6,40 +6,21 @@ const defaults = {
   opacity: ['1', '.3']
 }
 
-/**
- * init ripple
- * @param  {?} container [description]
- * @return {?}           [description]
- */
-function init (instance) {
-  instance.on('built', (container) => {
-    set(container)
-  })
-}
-
-/**
- * this function set the event listener
- * @param {HTMLElement} container [description]
- */
-function set (container) {
+function init (container) {
+  console.log('set', container)
   container.addEventListener('mousedown', (e) => {
+    console.log('mousedown')
     show(e)
   })
 }
 
-/**
- * show method
- * @param  {event} e The event related to the the touch
- * @param  {Object} coord
- * @return {void}
- */
 function show (e) {
-  // console.log('show', e);
+  console.log('show', e)
   var container = e.target
   var offs = offset(container)
 
   let ripple = document.createElement('div')
-  ripple.classList.add('material-ripple')
+  ripple.classList.add('ripple')
   let end = coordinate(offs)
   let initial = {
     left: (e.offsetX || offs.width / 2) + 'px',
@@ -67,24 +48,6 @@ function show (e) {
   }
 }
 
-/**
- * this method hides the given ripple
- * @return {Object} Size and position
- */
-function destroy (ripple) {
-  if (ripple.parentNode) { ripple.style.opacity = '0' }
-
-  document.body.onmouseup = null
-
-  setTimeout(() => {
-    if (ripple.parentNode) { ripple.parentNode.removeChild(ripple) }
-  }, 1000)
-}
-
-/**
- * Get ripple final coordinates
- * @return {Object} Size and position
- */
 function coordinate (o) {
   var size = o.height
   var top = -o.height / 2
@@ -99,6 +62,16 @@ function coordinate (o) {
     top: top + 'px',
     left: (size / -2) + 'px'
   }
+}
+
+function destroy (ripple) {
+  if (ripple.parentNode) { ripple.style.opacity = '0' }
+
+  document.body.onmouseup = null
+
+  setTimeout(() => {
+    if (ripple.parentNode) { ripple.parentNode.removeChild(ripple) }
+  }, 1000)
 }
 
 export default init
