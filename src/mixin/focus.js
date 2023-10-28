@@ -8,7 +8,7 @@ export default {
   focus () {
     if (this.disabled === true) return this
 
-    css.add(this.root, 'is-focused')
+    css.add(this.element, 'is-focused')
     if (this.element.input !== document.activeElement) { this.element.input.focus() }
     return this
   },
@@ -18,8 +18,7 @@ export default {
    * @return {?} [description]
    */
   blur () {
-    css.remove(this.root, 'is-focused')
+    css.remove(this.element, 'is-focused')
     return this
   }
 }
-

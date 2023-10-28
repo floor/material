@@ -4,7 +4,7 @@ import insert from './element/insert'
 import css from './module/css'
 import emitter from './module/emitter'
 import attach from './module/attach'
-import controller from './component/controller'
+import controller from './mixin/controller'
 
 // import component
 import Layout from './layout'
@@ -72,13 +72,13 @@ class Form {
   build () {
     var tag = this.options.tag || 'div'
 
-    this.root = document.createElement(tag)
-    css.add(this.root, this.options.prefix + '-' + this.options.class)
+    this.element = document.createElement(tag)
+    css.add(this.element, this.options.prefix + '-' + this.options.class)
 
     // complete layout options
-    this.options.root = this.root
+    this.options.root = this.element
 
-    this.layout = new Layout(this.options.layout, this.root)
+    this.layout = new Layout(this.options.layout, this.element)
 
     this._initControls(this.layout.controls)
 
@@ -86,7 +86,7 @@ class Form {
   }
 
   insert (container, context) {
-    insert(this.root, container, context)
+    insert(this.element, container, context)
 
     return this
   }

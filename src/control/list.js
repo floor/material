@@ -49,10 +49,10 @@ class List {
 
     var label = this.options.label || ''
 
-    this.root.innerHTML = label + text
+    this.element.innerHTML = label + text
 
     if (this.options.spaceAfter) {
-      this.root.innerHTML = this.root.innerHTML + ' '
+      this.element.innerHTML = this.element.innerHTML + ' '
     }
   }
 
@@ -60,7 +60,7 @@ class List {
 
   setText (text) {
     // console.log('setText', text)
-    this.root.innerHTML = text
+    this.element.innerHTML = text
   }
 }
 

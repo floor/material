@@ -1,18 +1,5 @@
 import css from '../module/css'
 
-/**
- * Classify component related functions
- * @module component/classify
- * @category component
- */
-
-/**
- * Init component class
- * @param  {element} element The component root element
- * @param  {object} options component class options
- * @return {Instance} The Class instance
- *
- */
 function classify (element, options) {
   css.add(element, options.prefix + '-' + options.class)
 

@@ -1,6 +1,6 @@
 'use strict'
 
-import insert from './component/insert'
+import insert from './mixin/insert'
 import css from './module/css'
 import attach from './module/attach'
 
@@ -85,8 +85,8 @@ class Tree {
     // define main tag
     var tag = this.options.tag || 'div'
 
-    this.root = document.createElement(tag)
-    css.add(this.root, this.options.prefix + '-' + this.options.class)
+    this.element = document.createElement(tag)
+    css.add(this.element, this.options.prefix + '-' + this.options.class)
 
     if (this.options.container) {
       this.insert(this.options.container)
@@ -96,7 +96,7 @@ class Tree {
       this.buildTree(this.options.data)
     }
 
-    // this.root.addEventListener("click", function(e) {
+    // this.element.addEventListener("click", function(e) {
     //   // console.log("list", this, e);
     //   // e.target was the clicked element
     // });
@@ -105,12 +105,11 @@ class Tree {
   }
 
   buildTree (data) {
-    this.root.innerHTML = ''
+    this.element.innerHTML = ''
 
     // console.log('buildTree', data);
 
     var tree = ''
-
 
     function checkChildren (parentObj, level) {
       if (level) {
@@ -119,11 +118,10 @@ class Tree {
         level = 0
       }
 
-
-      level++;
+      level++
 
       // console.log('-- ', level, parentObj);
-      if (parentObj.path) { 
+      if (parentObj.path) {
         var level = (parentObj.path.split('/').length - 1)
 
         if (level > 0) {
@@ -131,7 +129,7 @@ class Tree {
         }
       } else {
         if (level > 1) {
-          tree += '<li class="item-tree" data-id="'+parentObj._id+'">' + parentObj.name 
+          tree += '<li class="item-tree" data-id="' + parentObj._id + '">' + parentObj.name
         }
       }
 
@@ -150,13 +148,11 @@ class Tree {
       }
     }
 
-
-
     checkChildren(data)
 
     // console.log('html tree', tree);
 
-    this.root.innerHTML = tree
+    this.element.innerHTML = tree
 
     return tree
   }
@@ -238,8 +234,8 @@ class Tree {
     }
 
     var where = 'bottom'
-    this.insertElement(item.root, this.root, where)
-    // item.insert(this.root, where);
+    this.insertElement(item.root, this.element, where)
+    // item.insert(this.element, where);
     this.items.push(item)
 
     return item
@@ -247,7 +243,7 @@ class Tree {
 
   empty () {
     // console.log('empty')
-    this.root.innerHTML = ''
+    this.element.innerHTML = ''
     this.items = []
     this.item = null
   }

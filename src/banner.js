@@ -1,6 +1,6 @@
 'use strict'
 
-import create from './component/create'
+import create from './mixin/create'
 import insert from './element/insert'
 import event from './element/event'
 import offset from './element/offset'
@@ -53,17 +53,17 @@ class Banner {
    * @return {Object} This class  instance
    */
   build () {
-    this.root = create(this.options)
+    this.element = create(this.options)
 
     if (this.options.container) {
-      insert(this.root, this.options.container)
+      insert(this.element, this.options.container)
     }
 
     return this
   }
 
   attach () {
-    event.add(this.root, 'click', (ev) => {
+    event.add(this.element, 'click', (ev) => {
       // console.log('click', ev.target)
 
       if (ev.target && ev.target.classList.contains('material-button')) {
@@ -76,18 +76,18 @@ class Banner {
       ev.stopPropagation()
     })
 
-    this.root.addEventListener('DOMNodeInserted', (e) => {
+    this.element.addEventListener('DOMNodeInserted', (e) => {
       // console.log('DOMNodeInserted', e.target)
       var textNode = e.target
 
-      if (textNode == this.root) {
+      if (textNode == this.element) {
         // console.log('banner root inserted', e.target)
         if (!this.wrapper) { this.wrap() }
         this.scroll(this.view)
       }
       this.updatePaddingView()
 
-      // if (textNode !== this.root) return
+      // if (textNode !== this.element) return
     })
   }
 
@@ -106,34 +106,34 @@ class Banner {
   }
 
   wrap () {
-    this.view = this.root.parentNode
+    this.view = this.element.parentNode
 
-    // console.log('wrap', this.root, this.view)
+    // console.log('wrap', this.element, this.view)
     this.wrapper = document.createElement('div')
 
     this.wrapper.classList.add('banner-wrapper')
 
-    this.view.insertBefore(this.wrapper, this.root)
+    this.view.insertBefore(this.wrapper, this.element)
 
-    this.wrapper.appendChild(this.root)
+    this.wrapper.appendChild(this.element)
 
-    // insert(this.wrapper, this.root, 'before')
+    // insert(this.wrapper, this.element, 'before')
 
-    // insert(this.root, this.wrapper)
+    // insert(this.element, this.wrapper)
   }
 
   updatePaddingView () {
     // console.log('updatePaddingView', this.view)
 
-    this.height = offset(this.root, 'height')
+    this.height = offset(this.element, 'height')
     if (!this.paddingview) {
       this.paddingview = window.getComputedStyle(this.view)['padding-top']
     }
 
-      // this.root.style.top = 'top: ' + this.paddingview
+      // this.element.style.top = 'top: ' + this.paddingview
 
         // console.log('paddingTop', padding)
-        // if (!padding) padding = window.getComputedStyle(this.root.parentNode, 'padding')
+        // if (!padding) padding = window.getComputedStyle(this.element.parentNode, 'padding')
         // console.log('padding', padding)
 
     var padding = parseInt(this.paddingview, 10)
@@ -155,7 +155,7 @@ class Banner {
   }
 
   scroll (view) {
-    // console.log('initScroll', offset(this.root, 'top'), offset(view, 'top'))
+    // console.log('initScroll', offset(this.element, 'top'), offset(view, 'top'))
 
     var isBody = false
 
@@ -188,8 +188,8 @@ class Banner {
       scrollTop = view.scrollTop
     }
 
-      // var o = offset(this.root, 'top') - offset(view, 'top')
-      // console.log('o', this.root.offsetTop)
+      // var o = offset(this.element, 'top') - offset(view, 'top')
+      // console.log('o', this.element.offsetTop)
 
     var padding = this.paddingview
     padding = parseInt(padding, 10)
@@ -222,7 +222,7 @@ class Banner {
   }
 
   insert (container, context) {
-    insert(this.root, container, context)
+    insert(this.element, container, context)
 
     return this
   }

@@ -26,11 +26,11 @@ class Text {
    * @return {Object} This class instance
    */
   build () {
-    this.root = document.createElement(this.options.tag)
-    addClass(this.root, this.options.class)
+    this.element = document.createElement(this.options.tag)
+    addClass(this.element, this.options.class)
 
     if (this.options.class !== 'text') {
-      this.root.classList.add('text')
+      this.element.classList.add('text')
     }
 
     if (this.options.text) {
@@ -38,7 +38,7 @@ class Text {
     }
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
 
     return this
@@ -51,19 +51,19 @@ class Text {
     var label = this.options.label || ''
 
     if (this.options.textFirst) {
-      this.root.innerHTML = text + label
+      this.element.innerHTML = text + label
     } else {
-      this.root.innerHTML = label + text
+      this.element.innerHTML = label + text
     }
 
     if (this.options.spaceAfter) {
-      this.root.innerHTML = this.root.innerHTML + ' '
+      this.element.innerHTML = this.element.innerHTML + ' '
     }
   }
 
   setText (text) {
     // console.log('setText', text)
-    this.root.innerHTML = text
+    this.element.innerHTML = text
   }
 }
 

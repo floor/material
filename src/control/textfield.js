@@ -42,11 +42,11 @@ class Text {
   build () {
     var tag = this.options.tag || 'div'
 
-    this.root = document.createElement(tag)
-    this.root.classList.add('textfield')
+    this.element = document.createElement(tag)
+    this.element.classList.add('textfield')
 
     if (this.options.class !== 'textfield') {
-      this.root.classList.add(this.options.class)
+      this.element.classList.add(this.options.class)
     }
 
     this.buildLabel()
@@ -57,11 +57,11 @@ class Text {
     }
 
     if (this.options.data) {
-      dataset(this.root, this.options.data)
+      dataset(this.element, this.options.data)
     }
 
     if (this.container) {
-      this.container.appendChild(this.root)
+      this.container.appendChild(this.element)
     }
 
     return this
@@ -72,7 +72,7 @@ class Text {
       this.label = document.createElement('label')
       this.label.classList.add('label')
       this.label.innerHTML = this.options.label
-      this.root.appendChild(this.label)
+      this.element.appendChild(this.label)
     }
   }
 
@@ -83,7 +83,7 @@ class Text {
     }
     this.input = document.createElement(tag)
     this.input.classList.add('input')
-    this.root.appendChild(this.input)
+    this.element.appendChild(this.input)
 
     attributes(this.input, this.options)
 
@@ -99,12 +99,12 @@ class Text {
   }
 
   onFocus (ev) {
-    this.root.classList.add('focused')
+    this.element.classList.add('focused')
     this.emit('focus', ev)
   }
 
   onBlur (ev) {
-    this.root.classList.remove('focused')
+    this.element.classList.remove('focused')
     this.emit('blur', ev)
   }
 
@@ -120,7 +120,7 @@ class Text {
    * @return {Object} The class instance
    */
   set (prop, value) {
-    // console.log('set', this.root, prop, value)
+    // console.log('set', this.element, prop, value)
     switch (prop) {
       case 'value':
         this.setValue(value)
@@ -162,11 +162,11 @@ class Text {
   }
 
   hide () {
-    this.root.classList.add('hide')
+    this.element.classList.add('hide')
   }
 
   show () {
-    this.root.classList.remove('hide')
+    this.element.classList.remove('hide')
   }
 
   get () {

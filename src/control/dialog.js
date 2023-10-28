@@ -57,28 +57,28 @@ class Dialog {
    * @return {Object} The class instance
    */
   build () {
-    this.root = document.createElement('div')
-    this.root.classList.add('dialog')
+    this.element = document.createElement('div')
+    this.element.classList.add('dialog')
 
-    this.element = this.root
+    this.element = this.element
 
     if (this.options.class !== 'dialog') {
-      this.root.classList.add(this.options.class)
+      this.element.classList.add(this.options.class)
     }
 
     if (this.options.position) {
-      this.root.classList.add('position-' + this.options.position)
+      this.element.classList.add('position-' + this.options.position)
     }
 
     this.surface = document.createElement('div')
     this.surface.classList.add('surface')
-    this.root.appendChild(this.surface)
+    this.element.appendChild(this.surface)
 
     this.layout = new Layout(this.options.layout, this.surface)
     this.ui = this.layout.component
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
 
     if (this.options.display === 'show') {
@@ -157,11 +157,11 @@ class Dialog {
   }
 
   emphase () {
-    this.root.classList.add('emphase')
+    this.element.classList.add('emphase')
     var it
     it = setTimeout(() => {
       clearTimeout(it)
-      this.root.classList.remove('emphase')
+      this.element.classList.remove('emphase')
     }, 100)
   }
 

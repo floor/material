@@ -1,13 +1,13 @@
 'use strict'
 
-import init from './component/init'
+import init from './mixin/init'
 import build from './element/build'
-import control from './component/control'
+import control from './mixin/control'
 
-import events from './component/events'
+import events from './mixin/events'
 import insert from './element/insert'
 import offset from './element/offset'
-import classify from './component/classify'
+import classify from './module/classify'
 // import control from './control';
 import attach from './module/attach'
 import css from './module/css'
@@ -15,7 +15,7 @@ import emitter from './module/emitter'
 
 import icon from './skin/material/icon/pin.svg'
 
-let defaults = {
+const defaults = {
   prefix: 'material',
   class: 'slider',
   type: 'control',
@@ -84,19 +84,19 @@ class Slider {
    */
   build () {
     this.element = build(this.options.build)
-    this.root = this.element.root
+    this.element = this.element.root
 
-    classify(this.root, this.options)
+    classify(this.element, this.options)
 
     if (this.options.container) {
-      insert(this.root, this.options.container)
+      insert(this.element, this.options.container)
     }
 
-    var value = this.element.marker.innerHTML
+    const value = this.element.marker.innerHTML
     this.element.marker.innerHTML = icon + value
 
     if (this.options.type) {
-      css.add(this.root, 'type-' + this.options.type)
+      css.add(this.element, 'type-' + this.options.type)
     }
 
     // init input
@@ -105,19 +105,19 @@ class Slider {
     }
 
     // if (this.options.name) {
-    //   this.root.dataset.name = name
+    //   this.element.dataset.name = name
     //   this.element.input.name = name
     // }
 
     // init text
-    let text = this.options.label || this.options.text
+    const text = this.options.label || this.options.text
     this.element.label.textContent = text
 
     this.options.label = this.options.label || this.options.text
 
     this.initTrack()
 
-    var delay = 50
+    const delay = 50
 
     setTimeout(() => {
       this.initCanvas()
@@ -133,13 +133,13 @@ class Slider {
   }
 
   drawCanvas () {
-    var width = offset(this.element.track, 'width')
-    var height = offset(this.element.track, 'height')
+    const width = offset(this.element.track, 'width')
+    const height = offset(this.element.track, 'height')
 
     this.element.canvas.width = width
     this.element.canvas.height = height
 
-    var context = this.element.canvas.getContext('2d')
+    const context = this.element.canvas.getContext('2d')
     context.lineWidth = 2
     context.beginPath()
 
@@ -157,7 +157,7 @@ class Slider {
     this.element.track.addEventListener('mousedown', (ev) => {
       if (this.disabled === true) return
       this.initTrackSize()
-      var position = ev.layerX
+      const position = ev.layerX
       this.update(position)
     })
 
@@ -167,7 +167,7 @@ class Slider {
 
     this.initDragging()
 
-    var delay = 100
+    const delay = 100
 
     setTimeout(() => {
       this.setValue(this.options.value)
@@ -195,8 +195,8 @@ class Slider {
 
       css.add(this.element.control, 'dragging')
 
-      var start = 0
-      var position = 0
+      let start = 0
+      let position = 0
 
       if (e.pageX) start = e.pageX
       else if (e.clientX) start = e.clientX
@@ -207,7 +207,7 @@ class Slider {
         console.log('mousedown', this.disabled)
 
         e = e || window.event
-        var end = 0
+        let end = 0
         if (e.pageX) end = e.pageX
         else if (e.clientX) end = e.clientX
 
@@ -218,7 +218,7 @@ class Slider {
         document.body.onmousemove = document.body.onmouseup = null
 
         e = e || window.event
-        var end = 0
+        let end = 0
         if (e.pageX) end = e.pageX
         else if (e.clientX) end = e.clientX
 
@@ -230,8 +230,8 @@ class Slider {
   }
 
   update (position) {
-    var size = this._tracksize
-    var range = this.options.range[1] - this.options.range[0]
+    const size = this._tracksize
+    const range = this.options.range[1] - this.options.range[0]
 
     if (position > size) {
       position = size
@@ -241,8 +241,8 @@ class Slider {
       position = 0
     }
 
-    var ratio = (size / position)
-    var value = Math.round((range / ratio)) + this.options.range[0]
+    const ratio = (size / position)
+    const value = Math.round((range / ratio)) + this.options.range[0]
 
     if (position === 0) {
       css.remove(this.element.knob, 'notnull')
@@ -265,12 +265,12 @@ class Slider {
   updateValue (value) {
     this.initTrackSize()
 
-    var size = offset(this.element.track, 'width')
+    let size = offset(this.element.track, 'width')
     size = parseInt(size)
 
-    var range = this.options.range[1] - this.options.range[0]
-    var ratio = value * 100 / range
-    var position = Math.round(size * ratio / 100)
+    const range = this.options.range[1] - this.options.range[0]
+    const ratio = value * 100 / range
+    const position = Math.round(size * ratio / 100)
 
     this.update(position)
 
@@ -284,7 +284,7 @@ class Slider {
    * @return {?}           [description]
    */
   insert (container, context) {
-    insert(this.root, container, context)
+    insert(this.element, container, context)
   }
 
   /**
@@ -313,7 +313,7 @@ class Slider {
    * @param {string} value
    */
   get (prop) {
-    var value
+    let value
 
     switch (prop) {
       case 'value':

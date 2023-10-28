@@ -42,11 +42,11 @@ class Image {
    * @return {Object} This class instance
    */
   build () {
-    this.root = document.createElement('div')
-    this.root.classList.add(this.options.class)
+    this.element = document.createElement('div')
+    this.element.classList.add(this.options.class)
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
 
     return this
@@ -76,7 +76,7 @@ class Image {
       url = url + format
     }
 
-    this.root.style.backgroundImage = 'url(' + asset.url + src.path + 'thumb/' + src.filename + ')'
+    this.element.style.backgroundImage = 'url(' + asset.url + src.path + 'thumb/' + src.filename + ')'
   }
 
   sanitize (formats) {

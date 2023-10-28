@@ -40,19 +40,19 @@ class EmailLink {
    * @return {Object} This class instance
    */
   build () {
-    this.root = document.createElement('a')
-    this.root.classList.add('email')
+    this.element = document.createElement('a')
+    this.element.classList.add('email')
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
 
     return this
   }
 
   set (email) {
-    this.root.innerHTML = email
-    this.root.setAttribute('href', 'mailto:' + email)
+    this.element.innerHTML = email
+    this.element.setAttribute('href', 'mailto:' + email)
   }
 }
 

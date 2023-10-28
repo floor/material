@@ -33,11 +33,11 @@ class DateHour {
    * @return {Object} This class instance
    */
   build () {
-    this.root = document.createElement(this.options.tag)
-    this.root.classList.add(this.options.class)
+    this.element = document.createElement(this.options.tag)
+    this.element.classList.add(this.options.class)
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
 
     return this
@@ -47,7 +47,7 @@ class DateHour {
     // console.log('set', src)
     var d = new Date(date)
     var formatted = this.format(d)
-    this.root.innerHTML = formatted
+    this.element.innerHTML = formatted
   }
 
   format (date) {

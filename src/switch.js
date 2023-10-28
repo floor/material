@@ -1,12 +1,12 @@
 'use strict'
 
 // import control from '../control';
-// import control from './component/control'
+// import control from './mixin/control'
 import build from './element/build'
 import emitter from './module/emitter'
-import insert from './component/insert'
+import insert from './mixin/insert'
 import attach from './module/attach'
-import classify from './component/classify'
+import classify from './module/classify'
 
 let defaults = {
   prefix: 'material',
@@ -77,9 +77,9 @@ class Switch {
    */
   build () {
     this.element = build(this.options.build)
-    this.root = this.element.root
+    this.element = this.element.root
 
-    classify(this.root, this.options)
+    classify(this.element, this.options)
 
     if (this.options.disabled) {
       this.disable()
@@ -175,7 +175,7 @@ class Switch {
   check (checked, silent) {
     // console.log('check', checked, silent)
     if (checked === true) {
-      this.root.classList.add('is-checked')
+      this.element.classList.add('is-checked')
       this.element.input.checked = true
       this.checked = true
       this.value = true
@@ -183,7 +183,7 @@ class Switch {
         this.emit('change', this.checked)
       }
     } else {
-      this.root.classList.remove('is-checked')
+      this.element.classList.remove('is-checked')
       this.element.input.checked = false
       this.checked = false
       this.value = false
@@ -201,7 +201,7 @@ class Switch {
   focus () {
     if (this.disabled === true) return this
 
-    this.root.classList.add('is-focused')
+    this.element.classList.add('is-focused')
     if (this.element.input !== document.activeElement) { this.element.input.focus() }
     return this
   }
@@ -211,7 +211,7 @@ class Switch {
    * @return {?} [description]
    */
   blur () {
-    this.root.classList.remove('is-focused')
+    this.element.classList.remove('is-focused')
     return this
   }
 }

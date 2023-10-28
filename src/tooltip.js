@@ -40,19 +40,19 @@ class Tooltip {
   build () {
     var container = this.options.container || document.body
 
-    this.root = document.createElement('span')
-    this.root.classList.add('tooltip')
-    this.root.classList.add('control')
+    this.element = document.createElement('span')
+    this.element.classList.add('tooltip')
+    this.element.classList.add('control')
 
     this.pointer = document.createElement('span')
     this.pointer.classList.add('pointer')
-    this.root.appendChild(this.pointer)
+    this.element.appendChild(this.pointer)
 
     this.label = document.createElement('span')
     this.label.classList.add('label')
-    this.root.appendChild(this.label)
+    this.element.appendChild(this.label)
 
-    container.appendChild(this.root)
+    container.appendChild(this.element)
   }
 
   attach () {
@@ -78,8 +78,8 @@ class Tooltip {
         var coord = this.offset(e.currentTarget)
 
         this.show()
-        this.root.style.top = (coord.top + this.options.offset.top) + 'px'
-        this.root.style.left = coord.left - (this.root.offsetWidth / 2) + (e.currentTarget.offsetWidth / 2) + 'px'
+        this.element.style.top = (coord.top + this.options.offset.top) + 'px'
+        this.element.style.left = coord.left - (this.element.offsetWidth / 2) + (e.currentTarget.offsetWidth / 2) + 'px'
       })
 
       targets[i].addEventListener('mouseleave', (e) => {
@@ -88,7 +88,7 @@ class Tooltip {
       })
     }
 
-    this.root.addEventListener('click', (e) => {
+    this.element.addEventListener('click', (e) => {
       e.preventDefault()
       e.stop()
       this.hide()
@@ -103,11 +103,11 @@ class Tooltip {
   }
 
   hide () {
-    this.root.classList.remove('show')
+    this.element.classList.remove('show')
   }
 
   show () {
-    this.root.classList.add('show')
+    this.element.classList.add('show')
   }
 
   disable () {

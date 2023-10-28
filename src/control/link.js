@@ -24,11 +24,11 @@ class Link {
    * @return {Object} This class instance
    */
   build () {
-    this.root = document.createElement(this.options.tag)
-    this.root.classList.add(this.options.class)
+    this.element = document.createElement(this.options.tag)
+    this.element.classList.add(this.options.class)
 
     if (this.options.class !== 'link') {
-      this.root.classList.add('link')
+      this.element.classList.add('link')
     }
 
     if (this.options.link) {
@@ -36,15 +36,15 @@ class Link {
     }
 
     if (this.options.target !== 'blank') {
-      this.root.target = this.options.target
+      this.element.target = this.options.target
     }
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
 
     if (this.options.text) {
-      this.root.innerHTML = this.options.text
+      this.element.innerHTML = this.options.text
     }
 
     return this
@@ -55,13 +55,13 @@ class Link {
     if (link === undefined) return
 
     if (this.options.target === 'blank') {
-      this.root.href = '#'
-      this.root.addEventListener('click', () => {
+      this.element.href = '#'
+      this.element.addEventListener('click', () => {
         window.open(link)
         return false
       })
     } else {
-      this.root.href = link
+      this.element.href = link
     }
   }
 }

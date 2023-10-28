@@ -1,9 +1,9 @@
 // base class
-import EventEmitter from '../component/emitter'
+import EventEmitter from '../mixin/emitter'
 // related modules
 import build from '../module/build'
 import bindEvents from '../module/events'
-import display from '../module/display'
+import display from '../mixin/display'
 // ui element
 import Text from './text'
 import Button from './button'
@@ -27,7 +27,7 @@ class Snackbar extends EventEmitter {
 
   constructor (options) {
     super()
-    
+
     this.init(options)
     this.build(this.constructor)
     this.render()    

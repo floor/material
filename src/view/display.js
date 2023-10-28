@@ -11,15 +11,15 @@ export default {
     // console.log('show', this.visible)
 
     // if (this.options.transition) {
-    //   this.root.style.display = 'initial'
+    //   this.element.style.display = 'initial'
     // }
 
-    this.root.getBoundingClientRect()
+    this.element.getBoundingClientRect()
 
     // clearTimeout(this.displayTimeout)
-    // this.root.style.display = this._display
+    // this.element.style.display = this._display
 
-    this.root.classList.add('show')
+    this.element.classList.add('show')
     this.visible = true
 
     if (this.underlay) {
@@ -32,13 +32,13 @@ export default {
 
   hide () {
     // console.trace('hide')
-    // if (this.root.style.display === 'none') return
+    // if (this.element.style.display === 'none') return
     // clearTimeout(this.displayTimeout)
-    // this._display = getComputedStyle(this.root).display
+    // this._display = getComputedStyle(this.element).display
 
-    if (!this.root) return
+    if (!this.element) return
 
-    this.root.classList.remove('show')
+    this.element.classList.remove('show')
     this.visible = false
 
     if (this.underlay) {
@@ -48,7 +48,7 @@ export default {
     // if (this.options.transition) {
     //   this.displayTimeout = setTimeout(() => {
     //     console.log('display: none', this._display)
-    //     this.root.style.display = 'none'
+    //     this.element.style.display = 'none'
     //   }, this.options.transition)
     // }
 
@@ -57,9 +57,9 @@ export default {
   },
 
   destroy () {
-    // console.log('destroy', this.options.transition, this.root)
-    if (this.options.transition && this.root) {
-      this.root.classList.remove('show')
+    // console.log('destroy', this.options.transition, this.element)
+    if (this.options.transition && this.element) {
+      this.element.classList.remove('show')
 
       if (this.underlay) {
         this.underlay.classList.remove('show')
@@ -76,9 +76,9 @@ export default {
   },
 
   removeChild () {
-    if (this.root && this.root.parentNode) {
-      this.root.parentNode.removeChild(this.root)
-      this.root = null
+    if (this.element && this.element.parentNode) {
+      this.element.parentNode.removeChild(this.element)
+      this.element = null
     }
 
     if (this.underlay && this.underlay.parentNode) {

@@ -1,11 +1,11 @@
 'use strict'
 
 // dialog related modules
-import events from './component/events'
+import events from './mixin/events'
 import emitter from './module/emitter'
-import controller from './component/controller'
+import controller from './mixin/controller'
 import attach from './module/attach'
-import insert from './component/insert'
+import insert from './mixin/insert'
 import event from './element/event.js'
 import css from './module/css'
 
@@ -34,7 +34,7 @@ class Dialog {
     this.build()
     this.attach()
 
-    this.root.style.display = 'none'
+    this.element.style.display = 'none'
 
     return this
   }
@@ -65,27 +65,27 @@ class Dialog {
    * @return {Object} The class instance
    */
   build () {
-    this.root = document.createElement('div')
+    this.element = document.createElement('div')
 
-    css.add(this.root, 'material-dialog')
+    css.add(this.element, 'material-dialog')
 
     if (this.options.name) {
-      css.add(this.root, 'dialog-' + this.options.name)
+      css.add(this.element, 'dialog-' + this.options.name)
     }
 
     if (this.options.css) {
-      css.add(this.root, this.options.css)
+      css.add(this.element, this.options.css)
     }
 
     if (this.options.theme) {
-      css.add(this.root, this.options.theme + '-theme')
+      css.add(this.element, this.options.theme + '-theme')
     }
 
     this.surface = document.createElement('div')
 
     css.add(this.surface, 'dialog-surface')
 
-    this.insertElement(this.surface, this.root)
+    this.insertElement(this.surface, this.element)
 
     if (this.options.title) {
       this.buildTitle()
@@ -176,13 +176,13 @@ class Dialog {
   }
 
   close () {
-    css.add(this.root, 'dialog-closing')
+    css.add(this.element, 'dialog-closing')
 
     var delayMillis = 200 // 1 second
     setTimeout(() => {
-      this.root.style.display = 'none'
-      css.remove(this.root, 'dialog-closing')
-      css.remove(this.root, 'dialog-show')
+      this.element.style.display = 'none'
+      css.remove(this.element, 'dialog-closing')
+      css.remove(this.element, 'dialog-show')
     }, delayMillis)
 
     this.previousActive.focus()
@@ -193,19 +193,19 @@ class Dialog {
   show () {
     this.previousActive = document.activeElement
 
-    this.root.style.display = 'flex'
-    // css.add(this.root, 'dialog-showing');
+    this.element.style.display = 'flex'
+    // css.add(this.element, 'dialog-showing');
 
     var delayMillis = 100 // 1 second
 
     setTimeout(() => {
-      css.add(this.root, 'dialog-show')
-      // css.remove(this.root, 'dialog-showing');
+      css.add(this.element, 'dialog-show')
+      // css.remove(this.element, 'dialog-showing');
     }, delayMillis)
 
     return this
 
-    // var button = this.root.querySelector('button')
+    // var button = this.element.querySelector('button')
 
     // if (button) button.focus()
   }

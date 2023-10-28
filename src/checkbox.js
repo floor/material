@@ -1,8 +1,8 @@
 'use strict'
 
-import events from './component/events'
-import control from './component/control'
-import label from './component/label'
+import events from './mixin/events'
+import control from './mixin/control'
+import label from './mixin/label'
 
 import insert from './element/insert'
 import build from './element/build'
@@ -79,13 +79,13 @@ class Checkbox {
    */
   build () {
     this.element = build(this.options.build)
-    this.root = this.element.root
+    this.element = this.element.root
 
     this.element.control.innerHTML = icon
 
     var text = this.options.text || this.options.label
 
-    this.element.label = label(this.root, text, this.options)
+    this.element.label = label(this.element, text, this.options)
 
     this.element.input.setAttribute('type', 'checkbox')
     this.element.input.setAttribute('name', this.options.name)
@@ -98,7 +98,7 @@ class Checkbox {
     if (this.options.disabled) {
       this.disabled = this.options.disabled
       this.element.input.setAttribute('disabled', 'disabled')
-      css.add(this.root, 'is-disabled')
+      css.add(this.element, 'is-disabled')
     }
 
     if (this.options.checked) {
@@ -111,7 +111,7 @@ class Checkbox {
 
     // insert if container options is given
     if (this.options.container) {
-      insert(this.root, this.options.container)
+      insert(this.element, this.options.container)
     }
 
     return this
@@ -148,7 +148,7 @@ class Checkbox {
    * @return {?}           [description]
    */
   insert (container, context) {
-    insert(this.root, container, context)
+    insert(this.element, container, context)
 
     return this
   }

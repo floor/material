@@ -11,14 +11,14 @@ export default {
 
     this.dataId = this.options.dataId || '_id'
 
-    this.root = document.createElement('div')
-    this.root.classList.add('list')
+    this.element = document.createElement('div')
+    this.element.classList.add('list')
 
     if (this.options.class) {
       this.addClass(this.options.class)
     }
 
-    this.root.addEventListener('click', (e) => {
+    this.element.addEventListener('click', (e) => {
       e.stopPropagation()
     })
 
@@ -27,17 +27,17 @@ export default {
     }
 
     if (this.options.data) {
-      dataset(this.root, this.options.data)
+      dataset(this.element, this.options.data)
     }
 
-    this.layout = new Layout(this.options.layout.main, this.root)
+    this.layout = new Layout(this.options.layout.main, this.element)
     this.ui = this.layout.component
 
     // prepare loading
     // this.ui.loading = new Loading()
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
 
     var scrollbarOffset = scrollbar()
@@ -56,7 +56,7 @@ export default {
     var list = c.split(' ')
 
     for (var i = 0; i < list.length; i++) {
-      this.root.classList.add(list[i])
+      this.element.classList.add(list[i])
     }
   },
 

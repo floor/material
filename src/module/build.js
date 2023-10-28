@@ -5,7 +5,7 @@ export default {
   build () {
     this.element = document.createElement(this.options.tag || 'div')
     // for backward compatibility
-    this.root = this.element
+    this.element = this.element
 
     const defaults = this.constructor.defaults || {}
 
@@ -16,7 +16,7 @@ export default {
     }
 
     if (this.options.data) {
-      dataset(this.root, this.options.data)
+      dataset(this.element, this.options.data)
     }
 
     this.container = this.options.container
@@ -35,7 +35,8 @@ export default {
     container.appendChild(this.element)
   },
 
-  addClass  (c) {
+  addClass (clss) {
+    const c = clss.replace(/\s+/g, ' ').trim()
     const list = c.split(' ')
     list.forEach(item => this.element.classList.add(item))
   }

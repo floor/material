@@ -62,26 +62,26 @@ class View {
   build (props) {
     var tag = this.options.tag || 'div'
 
-    this.root = create(tag, this.options.prefix + '-' + this.options.class)
+    this.element = create(tag, this.options.prefix + '-' + this.options.class)
 
     if (this.options.name) {
-      css.add(this.root, this.options.class + '-' + this.options.name)
+      css.add(this.element, this.options.class + '-' + this.options.name)
     }
 
     if (this.options.css) {
-      css.add(this.root, this.options.css)
+      css.add(this.element, this.options.css)
     }
 
     if (this.options.container) {
       // console.log(this.options.name, opts.container);
-      insert(this.root, this.options.container)
+      insert(this.element, this.options.container)
     }
 
     return this
   }
 
   insert (container, context) {
-    insert(this.root, container, context)
+    insert(this.element, container, context)
     return this
   }
 }

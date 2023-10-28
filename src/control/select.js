@@ -32,18 +32,18 @@ class Select {
    */
   build () {
     var tag = this.options.tag || 'span'
-    this.root = document.createElement(tag)
-    this.root.classList.add('select')
+    this.element = document.createElement(tag)
+    this.element.classList.add('select')
 
     if (this.options.class !== 'select') {
-      this.root.classList.add(this.options.class)
+      this.element.classList.add(this.options.class)
     }
 
     this.buildLabel()
     this.buildInput()
 
     if (this.container) {
-      this.container.appendChild(this.root)
+      this.container.appendChild(this.element)
     }
 
     return this
@@ -54,14 +54,14 @@ class Select {
       this.label = document.createElement('span')
       this.label.classList.add('label')
       this.label.innerHTML = this.options.label
-      this.root.appendChild(this.label)
+      this.element.appendChild(this.label)
     }
   }
 
   buildInput () {
     this.input = document.createElement('select')
     this.input.classList.add('input')
-    this.root.appendChild(this.input)
+    this.element.appendChild(this.input)
 
     this.input.addEventListener('change', () => {
       // console.log('change', this.input[this.input.selectedIndex].value)

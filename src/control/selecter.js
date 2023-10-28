@@ -51,7 +51,7 @@ class Selecter {
 
   setup () {
     if (this.options.data) {
-      dataset(this.root, this.options.data)
+      dataset(this.element, this.options.data)
     }
 
     // console.log('attribute', this.ui.input, this.options)
@@ -62,7 +62,7 @@ class Selecter {
     }
 
     if (this.options.tooltip) {
-      this.root.setAttribute('data-tooltip', this.options.tooltip)
+      this.element.setAttribute('data-tooltip', this.options.tooltip)
     }
 
     if (this.options.label) {
@@ -72,7 +72,7 @@ class Selecter {
     this.ui.input.setAttribute('aria-label', this.options.name)
 
     if (this.options.case) {
-      this.root.classList.add(this.options.case + '-case')
+      this.element.classList.add(this.options.case + '-case')
     }
   }
   /**
@@ -81,14 +81,14 @@ class Selecter {
    */
   build () {
     var tag = this.options.tag || 'span'
-    this.root = document.createElement(tag)
-    this.root.classList.add('selecter')
+    this.element = document.createElement(tag)
+    this.element.classList.add('selecter')
 
     if (this.options.class !== 'selecter') {
-      addClass(this.root, this.options.class)
+      addClass(this.element, this.options.class)
     }
 
-    this.layout = new Layout(this.options.layout, this.root)
+    this.layout = new Layout(this.options.layout, this.element)
     this.ui = this.layout.component
 
     // console.log('ui', this.ui)
@@ -99,7 +99,7 @@ class Selecter {
     this.setList(this.options.list)
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
   }
 
@@ -110,13 +110,13 @@ class Selecter {
     this.ui.icon.classList.add('icon')
     this.ui.icon.innerHTML = this.options.icon
 
-    this.root.insertBefore(this.ui.icon, this.ui.input)
+    this.element.insertBefore(this.ui.icon, this.ui.input)
   }
 
   buildInput () {
     this.input = document.createElement('select')
     this.input.classList.add('input')
-    this.root.appendChild(this.input)
+    this.element.appendChild(this.input)
 
     this.input.addEventListener('change', () => {
       // console.log('change', this.input[this.input.selectedIndex].value)
@@ -154,19 +154,19 @@ class Selecter {
 
   styleAttributes () {
     if (this.options.style) {
-      this.root.classList.add('style-' + this.options.style)
+      this.element.classList.add('style-' + this.options.style)
     }
 
     if (this.options.size) {
-      this.root.classList.add(this.options.size + '-size')
+      this.element.classList.add(this.options.size + '-size')
     }
 
     if (this.options.color) {
-      this.root.classList.add('color-' + this.options.color)
+      this.element.classList.add('color-' + this.options.color)
     }
 
     if (this.options.bold) {
-      this.root.classList.add('bold')
+      this.element.classList.add('bold')
     }
   }
   showList () {
@@ -216,7 +216,7 @@ class Selecter {
       this.ui.value.innerHTML = this.values[value]
     }
 
-    this.selected = this.root.querySelector('[data-value=' + value + ']')
+    this.selected = this.element.querySelector('[data-value=' + value + ']')
 
     // console.log('item', this.selected)
     if (this.selected) {

@@ -10,9 +10,9 @@ export default {
   show () {
     // console.log('show', this.visible)
 
-    this.root.getBoundingClientRect()
+    this.element.getBoundingClientRect()
 
-    this.root.classList.add('show')
+    this.element.classList.add('show')
     this.visible = true
 
     if (this.underlay) {
@@ -26,11 +26,11 @@ export default {
   },
 
   hide () {
-    // console.log('hide', this.root.style.display)
+    // console.log('hide', this.element.style.display)
 
-    if (!this.root) return
+    if (!this.element) return
 
-    this.root.classList.remove('show')
+    this.element.classList.remove('show')
     this.visible = false
 
     if (this.underlay) {
@@ -43,8 +43,8 @@ export default {
 
   destroy () {
     // console.log('destroy', this.options.transition)
-    if (this.options.transition && this.root) {
-      this.root.classList.remove('show')
+    if (this.options.transition && this.element) {
+      this.element.classList.remove('show')
 
       if (this.underlay) {
         this.underlay.classList.remove('show')
@@ -63,9 +63,9 @@ export default {
   },
 
   removeChild () {
-    if (this.root && this.root.parentNode) {
-      this.root.parentNode.removeChild(this.root)
-      this.root = null
+    if (this.element && this.element.parentNode) {
+      this.element.parentNode.removeChild(this.element)
+      this.element = null
     }
 
     if (this.underlay && this.underlay.parentNode) {

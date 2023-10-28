@@ -44,7 +44,7 @@ class Selector {
     this.attach()
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
   }
 
@@ -53,30 +53,30 @@ class Selector {
    * @return {Object} This class instance
    */
   build () {
-    this.root = document.createElement(this.options.tag)
+    this.element = document.createElement(this.options.tag)
 
-    this.root.classList.add('selector')
+    this.element.classList.add('selector')
 
     if (this.options.class !== 'selector') {
-      this.root.setAttribute('class', this.options.class)
+      this.element.setAttribute('class', this.options.class)
     }
 
     if (this.options.modules.indexOf('border') > -1) {
       this.border = document.createElement('div')
       this.border.classList.add('border')
-      this.root.appendChild(this.border)
+      this.element.appendChild(this.border)
     }
 
     if (this.options.modules.indexOf('label') > -1) {
       this.label = document.createElement('div')
       this.label.classList.add('label')
-      this.root.appendChild(this.label)
+      this.element.appendChild(this.label)
     }
 
     if (this.options.modules.indexOf('resizer') > -1) {
       this.resizer = document.createElement('div')
       this.resizer.classList.add('resizer')
-      this.root.appendChild(this.resizer)
+      this.element.appendChild(this.resizer)
     }
 
     return this
@@ -95,7 +95,7 @@ class Selector {
    * @return {Object} The class instance
    */
   set (prop, value) {
-    // console.log('set', this.root, prop, value)
+    // console.log('set', this.element, prop, value)
     switch (prop) {
       case 'target':
         this.setTarget(value)
@@ -113,21 +113,21 @@ class Selector {
 
     this.update(this.target)
 
-    this.root.classList.remove('hide')
+    this.element.classList.remove('hide')
 
-    // console.log('target', this.root, this.target)
+    // console.log('target', this.element, this.target)
   }
 
   update (target) {
     target = target || this.target
     if (!target) return
     var coords = target.getBoundingClientRect()
-    var pcoords = this.root.parentNode.getBoundingClientRect()
+    var pcoords = this.element.parentNode.getBoundingClientRect()
 
-    this.root.style.top = coords.top - pcoords.top + 'px'
-    this.root.style.left = coords.left - pcoords.left + 'px'
-    this.root.style.width = coords.width + 'px'
-    this.root.style.height = coords.height + 'px'
+    this.element.style.top = coords.top - pcoords.top + 'px'
+    this.element.style.left = coords.left - pcoords.left + 'px'
+    this.element.style.width = coords.width + 'px'
+    this.element.style.height = coords.height + 'px'
   }
 
   /**
@@ -139,11 +139,11 @@ class Selector {
   get (prop, value) {
     switch (prop) {
       case 'value':
-        return this.root.value
+        return this.element.value
       case 'label':
         return this.label.innerHTML
       default:
-        return this.root.value
+        return this.element.value
     }
   }
 
@@ -154,11 +154,11 @@ class Selector {
     let width = 0
     let height = 0
 
-    const offsetX = this.root.getBoundingClientRect().x
-    const offsetY = this.root.getBoundingClientRect().y
+    const offsetX = this.element.getBoundingClientRect().x
+    const offsetY = this.element.getBoundingClientRect().y
     const element = document.body
 
-    var ratio = parseInt(this.root.style.width, 10) / parseInt(this.root.style.height, 10)
+    var ratio = parseInt(this.element.style.width, 10) / parseInt(this.element.style.height, 10)
 
     this.border.setPointerCapture(ev.pointerId)
 
@@ -184,8 +184,8 @@ class Selector {
         if (height < this.options.resizer.minHeight) height = this.options.resizer.minHeight
       }
 
-      this.root.style.width = width + 'px'
-      this.root.style.height = height + 'px'
+      this.element.style.width = width + 'px'
+      this.element.style.height = height + 'px'
 
       this.emit('resize', width, height)
     }
@@ -195,31 +195,31 @@ class Selector {
 
       element.onpointermove = null
       element.onpointerup = null
-      this.root.releasePointerCapture(e.pointerId)
+      this.element.releasePointerCapture(e.pointerId)
 
-      // if (e.target !== this.root) return
+      // if (e.target !== this.element) return
     }
   }
 
   disable () {
-    this.root.disabled = true
+    this.element.disabled = true
   }
 
   enable () {
-    this.root.disabled = false
+    this.element.disabled = false
   }
 
   hide () {
-    this.root.classList.add('hide')
+    this.element.classList.add('hide')
   }
 
   show () {
-    this.root.classList.remove('hide')
+    this.element.classList.remove('hide')
   }
 
   destroy () {
-    if (this.root && this.root.parentNode) {
-      this.root.parentNode.removeChild(this.root)
+    if (this.element && this.element.parentNode) {
+      this.element.parentNode.removeChild(this.element)
     }
   }
 
@@ -228,11 +228,11 @@ class Selector {
   }
 
   mousedown (ev) {
-    this.root.classList.add('pushed')
+    this.element.classList.add('pushed')
   }
 
   mouseup (ev) {
-    this.root.classList.remove('pushed')
+    this.element.classList.remove('pushed')
   }
 }
 

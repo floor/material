@@ -2,8 +2,8 @@
 
 import Layout from './layout'
 
-import create from './component/create'
-import insert from './component/insert'
+import create from './mixin/create'
+import insert from './mixin/insert'
 
 var defaults = {
   prefix: 'material',
@@ -70,14 +70,14 @@ class Item {
 
     this.options.tag = this.options.tag
 
-    this.root = create(this.options)
+    this.element = create(this.options)
 
     if (this.options.text) {
       this.set(this.options.text)
     }
 
     if (this.options.layout) {
-      this.layout = new Layout(this.options.layout, this.root)
+      this.layout = new Layout(this.options.layout, this.element)
     } else {
       if (this.options.container) {
         this.insert(this.options.container)
@@ -92,10 +92,10 @@ class Item {
    */
   set (value) {
     if (value) {
-      if (this.root.innerText) {
-        this.root.innerText = value
+      if (this.element.innerText) {
+        this.element.innerText = value
       } else {
-        this.root.textContent = value
+        this.element.textContent = value
       }
 
       return this

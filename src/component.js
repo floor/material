@@ -1,8 +1,8 @@
 'use strict'
 
-import create from './component/create'
-import events from './component/events'
-import insert from './component/insert'
+import create from './mixin/create'
+import events from './mixin/events'
+import insert from './mixin/insert'
 
 import emitter from './module/emitter'
 
@@ -59,7 +59,7 @@ class Component {
    * @return {Object} This class instance
    */
   build () {
-    this.root = create(this.options)
+    this.element = create(this.options)
 
     if (this.options.container) {
       this.insert(this.options.container)

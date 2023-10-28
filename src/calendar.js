@@ -112,12 +112,12 @@ class Calendar {
     // define main tag
     var tag = this.options.tag || 'div'
 
-    this.root = create(tag, this.options.prefix + '-' + this.options.class)
+    this.element = create(tag, this.options.prefix + '-' + this.options.class)
 
     this.buildWeek()
 
     if (this.options.container) {
-      insert(this.root, this.options.container)
+      insert(this.element, this.options.container)
     }
 
     return this
@@ -143,7 +143,7 @@ class Calendar {
    */
   buildHeader () {
     this.header = create('header')
-    insert(this.header, this.root)
+    insert(this.header, this.element)
 
     this.buildHeadline()
 
@@ -266,7 +266,7 @@ class Calendar {
 
     this.body = create('div')
     css.add(this.body, this.options.class + '-body')
-    insert(this.body, this.root)
+    insert(this.body, this.element)
 
     var hours = create('div')
     css.add(hours, 'hours')
@@ -422,7 +422,7 @@ class Calendar {
   next () {
     this.firstDay.setDate(this.firstDay.getDate() + this.options.rangedays)
 
-    this.root.innerHTML = ''
+    this.element.innerHTML = ''
 
     this.buildWeek()
   }
@@ -434,7 +434,7 @@ class Calendar {
   back () {
     this.firstDay.setDate(this.firstDay.getDate() - this.options.rangedays)
 
-    this.root.innerHTML = ''
+    this.element.innerHTML = ''
 
     this.buildWeek()
   }
@@ -448,7 +448,7 @@ class Calendar {
     date = date || new Date()
 
     this.firstDay = this.getFirstDayOfWeek(this.date)
-    this.root.innerHTML = ''
+    this.element.innerHTML = ''
 
     this.buildWeek()
   }
@@ -459,7 +459,7 @@ class Calendar {
 
   empty () {
     console.log('empty')
-    this.root.innerHTML = ''
+    this.element.innerHTML = ''
   }
 }
 

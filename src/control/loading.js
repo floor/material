@@ -62,16 +62,16 @@ class Loading {
    * @return {Object} This class instance
    */
   build (options) {
-    this.root = document.createElement(this.options.tag)
+    this.element = document.createElement(this.options.tag)
     this.classify()
 
     if (this.options.type === 'circular') {
-      this.root.innerHTML = this.options.circular
+      this.element.innerHTML = this.options.circular
     } if (this.options.type === 'indeterminate') {
       this.bar = document.createElement(this.options.tag)
       this.bar.classList.add('bar')
-      this.root.classList.add('type-indeterminate')
-      this.root.appendChild(this.bar)
+      this.element.classList.add('type-indeterminate')
+      this.element.appendChild(this.bar)
     }
 
     return this
@@ -79,16 +79,16 @@ class Loading {
 
   classify () {
     if (this.options.class !== 'loading') {
-      this.root.setAttribute('class', this.options.class + ' ' + this.options.class)
+      this.element.setAttribute('class', this.options.class + ' ' + this.options.class)
     } else {
-      this.root.classList.add(this.options.class)
+      this.element.classList.add(this.options.class)
     }
   }
 
   append (container) {
     container = container || this.options.container
     if (this.options.container) {
-      container.appendChild(this.root)
+      container.appendChild(this.element)
     }
   }
 
@@ -101,7 +101,7 @@ class Loading {
 
     clearTimeout(this.showTimeout)
     this.showTimeout = setTimeout(() => {
-      this.root.classList.add('show')
+      this.element.classList.add('show')
     }, this.options.delay)
 
     this.visible = true
@@ -110,7 +110,7 @@ class Loading {
   }
 
   showNow () {
-    this.root.classList.add('show')
+    this.element.classList.add('show')
 
     this.visible
 
@@ -119,7 +119,7 @@ class Loading {
 
   hide () {
     clearTimeout(this.showTimeout)
-    this.root.classList.remove('show')
+    this.element.classList.remove('show')
     this.visible = false
     return this
   }

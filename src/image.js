@@ -1,9 +1,9 @@
 'use strict'
 
-// import insert from './component/insert'
+// import insert from './mixin/insert'
 import css from './module/css'
 import insert from './element/insert'
-import control from './component/control'
+import control from './mixin/control'
 
 var defaults = {
   prefix: 'material',
@@ -50,22 +50,22 @@ class Image {
 
     var tag = options.tag || 'div'
     var text = options.text || options.label
-    this.root = document.createElement(tag)
+    this.element = document.createElement(tag)
 
     // if (options.src) {
-    //   this.root.setAttribute('style', 'background-image: url(' + options.src + ')')
+    //   this.element.setAttribute('style', 'background-image: url(' + options.src + ')')
 
     if (options.src) {
       this.image = document.createElement('img')
       this.image.setAttribute('src', options.src)
       css.add(this.image, this.options.class + '-image')
-      insert(this.image, this.root)
+      insert(this.image, this.element)
     }
 
     this.info = document.createElement('span')
     css.add(this.info, this.options.class + '-info')
 
-    insert(this.info, this.root)
+    insert(this.info, this.element)
 
     this.label(text, this.info)
 
@@ -77,13 +77,13 @@ class Image {
     //   this.label = document.createElement('span')
     //   this.label.innerText = text
     //   css.add(this.label, this.options.class + '-label')
-    //   insert(this.label, this.root)
+    //   insert(this.label, this.element)
     // }
 
-    css.add(this.root, this.options.prefix + '-' + this.options.class)
+    css.add(this.element, this.options.prefix + '-' + this.options.class)
 
-    if (options.css) { css.add(this.root, options.css) }
-    // css.add(this.root, this.options.class + '-adjust');
+    if (options.css) { css.add(this.element, options.css) }
+    // css.add(this.element, this.options.class + '-adjust');
 
     if (this.options.container) {
       this.insert(this.options.container)
@@ -97,7 +97,7 @@ class Image {
    * @return {?}           [description]
    */
   insert (container, context) {
-    insert(this.root, container, context)
+    insert(this.element, container, context)
 
     return this
   }
@@ -109,10 +109,10 @@ class Image {
    */
   set (value) {
     if (value) {
-      if (this.root.innerText) {
-        this.root.innerText = value
+      if (this.element.innerText) {
+        this.element.innerText = value
       } else {
-        this.root.textContent = value
+        this.element.textContent = value
       }
 
       return this

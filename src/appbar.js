@@ -1,6 +1,6 @@
 import passiveEvents from './module/passive'
-import create from './component/create'
-import insert from './component/insert'
+import create from './mixin/create'
+import insert from './mixin/insert'
 import offset from './element/offset'
 
 const defaults = {
@@ -36,21 +36,21 @@ class AppBar {
    * @return {Object} This class instance
    */
   build () {
-    this.root = create(this.options)
+    this.element = create(this.options)
 
     // console.log(this.options.height, this.options.fixed)
 
     if (this.options.height) {
-      this.root.style.height = this.options.height + 'px'
+      this.element.style.height = this.options.height + 'px'
     }
 
     if (this.options.fixed) {
       // console.log('is-fixed')
-      this.root.classList.add('is-fixed')
+      this.element.classList.add('is-fixed')
     }
 
     if (this.options.flexible) {
-      this.root.classList.add('is-flexible')
+      this.element.classList.add('is-flexible')
     }
 
     // if (this.options.container) {
@@ -61,13 +61,13 @@ class AppBar {
   }
 
   attach () {
-    this.root.addEventListener('DOMNodeInserted', (e) => {
+    this.element.addEventListener('DOMNodeInserted', (e) => {
       var textNode = e.target
-      if (textNode !== this.root) return
+      if (textNode !== this.element) return
 
-      var size = this.size = offset(this.root, 'height')
+      var size = this.size = offset(this.element, 'height')
 
-      var view = this.view = this.root.parentNode
+      var view = this.view = this.element.parentNode
 
       // console.log('view', view)
 
@@ -77,7 +77,7 @@ class AppBar {
 
       var padding = window.getComputedStyle(view)['padding-' + p]
       // console.log('paddingTop', padding)
-      // if (!padding) padding = window.getComputedStyle(this.root.parentNode, 'padding')
+      // if (!padding) padding = window.getComputedStyle(this.element.parentNode, 'padding')
       // console.log('padding', padding)
 
       padding = parseInt(padding, 10)
@@ -92,7 +92,7 @@ class AppBar {
 
       if (document.body == view) {
         // console.log('toolbar container body')
-        this.root.classList.add('toolbar-body')
+        this.element.classList.add('toolbar-body')
       }
 
       // console.log('p', p)
@@ -111,7 +111,7 @@ class AppBar {
   set (prop, value) {
     switch (prop) {
       case 'minimize':
-        this.root.setAttribute('style', 'height: 64px')
+        this.element.setAttribute('style', 'height: 64px')
         break
       case 'value':
         this.setValue(value)
@@ -154,9 +154,9 @@ class AppBar {
       }
 
       if (scrollTop > 0) {
-        this.root.classList.add('is-scrolled')
+        this.element.classList.add('is-scrolled')
       } else {
-        this.root.classList.remove('is-scrolled')
+        this.element.classList.remove('is-scrolled')
       }
 
       // console.log('scroll', scrollTop)
@@ -171,42 +171,42 @@ class AppBar {
   }
 
   flexible (e, scrollTop) {
-    var size = offset(this.root, 'height')
-    // console.log('flexible', size, this.root.offsetHeight, scrollTop)
+    var size = offset(this.element, 'height')
+    // console.log('flexible', size, this.element.offsetHeight, scrollTop)
     // if (scrollTop < this.size) {
     //
     var height = '64'
     if (size < height) {
-      this.root.style.height = height + 'px'
+      this.element.style.height = height + 'px'
     } else {
       height = this.size - scrollTop
       if (height < 64) height = 64
-      this.root.style.height = height + 'px'
+      this.element.style.height = height + 'px'
     }
 
-    // console.log('scroll', this.root.style.top, scrollTop)
+    // console.log('scroll', this.element.style.top, scrollTop)
 
     // if (scrollTop > 50) {
-    //   this.root.style.trans = scrollTop + 'px'
+    //   this.element.style.trans = scrollTop + 'px'
     // } else {
-    //   this.root.style.top = scrollTop + 'px'
+    //   this.element.style.top = scrollTop + 'px'
     // }
     // }
-      // this.root.style.top = scrollTop + 'px'
-      // this.root.style.height = this.size - scrollTop
+      // this.element.style.top = scrollTop + 'px'
+      // this.element.style.height = this.size - scrollTop
     // } else {
     //   console.log('size scroll', this.size, scrollTop)
 
-    //   this.root.style.height = this.size - scrollTop + 'px'
-    //   // this.root.style.top = scrollTop + 'px'
+    //   this.element.style.height = this.size - scrollTop + 'px'
+    //   // this.element.style.top = scrollTop + 'px'
     // }
   }
 
   fixed (e, scrollTop) {
     if (scrollTop > 0) {
-      this.root.style.transform = 'translateY(' + scrollTop + 'px)'
+      this.element.style.transform = 'translateY(' + scrollTop + 'px)'
     } else {
-      this.root.style.transform = 'translateY(' + scrollTop + 'px)'
+      this.element.style.transform = 'translateY(' + scrollTop + 'px)'
     }
   }
 

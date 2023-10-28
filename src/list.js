@@ -3,7 +3,7 @@
 import Item from './item'
 import Divider from './divider'
 
-// import init from './component/init'
+// import init from './mixin/init'
 import emitter from './module/emitter'
 import insert from './element/insert'
 import css from './module/css'
@@ -86,19 +86,19 @@ class List {
     // define main tag
     var tag = this.options.tag || 'ul'
 
-    this.root = document.createElement(tag)
-    css.add(this.root, 'material-' + this.options.class)
+    this.element = document.createElement(tag)
+    css.add(this.element, 'material-' + this.options.class)
 
     if (options.name) {
-      css.add(this.root, options.class + '-' + options.name)
+      css.add(this.element, options.class + '-' + options.name)
     }
 
     if (options.type) {
-      css.add(this.root, 'type-' + options.type)
+      css.add(this.element, 'type-' + options.type)
     }
 
     if (options.layout) {
-      css.add(this.root, 'layout-' + options.layout)
+      css.add(this.element, 'layout-' + options.layout)
     }
 
     if (this.options.list) {
@@ -106,10 +106,10 @@ class List {
     }
 
     if (this.options.container) {
-      insert(this.root, this.options.container)
+      insert(this.element, this.options.container)
     }
 
-    // this.root.addEventListener("click", function(e) {
+    // this.element.addEventListener("click", function(e) {
     //   // console.log("list", this, e);
     //   // e.target was the clicked element
     // });
@@ -207,7 +207,7 @@ class List {
   }
 
   scrollToBottom () {
-    this.root.scrollTop = this.root.scrollHeight - this.root.getBoundingClientRect().height
+    this.element.scrollTop = this.element.scrollHeight - this.element.getBoundingClientRect().height
   }
 
   /**
@@ -221,9 +221,9 @@ class List {
 
     var where = 'bottom'
     if (item.root) {
-      insert(item.root, this.root, where)
+      insert(item.root, this.element, where)
     } else {
-      insert(item, this.root, where)
+      insert(item, this.element, where)
     }
 
     this.items.push(item)
@@ -232,11 +232,11 @@ class List {
   }
 
   insert (container, context) {
-    insert(this.root, container, context)
+    insert(this.element, container, context)
   }
 
   empty () {
-    this.root.innerHTML = ''
+    this.element.innerHTML = ''
     this.items = []
     this.item = null
   }

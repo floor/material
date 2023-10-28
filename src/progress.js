@@ -2,7 +2,7 @@
 
 // import Component from './component';
 import create from './element/create'
-import classify from './component/classify'
+import classify from './module/classify'
 import css from './module/css'
 import insert from './element/insert'
 
@@ -55,23 +55,23 @@ class Spinner {
    * @return {Object} This class instance
    */
   build (options) {
-    this.root = create(this.options.tag)
-    classify(this.root, this.options)
+    this.element = create(this.options.tag)
+    classify(this.element, this.options)
 
     if (this.options.type === 'circular') {
-      this.root.innerHTML = this.options.circular
+      this.element.innerHTML = this.options.circular
     } if (this.options.type === 'indeterminate') {
       this.bar = create('div', 'bar')
-      insert(this.bar, this.root)
+      insert(this.bar, this.element)
     } else {
       this.bar = create('div', 'bar')
-      insert(this.bar, this.root)
+      insert(this.bar, this.element)
 
       this.set(this.options.progress)
     }
 
     if (this.options.container) {
-      insert(this.root, this.options.container)
+      insert(this.element, this.options.container)
     }
 
     return this

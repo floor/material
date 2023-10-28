@@ -13,11 +13,11 @@ export default {
    * @return {void} This class instance
    */
   build () {
-    this.root = document.createElement(this.options.tag)
-    this.root.classList.add(this.options.class)
+    this.element = document.createElement(this.options.tag)
+    this.element.classList.add(this.options.class)
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
 
     this.label = document.createElement('div')
@@ -27,7 +27,7 @@ export default {
     this.buildMap()
     this.screenSize()
 
-    observer.insert(this.root, () => {
+    observer.insert(this.element, () => {
       // if (touch()) {
       //   // console.log('pinchzoom', this.options.pichZoom)
       //   this.draggable = new PinchZoom(this.slide, {
@@ -58,7 +58,7 @@ export default {
       })
       // }
 
-      this.rect = this.root.getBoundingClientRect()
+      this.rect = this.element.getBoundingClientRect()
 
       this.screen = {
         y: window.pageYOffset,
@@ -84,7 +84,7 @@ export default {
     // console.log('buildmap')
     this.slide = document.createElement('div')
     this.slide.classList.add('slide')
-    this.root.appendChild(this.slide)
+    this.element.appendChild(this.slide)
 
     this.map = document.createElement('div')
     this.map.classList.add('map')

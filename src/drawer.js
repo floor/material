@@ -1,10 +1,10 @@
 'use strict'
 
-import init from './component/init'
+import init from './mixin/init'
 import insert from './element/insert'
-import classify from './component/classify'
+import classify from './module/classify'
 import css from './module/css'
-import events from './component/events'
+import events from './mixin/events'
 import create from './element/create'
 import emitter from './module/emitter'
 
@@ -57,14 +57,14 @@ class Drawer {
 
     classify(this.wrapper, this.options)
 
-    this.root = create('aside')
+    this.element = create('aside')
 
-    css.add(this.root, 'drawer-panel')
+    css.add(this.element, 'drawer-panel')
 
-    insert(this.root, this.wrapper)
+    insert(this.element, this.wrapper)
 
     if (this.options.position) {
-      css.add(this.root, 'position-' + this.options.position)
+      css.add(this.element, 'position-' + this.options.position)
     }
 
     if (this.options.fixed) {
@@ -73,9 +73,9 @@ class Drawer {
 
     if (this.options.size) {
       if (this.options.position === 'top' || this.options.position === 'bottom') {
-        this.root.style = 'height: ' + this.options.size + 'px;'
+        this.element.style = 'height: ' + this.options.size + 'px;'
       } else {
-        this.root.style = 'width: ' + this.options.size + 'px;'
+        this.element.style = 'width: ' + this.options.size + 'px;'
       }
     }
 
@@ -85,7 +85,7 @@ class Drawer {
 
     if (this.options.container) { insert(this.wrapper, this.options.container) }
 
-    this.emit('built', this.root)
+    this.emit('built', this.element)
 
     return this
   }
@@ -109,7 +109,7 @@ class Drawer {
    */
 
   toggle () {
-    // console.log('toggle', this.root);
+    // console.log('toggle', this.element);
     if (this.wrapper.classList.contains('show')) {
       this.close()
     } else {

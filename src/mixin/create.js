@@ -1,4 +1,4 @@
-import classify from './classify'
+import classify from '../module/classify'
 
 function create (options) {
   var element = document.createElement(options.tag || 'div')

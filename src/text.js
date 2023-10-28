@@ -1,7 +1,7 @@
 'use strict'
 
-import create from './component/create'
-import insert from './component/insert'
+import create from './mixin/create'
+import insert from './mixin/insert'
 
 var defaults = {
   prefix: 'material',
@@ -66,7 +66,7 @@ class Text {
   build () {
     this.options.tag = this.options.types[this.options.type]
 
-    this.root = create(this.options)
+    this.element = create(this.options)
 
     if (this.options.text) {
       this.set(this.options.text)
@@ -85,9 +85,9 @@ class Text {
    */
   set (value) {
     if (value) {
-      this.root.textContent = value
+      this.element.textContent = value
     } else {
-      this.root.textContent = ''
+      this.element.textContent = ''
     }
 
     return this

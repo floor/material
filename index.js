@@ -1,5 +1,5 @@
 import AppBar from 'material/src/appbar'
-import Button from 'material/src/button'
+import Button from 'material/src/control/button'
 import Banner from 'material/src/banner'
 import Calendar from 'material/src/calendar'
 import Card from 'material/src/card'
@@ -27,7 +27,12 @@ import Textfield from 'material/src/textfield'
 import Toolbar from 'material/src/toolbar'
 import View from 'material/src/view'
 import Tree from 'material/src/tree'
+
 import emitter from 'material/src/module/emitter'
+import mediator from 'material/src/module/mediator'
+import display from 'material/src/mixin/display'
+import build from 'material/src/module/build'
+import jsontohtml from 'material/src/module/jsontohtml'
 
 export {
   AppBar,
@@ -59,5 +64,9 @@ export {
   View,
   Snackbar,
   Progress,
-  emitter
+  emitter,
+  display,
+  build,
+  emitter,
+  mediator
 }

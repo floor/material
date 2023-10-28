@@ -31,7 +31,7 @@ class TabView {
 
     var ready = false
 
-    observer.insert(this.root, () => {
+    observer.insert(this.element, () => {
       // console.log('!!! inserted')
       if (!ready) {
         ready = true
@@ -46,13 +46,13 @@ class TabView {
   }
 
   build () {
-    this.root = document.createElement(this.options.tag || 'div')
-    this.root.classList.add('tabview')
+    this.element = document.createElement(this.options.tag || 'div')
+    this.element.classList.add('tabview')
 
-    this.root.classList.add('view')
+    this.element.classList.add('view')
 
     if (this.options.class !== 'tabview') {
-      this.root.classList.add(this.options.class)
+      this.element.classList.add(this.options.class)
     }
 
     this.ui = {}
@@ -63,9 +63,9 @@ class TabView {
     this.view = {}
     this.views = []
 
-    this.ui.tabs = this.root.querySelector('[class="tabs"]')
-    this.ui.view = this.root.querySelector('[class="views"]')
-    this.ui.indicator = this.root.querySelector('[class="indicator"]')
+    this.ui.tabs = this.element.querySelector('[class="tabs"]')
+    this.ui.view = this.element.querySelector('[class="views"]')
+    this.ui.indicator = this.element.querySelector('[class="indicator"]')
 
     this.ui.buttons = this.ui.tabs.childNodes
     this.ui.views = this.ui.view.childNodes

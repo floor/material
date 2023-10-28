@@ -37,10 +37,10 @@ class Layout {
         }
 
         component = new schema[i](options)
-        var element = component.root || component
+        var element = component.element || component
 
         if (level === 1) {
-          structure.root = element
+          structure.element = element
         }
 
         if (name) {
@@ -57,7 +57,7 @@ class Layout {
           if (component.insert) {
             component.insert(container)
           } else {
-            var wrapper = container.root || container
+            var wrapper = container.element || container
 
             wrapper.appendChild(element)
 
@@ -98,30 +98,30 @@ class Layout {
     // console.log('component', component);
 
     if (options.flex) {
-      css.add(component.root, 'flex-' + options.flex)
+      css.add(component.element, 'flex-' + options.flex)
     } else {
       var size = options.size
       if (options.size && options.width) {
-        component.root.width = size + 'px'
+        component.element.width = size + 'px'
       } else if (options.size && options.height) {
-        component.root.height = size + 'px'
+        component.element.height = size + 'px'
       }
     }
 
     if (options.position) {
-      component.root.position = options.position
+      component.element.position = options.position
     }
 
     if (options.bottom) {
-      component.root.bottom = options.bottom
+      component.element.bottom = options.bottom
     }
 
     if (options.hide) {
-      component.root.display = 'none'
+      component.element.display = 'none'
     }
 
     if (options.theme) {
-      css.add(component.root, 'theme' + '-' + options.theme)
+      css.add(component.element, 'theme' + '-' + options.theme)
     }
   }
 

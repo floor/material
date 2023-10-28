@@ -50,14 +50,14 @@ class Switch {
    */
   build () {
     var tag = this.options.tag || 'span'
-    this.root = document.createElement(tag)
-    this.root.classList.add('switch')
+    this.element = document.createElement(tag)
+    this.element.classList.add('switch')
 
     if (this.options.class !== 'switch') {
-      addClass(this.root, this.options.class)
+      addClass(this.element, this.options.class)
     }
 
-    this.layout = new Layout(this.options.layout, this.root)
+    this.layout = new Layout(this.options.layout, this.element)
     this.ui = this.layout.component
 
     // console.log('ui', this.ui)
@@ -68,13 +68,13 @@ class Switch {
     this.buildLabel()
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
   }
 
   setup () {
     if (this.options.data) {
-      dataset(this.root, this.options.data)
+      dataset(this.element, this.options.data)
     }
 
     // console.log('attribute', this.ui.input, this.options)
@@ -89,13 +89,13 @@ class Switch {
     }
 
     if (this.options.tooltip) {
-      this.root.setAttribute('data-tooltip', this.options.tooltip)
+      this.element.setAttribute('data-tooltip', this.options.tooltip)
     }
 
     this.ui.input.setAttribute('aria-label', this.options.name)
 
     if (this.options.case) {
-      this.root.classList.add(this.options.case + '-case')
+      this.element.classList.add(this.options.case + '-case')
     }
   }
 
@@ -111,7 +111,7 @@ class Switch {
       this.ui.label.setAttribute('for', this.options.name)
     }
 
-    this.root.insertBefore(this.ui.label, this.ui.input)
+    this.element.insertBefore(this.ui.label, this.ui.input)
   }
 
   buildIcon () {
@@ -121,24 +121,24 @@ class Switch {
     this.ui.icon.classList.add('icon')
     this.ui.icon.innerHTML = this.options.icon
 
-    this.root.insertBefore(this.ui.icon, this.ui.input)
+    this.element.insertBefore(this.ui.icon, this.ui.input)
   }
 
   styleAttributes () {
     if (this.options.style) {
-      this.root.classList.add('style-' + this.options.style)
+      this.element.classList.add('style-' + this.options.style)
     }
 
     if (this.options.size) {
-      this.root.classList.add(this.options.size + '-size')
+      this.element.classList.add(this.options.size + '-size')
     }
 
     if (this.options.color) {
-      this.root.classList.add('color-' + this.options.color)
+      this.element.classList.add('color-' + this.options.color)
     }
 
     if (this.options.bold) {
-      this.root.classList.add('bold')
+      this.element.classList.add('bold')
     }
   }
 
@@ -228,7 +228,7 @@ class Switch {
   check (checked, silent) {
     // console.log('check', checked, silent)
     if (checked === true) {
-      this.root.classList.add('is-checked')
+      this.element.classList.add('is-checked')
       this.ui.input.checked = true
       this.checked = true
       this.value = true
@@ -236,7 +236,7 @@ class Switch {
         this.emit('change', this.checked)
       }
     } else {
-      this.root.classList.remove('is-checked')
+      this.element.classList.remove('is-checked')
       this.ui.input.checked = false
       this.checked = false
       this.value = false
@@ -254,7 +254,7 @@ class Switch {
   focus () {
     if (this.disabled === true) return this
 
-    this.root.classList.add('is-focused')
+    this.element.classList.add('is-focused')
     if (this.ui.input !== document.activeElement) { this.ui.input.focus() }
     return this
   }
@@ -264,7 +264,7 @@ class Switch {
    * @return {?} [description]
    */
   blur () {
-    this.root.classList.remove('is-focused')
+    this.element.classList.remove('is-focused')
     return this
   }
 }

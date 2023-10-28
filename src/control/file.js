@@ -28,18 +28,18 @@ class File {
    * @return {Object} This class instance
    */
   build () {
-    this.root = document.createElement('div')
-    this.root.classList.add('file')
+    this.element = document.createElement('div')
+    this.element.classList.add('file')
 
     if (this.options.class !== 'file') {
-      this.root.classList.add(this.options.class)
+      this.element.classList.add(this.options.class)
     }
 
     this.buildLabel()
     this.buildInput()
 
     if (this.options.data) {
-      dataset(this.root, this.options.data)
+      dataset(this.element, this.options.data)
     }
 
     if (this.options.focus) {
@@ -47,7 +47,7 @@ class File {
     }
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
 
     return this
@@ -58,18 +58,18 @@ class File {
       this.label = document.createElement('label')
       this.label.classList.add('label')
       this.label.innerHTML = this.options.label
-      this.root.appendChild(this.label)
+      this.element.appendChild(this.label)
     }
   }
 
   buildInput () {
     this.field = document.createElement('div')
     this.field.classList.add('field')
-    this.root.appendChild(this.field)
+    this.element.appendChild(this.field)
 
     this.input = document.createElement('input')
     this.input.setAttribute('type', 'file')
-    this.root.appendChild(this.input)
+    this.element.appendChild(this.input)
 
     attributes(this.input, this.options)
 

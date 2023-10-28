@@ -30,26 +30,26 @@ class Switcher {
   }
 
   build () {
-    this.root = document.createElement(this.options.tag)
+    this.element = document.createElement(this.options.tag)
 
     if (this.options.class !== 'button') {
-      this.root.setAttribute('class', 'switcher ' + this.options.class)
+      this.element.setAttribute('class', 'switcher ' + this.options.class)
     } else {
-      this.root.classList.add('switcher')
+      this.element.classList.add('switcher')
     }
 
     if (this.options.label) {
       this.label = document.createElement('label')
       this.label.innerHTML = this.options.label
-      this.root.appendChild(this.label)
+      this.element.appendChild(this.label)
     }
 
     this.knob = document.createElement('span')
     this.knob.classList.add('knob')
-    this.root.appendChild(this.knob)
+    this.element.appendChild(this.knob)
 
     if (this.options.size) {
-      this.root.classList.add(this.options.size + '-size')
+      this.element.classList.add(this.options.size + '-size')
     }
 
     this.buildList(this.options.list)
@@ -59,17 +59,17 @@ class Switcher {
     }
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
   }
 
   buildList (list) {
     this.list = document.createElement('ul')
-    this.root.appendChild(this.list)
+    this.element.appendChild(this.list)
   }
 
   attach () {
-    this.root.addEventListener('click', (event) => {
+    this.element.addEventListener('click', (event) => {
       if (!event.target.dataset.switcher) return
       this.select(event.target)
     })
@@ -97,7 +97,7 @@ class Switcher {
 
   selectByName (name) {
     // console.log('selectByName', name)
-    var item = this.root.querySelector('[data-switcher="' + name + '"]')
+    var item = this.element.querySelector('[data-switcher="' + name + '"]')
     // console.log('item', item)
     if (item) {
       this.select(item)
@@ -106,7 +106,7 @@ class Switcher {
 
   preSelectByName (name) {
     // console.log('selectByName', name)
-    var item = this.root.querySelector('[data-switcher="' + name + '"]')
+    var item = this.element.querySelector('[data-switcher="' + name + '"]')
     // console.log('item', item)
     this.preselect(item)
   }
@@ -165,24 +165,24 @@ class Switcher {
   }
 
   setValue (value) {
-    // console.log('value', value, this.options.list, this.root)
+    // console.log('value', value, this.options.list, this.element)
     var list = this.options.list
     if (this.options.mode === 'unique') {
       for (var i = 0; i < list.length; i++) {
-        this.root.querySelector('[data-switcher="' + list[i] + '"]').classList.remove('selected')
+        this.element.querySelector('[data-switcher="' + list[i] + '"]').classList.remove('selected')
         if (list[i] == value) {
           this.selected = [value]
-          this.root.querySelector('[data-switcher="' + list[i] + '"]').classList.add('selected')
+          this.element.querySelector('[data-switcher="' + list[i] + '"]').classList.add('selected')
         }
       }
     } else {
       value = value || []
       this.selected = []
       for (var i = 0; i < list.length; i++) {
-        this.root.querySelector('[data-switcher="' + list[i] + '"]').classList.remove('selected')
+        this.element.querySelector('[data-switcher="' + list[i] + '"]').classList.remove('selected')
         if (value.indexOf(list[i]) !== -1) {
           this.selected.push(list[i])
-          this.root.querySelector('[data-switcher="' + list[i] + '"]').classList.add('selected')
+          this.element.querySelector('[data-switcher="' + list[i] + '"]').classList.add('selected')
         }
       }
     }

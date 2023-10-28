@@ -32,12 +32,12 @@ var control = {
    */
   check (checked) {
     if (checked === true) {
-      css.add(this.root, 'is-checked')
+      css.add(this.element, 'is-checked')
       this.element.input.checked = true
       this.checked = true
       this.emit('change', this.checked)
     } else {
-      css.remove(this.root, 'is-checked')
+      css.remove(this.element, 'is-checked')
       this.element.input.checked = false
       this.checked = false
       this.emit('change', this.checked)
@@ -60,7 +60,7 @@ var control = {
 
     this.element.label.textContent = label
 
-    container = container || this.root
+    container = container || this.element
 
     insert(this.element.label, container)
   },
@@ -73,7 +73,7 @@ var control = {
   icon (icon, container, position) {
     if (!icon) return
 
-    container = container || this.root
+    container = container || this.element
 
     position = position || 'top'
     if (this.options.type === 'text-icon') {
@@ -104,14 +104,14 @@ var control = {
       this.element.error.textContent = text
     }
 
-    insert(this.element.error, this.root, 'bottom')
+    insert(this.element.error, this.element, 'bottom')
   },
 
   disable () {
     this.disabled = true
 
     this.element.input.setAttribute('disabled', 'disabled')
-    css.add(this.root, 'is-disabled')
+    css.add(this.element, 'is-disabled')
     return this
   },
 
@@ -119,7 +119,7 @@ var control = {
     this.disabled = false
 
     this.element.input.removeAttribute('disabled')
-    css.remove(this.root, 'is-disabled')
+    css.remove(this.element, 'is-disabled')
     return this
   },
 
@@ -162,7 +162,7 @@ var control = {
   },
 
   getName () {
-    return this.root.dataset.name
+    return this.element.dataset.name
   },
 
   /**
@@ -172,7 +172,7 @@ var control = {
   focus () {
     if (this.disabled === true) return this
 
-    css.add(this.root, 'is-focused')
+    css.add(this.element, 'is-focused')
     if (this.element.input !== document.activeElement) { this.element.input.focus() }
     return this
   },
@@ -182,7 +182,7 @@ var control = {
    * @return {?} [description]
    */
   blur () {
-    css.remove(this.root, 'is-focused')
+    css.remove(this.element, 'is-focused')
     return this
   }
 }

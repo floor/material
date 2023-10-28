@@ -1,10 +1,10 @@
 'use strict'
 
 // import modules
-import init from './component/init'
+import init from './mixin/init'
 import create from './element/create'
-import insert from './component/insert'
-import classify from './component/classify'
+import insert from './mixin/insert'
+import classify from './module/classify'
 // import components
 import Layout from './layout'
 
@@ -40,10 +40,10 @@ class Snackbar {
   build () {
     var tag = this.options.tag || 'div'
 
-    this.root = create(tag)
-    classify(this.root, this.options)
+    this.element = create(tag)
+    classify(this.element, this.options)
 
-    this.layout = new Layout(this.options.layout, this.root)
+    this.layout = new Layout(this.options.layout, this.element)
   }
 
   /**
@@ -52,7 +52,7 @@ class Snackbar {
    */
   show () {
     setTimeout(() => {
-      this.root.classList.add('show')
+      this.element.classList.add('show')
     }, 10)
 
     if (this.options.delay) {
@@ -63,7 +63,7 @@ class Snackbar {
   }
 
   hide () {
-    this.root.classList.remove('show')
+    this.element.classList.remove('show')
   }
 }
 

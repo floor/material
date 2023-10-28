@@ -1,8 +1,8 @@
 'use strict'
 
 // import modules
-import create from './component/create'
-import insert from './component/insert'
+import create from './mixin/create'
+import insert from './mixin/insert'
 // import components
 import Layout from './layout'
 
@@ -33,10 +33,10 @@ class Card {
    * @return {Object} The class instance
    */
   build () {
-    this.root = create(this.options)
+    this.element = create(this.options)
 
     if (this.options.layout) {
-      this.layout = new Layout(this.options.layout, this.root)
+      this.layout = new Layout(this.options.layout, this.element)
     }
   }
 }

@@ -111,7 +111,7 @@ export default {
 
     // console.log('showSearch')
     this.mode = 'search'
-    this.root.classList.add('search-mode')
+    this.element.classList.add('search-mode')
 
     if (this.ui.search) {
       this.ui.search.root.classList.add('selected')
@@ -136,7 +136,7 @@ export default {
   hideSearch (notfetch) {
     // console.log('hideSearch', notfetch)
     this.mode = 'standard'
-    this.root.classList.remove('search-mode')
+    this.element.classList.remove('search-mode')
 
     if (this.ui.search) {
       this.ui.search.root.classList.remove('selected')

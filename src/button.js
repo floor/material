@@ -1,8 +1,8 @@
 'use strict'
 
-import create from './component/create'
-import control from './component/control'
-import ripple from './component/ripple'
+import create from './mixin/create'
+import control from './mixin/control'
+import ripple from './module/ripple'
 
 import insert from './element/insert'
 
@@ -13,7 +13,7 @@ const defaults = {
   prefix: 'material',
   class: 'button',
   tag: 'button',
-  ripple: false,
+  ripple: true,
   events: [
     ['root.click', 'handleClick'],
     ['root.mouseover', 'handleMouseOver']
@@ -63,9 +63,6 @@ class Button {
     this.element = this.element || {}
 
     // init module$
-    if (this.options.ripple) {
-      ripple(this)
-    }
 
     this.emit('init')
   }
@@ -78,21 +75,21 @@ class Button {
   build () {
     this.element = {}
 
-    this.root = create(this.options)
+    this.element = create(this.options)
 
     this.options.label = this.options.label || this.options.text
 
-    this.root.setAttribute('aria-label', this.options.label || this.options.name)
+    this.element.setAttribute('aria-label', this.options.label || this.options.name)
 
     if (this.options.title) {
-      this.root.setAttribute('title', this.options.title)
+      this.element.setAttribute('title', this.options.title)
     }
 
     this.label(this.options.label)
     this.icon(this.options.icon)
 
     if (this.options.tooltip) {
-      this.root.dataset.tooltip = this.options.tooltip
+      this.element.dataset.tooltip = this.options.tooltip
     }
 
     if (this.options.container) {
@@ -101,10 +98,12 @@ class Button {
       } else {
         this.container = this.options.container
       }
-      insert(this.root, this.options.container)
+      insert(this.element, this.options.container)
     }
 
-    this.emit('built', this.root)
+    if (this.options.ripple) {
+      ripple(this.element)
+    }
 
     return this
   }
@@ -116,7 +115,7 @@ class Button {
    * @return {?}           [description]
    */
   insert (container, context) {
-    insert(this.root, container, context)
+    insert(this.element, container, context)
 
     return this
   }
@@ -126,18 +125,18 @@ class Button {
    * @return {?} [description]
    */
   setup () {
-    this.element.input = this.root
+    this.element.input = this.element
 
     if (this.options.name) {
-      this.root.dataset.name = this.options.name
+      this.element.dataset.name = this.options.name
     }
 
     // if (this.options.label) {
-    //   this.root.title = this.options.label
+    //   this.element.title = this.options.label
     // }
 
     if (this.options.content) {
-      this.root.innerHTML = this.options.content
+      this.element.innerHTML = this.options.content
     }
 
     if (this.options.disabled === true) {
@@ -195,7 +194,7 @@ class Button {
   }
 
   destroy () {
-    this.container.removeChild(this.root)
+    this.container.removeChild(this.element)
   }
 
   /**

@@ -1,6 +1,6 @@
 'use strict'
 
-import create from './component/create'
+import create from './mixin/create'
 import insert from './element/insert'
 import emitter from './module/emitter'
 
@@ -50,17 +50,17 @@ class Container {
    * @return {Object} This class  instance
    */
   build () {
-    this.root = create(this.options)
+    this.element = create(this.options)
 
     if (this.options.container) {
-      insert(this.root, this.options.container)
+      insert(this.element, this.options.container)
     }
 
     return this
   }
 
   insert (container, context) {
-    insert(this.root, container, context)
+    insert(this.element, container, context)
     return this
   }
 }

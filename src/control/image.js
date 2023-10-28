@@ -38,14 +38,14 @@ class Image {
    * @return {Object} This class instance
    */
   build () {
-    this.root = document.createElement(this.options.tag)
-    this.root.classList.add(this.options.class)
+    this.element = document.createElement(this.options.tag)
+    this.element.classList.add(this.options.class)
     if (this.options.class !== 'image') {
-      this.root.classList.add('image')
+      this.element.classList.add('image')
     }
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
 
     return this
@@ -54,7 +54,7 @@ class Image {
   set (src) {
     // console.log('set', src)
     if (!src) {
-      this.root.style.backgroundImage = ''
+      this.element.style.backgroundImage = ''
     } else {
       var url = null
 
@@ -75,7 +75,7 @@ class Image {
         url = src.url
       }
 
-      this.root.style.backgroundImage = 'url(' + url + src.filename + ')'
+      this.element.style.backgroundImage = 'url(' + url + src.filename + ')'
     }
   }
 

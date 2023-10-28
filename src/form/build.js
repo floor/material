@@ -5,19 +5,19 @@ import Layout from '../layout'
 export default {
   build () {
     // console.log('build', this.options.layout)
-    this.root = document.createElement('div')
-    this.root.classList.add('form')
+    this.element = document.createElement('div')
+    this.element.classList.add('form')
 
     if (this.options.class !== 'form') {
-      this.root.classList.add(this.options.class)
+      this.element.classList.add(this.options.class)
     }
 
     if (this.options.form) {
-      this.root.classList.add(this.options.form)
+      this.element.classList.add(this.options.form)
     }
 
     if (this.options.data) {
-      dataset(this.root, this.options.data)
+      dataset(this.element, this.options.data)
     }
 
     this.buildForm(this.options.form)
@@ -25,13 +25,13 @@ export default {
     this.buildLayout()
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
   },
 
   buildForm (form) {
     this.form = document.createElement('form')
-    this.root.appendChild(this.form)
+    this.element.appendChild(this.form)
 
     if (form && form.method) {
       this.form.setAttribute('method', form.method)

@@ -1,8 +1,8 @@
 'use strict'
 
-import classify from './component/classify'
+import classify from './module/classify'
 import css from './module/css'
-import events from './component/events'
+import events from './mixin/events'
 import insert from './element/insert'
 import offset from './element/offset'
 
@@ -66,18 +66,18 @@ class Menu {
    * @return {Object} This class instance
    */
   build () {
-    this.root = create(this.options.tag, this.options.css)
+    this.element = create(this.options.tag, this.options.css)
     this.mask = create(this.options.tag, this.options.class + '-mask')
 
     if (this.options.position) {
-      this.root.style.position = this.options.position
+      this.element.style.position = this.options.position
     }
 
-    classify(this.root, this.options)
+    classify(this.element, this.options)
 
     if (this.options.list) {
       this.list = new List({
-        // root: this.root,
+        // root: this.element,
         list: this.options.list,
         target: '.material-item',
         height: 600,
@@ -86,17 +86,17 @@ class Menu {
           this.selected = item
           this.hide()
         }
-      }).insert(this.root)
+      }).insert(this.element)
     }
 
-    this.emit('built', this.root)
+    this.emit('built', this.element)
 
     return this
   }
 
   insert () {
     insert(this.mask, document.body)
-    insert(this.root, document.body)
+    insert(this.element, document.body)
   }
 
   setup () {
@@ -113,7 +113,7 @@ class Menu {
 
     if (e) this.caller = e.target
 
-    css.add(this.root, this.options.class + '-show')
+    css.add(this.element, this.options.class + '-show')
     this.position(this.caller)
   }
 
@@ -121,19 +121,19 @@ class Menu {
     if (!this.caller) return
     var offs = offset(this.caller)
 
-    var offsw = this.offset = offset(this.root)
+    var offsw = this.offset = offset(this.element)
 
     // console.log('offset')
     // console.log('caller', this.caller, offs, screen.width)
 
-    this.root.style.top = offs.top + 'px'
-    this.root.style.left = offs.left - offsw.width + offs.width + 'px'
-    // this.root.style.right = offs.right + offs.width + offsw.width  + 'px'
+    this.element.style.top = offs.top + 'px'
+    this.element.style.left = offs.left - offsw.width + offs.width + 'px'
+    // this.element.style.right = offs.right + offs.width + offsw.width  + 'px'
   }
 
   hide () {
     // console.log('hide')
-    css.remove(this.root, this.options.class + '-show')
+    css.remove(this.element, this.options.class + '-show')
     css.remove(this.mask, 'mask-show')
   }
 }

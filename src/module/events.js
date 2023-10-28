@@ -1,5 +1,7 @@
 import extract from './extract'
 
+function last (str) {}
+
 export default {
   bindEvents: function (events) {
     // console.log('bindEvents', events)

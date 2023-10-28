@@ -65,28 +65,28 @@ class Select {
   build () {
     // create a new div as input element
     var tag = this.options.tag || 'div'
-    this.root = document.createElement(tag)
-    this.root.classList.add(this.options.prefix + '-' + this.options.class)
+    this.element = document.createElement(tag)
+    this.element.classList.add(this.options.prefix + '-' + this.options.class)
 
     this.buildLabel()
     this.buildInput()
     this.buildUnderline()
 
     if (this.disabled) {
-      css.add(this.root, 'is-disabled')
+      css.add(this.element, 'is-disabled')
     }
 
     // insert if container this.options is given
     if (this.options.container) {
       // console.log(this.name, opts.container);
-      insert(this.root, this.options.container)
+      insert(this.element, this.options.container)
     }
   }
 
   buildLabel () {
     this.label = document.createElement('label')
     this.label.classList.add(this.options.class + '-label')
-    this.root.appendChild(this.label)
+    this.element.appendChild(this.label)
 
     if (this.options.label !== false) {
       this.setLabel()
@@ -101,14 +101,14 @@ class Select {
     this.input = document.createElement('select')
     this.input.classList.add(this.options.class + '-input')
     // this.input.setAttribute('type', 'text')
-    this.root.appendChild(this.input)
+    this.element.appendChild(this.input)
 
     if (this.options.options) {
       this.setOptions(this.options.options)
     }
 
     // if (!this.options.value) {
-    //   this.root.classList.add('is-empty')
+    //   this.element.classList.add('is-empty')
     // }
 
     if (this.readonly) {
@@ -132,7 +132,7 @@ class Select {
   buildUnderline () {
     this.underline = document.createElement('span')
     this.underline.classList.add(this.options.class + '-underline')
-    this.root.appendChild(this.underline)
+    this.element.appendChild(this.underline)
   }
 
   /**
@@ -185,7 +185,7 @@ class Select {
     this.disabled = true
 
     this.input.setAttribute('disabled', 'disabled')
-    this.root.classList.add('is-disabled')
+    this.element.classList.add('is-disabled')
     return this
   }
 
@@ -193,7 +193,7 @@ class Select {
     this.disabled = false
 
     this.element.input.removeAttribute('disabled')
-    this.root.classList.remove('is-disabled')
+    this.element.classList.remove('is-disabled')
     return this
   }
 
@@ -237,9 +237,9 @@ class Select {
     this.input.value = value
 
     if (value) {
-      this.root.classList.remove('is-empty')
+      this.element.classList.remove('is-empty')
     } else {
-      this.root.classList.add('is-empty')
+      this.element.classList.add('is-empty')
     }
 
     this.emit('change', value)
@@ -272,9 +272,9 @@ class Select {
     // console.log('_handleInputKeyPress', e);
 
     if (this.get('value') === '') {
-      this.root.classList.add('is-empty')
+      this.element.classList.add('is-empty')
     } else {
-      this.root.classList.remove('is-empty')
+      this.element.classList.remove('is-empty')
     }
 
     this.emit('change', this.getValue())
@@ -293,7 +293,7 @@ class Select {
   focus () {
     if (this.disabled === true) return this
 
-    this.root.classList.add('is-focused')
+    this.element.classList.add('is-focused')
     if (this.input !== document.activeElement) { this.input.focus() }
     return this
   }
@@ -303,7 +303,7 @@ class Select {
    * @return {?} [description]
    */
   blur () {
-    this.root.classList.remove('is-focused')
+    this.element.classList.remove('is-focused')
     return this
   }
   /**

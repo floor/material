@@ -18,7 +18,7 @@ export default {
    * @return {?}           [description]
    */
   insert (container, context) {
-    var element = this.root
+    var element = this.element
 
     this.insertElement(element, container, context)
 

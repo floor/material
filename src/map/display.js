@@ -82,24 +82,24 @@ export default {
   },
 
   updateRoot () {
-    this.offsetX = this.screen.width - this.root.offsetWidth
-    this.offsetY = this.screen.height - this.root.offsetHeight
+    this.offsetX = this.screen.width - this.element.offsetWidth
+    this.offsetY = this.screen.height - this.element.offsetHeight
 
     // console.log('--', this.offsetX / 2 + 'px')
 
-    this.root.style.left = (this.offsetX / 2) + 'px'
-    this.root.style.top = (this.offsetY / 2) + 'px'
+    this.element.style.left = (this.offsetX / 2) + 'px'
+    this.element.style.top = (this.offsetY / 2) + 'px'
 
     // if (isTouchScreen()) {
-    //   this.root.style.top = (this.offsetY / 2) + 70 + 'px'
+    //   this.element.style.top = (this.offsetY / 2) + 70 + 'px'
     // } else {
-    //   this.root.style.top = -1200 + 'px'
+    //   this.element.style.top = -1200 + 'px'
     // }
   },
 
   updateMap () {
-    var offsetX = this.root.offsetWidth - this.map.offsetWidth
-    // var offsetY = this.root.height - this.map.offsetHeight
+    var offsetX = this.element.offsetWidth - this.map.offsetWidth
+    // var offsetY = this.element.height - this.map.offsetHeight
 
     // console.log('--', this.offsetX / 2 + 'px')
 

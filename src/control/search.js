@@ -40,32 +40,32 @@ class Search {
    * @return {Object} This class instance
    */
   build () {
-    this.root = document.createElement('div')
-    this.root.classList.add('search')
+    this.element = document.createElement('div')
+    this.element.classList.add('search')
 
     if (this.options.class !== 'search') {
-      this.root.classList.add(this.options.class)
+      this.element.classList.add(this.options.class)
     }
 
     if (this.options.icon) {
       this.icon = document.createElement('i')
       this.icon.classList.add('icon')
       this.icon.innerHTML = this.options.icon
-      this.root.appendChild(this.icon)
+      this.element.appendChild(this.icon)
     }
 
     this.input = document.createElement('input')
     this.input.classList.add('input')
-    this.root.appendChild(this.input)
+    this.element.appendChild(this.input)
 
     this.cancel = new Button({
-      container: this.root,
+      container: this.element,
       class: 'clear',
       icon: this.options.iconCancel
     })
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
 
     return this
@@ -90,8 +90,8 @@ class Search {
   }
 
   set (email) {
-    this.root.innerHTML = email
-    this.root.setAttribute('href', 'mailto:' + email)
+    this.element.innerHTML = email
+    this.element.setAttribute('href', 'mailto:' + email)
   }
 }
 

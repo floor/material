@@ -1,7 +1,7 @@
 'use strict'
 
-import create from './component/create'
-import insert from './component/insert'
+import create from './mixin/create'
+import insert from './mixin/insert'
 import emitter from './module/emitter'
 
 import offset from './element/offset'
@@ -44,11 +44,11 @@ class Tabs {
    * @return {Object} This class instance
    */
   build () {
-    this.root = create(this.options)
+    this.element = create(this.options)
     this.tab = { }
     if (this.options.list) {
       this.list = new List({
-        // root: this.root,
+        // root: this.element,
         tag: 'div',
         list: this.options.list,
         target: '.material-button',
@@ -75,11 +75,11 @@ class Tabs {
           this.selected = item
           this.click(item)
         }
-      }).insert(this.root)
+      }).insert(this.element)
     }
 
     this.indicator = create(this.options.indicator)
-    this.insertElement(this.indicator, this.root)
+    this.insertElement(this.indicator, this.element)
 
     if (this.options.container) {
       this.insert(this.options.container)
@@ -95,8 +95,8 @@ class Tabs {
   }
 
   click (item, silent) {
-    // console.log('clickitem', item, this.root);
-    var or = offset(this.root)
+    // console.log('clickitem', item, this.element);
+    var or = offset(this.element)
     var o = offset(item)
     this.indicator.setAttribute('style', 'width: ' + o.width + 'px; left: ' + (o.left - or.left) + 'px;')
 

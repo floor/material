@@ -1,8 +1,8 @@
-import EventEmitter from '../component/emitter'
+import EventEmitter from '../mixin/emitter'
 // menu related modules
 import build from '../module/build'
 import bindEvents from '../module/events'
-import display from '../module/display'
+import display from '../mixin/display'
 
 import Element from '../element'
 import Button from './button'

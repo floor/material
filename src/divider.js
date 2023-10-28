@@ -1,7 +1,7 @@
 'use strict'
 
-import create from './component/create'
-import insert from './component/insert'
+import create from './mixin/create'
+import insert from './mixin/insert'
 
 var defaults = {
   prefix: 'material',
@@ -45,10 +45,10 @@ class Divider {
    * @return {Object} This class instance
    */
   build () {
-    this.root = create(this.options)
+    this.element = create(this.options)
 
     if (this.options.text) {
-      this.root.textContent = this.options.text
+      this.element.textContent = this.options.text
     }
 
     if (this.options.container) {

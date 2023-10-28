@@ -1,3 +1,4 @@
+import dom from '../module/dom'
 
 export default {
   toggle () {
@@ -31,9 +32,9 @@ export default {
     // console.log('hide')
     // if (this.element.style.display === 'none') return
     // clearTimeout(this.displayTimeout)
-    // this._display = getComputedStyle(this.root).display
+    // this._display = getComputedStyle(this.element).display
 
-    if (!this.root) return
+    if (!this.element) return
 
     this.element.classList.remove('show')
     this.visible = false
@@ -54,8 +55,8 @@ export default {
   },
 
   destroy () {
-    // console.log('destroy', this.options.transition, this.root)
-    if (this.options.transition && this.root) {
+    // console.log('destroy', this.options.transition, this.element)
+    if (this.options.transition && this.element) {
       this.element.classList.remove('show')
 
       if (this.underlay) {
@@ -63,26 +64,13 @@ export default {
       }
 
       setTimeout(() => {
-        this.removeChild()
+        dom.destroy(this.element)
       }, this.options.transition)
     } else {
-      this.removeChild()
+      dom.destroy(this.element)
     }
+
 
    this.emit?.('destroy')
-  },
-
-  removeChild () {
-    if (this.root && this.element.parentNode) {
-      this.element.parentNode.removeChild(this.root)
-      this.root = null
-    }
-
-    if (this.underlay && this.underlay.parentNode) {
-      this.underlay.parentNode.removeChild(this.underlay)
-    }
-
-    this.emit?.('remove')
-    return this
   }
 }

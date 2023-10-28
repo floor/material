@@ -24,7 +24,7 @@ export default {
     this.dataStore[info[this.dataId]] = info
     // console.log('data', this.data.length, this.data)
 
-    if (window.getComputedStyle(this.root, null).display === 'none') {
+    if (window.getComputedStyle(this.element, null).display === 'none') {
       this.virtual.items = this.data
     } else {
       this.virtual.update(this.data)

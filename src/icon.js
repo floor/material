@@ -1,6 +1,6 @@
 'use strict'
 
-import insert from './component/insert'
+import insert from './mixin/insert'
 import css from './module/css'
 
 var defaults = {
@@ -55,11 +55,11 @@ class Icon {
 
     this.element = this.element || {}
 
-    this.root = document.createElement(tag)
-    css.add(this.root, this.options.prefix + '-' + this.options.class)
+    this.element = document.createElement(tag)
+    css.add(this.element, this.options.prefix + '-' + this.options.class)
 
-    if (options.css) { css.add(this.root, options.css) }
-    // css.add(this.root, this.options.class + '-adjust');
+    if (options.css) { css.add(this.element, options.css) }
+    // css.add(this.element, this.options.class + '-adjust');
 
     if (this.options.container) {
       this.insert(this.options.container)
@@ -73,10 +73,10 @@ class Icon {
    */
   set (value) {
     if (value) {
-      if (this.root.innerText) {
-        this.root.innerText = value
+      if (this.element.innerText) {
+        this.element.innerText = value
       } else {
-        this.root.textContent = value
+        this.element.textContent = value
       }
 
       return this

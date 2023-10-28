@@ -41,17 +41,17 @@ class Button {
    * @return {Object} This class instance
    */
   build () {
-    this.root = document.createElement(this.options.tag)
+    this.element = document.createElement(this.options.tag)
 
     if (this.options.class !== 'button') {
-      this.root.classList.add('button')
+      this.element.classList.add('button')
     }
 
-    this.root.classList.add(this.options.class)
+    this.element.classList.add(this.options.class)
     this.styleAttributes()
 
     if (this.options.text) {
-      this.root.innerHTML = this.options.text
+      this.element.innerHTML = this.options.text
     }
 
     if (this.options.label) {
@@ -63,33 +63,33 @@ class Button {
 
   setup () {
     if (this.options.data) {
-      dataset(this.root, this.options.data)
+      dataset(this.element, this.options.data)
     }
 
     if (this.options.type) {
-      this.root.setAttribute('type', this.options.type)
+      this.element.setAttribute('type', this.options.type)
     } else {
-      this.root.setAttribute('type', 'button')
+      this.element.setAttribute('type', 'button')
     }
 
     if (this.options.name) {
-      this.root.setAttribute('name', this.options.name)
+      this.element.setAttribute('name', this.options.name)
     }
 
-    this.root.setAttribute('aria-label', this.options.text || this.options.label || this.options.class)
+    this.element.setAttribute('aria-label', this.options.text || this.options.label || this.options.class)
 
     if (this.options.tooltip) {
-      this.root.setAttribute('data-tooltip', this.options.tooltip)
+      this.element.setAttribute('data-tooltip', this.options.tooltip)
     }
 
     if (this.options.case) {
-      this.root.classList.add(this.options.case + '-case')
+      this.element.classList.add(this.options.case + '-case')
     }
   }
 
   append (container) {
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
   }
 
@@ -97,7 +97,7 @@ class Button {
     if (this.options.label) {
       this.label = document.createElement('label')
       this.label.innerHTML = this.options.label
-      this.root.appendChild(this.label)
+      this.element.appendChild(this.label)
     }
   }
 
@@ -105,26 +105,26 @@ class Button {
     if (this.options.icon) {
       this.label = document.createElement('label')
       this.label.innerHTML = this.options.label
-      this.root.appendChild(this.label)
+      this.element.appendChild(this.label)
     }
   }
 
   styleAttributes () {
     if (this.options.style) {
-      this.root.classList.add('style-' + this.options.style)
+      this.element.classList.add('style-' + this.options.style)
     }
 
     if (this.options.color) {
-      this.root.classList.add('color-' + this.options.color)
+      this.element.classList.add('color-' + this.options.color)
     }
 
     if (this.options.bold) {
-      this.root.classList.add('bold')
+      this.element.classList.add('bold')
     }
   }
 
   attach () {
-    this.root.addEventListener('click', (ev) => {
+    this.element.addEventListener('click', (ev) => {
       this.emit('click', ev)
     })
   }
@@ -138,7 +138,7 @@ class Button {
   set (prop, value) {
     switch (prop) {
       case 'value':
-        this.root.value = value
+        this.element.value = value
         break
       case 'label':
         if (this.ui.label) {
@@ -151,7 +151,7 @@ class Button {
         }
         break
       default:
-        this.root.value = value
+        this.element.value = value
     }
 
     return this
@@ -166,24 +166,24 @@ class Button {
   get (prop, value) {
     switch (prop) {
       case 'value':
-        return this.root.value
+        return this.element.value
       case 'label':
         return this.ui.label.innerHTML
       default:
-        return this.root.value
+        return this.element.value
     }
   }
 
   disable () {
-    this.root.disabled = true
+    this.element.disabled = true
   }
 
   enable () {
-    this.root.disabled = false
+    this.element.disabled = false
   }
 
   destroy () {
-    this.root.parentNode.removeChild(this.root)
+    this.element.parentNode.removeChild(this.element)
   }
 }
 
