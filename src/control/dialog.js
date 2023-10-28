@@ -1,5 +1,3 @@
-'use strict'
-
 // dialog related modules
 import emitter from '../module/emitter'
 import attach from '../module/attach'
@@ -27,7 +25,7 @@ let defaults = {
     ]
   ],
   events: [
-    ['root.click', 'onClickRoot'],
+    ['element.click', 'onClickRoot'],
     ['surface.click', 'onClick'],
     ['ui.ok.click', 'ok'],
     ['ui.cancel.click', 'cancel'],
@@ -61,6 +59,8 @@ class Dialog {
   build () {
     this.root = document.createElement('div')
     this.root.classList.add('dialog')
+
+    this.element = this.root
 
     if (this.options.class !== 'dialog') {
       this.root.classList.add(this.options.class)
@@ -149,6 +149,7 @@ class Dialog {
   }
 
   onClickRoot (e) {
+    console.log('onClickRoot')
     e.stopPropagation()
     if (!this.options.modal) {
       this.destroy()

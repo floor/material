@@ -56,6 +56,10 @@ class Button {
   build () {
     this.root = document.createElement(this.options.tag)
 
+    this.element = this.root
+
+    // console.log('class', this.options.class)
+
     if (this.options.class !== 'button') {
       this.root.setAttribute('class', 'button ' + this.options.class)
     } else {

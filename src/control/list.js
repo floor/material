@@ -1,9 +1,22 @@
-import addClass from './module/addclass'
+// menu related modules
+import emitter from '../module/emitter'
+import attach from '../module/attach'
+import build from '../module/build'
+import display from '../module/display'
+
+import Layout from '../layout'
+import Element from '../element'
+import Button from './text'
 
 const defaults = {
-  class: 'text',
-  tag: 'span',
-  seprator: ' | '
+  class: 'list',
+  layout: [
+    [Element, 'main', { tag: 'ul' }]
+  ],
+  item: [Text, { tag: 'li' }],
+  events: [
+    ['ui.main.click', 'select']
+  ]
 }
 
 class List {
@@ -14,40 +27,15 @@ class List {
    */
   constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
-
-    // console.log('options', this.options)
+    // implement modules
+    Object.assign(this, emitter, build, attach, display)
 
     this.build()
 
     return this
   }
 
-  /**
-   * Build Method
-   * @return {Object} This class instance
-   */
-  build () {
-    this.root = document.createElement(this.options.tag)
-    addClass(this.root, this.options.class)
-
-    if (this.options.class !== 'text') {
-      this.root.classList.add('text')
-    }
-
-    if (this.options.list) {
-      this.set(this.options.list)
-    }
-
-    if (this.options.container) {
-      this.options.container.appendChild(this.root)
-    }
-
-    return this
-  }
-
-  set (list) {
-    var text = ''
-
+  add (items) {
     for (var i = 0; i < list.length; i++) {
       if (i < list.length - 1) {
         text = text + list[i] + this.options.seprator
@@ -67,6 +55,8 @@ class List {
       this.root.innerHTML = this.root.innerHTML + ' '
     }
   }
+
+  select()
 
   setText (text) {
     // console.log('setText', text)

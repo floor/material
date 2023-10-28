@@ -50,7 +50,11 @@ class Text {
 
     var label = this.options.label || ''
 
-    this.root.innerHTML = label + text
+    if (this.options.textFirst) {
+      this.root.innerHTML = text + label
+    } else {
+      this.root.innerHTML = label + text
+    }
 
     if (this.options.spaceAfter) {
       this.root.innerHTML = this.root.innerHTML + ' '

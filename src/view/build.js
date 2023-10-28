@@ -1,5 +1,5 @@
 import scrollbar from '../module/scrollbar'
-import dataset from './dataset'
+import dataset from '../module/dataset'
 import Layout from '../layout'
 
 export default {
