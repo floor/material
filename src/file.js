@@ -1,56 +1,26 @@
-import emitter from '../module/emitter'
-import dataset from '../view/dataset'
+import EventEmitter from './mixin/emitter'
+
+import build from './module/build'
+import dataset from './module/dataset'
 import attributes from './module/attributes'
 
-const defaults = {
-  class: 'file',
-  attributes: ['name', 'accept', 'required', 'disabled', 'multiple']
-}
-
 class File {
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
-  constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, emitter)
-
-    this.build()
-    this.attach()
-
-    return this
+  static defaults = {
+    class: 'file',
+    attributes: ['name', 'accept', 'required', 'disabled', 'multiple']
   }
 
-  /**
-   * Build Method
-   * @return {Object} This class instance
-   */
-  build () {
-    this.element = document.createElement('div')
-    this.element.classList.add('file')
-
-    if (this.options.class !== 'file') {
-      this.element.classList.add(this.options.class)
-    }
-
+  constructor (options) {
+    this.init(options)   
+    this.build()
     this.buildLabel()
     this.buildInput()
+    this.attach()
+  }
 
-    if (this.options.data) {
-      dataset(this.element, this.options.data)
-    }
-
-    if (this.options.focus) {
-      this.input.focus()
-    }
-
-    if (this.options.container) {
-      this.options.container.appendChild(this.element)
-    }
-
-    return this
+  init (options) {
+    this.options = Object.assign({}, File.defaults, options || {})
+    Object.assign(this, build)
   }
 
   buildLabel () {

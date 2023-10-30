@@ -61,7 +61,7 @@ export default {
     }
 
     // console.log('showSearch')
-    this.ui['filter'].root.classList.add('selected')
+    this.ui['filter'].element.classList.add('selected')
     this.ui['filter-input'].classList.add('show')
 
     // this.ui['search-list'].classList.add('show')
@@ -74,7 +74,7 @@ export default {
    */
   hideFilter () {
     // console.log('hideSearch')
-    this.ui['filter'].root.classList.remove('selected')
+    this.ui['filter'].element.classList.remove('selected')
     this.ui['filter-input'].classList.remove('show')
     // this.ui['search-list'].classList.remove('show')
     // this.ui.body.classList.remove('hide')

@@ -1,5 +1,3 @@
-'use strict'
-
 import insert from './element/insert'
 import css from './module/css'
 import emitter from './module/emitter'

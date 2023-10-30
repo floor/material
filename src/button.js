@@ -1,146 +1,192 @@
-'use strict'
+import EventEmitter from './mixin/emitter'
 
-import create from './mixin/create'
-import control from './mixin/control'
+import build from './module/build'
+import display from './mixin/display'
+import bindEvents from './module/events'
+
+import dataset from './module/dataset'
 import ripple from './module/ripple'
 
-import insert from './element/insert'
+class Button extends EventEmitter{
+  static isComponent () {
+    return true
+  }
 
-import emitter from './module/emitter'
-import attach from './module/attach'
+  static defaults = {
+    class: 'button',
+    tag: 'button',
+    modules: [build, bindEvents],
+    styles: ['style', 'color'],
+    ripple: true,
+    stopPropagation: false,
+    events: [
+      ['element.click', 'click'],
+      ['element.mousedown', 'mousedown'],
+      ['element.mouseup', 'mouseup'],
+      ['element.mouseleave', 'mouseup'],
+      ['element.touchstart', 'mousedown'],
+      ['element.touchend', 'mouseup']
+    ]
+  }
 
-const defaults = {
-  prefix: 'material',
-  class: 'button',
-  tag: 'button',
-  ripple: true,
-  events: [
-    ['root.click', 'handleClick'],
-    ['root.mouseover', 'handleMouseOver']
-  ]
-}
-
-/**
- * Class that represents a button
- * @class
- * @since 0.0.1
- * @example
- * var button = new Button({
- *   label: 'Button raised',
- *   type: 'raised',
- *   color: 'primary'
- * }).on('click', function(e) {
- *   console.log('button click', e);
- * }).insert(document.body);
- */
-class Button {
   /**
-   * The init method of the Button class
-   * @param  {Object} options [description]
-   * @private
-   * @return {Object} The class instance
+   * Constructor
+   * @param  {Object} options - Component options
+   * @return {Object} Class instance
    */
   constructor (options) {
+    super()
+
     this.init(options)
     this.build()
     this.setup()
-    this.attach()
+    this.bindEvents()
 
-    this.emit('ready')
+    if (this.options.container) {
+      this.append(this.options.container)
+    }
 
     return this
   }
 
-  /**
-   * [init description]
-   * @param  {?} options [description]
-   * @return {?}         [description]
-   */
   init (options) {
-    this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, control, emitter, attach)
+    this.options = Object.assign({}, Button.defaults, options || {})
+    Object.assign(this, build, display, bindEvents)
 
-    this.element = this.element || {}
-
-    // init module$
-
-    this.emit('init')
   }
 
-  /**
-   * Build button's method
-   * @override
-   * @return {void}
-   */
-  build () {
-    this.element = {}
+  setup () {
+    this.styleAttributes()
 
-    this.element = create(this.options)
+    this.buildIcon()
+    this.buildLabel()
 
-    this.options.label = this.options.label || this.options.text
+    if (this.options.text) {
+      this.element.innerHTML = this.element.innerHTML + this.options.text
+    }
 
-    this.element.setAttribute('aria-label', this.options.label || this.options.name)
+    if (this.options.data) {
+      dataset(this.element, this.options.data)
+    }
+
+    if (this.options.type) {
+      this.element.setAttribute('type', this.options.type)
+    } else {
+      this.element.setAttribute('type', 'button')
+    }
+
+    if (this.options.name) {
+      this.element.setAttribute('name', this.options.name)
+    }
+
+    if (this.options.value) {
+      this.element.setAttribute('value', this.options.value)
+    }
 
     if (this.options.title) {
       this.element.setAttribute('title', this.options.title)
     }
 
-    this.label(this.options.label)
-    this.icon(this.options.icon)
+    this.element.setAttribute('aria-label', this.options.text || this.options.label || this.options.class)
 
     if (this.options.tooltip) {
-      this.element.dataset.tooltip = this.options.tooltip
+      this.element.setAttribute('data-tooltip', this.options.tooltip)
     }
 
+    if (this.options.case) {
+      this.element.classList.add(this.options.case + '-case')
+    }
+
+    if (this.options.ripple) ripple(this.element)
+  }
+
+  append (container) {
+    container = container || this.options.container
     if (this.options.container) {
-      if (this.options.container.root) {
-        this.container = this.options.container.root
-      } else {
-        this.container = this.options.container
-      }
-      insert(this.element, this.options.container)
+      container.appendChild(this.element)
+    }
+  }
+
+  buildLabel () {
+    if (!this.options.label) return
+
+    if (this.options.label) {
+      this.label = document.createElement('label')
+      this.label.classList.add('label')
+      this.label.innerHTML = this.options.label
+
+      this.element.appendChild(this.label)
+    }
+  }
+
+  buildIcon () {
+    if (!this.options.icon) return
+
+    if (this.options.icon) {
+      this.icon = document.createElement('i')
+      this.icon.classList.add('icon')
+      this.icon.innerHTML = this.options.icon
+
+      this.element.appendChild(this.icon)
+    }
+  }
+
+  styleAttributes () {
+    if (this.options.style) {
+      this.element.classList.add('style-' + this.options.style)
     }
 
-    if (this.options.ripple) {
-      ripple(this.element)
+    if (this.options.size) {
+      this.element.classList.add(this.options.size + '-size')
+    }
+
+    if (this.options.color) {
+      this.element.classList.add('color-' + this.options.color)
+    }
+
+    if (this.options.bold) {
+      this.element.classList.add('bold')
+    }
+  }
+
+  set (prop, value) {
+    // console.log('set', this.element, prop, value)
+    switch (prop) {
+      case 'value':
+        this.element.value = value
+        break
+      case 'label':
+        if (this.label) {
+          this.label.innerHTML = value
+        }
+        break
+      case 'text':
+        this.element.innerHTML = value
+        break
+      case 'icon':
+        if (this.icon) {
+          this.icon.innerHTML = value
+        }
+        break
+      default:
+        // console.log('prop', prop)
+        this.element.innerHTML = prop
     }
 
     return this
   }
 
-  /**
-   * insert method
-   * @param  {?} container [description]
-   * @param  {?} context   [description]
-   * @return {?}           [description]
-   */
-  insert (container, context) {
-    insert(this.element, container, context)
-
-    return this
+  setLabel (value) {
+    // console.log('setLabel', value)
+    this.label.innerHTML = value
   }
 
-  /**
-   * Setup method
-   * @return {?} [description]
-   */
-  setup () {
-    this.element.input = this.element
-
-    if (this.options.name) {
-      this.element.dataset.name = this.options.name
-    }
-
-    // if (this.options.label) {
-    //   this.element.title = this.options.label
-    // }
-
-    if (this.options.content) {
-      this.element.innerHTML = this.options.content
-    }
-
-    if (this.options.disabled === true) {
-      this.disable()
+  setText (value) {
+    // console.log('setText', value)
+    if (this.label) {
+      this.setLabel(value)
+    } else {
+      this.element.innerHTML = value
     }
   }
 
@@ -150,85 +196,39 @@ class Button {
    * @param {string} value
    * @return {Object} The class instance
    */
-  set (prop, value) {
+  get (prop, value) {
     switch (prop) {
-      case 'disabled':
-        this.disable(value)
-        break
       case 'value':
-        this.setValue(value)
-        break
+        return this.element.value
       case 'label':
-        this.setLabel(value)
-        break
+        return this.label.innerHTML
       default:
-        this.setValue(prop)
-    }
-
-    return this
-  }
-
-  /**
-   * [buildLabel description]
-   * @return {Object} The class instance
-   */
-  setLabel (label) {
-    label = label || this.options.label
-    var text = label
-
-    if (label === null || label === false) {
-      text = ''
-    } else if (label) {
-      text = label
-    } else if (this.options.label) {
-      text = label
-    } else {
-      text = this.options.name
-    }
-
-    if (!this.element.label) {
-      this.label(text)
-    } else {
-      this.element.label.textContent = text
+        return this.element.value
     }
   }
 
-  destroy () {
-    this.container.removeChild(this.element)
+  disable () {
+    this.element.disabled = true
   }
 
-  /**
-   * method handleClick
-   * @param  {event} e
-   * @return {void}
-   */
-  handleClick (e) {
-    e.preventDefault()
-
-    if (this.disabled === true) return
-    if (this.options.upload) return
-
-    // this.publish('click');
-    this.emit('click', e)
-
-    return this
+  enable () {
+    this.element.disabled = false
   }
 
-  /**
-   * method handleClick
-   * @param  {event} e
-   * @return {void}
-   */
-  handleMouseOver (e) {
-    e.preventDefault()
-
-    // console.log('mouse over', e.target)
-
-    if (e.target.dataset.tooltip) {
-      // console.log(e.target.dataset.tooltip)
+  click (ev) {
+    if (this.options.stopPropagation === true) {
+      ev.stopPropagation()
     }
 
-    return this
+    this.emit('click', ev)
+  }
+
+  mousedown (ev) {
+    this.element.classList.add('pushed')
+  }
+
+  mouseup (ev) {
+    this.element.classList.remove('pushed')
   }
 }
 

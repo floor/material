@@ -1,32 +1,29 @@
-import emitter from '../module/emitter'
+import EventEmitter from './mixin/emitter'
 
-const defaults = {
-  class: 'switcher',
-  tag: 'div',
-  list: [],
-  first: false,
-  mode: 'unique',
-  allowEmpty: false
-}
-
-class Switcher {
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
+class Switcher extends EventEmitter{
+  static defaults = {
+    class: 'switcher',
+    tag: 'div',
+    list: [],
+    first: false,
+    mode: 'unique',
+    allowEmpty: false
+  }
+  
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, emitter)
+    super()
 
+    this.init(options)
     this.build()
     this.attach()
 
     if (this.options.default) {
       this.selectByName(this.options.default, true)
     }
+  }
 
-    return this
+  init(options) {
+    this.options = Object.assign({}, Switcher.defaults, options || {})
   }
 
   build () {

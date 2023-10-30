@@ -1,9 +1,9 @@
 import scrollbar from '../module/scrollbar'
-import dataset from '../view/dataset'
+import dataset from '../module/dataset'
 
 import Layout from '../layout'
 import Virtual from './virtual'
-import Loading from '../control/loading'
+import Loading from '../loading'
 
 export default {
   build (data) {

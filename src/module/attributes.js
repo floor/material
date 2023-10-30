@@ -1,6 +1,6 @@
 const special = ['required', 'disabled', 'multiple', 'checked']
 
-function setAttributes (element, o) {
+function attributes (element, o) {
   // console.log('attributes', o.attributes, element)
 
   if (!element) return
@@ -18,4 +18,4 @@ function setAttributes (element, o) {
   }
 }
 
-export default setAttributes
+export default attributes

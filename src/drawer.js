@@ -1,5 +1,3 @@
-'use strict'
-
 import init from './mixin/init'
 import insert from './element/insert'
 import classify from './module/classify'

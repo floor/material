@@ -1,8 +1,8 @@
 import build from './module/build'
 
-class AppBar {
+class Navigation {
   static defaults = {
-    class: 'appbar'
+    class: 'navigation'
   }
 
   constructor (options) {
@@ -11,9 +11,9 @@ class AppBar {
   }
 
   init (options) {
-    this.options = Object.assign({}, AppBar.defaults, options || {})
+    this.options = Object.assign({}, Navigation.defaults, options || {})
     Object.assign(this, build)
   }
 }
 
-export default AppBar
+export default Navigation

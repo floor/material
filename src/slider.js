@@ -1,5 +1,3 @@
-'use strict'
-
 import init from './mixin/init'
 import build from './element/build'
 import control from './mixin/control'

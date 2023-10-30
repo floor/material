@@ -1,8 +1,9 @@
 {
   "name": "material",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "A lightweight implementation of Material Design Components - ES6",
   "main": "index.js",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@gitlab.com/alkaloid/material.git"
@@ -39,5 +40,8 @@
     "watch": "npm-run-all --parallel reload dev",
     "docs": "jsdoc src -r -d docs",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "fs-extra": "^11.1.1"
   }
 }

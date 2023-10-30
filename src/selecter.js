@@ -1,12 +1,12 @@
-import emitter from '..//module/emitter'
-import attach from '../module/attach'
-import dataset from '../view/dataset'
+import emitter from './module/emitter'
+import attach from './module/attach'
+import dataset from './view/dataset'
 import attributes from './module/attributes'
 import addClass from './module/addclass'
 
 // ui
-import Layout from '../layout'
-import Element from '../element'
+import Layout from './layout'
+import Element from './element'
 import Button from './button'
 
 const defaults = {

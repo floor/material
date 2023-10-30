@@ -1,69 +1,90 @@
-'use strict'
+// base class
+import EventEmitter from './mixin/emitter'
+// related modules
+import build from './module/build'
+import bindEvents from './module/events'
+import display from './mixin/display'
+// ui element
+import Text from './text'
+import Button from './button'
 
-// import modules
-import init from './mixin/init'
-import create from './element/create'
-import insert from './mixin/insert'
-import classify from './module/classify'
-// import components
-import Layout from './layout'
+class Snackbar extends EventEmitter {
+  static defaults = {
+    class: 'snackbar',
+    transition: 225,
+    duration: 4000,
+    close: false,
+    layout: [
+      [Text, 'text', { tag: 'span', class: 'text' }],
+      [Button, 'action', { class: 'action', type: 'link' }],
+      [Button, 'close', { class: 'close', type: 'action' }]
+    ],
+    events: [
+      ['ui.action.click', 'action'],
+      ['ui.close.click', 'destroy']
+    ]
+  };
 
-let defaults = {
-  prefix: 'material',
-  class: 'snackbar',
-  delay: 2000,
-  theme: 'dark'
-}
-
-class Snackbar {
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
+    super()
 
-    this.init()
-    this.build()
+    this.init(options)
+    this.build(this.constructor)
+    this.render()    
+    this.bindEvents()
     this.show()
+
+    if (this.options.duration)
+      setTimeout(()=>{
+        this.destroy()
+      }, this.options.duration)
   }
 
-  init () {
-    Object.assign(this, insert)
+  init(options) {
+    this.options = Object.assign({}, Snackbar.defaults, options || {})
+    Object.assign(this, build, bindEvents, display)
+
+    this.buildSnackbarContainer(this.options.container)
   }
 
-  /**
-   * build the component using the super method
-   * @return {Object} The class instance
-   */
-  build () {
-    var tag = this.options.tag || 'div'
+  buildSnackbarContainer (container = document.body) {
+    // console.log('buildSnackbarContainer', container)
 
-    this.element = create(tag)
-    classify(this.element, this.options)
+    let snackbarContainer = container.querySelector('.snackbars')
 
-    this.layout = new Layout(this.options.layout, this.element)
-  }
+    // console.log('snackbarContainer', snackbarContainer)
 
-  /**
-   *
-   * @return {[type]} [description]
-   */
-  show () {
-    setTimeout(() => {
-      this.element.classList.add('show')
-    }, 10)
-
-    if (this.options.delay) {
-      setTimeout(() => {
-        this.hide()
-      }, this.options.delay)
+    if (!snackbarContainer) {
+      this.options.container = document.createElement('div')
+      this.options.container.classList.add('snackbars')
+      container.appendChild(this.options.container)
+    } else {
+      this.options.container = snackbarContainer
     }
   }
 
-  hide () {
-    this.element.classList.remove('show')
+  render () {
+    this.ui.text.set(this.options.text)
+
+    if (this.options.action) {
+      this.ui.action.set(this.options.action)
+      this.ui.action.element.classList.add('show')
+    }
+
+    if (this.options.close) this.ui.close.element.classList.add('show')
+
+    return this
+  }
+
+  action () {
+    // console.log('action')
+    this.emit('action')
+    this.destroy()
+  }
+
+  close() {
+    // console.log('close')
+    this.destroy()
   }
 }
 

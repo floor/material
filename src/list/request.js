@@ -154,7 +154,7 @@ export default {
 
     }
 
-    if (this.ui.filter && this.ui.filter.root.classList.contains('selected')) {
+    if (this.ui.filter && this.ui.filter.element.classList.contains('selected')) {
       route = this.addParams(route, this.getFilter())
     }
 

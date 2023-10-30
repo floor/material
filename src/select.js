@@ -1,323 +1,108 @@
-'use strict'
+import EventEmitter from './mixin/emitter'
 
-import emitter from './module/emitter'
+import build from './module/build'
 import attach from './module/attach'
+import attributes from './module/attributes'
+import dataset from './view/dataset'
 
-var defaults = {
-  prefix: 'material',
-  class: 'textfield',
-  type: 'control',
-  tag: 'div',
-  events: [
-    ['input.change', '_onChange'],
-    ['input.focus', 'focus'],
-    ['input.blur', 'blur'],
-    // ['input.keypress', '_handleInputKeyPress',
-    ['input.keyup', '_handleInputKeyPress']
-    // ['input.mouseover', 'mouseover']
-    // ['input.change', '_onChange']
-    // 'input.keydown': '_handleInputKeyPress'
+class Select extends EventEmitter {
+  static defaults = {
+    type: 'list',
+    class: 'select',
+    first: null,
+    attributes: ['type', 'name', 'autocomplete', 'required']
+  }
 
-  ]
-}
-
-/**
- * Textfield class
- * @class
- */
-class Select {
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
+    super()
 
-    this.init()
+    this.init(options)
     this.build()
-    this.attach()
-
-    return this
-  }
-
-  /**
-   * init
-   * @param  {Object} options The class options
-   * @return {Object} The class instance
-   */
-  init () {
-    Object.assign(this, emitter, attach)
-
-    this.value = this.options.value
-
-    return this
-  }
-
-  mouseover () {
-    // console.log('mouseover')
-  }
-
-  /**
-   * [build description]
-   * @return {Object} The class instance
-   */
-  build () {
-    // create a new div as input element
-    var tag = this.options.tag || 'div'
-    this.element = document.createElement(tag)
-    this.element.classList.add(this.options.prefix + '-' + this.options.class)
-
     this.buildLabel()
     this.buildInput()
-    this.buildUnderline()
+    this.attach()
+  }
 
-    if (this.disabled) {
-      css.add(this.element, 'is-disabled')
-    }
-
-    // insert if container this.options is given
-    if (this.options.container) {
-      // console.log(this.name, opts.container);
-      insert(this.element, this.options.container)
-    }
+  init(options) {
+    this.options = Object.assign({}, Select.defaults, options || {})
+    Object.assign(this, build, attach, dataset)
   }
 
   buildLabel () {
-    this.label = document.createElement('label')
-    this.label.classList.add(this.options.class + '-label')
-    this.element.appendChild(this.label)
-
-    if (this.options.label !== false) {
-      this.setLabel()
+    if (this.options.label) {
+      this.label = document.createElement('span')
+      this.label.classList.add('label')
+      this.label.innerHTML = this.options.label
+      this.element.appendChild(this.label)
     }
   }
 
-  /**
-   * [_initInput description]
-   * @return {Object} The class instance
-   */
   buildInput () {
     this.input = document.createElement('select')
-    this.input.classList.add(this.options.class + '-input')
-    // this.input.setAttribute('type', 'text')
+    this.input.classList.add('input')
     this.element.appendChild(this.input)
+
+    this.input.addEventListener('change', () => {
+      // console.log('change', this.input[this.input.selectedIndex].value)
+      this.emit('change', this.input[this.input.selectedIndex].value)
+    })
+
+    if (this.options.data) {
+      dataset(this.data, this.options.data)
+    }
+
+    attributes(this.input, this.options)
 
     if (this.options.options) {
       this.setOptions(this.options.options)
     }
-
-    // if (!this.options.value) {
-    //   this.element.classList.add('is-empty')
-    // }
-
-    if (this.readonly) {
-      this.input.setAttribute('readonly', 'readonly')
-      this.input.setAttribute('tabindex', '-1')
-    }
-
-    return this.input
   }
 
   setOptions (options) {
+    // console.log('buildCountry', this.input)
+
+    var first = this.options.first
+
+    if (first && first[0] && first[1]) {
+      this.input.options[0] = new Option(first[1], first[0])
+    }
+
     for (var i = 0; i < options.length; i++) {
-      this.add(options[i], options[i])
+      this.addOption(options[i][1], options[i][0])
     }
   }
 
-  /**
-   * _initUnderline
-   * @return {Object} The class instance
-   */
-  buildUnderline () {
-    this.underline = document.createElement('span')
-    this.underline.classList.add(this.options.class + '-underline')
-    this.element.appendChild(this.underline)
+  addOption (name, value) {
+    // console.log('addOption', name, value)
+    this.input.options[this.input.options.length] = new Option(name, value)
   }
 
-  /**
-   * Setter
-   * @param {string} prop
-   * @param {string} value
-   */
-  set (prop, value) {
-    switch (prop) {
-      case 'value':
-        this.setValue(value)
-        break
-      case 'label':
-        this.setLabel(value)
-        break
-      case 'disabled':
-        if (value === true) {
-          this.disable()
-        } else if (value === false) {
-          this.enable()
-        }
-        break
-      default:
-        this.setValue(prop)
-    }
+  set (value) {
+    // console.log('set', value)
+    this.input.value = value
 
     return this
   }
 
-  /**
-   * [buildLabel description]
-   * @return {Object} The class instance
-   */
-  setLabel (label) {
-    label = label || this.options.label
-    var text
-
-    if (label === null || label === false) {
-      text = ''
-    } else if (this.options.label) {
-      text = label
-    } else {
-      text = this.options.name
+  setLabel (value) {
+    // console.log('setLabel', value)
+    if (this.label) {
+      this.label.innerHTML = value
     }
-
-    this.label.textContent = text
   }
 
-  disable () {
-    this.disabled = true
-
-    this.input.setAttribute('disabled', 'disabled')
-    this.element.classList.add('is-disabled')
-    return this
+  setText (value) {
+    this.setLabel(value)
   }
 
-  enable () {
-    this.disabled = false
+  get () {
+    var value = null
 
-    this.element.input.removeAttribute('disabled')
-    this.element.classList.remove('is-disabled')
-    return this
-  }
-
-  /**
-   * Getter
-   * @param {string} prop
-   * @param {string} value
-   */
-  get (prop) {
-    var value
-
-    switch (prop) {
-      case 'value':
-        value = this.getValue()
-        break
-      case 'name':
-        value = this.name
-        break
-      default:
-        return this.getValue()
+    if (this.input[this.input.selectedIndex]) {
+      value = this.input[this.input.selectedIndex].value
     }
 
     return value
-  }
-
-  /**
-   * [getValue description]
-   * @return {Object} The class instance
-   */
-  getValue () {
-    // console.log('getValue', this);
-    return this.input.value
-  }
-
-  /**
-   * [setValue description]
-   * @param {string} value [description]
-   */
-  setValue (value) {
-    // console.log('setValue', this.options.name, value)
-    this.input.value = value
-
-    if (value) {
-      this.element.classList.remove('is-empty')
-    } else {
-      this.element.classList.add('is-empty')
-    }
-
-    this.emit('change', value)
-  }
-
-  _onChange (ev) {
-    // console.log('change', ev)
-
-    this.emit('change', ev.target.value)
-  }
-
-  /**
-   * [_initValue description]
-   * @return {Object} The class instance
-   */
-  _initValue () {
-    var opts = this.options
-
-    // create a new div as input element
-    if (opts.value) {
-      this.setValue(opts.value)
-    }
-  }
-
-  /**
-   * [_onFocus description]
-   * @return {Object} The class instance
-   */
-  _handleInputKeyPress (e) {
-    // console.log('_handleInputKeyPress', e);
-
-    if (this.get('value') === '') {
-      this.element.classList.add('is-empty')
-    } else {
-      this.element.classList.remove('is-empty')
-    }
-
-    this.emit('change', this.getValue())
-  }
-
-  add (key, value, selected) {
-    selected = selected || false
-    var select = this.input
-    select.options[select.options.length] = new Option(value, key, selected, selected)
-  }
-
-  /**
-   * focus method
-   * @return {?} [description]
-   */
-  focus () {
-    if (this.disabled === true) return this
-
-    this.element.classList.add('is-focused')
-    if (this.input !== document.activeElement) { this.input.focus() }
-    return this
-  }
-
-  /**
-   * blur method
-   * @return {?} [description]
-   */
-  blur () {
-    this.element.classList.remove('is-focused')
-    return this
-  }
-  /**
-   * [setError description]
-   * @param {string} error Error description
-   */
-  setError (error) {
-    if (error) {
-      this.addClass('field-error')
-      if (this.error) { this.error.set('html', error) }
-    } else {
-      if (this.error) { this.removeClass('field-error') }
-      if (this.error) { this.error.set('html', '') }
-    }
   }
 }
 

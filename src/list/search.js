@@ -93,7 +93,7 @@ export default {
   toggleSearch (e) {
     e.stopPropagation()
     // console.log('toggle search', this.ui.body)
-    if (!this.ui['search-input'].root.classList.contains('show')) {
+    if (!this.ui['search-input'].element.classList.contains('show')) {
       this.showSearch()
     } else {
       this.hideSearch()
@@ -114,12 +114,12 @@ export default {
     this.element.classList.add('search-mode')
 
     if (this.ui.search) {
-      this.ui.search.root.classList.add('selected')
+      this.ui.search.element.classList.add('selected')
     }
 
     if (this.ui['search-input']) {
       this.ui['search-input'].input.value = ''
-      this.ui['search-input'].root.classList.add('show')
+      this.ui['search-input'].element.classList.add('show')
       this.ui['search-input'].input.focus()
     }
 
@@ -139,10 +139,10 @@ export default {
     this.element.classList.remove('search-mode')
 
     if (this.ui.search) {
-      this.ui.search.root.classList.remove('selected')
+      this.ui.search.element.classList.remove('selected')
     }
     if (this.ui['search-input']) {
-      this.ui['search-input'].root.classList.remove('show')
+      this.ui['search-input'].element.classList.remove('show')
       this.ui['search-input'].input.value = ''
     }
     // this.ui['search-list'].classList.remove('show')

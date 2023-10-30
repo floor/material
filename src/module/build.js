@@ -4,12 +4,12 @@ import Layout from '../layout'
 export default {
   build () {
     this.element = document.createElement(this.options.tag || 'div')
-    // for backward compatibility
-    this.element = this.element
 
     const defaults = this.constructor.defaults || {}
 
-    this.element.classList.add(defaults.class)
+    if (defaults.base) this.element.classList.add(defaults.base)
+
+    if (defaults.class) this.element.classList.add(defaults.class)
 
     if (this.options.class !== defaults.class) {
       this.addClass(this.options.class)
@@ -19,7 +19,11 @@ export default {
       dataset(this.element, this.options.data)
     }
 
-    this.container = this.options.container
+    if (this.options.base === 'view') {
+      this.container = this.options.container || document.body
+    } else {
+      this.container = this.options.container
+    }
 
     if (this.container) this.appendTo(this.container)
 
@@ -40,5 +44,4 @@ export default {
     const list = c.split(' ')
     list.forEach(item => this.element.classList.add(item))
   }
-
 }

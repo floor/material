@@ -1,5 +1,3 @@
-'use strict'
-
 // import Component from './component';
 import create from './element/create'
 import classify from './module/classify'

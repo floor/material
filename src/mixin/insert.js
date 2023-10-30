@@ -2,21 +2,8 @@
 
 import dom from '../module/dom'
 
-/**
- * Inject method insert element to the domtree using Dom methods
- * @param {HTMLElement} container [description]
- * @param  {string} context - Injection context
- * @return {Object} This class intance
- */
 export default {
 
-  /**
-   * [insert description]
-   * @param  {?} container [description]
-   * @param  {?} context   [description]
-   * @param  {?} debug     [description]
-   * @return {?}           [description]
-   */
   insert (container, context) {
     var element = this.element
 
@@ -25,18 +12,9 @@ export default {
     return this
   },
 
-  /**
-   * [insertElement description]
-
-   * @param  {?} element   [description]
-   * @param  {?} container [description]
-   * @param  {?} context   [description]
-   * @param  {?} debug     [description]
-   * @return {?}           [description]
-   */
   insertElement (element, container, context) {
-    if (container && container.root) {
-      container = container.root
+    if (container && container.element) {
+      container = container.element
     }
 
     this.container = container

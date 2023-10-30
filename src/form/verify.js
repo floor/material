@@ -8,10 +8,10 @@ export default {
       var field = this.ui['info.' + list[i]]
 
       if (!this.layout.get(list[i]).get()) {
-        field.root.classList.add('textfield-error')
+        field.element.classList.add('textfield-error')
         ok = false
       } else {
-        field.root.classList.remove('textfield-error')
+        field.element.classList.remove('textfield-error')
       }
     }
 

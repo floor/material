@@ -1,106 +1,125 @@
-'use strict'
+import EventEmitter from './mixin/emitter'
 
-// import control from '../control';
-// import control from './mixin/control'
-import build from './element/build'
-import emitter from './module/emitter'
-import insert from './mixin/insert'
+// module
+import build from './module/build'
+import dataset from './module/dataset'
 import attach from './module/attach'
-import classify from './module/classify'
+import attributes from './module/attributes'
 
-let defaults = {
-  prefix: 'material',
-  class: 'switch',
-  type: 'control',
-  label: null,
-  checked: false,
-  error: false,
-  value: false,
-  disabled: false,
-  build: ['$root.material-switch', {},
-    ['input$input$switch-input', { type: 'checkbox' }],
-    ['span$control.switch-control', {},
-      ['span$track.switch-track', {},
-        ['span$knob.switch-knob', {}]
+// ui
+import Layout from './layout'
+import Element from './element'
+
+class Switch extends EventEmitter {
+  static defaults = {
+    class: 'switch',
+    attributes: ['type', 'name', 'required', 'checked'],
+    layout: [
+      [Element, 'input', { class: 'input', type: 'checkbox' }],
+      [Element, 'control', { class: 'control' },
+        [Element, 'track', { class: 'track' },
+          [Element, 'knob', { class: 'knob' }]
+        ]
       ]
     ],
-    ['label$label.switch-label']
-  ],
-  events: [
-    ['element.control.click', 'toggle'],
-    // ['element.label.click', 'toggle'],
-    // for accessibility purpose
-    ['element.input.click', 'toggle'],
-    ['element.input.focus', 'focus'],
-    ['element.input.blur', 'blur']
-    // ['element.input.keydown', 'keydown']
-  ]
-}
+    events: [
+      ['ui.control.click', 'toggle'],
+      // ['ui.label.click', 'toggle'],
+      // for accessibility purpose
+      ['ui.input.click', 'toggle'],
+      ['ui.input.focus', 'focus'],
+      ['ui.input.blur', 'blur']
+    ]
+  }
 
-/**
- * Switch class
- * @class
- * @extends Control
- */
-class Switch {
-  /**
-   * Constructor
-   * @param  {Object} options
-  - Component options
-   * @return {Object} Class instance
-   */
   constructor (options) {
+    super()
+
     this.init(options)
     this.build()
+    this.setup()
     this.attach()
-
-    return this
   }
 
-  /**
-   * Constructor
-   * @param  {Object} options The class options
-   * @return {Object} This class instance
-   */
   init (options) {
-    this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, emitter, attach, insert)
+    this.options = Object.assign({}, Switch.defaults, options || {})
+    Object.assign(this, build, attach, dataset)
 
     this.value = this.options.value
-
-    return this
   }
 
-  /**
-   * build method
-   * @return {Object} The class instance
-   */
-  build () {
-    this.element = build(this.options.build)
-    this.element = this.element.root
+  setup () {
+    this.styleAttributes()
 
-    classify(this.element, this.options)
+    this.buildIcon()
+    this.buildLabel()
 
-    if (this.options.disabled) {
-      this.disable()
+    if (this.options.data) {
+      dataset(this.root, this.options.data)
+    }
+
+    // console.log('attribute', this.ui.input, this.options)
+    attributes(this.ui.input, this.options)
+
+    if (this.options.checked) {
+      this.check(true)
     }
 
     if (this.value) {
       this.element.input.setAttribute('checked', 'checked')
     }
 
-    this.element.input.setAttribute('aria-label', this.options.name)
-
-    let text = this.options.label || this.options.text || ''
-
-    this.element.label.textContent = text
-    this.element.label.setAttribute('for', this.options.name)
-    if (this.options.checked) {
-      this.check(true)
+    if (this.options.tooltip) {
+      this.element.setAttribute('data-tooltip', this.options.tooltip)
     }
 
-    if (this.options.container) {
-      this.insert(this.options.container)
+    this.ui.input.setAttribute('aria-label', this.options.name)
+
+    if (this.options.case) {
+      this.element.classList.add(this.options.case + '-case')
+    }
+  }
+
+  buildLabel () {
+    // console.log('buildLabel', this.options.label)
+    if (!this.options.label) return
+
+    this.ui.label = document.createElement('label')
+    this.ui.label.classList.add('label')
+    this.ui.label.innerHTML = this.options.label
+
+    if (this.options.name) {
+      this.ui.label.setAttribute('for', this.options.name)
+    }
+
+    this.element.insertBefore(this.ui.label, this.ui.input)
+  }
+
+  buildIcon () {
+    if (!this.options.icon) return
+
+    this.ui.icon = document.createElement('i')
+    this.ui.icon.classList.add('icon')
+    this.ui.icon.innerHTML = this.options.icon
+
+    this.element.insertBefore(this.ui.icon, this.ui.input)
+  }
+
+  styleAttributes () {
+    if (this.options.style) {
+      this.element.classList.add('style-' + this.options.style)
+    }
+
+    if (this.options.size) {
+      this.element.classList.add(this.options.size + '-size')
+    }
+
+    if (this.options.color) {
+      this.element.classList.add('color-' + this.options.color)
+    }
+
+    if (this.options.bold) {
+      this.element.classList.add('bold')
     }
   }
 
@@ -114,6 +133,9 @@ class Switch {
     switch (prop) {
       case 'value':
         this.setValue(value, silent)
+        break
+      case 'text':
+        this.setValue(value)
         break
       case 'disabled':
         if (value === true) {
@@ -129,31 +151,29 @@ class Switch {
     return this
   }
 
+  setLabel (value) {
+    // console.log('setLabel', value)
+    if (this.ui.label) {
+      this.ui.label.innerHTML = value
+    }
+  }
+
+  setText (value) {
+    this.setLabel(value)
+  }
+
   get () {
     return this.value
   }
 
-  /**
-   * set switch value
-   * @param {boolean} value [description]
-   */
   getValue () {
     return this.value
   }
 
-  /**
-   * set switch value
-   * @param {boolean} value [description]
-   */
   setValue (value, silent) {
-    // console.log('setValue', value)
     this.check(value, silent)
   }
 
- /**
-   * [toggle description]
-   * @return {Object} The class instance
-   */
   toggle () {
     if (this.disabled) return
 
@@ -168,15 +188,11 @@ class Switch {
     return this
   }
 
-  /**
-   * Set checkbox value
-   * @param {boolean} value [description]
-   */
   check (checked, silent) {
     // console.log('check', checked, silent)
     if (checked === true) {
       this.element.classList.add('is-checked')
-      this.element.input.checked = true
+      this.ui.input.checked = true
       this.checked = true
       this.value = true
       if (!silent) {
@@ -184,7 +200,7 @@ class Switch {
       }
     } else {
       this.element.classList.remove('is-checked')
-      this.element.input.checked = false
+      this.ui.input.checked = false
       this.checked = false
       this.value = false
       if (!silent) {
@@ -194,22 +210,14 @@ class Switch {
     return this
   }
 
-  /**
-   * [_onInputFocus description]
-   * @return {?} [description]
-   */
   focus () {
     if (this.disabled === true) return this
 
     this.element.classList.add('is-focused')
-    if (this.element.input !== document.activeElement) { this.element.input.focus() }
+    if (this.ui.input !== document.activeElement) { this.ui.input.focus() }
     return this
   }
 
-  /**
-   * [_onInputBlur description]
-   * @return {?} [description]
-   */
   blur () {
     this.element.classList.remove('is-focused')
     return this

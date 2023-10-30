@@ -1,5 +1,3 @@
-'use strict'
-
 import events from './mixin/events'
 import control from './mixin/control'
 import label from './mixin/label'

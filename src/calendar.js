@@ -1,5 +1,3 @@
-'use strict'
-
 import create from './element/create'
 import insert from './element/insert'
 import css from './module/css'

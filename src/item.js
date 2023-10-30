@@ -1,5 +1,3 @@
-'use strict'
-
 import Layout from './layout'
 
 import create from './mixin/create'

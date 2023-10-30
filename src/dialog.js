@@ -1,213 +1,166 @@
-'use strict'
-
 // dialog related modules
-import events from './mixin/events'
 import emitter from './module/emitter'
-import controller from './mixin/controller'
 import attach from './module/attach'
-import insert from './mixin/insert'
-import event from './element/event.js'
-import css from './module/css'
+import display from './view/display'
 
+import Element from './element'
 import Text from './text'
 import Button from './button'
-import Toolbar from './toolbar'
 import Layout from './layout'
 
-let defaults = {
-  prefix: 'material',
-  class: 'dialog',
-  tag: 'div',
-  events: [
-    ['root.click', 'close']
-  ]
-}
-
 class Dialog {
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
+  static defaults = {
+    class: 'dialog',
+    close: true,
+    layout: [
+      [Element, 'head', { class: 'head' },
+        [Text, 'title', { class: 'title' }],
+        [Button, 'close', { class: 'close' }]
+      ],
+      [Element, 'body', { class: 'body' },
+        [Text, 'content', { class: 'content' }]
+      ],
+      [Element, 'foot', { class: 'foot' },
+        [Element, { class: 'divider' }],
+        [Button, 'ok', { class: 'ok', text: 'Ok', color: 'primary' }]
+      ]
+    ],
+    events: [
+      ['element.click', 'onClickRoot'],
+      ['surface.click', 'onClick'],
+      ['ui.ok.click', 'ok'],
+      ['ui.cancel.click', 'cancel'],
+      ['ui.close.click', 'close']
+    ]
+  }
+
   constructor (options) {
     this.init(options)
     this.build()
+    this.render()
     this.attach()
 
-    this.element.style.display = 'none'
-
     return this
   }
 
-  /**
-   * Constructor
-   * @param  {Object} options The class options
-   * @return {Object} This class instance
-   */
-  init (options) {
-    // init options
-    this.options = Object.assign({}, defaults, options || {})
-
-    // implement modules
-    Object.assign(this, events, emitter, attach, insert)
-
-    this.layout = null
-    this.content = null
-    this.html = null
-
-    this.controller = controller
-
-    return this
+  init(options) {
+    this.options = Object.assign({}, Dialog.defaults, options || {})
+    Object.assign(this, emitter, attach, display)
   }
 
-  /**
-   * build the component using the super method
-   * @return {Object} The class instance
-   */
   build () {
     this.element = document.createElement('div')
+    this.element.classList.add('dialog')
 
-    css.add(this.element, 'material-dialog')
+    this.element = this.element
 
-    if (this.options.name) {
-      css.add(this.element, 'dialog-' + this.options.name)
+    if (this.options.class !== 'dialog') {
+      this.element.classList.add(this.options.class)
     }
 
-    if (this.options.css) {
-      css.add(this.element, this.options.css)
-    }
-
-    if (this.options.theme) {
-      css.add(this.element, this.options.theme + '-theme')
+    if (this.options.position) {
+      this.element.classList.add('position-' + this.options.position)
     }
 
     this.surface = document.createElement('div')
+    this.surface.classList.add('surface')
+    this.element.appendChild(this.surface)
 
-    css.add(this.surface, 'dialog-surface')
-
-    this.insertElement(this.surface, this.element)
-
-    if (this.options.title) {
-      this.buildTitle()
-    }
-
-    if (this.options.content) {
-      this.buildContent()
-    }
-
-    if (this.options.layout) {
-      this.buildLayout()
-    }
-
-    if (this.options.html) {
-      this.buildHTML()
-    }
-
-    this.buildActions()
-
-    event.add(this.surface, 'click', function (ev) {
-      ev.stopPropagation()
-    })
-  }
-
-  buildTitle () {
-    this.title = new Text({
-      type: 'title',
-      css: 'dialog-title',
-      text: this.options.title
-    })
-
-    this.insertElement(this.title.root, this.surface)
-
-    // console.log('buildTitle', this.title)
-  }
-
-  buildLayout () {
     this.layout = new Layout(this.options.layout, this.surface)
     this.ui = this.layout.component
+
+    if (this.options.container) {
+      this.options.container.appendChild(this.element)
+    }
+
+    if (this.options.display === 'show') {
+      this.show()
+    }
   }
 
-  buildHTML () {
-    this.html = new Container({
-      css: 'dialog-content'
-    })
+  render () {
+    if (this.options.title && this.ui.title) {
+      this.ui.title.set(this.options.title)
+    }
+
+    if (this.options.content && this.ui.content) {
+      this.ui.content.set(this.options.content)
+    }
+
+    if (this.options.cancel && this.ui.cancel) {
+      this.ui.cancel.set('text', this.options.cancel)
+    }
+
+    if (this.options.ok && this.ui.ok) {
+      this.ui.ok.set('text', this.options.ok)
+    }
+
+    if (this.options.target) {
+      this.setPosition()
+    }
   }
 
-  buildContent () {
-    // console.log('text content', this.options.content)
-    this.content = new Text({
-      type: 'content',
-      css: 'dialog-content',
-      text: this.options.content
-    })
-    this.insertElement(this.content.root, this.surface)
-  }
+  setPosition () {
+    var coord = this.options.target.getBoundingClientRect()
+    var surface_coord = this.surface.getBoundingClientRect()
 
-  buildActions () {
-    if (this.options.actions) {
-      this.actions = new Layout(this.options.actions, this.surface)
-
-      css.add(this.actions.get('root'), 'dialog-actions')
+    if (this.options.position === 'right') {
+      this.surface.style.top = coord.top + 'px'
+      this.surface.style.left = coord.left + coord.width // surface_coord.width + 'px'
     } else {
-      var actions
-      if (this.options.accept || this.options.cancel) {
-        actions = new Toolbar({ css: 'dialog-actions' })
-        this.insertElement(actions.root, this.surface)
-      }
+      this.surface.style.top = coord.top + 'px'
+      this.surface.style.left = coord.left - surface_coord.width + 'px'
+    }
+  }
 
-      if (this.options.cancel) {
-        this.cancel = new Button(this.options.cancel)
-        .on('click', () => {
-          this.emit('canceled')
-          this.close()
-        })
-        this.insertElement(this.cancel.root, actions.root)
-      }
+  ok () {
+    this.emit('ok')
+    if (this.options.close) {
+      this.destroy()
+    }
+  }
 
-      if (this.options.accept) {
-        this.accept = new Button(this.options.accept)
-        .on('click', () => {
-          this.emit('accepted')
-          this.close()
-        })
-        this.insertElement(this.accept.root, actions.root)
-      }
+  cancel () {
+    this.emit('cancel')
+
+    if (this.options.close) {
+      this.destroy()
     }
   }
 
   close () {
-    css.add(this.element, 'dialog-closing')
+    // this.hide()
 
-    var delayMillis = 200 // 1 second
-    setTimeout(() => {
-      this.element.style.display = 'none'
-      css.remove(this.element, 'dialog-closing')
-      css.remove(this.element, 'dialog-show')
-    }, delayMillis)
-
-    this.previousActive.focus()
-
-    return this
+    if (this.options.close) {
+      this.destroy()
+    }
   }
 
-  show () {
-    this.previousActive = document.activeElement
+  onClick (e) {
+    e.stopPropagation()
+  }
 
-    this.element.style.display = 'flex'
-    // css.add(this.element, 'dialog-showing');
+  onClickRoot (e) {
+    // console.log('onClickRoot')
+    e.stopPropagation()
+    if (!this.options.modal) {
+      this.destroy()
+    }
+  }
 
-    var delayMillis = 100 // 1 second
+  emphase () {
+    this.element.classList.add('emphase')
+    var it
+    it = setTimeout(() => {
+      clearTimeout(it)
+      this.element.classList.remove('emphase')
+    }, 100)
+  }
 
-    setTimeout(() => {
-      css.add(this.element, 'dialog-show')
-      // css.remove(this.element, 'dialog-showing');
-    }, delayMillis)
-
-    return this
-
-    // var button = this.element.querySelector('button')
-
-    // if (button) button.focus()
+  set (prop, value) {
+    if (this.ui[prop]) {
+      this.ui[prop].set(value)
+    }
   }
 }
 

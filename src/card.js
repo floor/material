@@ -1,5 +1,3 @@
-'use strict'
-
 // import modules
 import create from './mixin/create'
 import insert from './mixin/insert'

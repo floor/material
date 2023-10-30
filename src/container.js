@@ -1,5 +1,3 @@
-'use strict'
-
 import create from './mixin/create'
 import insert from './element/insert'
 import emitter from './module/emitter'
