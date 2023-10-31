@@ -1,5 +1,5 @@
 import insert from './element/insert'
-import css from './module/css'
+import * as css from './module/css'
 import emitter from './module/emitter'
 import attach from './module/attach'
 import controller from './mixin/controller'

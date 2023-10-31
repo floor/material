@@ -1,5 +1,3 @@
-'use strict'
-
 /**
  * Utility functions
  * @module module/utils
@@ -9,19 +7,17 @@
  * Checks if given value is an array
  * @param {*} object
  * @returns {boolean}
- * @private
  */
-function _isArray (object) {
+const isArray = (object) => {
   return Object.prototype.toString.call(object) === '[object Array]'
 }
 
 /**
- * Checks if javascript object is plain object
+ * Checks if JavaScript object is a plain object
  * @param {Object} object
  * @returns {*|boolean}
- * @private
  */
-function _isLiteralObject (object) {
+const isLiteralObject = (object) => {
   return object && typeof object === 'object' && Object.getPrototypeOf(object) === Object.getPrototypeOf({})
 }
 
@@ -29,34 +25,30 @@ function _isLiteralObject (object) {
  * Checks if object is iterable
  * @param {Object} object
  * @returns {boolean}
- * @private
  */
-function _isIterable (object) {
-  var r = _isLiteralObject(object) ||
-    _isArray(object) ||
+const isIterable = (object) => {
+  return isLiteralObject(object) ||
+    isArray(object) ||
     (typeof object === 'object' &&
       object !== null &&
       object.length !== undefined)
-
-  return r
 }
 
 /**
  *
  * @param {Object} object
  * @param {Function} callback
- * @private
  */
-function _each (object, callback) {
-  if (_isArray(object) || (typeof object === 'object' && object.length !== undefined)) {
-    for (var i = 0, l = object.length; i < l; i++) {
+const each = (object, callback) => {
+  if (isArray(object) || (typeof object === 'object' && object.length !== undefined)) {
+    for (let i = 0, l = object.length; i < l; i++) {
       callback.apply(object[i], [object[i], i])
     }
     return
   }
 
-  if (_isLiteralObject(object)) {
-    for (var key in object) {
+  if (isLiteralObject(object)) {
+    for (const key in object) {
       callback.apply(object[key], [object[key], key])
     }
   }
@@ -67,13 +59,12 @@ function _each (object, callback) {
  * @param {Array} array
  * @param {*} obj
  * @returns {number}
- * @private
  */
-function _indexOf (array, obj) {
+const indexOf = (array, obj) => {
   if (Array.prototype.indexOf) {
     return Array.prototype.indexOf.call(array, obj)
   }
-  for (var i = 0, j = array.length; i < j; i++) {
+  for (let i = 0, j = array.length; i < j; i++) {
     if (array[i] === obj) {
       return i
     }
@@ -81,4 +72,4 @@ function _indexOf (array, obj) {
   return -1
 }
 
-export { _isArray, _isIterable, _isLiteralObject, _each, _indexOf }
+export { isArray, isIterable, isLiteralObject, each, indexOf }

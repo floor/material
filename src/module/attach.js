@@ -1,72 +1,58 @@
+// Assuming extract is imported or defined elsewhere
 import extract from './extract'
 
-/**
- * attach function to events
- * @module module/attach
- * @category module
- */
-
-/**
- * [attach description]
- * @param  {object} component [description]
- * @param  {[type]} events    [description]
- * @return {[type]}           [description]
- */
-export default {
-  attach: function (events) {
-    // console.log('attach', events)
+const attachModule = {
+  attach (events) {
     events = events || this.options.events
     if (!events) return
 
-    // console.log('attach', events, this)
-    var instance = this
-    events.map((def) => {
-      var e = extract.e(instance, def[0])
-      var f = extract.f(instance, def[1])
-      var option = def[2]
+    events.map(([eventDef, funcDef, option]) => {
+      const e = extract.e(this, eventDef)
+      const isFunction = typeof funcDef === 'function'
+      let f = null
+      let keys = []
 
-      var keys = def[1].split('.')
+      if (!isFunction) {
+        f = extract.f(this, funcDef)
+        keys = funcDef.split('.')
+        keys.pop()
+      }
 
-      keys.pop()
-      var bound = this.last(keys.join('.'))
+      const bound = this.last(keys.join('.'))
 
-      if (f && bound && e && e.element && e.element.addEventListener) {
-        if (!f) { console.log('error') }
+      let handler = null
 
-        if (option) {
-          e.element.addEventListener(e.name, f.bind(bound), option)
-        } else {
-          e.element.addEventListener(e.name, f.bind(bound))
-        }
-      } else if (e && e.element && e.element.on && f && bound) {
-        e.element.on(e.name, f.bind(bound))
+      if (isFunction) {
+        handler = funcDef.bind(this)
+      } else if (f && bound) {
+        handler = f.bind(bound)
       } else {
-        // console.log('can\'t attach', def[0])
+        // console.error(`Can't bind function for ${eventDef}`)
+        return
+      }
+
+      if (handler && e && e.element && e.element.addEventListener) {
+        if (option) {
+          e.element.addEventListener(e.name, handler, option)
+        } else {
+          e.element.addEventListener(e.name, handler)
+        }
+      } else if (e && e.element && e.element.on && handler) {
+        e.element.on(e.name, handler)
+      } else {
+        // console.error(`Can't attach ${eventDef}`)
       }
     })
 
     return this
   },
 
-  /**
-   * Return the last reference from an object
-   * @param  {string} str Object path for example key1.key2.key3
-   * @return {value} The value of the last reference
-   */
-  last: function (str) {
-    // console.log('_path', str)
+  last (str) {
     if (!str) return this
-    else if (!str.match(/\./)) return this[str]
-    var last
+    if (!str.includes('.')) return this[str]
 
-    var keys = str.split('.')
-    for (var i = 0, l = keys.length; i < l; i++) {
-      var key = keys[i]
-
-      last = last || this
-      last = last[key]
-    }
-
-    return last
+    return str.split('.').reduce((acc, key) => acc[key], this)
   }
 }
+
+export default attachModule

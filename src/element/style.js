@@ -3,10 +3,10 @@
  * @module component/style
  */
 import {
-  _isIterable,
-  _isLiteralObject,
-  _isArray,
-  _each
+  isIterable,
+  isLiteralObject,
+  isArray,
+  each
 } from '../module/utils'
 
 /**
@@ -18,7 +18,7 @@ import {
 function get (element, style) {
   // console.log('get', element, style);
   // get array of elements
-  if (_isArray(style)) {
+  if (isArray(style)) {
     var css = {}
     for (var i in list) {
       css[list[i]] = this.get(element, list[i])
@@ -49,14 +49,14 @@ function get (element, style) {
  * @param {?} style   [description]
  */
 function set (element, style) {
-  if (_isIterable(element) && _isLiteralObject(style)) {
-    _each(element, function (e) {
+  if (isIterable(element) && _isLiteralObject(style)) {
+    each(element, function (e) {
       set(e, style)
     })
     return element
   }
 
-  if (_isLiteralObject(style)) {
+  if (isLiteralObject(style)) {
     // console.log('style', element, style);
     for (var i in style) {
       element.style[i] = style[i]

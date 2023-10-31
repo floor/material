@@ -1,5 +1,5 @@
 import create from '../element/create'
-import css from '../module/css'
+import * as css from '../module/css'
 import insert from '../element/insert'
 
 const KEYCODE = {

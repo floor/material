@@ -1,4 +1,6 @@
+import * as css from './css'
 import dataset from './dataset'
+
 import Layout from '../layout'
 
 export default {
@@ -7,13 +9,17 @@ export default {
 
     const defaults = this.constructor.defaults || {}
 
-    if (defaults.base) this.element.classList.add(defaults.base)
+    if (defaults.class === 'account') console.log('build', defaults.class)
 
-    if (defaults.class) this.element.classList.add(defaults.class)
+    if (defaults.base) css.add(this.element, defaults.base)
+
+    if (defaults.class) css.add(this.element, defaults.class)
 
     if (this.options.class !== defaults.class) {
-      this.addClass(this.options.class)
+      css.add(this.element, this.options.class)
     }
+
+    if (defaults.class === 'account') console.log('data')
 
     if (this.options.data) {
       dataset(this.element, this.options.data)
@@ -37,11 +43,5 @@ export default {
 
   appendTo (container) {
     container.appendChild(this.element)
-  },
-
-  addClass (clss) {
-    const c = clss.replace(/\s+/g, ' ').trim()
-    const list = c.split(' ')
-    list.forEach(item => this.element.classList.add(item))
   }
 }

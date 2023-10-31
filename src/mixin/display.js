@@ -70,6 +70,6 @@ export default {
       dom.destroy(this.element)
     }
 
-   this.emit?.('destroy')
+    this.emit?.('destroy')
   }
 }

@@ -8,7 +8,7 @@ import offset from './element/offset'
 import classify from './module/classify'
 // import control from './control';
 import attach from './module/attach'
-import css from './module/css'
+import * as css from './module/css'
 import emitter from './module/emitter'
 
 import icon from './skin/material/icon/pin.svg'

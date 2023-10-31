@@ -1,7 +1,7 @@
 import init from './mixin/init'
 import insert from './element/insert'
 import classify from './module/classify'
-import css from './module/css'
+import * as css from './module/css'
 import events from './mixin/events'
 import create from './element/create'
 import emitter from './module/emitter'
@@ -17,21 +17,7 @@ const defaults = {
   modules: [emitter, events]
 }
 
-/**
- * Class representing a UI Container. Can add components.
- *
- * @extends Component
- * @return {parent} The class instance
- * @example new Container({
- *   container: document.body
- * });
- */
 class Drawer {
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
   constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
@@ -41,8 +27,6 @@ class Drawer {
     this.attach()
 
     this.emit('ready')
-
-    return this
   }
 
   /**

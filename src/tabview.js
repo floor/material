@@ -1,5 +1,5 @@
 import emitter from './module/emitter'
-import observer from './module/observer'
+import observer from './element/observer'
 import display from './view/display'
 
 /**

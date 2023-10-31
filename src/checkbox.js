@@ -7,7 +7,7 @@ import build from './element/build'
 
 import emitter from './module/emitter'
 import attach from './module/attach'
-import css from './module/css'
+import * as css from './module/css'
 
 import icon from './skin/material/icon/checkbox.svg'
 // element related modules
@@ -31,26 +31,8 @@ let defaults = {
     ['element.input.keydown', 'keydown', {}]
   ]
 }
-/**
- * Checkbox control class
- * @class
- * @extends Control
- * @since 0.0.1
- * @example
- * var chkbox = checkbox({
- *   label: 'Primary raised button',
- *   type: 'raised',
- *   primary: true
- * }).on('click', function(e) {
- *   console.log('button click', e);
- * }).insert(document.body);
- */
+
 class Checkbox {
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
   constructor (options) {
     this.init(options)
     this.build()
@@ -59,11 +41,6 @@ class Checkbox {
     return this
   }
 
-  /**
-   * Constructor
-   * @param  {Object} options The class options
-   * @return {Object} This class instance
-   */
   init (options) {
     this.options = Object.assign({}, defaults, options || {})
     Object.assign(this, events, control, emitter, attach)
@@ -71,10 +48,6 @@ class Checkbox {
     return this
   }
 
-  /**
-   * build the component using the super method
-   * @return {Object} The class instance
-   */
   build () {
     this.element = build(this.options.build)
     this.element = this.element.root
@@ -115,12 +88,6 @@ class Checkbox {
     return this
   }
 
-  /**
-   * Setter
-   * @param {string} prop
-   * @param {string} value
-   * @return {Object} The class instance
-   */
   set (prop, value) {
     switch (prop) {
       case 'checked':
@@ -139,23 +106,12 @@ class Checkbox {
     return this
   }
 
-  /**
-   * [insert description]
-   * @param  {?} container [description]
-   * @param  {?} context   [description]
-   * @return {?}           [description]
-   */
   insert (container, context) {
     insert(this.element, container, context)
 
     return this
   }
 
-  /**
-   * [click description]
-   * @param  {event} e [description]
-   * @return {?}   [description]
-   */
   click (e) {
     this.toggle(e)
     this.element.input.focus()
@@ -163,12 +119,8 @@ class Checkbox {
     return this
   }
 
-  /**
-   * Set checkbox value
-   * @param {boolean} value [description]
-   */
   setValue (value) {
-    console.log('setValue', value)
+    // console.log('setValue', value)
     this.value = value
     this.element.input.setAttribute('value', value)
 

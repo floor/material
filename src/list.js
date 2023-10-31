@@ -1,4 +1,4 @@
-import addClass from './module/addclass'
+import * css from './module/css'
 
 const defaults = {
   className: 'text',
@@ -18,11 +18,11 @@ class List {
   }
 
   build () {
-    this.root = document.createElement(this.options.tag)
-    addClass(this.root, this.options.class)
+    this.element = document.createElement(this.options.tag)
+    css.add(this.element, this.options.class)
 
     if (this.options.class !== 'text') {
-      this.root.classList.add('text')
+      this.element.classList.add('text')
     }
 
     if (this.options.list) {
@@ -30,7 +30,7 @@ class List {
     }
 
     if (this.options.container) {
-      this.options.container.appendChild(this.root)
+      this.options.container.appendChild(this.element)
     }
 
     return this
@@ -52,16 +52,16 @@ class List {
 
     var label = this.options.label || ''
 
-    this.root.innerHTML = label + text
+    this.element.innerHTML = label + text
 
     if (this.options.spaceAfter) {
-      this.root.innerHTML = this.root.innerHTML + ' '
+      this.element.innerHTML = this.element.innerHTML + ' '
     }
   }
 
   setText (text) {
     // console.log('setText', text)
-    this.root.innerHTML = text
+    this.element.innerHTML = text
   }
 }
 

@@ -1,15 +1,4 @@
-'use strict'
-
-/**
- *
- */
 var controller = {
-
-  /**
-   * [register description]
-   * @param  {component} component [description]
-   * @return {Object} The class instance
-   */
   register (instance, group) {
     group = group || 'component'
     this[group + 's'] = this[group + 's'] || []
@@ -24,12 +13,6 @@ var controller = {
     return this
   },
 
-  /**
-   * This method subscribes to a specific topic
-   * @param  {string}   topic
-   * @param  {Function} callback
-   * @return {boolean} true
-   */
   subscribe (topic, callback) {
     this._topics = this._topics || {}
 
@@ -42,12 +25,6 @@ var controller = {
     return true
   },
 
-  /**
-   * This method unsubscribes to a specific topic
-   * @param  {string}   topic
-   * @param  {Function} callback
-   * @return {boolean} true
-   */
   unsunscribe (topic, callback) {
     this._topics = this._topics || {}
     // _log.debug('unsubscribe', topic);
@@ -65,10 +42,6 @@ var controller = {
     return false
   },
 
-  /**
-   * [publish description]
-   * @return {?} [description]
-   */
   publish () {
     this._topics = this._topics || {}
 

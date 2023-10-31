@@ -13,7 +13,7 @@ class Link {
   }
 
   init (options) {
-    this.options = Object.assign({}, Link.defaults, options || {})
+    this.options = { ...Link.defaults, ...options }
     Object.assign(this, build)
   }
 

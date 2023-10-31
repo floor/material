@@ -55,7 +55,7 @@ class Switch extends EventEmitter {
     this.buildLabel()
 
     if (this.options.data) {
-      dataset(this.root, this.options.data)
+      dataset(this.element, this.options.data)
     }
 
     // console.log('attribute', this.ui.input, this.options)

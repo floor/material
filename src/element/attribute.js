@@ -1,24 +1,21 @@
-'use strict'
-
-function init (element, attribute) {
-  for (var key in attribute) {
-    if (attribute.hasOwnProperty(key)) {
+const init = (element, attribute) => {
+  for (const key in attribute) {
+    if (Object.prototype.hasOwnProperty.call(attribute, key)) {
       element.setAttribute(key, attribute[key])
     }
   }
-
   return element
 }
 
-function set (element, name, value) {
-  return element.setAttribute(name, '' + value)
+const set = (element, name, value) => {
+  return element.setAttribute(name, `${value}`)
 }
 
-function get (element, name) {
+const get = (element, name) => {
   return element.getAttribute(name) || null
 }
 
-function remove (element, name) {
+const remove = (element, name) => {
   return element.removeAttribute(name)
 }
 

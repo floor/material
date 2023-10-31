@@ -1,4 +1,4 @@
-import css from '../module/css'
+import * as css from '../module/css'
 
 function classify (element, options) {
   css.add(element, options.prefix + '-' + options.class)

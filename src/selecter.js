@@ -1,52 +1,50 @@
-import emitter from './module/emitter'
+import EventEmitter from './mixin/emitter'
+// modules
 import attach from './module/attach'
-import dataset from './view/dataset'
+import dataset from './module/dataset'
 import attributes from './module/attributes'
-import addClass from './module/addclass'
-
-// ui
+import * as css from './module/css'
+// components
 import Layout from './layout'
 import Element from './element'
 import Button from './button'
 
-const defaults = {
-  class: 'selecter',
-  first: null,
-  attributes: ['type', 'name', 'autocomplete', 'required'],
-  layout: [
-    [Element, 'label', { tag: 'label', class: 'label' }],
-    [Element, 'value', { tag: 'value', class: 'value' }],
-    [Element, 'input', { tag: 'input', type: 'text', class: 'input' }],
-    [Element, 'list', { class: 'list' },
-      [Element, 'head', { class: 'head' },
-        [Element, 'title', { class: 'title' }],
-        [Button, 'close', { class: 'close' }]
-      ],
-      [Element, 'body', { class: 'body' }]
+class Selecter extends EventEmitter {
+  static defaults = {
+    class: 'selecter',
+    first: null,
+    attributes: ['type', 'name', 'autocomplete', 'required'],
+    layout: [
+      [Element, 'label', { tag: 'label', class: 'label' }],
+      [Element, 'value', { tag: 'value', class: 'value' }],
+      [Element, 'input', { tag: 'input', type: 'text', class: 'input' }],
+      [Element, 'list', { class: 'list' },
+        [Element, 'head', { class: 'head' },
+          [Element, 'title', { class: 'title' }],
+          [Button, 'close', { class: 'close' }]
+        ],
+        [Element, 'body', { class: 'body' }]
+      ]
+    ],
+    events: [
+      ['ui.value.click', 'showList'],
+      ['ui.list.click', 'select'],
+      ['ui.close.click', 'hideList']
     ]
-  ],
-  events: [
-    ['ui.value.click', 'showList'],
-    ['ui.list.click', 'select'],
-    ['ui.close.click', 'hideList']
-  ]
-}
+  }
 
-class Selecter {
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, emitter, attach, dataset)
+    super()
 
+    this.init(options)
     this.build()
     this.setup()
     this.attach()
+  }
 
-    return this
+  init(options) {
+    this.options = Object.assign({}, Selecter.defaults, options || {})
+    Object.assign(this, attach, dataset)
   }
 
   setup () {
@@ -85,7 +83,7 @@ class Selecter {
     this.element.classList.add('selecter')
 
     if (this.options.class !== 'selecter') {
-      addClass(this.element, this.options.class)
+      css.add(this.element, this.options.class)
     }
 
     this.layout = new Layout(this.options.layout, this.element)

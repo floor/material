@@ -1,6 +1,6 @@
 import create from './element/create'
 import insert from './element/insert'
-import css from './module/css'
+import * as css from './module/css'
 import attach from './module/attach'
 import emitter from './module/emitter'
 

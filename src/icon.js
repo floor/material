@@ -1,5 +1,5 @@
 import insert from './mixin/insert'
-import css from './module/css'
+import * as css from './module/css'
 
 var defaults = {
   prefix: 'material',
@@ -54,10 +54,10 @@ class Icon {
     this.element = this.element || {}
 
     this.element = document.createElement(tag)
-    css.add(this.element, this.options.prefix + '-' + this.options.class)
+    { add }.add(this.element, this.options.prefix + '-' + this.options.class)
 
-    if (options.css) { css.add(this.element, options.css) }
-    // css.add(this.element, this.options.class + '-adjust');
+    if (options.{ add }) { { add }.add(this.element, options.{ add }) }
+    // { add }.add(this.element, this.options.class + '-adjust');
 
     if (this.options.container) {
       this.insert(this.options.container)

@@ -1,4 +1,4 @@
-import observer from '../module/observer'
+import observer from '../module/element/observer'
 import Islands from '../view/islands'
 import preventPullRefresh from '../module/preventPullRefresh'
 import touch from '../module/touchscreen'

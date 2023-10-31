@@ -1,9 +1,9 @@
 import EventEmitter from './mixin/emitter'
-
+// modules
 import build from './module/build'
 import attach from './module/attach'
 import attributes from './module/attributes'
-import dataset from './view/dataset'
+import dataset from './module/dataset'
 
 class Select extends EventEmitter {
   static defaults = {

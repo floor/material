@@ -48,7 +48,6 @@ class Tabs {
     this.tab = { }
     if (this.options.list) {
       this.list = new List({
-        // root: this.element,
         tag: 'div',
         list: this.options.list,
         target: '.material-button',
@@ -91,7 +90,7 @@ class Tabs {
   select (tab) {
     // console.log('select', tab, this.tab)
     this.selected = this.tab[tab]
-    this.click(this.selected.root, true)
+    this.click(this.selected.element, true)
   }
 
   click (item, silent) {

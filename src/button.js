@@ -1,11 +1,12 @@
 import EventEmitter from './mixin/emitter'
-
 import build from './module/build'
 import display from './mixin/display'
 import bindEvents from './module/events'
-
 import dataset from './module/dataset'
 import ripple from './module/ripple'
+
+const DEFAULT_TYPE = 'button'
+const DEFAULT_CLASS = 'button'
 
 class Button extends EventEmitter{
   static isComponent () {
@@ -13,9 +14,8 @@ class Button extends EventEmitter{
   }
 
   static defaults = {
-    class: 'button',
+    class: DEFAULT_CLASS,
     tag: 'button',
-    modules: [build, bindEvents],
     styles: ['style', 'color'],
     ripple: true,
     stopPropagation: false,
@@ -29,11 +29,6 @@ class Button extends EventEmitter{
     ]
   }
 
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
   constructor (options) {
     super()
 
@@ -50,103 +45,66 @@ class Button extends EventEmitter{
   }
 
   init (options) {
-    this.options = Object.assign({}, Button.defaults, options || {})
+    this.options = { ...Button.defaults, ...options }  
     Object.assign(this, build, display, bindEvents)
-
   }
 
   setup () {
+    this.setAttributes()
     this.styleAttributes()
-
-    this.buildIcon()
-    this.buildLabel()
+    this.buildElements()
 
     if (this.options.text) {
       this.element.innerHTML = this.element.innerHTML + this.options.text
     }
+  }
 
-    if (this.options.data) {
-      dataset(this.element, this.options.data)
-    }
+  buildElements () {
+    this.buildIcon()
+    this.buildLabel()
+  }
 
-    if (this.options.type) {
-      this.element.setAttribute('type', this.options.type)
-    } else {
-      this.element.setAttribute('type', 'button')
-    }
+  setAttributes () {
+    const { type, name, value, title, text, label, tooltip, data, case: caseOption } = this.options
 
-    if (this.options.name) {
-      this.element.setAttribute('name', this.options.name)
-    }
-
-    if (this.options.value) {
-      this.element.setAttribute('value', this.options.value)
-    }
-
-    if (this.options.title) {
-      this.element.setAttribute('title', this.options.title)
-    }
-
-    this.element.setAttribute('aria-label', this.options.text || this.options.label || this.options.class)
-
-    if (this.options.tooltip) {
-      this.element.setAttribute('data-tooltip', this.options.tooltip)
-    }
-
-    if (this.options.case) {
-      this.element.classList.add(this.options.case + '-case')
-    }
-
+    this.element.setAttribute('type', type ?? DEFAULT_TYPE)
+    if (name) this.element.setAttribute('name', name)
+    if (value) this.element.setAttribute('value', value)
+    if (title) this.element.setAttribute('title', title)
+    this.element.setAttribute('aria-label', text ?? label ?? DEFAULT_CLASS)
+    if (tooltip) this.element.setAttribute('data-tooltip', tooltip)
+    if (data) dataset(this.element, data)
+    if (caseOption) this.element.classList.add(`${caseOption}-case`)
     if (this.options.ripple) ripple(this.element)
   }
 
-  append (container) {
-    container = container || this.options.container
-    if (this.options.container) {
-      container.appendChild(this.element)
-    }
+
+  styleAttributes () {
+    const { style, size, color, bold } = this.options
+    if (style) this.element.classList.add(`style-${style}`)
+    if (size) this.element.classList.add(`${size}-size`)
+    if (color) this.element.classList.add(`color-${color}`)
+    if (bold) this.element.classList.add('bold')
   }
 
   buildLabel () {
     if (!this.options.label) return
 
-    if (this.options.label) {
-      this.label = document.createElement('label')
-      this.label.classList.add('label')
-      this.label.innerHTML = this.options.label
+    this.label = document.createElement('label')
+    this.label.classList.add('label')
+    this.label.innerHTML = this.options.label
 
-      this.element.appendChild(this.label)
-    }
+    this.element.appendChild(this.label)
   }
 
   buildIcon () {
     if (!this.options.icon) return
 
-    if (this.options.icon) {
-      this.icon = document.createElement('i')
-      this.icon.classList.add('icon')
-      this.icon.innerHTML = this.options.icon
+    this.icon = document.createElement('i')
+    this.icon.classList.add('icon')
+    this.icon.innerHTML = this.options.icon
 
-      this.element.appendChild(this.icon)
-    }
-  }
-
-  styleAttributes () {
-    if (this.options.style) {
-      this.element.classList.add('style-' + this.options.style)
-    }
-
-    if (this.options.size) {
-      this.element.classList.add(this.options.size + '-size')
-    }
-
-    if (this.options.color) {
-      this.element.classList.add('color-' + this.options.color)
-    }
-
-    if (this.options.bold) {
-      this.element.classList.add('bold')
-    }
+    this.element.appendChild(this.icon)
   }
 
   set (prop, value) {
@@ -156,9 +114,8 @@ class Button extends EventEmitter{
         this.element.value = value
         break
       case 'label':
-        if (this.label) {
-          this.label.innerHTML = value
-        }
+        if (!this.label) this.buildLabel()
+        this.label.innerHTML = value
         break
       case 'text':
         this.element.innerHTML = value
@@ -177,12 +134,10 @@ class Button extends EventEmitter{
   }
 
   setLabel (value) {
-    // console.log('setLabel', value)
     this.label.innerHTML = value
   }
 
   setText (value) {
-    // console.log('setText', value)
     if (this.label) {
       this.setLabel(value)
     } else {
@@ -190,20 +145,21 @@ class Button extends EventEmitter{
     }
   }
 
-  /**
-   * Setter
-   * @param {string} prop
-   * @param {string} value
-   * @return {Object} The class instance
-   */
-  get (prop, value) {
+  get (prop) {
     switch (prop) {
       case 'value':
         return this.element.value
       case 'label':
-        return this.label.innerHTML
+        return this.label?.innerHTML ?? this.element.value
       default:
         return this.element.value
+    }
+  }
+
+  append (container) {
+    container = container ?? this.options.container
+    if (container) {
+      container.appendChild(this.element)
     }
   }
 

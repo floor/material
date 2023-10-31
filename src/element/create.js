@@ -1,11 +1,8 @@
-import css from '../module/css'
+import * as css from '../module/css'
 
-function create (tag, className) {
-  tag = tag || 'div'
-
-  var element = document.createElement(tag)
+const create = (tag = 'div', className) => {
+  const element = document.createElement(tag)
   css.add(element, className)
-
   return element
 }
 

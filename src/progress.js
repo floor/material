@@ -1,7 +1,6 @@
 // import Component from './component';
 import create from './element/create'
 import classify from './module/classify'
-import css from './module/css'
 import insert from './element/insert'
 
 var defaults = {
@@ -14,13 +13,6 @@ var defaults = {
     </svg>`
 }
 
-/**
- * The class represents an item ie for list
- *
- * @class
- * @return {Object} The class instance
- * @example new Item(object);
- */
 class Spinner {
   /**
    * init

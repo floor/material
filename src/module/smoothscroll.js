@@ -1,19 +1,15 @@
-function smoothscroll (e, top, time) {
-  // console.log('smoothscroll', top, e.scrollTop)
+const smoothscroll = (e, top, time = 275) => {
+  const start = top - e.scrollTop
+  const step = start / 100
+  let current = 0
 
-  var start = top - e.scrollTop
-
-  time = time || 275
-  var step = start / 100
-  var current = 0
   while (current <= time) {
     window.setTimeout(scrolling, current, e, step)
     current += time / 100
   }
 }
 
-function scrolling (e, step) {
-  // console.log('scrolling', step, e.scrollTop)
+const scrolling = (e, step) => {
   e.scrollBy(0, step)
 }
 

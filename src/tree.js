@@ -1,10 +1,7 @@
-'use strict'
-
-import insert from './mixin/insert'
-import css from './module/css'
-import attach from './module/attach'
-
 import emitter from './module/emitter'
+import * as css from './module/css'
+import attach from './module/attach'
+import insert from './mixin/insert'
 
 const defaults = {
   prefix: 'material',
@@ -16,21 +13,7 @@ const defaults = {
   ]
 }
 
-/**
- * Tree component
- * @class
- * @param {Object} options Default options for view
- * @extends {View}
- * @since 0.0.4
- * @author Jerome Vial
- *
- * @type {prime}
- */
 class Tree {
-  /**
-   * init
-   * @return {Object} The class options
-   */
   constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 
@@ -41,10 +24,6 @@ class Tree {
     return this
   }
 
-  /**
-   * [_initView description]
-   * @return  Class instance
-   */
   init () {
     // init this
 
@@ -62,11 +41,6 @@ class Tree {
     return this
   }
 
-  /**
-   * [_initFunction description]
-   * @param  {?} functions [description]
-   * @return {}           [description]
-   */
   _initFunction (functions) {
     for (var i = 0; i < functions.length; i++) {
       var name = functions[i]
@@ -76,11 +50,6 @@ class Tree {
     }
   }
 
-  /**
-   * [_initList description]
-   * @param  {Object} options this class options
-   * @return {Object} The class instance
-   */
   build () {
     // define main tag
     var tag = this.options.tag || 'div'
@@ -161,11 +130,6 @@ class Tree {
     // console.log(this.options)
   }
 
-  /**
-   * This method handles onSelect
-   * @param  {event} e [description]
-   * @return {?}   [description]
-   */
   onSelect (e) {
     // console.log('click', e.target, this.options.target)
     if (e.target && e.target.matches(this.options.target)) {
@@ -184,12 +148,6 @@ class Tree {
     return this
   }
 
-  /**
-   * select
-   * @param  {Element} item  [description]
-   * @param  {event} event The caller event
-   * @return        [description]
-   */
   select (item, event) {
     // console.log('select', item, event)
     this.item = item
@@ -197,11 +155,6 @@ class Tree {
     this.emit('selected', item[0])
   }
 
-  /**
-   * Setter
-   * @param {string} prop
-   * @param {string} value
-   */
   set (prop, value, options) {
     switch (prop) {
       case 'tree':
@@ -214,20 +167,11 @@ class Tree {
     return this
   }
 
-  /**
-   * Set list
-   * @param {Array} list List of info object
-   * @return {Object} The class instance
-   */
   setTree (data) {
     this.buildTree(data)
     return this
   }
 
-  /**
-   * [add description]
-   * @param {Object} item [description]
-   */
   addItem (item /*, index */) {
     if (!item) {
       return

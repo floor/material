@@ -13,7 +13,7 @@ class Image {
   }
 
   init (options) {
-    this.options = Object.assign({}, Image.defaults, options || {})
+    this.options = { ...Image.defaults, ...options }
     Object.assign(this, build)
   }
 

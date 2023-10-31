@@ -1,5 +1,5 @@
 import { is as isObject } from './module/object'
-import css from './module/css'
+import * as css from './module/css'
 
 class Layout {
   constructor (schema, container) {
@@ -49,7 +49,7 @@ class Layout {
         }
 
         // if (component) {
-        //   this.display(component.root, options)
+        //   this.display(component.element, options)
         //   this.style(component, options)
         // }
 

@@ -1,7 +1,7 @@
 // dialog related modules
 import emitter from './module/emitter'
 import attach from './module/attach'
-import display from './view/display'
+import display from './mixin/display'
 
 import Element from './element'
 import Text from './text'

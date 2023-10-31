@@ -38,7 +38,12 @@ function empty (element) {
 }
 
 function destroy (element) {
-  return element.parentNode.removeChild(element)
+  if (element && element.parentNode) {
+    return element.parentNode.removeChild(element)
+  } else {
+    // console.error('Element or its parent node is null')
+    return null
+  }
 }
 
 export default { append, prepend, after, before, replace, remove, destroy, empty, dispose }

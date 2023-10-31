@@ -1,4 +1,4 @@
-import css from '../module/css'
+import * as css from '../module/css'
 
 export default {
   /**

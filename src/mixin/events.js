@@ -1,10 +1,4 @@
 export default {
-
-  /**
-   * cross browser addEvent
-   * @param {string}   event The event to add
-   * @param {Function} fn    [description]
-   */
   addEvent (event, fn) {
     var element = this.element
     // avoid memory overhead of new anonymous functions for every event handler that's installed
@@ -38,12 +32,6 @@ export default {
     return this
   },
 
-  /**
-   * cross browser removeEvent
-   * @param  {string}   event The event to remove
-   * @param  {Function} fn    [description]
-   * @return {Object}         [description]
-   */
   removeEvent (event, fn) {
     var element = this.element
 

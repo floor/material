@@ -1,60 +1,26 @@
-'use strict'
+import build from '../module/build'
 
-const defaults = {
-  class: 'image',
-  format: 'thumb'
-}
-
-/**
- * Class representing an image.
- *
- * @extends Image
- * @return {parent} The class instance
- * @example new Image({
- *   src: {
- *     filename: 'image.png',
- *     url: 'exmaple.com/image/'
- *     format: ['thumbs/', 'medium/', 'large/'],
- *   },
- *   container: document.body
- * });
- */
 class Image {
   static isImage () {
     return true
   }
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
-  constructor (options) {
-    // console.log('options', options)
-    this.options = Object.assign({}, defaults, options || {})
 
-    this.build()
-
-    return this
+  static defaults = {
+    class: 'image',
+    format: 'thumb'
   }
 
-  /**
-   * Build Method
-   * @return {Object} This class instance
-   */
-  build () {
-    this.element = document.createElement('div')
-    this.element.classList.add(this.options.class)
+  constructor (options) {
+    this.init(options)
+    this.build()
+  }
 
-    if (this.options.container) {
-      this.options.container.appendChild(this.element)
-    }
-
-    return this
+  init(options) {
+    this.options = { ...Image.defaults, ...options }  
+    Object.assign(this, build)
   }
 
   set (src, asset) {
-    console.log('set', src, asset)
-
     asset = asset || {}
 
     if (!src) return
