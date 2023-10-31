@@ -1,2 +1,2234 @@
-!function(){"use strict";function t(t,i){return!(!t||!i)&&!!t.className.match(new RegExp("(\\s|^)"+i+"(\\s|$)"))}function i(i,e){if(i&&e){let o=e.split(" ");for(var s=0;s<o.length;s++){var n=o[s];t(i,n)||i.classList.add(n)}return i}}function e(t,i){if(t&&i)return t.classList.remove(i),t}function s(s,n){return t(s,n)?e(s,n):i(s,n),s}function n(t,i){if(F.add(t,i.prefix+"-"+i.class),i.name&&F.add(t,i.class+"-"+i.name),i.type&&F.add(t,"type-"+i.type),i.color&&F.add(t,i.color+"-color"),i.css&&F.add(t,i.css),i.elevation&&F.add(t,"elevation-z"+i.elevation),i.name&&(t.dataset.name=i.name),i.label&&(t.title=i.label),i.style)for(var e=i.style.split(" "),s=0;s<e.length;s++)F.add(t,"style-"+e[s]);i.theme&&t.classList.add(i.theme+"-theme")}function o(t){var i=document.createElement(t.tag||"div");return n(i,t),i}function r(t,i){t=t||"div";var e=document.createElement(t);return F.add(e,i),e}function h(t,i){return t.appendChild(i),i}function a(t,i){return t.insertBefore(i,t.firstChild)}function l(t,i){return t.parentNode.insertBefore(i,t.nextSibling)}function c(t,i){return t.insertBefore(i,t)}function u(t,i){return t.parentNode.replaceChild(i,t)}function p(t){return t.parentNode.removeChild(t)}function d(t){var i=t;return i.parentNode?i.parentNode.removeChild(i):i}function f(t){for(;t.firstChild;)t.removeChild(t.firstChild)}function m(t){return t.parentNode.removeChild(t)}function b(t,i,e){if(t&&i){t=t.root||t,i=i.root||i,e=e||"bottom";var s=["prepend","append","after","before"],n=["top","bottom","after","before"].indexOf(e);if(-1!==n)return R[s[n]](i,t),t}}function v(t){return"[object Array]"===Object.prototype.toString.call(t)}function g(t){return t&&"object"==typeof t&&Object.getPrototypeOf(t)===Object.getPrototypeOf({})}function y(t){return g(t)||v(t)||"object"==typeof t&&null!==t&&void 0!==t.length}function x(t,i){if(v(t)||"object"==typeof t&&void 0!==t.length)for(var e=0,s=t.length;e<s;e++)i.apply(t[e],[t[e],e]);else if(g(t))for(var n in t)i.apply(t[n],[t[n],n])}function k(t,i){if(v(i)){var e={};for(var s in list)e[list[s]]=this.get(t,list[s]);return e}var n;return n="function"==typeof window.getComputedStyle?window.getComputedStyle(t):void 0!==typeof document.currentStyle?t.currentStyle:t.style,i?n[i]:n}function w(t,i){if(y(t)&&g(i))return x(t,function(t){w(t,i)}),t;if(g(i)){for(var e in i)t.style[e]=i[e];return i}return!1}function O(t,i){var e=t.getBoundingClientRect(),s={top:Math.round(e.top),right:Math.round(e.right),bottom:Math.round(e.bottom),left:Math.round(e.left),width:e.width?Math.round(e.width):Math.round(t.offsetWidth),height:e.height?Math.round(e.height):Math.round(t.offsetHeight)};return s.width<=0&&(s.width=parseFloat(Y.get(t,"width"))),s.height<=0&&(s.height=parseFloat(Y.get(t,"height"))),i?s[i]:s}function j(t){t.on("built",t=>{C(t)})}function C(t){t.addEventListener("mousedown",t=>{L(t)})}function L(t){var i=t.target,e=O(i);let s=r("div","material-ripple"),n=A(e),o={left:(t.offsetX||e.width/2)+"px",top:(t.offsetY||e.height/2)+"px"};s.style.left=o.left,s.style.top=o.top,s.style.transition=K.transition,b(s,i,"top"),setTimeout(()=>{s.style.left=n.left;s.style.top=n.top;s.style.width=n.size;s.style.height=n.size},1),document.body.onmouseup=(()=>{z(s)})}function z(t){t.parentNode&&(t.style.opacity="0"),document.body.onmouseup=null,setTimeout(()=>{t.parentNode&&t.parentNode.removeChild(t)},1e3)}function A(t){var i=t.width,e=-t.height/2;return t.width>t.height&&(e=-(t.width-t.height/2)),{size:2*i+"px",top:e+"px",left:i/-2+"px"}}function E(t,i){if(i){if("function"==typeof i)return i;if(!i.match(/\./))return t[i];for(var e,s=i.split("."),n=0,o=s.length;n<o;n++){var r=s[n];e=(e=e||t)[r]}return e}}function T(t,i){if(!i)return t;if(!i.match(/\./))return t[i];for(var e,s,n={},o=i.split("."),r=0,h=o.length;r<h;r++){var a=o[r];e=(e=e||t)[a],r===o.length-2&&(s=e)}return n.element=s,n.name=o[o.length-1],n}function M(t){return t&&"object"==typeof t&&Object.getPrototypeOf(t)===Object.getPrototypeOf({})}function _(t,i,e){i=i||null;var s=r("label",(e.class||e.prefix)+"-label");return s.textContent=i,s.setAttribute("for",e.name),b(s,t),s}function $(t,i){for(var e in i)i.hasOwnProperty(e)&&t.setAttribute(e,i[e]);return t}function S(t,i,e){return t.setAttribute(i,""+e)}function N(t,i){return t.getAttribute(i)||null}function V(t,i){return t.removeAttribute(i)}function P(t){return t&&"object"==typeof t&&Object.getPrototypeOf(t)===Object.getPrototypeOf({})}function H(t){const i=t.match(/^[\w-]+/),e=t.match(/#([\w-]+)/),s=t.match(/\.[\w-]+/g),n=t.match(/\$([\w-]+)/),o={tag:i?i[0]:"div"};return e&&(o.id=e[1]),n&&(o.name=n[1]),s&&(o.class=s.join(" ").replace(/\./g,"")),o}function X(t,i,e,s){let n;e=e||{};for(var o=0;o<t.length;o++)if("string"==typeof t[o]){var h=H(t[o]);b(n=r(h.tag,h.class),i),h.name&&(e[h.name]=n)}else P(t[o])?ct.init(n,t[o]):Array.isArray(t[o])&&X(t[o],n,e,s);return e}function B(t){return D(t),mt.register(t),t}function D(t){for(var i=t.options.modules,e=0;e<i.length;e++)"function"==typeof i[e]?i[e](t):Object.assign(t,i[e])}var F={has:t,add:i,remove:e,toggle:s},R={append:h,prepend:a,after:l,before:c,replace:u,remove:p,destroy:m,empty:f,dispose:d};const I={ENTER:13,SPACE:32};var W={toggle(){if(!this.disabled)return this.focus(),this.checked?this.check(!1):this.check(!0),this},check(t){return t?(F.add(this.root,"is-checked"),this.element.input.checked=!0,this.checked=!0,this.emit("change",this.checked)):(F.remove(this.root,"is-checked"),this.element.input.checked=!1,this.checked=!1,this.emit("change",this.checked)),this},label(t){t&&(this.element=this.element||{},this.element.label||(this.element.label=r("label",this.options.class+"-label")),this.element.label.textContent=t,b(this.element.label,this.root))},icon(t){if(t){var i="top";"text-icon"===this.options.type&&(i="bottom"),this.element=this.element||{},this.element.icon=r("i",this.options.class+"-icon"),b(this.element.icon,this.root,i),this.element.icon.innerHTML=t}},error(t){if(t=t||this.options.error,null!==this.options.error){let t=this.options.error||this.options.text;this.element.error||(this.element.error=r("error",this.options.class+"-error")),t&&(this.element.error.textContent=t),b(this.element.error,this.root,"bottom")}},disable(){return this.disabled=!0,this.element.input.setAttribute("disabled","disabled"),F.add(this.root,"is-disabled"),this},enable(){return this.disabled=!1,this.element.input.removeAttribute("disabled"),F.remove(this.root,"is-disabled"),this},keydown(t){if(!t.altKey)switch(t.keyCode){case I.ENTER:case I.SPACE:t.preventDefault(),this.toggle(t)}},get(t){switch(t){case"name":this.getName();break;default:this.setValue(t)}return this},getName(){return this.root.dataset.name},focus(){return!0===this.disabled?this:(F.add(this.root,"is-focused"),this.element.input!==document.activeElement&&this.element.input.focus(),this)},blur(){return F.remove(this.root,"is-focused"),this}},Y={get:k,set:w};const K={transition:".5s cubic-bezier(0.4, 0.0, 0.2, 1)",opacity:["1",".3"]};var Z={on(t,i){return this.event=this.event||{},this.event[t]=this.event[t]||[],this.event[t].push(i),this},off(t,i){if(this.event=this.event||{},t in this.event!=!1)return this.event[t].splice(this.event[t].indexOf(i),1),this},emit(t){if(this.event=this.event||{},t in this.event!=!1){for(var i=0;i<this.event[t].length;i++)this.event[t][i].apply(this,Array.prototype.slice.call(arguments,1));return this}}},q={e:T,f:E},G={attach:function(t){if(t=t||this.options.events){var i=this;return t.map(t=>{var e=q.e(i,t[0]);var s=q.f(i,t[1]);e.element.addEventListener(e.name,s.bind(this))}),this}}};const J={prefix:"material",class:"button",tag:"button",events:[["root.click","handleClick"]]};class Q{constructor(t){return this.init(t),this.build(),this.setup(),this.attach(),this.emit("ready"),this}init(t){this.options=Object.assign({},J,t||{}),Object.assign(this,W,Z,G,j),this.element=this.element||{},j(this),this.emit("init")}build(){return this.element={},this.root=o(this.options),this.options.label=this.options.label||this.options.text,this.root.setAttribute("aria-label",this.options.label||this.options.name),this.label(this.options.label),this.icon(this.options.icon),this.options.container&&b(this.root,this.options.container),this.emit("built",this.root),this}insert(t,i){return b(this.root,t,i),this}setup(){this.element.input=this.root,this.options.name&&(this.root.dataset.name=this.options.name),this.options.content&&(this.root.innerHTML=this.options.content)}set(t,i){switch(t){case"disabled":this.disable(i);break;case"value":this.setValue(i);break;case"label":this.setLabel(i);break;default:this.setValue(t)}return this}handleClick(t){if(t.preventDefault(),!0!==this.disabled&&!this.options.upload)return this.emit("click",t),this}}const U={prefix:"material",class:"button",tag:"button",events:[["root.click","handleClick"]]};class tt{constructor(t){return this.init(t),this.build(),this.setup(),this.attach(),this.emit("ready"),this}init(t){this.options=Object.assign({},U,t||{}),Object.assign(this,W,Z,G,j),this.element=this.element||{},j(this),this.emit("init")}build(){return this.element={},this.root=o(this.options),this.options.label=this.options.label||this.options.text,this.root.setAttribute("aria-label",this.options.label||this.options.name),this.label(this.options.label),this.icon(this.options.icon),this.options.container&&b(this.root,this.options.container),this.emit("built",this.root),this}insert(t,i){return b(this.root,t,i),this}setup(){this.element.input=this.root,this.options.name&&(this.root.dataset.name=this.options.name),this.options.content&&(this.root.innerHTML=this.options.content)}set(t,i){switch(t){case"disabled":this.disable(i);break;case"value":this.setValue(i);break;case"label":this.setLabel(i);break;default:this.setValue(t)}return this}handleClick(t){if(t.preventDefault(),!0!==this.disabled&&!this.options.upload)return this.emit("click",t),this}}var it={insert(t,i){var e=this.root;return this.insertElement(e,t,i),this},insertElement(t,i,e){i&&i.root&&(i=i.root),this.container=i,e=e||"bottom";var s=["prepend","append","after","before"],n=["top","bottom","after","before"].indexOf(e);if(-1!==n)return R[s[n]](i,t),t}};class et{constructor(t,i){return this.component=this.create(t,i),this}create(t,i,e,s){s=s||0,s++,e=e||{};let n=null;for(var o=0;o<t.length;o++){var r,h={};t[o]instanceof Object&&"function"==typeof t[o]?(M(t[o+2])&&(h=t[o+2]),"string"==typeof t[o+1]&&(r=t[o+1],h.name=r),n=new t[o](h),r&&(e[r]=n),n&&(this.display(n.root,h),this.style(n,h)),1===s&&(e.root=n.root),n&&i&&(n.insert?n.insert(i):b(n,i))):Array.isArray(t[o])&&(null==n&&(n=i),this.create(t[o],n,e,s))}return e}display(t,i){var e=i.display,s=i.direction||"horizontal";t&&e&&("horizontal"===s?t.className+=" flex-row":"vertical"===s&&(t.className+=" flex-column"))}style(t){var i=t.options||{};if(i.flex)F.add(t.root,"flex-"+i.flex);else{var e=i.size;i.size&&i.width?t.root.width=e+"px":i.size&&i.height&&(t.root.height=e+"px")}i.position&&(t.root.position=i.position),i.bottom&&(t.root.bottom=i.bottom),i.hide&&(t.root.display="none"),i.theme&&F.add(t.root,"theme-"+i.theme)}get(t){return t?this.component[t]:this.component}}let st={prefix:"material",class:"card",tag:"div"};class nt{constructor(t){this.init(t),this.build()}init(t){this.options=Object.assign({},st,t||{}),Object.assign(this,it)}build(){this.root=o(this.options),this.options.layout&&(this.layout=new et(this.options.layout,this.root))}}var ot={addEvent(t,i){function e(t){var e=i.apply(this,arguments);return!1===e&&(t.stopPropagation(),t.preventDefault()),e}function s(){var t=i.call(n,window.event);return!1===t&&(window.event.returnValue=!1,window.event.cancelBubble=!0),t}var n=this.root;return n.addEventListener?n.addEventListener(t,e,!1):n.attachEvent("on"+t,s),this},removeEvent(t,i){var e=this.root;return e.removeEventListener?e.removeEventListener(t,i,!1):e.detachEvent?(e.detachEvent("on"+t,e[i.toString()+t]),e[i.toString()+t]=null):e["on"+t]=function(){},this}};const rt={prefix:"material",class:"component",tag:"span"};class ht{constructor(t){return this.init(t),this.build(),this}init(t){return this.options=Object.assign({},rt,t||{}),Object.assign(this,Z,ot,it),this}build(){return this.root=o(this.options),this.options.container&&this.insert(this.options.container),this}}const at={prefix:"material",class:"container",tag:"div"};class lt{constructor(t){return this.init(t),this.build(),this}init(t){return this.options=Object.assign({},at,t||{}),Object.assign(this,Z),this}build(){return this.root=o(this.options),this.options.container&&b(this.root,this.options.container),this}insert(t,i){return b(this.root,t,i),this}}var ct={init:$,set:S,get:N,remove:V};`\n<svg width="18px" height="18px" class="checkbox-icon" viewBox="0 0 18 18">\n  <polygon class="checkbox-check" points="7 14.42 2 9.42 3.41 8.01 7 11.59 14.59 4 16 5.42"></polygon>\n</svg>`;let ut={prefix:"material",class:"checkbox",type:"control",build:["$root.material-checkbox",{},["input$input",{}],["span$control.checkbox-control"]],events:[["element.control.click","click",{}],["element.label.click","toggle",{}],["element.input.focus","focus"],["element.input.blur","blur"],["element.input.keydown","keydown",{}]]};class pt{constructor(t){return this.init(t),this.build(),this.attach(),this}init(t){return this.options=Object.assign({},ut,t||{}),Object.assign(this,ot,W,Z,G),this}build(){this.element=X(this.options.build),this.root=this.element.root,this.element.control.innerHTML='\n<svg width="18px" height="18px" class="checkbox-icon" viewBox="0 0 18 18">\n  <polygon class="checkbox-check" points="7 14.42 2 9.42 3.41 8.01 7 11.59 14.59 4 16 5.42"></polygon>\n</svg>';var t=this.options.text||this.options.label;return this.element.label=_(this.root,t,this.options),this.element.input.setAttribute("type","checkbox"),this.element.input.setAttribute("name",this.options.name),this.element.input.setAttribute("aria-label",this.options.name),this.options.value&&this.element.input.setAttribute("value",this.options.value),this.options.disabled&&(this.disabled=this.options.disabled,this.element.input.setAttribute("disabled","disabled"),F.add(this.root,"is-disabled")),this.options.checked&&this.check(!0),this.options.value&&this.set("value",this.value),this.options.container&&b(this.root,this.options.container),this}set(t,i){switch(t){case"checked":this.check(i);break;case"value":this.setValue(i);break;case"label":this.setLabel(i);break;default:this.check(t)}return this}insert(t,i){return b(this.root,t,i),this}click(t){return this.toggle(t),this.element.input.focus(),this}setValue(t){return console.log("setValue",t),this.value=t,this.element.input.setAttribute("value",t),this}}let dt=null;class ft{constructor(){return dt||(dt=this),this.components=this.components||[],this.component=this.component||{},this.init(),dt}init(){this.subscribe("settings",t=>{})}register(t){return this.components.push(t),this.component[t.name]=this.component[t.name]||[],this.component[t.name].push(t),this}subscribe(t,i){return this._topics=this._topics||{},this._topics.hasOwnProperty(t)||(this._topics[t]=[]),this._topics[t].push(i),!0}unsunscribe(t,i){if(this._topics=this._topics||{},!this._topics.hasOwnProperty(t))return!1;for(var e=0,s=this._topics[t].length;e<s;e++)if(this._topics[t][e]===i)return this._topics[t].splice(e,1),!0;return!1}publish(){this._topics=this._topics||{};var t=Array.prototype.slice.call(arguments),i=t.shift();if(!this._topics.hasOwnProperty(i))return!1;for(var e=0,s=this._topics[i].length;e<s;e++)this._topics[i][e].apply(void 0,t);return!0}}var mt=new ft,bt={prefix:"material",class:"divider",tag:"span"};class vt{constructor(t){return this.init(t),this.build(),this}init(t){this.options=Object.assign({},bt,t||{}),Object.assign(this,it)}build(){this.root=o(this.options),this.options.text&&(this.root.textContent=this.options.text),this.options.container&&this.insert(this.options.container)}}const gt={prefix:"material",class:"drawer",modifier:"width",state:"closed",position:"left",tag:"div",width:"340",modules:[Z,ot]};class yt{constructor(t){return this.options=Object.assign({},gt,t||{}),B(this),this.build(),this.attach(),this.emit("ready"),this}build(){return this.wrapper=r("div"),n(this.wrapper,this.options),this.root=r("aside"),F.add(this.root,"drawer-panel"),b(this.root,this.wrapper),this.options.position&&F.add(this.root,"position-"+this.options.position),this.options.fixed&&this.wrapper.classList.add("is-fixed"),this.options.size&&("top"===this.options.position||"bottom"===this.options.position?this.root.style="height: "+this.options.size+"px;":this.root.style="width: "+this.options.size+"px;"),this.options.container&&b(this.wrapper,this.options.container),this.emit("built",this.root),this}attach(){this.wrapper.addEventListener("click",t=>{console.log(" click close");this.close()})}toggle(){return this.wrapper.classList.contains("show")?this.close():this.open(),this}close(){return F.remove(this.wrapper,"show"),this}open(){return F.add(this.wrapper,"show"),this}insert(t,i){return b(this.wrapper,t,i),this}}var xt={prefix:"material",class:"item",type:"default",types:{default:"span",display4:"h1",display3:"h1",display2:"h1",display1:"h1",headline:"h1",title:"h2",subheading2:"h3",subheading1:"h4",body:"p",body2:"aside",caption:"span"}};class kt{constructor(t){return this.init(t),this.build(),this}init(t){this.options=Object.assign({},xt,t||{}),Object.assign(this,it)}build(){this.options.tag=this.options.types[this.options.type],this.root=o(this.options),this.options.text&&this.set(this.options.text),this.options.layout?this.layout=new et(this.options.layout,this.root):this.options.container&&this.insert(this.options.container)}set(t){return t?(this.root.innerText?this.root.innerText=t:this.root.textContent=t,this):this}}const wt={prefix:"material",class:"list",functions:["render","select"],target:".material-item",events:[["root.click","handleSelect"]]};class Ot{constructor(t){return this.options=Object.assign({},wt,t||{}),this.init(this.options),this.build(this.options),this.attach(this.options.events),this}init(){return this.filters=[],this.data=[],this.items=[],Object.assign(this,Z,G),this._initFunction(this.options.functions),this}_initFunction(t){for(var i=0;i<t.length;i++){var e=t[i];this.options[e]&&(this[e]=this.options[e])}}build(t){var i=this.options.tag||"div";return this.root=document.createElement(i),F.add(this.root,"material-"+this.options.class),t.name&&F.add(this.root,t.class+"-"+t.name),this.options.list&&this.set("list",this.options.list),this.options.container&&b(this.root,this.options.container),this}handleSelect(t){t.target&&t.target.matches(this.options.target)&&(F.remove(this.item,"is-selected"),F.add(t.target,"is-selected"),this.select(t.target,t,this.item),this.item=t.target)}select(t,i,e){this.emit("select",t)}render(t){return"divider"===t.type?new vt:new kt({name:t.name,text:t.text||t.name})}set(t,i,e){switch(t){case"list":this.setList(i,e);break;default:this.setList(t,e)}return this}setList(t){for(var i=0;i<t.length;i++)this.addItem(this.render(t[i]),i);return this}addItem(t){if(t){return b(t.root,this.root,"bottom"),this.items.push(t),t}}insert(t,i){b(this.root,t,i)}empty(){this.root.innerHTML="",this.items=[],this.item=null}reverse(){return this.list.reverse(),this.update(this.list),this}}var jt={prefix:"material",class:"progress",tag:"div",progress:"0%",circular:`<svg class="progress" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">\n      <circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle>\n    </svg>`};class Ct{constructor(t){return this.init(t),this.build(),this}init(t){this.options=Object.assign({},jt,t||{}),Object.assign(this,b)}build(t){return this.root=r(this.options.tag),n(this.root,this.options),"circular"===this.options.type&&(this.root.innerHTML=this.options.circular),"indeterminate"===this.options.type?(this.bar=r("div","bar"),b(this.bar,this.root)):(this.bar=r("div","bar"),b(this.bar,this.root),this.set(this.options.progress)),this.options.container&&b(this.root,this.options.container),this}set(t){this.bar.setAttribute("style","width: "+t)}}`\n<svg width="24px" class="slider-pin" height="32px" viewBox="0 0 24 32">\n  <path d="M12.4799395,31.9994146 C12.4799395,31.9994146 24,18.0312233 24,11.6159251 C24,5.2006268 18.627417,0 12,0 C5.372583,0 0,5.2006268 0,11.6159251 C0,18.0312233 12.4799395,31.9994146 12.4799395,31.9994146 Z"></path>\n</svg>`;let Lt={prefix:"material",class:"slider",type:"control",label:null,checked:!1,error:!1,value:!1,range:[0,100],step:5,modules:[ot,W,Z,G],mixins:[],build:["$root.material-slider",{},["label$label.slider-label",{}],["input$input"],["$control.slider-control",{},["$track.slider-track",{},["canvas$canvas.slider-canvas",{}],["$trackvalue.slider-track-value",{}],["$knob.slider-knob",{}],["$marker.slider-marker",{},["$value.slider-value",{}]]]]],events:[["element.input.focus","focus"],["element.input.blur","blur"]]};class zt{constructor(t){return this.options=Object.assign({},Lt,t||{}),this.init(this.options),this.build(this.options),this.attach(),this}init(t){return B(this),this}build(){this.element=X(this.options.build),this.root=this.element.root,n(this.root,this.options),this.options.container&&b(this.root,this.options.container);var t=this.element.marker.innerHTML;this.element.marker.innerHTML='\n<svg width="24px" class="slider-pin" height="32px" viewBox="0 0 24 32">\n  <path d="M12.4799395,31.9994146 C12.4799395,31.9994146 24,18.0312233 24,11.6159251 C24,5.2006268 18.627417,0 12,0 C5.372583,0 0,5.2006268 0,11.6159251 C0,18.0312233 12.4799395,31.9994146 12.4799395,31.9994146 Z"></path>\n</svg>'+t,this.options.type&&F.add(this.root,"type-"+this.options.type),this.options.disabled&&this.disable(!0);let i=this.options.label||this.options.text;this.element.label.textContent=i,this.options.label=this.options.label||this.options.text,this.initTrack();setTimeout(()=>{this.initCanvas()},50)}initCanvas(){window.addEventListener("resize",()=>{console.log("resize");this.drawCanvas()},!1),this.drawCanvas()}drawCanvas(){var t=O(this.element.track,"width"),i=O(this.element.track,"height");this.element.canvas.width=t,this.element.canvas.height=i;var e=this.element.canvas.getContext("2d");e.lineWidth=2,e.beginPath(),e.moveTo(0,i/2+1),e.lineTo(t,i/2+1),e.strokeStyle="rgba(34, 31, 31, .26)",e.stroke()}initTrack(){this.element.track.addEventListener("mousedown",t=>{if(!0===this.disabled)return;this.initTrackSize();var i=t.layerX;this.update(i)}),this.element.knob.addEventListener("click",t=>{t.stopPropagation()}),this.initDragging();setTimeout(()=>{this.setValue(this.options.value)},100)}initTrackSize(){return this._tracksize=O(this.element.track,"width"),this._knobsize=O(this.element.knob,"width"),this._markersize=32,this._trackleft=O(this.element.track,"left"),this}initDragging(){this.element.knob.onmousedown=(t=>{if(!0===this.disabled)return;t.stopPropagation();t=t||window.event;F.add(this.element.control,"dragging");var i=0;var e=0;t.pageX?i=t.pageX:t.clientX&&(i=t.clientX);i=this._trackleft;document.body.onmousemove=(t=>{if(!0===this.disabled)return;console.log("mousedown",this.disabled);t=t||window.event;var s=0;t.pageX?s=t.pageX:t.clientX&&(s=t.clientX);e=s-i;this.update(e)});document.body.onmouseup=(t=>{document.body.onmousemove=document.body.onmouseup=null;t=t||window.event;var s=0;t.pageX?s=t.pageX:t.clientX&&(s=t.clientX);e=s-i;this.update(e);F.remove(this.element.control,"dragging")})})}update(t){var i=this._tracksize,e=this.options.range[1]-this.options.range[0];t>i&&(t=i),t<0&&(t=0);var s=i/t,n=Math.round(e/s)+this.options.range[0];0===t&&F.remove(this.element.knob,"notnull"),this.element.knob.style.left=t-this._knobsize/2+"px",this.element.trackvalue.style.width=t+"px",this.element.marker.style.left=t-this._markersize/2+"px",this.element.value.textContent=n,this.element.input.value=n,n>this.options.range[0]?F.add(this.element.knob,"notnull"):F.remove(this.element.knob,"notnull")}updateValue(t){this.initTrackSize();var i=O(this.element.track,"width");i=parseInt(i);var e=100*t/(this.options.range[1]-this.options.range[0]),s=Math.round(i*e/100);return this.update(s),this}insert(t,i){b(this.root,t,i)}set(t,i){switch(t){case"value":this.setValue(i);break;case"label":this.setLabel(i);break;default:this.setValue(t)}return this}get(t){var i;switch(t){case"value":i=this.getValue();break;case"name":i=this.name;break;default:return this.getValue()}return i}getValue(){return this.element.input.value}setValue(t){t=t||this.options.range[0],this.element.input.value=t,this.updateValue(t)}setLabel(t){null!==(t=t||this.options.label||this.options.text)&&this.label&&(this.label.textContent=t)}}let At={prefix:"material",class:"switch",type:"control",label:null,checked:!1,error:!1,value:!1,disabled:!1,build:["$root.material-switch",{},["input$input$switch-input",{type:"checkbox"}],["span$control.switch-control",{},["span$track.switch-track",{},["span$knob.switch-knob",{}]]],["label$label.switch-label"]],events:[["element.control.click","toggle"],["element.label.click","toggle"],["element.input.click","toggle"],["element.input.focus","focus"],["element.input.blur","blur"]]};class Et{constructor(t){return this.init(t),this.build(),this.attach(),this}init(t){return this.options=Object.assign({},At,t||{}),Object.assign(this,Z,W,G,it),this.value=this.options.value,this}build(){this.element=X(this.options.build),this.root=this.element.root,n(this.root,this.options),this.options.disabled&&this.disable(),this.value&&this.element.input.setAttribute("checked","checked"),this.element.input.setAttribute("aria-label",this.options.name);let t=this.options.label||this.options.text||"";this.element.label.textContent=t,this.element.label.setAttribute("for",this.options.name),this.options.checked&&this.check(!0),this.options.container&&this.insert(this.options.container)}set(t,i){switch(t){case"value":this.setValue(i);break;case"disabled":!0===i?this.disable():!1===i&&this.enable();break;default:this.setValue(t)}return this}get(){return this.value}getValue(){return this.value}setValue(t){t?this.check():this.unCheck()}}const Tt={prefix:"material",class:"tabs",tag:"div",indicator:{prefix:"material",class:"indicator",tag:"div"}};class Mt{constructor(t){return this.init(t),this.build(),this}init(t){this.options=Object.assign({},Tt,t||{}),Object.assign(this,it,Z)}build(){return this.root=o(this.options),this.options.list&&(this.list=new Ot({list:this.options.list,target:".material-button",height:600,label:"Flat",render:t=>{var i;i=new tt({name:t.name,text:t.text||t.name});return i},select:t=>{console.log("click");this.selected=t;this.click(t)}}).insert(this.root)),this.indicator=o(this.options.indicator),this.insertElement(this.indicator,this.root),this.options.container&&this.insert(this.options.container),this}click(t){var i=O(this.root),e=O(t);this.indicator.setAttribute("style","width: "+e.width+"px; left: "+(e.left-i.left)+"px;"),this.emit("select",t.dataset.name)}}var _t={prefix:"material",class:"text",type:"default",types:{default:"span",display4:"h1",display3:"h1",display2:"h1",display1:"h1",headline:"h1",title:"h2",subheading2:"h3",subheading1:"h4",body:"p",body2:"aside",caption:"span"}};class $t{constructor(t){return this.init(t),this.build(),this}init(t){this.options=Object.assign({},_t,t||{}),Object.assign(this,it)}build(){return this.options.tag=this.options.types[this.options.type],this.root=o(this.options),this.options.text&&this.set(this.options.text),this.options.container&&this.insert(this.options.container),this}set(t){return t?(this.root.innerText?this.root.innerText=t:this.root.textContent=t,this):this}}const St={prefix:"material",class:"toolbar",tag:"header"};class Nt{constructor(t){return this.init(t),this.build(),this.attach(),this}init(t){this.options=Object.assign({},St,t||{}),Object.assign(this,it),console.log("waterfALL",this.options.waterfall),this.waterfall=this.options.waterfall}build(){return this.root=o(this.options),console.log(this.options.height,this.options.fixed),this.options.height&&(this.root.style.height=this.options.height+"px"),this.options.fixed&&(console.log("is-fixed"),this.root.classList.add("is-fixed")),this.options.flexible&&this.root.classList.add("is-flexible"),this}attach(){this.root.addEventListener("DOMNodeInserted",t=>{var i=t.target;if(i!==this.root)return;var e=this.size=O(this.root,"height");var s=this.view=this.root.parentNode;console.log("view",s);var n=window.getComputedStyle(s)["padding-top"];n=parseInt(n,10);this.padding=n;var o=this.ptop=e+n;document.body==s&&(console.log("toolbar container body"),this.root.classList.add("toolbar-body"));s.setAttribute("style","padding-top: "+o+"px");this.scroll(s)})}set(t,i){switch(t){case"minimize":this.root.setAttribute("style","height: 64px");break;case"value":this.setValue(i);break;case"label":this.setLabel(i);break;default:this.check(t)}return this}scroll(t){var i=!1,e=t;this.scrolling=t,t===document.body&&(i=!0,e=document,this.scrolling=document.body),t.classList.add(),e.addEventListener("scroll",e=>{var s;s=i?(document.documentElement||document.body.parentNode||document.body).scrollTop:t.scrollTop;s>0?this.root.classList.add("is-scrolled"):this.root.classList.remove("is-scrolled");this.update(e,s)})}update(t,i){this.options.fixed&&this.fixed(t,i),this.options.flexible&&this.flexible(t,i)}flexible(t,i){var e="64";O(this.root,"height")<e?this.root.style.height=e+"px":((e=this.size-i)<64&&(e=64),this.root.style.height=e+"px")}fixed(t,i){this.root.style.transform="translateY("+i+"px)"}waterfall$(t){}}`\n<svg height="24" viewBox="0 0 24 24" width="24">\n  <path d="M0 0h24v24H0z" fill="none" />\n  <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />\n</svg>`,`\n<svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">\n  <path d="M0 0h24v24H0z" fill="none" />\n  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />\n</svg>`;var Vt=`\n<svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">\n    <path d="M0 0h24v24H0z" fill="none"/>\n    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>\n    <path d="M0 0h24v24H0z" fill="none"/>\n</svg>\n `,Pt=`\n<svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">\n    <path d="M11.99 2C6.47 2 2 6.47 2 12s4.47 10 9.99 10S22 17.53 22 12 17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm1-10.06L14.06 11l1.06-1.06L16.18 11l1.06-1.06-2.12-2.12zm-4.12 0L9.94 11 11 9.94 8.88 7.82 6.76 9.94 7.82 11zM12 17.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>\n    <path d="M0 0h24v24H0z" fill="none"/>\n</svg>\n `;console.log("demo"),console.log("log");var Ht=[{text:"One",name:"one"},{text:"Two",name:"two"},{text:"Three",name:"three"},{text:"Four",name:"four"}];document.addEventListener("DOMContentLoaded",function(){var t=new et([ht,"demo",{display:"flex",direction:"vertical"},[ht,"head",{display:"flex",direction:"horizontal"},[Nt,"toolbar",{flex:1,display:"flex",direction:"horizontal"},[Q,"menu-navi",{icon:'\n<svg height="24" viewBox="0 0 24 24" width="24">\n  <path d="M0 0h24v24H0z" fill="none" />\n  <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />\n</svg>',type:"action"}],[$t,"app-title",{text:"Material"}]],[Nt,"desk",{display:"flex",direction:"horizontal"},[Q,"menu-more",{icon:'\n<svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">\n  <path d="M0 0h24v24H0z" fill="none" />\n  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />\n</svg>',type:"action"}]]],[yt,"navi",{css:"drawer-temporary",type:"temporary",size:"280px"},[ht,"navi-head",{theme:"dark"},[$t,"app-title",{text:"Components"}]],[Ot,"navi-list",{theme:"dark"}]],[Mt,"tabs",{color:"primary",list:Ht,flex:"none"}],[lt,"body",{flex:"1"},[lt,"container-components",{},[$t,"text",{text:"Components",type:"title"}]],[nt,"buttons",{},[Nt,"toolbar-buttons",{},[$t,"buttons-title",{text:"Buttons"}]],[lt,"button-body",{},[Q,"first",{text:"Flat"}],[Q,"second",{text:"Raised",type:"raised",color:"primary"}],[Q,"third",{icon:Vt,type:"action"}],[Q,"fourth",{icon:Vt,text:"text"}]]],[nt,"buttons",{},[Nt,"toolbar-buttons",{},[$t,"buttons-title",{text:"Floating Buttons"}]],[lt,"button-body",{},[Q,"fifth",{icon:Vt,type:"floating",color:"primary"}],[Q,"six",{icon:Pt,type:"floating",style:"mini",color:"primary"}],[Q,"fifth",{icon:Vt,type:"floating",color:"secondary"}],[Q,"six",{icon:Pt,type:"floating",style:"mini",color:"secondary"}]]],[nt,"checkboxes",{},[Nt,"toolbar",{},[$t,"checkbox-title",{text:"Checkboxes"}]],[lt,"checkbox-body",{},[pt,"checkbox",{text:"Checkbox"}],[pt,"checkbox-checked",{text:"Checked",checked:!0}],[pt,"checkbox-disabled",{text:"Disabled",disabled:!0}]]],[nt,"switches",{},[Nt,"switch-toolbar",{},[$t,"switch-title",{text:"Switches"}]],[lt,"switch-body",{},[Et,"switch",{text:"Switch"}],[Et,"switch-checked",{text:"Checked",checked:!0}],[Et,"switch-disabled",{text:"Disabled",disabled:!0}]]],[nt,"progress indicators",{},[Nt,"progress-toolbar",{},[$t,"progress-title",{text:"Progress indicators"}]],[lt,"progress-body",{},[Ct,"progress",{progress:"60%"}],[Ct,"progress-indeterminate",{type:"indeterminate"}]]],[nt,"sliders",{},[Nt,"slider-toolbar",{},[$t,"slider-title",{text:"Sliders"}]],[lt,"slider-body",{},[zt,"slider",{text:"Slider"}],[zt,"slider-checked",{text:"Checked",checked:!0}],[zt,"slider-disabled",{text:"Disabled",disabled:!0}]]]]],document.body);t.get("menu-more").on("click",i=>{t.get("more-menu").show(i)});t.get("body").root.addEventListener("scroll",i=>{t.get("body").root.scrollTop>0?F.add(t.get("tabs").root,"head-shadow"):F.remove(t.get("tabs").root,"head-shadow")}),t.get("menu-navi").on("click",i=>{t.get("navi").open()})})}();
+(() => {
+  // ../../node_modules/material/src/module/css.js
+  function has(element, className) {
+    if (!element || !className) {
+      return false;
+    }
+    return !!element.className.match(new RegExp("(\\s|^)" + className + "(\\s|$)"));
+  }
+  function add(element, className) {
+    if (!element || !className) {
+      return;
+    }
+    let classNames = className.split(" ");
+    for (var i = 0; i < classNames.length; i++) {
+      var cn = classNames[i];
+      if (!has(element, cn)) {
+        element.classList.add(cn);
+      }
+    }
+    return element;
+  }
+  function remove(element, className) {
+    if (!element || !className) {
+      return;
+    }
+    element.classList.remove(className);
+    return element;
+  }
+  function toggle(element, className) {
+    if (has(element, className)) {
+      remove(element, className);
+    } else {
+      add(element, className);
+    }
+    return element;
+  }
+  var css_default = { has, add, remove, toggle };
+
+  // ../../node_modules/material/src/component/classify.js
+  function classify(element, options) {
+    css_default.add(element, options.prefix + "-" + options.class);
+    if (options.name) {
+      css_default.add(element, options.class + "-" + options.name);
+    }
+    if (options.type) {
+      css_default.add(element, "type-" + options.type);
+    }
+    if (options.color) {
+      css_default.add(element, options.color + "-color");
+    }
+    if (options.css) {
+      css_default.add(element, options.css);
+    }
+    if (options.elevation) {
+      css_default.add(element, "elevation-z" + options.elevation);
+    }
+    if (options.name) {
+      element.dataset.name = options.name;
+    }
+    if (options.label) {
+      element.title = options.label;
+    }
+    if (options.style) {
+      var styles = options.style.split(" ");
+      for (var i = 0; i < styles.length; i++) {
+        css_default.add(element, "style-" + styles[i]);
+      }
+    }
+    if (options.theme) {
+      element.classList.add(options.theme + "-theme");
+    }
+  }
+  var classify_default = classify;
+
+  // ../../node_modules/material/src/component/create.js
+  function create(options) {
+    var element = document.createElement(options.tag || "div");
+    classify_default(element, options);
+    return element;
+  }
+  var create_default = create;
+
+  // ../../node_modules/material/src/element/create.js
+  function create2(tag, className) {
+    tag = tag || "div";
+    var element = document.createElement(tag);
+    css_default.add(element, className);
+    return element;
+  }
+  var create_default2 = create2;
+
+  // ../../node_modules/material/src/module/dom.js
+  function append(container, element) {
+    container.appendChild(element);
+    return element;
+  }
+  function prepend(container, element) {
+    return container.insertBefore(element, container.firstChild);
+  }
+  function after(container, element) {
+    return container.parentNode.insertBefore(element, container.nextSibling);
+  }
+  function before(container, element) {
+    return container.insertBefore(element, container);
+  }
+  function replace(container, element) {
+    return container.parentNode.replaceChild(element, container);
+  }
+  function remove2(element) {
+    var parent = element.parentNode;
+    return parent.removeChild(element);
+  }
+  function dispose(element) {
+    var el = element;
+    return el.parentNode ? el.parentNode.removeChild(el) : el;
+  }
+  function empty(element) {
+    while (element.firstChild) {
+      element.removeChild(element.firstChild);
+    }
+  }
+  function destroy(element) {
+    return element.parentNode.removeChild(element);
+  }
+  var dom_default = { append, prepend, after, before, replace, remove: remove2, destroy, empty, dispose };
+
+  // ../../node_modules/material/src/element/insert.js
+  function insert(element, container, context) {
+    if (!element || !container)
+      return;
+    element = element.root || element;
+    container = container.root || container;
+    context = context || "bottom";
+    var contexts = ["top", "bottom", "after", "before"];
+    var methods = ["prepend", "append", "after", "before"];
+    var index = contexts.indexOf(context);
+    if (index === -1) {
+      return;
+    }
+    var method = methods[index];
+    dom_default[method](container, element);
+    return element;
+  }
+  var insert_default = insert;
+
+  // ../../node_modules/material/src/component/control.js
+  var KEYCODE = {
+    ENTER: 13,
+    SPACE: 32
+  };
+  var control = {
+    toggle() {
+      if (this.disabled)
+        return;
+      this.focus();
+      if (this.checked) {
+        this.check(false);
+      } else {
+        this.check(true);
+      }
+      return this;
+    },
+    check(checked) {
+      if (checked) {
+        css_default.add(this.root, "is-checked");
+        this.element.input.checked = true;
+        this.checked = true;
+        this.emit("change", this.checked);
+      } else {
+        css_default.remove(this.root, "is-checked");
+        this.element.input.checked = false;
+        this.checked = false;
+        this.emit("change", this.checked);
+      }
+      return this;
+    },
+    label(label2, container) {
+      if (!label2)
+        return;
+      this.element = this.element || {};
+      if (!this.element.label) {
+        this.element.label = create_default2("label", this.options.class + "-label");
+      }
+      this.element.label.textContent = label2;
+      container = container || this.root;
+      insert_default(this.element.label, container);
+    },
+    icon(icon, container, position) {
+      if (!icon)
+        return;
+      container = container || this.root;
+      position = position || "top";
+      if (this.options.type === "text-icon") {
+        position = "bottom";
+      }
+      this.element = this.element || {};
+      this.element.icon = create_default2("i", this.options.class + "-icon");
+      insert_default(this.element.icon, container, position);
+      this.element.icon.innerHTML = icon;
+    },
+    error(error) {
+      error = error || this.options.error;
+      if (this.options.error === null)
+        return;
+      let text = this.options.error || this.options.text;
+      if (!this.element.error) {
+        this.element.error = create_default2("error", this.options.class + "-error");
+      }
+      if (text) {
+        this.element.error.textContent = text;
+      }
+      insert_default(this.element.error, this.root, "bottom");
+    },
+    disable() {
+      this.disabled = true;
+      this.element.input.setAttribute("disabled", "disabled");
+      css_default.add(this.root, "is-disabled");
+      return this;
+    },
+    enable() {
+      this.disabled = false;
+      this.element.input.removeAttribute("disabled");
+      css_default.remove(this.root, "is-disabled");
+      return this;
+    },
+    keydown(e2) {
+      if (e2.altKey)
+        return;
+      switch (e2.keyCode) {
+        case KEYCODE.ENTER:
+        case KEYCODE.SPACE:
+          e2.preventDefault();
+          this.toggle(e2);
+          break;
+        default:
+          break;
+      }
+    },
+    get(prop) {
+      switch (prop) {
+        case "name":
+          this.getName();
+          break;
+        default:
+          this.setValue(prop);
+      }
+      return this;
+    },
+    getName() {
+      return this.root.dataset.name;
+    },
+    focus() {
+      if (this.disabled === true)
+        return this;
+      css_default.add(this.root, "is-focused");
+      if (this.element.input !== document.activeElement) {
+        this.element.input.focus();
+      }
+      return this;
+    },
+    blur() {
+      css_default.remove(this.root, "is-focused");
+      return this;
+    }
+  };
+  var control_default = control;
+
+  // ../../node_modules/material/src/module/utils.js
+  function _isArray(object) {
+    return Object.prototype.toString.call(object) === "[object Array]";
+  }
+  function _isLiteralObject(object) {
+    return object && typeof object === "object" && Object.getPrototypeOf(object) === Object.getPrototypeOf({});
+  }
+  function _isIterable(object) {
+    var r = _isLiteralObject(object) || _isArray(object) || typeof object === "object" && object !== null && object.length !== void 0;
+    return r;
+  }
+  function _each(object, callback) {
+    if (_isArray(object) || typeof object === "object" && object.length !== void 0) {
+      for (var i = 0, l = object.length; i < l; i++) {
+        callback.apply(object[i], [object[i], i]);
+      }
+      return;
+    }
+    if (_isLiteralObject(object)) {
+      for (var key in object) {
+        callback.apply(object[key], [object[key], key]);
+      }
+    }
+  }
+
+  // ../../node_modules/material/src/element/style.js
+  function get(element, style) {
+    if (_isArray(style)) {
+      var css = {};
+      for (var i in list) {
+        css[list[i]] = this.get(element, list[i]);
+      }
+      return css;
+    } else {
+      var computedStyle;
+      if (typeof window.getComputedStyle === "function") {
+        computedStyle = window.getComputedStyle(element);
+      } else if (typeof document.currentStyle !== void 0) {
+        computedStyle = element.currentStyle;
+      } else {
+        computedStyle = element.style;
+      }
+      if (style) {
+        return computedStyle[style];
+      } else {
+        return computedStyle;
+      }
+    }
+  }
+  function set(element, style) {
+    if (_isIterable(element) && _isLiteralObject(style)) {
+      _each(element, function(e2) {
+        set(e2, style);
+      });
+      return element;
+    }
+    if (_isLiteralObject(style)) {
+      for (var i in style) {
+        element.style[i] = style[i];
+      }
+      return style;
+    }
+    return false;
+  }
+  var style_default = { get, set };
+
+  // ../../node_modules/material/src/element/offset.js
+  function offset(element, prop) {
+    var rect = element.getBoundingClientRect();
+    var offset2 = {
+      top: Math.round(rect.top),
+      right: Math.round(rect.right),
+      bottom: Math.round(rect.bottom),
+      left: Math.round(rect.left),
+      width: rect.width ? Math.round(rect.width) : Math.round(element.offsetWidth),
+      height: rect.height ? Math.round(rect.height) : Math.round(element.offsetHeight)
+    };
+    if (offset2.width <= 0) {
+      offset2.width = parseFloat(style_default.get(element, "width"));
+    }
+    if (offset2.height <= 0) {
+      offset2.height = parseFloat(style_default.get(element, "height"));
+    }
+    if (prop) {
+      return offset2[prop];
+    } else {
+      return offset2;
+    }
+  }
+  var offset_default = offset;
+
+  // ../../node_modules/material/src/component/ripple.js
+  var defaults = {
+    transition: ".5s cubic-bezier(0.4, 0.0, 0.2, 1)",
+    opacity: ["1", ".3"]
+  };
+  function init(instance2) {
+    instance2.on("built", (container) => {
+      set2(container);
+    });
+  }
+  function set2(container) {
+    container.addEventListener("mousedown", (e2) => {
+      show(e2);
+    });
+  }
+  function show(e2) {
+    var container = e2.target;
+    var offs = offset_default(container);
+    let ripple = create_default2("div", "material-ripple");
+    let end = coordinate(offs);
+    let initial = {
+      left: (e2.offsetX || offs.width / 2) + "px",
+      top: (e2.offsetY || offs.height / 2) + "px"
+    };
+    ripple.style.left = initial.left;
+    ripple.style.top = initial.top;
+    ripple.style.transition = defaults.transition;
+    insert_default(ripple, container, "top");
+    setTimeout(() => {
+      ripple.style.left = end.left;
+      ripple.style.top = end.top;
+      ripple.style.width = end.size;
+      ripple.style.height = end.size;
+    }, 1);
+    document.body.onmouseup = () => {
+      destroy2(ripple);
+    };
+  }
+  function destroy2(ripple) {
+    if (ripple.parentNode) {
+      ripple.style.opacity = "0";
+    }
+    document.body.onmouseup = null;
+    setTimeout(() => {
+      if (ripple.parentNode) {
+        ripple.parentNode.removeChild(ripple);
+      }
+    }, 1e3);
+  }
+  function coordinate(o) {
+    var size = o.width;
+    var top = -o.height / 2;
+    if (o.width > o.height) {
+      top = -(o.width - o.height / 2);
+    }
+    return {
+      size: size * 2 + "px",
+      top: top + "px",
+      left: size / -2 + "px"
+    };
+  }
+  var ripple_default = init;
+
+  // ../../node_modules/material/src/module/emitter.js
+  var emitter_default = {
+    on(event, cb) {
+      this.event = this.event || {};
+      this.event[event] = this.event[event] || [];
+      this.event[event].push(cb);
+      return this;
+    },
+    off(event, cb) {
+      this.event = this.event || {};
+      if (event in this.event === false)
+        return;
+      this.event[event].splice(this.event[event].indexOf(cb), 1);
+      return this;
+    },
+    emit(event) {
+      this.event = this.event || {};
+      if (event in this.event === false)
+        return;
+      for (var i = 0; i < this.event[event].length; i++) {
+        this.event[event][i].apply(this, Array.prototype.slice.call(arguments, 1));
+      }
+      return this;
+    }
+  };
+
+  // ../../node_modules/material/src/module/extract.js
+  function f(instance2, func) {
+    if (!func)
+      return;
+    if (typeof func === "function") {
+      return func;
+    } else if (!func.match(/\./))
+      return instance2[func];
+    var iteration;
+    var keys = func.split(".");
+    for (var i = 0, l = keys.length; i < l; i++) {
+      var key = keys[i];
+      iteration = iteration || instance2;
+      iteration = iteration[key];
+    }
+    return iteration;
+  }
+  function e(instance2, ev) {
+    if (!ev)
+      return instance2;
+    else if (!ev.match(/\./))
+      return instance2[ev];
+    var iteration;
+    var obj = {};
+    var element;
+    var keys = ev.split(".");
+    for (var i = 0, l = keys.length; i < l; i++) {
+      var key = keys[i];
+      iteration = iteration || instance2;
+      iteration = iteration[key];
+      if (i === keys.length - 2) {
+        element = iteration;
+      }
+    }
+    obj.element = element;
+    obj.name = keys[keys.length - 1];
+    return obj;
+  }
+  var extract_default = { e, f };
+
+  // ../../node_modules/material/src/module/attach.js
+  var attach_default = {
+    attach: function(events) {
+      events = events || this.options.events;
+      if (!events)
+        return;
+      var instance2 = this;
+      events.map((def) => {
+        var e2 = extract_default.e(instance2, def[0]);
+        var f2 = extract_default.f(instance2, def[1]);
+        e2.element.addEventListener(e2.name, f2.bind(this));
+      });
+      return this;
+    }
+  };
+
+  // ../../node_modules/material/src/Button.js
+  var defaults2 = {
+    prefix: "material",
+    class: "button",
+    tag: "button",
+    events: [
+      ["root.click", "handleClick"]
+    ]
+  };
+  var Button = class {
+    constructor(options) {
+      this.init(options);
+      this.build();
+      this.setup();
+      this.attach();
+      this.emit("ready");
+      return this;
+    }
+    init(options) {
+      this.options = Object.assign({}, defaults2, options || {});
+      Object.assign(this, control_default, emitter_default, attach_default, ripple_default);
+      this.element = this.element || {};
+      ripple_default(this);
+      this.emit("init");
+    }
+    build() {
+      this.element = {};
+      this.root = create_default(this.options);
+      this.options.label = this.options.label || this.options.text;
+      this.root.setAttribute("aria-label", this.options.label || this.options.name);
+      this.label(this.options.label);
+      this.icon(this.options.icon);
+      if (this.options.container) {
+        insert_default(this.root, this.options.container);
+      }
+      this.emit("built", this.root);
+      return this;
+    }
+    insert(container, context) {
+      insert_default(this.root, container, context);
+      return this;
+    }
+    setup() {
+      this.element.input = this.root;
+      if (this.options.name) {
+        this.root.dataset.name = this.options.name;
+      }
+      if (this.options.content) {
+        this.root.innerHTML = this.options.content;
+      }
+    }
+    set(prop, value) {
+      switch (prop) {
+        case "disabled":
+          this.disable(value);
+          break;
+        case "value":
+          this.setValue(value);
+          break;
+        case "label":
+          this.setLabel(value);
+          break;
+        default:
+          this.setValue(prop);
+      }
+      return this;
+    }
+    handleClick(e2) {
+      e2.preventDefault();
+      if (this.disabled === true)
+        return;
+      if (this.options.upload)
+        return;
+      this.emit("click", e2);
+      return this;
+    }
+  };
+  var Button_default = Button;
+
+  // ../../node_modules/material/src/component/insert.js
+  var insert_default2 = {
+    insert(container, context) {
+      var element = this.root;
+      this.insertElement(element, container, context);
+      return this;
+    },
+    insertElement(element, container, context) {
+      if (container && container.root) {
+        container = container.root;
+      }
+      this.container = container;
+      context = context || "bottom";
+      var contexts = ["top", "bottom", "after", "before"];
+      var methods = ["prepend", "append", "after", "before"];
+      var index = contexts.indexOf(context);
+      if (index === -1) {
+        return;
+      }
+      var method = methods[index];
+      dom_default[method](container, element);
+      return element;
+    }
+  };
+
+  // ../../node_modules/material/src/module/object.js
+  function is(object) {
+    return object && typeof object === "object" && Object.getPrototypeOf(object) === Object.getPrototypeOf({});
+  }
+
+  // ../../node_modules/material/src/layout.js
+  var Layout = class {
+    constructor(schema, container) {
+      this.component = this.create(schema, container);
+      return this;
+    }
+    create(schema, container, structure, level) {
+      level = level || 0;
+      level++;
+      structure = structure || {};
+      let component = null;
+      for (var i = 0; i < schema.length; i++) {
+        var name;
+        var options = {};
+        if (schema[i] instanceof Object && typeof schema[i] === "function") {
+          if (is(schema[i + 2])) {
+            options = schema[i + 2];
+          }
+          if (typeof schema[i + 1] === "string") {
+            name = schema[i + 1];
+            options.name = name;
+          }
+          component = new schema[i](options);
+          if (name) {
+            structure[name] = component;
+          }
+          if (component) {
+            this.display(component.root, options);
+            this.style(component, options);
+          }
+          if (level === 1) {
+            var isClass = (fn) => /^\sclass/.test(schema[i].toString());
+            structure.root = component.root;
+          }
+          if (component && container) {
+            if (component.insert)
+              component.insert(container);
+            else
+              insert_default(component, container);
+          }
+        } else if (Array.isArray(schema[i])) {
+          if (component == null) {
+            component = container;
+          }
+          this.create(schema[i], component, structure, level);
+        }
+      }
+      return structure;
+    }
+    display(element, options) {
+      var display = options.display;
+      var direction = options.direction || "horizontal";
+      if (!element || !display)
+        return;
+      if (direction === "horizontal") {
+        element.className += " flex-row";
+      } else if (direction === "vertical") {
+        element.className += " flex-column";
+      }
+    }
+    style(component) {
+      var options = component.options || {};
+      if (options.flex) {
+        css_default.add(component.root, "flex-" + options.flex);
+      } else {
+        var size = options.size;
+        if (options.size && options.width) {
+          component.root.width = size + "px";
+        } else if (options.size && options.height) {
+          component.root.height = size + "px";
+        }
+      }
+      if (options.position) {
+        component.root.position = options.position;
+      }
+      if (options.bottom) {
+        component.root.bottom = options.bottom;
+      }
+      if (options.hide) {
+        component.root.display = "none";
+      }
+      if (options.theme) {
+        css_default.add(component.root, "theme-" + options.theme);
+      }
+    }
+    get(name) {
+      if (name)
+        return this.component[name];
+      else
+        return this.component;
+    }
+  };
+  var layout_default = Layout;
+
+  // ../../node_modules/material/src/card.js
+  var defaults3 = {
+    prefix: "material",
+    class: "card",
+    tag: "div"
+  };
+  var Card = class {
+    constructor(options) {
+      this.init(options);
+      this.build();
+    }
+    init(options) {
+      this.options = Object.assign({}, defaults3, options || {});
+      Object.assign(this, insert_default2);
+    }
+    build() {
+      this.root = create_default(this.options);
+      if (this.options.layout) {
+        this.layout = new layout_default(this.options.layout, this.root);
+      }
+    }
+  };
+  var card_default = Card;
+
+  // ../../node_modules/material/src/component/events.js
+  var events_default = {
+    addEvent(event, fn) {
+      var element = this.root;
+      function listenHandler(e2) {
+        var ret = fn.apply(this, arguments);
+        if (ret === false) {
+          e2.stopPropagation();
+          e2.preventDefault();
+        }
+        return ret;
+      }
+      function attachHandler() {
+        var ret = fn.call(element, window.event);
+        if (ret === false) {
+          window.event.returnValue = false;
+          window.event.cancelBubble = true;
+        }
+        return ret;
+      }
+      if (element.addEventListener) {
+        element.addEventListener(event, listenHandler, false);
+      } else {
+        element.attachEvent("on" + event, attachHandler);
+      }
+      return this;
+    },
+    removeEvent(event, fn) {
+      var element = this.root;
+      if (element.removeEventListener) {
+        element.removeEventListener(event, fn, false);
+      } else if (element.detachEvent) {
+        element.detachEvent("on" + event, element[fn.toString() + event]);
+        element[fn.toString() + event] = null;
+      } else {
+        element["on" + event] = function() {
+        };
+      }
+      return this;
+    }
+  };
+
+  // ../../node_modules/material/src/component.js
+  var defaults4 = {
+    prefix: "material",
+    class: "component",
+    tag: "span"
+  };
+  var Component = class {
+    constructor(options) {
+      this.init(options);
+      this.build();
+      return this;
+    }
+    init(options) {
+      this.options = Object.assign({}, defaults4, options || {});
+      Object.assign(this, emitter_default, events_default, insert_default2);
+      return this;
+    }
+    build() {
+      this.root = create_default(this.options);
+      if (this.options.container) {
+        this.insert(this.options.container);
+      }
+      return this;
+    }
+  };
+  var component_default = Component;
+
+  // ../../node_modules/material/src/container.js
+  var defaults5 = {
+    prefix: "material",
+    class: "container",
+    tag: "div"
+  };
+  var Container = class {
+    constructor(options) {
+      this.init(options);
+      this.build();
+      return this;
+    }
+    init(options) {
+      this.options = Object.assign({}, defaults5, options || {});
+      Object.assign(this, emitter_default);
+      return this;
+    }
+    build() {
+      this.root = create_default(this.options);
+      if (this.options.container) {
+        insert_default(this.root, this.options.container);
+      }
+      return this;
+    }
+    insert(container, context) {
+      insert_default(this.root, container, context);
+      return this;
+    }
+  };
+  var container_default = Container;
+
+  // ../../node_modules/material/src/component/label.js
+  function label(root, text, options) {
+    text = text || null;
+    var prefix = options.class || options.prefix;
+    var label2 = create_default2("label", prefix + "-label");
+    label2.textContent = text;
+    label2.setAttribute("for", options.name);
+    insert_default(label2, root);
+    return label2;
+  }
+  var label_default = label;
+
+  // ../../node_modules/material/src/element/attribute.js
+  function init2(element, attribute) {
+    for (var key in attribute) {
+      if (attribute.hasOwnProperty(key)) {
+        element.setAttribute(key, attribute[key]);
+      }
+    }
+    return element;
+  }
+  function set3(element, name, value) {
+    return element.setAttribute(name, "" + value);
+  }
+  function get2(element, name) {
+    return element.getAttribute(name) || null;
+  }
+  function remove3(element, name) {
+    return element.removeAttribute(name);
+  }
+  var attribute_default = { init: init2, set: set3, get: get2, remove: remove3 };
+
+  // ../../node_modules/material/src/element/build.js
+  function isObject(object) {
+    return object && typeof object === "object" && Object.getPrototypeOf(object) === Object.getPrototypeOf({});
+  }
+  function process(string) {
+    const tags = string.match(/^[\w-]+/);
+    const ids = string.match(/#([\w-]+)/);
+    const classes = string.match(/\.[\w-]+/g);
+    const names = string.match(/\$([\w-]+)/);
+    const properties = {
+      tag: tags ? tags[0] : "div"
+    };
+    if (ids)
+      properties.id = ids[1];
+    if (names)
+      properties.name = names[1];
+    if (classes) {
+      properties.class = classes.join(" ").replace(/\./g, "");
+    }
+    return properties;
+  }
+  function build(schema, container, object, level) {
+    let element;
+    object = object || {};
+    for (var i = 0; i < schema.length; i++) {
+      if (typeof schema[i] === "string") {
+        var property = process(schema[i]);
+        element = create_default2(property.tag, property.class);
+        insert_default(element, container);
+        if (property.name) {
+          object[property.name] = element;
+        }
+      } else if (isObject(schema[i])) {
+        attribute_default.init(element, schema[i]);
+      } else if (Array.isArray(schema[i])) {
+        build(schema[i], element, object, level);
+      }
+    }
+    return object;
+  }
+  var build_default = build;
+
+  // ../../node_modules/material/src/skin/material/icon/checkbox.svg
+  var checkbox_default = 'export default `\n<svg width="18px" height="18px" class="checkbox-icon" viewBox="0 0 18 18">\n  <polygon class="checkbox-check" points="7 14.42 2 9.42 3.41 8.01 7 11.59 14.59 4 16 5.42"></polygon>\n</svg>`;';
+
+  // ../../node_modules/material/src/checkbox.js
+  var defaults6 = {
+    prefix: "material",
+    class: "checkbox",
+    type: "control",
+    build: [
+      "$root.material-checkbox",
+      {},
+      ["input$input", {}],
+      ["span$control.checkbox-control"]
+    ],
+    events: [
+      ["element.control.click", "click", {}],
+      ["element.label.click", "toggle", {}],
+      ["element.input.focus", "focus"],
+      ["element.input.blur", "blur"],
+      ["element.input.keydown", "keydown", {}]
+    ]
+  };
+  var Checkbox = class {
+    constructor(options) {
+      this.init(options);
+      this.build();
+      this.attach();
+      return this;
+    }
+    init(options) {
+      this.options = Object.assign({}, defaults6, options || {});
+      Object.assign(this, events_default, control_default, emitter_default, attach_default);
+      return this;
+    }
+    build() {
+      this.element = build_default(this.options.build);
+      this.root = this.element.root;
+      this.element.control.innerHTML = checkbox_default;
+      var text = this.options.text || this.options.label;
+      this.element.label = label_default(this.root, text, this.options);
+      this.element.input.setAttribute("type", "checkbox");
+      this.element.input.setAttribute("name", this.options.name);
+      this.element.input.setAttribute("aria-label", this.options.name);
+      if (this.options.value) {
+        this.element.input.setAttribute("value", this.options.value);
+      }
+      if (this.options.disabled) {
+        this.disabled = this.options.disabled;
+        this.element.input.setAttribute("disabled", "disabled");
+        css_default.add(this.root, "is-disabled");
+      }
+      if (this.options.checked) {
+        this.check(true);
+      }
+      if (this.options.value) {
+        this.set("value", this.value);
+      }
+      if (this.options.container) {
+        insert_default(this.root, this.options.container);
+      }
+      return this;
+    }
+    set(prop, value) {
+      switch (prop) {
+        case "checked":
+          this.check(value);
+          break;
+        case "value":
+          this.setValue(value);
+          break;
+        case "label":
+          this.setLabel(value);
+          break;
+        default:
+          this.check(prop);
+      }
+      return this;
+    }
+    insert(container, context) {
+      insert_default(this.root, container, context);
+      return this;
+    }
+    click(e2) {
+      this.toggle(e2);
+      this.element.input.focus();
+      return this;
+    }
+    setValue(value) {
+      console.log("setValue", value);
+      this.value = value;
+      this.element.input.setAttribute("value", value);
+      return this;
+    }
+  };
+  var checkbox_default2 = Checkbox;
+
+  // ../../node_modules/material/src/component/controller.js
+  var instance = null;
+  var Controller = class {
+    constructor() {
+      if (!instance) {
+        instance = this;
+      }
+      this.components = this.components || [];
+      this.component = this.component || {};
+      this.init();
+      return instance;
+    }
+    init() {
+      this.subscribe("settings", (message) => {
+      });
+    }
+    register(component) {
+      this.components.push(component);
+      this.component[component.name] = this.component[component.name] || [];
+      this.component[component.name].push(component);
+      return this;
+    }
+    subscribe(topic, callback) {
+      this._topics = this._topics || {};
+      if (!this._topics.hasOwnProperty(topic)) {
+        this._topics[topic] = [];
+      }
+      this._topics[topic].push(callback);
+      return true;
+    }
+    unsunscribe(topic, callback) {
+      this._topics = this._topics || {};
+      if (!this._topics.hasOwnProperty(topic)) {
+        return false;
+      }
+      for (var i = 0, len = this._topics[topic].length; i < len; i++) {
+        if (this._topics[topic][i] === callback) {
+          this._topics[topic].splice(i, 1);
+          return true;
+        }
+      }
+      return false;
+    }
+    publish() {
+      this._topics = this._topics || {};
+      var args = Array.prototype.slice.call(arguments);
+      var topic = args.shift();
+      if (!this._topics.hasOwnProperty(topic)) {
+        return false;
+      }
+      for (var i = 0, len = this._topics[topic].length; i < len; i++) {
+        this._topics[topic][i].apply(void 0, args);
+      }
+      return true;
+    }
+  };
+  var controller = new Controller();
+  var controller_default = controller;
+
+  // ../../node_modules/material/src/divider.js
+  var defaults7 = {
+    prefix: "material",
+    class: "divider",
+    tag: "span"
+  };
+  var Divider = class {
+    constructor(options) {
+      this.init(options);
+      this.build();
+      return this;
+    }
+    init(options) {
+      this.options = Object.assign({}, defaults7, options || {});
+      Object.assign(this, insert_default2);
+    }
+    build() {
+      this.root = create_default(this.options);
+      if (this.options.text) {
+        this.root.textContent = this.options.text;
+      }
+      if (this.options.container) {
+        this.insert(this.options.container);
+      }
+    }
+  };
+  var divider_default = Divider;
+
+  // ../../node_modules/material/src/component/init.js
+  function init3(instance2) {
+    modules(instance2);
+    controller_default.register(instance2);
+    return instance2;
+  }
+  function modules(instance2) {
+    var modules2 = instance2.options.modules;
+    for (var i = 0; i < modules2.length; i++) {
+      if (typeof modules2[i] === "function") {
+        modules2[i](instance2);
+      } else {
+        Object.assign(instance2, modules2[i]);
+      }
+    }
+  }
+  var init_default = init3;
+
+  // ../../node_modules/material/src/drawer.js
+  var defaults8 = {
+    prefix: "material",
+    class: "drawer",
+    modifier: "width",
+    state: "closed",
+    position: "left",
+    tag: "div",
+    width: "340",
+    modules: [emitter_default, events_default]
+  };
+  var Drawer = class {
+    constructor(options) {
+      this.options = Object.assign({}, defaults8, options || {});
+      init_default(this);
+      this.build();
+      this.attach();
+      this.emit("ready");
+      return this;
+    }
+    build() {
+      this.wrapper = create_default2("div");
+      classify_default(this.wrapper, this.options);
+      this.root = create_default2("aside");
+      css_default.add(this.root, "drawer-panel");
+      insert_default(this.root, this.wrapper);
+      if (this.options.position) {
+        css_default.add(this.root, "position-" + this.options.position);
+      }
+      if (this.options.fixed) {
+        this.wrapper.classList.add("is-fixed");
+      }
+      if (this.options.size) {
+        if (this.options.position === "top" || this.options.position === "bottom") {
+          this.root.style = "height: " + this.options.size + "px;";
+        } else {
+          this.root.style = "width: " + this.options.size + "px;";
+        }
+      }
+      if (this.options.container) {
+        insert_default(this.wrapper, this.options.container);
+      }
+      this.emit("built", this.root);
+      return this;
+    }
+    attach() {
+      this.wrapper.addEventListener("click", (e2) => {
+        console.log(" click close");
+        this.close();
+      });
+    }
+    toggle() {
+      if (this.wrapper.classList.contains("show")) {
+        this.close();
+      } else {
+        this.open();
+      }
+      return this;
+    }
+    close() {
+      css_default.remove(this.wrapper, "show");
+      return this;
+    }
+    open() {
+      css_default.add(this.wrapper, "show");
+      return this;
+    }
+    insert(container, context) {
+      insert_default(this.wrapper, container, context);
+      return this;
+    }
+  };
+  var drawer_default = Drawer;
+
+  // ../../node_modules/material/src/item.js
+  var defaults9 = {
+    prefix: "material",
+    class: "item",
+    type: "default",
+    tag: "li",
+    types: {
+      default: "span",
+      display4: "h1",
+      display3: "h1",
+      display2: "h1",
+      display1: "h1",
+      headline: "h1",
+      title: "h2",
+      subheading2: "h3",
+      subheading1: "h4",
+      body: "p",
+      body2: "aside",
+      caption: "span"
+    }
+  };
+  var Item = class {
+    constructor(options) {
+      this.init(options);
+      this.build();
+      return this;
+    }
+    init(options) {
+      this.options = Object.assign({}, defaults9, options || {});
+      Object.assign(this, insert_default2);
+    }
+    build() {
+      this.options.tag = this.options.tag || this.options.types[this.options.type];
+      this.options.tag = this.options.tag;
+      this.root = create_default(this.options);
+      if (this.options.text) {
+        this.set(this.options.text);
+      }
+      if (this.options.layout) {
+        this.layout = new layout_default(this.options.layout, this.root);
+      } else {
+        if (this.options.container) {
+          this.insert(this.options.container);
+        }
+      }
+    }
+    set(value) {
+      if (value) {
+        if (this.root.innerText) {
+          this.root.innerText = value;
+        } else {
+          this.root.textContent = value;
+        }
+        return this;
+      }
+      return this;
+    }
+  };
+  var item_default = Item;
+
+  // ../../node_modules/material/src/list.js
+  var defaults10 = {
+    prefix: "material",
+    class: "list",
+    tag: "ul",
+    functions: ["render", "select"],
+    target: ".material-item",
+    events: [
+      ["root.click", "handleSelect"]
+    ]
+  };
+  var List = class {
+    constructor(options) {
+      this.options = Object.assign({}, defaults10, options || {});
+      this.init(this.options);
+      this.build(this.options);
+      this.attach(this.options.events);
+      return this;
+    }
+    init() {
+      this.filters = [];
+      this.data = [];
+      this.items = [];
+      Object.assign(this, emitter_default, attach_default);
+      this._initFunction(this.options.functions);
+      return this;
+    }
+    _initFunction(functions) {
+      for (var i = 0; i < functions.length; i++) {
+        var name = functions[i];
+        if (this.options[name]) {
+          this[name] = this.options[name];
+        }
+      }
+    }
+    build(options) {
+      var tag = this.options.tag || "ul";
+      this.root = document.createElement(tag);
+      css_default.add(this.root, "material-" + this.options.class);
+      if (options.name) {
+        css_default.add(this.root, options.class + "-" + options.name);
+      }
+      if (options.type) {
+        css_default.add(this.root, "type-" + options.type);
+      }
+      if (options.layout) {
+        css_default.add(this.root, "layout-" + options.layout);
+      }
+      if (this.options.list) {
+        this.set("list", this.options.list);
+      }
+      if (this.options.container) {
+        insert_default(this.root, this.options.container);
+      }
+      return this;
+    }
+    handleSelect(e2) {
+      if (e2.target && e2.target.matches(this.options.target)) {
+        css_default.remove(this.item, "is-selected");
+        css_default.add(e2.target, "is-selected");
+        this.select(e2.target, e2, this.item);
+        this.item = e2.target;
+      }
+    }
+    select(item, e2, selected) {
+      this.emit("select", item);
+    }
+    render(info) {
+      var item;
+      if (info.type === "divider") {
+        item = new divider_default();
+      } else {
+        item = new item_default({
+          name: info.name,
+          text: info.text || info.name
+        });
+      }
+      return item;
+    }
+    set(prop, value, options) {
+      switch (prop) {
+        case "list":
+          this.setList(value, options);
+          break;
+        default:
+          this.setList(prop, options);
+      }
+      return this;
+    }
+    setList(list3) {
+      for (var i = 0; i < list3.length; i++) {
+        this.addItem(this.render(list3[i]), i);
+      }
+      return this;
+    }
+    addItem(item) {
+      if (!item) {
+        return;
+      }
+      var where = "bottom";
+      insert_default(item.root, this.root, where);
+      this.items.push(item);
+      return item;
+    }
+    insert(container, context) {
+      insert_default(this.root, container, context);
+    }
+    empty() {
+      this.root.innerHTML = "";
+      this.items = [];
+      this.item = null;
+    }
+    reverse() {
+      this.list.reverse();
+      this.update(this.list);
+      return this;
+    }
+  };
+  var list_default = List;
+
+  // ../../node_modules/material/src/progress.js
+  var defaults11 = {
+    prefix: "material",
+    class: "progress",
+    tag: "div",
+    progress: "0%",
+    circular: `<svg class="progress" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+      <circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
+    </svg>`
+  };
+  var Spinner = class {
+    constructor(options) {
+      this.init(options);
+      this.build();
+      return this;
+    }
+    init(options) {
+      this.options = Object.assign({}, defaults11, options || {});
+      Object.assign(this, insert_default);
+    }
+    build(options) {
+      this.root = create_default2(this.options.tag);
+      classify_default(this.root, this.options);
+      if (this.options.type === "circular") {
+        this.root.innerHTML = this.options.circular;
+      }
+      if (this.options.type === "indeterminate") {
+        this.bar = create_default2("div", "bar");
+        insert_default(this.bar, this.root);
+      } else {
+        this.bar = create_default2("div", "bar");
+        insert_default(this.bar, this.root);
+        this.set(this.options.progress);
+      }
+      if (this.options.container) {
+        insert_default(this.root, this.options.container);
+      }
+      return this;
+    }
+    set(progress) {
+      this.bar.setAttribute("style", "width: " + progress);
+    }
+  };
+  var progress_default = Spinner;
+
+  // ../../node_modules/material/src/skin/material/icon/pin.svg
+  var pin_default = 'export default `\n<svg width="24px" class="slider-pin" height="32px" viewBox="0 0 24 32">\n  <path d="M12.4799395,31.9994146 C12.4799395,31.9994146 24,18.0312233 24,11.6159251 C24,5.2006268 18.627417,0 12,0 C5.372583,0 0,5.2006268 0,11.6159251 C0,18.0312233 12.4799395,31.9994146 12.4799395,31.9994146 Z"></path>\n</svg>`;';
+
+  // ../../node_modules/material/src/slider.js
+  var defaults12 = {
+    prefix: "material",
+    class: "slider",
+    type: "control",
+    label: null,
+    checked: false,
+    error: false,
+    value: false,
+    range: [0, 100],
+    step: 5,
+    modules: [events_default, control_default, emitter_default, attach_default],
+    mixins: [],
+    build: [
+      "$root.material-slider",
+      {},
+      ["label$label.slider-label", {}],
+      ["input$input"],
+      [
+        "$control.slider-control",
+        {},
+        [
+          "$track.slider-track",
+          {},
+          ["canvas$canvas.slider-canvas", {}],
+          ["$trackvalue.slider-track-value", {}],
+          ["$knob.slider-knob", {}],
+          [
+            "$marker.slider-marker",
+            {},
+            ["$value.slider-value", {}]
+          ]
+        ]
+      ]
+    ],
+    events: [
+      ["element.input.focus", "focus"],
+      ["element.input.blur", "blur"]
+    ]
+  };
+  var Slider = class {
+    constructor(options) {
+      this.options = Object.assign({}, defaults12, options || {});
+      this.init(this.options);
+      this.build(this.options);
+      this.attach();
+      return this;
+    }
+    init(options) {
+      init_default(this);
+      return this;
+    }
+    build() {
+      this.element = build_default(this.options.build);
+      this.root = this.element.root;
+      classify_default(this.root, this.options);
+      if (this.options.container) {
+        insert_default(this.root, this.options.container);
+      }
+      var value = this.element.marker.innerHTML;
+      this.element.marker.innerHTML = pin_default + value;
+      if (this.options.type) {
+        css_default.add(this.root, "type-" + this.options.type);
+      }
+      if (this.options.disabled) {
+        this.disable(true);
+      }
+      let text = this.options.label || this.options.text;
+      this.element.label.textContent = text;
+      this.options.label = this.options.label || this.options.text;
+      this.initTrack();
+      var delay = 50;
+      setTimeout(() => {
+        this.initCanvas();
+      }, delay);
+    }
+    initCanvas() {
+      window.addEventListener("resize", () => {
+        console.log("resize");
+        this.drawCanvas();
+      }, false);
+      this.drawCanvas();
+    }
+    drawCanvas() {
+      var width = offset_default(this.element.track, "width");
+      var height = offset_default(this.element.track, "height");
+      this.element.canvas.width = width;
+      this.element.canvas.height = height;
+      var context = this.element.canvas.getContext("2d");
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(0, height / 2 + 1);
+      context.lineTo(width, height / 2 + 1);
+      context.strokeStyle = "rgba(34, 31, 31, .26)";
+      context.stroke();
+    }
+    initTrack() {
+      this.element.track.addEventListener("mousedown", (ev) => {
+        if (this.disabled === true)
+          return;
+        this.initTrackSize();
+        var position = ev.layerX;
+        this.update(position);
+      });
+      this.element.knob.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+      });
+      this.initDragging();
+      var delay = 100;
+      setTimeout(() => {
+        this.setValue(this.options.value);
+      }, delay);
+    }
+    initTrackSize() {
+      this._tracksize = offset_default(this.element.track, "width");
+      this._knobsize = offset_default(this.element.knob, "width");
+      this._markersize = 32;
+      this._trackleft = offset_default(this.element.track, "left");
+      return this;
+    }
+    initDragging() {
+      this.element.knob.onmousedown = (e2) => {
+        if (this.disabled === true)
+          return;
+        e2.stopPropagation();
+        e2 = e2 || window.event;
+        css_default.add(this.element.control, "dragging");
+        var start = 0;
+        var position = 0;
+        if (e2.pageX)
+          start = e2.pageX;
+        else if (e2.clientX)
+          start = e2.clientX;
+        start = this._trackleft;
+        document.body.onmousemove = (e3) => {
+          if (this.disabled === true)
+            return;
+          console.log("mousedown", this.disabled);
+          e3 = e3 || window.event;
+          var end = 0;
+          if (e3.pageX)
+            end = e3.pageX;
+          else if (e3.clientX)
+            end = e3.clientX;
+          position = end - start;
+          this.update(position);
+        };
+        document.body.onmouseup = (e3) => {
+          document.body.onmousemove = document.body.onmouseup = null;
+          e3 = e3 || window.event;
+          var end = 0;
+          if (e3.pageX)
+            end = e3.pageX;
+          else if (e3.clientX)
+            end = e3.clientX;
+          position = end - start;
+          this.update(position);
+          css_default.remove(this.element.control, "dragging");
+        };
+      };
+    }
+    update(position) {
+      var size = this._tracksize;
+      var range = this.options.range[1] - this.options.range[0];
+      if (position > size) {
+        position = size;
+      }
+      if (position < 0) {
+        position = 0;
+      }
+      var ratio = size / position;
+      var value = Math.round(range / ratio) + this.options.range[0];
+      if (position === 0) {
+        css_default.remove(this.element.knob, "notnull");
+      }
+      this.element.knob.style.left = position - this._knobsize / 2 + "px";
+      this.element.trackvalue.style.width = position + "px";
+      this.element.marker.style.left = position - this._markersize / 2 + "px";
+      this.element.value.textContent = value;
+      this.element.input.value = value;
+      if (value > this.options.range[0]) {
+        css_default.add(this.element.knob, "notnull");
+      } else {
+        css_default.remove(this.element.knob, "notnull");
+      }
+    }
+    updateValue(value) {
+      this.initTrackSize();
+      var size = offset_default(this.element.track, "width");
+      size = parseInt(size);
+      var range = this.options.range[1] - this.options.range[0];
+      var ratio = value * 100 / range;
+      var position = Math.round(size * ratio / 100);
+      this.update(position);
+      return this;
+    }
+    insert(container, context) {
+      insert_default(this.root, container, context);
+    }
+    set(prop, value) {
+      switch (prop) {
+        case "value":
+          this.setValue(value);
+          break;
+        case "label":
+          this.setLabel(value);
+          break;
+        default:
+          this.setValue(prop);
+      }
+      return this;
+    }
+    get(prop) {
+      var value;
+      switch (prop) {
+        case "value":
+          value = this.getValue();
+          break;
+        case "name":
+          value = this.name;
+          break;
+        default:
+          return this.getValue();
+      }
+      return value;
+    }
+    getValue() {
+      return this.element.input.value;
+    }
+    setValue(value) {
+      value = value || this.options.range[0];
+      this.element.input.value = value;
+      this.updateValue(value);
+    }
+    setLabel(text) {
+      text = text || this.options.label || this.options.text;
+      if (text !== null && this.label) {
+        this.label.textContent = text;
+      }
+    }
+  };
+  var slider_default = Slider;
+
+  // ../../node_modules/material/src/switch.js
+  var defaults13 = {
+    prefix: "material",
+    class: "switch",
+    type: "control",
+    label: null,
+    checked: false,
+    error: false,
+    value: false,
+    disabled: false,
+    build: [
+      "$root.material-switch",
+      {},
+      ["input$input$switch-input", { type: "checkbox" }],
+      [
+        "span$control.switch-control",
+        {},
+        [
+          "span$track.switch-track",
+          {},
+          ["span$knob.switch-knob", {}]
+        ]
+      ],
+      ["label$label.switch-label"]
+    ],
+    events: [
+      ["element.control.click", "toggle"],
+      ["element.label.click", "toggle"],
+      ["element.input.click", "toggle"],
+      ["element.input.focus", "focus"],
+      ["element.input.blur", "blur"]
+    ]
+  };
+  var Switch = class {
+    constructor(options) {
+      this.init(options);
+      this.build();
+      this.attach();
+      return this;
+    }
+    init(options) {
+      this.options = Object.assign({}, defaults13, options || {});
+      Object.assign(this, emitter_default, control_default, attach_default, insert_default2);
+      this.value = this.options.value;
+      return this;
+    }
+    build() {
+      this.element = build_default(this.options.build);
+      this.root = this.element.root;
+      classify_default(this.root, this.options);
+      if (this.options.disabled) {
+        this.disable();
+      }
+      if (this.value) {
+        this.element.input.setAttribute("checked", "checked");
+      }
+      this.element.input.setAttribute("aria-label", this.options.name);
+      let text = this.options.label || this.options.text || "";
+      this.element.label.textContent = text;
+      this.element.label.setAttribute("for", this.options.name);
+      if (this.options.checked) {
+        this.check(true);
+      }
+      if (this.options.container) {
+        this.insert(this.options.container);
+      }
+    }
+    set(prop, value) {
+      switch (prop) {
+        case "value":
+          this.setValue(value);
+          break;
+        case "disabled":
+          if (value === true) {
+            this.disable();
+          } else if (value === false) {
+            this.enable();
+          }
+          break;
+        default:
+          this.setValue(prop);
+      }
+      return this;
+    }
+    get() {
+      return this.value;
+    }
+    getValue() {
+      return this.value;
+    }
+    setValue(value) {
+      if (value) {
+        this.check();
+      } else {
+        this.unCheck();
+      }
+    }
+  };
+  var switch_default = Switch;
+
+  // ../../node_modules/material/src/tabs.js
+  var defaults14 = {
+    prefix: "material",
+    class: "tabs",
+    tag: "div",
+    indicator: {
+      prefix: "material",
+      class: "indicator",
+      tag: "div"
+    }
+  };
+  var Tabs = class {
+    constructor(options) {
+      this.init(options);
+      this.build();
+      return this;
+    }
+    init(options) {
+      this.options = Object.assign({}, defaults14, options || {});
+      Object.assign(this, insert_default2, emitter_default);
+    }
+    build() {
+      this.root = create_default(this.options);
+      if (this.options.list) {
+        this.list = new list_default({
+          list: this.options.list,
+          target: ".material-button",
+          height: 600,
+          label: "Flat",
+          render: (info) => {
+            var item;
+            item = new Button_default({
+              name: info.name,
+              text: info.text || info.name
+            });
+            return item;
+          },
+          select: (item) => {
+            console.log("click");
+            this.selected = item;
+            this.click(item);
+          }
+        }).insert(this.root);
+      }
+      this.indicator = create_default(this.options.indicator);
+      this.insertElement(this.indicator, this.root);
+      if (this.options.container) {
+        this.insert(this.options.container);
+      }
+      return this;
+    }
+    click(item) {
+      var or = offset_default(this.root);
+      var o = offset_default(item);
+      this.indicator.setAttribute("style", "width: " + o.width + "px; left: " + (o.left - or.left) + "px;");
+      this.emit("select", item.dataset.name);
+    }
+  };
+  var tabs_default = Tabs;
+
+  // ../../node_modules/material/src/text.js
+  var defaults15 = {
+    prefix: "material",
+    class: "text",
+    type: "default",
+    types: {
+      default: "span",
+      display4: "h1",
+      display3: "h1",
+      display2: "h1",
+      display1: "h1",
+      headline: "h1",
+      title: "h2",
+      subheading2: "h3",
+      subheading1: "h4",
+      body: "p",
+      body2: "aside",
+      caption: "span"
+    }
+  };
+  var Text = class {
+    constructor(options) {
+      this.init(options);
+      this.build();
+      return this;
+    }
+    init(options) {
+      this.options = Object.assign({}, defaults15, options || {});
+      Object.assign(this, insert_default2);
+    }
+    build() {
+      this.options.tag = this.options.types[this.options.type];
+      this.root = create_default(this.options);
+      if (this.options.text) {
+        this.set(this.options.text);
+      }
+      if (this.options.container) {
+        this.insert(this.options.container);
+      }
+      return this;
+    }
+    set(value) {
+      if (value) {
+        if (this.root.innerText) {
+          this.root.innerText = value;
+        } else {
+          this.root.textContent = value;
+        }
+        return this;
+      }
+      return this;
+    }
+  };
+  var text_default = Text;
+
+  // ../../node_modules/material/src/toolbar.js
+  var defaults16 = {
+    prefix: "material",
+    class: "toolbar",
+    tag: "header"
+  };
+  var Toolbar = class {
+    constructor(options) {
+      this.init(options);
+      this.build();
+      this.attach();
+      return this;
+    }
+    init(options) {
+      this.options = Object.assign({}, defaults16, options || {});
+      Object.assign(this, insert_default2);
+      console.log("waterfALL", this.options.waterfall);
+      this.waterfall = this.options.waterfall;
+    }
+    build() {
+      this.root = create_default(this.options);
+      console.log(this.options.height, this.options.fixed);
+      if (this.options.height) {
+        this.root.style.height = this.options.height + "px";
+      }
+      if (this.options.fixed) {
+        console.log("is-fixed");
+        this.root.classList.add("is-fixed");
+      }
+      if (this.options.flexible) {
+        this.root.classList.add("is-flexible");
+      }
+      return this;
+    }
+    attach() {
+      this.root.addEventListener("DOMNodeInserted", (e2) => {
+        var textNode = e2.target;
+        if (textNode !== this.root)
+          return;
+        var size = this.size = offset_default(this.root, "height");
+        var view = this.view = this.root.parentNode;
+        console.log("view", view);
+        var padding = window.getComputedStyle(view)["padding-top"];
+        padding = parseInt(padding, 10);
+        this.padding = padding;
+        var ptop = this.ptop = size + padding;
+        if (document.body == view) {
+          console.log("toolbar container body");
+          this.root.classList.add("toolbar-body");
+        }
+        view.setAttribute("style", "padding-top: " + ptop + "px");
+        this.scroll(view);
+      });
+    }
+    set(prop, value) {
+      switch (prop) {
+        case "minimize":
+          this.root.setAttribute("style", "height: 64px");
+          break;
+        case "value":
+          this.setValue(value);
+          break;
+        case "label":
+          this.setLabel(value);
+          break;
+        default:
+          this.check(prop);
+      }
+      return this;
+    }
+    scroll(view) {
+      var isBody = false;
+      var element = view;
+      this.scrolling = view;
+      if (view === document.body) {
+        isBody = true;
+        element = document;
+        this.scrolling = document.body;
+      }
+      view.classList.add();
+      element.addEventListener("scroll", (e2) => {
+        var scrollTop;
+        if (isBody) {
+          scrollTop = (document.documentElement || document.body.parentNode || document.body).scrollTop;
+        } else {
+          scrollTop = view.scrollTop;
+        }
+        if (scrollTop > 0) {
+          this.root.classList.add("is-scrolled");
+        } else {
+          this.root.classList.remove("is-scrolled");
+        }
+        this.update(e2, scrollTop);
+      });
+    }
+    update(e2, scrollTop) {
+      if (this.options.fixed) {
+        this.fixed(e2, scrollTop);
+      }
+      if (this.options.flexible) {
+        this.flexible(e2, scrollTop);
+      }
+    }
+    flexible(e2, scrollTop) {
+      var size = offset_default(this.root, "height");
+      var height = "64";
+      if (size < height) {
+        this.root.style.height = height + "px";
+      } else {
+        height = this.size - scrollTop;
+        if (height < 64)
+          height = 64;
+        this.root.style.height = height + "px";
+      }
+    }
+    fixed(e2, scrollTop) {
+      if (scrollTop > 0) {
+        this.root.style.transform = "translateY(" + scrollTop + "px)";
+      } else {
+        this.root.style.transform = "translateY(" + scrollTop + "px)";
+      }
+    }
+    waterfall$(e2) {
+    }
+  };
+  var toolbar_default = Toolbar;
+
+  // src/module/css.js
+  var has2 = (element, className) => {
+    if (!element || !className)
+      return false;
+    return !!element.className.match(new RegExp(`(\\s|^)${className}(\\s|$)`));
+  };
+  var add2 = (element, className) => {
+    if (!element || !className)
+      return;
+    const sanitizedClassName = className.trim().replace(/\s+/g, " ");
+    const classNames = sanitizedClassName.split(" ");
+    for (let cn of classNames) {
+      if (!has2(element, cn)) {
+        element.classList.add(cn);
+      }
+    }
+    return element;
+  };
+  var remove4 = (element, className) => {
+    if (!element || !className)
+      return;
+    element.classList.remove(className);
+    return element;
+  };
+  var toggle2 = (element, className) => {
+    if (has2(element, className)) {
+      remove4(element, className);
+    } else {
+      add2(element, className);
+    }
+    return element;
+  };
+  var css_default2 = { has: has2, add: add2, remove: remove4, toggle: toggle2 };
+
+  // dist/icon/navi.svg
+  var navi_default = 'export default `\n<svg height="24" viewBox="0 0 24 24" width="24">\n  <path d="M0 0h24v24H0z" fill="none" />\n  <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />\n</svg>`;';
+
+  // dist/icon/more.svg
+  var more_default = 'export default `\n<svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">\n  <path d="M0 0h24v24H0z" fill="none" />\n  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />\n</svg>`';
+
+  // dist/icon/star.svg
+  var star_default = 'export default `\n<svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">\n    <path d="M0 0h24v24H0z" fill="none"/>\n    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>\n    <path d="M0 0h24v24H0z" fill="none"/>\n</svg>\n `;';
+
+  // dist/icon/happy.svg
+  var happy_default = 'export default `\n<svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">\n    <path d="M11.99 2C6.47 2 2 6.47 2 12s4.47 10 9.99 10S22 17.53 22 12 17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm1-10.06L14.06 11l1.06-1.06L16.18 11l1.06-1.06-2.12-2.12zm-4.12 0L9.94 11 11 9.94 8.88 7.82 6.76 9.94 7.82 11zM12 17.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>\n    <path d="M0 0h24v24H0z" fill="none"/>\n</svg>\n `';
+
+  // dist/demo.js
+  console.log("demo");
+  console.log("log");
+  var list2 = [{
+    text: "One",
+    name: "one"
+  }, {
+    text: "Two",
+    name: "two"
+  }, {
+    text: "Three",
+    name: "three"
+  }, {
+    text: "Four",
+    name: "four"
+  }];
+  document.addEventListener("DOMContentLoaded", function() {
+    var layout = new layout_default([
+      component_default,
+      "demo",
+      { display: "flex", direction: "vertical" },
+      [
+        component_default,
+        "head",
+        { display: "flex", direction: "horizontal" },
+        [
+          toolbar_default,
+          "toolbar",
+          { flex: 1, display: "flex", direction: "horizontal" },
+          [Button_default, "menu-navi", { icon: navi_default, type: "action" }],
+          [text_default, "app-title", { text: "Material" }]
+        ],
+        [
+          toolbar_default,
+          "desk",
+          { display: "flex", direction: "horizontal" },
+          [Button_default, "menu-more", { icon: more_default, type: "action" }]
+        ]
+      ],
+      [
+        drawer_default,
+        "navi",
+        { css: "drawer-temporary", type: "temporary", size: "280px" },
+        [
+          component_default,
+          "navi-head",
+          { theme: "dark" },
+          [text_default, "app-title", { text: "Components" }]
+        ],
+        [list_default, "navi-list", { theme: "dark" }]
+      ],
+      [tabs_default, "tabs", { color: "primary", list: list2, flex: "none" }],
+      [
+        container_default,
+        "body",
+        { flex: "1" },
+        [
+          container_default,
+          "container-components",
+          {},
+          [text_default, "text", { text: "Components", type: "title" }]
+        ],
+        [
+          card_default,
+          "buttons",
+          {},
+          [
+            toolbar_default,
+            "toolbar-buttons",
+            {},
+            [text_default, "buttons-title", { text: "Buttons" }]
+          ],
+          [
+            container_default,
+            "button-body",
+            {},
+            [Button_default, "first", { text: "Flat" }],
+            [Button_default, "second", { text: "Raised", type: "raised", color: "primary" }],
+            [Button_default, "third", { icon: star_default, type: "action" }],
+            [Button_default, "fourth", { icon: star_default, text: "text" }]
+          ]
+        ],
+        [
+          card_default,
+          "buttons",
+          {},
+          [
+            toolbar_default,
+            "toolbar-buttons",
+            {},
+            [text_default, "buttons-title", { text: "Floating Buttons" }]
+          ],
+          [
+            container_default,
+            "button-body",
+            {},
+            [Button_default, "fifth", { icon: star_default, type: "floating", color: "primary" }],
+            [Button_default, "six", { icon: happy_default, type: "floating", style: "mini", color: "primary" }],
+            [Button_default, "fifth", { icon: star_default, type: "floating", color: "secondary" }],
+            [Button_default, "six", { icon: happy_default, type: "floating", style: "mini", color: "secondary" }]
+          ]
+        ],
+        [
+          card_default,
+          "checkboxes",
+          {},
+          [
+            toolbar_default,
+            "toolbar",
+            {},
+            [text_default, "checkbox-title", { text: "Checkboxes" }]
+          ],
+          [
+            container_default,
+            "checkbox-body",
+            {},
+            [checkbox_default2, "checkbox", { text: "Checkbox" }],
+            [checkbox_default2, "checkbox-checked", { text: "Checked", checked: true }],
+            [checkbox_default2, "checkbox-disabled", { text: "Disabled", disabled: true }]
+          ]
+        ],
+        [
+          card_default,
+          "switches",
+          {},
+          [
+            toolbar_default,
+            "switch-toolbar",
+            {},
+            [text_default, "switch-title", { text: "Switches" }]
+          ],
+          [
+            container_default,
+            "switch-body",
+            {},
+            [switch_default, "switch", { text: "Switch" }],
+            [switch_default, "switch-checked", { text: "Checked", checked: true }],
+            [switch_default, "switch-disabled", { text: "Disabled", disabled: true }]
+          ]
+        ],
+        [
+          card_default,
+          "progress indicators",
+          {},
+          [
+            toolbar_default,
+            "progress-toolbar",
+            {},
+            [text_default, "progress-title", { text: "Progress indicators" }]
+          ],
+          [
+            container_default,
+            "progress-body",
+            {},
+            [progress_default, "progress", { progress: "60%" }],
+            [progress_default, "progress-indeterminate", { type: "indeterminate" }]
+          ]
+        ],
+        [
+          card_default,
+          "sliders",
+          {},
+          [
+            toolbar_default,
+            "slider-toolbar",
+            {},
+            [text_default, "slider-title", { text: "Sliders" }]
+          ],
+          [
+            container_default,
+            "slider-body",
+            {},
+            [slider_default, "slider", { text: "Slider" }],
+            [slider_default, "slider-checked", { text: "Checked", checked: true }],
+            [slider_default, "slider-disabled", { text: "Disabled", disabled: true }]
+          ]
+        ]
+      ]
+    ], document.body);
+    var moreButton = layout.get("menu-more").on("click", (e2) => {
+      layout.get("more-menu").show(e2);
+    });
+    layout.get("body").root.addEventListener("scroll", (e2) => {
+      if (layout.get("body").root.scrollTop > 0) {
+        css_default2.add(layout.get("tabs").root, "head-shadow");
+      } else {
+        css_default2.remove(layout.get("tabs").root, "head-shadow");
+      }
+    });
+    var naviMenu = layout.get("menu-navi");
+    naviMenu.on("click", (e2) => {
+      layout.get("navi").open();
+    });
+  });
+})();
 //# sourceMappingURL=demo-bundle.js.map
