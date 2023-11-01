@@ -12,7 +12,7 @@ import * as css from './module/css'
 import icon from './skin/material/icon/checkbox.svg'
 // element related modules
 
-let defaults = {
+const defaults = {
   prefix: 'material',
   class: 'checkbox',
   type: 'control',
@@ -54,7 +54,7 @@ class Checkbox {
 
     this.element.control.innerHTML = icon
 
-    var text = this.options.text || this.options.label
+    const text = this.options.text || this.options.label
 
     this.element.label = label(this.element, text, this.options)
 

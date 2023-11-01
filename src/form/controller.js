@@ -6,13 +6,13 @@ export default {
 
     this.disableControls()
 
-    for (var field in this.field) {
+    for (const field in this.field) {
       if (this.field.hasOwnProperty(field)) {
         this.bindControl(this.field[field])
       }
     }
 
-    for (var file in this.file) {
+    for (const file in this.file) {
       if (this.file.hasOwnProperty(file)) {
         this.bindControl(this.file[file])
       }
@@ -29,9 +29,9 @@ export default {
   },
 
   updateClassMode (mode) {
-    var modes = ['read', 'create', 'update']
+    const modes = ['read', 'create', 'update']
 
-    for (var i = 0; i < modes.length; i++) {
+    for (let i = 0; i < modes.length; i++) {
       this.form.classList.remove(modes[i] + '-mode')
     }
 
@@ -64,11 +64,11 @@ export default {
 
   enableControls () {
     // console.log('enableControls')
-    var controls = this.options.controls || ['submit', 'cancel']
+    const controls = this.options.controls || ['submit', 'cancel']
 
     if (controls === null) return
 
-    for (var i = 0; i < controls.length; i++) {
+    for (let i = 0; i < controls.length; i++) {
       if (this.ui[controls[i]] && this.ui[controls[i]].enable) {
         this.ui[controls[i]].enable()
       }
@@ -77,11 +77,11 @@ export default {
 
   disableControls () {
     // console.log('disableControls')
-    var controls = this.options.controls || ['submit', 'cancel']
+    const controls = this.options.controls || ['submit', 'cancel']
 
     if (controls === null) return
 
-    for (var i = 0; i < controls.length; i++) {
+    for (let i = 0; i < controls.length; i++) {
       if (this.ui[controls[i]] && this.ui[controls[i]].disable) {
         this.ui[controls[i]].disable()
       }

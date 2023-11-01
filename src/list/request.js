@@ -16,7 +16,7 @@ export default {
     }
 
     this.data = this.data || []
-    var signal = null
+    let signal = null
 
     if (this.abortController) {
       // console.log('abort')
@@ -37,7 +37,7 @@ export default {
       this.ui.body.scrolltop = 0
     }
 
-    var route = this.buildRoute(page, size)
+    const route = this.buildRoute(page, size)
 
     if (more !== true && this.options.count) {
       this.requestCount(route)
@@ -45,7 +45,7 @@ export default {
 
     // console.log('route - ', this.rand, route)
 
-    fetch(route, {signal}).then((resp) => {
+    fetch(route, { signal }).then((resp) => {
       return resp.json()
     }).then((data) => {
       if (this.options.debug) {
@@ -68,7 +68,7 @@ export default {
       }
 
       if (more === true) {
-        var a = this.data.concat(data)
+        const a = this.data.concat(data)
         this.data = a
         this.storeData(data, more)
         this.virtual.add(this.data)
@@ -95,7 +95,7 @@ export default {
 
   requestCount (route, signal) {
     // console.log('fetchCount', route)
-    fetch(route + '&count=1', {signal}).then((resp) => {
+    fetch(route + '&count=1', { signal }).then((resp) => {
       return resp.json()
     }).then((data) => {
       // console.log('data', data.count)
@@ -137,7 +137,7 @@ export default {
     page = page || 1
     size = size || this.options.list.size
 
-    var route = this.options.route
+    let route = this.options.route
 
     if (path) {
       route = this.options.route[path]
@@ -174,7 +174,7 @@ export default {
     // console.log('storeData', this.dataStore)
     this.dataStore = this.dataStore || {}
 
-    for (var i = 0; i < list.length; i++) {
+    for (let i = 0; i < list.length; i++) {
       this.dataList.push(list[i][this.dataId])
       this.dataStore[list[i][this.dataId]] = list[i]
     }

@@ -11,26 +11,26 @@ class DateHour {
     this.build()
   }
 
-  init(options) {
+  init (options) {
     this.options = Object.assign({}, DateHour.defaults, options || {})
     Object.assign(this, build)
   }
 
   set (date) {
     // console.log('set', src)
-    var d = new Date(date)
-    var formatted = this.format(d)
+    const d = new Date(date)
+    const formatted = this.format(d)
     this.element.innerHTML = formatted
   }
 
   format (date) {
-    var hours = date.getHours()
-    var minutes = date.getMinutes()
-    var ampm = hours >= 12 ? 'pm' : 'am'
+    let hours = date.getHours()
+    let minutes = date.getMinutes()
+    const ampm = hours >= 12 ? 'pm' : 'am'
     hours = hours % 12
     hours = hours || 12 // the hour '0' should be '12'
     minutes = minutes < 10 ? '0' + minutes : minutes
-    var strTime = hours + ':' + minutes + ' ' + ampm
+    const strTime = hours + ':' + minutes + ' ' + ampm
     return date.getMonth() + 1 + '/' + date.getDate() + '/' + date.getFullYear() + ' ' + strTime
   }
 }

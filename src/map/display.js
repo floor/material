@@ -5,7 +5,7 @@ export default {
     // object used to cache map by decade
     this.mapsvg = this.mapsvg || {}
 
-    var decade = decades[0]
+    const decade = decades[0]
 
     // do not update map when in taxi mode
     // if (typeof decade !== 'number') {
@@ -20,7 +20,7 @@ export default {
       if (cb) cb()
     } else {
       // fetch map for the corresponding decade
-      var url = this.options.path + decade + '.svg'
+      const url = this.options.path + decade + '.svg'
       // console.log(url)
       fetch(url).then((response) => {
         response.text().then((map) => {
@@ -52,12 +52,12 @@ export default {
 
   optimizeMap (decade) {
     // console.log('optimizing map', decade)
-    var parts = this.map.querySelectorAll('g[data-isocode]')
-    var country = {}
+    const parts = this.map.querySelectorAll('g[data-isocode]')
+    const country = {}
 
-    for (var i = 0; i < parts.length; i++) {
-      var part = parts[i]
-      var code = part.dataset.isocode
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i]
+      const code = part.dataset.isocode
       if (!country[code]) {
         country[code] = part
       } else {
@@ -98,7 +98,7 @@ export default {
   },
 
   updateMap () {
-    var offsetX = this.element.offsetWidth - this.map.offsetWidth
+    const offsetX = this.element.offsetWidth - this.map.offsetWidth
     // var offsetY = this.element.height - this.map.offsetHeight
 
     // console.log('--', this.offsetX / 2 + 'px')
@@ -114,17 +114,17 @@ export default {
 
   screenSize () {
     // console.log('screensize')
-    var width = window.innerWidth ||
+    const width = window.innerWidth ||
     document.documentElement.clientWidth ||
     document.body.clientWidth
 
-    var height = window.innerHeight ||
+    const height = window.innerHeight ||
     document.documentElement.clientHeight ||
     document.body.clientHeight
 
-    var screen = {
-      width: width,
-      height: height
+    const screen = {
+      width,
+      height
     }
 
     this.screen = screen

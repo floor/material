@@ -1,7 +1,7 @@
 import create from './mixin/create'
 import insert from './mixin/insert'
 
-var defaults = {
+const defaults = {
   prefix: 'material',
   class: 'divider',
   tag: 'span'

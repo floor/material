@@ -121,8 +121,8 @@ class Selector {
   update (target) {
     target = target || this.target
     if (!target) return
-    var coords = target.getBoundingClientRect()
-    var pcoords = this.element.parentNode.getBoundingClientRect()
+    const coords = target.getBoundingClientRect()
+    const pcoords = this.element.parentNode.getBoundingClientRect()
 
     this.element.style.top = coords.top - pcoords.top + 'px'
     this.element.style.left = coords.left - pcoords.left + 'px'
@@ -158,7 +158,7 @@ class Selector {
     const offsetY = this.element.getBoundingClientRect().y
     const element = document.body
 
-    var ratio = parseInt(this.element.style.width, 10) / parseInt(this.element.style.height, 10)
+    const ratio = parseInt(this.element.style.width, 10) / parseInt(this.element.style.height, 10)
 
     this.border.setPointerCapture(ev.pointerId)
 

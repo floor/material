@@ -27,7 +27,7 @@ class Text {
     // console.log('set', text)
     if (text === undefined) return
 
-    var label = this.options.label || ''
+    const label = this.options.label || ''
 
     if (this.options.textFirst) {
       this.element.innerHTML = text + label

@@ -19,16 +19,16 @@ export default {
     if (!events) return
 
     // console.log('attach', events, this)
-    var instance = this
+    const instance = this
     events.map((def) => {
-      var e = extract.e(instance, def[0])
-      var f = extract.f(instance, def[1])
-      var option = def[2]
+      const e = extract.e(instance, def[0])
+      const f = extract.f(instance, def[1])
+      const option = def[2]
 
-      var keys = def[1].split('.')
+      const keys = def[1].split('.')
 
       keys.pop()
-      var bound = this.last(keys.join('.'))
+      const bound = this.last(keys.join('.'))
 
       if (f && bound && e && e.element && e.element.addEventListener) {
         if (!f) { console.log('error') }
@@ -59,11 +59,11 @@ export default {
     // console.log('_path', str)
     if (!str) return this
     else if (!str.match(/\./)) return this[str]
-    var last
+    let last
 
-    var keys = str.split('.')
-    for (var i = 0, l = keys.length; i < l; i++) {
-      var key = keys[i]
+    const keys = str.split('.')
+    for (let i = 0, l = keys.length; i < l; i++) {
+      const key = keys[i]
 
       last = last || this
       last = last[key]

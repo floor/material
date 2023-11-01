@@ -15,7 +15,7 @@ export default {
     }
 
     this.data = this.data || []
-    var signal = null
+    let signal = null
 
     if (this.abortController) {
       this.abortController.abort()
@@ -34,7 +34,7 @@ export default {
       this.ui.body.scrolltop = 0
     }
 
-    var route = this.buildRoute(page, size, 'search')
+    let route = this.buildRoute(page, size, 'search')
 
     route = this.addParams(route, 'search=' + keywords)
 
@@ -44,7 +44,7 @@ export default {
       this.requestCount(route)
     }
 
-    fetch(route, {signal}).then((resp) => {
+    fetch(route, { signal }).then((resp) => {
       return resp.json()
     }).then((data) => {
       // console.log('data', data)
@@ -64,7 +64,7 @@ export default {
       }
 
       if (more === true) {
-        var a = this.data.concat(data)
+        const a = this.data.concat(data)
         this.data = a
         this.storeData(data, more)
         this.virtual.add(this.data)

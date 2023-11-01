@@ -38,7 +38,7 @@ class Tooltip {
   }
 
   build () {
-    var container = this.options.container || document.body
+    const container = this.options.container || document.body
 
     this.element = document.createElement('span')
     this.element.classList.add('tooltip')
@@ -57,9 +57,9 @@ class Tooltip {
 
   attach () {
     // console.log('attach', this.options.targets)
-    var targets = document.querySelectorAll(this.options.targets)
+    const targets = document.querySelectorAll(this.options.targets)
 
-    for (var i = 0; i < targets.length; i++) {
+    for (let i = 0; i < targets.length; i++) {
       targets[i].addEventListener('mouseover', (e) => {
         // console.log('tooltip', touch(), this.disabled)
         if (touch()) return
@@ -75,7 +75,7 @@ class Tooltip {
         }
 
         this.label.innerHTML = e.currentTarget.dataset.tooltip
-        var coord = this.offset(e.currentTarget)
+        const coord = this.offset(e.currentTarget)
 
         this.show()
         this.element.style.top = (coord.top + this.options.offset.top) + 'px'
@@ -96,9 +96,9 @@ class Tooltip {
   }
 
   offset (target) {
-    var rect = target.getBoundingClientRect()
-    var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft
-    var scrollTop = window.pageYOffset || document.documentElement.scrollTop
+    const rect = target.getBoundingClientRect()
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop
     return { top: rect.top + scrollTop, left: rect.left + scrollLeft }
   }
 

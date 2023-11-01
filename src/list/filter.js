@@ -3,7 +3,7 @@ export default {
   initFilter () {
     this.filter = this.extractFilter(this.ui)
 
-    for (var name in this.filter) {
+    for (const name in this.filter) {
       if (this.filter.hasOwnProperty(name)) {
         this.filter[name].on('change', () => {
           this.request()
@@ -15,15 +15,15 @@ export default {
       this.clearFilter()
     })
 
-    this.ui['filter'].on('click', () => {
+    this.ui.filter.on('click', () => {
       this.toggleFilter()
     })
   },
 
   getFilter () {
     console.log('getFilter')
-    var filter = null
-    for (var name in this.filter) {
+    let filter = null
+    for (const name in this.filter) {
       if (this.filter.hasOwnProperty(name)) {
         console.log('--', typeof this.filter[name].get(), this.filter[name].get())
         if (this.filter[name].get() !== ''/* && this.filter[name].get() !== [] */) {
@@ -61,7 +61,7 @@ export default {
     }
 
     // console.log('showSearch')
-    this.ui['filter'].element.classList.add('selected')
+    this.ui.filter.element.classList.add('selected')
     this.ui['filter-input'].classList.add('show')
 
     // this.ui['search-list'].classList.add('show')
@@ -74,7 +74,7 @@ export default {
    */
   hideFilter () {
     // console.log('hideSearch')
-    this.ui['filter'].element.classList.remove('selected')
+    this.ui.filter.element.classList.remove('selected')
     this.ui['filter-input'].classList.remove('show')
     // this.ui['search-list'].classList.remove('show')
     // this.ui.body.classList.remove('hide')
@@ -83,7 +83,7 @@ export default {
   },
 
   clearFilter () {
-    for (var name in this.filter) {
+    for (const name in this.filter) {
       if (this.filter.hasOwnProperty(name)) {
         this.filter[name].set('')
       }
@@ -95,14 +95,14 @@ export default {
   extractFilter (object) {
     // console.log('extractField', object)
 
-    var filter = {}
+    const filter = {}
 
-    for (var property in object) {
+    for (const property in object) {
       if (object.hasOwnProperty(property)) {
-        var str = property.split(/\./)
+        const str = property.split(/\./)
 
         if (str[0] === 'filter' && str[1] !== undefined) {
-          var name = property.substr(7, property.length)
+          const name = property.substr(7, property.length)
 
           filter[name] = object[property]
         }

@@ -4,7 +4,7 @@ export default {
     ev.preventDefault()
     // console.log('submit', this.mode)
 
-    var data = this.initData()
+    const data = this.initData()
 
     // console.log('data', data)
 
@@ -18,7 +18,7 @@ export default {
   },
 
   setMethod (formData) {
-    var method = 'PUT'
+    let method = 'PUT'
     if (this.mode === 'create') {
       method = 'POST'
     }
@@ -26,15 +26,15 @@ export default {
     if (this.fetch) {
       // console.log('formData', formData.keys())
       this.fetch({
-        method: method,
-        formData: formData
+        method,
+        formData
       })
     }
 
     if (this.action) {
       this.action({
-        method: method,
-        formData: formData
+        method,
+        formData
       })
     }
   }

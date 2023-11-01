@@ -6,7 +6,7 @@ class Element {
   constructor (options) {
     this.options = Object.assign({}, options || {})
     // console.log('element options', options)
-    var element = document.createElement(this.options.tag || 'div')
+    const element = document.createElement(this.options.tag || 'div')
     delete this.options.tag
 
     if (options.html) element.innerHTML = this.options.html
@@ -17,7 +17,7 @@ class Element {
 
     if (options.id) element.setAttribute('id', options.id)
 
-    for (var property in this.options) {
+    for (const property in this.options) {
       if (this.options.hasOwnProperty(property)) {
         element.setAttribute(property, this.options[property])
       }

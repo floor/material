@@ -9,8 +9,8 @@ export default {
 
   getUpdatedIndex (id) {
     // console.log('getUpdatedIndex', id)
-    var index = null
-    for (var i = 0; i < this.data.length; i++) {
+    let index = null
+    for (let i = 0; i < this.data.length; i++) {
       // console.log('--', this.data[i][this.dataId], id)
       if (this.data[i][this.dataId] === id) {
         index = i
@@ -23,9 +23,9 @@ export default {
 
   getUpdatedInfo (id) {
     // console.log('getUpdatedInfo', id)
-    var index = this.getUpdatedIndex(id)
+    const index = this.getUpdatedIndex(id)
     // console.log('index', index)
-    var route = this.buildRoute(index + 1, 1)
+    const route = this.buildRoute(index + 1, 1)
     // console.log('roote', route)
     fetch(route).then((resp) => {
       return resp.json()
@@ -50,10 +50,10 @@ export default {
     this.dataStore[info[this.dataId]] = info
 
     // update item if on the screen
-    var item = this.ui.body.querySelector('[data-id="' + info[this.dataId] + '"]')
+    const item = this.ui.body.querySelector('[data-id="' + info[this.dataId] + '"]')
     if (item) {
       item.innerHTML = ''
-      var layout = new Layout(this.options.layout.item, item)
+      const layout = new Layout(this.options.layout.item, item)
 
       this.renderInfo(layout, info)
     }

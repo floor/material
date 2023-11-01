@@ -22,13 +22,13 @@ class Image {
     if (!src) {
       this.element.style.backgroundImage = ''
     } else {
-      var url = null
+      let url = null
 
       if (src.format) {
-        var format = this.sanitize(src.format)
+        let format = this.sanitize(src.format)
 
         if (format.length > 0) {
-          var index = format.indexOf(this.options.format)
+          const index = format.indexOf(this.options.format)
           if (index === -1) {
             format = src.format[0] + '/'
           } else {
@@ -46,9 +46,9 @@ class Image {
   }
 
   sanitize (formats) {
-    var a = []
-    for (var i = 0; i < formats.length; i++) {
-      var format = formats[i].replace(/\/$/, '')
+    const a = []
+    for (let i = 0; i < formats.length; i++) {
+      const format = formats[i].replace(/\/$/, '')
       a.push(format)
     }
     return a

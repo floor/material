@@ -42,7 +42,7 @@ class Selecter extends EventEmitter {
     this.attach()
   }
 
-  init(options) {
+  init (options) {
     this.options = Object.assign({}, Selecter.defaults, options || {})
     Object.assign(this, attach, dataset)
   }
@@ -73,12 +73,13 @@ class Selecter extends EventEmitter {
       this.element.classList.add(this.options.case + '-case')
     }
   }
+
   /**
    * build method
    * @return {Object} The class instance
    */
   build () {
-    var tag = this.options.tag || 'span'
+    const tag = this.options.tag || 'span'
     this.element = document.createElement(tag)
     this.element.classList.add('selecter')
 
@@ -136,9 +137,9 @@ class Selecter extends EventEmitter {
 
     // console.log('list', list)
 
-    for (var i = 0; i < list.length; i++) {
+    for (let i = 0; i < list.length; i++) {
       // if (list.indexOf(list[i][0]) > -1) {
-      var item = document.createElement('div')
+      const item = document.createElement('div')
       item.classList.add('item')
       item.innerHTML = list[i][1]
       item.dataset.value = list[i][0]
@@ -167,6 +168,7 @@ class Selecter extends EventEmitter {
       this.element.classList.add('bold')
     }
   }
+
   showList () {
     // console.log('showList')
 

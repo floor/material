@@ -40,12 +40,12 @@ export default {
       this.options.container.appendChild(this.element)
     }
 
-    var scrollbarOffset = scrollbar()
+    const scrollbarOffset = scrollbar()
 
     // console.log('scrollbarOffset', scrollbarOffset)
     if (this.ui && this.ui.body) {
       // console.log('body padding', 11 - scrollbarOffset + 'px')
-      this.ui.body.style['marginRight'] = 11 - scrollbarOffset + 'px'
+      this.ui.body.style.marginRight = 11 - scrollbarOffset + 'px'
       this.ui.body.classList.add('offset' + scrollbarOffset)
     }
 
@@ -53,16 +53,16 @@ export default {
   },
 
   addClass (c) {
-    var list = c.split(' ')
+    const list = c.split(' ')
 
-    for (var i = 0; i < list.length; i++) {
+    for (let i = 0; i < list.length; i++) {
       this.element.classList.add(list[i])
     }
   },
 
   buildVirtual () {
     // console.log('buildVirtual', this.options.class)
-    var height = 80
+    let height = 80
     this.size = this.options.list.size
     this.stop = false
 
@@ -100,15 +100,15 @@ export default {
       // console.log('progress', progress, this.count)
 
       if (this.statusDisplay) {
-        var percent = parseInt(progress / this.count * 100)
+        const percent = parseInt(progress / this.count * 100)
         this.statusDisplay('count', percent + '% | ' + progress + ' / ' + this.count)
       }
 
       this.onProgress(progress)
     })
     // .on('size', (size) => {
-      // console.log('!!!!size', size)
-      // this.size = size
+    // console.log('!!!!size', size)
+    // this.size = size
     // })
     //
   },

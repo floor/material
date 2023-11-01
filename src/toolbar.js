@@ -63,16 +63,16 @@ class Toolbar {
 
   attach () {
     this.element.addEventListener('DOMNodeInserted', (e) => {
-      var textNode = e.target
+      const textNode = e.target
       if (textNode !== this.element) return
 
-      var size = this.size = offset(this.element, 'height')
+      const size = this.size = offset(this.element, 'height')
 
-      var view = this.view = this.element.parentNode
+      const view = this.view = this.element.parentNode
 
       // console.log('view', view)
 
-      var padding = window.getComputedStyle(view)['padding-top']
+      let padding = window.getComputedStyle(view)['padding-top']
       // console.log('paddingTop', padding)
       // if (!padding) padding = window.getComputedStyle(this.element.parentNode, 'padding')
       // console.log('padding', padding)
@@ -83,7 +83,7 @@ class Toolbar {
       this.padding = padding
 
       // console.log(' toolbar inserted in', size, 'padding', padding)
-      var ptop = this.ptop = size + padding
+      const ptop = this.ptop = size + padding
 
       // console.log('ptop', ptop)
 
@@ -125,9 +125,9 @@ class Toolbar {
   scroll (view) {
     // console.log('initScroll')
 
-    var isBody = false
+    let isBody = false
 
-    var element = view
+    let element = view
 
     this.scrolling = view
 
@@ -140,7 +140,7 @@ class Toolbar {
     view.classList.add()
 
     element.addEventListener('scroll', (e) => {
-      var scrollTop
+      let scrollTop
       if (isBody) {
         scrollTop = (document.documentElement ||
        document.body.parentNode ||
@@ -167,11 +167,11 @@ class Toolbar {
   }
 
   flexible (e, scrollTop) {
-    var size = offset(this.element, 'height')
+    const size = offset(this.element, 'height')
     // console.log('flexible', size, this.element.offsetHeight, scrollTop)
     // if (scrollTop < this.size) {
     //
-    var height = '64'
+    let height = '64'
     if (size < height) {
       this.element.style.height = height + 'px'
     } else {
@@ -188,8 +188,8 @@ class Toolbar {
     //   this.element.style.top = scrollTop + 'px'
     // }
     // }
-      // this.element.style.top = scrollTop + 'px'
-      // this.element.style.height = this.size - scrollTop
+    // this.element.style.top = scrollTop + 'px'
+    // this.element.style.height = this.size - scrollTop
     // } else {
     //   console.log('size scroll', this.size, scrollTop)
 

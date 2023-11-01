@@ -3,7 +3,7 @@ import create from './element/create'
 import classify from './module/classify'
 import insert from './element/insert'
 
-var defaults = {
+const defaults = {
   prefix: 'material',
   class: 'progress',
   tag: 'div',

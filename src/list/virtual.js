@@ -39,14 +39,14 @@ function VirtualList (options) {
 VirtualList.prototype._renderChunk = function (node, from, number) {
   // console.log('_renderChunk', from, number, this.options.class)
 
-  var fragment = document.createDocumentFragment()
+  const fragment = document.createDocumentFragment()
   fragment.appendChild(this.scroller)
 
-  var last = from + number
+  let last = from + number
   if (last > this.count) last = this.count
 
-  for (var i = from; i < last; i++) {
-    var item = this.render(i)
+  for (let i = from; i < last; i++) {
+    const item = this.render(i)
 
     item.style.position = 'absolute'
     item.style.top = i * this.itemHeight + 'px'
@@ -84,7 +84,7 @@ VirtualList.prototype.set = function (items) {
   this.container.innerHTML = ''
   this.container.scrollTop = 0
 
-  var height = this.itemHeight * this.count
+  const height = this.itemHeight * this.count
 
   this.scroller.style.height = height + 'px'
 
@@ -94,7 +94,7 @@ VirtualList.prototype.set = function (items) {
   // console.log('this.itemsByScreen', this.itemsByScreen)
 
   // Cache 4 times the number of items that fit in the container viewport
-  var size = this.itemsByScreen * 4
+  let size = this.itemsByScreen * 4
   this._renderChunk(this.container, 0, size)
 
   this.size = size
@@ -102,13 +102,13 @@ VirtualList.prototype.set = function (items) {
   // console.log('emit size', size)
   this.emit('size', size)
 
-  var self = this
-  var lastRepaintY
-  var maxBuffer = this.itemsByScreen * this.itemHeight
+  const self = this
+  let lastRepaintY
+  const maxBuffer = this.itemsByScreen * this.itemHeight
 
   function onScroll (e) {
     // console.log('scroll', e.target.scrollTop, height)
-    var scrollTop = e.target.scrollTop
+    const scrollTop = e.target.scrollTop
 
     // console.log('itemsByScreen', self.itemsByScreen)
 
@@ -124,7 +124,7 @@ VirtualList.prototype.set = function (items) {
 
     // console.log('itemsByScreen', self.itemsByScreen)
 
-    var first = parseInt(scrollTop / self.itemHeight) - self.itemsByScreen
+    let first = parseInt(scrollTop / self.itemHeight) - self.itemsByScreen
     first = first < 0 ? 0 : first
 
     size = self.itemsByScreen * 4
@@ -134,7 +134,7 @@ VirtualList.prototype.set = function (items) {
       lastRepaintY = scrollTop
     }
 
-    var progress = Math.ceil((scrollTop / self.itemHeight) + self.itemsByScreen) - 1
+    const progress = Math.ceil((scrollTop / self.itemHeight) + self.itemsByScreen) - 1
     // console.log('progress', progress)
     self.emit('progress', progress)
 
@@ -160,14 +160,14 @@ VirtualList.prototype.update = function (items) {
   this.count = this.items.length
 
   // var itemsByScreen = Math.ceil(this.container.offsetHeight / this.itemHeight)
-  var cachedItemsLen = this.itemsByScreen * 4
-  var scrollTop = this.container.scrollTop
+  const cachedItemsLen = this.itemsByScreen * 4
+  const scrollTop = this.container.scrollTop
 
-  var height = this.itemHeight * this.count
+  const height = this.itemHeight * this.count
 
   this.scroller.style.height = height + 'px'
 
-  var first = parseInt(scrollTop / this.itemHeight) - this.itemsByScreen
+  let first = parseInt(scrollTop / this.itemHeight) - this.itemsByScreen
   first = first < 0 ? 0 : first
 
   // console.log('first', first, cachedItemsLen)
@@ -183,7 +183,7 @@ VirtualList.prototype.add = function (items) {
 
   this.count = this.items.length
 
-  var height = this.itemHeight * this.count
+  const height = this.itemHeight * this.count
 
   this.scroller.style.height = height + 'px'
 }
@@ -212,10 +212,10 @@ VirtualList.prototype.setOffset = function (info) {
 
   // console.log('new itemsByScreen', this.itemsByScreen)
 
-  var itemsByScreen = Math.ceil(this.offsetHeight / this.itemHeight)
+  const itemsByScreen = Math.ceil(this.offsetHeight / this.itemHeight)
 
   // Cache 4 times the number of items that fit in the container viewport
-  var size = itemsByScreen * 4
+  const size = itemsByScreen * 4
 
   return size
 }
@@ -227,7 +227,7 @@ VirtualList.prototype.getCount = function () {
 }
 
 VirtualList.createScroller = function () {
-  var scroller = document.createElement('div')
+  const scroller = document.createElement('div')
   scroller.classList.add('scroller')
   return scroller
 }

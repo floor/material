@@ -5,7 +5,7 @@ import dom from '../module/dom'
 export default {
 
   insert (container, context) {
-    var element = this.element
+    const element = this.element
 
     this.insertElement(element, container, context)
 
@@ -27,15 +27,15 @@ export default {
 
     context = context || 'bottom'
 
-    var contexts = ['top', 'bottom', 'after', 'before']
-    var methods = ['prepend', 'append', 'after', 'before']
+    const contexts = ['top', 'bottom', 'after', 'before']
+    const methods = ['prepend', 'append', 'after', 'before']
 
-    var index = contexts.indexOf(context)
+    const index = contexts.indexOf(context)
     if (index === -1) {
       return
     }
 
-    var method = methods[index]
+    const method = methods[index]
 
     // this.emit('insert');
 

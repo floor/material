@@ -7,7 +7,7 @@ const KEYCODE = {
   SPACE: 32
 }
 
-var control = {
+const control = {
   /**
    * [toggle description]
    * @return {Object} The class instance
@@ -96,7 +96,7 @@ var control = {
     error = error || this.options.error
     if (this.options.error === null) return
 
-    let text = this.options.error || this.options.text
+    const text = this.options.error || this.options.text
 
     if (!this.element.error) { this.element.error = create('error', this.options.class + '-error') }
 

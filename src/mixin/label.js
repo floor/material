@@ -10,9 +10,9 @@ const prefix = 'material'
 function label (root, text, options) {
   text = text || null
 
-  var prefix = options.class || options.prefix
+  const prefix = options.class || options.prefix
 
-  var label = create('label', prefix + '-label')
+  const label = create('label', prefix + '-label')
   label.textContent = text
   label.setAttribute('for', options.name)
   insert(label, root)

@@ -4,9 +4,9 @@ export default {
   render (object, option) {
     // console.log('render', object)
 
-    var info = dot(object)
+    const info = dot(object)
 
-    for (var file in this.file) {
+    for (const file in this.file) {
       if (this.file.hasOwnProperty(file)) {
         this.file[file].reset()
       }
@@ -16,12 +16,12 @@ export default {
 
     if (!info) return
 
-    for (var field in this.field) {
+    for (const field in this.field) {
       if (this.field.hasOwnProperty(field)) {
         // console.log('field type', field, this.field[field])
         if (this.field[field] &&
             this.field[field].set) {
-          var value = this.objectValueByDotKey(object, field)
+          const value = this.objectValueByDotKey(object, field)
           // console.log('value', value)
           this.field[field].set(value, true)
         }
@@ -31,18 +31,18 @@ export default {
     this.emit('rendered')
 
     // won't stay here
-    if (option === 'create' && this.field['name']) {
-      this.focusNameOnRender(this.field['name'])
+    if (option === 'create' && this.field.name) {
+      this.focusNameOnRender(this.field.name)
     }
   },
 
   objectValueByDotKey (object, dotkey) {
     // console.log('objectValueByDotKey', object, dotkey)
-    var keys = dotkey.split(/\./)
+    const keys = dotkey.split(/\./)
 
-    var value = Object.assign({}, object)
+    let value = Object.assign({}, object)
 
-    for (var i = 0; i < keys.length; i++) {
+    for (let i = 0; i < keys.length; i++) {
       if (value !== undefined) {
         value = value[keys[i]]
       }

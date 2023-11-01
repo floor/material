@@ -15,7 +15,7 @@ class Badge {
     Object.assign(this, build)
   }
 
-  set(text) {
+  set (text) {
     if (text) {
       this.element.innerHTML = text
     } else {

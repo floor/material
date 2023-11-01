@@ -22,12 +22,12 @@ function replace (container, element) {
 }
 
 function remove (element) {
-  var parent = element.parentNode
+  const parent = element.parentNode
   return parent.removeChild(element)
 }
 
 function dispose (element) {
-  var el = element
+  const el = element
   return (el.parentNode) ? el.parentNode.removeChild(el) : el
 }
 

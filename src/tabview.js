@@ -1,38 +1,24 @@
-import emitter from './module/emitter'
+import EventEmitter from './mixin/emitter'
 import observer from './element/observer'
+import build from './view/build'
 import display from './view/display'
 
-/**
- * Class Tab
- * @class
- * @since 0.0.1
- * @example
- * var tab = new TabView()
- */
+class TabView extends EventEmitter {
+  static defaults = {
+    base: 'view',
+    class: 'tabview',
+    mode: 'style'
+  }
 
-var defaults = {
-  class: 'tabview',
-  mode: 'style' // css
-}
-
-class TabView {
-  /**
-   * The init method of the Button class
-   * @param  {Object} The element attributes
-   * @private
-   * @return {DOMElement} The dom element
-   */
   constructor (options) {
-    // console.log('TabView')
-    this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, emitter, display)
+    super()
 
+    this.init(options)
     this.build()
 
-    var ready = false
+    let ready = false
 
     observer.insert(this.element, () => {
-      // console.log('!!! inserted')
       if (!ready) {
         ready = true
         this.setup()
@@ -45,15 +31,9 @@ class TabView {
     return this
   }
 
-  build () {
-    this.element = document.createElement(this.options.tag || 'div')
-    this.element.classList.add('tabview')
-
-    this.element.classList.add('view')
-
-    if (this.options.class !== 'tabview') {
-      this.element.classList.add(this.options.class)
-    }
+  init (options) {
+    this.options = { ...TabView.defaults, ...options }
+    Object.assign(this, build, display)
 
     this.ui = {}
   }
@@ -72,7 +52,7 @@ class TabView {
 
     // console.log('views', this.ui.views)
 
-    for (var i = 0; i < this.ui.views.length; i++) {
+    for (let i = 0; i < this.ui.views.length; i++) {
       if (this.ui.views[i].dataset) {
         this.views.push(this.ui.views[i].dataset.view)
         this.view[this.ui.views[i].dataset.view] = this.ui.views[i]
@@ -98,7 +78,7 @@ class TabView {
   select (view) {
     // console.log('select', view, this.ui.tabs)
     if (this.ui && this.ui.tabs) {
-      var button = this.ui.tabs.querySelector('[data-view="' + view + '"]')
+      const button = this.ui.tabs.querySelector('[data-view="' + view + '"]')
       // console.log('tab', button)
       if (button) {
         this.click(button)
@@ -111,7 +91,7 @@ class TabView {
   disable (view) {
     // console.log('select', view)
     if (this.ui && this.ui.tabs) {
-      var button = this.ui.tabs.querySelector('[data-view="' + view + '"]')
+      const button = this.ui.tabs.querySelector('[data-view="' + view + '"]')
       // console.log('tab', button)
       if (button) {
         button.disabled = 'disabled'
@@ -125,7 +105,7 @@ class TabView {
     // console.log('select', view)
 
     if (this.ui && this.ui.tabs) {
-      var button = this.ui.tabs.querySelector('[data-view="' + view + '"]')
+      const button = this.ui.tabs.querySelector('[data-view="' + view + '"]')
       // console.log('tab', button)
       if (button) {
         button.disabled = false
@@ -137,7 +117,7 @@ class TabView {
 
   hideView () {
     // console.log('hideView')
-    for (var i = 0; i < this.ui.views.length; i++) {
+    for (let i = 0; i < this.ui.views.length; i++) {
       // console.log('hide', this.ui.views[i])
       this.ui.views[i].classList.add('hide')
     }
@@ -145,7 +125,7 @@ class TabView {
 
   click (button) {
     // console.log('click', button.dataset.view, true)
-    var view = this.ui.view.querySelector('[data-view="' + button.dataset.view + '"]')
+    const view = this.ui.view.querySelector('[data-view="' + button.dataset.view + '"]')
     this.hideView()
 
     if (this.button) {
@@ -172,14 +152,14 @@ class TabView {
   indicator (button) {
     if (!this.ui.indicator) return
 
-    var t = this.ui.tabs.getBoundingClientRect()
-    var b = button.getBoundingClientRect()
+    const tabs = this.ui.tabs.getBoundingClientRect()
+    var button = button.getBoundingClientRect()
 
     // console.log('tab rect', b.height, b.height)
 
-    this.ui.indicator.style.top = t.height - 2 + 'px'
-    this.ui.indicator.style.left = (b.left - t.left) + 'px'
-    this.ui.indicator.style.width = b.width + 'px'
+    this.ui.indicator.style.top = tabs.height - 2 + 'px'
+    this.ui.indicator.style.left = (button.left - tabs.left) + 'px'
+    this.ui.indicator.style.width = button.width + 'px'
   }
 }
 

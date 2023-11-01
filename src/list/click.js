@@ -8,9 +8,9 @@ export default {
       return
     }
 
-    var target = '[data-id]'
-    var item = e.target
-    var i = 0
+    const target = '[data-id]'
+    let item = e.target
+    let i = 0
 
     while (item && !item.matches(target)) {
       // console.log('item', item)

@@ -23,24 +23,25 @@ class Snackbar extends EventEmitter {
       ['ui.action.click', 'action'],
       ['ui.close.click', 'destroy']
     ]
-  };
+  }
 
   constructor (options) {
     super()
 
     this.init(options)
     this.build(this.constructor)
-    this.render()    
+    this.render()
     this.bindEvents()
     this.show()
 
-    if (this.options.duration)
-      setTimeout(()=>{
+    if (this.options.duration) {
+      setTimeout(() => {
         this.destroy()
       }, this.options.duration)
+    }
   }
 
-  init(options) {
+  init (options) {
     this.options = Object.assign({}, Snackbar.defaults, options || {})
     Object.assign(this, build, bindEvents, display)
 
@@ -50,7 +51,7 @@ class Snackbar extends EventEmitter {
   buildSnackbarContainer (container = document.body) {
     // console.log('buildSnackbarContainer', container)
 
-    let snackbarContainer = container.querySelector('.snackbars')
+    const snackbarContainer = container.querySelector('.snackbars')
 
     // console.log('snackbarContainer', snackbarContainer)
 
@@ -82,7 +83,7 @@ class Snackbar extends EventEmitter {
     this.destroy()
   }
 
-  close() {
+  close () {
     // console.log('close')
     this.destroy()
   }

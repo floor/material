@@ -42,8 +42,8 @@ class Tree {
   }
 
   _initFunction (functions) {
-    for (var i = 0; i < functions.length; i++) {
-      var name = functions[i]
+    for (let i = 0; i < functions.length; i++) {
+      const name = functions[i]
       if (this.options[name]) {
         this[name] = this.options[name]
       }
@@ -52,7 +52,7 @@ class Tree {
 
   build () {
     // define main tag
-    var tag = this.options.tag || 'div'
+    const tag = this.options.tag || 'div'
 
     this.element = document.createElement(tag)
     css.add(this.element, this.options.prefix + '-' + this.options.class)
@@ -78,7 +78,7 @@ class Tree {
 
     // console.log('buildTree', data);
 
-    var tree = ''
+    let tree = ''
 
     function checkChildren (parentObj, level) {
       if (level) {
@@ -104,8 +104,8 @@ class Tree {
 
       if (parentObj.children && parentObj.children.length > 0) {
         tree += '<ul>'
-        for (var i = 0; i < parentObj.children.length; i++) {
-          var children = parentObj.children[i]
+        for (let i = 0; i < parentObj.children.length; i++) {
+          const children = parentObj.children[i]
 
           checkChildren(children, level)
         }
@@ -177,7 +177,7 @@ class Tree {
       return
     }
 
-    var where = 'bottom'
+    const where = 'bottom'
     this.insertElement(item.root, this.element, where)
     // item.insert(this.element, where);
     this.items.push(item)

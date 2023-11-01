@@ -27,7 +27,7 @@ class Search extends EventEmitter {
     this.bindEvents()
   }
 
-  init(options) {
+  init (options) {
     this.options = Object.assign({}, Search.defaults, options || {})
     Object.assign(this, build, bindEvents)
   }

@@ -14,7 +14,7 @@ export default {
   emit (event /* , args... */) {
     this.event = this.event || {}
     if (event in this.event === false) return
-    for (var i = 0; i < this.event[event].length; i++) {
+    for (let i = 0; i < this.event[event].length; i++) {
       this.event[event][i].apply(this, Array.prototype.slice.call(arguments, 1))
     }
     return this

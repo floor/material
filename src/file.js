@@ -11,7 +11,7 @@ class File {
   }
 
   constructor (options) {
-    this.init(options)   
+    this.init(options)
     this.build()
     this.buildLabel()
     this.buildInput()

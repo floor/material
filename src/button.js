@@ -8,7 +8,7 @@ import ripple from './module/ripple'
 const DEFAULT_TYPE = 'button'
 const DEFAULT_CLASS = 'button'
 
-class Button extends EventEmitter{
+class Button extends EventEmitter {
   static isComponent () {
     return true
   }
@@ -36,16 +36,10 @@ class Button extends EventEmitter{
     this.build()
     this.setup()
     this.bindEvents()
-
-    if (this.options.container) {
-      this.append(this.options.container)
-    }
-
-    return this
   }
 
   init (options) {
-    this.options = { ...Button.defaults, ...options }  
+    this.options = { ...Button.defaults, ...options }
     Object.assign(this, build, display, bindEvents)
   }
 
@@ -77,7 +71,6 @@ class Button extends EventEmitter{
     if (caseOption) this.element.classList.add(`${caseOption}-case`)
     if (this.options.ripple) ripple(this.element)
   }
-
 
   styleAttributes () {
     const { style, size, color, bold } = this.options
@@ -125,6 +118,12 @@ class Button extends EventEmitter{
           this.icon.innerHTML = value
         }
         break
+      case 'enable':
+        this.element.disabled = false
+        break
+      case 'disable':
+        this.element.disabled = true
+        break
       default:
         // console.log('prop', prop)
         this.element.innerHTML = prop
@@ -134,7 +133,9 @@ class Button extends EventEmitter{
   }
 
   setLabel (value) {
-    this.label.innerHTML = value
+    if (this.label) {
+      this.label.innerHTML = value
+    }
   }
 
   setText (value) {
@@ -153,13 +154,6 @@ class Button extends EventEmitter{
         return this.label?.innerHTML ?? this.element.value
       default:
         return this.element.value
-    }
-  }
-
-  append (container) {
-    container = container ?? this.options.container
-    if (container) {
-      container.appendChild(this.element)
     }
   }
 

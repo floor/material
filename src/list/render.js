@@ -23,7 +23,7 @@ export default {
     // console.log('renderItem', info)
     info = info || {}
 
-    var container = this.ui.body
+    const container = this.ui.body
 
     if (context === 'create') {
       container.scrolltop = 0
@@ -33,7 +33,7 @@ export default {
     //   container = this.ui['search-list']
     // }
 
-    var element = new Element({
+    const element = new Element({
       tag: 'li',
       class: 'item'
     })
@@ -47,10 +47,10 @@ export default {
     element.dataset.id = info[this.dataId]
     element.dataset.info = this.options.info
 
-    var layout = null
+    let layout = null
 
     if (this.options.itemSwitch) {
-      var item = info[this.options.itemSwitch]
+      const item = info[this.options.itemSwitch]
 
       if (this.options.layout.item[item]) {
         layout = new Layout(this.options.layout.item[item], element)
@@ -58,7 +58,7 @@ export default {
         layout = new Layout(this.options.layout.item.base, element)
       }
     } else {
-      var itemName = this.options.itemName || 'item'
+      const itemName = this.options.itemName || 'item'
       layout = new Layout(this.options.layout[itemName], element)
     }
 
@@ -91,11 +91,11 @@ export default {
    */
   renderInfo (layout, object) {
     // console.log('renderInfo', object)
-    var info = dot(object)
+    const info = dot(object)
 
-    var f = this.extractInfo(layout.component)
+    const f = this.extractInfo(layout.component)
 
-    for (var field in f) {
+    for (const field in f) {
       if (f.hasOwnProperty(field)) {
         if (f[field] && f[field].set) {
           f[field].set(this.objectValueByDotKey(object, field))
@@ -108,11 +108,11 @@ export default {
   },
 
   objectValueByDotKey (object, dotkey) {
-    var keys = dotkey.split(/\./)
+    const keys = dotkey.split(/\./)
 
-    var value = Object.assign({}, object)
+    let value = Object.assign({}, object)
 
-    for (var i = 0; i < keys.length; i++) {
+    for (let i = 0; i < keys.length; i++) {
       if (value !== undefined) {
         value = value[keys[i]]
       }
@@ -124,14 +124,14 @@ export default {
   extractInfo (object) {
     // console.log('extractField', object)
 
-    var field = {}
+    const field = {}
 
-    for (var property in object) {
+    for (const property in object) {
       if (object.hasOwnProperty(property)) {
-        var infos = property.split(/\./)
+        const infos = property.split(/\./)
 
         if (infos[0] === 'info' && infos[1] !== undefined) {
-          var name = property.substr(5, property.length)
+          const name = property.substr(5, property.length)
           // console.log('field', name, property)
 
           field[name] = object[property]

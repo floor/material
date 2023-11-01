@@ -6,7 +6,7 @@ export default {
    */
   focus (country) {
     // console.log('focus', country)
-    var part = this.getCountryParts(country)
+    const part = this.getCountryParts(country)
     // console.log('focus on part', part)
     this.draggable.focus(part)
 
@@ -15,18 +15,18 @@ export default {
 
   getCountryParts (country) {
     // console.log('focus', country)
-    var parts = this.map.querySelectorAll('[data-isocode="' + country + '"]')
+    const parts = this.map.querySelectorAll('[data-isocode="' + country + '"]')
     // console.log('parts', parts)
 
     return this.getBiggestPart(parts)
   },
 
   getBiggestPart (parts) {
-    var surface = 0
-    var biggest = null
-    for (var i = 0; i < parts.length; i++) {
-      var part = parts[i]
-      var rect = part.getBoundingClientRect()
+    let surface = 0
+    let biggest = null
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i]
+      const rect = part.getBoundingClientRect()
 
       if (rect.width * rect.height > surface) {
         surface = rect.width * rect.height

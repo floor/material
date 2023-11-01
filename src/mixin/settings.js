@@ -2,9 +2,9 @@ import cookies from '../module/cookies'
 import merge from '../module/merge'
 
 function set (key, value) {
-  var text = cookies.get(key)
+  const text = cookies.get(key)
 
-  var current = {}
+  let current = {}
 
   if (text) {
     current = JSON.parse(text)
@@ -12,7 +12,7 @@ function set (key, value) {
 
   console.log('settings value', current, value)
   // settings = [settings, value].reduce(Object.assign, {});
-  var settings = merge(current, value)
+  const settings = merge(current, value)
 
   console.log('settings ' + key, settings)
 
@@ -20,12 +20,12 @@ function set (key, value) {
 }
 
 function get (key) {
-  var json = cookies.get(key)
+  const json = cookies.get(key)
 
   if (!json) {
     return null
   }
-  var value = JSON.parse(json)
+  const value = JSON.parse(json)
 
   console.log('settings' + key, value)
 

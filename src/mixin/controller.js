@@ -110,7 +110,7 @@ class Controller {
       return false
     }
 
-    for (var i = 0, len = this._topics[topic].length; i < len; i++) {
+    for (let i = 0, len = this._topics[topic].length; i < len; i++) {
       if (this._topics[topic][i] === callback) {
         this._topics[topic].splice(i, 1)
         return true
@@ -127,20 +127,20 @@ class Controller {
   publish () {
     this._topics = this._topics || {}
 
-    var args = Array.prototype.slice.call(arguments)
-    var topic = args.shift()
+    const args = Array.prototype.slice.call(arguments)
+    const topic = args.shift()
     // _log.debug('publish', topic);
     if (!this._topics.hasOwnProperty(topic)) {
       return false
     }
 
-    for (var i = 0, len = this._topics[topic].length; i < len; i++) {
+    for (let i = 0, len = this._topics[topic].length; i < len; i++) {
       this._topics[topic][i].apply(undefined, args)
     }
     return true
   }
 }
 
-var controller = new Controller()
+const controller = new Controller()
 
 export default controller

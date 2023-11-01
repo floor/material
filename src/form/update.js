@@ -5,11 +5,11 @@ export default {
     options = options || {}
 
     // console.log('mode', this.mode)
-    var method = options.method ||
+    const method = options.method ||
         this.options[this.mode].method ||
         'put'
 
-    var action = options.action ||
+    const action = options.action ||
         this.options[this.mode].action ||
         this.options.action
 
@@ -18,7 +18,7 @@ export default {
     }
 
     fetch(action, {
-      method: method,
+      method,
       body: data
     }).then((resp) => {
       // console.log('resp', resp)

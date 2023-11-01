@@ -11,12 +11,12 @@ function icon (root, svg, options) {
     return
   }
 
-  var position = 'top'
+  let position = 'top'
   if (options && options.type === 'text-icon') {
     position = 'bottom'
   }
 
-  var element = create('i', options.class + '-icon')
+  const element = create('i', options.class + '-icon')
   insert(element, root, position)
 
   element.innerHTML = svg

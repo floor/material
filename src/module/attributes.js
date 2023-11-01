@@ -5,8 +5,8 @@ function attributes (element, o) {
 
   if (!element) return
 
-  for (var i = 0; i < o.attributes.length; i++) {
-    var attribute = o.attributes[i]
+  for (let i = 0; i < o.attributes.length; i++) {
+    const attribute = o.attributes[i]
 
     if (o[attribute] && o[attribute] !== 'undefined') {
       if (special.indexOf(attribute) > -1) {

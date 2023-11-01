@@ -54,9 +54,9 @@ export default {
 
   setIsocodes (isocodes) {
     this.isocodes = this.isocodes || []
-    var l = this.isocodes.length
-    for (var i = 0; i < l; i++) {
-      var isocode = this.isocodes.splice(0, 1)
+    const l = this.isocodes.length
+    for (let i = 0; i < l; i++) {
+      const isocode = this.isocodes.splice(0, 1)
       this.highlight(isocode, false)
     }
 

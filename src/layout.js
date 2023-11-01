@@ -16,10 +16,10 @@ class Layout {
     structure = structure || {}
     let component = null
 
-    for (var i = 0; i < schema.length; i++) {
+    for (let i = 0; i < schema.length; i++) {
       // console.log('index', i, typeof schema[i])
       var name
-      var options = {}
+      let options = {}
 
       if (schema[i] instanceof Object &&
         typeof schema[i] === 'function') {
@@ -37,7 +37,7 @@ class Layout {
         }
 
         component = new schema[i](options)
-        var element = component.element || component
+        const element = component.element || component
 
         if (level === 1) {
           structure.element = element
@@ -57,7 +57,7 @@ class Layout {
           if (component.insert) {
             component.insert(container)
           } else {
-            var wrapper = container.element || container
+            const wrapper = container.element || container
 
             wrapper.appendChild(element)
 
@@ -68,7 +68,7 @@ class Layout {
           component._container = container
         }
       } else if (Array.isArray(schema[i])) {
-       // console.log('------', schema[i])
+        // console.log('------', schema[i])
         if (component == null) {
           component = container
         }
@@ -80,8 +80,8 @@ class Layout {
   }
 
   display (element, options) {
-    var display = options.display
-    var direction = options.direction || 'horizontal'
+    const display = options.display
+    const direction = options.direction || 'horizontal'
 
     if (!element || !display) return
 
@@ -93,14 +93,14 @@ class Layout {
   }
 
   style (component) {
-    var options = component.options || {}
+    const options = component.options || {}
 
     // console.log('component', component);
 
     if (options.flex) {
       css.add(component.element, 'flex-' + options.flex)
     } else {
-      var size = options.size
+      const size = options.size
       if (options.size && options.width) {
         component.element.width = size + 'px'
       } else if (options.size && options.height) {
@@ -128,11 +128,11 @@ class Layout {
   extractInfo (object) {
     // console.log('extractField', object)
 
-    var field = {}
+    const field = {}
 
-    for (var property in object) {
+    for (const property in object) {
       if (object.hasOwnProperty(property)) {
-        var infos = property.split(/\./)
+        const infos = property.split(/\./)
 
         if (infos[0] === 'info' && infos[1] !== undefined) {
           // console.log('field', infos[0], infos[1])

@@ -3,7 +3,7 @@ export default {
     // console.log('select', item.dataset.id)
     if (!item || !item.dataset.id) return
 
-    var id = item.dataset.id
+    const id = item.dataset.id
 
     this.index = this.dataList.indexOf(id)
     this.info = this.dataStore[id]
@@ -12,7 +12,7 @@ export default {
       return
     }
 
-    var selected = this.ui.body.querySelector('.selected')
+    const selected = this.ui.body.querySelector('.selected')
     if (selected) selected.classList.remove('selected')
 
     if (id) {
@@ -32,7 +32,7 @@ export default {
 
   unselect () {
     // console.log('unselect')
-    var item = this.ui.body.querySelector('[data-id="' + this.id + '"]') || this.item
+    const item = this.ui.body.querySelector('[data-id="' + this.id + '"]') || this.item
     this.id = null
     if (item) {
       item.classList.remove('selected')
@@ -51,7 +51,7 @@ export default {
 
   getItemById (id, silent) {
     // console.log('selectItemById', id)
-    var item = this.ui.body.querySelector('[data-id="' + id + '"]')
+    const item = this.ui.body.querySelector('[data-id="' + id + '"]')
 
     if (!item) {
       return null
@@ -67,7 +67,7 @@ export default {
       return false
     }
 
-    var index = this.dataList.indexOf(id)
+    const index = this.dataList.indexOf(id)
     if (index < 0) {
       // console.log('can\'t selectid, not in the list')
       return false
@@ -83,16 +83,16 @@ export default {
 
   selectItemById (id, direction) {
     // console.log('selectItemById', id)
-    var item = this.ui.body.querySelector('[data-id="' + id + '"]')
+    const item = this.ui.body.querySelector('[data-id="' + id + '"]')
 
     this.id = id
 
     if (!item) {
-      var index = this.dataList.indexOf(id)
+      const index = this.dataList.indexOf(id)
       // console.log('not found in DOM, check in dataList', index)
       if (index > -1) {
-        var listSize = this.options.list.size
-        var slice = listSize * index / listSize
+        const listSize = this.options.list.size
+        const slice = listSize * index / listSize
         // console.log('getSlice', slice)
       }
 
@@ -103,7 +103,7 @@ export default {
 
     // if (this.item) this.item.classList.remove('selected')
 
-    var selected = this.ui.body.querySelector('.selected')
+    const selected = this.ui.body.querySelector('.selected')
     if (selected) selected.classList.remove('selected')
 
     this.item = item
@@ -118,7 +118,7 @@ export default {
   },
 
   selectPosition (item, direction) {
-    var offsetY = this.options.item.height
+    const offsetY = this.options.item.height
     direction = direction || 'down'
     // console.log('selectPosition', this.ui.body, direction)
 
@@ -126,12 +126,12 @@ export default {
 
     // console.log('coord', this.coord)
 
-    var itemTop = item.offsetTop + this.coord.top - this.ui.body.scrollTop
+    const itemTop = item.offsetTop + this.coord.top - this.ui.body.scrollTop
 
     if (direction === 'down' && itemTop + this.options.item.height + offsetY - this.coord.y > this.coord.height) {
       var top = this.ui.body.scrollTop + itemTop - this.coord.height - this.coord.y + this.options.item.height + offsetY
       this.ui.body.scrollTo({
-        top: top,
+        top,
         left: 0
         // behavior: 'smooth'
       })
@@ -142,7 +142,7 @@ export default {
       // console.lof('scrollTo', top, item)
       this.ui.body.scrollTo({
         left: 0,
-        top: top
+        top
         // behavior: 'smooth'
       })
     }
@@ -150,9 +150,9 @@ export default {
 
   selectNext (silent) {
     // console.log('selectNext', this.id)
-    var idx = this.dataList.indexOf(this.id)
+    const idx = this.dataList.indexOf(this.id)
 
-    var id = this.dataList[idx + 1]
+    const id = this.dataList[idx + 1]
 
     // console.log('id', id)
 
@@ -172,9 +172,9 @@ export default {
 
   selectPrevious (silent) {
     // console.log('selectPrevious', this.id)
-    var idx = this.dataList.indexOf(this.id)
+    const idx = this.dataList.indexOf(this.id)
 
-    var id = this.dataList[idx - 1]
+    const id = this.dataList[idx - 1]
 
     if (id) {
       this.id = id

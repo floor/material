@@ -68,7 +68,7 @@ class Form {
    * @return {Object} This class instance
    */
   build () {
-    var tag = this.options.tag || 'div'
+    const tag = this.options.tag || 'div'
 
     this.element = document.createElement(tag)
     css.add(this.element, this.options.prefix + '-' + this.options.class)
@@ -99,8 +99,8 @@ class Form {
 
     this.key = this.key || {}
 
-    for (var i = 0; i < controls.length; i++) {
-      var control = controls[i]
+    for (let i = 0; i < controls.length; i++) {
+      const control = controls[i]
       // control.setAttribute('data-key', control.name);
 
       this.key[control.name] = control
@@ -126,9 +126,9 @@ class Form {
    * @return {?}         [description]
    */
   initControl (key, section) {
-    var name = key.name || 'undefined'
+    const name = key.name || 'undefined'
 
-    var control = this.render(key)
+    const control = this.render(key)
 
     if (control) {
       this.key[name] = control
@@ -179,15 +179,15 @@ class Form {
    */
   parseInfo (obj, name, i) {
     // console.log('parseInfo', obj, name, 'level ' + i);
-    var level = i || 0
+    let level = i || 0
     level = level + 1
-    var key
+    let key
 
     if (obj instanceof Object) {
       for (key in obj) {
         if (obj.hasOwnProperty(key)) {
           // recursive call to scan property
-          var n = null
+          let n = null
           if (name) {
             n = name + '.' + key
           } else {

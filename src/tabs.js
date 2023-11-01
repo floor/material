@@ -55,7 +55,7 @@ class Tabs {
         label: 'Flat',
 
         render: (info) => {
-          var item
+          let item
           if (info.type === 'divider') {
             item = new Divider()
           } else {
@@ -95,8 +95,8 @@ class Tabs {
 
   click (item, silent) {
     // console.log('clickitem', item, this.element);
-    var or = offset(this.element)
-    var o = offset(item)
+    const or = offset(this.element)
+    const o = offset(item)
     this.indicator.setAttribute('style', 'width: ' + o.width + 'px; left: ' + (o.left - or.left) + 'px;')
 
     if (!silent) { this.emit('select', item.dataset.name) }

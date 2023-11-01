@@ -34,14 +34,14 @@ function classify (element, options) {
   }
 
   if (options.style) {
-    var styles = options.style.split(' ')
-    for (var i = 0; i < styles.length; i++) {
+    const styles = options.style.split(' ')
+    for (let i = 0; i < styles.length; i++) {
       css.add(element, 'style-' + styles[i])
     }
   }
 
   if (options.data) {
-    for (var property in options.data) {
+    for (const property in options.data) {
       if (options.data.hasOwnProperty(property)) {
         element.dataset[property] = options.data[property]
       }

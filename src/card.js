@@ -4,7 +4,7 @@ import insert from './mixin/insert'
 // import components
 import Layout from './layout'
 
-let defaults = {
+const defaults = {
   prefix: 'material',
   class: 'card',
   tag: 'div'

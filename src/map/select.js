@@ -17,7 +17,7 @@ export default {
       this.isocodes = [isocode]
     } else {
       this.isocodes = this.isocodes || []
-      var index = this.isocodes.indexOf(isocode)
+      const index = this.isocodes.indexOf(isocode)
       if (index > -1) {
         this.isocodes.splice(index, 1)
         this.highlight(isocode, false)
@@ -54,7 +54,7 @@ export default {
 
     // console.log('islands list', this.islands.list, island.dataset.id)
 
-    var info = this.islands.list[island.dataset.id]
+    const info = this.islands.list[island.dataset.id]
 
     this.emit('island', info)
   },

@@ -9,10 +9,7 @@ export default {
 
     const defaults = this.constructor.defaults || {}
 
-    if (defaults.class === 'account') console.log('build', defaults.class)
-
     if (defaults.base) css.add(this.element, defaults.base)
-
     if (defaults.class) css.add(this.element, defaults.class)
 
     if (this.options.class !== defaults.class) {

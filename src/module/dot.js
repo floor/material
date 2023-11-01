@@ -1,10 +1,10 @@
 
 function dot (obj) {
-  var res = {}
+  const res = {}
   function recurse (obj, current) {
-    for (var key in obj) {
-      var value = obj[key]
-      var newKey = (current ? current + '.' + key : key)
+    for (const key in obj) {
+      const value = obj[key]
+      const newKey = (current ? current + '.' + key : key)
       if (value && typeof value === 'object') {
         recurse(value, newKey)
       } else {

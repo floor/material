@@ -9,7 +9,7 @@ const add = (element, className) => {
   const sanitizedClassName = className.trim().replace(/\s+/g, ' ')
   const classNames = sanitizedClassName.split(' ')
 
-  for (let cn of classNames) {
+  for (const cn of classNames) {
     if (!has(element, cn)) {
       element.classList.add(cn)
     }

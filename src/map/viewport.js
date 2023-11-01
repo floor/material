@@ -3,21 +3,21 @@ export default {
   updatePaths () {
     this.path = {}
     this.paths = []
-    var paths = this.paths = this.map.querySelectorAll('path')
+    const paths = this.paths = this.map.querySelectorAll('path')
     this.path = this.path || {}
 
-    for (var i = 0; i < paths.length; i++) {
-      var path = paths[i]
-      var rect = path.getBoundingClientRect()
+    for (let i = 0; i < paths.length; i++) {
+      const path = paths[i]
+      const rect = path.getBoundingClientRect()
       this.path[i] = rect
     }
   },
 
   updateViewport () {
     console.log('updateViewport', this.rect, this.screen)
-    var paths = this.paths
-    for (var i = 0; i < paths.length; i++) {
-      var path = paths[i]
+    const paths = this.paths
+    for (let i = 0; i < paths.length; i++) {
+      const path = paths[i]
       if (this.viewport(this.path[i])) {
         path.classList.remove('hide')
       } else {
@@ -31,10 +31,10 @@ export default {
 
     // *var rect = this.path[path]
 
-    var top = rect.top
-    var left = rect.left
-    var width = rect.width
-    var height = rect.height
+    const top = rect.top
+    const left = rect.left
+    const width = rect.width
+    const height = rect.height
 
     return (
       top >= this.screen.y &&

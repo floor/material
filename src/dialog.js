@@ -43,7 +43,7 @@ class Dialog {
     return this
   }
 
-  init(options) {
+  init (options) {
     this.options = Object.assign({}, Dialog.defaults, options || {})
     Object.assign(this, emitter, attach, display)
   }
@@ -101,8 +101,8 @@ class Dialog {
   }
 
   setPosition () {
-    var coord = this.options.target.getBoundingClientRect()
-    var surface_coord = this.surface.getBoundingClientRect()
+    const coord = this.options.target.getBoundingClientRect()
+    const surface_coord = this.surface.getBoundingClientRect()
 
     if (this.options.position === 'right') {
       this.surface.style.top = coord.top + 'px'
@@ -150,7 +150,7 @@ class Dialog {
 
   emphase () {
     this.element.classList.add('emphase')
-    var it
+    let it
     it = setTimeout(() => {
       clearTimeout(it)
       this.element.classList.remove('emphase')

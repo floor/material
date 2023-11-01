@@ -2,12 +2,12 @@
 function viewport (el) {
   if (!el) return
 
-  var rect = el.getBoundingClientRect()
+  const rect = el.getBoundingClientRect()
 
-  var top = rect.top
-  var left = rect.left
-  var width = rect.width
-  var height = rect.height
+  const top = rect.top
+  const left = rect.left
+  const width = rect.width
+  const height = rect.height
 
   return (
     top >= window.pageYOffset &&

@@ -32,7 +32,7 @@ class Textfield {
   }
 
   build () {
-    var tag = this.options.tag || 'div'
+    const tag = this.options.tag || 'div'
 
     this.element = document.createElement(tag)
     this.element.classList.add('textfield')

@@ -15,8 +15,8 @@ class Image {
     this.build()
   }
 
-  init(options) {
-    this.options = { ...Image.defaults, ...options }  
+  init (options) {
+    this.options = { ...Image.defaults, ...options }
     Object.assign(this, build)
   }
 
@@ -25,13 +25,13 @@ class Image {
 
     if (!src) return
 
-    var url = src.url
+    let url = src.url
 
     if (src.format) {
-      var format = this.sanitize(src.format)
+      let format = this.sanitize(src.format)
 
       if (format.length > 0) {
-        var index = format.indexOf(this.options.format)
+        const index = format.indexOf(this.options.format)
         if (index === -1) {
           format = src.format[0] + '/'
         } else {
@@ -46,9 +46,9 @@ class Image {
   }
 
   sanitize (formats) {
-    var a = []
-    for (var i = 0; i < formats.length; i++) {
-      var format = formats[i].replace(/\/$/, '')
+    const a = []
+    for (let i = 0; i < formats.length; i++) {
+      const format = formats[i].replace(/\/$/, '')
       a.push(format)
     }
 

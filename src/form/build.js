@@ -71,11 +71,11 @@ export default {
   extractFile (object) {
     this.file = {}
 
-    for (var property in object) {
+    for (const property in object) {
       if (object.hasOwnProperty(property)) {
-        var files = property.split(/\./)
+        const files = property.split(/\./)
         if (files[0] === 'file' && files[1] !== undefined) {
-          var name = property.substr(5, property.length)
+          const name = property.substr(5, property.length)
 
           this.file[name] = object[property]
         }
@@ -89,12 +89,12 @@ export default {
     this.field = {}
     this.fields = []
 
-    for (var property in object) {
+    for (const property in object) {
       if (object.hasOwnProperty(property)) {
-        var infos = property.split(/\./)
+        const infos = property.split(/\./)
 
         if (infos[0] === 'info' && infos[1] !== undefined) {
-          var name = property.substr(5, property.length)
+          const name = property.substr(5, property.length)
           // console.log('field', name, property)
           this.fields.push(name)
           this.field[name] = object[property]
@@ -105,7 +105,7 @@ export default {
 
   clean () {
     // console.log('clean', this.info)
-    for (var member in this.info) {
+    for (const member in this.info) {
       delete this.info[member]
     }
 

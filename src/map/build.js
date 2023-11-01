@@ -51,7 +51,7 @@ export default {
 
       //   })
       // } else {
-        // console.log('panzoom')
+      // console.log('panzoom')
       this.draggable = new PanZoom(this.slide, {
         maxZoom: 16,
         minZoom: 1

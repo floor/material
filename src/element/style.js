@@ -19,13 +19,13 @@ function get (element, style) {
   // console.log('get', element, style);
   // get array of elements
   if (isArray(style)) {
-    var css = {}
-    for (var i in list) {
+    const css = {}
+    for (const i in list) {
       css[list[i]] = this.get(element, list[i])
     }
     return css
   } else {
-    var computedStyle
+    let computedStyle
 
     if (typeof window.getComputedStyle === 'function') { // normal browsers
       computedStyle = window.getComputedStyle(element)
@@ -58,7 +58,7 @@ function set (element, style) {
 
   if (isLiteralObject(style)) {
     // console.log('style', element, style);
-    for (var i in style) {
+    for (const i in style) {
       element.style[i] = style[i]
     }
     return style

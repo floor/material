@@ -79,8 +79,8 @@ class Calendar {
    */
   getFirstDayOfWeek (d) {
     d = new Date(d)
-    var day = d.getDay()
-    var diff = d.getDate() - day + (day === 0 ? -6 : 1) // adjust when day is sunday
+    const day = d.getDay()
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1) // adjust when day is sunday
 
     return new Date(d.setDate(diff))
   }
@@ -93,8 +93,8 @@ class Calendar {
   _initFunction (functions) {
     functions = functions || []
 
-    for (var i = 0; i < functions.length; i++) {
-      var name = functions[i]
+    for (let i = 0; i < functions.length; i++) {
+      const name = functions[i]
       if (this.options[name]) {
         this[name] = this.options[name]
       }
@@ -108,7 +108,7 @@ class Calendar {
    */
   build () {
     // define main tag
-    var tag = this.options.tag || 'div'
+    const tag = this.options.tag || 'div'
 
     this.element = create(tag, this.options.prefix + '-' + this.options.class)
 
@@ -145,22 +145,22 @@ class Calendar {
 
     this.buildHeadline()
 
-    var element = create('div')
+    const element = create('div')
     insert(element, this.header)
     css.add(element, 'header-days')
 
-    var date = new Date(this.firstDay)
-    var days = this.options.rangedays
+    const date = new Date(this.firstDay)
+    const days = this.options.rangedays
 
-    var margin = create('div')
+    const margin = create('div')
     css.add(margin, 'margin')
     insert(margin, element)
 
-    for (var i = 0; i < days; i++) {
-      var dow = this.options.days[date.getDay()]
-      var dom = (date.getMonth() + 1) + '/' + date.getDate()
+    for (let i = 0; i < days; i++) {
+      const dow = this.options.days[date.getDay()]
+      const dom = (date.getMonth() + 1) + '/' + date.getDate()
 
-      var cell = create('div')
+      const cell = create('div')
       cell.innerHTML = '<div class="first">' + dow + '</div><div class="second">' + dom + '</div>'
       css.add(cell, 'date')
       insert(cell, element)
@@ -178,11 +178,11 @@ class Calendar {
 
     insert(this.headline, this.header)
 
-    var year = this.firstDay.getFullYear()
+    const year = this.firstDay.getFullYear()
 
-    var month = this.options.months[this.firstDay.getMonth()]
+    const month = this.options.months[this.firstDay.getMonth()]
 
-    var monthIndex = create('div', 'month-year')
+    const monthIndex = create('div', 'month-year')
     monthIndex.innerHTML = '<b>' + month + '</b> ' + year
     insert(monthIndex, this.headline)
 
@@ -194,10 +194,10 @@ class Calendar {
    * @return {?} [description]
    */
   buildNavigation () {
-    var navigation = create('div', this.options.prefix + '-toolbar')
+    const navigation = create('div', this.options.prefix + '-toolbar')
     insert(navigation, this.headline)
 
-    var back = new Button({
+    const back = new Button({
       icon: iconBack,
       style: 'dense'
     }).on('click', () => {
@@ -206,7 +206,7 @@ class Calendar {
 
     css.add(back.root, 'compact')
 
-    var today = new Button({
+    const today = new Button({
       style: 'dense',
       label: 'today'
     }).on('click', () => {
@@ -215,7 +215,7 @@ class Calendar {
 
     css.add(today.root, 'compact')
 
-    var next = new Button({
+    const next = new Button({
       icon: iconForward,
       style: 'dense'
     }).on('click', () => {
@@ -231,18 +231,18 @@ class Calendar {
    * @return {?}      [description]
    */
   buildAllDay () {
-    var allday = create('div', 'allday')
+    const allday = create('div', 'allday')
     insert(allday, this.header)
 
-    var dow = new Date(this.firstDay)
-    var days = this.options.rangedays
+    const dow = new Date(this.firstDay)
+    const days = this.options.rangedays
 
-    var label = create('label', 'label')
+    const label = create('label', 'label')
     label.innerHTML = 'all-day'
     insert(label, allday)
 
-    for (var i = 0; i < days; i++) {
-      var day = create('div', 'date')
+    for (let i = 0; i < days; i++) {
+      const day = create('div', 'date')
       day.setAttribute('data-date', this.dateToString(dow))
       insert(day, allday)
 
@@ -256,33 +256,33 @@ class Calendar {
    * @return {?}         [description]
    */
   buildBody () {
-    var cells = []
+    const cells = []
 
-    var firstDay = this.firstDay
+    const firstDay = this.firstDay
 
-    var days = this.options.rangedays
+    const days = this.options.rangedays
 
     this.body = create('div')
     css.add(this.body, this.options.class + '-body')
     insert(this.body, this.element)
 
-    var hours = create('div')
+    const hours = create('div')
     css.add(hours, 'hours')
     insert(hours, this.body)
 
     this.initCanvas()
 
-    for (var i = 0; i < 24; i++) {
-      var hour = create('div')
+    for (let i = 0; i < 24; i++) {
+      const hour = create('div')
       css.add(hour, 'hour')
       insert(hour, hours)
 
       hour.innerHTML = i + ':00'
     }
 
-    var sday = new Date(firstDay)
-    for (var k = 0; k < days; k++) {
-      var day = create('div')
+    const sday = new Date(firstDay)
+    for (let k = 0; k < days; k++) {
+      const day = create('div')
       css.add(day, 'week-day')
       day.setAttribute('data-date', this.dateToString(sday))
       insert(day, this.body)
@@ -301,9 +301,9 @@ class Calendar {
    * @return {Date}
    */
   dateToString (d) {
-    var day = d.getDate()
-    var month = d.getMonth() + 1
-    var year = d.getFullYear()
+    let day = d.getDate()
+    let month = d.getMonth() + 1
+    const year = d.getFullYear()
 
     if (day < 10) {
       day = '0' + day
@@ -312,7 +312,7 @@ class Calendar {
       month = '0' + month
     }
 
-    var date = year + '-' + month + '-' + day
+    const date = year + '-' + month + '-' + day
 
     return date
   }
@@ -323,19 +323,19 @@ class Calendar {
    * @return {?}         [description]
    */
   initCanvas () {
-    var canvas = create('canvas')
+    const canvas = create('canvas')
     css.add(canvas, 'canvas')
     canvas.width = '2000'
     canvas.height = '1440'
     insert(canvas, this.body)
 
-    var ctx = canvas.getContext('2d')
+    const ctx = canvas.getContext('2d')
     ctx.lineWidth = 0.5
     ctx.strokeStyle = '#dedbdb'
 
-    var offset = 6
+    const offset = 6
 
-    for (var j = 0; j <= 24; j++) {
+    for (let j = 0; j <= 24; j++) {
       ctx.beginPath()
 
       if (j < this.options.range[0] - 1 || j > this.options.range[1] - 1) {
@@ -344,7 +344,7 @@ class Calendar {
         ctx.strokeStyle = '#D9D9D9'
       }
 
-      var y = j * 60 + 0.5
+      const y = j * 60 + 0.5
 
       ctx.moveTo(0, y + 60 + offset)
       ctx.lineTo(2000, y + 60 + offset)
@@ -359,16 +359,16 @@ class Calendar {
    */
   add (e) {
     if (e.target && e.target.matches(this.options.target)) {
-      var data = e.target.getAttribute('data-date')
+      const data = e.target.getAttribute('data-date')
 
-      var d = data.split(/-/)
+      const d = data.split(/-/)
 
-      var time = this.roundTime(e.offsetY / 60)
+      const time = this.roundTime(e.offsetY / 60)
 
-      var h = parseInt(time)
-      var m = (time - h) * 60
+      const h = parseInt(time)
+      const m = (time - h) * 60
 
-      var date = new Date(d[0], d[1], d[2], h, m)
+      const date = new Date(d[0], d[1], d[2], h, m)
 
       this.emit('add', date)
     }
@@ -380,8 +380,8 @@ class Calendar {
    * @return {?}       [description]
    */
   roundTime (value) {
-    var step = 0.5
-    var inv = 1.0 / step
+    const step = 0.5
+    const inv = 1.0 / step
     return Math.round(value * inv) / inv
   }
 

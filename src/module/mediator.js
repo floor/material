@@ -18,7 +18,7 @@ const mediator = ((() => {
       return false
     }
 
-    for (let value of mediator.stores[store]) {
+    for (const value of mediator.stores[store]) {
       const subscription = value
       subscription.callback.apply(subscription.context, args)
     }

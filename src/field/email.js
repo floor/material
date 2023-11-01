@@ -10,8 +10,8 @@ class EmailLink {
     this.build()
   }
 
-  init(options) {
-    this.options = { ...Button.defaults, ...options }  
+  init (options) {
+    this.options = { ...Button.defaults, ...options }
     Object.assign(this, build)
   }
 

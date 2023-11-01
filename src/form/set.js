@@ -13,7 +13,7 @@ export default {
     // this.render(info)
     fetch(this.options.action + id, {
       headers: {
-        'Accept': 'application/json'
+        Accept: 'application/json'
       },
       method: 'GET'
     }).then((resp) => {

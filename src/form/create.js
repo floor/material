@@ -6,7 +6,7 @@ export default {
 
     this.clean()
 
-    var info = this.options.create.info || { name: 'New Item' }
+    const info = this.options.create.info || { name: 'New Item' }
 
     console.log('info', info)
 

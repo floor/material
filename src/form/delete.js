@@ -20,7 +20,7 @@ export default {
     this.setMode('delete')
     fetch(this.options.action, {
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({

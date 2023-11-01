@@ -1,15 +1,15 @@
 // based on https://sergimansilla.com/blog/virtual-scrolling/
 
 // Import necessary modules
-import passiveEvents from '../module/passive'  // Import the passiveEvents utility.
-import emitter from '../module/emitter'        // Import the emitter module.
+import passiveEvents from '../module/passive' // Import the passiveEvents utility.
+import emitter from '../module/emitter' // Import the emitter module.
 
 // Define the VirtualList class
 class VirtualList {
   constructor (options) {
     // Initialize the class with options passed to the constructor.
-    this.options = { ...(options || {}) }  // Spread operator to merge options with default values.
-    Object.assign(this, emitter)           // Assign emitter methods to the instance.
+    this.options = { ...(options || {}) } // Spread operator to merge options with default values.
+    Object.assign(this, emitter) // Assign emitter methods to the instance.
 
     // Destructure options for easier access to properties.
     const { itemHeight = 0, size = 0, items = [], render, container } = options
@@ -103,7 +103,7 @@ class VirtualList {
     // Add a scroll event listener to render items dynamically.
     const onScroll = (e) => {
       const scrollTop = e.target.scrollTop
-      let first = parseInt(scrollTop / this.itemHeight) - this.itemsByScreen
+      const first = parseInt(scrollTop / this.itemHeight) - this.itemsByScreen
 
       size = this.itemsByScreen * 4
 

@@ -25,9 +25,9 @@ export default {
   },
 
   addClass (c) {
-    var list = c.split(' ')
+    const list = c.split(' ')
 
-    for (var i = 0; i < list.length; i++) {
+    for (let i = 0; i < list.length; i++) {
       this.element.classList.add(list[i])
     }
   }

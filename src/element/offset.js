@@ -7,9 +7,9 @@
 import style from './style'
 
 function offset (element, prop) {
-  var rect = element.getBoundingClientRect()
+  const rect = element.getBoundingClientRect()
 
-  var offset = {
+  const offset = {
     top: Math.round(rect.top),
     right: Math.round(rect.right),
     bottom: Math.round(rect.bottom),

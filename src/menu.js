@@ -20,26 +20,26 @@ class Menu extends EventEmitter {
     events: [
       ['element.click', 'close']
     ]
-  };
+  }
 
   constructor (options) {
     super()
-    
+
     this.init(options)
-    this.build(this.constructor)    
+    this.build(this.constructor)
     this.bindEvents()
 
     this.render(this.options.items)
   }
 
-  init(options) {
+  init (options) {
     this.options = Object.assign({}, Menu.defaults, options || {})
     Object.assign(this, build, bindEvents, display)
   }
 
   render (items) {
-      if (items && Array.isArray(items)) {
-      for (var i = 0; i < items.length; i++) {
+    if (items && Array.isArray(items)) {
+      for (let i = 0; i < items.length; i++) {
         this.add(items[i])
       }
     }
@@ -48,8 +48,8 @@ class Menu extends EventEmitter {
   }
 
   add (obj) {
-    if (typeof obj !== 'object') return this;
-    let item;
+    if (typeof obj !== 'object') return this
+    let item
     if (obj.type === 'divider') {
       item = new Element({ tag: 'li', class: 'divider' })
     } else {
@@ -64,11 +64,11 @@ class Menu extends EventEmitter {
     return this
   }
 
-  position(target) {
+  position (target) {
     if (!target) return
-    var offs = target.getBoundingClientRect()
+    const offs = target.getBoundingClientRect()
 
-    var offsw = this.offset = this.ui.surface.getBoundingClientRect()
+    const offsw = this.offset = this.ui.surface.getBoundingClientRect()
 
     this.ui.surface.style.top = (offs.top - 4) + 'px'
     this.ui.surface.style.left = offs.left - offsw.width + offs.width + 'px'
@@ -76,7 +76,7 @@ class Menu extends EventEmitter {
     return this
   }
 
-  close() {
+  close () {
     // console.log('close')
     this.destroy()
   }

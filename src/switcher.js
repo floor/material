@@ -1,6 +1,6 @@
 import EventEmitter from './mixin/emitter'
 
-class Switcher extends EventEmitter{
+class Switcher extends EventEmitter {
   static defaults = {
     class: 'switcher',
     tag: 'div',
@@ -9,7 +9,7 @@ class Switcher extends EventEmitter{
     mode: 'unique',
     allowEmpty: false
   }
-  
+
   constructor (options) {
     super()
 
@@ -22,7 +22,7 @@ class Switcher extends EventEmitter{
     }
   }
 
-  init(options) {
+  init (options) {
     this.options = Object.assign({}, Switcher.defaults, options || {})
   }
 
@@ -85,8 +85,8 @@ class Switcher extends EventEmitter{
     if (item) {
       item.classList.add('preselected')
     } else {
-      var items = this.list.childNodes
-      for (var i = 0; i < items.length; i++) {
+      const items = this.list.childNodes
+      for (let i = 0; i < items.length; i++) {
         items[i].classList.remove('preselected')
       }
     }
@@ -94,7 +94,7 @@ class Switcher extends EventEmitter{
 
   selectByName (name) {
     // console.log('selectByName', name)
-    var item = this.element.querySelector('[data-switcher="' + name + '"]')
+    const item = this.element.querySelector('[data-switcher="' + name + '"]')
     // console.log('item', item)
     if (item) {
       this.select(item)
@@ -103,7 +103,7 @@ class Switcher extends EventEmitter{
 
   preSelectByName (name) {
     // console.log('selectByName', name)
-    var item = this.element.querySelector('[data-switcher="' + name + '"]')
+    const item = this.element.querySelector('[data-switcher="' + name + '"]')
     // console.log('item', item)
     this.preselect(item)
   }
@@ -111,9 +111,9 @@ class Switcher extends EventEmitter{
   unique (option) {
     // console.log('option', option)
     if (!option.classList.contains('selected')) {
-      var options = this.list.childNodes
+      const options = this.list.childNodes
 
-      for (var i = 0; i < options.length; i++) {
+      for (let i = 0; i < options.length; i++) {
         options[i].classList.remove('selected')
       }
 
@@ -132,7 +132,7 @@ class Switcher extends EventEmitter{
   multiple (option) {
     if (option.classList.contains('selected')) {
       if (this.selected.length === 1) return
-      var i = this.selected.indexOf(option.dataset.switcher)
+      const i = this.selected.indexOf(option.dataset.switcher)
       this.selected.splice(i, 1)
       option.classList.remove('selected')
     } else {
@@ -163,7 +163,7 @@ class Switcher extends EventEmitter{
 
   setValue (value) {
     // console.log('value', value, this.options.list, this.element)
-    var list = this.options.list
+    const list = this.options.list
     if (this.options.mode === 'unique') {
       for (var i = 0; i < list.length; i++) {
         this.element.querySelector('[data-switcher="' + list[i] + '"]').classList.remove('selected')
@@ -190,7 +190,7 @@ class Switcher extends EventEmitter{
 
     if (!list) return
 
-    for (var i = 0; i < list.length; i++) {
+    for (let i = 0; i < list.length; i++) {
       this.addOption(list[i])
     }
   }
@@ -202,19 +202,19 @@ class Switcher extends EventEmitter{
 
     if (this.options.list.length < 1) this.options.list = list
 
-    for (var i = 0; i < list.length; i++) {
+    for (let i = 0; i < list.length; i++) {
       this.addOption(list[i])
     }
   }
 
   addOption (value) {
     // console.log('addOption', value)
-    var item = document.createElement('li')
+    const item = document.createElement('li')
     item.classList.add('item')
     item.dataset.switcher = value
     item.innerHTML = value
     this.list.appendChild(item)
-      // this.options.list.push(list[i])
+    // this.options.list.push(list[i])
   }
 
   setLabel (value) {

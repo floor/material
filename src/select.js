@@ -23,7 +23,7 @@ class Select extends EventEmitter {
     this.attach()
   }
 
-  init(options) {
+  init (options) {
     this.options = Object.assign({}, Select.defaults, options || {})
     Object.assign(this, build, attach, dataset)
   }
@@ -61,13 +61,13 @@ class Select extends EventEmitter {
   setOptions (options) {
     // console.log('buildCountry', this.input)
 
-    var first = this.options.first
+    const first = this.options.first
 
     if (first && first[0] && first[1]) {
       this.input.options[0] = new Option(first[1], first[0])
     }
 
-    for (var i = 0; i < options.length; i++) {
+    for (let i = 0; i < options.length; i++) {
       this.addOption(options[i][1], options[i][0])
     }
   }
@@ -96,7 +96,7 @@ class Select extends EventEmitter {
   }
 
   get () {
-    var value = null
+    let value = null
 
     if (this.input[this.input.selectedIndex]) {
       value = this.input[this.input.selectedIndex].value

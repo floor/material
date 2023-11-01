@@ -13,14 +13,14 @@ function e (instance, ev) {
     }
   }
 
-  var iteration
-  var obj = {}
-  var element
+  let iteration
+  const obj = {}
+  let element
 
-  var keys = ev.split('.')
+  const keys = ev.split('.')
 
-  for (var i = 0, l = keys.length; i <= l; i++) {
-    var key = keys[i]
+  for (let i = 0, l = keys.length; i <= l; i++) {
+    const key = keys[i]
     iteration = iteration || instance
     iteration = iteration[key]
 
@@ -45,11 +45,11 @@ function f (instance, func) {
   if (typeof func === 'function') {
     return func
   } else if (!func.match(/\./)) return instance[func]
-  var iteration
+  let iteration
 
-  var keys = func.split('.')
-  for (var i = 0, l = keys.length; i < l; i++) {
-    var key = keys[i]
+  const keys = func.split('.')
+  for (let i = 0, l = keys.length; i < l; i++) {
+    const key = keys[i]
 
     iteration = iteration || instance
     iteration = iteration[key]
