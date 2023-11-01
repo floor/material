@@ -1,4 +1,4 @@
-.material-checkbox
+.checkbox
   display: block
   position: relative
   margin-left: 4px
@@ -17,7 +17,7 @@
     left: -10000px
     order: 2
 
-  .checkbox-control
+  .control
     //flex: none;
     order: 1
     cursor: pointer
@@ -29,7 +29,7 @@
     border-radius: 50%
 
     //margin: 10px 10px 10px 4px;
-    .checkbox-icon
+    .icon
       position: absolute
       top: 11px
       left: 11px
@@ -38,14 +38,14 @@
       transition: .3s
 
       //stroke: rgba(0, 0, 0, 0.5);
-      .checkbox-check
+      .check
         opacity: 0
         position: absolute
         fill: rgba(255, 255, 255, 0.95)
         top: 8px
         left: 8px
 
-  .checkbox-label
+  label
     flex: 1
     order: 3
     font-size: 1rem
@@ -56,13 +56,13 @@
     overflow: hidden
 
   &.is-checked
-    .checkbox-control
-      .checkbox-icon
+    .control
+      .icon
         transition: .3s
         border-color: $secondary-color
         background-color: $secondary-color
 
-        .checkbox-check
+        .check
           opacity: 1
           position: absolute
           fill: rgba(255, 255, 255, 0.95)
@@ -70,36 +70,36 @@
           left: 8px
 
   &.is-disabled
-    .checkbox-label
+    label
       opacity: .4
 
-    .checkbox-icon
+    .icon
       background-color: rgba(0, 0, 0, 0.26)
       border-color: rgba(0, 0, 0, 0.26)
       //opacity: .4
 
-    .checkbox-control
-      .checkbox-icon
+    .control
+      .icon
         opacity: .4
 
   &.is-focused
-    .checkbox-control
+    .control
       background-color: rgba(34, 31, 31, 0.05)
 
   &:active
-    .checkbox-control
-      //background-color: transparent;
+    .control
+      background-color: transparent
 
-.dark-mode .material-checkbox,
-.material-checkbox.dark-mode
-  > .material-control
-    > .checkbox-icon
+.dark-mode .checkbox,
+.checkbox.dark-mode
+  .control
+    .icon
       border: 2px solid rgba(255, 255, 255, 0.5)
 
   &.is-focused
-    .checkbox-control
+    .control
       background-color: rgba(255, 255, 255, 0.05)
 
   &.is-checked
-    .material-control
+    .control
       background-color: rgba(255, 255, 255, 0.5)

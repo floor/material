@@ -1,10 +1,10 @@
 import dom from '../module/dom'
 
-const insert = (element, container, context = 'bottom') => {
-  if (!element || !container) return
+const insert = (component, container, context = 'bottom') => {
+  if (!component || !container) return
 
-  element = element.root || element
-  container = container.root || container
+  element = component.element || component
+  container = container.element || container
 
   const contexts = ['top', 'bottom', 'after', 'before']
   const methods = ['prepend', 'append', 'after', 'before']

@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "A lightweight implementation of Material Design Components - ES6",
   "main": "index.js",
   "type": "module",
@@ -18,9 +18,6 @@
     "lightweight material design ui component es6 vanilla javascript"
   ],
   "devDependencies": {
-    "esbuild": "^0.14.47",
-    "esbuild-plugin-svg": "^0.1.0",
-    "@jgoz/esbuild-plugin-livereload": "^2.0.3",
     "standard": "^10.0.3"
   },
   "scripts": {

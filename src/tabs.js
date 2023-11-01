@@ -1,5 +1,3 @@
-'use strict'
-
 import create from './mixin/create'
 import insert from './mixin/insert'
 import emitter from './module/emitter'
@@ -49,6 +47,7 @@ class Tabs {
     if (this.options.list) {
       this.list = new List({
         tag: 'div',
+        container: this.element,
         list: this.options.list,
         target: '.material-button',
         height: 600,
@@ -74,7 +73,7 @@ class Tabs {
           this.selected = item
           this.click(item)
         }
-      }).insert(this.element)
+      })
     }
 
     this.indicator = create(this.options.indicator)

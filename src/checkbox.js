@@ -1,74 +1,67 @@
-import events from './mixin/events'
-import control from './mixin/control'
-import label from './mixin/label'
-
-import insert from './element/insert'
-import build from './element/build'
-
-import emitter from './module/emitter'
+import EventEmitter from './mixin/events'
+// import control from './mixin/control'
+import build from './module/build'
 import attach from './module/attach'
 import * as css from './module/css'
 
 import icon from './skin/material/icon/checkbox.svg'
-// element related modules
 
-const defaults = {
-  prefix: 'material',
-  class: 'checkbox',
-  type: 'control',
-  // modules: [events, control, emitter, attach],
-  build: ['$root.material-checkbox', {},
-    ['input$input', {}],
-    ['span$control.checkbox-control']
-  ],
-  events: [
-    ['element.control.click', 'click', {}],
-    ['element.label.click', 'toggle', {}],
-    // for accessibility purpose
-    // ['element.input.click', 'toggle', {}],
-    ['element.input.focus', 'focus'],
-    ['element.input.blur', 'blur'],
-    ['element.input.keydown', 'keydown', {}]
-  ]
-}
+import Element from './element'
 
 class Checkbox {
+  static defaults = {
+    class: 'checkbox',
+    layout: [
+      [Element, 'input', { type: 'checkbox' } ],
+      [Element, 'control', { type: 'checkbox' } ],
+      [Element, 'label', { tag: 'label' }]
+    ],
+    events: [
+      ['ui.control.click', 'click'],
+      ['ui.label.click', 'toggle'],
+      // for accessibility purpose
+      // ['element.input.click', 'toggle'],
+      ['ui.input.focus', 'focus'],
+      ['ui.input.blur', 'blur'],
+      ['ui.input.keydown', 'keydown']
+    ]
+  }
+
   constructor (options) {
     this.init(options)
     this.build()
+    this.setup()
     this.attach()
-
-    return this
   }
 
   init (options) {
     this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, events, control, emitter, attach)
+    Object.assign(this, build, attach)
 
     return this
   }
 
-  build () {
+  setup () {
     this.element = build(this.options.build)
     this.element = this.element.root
 
-    this.element.control.innerHTML = icon
+    this.ui.control.innerHTML = icon
 
     const text = this.options.text || this.options.label
 
-    this.element.label = label(this.element, text, this.options)
+    this.ui.label.innerHTML = text
 
-    this.element.input.setAttribute('type', 'checkbox')
-    this.element.input.setAttribute('name', this.options.name)
-    this.element.input.setAttribute('aria-label', this.options.name)
+    this.ui.input.setAttribute('type', 'checkbox')
+    this.ui.input.setAttribute('name', this.options.name)
+    this.ui.input.setAttribute('aria-label', this.options.name)
 
     if (this.options.value) {
-      this.element.input.setAttribute('value', this.options.value)
+      this.ui.input.setAttribute('value', this.options.value)
     }
 
     if (this.options.disabled) {
       this.disabled = this.options.disabled
-      this.element.input.setAttribute('disabled', 'disabled')
+      this.ui.input.setAttribute('disabled', 'disabled')
       css.add(this.element, 'is-disabled')
     }
 
@@ -79,13 +72,6 @@ class Checkbox {
     if (this.options.value) {
       this.set('value', this.value)
     }
-
-    // insert if container options is given
-    if (this.options.container) {
-      insert(this.element, this.options.container)
-    }
-
-    return this
   }
 
   set (prop, value) {
@@ -106,15 +92,25 @@ class Checkbox {
     return this
   }
 
-  insert (container, context) {
-    insert(this.element, container, context)
-
+  check (checked) {
+    if (checked === true) {
+      css.add(this.element, 'is-checked')
+      this.ui.input.checked = true
+      this.checked = true
+      this.emit('change', this.checked)
+    } else {
+      css.remove(this.element, 'is-checked')
+      this.ui.input.checked = false
+      this.checked = false
+      this.emit('change', this.checked)
+    }
     return this
   }
 
+
   click (e) {
     this.toggle(e)
-    this.element.input.focus()
+    this.ui.input.focus()
 
     return this
   }
@@ -122,7 +118,7 @@ class Checkbox {
   setValue (value) {
     // console.log('setValue', value)
     this.value = value
-    this.element.input.setAttribute('value', value)
+    this.ui.input.setAttribute('value', value)
 
     return this
   }

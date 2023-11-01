@@ -1,3 +1,4 @@
+import * as css from './module/css'
 import build from './module/build'
 
 class Navigation {
@@ -8,11 +9,16 @@ class Navigation {
   constructor (options) {
     this.init(options)
     this.build()
+    this.setup()
   }
 
   init (options) {
-    this.options = Object.assign({}, Navigation.defaults, options || {})
+    this.options = { ...Navigation.defaults, ...options }
     Object.assign(this, build)
+  }
+
+  setup() {
+    if (this.options.type) css.add(this.element, 'type-', this.options.type)
   }
 }
 
