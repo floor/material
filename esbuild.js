@@ -1,7 +1,7 @@
 import esbuild from 'esbuild'
 import svg from 'esbuild-plugin-svg'
 
-const outfile = `./dist/demo.js`
+const outfile = './dist/demo.js'
 
 const option = {
   entryPoints: ['./dist/demo-bundle.js'],

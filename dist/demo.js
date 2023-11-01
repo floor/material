@@ -1,5 +1,3 @@
-console.log('demo')
-
 import {
   Button,
   Component,
@@ -35,8 +33,10 @@ import iconApps from './icon/apps.svg'
 import iconStar from './icon/star.svg'
 import iconHappy from './icon/happy.svg'
 
+console.log('demo')
+
 console.log('log')
-var list = [{
+const list = [{
   text: 'One',
   name: 'one'
 }, {
@@ -51,7 +51,7 @@ var list = [{
 }]
 
 document.addEventListener('DOMContentLoaded', function () {
-  var layout = new Layout([Component, 'demo', { display: 'flex', direction: 'vertical' },
+  const layout = new Layout([Component, 'demo', { display: 'flex', direction: 'vertical' },
     [Component, 'head', { display: 'flex', direction: 'horizontal' },
       [Toolbar, 'toolbar', { flex: 1, display: 'flex', direction: 'horizontal' },
         [Button, 'menu-navi', { icon: iconMenu, type: 'action' }],
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
       ],
       [List, 'navi-list', { theme: 'dark' }]
     ],
-    [Tabs, 'tabs', { color: 'primary', list: list, flex: 'none' }],
+    [Tabs, 'tabs', { color: 'primary', list, flex: 'none' }],
     [Container, 'body', { flex: '1' },
       [Container, 'container-components', { },
         [Text, 'text', { text: 'Components', type: 'title' }]
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // Buttons
       [Card, 'buttons', { },
         [Toolbar, 'toolbar-buttons', {},
-          [Text, 'buttons-title', { text: 'Buttons'}]
+          [Text, 'buttons-title', { text: 'Buttons' }]
         ],
         [Container, 'button-body', {},
           [Button, 'first', { text: 'Flat' }],
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // Buttons
       [Card, 'buttons', { },
         [Toolbar, 'toolbar-buttons', {},
-          [Text, 'buttons-title', { text: 'Floating Buttons'}]
+          [Text, 'buttons-title', { text: 'Floating Buttons' }]
         ],
         [Container, 'button-body', {},
           [Button, 'fifth', { icon: iconStar, type: 'floating', color: 'primary' }],
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function () {
       ],
       [Card, 'checkboxes', { },
         [Toolbar, 'toolbar', {},
-          [Text, 'checkbox-title', { text: 'Checkboxes'}]
+          [Text, 'checkbox-title', { text: 'Checkboxes' }]
         ],
         [Container, 'checkbox-body', {},
           [Checkbox, 'checkbox', { text: 'Checkbox' }],
@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function () {
       ],
       [Card, 'switches', { },
         [Toolbar, 'switch-toolbar', {},
-          [Text, 'switch-title', { text: 'Switches'}]
+          [Text, 'switch-title', { text: 'Switches' }]
         ],
         [Container, 'switch-body', {},
           [Switch, 'switch', { text: 'Switch' }],
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function () {
       ],
       [Card, 'progress indicators', { },
         [Toolbar, 'progress-toolbar', {},
-          [Text, 'progress-title', { text: 'Progress indicators'}]
+          [Text, 'progress-title', { text: 'Progress indicators' }]
         ],
         [Container, 'progress-body', {},
           [Progress, 'progress', { progress: '60%' }],
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
       ],
       [Card, 'sliders', { },
         [Toolbar, 'slider-toolbar', {},
-          [Text, 'slider-title', { text: 'Sliders'}]
+          [Text, 'slider-title', { text: 'Sliders' }]
         ],
         [Container, 'slider-body', {},
           [Slider, 'slider', { text: 'Slider' }],
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
     ]
   ], document.body)
 
-  var moreButton = layout.get('menu-more').on('click', (e) => {
+  const moreButton = layout.get('menu-more').on('click', (e) => {
     layout.get('more-menu').show(e)
   })
 
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   })
 
-  var naviMenu = layout.get('menu-navi')
+  const naviMenu = layout.get('menu-navi')
 
   naviMenu.on('click', (e) => {
     layout.get('navi').open()

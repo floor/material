@@ -10,7 +10,7 @@ esbuild
     format: 'iife',
     minify: false,
     sourcemap: true,
-    plugins: [svg() /*, livereloadPlugin() */],
+    plugins: [svg()],
     watch: {
       onRebuild (error, result) {
         if (error) console.error('watch build failed:', error)
