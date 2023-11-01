@@ -118,9 +118,9 @@ export default {
     }
 
     if (this.ui['search-input']) {
-      this.ui['search-input'].input.value = ''
-      this.ui['search-input'].element.classList.add('show')
-      this.ui['search-input'].input.focus()
+      this.ui['search-input'].set()
+      this.ui['search-input'].show()
+      this.ui['search-input'].focus()
     }
 
     this.ui.body.innerHTML = ''
@@ -142,8 +142,8 @@ export default {
       this.ui.search.element.classList.remove('selected')
     }
     if (this.ui['search-input']) {
-      this.ui['search-input'].element.classList.remove('show')
-      this.ui['search-input'].input.value = ''
+      this.ui['search-input'].hide()
+      this.ui['search-input'].set()
     }
     // this.ui['search-list'].classList.remove('show')
     // this.ui.body.classList.remove('hide')

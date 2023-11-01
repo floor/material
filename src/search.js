@@ -1,20 +1,24 @@
 import EventEmitter from './mixin/emitter'
 
 import build from './module/build'
+import display from './mixin/display'
 import bindEvents from './module/events'
 
+import Element from './element'
 import Button from './button'
-import cancel from './skin/material/icon/cancel.svg'
 
 class Search extends EventEmitter {
   static defaults = {
     class: 'search-input',
     minChar: 4,
-    iconCancel: cancel,
     timeout: 200,
+    layout: [
+      [Element, 'input', { tag: 'input', class: 'input'} ],
+      [Button, 'clear', { class: 'clear'} ]
+    ],
     events: [
-      ['input.input', 'onInput'],
-      ['input.cancel', 'onCancel']
+      ['ui.input.input', 'onInput'],
+      ['ui.clear.click', 'onClear']
     ]
   }
 
@@ -23,47 +27,38 @@ class Search extends EventEmitter {
 
     this.init(options)
     this.build()
-    this.buildSearch()
     this.bindEvents()
+
+    this.input = this.ui.input
   }
 
   init (options) {
-    this.options = Object.assign({}, Search.defaults, options || {})
-    Object.assign(this, build, bindEvents)
+    this.options = { ...Search.defaults, ...options }
+    Object.assign(this, build, display, bindEvents)
   }
 
-  buildSearch () {
-    if (this.options.icon) {
-      this.icon = document.createElement('i')
-      this.icon.classList.add('icon')
-      this.icon.innerHTML = this.options.icon
-      this.element.appendChild(this.icon)
-    }
+  set (value) {
+    if (value) this.input.value = value
+    else this.input.value = ''
+  }
 
-    this.input = document.createElement('input')
-    this.input.classList.add('input')
-    this.element.appendChild(this.input)
-
-    this.cancel = new Button({
-      container: this.element,
-      class: 'clear',
-      icon: this.options.iconCancel
-    })
+  focus () {
+    this.ui.input.focus()
   }
 
   onInput () {
-    if (this.input.value.length < this.options.minChar) return
+    if (this.ui.input.value.length < this.options.minChar) return
 
     clearTimeout(this.timeout)
 
     this.timeout = setTimeout(() => {
-      this.emit('change', this.input.value)
+      this.emit('change', this.ui.input.value)
     }, this.options.timeout)
   }
 
-  onCancel () {
-    this.input.value = ''
-    this.input.focus()
+  onClear () {
+    this.set(null)
+    this.focus()
     this.emit('cancel')
   }
 }
