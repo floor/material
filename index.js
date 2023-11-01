@@ -1,32 +1,39 @@
 import AppBar from './src/appbar'
+import Badge from './src/badge'
 import Button from './src/button'
 import Card from './src/card'
+import Checkbox from './src/checkbox'
 import Component from './src/component'
-import DateHour from './src/control/datehour'
+import DateHour from './src/datehour'
 import Dialog from './src/dialog'
-import File from './src/control/file'
-import Loading from './src/control/loading'
-import Menu from './src/control/menu'
-import Select from './src/select'
-import Selecter from './src/control/selecter'
-import Snackbar from './src/snackbar'
-import Switch from './src/switch'
-import Switcher from './src/control/switcher'
-import Text from './src/text'
-import Textfield from './src/textfield'
+import Drawer from './src/drawer'
 import Element from './src/element'
+import File from './src/file'
+import Form from './src/form'
+import Image from './src/image'
 import Layout from './src/layout'
 import List from './src/list'
-import Tabview from './src/tabview'
+import Loading from './src/loading'
+import Menu from './src/menu'
+import Navigation from './src/navigation'
+import Progress from './src/progress'
+import Select from './src/select'
+import Selecter from './src/selecter'
+import Snackbar from './src/snackbar'
+import Slider from './src/slider'
+import Switch from './src/switch'
+import Switcher from './src/switcher'
+import Tabs from './src/tabs'
 import TabView from './src/tabview'
 import Text from './src/text'
+import Textfield from './src/textfield'
 import Toolbar from './src/toolbar'
 import Tooltip from './src/tooltip'
 import attach from './src/module/attach'
 import attributes from './src/module/attributes'
 import build from './src/module/build'
 import dataset from './src/module/dataset'
-import display from './src/module/display'
+import display from './src/mixin/display'
 import events from './src/module/attach'
 import emitter from './src/module/emitter'
 import jsonToHTML from './src/module/jsontohtml'
@@ -35,39 +42,9 @@ import observer from './src/module/observer'
 import smoothscroll from './src/module/smoothscroll'
 
 export {
-  AppBar
-  Button,
-  DateHour,
-  Datehour,
-  Dialog,
-  Card,
-  Component,
-  Element,
-  File,
-  Loading,
-  Menu,
-  Select,
-  Selecter,
-  Snackbar,
-  Switch,
-  Switcher,
-  Tabview,
-  TabView,
-  Text,
-  Textfield,
-  Toolbar,
-  Tooltip,
-  Layout,
-  List,
-  attach,
-  attributes,
-  build,
-  dataset,
-  display,
-  events,
-  emitter,
-  jsonToHTML,
-  mediator,
-  observer,
-  smoothscroll
+  AppBar, Button, Card, Checkbox, Component, DateHour, Dialog, Drawer, Element,
+  File, Form, Image, Layout, List, Loading, Menu, Navigation, Progress, Select,
+  Selecter, Slider, Snackbar, Switch, Switcher, Tabs, TabView, Text, Textfield, Toolbar, Tooltip,
+  attach, attributes, build, dataset, display, events, emitter, jsonToHTML, mediator,
+  observer, smoothscroll
 }
