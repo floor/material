@@ -1,4 +1,4 @@
-import * css from './module/css'
+import * as css from './module/css'
 
 const defaults = {
   className: 'text',
@@ -9,8 +9,6 @@ const defaults = {
 class List {
   constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
-
-    // console.log('options', this.options)
 
     this.build()
 
