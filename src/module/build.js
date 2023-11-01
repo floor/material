@@ -16,8 +16,6 @@ export default {
       css.add(this.element, this.options.class)
     }
 
-    if (defaults.class === 'account') console.log('data')
-
     if (this.options.data) {
       dataset(this.element, this.options.data)
     }
