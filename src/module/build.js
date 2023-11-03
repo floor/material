@@ -20,7 +20,7 @@ export default {
       dataset(this.element, this.options.data)
     }
 
-    if (this.options.base === 'view') {
+    if (this.options.base === 'view' || this.options.base === 'app') {
       this.container = this.options.container || document.body
     } else {
       this.container = this.options.container
