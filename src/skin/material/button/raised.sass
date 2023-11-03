@@ -1,6 +1,6 @@
 
 // type raised
-.material-button.type-raised
+.button.type-raised
   min-width: 36px
   transition: box-shadow .2s
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12)
@@ -9,7 +9,7 @@
     background-color: rgba(0, 0, 0, 1)
 
 // states
-.material-button.type-raised
+.button.type-raised
   background-color: rgba(0, 0, 0, 0.05)
   &:focus
     background-color: rgba(0, 0, 0, 0.15)
@@ -21,7 +21,7 @@
     box-shadow: 0px 4px 4px -3px rgba(0, 0, 0, 0.2), 0px 6px 8px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12)
 
 // color
-.material-button.type-raised
+.button.type-raised
   &.primary-color
     background-color: $primary-color
     color: $primary-color-text
@@ -56,8 +56,8 @@
       background-color: lighten($secondary-color, 5%)
 
 // theme
-.dark-mode .material-button.type-raised,
-.material-button.type-raised.dark-mode
+.dark-mode .button.type-raised,
+.button.type-raised.dark-mode
   .material-ripple
     opacity: .1
     background-color: rgba(255, 255, 255, 1)

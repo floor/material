@@ -1,4 +1,4 @@
-.material-button
+.button
   display: flex
   -webkit-font-smoothing: antialiased
   white-space: nowrap
@@ -60,7 +60,7 @@
       order: 1
 
 // states
-.material-button
+.button
   &.is-disabled
     pointer-events: none
     opacity: .3
@@ -86,7 +86,7 @@
     opacity: .3
 
 // styles
-.material-button
+.button
   &.style-compact
     > .button-label
       padding-left: 0
@@ -100,7 +100,7 @@
       padding-bottom: 2px
 
 // color
-.material-button
+.button
   &.primary-color
     color: $primary-color
     &:focus
@@ -134,8 +134,8 @@
       background-color: rgba($secondary-color, .05)
 
 // theme
-.dark-mode .material-button,
-.material-button.dark-mode
+.dark-mode .button,
+.button.dark-mode
   color: $default-color-text-dark
   .button-icon
     svg
