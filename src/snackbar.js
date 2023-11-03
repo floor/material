@@ -13,9 +13,10 @@ class Snackbar extends EventEmitter {
     class: 'snackbar',
     transition: 225,
     duration: 4000,
+    stack: false,
     close: false,
     layout: [
-      [Text, 'text', { tag: 'span', class: 'text' }],
+      [Text, 'message', { tag: 'span', class: 'message' }],
       [Button, 'action', { class: 'action', type: 'link' }],
       [Button, 'close', { class: 'close', type: 'action' }]
     ],
@@ -60,12 +61,13 @@ class Snackbar extends EventEmitter {
       this.options.container.classList.add('snackbars')
       container.appendChild(this.options.container)
     } else {
+      if (this.options.stack === false) snackbarContainer.innerHTML = ''
       this.options.container = snackbarContainer
     }
   }
 
   render () {
-    this.ui.text.set(this.options.text)
+    this.ui.message.set(this.options.message)
 
     if (this.options.action) {
       this.ui.action.set(this.options.action)
