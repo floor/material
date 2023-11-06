@@ -1,19 +1,7 @@
 import extract from './extract'
-
-/**
- * attach function to events
- * @module module/attach
- * @category module
- */
-
-/**
- * [attach description]
- * @param  {object} component [description]
- * @param  {[type]} events    [description]
- * @return {[type]}           [description]
- */
+import last from './last'
 export default {
-  remove: function (events) {
+  remove: (events) => {
     // console.log('attach', events)
     events = events || this.options.events
     if (!events) return
@@ -42,33 +30,10 @@ export default {
       } else if (e && e.element && e.element.off && f && bound) {
         e.element.off(e.name, f.bind(bound))
       } else {
-        console.trace('can\'t attach', def[0])
-        console.log('can\'t attach', def[0])
+        console.trace('can\'t be removed', def[0])
       }
     })
 
     return this
-  },
-
-  /**
-   * Return the last reference from an object
-   * @param  {string} str Object path for example key1.key2.key3
-   * @return {value} The value of the last reference
-   */
-  last: function (str) {
-    // console.log('_path', str)
-    if (!str) return this
-    else if (!str.match(/\./)) return this[str]
-    let last
-
-    const keys = str.split('.')
-    for (let i = 0, l = keys.length; i < l; i++) {
-      const key = keys[i]
-
-      last = last || this
-      last = last[key]
-    }
-
-    return last
   }
 }

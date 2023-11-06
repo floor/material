@@ -1,5 +1,5 @@
-// Assuming extract is imported or defined elsewhere
 import extract from './extract'
+import last from './last'
 
 const attachModule = {
   attach (events) {
@@ -18,7 +18,7 @@ const attachModule = {
         keys.pop()
       }
 
-      const bound = this.last(keys.join('.'))
+      const bound = last(keys.join('.'), this)
 
       let handler = null
 
@@ -45,14 +45,8 @@ const attachModule = {
     })
 
     return this
-  },
-
-  last (str) {
-    if (!str) return this
-    if (!str.includes('.')) return this[str]
-
-    return str.split('.').reduce((acc, key) => acc[key], this)
   }
+
 }
 
 export default attachModule

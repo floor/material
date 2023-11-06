@@ -1,4 +1,4 @@
-function passiveEvents () {
+const passiveEvents = () => {
   let supportsPassive = false
 
   try {

@@ -1,0 +1,93 @@
+.navigation.type-rail
+  flex: none
+  display: flex
+  flex-direction: column
+  width: 12px
+  background-color: #2D2F31
+  padding-top: 56px
+  margin: 0
+  overflow: hidden
+  transition: .1s linear width
+
+  &.show
+    width: 92px
+    .headmenu
+      display: flex
+    .bodymenu
+      display: flex
+  &.first
+    transition: none
+
+  .head
+    flex: none
+    display: none
+    flex-direction: column
+    width: 92px
+    height: 56px
+    padding: 0 0
+    margin: 0
+    .button.apps
+      height: 56px
+      width: 56px
+      padding: 16px 10px
+      margin: 0 auto
+      align-items: center
+      justify-content: center
+      transition: .3s linear opacity
+  .body
+    display: none
+    flex: 1
+    flex-direction: column
+    width: 92px
+    padding: 0 0
+    margin: 0
+    .item
+      flex: none
+      display: flex
+      flex-direction: column
+      height: 64px
+      margin: 0
+      border-radius: 0
+      text-align: center
+      padding: 10px 0 6px
+      // border-radius: 4px
+      font-size: 0.8rem
+      text-transform: none
+      text-align: center
+      // background-color: rgba(0, 0, 0, 0.3)
+      align-items: center
+      justify-content: center
+      &.selected, &.selected:hover
+        background-color: transparent          
+        .icon
+          background-color: #004A77
+          svg
+            fill: #C2E8FF
+      i.icon
+        width: 60px
+        pointer-events: none
+        padding: 0
+        border-radius: 21px
+        margin: 0
+        height: 32px
+        padding: 4px 0
+        align-items: center
+        justify-content: center
+        svg
+          fill: rgba(255,255,255,.7)
+      label.label
+        pointer-events: none
+        align-items: center
+        justify-content: center
+        text-align: center
+        flex: 1
+        color: rgba(255, 255, 255, 1)
+        text-transform: capitalize
+        font-size: .9em
+        text-align: center
+        padding: 0
+        margin: 0
+      &:hover
+        background-color: transaprent
+        i.icon
+          background-color: rgba(255,255,255,.05)

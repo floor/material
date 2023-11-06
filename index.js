@@ -29,6 +29,7 @@ import Text from './src/text'
 import Textfield from './src/textfield'
 import Toolbar from './src/toolbar'
 import Tooltip from './src/tooltip'
+import View from './src/view'
 import attach from './src/module/attach'
 import attributes from './src/module/attributes'
 import build from './src/module/build'
@@ -45,6 +46,6 @@ export {
   AppBar, Button, Card, Checkbox, Component, DateHour, Dialog, Drawer, Element,
   File, Form, Image, Layout, List, Loading, Menu, Navigation, Progress, Select,
   Selecter, Slider, Snackbar, Switch, Switcher, Tabs, TabView, Text, Textfield, Toolbar, Tooltip,
-  attach, attributes, build, dataset, display, events, emitter, jsonToHTML, mediator,
+  View, attach, attributes, build, dataset, display, events, emitter, jsonToHTML, mediator,
   observer, smoothscroll
 }

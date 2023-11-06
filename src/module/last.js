@@ -1,18 +1,8 @@
-export default {
-  (str) => {
-    // console.log('_path', str)
-    if (!str) return this
-    else if (!str.match(/\./)) return this[str]
-    var last
+const last = (str, that) => {
+  if (!str) return that
+  if (!str.includes('.')) return that[str]
 
-    var keys = str.split('.')
-    for (var i = 0, l = keys.length; i < l; i++) {
-      var key = keys[i]
-
-      last = last || this
-      last = last[key]
-    }
-
-    return last
-  }
+  return str.split('.').reduce((acc, key) => acc[key], that)
 }
+
+export default last

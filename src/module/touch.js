@@ -1,4 +1,4 @@
-export default function () {
+export default () => {
   try {
     document.createEvent('TouchEvent')
     return true

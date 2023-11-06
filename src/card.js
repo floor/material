@@ -11,11 +11,6 @@ const defaults = {
 }
 
 class Card {
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
   constructor (options) {
     this.init(options)
     this.build()

@@ -1,4 +1,3 @@
-// request.js
 const request = async (url, method = 'GET', body = null, headers = {}, signal = null) => {
   const defaultHeaders = {
     Accept: 'application/json',

@@ -1,7 +1,7 @@
 {
   "name": "material",
-  "version": "0.7.4",
-  "description": "A lightweight implementation of Material Design Components - ES6",
+  "version": "0.7.5",
+  "description": "A lightweight implementation of Material Design Components for the web - ES6",
   "main": "index.js",
   "type": "module",
   "repository": {
@@ -15,7 +15,7 @@
   },
   "homepage": "https://gitlab.com/alkaloid/material",
   "keywords": [
-    "lightweight material design ui component es6 vanilla javascript"
+    "lightweight material design ui component web es6 vanilla javascript"
   ],
   "devDependencies": {
     "standard": "^10.0.3"

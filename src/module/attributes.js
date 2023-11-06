@@ -1,21 +1,14 @@
 const special = ['required', 'disabled', 'multiple', 'checked']
 
-function attributes (element, o) {
-  // console.log('attributes', o.attributes, element)
+const attributes = (element, options) => {
+  if (!element || !options.attributes) return
 
-  if (!element) return
-
-  for (let i = 0; i < o.attributes.length; i++) {
-    const attribute = o.attributes[i]
-
-    if (o[attribute] && o[attribute] !== 'undefined') {
-      if (special.indexOf(attribute) > -1) {
-        element.setAttribute(attribute, attribute)
-      } else {
-        element.setAttribute(attribute, o[attribute])
-      }
+  options.attributes.forEach(attribute => {
+    if (options[attribute] && String(options[attribute]) !== 'undefined') {
+      const value = special.includes(attribute) ? attribute : options[attribute]
+      element.setAttribute(attribute, value)
     }
-  }
+  })
 }
 
 export default attributes

@@ -1,11 +1,11 @@
 
-function is (object) {
+const is = (object) => {
   return object &&
     typeof object === 'object' &&
     Object.getPrototypeOf(object) === Object.getPrototypeOf({})
 }
 
-function byString (o, s) {
+const byString = (o, s) => {
   s = s.replace(/\[(\w+)\]/g, '.$1') // convert indexes to properties
   s = s.replace(/^\./, '') // strip a leading dot
   const a = s.split('.')

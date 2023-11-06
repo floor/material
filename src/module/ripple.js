@@ -2,7 +2,8 @@ import insert from '../element/insert'
 import offset from '../element/offset'
 
 const defaults = {
-  transition: '.5s cubic-bezier(0.4, 0.0, 0.2, 1)',
+  // transition: '.375s cubic-bezier(0.4, 0.0, 0.2, 1)',
+  transition: '.375s linear',
   opacity: ['1', '.3']
 }
 

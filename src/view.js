@@ -1,5 +1,4 @@
 import EventEmitter from './mixin/emitter'
-
 import build from './module/build'
 
 class View extends EventEmitter {
@@ -16,7 +15,7 @@ class View extends EventEmitter {
   }
 
   init (options) {
-    this.options = Object.assign({}, defaults, options || {})
+    this.options = Object.assign({}, View.defaults, options || {})
     Object.assign(this, build)
   }
 }
