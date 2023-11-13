@@ -13,7 +13,6 @@ class File {
   constructor (options) {
     this.init(options)
     this.build()
-    this.buildLabel()
     this.buildInput()
     this.attach()
   }
@@ -21,15 +20,6 @@ class File {
   init (options) {
     this.options = Object.assign({}, File.defaults, options || {})
     Object.assign(this, build)
-  }
-
-  buildLabel () {
-    if (this.options.label) {
-      this.label = document.createElement('label')
-      this.label.classList.add('label')
-      this.label.innerHTML = this.options.label
-      this.element.appendChild(this.label)
-    }
   }
 
   buildInput () {

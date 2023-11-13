@@ -25,9 +25,9 @@ const observer = (() => {
   }
 
   const notify = function (event, ...args) {
-    if (!observer.events[event]) return this
+    if (!this.events[event]) return this
 
-    for (const { context, callback } of observer.events[event]) {
+    for (const { context, callback } of this.events[event]) {
       callback.apply(context, args)
     }
 

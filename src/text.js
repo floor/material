@@ -43,6 +43,14 @@ class Text {
   setText (text) {
     this.element.innerHTML = text
   }
+
+  get () {
+    if (this.element.innerHTML) {
+      return this.element.innerHTML
+    } else {
+      return ''
+    }
+  }
 }
 
 export default Text

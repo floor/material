@@ -46,16 +46,10 @@ class Button extends EventEmitter {
   setup () {
     this.setAttributes()
     this.styleAttributes()
-    this.buildElements()
 
     if (this.options.text) {
       this.element.innerHTML = this.element.innerHTML + this.options.text
     }
-  }
-
-  buildElements () {
-    this.buildIcon()
-    this.buildLabel()
   }
 
   setAttributes () {
@@ -80,26 +74,6 @@ class Button extends EventEmitter {
     if (bold) this.element.classList.add('bold')
   }
 
-  buildLabel () {
-    if (!this.options.label) return
-
-    this.label = document.createElement('label')
-    this.label.classList.add('label')
-    this.label.innerHTML = this.options.label
-
-    this.element.appendChild(this.label)
-  }
-
-  buildIcon () {
-    if (!this.options.icon) return
-
-    this.icon = document.createElement('i')
-    this.icon.classList.add('icon')
-    this.icon.innerHTML = this.options.icon
-
-    this.element.appendChild(this.icon)
-  }
-
   set (prop, value) {
     // console.log('set', this.element, prop, value)
     switch (prop) {
@@ -107,15 +81,15 @@ class Button extends EventEmitter {
         this.element.value = value
         break
       case 'label':
-        if (!this.label) this.buildLabel()
-        this.label.innerHTML = value
+        if (!this.ui.label) this.buildLabel()
+        this.ui.label.innerHTML = value
         break
       case 'text':
         this.element.innerHTML = value
         break
       case 'icon':
-        if (this.icon) {
-          this.icon.innerHTML = value
+        if (this.ui.icon) {
+          this.ui.icon.innerHTML = value
         }
         break
       case 'enable':
@@ -133,13 +107,13 @@ class Button extends EventEmitter {
   }
 
   setLabel (value) {
-    if (this.label) {
-      this.label.innerHTML = value
+    if (this.ui.label) {
+      this.ui.label.innerHTML = value
     }
   }
 
   setText (value) {
-    if (this.label) {
+    if (this.ui.label) {
       this.setLabel(value)
     } else {
       this.element.innerHTML = value

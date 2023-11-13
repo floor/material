@@ -8,10 +8,6 @@ const KEYCODE = {
 }
 
 const control = {
-  /**
-   * [toggle description]
-   * @return {Object} The class instance
-   */
   toggle () {
     if (this.disabled) return
 
@@ -26,10 +22,6 @@ const control = {
     return this
   },
 
-  /**
-   * Set checkbox value
-   * @param {boolean} value [description]
-   */
   check (checked) {
     if (checked === true) {
       css.add(this.element, 'is-checked')
@@ -45,10 +37,6 @@ const control = {
     return this
   },
 
-  /**
-   * [initLabel description]
-   * @return {?} [description]
-   */
   label (label, container) {
     if (!label) return
 
@@ -65,11 +53,6 @@ const control = {
     insert(this.element.label, container)
   },
 
-  /**
-   * [_initIcon description]
-   * @param  {string} type
-   * @return {string}
-   */
   icon (icon, container, position) {
     if (!icon) return
 
@@ -88,10 +71,6 @@ const control = {
     this.element.icon.innerHTML = icon
   },
 
-  /**
-   * [initLabel description]
-   * @return {?} [description]
-   */
   error (error) {
     error = error || this.options.error
     if (this.options.error === null) return
@@ -137,12 +116,6 @@ const control = {
     }
   },
 
-  /**
-   * Setter
-   * @param {string} prop
-   * @param {string} value
-   * @return {Object} The class instance
-   */
   get (prop) {
     switch (prop) {
       case 'name':
@@ -165,10 +138,6 @@ const control = {
     return this.element.dataset.name
   },
 
-  /**
-   * [_onInputFocus description]
-   * @return {?} [description]
-   */
   focus () {
     if (this.disabled === true) return this
 
@@ -177,10 +146,6 @@ const control = {
     return this
   },
 
-  /**
-   * [_onInputBlur description]
-   * @return {?} [description]
-   */
   blur () {
     css.remove(this.element, 'is-focused')
     return this

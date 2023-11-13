@@ -33,7 +33,32 @@ export default {
       this.ui = this.layout.component
     }
 
+    this.ui = this.ui || {}
+
+    if (this.options.label) this.buildLabel()
+    if (this.options.icon) this.buildIcon()
+
     if (this.options.show === true && this.show) this.show()
+  },
+
+  buildLabel () {
+    if (!this.options.label) return
+
+    this.ui.label = document.createElement('label')
+    this.ui.label.classList.add('label')
+    this.ui.label.innerHTML = this.options.label
+
+    this.element.appendChild(this.ui.label)
+  },
+
+  buildIcon () {
+    if (!this.options.icon) return
+
+    this.ui.icon = document.createElement('i')
+    this.ui.icon.classList.add('icon')
+    this.ui.icon.innerHTML = this.options.icon
+
+    this.element.appendChild(this.ui.icon)
   },
 
   appendTo (container) {

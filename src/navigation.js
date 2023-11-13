@@ -6,11 +6,15 @@ import attach from './module/attach'
 import display from './mixin/display'
 import Element from './element'
 import Button from './button'
+import Item from './item'
 
 class Navigation extends EventEmitter {
   static defaults = {
     class: 'navigation',
     tag: 'nav',
+    layout: [
+      [Element, 'body', { class: 'body' }]
+    ],
     events: [
       ['element.click', 'toggle']
     ]
@@ -28,6 +32,7 @@ class Navigation extends EventEmitter {
   init (options) {
     this.options = { ...Navigation.defaults, ...options }
     Object.assign(this, build, attach, display)
+    this.items = []
   }
 
   setup () {
@@ -38,6 +43,7 @@ class Navigation extends EventEmitter {
   }
 
   render (items) {
+    console.log('render', items)
     if (items && Array.isArray(items)) {
       for (let i = 0; i < items.length; i++) {
         this.add(items[i])
@@ -48,17 +54,18 @@ class Navigation extends EventEmitter {
   add (obj) {
     if (typeof obj !== 'object') return this
     let item
-    if (obj.type === 'divider') {
-      item = new Element({ tag: 'li', class: 'divider' })
+    if (obj.type === 'header') {
+      item = new Element({ tag: 'span', class: 'header' })
     } else if (obj.type === 'divider') {
-      item = new Element({ tag: 'li', class: 'divider' })
+      item = new Element({ tag: 'span', class: 'divider' })
     } else {
-      obj.container = this.ui.list
+      obj.container = this.ui.body
       obj.class = 'item'
-      item = new Button(obj).on('click', (ev) => {
-        // console.log('select', ev.target.name)
-        this.emit('select', ev.target.name)
-      })
+      obj.stopPropagation = true
+      obj.class = 'item'
+      item = new Item(obj)
+      console.log('item', item, this.items)
+      this.items.push(item)
     }
 
     return this

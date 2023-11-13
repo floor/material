@@ -10,10 +10,7 @@ export default {
 
   show () {
     // console.log('show', this.visible)
-
-    // if (this.options.transition) {
-    //   this.element.style.display = 'initial'
-    // }
+    if (!this.element) return
 
     this.element.getBoundingClientRect()
 
@@ -29,11 +26,6 @@ export default {
   },
 
   hide () {
-    // console.log('hide')
-    // if (this.element.style.display === 'none') return
-    // clearTimeout(this.displayTimeout)
-    // this._display = getComputedStyle(this.element).display
-
     if (!this.element) return
 
     this.element.classList.remove('show')
@@ -42,13 +34,6 @@ export default {
     if (this.underlay) {
       this.underlay.classList.remove('show')
     }
-
-    // if (this.options.transition) {
-    //   this.displayTimeout = setTimeout(() => {
-    //     console.log('display: none', this._display)
-    //     this.element.style.display = 'none'
-    //   }, this.options.transition)
-    // }
 
     this.emit?.('hide')
     return this

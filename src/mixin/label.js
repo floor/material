@@ -3,10 +3,6 @@ import insert from '../element/insert'
 
 const prefix = 'material'
 
-/**
- * [initLabel description]
- * @return {?} [description]
- */
 function label (root, text, options) {
   text = text || null
 

@@ -1,4 +1,8 @@
 const numabbr = (number, decimals = 2) => {
+  if (typeof number !== 'number' || isNaN(number)) {
+    return null
+  }
+
   const factor = Math.pow(10, decimals)
   const abbrev = ['k', 'm', 'b', 't']
 
@@ -11,7 +15,7 @@ const numabbr = (number, decimals = 2) => {
       // Handle special case where we round up to the next abbreviation
       if (num === 1000 && i < abbrev.length - 1) {
         num = 1
-        i++
+        return `${num}${abbrev[i + 1]}`
       }
 
       return `${num}${abbrev[i]}`

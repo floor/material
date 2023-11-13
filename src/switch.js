@@ -1,13 +1,11 @@
+// base
 import EventEmitter from './mixin/emitter'
-
 // module
 import build from './module/build'
 import dataset from './module/dataset'
 import attach from './module/attach'
 import attributes from './module/attributes'
-
 // ui
-import Layout from './layout'
 import Element from './element'
 
 class Switch extends EventEmitter {
@@ -33,6 +31,7 @@ class Switch extends EventEmitter {
   }
 
   constructor (options) {
+    // console.log('switch')
     super()
 
     this.init(options)
@@ -50,9 +49,6 @@ class Switch extends EventEmitter {
 
   setup () {
     this.styleAttributes()
-
-    this.buildIcon()
-    this.buildLabel()
 
     if (this.options.data) {
       dataset(this.element, this.options.data)
@@ -80,31 +76,6 @@ class Switch extends EventEmitter {
     }
   }
 
-  buildLabel () {
-    // console.log('buildLabel', this.options.label)
-    if (!this.options.label) return
-
-    this.ui.label = document.createElement('label')
-    this.ui.label.classList.add('label')
-    this.ui.label.innerHTML = this.options.label
-
-    if (this.options.name) {
-      this.ui.label.setAttribute('for', this.options.name)
-    }
-
-    this.element.insertBefore(this.ui.label, this.ui.input)
-  }
-
-  buildIcon () {
-    if (!this.options.icon) return
-
-    this.ui.icon = document.createElement('i')
-    this.ui.icon.classList.add('icon')
-    this.ui.icon.innerHTML = this.options.icon
-
-    this.element.insertBefore(this.ui.icon, this.ui.input)
-  }
-
   styleAttributes () {
     if (this.options.style) {
       this.element.classList.add('style-' + this.options.style)
@@ -123,12 +94,6 @@ class Switch extends EventEmitter {
     }
   }
 
-  /**
-   * Setter
-   * @param {string} prop
-   * @param {string} value
-   * @return {Object} The class instance
-   */
   set (prop, value, silent) {
     switch (prop) {
       case 'value':
