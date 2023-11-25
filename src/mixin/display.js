@@ -50,9 +50,11 @@ export default {
 
       setTimeout(() => {
         dom.destroy(this.element)
+        if (this.underlay) dom.destroy(this.underlay)
       }, this.options.transition)
     } else {
       dom.destroy(this.element)
+      if (this.underlay) dom.destroy(this.underlay)
     }
 
     this.emit?.('destroy')
