@@ -17,8 +17,7 @@ class Snackbar extends EventEmitter {
     close: false,
     layout: [
       [Text, 'message', { tag: 'span', class: 'message' }],
-      [Button, 'action', { class: 'action', type: 'link' }],
-      [Button, 'close', { class: 'close', type: 'action' }]
+      [Button, 'action', { class: 'action', type: 'link' }]
     ],
     events: [
       ['ui.action.click', 'action'],
@@ -72,11 +71,11 @@ class Snackbar extends EventEmitter {
     if (this.options.action) {
       this.ui.action.set(this.options.action)
       this.ui.action.element.classList.add('show')
+    } else if (this.options.close) {
+      this.ui.action.element.classList.remove('style-link')
+      this.ui.action.element.classList.add('style-action')
+      this.ui.action.element.classList.add('close')
     }
-
-    if (this.options.close) this.ui.close.element.classList.add('show')
-
-    return this
   }
 
   action () {
