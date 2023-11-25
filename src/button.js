@@ -147,6 +147,16 @@ class Button extends EventEmitter {
     this.emit('click', ev)
   }
 
+  select (select) {
+    if (select === null) {
+      this.element.classList.remove('selected')
+      this.selected = null
+    } else {
+      this.element.classList.add('selected')
+      this.selected = true
+    }
+  }
+
   mousedown (ev) {
     this.element.classList.add('pushed')
   }
