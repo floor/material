@@ -35,8 +35,8 @@ export default {
 
     this.ui = this.ui || {}
 
-    if (this.options.label) this.buildLabel()
     if (this.options.icon) this.buildIcon()
+    if (this.options.label) this.buildLabel()
 
     if (this.options.show === true && this.show) this.show()
   },
