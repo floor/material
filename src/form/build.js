@@ -24,6 +24,8 @@ export default {
 
     this.buildLayout()
 
+    // console.log('optioins container', this.options)
+
     if (this.options.container) {
       this.options.container.appendChild(this.element)
     }
