@@ -5,6 +5,7 @@ import build from './module/build'
 import bindEvents from './module/events'
 import display from './mixin/display'
 // ui element
+import Element from './element'
 import Text from './text'
 import Button from './button'
 
@@ -17,10 +18,13 @@ class Snackbar extends EventEmitter {
     close: false,
     layout: [
       [Text, 'message', { tag: 'span', class: 'message' }],
-      [Button, 'action', { class: 'action', type: 'link' }]
+      [Element, 'action', { tag: 'span', class: 'action' },
+        [Button, 'callback', { class: 'callback', type: 'link' }],
+        [Button, 'close', { class: 'close', type: 'action' }]
+      ]
     ],
     events: [
-      ['ui.action.click', 'action'],
+      ['ui.callback.click', 'action'],
       ['ui.close.click', 'destroy']
     ]
   }
@@ -69,12 +73,14 @@ class Snackbar extends EventEmitter {
     this.ui.message.set(this.options.message)
 
     if (this.options.action) {
-      this.ui.action.set(this.options.action)
-      this.ui.action.element.classList.add('show')
-    } else if (this.options.close) {
-      this.ui.action.element.classList.remove('style-link')
-      this.ui.action.element.classList.add('style-action')
-      this.ui.action.element.classList.add('close')
+      this.ui.callback.set(this.options.action)
+      this.ui.callback.element.classList.add('show')
+      this.ui.action.classList.add('show')
+    }
+
+    if (this.options.close) {
+      this.ui.close.element.classList.add('show')
+      this.ui.action.classList.add('show')
     }
   }
 
