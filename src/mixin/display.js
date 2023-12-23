@@ -12,6 +12,10 @@ export default {
     // console.log('show', this.visible)
     if (!this.element) return
 
+    if (this.options.display !== false) {
+      this.element.style.display = ''
+    }
+
     this.element.getBoundingClientRect()
 
     this.element.classList.add('show')
@@ -26,6 +30,7 @@ export default {
   },
 
   hide () {
+    // console.log('hide', this.element)
     if (!this.element) return
 
     this.element.classList.remove('show')
@@ -33,6 +38,14 @@ export default {
 
     if (this.underlay) {
       this.underlay.classList.remove('show')
+    }
+
+    if (this.options.transition && this.element) {
+      setTimeout(() => {
+        if (this.options.display !== false) {
+          this.element.style.display = 'none'
+        }
+      }, this.options.transition)
     }
 
     this.emit?.('hide')
