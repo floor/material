@@ -42,11 +42,11 @@ export default {
   },
 
   getInfoById (id) {
-    return this.dataStore[id]
+    return JSON.parse(JSON.stringify(this.dataStore[id]))
   },
 
   getSelectedInfo () {
-    return this.dataStore[this.id]
+    return JSON.parse(JSON.stringify(this.dataStore[this.id]))
   },
 
   getItemById (id, silent) {
