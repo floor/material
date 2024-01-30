@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "A lightweight implementation of Material Design Components for the web - ES6",
   "main": "index.js",
   "type": "module",
