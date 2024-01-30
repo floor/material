@@ -10,7 +10,7 @@ import Button from './button'
 class Menu extends EventEmitter {
   static defaults = {
     class: 'menu',
-    transition: 200,
+    offset: 8,
     modal: false,
     layout: [
       [Element, 'surface', { class: 'surface' },
@@ -66,12 +66,23 @@ class Menu extends EventEmitter {
 
   position (target) {
     if (!target) return
-    const offs = target.getBoundingClientRect()
+    const caller = target.getBoundingClientRect()
+    const screen = this.ui.surface.getBoundingClientRect()
+    const menu = this.ui.list.getBoundingClientRect()
 
-    const offsw = this.offset = this.ui.surface.getBoundingClientRect()
+    // Calculate top position
+    let top = caller.top + caller.height
+    if (top + menu.height > window.innerHeight) {
+      top = window.innerHeight - menu.height - this.options.offset
+    }
+    this.ui.surface.style.top = top + 'px'
 
-    this.ui.surface.style.top = (offs.top - 4) + 'px'
-    this.ui.surface.style.left = offs.left - offsw.width + offs.width + 'px'
+    // Calculate left position
+    let left = caller.left - caller.width + menu.width - screen.width + caller.width
+    if (left + menu.width > window.innerWidth) {
+      left = window.innerWidth - menu.width - this.options.offset
+    }
+    this.ui.surface.style.left = left + 'px'
 
     return this
   }
