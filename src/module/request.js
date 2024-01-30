@@ -1,4 +1,4 @@
-const request = async (url, method = 'GET', body = null, headers = {}, signal = null) => {
+const request = async (url, method = 'GET', body = null, headers = {}, signal = null, debug = false) => {
   const defaultHeaders = {
     Accept: 'application/json',
     'Content-Type': 'application/json'
@@ -10,6 +10,10 @@ const request = async (url, method = 'GET', body = null, headers = {}, signal = 
     signal
   }
 
+  if (debug) {
+    console.log('debug', options)
+  }
+
   if (body) {
     options.body = JSON.stringify(body)
   }
@@ -17,14 +21,17 @@ const request = async (url, method = 'GET', body = null, headers = {}, signal = 
   try {
     const response = await fetch(url, options)
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`Network response was not ok! ${response.status}`)
     }
-    const data = await response.json()
 
-    return data
+    // Determine response type based on 'Accept' header
+    if (headers.Accept === 'text/xml') {
+      return await response.text()
+    } else {
+      return await response.json()
+    }
   } catch (error) {
-    // Handle fetch or data processing errors
-    // console.log('error', error)
+    console.error('There has been a problem with your fetch operation:', error)
     return { error }
   }
 }
