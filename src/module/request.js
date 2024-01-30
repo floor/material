@@ -21,7 +21,7 @@ const request = async (url, method = 'GET', body = null, headers = {}, signal = 
   try {
     const response = await fetch(url, options)
     if (!response.ok) {
-      throw new Error(`Network response was not ok! ${response.status}`)
+      console.log('Error', response)
     }
 
     // Determine response type based on 'Accept' header
@@ -31,8 +31,11 @@ const request = async (url, method = 'GET', body = null, headers = {}, signal = 
       return await response.json()
     }
   } catch (error) {
-    console.error('There has been a problem with your fetch operation:', error)
-    return { error }
+    if (headers.Accept === 'text/xml') {
+      return error
+    } else {
+      return { error }
+    }
   }
 }
 
