@@ -21,7 +21,7 @@ const request = async (url, method = 'GET', body = null, headers = {}, signal = 
   try {
     const response = await fetch(url, options)
     if (!response.ok) {
-      console.log('Error', response)
+      // console.log('Error', response)
     }
 
     // Determine response type based on 'Accept' header
@@ -32,9 +32,9 @@ const request = async (url, method = 'GET', body = null, headers = {}, signal = 
     }
   } catch (error) {
     if (headers.Accept === 'text/xml') {
-      return error
+      throw error
     } else {
-      return { error }
+      throw { error }
     }
   }
 }
