@@ -1,14 +1,24 @@
 
 export default {
   add (info, context) {
-    // console.log('list add', info)
+  // console.log('list add', info)
 
     if (!this.dataStore) return
-    context = context || null
+    context = context !== undefined ? context : null
 
     this.dataList = this.dataList || []
 
-    if (context === 'bottom') {
+    if (typeof context === 'number') {
+      if (this.data) {
+        this.data.splice(context, 0, info)
+      } else {
+        console.log('error no data')
+      }
+
+      if (this.dataList) {
+        this.dataList.splice(context, 0, info[this.dataId])
+      }
+    } else if (context === 'bottom') {
       if (this.data) { this.data.push(info) }
       if (this.dataList) { this.dataList.push(info[this.dataId]) }
     } else {
@@ -30,9 +40,12 @@ export default {
       this.virtual.update(this.data)
     }
 
+    this.emit('added', info, context)
+
     // this.ui.body.scrollTo(0, this.ui.body.scrollTop + 1)
     // this.ui.body.scrollTo(0, this.ui.body.scrollTop - 1)
 
     return info
   }
+
 }
