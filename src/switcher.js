@@ -66,7 +66,7 @@ class Switcher extends EventEmitter {
   }
 
   setup () {
-    console.log('events.attach', this.options.events)
+    // console.log('events.attach', this.options.events)
     events.attach(this.options.events, this)
 
     if (this.options.default) {
@@ -75,7 +75,7 @@ class Switcher extends EventEmitter {
   }
 
   click (event) {
-    console.log('click', event)
+    // console.log('click', event)
     if (!event.target.dataset.switcher) return
     this.select(event.target)
   }

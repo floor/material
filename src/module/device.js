@@ -6,6 +6,8 @@ const previousDevice = window.device
 const device = {}
 const os = ['ios', 'iphone', 'ipad', 'ipod', 'android', 'blackberry', 'macos', 'windows', 'fxos', 'meego', 'television']
 const type = ['mobile', 'tablet', 'desktop']
+const television = ['googletv', 'viera', 'smarttv', 'internet.tv', 'netcast', 'nettv', 'appletv', 'boxee', 'kylo', 'roku', 'dlnadoc', 'pov_tv', 'hbbtv', 'ce-html']
+
 const changeOrientationList = []
 
 // Add device as a global object.
@@ -19,22 +21,6 @@ const documentElement = window.document.documentElement
 let userAgent = window.navigator.userAgent.toLowerCase()
 
 // Detectable television devices.
-const television = [
-  'googletv',
-  'viera',
-  'smarttv',
-  'internet.tv',
-  'netcast',
-  'nettv',
-  'appletv',
-  'boxee',
-  'kylo',
-  'roku',
-  'dlnadoc',
-  'pov_tv',
-  'hbbtv',
-  'ce-html'
-]
 
 // Main functions
 // --------------
