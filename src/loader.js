@@ -6,7 +6,7 @@ class Loader {
   constructor (options) {
     this.options = Object.assign({}, Loader.defaults, options || {})
 
-    // Object.assign(this, attach, mediator, build)
+    // Object.assign(this, mediator, build)
 
     this.build()
 

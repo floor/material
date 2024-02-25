@@ -1,6 +1,6 @@
 import emitter from './module/emitter'
 import * as css from './module/css'
-import attach from './module/attach'
+import events from './module/events'
 import insert from './mixin/insert'
 
 const defaults = {
@@ -19,7 +19,7 @@ class Tree {
 
     this.init()
     this.build()
-    this.attach()
+    events.attach(this.options.events, this)
 
     return this
   }

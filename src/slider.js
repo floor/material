@@ -7,7 +7,6 @@ import insert from './element/insert'
 import offset from './element/offset'
 import classify from './module/classify'
 // import control from './control';
-import attach from './module/attach'
 import * as css from './module/css'
 import emitter from './module/emitter'
 
@@ -23,7 +22,7 @@ const defaults = {
   value: false,
   range: [0, 100],
   step: 5,
-  modules: [events, control, emitter, attach],
+  modules: [control, emitter],
   mixins: [],
   build: ['$root.material-slider', {},
     ['label$label.slider-label', {}],
@@ -60,7 +59,7 @@ class Slider {
 
     this.init(this.options)
     this.build(this.options)
-    this.attach()
+    events.attach(this.options.events, this)
 
     return this
   }

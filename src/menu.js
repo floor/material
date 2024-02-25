@@ -1,7 +1,7 @@
 import EventEmitter from './mixin/emitter'
 // menu related modules
 import build from './module/build'
-import bindEvents from './module/events'
+import events from './module/events'
 import display from './mixin/display'
 
 import Element from './element'
@@ -27,14 +27,18 @@ class Menu extends EventEmitter {
 
     this.init(options)
     this.build(this.constructor)
-    this.bindEvents()
+    this.setup()
 
     this.render(this.options.items)
   }
 
   init (options) {
     this.options = Object.assign({}, Menu.defaults, options || {})
-    Object.assign(this, build, bindEvents, display)
+    Object.assign(this, build, display)
+  }
+
+  setup () {
+    events.attach(this.options.events, this)
   }
 
   render (items) {

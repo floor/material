@@ -1,7 +1,7 @@
 import insert from './element/insert'
 import * as css from './module/css'
 import emitter from './module/emitter'
-import attach from './module/attach'
+import events from './module/events'
 import controller from './mixin/controller'
 
 // import component
@@ -31,7 +31,7 @@ class Form {
 
     this.init()
     this.build()
-    this.attach()
+    events.attach(this.options.events, this)
 
     return this
   }

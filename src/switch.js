@@ -3,7 +3,7 @@ import EventEmitter from './mixin/emitter'
 // module
 import build from './module/build'
 import dataset from './module/dataset'
-import attach from './module/attach'
+import events from './module/events'
 import attributes from './module/attributes'
 // ui
 import Element from './element'
@@ -37,12 +37,12 @@ class Switch extends EventEmitter {
     this.init(options)
     this.build()
     this.setup()
-    this.attach()
+    events.attach(this.options.events, this)
   }
 
   init (options) {
     this.options = Object.assign({}, Switch.defaults, options || {})
-    Object.assign(this, build, attach, dataset)
+    Object.assign(this, build, dataset)
 
     this.value = this.options.value
   }

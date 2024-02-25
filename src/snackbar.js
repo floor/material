@@ -2,7 +2,7 @@
 import EventEmitter from './mixin/emitter'
 // related modules
 import build from './module/build'
-import bindEvents from './module/events'
+import events from './module/events'
 import display from './mixin/display'
 // ui element
 import Element from './element'
@@ -35,7 +35,7 @@ class Snackbar extends EventEmitter {
     this.init(options)
     this.build(this.constructor)
     this.render()
-    this.bindEvents()
+    events.attach(this.options.events, this)
     this.show()
 
     if (this.options.duration) {
@@ -47,7 +47,7 @@ class Snackbar extends EventEmitter {
 
   init (options) {
     this.options = Object.assign({}, Snackbar.defaults, options || {})
-    Object.assign(this, build, bindEvents, display)
+    Object.assign(this, build, display)
 
     this.buildSnackbarContainer(this.options.container)
   }

@@ -1,5 +1,6 @@
 import EventEmitter from './mixin/emitter'
 import observer from './element/observer'
+import events from './module/events'
 import build from './module/build'
 import display from './view/display'
 
@@ -7,7 +8,10 @@ class TabView extends EventEmitter {
   static defaults = {
     base: 'view',
     class: 'tabview',
-    mode: 'style'
+    mode: 'style',
+    events: [
+      ['ui.tabs.click', 'onTabClick']
+    ]
   }
 
   constructor (options) {
@@ -22,7 +26,7 @@ class TabView extends EventEmitter {
       if (!ready) {
         ready = true
         this.setup()
-        this.attach()
+        events.attach(this.options.events, this)
 
         this.emit('ready')
       }
@@ -64,15 +68,13 @@ class TabView extends EventEmitter {
     this.click(this.ui.buttons[0])
   }
 
-  attach () {
-    this.ui.tabs.addEventListener('click', (e) => {
-      e.stopPropagation()
-      if (e.target === e.currentTarget) return
+  onTabClick (e) {
+    e.stopPropagation()
+    if (e.target === e.currentTarget) return
 
-      if (e.target.matches('BUTTON')) {
-        this.click(e.target)
-      }
-    })
+    if (e.target.matches('BUTTON')) {
+      this.click(e.target)
+    }
   }
 
   select (view) {

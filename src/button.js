@@ -1,7 +1,7 @@
 import EventEmitter from './mixin/emitter'
 import build from './module/build'
 import display from './mixin/display'
-import bindEvents from './module/events'
+import events from './module/events'
 import dataset from './module/dataset'
 import ripple from './module/ripple'
 
@@ -35,12 +35,11 @@ class Button extends EventEmitter {
     this.init(options)
     this.build()
     this.setup()
-    this.bindEvents()
   }
 
   init (options) {
     this.options = { ...Button.defaults, ...options }
-    Object.assign(this, build, display, bindEvents)
+    Object.assign(this, build, display)
   }
 
   setup () {
@@ -50,6 +49,8 @@ class Button extends EventEmitter {
     if (this.options.text) {
       this.element.innerHTML = this.element.innerHTML + this.options.text
     }
+
+    events.attach(this.options.events, this)
   }
 
   setAttributes () {

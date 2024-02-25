@@ -25,7 +25,6 @@ class Drawer {
 
     this.build()
     this.attach()
-
     this.emit('ready')
   }
 

@@ -1,7 +1,7 @@
 import EventEmitter from './mixin/emitter'
 // modules
 import build from './module/build'
-import attach from './module/attach'
+import events from './module/events'
 import attributes from './module/attributes'
 import dataset from './module/dataset'
 
@@ -20,12 +20,12 @@ class Select extends EventEmitter {
     this.build()
     this.buildLabel()
     this.buildInput()
-    this.attach()
+    events.attach(this.options.events, this)
   }
 
   init (options) {
     this.options = Object.assign({}, Select.defaults, options || {})
-    Object.assign(this, build, attach, dataset)
+    Object.assign(this, build, dataset)
   }
 
   buildLabel () {

@@ -1,7 +1,7 @@
 import create from './element/create'
 import insert from './element/insert'
 import * as css from './module/css'
-import attach from './module/attach'
+import events from './module/events'
 import emitter from './module/emitter'
 
 import Button from './button'
@@ -45,7 +45,7 @@ class Calendar {
 
     this.init()
     this.build()
-    this.attach()
+    events.attach(this.options.events, this)
 
     return this
   }

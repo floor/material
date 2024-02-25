@@ -1,5 +1,5 @@
 import EventEmitter from './mixin/emitter'
-
+import events from './module/events'
 import build from './module/build'
 import dataset from './module/dataset'
 import attributes from './module/attributes'
@@ -7,14 +7,18 @@ import attributes from './module/attributes'
 class File {
   static defaults = {
     class: 'file',
-    attributes: ['name', 'accept', 'required', 'disabled', 'multiple']
+    attributes: ['name', 'accept', 'required', 'disabled', 'multiple'],
+    events: [
+      ['input.change', 'change']
+
+    ]
   }
 
   constructor (options) {
     this.init(options)
     this.build()
     this.buildInput()
-    this.attach()
+    events.attach(this.options.events, this)
   }
 
   init (options) {
@@ -40,10 +44,8 @@ class File {
     }
   }
 
-  attach () {
-    this.input.addEventListener('change', (e) => {
-      this.emit('change', e)
-    })
+  change (e) {
+    this.emit('change', e)
   }
 
   image (e) {

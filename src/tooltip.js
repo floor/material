@@ -32,7 +32,7 @@ class Tooltip {
     // console.log('element options', options)
 
     this.build()
-    this.attach()
+    this.attachEvent()
 
     return this
   }
@@ -55,7 +55,7 @@ class Tooltip {
     container.appendChild(this.element)
   }
 
-  attach () {
+  attachEvent () {
     // console.log('attach', this.options.targets)
     const targets = document.querySelectorAll(this.options.targets)
 

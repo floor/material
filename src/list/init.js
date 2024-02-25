@@ -1,6 +1,6 @@
 export default {
   init () {
     this.build()
-    this.attach()
+    events.attach(this.options.events, this)
   }
 }

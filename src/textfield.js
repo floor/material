@@ -1,5 +1,5 @@
 import emitter from './module/emitter'
-import attach from './module/attach'
+import events from './module/events'
 import dataset from './module/dataset'
 import attributes from './module/attributes'
 
@@ -22,12 +22,12 @@ class Textfield {
   constructor (options) {
     this.init(options)
     this.build()
-    this.attach()
+    events.attach(this.options.events, this)
   }
 
   init (options) {
     this.options = Object.assign({}, Textfield.defaults, options || {})
-    Object.assign(this, emitter, attach, dataset)
+    Object.assign(this, emitter, dataset)
     // console.log('options', options)
   }
 

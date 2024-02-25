@@ -1,22 +1,30 @@
 import extract from './extract'
+import last from './last'
 
-const attachModule = {
-  bindEvents (events) {
-    events = events || this.options.events
-    if (!events) return
+const events = {
+  eventHandlers: [], // Utiliser un tableau pour stocker les événements et les gestionnaires
 
-    events.map(([eventDef, funcDef, option]) => {
-      const e = extract.e(this, eventDef)
+  attach (eventsArray, context) {
+    if (!eventsArray) return
+
+    eventsArray.forEach(([eventDef, funcDef, option]) => {
+      const e = extract.e(context, eventDef)
       const isFunction = typeof funcDef === 'function'
-      const f = isFunction ? null : extract.f(this, funcDef)
-      const keys = funcDef.split('.')
-      keys.pop()
-      const bound = this.last(keys.join('.'))
+      let f = null
+      let keys = []
+
+      if (!isFunction) {
+        f = extract.f(context, funcDef)
+        keys = funcDef.split('.')
+        keys.pop()
+      }
+
+      const bound = last(keys.join('.'), context)
 
       let handler = null
 
-      if (isFunction && funcDef) {
-        handler = funcDef.bind(this)
+      if (isFunction) {
+        handler = funcDef.bind(context)
       } else if (f && bound) {
         handler = f.bind(bound)
       } else {
@@ -25,13 +33,11 @@ const attachModule = {
       }
 
       if (handler && e && e.element && e.element.addEventListener) {
-        if (option) {
-          e.element.addEventListener(e.name, handler, option)
-        } else {
-          e.element.addEventListener(e.name, handler)
-        }
+        e.element.addEventListener(e.name, handler, option)
+        this.eventHandlers.push({ eventDef, element: e.element, handler })
       } else if (e && e.element && e.element.on && handler) {
         e.element.on(e.name, handler)
+        this.eventHandlers.push({ eventDef, element: e.element, handler })
       } else {
         // console.error(`Can't attach ${eventDef}`)
       }
@@ -40,12 +46,22 @@ const attachModule = {
     return this
   },
 
-  last (str) {
-    if (!str) return this
-    if (!str.includes('.')) return this[str]
-
-    return str.split('.').reduce((acc, key) => acc[key], this)
+  detach (eventsArray, context) {
+    (eventsArray || []).forEach(([eventDef]) => {
+      this.eventHandlers.forEach((handlerObj, index) => {
+        if (handlerObj.eventDef === eventDef) {
+          const { element, handler } = handlerObj
+          if (element.removeEventListener) {
+            element.removeEventListener(eventDef, handler)
+          } else if (element.off) {
+            element.off(eventDef, handler)
+          }
+          delete this.eventHandlers[index]
+        }
+      })
+      this.eventHandlers = this.eventHandlers.filter(Boolean) // Nettoyer les entrées supprimées
+    })
   }
 }
 
-export default attachModule
+export default events

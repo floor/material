@@ -2,7 +2,7 @@ import EventEmitter from './mixin/emitter'
 
 import * as css from './module/css'
 import build from './module/build'
-import attach from './module/attach'
+import events from './module/events'
 import display from './mixin/display'
 import Element from './element'
 import Button from './button'
@@ -25,13 +25,13 @@ class Navigation extends EventEmitter {
 
     this.init(options)
     this.build()
-    this.attach()
+    events.attach(this.options.events, this)
     this.setup()
   }
 
   init (options) {
     this.options = { ...Navigation.defaults, ...options }
-    Object.assign(this, build, attach, display)
+    Object.assign(this, build, display)
     this.items = []
   }
 

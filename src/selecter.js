@@ -1,6 +1,6 @@
 import EventEmitter from './mixin/emitter'
 // modules
-import attach from './module/attach'
+import events from './module/events'
 import dataset from './module/dataset'
 import attributes from './module/attributes'
 import * as css from './module/css'
@@ -39,12 +39,12 @@ class Selecter extends EventEmitter {
     this.init(options)
     this.build()
     this.setup()
-    this.attach()
+    events.attach(this.options.events, this)
   }
 
   init (options) {
     this.options = Object.assign({}, Selecter.defaults, options || {})
-    Object.assign(this, attach, dataset)
+    Object.assign(this, dataset)
   }
 
   setup () {

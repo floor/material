@@ -1,5 +1,5 @@
 import emitter from './module/emitter'
-import attach from './module/attach'
+import events from './module/events'
 
 const defaults = {
   class: 'selector',
@@ -41,7 +41,7 @@ class Selector {
   init () {
     this.build()
     this.setup()
-    this.attach()
+    events.attach(this.options.events, this)
 
     if (this.options.container) {
       this.options.container.appendChild(this.element)

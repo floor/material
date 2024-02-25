@@ -1,6 +1,6 @@
 // dialog related modules
 import emitter from './module/emitter'
-import attach from './module/attach'
+import events from './module/events'
 import display from './mixin/display'
 
 import Element from './element'
@@ -38,14 +38,14 @@ class Dialog {
     this.init(options)
     this.build()
     this.render()
-    this.attach()
+    this.setup()
 
     return this
   }
 
   init (options) {
     this.options = Object.assign({}, Dialog.defaults, options || {})
-    Object.assign(this, emitter, attach, display)
+    Object.assign(this, emitter, display)
   }
 
   build () {
@@ -98,6 +98,10 @@ class Dialog {
     if (this.options.target) {
       this.setPosition()
     }
+  }
+
+  setup () {
+    events.attach(this.options.events, this)
   }
 
   setPosition () {

@@ -1,7 +1,7 @@
 import EventEmitter from './mixin/events'
 // import control from './mixin/control'
 import build from './module/build'
-import attach from './module/attach'
+import events from './module/events'
 import * as css from './module/css'
 
 import icon from './skin/material/icon/checkbox.svg'
@@ -12,8 +12,8 @@ class Checkbox {
   static defaults = {
     class: 'checkbox',
     layout: [
-      [Element, 'input', { type: 'checkbox' } ],
-      [Element, 'control', { type: 'checkbox' } ],
+      [Element, 'input', { type: 'checkbox' }],
+      [Element, 'control', { type: 'checkbox' }],
       [Element, 'label', { tag: 'label' }]
     ],
     events: [
@@ -31,7 +31,6 @@ class Checkbox {
     this.init(options)
     this.build()
     this.setup()
-    this.attach()
   }
 
   init (options) {
@@ -72,6 +71,8 @@ class Checkbox {
     if (this.options.value) {
       this.set('value', this.value)
     }
+
+    events.attach(this.options.events, this)
   }
 
   set (prop, value) {
@@ -106,7 +107,6 @@ class Checkbox {
     }
     return this
   }
-
 
   click (e) {
     this.toggle(e)

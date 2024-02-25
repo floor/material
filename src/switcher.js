@@ -1,4 +1,5 @@
 import EventEmitter from './mixin/emitter'
+import events from './module/events'
 
 class Switcher extends EventEmitter {
   static defaults = {
@@ -7,7 +8,10 @@ class Switcher extends EventEmitter {
     list: [],
     first: false,
     mode: 'unique',
-    allowEmpty: false
+    allowEmpty: false,
+    events: [
+      ['element.click', 'click']
+    ]
   }
 
   constructor (options) {
@@ -15,11 +19,7 @@ class Switcher extends EventEmitter {
 
     this.init(options)
     this.build()
-    this.attach()
-
-    if (this.options.default) {
-      this.selectByName(this.options.default, true)
-    }
+    this.setup()
   }
 
   init (options) {
@@ -65,11 +65,19 @@ class Switcher extends EventEmitter {
     this.element.appendChild(this.list)
   }
 
-  attach () {
-    this.element.addEventListener('click', (event) => {
-      if (!event.target.dataset.switcher) return
-      this.select(event.target)
-    })
+  setup () {
+    console.log('events.attach', this.options.events)
+    events.attach(this.options.events, this)
+
+    if (this.options.default) {
+      this.selectByName(this.options.default, true)
+    }
+  }
+
+  click (event) {
+    console.log('click', event)
+    if (!event.target.dataset.switcher) return
+    this.select(event.target)
   }
 
   select (option) {

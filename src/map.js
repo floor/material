@@ -1,4 +1,3 @@
-
 import mediator from '../module/mediator'
 import emitter from 'material/src/module/emitter'
 import attach from 'material/src/module/attach'
@@ -50,7 +49,7 @@ class Map {
     this.options = Object.assign({}, defaults, options || {})
 
     Object.assign(
-      this, attach, emitter, init, build, viewport, mouse,
+      this, emitter, init, build, viewport, mouse,
       mode, countries,
       set, display, select, focus
     )

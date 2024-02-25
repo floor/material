@@ -20,7 +20,6 @@ class Collection {
   }
 
   get (page, size, more) {
-    7
    // console.log('fetch', page, size, more)
     if (more !== true) {
       this.page = 1
