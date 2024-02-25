@@ -30,12 +30,12 @@ import Textfield from './src/textfield'
 import Toolbar from './src/toolbar'
 import Tooltip from './src/tooltip'
 import View from './src/view'
-import events from './src/module/events'
 import attributes from './src/module/attributes'
 import build from './src/module/build'
 import dataset from './src/module/dataset'
+import device from './src/module/device'
 import display from './src/mixin/display'
-import events from './src/module/attach'
+import events from './src/module/events'
 import emitter from './src/module/emitter'
 import jsonToHTML from './src/module/jsontohtml'
 import mediator from './src/module/mediator'
@@ -46,6 +46,6 @@ export {
   AppBar, Button, Card, Checkbox, Component, DateHour, Dialog, Drawer, Element,
   File, Form, Image, Layout, List, Loading, Menu, Navigation, Progress, Select,
   Selecter, Slider, Snackbar, Switch, Switcher, Tabs, TabView, Text, Textfield, Toolbar, Tooltip,
-  View, events, attributes, build, dataset, display, events, emitter, jsonToHTML, mediator,
+  View, attributes, build, dataset, device, display, events, emitter, jsonToHTML, mediator,
   observer, smoothscroll
 }

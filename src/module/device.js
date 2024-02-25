@@ -4,7 +4,8 @@
 const previousDevice = window.device
 
 const device = {}
-
+const os = ['ios', 'iphone', 'ipad', 'ipod', 'android', 'blackberry', 'macos', 'windows', 'fxos', 'meego', 'television']
+const type = ['mobile', 'tablet', 'desktop']
 const changeOrientationList = []
 
 // Add device as a global object.
@@ -237,7 +238,7 @@ function removeClass (className) {
 }
 
 function cleanClasses () {
-  const classes = ['mobile', 'tablet', 'desktop', 'ios', 'iphone', 'ipad', 'ipod', 'android', 'blackberry', 'macos', 'windows', 'fxos', 'meego', 'television']
+  const classes = [...os, ...type]
   for (let i = 0; i < classes.length; i++) {
     removeClass(classes[i])
   }
@@ -362,20 +363,8 @@ function findMatch (arr) {
   return 'unknown'
 }
 
-device.type = findMatch(['mobile', 'tablet', 'desktop'])
-device.os = findMatch([
-  'ios',
-  'iphone',
-  'ipad',
-  'ipod',
-  'android',
-  'blackberry',
-  'macos',
-  'windows',
-  'fxos',
-  'meego',
-  'television'
-])
+device.type = findMatch(type)
+device.os = findMatch(os)
 
 function setOrientationCache () {
   device.orientation = findMatch(['portrait', 'landscape'])
@@ -388,9 +377,8 @@ device.onDeviceChange = null
 
 function updateDeviceDetection () {
   userAgent = window.navigator.userAgent.toLowerCase()
-  console.log('UA', userAgent)
-  device.type = findMatch(['mobile', 'tablet', 'desktop'])
-  device.os = findMatch(['ios', 'iphone', 'ipad', 'ipod', 'android', 'blackberry', 'macos', 'windows', 'fxos', 'meego', 'television'])
+  device.type = findMatch(type)
+  device.os = findMatch(os)
   setOrientationCache()
   applyClass()
   checkAndHandleDeviceChange()
