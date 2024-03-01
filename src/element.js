@@ -7,6 +7,9 @@ class Element {
     this.options = Object.assign({}, options || {})
     // console.log('element options', options)
     const element = document.createElement(this.options.tag || 'div')
+
+    const container = this.options.container
+    delete this.options.container
     delete this.options.tag
 
     if (options.html) element.innerHTML = this.options.html
@@ -17,14 +20,12 @@ class Element {
 
     if (options.id) element.setAttribute('id', options.id)
 
-    for (const property in this.options) {
-      if (this.options.hasOwnProperty(property)) {
-        element.setAttribute(property, this.options[property])
-      }
+    for (const [property, value] of Object.entries(this.options)) {
+      element.setAttribute(property, value)
     }
 
-    if (this.options.container) {
-      this.options.container.appendChild(element)
+    if (container) {
+      container.appendChild(element)
     }
 
     return element

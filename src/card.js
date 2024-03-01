@@ -1,36 +1,28 @@
-// import modules
-import create from './mixin/create'
-import insert from './mixin/insert'
-// import components
-import Layout from './layout'
-
-const defaults = {
-  prefix: 'material',
-  class: 'card',
-  tag: 'div'
-}
+import build from './module/build'
+import display from './mixin/display'
+import position from './mixin/position'
 
 class Card {
+  static defaults = {
+    class: 'card',
+    position: {
+      align: 'center',
+      vAlign: 'dynamic',
+      offsetX: 10,
+      offsetY: 10
+    },
+    close: true,
+    layout: []
+  }
+
   constructor (options) {
     this.init(options)
     this.build()
   }
 
   init (options) {
-    this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, insert)
-  }
-
-  /**
-   * build the component using the super method
-   * @return {Object} The class instance
-   */
-  build () {
-    this.element = create(this.options)
-
-    if (this.options.layout) {
-      this.layout = new Layout(this.options.layout, this.element)
-    }
+    this.options = Object.assign({}, Card.defaults, options || {})
+    Object.assign(this, build, display, position)
   }
 }
 
