@@ -5,7 +5,6 @@ export default {
     const { offsetX = 0, offsetY = 0, align = 'center', vAlign = 'middle' } = position
 
     const name = this.constructor.name
-    console.log('constructor', name)
 
     if (!target) return
 
@@ -13,14 +12,7 @@ export default {
     const screen = this.element.parentNode.getBoundingClientRect()
     const element = this.element.getBoundingClientRect()
 
-    console.log('caller', caller)
-    console.log('screen', screen)
-    console.log('element', element)
-
     let left, top
-
-    console.log('align', align)
-    console.log('target left', caller.left)
 
     switch (align) {
       case 'left':
@@ -40,13 +32,15 @@ export default {
         left = caller.left + (caller.width / 2) - (element.width / 2)
     }
 
+    // ensure that the element remains within the limits of its container
+
     if (left < 0) left = offsetX
 
     if (left + element.width + offsetX > screen.width) {
-      left = caller.left - element.width + caller.width - offsetX
+      left = screen.width - element.width - offsetX
     }
 
-    console.log('left', left)
+    // console.log('left', left)
 
     // left = Math.max(offsetX, Math.min(left, screen.width - element.width - offsetX))
 
@@ -76,12 +70,6 @@ export default {
       default:
         top = caller.top + scrollY + (caller.height / 2) - (element.height / 2)
     }
-
-    // if (this.options.class !== 'menu') {
-    //   top = Math.max(offsetY, Math.min(top, screen.height - element.height - offsetY))
-    // }
-
-    console.log('top', top)
 
     this.element.style.left = `${left}px`
     this.element.style.top = `${top}px`
