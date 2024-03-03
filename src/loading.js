@@ -1,6 +1,8 @@
 import build from './module/build'
 
 class Loading {
+  static uid = "material-loading";
+
   static isComponent () {
     return true
   }

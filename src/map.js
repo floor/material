@@ -41,6 +41,8 @@ const defaults = {
 }
 
 class Map {
+  static uid = "material-map";
+
   /**
    * Constructor component options
    * @return {Object} Class instance

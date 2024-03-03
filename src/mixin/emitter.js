@@ -1,4 +1,6 @@
 class EventEmitter {
+  static uid = "material-mixin-eventemitter";
+
   constructor () {
     this.events = {}
   }

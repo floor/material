@@ -18,6 +18,8 @@ const defaults = {
 }
 
 class Drawer {
+  static uid = "material-drawer";
+
   constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 

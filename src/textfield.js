@@ -4,6 +4,8 @@ import dataset from './module/dataset'
 import attributes from './module/attributes'
 
 class Textfield {
+  static uid = "material-textfield";
+
   static isComponent () {
     return true
   }

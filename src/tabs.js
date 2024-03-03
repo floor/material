@@ -20,6 +20,8 @@ const defaults = {
 }
 
 class Tabs {
+  static uid = "material-tabs";
+
   /**
    * Constructor
    * @param  {Object} options - Component options

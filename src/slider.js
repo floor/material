@@ -50,6 +50,8 @@ const defaults = {
  * @extends Control
  */
 class Slider {
+  static uid = "material-slider";
+
   /**
    * init
    * @return {Object} The class options

@@ -4,6 +4,8 @@ import display from './mixin/display'
 const isStringNumber = (str) => !isNaN(parseFloat(str)) && isFinite(str)
 
 class Badge {
+  static uid = "material-badge";
+
   static defaults = {
     class: 'badge'
   }

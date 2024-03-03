@@ -1,4 +1,6 @@
 class Loader {
+  static uid = "material-loader";
+
   static defaults = {
     class: 'loader'
   }

@@ -5,6 +5,8 @@ import dataset from './module/dataset'
 import attributes from './module/attributes'
 
 class File {
+  static uid = "material-file";
+
   static defaults = {
     class: 'file',
     attributes: ['name', 'accept', 'required', 'disabled', 'multiple'],

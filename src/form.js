@@ -21,6 +21,8 @@ const defaults = {
  * @return {Class} This class instance
  */
 class Form {
+  static uid = "material-form";
+
   /**
    * Constructor
    * @param  {Object} options - Component options

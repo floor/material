@@ -9,6 +9,8 @@ import icon from './skin/material/icon/checkbox.svg'
 import Element from './element'
 
 class Checkbox {
+  static uid = "material-checkbox";
+
   static defaults = {
     class: 'checkbox',
     layout: [

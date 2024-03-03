@@ -1,6 +1,8 @@
 import build from './module/build'
 
 class Item {
+  static uid = "material-item";
+
   static defaults = {
     prefix: 'material',
     class: 'item',

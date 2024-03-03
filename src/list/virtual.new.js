@@ -6,6 +6,8 @@ import emitter from '../module/emitter' // Import the emitter module.
 
 // Define the VirtualList class
 class VirtualList {
+  static uid = "material-list-virtuallist";
+
   constructor (options) {
     // Initialize the class with options passed to the constructor.
     this.options = { ...(options || {}) } // Spread operator to merge options with default values.

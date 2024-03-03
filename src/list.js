@@ -7,6 +7,8 @@ const defaults = {
 }
 
 class List {
+  static uid = "material-list";
+
   constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 

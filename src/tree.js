@@ -14,6 +14,8 @@ const defaults = {
 }
 
 class Tree {
+  static uid = "material-tree";
+
   constructor (options) {
     this.options = Object.assign({}, defaults, options || {})
 

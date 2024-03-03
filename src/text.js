@@ -1,6 +1,8 @@
 import build from './module/build'
 
 class Text {
+  static uid = "material-text";
+
   static defaults = {
     class: 'text',
     tag: 'span'

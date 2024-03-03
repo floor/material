@@ -7,6 +7,8 @@ const defaults = {
 }
 
 class Collection {
+  static uid = "material-list-collection";
+
   /**
    * Constructor
    * @param  {Object} options - Component options

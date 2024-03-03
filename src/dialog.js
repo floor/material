@@ -9,6 +9,8 @@ import Button from './button'
 import Layout from './layout'
 
 class Dialog {
+  static uid = "material-dialog";
+
   static defaults = {
     class: 'dialog',
     close: true,

@@ -1,6 +1,8 @@
 import build from './module/build'
 
 class AppBar {
+  static uid = "material-appbar";
+
   static defaults = {
     class: 'appbar'
   }

@@ -1,6 +1,8 @@
 import build from './module/build'
 
 class DateHour {
+  static uid = "material-datehour";
+
   static defaults = {
     class: 'date',
     tag: 'span'

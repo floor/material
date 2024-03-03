@@ -14,6 +14,8 @@ const defaults = {
 }
 
 class Spinner {
+  static uid = "material-spinner";
+
   /**
    * init
    * @return {Object} The class options

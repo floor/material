@@ -6,6 +6,8 @@ let instance = null
  *
  */
 class Controller {
+  static uid = "material-mixin-controller";
+
   /**
    * Setting up block level variable to store class state
    * , set's to null by default.

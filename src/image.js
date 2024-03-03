@@ -1,6 +1,8 @@
 import build from './module/build'
 
 class Image {
+  static uid = "material-image";
+
   static defaults = {
     class: 'image',
     tag: 'div',

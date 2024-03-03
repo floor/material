@@ -1,4 +1,6 @@
 class Element {
+  static uid = "material-element";
+
   static isElement () {
     return true
   }

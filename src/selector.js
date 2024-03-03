@@ -18,6 +18,8 @@ const defaults = {
 }
 
 class Selector {
+  static uid = "material-selector";
+
   static isComponent () {
     return true
   }

@@ -16,6 +16,8 @@ var defaults = {
  * @example new Item(object);
  */
 class Icon {
+  static uid = "material-icon";
+
   /**
    * init
    * @return {Object} The class options

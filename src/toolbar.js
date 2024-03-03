@@ -11,6 +11,8 @@ const defaults = {
 }
 
 class Toolbar {
+  static uid = "material-toolbar";
+
   /**
    * Constructor
    * @param  {Object} options - Component options

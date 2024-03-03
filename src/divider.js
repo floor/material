@@ -16,6 +16,8 @@ const defaults = {
  * @example new Item(object);
  */
 class Divider {
+  static uid = "material-divider";
+
   /**
    * init
    * @return {Object} The class options

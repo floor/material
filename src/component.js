@@ -27,6 +27,8 @@ const defaults = {
  * });
  */
 class Component {
+  static uid = "material-component";
+
   /**
    * Constructor
    * @param  {Object} options - Component options

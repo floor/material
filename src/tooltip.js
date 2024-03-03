@@ -20,6 +20,8 @@ const defaults = {
 }
 
 class Tooltip {
+  static uid = "material-tooltip";
+
   /**
    * The init method of the Button class
    * @param  {Object} The element attributes

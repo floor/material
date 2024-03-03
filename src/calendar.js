@@ -36,6 +36,8 @@ const defaults = {
  * @type {prime}
  */
 class Calendar {
+  static uid = "material-calendar";
+
   /**
    * init
    * @return {Object} The class options
