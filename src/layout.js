@@ -1,28 +1,47 @@
 import { is as isObject } from './module/object'
-import * as css from './module/css'
 
+/**
+ * Layout class for creating and managing UI components.
+ */
 class Layout {
+  /**
+   * Constructs a new Layout instance.
+   *
+   * @param {Array} schema - An array defining the structure and components of the layout.
+   * @param {HTMLElement} container - The container in which the layout components are placed.
+   * @param {boolean} [enableMemoization=false] - Flag to enable memoization (not implemented in current version).
+   */
   constructor (schema, container) {
     this.components = []
+    // const startTime = Date.now()
     this.component = this.create(schema, container)
-
+    // const endTime = Date.now()
+    // console.log(`Execution time: ${endTime - startTime} ms`)
     return this
   }
 
+  /**
+   * Recursively creates components based on a provided schema.
+   *
+   * @param {Array} schema - An array of components or sub-schemas.
+   * @param {HTMLElement} container - The container for the current level of components.
+   * @param {Object} [structure={}] - An accumulator object for components, keyed by name.
+   * @param {number} [level=0] - The current level of recursion.
+   * @returns {Object} The structure containing all created components.
+   */
   create (schema, container, structure, level) {
     level = level || 0
     level++
 
     structure = structure || {}
     let component = null
+    const fragment = document.createDocumentFragment()
 
     for (let i = 0; i < schema.length; i++) {
-      // console.log('index', i, typeof schema[i])
       var name
       let options = {}
 
-      if (schema[i] instanceof Object &&
-        typeof schema[i] === 'function') {
+      if (schema[i] instanceof Object && typeof schema[i] === 'function') {
         if (isObject(schema[i + 1])) {
           options = schema[i + 1]
         } else if (isObject(schema[i + 2])) {
@@ -37,113 +56,47 @@ class Layout {
         }
 
         component = new schema[i](options)
-        const element = component.element || component
 
-        if (level === 1) {
-          structure.element = element
-        }
+        const element = component.element || component
+        if (level === 1) structure.element = element
 
         if (name) {
           structure[name] = component
           this.components.push([name, component])
         }
 
-        // if (component) {
-        //   this.display(component.element, options)
-        //   this.style(component, options)
-        // }
+        if (component) {
+          if (component.insert) component.insert(fragment)
+          else fragment.appendChild(element)
 
-        if (component && container) {
-          if (component.insert) {
-            component.insert(container)
-          } else {
-            const wrapper = container.element || container
-
-            wrapper.appendChild(element)
-
-            if (component.onInserted) {
-              component.onInserted(wrapper)
-            }
-          }
-          component._container = container
+          if (component.onInserted) component.onInserted(fragment)
         }
       } else if (Array.isArray(schema[i])) {
-        // console.log('------', schema[i])
-        if (component == null) {
-          component = container
-        }
+        if (!component) component = container
         this.create(schema[i], component, structure, level)
       }
+    }
+
+    if (container && fragment.hasChildNodes()) {
+      const wrapper = container.element || container
+      // console.log('wrapper', wrapper)
+      // console.log('fragment', fragment)
+      wrapper.appendChild(fragment)
     }
 
     return structure
   }
 
-  display (element, options) {
-    const display = options.display
-    const direction = options.direction || 'horizontal'
-
-    if (!element || !display) return
-
-    if (direction === 'horizontal') {
-      element.className += ' ' + 'flex-row'
-    } else if (direction === 'vertical') {
-      element.className += ' ' + 'flex-column'
-    }
-  }
-
-  style (component) {
-    const options = component.options || {}
-
-    // console.log('component', component);
-
-    if (options.flex) {
-      css.add(component.element, 'flex-' + options.flex)
-    } else {
-      const size = options.size
-      if (options.size && options.width) {
-        component.element.width = size + 'px'
-      } else if (options.size && options.height) {
-        component.element.height = size + 'px'
-      }
-    }
-
-    if (options.position) {
-      component.element.position = options.position
-    }
-
-    if (options.bottom) {
-      component.element.bottom = options.bottom
-    }
-
-    if (options.hide) {
-      component.element.display = 'none'
-    }
-
-    if (options.theme) {
-      css.add(component.element, 'theme' + '-' + options.theme)
-    }
-  }
-
-  extractInfo (object) {
-    // console.log('extractField', object)
-
-    const field = {}
-
-    for (const property in object) {
-      if (object.hasOwnProperty(property)) {
-        const infos = property.split(/\./)
-
-        if (infos[0] === 'info' && infos[1] !== undefined) {
-          // console.log('field', infos[0], infos[1])
-          field[infos[1]] = object[property]
-        }
-      }
-    }
-
-    return field
-  }
-
+  /**
+   * Retrieves a specific component or the entire component structure.
+   *
+   * This method allows accessing a component from the created layout by its name.
+   * If a name is provided, it returns the component associated with that name.
+   * If no name is provided, it returns the entire component structure.
+   *
+   * @param {string} name - The name of the component to retrieve.
+   * @returns {Object} The requested component or the entire component structure.
+   */
   get (name) {
     if (name) return this.component[name]
     else return this.component
