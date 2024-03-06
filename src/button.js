@@ -82,8 +82,7 @@ class Button extends EventEmitter {
         this.element.value = value
         break
       case 'label':
-        if (!this.ui.label) this.buildLabel()
-        this.ui.label.innerHTML = value
+        this.setLabel(value)
         break
       case 'text':
         this.element.innerHTML = value
@@ -126,9 +125,19 @@ class Button extends EventEmitter {
       case 'value':
         return this.element.value
       case 'label':
-        return this.label?.innerHTML ?? this.element.value
+        return this.getText()
+      case 'text':
+        return this.getText()
       default:
         return this.element.value
+    }
+  }
+
+  getText () {
+    if (this.ui.label) {
+      return this.ui.label.innerHTML
+    } else {
+      return this.element.innerHTML
     }
   }
 
