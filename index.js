@@ -35,6 +35,7 @@ import build from './src/module/build'
 import dataset from './src/module/dataset'
 import device from './src/module/device'
 import display from './src/mixin/display'
+import request from './src/module/request'
 import events from './src/module/events'
 import emitter from './src/module/emitter'
 import jsonToHTML from './src/module/jsontohtml'
@@ -47,5 +48,5 @@ export {
   File, Form, Image, Layout, List, Loading, Menu, Navigation, Progress, Select,
   Selecter, Slider, Snackbar, Switch, Switcher, Tabs, TabView, Text, Textfield, Toolbar, Tooltip,
   View, attributes, build, dataset, device, display, events, emitter, jsonToHTML, mediator,
-  observer, smoothscroll
+  observer, request, smoothscroll
 }
