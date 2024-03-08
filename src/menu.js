@@ -6,7 +6,6 @@ import display from './mixin/display'
 import position from './mixin/position'
 
 import Element from './element'
-import Button from './button'
 
 class Menu extends EventEmitter {
   static defaults = {
@@ -23,10 +22,8 @@ class Menu extends EventEmitter {
     ],
     events: [
       ['element.click', 'onClick'],
-      ['element.show', 'close'],
-      ['element.mouseenter', 'onMouseEnter'],
-      ['element.mouseleave', 'close'],
-      ['options.target.mouseleave', 'close']
+      ['select', 'destroy'],
+      ['underlay.click', 'close']
     ]
   }
 
@@ -35,6 +32,7 @@ class Menu extends EventEmitter {
 
     this.init(options)
     this.build(this.constructor)
+    this.buildUnderlay()
     this.setup()
 
     this.render(this.options.items)
@@ -45,11 +43,25 @@ class Menu extends EventEmitter {
   init (options) {
     this.options = Object.assign({}, Menu.defaults, options || {})
     Object.assign(this, build, display, position)
+
+    this.menus = []
+  }
+
+  buildUnderlay () {
+    if (!this.options.parentName) {
+      this.underlay = new Element({
+        class: 'menu-underlay'
+      })
+
+      this.options.container.appendChild(this.underlay)
+    }
   }
 
   setup () {
     events.attach(this.options.events, this)
     this.closeTimeout = null
+
+    document.addEventListener('click', this.handleDocumentClick)
   }
 
   render (items) {
@@ -64,34 +76,81 @@ class Menu extends EventEmitter {
 
   add (obj) {
     if (typeof obj !== 'object') return this
+
     let item
+
     if (obj.type === 'divider') {
       item = new Element({ tag: 'li', class: 'divider' })
     } else {
-      obj.container = this.ui.list
-      item = new Element(obj).classList.add('item')
-    }
+      obj.tag = 'li'
+      obj.class = obj.class ? obj.class + ' item' : 'item'
+      item = new Element(obj)
 
+      item.addEventListener('mouseenter', () => {
+        if (this.menu) {
+          this.menu.destroy()
+        }
+      })
+
+      if (obj.items && Array.isArray(obj.items)) {
+        item.classList.add('sub')
+
+        item.addEventListener('mouseenter', () => {
+          this.menu = new Menu({
+            class: 'floating',
+            target: item,
+            container: this.options.container,
+            parentName: obj.name,
+            items: obj.items
+          }).position(item, {
+            align: 'left',
+            vAlign: 'inline',
+            offsetX: 8,
+            offsetY: 8
+          }).show()
+
+          this.menu.on('select', (name) => {
+            this.emit('select', `${obj.name}:${name}`)
+          }).on('destroy', () => {
+            this.menu = null
+          })
+
+          this.menus.push(this.menu)
+        })
+      }
+    }
+    this.ui.list.appendChild(item)
     return this
   }
 
-  onMouseEnter () {
-    clearTimeout(this.closeTimeout)
-  }
-
   onClick (ev) {
-    // console.log('onClick', ev.target, ev.target.getAttribute('name'))
+    if (ev.target.classList.contains('sub')) return
     const name = ev.target.getAttribute('name')
     if (name) {
       this.emit('select', name)
     }
-    this.destroy()
+  }
+
+  destroyMenu (menu) {
+  // Trouver l'index de menuToDestroy dans this.menus
+    const index = this.menus.indexOf(menu)
+
+    // Si trouvé, supprimer le menu du tableau
+    if (index > -1) {
+      this.menus.splice(index, 1)
+    }
+
+    // Appeler la méthode destroy sur le menuToDestroy
+    menu.destroy()
   }
 
   close () {
-    this.closeTimeout = setTimeout(() => {
-      this.destroy()
-    }, 200)
+    // console.log('')
+    this.menus.forEach(menu => {
+      menu.destroy()
+    })
+    this.menus = []
+    this.destroy()
   }
 }
 

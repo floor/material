@@ -8,8 +8,10 @@ export default {
 
     if (!target) return
 
+    // console.log('container', this.options.container)
+
     const caller = target.getBoundingClientRect()
-    const screen = this.element.parentNode.getBoundingClientRect()
+    const screen = this.options.container.getBoundingClientRect()
     const element = this.element.getBoundingClientRect()
 
     let left, top
@@ -21,7 +23,6 @@ export default {
       case 'right':
         left = caller.left
         if (left + element.width + offsetX > screen.width) {
-          console.log('out boundaries')
           left = caller.left - element.width + caller.width
         }
         break
@@ -34,10 +35,16 @@ export default {
 
     // ensure that the element remains within the limits of its container
 
+    // if (left < 0) left = offsetX
+
+    // if (left + element.width + offsetX > screen.width) {
+    //   left = screen.width - element.width - offsetX
+    // }
+
     if (left < 0) left = offsetX
 
-    if (left + element.width + offsetX > screen.width) {
-      left = screen.width - element.width - offsetX
+    if (left + element.width > screen.width) {
+      left = caller.left - element.width
     }
 
     // console.log('left', left)
@@ -46,14 +53,12 @@ export default {
 
     const scrollY = window.scrollY
 
-    // console.log('class', name)
-    // console.log('scrollY', scrollY)
-    // console.log('vAlign', vAlign)
-    // console.log('target top', caller.top)
-
     switch (vAlign) {
       case 'top':
         top = caller.top + scrollY - element.height
+        break
+      case 'inline':
+        top = caller.top + scrollY
         break
       case 'bottom':
         top = caller.top + caller.height + scrollY
@@ -69,6 +74,12 @@ export default {
 
       default:
         top = caller.top + scrollY + (caller.height / 2) - (element.height / 2)
+    }
+
+    // console.log('screen height', screen.height, element.height, offsetX)
+
+    if (top + element.height + offsetY > screen.height) {
+      top = screen.height - element.height - offsetX
     }
 
     this.element.style.left = `${left}px`
