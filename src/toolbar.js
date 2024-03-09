@@ -4,40 +4,26 @@ import create from './mixin/create'
 import insert from './mixin/insert'
 import offset from './element/offset'
 
-const defaults = {
-  prefix: 'material',
-  class: 'toolbar',
-  tag: 'div'
-}
-
 class Toolbar {
-  static uid = "material-toolbar";
+  static defaults = {
+    prefix: 'material',
+    class: 'toolbar',
+    tag: 'div'
+  }
 
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
   constructor (options) {
     this.init(options)
     this.build()
     this.attach()
-    return this
   }
 
   init (options) {
-    this.options = Object.assign({}, defaults, options || {})
+    this.options = { ...Toolbar.defaults, ...options }
     Object.assign(this, insert)
-
-    // console.log('waterfALL', this.options.waterfall)
 
     this.waterfall = this.options.waterfall
   }
 
-  /**
-   * Build Method
-   * @return {Object} This class instance
-   */
   build () {
     this.element = create(this.options)
 

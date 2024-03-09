@@ -25,18 +25,19 @@ class Navigation extends EventEmitter {
 
     this.init(options)
     this.build()
-    events.attach(this.options.events, this)
     this.setup()
   }
 
   init (options) {
     this.options = { ...Navigation.defaults, ...options }
     Object.assign(this, build, display)
+
     this.items = []
   }
 
   setup () {
-    console.log('setup', this.options)
+    events.attach(this.options.events, this)
+
     if (this.options.type) css.add(this.element, 'type-' + this.options.type)
     if (this.options.type === 'rail') this.show()
     if (this.options.items) this.render(this.options.items)

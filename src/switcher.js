@@ -23,7 +23,7 @@ class Switcher extends EventEmitter {
   }
 
   init (options) {
-    this.options = Object.assign({}, Switcher.defaults, options || {})
+    this.options = { ...Switcher.defaults, ...options }
   }
 
   build () {

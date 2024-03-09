@@ -7,29 +7,16 @@ import controller from './mixin/controller'
 // import component
 import Layout from './layout'
 
-const defaults = {
-  prefix: 'material',
-  class: 'form',
-  tag: 'div',
-  controls: ['textfield', 'checkbox', 'slider', 'switch']
-}
-
-/**
- * Form class
- *
- * @class
- * @return {Class} This class instance
- */
 class Form {
-  static uid = "material-form";
+  static defaults = {
+    prefix: 'material',
+    class: 'form',
+    tag: 'div',
+    controls: ['textfield', 'checkbox', 'slider', 'switch']
+  }
 
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
+    this.options = Object.assign({}, Form.defaults, options || {})
 
     this.init()
     this.build()

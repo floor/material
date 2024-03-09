@@ -36,8 +36,9 @@ class Search extends EventEmitter {
   }
 
   setup () {
-    this.input = this.ui.input
     events.attach(this.options.events, this)
+
+    this.input = this.ui.input
   }
 
   set (value) {

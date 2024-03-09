@@ -17,16 +17,22 @@
  * // flatComplex is now { 'a': [{ b: 1 }, { c: 2 }], 'd': [Date Object] }
  */
 
-const dot = (obj, base = '') => {
-  return Object.entries(obj).reduce((acc, [key, value]) => {
-    const newKey = base ? `${base}.${key}` : key
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      Object.assign(acc, dot(value, newKey))
-    } else {
-      acc[newKey] = value
+function dot (obj) {
+  const res = {}
+  function recurse (obj, current) {
+    for (const key in obj) {
+      const value = obj[key]
+      const newKey = (current ? current + '.' + key : key)
+      if (value && typeof value === 'object') {
+        recurse(value, newKey)
+      } else {
+        res[newKey] = value
+      }
     }
-    return acc
-  }, {})
+  }
+
+  recurse(obj)
+  return res
 }
 
 export default dot

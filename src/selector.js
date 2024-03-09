@@ -1,53 +1,32 @@
 import emitter from './module/emitter'
 import events from './module/events'
 
-const defaults = {
-  class: 'selector',
-  tag: 'div',
-  styles: ['style', 'color'],
-  modules: ['border', 'label', 'resizer'],
-  resizer: {
-    keepRatio: true,
-    minWidth: 10,
-    minHeight: 10
-  },
-  events: [
-    ['resizer.pointerdown', 'onPointerDown']
-  ]
-
-}
-
 class Selector {
-  static uid = "material-selector";
-
-  static isComponent () {
-    return true
+  static defaults = {
+    class: 'selector',
+    tag: 'div',
+    styles: ['style', 'color'],
+    modules: ['border', 'label', 'resizer'],
+    resizer: {
+      keepRatio: true,
+      minWidth: 10,
+      minHeight: 10
+    },
+    events: [
+      ['resizer.pointerdown', 'onPointerDown']
+    ]
   }
 
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
   constructor (options) {
     // console.log('constructor')
-    this.options = Object.assign({}, defaults, options || {})
-    Object.assign(this, emitter, attach)
-    // console.log('options', options)
-
-    this.init()
-
-    return this
-  }
-
-  init () {
+    this.init(options)
     this.build()
     this.setup()
-    events.attach(this.options.events, this)
+  }
 
-    if (this.options.container) {
-      this.options.container.appendChild(this.element)
-    }
+  init (options) {
+    this.options = Object.assign({}, Selector.defaults, options || {})
+    Object.assign(this, emitter, attach)
   }
 
   /**
@@ -81,12 +60,15 @@ class Selector {
       this.element.appendChild(this.resizer)
     }
 
-    return this
+    if (this.options.container) {
+      this.options.container.appendChild(this.element)
+    }
   }
 
   setup () {
-    if (!this.options.src) return
+    events.attach(this.options.events, this)
 
+    if (!this.options.src) return
     this.setTarget(this.options.element)
   }
 

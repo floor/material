@@ -3,22 +3,18 @@ import * as css from './module/css'
 import events from './module/events'
 import insert from './mixin/insert'
 
-const defaults = {
-  prefix: 'material',
-  class: 'tree',
-  functions: ['render', 'select'],
-  target: '.item-tree',
-  events: [
-    ['root.click', 'onSelect']
-  ]
-}
-
 class Tree {
-  static uid = "material-tree";
+  static defaults = {
+    prefix: 'material',
+    class: 'tree',
+    functions: ['render', 'select'],
+    target: '.item-tree',
+    events: [
+      ['root.click', 'onSelect']
+    ]
+  }
 
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
-
     this.init()
     this.build()
     events.attach(this.options.events, this)
@@ -27,7 +23,7 @@ class Tree {
   }
 
   init () {
-    // init this
+    this.options = { ...Tree.defaults, ...options }
 
     this.name = this.options.name
     this.filters = []

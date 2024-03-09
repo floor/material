@@ -5,12 +5,9 @@ import events from './module/events'
 import * as css from './module/css'
 
 import icon from './skin/material/icon/checkbox.svg'
-
 import Element from './element'
 
 class Checkbox {
-  static uid = "material-checkbox";
-
   static defaults = {
     class: 'checkbox',
     layout: [
@@ -36,10 +33,8 @@ class Checkbox {
   }
 
   init (options) {
-    this.options = Object.assign({}, defaults, options || {})
+    this.options = { ...Checkbox.defaults, ...options }
     Object.assign(this, build, attach)
-
-    return this
   }
 
   setup () {

@@ -1,8 +1,6 @@
 import build from './module/build'
 
 class AppBar {
-  static uid = "material-appbar";
-
   static defaults = {
     class: 'appbar'
   }
@@ -13,7 +11,7 @@ class AppBar {
   }
 
   init (options) {
-    this.options = Object.assign({}, AppBar.defaults, options || {})
+    this.options = { ...AppBar.defaults, ...options }
     Object.assign(this, build)
   }
 }

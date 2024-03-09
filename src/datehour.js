@@ -1,8 +1,6 @@
 import build from './module/build'
 
 class DateHour {
-  static uid = "material-datehour";
-
   static defaults = {
     class: 'date',
     tag: 'span'
@@ -14,7 +12,7 @@ class DateHour {
   }
 
   init (options) {
-    this.options = Object.assign({}, DateHour.defaults, options || {})
+    this.options = { ...DateHour.defaults, ...options }
     Object.assign(this, build)
   }
 

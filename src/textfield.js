@@ -4,8 +4,6 @@ import dataset from './module/dataset'
 import attributes from './module/attributes'
 
 class Textfield {
-  static uid = "material-textfield";
-
   static isComponent () {
     return true
   }
@@ -28,7 +26,7 @@ class Textfield {
   }
 
   init (options) {
-    this.options = Object.assign({}, Textfield.defaults, options || {})
+    this.options = { ...Textfield.defaults, ...options }
     Object.assign(this, emitter, dataset)
     // console.log('options', options)
   }

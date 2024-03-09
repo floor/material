@@ -1,26 +1,13 @@
 import touch from './module/touch'
 
-/**
- * Class Tootip
- * @class
- * @since 0.3.16
- * @example
- * var div = new Tootip({
- *   tag: 'div',
- *   class: 'mydiv',
- * })
- */
-
-const defaults = {
-  targets: '[data-tooltip]',
-  offset: {
-    top: 60
-  },
-  disabled: false
-}
-
 class Tooltip {
-  static uid = "material-tooltip";
+  static defaults = {
+    targets: '[data-tooltip]',
+    offset: {
+      top: 60
+    },
+    disabled: false
+  }
 
   /**
    * The init method of the Button class
@@ -30,13 +17,16 @@ class Tooltip {
    */
   constructor (options) {
     // console.log('constructor')
-    this.options = Object.assign({}, defaults, options || {})
-    // console.log('element options', options)
 
+    this.init(options)
     this.build()
-    this.attachEvent()
+    this.bindEvents()
 
     return this
+  }
+
+  init (options) {
+    this.options = { ...Tooltip.defaults, ...options }
   }
 
   build () {
@@ -57,7 +47,7 @@ class Tooltip {
     container.appendChild(this.element)
   }
 
-  attachEvent () {
+  bindEvents () {
     // console.log('attach', this.options.targets)
     const targets = document.querySelectorAll(this.options.targets)
 

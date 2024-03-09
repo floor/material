@@ -24,7 +24,7 @@ class Select extends EventEmitter {
   }
 
   init (options) {
-    this.options = Object.assign({}, Select.defaults, options || {})
+    this.options = { ...Select.defaults, ...options }
     Object.assign(this, build, dataset)
   }
 

@@ -3,8 +3,6 @@ import display from './mixin/display'
 import position from './mixin/position'
 
 class Card {
-  static uid = "material-card";
-
   static defaults = {
     class: 'card',
     position: {
@@ -23,7 +21,7 @@ class Card {
   }
 
   init (options) {
-    this.options = Object.assign({}, Card.defaults, options || {})
+    this.options = { ...Card.defaults, ...options }
     Object.assign(this, build, display, position)
   }
 }

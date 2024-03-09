@@ -15,7 +15,7 @@ class View extends EventEmitter {
   }
 
   init (options) {
-    this.options = Object.assign({}, View.defaults, options || {})
+    this.options = { ...View.defaults, ...options }
     Object.assign(this, build)
   }
 }

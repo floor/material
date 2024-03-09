@@ -41,7 +41,7 @@ class Menu extends EventEmitter {
   }
 
   init (options) {
-    this.options = Object.assign({}, Menu.defaults, options || {})
+    this.options = { ...Menu.defaults, ...options }
     Object.assign(this, build, display, position)
 
     this.menus = []

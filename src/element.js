@@ -1,33 +1,29 @@
 class Element {
-  static uid = "material-element";
-
   static isElement () {
     return true
   }
 
-  constructor (options) {
-    this.options = Object.assign({}, options || {})
-    // console.log('element options', options)
-    const element = document.createElement(this.options.tag || 'div')
+  constructor (options = {}) {
+    // Use the spread operator for default options
+    this.options = { tag: 'div', container: null, html: '', text: '', id: '', ...options }
 
-    const container = this.options.container
-    delete this.options.container
-    delete this.options.tag
+    const element = document.createElement(this.options.tag)
 
-    if (options.html) element.innerHTML = this.options.html
-    delete this.options.html
+    // Apply HTML, text, and id if provided
+    if (this.options.html) element.innerHTML = this.options.html
+    if (this.options.text) element.textContent = this.options.text
+    if (this.options.id) element.setAttribute('id', this.options.id)
 
-    if (options.text) element.textContent = this.options.text
-    delete this.options.text
-
-    if (options.id) element.setAttribute('id', options.id)
-
-    for (const [property, value] of Object.entries(this.options)) {
-      element.setAttribute(property, value)
+    // Apply additional attributes
+    for (const key in this.options) {
+      if (!['tag', 'container', 'html', 'text', 'id'].includes(key)) {
+        element.setAttribute(key, this.options[key])
+      }
     }
 
-    if (container) {
-      container.appendChild(element)
+    // Append to container if available
+    if (this.options.container) {
+      this.options.container.appendChild(element)
     }
 
     return element

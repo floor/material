@@ -13,42 +13,37 @@ import mode from './map/mode'
 import select from './map/select'
 import focus from './map/focus'
 
-const events = [
-  ['root.mousedown', 'mouseDown'],
-  ['root.mouseup', 'mouseUp'],
-  ['root.mousemove', 'mouseMove'],
-  ['root.mouseleave', 'mouseLeave'],
-  ['root.mouseout', 'mouseOut'],
-  ['root.click', 'mouseClick'],
-  ['root.touchStart', 'mouseClick']
-]
-
-const defaults = {
-  class: 'worldmap',
-  tag: 'main',
-  zoom: 0.3,
-  isocodes: [],
-  mode: 'unique',
-  path: '/dist/map/',
-  pinchZoom: {
-    maxZoom: 128,
-    minZoom: 3,
-    setOffsetsOnce: true,
-    verticalPadding: 64,
-    horizontalPadding: 64,
-    tapZoomFactor: 0
-  }
-}
+// Depracted
 
 class Map {
-  static uid = "material-map";
+  static defaults = {
+    class: 'worldmap',
+    tag: 'main',
+    zoom: 0.3,
+    isocodes: [],
+    mode: 'unique',
+    path: '/dist/map/',
+    pinchZoom: {
+      maxZoom: 128,
+      minZoom: 3,
+      setOffsetsOnce: true,
+      verticalPadding: 64,
+      horizontalPadding: 64,
+      tapZoomFactor: 0
+    },
+    events: [
+      ['root.mousedown', 'mouseDown'],
+      ['root.mouseup', 'mouseUp'],
+      ['root.mousemove', 'mouseMove'],
+      ['root.mouseleave', 'mouseLeave'],
+      ['root.mouseout', 'mouseOut'],
+      ['root.click', 'mouseClick'],
+      ['root.touchStart', 'mouseClick']
+    ]
+  }
 
-  /**
-   * Constructor component options
-   * @return {Object} Class instance
-   */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
+    this.options = { ...Map.defaults, ...options }
 
     Object.assign(
       this, emitter, init, build, viewport, mouse,

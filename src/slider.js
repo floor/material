@@ -12,75 +12,53 @@ import emitter from './module/emitter'
 
 import icon from './skin/material/icon/pin.svg'
 
-const defaults = {
-  prefix: 'material',
-  class: 'slider',
-  type: 'control',
-  label: null,
-  checked: false,
-  error: false,
-  value: false,
-  range: [0, 100],
-  step: 5,
-  modules: [control, emitter],
-  mixins: [],
-  build: ['$root.material-slider', {},
-    ['label$label.slider-label', {}],
-    ['input$input'],
-    ['$control.slider-control', {},
-      ['$track.slider-track', {},
-        ['canvas$canvas.slider-canvas', {}],
-        ['$trackvalue.slider-track-value', {}],
-        ['$knob.slider-knob', {}],
-        ['$marker.slider-marker', {},
-          ['$value.slider-value', {}]
+class Slider {
+  static defaults = {
+    class: 'slider',
+    type: 'control',
+    label: null,
+    checked: false,
+    error: false,
+    value: false,
+    range: [0, 100],
+    step: 5,
+    modules: [control, emitter],
+    mixins: [],
+    build: ['$root.material-slider', {},
+      ['label$label.slider-label', {}],
+      ['input$input'],
+      ['$control.slider-control', {},
+        ['$track.slider-track', {},
+          ['canvas$canvas.slider-canvas', {}],
+          ['$trackvalue.slider-track-value', {}],
+          ['$knob.slider-knob', {}],
+          ['$marker.slider-marker', {},
+            ['$value.slider-value', {}]
+          ]
         ]
       ]
+    ],
+    events: [
+      ['element.input.focus', 'focus'],
+      ['element.input.blur', 'blur']
     ]
-  ],
-  events: [
-    ['element.input.focus', 'focus'],
-    ['element.input.blur', 'blur']
-  ]
-}
+  }
 
-/**
- * Switch class
- * @class
- * @extends Control
- */
-class Slider {
-  static uid = "material-slider";
-
-  /**
-   * init
-   * @return {Object} The class options
-   */
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
-
     this.init(this.options)
     this.build(this.options)
-    events.attach(this.options.events, this)
-
-    return this
+    this.setup()
   }
 
-  /**
-   * Constructor
-   * @param  {Object} options The class options
-   * @return {Object} This class instance
-   */
   init (options) {
+    this.options = Object.assign({}, Slider.defaults, options || {})
     init(this)
-
-    return this
   }
 
-  /**
-   * build method
-   * @return {Object} The class instance
-   */
+  setup () {
+    events.attach(this.options.events, this)
+  }
+
   build () {
     this.element = build(this.options.build)
     this.element = this.element.root

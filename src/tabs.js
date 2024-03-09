@@ -8,25 +8,18 @@ import List from './list'
 import Button from './button'
 import Divider from './divider'
 
-const defaults = {
-  prefix: 'material',
-  class: 'tabs',
-  tag: 'div',
-  indicator: {
-    prefix: 'material',
-    class: 'indicator',
-    tag: 'div'
-  }
-}
-
 class Tabs {
-  static uid = "material-tabs";
+  static defaults = {
+    prefix: 'material',
+    class: 'tabs',
+    tag: 'div',
+    indicator: {
+      prefix: 'material',
+      class: 'indicator',
+      tag: 'div'
+    }
+  }
 
-  /**
-   * Constructor
-   * @param  {Object} options - Component options
-   * @return {Object} Class instance
-   */
   constructor (options) {
     this.init(options)
     this.build()
@@ -35,7 +28,7 @@ class Tabs {
   }
 
   init (options) {
-    this.options = Object.assign({}, defaults, options || {})
+    this.options = { ...Tabs.defaults, ...options }
     Object.assign(this, insert, emitter)
   }
 
@@ -58,7 +51,7 @@ class Tabs {
         render: (info) => {
           let item
           if (info.type === 'divider') {
-            item = new Divider()
+            item = new Element({ class: 'divider' })
           } else {
             item = new Button({
               name: info.name,

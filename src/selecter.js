@@ -39,15 +39,16 @@ class Selecter extends EventEmitter {
     this.init(options)
     this.build()
     this.setup()
-    events.attach(this.options.events, this)
   }
 
   init (options) {
-    this.options = Object.assign({}, Selecter.defaults, options || {})
+    this.options = { ...Selecter.defaults, ...options }
     Object.assign(this, dataset)
   }
 
   setup () {
+    events.attach(this.options.events, this)
+
     if (this.options.data) {
       dataset(this.element, this.options.data)
     }

@@ -9,8 +9,6 @@ import Button from './button'
 import Layout from './layout'
 
 class Dialog {
-  static uid = "material-dialog";
-
   static defaults = {
     class: 'dialog',
     close: true,
@@ -46,7 +44,7 @@ class Dialog {
   }
 
   init (options) {
-    this.options = Object.assign({}, Dialog.defaults, options || {})
+    this.options = { ...Dialog.defaults, ...options }
     Object.assign(this, emitter, display)
   }
 

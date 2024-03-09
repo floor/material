@@ -1,8 +1,6 @@
 import build from './module/build'
 
 class Link {
-  static uid = "material-link";
-
   static defaults = {
     class: 'link',
     tag: 'a'

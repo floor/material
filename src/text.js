@@ -1,8 +1,6 @@
 import build from './module/build'
 
 class Text {
-  static uid = "material-text";
-
   static defaults = {
     class: 'text',
     tag: 'span'
@@ -15,7 +13,7 @@ class Text {
   }
 
   init (options) {
-    this.options = Object.assign({}, Text.defaults, options || {})
+    this.options = { ...Text.defaults, ...options }
     Object.assign(this, build)
   }
 

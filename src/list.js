@@ -1,20 +1,19 @@
 import * as css from './module/css'
 
-const defaults = {
-  className: 'text',
-  tag: 'span',
-  seprator: ' | '
-}
-
 class List {
-  static uid = "material-list";
+  static defaults = {
+    className: 'text',
+    tag: 'span',
+    seprator: ' | '
+  }
 
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
-
+    this.init(options)
     this.build()
+  }
 
-    return this
+  init (otions) {
+    this.options = { ...List.defaults, ...options }
   }
 
   build () {
@@ -37,9 +36,9 @@ class List {
   }
 
   set (list) {
-    var text = ''
+    let text = ''
 
-    for (var i = 0; i < list.length; i++) {
+    for (let i = 0; i < list.length; i++) {
       if (i < list.length - 1) {
         text = text + list[i] + this.options.seprator
       } else {
@@ -50,7 +49,7 @@ class List {
     // console.log('set', text)
     if (text === undefined) return
 
-    var label = this.options.label || ''
+    const label = this.options.label || ''
 
     this.element.innerHTML = label + text
 

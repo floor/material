@@ -6,22 +6,22 @@ import events from './mixin/events'
 import create from './element/create'
 import emitter from './module/emitter'
 
-const defaults = {
-  prefix: 'material',
-  class: 'drawer',
-  modifier: 'width',
-  state: 'closed',
-  position: 'left',
-  tag: 'div',
-  width: '340',
-  modules: [emitter, events]
-}
+// Depracted, see Navigation
 
 class Drawer {
-  static uid = "material-drawer";
+  static defaults = {
+    prefix: 'material',
+    class: 'drawer',
+    modifier: 'width',
+    state: 'closed',
+    position: 'left',
+    tag: 'div',
+    width: '340',
+    modules: [emitter, events]
+  }
 
   constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
+    this.options = { ...Drawer.defaults, ...options }
 
     init(this)
 

@@ -1,12 +1,6 @@
 import build from './module/build'
 
 class Loading {
-  static uid = "material-loading";
-
-  static isComponent () {
-    return true
-  }
-
   static defaults = {
     class: 'loading',
     tag: 'div',
@@ -24,7 +18,7 @@ class Loading {
   }
 
   init (options) {
-    this.options = Object.assign({}, Loading.defaults, options || {})
+    this.options = { ...Loading.defaults, ...options }
     Object.assign(this, build)
   }
 

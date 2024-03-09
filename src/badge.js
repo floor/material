@@ -4,8 +4,6 @@ import display from './mixin/display'
 const isStringNumber = (str) => !isNaN(parseFloat(str)) && isFinite(str)
 
 class Badge {
-  static uid = "material-badge";
-
   static defaults = {
     class: 'badge'
   }
@@ -16,7 +14,7 @@ class Badge {
   }
 
   init (options) {
-    this.options = Object.assign({}, Badge.defaults, options || {})
+    this.options = { ...Badge.defaults, ...options }
     Object.assign(this, build, display)
   }
 
@@ -29,7 +27,6 @@ class Badge {
   }
 
   inc (value) {
-    // console.log('inc', value)
     let actual = this.element.innerHTML
 
     if (actual === '') actual = '0'

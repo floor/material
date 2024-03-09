@@ -5,8 +5,6 @@ import dataset from './module/dataset'
 import attributes from './module/attributes'
 
 class File {
-  static uid = "material-file";
-
   static defaults = {
     class: 'file',
     attributes: ['name', 'accept', 'required', 'disabled', 'multiple'],
@@ -20,7 +18,7 @@ class File {
     this.init(options)
     this.build()
     this.buildInput()
-    events.attach(this.options.events, this)
+    this.setup()
   }
 
   init (options) {
@@ -44,6 +42,10 @@ class File {
     if (this.options.focus) {
       this.input.focus()
     }
+  }
+
+  setup () {
+    events.attach(this.options.events, this)
   }
 
   change (e) {

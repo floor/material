@@ -1,27 +1,13 @@
 import insert from './mixin/insert'
 import * as css from './module/css'
 
-var defaults = {
-  prefix: 'material',
-  class: 'icon',
-  tag: 'div'
-}
-
-/**
- * The item class is used for example as item list
- *
- * @class
- * @extends {Component}
- * @return {Object} The class instance
- * @example new Item(object);
- */
 class Icon {
-  static uid = "material-icon";
+  static defaults = {
+    prefix: 'material',
+    class: 'icon',
+    tag: 'div'
+ }
 
-  /**
-   * init
-   * @return {Object} The class options
-   */
   constructor (options) {
     this.init(options)
     this.build()
@@ -29,20 +15,11 @@ class Icon {
     return this
   }
 
-  /**
-   * [init description]
-   * @param  {?} options [description]
-   * @return {?}         [description]
-   */
   init (options) {
-    this.options = Object.assign({}, defaults, options || {})
+    this.options = Object.assign({}, Icon.defaults, options || {})
     Object.assign(this, insert)
   }
 
-  /**
-   * Build function for item
-   * @return {Object} This class instance
-   */
   build (options) {
     options = options || this.options
 
@@ -66,11 +43,6 @@ class Icon {
     }
   }
 
-  /**
-   * Get or set text value of the element
-   * @param {string} value The text to set
-   * @returns {*}
-   */
   set (value) {
     if (value) {
       if (this.element.innerText) {

@@ -1,18 +1,15 @@
 class Loader {
-  static uid = "material-loader";
-
   static defaults = {
     class: 'loader'
   }
 
   constructor (options) {
-    this.options = Object.assign({}, Loader.defaults, options || {})
-
-    // Object.assign(this, mediator, build)
-
+    this.init(options)
     this.build()
+  }
 
-    return this
+  init (options) {
+    this.options = { ...Loader.defaults, ...options }
   }
 
   build () {

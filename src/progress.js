@@ -3,23 +3,17 @@ import create from './element/create'
 import classify from './module/classify'
 import insert from './element/insert'
 
-const defaults = {
-  prefix: 'material',
-  class: 'progress',
-  tag: 'div',
-  progress: '0%',
-  circular: `<svg class="progress" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+class Spinner {
+  static defaults = {
+    prefix: 'material',
+    class: 'progress',
+    tag: 'div',
+    progress: '0%',
+    circular: `<svg class="progress" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
       <circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
     </svg>`
-}
+  }
 
-class Spinner {
-  static uid = "material-spinner";
-
-  /**
-   * init
-   * @return {Object} The class options
-   */
   constructor (options) {
     this.init(options)
     this.build()
@@ -27,14 +21,9 @@ class Spinner {
     return this
   }
 
-  /**
-   * [init description]
-   * @param  {?} options [description]
-   * @return {?}         [description]
-   */
   init (options) {
     // merge options
-    this.options = Object.assign({}, defaults, options || {})
+    this.options = { ...Spinner.defaults, ...options }
 
     // define class
 
@@ -42,10 +31,6 @@ class Spinner {
     Object.assign(this, insert)
   }
 
-  /**
-   * Build function for item
-   * @return {Object} This class instance
-   */
   build (options) {
     this.element = create(this.options.tag)
     classify(this.element, this.options)

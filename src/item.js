@@ -1,8 +1,8 @@
 import build from './module/build'
 
-class Item {
-  static uid = "material-item";
+// Depracated
 
+class Item {
   static defaults = {
     prefix: 'material',
     class: 'item',

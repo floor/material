@@ -8,56 +8,32 @@ import Button from './button'
 import iconBack from './skin/material/icon/back.svg'
 import iconForward from './skin/material/icon/forward.svg'
 
-const defaults = {
-  prefix: 'material',
-  class: 'calendar',
-  target: '.week-day',
-  functions: ['newEvent'],
-  rangedays: 7,
-  months: ['January', 'February', 'Mars', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-  days: ['Sunday', 'Monday', 'Tuesday', 'wednesday', 'Thursday', 'Friday', 'Saturday'],
-  mode: 'view',
-  range: [8, 18],
-  display: 'three',
-  weekend: [0, 1],
-  events: [
-    ['root.dblclick', 'add']
-  ]
-}
-
-/**
- * List view class
- * @class
- * @param {Object} options Default options for view
- * @extends {View}
- * @since 0.0.4
- * @author Jerome Vial
- *
- * @type {prime}
- */
 class Calendar {
-  static uid = "material-calendar";
-
-  /**
-   * init
-   * @return {Object} The class options
-   */
-  constructor (options) {
-    this.options = Object.assign({}, defaults, options || {})
-
-    this.init()
-    this.build()
-    events.attach(this.options.events, this)
-
-    return this
+  static defaults = {
+    prefix: 'material',
+    class: 'calendar',
+    target: '.week-day',
+    functions: ['newEvent'],
+    rangedays: 7,
+    months: ['January', 'February', 'Mars', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    days: ['Sunday', 'Monday', 'Tuesday', 'wednesday', 'Thursday', 'Friday', 'Saturday'],
+    mode: 'view',
+    range: [8, 18],
+    display: 'three',
+    weekend: [0, 1],
+    events: [
+      ['root.dblclick', 'add']
+    ]
   }
 
-  /**
-   * [_initView description]
-   * @return  Class instance
-   */
+  constructor (options) {
+    this.init(options)
+    this.build()
+    this.setup()
+  }
+
   init (options) {
-    // assign modules
+    this.options = { ...Calendar.defaults, ...options }
     Object.assign(this, emitter, attach)
 
     // init function
@@ -74,11 +50,10 @@ class Calendar {
     return this
   }
 
-  /**
-   * getMonday
-   * @param  {Date} d
-   * @return {Date}
-   */
+  setup () {
+    events.attach(this.options.events, this)
+  }
+
   getFirstDayOfWeek (d) {
     d = new Date(d)
     const day = d.getDay()
