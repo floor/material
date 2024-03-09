@@ -6,7 +6,7 @@ import offset from './element/offset'
 
 import List from './list'
 import Button from './button'
-import Divider from './divider'
+import Element from './element'
 
 class Tabs {
   static defaults = {
