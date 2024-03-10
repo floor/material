@@ -1,67 +1,72 @@
 import * as css from './css'
 import dataset from './dataset'
+import { create } from '../module/layout'
 
-import Layout from '../layout'
+/**
+ * Builds a UI component instance.
+ * @param {object} instance - The component instance to build.
+ */
+const build = (instance) => {
+  const { tag = 'div', class: customClass, data, base, container, schema, icon, label, show } = instance.options
+  const { defaults = {} } = instance.constructor
 
-export default {
-  build () {
-    this.element = document.createElement(this.options.tag || 'div')
+  instance.element = document.createElement(tag)
 
-    const defaults = this.constructor.defaults || {}
+  if (defaults.base) css.add(instance.element, defaults.base)
+  if (defaults.class) css.add(instance.element, defaults.class)
 
-    if (defaults.base) css.add(this.element, defaults.base)
-    if (defaults.class) css.add(this.element, defaults.class)
-
-    if (this.options.class !== defaults.class) {
-      css.add(this.element, this.options.class)
-    }
-
-    if (this.options.data) {
-      dataset(this.element, this.options.data)
-    }
-
-    if (this.options.base === 'view' || this.options.base === 'app') {
-      this.container = this.options.container || document.body
-    } else {
-      this.container = this.options.container
-    }
-
-    if (this.container) this.appendTo(this.container)
-
-    if (this.options.layout) {
-      this.layout = new Layout(this.options.layout, this.element)
-      this.ui = this.layout.component
-    }
-
-    this.ui = this.ui || {}
-
-    if (this.options.icon) this.buildIcon()
-    if (this.options.label) this.buildLabel()
-
-    if (this.options.show === true && this.show) this.show()
-  },
-
-  buildLabel () {
-    if (!this.options.label) return
-
-    this.ui.label = document.createElement('label')
-    this.ui.label.classList.add('label')
-    this.ui.label.innerHTML = this.options.label
-
-    this.element.appendChild(this.ui.label)
-  },
-
-  buildIcon () {
-    if (!this.options.icon) return
-
-    this.ui.icon = document.createElement('i')
-    this.ui.icon.classList.add('icon')
-    this.ui.icon.innerHTML = this.options.icon
-
-    this.element.appendChild(this.ui.icon)
-  },
-
-  appendTo (container) {
-    container.appendChild(this.element)
+  if (customClass !== defaults.class) {
+    css.add(instance.element, customClass)
   }
+
+  if (data) {
+    dataset(instance.element, data)
+  }
+
+  setupContainer(instance, base, container)
+
+  if (schema) {
+    setupLayout(instance, schema)
+  }
+
+  instance.ui = instance.ui || {}
+
+  if (icon) buildIcon(instance)
+  if (label) buildLabel(instance)
+
+  if (show === true && instance.show) instance.show()
 }
+
+const setupContainer = (instance, base, container) => {
+  instance.container = (base === 'view' || base === 'app') ? container || document.body : container
+  if (instance.container) instance.container.appendChild(instance.element)
+}
+
+const setupLayout = (instance, schema) => {
+  instance.layout = create(schema, instance.element)
+  instance.ui = instance.layout.component
+}
+
+function buildLabel ({ ui, options, element }) {
+  const { label } = options
+  if (!label) return
+
+  ui.label = document.createElement('label')
+  ui.label.classList.add('label')
+  ui.label.innerHTML = label
+
+  element.appendChild(ui.label)
+}
+
+function buildIcon ({ ui, options, element }) {
+  const { icon } = options
+  if (!icon) return
+
+  ui.icon = document.createElement('i')
+  ui.icon.classList.add('icon')
+  ui.icon.innerHTML = icon
+
+  element.appendChild(ui.icon)
+}
+
+export default build
