@@ -1,7 +1,5 @@
 import { is as isObject } from '../module/object'
 
-const components = []
-
 /**
  * Recursively creates components based on a provided schema.
  *
@@ -14,6 +12,7 @@ const components = []
 function create (schema, container, structure = {}, level = 0) {
   level++
   let component
+  const components = []
   const object = {}
   const fragment = document.createDocumentFragment()
 
