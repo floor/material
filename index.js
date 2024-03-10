@@ -1,3 +1,4 @@
+// components
 import AppBar from './src/appbar'
 import Badge from './src/badge'
 import Button from './src/button'
@@ -31,22 +32,25 @@ import Toolbar from './src/toolbar'
 import Tooltip from './src/tooltip'
 import View from './src/view'
 import attributes from './src/module/attributes'
+// modules
 import build from './src/module/build'
+import clone from './src/module/clone'
 import dataset from './src/module/dataset'
 import device from './src/module/device'
 import display from './src/mixin/display'
-import request from './src/module/request'
-import events from './src/module/events'
 import emitter from './src/module/emitter'
+import events from './src/module/events'
 import jsonToHTML from './src/module/jsontohtml'
 import mediator from './src/module/mediator'
 import observer from './src/module/observer'
+import request from './src/module/request'
 import smoothscroll from './src/module/smoothscroll'
 
 export {
   AppBar, Button, Card, Checkbox, Component, DateHour, Dialog, Drawer, Element,
   File, Form, Image, Layout, List, Loading, Menu, Navigation, Progress, Select,
   Selecter, Slider, Snackbar, Switch, Switcher, Tabs, TabView, Text, Textfield, Toolbar, Tooltip,
-  View, attributes, build, dataset, device, display, events, emitter, jsonToHTML, mediator,
+  View,
+  attributes, build, clone, dataset, device, display, events, emitter, jsonToHTML, mediator,
   observer, request, smoothscroll
 }

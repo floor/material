@@ -9,6 +9,7 @@ class Layout {
    *
    * @param {Array} schema - An array defining the structure and components of the layout.
    * @param {HTMLElement} container - The container in which the layout components are placed.
+   * @param {boolean} [enableMemoization=false] - Flag to enable memoization (not implemented in current version).
    */
   constructor (schema, container) {
     this.components = []
@@ -86,20 +87,20 @@ class Layout {
     return structure
   }
 
-  // /**
-  //  * Retrieves a specific component or the entire component structure.
-  //  *
-  //  * This method allows accessing a component from the created layout by its name.
-  //  * If a name is provided, it returns the component associated with that name.
-  //  * If no name is provided, it returns the entire component structure.
-  //  *
-  //  * @param {string} name - The name of the component to retrieve.
-  //  * @returns {Object} The requested component or the entire component structure.
-  //  */
-  // get (name) {
-  //   if (name) return this.component[name]
-  //   else return this.component
-  // }
+  /**
+   * Retrieves a specific component or the entire component structure.
+   *
+   * This method allows accessing a component from the created layout by its name.
+   * If a name is provided, it returns the component associated with that name.
+   * If no name is provided, it returns the entire component structure.
+   *
+   * @param {string} name - The name of the component to retrieve.
+   * @returns {Object} The requested component or the entire component structure.
+   */
+  get (name) {
+    if (name) return this.component[name]
+    else return this.component
+  }
 }
 
 export default Layout

@@ -1,3 +1,5 @@
+import clone from '../module/clone'
+
 export default {
   select (item, silent) {
     // console.log('select', item.dataset.id)
@@ -42,11 +44,11 @@ export default {
   },
 
   getInfoById (id) {
-    return JSON.parse(JSON.stringify(this.dataStore[id]))
+    return clone(this.dataStore[id])
   },
 
   getSelectedInfo () {
-    return JSON.parse(JSON.stringify(this.dataStore[this.id]))
+    return clone(this.dataStore[this.id])
   },
 
   getItemById (id, silent) {

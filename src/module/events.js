@@ -33,6 +33,8 @@ const events = {
       } else if (f && bound) {
         handler = f.bind(bound)
       } else {
+        // throw new Error('Cannot bind function for eventDef')
+        // console.trace('Cannot bind function for eventDef')
         return // Cannot bind function for eventDef
       }
 
