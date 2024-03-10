@@ -38,9 +38,15 @@ const events = {
         return // Cannot bind function for eventDef
       }
 
+      let isPassive = false
+      if (e.name === 'touchstart' || e.name === 'touchmove') {
+        isPassive = true
+        option = { ...option, passive: true }
+      }
+
       if (!this.eventHandlers[uid][eventDef]) {
         if (handler && e && e.element?.addEventListener) {
-          e.element.addEventListener(e.name, handler, option)
+          e.element.addEventListener(e.name, handler, isPassive ? { passive: true } : option)
           this.eventHandlers[uid][eventDef] = handler
         } else if (e && e.element?.on && handler) {
           e.element.on(e.name, handler)
