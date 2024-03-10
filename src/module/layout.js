@@ -9,10 +9,10 @@ import { is as isObject } from '../module/object'
  * @param {number} [level=0] - The current level of recursion.
  * @returns {Object} The structure containing all created components.
  */
-function create (schema, container, structure = {}, level = 0) {
+function create (schema, container, structure = {}, level = 0, components = []) {
+  // console.log('layout create')
   level++
   let component
-  const components = []
   const object = {}
   const fragment = document.createDocumentFragment()
 
@@ -52,7 +52,7 @@ function create (schema, container, structure = {}, level = 0) {
       }
     } else if (Array.isArray(schema[i])) {
       if (!component) component = container
-      create(schema[i], component, structure, level)
+      create(schema[i], component, structure, level, components)
     }
   }
 

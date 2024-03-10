@@ -1,6 +1,6 @@
 import scrollbar from '../module/scrollbar'
 import dataset from '../module/dataset'
-import Layout from '../layout'
+import { create } from './module/layout'
 
 export default {
   build () {
@@ -19,7 +19,7 @@ export default {
     this.container.appendChild(this.element)
 
     if (this.options.layout) {
-      this.layout = new Layout(this.options.layout, this.element)
+      this.layout = create(this.options.layout, this.element)
       this.ui = this.layout.component
     }
   },

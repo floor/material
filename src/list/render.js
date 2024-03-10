@@ -5,7 +5,7 @@ import dot from '../module/dot'
 
 export default {
 
-  render (list, option) {
+  render (list) {
     // console.log('render', list)
     this.virtual.set(list)
 
@@ -38,8 +38,6 @@ export default {
       class: 'item'
     })
 
-    // console.log('---', this.id)
-
     if (this.id && this.id === info[this.dataId]) {
       element.classList.add('selected')
     }
@@ -53,9 +51,9 @@ export default {
       const item = info[this.options.itemSwitch]
 
       if (this.options.layout.item[item]) {
-        layout = new Layout(this.options.layout.item[item], element)
+        layout = create(this.options.layout.item[item], element)
       } else {
-        layout = new Layout(this.options.layout.item.base, element)
+        layout = create(this.options.layout.item.base, element)
       }
     } else {
       const itemName = this.options.itemName || 'item'
