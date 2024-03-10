@@ -2,7 +2,7 @@ import extract from './extract'
 import last from './last'
 
 const events = {
-  eventHandlers: {}, // Utiliser un tableau pour stocker les événements et les gestionnaires
+  eventHandlers: {}, // Use an array to store events and handlers
 
   attach (eventsArray, context) {
     if (!eventsArray) return
