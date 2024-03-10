@@ -31,7 +31,6 @@ export default {
     }
 
     this.layout = create(this.options.layout.main, this.element)
-    console.log('layout', this.layout)
     this.ui = this.layout.component
 
     // prepare loading
