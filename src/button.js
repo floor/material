@@ -1,22 +1,23 @@
-import EventEmitter from './mixin/emitter'
-import build from './module/build'
-import display from './mixin/display'
-import events from './module/events'
-import dataset from './module/dataset'
-import ripple from './module/ripple'
+import {
+  Control,
+  display,
+  dataset,
+  ripple
+} from '../index'
 
 const DEFAULT_TYPE = 'button'
 const DEFAULT_CLASS = 'button'
 
-class Button extends EventEmitter {
+class Button extends Control {
   static isComponent () {
     return true
   }
 
   static defaults = {
-    class: DEFAULT_CLASS,
+    class: 'button',
     tag: 'button',
     styles: ['style', 'color'],
+    mixins: [display],
     ripple: true,
     stopPropagation: false,
     events: [
@@ -30,16 +31,9 @@ class Button extends EventEmitter {
   }
 
   constructor (options) {
-    super()
+    super(options)
 
-    this.init(options)
-    this.build()
     this.setup()
-  }
-
-  init (options) {
-    this.options = { ...Button.defaults, ...options }
-    Object.assign(this, build, display)
   }
 
   setup () {
@@ -49,8 +43,6 @@ class Button extends EventEmitter {
     if (this.options.text) {
       this.element.innerHTML = this.element.innerHTML + this.options.text
     }
-
-    events.attach(this.options.events, this)
   }
 
   setAttributes () {

@@ -1,21 +1,17 @@
-import build from './module/build'
-import display from './mixin/display'
+import { Component, build, display } from '../index'
 
 const isStringNumber = (str) => !isNaN(parseFloat(str)) && isFinite(str)
 
-class Badge {
+class Badge extends Component {
   static defaults = {
-    class: 'badge'
+    class: 'badge',
+    mixins: [build, display]
   }
 
   constructor (options) {
-    this.init(options)
-    this.build()
-  }
+    super(options)
 
-  init (options) {
-    this.options = { ...Badge.defaults, ...options }
-    Object.assign(this, build, display)
+    this.build()
   }
 
   set (text) {
