@@ -1,5 +1,5 @@
 import EventEmitter from './mixin/emitter'
-import build from './module/build'
+import build from './mixin/build'
 
 class View extends EventEmitter {
   static defaults = {

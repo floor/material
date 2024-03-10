@@ -1,10 +1,12 @@
+// base classes
+import Control from './src/class/control'
+import Component from './src/class/component'
 // components
 import AppBar from './src/appbar'
 import Badge from './src/badge'
 import Button from './src/button'
 import Card from './src/card'
 import Checkbox from './src/checkbox'
-import Component from './src/component'
 import DateHour from './src/datehour'
 import Dialog from './src/dialog'
 import Drawer from './src/drawer'
@@ -32,25 +34,33 @@ import Toolbar from './src/toolbar'
 import Tooltip from './src/tooltip'
 import View from './src/view'
 import attributes from './src/module/attributes'
+// mixins
+import EventEmitter from './src/mixin/emitter'
+import display from './src/mixin/display'
+import build from './src/mixin/build'
 // modules
-import build from './src/module/build'
 import clone from './src/module/clone'
 import dataset from './src/module/dataset'
 import device from './src/module/device'
-import display from './src/mixin/display'
 import emitter from './src/module/emitter'
 import events from './src/module/events'
 import jsonToHTML from './src/module/jsontohtml'
 import mediator from './src/module/mediator'
+import merge from './src/module/merge'
 import observer from './src/module/observer'
 import request from './src/module/request'
+import ripple from './src/module/ripple'
 import smoothscroll from './src/module/smoothscroll'
 
 export {
-  AppBar, Button, Card, Checkbox, Component, DateHour, Dialog, Drawer, Element,
+  // classes
+  Component, Control,
+  AppBar, Button, Card, Checkbox, DateHour, Dialog, Drawer, Element,
   File, Form, Image, Layout, List, Loading, Menu, Navigation, Progress, Select,
   Selecter, Slider, Snackbar, Switch, Switcher, Tabs, TabView, Text, Textfield, Toolbar, Tooltip,
   View,
-  attributes, build, clone, dataset, device, display, events, emitter, jsonToHTML, mediator,
-  observer, request, smoothscroll
+  // mixins and  modules
+  EventEmitter,
+  attributes, build, clone, dataset, device, display, events, emitter, jsonToHTML, mediator, merge,
+  observer, request, ripple, smoothscroll
 }

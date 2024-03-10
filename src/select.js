@@ -1,6 +1,6 @@
 import EventEmitter from './mixin/emitter'
 // modules
-import build from './module/build'
+import build from './mixin/build'
 import events from './module/events'
 import attributes from './module/attributes'
 import dataset from './module/dataset'

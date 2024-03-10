@@ -1,7 +1,7 @@
 import EventEmitter from './mixin/emitter'
 
 import * as css from './module/css'
-import build from './module/build'
+import build from './mixin/build'
 import events from './module/events'
 import display from './mixin/display'
 import Element from './element'

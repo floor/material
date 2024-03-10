@@ -1,6 +1,6 @@
 import EventEmitter from './mixin/emitter'
 
-import build from './module/build'
+import build from './mixin/build'
 import display from './mixin/display'
 import events from './module/events'
 

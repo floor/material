@@ -1,6 +1,6 @@
 import EventEmitter from './mixin/emitter'
 // menu related modules
-import build from './module/build'
+import build from './mixin/build'
 import events from './module/events'
 import display from './mixin/display'
 import position from './mixin/position'

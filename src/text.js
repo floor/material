@@ -1,4 +1,4 @@
-import build from './module/build'
+import build from './mixin/build'
 
 class Text {
   static defaults = {

@@ -1,4 +1,4 @@
-import build from './module/build'
+import build from './mixin/build'
 import display from './mixin/display'
 import position from './mixin/position'
 

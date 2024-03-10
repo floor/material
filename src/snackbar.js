@@ -1,7 +1,7 @@
 // base class
 import EventEmitter from './mixin/emitter'
 // related modules
-import build from './module/build'
+import build from './mixin/build'
 import events from './module/events'
 import display from './mixin/display'
 // ui element

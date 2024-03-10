@@ -1,7 +1,7 @@
 import EventEmitter from './mixin/emitter'
 import observer from './element/observer'
 import events from './module/events'
-import build from './module/build'
+import build from './mixin/build'
 import display from './view/display'
 
 class TabView extends EventEmitter {
