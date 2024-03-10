@@ -14,7 +14,6 @@ import Element from './src/element'
 import File from './src/file'
 import Form from './src/form'
 import Image from './src/image'
-import Layout from './src/layout'
 import List from './src/list'
 import Loading from './src/loading'
 import Menu from './src/menu'
@@ -45,6 +44,7 @@ import device from './src/module/device'
 import emitter from './src/module/emitter'
 import events from './src/module/events'
 import jsonToHTML from './src/module/jsontohtml'
+import { create } from './src/module/layout'
 import mediator from './src/module/mediator'
 import merge from './src/module/merge'
 import observer from './src/module/observer'
@@ -56,11 +56,11 @@ export {
   // classes
   Component, Control,
   AppBar, Button, Card, Checkbox, DateHour, Dialog, Drawer, Element,
-  File, Form, Image, Layout, List, Loading, Menu, Navigation, Progress, Select,
+  File, Form, Image, List, Loading, Menu, Navigation, Progress, Select,
   Selecter, Slider, Snackbar, Switch, Switcher, Tabs, TabView, Text, Textfield, Toolbar, Tooltip,
   View,
   // mixins and  modules
   EventEmitter,
-  attributes, build, clone, dataset, device, display, events, emitter, jsonToHTML, mediator, merge,
+  attributes, build, clone, create, dataset, device, display, events, emitter, jsonToHTML, mediator, merge,
   observer, request, ripple, smoothscroll
 }
