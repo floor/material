@@ -1,4 +1,4 @@
-import Layout from '../layout'
+import { create } from '../module/layout'
 
 export default {
   update (info) {
@@ -53,7 +53,7 @@ export default {
     const item = this.ui.body.querySelector('[data-id="' + info[this.dataId] + '"]')
     if (item) {
       item.innerHTML = ''
-      const layout = new Layout(this.options.layout.item, item)
+      const layout = create(this.options.layout.item, item)
 
       this.renderInfo(layout, info)
     }

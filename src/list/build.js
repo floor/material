@@ -1,7 +1,7 @@
 import scrollbar from '../module/scrollbar'
 import dataset from '../module/dataset'
 
-import Layout from '../layout'
+import { create } from '../module/layout'
 import Virtual from './virtual'
 import Loading from '../loading'
 
@@ -30,7 +30,8 @@ export default {
       dataset(this.element, this.options.data)
     }
 
-    this.layout = new Layout(this.options.layout.main, this.element)
+    this.layout = create(this.options.layout.main, this.element)
+    console.log('layout', this.layout)
     this.ui = this.layout.component
 
     // prepare loading

@@ -13,7 +13,8 @@ const components = []
  */
 function create (schema, container, structure = {}, level = 0) {
   level++
-  let component = null
+  let component
+  const object = {}
   const fragment = document.createDocumentFragment()
 
   for (let i = 0; i < schema.length; i++) {
@@ -61,18 +62,15 @@ function create (schema, container, structure = {}, level = 0) {
     wrapper.appendChild(fragment)
   }
 
-  return structure
+  function get (name) {
+    return structure[name] || null
+  }
+
+  object.component = structure
+  object.components = components
+  object.get = get
+
+  return object
 }
 
-/**
- * Retrieves a specific component or the entire component structure.
- *
- * @param {Object} componentStructure - The component structure to search.
- * @param {string} name - The name of the component to retrieve.
- * @returns {Object} The requested component or the entire component structure.
- */
-function get (componentStructure, name) {
-  return name ? componentStructure[name] : componentStructure
-}
-
-export { create, get }
+export { create }

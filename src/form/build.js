@@ -1,6 +1,6 @@
 import dataset from '../view/dataset'
 
-import Layout from '../layout'
+import { create } from '../module/layout'
 
 export default {
   build () {
@@ -51,7 +51,7 @@ export default {
   buildLayout () {
     // console.log('buildLayout')
     this.form.innerHTML = ''
-    this.layout = new Layout(this.options.layout, this.form)
+    this.layout = create(this.options.layout, this.form)
     this.ui = this.layout.component
 
     // console.log('ui', this.ui)

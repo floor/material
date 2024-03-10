@@ -5,7 +5,7 @@ import dataset from './module/dataset'
 import attributes from './module/attributes'
 import * as css from './module/css'
 // components
-import Layout from './layout'
+import { create } from './module/layout'
 import Element from './element'
 import Button from './button'
 
@@ -88,7 +88,7 @@ class Selecter extends EventEmitter {
       css.add(this.element, this.options.class)
     }
 
-    this.layout = new Layout(this.options.layout, this.element)
+    this.layout = create(this.options.layout, this.element)
     this.ui = this.layout.component
 
     // console.log('ui', this.ui)

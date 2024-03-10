@@ -1,7 +1,7 @@
 import * as css from '../module/css'
 import dataset from '../module/dataset'
 
-import Layout from '../layout'
+import { create } from '../module/layout'
 
 export default {
   build () {
@@ -29,7 +29,7 @@ export default {
     if (this.container) this.appendTo(this.container)
 
     if (this.options.layout) {
-      this.layout = new Layout(this.options.layout, this.element)
+      this.layout = create(this.options.layout, this.element)
       this.ui = this.layout.component
     }
 

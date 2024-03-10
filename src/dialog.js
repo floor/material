@@ -6,7 +6,7 @@ import display from './mixin/display'
 import Element from './element'
 import Text from './text'
 import Button from './button'
-import Layout from './layout'
+import { create } from './module/layout'
 
 class Dialog {
   static defaults = {
@@ -66,7 +66,7 @@ class Dialog {
     this.surface.classList.add('surface')
     this.element.appendChild(this.surface)
 
-    this.layout = new Layout(this.options.layout, this.surface)
+    this.layout = create(this.options.layout, this.surface)
     this.ui = this.layout.component
 
     if (this.options.container) {

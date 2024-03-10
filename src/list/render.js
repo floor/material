@@ -1,5 +1,5 @@
 import Element from '../element'
-import Layout from '../layout'
+import { create } from '../module/layout'
 
 import dot from '../module/dot'
 
@@ -59,7 +59,7 @@ export default {
       }
     } else {
       const itemName = this.options.itemName || 'item'
-      layout = new Layout(this.options.layout[itemName], element)
+      layout = create(this.options.layout[itemName], element)
     }
 
     // console.log('translate', layout)

@@ -5,7 +5,7 @@ import events from './module/events'
 import controller from './mixin/controller'
 
 // import component
-import Layout from './layout'
+import { create } from './module/layout'
 
 class Form {
   static defaults = {
@@ -65,7 +65,7 @@ class Form {
     // complete layout options
     this.options.root = this.element
 
-    this.layout = new Layout(this.options.layout, this.element)
+    this.layout = create(this.options.layout, this.element)
 
     this._initControls(this.layout.controls)
 
