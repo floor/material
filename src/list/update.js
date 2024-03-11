@@ -7,6 +7,20 @@ export default {
     this.getUpdatedInfo(info[this.dataId])
   },
 
+  updateInfo (info) {
+    // console.log('update', info)
+    this.dataStore[info._id] = info
+
+    // update item in the list if visible
+    const item = this.ui.body.querySelector('[data-id="' + info[this.dataId] + '"]')
+    if (item) {
+      item.innerHTML = ''
+      const layout = create(this.options.layout.item, item)
+
+      this.renderInfo(layout, info)
+    }
+  },
+
   getUpdatedIndex (id) {
     // console.log('getUpdatedIndex', id)
     let index = null
