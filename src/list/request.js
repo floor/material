@@ -56,6 +56,10 @@ export default {
 
       data = data || []
 
+      if (this.options.reverse) {
+        data.reverse()
+      }
+
       if (data.error) {
         console.log('error', data.error)
         return

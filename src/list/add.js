@@ -3,6 +3,10 @@ export default {
   add (info, context) {
   // console.log('list add', info)
 
+    if (this.options.reverse) {
+      context = 'bottom'
+    }
+
     if (!this.dataStore) return
     context = context !== undefined ? context : null
 
