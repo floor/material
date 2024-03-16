@@ -19,13 +19,17 @@ function e (instance, ev) {
 
   const keys = ev.split('.')
 
-  for (let i = 0, l = keys.length; i <= l; i++) {
-    const key = keys[i]
-    iteration = iteration || instance
-    iteration = iteration[key]
+  if (keys[0] === 'window') {
+    element = window
+  } else {
+    for (let i = 0, l = keys.length; i <= l; i++) {
+      const key = keys[i]
+      iteration = iteration || instance
+      iteration = iteration[key]
 
-    if (i === keys.length - 2) {
-      element = iteration
+      if (i === keys.length - 2) {
+        element = iteration
+      }
     }
   }
 
