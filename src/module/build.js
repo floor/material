@@ -11,10 +11,6 @@ const build = (instance) => {
   const { tag = 'div', class: customClass, data, base, container, layout, icon, label, show } = instance.options
   const { defaults = {} } = instance.constructor
 
-  if (instance.constructor?.defaults.class === 'length') {
-    console.log('---', instance.constructor.defaults)
-  }
-
   instance.element = document.createElement(tag)
 
   if (defaults.base) css.add(instance.element, defaults.base)
@@ -50,10 +46,6 @@ const setupContainer = (instance, base, container) => {
 const setupLayout = (instance, layout) => {
   instance.layout = create(layout, instance.element)
   instance.ui = instance.layout.component
-
-  if (instance.constructor.name === 'Length') {
-    console.log(instance.ui)
-  }
 }
 
 function buildLabel ({ ui, options, element }) {
