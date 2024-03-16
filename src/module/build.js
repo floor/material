@@ -32,8 +32,8 @@ const build = (instance) => {
 
   instance.ui = instance.ui || {}
 
-  if (icon) buildIcon(instance)
-  if (label) buildLabel(instance)
+  if (icon && !instance.ui.icon) buildIcon(instance)
+  if (label && !instance.ui.label) buildLabel(instance)
 
   if (show === true && instance.show) instance.show()
 }
