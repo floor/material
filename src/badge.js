@@ -1,17 +1,11 @@
-import { Component, build, display } from '../index'
+import { Component, display } from '../index'
 
 const isStringNumber = (str) => !isNaN(parseFloat(str)) && isFinite(str)
 
 class Badge extends Component {
   static defaults = {
     class: 'badge',
-    mixins: [build, display]
-  }
-
-  constructor (options) {
-    super(options)
-
-    this.build()
+    mixins: [display]
   }
 
   set (text) {
