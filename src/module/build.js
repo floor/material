@@ -7,8 +7,13 @@ import { create } from '../module/layout'
  * @param {object} instance - The component instance to build.
  */
 const build = (instance) => {
-  const { tag = 'div', class: customClass, data, base, container, schema, icon, label, show } = instance.options
+  // console.log('name', instance.constructor.defaults)
+  const { tag = 'div', class: customClass, data, base, container, layout, icon, label, show } = instance.options
   const { defaults = {} } = instance.constructor
+
+  if (instance.constructor?.defaults.class === 'length') {
+    console.log('---', instance.constructor.defaults)
+  }
 
   instance.element = document.createElement(tag)
 
@@ -25,8 +30,8 @@ const build = (instance) => {
 
   setupContainer(instance, base, container)
 
-  if (schema) {
-    setupLayout(instance, schema)
+  if (layout) {
+    setupLayout(instance, layout)
   }
 
   instance.ui = instance.ui || {}
@@ -42,9 +47,13 @@ const setupContainer = (instance, base, container) => {
   if (instance.container) instance.container.appendChild(instance.element)
 }
 
-const setupLayout = (instance, schema) => {
-  instance.layout = create(schema, instance.element)
+const setupLayout = (instance, layout) => {
+  instance.layout = create(layout, instance.element)
   instance.ui = instance.layout.component
+
+  if (instance.constructor.name === 'Length') {
+    console.log(instance.ui)
+  }
 }
 
 function buildLabel ({ ui, options, element }) {
