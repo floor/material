@@ -1,15 +1,12 @@
-import EventEmitter from './mixin/emitter'
-// menu related modules
-import build from './mixin/build'
-import events from './module/events'
-import display from './mixin/display'
-import position from './mixin/position'
+import {
+  Control, Element, display, position
+} from '../index'
 
-import Element from './element'
-
-class Menu extends EventEmitter {
+class Menu extends Control {
   static defaults = {
     class: 'menu',
+    mixins: [display, position],
+    underlay: true,
     modal: false,
     position: {
       align: 'right',
@@ -28,37 +25,15 @@ class Menu extends EventEmitter {
   }
 
   constructor (options) {
-    super()
+    super(options)
 
-    this.init(options)
-    this.build(this.constructor)
-    this.buildUnderlay()
     this.setup()
 
     this.render(this.options.items)
-
-    return this
-  }
-
-  init (options) {
-    this.options = { ...Menu.defaults, ...options }
-    Object.assign(this, build, display, position)
-
-    this.menus = []
-  }
-
-  buildUnderlay () {
-    if (!this.options.parentName) {
-      this.underlay = new Element({
-        class: 'menu-underlay'
-      })
-
-      this.options.container.appendChild(this.underlay)
-    }
   }
 
   setup () {
-    events.attach(this.options.events, this)
+    this.menus = []
     this.closeTimeout = null
 
     document.addEventListener('click', this.handleDocumentClick)
@@ -100,6 +75,7 @@ class Menu extends EventEmitter {
             class: 'floating',
             target: item,
             container: this.options.container,
+            underlay: false,
             parentName: obj.name,
             items: obj.items
           }).position(item, {
@@ -132,7 +108,6 @@ class Menu extends EventEmitter {
   }
 
   destroyMenu (menu) {
-  // Trouver l'index de menuToDestroy dans this.menus
     const index = this.menus.indexOf(menu)
 
     // Si trouvé, supprimer le menu du tableau
@@ -140,7 +115,6 @@ class Menu extends EventEmitter {
       this.menus.splice(index, 1)
     }
 
-    // Appeler la méthode destroy sur le menuToDestroy
     menu.destroy()
   }
 

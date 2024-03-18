@@ -1,13 +1,9 @@
-import EventEmitter from './mixin/events'
-// import control from './mixin/control'
-import build from './mixin/build'
-import events from './module/events'
-import * as css from './module/css'
+import Control from './class/control'
 
 import icon from './skin/material/icon/checkbox.svg'
 import Element from './element'
 
-class Checkbox {
+class Checkbox extends Control {
   static defaults = {
     class: 'checkbox',
     layout: [
@@ -17,7 +13,7 @@ class Checkbox {
     ],
     events: [
       ['ui.control.click', 'click'],
-      ['ui.label.click', 'toggle'],
+      ['ui.label.click', 'check'],
       // for accessibility purpose
       // ['element.input.click', 'toggle'],
       ['ui.input.focus', 'focus'],
@@ -27,20 +23,11 @@ class Checkbox {
   }
 
   constructor (options) {
-    this.init(options)
-    this.build()
+    super(options)
     this.setup()
   }
 
-  init (options) {
-    this.options = { ...Checkbox.defaults, ...options }
-    Object.assign(this, build, attach)
-  }
-
   setup () {
-    this.element = build(this.options.build)
-    this.element = this.element.root
-
     this.ui.control.innerHTML = icon
 
     const text = this.options.text || this.options.label
@@ -58,7 +45,7 @@ class Checkbox {
     if (this.options.disabled) {
       this.disabled = this.options.disabled
       this.ui.input.setAttribute('disabled', 'disabled')
-      css.add(this.element, 'is-disabled')
+      this.element.classList.add('is-disabled')
     }
 
     if (this.options.checked) {
@@ -68,8 +55,6 @@ class Checkbox {
     if (this.options.value) {
       this.set('value', this.value)
     }
-
-    events.attach(this.options.events, this)
   }
 
   set (prop, value) {
@@ -90,24 +75,32 @@ class Checkbox {
     return this
   }
 
-  check (checked) {
-    if (checked === true) {
-      css.add(this.element, 'is-checked')
+  get () {
+    return this.value
+  }
+
+  check (value) {
+    if (value === true) {
+      this.element.classList.add('is-checked')
       this.ui.input.checked = true
-      this.checked = true
-      this.emit('change', this.checked)
+      this.value = true
+      this.emit('change', this.value)
     } else {
-      css.remove(this.element, 'is-checked')
+      this.element.classList.remove('is-checked')
       this.ui.input.checked = false
-      this.checked = false
-      this.emit('change', this.checked)
+      this.value = false
+      this.emit('change', this.value)
     }
     return this
   }
 
-  click (e) {
-    this.toggle(e)
+  onClick (e) {
     this.ui.input.focus()
+    if (this.element.classList.add('is-checked')) {
+      this.check(false)
+    } else {
+      this.check(true)
+    }
 
     return this
   }

@@ -1,59 +1,33 @@
+import Component from './class/component'
+import Element from './element'
+import position from './mixin/position'
 import touch from './module/touch'
 
-class Tooltip {
+class Tooltip extends Component {
   static defaults = {
+    base: 'component',
+    class: 'tooltip',
+    tag: 'span',
+    mixins: [position],
     targets: '[data-tooltip]',
     offset: {
       top: 60
     },
-    disabled: false
+    position: {
+      align: 'center',
+      vAlign: 'bottom'
+    },
+    disabled: false,
+    layout: [
+      [Element, { tag: 'span', class: 'pointer' }],
+      [Element, 'label', { tag: 'span', class: 'label' }]
+    ]
   }
 
-  /**
-   * The init method of the Button class
-   * @param  {Object} The element attributes
-   * @private
-   * @return {DOMElement} The dom element
-   */
-  constructor (options) {
-    // console.log('constructor')
-
-    this.init(options)
-    this.build()
-    this.bindEvents()
-
-    return this
-  }
-
-  init (options) {
-    this.options = { ...Tooltip.defaults, ...options }
-  }
-
-  build () {
-    const container = this.options.container || document.body
-
-    this.element = document.createElement('span')
-    this.element.classList.add('tooltip')
-    this.element.classList.add('control')
-
-    this.pointer = document.createElement('span')
-    this.pointer.classList.add('pointer')
-    this.element.appendChild(this.pointer)
-
-    this.label = document.createElement('span')
-    this.label.classList.add('label')
-    this.element.appendChild(this.label)
-
-    container.appendChild(this.element)
-  }
-
-  bindEvents () {
-    // console.log('attach', this.options.targets)
+  bindTargets () {
     const targets = document.querySelectorAll(this.options.targets)
-
     for (let i = 0; i < targets.length; i++) {
       targets[i].addEventListener('mouseover', (e) => {
-        // console.log('tooltip', touch(), this.disabled)
         if (touch()) return
 
         if (this.disabled === true) {
@@ -66,16 +40,18 @@ class Tooltip {
           return
         }
 
-        this.label.innerHTML = e.currentTarget.dataset.tooltip
+        this.ui.label.innerHTML = e.currentTarget.dataset.tooltip
         const coord = this.offset(e.currentTarget)
 
         this.show()
-        this.element.style.top = (coord.top + this.options.offset.top) + 'px'
-        this.element.style.left = coord.left - (this.element.offsetWidth / 2) + (e.currentTarget.offsetWidth / 2) + 'px'
+        // this.element.style.top = (coord.top + this.options.offset.top) + 'px'
+        // this.element.style.left = coord.left - (this.element.offsetWidth / 2) + (e.currentTarget.offsetWidth / 2) + 'px'
+
+        this.position(e.currentTarget)
       })
 
       targets[i].addEventListener('mouseleave', (e) => {
-        this.label.innerHTML = ''
+        this.ui.label.innerHTML = ''
         this.hide()
       })
     }

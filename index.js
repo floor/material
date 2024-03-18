@@ -37,6 +37,7 @@ import attributes from './src/module/attributes'
 import EventEmitter from './src/mixin/emitter'
 import display from './src/mixin/display'
 import build from './src/mixin/build'
+import position from './src/mixin/position'
 // modules
 import clone from './src/module/clone'
 import dataset from './src/module/dataset'
@@ -51,6 +52,7 @@ import observer from './src/module/observer'
 import request from './src/module/request'
 import ripple from './src/module/ripple'
 import smoothscroll from './src/module/smoothscroll'
+import touch from './src/module/touch'
 
 export {
   // classes
@@ -62,5 +64,5 @@ export {
   // mixins and  modules
   EventEmitter,
   attributes, build, clone, create, dataset, device, display, events, emitter, jsonToHTML, mediator, merge,
-  observer, request, ripple, smoothscroll
+  observer, position, request, ripple, smoothscroll, touch
 }

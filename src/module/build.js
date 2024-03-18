@@ -8,7 +8,7 @@ import { create } from '../module/layout'
  */
 const build = (instance) => {
   // console.log('name', instance.constructor.defaults)
-  const { tag = 'div', class: customClass, data, base, container, layout, icon, label, show } = instance.options
+  const { tag = 'div', class: customClass, data, base, container, underlay, layout, icon, label, show } = instance.options
   const { defaults = {} } = instance.constructor
 
   instance.element = document.createElement(tag)
@@ -32,6 +32,7 @@ const build = (instance) => {
 
   instance.ui = instance.ui || {}
 
+  if (instance.options.underlay) buildUnderlay(instance, defaults.class)
   if (icon && !instance.ui.icon) buildIcon(instance)
   if (label && !instance.ui.label) buildLabel(instance)
 
@@ -46,6 +47,14 @@ const setupContainer = (instance, base, container) => {
 const setupLayout = (instance, layout) => {
   instance.layout = create(layout, instance.element)
   instance.ui = instance.layout.component
+}
+
+function buildUnderlay (instance, name) {
+  if (instance.options.underlay) {
+    instance.underlay = document.createElement('div')
+    instance.underlay.classList.add(name + '-underlay')
+    instance.options.container.appendChild(instance.underlay)
+  }
 }
 
 function buildLabel ({ ui, options, element }) {

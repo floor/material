@@ -1,20 +1,14 @@
-import build from './mixin/build'
+import Component from './class/component'
 
-class Text {
+class Text extends Component {
   static defaults = {
     class: 'text',
     tag: 'span'
   }
 
   constructor (options) {
-    this.init(options)
-    this.build()
+    super(options)
     this.setup()
-  }
-
-  init (options) {
-    this.options = { ...Text.defaults, ...options }
-    Object.assign(this, build)
   }
 
   setup () {

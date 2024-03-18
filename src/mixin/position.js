@@ -1,14 +1,15 @@
 export default {
   position (target, position) {
+    // console.log('position', target)
     target = target || this.options.target
     position = position || this.options.position
     const { offsetX = 0, offsetY = 0, align = 'center', vAlign = 'middle' } = position
 
-    const name = this.constructor.name
+    if (!target) return this
 
-    if (!target) return
+    // console.log('--- target', target)
 
-    // console.log('container', this.options.container)
+    this.options.container = this.options.container || this.element.parentNode
 
     const caller = target.getBoundingClientRect()
     const screen = this.options.container.getBoundingClientRect()

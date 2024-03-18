@@ -1,19 +1,9 @@
-import build from './mixin/build'
+import Component from './class/component'
 
-class DateHour {
+class DateHour extends Component {
   static defaults = {
     class: 'date',
     tag: 'span'
-  }
-
-  constructor (options) {
-    this.init(options)
-    this.build()
-  }
-
-  init (options) {
-    this.options = { ...DateHour.defaults, ...options }
-    Object.assign(this, build)
   }
 
   set (date) {

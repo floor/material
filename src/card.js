@@ -1,28 +1,24 @@
-import build from './mixin/build'
-import display from './mixin/display'
-import position from './mixin/position'
+import {
+  Component,
+  display,
+  position
+} from '../'
 
-class Card {
+// import position from './mixin/position'
+
+console.log('position', position)
+
+class Card extends Component {
   static defaults = {
     class: 'card',
+    mixins: [display, position],
     position: {
       align: 'center',
       vAlign: 'dynamic',
       offsetX: 10,
       offsetY: 10
     },
-    close: true,
-    layout: []
-  }
-
-  constructor (options) {
-    this.init(options)
-    this.build()
-  }
-
-  init (options) {
-    this.options = { ...Card.defaults, ...options }
-    Object.assign(this, build, display, position)
+    close: true
   }
 }
 
