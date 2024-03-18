@@ -1,12 +1,9 @@
 import {
   Component,
-  display,
-  position
+  display
 } from '../'
 
-// import position from './mixin/position'
-
-console.log('position', position)
+import position from './mixin/position'
 
 class Card extends Component {
   static defaults = {

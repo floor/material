@@ -1,6 +1,8 @@
 import {
-  Control, Element, display, position
+  Control, Element, display
 } from '../index'
+
+import position from './mixin/position'
 
 class Menu extends Control {
   static defaults = {
