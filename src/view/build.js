@@ -1,6 +1,6 @@
 import scrollbar from '../module/scrollbar'
 import dataset from '../module/dataset'
-import { create } from './module/layout'
+import { create } from '../module/layout'
 
 export default {
   build () {
