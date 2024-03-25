@@ -10,11 +10,14 @@ import { is as isObject } from '../module/object'
  * @returns {Object} The structure containing all created components.
  */
 function create (schema, container, structure = {}, level = 0, components = []) {
-  // console.log('layout create')
   level++
   let component
   const object = {}
   const fragment = document.createDocumentFragment()
+
+  if (!Array.isArray(schema)) {
+    console.trace('Schema is not an array!')
+  }
 
   for (let i = 0; i < schema.length; i++) {
     var name
@@ -48,7 +51,11 @@ function create (schema, container, structure = {}, level = 0, components = []) 
         if (component.insert) component.insert(fragment)
         else fragment.appendChild(element)
 
-        if (component.onInserted) component.onInserted(fragment)
+        if (container) {
+          // console.log('container', container)
+          component._container = container
+          if (component.onInserted) component.onInserted(container)
+        }
       }
     } else if (Array.isArray(schema[i])) {
       if (!component) component = container
