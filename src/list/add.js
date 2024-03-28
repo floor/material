@@ -1,6 +1,6 @@
 
 export default {
-  add (info, context) {
+  add (info, context, silent) {
   // console.log('list add', info)
 
     if (this.options.reverse) {
@@ -44,7 +44,7 @@ export default {
       this.virtual.update(this.data)
     }
 
-    this.emit('added', info, context)
+    if (silent !== true) this.emit('added', info, context)
 
     // this.ui.body.scrollTo(0, this.ui.body.scrollTop + 1)
     // this.ui.body.scrollTo(0, this.ui.body.scrollTop - 1)
