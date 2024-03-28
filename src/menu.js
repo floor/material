@@ -87,8 +87,8 @@ class Menu extends Control {
             offsetY: 8
           }).show()
 
-          this.menu.on('select', (name) => {
-            this.emit('select', `${obj.name}:${name}`)
+          this.menu.on('select', (value, name) => {
+            this.emit('select', `${obj.name}:${value}`, name)
           }).on('destroy', () => {
             this.menu = null
           })
@@ -103,9 +103,10 @@ class Menu extends Control {
 
   onClick (ev) {
     if (ev.target.classList.contains('sub')) return
-    const name = ev.target.getAttribute('name')
-    if (name) {
-      this.emit('select', name)
+    const value = ev.target.getAttribute('name')
+    const name = ev.target.innerHTML
+    if (value) {
+      this.emit('select', value, name)
     }
   }
 
