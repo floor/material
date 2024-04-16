@@ -57,6 +57,8 @@ class Button extends Control {
     if (data) dataset(this.element, data)
     if (caseOption) this.element.classList.add(`${caseOption}-case`)
     if (this.options.ripple) ripple(this.element)
+
+    if (this.options.disabled) this.disable()
   }
 
   styleAttributes () {

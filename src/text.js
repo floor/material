@@ -19,7 +19,7 @@ class Text extends Component {
 
   set (text) {
     // console.log('set', text)
-    if (text === undefined) return
+    if (text === 'undefined') text = ''
 
     const label = this.options.label || ''
 
@@ -35,6 +35,7 @@ class Text extends Component {
   }
 
   setText (text) {
+    if (text === 'undefined') text = ''
     this.element.innerHTML = text
   }
 
