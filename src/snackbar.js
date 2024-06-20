@@ -1,17 +1,13 @@
-// base class
-import EventEmitter from './mixin/emitter'
-// related modules
-import build from './mixin/build'
-import events from './module/events'
+import Control from './class/control'
 import display from './mixin/display'
-// ui element
 import Element from './element'
 import Text from './text'
 import Button from './button'
 
-class Snackbar extends EventEmitter {
+class Snackbar extends Control {
   static defaults = {
     class: 'snackbar',
+    mixins: [display],
     transition: 225,
     duration: 4000,
     stack: false,
@@ -30,12 +26,9 @@ class Snackbar extends EventEmitter {
   }
 
   constructor (options) {
-    super()
-
+    super(options)
     this.init(options)
-    this.build(this.constructor)
     this.render()
-    events.attach(this.options.events, this)
     this.show()
 
     if (this.options.duration) {
@@ -46,18 +39,11 @@ class Snackbar extends EventEmitter {
   }
 
   init (options) {
-    this.options = Object.assign({}, Snackbar.defaults, options || {})
-    Object.assign(this, build, display)
-
     this.buildSnackbarContainer(this.options.container)
   }
 
   buildSnackbarContainer (container = document.body) {
-    // console.log('buildSnackbarContainer', container)
-
     const snackbarContainer = container.querySelector('.snackbars')
-
-    // console.log('snackbarContainer', snackbarContainer)
 
     if (!snackbarContainer) {
       this.options.container = document.createElement('div')
@@ -67,31 +53,46 @@ class Snackbar extends EventEmitter {
       if (this.options.stack === false) snackbarContainer.innerHTML = ''
       this.options.container = snackbarContainer
     }
+
+    this.options.container.appendChild(this.element)
   }
 
   render () {
-    this.ui.message.set(this.options.message)
-
-    if (this.options.action) {
-      this.ui.callback.set(this.options.action)
-      this.ui.callback.element.classList.add('show')
-      this.ui.action.classList.add('show')
+    if (!this.ui) {
+      console.error('UI elements not initialized properly.')
+      return
     }
 
-    if (this.options.close) {
-      this.ui.close.element.classList.add('show')
-      this.ui.action.classList.add('show')
+    const { message, callback, close, action } = this.ui
+
+    if (message) {
+      message.set(this.options.message)
+    } else {
+      console.error('Message UI element not initialized.')
+    }
+
+    if (this.options.action && callback && callback.element) {
+      callback.set(this.options.action)
+      callback.element.classList.add('show')
+      if (action) {
+        action.classList.add('show')
+      }
+    }
+
+    if (this.options.close && close && close.element) {
+      close.element.classList.add('show')
+      if (action) {
+        action.classList.add('show')
+      }
     }
   }
 
   action () {
-    // console.log('action')
     this.emit('action')
     this.destroy()
   }
 
   close () {
-    // console.log('close')
     this.destroy()
   }
 }
