@@ -198,6 +198,21 @@ VirtualList.prototype.reset = function () {
   this.scroller.style.height = 0
 }
 
+VirtualList.prototype.setCount = function (count) {
+  console.log('setCount', count)
+  this.count = count
+  const height = this.itemHeight * this.count
+
+  console.log('scroller height', height)
+  this.scroller.style.height = height + 'px'
+}
+
+VirtualList.prototype.getCount = function () {
+  // console.log('getCount')
+
+  return this.count
+}
+
 VirtualList.prototype.setOffset = function (info) {
   // console.log('setOffset', info)
 
@@ -218,12 +233,6 @@ VirtualList.prototype.setOffset = function (info) {
   const size = itemsByScreen * 4
 
   return size
-}
-
-VirtualList.prototype.getCount = function () {
-  // console.log('getCount')
-
-  return this.count
 }
 
 VirtualList.createScroller = function () {
