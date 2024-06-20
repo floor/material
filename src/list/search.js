@@ -104,7 +104,7 @@ export default {
    * [showSearch description]
    * @return {[type]} [description]
    */
-  showSearch () {
+  showSearch (doNotEmpty) {
     if (this.hideFilter) {
       this.hideFilter()
     }
@@ -123,7 +123,7 @@ export default {
       this.ui['search-input'].focus()
     }
 
-    this.ui.body.innerHTML = ''
+    if (!doNotEmpty) this.ui.body.innerHTML = ''
 
     // this.ui['search-list'].classList.add('show')
     // this.ui.body.classList.add('hide')
