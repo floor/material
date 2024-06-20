@@ -1,4 +1,3 @@
-
 const is = (object) => {
   return object &&
     typeof object === 'object' &&
