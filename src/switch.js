@@ -110,7 +110,7 @@ class Switch extends EventEmitter {
         }
         break
       default:
-        this.setValue(prop, value)
+        this.setValue(prop, silent)
     }
 
     return this
