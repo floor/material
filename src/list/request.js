@@ -1,4 +1,15 @@
 export default {
+  requestById (id, cb) {
+    // log.error('requestById', id)
+    if (!id) return
+    return this.getPage(id, (data) => {
+      // log.error('getPage', data)
+      const page = data?.page || null
+      if (data?.count) this.virtual.setCount(data?.count)
+      this.request(page, null, null, cb)
+    })
+  },
+
   request (page, size, more, cb) {
     // console.log('request', page, size, more, cb)
     if (more !== true) {
