@@ -1,99 +1,88 @@
-import create from './mixin/create'
-import insert from './mixin/insert'
-import emitter from './module/emitter'
-
+// modules
+import { insertion } from './module/mutation.js'
+import display from './mixin/display'
 import offset from './element/offset'
 
-import List from './list'
+// ui
+import Control from './class/control'
 import Button from './button'
-import Element from './element'
 
-class Tabs {
+class Tabs extends Control {
   static defaults = {
-    prefix: 'material',
     class: 'tabs',
-    tag: 'div',
+    mixins: [display],
+    show: true,
+    style: 'primary',
     indicator: {
-      prefix: 'material',
-      class: 'indicator',
-      tag: 'div'
+      size: 30
     }
   }
 
   constructor (options) {
-    this.init(options)
-    this.build()
+    super(options)
 
-    return this
+    insertion(this.element, () => this.setup())
   }
 
-  init (options) {
-    this.options = { ...Tabs.defaults, ...options }
-    Object.assign(this, insert, emitter)
-  }
+  setup () {
+    this.items = Array.from(this.element.childNodes).filter(node => node.nodeType === Node.ELEMENT_NODE)
+    this.item = {}
 
-  /**
-   * Build Method
-   * @return {Object} This class instance
-   */
-  build () {
-    this.element = create(this.options)
-    this.tab = { }
-    if (this.options.list) {
-      this.list = new List({
-        tag: 'div',
-        container: this.element,
-        list: this.options.list,
-        target: '.material-button',
-        height: 600,
-        label: 'Flat',
+    this.items.forEach(item => {
+      this.item[item.name] = item
+      this.addListener(item)
+    })
 
-        render: (info) => {
-          let item
-          if (info.type === 'divider') {
-            item = new Element({ class: 'divider' })
-          } else {
-            item = new Button({
-              name: info.name,
-              text: info.text || info.name,
-              tooltip: info.tootip
-            })
-          }
+    this.indicator = document.createElement('div')
+    this.indicator.classList.add('indicator')
+    this.element.appendChild(this.indicator)
 
-          this.tab[info.name] = item
+    if (this.options.show) this.show()
 
-          return item
-        },
-        select: (item) => {
-          this.selected = item
-          this.click(item)
-        }
-      })
+    if (this.options.selected && this.item[this.options.selected]) {
+      this.select(this.options.selected, true)
     }
 
-    this.indicator = create(this.options.indicator)
-    this.insertElement(this.indicator, this.element)
-
-    if (this.options.container) {
-      this.insert(this.options.container)
-    }
-
-    return this
+    this.emit('ready')
   }
 
-  select (tab) {
-    // console.log('select', tab, this.tab)
-    this.selected = this.tab[tab]
-    this.click(this.selected.element, true)
+  select (name, silent = false) {
+    this.items.forEach(item => {
+      item.classList.toggle('selected', name === item.name)
+    })
+
+    this.selectedName = name
+
+    if (!silent) this.emit('select', name)
+    this.updateIndicator(name)
   }
 
-  click (item, silent) {
-    // console.log('clickitem', item, this.element);
-    const or = offset(this.element)
-    const o = offset(item)
-    this.indicator.setAttribute('style', 'width: ' + o.width + 'px; left: ' + (o.left - or.left) + 'px;')
+  updateIndicator (name) {
+    name = name ?? this.selectedName
 
-    if (!silent) { this.emit('select', item.dataset.name) }
+    const item = this.item[name]
+
+    if (!item) return
+
+    this.selected = item
+    const oElement = offset(this.element)
+    const oItem = offset(item)
+
+    const label = item.querySelector('label')
+    const oLabel = label ? offset(label) : null
+    const width = oLabel?.width ?? this.options.indicator.size
+
+    const style = this.options.style === 'secondary'
+      ? `width: ${oItem.width}px; left: ${oItem.left - oElement.left}px;`
+      : `width: ${width}px; left: ${oItem.left - oElement.left + (oItem.width / 2) - (width / 2)}px;`
+
+    this.indicator.setAttribute('style', style)
+  }
+
+  addListener (item) {
+    item.addEventListener('click', (ev) => {
+      this.select(item.name)
+    })
   }
 }
 
