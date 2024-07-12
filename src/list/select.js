@@ -44,7 +44,12 @@ export default {
   },
 
   getInfoById (id) {
-    return clone(this.dataStore[id])
+    // console.log('getInfoById', this.dataStore)
+    let info = null
+
+    if (this.dataStore) info = clone(this.dataStore[id])
+
+    return info
   },
 
   getSelectedInfo () {
