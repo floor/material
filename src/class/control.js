@@ -25,6 +25,15 @@ class Control extends Component {
 
     return this
   }
+
+  destroy () {
+    // if (this.options.events) {
+    //   events.detach(this.options.events, this)
+    // }
+
+    super.destroy()
+    this.emit?.('destroy')
+  }
 }
 
 export default Control
