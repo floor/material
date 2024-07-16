@@ -12,6 +12,16 @@ const mediator = ((() => {
     return this
   }
 
+  const unsubscribe = function (store, fn) {
+    if (!mediator.stores[store]) {
+      return this
+    }
+
+    mediator.stores[store] = mediator.stores[store].filter(subscription => subscription.callback !== fn)
+
+    return this
+  }
+
   const publish = function (store, ...args) {
     // console.log('publish', store, args)
     if (!mediator.stores[store]) {
@@ -30,10 +40,12 @@ const mediator = ((() => {
     stores: {},
     publish,
     subscribe,
+    unsubscribe,
     installTo: function (obj) {
       obj.subscribe = subscribe
       obj.publish = publish
     },
+
     init: function (obj) {
       obj.subscribe = subscribe
       obj.publish = publish
