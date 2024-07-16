@@ -1,4 +1,5 @@
 import { create } from '../module/layout'
+import clone from '../module/clone'
 
 export default {
   update (info) {
@@ -9,7 +10,7 @@ export default {
 
   updateInfo (info) {
     // console.log('update', info)
-    this.dataStore[info._id] = info
+    this.dataStore[info._id] = clone(info)
 
     // update item in the list if visible
     const item = this.ui.body.querySelector('[data-id="' + info[this.dataId] + '"]')
