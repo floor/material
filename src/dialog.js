@@ -2,6 +2,7 @@
 import emitter from './module/emitter'
 import events from './module/events'
 import display from './mixin/display'
+import * as css from './module/css'
 
 import Element from './element'
 import Text from './text'
@@ -55,7 +56,8 @@ class Dialog {
     this.element = this.element
 
     if (this.options.class !== 'dialog') {
-      this.element.classList.add(this.options.class)
+      // console.log('css add', this.options.class)
+      css.add(this.element, this.options.class)
     }
 
     if (this.options.position) {
