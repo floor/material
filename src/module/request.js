@@ -1,4 +1,13 @@
-const request = async (url, method = 'GET', body = null, headers = {}, signal = null, debug = false) => {
+const request = async (
+  url,
+  method = 'GET',
+  body = null,
+  headers = {},
+  signal = null,
+  debug = false,
+  cache = 'no-store' // Adding cache parameter with a default value
+) => {
+  // console.trace('request')
   const defaultHeaders = {
     Accept: 'application/json',
     'Content-Type': 'application/json'
@@ -7,7 +16,8 @@ const request = async (url, method = 'GET', body = null, headers = {}, signal = 
   const options = {
     method,
     headers: { ...defaultHeaders, ...headers },
-    signal
+    signal,
+    cache // Including the cache option in the request
   }
 
   if (debug) {
