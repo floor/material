@@ -1,6 +1,9 @@
+import emitter from './module/emitter'
+
 class Loader {
   static defaults = {
-    class: 'loader'
+    class: 'loader',
+    timeout: 10000
   }
 
   constructor (options) {
@@ -10,6 +13,7 @@ class Loader {
 
   init (options) {
     this.options = { ...Loader.defaults, ...options }
+    Object.assign(this, emitter)
   }
 
   build () {
@@ -77,9 +81,19 @@ class Loader {
 
   show () {
     this.element.classList.add('show')
+
+    clearTimeout(this.timeout)
+
+    if (this.options.timeout) {
+      this.timeout = setTimeout(() => {
+        this.hide()
+        this.emit('timeout')
+      }, this.options.timeout)
+    }
   }
 
   hide () {
+    clearTimeout(this.timeout)
     this.element.classList.remove('show')
   }
 }
