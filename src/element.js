@@ -16,9 +16,14 @@ class Element {
 
     // Apply additional attributes
     for (const key in this.options) {
-      if (!['tag', 'container', 'html', 'text', 'id'].includes(key)) {
+      if (!['tag', 'container', 'html', 'text', 'id', 'data'].includes(key)) {
         element.setAttribute(key, this.options[key])
       }
+    }
+
+    // Apply additional dataset
+    for (const key in this.options.data) {
+      element.setAttribute('data-' + key, this.options.data[key])
     }
 
     // Append to container if available
