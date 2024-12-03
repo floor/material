@@ -98,7 +98,9 @@ class Loader {
   }
 
   setText (text) {
-    this.text.innerHTML = text
+    if (text) {
+      this.text.innerHTML = text
+    }
   }
 
   show () {
