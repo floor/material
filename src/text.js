@@ -19,7 +19,7 @@ class Text extends Component {
 
   set (text) {
     // console.log('set', text)
-    if (text === 'undefined') text = ''
+    if (text === 'undefined' || !text) text = ''
 
     const label = this.options.label || ''
 
