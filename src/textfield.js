@@ -2,8 +2,9 @@ import emitter from './module/emitter'
 import events from './module/events'
 import dataset from './module/dataset'
 import attributes from './module/attributes'
+import Control from './class/control'
 
-class Textfield {
+class Textfield extends Control {
   static isComponent () {
     return true
   }
@@ -20,28 +21,22 @@ class Textfield {
   }
 
   constructor (options) {
-    this.init(options)
+    super(options)
+    console.log('options', this.options)
     this.build()
-    events.attach(this.options.events, this)
-  }
-
-  init (options) {
-    this.options = { ...Textfield.defaults, ...options }
-    Object.assign(this, emitter, dataset)
-    // console.log('options', options)
   }
 
   build () {
     const tag = this.options.tag || 'div'
 
-    this.element = document.createElement(tag)
-    this.element.classList.add('textfield')
+    // this.element = document.createElement(tag)
+    // this.element.classList.add('textfield')
 
-    if (this.options.class !== 'textfield') {
-      this.element.classList.add(this.options.class)
-    }
+    // if (this.options.class !== 'textfield') {
+    //   this.element.classList.add(this.options.class)
+    // }
 
-    this.buildLabel()
+    // this.buildLabel()
     this.buildInput()
 
     if (this.options.value) {
@@ -57,15 +52,6 @@ class Textfield {
     }
 
     return this
-  }
-
-  buildLabel () {
-    if (this.options.label) {
-      this.label = document.createElement('label')
-      this.label.classList.add('label')
-      this.label.innerHTML = this.options.label
-      this.element.appendChild(this.label)
-    }
   }
 
   buildInput () {
