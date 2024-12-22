@@ -3,25 +3,30 @@ import Component from './class/component'
 class DateHour extends Component {
   static defaults = {
     class: 'date',
-    tag: 'span'
+    tag: 'span',
+    locale: navigator.language,
+    format: { // Changed from 'options' to 'format'
+      dateStyle: 'short',
+      timeStyle: 'short',
+      hour12: false
+    }
+  }
+
+  constructor (options) {
+    super(options)
+    this.formatter = new Intl.DateTimeFormat(
+      this.options.locale,
+      this.options.format // Using format instead of options
+    )
   }
 
   set (date) {
-    // console.log('set', src)
     const d = new Date(date)
-    const formatted = this.format(d)
-    this.element.innerHTML = formatted
+    this.element.innerHTML = this.format(d)
   }
 
   format (date) {
-    let hours = date.getHours()
-    let minutes = date.getMinutes()
-    const ampm = hours >= 12 ? 'pm' : 'am'
-    hours = hours % 12
-    hours = hours || 12 // the hour '0' should be '12'
-    minutes = minutes < 10 ? '0' + minutes : minutes
-    const strTime = hours + ':' + minutes + ' ' + ampm
-    return date.getMonth() + 1 + '/' + date.getDate() + '/' + date.getFullYear() + ' ' + strTime
+    return this.formatter.format(date)
   }
 }
 
