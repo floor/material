@@ -1,7 +1,6 @@
 // DOM manipulation function
 
 function append (container, element) {
-  console.log(container, element)
   container.appendChild(element)
   return element
 }
