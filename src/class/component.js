@@ -17,7 +17,7 @@ class Component {
   }
 
   destroy () {
-    console.log('dest5roy')
+    // console.log('destroy')
     if (this.options.transition && this.element) {
       this.element.classList.remove('show')
 
