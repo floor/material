@@ -169,7 +169,7 @@ class Switcher extends EventEmitter {
     return this
   }
 
-  setValue (value) {
+  setValue (value, silent) {
     // console.log('value', value, this.options.list, this.element)
     const list = this.options.list
     if (this.options.mode === 'unique') {
@@ -190,6 +190,15 @@ class Switcher extends EventEmitter {
           this.element.querySelector('[data-switcher="' + list[i] + '"]').classList.add('selected')
         }
       }
+    }
+  }
+
+  get () {
+    // console.log('get', this.selected)
+    if (this.options.mode === 'unique') {
+      return this.selected[0]
+    } else {
+      return this.selected
     }
   }
 
@@ -235,15 +244,6 @@ class Switcher extends EventEmitter {
   setText (value) {
     // console.log('setText', value)
     this.setLabel(value)
-  }
-
-  get () {
-    // console.log('get', this.selected)
-    if (this.options.mode === 'unique') {
-      return this.selected[0]
-    } else {
-      return this.selected
-    }
   }
 }
 

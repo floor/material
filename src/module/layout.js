@@ -16,7 +16,7 @@ function create (schema, container, structure = {}, level = 0, components = []) 
   const fragment = document.createDocumentFragment()
 
   if (!Array.isArray(schema)) {
-    console.trace('Schema is not an array!')
+    console.error('Schema is not an array!', container, level, schema)
   }
 
   for (let i = 0; i < schema.length; i++) {

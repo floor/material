@@ -100,7 +100,7 @@ class Switch extends EventEmitter {
         this.setValue(value, silent)
         break
       case 'text':
-        this.setValue(value)
+        this.setText(value)
         break
       case 'disabled':
         if (value === true) {
@@ -160,17 +160,15 @@ class Switch extends EventEmitter {
       this.ui.input.checked = true
       this.checked = true
       this.value = true
-      if (!silent) {
-        this.emit('change', this.checked)
-      }
     } else {
       this.element.classList.remove('is-checked')
       this.ui.input.checked = false
       this.checked = false
       this.value = false
-      if (!silent) {
-        this.emit('change', this.checked)
-      }
+    }
+
+    if (!silent) {
+      this.emit('change', this.checked)
     }
     return this
   }
