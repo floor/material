@@ -135,7 +135,7 @@ VirtualList.prototype.set = function (items) {
     }
 
     const progress = Math.ceil((scrollTop / self.itemHeight) + self.itemsByScreen) - 1
-    // console.log('progress', progress)
+    // console.log('progress', progress, scrollTop, self.itemHeight)
     self.emit('progress', progress)
 
     // e.preventDefault && e.preventDefault()

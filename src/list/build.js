@@ -100,7 +100,12 @@ export default {
       // console.log('progress', progress, this.count)
 
       if (this.statusDisplay) {
-        const percent = parseInt(progress / this.count * 100)
+        let percent = parseInt(progress / this.count * 100)
+        if (progress > this.count) {
+          percent = 100
+          progress = this.count
+        }
+
         this.statusDisplay('count', percent + '% | ' + progress + ' / ' + this.count)
       }
 

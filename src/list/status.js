@@ -9,7 +9,12 @@ export default {
 
   statusCount (count) {
     // console.log('statusCount', count)
+    //
     let items = 'items'
+    if (count < 1) {
+      items = 'item'
+    }
+
     if (this.status && this.status.count && this.status.count.name) {
       items = this.status.count.name
     }

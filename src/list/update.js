@@ -5,6 +5,8 @@ export default {
   update (info) {
     // console.log('update', info)
 
+    if (!info) return
+
     this.getUpdatedInfo(info[this.dataId])
   },
 
