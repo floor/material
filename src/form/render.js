@@ -12,9 +12,9 @@ export default {
       }
     }
 
-    // console.log('dotified', this.field, info)
-
     if (!info) return
+
+    // console.log('dotified', this.field, info)
 
     for (const field in this.field) {
       if (this.field.hasOwnProperty(field)) {

@@ -6,17 +6,8 @@ export default {
 
     this.disableControls()
 
-    for (const field in this.field) {
-      if (this.field.hasOwnProperty(field)) {
-        this.bindControl(this.field[field])
-      }
-    }
-
-    for (const file in this.file) {
-      if (this.file.hasOwnProperty(file)) {
-        this.bindControl(this.file[file])
-      }
-    }
+    Object.keys(this.field).forEach(field => this.bindControl(this.field[field]))
+    Object.keys(this.file).forEach(file => this.bindControl(this.file[file]))
   },
 
   setMode (mode) {
@@ -39,7 +30,7 @@ export default {
   },
 
   changeMode (mode) {
-    // console.log('changeMode', mode)
+    // console.log('changeMode', mode, this.options.class)
 
     if (mode === 'update' && this.enableControls) {
       this.enableControls()
@@ -51,19 +42,16 @@ export default {
   },
 
   bindControl (control) {
-    // console.log('bindControl')
+    // console.log('bindControl', this.options.class)
     if (control && control.on) {
       control.on('change', () => {
-        // console.log('change', control, this.mode)
-        if (this.mode === 'read') {
-          this.setMode('update')
-        }
+        this.setMode('update')
+        this.emit('changed', this.options.class)
       })
     }
   },
 
   enableControls () {
-    // console.log('enableControls')
     const controls = this.options.controls || ['submit', 'cancel']
 
     if (controls === null) return
@@ -73,6 +61,8 @@ export default {
         this.ui[controls[i]].enable()
       }
     }
+
+    this.emit('enableControls')
   },
 
   disableControls () {

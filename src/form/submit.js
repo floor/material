@@ -1,15 +1,20 @@
 export default {
 
-  submit (ev) {
-    ev.preventDefault()
+  async submit (ev) {
+    if (ev) ev.preventDefault()
     // console.log('submit', this.mode)
 
     const data = this.initData()
 
+    // for (const pair of data.entries()) {
+    //   console.log(`${pair[0]}: ${pair[1]}`)
+    // }
+
     // console.log('data', data)
 
     if (this.update) {
-      this.update(data)
+      // console.log('this.update', this.update)
+      await this.update(data)
     } else {
       this.setMethod(data)
     }
@@ -18,6 +23,7 @@ export default {
   },
 
   setMethod (formData) {
+    // console.log('setMethod', this.mode)
     let method = 'PUT'
     if (this.mode === 'create') {
       method = 'POST'
