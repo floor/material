@@ -4,7 +4,7 @@
  * @param  {[type]} str [description]
  * @return {[type]}     [description]
  */
-function e (instance, ev) {
+const e = (instance, ev) => {
   if (!ev) return instance
   else if (!ev.match(/\./)) {
     return {
@@ -43,7 +43,7 @@ function e (instance, ev) {
  * @param  {string} func A string representing a function accessible in dot notation
  * @return {function}      The function
  */
-function f (instance, func) {
+const f = (instance, func) => {
   if (!func) return
 
   if (typeof func === 'function') {
