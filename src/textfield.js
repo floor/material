@@ -167,6 +167,10 @@ class Textfield {
   get () {
     return this.input.value
   }
+
+  getValue () {
+    return this.input.value
+  }
 }
 
 export default Textfield

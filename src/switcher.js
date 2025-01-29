@@ -151,7 +151,7 @@ class Switcher extends EventEmitter {
     this.emit('change', this.selected)
   }
 
-  set (prop, value) {
+  set (prop, value, silent) {
     switch (prop) {
       case 'value':
         this.setValue(value)
@@ -163,7 +163,7 @@ class Switcher extends EventEmitter {
         this.addOptions(value)
         break
       default:
-        this.setValue(prop)
+        this.setValue(prop, value)
     }
 
     return this
@@ -194,6 +194,15 @@ class Switcher extends EventEmitter {
   }
 
   get () {
+    console.log('get', this.options.mode, this.selected[0])
+    if (this.options.mode === 'unique') {
+      return this.selected[0]
+    } else {
+      return this.selected
+    }
+  }
+
+  getValue () {
     // console.log('get', this.selected)
     if (this.options.mode === 'unique') {
       return this.selected[0]
