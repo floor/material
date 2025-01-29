@@ -26,7 +26,7 @@ class Selector {
 
   init (options) {
     this.options = Object.assign({}, Selector.defaults, options || {})
-    Object.assign(this, emitter, attach)
+    Object.assign(this, emitter, events)
   }
 
   /**
