@@ -1,29 +1,28 @@
-import Component from './component'
-import events from '../module/events'
+import Control from './control'
+import display from '../mixin/display'
 
-class View extends Component {
-  static base = 'view'
+class View extends Control {
+  static defaults = {
+    base: 'view',
+    ...Control.defaults,
+    display: {}
+  }
 
   constructor (options) {
+    // Let Control handle all the event setup
     super(options)
-    this.events = {}
 
-    if (this.options.events) {
-      events.attach(this.options.events, this)
-    }
+    // Add any View-specific initialization here
+    // For example, if View needs display functionality:
+    Object.assign(this, display)
   }
 
-  on (event, listener) {
-    this.events[event] ??= []
-    this.events[event].push(listener)
+  // If View needs any special cleanup:
+  destroy () {
+    // Do View-specific cleanup first
 
-    return this
-  }
-
-  emit (event, ...args) {
-    this.events?.[event]?.forEach(listener => listener.apply(this, args))
-
-    return this
+    // Then let Control handle event cleanup
+    super.destroy()
   }
 }
 
