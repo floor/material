@@ -42,11 +42,13 @@ export default {
   },
 
   bindControl (control) {
-    // console.log('bindControl', this.options.class)
+    // console.log('bindControl', control.class)
     if (control && control.on) {
       control.on('change', () => {
+        if (this.isModified) this.isModified()
         this.setMode('update')
         this.emit('changed', this.options.class)
+        console.log('isModified', this.isModified)
       })
     }
   },

@@ -149,6 +149,9 @@ export default {
    */
   isModified () {
     // console.log('checkModified', this.options.class)
+    // console.log('field', this.field)
+    // console.log('info', this.info)
+
     if (!this.field || !this.info) {
       return false
     }
@@ -161,6 +164,8 @@ export default {
     })
 
     this.modified = modified
+
+    // console.log('modified', modified)
 
     return modified
   },
@@ -176,7 +181,7 @@ export default {
  * @returns {boolean} True if the field is modified
  */
   isFieldModified (fieldName) {
-    console.log('isFieldModified', fieldName)
+    // console.log('isFieldModified', fieldName)
     const currentValue = this.field[fieldName]?.get?.() ?? undefined
     const initialValue = this.info[fieldName] ?? undefined
 
@@ -197,6 +202,8 @@ export default {
     if (initialValue === undefined || initialValue === null) {
       return currentValue !== null && currentValue !== undefined
     }
+
+    log.error('modified', initialValue !== currentValue)
 
     return initialValue !== currentValue
   }
