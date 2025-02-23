@@ -1,5 +1,16 @@
 import { is as isObject } from '../module/object'
 
+const createComponent = (Component, options = {}) => {
+  // Check if Component is a class (has prototype) or function
+  const isClass = Component.prototype && Component.prototype.constructor === Component
+
+  if (isClass) {
+    return new Component(options)
+  }
+
+  return Component(options)
+}
+
 /**
  * Recursively creates components based on a provided schema.
  *
@@ -9,7 +20,7 @@ import { is as isObject } from '../module/object'
  * @param {number} [level=0] - The current level of recursion.
  * @returns {Object} The structure containing all created components.
  */
-function create (schema, container, structure = {}, level = 0, components = []) {
+const create = (schema, container, structure = {}, level = 0, components = []) => {
   level++
   let component
   const object = {}
@@ -20,7 +31,7 @@ function create (schema, container, structure = {}, level = 0, components = []) 
   }
 
   for (let i = 0; i < schema.length; i++) {
-    var name
+    let name
     let options = {}
 
     if (schema[i] instanceof Object && typeof schema[i] === 'function') {
@@ -37,7 +48,7 @@ function create (schema, container, structure = {}, level = 0, components = []) 
         }
       }
 
-      component = new schema[i](options)
+      component = createComponent(schema[i], options)
 
       const element = component.element || component
       if (level === 1) structure.element = element
