@@ -19,7 +19,6 @@ class Component {
   }
 
   async destroy () {
-    console.log('destroy')
     if (this.options.transition && this.element) {
       this.element.classList.remove('show')
       if (this.underlay) {
@@ -36,6 +35,8 @@ class Component {
       dom.destroy(this.element)
       if (this.underlay) dom.destroy(this.underlay)
     }
+
+    // this.emit('destroy')
   }
 }
 

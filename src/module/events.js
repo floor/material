@@ -59,21 +59,22 @@ const events = {
   },
 
   detach (eventsArray, context) {
+    // console.log('this', this)
     const uid = context._uid
     if (!this.eventHandlers[uid]) return
 
     eventsArray.forEach(([eventDef, funcDef, option]) => {
       const e = extract.e(context, eventDef)
       const handler = this.eventHandlers[uid][eventDef]
-      if (handler) {
-        e.element.removeEventListener(e.name, handler)
-      } else if (e.element.off) {
-        e.element.off(e.name, handler)
-      }
 
-      delete this.eventHandlers[uid][eventDef]
-    }
-    )
+      if (handler && e?.element?.removeEventListener) {
+        e.element.removeEventListener(e.name, handler)
+        delete this.eventHandlers[uid][eventDef]
+      } else if (e?.element?.off) {
+        e.element.off(e.name, handler)
+        delete this.eventHandlers[uid][eventDef]
+      }
+    })
   },
 
   list (context) {

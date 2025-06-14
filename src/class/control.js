@@ -31,7 +31,7 @@ class Control extends Component {
     }
 
     // Clean up emitter subscriptions
-    this.removeAll()
+    // this.removeAll()
 
     // Emit destroy event before DOM removal
     this.emit('destroy')
