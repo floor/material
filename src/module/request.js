@@ -64,7 +64,22 @@ const request = async (
       if (debug) {
         console.error('Response error:', response.status, response.statusText)
       }
-      throw new Error(`HTTP error! status: ${response.status}`)
+
+      // Try to parse error response as JSON to preserve backend error data
+      let errorData
+      try {
+        errorData = await response.json()
+      } catch (jsonError) {
+        // If JSON parsing fails, throw basic error (backward compatible)
+        throw { error: `HTTP error! status: ${response.status}` }
+      }
+
+      // If we successfully parsed JSON, throw it with all data
+      // If we successfully parsed JSON, throw it with all data
+      throw {
+        error: errorData.error || `HTTP error! status: ${response.status}`,
+        ...errorData
+      }
     }
 
     // Handle response based on Accept header
@@ -77,7 +92,12 @@ const request = async (
     if (headers.Accept === 'text/xml') {
       throw error
     } else {
-      throw { error: error.message || 'Request failed' }
+      // If error is already an object with error field, preserve it
+      if (typeof error === 'object' && error.error) {
+        throw error
+      } else {
+        throw { error: error.message || 'Request failed' }
+      }
     }
   }
 }
