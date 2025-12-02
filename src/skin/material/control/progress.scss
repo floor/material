@@ -1,10 +1,11 @@
-// Here is where the magic happens
+@use "sass:color";
 
+// Here is where the magic happens
 
 .progress {
   width: 100%;
   height: 4px;
-  background-color: lighten($primary-color, 30%);
+  background-color: color.adjust($primary-color, $lightness: 30%);
   .bar {
     width: 0%;
     height: 100%;
@@ -18,7 +19,7 @@
   height: 4px;
   display: block;
   width: 100%;
-  background-color: lighten($primary-color, 30%);
+  background-color: color.adjust($primary-color, $lightness: 30%);
   overflow: hidden;
   .determinate {
     position: absolute;
@@ -26,31 +27,35 @@
     top: 0;
     bottom: 0;
     background-color: $primary-color;
-    transition: width .3s linear;
+    transition: width 0.3s linear;
   }
   .bar {
     background-color: $primary-color;
     &:before {
-      content: '';
+      content: "";
       position: absolute;
       background-color: inherit;
       top: 0;
       left: 0;
       bottom: 0;
       will-change: left, right;
-      -webkit-animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
-      animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+      -webkit-animation: indeterminate 2.1s
+        cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+      animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395)
+        infinite;
     }
     &:after {
-      content: '';
+      content: "";
       position: absolute;
       background-color: inherit;
       top: 0;
       left: 0;
       bottom: 0;
       will-change: left, right;
-      -webkit-animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
-      animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+      -webkit-animation: indeterminate-short 2.1s
+        cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+      animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1)
+        infinite;
       -webkit-animation-delay: 1.15s;
       animation-delay: 1.15s;
     }
@@ -141,7 +146,7 @@
   }
 
   .path {
-    stroke: #4285F4;
+    stroke: #4285f4;
     stroke-dasharray: 187;
     stroke-dashoffset: 0;
     transform-origin: center;

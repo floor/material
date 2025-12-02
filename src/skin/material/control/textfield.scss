@@ -1,3 +1,4 @@
+
 .material-textfield {
   display: block;
   position: relative;
@@ -6,10 +7,10 @@
   margin-bottom: 16px;
   vertical-align: top;
   .textfield-label {
-    transition: .2s;
+    transition: 0.2s;
     color: rgba(0, 0, 0, 0.3);
     position: absolute;
-    font-size: .7em;
+    font-size: 0.7em;
     top: -2px;
   }
 
@@ -20,32 +21,32 @@
     bottom: 0px;
     height: 2px;
     width: 2px;
-    background-color: #4891F4;
-    transition: .1s;
+    background-color: #4891f4;
+    transition: 0.1s;
   }
 
   &.textfield-error {
     .textfield-label {
-      color: #F44336;
-      color: #D6392C;
+      color: #f44336;
+      color: #d6392c;
     }
 
     textarea,
     input {
-      border-bottom: 1px solid #F44336;
+      border-bottom: 1px solid #f44336;
     }
   }
 
   &.hide {
     display: none;
-
-// states
   }
 }
+
+// states
 .material-textfield {
   &.is-focused {
     .textfield-label {
-      transition: .2s;
+      transition: 0.2s;
     }
 
     .textfield-underline {
@@ -53,14 +54,14 @@
       display: block;
       width: 100%;
       left: 0;
-      transition: .1s;
+      transition: 0.1s;
       background-color: $primary-color;
     }
   }
 
   &.is-empty {
     .textfield-label {
-      transition: .2s;
+      transition: 0.2s;
       pointer-events: none;
       position: absolute;
       top: 20px;
@@ -72,8 +73,8 @@
 
     &.is-focused {
       .textfield-label {
-        transition: .2s;
-        font-size: .7em;
+        transition: 0.2s;
+        font-size: 0.7em;
         top: -2px;
       }
     }
@@ -83,13 +84,9 @@
       width: 100%;
       border: none;
       margin: 0;
-
-      // margin-top: 13px;
       background-color: transparent;
       border-radius: 0;
       border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-
-      //outline:none;
     }
   }
 
@@ -103,11 +100,8 @@
     border-radius: 0;
     border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 
-    //outline:none;
     &:hover {
       cursor: default;
-
-      //background-color: rgba(100, 100, 100, .06);
     }
 
     &:focus {
@@ -117,23 +111,16 @@
 
   input[readonly],
   textarea[readonly] {
-    //color: #9A9A9A;
-    //color: rgba(0, 0, 0, 1);
-    //background-color: rgba(255,255,255,1);
     border-bottom: 1px solid transparent;
 
     &:hover {
       cursor: default;
-
-      //background-color: rgba(255,255,255,1);
     }
 
     &:focus,
     &:active {
       cursor: text;
       border-bottom: 1px solid transparent !important;
-
-      //background-color: rgba(255,255,255,1);
     }
   }
 }
@@ -141,7 +128,7 @@
 .dark-mode {
   .material-textfield {
     .textfield-label {
-      transition: .2s;
+      transition: 0.2s;
       color: rgba(255, 255, 255, 0.3);
     }
 

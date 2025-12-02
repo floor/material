@@ -1,9 +1,10 @@
+
 .material-tabs {
   position: relative;
   text-align: center;
   overflow: hidden;
   white-space: nowrap;
-  >.material-list {
+  > .material-list {
     display: inline-block;
     white-space: nowrap;
     padding: 0;
@@ -30,7 +31,7 @@
       cursor: pointer;
       overflow: hidden;
       vertical-align: middle;
-      transition: .4s;
+      transition: 0.4s;
       margin: 0;
       background-color: transparent;
     }
@@ -40,7 +41,7 @@
     height: 2px;
     bottom: 0;
     background-color: $primary-color;
-    transition: .2s;
+    transition: 0.2s;
   }
 
   &.primary-color {

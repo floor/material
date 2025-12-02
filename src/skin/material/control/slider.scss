@@ -1,3 +1,4 @@
+
 .material-slider {
   display: block;
   position: relative;
@@ -9,8 +10,6 @@
   flex-direction: column;
   flex-wrap: nowrap;
 
-  //overflow: hidden;
-  //border-bottom: 1px solid rgba(100, 100, 100, 0.1);
   input {
     position: absolute;
     left: -10000px;
@@ -41,9 +40,7 @@
       display: block;
       height: 48px;
       padding: 0;
-
-      //background-color: rgba(34, 31, 31, .26);
-      transition: .3s;
+      transition: 0.3s;
     }
 
     .slider-canvas {
@@ -61,7 +58,7 @@
       display: block;
       height: 2px;
       padding: 0;
-      background-color: #4054B2;
+      background-color: #4054b2;
       border-radius: 7px;
     }
 
@@ -79,7 +76,7 @@
       cursor: pointer;
       margin: auto;
       border-radius: 50%;
-      transition: .2s;
+      transition: 0.2s;
 
       .slider-pin {
         fill: $secondary-color;
@@ -100,23 +97,16 @@
       border-radius: 50%;
       background-color: white;
       border: 2px solid rgba(241, 241, 241, 100);
-
-      //box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24), 0 0 2px 0 rgba(0, 0, 0, 0.12);
-      transition: .2s;
+      transition: 0.2s;
 
       &.notnull {
-        background-color: #4054B2;
-        border: 2px solid #4054B2;
+        background-color: #4054b2;
+        border: 2px solid #4054b2;
       }
 
       &:active {
-        background-color: #4054B2;
-        border: 2px solid #4054B2;
-      }
-
-      &:hover {
-        // background-color: #4054B2;
-        // border: 2px solid #4054B2;
+        background-color: #4054b2;
+        border: 2px solid #4054b2;
       }
     }
 
@@ -125,14 +115,12 @@
         top: 50%;
         background-color: white;
         border: 2px solid rgba(241, 241, 241, 100);
-
-        //box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24), 0 0 2px 0 rgba(0, 0, 0, 0.12);
         transition: none;
         transform: scale(1.5) translateY(-4px);
 
         &.notnull {
-          background-color: #4054B2;
-          border: 2px solid #4054B2;
+          background-color: #4054b2;
+          border: 2px solid #4054b2;
         }
       }
     }
@@ -151,27 +139,23 @@
 
   &.is-disabled {
     .slider-label {
-      opacity: .5;
+      opacity: 0.5;
     }
 
     .slider-control {
       .slider-track {
         .slider-knob {
-          background-color: #BDBDBD;
+          background-color: #bdbdbd;
           border: 2px solid white;
         }
 
         .slider-track-value {
-          background-color: #BDBDBD;
+          background-color: #bdbdbd;
         }
       }
 
       order: 3;
       cursor: pointer;
-
-      // .slider-track
-
-      // .slider-knob
     }
   }
 
@@ -199,7 +183,7 @@
           opacity: 0;
           transform: scale(0.2);
           display: block;
-          transition: .2s;
+          transition: 0.2s;
         }
       }
     }
@@ -211,7 +195,7 @@
     .slider-control {
       .slider-track {
         .slider-tarck-value {
-          background-color: #5C5C5C;
+          background-color: #5c5c5c;
         }
       }
     }

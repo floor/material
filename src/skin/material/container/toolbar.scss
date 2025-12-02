@@ -1,19 +1,13 @@
+
 .material-toolbar {
   display: flex;
   flex-direction: row;
-  //height: 64px
-
-  // position: absolute
-  // top: 0
-  // left: 0
-  // right: 0
 
   z-index: 3;
   flex: none;
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  //padding: 14px 16px
 
   &.type-app {
     z-index: 5;
@@ -23,8 +17,10 @@
       position: fixed;
     }
     &.is-scrolled {
-      transition: box-shadow .3s;
-      box-shadow: 0 0 4px rgba(0, 0, 0, 0.14),0 4px 8px rgba(0, 0, 0, 0.28);
+      transition: box-shadow 0.3s;
+      box-shadow:
+        0 0 4px rgba(0, 0, 0, 0.14),
+        0 4px 8px rgba(0, 0, 0, 0.28);
     }
   }
 
@@ -33,7 +29,6 @@
     top: 0;
     left: 0;
     right: 0;
-    //display: block
   }
 
   &.is-fixed {
@@ -41,10 +36,11 @@
     top: 0;
     left: 0;
     right: 0;
-    //display: block
     &.is-scrolled {
-      transition: box-shadow .3s;
-      box-shadow: 0 0 4px rgba(0, 0, 0, 0.14),0 4px 8px rgba(0, 0, 0, 0.28);
+      transition: box-shadow 0.3s;
+      box-shadow:
+        0 0 4px rgba(0, 0, 0, 0.14),
+        0 4px 8px rgba(0, 0, 0, 0.28);
     }
   }
 
@@ -64,7 +60,6 @@
     font-size: 1.3rem;
     font-weight: 300;
     line-height: 2.3rem;
-    //color: $primary-color-text
     padding: 0;
     margin-left: 16px;
     overflow: hidden;
@@ -179,14 +174,6 @@
       .checkbox-label {
         color: $secondary-color-text;
         padding: 10px 0 6px;
-
-
-
-
-// @media only screen and (max-width: 768px)
-//   .material-toolbar
-//     &.type-app
-//       padding: 10px 16px
       }
     }
   }

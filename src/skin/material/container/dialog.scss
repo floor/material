@@ -1,3 +1,4 @@
+
 .dialog {
   position: fixed;
   top: 0;
@@ -9,32 +10,23 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-
-  //display: none;
-  //visibility: hidden;
   opacity: 0;
-
-  //z-index: -1;
-  transition: .2s;
+  transition: 0.2s;
 
   &.show {
-    // display: flex;
-    // width: 10;
-    // height: 0;
-    //transition: .2s;
-    transition: .1s;
+    transition: 0.1s;
     opacity: 1;
 
     .surface {
       transform: translateY(0) scale(1);
       opacity: 1;
       margin-top: 0;
-      transition: .1s;
+      transition: 0.1s;
     }
   }
 
   .surface {
-    transition: .1s;
+    transition: 0.1s;
     max-height: 600px;
     display: flex;
     flex-direction: column;
@@ -42,7 +34,10 @@
     opacity: 0;
     border-radius: 2px;
     background-color: $background-color;
-    box-shadow: 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14), 0px 9px 46px 8px rgba(0, 0, 0, 0.12);
+    box-shadow:
+      0px 11px 15px -7px rgba(0, 0, 0, 0.2),
+      0px 24px 38px 3px rgba(0, 0, 0, 0.14),
+      0px 9px 46px 8px rgba(0, 0, 0, 0.12);
     transform: translateY(150px) scale(0.8);
   }
 }
@@ -53,8 +48,6 @@
   left: 0;
   bottom: 0;
   right: 0;
-
-  //height: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: -webkit-box;
   display: -ms-flexbox;
@@ -62,17 +55,12 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-
-  //display: none;
-  //visibility: hidden;
   z-index: 20;
   opacity: 0;
-
-  //z-index: -1;
-  transition: .2s;
+  transition: 0.2s;
 
   .dialog-surface {
-    transition: .1s;
+    transition: 0.1s;
     max-height: 600px;
     display: flex;
     min-width: 320px;
@@ -83,12 +71,11 @@
     border-radius: 2px;
     background-color: $background-color;
     overflow: scroll;
-    box-shadow: 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14), 0px 9px 46px 8px rgba(0, 0, 0, 0.12);
+    box-shadow:
+      0px 11px 15px -7px rgba(0, 0, 0, 0.2),
+      0px 24px 38px 3px rgba(0, 0, 0, 0.14),
+      0px 9px 46px 8px rgba(0, 0, 0, 0.12);
     transform: translateY(150px) scale(0.8);
-
-    // >*:first-child
-    //   margin-top: 24px
-
 
     .dialog-title {
       font-weight: bold;
@@ -101,7 +88,7 @@
       flex: 1;
       padding: 0 24px 24px 24px;
       &.material-text {
-        opacity: .7;
+        opacity: 0.7;
       }
     }
 
@@ -110,7 +97,6 @@
       display: block;
       text-align: right;
       overflow: hidden;
-      //padding: 8px
     }
 
     .material-toolbar {
@@ -134,11 +120,8 @@
 
     .component-action {
       flex: none;
-      display: 'flex';
+      display: "flex";
       text-align: right;
-
-      // float: right;
-      // justify-content: flex-end;
       padding: 8px;
 
       .material-button {
@@ -148,38 +131,26 @@
   }
 
   &.dialog-show {
-    // display: flex;
-    // width: 10;
-    // height: 0;
-    //transition: .2s;
-    transition: .1s;
+    transition: 0.1s;
     opacity: 1;
 
-    //
     .dialog-surface {
       transform: translateY(0) scale(1);
       opacity: 1;
       margin-top: 0;
-      transition: .1s;
+      transition: 0.1s;
     }
   }
 
   &.dialog-closing {
     pointer-events: none;
     opacity: 0;
+    transition: 0.2s;
 
-    // display: flex;
-    // width: 10;
-    // height: 0;
-    transition: .2s;
-
-    // transition: .2s;
-    //opacity: 1;
-    //
     .dialog-surface {
       opacity: 0;
       transform: translateY(150px) scale(0.8);
-      transition: .1s;
+      transition: 0.1s;
     }
   }
 }

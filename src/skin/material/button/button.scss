@@ -1,3 +1,4 @@
+
 .button {
   display: flex;
   -webkit-font-smoothing: antialiased;
@@ -64,20 +65,19 @@
     }
     .button-label {
       order: 1;
-
-// states
     }
   }
 }
+
+// states
 .button {
   &.is-disabled {
     pointer-events: none;
-    opacity: .3;
+    opacity: 0.3;
   }
 
   &:focus {
-    //transition-delay: .2s
-    transition-duration: .3s;
+    transition-duration: 0.3s;
     background-color: rgba($default-color-text, 0.05);
     &:hover {
       background-color: rgba($default-color-text, 0.05);
@@ -85,24 +85,21 @@
   }
 
   &:active {
-    transition-duration: .2s;
-    &:focus {
-      //transition-delay: .2s
-    }
+    transition-duration: 0.2s;
   }
 
   &:hover {
-    transition-duration: .2s;
+    transition-duration: 0.2s;
     background-color: rgba($default-color-text, 0.03);
   }
 
   &:disabled {
     pointer-events: none;
-    opacity: .3;
-
-// styles
+    opacity: 0.3;
   }
 }
+
+// styles
 .button {
   &.style-compact {
     > .button-label {
@@ -117,22 +114,22 @@
       font-size: 0.8125rem;
       padding-top: 2px;
       padding-bottom: 2px;
-
-// color
     }
   }
 }
+
+// color
 .button {
   &.primary-color {
     color: $primary-color;
     &:focus {
-      background-color: rgba($primary-color, .1);
+      background-color: rgba($primary-color, 0.1);
       &:hover {
-        background-color: rgba($primary-color, .1);
+        background-color: rgba($primary-color, 0.1);
       }
     }
     &:hover {
-      background-color: rgba($primary-color, .05);
+      background-color: rgba($primary-color, 0.05);
     }
 
     .button-icon {
@@ -142,7 +139,7 @@
     }
 
     .material-ripple {
-      background-color: rgba($primary-color, .1);
+      background-color: rgba($primary-color, 0.1);
     }
   }
 
@@ -154,21 +151,21 @@
       }
     }
     .material-ripple {
-      background-color: rgba($secondary-color, .1);
+      background-color: rgba($secondary-color, 0.1);
     }
     &:focus {
-      background-color: rgba($secondary-color, .10);
+      background-color: rgba($secondary-color, 0.1);
       &:hover {
-        background-color: rgba($secondary-color, .10);
+        background-color: rgba($secondary-color, 0.1);
       }
     }
     &:hover {
-      background-color: rgba($secondary-color, .05);
-
-// theme
+      background-color: rgba($secondary-color, 0.05);
     }
   }
 }
+
+// theme
 .dark-mode .button,
 .button.dark-mode {
   color: $default-color-text-dark;
@@ -178,21 +175,14 @@
     }
   }
   .material-ripple {
-    background-color: rgba($default-color-text-dark, .1);
-  }
-  &:focus {
-    //background-color: rgba($default-color-text-dark, .1)
-    &:hover {
-      //background-color: rgba($default-color-text-dark, .1)
-    }
+    background-color: rgba($default-color-text-dark, 0.1);
   }
   &:hover {
-    background-color: rgba($default-color-text-dark, .05);
+    background-color: rgba($default-color-text-dark, 0.05);
+  }
 
   // primary color
-  }
   &.primary-color {
-    //background-color: $primary-color;
     color: $primary-color-dark;
     .button-icon {
       svg {
@@ -200,20 +190,20 @@
       }
     }
     .material-ripple {
-      background-color: rgba($primary-color-dark, .3);
+      background-color: rgba($primary-color-dark, 0.3);
     }
     &:focus {
-      background-color: rgba($primary-color-dark, .2);
+      background-color: rgba($primary-color-dark, 0.2);
       &:hover {
-        background-color: rgba($primary-color-dark, .2);
+        background-color: rgba($primary-color-dark, 0.2);
       }
     }
     &:hover {
-      background-color: rgba($primary-color-dark, .1);
-
-  // secondary color
+      background-color: rgba($primary-color-dark, 0.1);
     }
   }
+
+  // secondary color
   &.secondary-color {
     color: $secondary-color-dark;
     .button-icon {
@@ -222,18 +212,18 @@
       }
     }
     .material-ripple {
-      background-color: rgba($secondary-color-dark, .3);
+      background-color: rgba($secondary-color-dark, 0.3);
     }
 
     &:focus {
-      background-color: rgba($secondary-color-dark, .2);
+      background-color: rgba($secondary-color-dark, 0.2);
       &:hover {
-        background-color: rgba($secondary-color-dark, .2);
+        background-color: rgba($secondary-color-dark, 0.2);
       }
     }
 
     &:hover {
-      background-color: rgba($secondary-color-dark, .1);
+      background-color: rgba($secondary-color-dark, 0.1);
     }
   }
 }

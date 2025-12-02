@@ -1,0 +1,30 @@
+// Material Design color variables with defaults
+// These can be overridden by consumers using @use "variables" with (...)
+
+// Background colors
+$background-color: #ffffff !default;
+$background-color-dark: #202124 !default;
+
+// Surface colors
+$surface-color: #ffffff !default;
+$surface-color-dark: #333333 !default;
+
+// Default colors
+$default-color: rgba(0, 0, 0, 1) !default;
+$default-color-dark: rgba(255, 255, 255, 1) !default;
+$default-color-text: rgba(0, 0, 0, 0.87) !default;
+$default-color-text-dark: rgba(255, 255, 255, 0.87) !default;
+$default-color-button: rgba(0, 0, 0, 0.47) !default;
+$default-color-icon: rgba(0, 0, 0, 0.67) !default;
+
+// Primary colors
+$primary-color: #6200ee !default;
+$primary-color-dark: #bb86fc !default;
+$primary-color-text: rgba(255, 255, 255, 0.87) !default;
+$primary-color-text-dark: rgba(255, 255, 255, 0.87) !default;
+
+// Secondary colors
+$secondary-color: #03dac6 !default;
+$secondary-color-dark: #03dac6 !default;
+$secondary-color-text: rgba(0, 0, 0, 0.87) !default;
+$secondary-color-text-dark: rgba(0, 0, 0, 0.87) !default;
