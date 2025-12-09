@@ -7,12 +7,13 @@ export default {
     options = options || {}
 
     // console.log('mode', this.mode)
+    const modeConfig = this.options[this.mode] || {}
     const method = options.method ||
-      this.options[this.mode].method ||
+      modeConfig.method ||
       'PUT'
 
     const action = options.action ||
-      this.options[this.mode].action ||
+      modeConfig.action ||
       this.options.action
 
     if (this.beforeCreate) {
