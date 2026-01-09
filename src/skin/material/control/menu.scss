@@ -1,12 +1,10 @@
 .menu {
-  //display: none
-  &.show {
-    //display: block
-  }
+  display: none;
+
   .list {
     background: white;
     .item {
-      color: rgba(0,0,0,.87);
+      color: rgba(0, 0, 0, 0.87);
     }
   }
 
@@ -17,5 +15,8 @@
     overflow: hidden;
     opacity: 0;
     transition: 0.2s;
+    &.show {
+      opacity: 1;
+    }
   }
 }

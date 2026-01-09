@@ -135,8 +135,6 @@ class Dialog {
   }
 
   close () {
-    // this.hide()
-
     if (this.options.close) {
       this.destroy()
     }
