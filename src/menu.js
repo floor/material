@@ -37,6 +37,7 @@ class Menu extends Control {
   setup () {
     this.menus = []
     this.closeTimeout = null
+    this.closeDelay = 300
 
     document.addEventListener('click', this.handleDocumentClick)
   }
@@ -64,8 +65,26 @@ class Menu extends Control {
       item = new Element(obj)
 
       item.addEventListener('mouseenter', () => {
-        if (this.menu) {
-          this.menu.destroy()
+        if (obj.items && Array.isArray(obj.items)) {
+          // Clear any pending close timeout when entering submenu trigger
+          if (this.closeTimeout) {
+            clearTimeout(this.closeTimeout)
+            this.closeTimeout = null
+          }
+        } else {
+          // For non-submenu items, schedule submenu close with delay
+          if (this.menu) {
+            if (this.closeTimeout) {
+              clearTimeout(this.closeTimeout)
+            }
+            this.closeTimeout = setTimeout(() => {
+              if (this.menu) {
+                this.menu.destroy()
+                this.menu = null
+              }
+              this.closeTimeout = null
+            }, this.closeDelay)
+          }
         }
       })
 
@@ -73,6 +92,18 @@ class Menu extends Control {
         item.classList.add('sub')
 
         item.addEventListener('mouseenter', () => {
+          // Clear any pending close timeout
+          if (this.closeTimeout) {
+            clearTimeout(this.closeTimeout)
+            this.closeTimeout = null
+          }
+
+          // Destroy existing submenu before creating new one
+          if (this.menu) {
+            this.menu.destroy()
+            this.menu = null
+          }
+
           this.menu = new Menu({
             class: 'floating',
             target: item,
@@ -86,6 +117,14 @@ class Menu extends Control {
             offsetX: 8,
             offsetY: 8
           }).show()
+
+          // When mouse enters the submenu, cancel any close timeout
+          this.menu.element.addEventListener('mouseenter', () => {
+            if (this.closeTimeout) {
+              clearTimeout(this.closeTimeout)
+              this.closeTimeout = null
+            }
+          })
 
           this.menu.on('select', (value, name) => {
             this.emit('select', `${obj.name}:${value}`, name)
@@ -122,7 +161,10 @@ class Menu extends Control {
   }
 
   close () {
-    // console.log('')
+    if (this.closeTimeout) {
+      clearTimeout(this.closeTimeout)
+      this.closeTimeout = null
+    }
     this.menus.forEach(menu => {
       menu.destroy()
     })
