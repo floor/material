@@ -6,14 +6,14 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@gitlab.com/alkaloid/material.git"
+    "url": "git+https://github.com/floor/material.git"
   },
   "author": "Jérôme Vial <jerome.vial@gmail.com>",
   "license": "GPL-3",
   "bugs": {
-    "url": "https://gitlab.com/alkaloid/material/issues"
+    "url": "https://github.com/floor/material/issues"
   },
-  "homepage": "https://gitlab.com/alkaloid/material",
+  "homepage": "https://github.com/floor/material",
   "keywords": [
     "lightweight material design ui component web es6 vanilla javascript"
   ],
