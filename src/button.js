@@ -1,9 +1,7 @@
-import {
-  Control,
-  display,
-  dataset,
-  ripple
-} from '../index'
+import Control from './class/control'
+import display from './mixin/display'
+import dataset from './module/dataset'
+import ripple from './module/ripple'
 
 const DEFAULT_TYPE = 'button'
 const DEFAULT_CLASS = 'button'

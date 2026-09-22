@@ -1,6 +1,6 @@
-import {
-  Control, Element, display
-} from '../index'
+import Control from './class/control'
+import Element from './element'
+import display from './mixin/display'
 
 import position from './mixin/position'
 

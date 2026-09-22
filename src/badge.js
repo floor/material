@@ -1,4 +1,5 @@
-import { Component, display } from '../index'
+import Component from './class/component'
+import display from './mixin/display'
 
 const isStringNumber = (str) => !isNaN(parseFloat(str)) && isFinite(str)
 

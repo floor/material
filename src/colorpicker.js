@@ -1,9 +1,7 @@
-import {
-  Element,
-  Control,
-  display,
-  dataset
-} from '../index'
+import Element from './element'
+import Control from './class/control'
+import display from './mixin/display'
+import dataset from './module/dataset'
 
 class ColorPicker extends Control {
   static defaults = {
