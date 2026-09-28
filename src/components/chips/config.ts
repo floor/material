@@ -91,16 +91,8 @@ export const getElementConfig = (config: ChipsConfig) => {
 interface ChipsApiHost {
   chips?: Partial<ApiOptions["chips"]>;
   layout?: Partial<ApiOptions["layout"]>;
-  /**
-   * Two different things share this name, which is why it is a union.
-   *
-   * withDom puts the label *element* here. withChipsLabel would put a label
-   * *API* here — setText, getText, setPosition — but it is never applied to
-   * the pipe, which is FLO-231. So today the `?.` chains below always miss and
-   * the label block of the API config is inert. The union says that rather
-   * than hiding it behind a type that describes only the half that is absent.
-   */
-  label?: HTMLElement | Partial<ApiOptions["label"]>;
+  /** withDom's label API, which adds, renames, removes and places the label. */
+  labelControl?: Partial<ApiOptions["label"]>;
   // The feature calls these enable and disable; ApiOptions calls them
   // enableKeyboardNavigation and disableKeyboardNavigation, and this function
   // is the bridge. Named from the producer.
@@ -109,17 +101,6 @@ interface ChipsApiHost {
   off?: (event: string, handler: EventCallback) => unknown;
   lifecycle?: { destroy?: () => void };
 }
-
-/**
- * The label API, if there is one. See the note on ChipsApiHost's `label`:
- * today there never is, because withChipsLabel is not in the pipe (FLO-231).
- * A structural check rather than `instanceof HTMLElement`, so this needs no
- * DOM global.
- */
-const labelApi = (
-  label: ChipsApiHost["label"],
-): Partial<ApiOptions["label"]> | undefined =>
-  label && "setText" in label ? label : undefined;
 
 export const getApiConfig = (
   comp: ChipsApiHost,
@@ -150,10 +131,10 @@ export const getApiConfig = (
     isVertical: () => comp.layout?.isVertical?.() ?? false,
   },
   label: {
-    setText: (t) => labelApi(comp.label)?.setText?.(t),
-    getText: () => labelApi(comp.label)?.getText?.() ?? "",
-    setPosition: (p) => labelApi(comp.label)?.setPosition?.(p),
-    getPosition: () => labelApi(comp.label)?.getPosition?.() ?? "start",
+    setText: (t) => comp.labelControl?.setText?.(t),
+    getText: () => comp.labelControl?.getText?.() ?? "",
+    setPosition: (p) => comp.labelControl?.setPosition?.(p),
+    getPosition: () => comp.labelControl?.getPosition?.() ?? "start",
   },
   keyboard: {
     enableKeyboardNavigation: () => comp.keyboard?.enable?.(),
