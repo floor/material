@@ -94,3 +94,4 @@ demo/
 .check-react-*.js
 .check-vue.js
 .check-svelte.js
+.check-solid.js

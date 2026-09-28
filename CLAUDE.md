@@ -914,7 +914,7 @@ under `.agents/` and are not versioned; the manifest is.
 ## Prohibited Actions
 
 **❌ NEVER do these:**
-- Use React or any framework in components or core (pure TypeScript/JavaScript only). The one exception is the framework adapters (`src/react`, `src/vue`, `src/svelte`, and later `src/solid`), which wrap the elements in `src/elements` and are generated from them (decided 2026-09-28); the Svelte components are `.svelte` files the build writes to `dist/svelte` (`scripts/svelte-package.ts`). The frameworks stay optional peer dependencies: mtrl itself has no runtime dependency
+- Use React or any framework in components or core (pure TypeScript/JavaScript only). The one exception is the framework adapters (`src/react`, `src/vue`, `src/svelte`, `src/solid`), which wrap the elements in `src/elements` and are generated from them (decided 2026-09-28); the Svelte components are `.svelte` files the build writes to `dist/svelte` (`scripts/svelte-package.ts`). The frameworks stay optional peer dependencies: mtrl itself has no runtime dependency
 - Add external dependencies (zero dependencies policy)
 - Create markdown documentation files in this package
 - Hardcode CSS prefix in TypeScript or SCSS files
