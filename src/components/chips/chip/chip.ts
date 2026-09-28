@@ -1,7 +1,8 @@
 import { getCleanup } from "../../../core/compose/cleanup";
 import { pipe } from "../../../core/compose/pipe";
 import { createBase, withElement } from "../../../core/compose/component";
-import { withEvents, withRipple, withLifecycle } from "../../../core/compose/features";
+import { withEvents, withLifecycle } from "../../../core/compose/features";
+import { createRipple } from "../../../core/compose/features/ripple";
 import { createComponentConfig, createElementConfig } from "../../../core/config/component";
 import { setHTML } from "../../../core/dom/html";
 import type { ChipConfig, ChipComponent, ChipEvents } from "../types";
@@ -15,7 +16,7 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
   const options = createComponentConfig<ChipConfig>({ type: "filter", ripple: true }, config, "chip");
   const type = options.type ?? "filter";
   const selectable = type === "filter" || type === "input";
-  const base = pipe(createBase, withEvents(), withElement(createElementConfig(options, { tag: "div" })), withRipple(options), withLifecycle())(options);
+  const base = pipe(createBase, withEvents(), withElement(createElementConfig(options, { tag: "div" })), withLifecycle())(options);
   const root = base.element;
   const resources = getCleanup(base);
   root.classList.add(base.getClass(`chip--${type}`));
@@ -25,6 +26,14 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
   action.className = base.getClass("chip__action");
   if (selectable) action.setAttribute("role", "checkbox");
   root.append(action);
+  // The ripple belongs to the chip's action, not the whole chip: mounted on the root,
+  // a press on the remove or trailing button rippled across the chip it does not
+  // activate.
+  if (options.ripple) {
+    const ripple = createRipple();
+    ripple.mount(action);
+    resources.add(() => ripple.unmount(action));
+  }
 
   const leading = document.createElement("span");
   leading.className = base.getClass("chip__leading-icon");
