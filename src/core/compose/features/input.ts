@@ -35,7 +35,7 @@ export interface InputConfig {
   /**
    * Accessibility label text
    */
-  label?: string;
+  label?: string | Node;
 
   /**
    * Alternative accessibility label
@@ -142,7 +142,8 @@ export const withInput =
       disabled: config.disabled,
       value: config.value || "on",
       // an explicit ariaLabel is a choice; the label text is only a fallback
-      "aria-label": config.ariaLabel || config.label,
+      // A node (the web component's <slot>) names the input through its <label>.
+      "aria-label": config.ariaLabel || (typeof config.label === "string" ? config.label : undefined),
     };
 
     Object.entries(attributes).forEach(([key, value]) => {

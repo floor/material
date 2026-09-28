@@ -9,7 +9,11 @@ export interface TextLabelConfig {
   /**
    * Label text
    */
-  label?: string;
+  /**
+   * The label: text, or a node placed inside the label element (the
+   * web components pass a `<slot>` so the page's content is the label).
+   */
+  label?: string | Node;
 
   /**
    * Label position ('start' or 'end')
@@ -76,7 +80,8 @@ export const withTextLabel =
     // component applied the feature -- checkbox, slider, switch or
     // textfield. FLO-120.
     labelElement.className = `${config.prefix}-${config.componentName}__label ${config.prefix}-${config.componentName}__label--${position}`;
-    labelElement.textContent = config.label;
+    if (typeof config.label === "string") labelElement.textContent = config.label;
+    else labelElement.append(config.label);
     // the label names the input: without the link a screen reader has no
     // name for the field and a click on the label focuses nothing
     const input = (component as { input?: HTMLElement }).input;

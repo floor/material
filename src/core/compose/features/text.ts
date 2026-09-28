@@ -11,7 +11,8 @@ export interface TextManager {
    * @param text - Text content to set
    * @returns TextManager instance for chaining
    */
-  setText: (text: string) => TextManager;
+  /** Text, or a node placed inside the text element (the web components pass a `<slot>`). */
+  setText: (text: string | Node) => TextManager;
   
   /**
    * Gets current text content
@@ -33,7 +34,8 @@ export interface TextConfig {
   /**
    * Initial text content
    */
-  text?: string;
+  /** Text, or a node placed inside the text element. */
+  text?: string | Node;
   
   /**
    * CSS class prefix
@@ -76,13 +78,14 @@ const createText = (element: HTMLElement, config: TextConfig = {}): TextManager 
   /**
    * Creates a text element with the given content
    */
-  const createElement = (content: string): HTMLElement => {
+  const createElement = (content: string | Node): HTMLElement => {
     const span = document.createElement('span');
     // BEM, as with withIcon and withTextLabel: this text belongs to whichever
     // component applied the feature -- button, extended-fab or snackbar.
     // FLO-120.
     span.className = `${PREFIX}-${config.componentName || 'component'}__text`;
-    span.textContent = content;
+    if (typeof content === "string") span.textContent = content;
+    else span.append(content);
     return span;
   };
 
@@ -92,7 +95,7 @@ const createText = (element: HTMLElement, config: TextConfig = {}): TextManager 
      * @param text - Text content to set
      * @returns TextManager instance for chaining
      */
-    setText(text: string): TextManager {
+    setText(text: string | Node): TextManager {
       if (!textElement && text) {
         // Create new text element
         textElement = createElement(text);
@@ -105,7 +108,8 @@ const createText = (element: HTMLElement, config: TextConfig = {}): TextManager 
         }
       } else if (textElement) {
         // Update existing text
-        textElement.textContent = text;
+        if (typeof text === "string") textElement.textContent = text;
+        else textElement.replaceChildren(text);
       }
       return this;
     },

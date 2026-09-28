@@ -59,7 +59,7 @@ export interface IconConfig {
   /**
    * Text content (for determining button styling)
    */
-  text?: string;
+  text?: string | Node;
 }
 
 /**

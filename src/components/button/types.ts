@@ -51,10 +51,11 @@ export interface ButtonConfig extends BaseComponentConfig {
   disabled?: boolean;
 
   /**
-   * Initial button text content
+   * Initial button text content, or a node placed where the text goes (the
+   * web component passes a `<slot>` so the page's content is the label)
    * @example 'Submit'
    */
-  text?: string;
+  text?: string | Node;
 
   /**
    * Initial button icon HTML content

@@ -125,4 +125,29 @@ describe("withTextLabel", () => {
     // But the label should still be correctly positioned
     expect((sliderComponent.element.lastChild as Element).tagName).toBe("LABEL");
   });
+
+  test("should place a node given as label inside the label element", () => {
+    const input = document.createElement("input");
+    input.id = "field";
+    const slot = document.createElement("slot");
+    slot.textContent = "Fallback";
+    const enhanced = withTextLabel({ prefix: PREFIX, componentName: "switch", label: slot })({
+      ...component,
+      componentName: "switch",
+      input,
+    });
+
+    const label = component.element.querySelector("label");
+    expect(label?.firstChild).toBe(slot);
+    expect(label?.htmlFor).toBe("field");
+    expect(enhanced.label.getText()).toBe("Fallback");
+  });
+
+  test("should keep treating a string label as text, not markup", () => {
+    withTextLabel({ prefix: PREFIX, componentName: "checkbox", label: "<b>Wi-Fi</b>" })(component);
+
+    const label = component.element.querySelector("label");
+    expect(label?.children.length).toBe(0);
+    expect(label?.textContent).toBe("<b>Wi-Fi</b>");
+  });
 });
