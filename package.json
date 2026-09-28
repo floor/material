@@ -67,6 +67,11 @@
       "types": "./dist/vue/index.d.ts",
       "import": "./dist/vue/index.js"
     },
+    "./svelte": {
+      "types": "./dist/svelte/index.d.ts",
+      "svelte": "./dist/svelte/index.js",
+      "import": "./dist/svelte/index.js"
+    },
     "./core": {
       "types": "./dist/core/index.d.ts",
       "import": "./dist/core/index.js"
@@ -124,6 +129,7 @@
     "adapters:generate": "bun run scripts/generate-adapters.ts",
     "react:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react.ts",
     "vue:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-vue.ts",
+    "svelte:check": "bun run scripts/check-svelte.ts",
     "tooling:check": "tsc --project tsconfig.tools.json --noEmit && tsc --project tsconfig.types.json --noEmit"
   },
   "repository": {
@@ -136,10 +142,14 @@
   },
   "peerDependencies": {
     "react": ">=18",
+    "svelte": ">=5",
     "vue": ">=3.3"
   },
   "peerDependenciesMeta": {
     "react": {
+      "optional": true
+    },
+    "svelte": {
       "optional": true
     },
     "vue": {
@@ -161,6 +171,7 @@
     "react-dom": "^19",
     "react-dom-18": "npm:react-dom@^18.3.1",
     "sass": "^1.85.1",
+    "svelte": "^5",
     "typedoc": "^0.27.9",
     "typescript": "^5.8.2",
     "vite": "^8.2.2",
