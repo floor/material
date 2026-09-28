@@ -13,7 +13,10 @@
 
 import createTabs from "../components/tabs";
 import type { TabConfig, TabsComponent, TabsConfig } from "../components/tabs/types";
-import { defineElement, DEFAULT_PREFIX, type Config, type DefineOptions } from "./define";
+import {
+  defineElement, DEFAULT_PREFIX, type Config, type DefineOptions, type ElementAttributes,
+  type ElementInstance, type ElementSpec,
+} from "./define";
 
 const readTabs = (host: HTMLElement): Config => {
   const tabTag = host.localName.replace(/tabs$/, "tab");
@@ -36,7 +39,7 @@ const readTabs = (host: HTMLElement): Config => {
   return { tabs } satisfies TabsConfig;
 };
 
-export const tabsElement = defineElement<TabsComponent>({
+const tabsSpec = {
   name: "tabs",
   create: (config) => createTabs(config as TabsConfig),
   styles: ["badge", "progress", "button", "tabs"],
@@ -58,12 +61,33 @@ export const tabsElement = defineElement<TabsComponent>({
   },
   config: readTabs,
   observeChildren: true,
-});
+} satisfies ElementSpec<TabsComponent>;
+
+export const tabsElement = defineElement<TabsComponent>(tabsSpec);
+export type TabsSpec = typeof tabsSpec;
+/** `<m-tabs>` as a ref or a query returns it. */
+export type TabsElement = ElementInstance<TabsSpec, TabsComponent>;
+
+/**
+ * `<m-tab>` declares one tab and renders nothing. Its text content is the
+ * label unless `label` is set.
+ */
+export const tabDeclaration = {
+  name: "tab",
+  attributes: {
+    value: { type: "string" },
+    label: { type: "string" },
+    icon: { type: "string" },
+    badge: { type: "string" },
+    disabled: { type: "boolean" },
+  },
+} as const;
+export type TabAttributes = ElementAttributes<typeof tabDeclaration>;
 
 /** Registers `<m-tabs>` and `<m-tab>` (or with another prefix). */
 export const defineTabs = (options?: DefineOptions): string => {
   const tag = tabsElement.define(options);
-  const tabTag = `${options?.prefix ?? DEFAULT_PREFIX}-tab`;
+  const tabTag = `${options?.prefix ?? DEFAULT_PREFIX}-${tabDeclaration.name}`;
   // A tab only declares data; it renders nothing and has no behaviour.
   if (!customElements.get(tabTag)) customElements.define(tabTag, class extends HTMLElement {});
   return tag;

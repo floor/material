@@ -22,7 +22,8 @@
   "sideEffects": [
     "**/*.css",
     "**/*.scss",
-    "**/styles/*.js"
+    "**/styles/*.js",
+    "**/elements/css/*.js"
   ],
   "type": "module",
   "main": "./dist/index.cjs",
@@ -45,6 +46,22 @@
     "./components/*": {
       "types": "./dist/components/*/index.d.ts",
       "import": "./dist/components/*/index.js"
+    },
+    "./elements": {
+      "types": "./dist/elements/index.d.ts",
+      "import": "./dist/elements/index.js"
+    },
+    "./elements/css": {
+      "types": "./dist/elements/css/index.d.ts",
+      "import": "./dist/elements/css/index.js"
+    },
+    "./elements/css/*": {
+      "types": "./dist/elements/css/*.d.ts",
+      "import": "./dist/elements/css/*.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js"
     },
     "./core": {
       "types": "./dist/core/index.d.ts",
@@ -100,6 +117,8 @@
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "core:check": "bun run scripts/check-core.ts",
     "elements:check": "bun run scripts/check-elements.ts",
+    "react:generate": "bun run scripts/generate-react.ts",
+    "react:check": "bun run scripts/generate-react.ts --check && bun run scripts/check-react.ts",
     "tooling:check": "tsc --project tsconfig.tools.json --noEmit && tsc --project tsconfig.types.json --noEmit"
   },
   "repository": {
@@ -110,13 +129,27 @@
   "bugs": {
     "url": "https://github.com/floor/mtrl/issues"
   },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/jsdom": "^21.1.7",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "@typescript-eslint/eslint-plugin": "^8.33.1",
     "eslint": "8",
     "jsdom": "^26.0.0",
     "playwright": "^1.63.0",
+    "react": "^19",
+    "react-18": "npm:react@^18.3.1",
+    "react-dom": "^19",
+    "react-dom-18": "npm:react-dom@^18.3.1",
     "sass": "^1.85.1",
     "typedoc": "^0.27.9",
     "typescript": "^5.8.2",

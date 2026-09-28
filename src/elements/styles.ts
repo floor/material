@@ -24,6 +24,9 @@ export const registerStyles = (css: Record<string, string>): void => {
   }
 };
 
+/** Whether CSS is registered under a name. */
+export const hasStyles = (name: string): boolean => sources.has(name);
+
 const canAdopt = (): boolean =>
   typeof CSSStyleSheet === "function" &&
   "replaceSync" in CSSStyleSheet.prototype &&

@@ -10,9 +10,9 @@
 
 import createButton from "../components/button";
 import type { ButtonComponent, ButtonConfig } from "../components/button/types";
-import { defineElement, type DefineOptions } from "./define";
+import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
-export const buttonElement = defineElement<ButtonComponent>({
+const buttonSpec = {
   name: "button",
   create: (config) => createButton({ ...(config as ButtonConfig), type: "button" }),
   styles: ["progress", "button"],
@@ -28,7 +28,7 @@ export const buttonElement = defineElement<ButtonComponent>({
     "aria-label": { type: "string", config: "ariaLabel", update: (c, v) => void c.setAriaLabel(String(v ?? "")) },
   },
   slot: {
-    attribute: "label",
+    attribute: "label" as const,
     config: "text",
     container: (c) => c.text.getElement(),
   },
@@ -47,7 +47,12 @@ export const buttonElement = defineElement<ButtonComponent>({
     host.addEventListener("click", onClick);
     return () => host.removeEventListener("click", onClick);
   },
-});
+} satisfies ElementSpec<ButtonComponent>;
+
+export const buttonElement = defineElement<ButtonComponent>(buttonSpec);
+export type ButtonSpec = typeof buttonSpec;
+/** `<m-button>` as a ref or a query returns it. */
+export type ButtonElement = ElementInstance<ButtonSpec, ButtonComponent>;
 
 /** Registers `<m-button>` (or `<prefix-button>`). */
 export const defineButton = (options?: DefineOptions): string => buttonElement.define(options);

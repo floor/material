@@ -83,4 +83,32 @@ export async function buildStyles(outdir: string, banner: string) {
     await emit(`styles/${name}`, [entry.source], entry.dependencies);
   }
   for (const name of themeStyles) await emit(`themes/${name}`, [`themes/${name}`]);
+  await emitElementStyles(outdir, options);
+}
+
+/**
+ * CSS for the elements' shadow roots, as modules that register it: importing
+ * `mtrl/elements/css/switch` registers the switch's CSS and its dependencies.
+ * Emitted for the components that have an element; importing the module
+ * also proves the elements import without a DOM.
+ * The shadow base (`ripple`) is what the global base stylesheet gives a
+ * component in light DOM and a shadow root does not inherit.
+ */
+async function emitElementStyles(outdir: string, options: sass.StringOptions<"sync">) {
+  const dir = `${outdir}/elements/css`;
+  await mkdir(dir, { recursive: true });
+  const write = async (name: string, source: string, imports: string[]) => {
+    const css = sass.compileString(`@use "${source}";`, options).css;
+    await writeFile(`${dir}/${name}.js`,
+      imports.map(dependency => `import "./${dependency}.js";`).join("\n") +
+      `\nimport { registerStyles } from "../styles.js";\nregisterStyles({ ${JSON.stringify(name)}: ${JSON.stringify(css)} });\n`);
+    await writeFile(`${dir}/${name}.d.ts`, "export {};\n");
+  };
+  await write("ripple", "utilities/ripple", []);
+  // Only components that have an element, and what their CSS depends on.
+  const { elements } = await import("../src/elements");
+  const names = resolveStyleDependencies(Object.values(elements).flatMap(element => [...element.spec.styles]));
+  for (const name of names) await write(name, componentStyles[name].source, ["ripple", ...componentStyles[name].dependencies]);
+  await writeFile(`${dir}/index.js`, names.map(name => `import "./${name}.js";`).join("\n") + "\n");
+  await writeFile(`${dir}/index.d.ts`, "export {};\n");
 }

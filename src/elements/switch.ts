@@ -10,9 +10,9 @@
 
 import createSwitch from "../components/switch";
 import type { SwitchComponent, SwitchConfig } from "../components/switch/types";
-import { defineElement, type DefineOptions } from "./define";
+import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
-export const switchElement = defineElement<SwitchComponent>({
+const switchSpec = {
   name: "switch",
   create: (config) => createSwitch(config as SwitchConfig),
   styles: ["switch"],
@@ -32,7 +32,7 @@ export const switchElement = defineElement<SwitchComponent>({
   properties: {
     checked: { get: (c) => c.isChecked(), set: (c, v) => void c.setValue(!!v), config: "checked" },
   },
-  methods: ["toggle", "check", "uncheck"],
+  methods: ["toggle", "check", "uncheck"] as const,
   events: {
     change: {
       detail: (payload) => {
@@ -42,7 +42,7 @@ export const switchElement = defineElement<SwitchComponent>({
     },
   },
   slot: {
-    attribute: "label",
+    attribute: "label" as const,
     config: "label",
     container: (c) => c.element.querySelector("label"),
   },
@@ -53,7 +53,12 @@ export const switchElement = defineElement<SwitchComponent>({
     activate: (c) => c.input.click(),
     disable: (c, disabled) => void (disabled ? c.disable() : c.enable()),
   },
-});
+} satisfies ElementSpec<SwitchComponent>;
+
+export const switchElement = defineElement<SwitchComponent>(switchSpec);
+export type SwitchSpec = typeof switchSpec;
+/** `<m-switch>` as a ref or a query returns it. */
+export type SwitchElement = ElementInstance<SwitchSpec, SwitchComponent>;
 
 /** Registers `<m-switch>` (or `<prefix-switch>`). */
 export const defineSwitch = (options?: DefineOptions): string => switchElement.define(options);
