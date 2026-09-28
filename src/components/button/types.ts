@@ -107,11 +107,11 @@ export interface ButtonConfig extends BaseComponentConfig {
    * Ripple effect configuration
    */
   rippleConfig?: {
-    /** Duration of the ripple animation in milliseconds */
+    /** How long, in milliseconds, a released wave lingers before it is removed */
     duration?: number;
-    /** Timing function for the ripple animation */
+    /** @deprecated Not applied: the ripple's motion comes from the stylesheet (FLO-268). */
     timing?: string;
-    /** Opacity values for ripple start and end [start, end] */
+    /** @deprecated Not applied: the wave is the 0.10 pressed state layer, drawn by the stylesheet (FLO-268). */
     opacity?: [string, string];
   };
 

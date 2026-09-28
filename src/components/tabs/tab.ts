@@ -52,8 +52,6 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
       ripple: baseConfig.ripple !== false, // Enable ripple by default
       rippleConfig: {
         duration: 400,
-        timing: "cubic-bezier(0.4, 0, 0.2, 1)",
-        opacity: ["0.2", "0"],
         ...(baseConfig.rippleConfig || {}),
       },
       value: baseConfig.value,
