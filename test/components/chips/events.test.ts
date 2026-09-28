@@ -68,7 +68,7 @@ describe("chips container events", () => {
 
   test("programmatic selection and clearing emit null as the changed value", () => {
     const events: Parameters<ChipsEvents["change"]>[] = [];
-    const chips = mount({ chips: [{ value: "a", ripple: false }, { value: "b", ripple: false }] });
+    const chips = mount({ multiSelect: false, chips: [{ value: "a", ripple: false }, { value: "b", ripple: false }] });
     chips.on("change", (...args) => events.push(args));
     chips.selectByValue("a").selectByValue("a").selectByValue("b").clearSelection().clearSelection();
     expect(events).toEqual([[["a"], null], [["b"], null], [[], null]]);

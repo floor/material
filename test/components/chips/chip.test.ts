@@ -102,7 +102,8 @@ describe("Material chip factories", () => {
     expect(remove.getAttribute("aria-label")).toBe("Remove Ada");
     remove.click();
     expect(requests).toEqual([chip]); expect(clicks).toBe(0); expect(chip.isSelected()).toBe(false);
-    expect(chip.element.isConnected).toBe(true); // Removal is the owner's choice.
+    // Input chips are always removable, and on its own a chip leaves the page (FLO-257).
+    expect(chip.element.isConnected).toBe(false);
     chip.setLabel("Grace"); expect(remove.getAttribute("aria-label")).toBe("Remove Grace");
     chip.disable(); expect(remove.disabled).toBe(true); remove.click(); expect(requests).toHaveLength(1);
   });

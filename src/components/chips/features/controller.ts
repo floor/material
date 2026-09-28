@@ -62,15 +62,12 @@ export const withController =
           chip.setSelected(false);
         }
       });
+    }
 
-      // If this was a deselection, and it's the only selected chip in single-select mode,
-      // prevent deselection (keep it selected)
-      if (!selectedChip.isSelected() && getSelectedChips().length === 0) {
-        selectedChip.setSelected(true);
-      }
-    } else {
-      // In multi-select mode, we allow deselection of all chips
-      // No need to enforce at least one selection
+    // With selectionRequired, deselecting the last selected chip is refused, in either
+    // mode. It used to be forced on every single-select set. FLO-257.
+    if (config.selectionRequired && !selectedChip.isSelected() && getSelectedChips().length === 0) {
+      selectedChip.setSelected(true);
     }
 
     // Get all currently selected chips and their values

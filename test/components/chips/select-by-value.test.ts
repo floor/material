@@ -71,8 +71,9 @@ describe("selectByValue", () => {
 
   // Exclusive is the default for a single-select chip set: selecting one
   // clears whatever was selected before.
-  test("selecting replaces the previous selection by default", () => {
-    const chips = mount({ chips: THREE });
+  // Sets are multi-select by default since FLO-257; replacing is single-select's rule.
+  test("in single-select, selecting replaces the previous selection", () => {
+    const chips = mount({ chips: THREE, multiSelect: false });
 
     chips.selectByValue("red");
     chips.selectByValue("blue");
@@ -88,8 +89,8 @@ describe("selectByValue", () => {
     expect(chips.getSelectedValues().sort()).toEqual(["green", "red"]);
   });
 
-  test("selecting nothing clears the selection", () => {
-    const chips = mount({ chips: THREE });
+  test("in single-select, selecting nothing clears the selection", () => {
+    const chips = mount({ chips: THREE, multiSelect: false });
     chips.selectByValue("red");
 
     chips.selectByValue([]);
