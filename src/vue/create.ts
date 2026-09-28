@@ -29,7 +29,10 @@ import {
   describeDeclaration,
   getPrefix,
   isBrowser,
+  serverDefaults,
   toAttribute,
+  writeDefaults,
+  writeLive,
   type ComponentSpec,
   type DeclarationSpec,
   type DefaultProps,
@@ -85,7 +88,8 @@ export const createComponent = <S, E extends HTMLElement>(
   define: (options?: DefineOptions) => string,
   name: string
 ): MComponent<S, E> => {
-  const { attributes, properties, events, model, form } = describe(spec);
+  const described = describe(spec);
+  const { attributes, properties, events, model, form } = described;
   const props = [...attributes.keys(), ...properties, ...(model ? ["modelValue"] : []), ...(form ? ["name"] : [])];
   const emits = Object.fromEntries(
     [...events, ...properties.map((p) => `update:${p}`), ...(model ? ["update:modelValue"] : [])].map((e) => [e, accept])
@@ -115,17 +119,7 @@ export const createComponent = <S, E extends HTMLElement>(
           if (attribute.shadowed && isBrowser) continue;
           result[attribute.name] = value;
         }
-        // On the server a live value is the markup's default, so the page
-        // renders in that state before it hydrates.
-        if (!isBrowser) {
-          for (const property of properties) {
-            const shadowed = [...attributes.values()].find((a) => a.shadowed && a.name === property);
-            const value = live(property);
-            if (shadowed && value !== undefined && result[shadowed.name] === undefined) {
-              result[shadowed.name] = toAttribute(shadowed.type, value);
-            }
-          }
-        }
+        if (!isBrowser) for (const [name, value] of serverDefaults(described, live)) result[name] ??= value;
         if (form && props.name !== undefined) result.name = props.name;
         return result;
       };
@@ -133,17 +127,8 @@ export const createComponent = <S, E extends HTMLElement>(
       const sync = (): void => {
         const el = element.value;
         if (!el) return;
-        for (const [key, attribute] of attributes) {
-          if (!attribute.shadowed) continue;
-          const value = toAttribute(attribute.type, props[key]);
-          if (value === undefined) el.removeAttribute(attribute.name);
-          else if (el.getAttribute(attribute.name) !== value) el.setAttribute(attribute.name, value);
-        }
-        const target = el as unknown as Record<string, unknown>;
-        for (const property of properties) {
-          const value = live(property);
-          if (value !== undefined && target[property] !== value) target[property] = value;
-        }
+        writeDefaults(el, described, (key) => props[key]);
+        writeLive(el, described, live);
       };
 
       const listeners: Array<() => void> = [];

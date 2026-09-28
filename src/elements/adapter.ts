@@ -79,6 +79,8 @@ export interface Described {
   /** The property two-way binding drives, if any. */
   model: string | undefined;
   form: boolean;
+  /** Live property name to the attribute it shadows (`checked` → the `checked` attribute). */
+  shadowedBy: Map<string, AttributeProp>;
 }
 
 export const describe = (spec: ComponentSpec): Described => {
@@ -90,13 +92,56 @@ export const describe = (spec: ComponentSpec): Described => {
     attributes.set(shadowed ? `default${pascal(key)}` : key, { name, type: attribute.type, shadowed });
   }
   if (spec.slot) attributes.set(spec.slot.attribute, { name: spec.slot.attribute, type: "string", shadowed: false });
+  const shadowedBy = new Map([...attributes.values()].filter((a) => a.shadowed).map((a) => [a.name, a]));
   return {
     attributes,
     properties,
     events: Object.keys(spec.events ?? {}),
     model: spec.model,
     form: !!spec.form,
+    shadowedBy,
   };
+};
+
+/**
+ * Writes the attributes live properties shadow (`defaultChecked` → the
+ * `checked` attribute) on the element. Frameworks would assign a same-named
+ * prop to the live property, so every adapter writes these itself in the
+ * browser. A prop that is not given leaves the attribute alone.
+ */
+export const writeDefaults = (element: HTMLElement, described: Described, read: (prop: string) => unknown): void => {
+  for (const [key, attribute] of described.attributes) {
+    if (!attribute.shadowed) continue;
+    const raw = read(key);
+    if (raw === undefined) continue;
+    const value = toAttribute(attribute.type, raw);
+    if (value === undefined) element.removeAttribute(attribute.name);
+    else if (element.getAttribute(attribute.name) !== value) element.setAttribute(attribute.name, value);
+  }
+};
+
+/** Writes live-state props to the element. A prop that is not given leaves the element's own state. */
+export const writeLive = (element: HTMLElement, described: Described, read: (property: string) => unknown): void => {
+  const target = element as unknown as Record<string, unknown>;
+  for (const property of described.properties) {
+    const value = read(property);
+    if (value !== undefined && target[property] !== value) target[property] = value;
+  }
+};
+
+/**
+ * On the server a live value is the markup's default, so the page renders in
+ * that state before it hydrates: the attribute each given live property
+ * shadows, with its value.
+ */
+export const serverDefaults = (described: Described, read: (property: string) => unknown): Array<[string, string]> => {
+  const result: Array<[string, string]> = [];
+  for (const property of described.properties) {
+    const attribute = described.shadowedBy.get(property);
+    const value = attribute ? toAttribute(attribute.type, read(property)) : undefined;
+    if (attribute && value !== undefined) result.push([attribute.name, value]);
+  }
+  return result;
 };
 
 export const describeDeclaration = (spec: DeclarationSpec): Map<string, AttributeProp> =>

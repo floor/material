@@ -52,6 +52,8 @@ const switchSpec = {
     control: (c) => c.input,
     events: ["change"],
     activate: (c) => c.input.click(),
+    state: (c) => (c.isChecked() ? "checked" : "unchecked"),
+    restore: (c, state) => void c.setValue(state === "checked"),
     disable: (c, disabled) => void (disabled ? c.disable() : c.enable()),
   },
 } satisfies ElementSpec<SwitchComponent>;

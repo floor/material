@@ -28,6 +28,17 @@ const server = Bun.serve({
     const path = new URL(request.url).pathname;
     if (path === "/elements.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
     if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
+    if (path === "/away") return new Response("<!doctype html><p>away</p>", { headers: { "Content-Type": "text/html" } });
+    if (path === "/restore") {
+      // no-store keeps the page out of the back/forward cache, so going back
+      // reloads it and the browser restores the form's state into it.
+      return new Response(
+        `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
+<body><form><m-switch id="r" name="r">Restored</m-switch></form><a id="go" href="/away">away</a>
+<script type="module" src="/elements.js"></script></body></html>`,
+        { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } }
+      );
+    }
     return new Response(
       `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css">
 <style>body{margin:0;font-family:sans-serif}section{padding:8px}</style></head>
@@ -271,6 +282,94 @@ try {
     check("tabs: a new child tab is added and the selection is kept");
   }
 
+  // ---------------------------------------------------------------- sharing
+  await fresh(page, `<section id="a"></section>`);
+  {
+    const shared = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: Record<string, (o?: object) => string> };
+      const make = (): HTMLElement => {
+        const el = document.createElement("m-switch");
+        el.textContent = "Shared";
+        document.getElementById("a")?.append(el);
+        return el;
+      };
+      const a = make();
+      // Framework adapters call define() on every mount.
+      w.mtrl.defineSwitch();
+      w.mtrl.defineSwitch();
+      const b = make();
+      const sheetsA = a.shadowRoot?.adoptedStyleSheets ?? [];
+      const sheetsB = b.shadowRoot?.adoptedStyleSheets ?? [];
+      return { count: sheetsA.length, same: sheetsA.length === sheetsB.length && sheetsA.every((sheet, i) => sheet === sheetsB[i]) };
+    });
+    assert.ok(shared.count > 0);
+    assert.equal(shared.same, true, "every instance adopts the same stylesheet objects");
+    check("styles: instances share one stylesheet per entry, however often define() runs");
+  }
+
+  // ---------------------------------------------------------------- tabs updates
+  await fresh(
+    page,
+    `<m-tabs id="t" value="t1"><m-tab value="t1">Flights</m-tab><m-tab value="t2" badge="3">Trips</m-tab>
+     <m-tab value="t3">Hotels</m-tab></m-tabs>`
+  );
+  {
+    await page.getByRole("tab", { name: "Flights", exact: true }).focus();
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const before = await page.evaluate(() => {
+      const t = document.getElementById("t") as HTMLElement & { component: unknown };
+      (window as unknown as Record<string, unknown>).__tabs = { component: t.component, focused: t.shadowRoot?.activeElement };
+      return t.shadowRoot?.activeElement?.textContent?.trim();
+    });
+    assert.equal(before, "Flights");
+
+    await page.evaluate(() => {
+      const tabs = document.querySelectorAll("#t m-tab");
+      tabs[1].setAttribute("badge", "4");
+      tabs[2].textContent = "Stays";
+      tabs[2].setAttribute("disabled", "");
+    });
+    await settle();
+    const after = await page.evaluate(() => {
+      const t = document.getElementById("t") as HTMLElement & {
+        component: { getTabs: () => Array<{ getBadge: () => string }> };
+      };
+      const kept = (window as unknown as Record<string, { component: unknown; focused: unknown }>).__tabs;
+      const buttons = [...(t.shadowRoot?.querySelectorAll('[role="tab"]') ?? [])] as HTMLElement[];
+      return {
+        sameComponent: t.component === kept.component,
+        sameFocus: t.shadowRoot?.activeElement === kept.focused,
+        labels: buttons.map((b) => b.textContent?.replace(/\s+/g, " ").trim()),
+        badges: t.component.getTabs().map((tab) => tab.getBadge()),
+        disabled: buttons.map((b) => b.hasAttribute("disabled") || b.getAttribute("aria-disabled") === "true"),
+      };
+    });
+    assert.deepEqual(after.sameComponent, true, "a child update does not rebuild the tabs");
+    assert.deepEqual(after.sameFocus, true, "the focused tab keeps focus");
+    assert.equal(after.labels[1], "Trips");
+    assert.equal(after.badges[1], "4");
+    assert.equal(after.labels[2], "Stays");
+    assert.deepEqual(after.disabled, [false, false, true]);
+    check("tabs: badge, text and disabled changes update in place and keep focus");
+
+    await page.evaluate(() => {
+      const tab = document.createElement("m-tab");
+      tab.setAttribute("value", "t9");
+      tab.textContent = "Cars";
+      const t = document.getElementById("t") as HTMLElement;
+      t.insertBefore(tab, t.children[1]);
+      t.children[3].remove();
+    });
+    await settle();
+    const reordered = await page.evaluate(() => {
+      const t = document.getElementById("t") as HTMLElement & { value: string };
+      const buttons = [...(t.shadowRoot?.querySelectorAll('[role="tab"]') ?? [])] as HTMLElement[];
+      return { labels: buttons.map((b) => b.textContent?.replace(/\s*\d+$/, "").trim()), value: t.value };
+    });
+    assert.deepEqual(reordered, { labels: ["Flights", "Cars", "Trips"], value: "t1" });
+    check("tabs: an insertion in the middle and a removal keep order and selection");
+  }
+
   // ---------------------------------------------------------------- lifecycle
   await fresh(page, `<section id="a"><m-switch id="s" checked>Moved</m-switch></section><section id="b"></section>`);
   {
@@ -310,6 +409,24 @@ try {
     });
     assert.equal(upgraded, true);
     check("lifecycle: a property set before upgrade is kept");
+  }
+
+  // ---------------------------------------------------------------- form restore
+  {
+    const restorePage = await browser.newPage();
+    await restorePage.goto(`http://127.0.0.1:${server.port}/restore`);
+    await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
+    await restorePage.getByRole("switch", { name: "Restored", exact: true }).click();
+    await restorePage.click("#go");
+    await restorePage.waitForURL(/\/away$/);
+    await restorePage.goBack();
+    await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
+    await restorePage.waitForFunction(() => (document.getElementById("r") as HTMLElement & { checked: boolean }).checked === true, undefined, { timeout: 5_000 })
+      .catch(() => undefined);
+    const restored = await restorePage.evaluate(() => (document.getElementById("r") as HTMLElement & { checked: boolean }).checked);
+    await restorePage.close();
+    assert.equal(restored, true, "going back restores the switch the user turned on");
+    check("forms: going back restores a switch's state");
   }
 
   // ---------------------------------------------------------------- theme
