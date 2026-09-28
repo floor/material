@@ -51,10 +51,10 @@ jobs:
         run: bun run size:check
       - name: Install Chromium
         run: node node_modules/playwright/cli.js install --with-deps chromium
-      - name: TEMPORARY flake probe (split-button-open x25), remove before merge
+      - name: TEMPORARY flake probe (after hover and focus, x25), remove before merge
         continue-on-error: true
         env:
-          CONSUMER_SCENARIOS: split-button-open
+          CONSUMER_SCENARIOS: button-hover,button-focus,split-button,split-button-open
           CONSUMER_ROUNDS: "25"
         run: bun run consumer:check
       - name: Vite and browser regression checks
