@@ -247,7 +247,21 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
       event.preventDefault();
       if (!disabled) action.click();
     });
-    listen(action, "mousedown", event => { event.preventDefault(); root.focus(); });
+    // Focus moved by script matches :focus-visible, so a click drew the keyboard
+    // ring. focusVisible: false marks it as pointer focus where the browser supports
+    // it (HTML FocusOptions, not yet in TypeScript's DOM types; Chromium 130 ignores
+    // it), and --pointer-focus hides the ring everywhere else, including a click on
+    // the cell that already had keyboard focus. Any key, or leaving the cell,
+    // clears it, so Tab and the arrows still show the ring.
+    const pointerFocus: FocusOptions & { focusVisible: boolean } = { focusVisible: false };
+    const pointerClass = base.getClass("chip--pointer-focus");
+    listen(action, "mousedown", event => {
+      event.preventDefault();
+      root.classList.add(pointerClass);
+      root.focus(pointerFocus);
+    });
+    listen(root, "keydown", () => root.classList.remove(pointerClass));
+    listen(root, "blur", () => root.classList.remove(pointerClass));
   }
   // The dragged state (Compose DraggedContainerElevation, DraggedStateLayerOpacity) for
   // a chip the app makes draggable; mtrl does no dragging itself. FLO-259.

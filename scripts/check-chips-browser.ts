@@ -161,6 +161,35 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
   assert.equal(await page.locator("#grid-set [role=gridcell]").nth(1).getAttribute("aria-selected"), "true", "Space selects the focused cell");
   await page.keyboard.press("Tab");
   assert.notEqual(await page.evaluate(() => document.activeElement?.closest("#grid-set") !== null), true, "Tab leaves the set: one Tab stop");
+  // A click focuses the cell as pointer focus: no keyboard ring. Moving focus by
+  // script matched :focus-visible and drew it.
+  await page.locator("#grid-set [role=gridcell]").nth(2).click();
+  const clicked = await page.evaluate(() => {
+    const cell = document.activeElement as HTMLElement;
+    return { label: cell.textContent, focusVisible: cell.matches(":focus-visible"), ring: getComputedStyle(cell, "::before").borderTopWidth };
+  });
+  assert.deepEqual(clicked, { label: "Three", focusVisible: false, ring: "0px" }, "a clicked cell takes focus without the keyboard ring");
+  // A click on the cell that already has keyboard focus clears the ring too, and so
+  // does a click in a browser that ignores focusVisible (Chromium 130): focus()
+  // stripped of its options stands in for one.
+  const ringOf = () => page.evaluate(() => {
+    const cell = document.activeElement as HTMLElement;
+    return { label: cell.textContent, ring: getComputedStyle(cell, "::before").borderTopWidth };
+  });
+  await page.keyboard.press("ArrowLeft");
+  assert.deepEqual(await ringOf(), { label: "Two", ring: "3px" }, "the arrow key shows the ring");
+  await page.locator("#grid-set [role=gridcell]").nth(1).click();
+  assert.deepEqual(await ringOf(), { label: "Two", ring: "0px" }, "a click on the keyboard-focused cell clears its ring");
+  await page.keyboard.press("ArrowLeft");
+  assert.deepEqual(await ringOf(), { label: "One", ring: "3px" }, "a key after a click shows the ring again");
+  await page.evaluate(() => {
+    const focus = HTMLElement.prototype.focus;
+    (window as unknown as { nativeFocus: typeof focus }).nativeFocus = focus;
+    HTMLElement.prototype.focus = function (this: HTMLElement) { focus.call(this); };
+  });
+  await page.locator("#grid-set [role=gridcell]").nth(2).click();
+  assert.deepEqual(await ringOf(), { label: "Three", ring: "0px" }, "no ring where focusVisible is ignored");
+  await page.evaluate(() => { HTMLElement.prototype.focus = (window as unknown as { nativeFocus: HTMLElement["focus"] }).nativeFocus; });
   await page.evaluate(() => {
     (window as unknown as { gridSet: { destroy: () => void } }).gridSet.destroy();
     document.querySelector("#grid-set")?.remove();
