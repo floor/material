@@ -24,6 +24,8 @@ import {
   getPrefix,
   pascal,
   toAttribute,
+  writeDefaults,
+  writeLive,
   type ComponentSpec,
   type DeclarationSpec,
   type DefaultProps,
@@ -80,7 +82,8 @@ export const createComponent = <S, E extends HTMLElement>(
   define: (options?: DefineOptions) => string,
   _name?: string
 ): MComponent<S, E> => {
-  const { attributes, properties, events, form } = describe(spec);
+  const described = describe(spec);
+  const { attributes, properties, events, form } = described;
   const eventProps = events.map((event) => `on${pascal(event)}`);
   const own = [...attributes.keys(), ...properties, ...eventProps, ...(form ? ["name"] : []), "ref"];
 
@@ -117,19 +120,9 @@ export const createComponent = <S, E extends HTMLElement>(
     };
 
     const sync = (): void => {
-      const el = element;
-      if (!el) return;
-      for (const [key, attribute] of attributes) {
-        if (!attribute.shadowed) continue;
-        const value = toAttribute(attribute.type, props[key]);
-        if (value === undefined) el.removeAttribute(attribute.name);
-        else if (el.getAttribute(attribute.name) !== value) el.setAttribute(attribute.name, value);
-      }
-      const target = el as unknown as Props;
-      for (const property of properties) {
-        const value = props[property];
-        if (value !== undefined && target[property] !== value) target[property] = value;
-      }
+      if (!element) return;
+      writeDefaults(element, described, (key) => props[key]);
+      writeLive(element, described, (property) => props[property]);
     };
 
     onMount(() => {

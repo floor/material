@@ -23,7 +23,10 @@ import {
   describeDeclaration,
   getPrefix,
   isBrowser,
+  serverDefaults,
   toAttribute,
+  writeDefaults,
+  writeLive,
   type ComponentSpec,
   type DeclarationSpec,
   type DefaultProps,
@@ -71,7 +74,8 @@ export interface Adapter {
  * @param define - Registers the element and anything it needs (`defineSwitch`)
  */
 export const adapter = (spec: ComponentSpec, define: (options?: DefineOptions) => string): Adapter => {
-  const { attributes, properties, events, form } = describe(spec);
+  const described = describe(spec);
+  const { attributes, properties, events, form } = described;
   const eventProps = new Set(events.map((event) => `on${event}`));
 
   const hostAttributes = (props: Record<string, unknown>, live: Record<string, unknown>): Record<string, unknown> => {
@@ -89,16 +93,7 @@ export const adapter = (spec: ComponentSpec, define: (options?: DefineOptions) =
         result[key] = value;
       }
     }
-    // On the server a live value is the markup's default, so the page renders
-    // in that state before it hydrates.
-    if (!isBrowser) {
-      for (const property of properties) {
-        const shadowed = [...attributes.values()].find((a) => a.shadowed && a.name === property);
-        if (shadowed && live[property] !== undefined && result[shadowed.name] === undefined) {
-          result[shadowed.name] = toAttribute(shadowed.type, live[property]);
-        }
-      }
-    }
+    if (!isBrowser) for (const [name, value] of serverDefaults(described, (p) => live[p])) result[name] ??= value;
     return result;
   };
 
@@ -107,16 +102,8 @@ export const adapter = (spec: ComponentSpec, define: (options?: DefineOptions) =
     const target = node as unknown as Record<string, unknown>;
 
     const sync = (): void => {
-      for (const [key, attribute] of attributes) {
-        if (!attribute.shadowed) continue;
-        const value = toAttribute(attribute.type, binding.props[key]);
-        if (value === undefined) node.removeAttribute(attribute.name);
-        else if (node.getAttribute(attribute.name) !== value) node.setAttribute(attribute.name, value);
-      }
-      for (const property of properties) {
-        const value = binding.live[property];
-        if (value !== undefined && target[property] !== value) target[property] = value;
-      }
+      writeDefaults(node, described, (key) => binding.props[key]);
+      writeLive(node, described, (property) => binding.live[property]);
     };
 
     sync();

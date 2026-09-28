@@ -69,6 +69,12 @@ export interface FormSpec<C> {
   events?: readonly string[];
   /** Called when a `<label for>` or the host itself is clicked. */
   activate?: (component: C) => void;
+  /**
+   * The state the browser keeps for the control, to hand back through
+   * `restore` when it restores the form (history navigation, autofill).
+   */
+  state?: (component: C) => string;
+  restore?: (component: C, state: string) => void;
   disable?: (component: C, disabled: boolean) => void;
 }
 
@@ -99,8 +105,12 @@ export interface ElementSpec<C extends ElementComponent> {
   config?: (host: HTMLElement) => Config;
   /** Wiring that lives as long as one component; returns its cleanup. */
   setup?: (host: ElementHost<C>, component: C) => (() => void) | void;
-  /** Recreate the component when the host's children change. */
-  observeChildren?: boolean;
+  /**
+   * React to the host's children changing. `true` recreates the component; a
+   * function updates it in place and returns false when it cannot, which
+   * falls back to recreating.
+   */
+  observeChildren?: boolean | ((host: ElementHost<C>, component: C) => boolean);
 }
 
 export interface DefineOptions {
@@ -217,6 +227,7 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
     readonly internals: ElementInternals | null;
 
     #pending = new Map<string, unknown>();
+    #restoreState: string | null = null;
     #silent = 0;
     #cleanup: Array<() => void> = [];
     #observer: MutationObserver | null = null;
@@ -262,6 +273,16 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       // Attributes are the defaults: rebuilding from them is the reset.
       this.#pending.clear();
       this.#rebuild(false);
+    }
+
+    formStateRestoreCallback(state: unknown): void {
+      if (typeof state !== "string" || !spec.form?.restore) return;
+      if (!this.component) {
+        this.#restoreState = state; // applied once the component is built
+        return;
+      }
+      this.#quietly(() => spec.form?.restore?.(this.component as C, state));
+      this.#syncForm();
     }
 
     formDisabledCallback(disabled: boolean): void {
@@ -384,6 +405,11 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
         if (property) this.#quietly(() => property.set(component, value));
       }
       this.#pending.clear();
+      if (this.#restoreState !== null) {
+        const state = this.#restoreState;
+        this.#restoreState = null;
+        this.#quietly(() => spec.form?.restore?.(component, state));
+      }
 
       if (spec.form?.activate) {
         // A click on the host itself (a <label for> pointing at it) activates the control.
@@ -400,7 +426,9 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       if ((spec.slot && !this.#slot) || spec.observeChildren) {
         // Content arriving later than creation needs a container the factory builds.
         this.#observer = new MutationObserver(() => {
-          if (spec.observeChildren || (!this.#slot && hasContent(this))) this.#rebuild(true);
+          const observe = spec.observeChildren;
+          if (typeof observe === "function" && this.component && observe(this, this.component)) return;
+          if (observe || (!this.#slot && hasContent(this))) this.#rebuild(true);
         });
         this.#observer.observe(this, {
           childList: true,
@@ -440,7 +468,9 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       const form = spec.form;
       const internals = this.internals;
       if (!form || !internals || !this.component) return;
-      internals.setFormValue(form.value(this.component));
+      const value = form.value(this.component);
+      if (form.state) internals.setFormValue(value, form.state(this.component));
+      else internals.setFormValue(value);
       const control = form.control?.(this.component);
       if (control) internals.setValidity(control.validity, control.validationMessage, control);
     }
@@ -499,6 +529,7 @@ export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>):
   let element: CustomElementConstructor | null = null;
   const getElement = (): CustomElementConstructor => (element ??= createElementClass(spec));
   const registered = new Set<CustomElementConstructor>();
+  let prepared = false;
 
   return {
     spec,
@@ -507,10 +538,15 @@ export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>):
     },
     define(options: DefineOptions = {}) {
       const tag = `${options.prefix ?? DEFAULT_PREFIX}-${spec.name}`;
-      registerStyles({ [`host:${spec.name}`]: BASE_HOST_STYLES + (spec.hostStyles ?? "") });
-      const missing = [...SHADOW_BASE_STYLES, ...spec.styles].filter((name) => !hasStyles(name));
-      if (missing.length) {
-        console.warn(`<${tag}> has no CSS for ${missing.join(", ")}: import "mtrl/elements/css/${spec.name}" first.`);
+      // Once per definition: framework adapters call define() on every mount,
+      // and registering again would drop the shared host stylesheet.
+      if (!prepared) {
+        prepared = true;
+        registerStyles({ [`host:${spec.name}`]: BASE_HOST_STYLES + (spec.hostStyles ?? "") });
+        const missing = [...SHADOW_BASE_STYLES, ...spec.styles].filter((name) => !hasStyles(name));
+        if (missing.length) {
+          console.warn(`<${tag}> has no CSS for ${missing.join(", ")}: import "mtrl/elements/css/${spec.name}" first.`);
+        }
       }
       const existing = customElements.get(tag);
       if (existing) {

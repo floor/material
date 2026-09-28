@@ -25,7 +25,10 @@ import {
   getPrefix,
   isBrowser,
   pascal,
+  serverDefaults,
   toAttribute,
+  writeDefaults,
+  writeLive,
   type ComponentSpec,
   type DeclarationSpec,
   type DefaultProps,
@@ -80,7 +83,6 @@ export const createComponent = <S, E extends HTMLElement>(
     const host: Record<string, unknown> = {};
     const live: Record<string, unknown> = {};
     const handlers: Record<string, (event: Event) => void> = {};
-    const defaults: Record<string, string | undefined> = {};
     for (const [key, value] of Object.entries(props as Record<string, unknown>)) {
       const event = events.get(key);
       const attribute = attributes.get(key);
@@ -88,18 +90,11 @@ export const createComponent = <S, E extends HTMLElement>(
         if (typeof value === "function") handlers[event] = value as (event: Event) => void;
       } else if (properties.has(key)) {
         live[key] = value;
-        // On the server a controlled value is the markup's default, so the
-        // page renders in that state before it hydrates.
-        const shadowed = attributes.get(`default${pascal(key)}`);
-        if (!isBrowser && shadowed && value !== undefined && host[shadowed.name] === undefined) {
-          host[shadowed.name] = toAttribute(shadowed.type, value);
-        }
       } else if (attribute?.shadowed) {
         // React 19 assigns a prop to a same-named element property in the
         // browser, which here is the live state (`checked`), not the default.
-        // The server renders the attribute; the browser sets it below.
-        if (isBrowser) defaults[attribute.name] = toAttribute(attribute.type, value);
-        else host[attribute.name] = toAttribute(attribute.type, value);
+        // The server renders the attribute; the browser writes it below.
+        if (!isBrowser) host[attribute.name] = toAttribute(attribute.type, value);
       } else if (attribute) {
         host[attribute.name] = toAttribute(attribute.type, value);
       } else if (key === "className") {
@@ -111,6 +106,10 @@ export const createComponent = <S, E extends HTMLElement>(
       }
     }
 
+    if (!isBrowser) {
+      for (const [name, value] of serverDefaults(described, (property) => live[property])) host[name] ??= value;
+    }
+
     // The latest handlers and controlled values, read by listeners that are
     // attached once.
     const latest = React.useRef({ handlers, live });
@@ -120,12 +119,7 @@ export const createComponent = <S, E extends HTMLElement>(
 
     // Defaults first, so an element upgraded by define() is created from them.
     useIsomorphicLayoutEffect(() => {
-      const el = element.current;
-      if (!el) return;
-      for (const [name, value] of Object.entries(defaults)) {
-        if (value === undefined) el.removeAttribute(name);
-        else if (el.getAttribute(name) !== value) el.setAttribute(name, value);
-      }
+      if (element.current) writeDefaults(element.current, described, (key) => (props as Record<string, unknown>)[key]);
     });
 
     useIsomorphicLayoutEffect(() => {
@@ -134,11 +128,7 @@ export const createComponent = <S, E extends HTMLElement>(
 
     // Controlled properties follow their props after every render.
     useIsomorphicLayoutEffect(() => {
-      const el = element.current as unknown as Record<string, unknown> | null;
-      if (!el) return;
-      for (const [key, value] of Object.entries(live)) {
-        if (value !== undefined && el[key] !== value) el[key] = value;
-      }
+      if (element.current) writeLive(element.current, described, (property) => live[property]);
     });
 
     React.useEffect(() => {
@@ -151,11 +141,7 @@ export const createComponent = <S, E extends HTMLElement>(
           // as React does for <input checked>. React flushes a state update
           // from the handler before this microtask runs.
           queueMicrotask(() => {
-            const target = element.current as unknown as Record<string, unknown> | null;
-            if (!target) return;
-            for (const [key, value] of Object.entries(latest.current.live)) {
-              if (value !== undefined && target[key] !== value) target[key] = value;
-            }
+            if (element.current) writeLive(element.current, described, (property) => latest.current.live[property]);
           });
         };
         el.addEventListener(event, listener);

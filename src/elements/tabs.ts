@@ -18,7 +18,7 @@ import {
   type ElementInstance, type ElementSpec,
 } from "./define";
 
-const readTabs = (host: HTMLElement): Config => {
+const declaredTabs = (host: HTMLElement): TabConfig[] => {
   const tabTag = host.localName.replace(/tabs$/, "tab");
   const active = host.getAttribute("value");
   const tabs: TabConfig[] = [];
@@ -36,7 +36,50 @@ const readTabs = (host: HTMLElement): Config => {
       state: value === active ? "active" : undefined,
     });
   }
-  return { tabs } satisfies TabsConfig;
+  return tabs;
+};
+
+const readTabs = (host: HTMLElement): Config => ({ tabs: declaredTabs(host) }) satisfies TabsConfig;
+
+/**
+ * Applies the declared tabs to the component in place: text, icon, badge and
+ * disabled changes, removals, and tabs added at the end. Keeps the component,
+ * its selection and focus. Returns false for what the tabs API cannot do in
+ * place (a reorder, an insertion before existing tabs, a repeated value), so
+ * the element rebuilds instead.
+ */
+const updateTabs = (host: HTMLElement, component: TabsComponent): boolean => {
+  const declared = declaredTabs(host);
+  const values = declared.map((tab) => tab.value ?? "");
+  if (new Set(values).size !== values.length) return false;
+  const current = component.getTabs();
+  const existing = new Set(current.map((tab) => tab.getValue()));
+  const kept = current.map((tab) => tab.getValue()).filter((value) => values.includes(value));
+  const firstNew = values.findIndex((value) => !existing.has(value));
+  const declaredKept = (firstNew === -1 ? values : values.slice(0, firstNew)).filter((value) => existing.has(value));
+  // Everything already there must come first, in the same order.
+  if (kept.join("\u0000") !== declaredKept.join("\u0000")) return false;
+  if (firstNew !== -1 && values.slice(firstNew).some((value) => existing.has(value))) return false;
+
+  for (const tab of current) if (!values.includes(tab.getValue())) component.removeTab(tab);
+  for (const config of declared) {
+    const tab = component.getTabs().find((candidate) => candidate.getValue() === config.value);
+    if (!tab) {
+      component.addTab({ ...config, state: undefined });
+      continue;
+    }
+    if (tab.getText() !== (config.text ?? "")) tab.setText(config.text ?? "");
+    if (tab.getIcon() !== (config.icon ?? "")) tab.setIcon(config.icon ?? "");
+    if (config.badge !== undefined) {
+      if (tab.getBadge() !== String(config.badge)) tab.setBadge(config.badge);
+      else tab.showBadge();
+    } else {
+      tab.hideBadge();
+    }
+    if (config.disabled) tab.disable();
+    else tab.enable();
+  }
+  return true;
 };
 
 const tabsSpec = {
@@ -61,7 +104,7 @@ const tabsSpec = {
     },
   },
   config: readTabs,
-  observeChildren: true,
+  observeChildren: updateTabs,
 } satisfies ElementSpec<TabsComponent>;
 
 export const tabsElement = defineElement<TabsComponent>(tabsSpec);
