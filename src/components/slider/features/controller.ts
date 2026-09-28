@@ -12,7 +12,7 @@ import {
 import { defaultConfig } from "../config";
 import { createHandlers } from "./handlers";
 import { getExternalTrackRadius, trackPositionCss } from "./tracks";
-import { bubbleTransform, getAxis, handleTransform, lengthOf, offsetAlong } from "./axis";
+import { bubbleTransform, getAxis, handleTransform, isRtl, lengthOf, offsetAlong } from "./axis";
 import { setFormValue } from "../../../core/dom/form-value";
 
 /**
@@ -114,7 +114,8 @@ export const withController =
 
   // A discrete slider puts its interior steps on a scale inset by the track's corner
   // radius; a continuous one spans the whole track (see trackPosition). FLO-250.
-  const axis = getAxis(config);
+  // Read at each use: a right-to-left layout is known only once the slider is placed.
+  const axisNow = () => getAxis(config, isRtl(component.element));
   const inset = () => config.ticks ? getExternalTrackRadius(component.getSize?.() ?? config.size) : 0;
 
   // Percentage plus the inset stays aligned when the container resizes.
@@ -139,6 +140,7 @@ export const withController =
       // inset scale, and anything beyond it clamps to the first or last step.
       // `position` is a client coordinate on the slider's axis.
       const edge = inset();
+      const axis = axisNow();
       const span = lengthOf(containerRect, axis) - 2 * edge;
       const along = offsetAlong(position, containerRect, axis) - edge;
       const fraction = span > 0 ? Math.max(0, Math.min(1, along / span)) : 0;
@@ -182,8 +184,14 @@ export const withController =
 
     // Along the axis the position; across it the handle is centred on the track,
     // which the stylesheet does for a vertical slider.
+    const axis = axisNow();
+    // Along the axis the position, clearing the side an earlier render or withDom
+    // wrote: across a vertical track the stylesheet centres the element, and the
+    // value indicator's stylesheet anchors it on the left, which RTL undoes.
     const place = (element: HTMLElement, value: number, transform: string) => {
       if (axis.vertical) element.style.left = "";
+      if (axis.start === "right") element.style.left = "auto";
+      if (axis.start === "left") element.style.right = "";
       element.style[axis.start] = visualPosition(getPercentage(value));
       element.style.transform = transform;
     };
@@ -200,6 +208,9 @@ export const withController =
     updateHandleAria(handle, state.value);
     if (config.range && secondHandle && state.secondValue !== null) {
       updateHandleAria(secondHandle, state.secondValue);
+      // Each handle of a range can go only as far as the other, and says so.
+      handle.setAttribute("aria-valuemax", String(state.secondValue));
+      secondHandle.setAttribute("aria-valuemin", String(state.value));
     }
   };
 
@@ -399,7 +410,10 @@ export const withController =
        * @returns Slider controller for chaining
        */
       setValue(value: number, triggerEvent = true) {
-        const newValue = clamp(value, state.min, state.max);
+        // A range slider's first value stops at its second, as Compose's
+        // RangeSliderState coerces activeRangeStart. FLO-251.
+        const ceiling = config.range && state.secondValue !== null ? state.secondValue : state.max;
+        const newValue = clamp(value, state.min, ceiling);
 
         state.value = newValue;
         render();
@@ -428,7 +442,8 @@ export const withController =
       setSecondValue(value: number, triggerEvent = true) {
         if (!config.range) return this;
 
-        const newValue = clamp(value, state.min, state.max);
+        // ...and the second at the first (activeRangeEnd).
+        const newValue = clamp(value, state.value, state.max);
         state.secondValue = newValue;
         render();
 

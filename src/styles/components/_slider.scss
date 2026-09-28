@@ -303,9 +303,9 @@ $component: '#{base.$prefix}-slider';
     }
   }
 
-  // Positions are written to left, or to bottom or top on a vertical slider; lengths
-  // to width or height.
-  $settle-position: m.spring(left, default-spatial), m.spring(bottom, default-spatial), m.spring(top, default-spatial);
+  // Positions are written to left (right in RTL), or to bottom or top on a vertical
+  // slider; lengths to width or height.
+  $settle-position: m.spring(left, default-spatial), m.spring(right, default-spatial), m.spring(bottom, default-spatial), m.spring(top, default-spatial);
   $settle-length: m.spring(width, default-spatial), m.spring(height, default-spatial);
   &--settling {
     .#{$component}__handle, .#{$component}__inset-icon { transition: $settle-position; }
