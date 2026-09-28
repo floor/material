@@ -114,4 +114,11 @@ describe('withInput', () => {
     
     expect(enhanced.input.value).toBe('on');
   });
+
+  test('should not copy a node label into aria-label', () => {
+    const slot = document.createElement('slot');
+    const enhanced = withInput({ prefix: PREFIX, componentName: 'switch', label: slot })(component);
+
+    expect(enhanced.input.hasAttribute('aria-label')).toBe(false);
+  });
 });

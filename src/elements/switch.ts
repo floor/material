@@ -45,7 +45,6 @@ const switchSpec = {
   slot: {
     attribute: "label" as const,
     config: "label",
-    container: (c) => c.element.querySelector("label"),
   },
   form: {
     value: (c) => (c.isChecked() ? c.getValueAttribute() || "on" : null),
