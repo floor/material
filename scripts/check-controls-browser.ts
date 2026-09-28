@@ -3,9 +3,10 @@ import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createSwitch from "../src/components/switch";
 import type createCheckbox from "../src/components/checkbox";
+import type createRadios from "../src/components/radios";
 
 type ControlsWindow = Window & {
-  inputs: { createSwitch: typeof createSwitch; createCheckbox: typeof createCheckbox };
+  inputs: { createSwitch: typeof createSwitch; createCheckbox: typeof createCheckbox; createRadios: typeof createRadios };
   controlsHost: HTMLElement;
 };
 type Box = { left: number; right: number; top: number; width: number; height: number };
@@ -150,8 +151,65 @@ async function checkCheckbox(page: Page): Promise<number> {
   return 17;
 }
 
+/** FLO-266: the radio ring and dot, state layers, keyboard-only focus, and the label gap in both directions. */
+async function checkRadios(page: Page): Promise<number> {
+  const mount = (dir: "ltr" | "rtl") => page.evaluate((dir) => {
+    const state = window as unknown as ControlsWindow;
+    document.documentElement.dir = dir;
+    state.controlsHost?.remove();
+    const host = document.createElement("div");
+    host.style.cssText = "padding:24px";
+    state.controlsHost = host;
+    document.body.append(host);
+    const group = state.inputs.createRadios({ name: "size", value: "s", options: [{ value: "s", label: "Small" }, { value: "m", label: "Medium" }, { value: "l", label: "Large" }] });
+    group.element.id = "rd";
+    host.append(group.element);
+  }, dir);
+  const item = (n: number) => `#rd .mtrl-radios__item:nth-child(${n})`;
+  const mix = (name: string, percent: number) => page.evaluate(([name, percent]) => { const probe = document.createElement("i"); probe.style.color = `color-mix(in srgb, var(--mtrl-sys-color-${name}) ${percent}%, transparent)`; document.body.append(probe); const c = getComputedStyle(probe).color; probe.remove(); return c; }, [name, percent] as const);
+  const layer = (n: number) => style(page, `${item(n)} .mtrl-radios__ripple`, "background-color");
+  let checks = 0;
+  for (const dir of ["ltr", "rtl"] as const) {
+    await mount(dir);
+    await settle(page);
+    const control = await box(page, `${item(1)} .mtrl-radios__control`), text = await box(page, `${item(1)} .mtrl-radios__text`);
+    assert.equal(dir === "ltr" ? text.left - control.right : control.left - text.right, 8, `${dir}: 8dp between the control and its label`);
+    checks += 1;
+  }
+  await page.evaluate(() => { document.documentElement.dir = "ltr"; });
+  await page.mouse.move(0, 0);
+  await settle(page);
+  assert.equal(await style(page, `${item(1)} .mtrl-radios__circle`, "border-top-width"), "2px", "2dp ring");
+  assert.equal(await style(page, `${item(2)} .mtrl-radios__circle`, "border-top-color"), await role(page, "on-surface-variant"), "unselected ring on-surface-variant");
+  assert.equal((await box(page, `${item(1)} .mtrl-radios__circle`)).width, 20, "20dp icon");
+  assert.equal(parseFloat(await style(page, `${item(1)} .mtrl-radios__circle`, "width", "::after")), 10, "10dp dot");
+  await page.hover(`${item(2)} .mtrl-radios__label`);
+  await settle(page);
+  assert.equal(await layer(2), await mix("on-surface", 8), "unselected hover: on-surface");
+  assert.equal(await style(page, `${item(2)} .mtrl-radios__circle`, "border-top-color"), await role(page, "on-surface"), "unselected hover ring on-surface");
+  await page.mouse.down();
+  await settle(page);
+  assert.equal(await layer(2), await mix("primary", 10), "unselected press: primary");
+  await page.mouse.up();
+  await page.mouse.move(0, 0);
+  await settle(page);
+  assert.equal(await style(page, `${item(2)} .mtrl-radios__ripple`, "outline-style"), "none", "a click draws no focus ring");
+  // Keyboard: Tab onto the selected radio, an arrow moves and selects.
+  await page.evaluate(() => { const before = document.createElement("button"); before.id = "before-radios"; document.getElementById("rd")!.before(before); before.focus(); });
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("ArrowDown");
+  await settle(page);
+  assert.equal(await page.locator(`${item(3)} input`).isChecked(), true, "ArrowDown moves and selects");
+  assert.equal(await layer(3), await mix("primary", 10), "selected focus: primary");
+  const ring = await page.locator(`${item(3)} .mtrl-radios__ripple`).evaluate((el) => { const c = getComputedStyle(el); return `${c.outlineWidth} ${c.outlineStyle} ${c.outlineColor} ${c.outlineOffset}`; });
+  assert.equal(ring, `3px solid ${await role(page, "secondary")} 2px`, "focus ring");
+  checks += 10;
+  await page.evaluate(() => { (window as unknown as ControlsWindow).controlsHost.remove(); document.getElementById("before-radios")?.remove(); });
+  return checks;
+}
+
 export async function checkControls(page: Page): Promise<void> {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  const checks = (await checkSwitch(page)) + (await checkCheckbox(page));
-  console.log(`Passed ${checks} selection-control checks: the switch handle and state layer in both directions, its icons, label side, focus layer, handle colour and ring; the checkbox box, state layers, focus ring, keys, error and disabled indeterminate.`);
+  const checks = (await checkSwitch(page)) + (await checkCheckbox(page)) + (await checkRadios(page));
+  console.log(`Passed ${checks} selection-control checks: the switch handle and state layer in both directions, its icons, label side, focus layer, handle colour and ring; the checkbox box, state layers, focus ring, keys, error and disabled indeterminate; the radio ring, dot, state layers, keyboard focus and label gap.`);
 }

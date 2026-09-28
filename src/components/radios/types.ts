@@ -85,8 +85,9 @@ export interface RadiosConfig {
    */
   componentName?: string;
   
-  /** 
-   * Ripple effect configuration
+  /**
+   * @deprecated Never applied (FLO-266). The state layer is drawn by the
+   * stylesheet.
    */
   rippleConfig?: {
     /** Duration of the ripple animation in milliseconds */

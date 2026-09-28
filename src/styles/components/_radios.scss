@@ -32,10 +32,10 @@ $component: '#{base.$prefix}-radios';
     align-items: flex-start;
 
     .#{$component}__item {
-      margin-right: 16px;
+      margin-inline-end: 16px;
 
       &:last-child {
-        margin-right: 0;
+        margin-inline-end: 0;
       }
     }
   }
@@ -71,21 +71,13 @@ $component: '#{base.$prefix}-radios';
     margin: 0;
     padding: 0;
 
-    // Focus styles
-    &:focus ~ .#{$component}__label .#{$component}__ripple {
-      background-color: t.alpha('primary', v.state('focus-state-layer-opacity'));
-    }
+    // Selected: a primary ring and dot.
+    &:checked ~ .#{$component}__label .#{$component}__circle {
+      border-color: t.color('primary');
 
-    // Checked styles
-    &:checked ~ .#{$component}__label {
-      .#{$component}__circle {
-        border-color: t.color('primary');
-        border-width: 1.5px;
-
-        &:after {
-          transform: translate(-50%, -50%) scale(1);
-          opacity: 1;
-        }
+      &::after {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
       }
     }
 
@@ -94,7 +86,7 @@ $component: '#{base.$prefix}-radios';
       .#{$component}__circle {
         border-color: t.alpha('on-surface', 0.38);
 
-        &:after {
+        &::after {
           background-color: t.alpha('on-surface', 0.38);
         }
       }
@@ -113,6 +105,7 @@ $component: '#{base.$prefix}-radios';
     cursor: pointer;
     padding: 8px 0;
     height: 48px;
+    color: t.color('on-surface');
 
     // Typography for label
     @include m.typography('body-medium');
@@ -121,13 +114,12 @@ $component: '#{base.$prefix}-radios';
       flex-direction: row-reverse;
 
       .#{$component}__text {
-        margin-right: 12px;
-        margin-left: 0;
+        margin-inline: 0 8px;
       }
     }
   }
 
-  // Radio control
+  // Radio control: the 40dp state layer area
   &__control {
     position: relative;
     display: inline-flex;
@@ -138,50 +130,73 @@ $component: '#{base.$prefix}-radios';
     flex-shrink: 0;
   }
 
-  // Radio circle
+  // The 20dp icon: a 2dp ring (RadioStrokeWidth; it was 1.5px, which Chromium
+  // paints as 1px) in on-surface-variant, and a 10dp dot (Compose and material-web;
+  // it was 12px) that springs in on the fast spatial spring. FLO-266.
   &__circle {
     position: relative;
     width: 20px;
     height: 20px;
-    border: 1.5px solid t.color('outline');
+    border: 2px solid t.color('on-surface-variant');
     border-radius: 50%;
     box-sizing: border-box;
-    transition: border-color 0.2s ease;
+    transition: m.spring(border-color, fast-effects);
 
-    &:after {
+    &::after {
       content: '';
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%) scale(0);
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background-color: t.color('primary');
       opacity: 0;
-      transition: transform 0.15s ease, opacity 0.15s ease;
+      transition: m.spring(transform, fast-spatial), m.spring(opacity, fast-effects);
     }
   }
 
-  // Ripple effect
+  // The state layer (md-comp-radio-button): unselected on-surface on hover and
+  // focus, selected primary; a press takes the colour of the state it leads to. The
+  // unselected ring turns on-surface. Hover was primary even when unselected, a
+  // plain :focus showed on mouse clicks, and there was no press. FLO-266.
   &__ripple {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     border-radius: 50%;
-    transition: background-color 0.15s ease;
+    transition: m.spring(background-color, fast-effects);
+  }
 
-    // Apply ripple effect on hover
-    .#{$component}__input:not(:disabled) ~ .#{$component}__label:hover & {
-      background-color: t.alpha('primary', 0.08);
+  &__item {
+    $input: '.#{$component}__input:not(:disabled)';
+    $label: '.#{$component}__label';
+    $ripple: '.#{$component}__ripple';
+
+    #{$input}:not(:checked) ~ #{$label}:is(:hover, :active) .#{$component}__circle,
+    #{$input}:not(:checked):focus-visible ~ #{$label} .#{$component}__circle {
+      border-color: t.color('on-surface');
+    }
+
+    #{$input} ~ #{$label}:hover #{$ripple} { background-color: t.alpha('on-surface', v.state('hover-state-layer-opacity')); }
+    #{$input}:focus-visible ~ #{$label} #{$ripple} { background-color: t.alpha('on-surface', v.state('focus-state-layer-opacity')); }
+    #{$input} ~ #{$label}:active #{$ripple} { background-color: t.alpha('primary', v.state('pressed-state-layer-opacity')); }
+
+    #{$input}:checked ~ #{$label}:hover #{$ripple} { background-color: t.alpha('primary', v.state('hover-state-layer-opacity')); }
+    #{$input}:checked:focus-visible ~ #{$label} #{$ripple} { background-color: t.alpha('primary', v.state('focus-state-layer-opacity')); }
+    #{$input}:checked ~ #{$label}:active #{$ripple} { background-color: t.alpha('on-surface', v.state('pressed-state-layer-opacity')); }
+
+    // md.comp.focus-ring: 3dp secondary, 2dp outside the state layer.
+    #{$input}:focus-visible ~ #{$label} #{$ripple} {
+      outline: 3px solid t.color('secondary');
+      outline-offset: 2px;
     }
   }
 
-  // Radio text
+  // Radio text: the gap follows the reading direction (it was a physical
+  // margin-left, 0px in right-to-left layouts). FLO-266.
   &__text {
-    margin-left: 8px;
+    margin-inline-start: 8px;
     line-height: 1.2;
   }
 }
