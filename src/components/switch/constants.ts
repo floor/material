@@ -33,9 +33,9 @@ export const SWITCH_STATES = {
 export const SWITCH_EVENTS = {
   /** Emitted when the checked state changes. */
   CHANGE: 'change',
-  /** Native input focus event; listen on the input, not the switch emitter. */
+  /** The switch received focus. */
   FOCUS: 'focus',
-  /** Native input blur event; listen on the input, not the switch emitter. */
+  /** The switch lost focus. */
   BLUR: 'blur'
 } as const;
 

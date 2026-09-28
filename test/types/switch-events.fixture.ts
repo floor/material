@@ -10,7 +10,8 @@ type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 
 const control = createSwitch();
-export const onlyChangeIsEmitted: Equals<keyof SwitchEvents, "change"> = true;
+// FLO-267: focus and blur are emitted too.
+export const emittedEvents: Equals<keyof SwitchEvents, "change" | "focus" | "blur"> = true;
 export const callbackPayload: Equals<
   Parameters<Parameters<typeof control.on<"change">>[1]>[0],
   SwitchChangePayload
@@ -45,10 +46,8 @@ control.on("chnage", () => {});
 control.off("chnage", () => {});
 // @ts-expect-error click is available on the DOM input, not the emitter
 control.on("click", () => {});
-// @ts-expect-error focus is available on the DOM input, not the emitter
-control.on(SWITCH_EVENTS.FOCUS, () => {});
-// @ts-expect-error blur is also a native input event
-control.on(SWITCH_EVENTS.BLUR, () => {});
+control.on(SWITCH_EVENTS.FOCUS, (event: FocusEvent) => event.relatedTarget);
+control.on(SWITCH_EVENTS.BLUR, (event: FocusEvent) => event.relatedTarget);
 // @ts-expect-error control overrides the input feature's value setter
 control.on("value", () => {});
 // @ts-expect-error lifecycle events are not emitted through this API
