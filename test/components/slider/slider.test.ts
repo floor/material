@@ -13,8 +13,7 @@
 // through aria-valuetext.
 //
 // Deliberately not asserted, because each is open: labelPosition and
-// iconPosition are typed and defaulted but nothing reads them; setValue() and
-// setSecondValue() let the handles cross, where dragging swaps them; setValue()
+// iconPosition are typed and defaulted but nothing reads them; setValue()
 // does not snap to step, where keyboard and pointer input do; setSize() leaves
 // the size class from config in place and getSize() returns a track height as a
 // number, where the type promises a string.
@@ -655,6 +654,121 @@ describe('vertical slider', () => {
     expect(container.style.height).toBe('');
     expect(slider.element.querySelector<HTMLElement>('.mtrl-slider__track')!.style.width).toBe('40px');
     expect(handles(slider)[0]!.style.width).toBe('52px');
+  });
+});
+
+// FLO-251, after Compose's Slider.kt keyboard handling and RangeSlider coercion:
+// PageUp/PageDown move a tenth of the steps (one to ten), range handles stop at each
+// other instead of crossing, the arrows along the track follow it as drawn (reversed
+// in RTL and top to bottom), and an RTL slider lays out and reads taps from the right.
+describe('slider keys, range limits and RTL', () => {
+  const WIDTH = 300;
+  const within = async (config: Parameters<typeof createSlider>[0], dir?: 'rtl') => {
+    const host = document.createElement('div');
+    if (dir) host.setAttribute('dir', dir);
+    document.body.appendChild(host);
+    const slider = createSlider(config);
+    const container = slider.element.querySelector<HTMLElement>('.mtrl-slider__container')!;
+    container.getBoundingClientRect = () => ({ width: WIDTH, height: 48, top: 0, left: 0, right: WIDTH, bottom: 48, x: 0, y: 0, toJSON() {} }) as DOMRect;
+    host.appendChild(slider.element);
+    await wait();
+    return slider;
+  };
+
+  test('PageUp and PageDown move a tenth of the steps, one to ten of them', async () => {
+    const fine = await within({ value: 50, step: 1 });
+    key(handles(fine)[0]!, 'PageUp');
+    expect(fine.getValue()).toBe(60);
+    // Four steps: a tenth rounds down to none, so one step, not ten to the end.
+    const coarse = await within({ value: 25, step: 25 });
+    key(handles(coarse)[0]!, 'PageUp');
+    expect(coarse.getValue()).toBe(50);
+    key(handles(coarse)[0]!, 'PageDown');
+    key(handles(coarse)[0]!, 'PageDown');
+    expect(coarse.getValue()).toBe(0);
+  });
+
+  test('range handles stop at each other from the keyboard', async () => {
+    const slider = await within({ range: true, value: 40, secondValue: 60, step: 10 });
+    const [first, second] = handles(slider);
+    key(first!, 'End');
+    expect(slider.getValue()).toBe(60);
+    key(first!, 'ArrowRight');
+    expect(slider.getValue()).toBe(60);
+    key(second!, 'Home');
+    expect(slider.getSecondValue()).toBe(60);
+  });
+
+  test('a dragged range handle stops at the other one instead of swapping', async () => {
+    const slider = await within({ range: true, value: 20, secondValue: 60 });
+    const [first] = handles(slider);
+    first!.dispatchEvent(new dom.window.MouseEvent('mousedown', { clientX: 60, bubbles: true }));
+    document.dispatchEvent(new dom.window.MouseEvent('mousemove', { clientX: 280, bubbles: true }));
+    document.dispatchEvent(new dom.window.MouseEvent('mouseup', { clientX: 280, bubbles: true }));
+    expect(slider.getValue()).toBe(60);
+    expect(slider.getSecondValue()).toBe(60);
+  });
+
+  test('the setters stop at the other handle too', async () => {
+    const slider = await within({ range: true, value: 20, secondValue: 80 });
+    slider.setValue(90);
+    expect(slider.getValue()).toBe(80);
+    slider.setValue(20);
+    slider.setSecondValue(10);
+    expect(slider.getSecondValue()).toBe(20);
+  });
+
+  test('each range handle announces the other as its limit', async () => {
+    const slider = await within({ range: true, value: 20, secondValue: 80 });
+    const [first, second] = handles(slider);
+    expect(first!.getAttribute('aria-valuemin')).toBe('0');
+    expect(first!.getAttribute('aria-valuemax')).toBe('80');
+    expect(second!.getAttribute('aria-valuemin')).toBe('20');
+    expect(second!.getAttribute('aria-valuemax')).toBe('100');
+    key(first!, 'ArrowRight');
+    expect(second!.getAttribute('aria-valuemin')).toBe('21');
+  });
+
+  test('in RTL the track runs from the right', async () => {
+    const slider = await within({ value: 25 }, 'rtl');
+    const handle = handles(slider)[0]!;
+    expect(handle.style.right).toBe('25%');
+    expect(handle.style.left).toBe('auto');
+    const [, active, inactive] = Array.from(slider.element.querySelectorAll<HTMLElement>('.mtrl-slider__segment'));
+    expect([active!.style.right, active!.style.width, active!.style.left]).toEqual(['0px', '67px', '']);
+    expect([inactive!.style.right, inactive!.style.width]).toEqual(['83px', '217px']);
+  });
+
+  test('in RTL ArrowRight lowers and ArrowLeft raises; ArrowUp still raises', async () => {
+    const slider = await within({ value: 50 }, 'rtl');
+    const handle = handles(slider)[0]!;
+    key(handle, 'ArrowRight');
+    expect(slider.getValue()).toBe(49);
+    key(handle, 'ArrowLeft');
+    key(handle, 'ArrowLeft');
+    expect(slider.getValue()).toBe(51);
+    key(handle, 'ArrowUp');
+    expect(slider.getValue()).toBe(52);
+  });
+
+  test('in RTL a tap reads from the right edge', async () => {
+    const slider = await within({ value: 10 }, 'rtl');
+    const container = slider.element.querySelector<HTMLElement>('.mtrl-slider__container')!;
+    container.dispatchEvent(new dom.window.MouseEvent('mousedown', { clientX: 60, bubbles: true }));
+    document.dispatchEvent(new dom.window.MouseEvent('mouseup', { clientX: 60, bubbles: true }));
+    expect(slider.getValue()).toBe(80);
+  });
+
+  test('top to bottom, ArrowUp and PageUp move toward the top, which is the minimum', async () => {
+    const slider = await within({ orientation: 'vertical', topToBottom: true, value: 50 });
+    const handle = handles(slider)[0]!;
+    key(handle, 'ArrowUp');
+    expect(slider.getValue()).toBe(49);
+    key(handle, 'ArrowDown');
+    key(handle, 'ArrowDown');
+    expect(slider.getValue()).toBe(51);
+    key(handle, 'PageUp');
+    expect(slider.getValue()).toBe(41);
   });
 });
 

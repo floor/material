@@ -1,5 +1,6 @@
 // src/components/slider/features/handlers.ts
 import { SLIDER_EVENTS } from "../types";
+import { arrowSign, getAxis, isRtl } from "./axis";
 import {
   SliderConfig,
   SliderEventHelpers,
@@ -43,6 +44,11 @@ export const createHandlers = (
   const component = state.component;
   // The coordinate along the slider's axis: y for a vertical slider. FLO-252.
   const pointerOf = config.orientation === "vertical" ? clientYOf : clientXOf;
+  // The values a handle may take: a range handle stops at the other one.
+  const rangeBounds = (isSecondHandle: boolean): [number, number] => {
+    if (!config.range || state.secondValue === null) return [state.min, state.max];
+    return isSecondHandle ? [state.value, state.max] : [state.min, state.secondValue];
+  };
 
   // Extract needed components from both locations for backward compatibility
   const container = component.container || components.container || null;
@@ -331,37 +337,16 @@ export const createHandlers = (
         newValue = roundToStep(newValue);
       newValue = clamp(newValue, state.min, state.max);
 
-      // Handle crossing points and handle swapping for range sliders
+      // A range handle stops at the other one rather than crossing it (Compose's
+      // RangeSlider coerces each value to the other). The handles used to swap
+      // roles mid-drag. FLO-251.
       const isSecondHandle = state.activeHandle === "second";
 
       if (config.range && state.secondValue !== null) {
-        if (isSecondHandle) {
-          // Second handle is active
-          if (newValue >= state.value) {
-            state.secondValue = newValue;
-          } else {
-            // Handles are crossed, swap them
-            hideActiveBubble(state.activeBubble, 0);
-            state.secondValue = state.value;
-            state.value = newValue;
-            state.activeHandle = "first";
-            state.activeBubble = valueBubble;
-            showActiveBubble(state.activeBubble);
-          }
-        } else {
-          // First handle is active
-          if (newValue <= state.secondValue) {
-            state.value = newValue;
-          } else {
-            // Handles are crossed, swap them
-            hideActiveBubble(state.activeBubble, 0);
-            state.value = state.secondValue;
-            state.secondValue = newValue;
-            state.activeHandle = "second";
-            state.activeBubble = secondValueBubble;
-            showActiveBubble(state.activeBubble);
-          }
-        }
+        const [low, high] = rangeBounds(isSecondHandle);
+        const clamped = Math.min(high, Math.max(low, newValue));
+        if (isSecondHandle) state.secondValue = clamped;
+        else state.value = clamped;
       } else {
         // Regular slider - update previousValue for centered sliders
         if (config.centered) {
@@ -428,52 +413,31 @@ export const createHandlers = (
     // Handle tab key separately
     if (e.key === "Tab") return;
 
-    let valueChanged = false;
+    // Along the track the arrows follow it as drawn (reversed in RTL, and on a
+    // top-to-bottom vertical slider); across it they keep ARIA's meaning. PageUp and
+    // PageDown move a tenth of the steps, one to ten of them (Compose's
+    // `(steps + 1) / 10`, coerced to 1..10), raising on a horizontal slider and
+    // following the track on a vertical one. FLO-251.
+    const axis = getAxis(config, isRtl(state.component.element));
+    const sign = arrowSign(axis);
+    const intervals = Math.max(1, Math.floor((state.max - state.min) / step));
+    const page = Math.min(10, Math.max(1, Math.floor(intervals / 10))) * step;
+    const along = axis.vertical ? ["ArrowUp", "ArrowDown"] : ["ArrowRight", "ArrowLeft"];
+    let target: number;
+    if (e.key === along[0]) target = newValue + sign * stepSize;
+    else if (e.key === along[1]) target = newValue - sign * stepSize;
+    else if (e.key === "ArrowUp" || e.key === "ArrowRight") target = newValue + stepSize;
+    else if (e.key === "ArrowDown" || e.key === "ArrowLeft") target = newValue - stepSize;
+    else if (e.key === "PageUp") target = newValue + (axis.vertical ? sign : 1) * page;
+    else if (e.key === "PageDown") target = newValue - (axis.vertical ? sign : 1) * page;
+    else if (e.key === "Home") target = state.min;
+    else if (e.key === "End") target = state.max;
+    else return; // Exit if not a handled key
+    e.preventDefault();
+    // A range handle stops at the other one, as Compose's RangeSlider coerces it.
+    const [low, high] = rangeBounds(isSecondHandle);
+    newValue = Math.min(high, Math.max(low, target));
 
-    switch (e.key) {
-      case "ArrowRight":
-      case "ArrowUp":
-        e.preventDefault();
-        newValue = Math.min(newValue + stepSize, state.max);
-        valueChanged = true;
-        break;
-
-      case "ArrowLeft":
-      case "ArrowDown":
-        e.preventDefault();
-        newValue = Math.max(newValue - stepSize, state.min);
-        valueChanged = true;
-        break;
-
-      case "Home":
-        e.preventDefault();
-        newValue = state.min;
-        valueChanged = true;
-        break;
-
-      case "End":
-        e.preventDefault();
-        newValue = state.max;
-        valueChanged = true;
-        break;
-
-      case "PageUp":
-        e.preventDefault();
-        newValue = Math.min(newValue + step * 10, state.max);
-        valueChanged = true;
-        break;
-
-      case "PageDown":
-        e.preventDefault();
-        newValue = Math.max(newValue - step * 10, state.min);
-        valueChanged = true;
-        break;
-
-      default:
-        return; // Exit if not a handled key
-    }
-
-    if (!valueChanged) return;
 
     // Update active bubble reference
     state.activeBubble = isSecondHandle ? secondValueBubble : valueBubble;

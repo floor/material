@@ -27,7 +27,8 @@ const size = { raw: Buffer.byteLength(js), gzip: gzipSync(js, { level: 9 }).leng
 // (10,983), until linking a label to its input (#67) added 19 and crossed it at 11,002.
 // It follows check-package-size.ts again at 12,600 for M3 conformance (FLO-250, FLO-252),
 // which took this build from 11,410 to 12,308; the breakdown is in that fixture.
-assert(size.gzip < 12600, `Slider JS exceeds 12,600 gzip bytes: ${size.gzip}`);
+// Range limits, keys and RTL (FLO-251) took it to 12,604; both copies move to 12,900.
+assert(size.gzip < 12900, `Slider JS exceeds 12,900 gzip bytes: ${size.gzip}`);
 const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
   const url = new URL(request.url);
   if (url.pathname === "/slider.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });

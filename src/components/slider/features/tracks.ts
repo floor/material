@@ -2,7 +2,7 @@ import { SliderConfig, SliderColor } from "../types";
 import { SLIDER_SIZES, SLIDER_MEASUREMENTS, SliderSize } from "../constants";
 import { PREFIX } from "../../../core/config";
 import { setHTML } from "../../../core/dom/html";
-import { getAxis, lengthOf } from "./axis";
+import { getAxis, isRtl, lengthOf, type SliderAxis } from "./axis";
 
 export const getTrackHeight = (size?: SliderSize): number => {
   if (typeof size === "number") {
@@ -121,7 +121,17 @@ export const withTracks =
     parent.append(node);
     return node;
   };
-  const axis = getAxis(config);
+  // The axis is read at each render: a right-to-left layout is known only once the
+  // slider is in the document.
+  let axis: SliderAxis = getAxis(config);
+  // Writes a position along the axis and clears the opposite side, which an earlier
+  // render may have used: the first one runs before the slider is in the document,
+  // when an RTL layout still reads as left to right.
+  const opposite = { left: "right", right: "left", top: "bottom", bottom: "top" } as const;
+  const at = (node: HTMLElement, position: string) => {
+    node.style[opposite[axis.start]] = "";
+    node.style[axis.start] = position;
+  };
   const visual = element("slider__visual", container);
   visual.setAttribute("aria-hidden", "true");
   const track = element("slider__track", visual);
@@ -154,6 +164,7 @@ export const withTracks =
   const render = (next?: VisualState) => {
     if (destroyed) return;
     if (next) state = { ...next };
+    axis = getAxis(config, isRtl(component.element));
     // The track's length along the axis; the names below say width for it.
     const width = lengthOf(container.getBoundingClientRect(), axis) || 200;
     const corner = getExternalTrackRadius(size);
@@ -203,7 +214,7 @@ export const withTracks =
     });
     segments.forEach((segment, index) => {
       const [start, end, active] = parts[index] ?? [0, 0, false];
-      segment.style[axis.start] = `${start}px`;
+      at(segment, `${start}px`);
       segment.style[axis.size] = `${Math.max(0, end - start)}px`;
       segment.classList.toggle(component.getClass("slider__segment--active"), active);
     });
@@ -211,8 +222,8 @@ export const withTracks =
     // ticks already.
     dots[0].hidden = !!config.ticks || standard || parts[0][1] <= parts[0][0];
     dots[1].hidden = !!config.ticks || parts[2][1] <= parts[2][0];
-    dots[0].style[axis.start] = `${corner - 2}px`;
-    dots[1].style[axis.start] = `${width - corner - 2}px`;
+    at(dots[0], `${corner - 2}px`);
+    at(dots[1], `${width - corner - 2}px`);
     placeInsetIcon(parts);
     const discrete = !!config.ticks && state.step > 0 && state.max > state.min;
     ticks.forEach(tick => { tick.hidden = !discrete; });
@@ -234,7 +245,7 @@ export const withTracks =
           else merged.push([start, end]);
         }
         const stops = merged.flatMap(([start, end]) => [`black ${start}px`, `transparent ${start}px`, `transparent ${end}px`, `black ${end}px`]);
-        const direction = !axis.vertical ? "to right" : axis.start === "top" ? "to bottom" : "to top";
+        const direction = { left: "to right", right: "to left", top: "to bottom", bottom: "to top" }[axis.start];
         return stops.length ? `linear-gradient(${direction}, black 0px, ${stops.join(",")}, black 100%)` : "none";
       };
       ticks.forEach((tick, index) => {
@@ -242,17 +253,19 @@ export const withTracks =
         tick.style.backgroundSize = axis.vertical ? `100% ${repeat}` : `${repeat} 100%`;
         tick.style.backgroundPosition = axis.vertical
           ? `center ${axis.start} ${inset - spacing / 2}px`
-          : `${inset - spacing / 2}px center`;
+          : `${axis.start} ${inset - spacing / 2}px center`;
         tick.style.maskImage = mask([
           ...holes,
           ...(index === 0 ? [[activeStart - 2, activeEnd + 2]] : []),
         ]);
       });
       // Cut from the start and from the end of the axis.
-      const clip = (fromStart: number, fromEnd: number) =>
-        !axis.vertical ? `inset(0 ${fromEnd}px 0 ${fromStart}px)`
-          : axis.start === "top" ? `inset(${fromStart}px 0 ${fromEnd}px 0)`
-            : `inset(${fromEnd}px 0 ${fromStart}px 0)`;
+      const clip = (fromStart: number, fromEnd: number) => ({
+        left: `inset(0 ${fromEnd}px 0 ${fromStart}px)`,
+        right: `inset(0 ${fromStart}px 0 ${fromEnd}px)`,
+        top: `inset(${fromStart}px 0 ${fromEnd}px 0)`,
+        bottom: `inset(${fromEnd}px 0 ${fromStart}px 0)`,
+      })[axis.start];
       ticks[0].style.clipPath = clip(0, Math.max(0, width - last - 2));
       ticks[1].style.clipPath = clip(Math.max(0, activeStart - 2), Math.max(0, width - Math.min(last + 2, activeEnd + 2)));
     }
@@ -279,7 +292,7 @@ export const withTracks =
       shownMarkup = markup;
     }
     insetIcon.style.width = insetIcon.style.height = `${iconSize}px`;
-    insetIcon.style[axis.start] = `${(onActive ? activeStart : inactiveStart) + INSET_ICON_PADDING}px`;
+    at(insetIcon, `${(onActive ? activeStart : inactiveStart) + INSET_ICON_PADDING}px`);
     insetIcon.classList.toggle(component.getClass("slider__inset-icon--inactive"), onInactive);
   }
   component.setInsetIcon = (icon: string, atMin = "") => {
