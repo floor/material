@@ -413,7 +413,9 @@ export const withController =
         // A range slider's first value stops at its second, as Compose's
         // RangeSliderState coerces activeRangeStart. FLO-251.
         const ceiling = config.range && state.secondValue !== null ? state.secondValue : state.max;
-        const newValue = clamp(value, state.min, ceiling);
+        // Snapped to the step, as keys and the pointer are and as Compose's
+        // SliderState snaps a value it is given (shouldAutoSnap). FLO-107.
+        const newValue = clamp(roundToStep(clamp(value, state.min, state.max)), state.min, ceiling);
 
         state.value = newValue;
         render();
@@ -443,7 +445,7 @@ export const withController =
         if (!config.range) return this;
 
         // ...and the second at the first (activeRangeEnd).
-        const newValue = clamp(value, state.value, state.max);
+        const newValue = clamp(roundToStep(clamp(value, state.min, state.max)), state.value, state.max);
         state.secondValue = newValue;
         render();
 

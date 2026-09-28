@@ -352,8 +352,8 @@ export interface SliderComponent {
   /** Sets slider size */
   setSize: (size: SliderSize) => SliderComponent;
 
-  /** Gets slider size */
-  getSize: () => string;
+  /** Gets the size as it was set: a size name, or a track height in pixels */
+  getSize: () => SliderSize;
 
   /** Shows or hides tick marks */
   showTicks: (show: boolean) => SliderComponent;

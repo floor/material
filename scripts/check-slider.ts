@@ -181,6 +181,25 @@ try {
   shown = await paint({ orientation: "vertical", topToBottom: true, value: 25, ariaLabel: "Volume" }, 240);
   near(shown.handles[0]!.y, 60, "top-to-bottom handle");
 
+  // The icon beside the track, level with it, before or after it; the label above or
+  // below (FLO-107: both positions used to change nothing on screen).
+  const icon = '<svg viewBox="0 0 24 24"><path d="M3 9h4l5-5v16l-5-5H3z"/></svg>';
+  for (const [iconPosition, labelPosition] of [["start", "start"], ["end", "end"]] as const) {
+    await paint({ value: 50, icon, iconPosition, label: "Volume", labelPosition });
+    const placed = await page.evaluate(() => {
+      const box = (selector: string) => document.querySelector(selector)!.getBoundingClientRect();
+      const track = box(".mtrl-slider__track"), icon = box(".mtrl-slider__icon"), label = box(".mtrl-slider__label");
+      return { trackTop: track.top, trackBottom: track.bottom, trackLeft: track.left, trackRight: track.right, trackMiddle: track.top + track.height / 2,
+        iconLeft: icon.left, iconRight: icon.right, iconMiddle: icon.top + icon.height / 2, labelTop: label.top, labelBottom: label.bottom, labelLeft: label.left };
+    });
+    near(placed.iconMiddle, placed.trackMiddle, `${iconPosition} icon level with the track`);
+    if (iconPosition === "start") assert(placed.iconRight <= placed.trackLeft, "a start icon sits before the track");
+    else assert(placed.iconLeft >= placed.trackRight, "an end icon sits after the track");
+    if (labelPosition === "start") assert(placed.labelBottom <= placed.trackTop, "a start label sits above the track");
+    else assert(placed.labelTop >= placed.trackBottom, "an end label sits below the track");
+    near(placed.labelLeft, placed.trackLeft, `${labelPosition} label aligned with the track`);
+  }
+
   // Motion, with the slider's own transitions: a tap settles on the default spatial
   // spring (peaks about 270ms in, about 1.5% over, settled by 450ms), which the M3 sliders
   // video approaches (about 300ms, 3-5%); nothing moves on the first render or in a drag.

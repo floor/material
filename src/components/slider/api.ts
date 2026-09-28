@@ -36,7 +36,7 @@ export interface ApiOptions {
     setColor: (color: SliderColor) => void;
     getColor: () => string;
     setSize: (size: SliderSize) => void;
-    getSize: () => string;
+    getSize: () => SliderSize;
     showTicks: (show: boolean) => void;
     showCurrentValue: (show: boolean) => void;
   };
