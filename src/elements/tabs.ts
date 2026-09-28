@@ -54,6 +54,7 @@ const tabsSpec = {
       set: (c, v) => void (v === null || v === undefined ? undefined : c.setActiveTab(String(v))),
     },
   },
+  model: "value" as const,
   events: {
     change: {
       detail: (payload) => ({ value: (payload as { value: string | null }).value }),

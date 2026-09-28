@@ -90,6 +90,8 @@ export interface ElementSpec<C extends ElementComponent> {
   attributes?: Record<string, AttributeSpec<C>>;
   properties?: Record<string, PropertySpec<C>>;
   methods?: readonly string[];
+  /** The live property two-way binding drives (`v-model`, Svelte's `bind:`). */
+  model?: string;
   events?: Record<string, EventSpec>;
   slot?: SlotSpec<C>;
   form?: FormSpec<C>;

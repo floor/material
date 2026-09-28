@@ -63,6 +63,10 @@
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.js"
     },
+    "./vue": {
+      "types": "./dist/vue/index.d.ts",
+      "import": "./dist/vue/index.js"
+    },
     "./core": {
       "types": "./dist/core/index.d.ts",
       "import": "./dist/core/index.js"
@@ -117,8 +121,9 @@
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "core:check": "bun run scripts/check-core.ts",
     "elements:check": "bun run scripts/check-elements.ts",
-    "react:generate": "bun run scripts/generate-react.ts",
-    "react:check": "bun run scripts/generate-react.ts --check && bun run scripts/check-react.ts",
+    "adapters:generate": "bun run scripts/generate-adapters.ts",
+    "react:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react.ts",
+    "vue:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-vue.ts",
     "tooling:check": "tsc --project tsconfig.tools.json --noEmit && tsc --project tsconfig.types.json --noEmit"
   },
   "repository": {
@@ -130,10 +135,14 @@
     "url": "https://github.com/floor/mtrl/issues"
   },
   "peerDependencies": {
-    "react": ">=18"
+    "react": ">=18",
+    "vue": ">=3.3"
   },
   "peerDependenciesMeta": {
     "react": {
+      "optional": true
+    },
+    "vue": {
       "optional": true
     }
   },
@@ -143,6 +152,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@typescript-eslint/eslint-plugin": "^8.33.1",
+    "@vue/server-renderer": "^3.5",
     "eslint": "8",
     "jsdom": "^26.0.0",
     "playwright": "^1.63.0",
@@ -153,6 +163,7 @@
     "sass": "^1.85.1",
     "typedoc": "^0.27.9",
     "typescript": "^5.8.2",
-    "vite": "^8.2.2"
+    "vite": "^8.2.2",
+    "vue": "^3.5"
   }
 }

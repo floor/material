@@ -18,41 +18,30 @@
  */
 
 import * as React from "react";
+import type { DefineOptions, ElementEvents, ElementProps } from "../elements";
 import {
-  DEFAULT_PREFIX,
-  type AttributeType,
-  type DefineOptions,
-  type ElementAttributes,
-  type ElementEvents,
-  type ElementProperties,
-  type ElementProps,
-} from "../elements";
+  describe,
+  describeDeclaration,
+  getPrefix,
+  isBrowser,
+  pascal,
+  toAttribute,
+  type ComponentSpec,
+  type DeclarationSpec,
+  type DefaultProps,
+  type FormProps,
+  type Pascal,
+} from "../elements/adapter";
 
-/** The runtime parts of an element spec the adapter reads. */
-export interface ComponentSpec {
-  name: string;
-  attributes?: Record<string, { type: AttributeType }>;
-  properties?: Record<string, unknown>;
-  events?: Record<string, unknown>;
-  slot?: { attribute: string };
-}
-
-type Pascal<S extends string> = S extends `${infer H}-${infer T}` ? `${Capitalize<H>}${Pascal<T>}` : Capitalize<S>;
+export { configure } from "../elements/adapter";
+export type { DefaultProps, FormProps } from "../elements/adapter";
 
 /** `change` → `onChange`, typed with the element's event. */
 export type EventProps<S> = {
   [K in keyof ElementEvents<S> & string as `on${Pascal<K>}`]?: (event: ElementEvents<S>[K]) => void;
 };
 
-/** An attribute a live property shadows is set through `default<Name>`. */
-export type DefaultProps<S> = {
-  [K in keyof ElementProperties<S> & keyof ElementAttributes<S> & string as `default${Capitalize<K>}`]?: ElementAttributes<S>[K];
-};
-
 type OwnProps<S> = ElementProps<S> & DefaultProps<S> & EventProps<S>;
-
-/** A form-associated element takes `name`, which React's HTML attributes do not type. */
-export type FormProps<S> = S extends { form: unknown } ? { name?: string } : Record<never, never>;
 
 /** Props of a generated component: the element's own, plus any HTML attribute for the host. */
 export type ComponentProps<S> = OwnProps<S> &
@@ -64,29 +53,7 @@ export type MComponent<S, E extends HTMLElement> = React.ForwardRefExoticCompone
   React.PropsWithoutRef<ComponentProps<S>> & React.RefAttributes<E>
 >;
 
-const isBrowser = typeof window !== "undefined";
 const useIsomorphicLayoutEffect = isBrowser ? React.useLayoutEffect : React.useEffect;
-
-let prefix = DEFAULT_PREFIX;
-
-/** Sets the tag prefix every component renders. Call before the first render. */
-export const configure = (options: DefineOptions): void => {
-  prefix = options.prefix ?? DEFAULT_PREFIX;
-};
-
-const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-const pascal = (name: string): string => camel(name).replace(/^./, (c) => c.toUpperCase());
-
-/**
- * An attribute value as React should render it. A present boolean is `""`,
- * which the element reads as true whether React sets it as an attribute
- * (React 18, the server) or as a property (React 19 in the browser).
- */
-const toAttribute = (type: AttributeType, value: unknown): string | undefined => {
-  if (value === undefined || value === null) return undefined;
-  if (type === "boolean") return value === false ? undefined : "";
-  return String(value);
-};
 
 const assignRef = <E>(ref: React.ForwardedRef<E>, value: E | null): void => {
   if (typeof ref === "function") ref(value);
@@ -103,15 +70,10 @@ export const createComponent = <S, E extends HTMLElement>(
   define: (options?: DefineOptions) => string,
   displayName: string
 ): MComponent<S, E> => {
-  const properties = new Set(Object.keys(spec.properties ?? {}));
-  const attributes = new Map<string, { name: string; type: AttributeType; shadowed: boolean }>();
-  for (const [name, attribute] of Object.entries(spec.attributes ?? {})) {
-    const key = camel(name);
-    const shadowed = properties.has(key);
-    attributes.set(shadowed ? `default${pascal(key)}` : key, { name, type: attribute.type, shadowed });
-  }
-  if (spec.slot) attributes.set(spec.slot.attribute, { name: spec.slot.attribute, type: "string", shadowed: false });
-  const events = new Map(Object.keys(spec.events ?? {}).map((event) => [`on${pascal(event)}`, event]));
+  const described = describe(spec);
+  const properties = new Set(described.properties);
+  const attributes = described.attributes;
+  const events = new Map(described.events.map((event) => [`on${pascal(event)}`, event]));
 
   const Component = React.forwardRef<E, ComponentProps<S>>((props, forwardedRef) => {
     const element = React.useRef<E | null>(null);
@@ -167,7 +129,7 @@ export const createComponent = <S, E extends HTMLElement>(
     });
 
     useIsomorphicLayoutEffect(() => {
-      define({ prefix });
+      define({ prefix: getPrefix() });
     }, []);
 
     // Controlled properties follow their props after every render.
@@ -211,17 +173,11 @@ export const createComponent = <S, E extends HTMLElement>(
     );
 
     // `children` passed to the host through `host` like any other prop.
-    return React.createElement(`${prefix}-${spec.name}`, { ...host, ref });
+    return React.createElement(`${getPrefix()}-${spec.name}`, { ...host, ref });
   });
   Component.displayName = displayName;
   return Component as MComponent<S, E>;
 };
-
-/** A declaration child (`<m-tab>`): attributes and children only, no behaviour. */
-export interface DeclarationSpec {
-  name: string;
-  attributes: Record<string, { type: AttributeType }>;
-}
 
 export type DeclarationProps<A> = A & Omit<React.HTMLAttributes<HTMLElement>, keyof A> & { children?: React.ReactNode };
 
@@ -235,7 +191,7 @@ export const createDeclaration = <A>(
   spec: DeclarationSpec,
   displayName: string
 ): MDeclaration<A> => {
-  const attributes = new Map(Object.entries(spec.attributes).map(([name, a]) => [camel(name), { name, type: a.type }]));
+  const attributes = describeDeclaration(spec);
   const Component = React.forwardRef<HTMLElement, DeclarationProps<A>>((props, ref) => {
     const host: Record<string, unknown> = { ref };
     for (const [key, value] of Object.entries(props as Record<string, unknown>)) {
@@ -243,7 +199,7 @@ export const createDeclaration = <A>(
       const name = attribute ? attribute.name : key === "className" ? "class" : key;
       host[name] = attribute ? toAttribute(attribute.type, value) : value;
     }
-    return React.createElement(`${prefix}-${spec.name}`, host);
+    return React.createElement(`${getPrefix()}-${spec.name}`, host);
   });
   Component.displayName = displayName;
   return Component as MDeclaration<A>;
