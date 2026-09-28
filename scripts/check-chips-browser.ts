@@ -161,6 +161,14 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
   assert.equal(await page.locator("#grid-set [role=gridcell]").nth(1).getAttribute("aria-selected"), "true", "Space selects the focused cell");
   await page.keyboard.press("Tab");
   assert.notEqual(await page.evaluate(() => document.activeElement?.closest("#grid-set") !== null), true, "Tab leaves the set: one Tab stop");
+  // A click focuses the cell as pointer focus: no keyboard ring. Moving focus by
+  // script matched :focus-visible and drew it.
+  await page.locator("#grid-set [role=gridcell]").nth(2).click();
+  const clicked = await page.evaluate(() => {
+    const cell = document.activeElement as HTMLElement;
+    return { label: cell.textContent, focusVisible: cell.matches(":focus-visible"), ring: getComputedStyle(cell, "::before").borderTopWidth };
+  });
+  assert.deepEqual(clicked, { label: "Three", focusVisible: false, ring: "0px" }, "a clicked cell takes focus without the keyboard ring");
   await page.evaluate(() => {
     (window as unknown as { gridSet: { destroy: () => void } }).gridSet.destroy();
     document.querySelector("#grid-set")?.remove();
