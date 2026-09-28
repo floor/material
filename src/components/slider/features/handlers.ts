@@ -18,7 +18,7 @@ import {
  * @returns Event handlers for all slider interactions
  */
 /**
- * The x coordinate of whichever kind of pointer event this is.
+ * The x or y coordinate of whichever kind of pointer event this is.
  *
  * `"touches" in e` is a real type guard where `e.type.includes("touch")` is
  * only a string test, so the branches below could not be narrowed. Every
@@ -26,6 +26,8 @@ import {
  */
 const clientXOf = (e: SliderPointerEvent): number =>
   "touches" in e ? e.touches[0].clientX : e.clientX;
+const clientYOf = (e: SliderPointerEvent): number =>
+  "touches" in e ? e.touches[0].clientY : e.clientY;
 
 export const createHandlers = (
   config: SliderConfig,
@@ -39,6 +41,8 @@ export const createHandlers = (
   // the empty object made every lookup below a union no property existed on.
   const components = state.component.components || {};
   const component = state.component;
+  // The coordinate along the slider's axis: y for a vertical slider. FLO-252.
+  const pointerOf = config.orientation === "vertical" ? clientYOf : clientXOf;
 
   // Extract needed components from both locations for backward compatibility
   const container = component.container || components.container || null;
@@ -167,7 +171,7 @@ export const createHandlers = (
     clearKeyboardFocus();
 
     // Capture initial position
-    initialX = clientXOf(e);
+    initialX = pointerOf(e);
 
     // Setup drag state
     state.dragging = false;
@@ -213,7 +217,7 @@ export const createHandlers = (
     let isSecondHandle = false;
 
     try {
-      const position = clientXOf(e);
+      const position = pointerOf(e);
 
       // Calculate value at click position and apply constraints
       let newValue = getValueFromPosition(position);
@@ -257,7 +261,7 @@ export const createHandlers = (
     state.activeBubble = isSecondHandle ? secondValueBubble : valueBubble;
 
     // Store the initial position
-    initialX = clientXOf(e);
+    initialX = pointerOf(e);
 
     // For centered sliders, delay starting drag to allow animation
     if (config.centered && !config.range) {
@@ -307,7 +311,7 @@ export const createHandlers = (
 
     try {
       // Get current position
-      const currentX = clientXOf(e);
+      const currentX = pointerOf(e);
 
       // Determine if we've started a real drag
       if (
@@ -518,6 +522,8 @@ export const createHandlers = (
     );
     showActiveBubble(isSecondHandle ? secondValueBubble : valueBubble);
     state.activeBubble = isSecondHandle ? secondValueBubble : valueBubble;
+    // A focused handle narrows to 2dp and the track's gap follows it.
+    render();
 
     triggerEvent(SLIDER_EVENTS.FOCUS, e);
   };
@@ -531,6 +537,7 @@ export const createHandlers = (
     handleElement.classList.remove(
       `${state.component.getClass("slider__handle")}--focused`,
     );
+    render();
 
     // Only hide bubble if not tabbing to another handle
     const relatedTarget = e.relatedTarget;

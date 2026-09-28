@@ -48,6 +48,9 @@ export interface ApiOptions {
     setIcon: (html: string) => void;
     getIcon: () => string;
   };
+  insetIcon: {
+    setInsetIcon: (icon: string, atMin?: string) => void;
+  };
   events: {
     on: (event: string, handler: EventCallback) => void;
     off: (event: string, handler: EventCallback) => void;
@@ -177,6 +180,11 @@ export const withAPI =
 
       getLabel() {
         return options.text?.getText ? options.text.getText() : "";
+      },
+
+      setInsetIcon(icon: string, atMin?: string) {
+        options.insetIcon.setInsetIcon(icon, atMin);
+        return this;
       },
 
       setIcon(iconHtml: string) {

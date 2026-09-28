@@ -95,6 +95,31 @@ export interface SliderConfig extends BaseComponentConfig {
   /** Position of the label (start or end) - defaults to 'start' */
   labelPosition?: "start" | "end";
 
+  /**
+   * An icon inside the track, drawn as SVG markup (M3 Expressive "inset icon"). It
+   * illustrates what the slider controls. Shown on a standard slider -- not range,
+   * not centred -- at size M, L or XL (24, 24 and 32px); XS and S are too thin for it.
+   * It sits at the start of the active track and moves to the inactive track when
+   * the active one is too short to hold it (m3.material.io slider guidelines).
+   */
+  insetIcon?: string;
+
+  /**
+   * The inset icon while the value is at the minimum, in place of `insetIcon`: a
+   * volume slider swaps to a mute icon at zero, as the guidelines suggest.
+   */
+  insetIconAtMin?: string;
+
+  /**
+   * The slider's orientation. A vertical slider takes its length from its CSS
+   * height and runs bottom to top unless `topToBottom` is set. The guidelines advise
+   * against vertical range sliders.
+   */
+  orientation?: "horizontal" | "vertical";
+
+  /** A vertical slider's minimum at the top instead of the bottom (Compose VerticalSlider) */
+  topToBottom?: boolean;
+
   /** Icon to display with the slider */
   icon?: string;
 
@@ -212,6 +237,8 @@ export interface SliderStateComponent {
    * host that said undefined is not satisfied by one that says null.
    */
   formFields?: (HTMLInputElement | null)[] | null;
+  /** withTracks installs this; the controller reads it for the discrete inset */
+  getSize?: () => SliderSize;
   /** withTracks installs this; the controller calls it with the state after every change */
   renderTracks?: (state?: unknown) => void;
   lifecycle?: { destroy?: () => void; mount?: () => void };
@@ -339,6 +366,9 @@ export interface SliderComponent {
 
   /** Gets label text */
   getLabel: () => string;
+
+  /** Sets the inset icon, and optionally the one shown at the minimum; '' removes it */
+  setInsetIcon: (icon: string, atMin?: string) => SliderComponent;
 
   /** Sets icon HTML */
   setIcon: (iconHtml: string) => SliderComponent;
