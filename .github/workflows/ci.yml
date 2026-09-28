@@ -67,6 +67,8 @@ jobs:
         run: bun run elements:check
       - name: React adapter on React 18 and 19, server rendering and hydration
         run: bun run react:check
+      - name: Vue adapter, server rendering and hydration
+        run: bun run vue:check
       - name: Browser comparison artifacts
         if: always()
         uses: actions/upload-artifact@v4

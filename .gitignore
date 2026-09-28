@@ -90,5 +90,6 @@ demo/
 .agents/*
 !.agents/agents.yaml
 
-# scripts/check-react.ts writes its server bundle here while it runs
+# the adapter checks write their server bundle here while they run
 .check-react-*.js
+.check-vue.js
