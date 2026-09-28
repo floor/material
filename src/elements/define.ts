@@ -5,12 +5,15 @@
  * The element owns one factory instance, built inside its shadow root on first
  * connection. Attributes are the component's defaults, as on native controls;
  * properties carry its live state. Factory events are re-dispatched from the
- * host under the same names. See the element specs in the floor docs.
+ * host under the same names.
+ *
+ * Nothing here touches the DOM at import time: the element class is built on
+ * first use, so every element module can be imported on a server.
  *
  * @module elements
  */
 
-import { applyStyles, registerStyles } from "./styles";
+import { applyStyles, hasStyles, registerStyles } from "./styles";
 
 /** The part of a component the element relies on. */
 export interface ElementComponent {
@@ -69,13 +72,20 @@ export interface FormSpec<C> {
   disable?: (component: C, disabled: boolean) => void;
 }
 
+/** What a spec's `setup` sees of the element. */
+export interface ElementHost<C extends ElementComponent> extends HTMLElement {
+  /** The factory instance, while connected. */
+  readonly component: C | null;
+  readonly internals: ElementInternals | null;
+}
+
 export interface ElementSpec<C extends ElementComponent> {
   /** Name after the prefix: "switch" registers `<m-switch>`. */
   name: string;
   create: (config: Config) => C;
   /** Style entries, in cascade order. */
   styles: readonly string[];
-  /** CSS for the host, prepended to the component's. */
+  /** CSS for the host, after the shared host rules. */
   hostStyles?: string;
   attributes?: Record<string, AttributeSpec<C>>;
   properties?: Record<string, PropertySpec<C>>;
@@ -86,7 +96,7 @@ export interface ElementSpec<C extends ElementComponent> {
   /** Extra config read from the host, such as children. */
   config?: (host: HTMLElement) => Config;
   /** Wiring that lives as long as one component; returns its cleanup. */
-  setup?: (host: MElement<C>, component: C) => (() => void) | void;
+  setup?: (host: ElementHost<C>, component: C) => (() => void) | void;
   /** Recreate the component when the host's children change. */
   observeChildren?: boolean;
 }
@@ -97,6 +107,71 @@ export interface DefineOptions {
 }
 
 export const DEFAULT_PREFIX = "m";
+
+/**
+ * Global base styles components rely on, which a shadow root does not inherit.
+ * Registered under these names like the component entries.
+ */
+export const SHADOW_BASE_STYLES = ["ripple"] as const;
+
+const BASE_HOST_STYLES =
+  ":host{display:inline-block}:host([hidden]){display:none}*,*::before,*::after{box-sizing:border-box}";
+
+// ---------------------------------------------------------------------------
+// Types derived from a spec, for the elements and the framework adapters.
+
+type Camel<S extends string> = S extends `${infer H}-${infer T}` ? `${H}${Capitalize<Camel<T>>}` : S;
+type ValueOf<T> = T extends "boolean" ? boolean : T extends "number" ? number : string;
+type Get<S, K extends string> = S extends { [P in K]: infer V } ? V : Record<never, never>;
+
+/** Attributes as properties, camelCased: `supporting-text` is `supportingText`. */
+export type ElementAttributes<S> = {
+  [K in keyof Get<S, "attributes"> & string as Camel<K>]?: Get<S, "attributes">[K] extends { type: infer T }
+    ? ValueOf<T>
+    : never;
+};
+
+/** Live-state properties, typed by their getter. */
+export type ElementProperties<S> = {
+  [K in keyof Get<S, "properties"> & string]?: Get<S, "properties">[K] extends { get: (c: never) => infer R }
+    ? R
+    : unknown;
+};
+
+/** The slot's fallback-text attribute, when the spec has one. */
+export type ElementSlotText<S> = S extends { slot: { attribute: infer A extends string } }
+  ? string extends A
+    ? Record<never, never> // a widened name would become an index signature: declare it `as const`
+    : { [K in A]?: string }
+  : Record<never, never>;
+
+/** Event names to their `CustomEvent`, typed by the spec's `detail` mapper. */
+export type ElementEvents<S> = {
+  [K in keyof Get<S, "events"> & string]: CustomEvent<
+    Get<S, "events">[K] extends { detail: (p: never) => infer D } ? D : unknown
+  >;
+};
+
+/** Methods the element forwards to its component. */
+export type ElementMethods<S, C> = S extends { methods: readonly (infer M)[] }
+  ? string extends M
+    ? Record<never, never> // a widened list names no method in particular: declare it `as const`
+    : { [K in M & keyof C & string]: C[K] extends (...args: infer A) => unknown ? (...args: A) => unknown : never }
+  : Record<never, never>;
+
+/**
+ * Every property an element instance has, beyond HTMLElement's. A live-state
+ * property replaces the attribute of the same name: the `checked` property is
+ * the switch's current state, the `checked` attribute only its default.
+ */
+export type ElementProps<S> = Omit<ElementAttributes<S>, keyof ElementProperties<S>> &
+  ElementProperties<S> &
+  ElementSlotText<S>;
+
+/** An element instance, as a ref or `document.querySelector` returns it. */
+export type ElementInstance<S, C extends ElementComponent> = ElementHost<C> & ElementProps<S> & ElementMethods<S, C>;
+
+// ---------------------------------------------------------------------------
 
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
@@ -111,333 +186,317 @@ const read = (host: HTMLElement, name: string, type: AttributeType): AttributeVa
   return raw;
 };
 
+/**
+ * Writes a property to its attribute. A boolean is present for any value but
+ * `false`, `null` and `undefined`, so `""` (how server-rendered markup and
+ * framework adapters spell a present boolean) reads as true.
+ */
+const write = (host: HTMLElement, name: string, type: AttributeType, value: unknown): void => {
+  if (type === "boolean") host.toggleAttribute(name, value !== false && value !== null && value !== undefined);
+  else if (value === null || value === undefined) host.removeAttribute(name);
+  else host.setAttribute(name, String(value));
+};
+
 const hasContent = (host: HTMLElement): boolean =>
   Array.from(host.childNodes).some(
     (node) => node.nodeType === 1 || (node.nodeType === 3 && (node.textContent ?? "").trim() !== "")
   );
 
-/**
- * Global base styles components rely on, which a shadow root does not inherit.
- * Registered under these names like the component entries.
- */
-export const SHADOW_BASE_STYLES = ["ripple"] as const;
+/** The element class for a spec. Called on first use, never at import. */
+const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): CustomElementConstructor => {
+  class MElement extends HTMLElement implements ElementHost<C> {
+    static formAssociated = !!spec.form;
+    static observedAttributes = [
+      ...Object.keys(spec.attributes ?? {}),
+      ...(spec.slot ? [spec.slot.attribute] : []),
+    ];
 
-const BASE_HOST_STYLES = ":host{display:inline-block}:host([hidden]){display:none}*,*::before,*::after{box-sizing:border-box}";
+    component: C | null = null;
+    readonly internals: ElementInternals | null;
 
-/** Base class of every element; one subclass per spec. */
-export abstract class MElement<C extends ElementComponent> extends HTMLElement {
-  protected abstract spec(): ElementSpec<C>;
+    #pending = new Map<string, unknown>();
+    #silent = 0;
+    #cleanup: Array<() => void> = [];
+    #observer: MutationObserver | null = null;
+    #slot: HTMLSlotElement | null = null;
 
-  /** The factory instance, while connected. */
-  component: C | null = null;
-  readonly internals: ElementInternals | null;
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open", delegatesFocus: true });
+      this.internals = spec.form && typeof this.attachInternals === "function" ? this.attachInternals() : null;
+    }
 
-  #pending = new Map<string, unknown>();
-  #silent = 0;
-  #cleanup: Array<() => void> = [];
-  #observer: MutationObserver | null = null;
-  #slot: HTMLSlotElement | null = null;
+    connectedCallback(): void {
+      this.#upgradeProperties();
+      if (!this.component) this.#build();
+    }
 
-  constructor() {
-    super();
-    const spec = this.spec();
-    this.attachShadow({ mode: "open", delegatesFocus: true });
-    this.internals =
-      spec.form && typeof this.attachInternals === "function" ? this.attachInternals() : null;
+    disconnectedCallback(): void {
+      // A move is a disconnect then a connect in the same task: keep the component.
+      queueMicrotask(() => {
+        if (!this.isConnected) this.#teardown();
+      });
+    }
+
+    attributeChangedCallback(name: string, previous: string | null, next: string | null): void {
+      if (!this.component || previous === next) return;
+      if (spec.slot && name === spec.slot.attribute && this.#slot) {
+        this.#slot.textContent = next ?? "";
+        return;
+      }
+      const attribute = spec.attributes?.[name];
+      if (!attribute) return;
+      if (attribute.update) {
+        this.#quietly(() => attribute.update?.(this.component as C, read(this, name, attribute.type), this));
+        this.#syncForm();
+      } else {
+        this.#rebuild(true);
+      }
+    }
+
+    // Form-associated callbacks; only reached when the spec has a form.
+
+    formResetCallback(): void {
+      // Attributes are the defaults: rebuilding from them is the reset.
+      this.#pending.clear();
+      this.#rebuild(false);
+    }
+
+    formDisabledCallback(disabled: boolean): void {
+      const form = spec.form;
+      if (this.component && form?.disable) this.#quietly(() => form.disable?.(this.component as C, disabled));
+    }
+
+    getProperty(name: string): unknown {
+      const property = spec.properties?.[name];
+      if (!property) return undefined;
+      return this.component ? property.get(this.component) : this.#pending.get(name);
+    }
+
+    setProperty(name: string, value: unknown): void {
+      const property = spec.properties?.[name];
+      if (!property) return;
+      if (!this.component) {
+        this.#pending.set(name, value);
+        return;
+      }
+      this.#quietly(() => property.set(this.component as C, value));
+      this.#syncForm();
+    }
+
+    callMethod(name: string, args: unknown[]): unknown {
+      const component = this.component as unknown as Record<string, unknown> | null;
+      const method = component?.[name];
+      if (typeof method !== "function") return undefined;
+      const result = (method as (...a: unknown[]) => unknown).apply(component, args);
+      this.#syncForm();
+      return result === component ? this : result;
+    }
+
+    /** Runs `fn` without re-dispatching the events it causes. */
+    #quietly(fn: () => void): void {
+      this.#silent++;
+      try {
+        fn();
+      } finally {
+        this.#silent--;
+      }
+    }
+
+    /** Reads a property as set before the element was upgraded, then routes it through the setter. */
+    #upgradeProperties(): void {
+      const names = [...Object.keys(spec.attributes ?? {}).map(camel), ...Object.keys(spec.properties ?? {})];
+      const self = this as unknown as Record<string, unknown>;
+      for (const name of names) {
+        if (Object.prototype.hasOwnProperty.call(this, name)) {
+          const value = self[name];
+          delete self[name];
+          self[name] = value;
+        }
+      }
+    }
+
+    #config(): Config {
+      const config: Config = {};
+      for (const [name, attribute] of Object.entries(spec.attributes ?? {})) {
+        if (!attribute.config) continue;
+        const value = read(this, name, attribute.type);
+        if (value !== null && value !== false) config[attribute.config] = value;
+      }
+      if (spec.slot) {
+        const text = this.getAttribute(spec.slot.attribute);
+        // A placeholder makes the factory build the container the slot goes in,
+        // until factories take a slot option (see the element specs).
+        if (text) config[spec.slot.config] = text;
+        else if (hasContent(this)) config[spec.slot.config] = "​";
+      }
+      Object.assign(config, spec.config?.(this));
+      for (const [name, property] of Object.entries(spec.properties ?? {})) {
+        if (property.config && this.#pending.has(name)) {
+          config[property.config] = this.#pending.get(name);
+          this.#pending.delete(name);
+        }
+      }
+      return config;
+    }
+
+    #build(): void {
+      const root = this.shadowRoot as ShadowRoot;
+      applyStyles(root, [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...spec.styles]);
+      const component = spec.create(this.#config());
+      this.component = component;
+
+      if (spec.slot) {
+        const container = spec.slot.container(component);
+        if (container) {
+          const slot = document.createElement("slot");
+          slot.textContent = this.getAttribute(spec.slot.attribute) ?? "";
+          container.replaceChildren(slot);
+          this.#slot = slot;
+        }
+      }
+
+      root.append(component.element);
+      const events = component as unknown as Subscribable;
+
+      for (const [event, eventSpec] of Object.entries(spec.events ?? {})) {
+        const handler = (payload: never): void => {
+          this.#syncForm();
+          if (this.#silent) return;
+          const detail = eventSpec.detail ? eventSpec.detail(payload) : payload;
+          this.dispatchEvent(new CustomEvent(event, { detail, bubbles: true, composed: true }));
+        };
+        events.on?.(event, handler);
+        this.#cleanup.push(() => events.off?.(event, handler));
+      }
+      for (const event of spec.form?.events ?? []) {
+        if (spec.events?.[event]) continue;
+        const handler = (): void => this.#syncForm();
+        events.on?.(event, handler);
+        this.#cleanup.push(() => events.off?.(event, handler));
+      }
+
+      // Properties set before creation that did not go into the config.
+      for (const [name, value] of this.#pending) {
+        const property = spec.properties?.[name];
+        if (property) this.#quietly(() => property.set(component, value));
+      }
+      this.#pending.clear();
+
+      if (spec.form?.activate) {
+        // A click on the host itself (a <label for> pointing at it) activates the control.
+        const onClick = (event: MouseEvent): void => {
+          if (event.composedPath()[0] === this) spec.form?.activate?.(component);
+        };
+        this.addEventListener("click", onClick);
+        this.#cleanup.push(() => this.removeEventListener("click", onClick));
+      }
+
+      const cleanup = spec.setup?.(this, component);
+      if (cleanup) this.#cleanup.push(cleanup);
+
+      if ((spec.slot && !this.#slot) || spec.observeChildren) {
+        // Content arriving later than creation needs a container the factory builds.
+        this.#observer = new MutationObserver(() => {
+          if (spec.observeChildren || (!this.#slot && hasContent(this))) this.#rebuild(true);
+        });
+        this.#observer.observe(this, {
+          childList: true,
+          subtree: !!spec.observeChildren,
+          attributes: !!spec.observeChildren,
+          characterData: !!spec.observeChildren,
+        });
+      }
+
+      this.#syncForm();
+    }
+
+    #teardown(): void {
+      this.#observer?.disconnect();
+      this.#observer = null;
+      for (const cleanup of this.#cleanup.splice(0)) cleanup();
+      if (this.component) {
+        this.component.destroy();
+        this.component.element.remove();
+      }
+      this.component = null;
+      this.#slot = null;
+    }
+
+    /** Recreates the component, keeping its live state when asked. */
+    #rebuild(keepState: boolean): void {
+      if (this.component && keepState) {
+        for (const [name, property] of Object.entries(spec.properties ?? {})) {
+          this.#pending.set(name, property.get(this.component));
+        }
+      }
+      this.#teardown();
+      if (this.isConnected) this.#build();
+    }
+
+    #syncForm(): void {
+      const form = spec.form;
+      const internals = this.internals;
+      if (!form || !internals || !this.component) return;
+      internals.setFormValue(form.value(this.component));
+      const control = form.control?.(this.component);
+      if (control) internals.setValidity(control.validity, control.validationMessage, control);
+    }
   }
 
-  connectedCallback(): void {
-    this.#upgradeProperties();
-    if (!this.component) this.#build();
-  }
-
-  disconnectedCallback(): void {
-    // A move is a disconnect then a connect in the same task: keep the component.
-    queueMicrotask(() => {
-      if (!this.isConnected) this.#teardown();
+  const proto = MElement.prototype as unknown as Record<string, unknown>;
+  for (const [name, attribute] of Object.entries(spec.attributes ?? {})) {
+    const property = camel(name);
+    if (property in proto || spec.properties?.[property]) continue;
+    Object.defineProperty(proto, property, {
+      configurable: true,
+      get(this: HTMLElement) {
+        return read(this, name, attribute.type);
+      },
+      set(this: HTMLElement, value: unknown) {
+        write(this, name, attribute.type, value);
+      },
     });
   }
-
-  attributeChangedCallback(name: string, previous: string | null, next: string | null): void {
-    if (!this.component || previous === next) return;
-    const spec = this.spec();
-    if (spec.slot && name === spec.slot.attribute && this.#slot) {
-      this.#slot.textContent = next ?? "";
-      return;
-    }
-    const attribute = spec.attributes?.[name];
-    if (!attribute) return;
-    if (attribute.update) {
-      this.#quietly(() => attribute.update?.(this.component as C, read(this, name, attribute.type), this));
-      this.#syncForm();
-    } else {
-      this.#rebuild(true);
-    }
+  for (const name of Object.keys(spec.properties ?? {})) {
+    Object.defineProperty(proto, name, {
+      configurable: true,
+      get(this: MElement) {
+        return this.getProperty(name);
+      },
+      set(this: MElement, value: unknown) {
+        this.setProperty(name, value);
+      },
+    });
   }
-
-  // Form-associated callbacks; only reached when the spec has a form.
-
-  formResetCallback(): void {
-    // Attributes are the defaults: rebuilding from them is the reset.
-    this.#pending.clear();
-    this.#rebuild(false);
+  for (const name of spec.methods ?? []) {
+    Object.defineProperty(proto, name, {
+      configurable: true,
+      value(this: MElement, ...args: unknown[]) {
+        return this.callMethod(name, args);
+      },
+    });
   }
+  return MElement;
+};
 
-  formDisabledCallback(disabled: boolean): void {
-    const form = this.spec().form;
-    if (this.component && form?.disable) this.#quietly(() => form.disable?.(this.component as C, disabled));
-  }
-
-  /** Runs `fn` without re-dispatching the events it causes. */
-  #quietly(fn: () => void): void {
-    this.#silent++;
-    try {
-      fn();
-    } finally {
-      this.#silent--;
-    }
-  }
-
-  /** Reads a property as set before the element was upgraded, then routes it through the setter. */
-  #upgradeProperties(): void {
-    const names = [
-      ...Object.keys(this.spec().attributes ?? {}).map(camel),
-      ...Object.keys(this.spec().properties ?? {}),
-    ];
-    for (const name of names) {
-      if (Object.prototype.hasOwnProperty.call(this, name)) {
-        const value = (this as unknown as Record<string, unknown>)[name];
-        delete (this as unknown as Record<string, unknown>)[name];
-        (this as unknown as Record<string, unknown>)[name] = value;
-      }
-    }
-  }
-
-  getProperty(name: string): unknown {
-    const property = this.spec().properties?.[name];
-    if (!property) return undefined;
-    return this.component ? property.get(this.component) : this.#pending.get(name);
-  }
-
-  setProperty(name: string, value: unknown): void {
-    const property = this.spec().properties?.[name];
-    if (!property) return;
-    if (!this.component) {
-      this.#pending.set(name, value);
-      return;
-    }
-    this.#quietly(() => property.set(this.component as C, value));
-    this.#syncForm();
-  }
-
-  callMethod(name: string, args: unknown[]): unknown {
-    const component = this.component as unknown as Record<string, unknown> | null;
-    const method = component?.[name];
-    if (typeof method !== "function") return undefined;
-    const result = (method as (...a: unknown[]) => unknown).apply(component, args);
-    this.#syncForm();
-    return result === component ? this : result;
-  }
-
-  #config(): Config {
-    const spec = this.spec();
-    const config: Config = {};
-    for (const [name, attribute] of Object.entries(spec.attributes ?? {})) {
-      if (!attribute.config) continue;
-      const value = read(this, name, attribute.type);
-      if (value !== null && value !== false) config[attribute.config] = value;
-    }
-    if (spec.slot) {
-      const text = this.getAttribute(spec.slot.attribute);
-      // A placeholder makes the factory build the container the slot goes in,
-      // until factories take a slot option (see the element specs).
-      if (text) config[spec.slot.config] = text;
-      else if (hasContent(this)) config[spec.slot.config] = "\u200b";
-    }
-    Object.assign(config, spec.config?.(this));
-    for (const [name, property] of Object.entries(spec.properties ?? {})) {
-      if (property.config && this.#pending.has(name)) {
-        config[property.config] = this.#pending.get(name);
-        this.#pending.delete(name);
-      }
-    }
-    return config;
-  }
-
-  #build(): void {
-    const spec = this.spec();
-    const root = this.shadowRoot as ShadowRoot;
-    applyStyles(root, [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...spec.styles]);
-    const component = spec.create(this.#config());
-    this.component = component;
-
-    if (spec.slot) {
-      const container = spec.slot.container(component);
-      if (container) {
-        const slot = document.createElement("slot");
-        slot.textContent = this.getAttribute(spec.slot.attribute) ?? "";
-        container.replaceChildren(slot);
-        this.#slot = slot;
-      }
-    }
-
-    root.append(component.element);
-    const events = component as unknown as Subscribable;
-
-    for (const [event, eventSpec] of Object.entries(spec.events ?? {})) {
-      const handler = (payload: never): void => {
-        this.#syncForm();
-        if (this.#silent) return;
-        const detail = eventSpec.detail ? eventSpec.detail(payload) : payload;
-        this.dispatchEvent(new CustomEvent(event, { detail, bubbles: true, composed: true }));
-      };
-      events.on?.(event, handler);
-      this.#cleanup.push(() => events.off?.(event, handler));
-    }
-    for (const event of spec.form?.events ?? []) {
-      if (spec.events?.[event]) continue;
-      const handler = (): void => this.#syncForm();
-      events.on?.(event, handler);
-      this.#cleanup.push(() => events.off?.(event, handler));
-    }
-
-    // Properties set before creation that did not go into the config.
-    for (const [name, value] of this.#pending) {
-      const property = spec.properties?.[name];
-      if (property) this.#quietly(() => property.set(component, value));
-    }
-    this.#pending.clear();
-
-    if (spec.form?.activate) {
-      // A click on the host itself (a <label for> pointing at it) activates the control.
-      const onClick = (event: MouseEvent): void => {
-        if (event.composedPath()[0] === this) spec.form?.activate?.(component);
-      };
-      this.addEventListener("click", onClick);
-      this.#cleanup.push(() => this.removeEventListener("click", onClick));
-    }
-
-    const cleanup = spec.setup?.(this, component);
-    if (cleanup) this.#cleanup.push(cleanup);
-
-    if ((spec.slot && !this.#slot) || spec.observeChildren) {
-      // Content arriving later than creation needs a container the factory builds.
-      this.#observer = new MutationObserver(() => {
-        if (spec.observeChildren || (!this.#slot && hasContent(this))) this.#rebuild(true);
-      });
-      this.#observer.observe(this, {
-        childList: true,
-        subtree: !!spec.observeChildren,
-        attributes: !!spec.observeChildren,
-        characterData: !!spec.observeChildren,
-      });
-    }
-
-    this.#syncForm();
-  }
-
-  #teardown(): void {
-    this.#observer?.disconnect();
-    this.#observer = null;
-    for (const cleanup of this.#cleanup.splice(0)) cleanup();
-    if (this.component) {
-      this.component.destroy();
-      this.component.element.remove();
-    }
-    this.component = null;
-    this.#slot = null;
-  }
-
-  /** Recreates the component, keeping its live state when asked. */
-  #rebuild(keepState: boolean): void {
-    if (this.component && keepState) {
-      for (const [name, property] of Object.entries(this.spec().properties ?? {})) {
-        this.#pending.set(name, property.get(this.component));
-      }
-    }
-    this.#teardown();
-    if (this.isConnected) this.#build();
-  }
-
-  #syncForm(): void {
-    const form = this.spec().form;
-    const internals = this.internals;
-    if (!form || !internals || !this.component) return;
-    internals.setFormValue(form.value(this.component));
-    const control = form.control?.(this.component);
-    if (control) internals.setValidity(control.validity, control.validationMessage, control);
-  }
-}
-
-/** A defined element class with its registration. */
+/** A spec with its element class and registration. */
 export interface ElementDefinition<C extends ElementComponent> {
   spec: ElementSpec<C>;
-  element: new () => MElement<C>;
-  /** Registers the element; a repeated call is a no-op. Returns the tag. */
+  /** The element class, built on first access. Browser only. */
+  readonly element: CustomElementConstructor;
+  /** Registers the element; a repeated call is a no-op. Returns the tag. Browser only. */
   define: (options?: DefineOptions) => string;
 }
 
 /**
- * Creates the element class for a spec. Nothing is registered until
- * `define()` is called, so the module can be imported on a server.
+ * Creates the definition for a spec. Nothing is built or registered until
+ * `element` or `define()` is used, so the module can be imported on a server.
  */
 export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>): ElementDefinition<C> => {
-  const hostCss = BASE_HOST_STYLES + (spec.hostStyles ?? "");
-  let hostRegistered = false;
+  let element: CustomElementConstructor | null = null;
+  const getElement = (): CustomElementConstructor => (element ??= createElementClass(spec));
   const registered = new Set<CustomElementConstructor>();
-
-  // Built lazily: HTMLElement does not exist on a server.
-  let element: (new () => MElement<C>) | null = null;
-  const getElement = (): new () => MElement<C> => {
-    if (element) return element;
-    class Element extends MElement<C> {
-      static formAssociated = !!spec.form;
-      static observedAttributes = [
-        ...Object.keys(spec.attributes ?? {}),
-        ...(spec.slot ? [spec.slot.attribute] : []),
-      ];
-      protected spec(): ElementSpec<C> {
-        return spec;
-      }
-    }
-    const proto = Element.prototype as unknown as Record<string, unknown>;
-    for (const [name, attribute] of Object.entries(spec.attributes ?? {})) {
-      const property = camel(name);
-      if (property in proto || spec.properties?.[property]) continue;
-      Object.defineProperty(proto, property, {
-        configurable: true,
-        get(this: HTMLElement) {
-          return read(this, name, attribute.type);
-        },
-        set(this: HTMLElement, value: unknown) {
-          if (attribute.type === "boolean") this.toggleAttribute(name, !!value);
-          else if (value === null || value === undefined) this.removeAttribute(name);
-          else this.setAttribute(name, String(value));
-        },
-      });
-    }
-    for (const name of Object.keys(spec.properties ?? {})) {
-      Object.defineProperty(proto, name, {
-        configurable: true,
-        get(this: MElement<C>) {
-          return this.getProperty(name);
-        },
-        set(this: MElement<C>, value: unknown) {
-          this.setProperty(name, value);
-        },
-      });
-    }
-    for (const name of spec.methods ?? []) {
-      Object.defineProperty(proto, name, {
-        configurable: true,
-        value(this: MElement<C>, ...args: unknown[]) {
-          return this.callMethod(name, args);
-        },
-      });
-    }
-    element = Element;
-    return element;
-  };
 
   return {
     spec,
@@ -446,9 +505,10 @@ export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>):
     },
     define(options: DefineOptions = {}) {
       const tag = `${options.prefix ?? DEFAULT_PREFIX}-${spec.name}`;
-      if (!hostRegistered) {
-        registerStyles({ [`host:${spec.name}`]: hostCss });
-        hostRegistered = true;
+      registerStyles({ [`host:${spec.name}`]: BASE_HOST_STYLES + (spec.hostStyles ?? "") });
+      const missing = [...SHADOW_BASE_STYLES, ...spec.styles].filter((name) => !hasStyles(name));
+      if (missing.length) {
+        console.warn(`<${tag}> has no CSS for ${missing.join(", ")}: import "mtrl/elements/css/${spec.name}" first.`);
       }
       const existing = customElements.get(tag);
       if (existing) {
@@ -459,11 +519,10 @@ export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>):
       }
       // A constructor registers once per registry: another prefix needs its own subclass.
       const base = getElement();
-      const ctor: CustomElementConstructor = registered.size === 0 ? base : class extends (base as CustomElementConstructor) {};
+      const ctor: CustomElementConstructor = registered.size === 0 ? base : class extends base {};
       customElements.define(tag, ctor);
       registered.add(ctor);
       return tag;
     },
   };
 };
-

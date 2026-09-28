@@ -7,14 +7,12 @@
 // rendered in light DOM with the full stylesheet, so a style that fails to
 // cross into the shadow root shows as a difference.
 //
-//   bun run scripts/check-elements.ts
+//   bun run build && bun run scripts/check-elements.ts
 
 import assert from "node:assert/strict";
-import { resolve } from "node:path";
-import * as sass from "sass";
 import { chromium, type Page } from "playwright";
-import { componentStyles } from "./style-manifest";
 
+// Runs against the build: `bun run build` first, as CI does.
 const bundle = await Bun.build({
   entrypoints: ["scripts/fixtures/elements.ts"],
   target: "browser",
@@ -23,23 +21,13 @@ const bundle = await Bun.build({
 assert(bundle.success, String(bundle.logs));
 const js = await bundle.outputs[0].text();
 
-const options: sass.StringOptions<"sync"> = { loadPaths: [resolve("src/styles")], style: "compressed" };
-const compile = (source: string): string => sass.compileString(`@use "${source}";`, options).css;
-const fullCss = sass.compileString(await Bun.file("src/styles/main.scss").text(), options).css;
-const entries = ["badge", "progress", "button", "switch", "tabs"] as const;
-const componentCss: Record<string, string> = {
-  ...Object.fromEntries(entries.map((name) => [name, compile(componentStyles[name].source)])),
-  ripple: compile("utilities/ripple"),
-};
-
 const server = Bun.serve({
   hostname: "127.0.0.1",
   port: 0,
   fetch(request) {
     const path = new URL(request.url).pathname;
     if (path === "/elements.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
-    if (path === "/styles.css") return new Response(fullCss, { headers: { "Content-Type": "text/css" } });
-    if (path === "/components.json") return Response.json(componentCss);
+    if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
     return new Response(
       `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css">
 <style>body{margin:0;font-family:sans-serif}section{padding:8px}</style></head>
