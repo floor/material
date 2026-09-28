@@ -68,6 +68,15 @@ const enhanceWithCheckable = <C extends BaseComponent & InputComponent>(componen
   // A click has already cleared the property by the time change is emitted.
   enhanced.on?.('change', syncIndeterminate);
 
+  // Error: a class for the stylesheet and aria-invalid for assistive tech. FLO-265.
+  enhanced.setError = (error: boolean) => {
+    enhanced.element.classList.toggle(`${config.prefix}-checkbox--error`, error);
+    if (error) enhanced.input.setAttribute('aria-invalid', 'true');
+    else enhanced.input.removeAttribute('aria-invalid');
+    return enhanced;
+  };
+  enhanced.setError(!!config.error);
+
   // Add method to control indeterminate state
   enhanced.setIndeterminate = (state: boolean) => {
     enhanced.input.indeterminate = state;
@@ -132,7 +141,6 @@ const enhanceWithCheckable = <C extends BaseComponent & InputComponent>(componen
  * const checkbox = createCheckbox({
  *   label: 'Remember me',
  *   checked: true,
- *   variant: 'outlined',
  *   labelPosition: 'start'
  * });
  * 

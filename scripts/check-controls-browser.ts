@@ -2,9 +2,10 @@
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createSwitch from "../src/components/switch";
+import type createCheckbox from "../src/components/checkbox";
 
 type ControlsWindow = Window & {
-  inputs: { createSwitch: typeof createSwitch };
+  inputs: { createSwitch: typeof createSwitch; createCheckbox: typeof createCheckbox };
   controlsHost: HTMLElement;
 };
 type Box = { left: number; right: number; top: number; width: number; height: number };
@@ -82,8 +83,75 @@ async function checkSwitch(page: Page): Promise<number> {
   return checks;
 }
 
+/** FLO-265: the checkbox box, its state layers, focus ring, error and disabled indeterminate states. */
+async function checkCheckbox(page: Page): Promise<number> {
+  await page.evaluate(() => {
+    const state = window as unknown as ControlsWindow;
+    state.controlsHost?.remove();
+    const host = document.createElement("div");
+    host.style.cssText = "padding:24px;display:flex;flex-direction:column;gap:8px";
+    state.controlsHost = host;
+    document.body.append(host);
+    const { createCheckbox } = state.inputs;
+    for (const [id, config] of [["cb-off", { label: "Off" }], ["cb-on", { label: "On", checked: true }], ["cb-error", { label: "Error", checked: true, error: true }], ["cb-error-off", { label: "Error off", error: true }], ["cb-dis-mixed", { label: "Mixed", indeterminate: true, disabled: true }]] as const) {
+      const control = createCheckbox(config);
+      control.element.id = id;
+      host.append(control.element);
+    }
+  });
+  await page.mouse.move(0, 0);
+  await settle(page);
+  const icon = (id: string) => `#${id} .mtrl-checkbox__icon`;
+  const transparent = "rgba(0, 0, 0, 0)";
+  // The box: no fill and an on-surface-variant outline when unselected.
+  assert.equal(await style(page, icon("cb-off"), "background-color"), transparent, "unselected: no container fill");
+  assert.equal(await style(page, icon("cb-off"), "border-top-color"), await role(page, "on-surface-variant"), "unselected outline");
+  assert.deepEqual([(await box(page, icon("cb-off"))).width, (await box(page, icon("cb-off"))).height], [18, 18], "18dp box");
+  // The 40dp state layer, centred; hover on-surface 0.08 unselected, primary 0.08 selected.
+  const layer = async (id: string) => page.locator(icon(id)).evaluate((el) => {
+    const c = getComputedStyle(el, "::before"); const b = el.getBoundingClientRect();
+    return { width: parseFloat(c.width), colour: c.backgroundColor, ring: `${c.outlineWidth} ${c.outlineStyle} ${c.outlineColor} ${c.outlineOffset}`, box: b.width };
+  });
+  const mix = (name: string, percent: number) => page.evaluate(([name, percent]) => { const probe = document.createElement("i"); probe.style.color = `color-mix(in srgb, var(--mtrl-sys-color-${name}) ${percent}%, transparent)`; document.body.append(probe); const c = getComputedStyle(probe).color; probe.remove(); return c; }, [name, percent] as const);
+  await page.hover("#cb-off .mtrl-checkbox__input");
+  await settle(page);
+  assert.equal((await layer("cb-off")).width, 40, "40dp state layer");
+  assert.equal((await layer("cb-off")).colour, await mix("on-surface", 8), "unselected hover: on-surface 0.08");
+  assert.equal(await style(page, icon("cb-off"), "border-top-color"), await role(page, "on-surface"), "unselected hover outline on-surface");
+  await page.hover("#cb-on .mtrl-checkbox__input");
+  await settle(page);
+  assert.equal((await layer("cb-on")).colour, await mix("primary", 8), "selected hover: primary 0.08 (was the pressed 0.10)");
+  await page.mouse.down();
+  await settle(page);
+  assert.equal((await layer("cb-on")).colour, await mix("on-surface", 10), "selected press: on-surface, the state it leads to");
+  await page.mouse.up();
+  await page.locator("#cb-on .mtrl-checkbox__input").evaluate((el) => (el as HTMLInputElement).click());
+  await page.mouse.move(0, 0);
+  // Keyboard focus: a 0.10 layer and the 3dp secondary ring 2dp outside it.
+  await page.evaluate(() => { const before = document.createElement("button"); before.id = "before-checkbox"; document.getElementById("cb-off")!.before(before); before.focus(); });
+  await page.keyboard.press("Tab");
+  await settle(page);
+  const focused = await layer("cb-off");
+  assert.equal(focused.colour, await mix("on-surface", 10), "focus layer");
+  assert.equal(focused.ring, `3px solid ${await role(page, "secondary")} 2px`, "focus ring");
+  // Enter is left to the form (Dr Jones); Space toggles.
+  await page.keyboard.press("Enter");
+  assert.equal(await page.locator("#cb-off .mtrl-checkbox__input").isChecked(), false, "Enter does not toggle");
+  await page.keyboard.press("Space");
+  assert.equal(await page.locator("#cb-off .mtrl-checkbox__input").isChecked(), true, "Space toggles");
+  // Error and disabled indeterminate.
+  assert.equal(await style(page, icon("cb-error"), "background-color"), await role(page, "error"), "selected error container");
+  assert.equal(await style(page, `${icon("cb-error")} svg`, "color"), await role(page, "on-error"), "error check on-error");
+  assert.equal(await style(page, icon("cb-error-off"), "border-top-color"), await role(page, "error"), "unselected error outline");
+  assert.equal(await page.locator("#cb-error .mtrl-checkbox__input").getAttribute("aria-invalid"), "true", "aria-invalid");
+  assert.equal(await style(page, icon("cb-dis-mixed"), "background-color"), await mix("on-surface", 38), "disabled indeterminate container");
+  assert.equal(await style(page, icon("cb-dis-mixed"), "background-color", "::after"), await role(page, "surface"), "disabled indeterminate dash: surface, visible");
+  await page.evaluate(() => { (window as unknown as ControlsWindow).controlsHost.remove(); document.getElementById("before-checkbox")?.remove(); });
+  return 17;
+}
+
 export async function checkControls(page: Page): Promise<void> {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  const checks = await checkSwitch(page);
-  console.log(`Passed ${checks} selection-control checks: the switch handle and state layer in both directions, its icons, label side, focus layer, handle colour and ring.`);
+  const checks = (await checkSwitch(page)) + (await checkCheckbox(page));
+  console.log(`Passed ${checks} selection-control checks: the switch handle and state layer in both directions, its icons, label side, focus layer, handle colour and ring; the checkbox box, state layers, focus ring, keys, error and disabled indeterminate.`);
 }

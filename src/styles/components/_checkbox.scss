@@ -34,25 +34,35 @@ $component: '#{base.$prefix}-checkbox';
     &:disabled {
       cursor: not-allowed;
     }
-
-    // Focus indicator
-    &:focus-visible ~ .#{$component}__icon {
-      outline: 2px solid t.color('primary');
-      outline-offset: 2px;
-    }
   }
 
-  // Checkbox visual element
+  // The box: 18dp, a 2dp corner and a 2dp on-surface-variant outline, with no fill
+  // until selected (CheckboxTokens, md-comp-checkbox). It carried a
+  // surface-container-highest fill and an outline-coloured stroke. FLO-265.
   &__icon {
     position: relative;
+    flex-shrink: 0;
     width: 18px;
     height: 18px;
+    box-sizing: border-box;
     border-radius: f.get-shape('tiny');
-    background-color: t.color('surface-container-highest');
-    border: 2px solid t.color('outline');
-    @include m.motion-transition(background-color, border-color);
+    background-color: transparent;
+    border: 2px solid t.color('on-surface-variant');
+    transition: m.spring(background-color, fast-effects), m.spring(border-color, fast-effects);
 
-    // Check mark icon
+    // The 40dp state layer, centred on the box. Its colour carries the state
+    // opacity, so its outline can be the focus ring at full strength.
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -13px;
+      border-radius: 50%;
+      background-color: transparent;
+      pointer-events: none;
+    }
+
+    // The check draws in on the default spatial spring and snaps off, as Compose's
+    // does: the transition belongs to the checked state only.
     svg {
       position: absolute;
       top: 50%;
@@ -62,67 +72,39 @@ $component: '#{base.$prefix}-checkbox';
       transform: translate(-50%, -50%) scale(0);
       fill: currentColor;
       color: t.color('on-primary');
-      transition: transform v.motion('duration-short4') v.motion('easing-emphasized');
     }
   }
 
   // Label styling
   &__label {
     @include m.typography('body-large');
-    margin-left: 12px;
     color: t.color('on-surface');
   }
 
-  // Label position variants
-  &--label-start {
-    .#{$component}__label {
-      margin-left: 0;
-      margin-right: 12px;
-    }
+  // The gap follows the reading direction on both sides.
+  &--label-end .#{$component}__label {
+    margin-inline-start: 12px;
   }
 
-  &--label-end {
-    flex-direction: row;
-
-    .#{$component}__label {
-      margin-left: 12px;
-      margin-right: 0;
-    }
+  &--label-start .#{$component}__label {
+    margin-inline-end: 12px;
   }
 
-  // RTL support
-  @include m.rtl {
-    &--label-start {
-      .#{$component}__label {
-        margin-left: 12px;
-        margin-right: 0;
-      }
-    }
-
-    &--label-end {
-      .#{$component}__label {
-        margin-left: 0;
-        margin-right: 12px;
-      }
-    }
-  }
-
-  // Checked state
-  .#{$component}__input:checked ~ .#{$component}__icon {
+  // Selected: checked or indeterminate, primary with on-primary content.
+  .#{$component}__input:checked ~ .#{$component}__icon,
+  &--indeterminate .#{$component}__icon {
     background-color: t.color('primary');
     border-color: t.color('primary');
+  }
 
-    svg {
-      transform: translate(-50%, -50%) scale(1);
-    }
+  .#{$component}__input:checked ~ .#{$component}__icon svg {
+    transform: translate(-50%, -50%) scale(1);
+    transition: m.spring(transform, default-spatial);
   }
 
   // Indeterminate state
   &--indeterminate {
     .#{$component}__icon {
-      background-color: t.color('primary');
-      border-color: t.color('primary');
-
       &::after {
         content: '';
         position: absolute;
@@ -140,9 +122,32 @@ $component: '#{base.$prefix}-checkbox';
     }
   }
 
+  // Error (m3: "those states on error"): the outline, the selected container and
+  // every state layer are error, the check and dash on-error. FLO-265.
+  &--error {
+    .#{$component}__icon {
+      border-color: t.color('error');
+    }
+
+    .#{$component}__input:checked ~ .#{$component}__icon,
+    &.#{$component}--indeterminate .#{$component}__icon {
+      background-color: t.color('error');
+      border-color: t.color('error');
+    }
+
+    .#{$component}__icon svg {
+      color: t.color('on-error');
+    }
+
+    &.#{$component}--indeterminate .#{$component}__icon::after {
+      background-color: t.color('on-error');
+    }
+  }
+
   // Disabled state. Per role, not a blanket opacity: CheckboxTokens gives the
   // unselected outline and the selected container OnSurface at 0.38, and the selected
-  // checkmark Surface at full opacity.
+  // checkmark Surface at full opacity. The indeterminate dash follows the check: it
+  // was an on-primary dash on a transparent box, which painted nothing. FLO-265.
   &--disabled {
     .#{$component}__input {
       cursor: not-allowed;
@@ -153,10 +158,18 @@ $component: '#{base.$prefix}-checkbox';
       border-color: t.alpha('on-surface', 0.38);
     }
 
-    .#{$component}__input:checked ~ .#{$component}__icon {
+    .#{$component}__input:checked ~ .#{$component}__icon,
+    &.#{$component}--indeterminate .#{$component}__icon {
       background-color: t.alpha('on-surface', 0.38);
-      border-color: t.alpha('on-surface', 0.38);
+      border-color: transparent;
+    }
+
+    .#{$component}__icon svg {
       color: t.color('surface');
+    }
+
+    &.#{$component}--indeterminate .#{$component}__icon::after {
+      background-color: t.color('surface');
     }
 
     .#{$component}__label {
@@ -164,58 +177,40 @@ $component: '#{base.$prefix}-checkbox';
     }
   }
 
-  // Outlined variant
-  &--outlined {
-    .#{$component}__icon {
-      background-color: transparent;
-    }
-
-    .#{$component}__input:checked ~ .#{$component}__icon {
-      background-color: transparent;
-      border-color: t.color('primary');
-
-      svg {
-        color: t.color('primary');
-      }
-    }
-
-    &.#{$component}--indeterminate {
-      .#{$component}__icon::after {
-        background-color: t.color('primary');
-      }
-    }
-  }
-
-  // State layer effects
+  // State layers (md-comp-checkbox). Unselected: on-surface on hover and focus, and
+  // the outline turns on-surface; selected: primary. A press takes the colour of the
+  // state it leads to (unselected presses primary, selected presses on-surface), and
+  // error is error throughout. Checked hover used the pressed opacity. FLO-265.
   &:not(&--disabled) {
-    // Common state layer structure
-    .#{$component}__input:hover ~ .#{$component}__icon::before,
-    .#{$component}__input:active ~ .#{$component}__icon::before {
-      content: '';
-      position: absolute;
-      top: -12px;
-      left: -12px;
-      right: -12px;
-      bottom: -12px;
-      border-radius: 50%;
-      background-color: t.color('on-surface');
+    $input: '.#{$component}__input';
+    $layer: '.#{$component}__icon::before';
+
+    #{$input}:is(:hover, :focus-visible, :active):not(:checked) ~ .#{$component}__icon {
+      border-color: t.color('on-surface');
     }
 
-    // Hover state
-    .#{$component}__input:hover ~ .#{$component}__icon::before {
-      opacity: v.state('hover-state-layer-opacity');
+    #{$input}:hover ~ #{$layer} { background-color: t.alpha('on-surface', v.state('hover-state-layer-opacity')); }
+    #{$input}:focus-visible ~ #{$layer} { background-color: t.alpha('on-surface', v.state('focus-state-layer-opacity')); }
+    #{$input}:active ~ #{$layer} { background-color: t.alpha('primary', v.state('pressed-state-layer-opacity')); }
 
+    #{$input}:checked:hover ~ #{$layer},
+    &.#{$component}--indeterminate #{$input}:hover ~ #{$layer} { background-color: t.alpha('primary', v.state('hover-state-layer-opacity')); }
+    #{$input}:checked:focus-visible ~ #{$layer},
+    &.#{$component}--indeterminate #{$input}:focus-visible ~ #{$layer} { background-color: t.alpha('primary', v.state('focus-state-layer-opacity')); }
+    #{$input}:checked:active ~ #{$layer},
+    &.#{$component}--indeterminate #{$input}:active ~ #{$layer} { background-color: t.alpha('on-surface', v.state('pressed-state-layer-opacity')); }
+
+    &.#{$component}--error {
+      #{$input}:not(:checked):is(:hover, :focus-visible, :active) ~ .#{$component}__icon { border-color: t.color('error'); }
+      #{$input}:hover ~ #{$layer} { background-color: t.alpha('error', v.state('hover-state-layer-opacity')); }
+      #{$input}:focus-visible ~ #{$layer} { background-color: t.alpha('error', v.state('focus-state-layer-opacity')); }
+      #{$input}:active ~ #{$layer} { background-color: t.alpha('error', v.state('pressed-state-layer-opacity')); }
     }
 
-    // Hover checked state
-    .#{$component}__input:checked:hover ~ .#{$component}__icon::before {
-      opacity: v.state('pressed-state-layer-opacity');
-      background-color: t.color('primary');
-    }
-    // Active/pressed state
-    .#{$component}__input:active ~ .#{$component}__icon::before {
-      opacity: v.state('pressed-state-layer-opacity');
-      background-color: t.color('on-surface');
+    // md.comp.focus-ring: 3dp secondary, 2dp outside the state layer.
+    #{$input}:focus-visible ~ #{$layer} {
+      outline: 3px solid t.color('secondary');
+      outline-offset: 2px;
     }
   }
 

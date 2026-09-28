@@ -30,11 +30,11 @@ export type {
  * code completion, type safety, and to follow best practices.
  * 
  * @example
- * import { createCheckbox, CHECKBOX_VARIANTS } from 'mtrl';
+ * import { createCheckbox } from 'mtrl';
  * 
  * const checkbox = createCheckbox({
- *   variant: CHECKBOX_VARIANTS.OUTLINED,
- *   label: 'Accept terms'
+ *   label: 'Accept terms',
+ *   error: !accepted
  * });
  * 
  * @category Components

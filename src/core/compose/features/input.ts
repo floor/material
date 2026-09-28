@@ -46,6 +46,12 @@ export interface InputConfig {
    * Component name for classes
    */
   componentName?: string;
+
+  /**
+   * Whether Enter toggles the input as Space does
+   * @default true
+   */
+  enterToggles?: boolean;
 }
 
 /**
@@ -168,7 +174,7 @@ export const withInput =
 
     // Add keyboard handling
     input.addEventListener("keydown", (event) => {
-      if (event.key === " " || event.key === "Enter") {
+      if (event.key === " " || (event.key === "Enter" && config.enterToggles !== false)) {
         event.preventDefault();
         if (!input.disabled) {
           input.checked = !input.checked;

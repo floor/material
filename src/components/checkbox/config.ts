@@ -10,8 +10,10 @@ import { setHTML } from "../../core/dom/html";
  * Default configuration for the Checkbox component
  */
 export const defaultConfig: CheckboxConfig = {
-  variant: "filled",
   labelPosition: "end",
+  // Space toggles a checkbox and Enter is left to its form, as natively and in
+  // WAI-ARIA (Dr Jones, FLO-265). The switch keeps both, as its m3 page says.
+  enterToggles: false,
 };
 
 /**

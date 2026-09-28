@@ -1,11 +1,8 @@
 // src/components/checkbox/constants.ts
 
 /**
- * Visual variants for checkbox styling
- * 
- * Material Design 3 checkboxes can use different visual styles
- * while maintaining the same functionality.
- * 
+ * @deprecated M3 has one checkbox style, and the `variant` option has no
+ * effect (FLO-94, FLO-265).
  * @category Components
  */
 export const CHECKBOX_VARIANTS = {
