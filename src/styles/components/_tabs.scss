@@ -107,6 +107,11 @@ $container: "#{base.$prefix}-tabs";
     &__indicator {
         position: absolute;
         bottom: 1px;
+        // indicator.ts measures from the scroll container's left edge and moves the
+        // indicator with translateX, so it has to start there. Without `left` an
+        // absolute box sits at its static position: 0 in the fixed row, but past the
+        // 52px padding-inline of the scrollable row, which offset every tab by that.
+        left: 0;
         transition:
             transform 250ms cubic-bezier(0.4, 0, 0.2, 1),
             width 250ms cubic-bezier(0.4, 0, 0.2, 1);
