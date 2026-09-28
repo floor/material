@@ -148,4 +148,22 @@ describe('withText', () => {
     expect(enhanced.text.getText()).toBe('New text');
     expect(enhanced.text.getElement().textContent).toBe('New text');
   });
+
+  test('should place a node given as text inside the text element', () => {
+    const slot = document.createElement('slot');
+    slot.textContent = 'Fallback';
+    const enhanced = withText({ prefix: 'mtrl', componentName: 'button', text: slot })(component);
+
+    const textElement = enhanced.text.getElement();
+    expect(textElement?.className).toBe('mtrl-button__text');
+    expect(textElement?.firstChild).toBe(slot);
+    expect(enhanced.text.getText()).toBe('Fallback');
+  });
+
+  test('should keep treating a string as text, not markup', () => {
+    const enhanced = withText({ prefix: 'mtrl', componentName: 'button', text: '<b>Save</b>' })(component);
+
+    expect(enhanced.text.getElement()?.children.length).toBe(0);
+    expect(enhanced.text.getText()).toBe('<b>Save</b>');
+  });
 });

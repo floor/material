@@ -30,7 +30,6 @@ const buttonSpec = {
   slot: {
     attribute: "label" as const,
     config: "text",
-    container: (c) => c.text.getElement(),
   },
   form: {
     value: () => null,

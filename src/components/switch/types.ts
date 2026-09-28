@@ -27,8 +27,8 @@ export interface SwitchConfig {
   /** Input value attribute */
   value?: string;
 
-  /** Label text */
-  label?: string;
+  /** Label text, or a node placed inside the label (the web component passes a `<slot>`) */
+  label?: string | Node;
 
   /** Supporting text content */
   supportingText?: string;

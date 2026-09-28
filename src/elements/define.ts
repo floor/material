@@ -51,13 +51,14 @@ export interface EventSpec {
   detail?: (payload: unknown) => unknown;
 }
 
-export interface SlotSpec<C> {
+export interface SlotSpec {
   /** Attribute whose text is the slot's fallback content. */
   attribute: string;
-  /** The config key the text goes to, so the factory builds its container. */
+  /**
+   * The config key that takes the text or a node (`text`, `label`): the
+   * element passes its `<slot>` there and the factory places it.
+   */
   config: string;
-  /** Finds the container the factory built for the text. */
-  container: (component: C) => HTMLElement | null;
 }
 
 export interface FormSpec<C> {
@@ -99,7 +100,7 @@ export interface ElementSpec<C extends ElementComponent> {
   /** The live property two-way binding drives (`v-model`, Svelte's `bind:`). */
   model?: string;
   events?: Record<string, EventSpec>;
-  slot?: SlotSpec<C>;
+  slot?: SlotSpec;
   form?: FormSpec<C>;
   /** Extra config read from the host, such as children. */
   config?: (host: HTMLElement) => Config;
@@ -347,11 +348,15 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
         if (value !== null && value !== false) config[attribute.config] = value;
       }
       if (spec.slot) {
+        // The factory places the slot where its text goes; the attribute is
+        // the slot's fallback, shown when the element has no content.
         const text = this.getAttribute(spec.slot.attribute);
-        // A placeholder makes the factory build the container the slot goes in,
-        // until factories take a slot option (see the element specs).
-        if (text) config[spec.slot.config] = text;
-        else if (hasContent(this)) config[spec.slot.config] = "​";
+        if (text || hasContent(this)) {
+          const slot = document.createElement("slot");
+          slot.textContent = text ?? "";
+          config[spec.slot.config] = slot;
+          this.#slot = slot;
+        }
       }
       Object.assign(config, spec.config?.(this));
       for (const [name, property] of Object.entries(spec.properties ?? {})) {
@@ -368,16 +373,8 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       applyStyles(root, [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...spec.styles]);
       const component = spec.create(this.#config());
       this.component = component;
-
-      if (spec.slot) {
-        const container = spec.slot.container(component);
-        if (container) {
-          const slot = document.createElement("slot");
-          slot.textContent = this.getAttribute(spec.slot.attribute) ?? "";
-          container.replaceChildren(slot);
-          this.#slot = slot;
-        }
-      }
+      // A factory that did not place the slot leaves the element without one.
+      if (this.#slot && !component.element.contains(this.#slot)) this.#slot = null;
 
       root.append(component.element);
       const events = component as unknown as Subscribable;
