@@ -553,6 +553,33 @@ export const createHandlers = (
   /**
    * Set up all event listeners
    */
+  // Each handle's listeners, made once and kept, so cleanup removes the very
+  // functions setup added. Both used to be written inline, and removeEventListener
+  // matches by reference, so no handle listener was ever removed: after destroy a
+  // key still moved the value and focus still showed the bubble. FLO-253.
+  const listenersFor = (isSecondHandle: boolean) => ({
+    press: (e: SliderPointerEvent) => handleHandleMouseDown(e, isSecondHandle),
+    keydown: (e: KeyboardEvent) => handleKeyDown(e, isSecondHandle),
+    focus: (e: FocusEvent) => handleFocus(e, isSecondHandle),
+    blur: (e: FocusEvent) => handleBlur(e, isSecondHandle),
+  });
+  const handleListeners = listenersFor(false);
+  const secondHandleListeners = listenersFor(true);
+  const attach = (element: HTMLElement, listeners: ReturnType<typeof listenersFor>) => {
+    element.addEventListener("mousedown", listeners.press);
+    element.addEventListener("touchstart", listeners.press, { passive: true });
+    element.addEventListener("keydown", listeners.keydown);
+    element.addEventListener("focus", listeners.focus);
+    element.addEventListener("blur", listeners.blur);
+  };
+  const detach = (element: HTMLElement, listeners: ReturnType<typeof listenersFor>) => {
+    element.removeEventListener("mousedown", listeners.press);
+    element.removeEventListener("touchstart", listeners.press);
+    element.removeEventListener("keydown", listeners.keydown);
+    element.removeEventListener("focus", listeners.focus);
+    element.removeEventListener("blur", listeners.blur);
+  };
+
   const setupEventListeners = () => {
     if (!handle || !container) {
       console.warn(
@@ -567,38 +594,10 @@ export const createHandlers = (
       passive: true,
     });
 
-    // Handle events
-    handle.addEventListener("mousedown", (e) =>
-      handleHandleMouseDown(e, false),
-    );
-    handle.addEventListener(
-      "touchstart",
-      (e) => handleHandleMouseDown(e, false),
-      { passive: true },
-    );
-    handle.addEventListener("keydown", (e) => handleKeyDown(e, false));
-    handle.addEventListener("focus", (e) => handleFocus(e, false));
-    handle.addEventListener("blur", (e) => handleBlur(e, false));
-
-    // Second handle events for range slider
-    if (config.range && secondHandle) {
-      secondHandle.addEventListener("mousedown", (e) =>
-        handleHandleMouseDown(e, true),
-      );
-      secondHandle.addEventListener(
-        "touchstart",
-        (e) => handleHandleMouseDown(e, true),
-        { passive: true },
-      );
-      secondHandle.addEventListener("keydown", (e) => handleKeyDown(e, true));
-      secondHandle.addEventListener("focus", (e) => handleFocus(e, true));
-      secondHandle.addEventListener("blur", (e) => handleBlur(e, true));
-    }
+    attach(handle, handleListeners);
+    if (config.range && secondHandle) attach(secondHandle, secondHandleListeners);
   };
 
-  /**
-   * Clean up all event listeners
-   */
   const cleanupEventListeners = () => {
     if (!state.component) return;
 
@@ -608,33 +607,8 @@ export const createHandlers = (
       container.removeEventListener("touchstart", handleTrackMouseDown);
     }
 
-    // Clean up handle listeners
-    if (handle) {
-      handle.removeEventListener("mousedown", (e) =>
-        handleHandleMouseDown(e, false),
-      );
-      handle.removeEventListener("touchstart", (e) =>
-        handleHandleMouseDown(e, false),
-      );
-      handle.removeEventListener("keydown", (e) => handleKeyDown(e, false));
-      handle.removeEventListener("focus", (e) => handleFocus(e, false));
-      handle.removeEventListener("blur", (e) => handleBlur(e, false));
-    }
-
-    // Clean up second handle listeners
-    if (config.range && secondHandle) {
-      secondHandle.removeEventListener("mousedown", (e) =>
-        handleHandleMouseDown(e, true),
-      );
-      secondHandle.removeEventListener("touchstart", (e) =>
-        handleHandleMouseDown(e, true),
-      );
-      secondHandle.removeEventListener("keydown", (e) =>
-        handleKeyDown(e, true),
-      );
-      secondHandle.removeEventListener("focus", (e) => handleFocus(e, true));
-      secondHandle.removeEventListener("blur", (e) => handleBlur(e, true));
-    }
+    if (handle) detach(handle, handleListeners);
+    if (config.range && secondHandle) detach(secondHandle, secondHandleListeners);
 
     // Clean up document listeners
     document.removeEventListener("mousemove", handleMouseMove);
