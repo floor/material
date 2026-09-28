@@ -31,3 +31,16 @@ describe('tab indicator', () => {
     expect(transition).toContain('width 300ms');
   });
 });
+
+// FLO-264: options that were accepted and never applied.
+describe('indicator options', () => {
+  test('color colours the indicator', () => {
+    expect(createTabIndicator({ color: 'rgb(1, 2, 3)' }).element.style.backgroundColor).toBe('rgb(1, 2, 3)');
+    expect(createTabIndicator({}).element.style.backgroundColor).toBe('');
+  });
+
+  test('visible: false starts it hidden; undefined leaves it shown', () => {
+    expect(createTabIndicator({ visible: false }).element.style.opacity).toBe('0');
+    expect(createTabIndicator({ visible: undefined }).element.style.opacity).toBe('');
+  });
+});

@@ -212,17 +212,58 @@ describe('setupResponsiveBehavior', () => {
     expect(layoutOf(byValue(second, 'trips'))).toEqual(['icon-and-text']);
   });
 
-  test('a tab added after setup is not rewritten on the next resize', () => {
-    setWidth(1280);
+  // FLO-232: the layout followed a snapshot of the tabs taken at setup.
+  test('a tab added after setup follows the layout, at once and on the next resize', () => {
+    setWidth(400);
     const tabs = mount();
     enhance(tabs);
     tabs.addTab({ text: 'Explore', value: 'explore', icon: ICON });
+    expect(layoutOf(byValue(tabs, 'explore'))).toEqual(['icon-only']);
+
+    setWidth(1280);
+    notifyResize();
+    expect(layoutOf(byValue(tabs, 'explore'))).toEqual(['icon-and-text']);
+  });
+
+  test('a label or icon changed after setup is kept when the layout is restored', () => {
+    setWidth(1280);
+    const tabs = createTabs({ tabs: [{ text: 'Flights', value: 'flights', state: 'active' }, { text: 'Trips', value: 'trips' }] });
+    document.body.append(tabs.element);
+    enhance(tabs);
+    byValue(tabs, 'trips').setIcon(ICON);
 
     setWidth(400);
     notifyResize();
+    expect(layoutOf(byValue(tabs, 'trips'))).toEqual(['icon-only']);
 
+    setWidth(1280);
+    notifyResize();
+    expect(layoutOf(byValue(tabs, 'trips'))).toEqual(['icon-and-text']);
+  });
+
+  test('a change on a small screen keeps the small layout', () => {
+    setWidth(400);
+    const tabs = mount();
+    enhance(tabs);
+    byValue(tabs, 'trips').setText('Journeys');
+    expect(layoutOf(byValue(tabs, 'trips'))).toEqual(['icon-only']);
+  });
+
+  test('the icon-and-text small layout keeps every tab as built', () => {
+    setWidth(400);
+    const tabs = mount();
+    enhance(tabs, { smallScreen: { layout: 'icon-and-text' } });
+    expect(tabs.element.classList.contains(smallClass(tabs))).toBe(true);
+    expect(layoutOf(byValue(tabs, 'flights'))).toEqual(['icon-and-text']);
+  });
+
+  test('the text-only small layout leaves an icon-only tab its icon', () => {
+    setWidth(400);
+    const tabs = createTabs({ tabs: [{ icon: ICON, ariaLabel: 'Flights', value: 'flights', state: 'active' }, { text: 'Trips', icon: ICON, value: 'trips' }] });
+    document.body.append(tabs.element);
+    enhance(tabs, { smallScreen: { layout: 'text-only' } });
     expect(layoutOf(byValue(tabs, 'flights'))).toEqual(['icon-only']);
-    expect(layoutOf(byValue(tabs, 'explore'))).toEqual(['icon-and-text']);
+    expect(layoutOf(byValue(tabs, 'trips'))).toEqual(['text-only']);
   });
 
   test('destroy disconnects the observer so a later resize does not touch a dead group', () => {
