@@ -2,6 +2,7 @@
 import { copyFile, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { buildModules } from "./scripts/build-modules";
 import { buildStyles } from "./scripts/build-styles";
+import { emitSvelte } from "./scripts/svelte-package";
 
 const outdir = "./dist";
 const pkg = await Bun.file("package.json").json();
@@ -14,6 +15,8 @@ try {
   try {
     console.log("Building ESM modules and declarations...");
     buildModules(staging);
+    console.log("Writing the Svelte components...");
+    await emitSvelte(staging);
     console.log("Building CommonJS compatibility bundle...");
     const cjs = await Bun.build({
       entrypoints: ["./index.ts"],

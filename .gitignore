@@ -93,3 +93,4 @@ demo/
 # the adapter checks write their server bundle here while they run
 .check-react-*.js
 .check-vue.js
+.check-svelte.js
