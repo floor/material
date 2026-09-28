@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Writes each framework adapter's index (src/react/index.ts, src/vue/index.ts):
+// Writes each framework adapter's index (src/react, src/solid, src/vue):
 // one component per element and per declaration child, from the registry in
 // src/elements/index.ts.
 //
@@ -33,6 +33,13 @@ const frameworks: Framework[] = [
     header: "React components for the elements. Each renders its `<m-*>` tag, registers\n * it on first mount and loads its CSS.",
     exports: `export { configure } from "./create";
 export type { ComponentProps, DeclarationProps, EventProps, DefaultProps, FormProps, MComponent, MDeclaration } from "./create";`,
+  },
+  {
+    dir: "solid",
+    component: pascal,
+    header: "Solid components for the elements. Each renders its `<m-*>` tag, registers\n * it on mount and loads its CSS.",
+    exports: `export { configure } from "./create";
+export type { SolidProps, DeclarationProps, EventProps, DefaultProps, FormProps, MComponent, MDeclaration } from "./create";`,
   },
   {
     dir: "vue",
