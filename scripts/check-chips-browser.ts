@@ -72,11 +72,73 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
   });
   assert.equal(await page.locator("#chip-2").evaluate(el => el.scrollWidth <= el.clientWidth), true, "Long input labels must fit beside removal");
   assert.equal(await page.locator("#chip-2 .mtrl-chip__label").evaluate(el => el.scrollWidth > el.clientWidth), true);
+  // Conformance on the painted page (FLO-256, FLO-259, #202): M3's paddings with the
+  // stroke drawn inside, 48dp targets that never overflow, the trailing button, no
+  // icon motion on a chip's first render but motion after, the dragged state, and a
+  // ripple that belongs to the action alone.
+  // With motion on: under reduced motion (which check-core sets before this) nothing
+  // animates, so neither the load check nor the motion check would mean anything.
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const painted = await page.evaluate(async () => {
+    const { createFilterChip, createInputChip } = (window as unknown as ChipWindow).core;
+    const icon = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h16v16H4z"/></svg>';
+    const host = document.createElement("div");
+    host.style.cssText = "display:flex; gap:24px; padding:24px; width:100%";
+    document.body.append(host);
+    const plain = createFilterChip({ label: "Plain" });
+    const input = createInputChip({ label: "Ada" });
+    const menu = createFilterChip({ label: "Price", trailingMenu: true, onTrailingClick: () => {} });
+    const selected = createFilterChip({ label: "On", selected: true, leadingIcon: icon });
+    for (const chip of [plain, input, menu, selected]) host.append(chip.element);
+    await new Promise(requestAnimationFrame);
+    const firstFrame = selected.element.querySelector(".mtrl-chip__checkmark")!.getBoundingClientRect().width;
+    const box = (element: Element) => element.getBoundingClientRect();
+    const around = (chip: typeof input, selector: string) => {
+      const c = box(chip.element), l = box(chip.element.querySelector(".mtrl-chip__label")!), i = box(chip.element.querySelector(`${selector} svg`)!);
+      return { fromLabel: Math.round(i.left - l.right), toEdge: Math.round(c.right - i.right), overflow: chip.element.scrollWidth - chip.element.clientWidth };
+    };
+    const hit = (x: number, y: number) => (document.elementFromPoint(x, y) as HTMLElement | null)?.className ?? "";
+    const p = box(plain.element), removeIcon = box(input.element.querySelector(".mtrl-chip__remove svg")!);
+    const waves = (chip: typeof input) => chip.element.querySelectorAll(".mtrl-ripple-wave").length;
+    input.element.querySelector(".mtrl-chip__remove")!.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: removeIcon.left + 9, clientY: removeIcon.top + 9 }));
+    const removeRipples = waves(input);
+    plain.action.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: p.left + 20, clientY: p.top + 16 }));
+    const actionRipples = plain.action.querySelectorAll(".mtrl-ripple-wave").length;
+    plain.element.dispatchEvent(new Event("dragstart", { bubbles: true }));
+    const dragged = { shadow: getComputedStyle(plain.element).boxShadow, layer: getComputedStyle(plain.element, "::after").opacity };
+    plain.element.dispatchEvent(new Event("dragend", { bubbles: true }));
+    selected.action.click();
+    const motion = { marked: selected.element.classList.contains("mtrl-chip--motion"), transition: getComputedStyle(selected.element.querySelector(".mtrl-chip__checkmark")!).transitionProperty };
+    const result = {
+      labelStart: Math.round(box(plain.element.querySelector(".mtrl-chip__label")!).left - p.left),
+      remove: around(input, ".mtrl-chip__remove"), trailing: around(menu, ".mtrl-chip__trailing-action"),
+      hitAbove: hit(p.left + 10, p.top - 6), hitBelow: hit(p.left + 10, p.bottom + 6), hitAboveRemove: hit(removeIcon.left + 9, removeIcon.top - 12),
+      firstFrame, removeRipples, actionRipples, dragged, motion,
+    };
+    for (const chip of [plain, input, menu, selected]) chip.destroy();
+    host.remove();
+    return result;
+  });
+  assert.equal(painted.labelStart, 16, "16dp before a label without icons");
+  for (const [name, geometry] of [["remove", painted.remove], ["trailing", painted.trailing]] as const) {
+    assert.deepEqual(geometry, { fromLabel: 8, toEdge: 8, overflow: 0 }, `${name} icon: 8dp from the label and the edge, no overflow`);
+  }
+  for (const [where, hit] of [["above", painted.hitAbove], ["below", painted.hitBelow]]) assert.match(hit, /mtrl-chip__action/, `the 48dp target reaches ${where} the chip`);
+  assert.match(painted.hitAboveRemove, /mtrl-chip__remove/, "the remove button's 48dp target reaches above its icon");
+  assert.equal(painted.firstFrame, 18, "a chip's first render does not animate its checkmark");
+  assert.deepEqual(painted.motion.marked, true, "a change after creation animates");
+  assert.match(painted.motion.transition, /width/);
+  assert.notEqual(painted.dragged.shadow, "none", "dragged: elevation 4");
+  assert.equal(painted.dragged.layer, "0.16", "dragged: 0.16 state layer");
+  assert.equal(painted.removeRipples, 0, "pressing remove does not ripple the chip");
+  assert.ok(painted.actionRipples > 0, "pressing the chip ripples its action");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+
   await page.evaluate(() => {
     for (const chip of (window as unknown as ChipWindow).chipCases) chip.destroy();
     document.documentElement.removeAttribute("data-theme");
     document.documentElement.removeAttribute("data-theme-mode");
   });
   assert.equal(await page.locator(".mtrl-chip").count(), 0);
-  console.log("Passed packed Material chips: 32px geometry, flat/elevated/selected styles, icons/avatar, native keyboard toggle/removal and cleanup.");
+  console.log("Passed packed Material chips: 32px geometry, flat/elevated/selected styles, icons/avatar, native keyboard toggle/removal, M3 paddings and 48dp targets, trailing action, motion only after creation, dragged state, action-only ripple and cleanup.");
 }
