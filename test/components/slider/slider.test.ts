@@ -657,3 +657,33 @@ describe('vertical slider', () => {
     expect(handles(slider)[0]!.style.width).toBe('52px');
   });
 });
+
+// FLO-253. The handles' listeners were added and removed as separate inline
+// functions, so destroy removed none of them: a key still moved a destroyed
+// slider's value and focus still marked the handle. The existing destroy test
+// watched for a change event, which the cleared emitter never delivers.
+describe('slider destroy removes the handle listeners', () => {
+  test('keys and focus on a destroyed slider do nothing, on both handles', async () => {
+    const slider = await mount({ range: true, value: 20, secondValue: 80 });
+    const [first, second] = handles(slider);
+    slider.destroy();
+    for (const [handle, value] of [[first!, 20], [second!, 80]] as const) {
+      key(handle, 'ArrowRight');
+      key(handle, 'End');
+      expect(handle.getAttribute('aria-valuenow')).toBe(String(value));
+      handle.dispatchEvent(new dom.window.FocusEvent('focus'));
+      expect(handle.classList.contains('mtrl-slider__handle--focused')).toBe(false);
+    }
+    expect(slider.getValue()).toBe(20);
+    expect(slider.getSecondValue()).toBe(80);
+  });
+
+  test('a live slider still answers keys and focus', async () => {
+    const slider = await mount({ value: 50 });
+    const [handle] = handles(slider);
+    key(handle!, 'ArrowRight');
+    expect(slider.getValue()).toBe(51);
+    handle!.dispatchEvent(new dom.window.FocusEvent('focus'));
+    expect(handle!.classList.contains('mtrl-slider__handle--focused')).toBe(true);
+  });
+});
