@@ -7,6 +7,7 @@ import { setHTML } from "../../../core/dom/html";
 import type { ChipConfig, ChipComponent, ChipEvents } from "../types";
 
 const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>';
+const DROP_DOWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 10l5 5 5-5z"/></svg>';
 const CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
 
 /** Shared internal implementation for the four Material chip factories. */
@@ -55,6 +56,22 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
     root.append(remove);
     root.setAttribute("role", "group");
   }
+  // A filter chip's trailing icon can have its own action: open a menu or remove the
+  // chip (m3.material.io chips). Built like the remove button, beside the action,
+  // never inside it. FLO-259.
+  let trailingAction: HTMLButtonElement | undefined;
+  if (type === "filter" && options.onTrailingClick) {
+    trailingAction = document.createElement("button");
+    trailingAction.type = "button";
+    trailingAction.className = base.getClass("chip__trailing-action");
+    if (options.trailingMenu) {
+      trailingAction.setAttribute("aria-haspopup", "menu");
+      trailingAction.setAttribute("aria-expanded", "false");
+    }
+    setHTML(trailingAction, trailingIcon || (options.trailingMenu ? DROP_DOWN : CLOSE));
+    root.append(trailingAction);
+    root.setAttribute("role", "group");
+  }
 
   const render = () => {
     root.classList.toggle(base.getClass("chip--selected"), selected);
@@ -64,13 +81,19 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
     if (selectable) action.setAttribute("aria-checked", String(selected));
     leading.hidden = !avatar && (!leadingIcon || selected);
     check.hidden = !(selected && (type === "filter" || (type === "input" && !avatar)));
-    trailing.hidden = !trailingIcon || !!remove;
+    trailing.hidden = !trailingIcon || !!remove || !!trailingAction;
     root.classList.toggle(base.getClass("chip--leading"), !leading.hidden || !check.hidden);
-    root.classList.toggle(base.getClass("chip--trailing"), !trailing.hidden || !!remove);
+    root.classList.toggle(base.getClass("chip--trailing"), !trailing.hidden || !!remove || !!trailingAction);
     if (remove) {
       remove.disabled = disabled;
       remove.setAttribute("aria-label", options.removeLabel ?? `Remove ${label.textContent ?? ""}`);
       root.setAttribute("aria-label", label.textContent ?? "");
+    }
+    if (trailingAction) {
+      trailingAction.disabled = disabled;
+      const text = label.textContent ?? "";
+      trailingAction.setAttribute("aria-label", options.trailingLabel ?? (options.trailingMenu ? `${text} options` : `Remove ${text}`));
+      root.setAttribute("aria-label", text);
     }
   };
   const setLabel = (text: string) => { label.textContent = text; render(); return api; };
@@ -83,6 +106,7 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
   const api: ChipComponent = {
     element: root,
     action,
+    trailingAction,
     getType: () => type,
     getValue() {
       const attribute = root.getAttribute("data-value");
@@ -106,7 +130,8 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
     setLeadingIcon,
     setTrailingIcon(icon) {
       trailingIcon = type === "suggestion" ? "" : icon;
-      setHTML(remove ?? trailing, trailingIcon || (remove ? CLOSE : ""));
+      if (trailingAction) setHTML(trailingAction, trailingIcon || (options.trailingMenu ? DROP_DOWN : CLOSE));
+      else setHTML(remove ?? trailing, trailingIcon || (remove ? CLOSE : ""));
       render();
       return api;
     },
@@ -167,6 +192,22 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
       if (event.key === "Enter" || event.key === " ") event.stopPropagation();
     });
   }
+  if (trailingAction) {
+    listen(trailingAction, "click", event => {
+      event.stopPropagation();
+      if (disabled) return;
+      base.emit("trailing", api);
+      options.onTrailingClick?.(api);
+    });
+    // As for the remove button: Enter and Space stay here, the arrows go on to the set.
+    listen(trailingAction, "keydown", event => {
+      if (event.key === "Enter" || event.key === " ") event.stopPropagation();
+    });
+  }
+  // The dragged state (Compose DraggedContainerElevation, DraggedStateLayerOpacity) for
+  // a chip the app makes draggable; mtrl does no dragging itself. FLO-259.
+  listen(root, "dragstart", () => root.classList.add(base.getClass("chip--dragged")));
+  listen(root, "dragend", () => root.classList.remove(base.getClass("chip--dragged")));
   label.textContent = options.label ?? options.text ?? "";
   setHTML(leading, avatar || leadingIcon);
   setHTML(trailing, trailingIcon);
