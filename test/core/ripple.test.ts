@@ -188,3 +188,21 @@ describe('Ripple Effect', () => {
     expect(destroyCounter.count).toBe(1);
   });
 });
+// FLO-268: only duration is read. The wave is the pressed state layer (FLO-260),
+// its opacity and motion drawn by the stylesheet, so timing and opacity leave no
+// trace on it.
+describe('rippleConfig', () => {
+  test('duration sets when a released wave is removed; timing and opacity are not applied', async () => {
+    const enhanced = withRipple({ ripple: true, rippleConfig: { duration: 30, timing: 'linear', opacity: ['0.9', '0'] } })(createBaseComponent());
+    document.body.append(enhanced.element);
+    enhanced.element.dispatchEvent(new dom.window.MouseEvent('pointerdown', { bubbles: true, clientX: 5, clientY: 5 }));
+    const wave = enhanced.element.querySelector(`.${PREFIX}-ripple-wave`) as HTMLElement;
+    expect(wave).not.toBeNull();
+    expect([wave.style.opacity, wave.style.transition, wave.style.animationTimingFunction]).toEqual(['', '', '']);
+    document.dispatchEvent(new dom.window.MouseEvent('pointerup'));
+    expect(wave.isConnected).toBe(true);
+    await new Promise(resolve => setTimeout(resolve, 60));
+    expect(wave.isConnected).toBe(false);
+    enhanced.element.remove();
+  });
+});
