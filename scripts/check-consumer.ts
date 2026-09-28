@@ -172,11 +172,18 @@ try {
   }
   const failures: string[] = [];
   let comparisons = 0;
+  // For chasing a flaky comparison: CONSUMER_SCENARIOS=split-button-open
+  // compares only those scenarios, CONSUMER_ROUNDS=20 repeats the whole matrix.
+  const only = process.env.CONSUMER_SCENARIOS?.split(",").filter(Boolean);
+  const compared = only ? scenarios.filter((scenario) => only.includes(scenario.name)) : scenarios;
+  assert(compared.length, `No scenario matches CONSUMER_SCENARIOS=${process.env.CONSUMER_SCENARIOS}`);
+  const rounds = Number(process.env.CONSUMER_ROUNDS ?? 1);
+  for (let round = 1; round <= rounds; round++)
   for (const width of [1040, 390]) for (const theme of ["baseline", "ocean"]) for (const mode of ["light", "dark"]) {
     const pages = await Promise.all([context.newPage(), context.newPage()]);
     for (const page of pages) await page.setViewportSize({ width, height: 900 });
-    for (const scenario of scenarios) {
-      const label = `${scenario.name}-${theme}-${mode}-${width}`;
+    for (const scenario of compared) {
+      const label = `${scenario.name}-${theme}-${mode}-${width}${rounds > 1 ? `-round${round}` : ""}`;
       await Promise.all(pages.map(async (page, i) => {
         const params = new URLSearchParams({ theme, mode, state: scenario.state ?? "" });
         await page.goto(`${origin}/${i === 0 ? "full" : "selective"}-${scenario.name}.html?${params}`);
