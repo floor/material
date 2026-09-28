@@ -1,6 +1,7 @@
 import { SliderConfig, SliderColor } from "../types";
 import { SLIDER_SIZES, SLIDER_MEASUREMENTS, SliderSize } from "../constants";
 import { PREFIX } from "../../../core/config";
+import { sliderSizeClass } from "../config";
 import { setHTML } from "../../../core/dom/html";
 import { getAxis, isRtl, lengthOf, type SliderAxis } from "./axis";
 
@@ -303,6 +304,11 @@ export const withTracks =
 
   const setSize = (next: SliderSize) => {
     if (destroyed) return;
+    // The root's size modifier follows the size: it kept the one from config,
+    // so a slider made at M and set to XL wore both. FLO-107.
+    const previous = sliderSizeClass(size), current = sliderSizeClass(next);
+    if (previous) component.element.classList.remove(previous);
+    if (current) component.element.classList.add(current);
     size = next;
     const handleHeight = getHandleHeight(size);
     // Sizes are thicknesses: across the axis. A vertical slider's length is its CSS height.

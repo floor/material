@@ -12,6 +12,13 @@ import type { ApiOptions } from "./api";
 import { SLIDER_DEFAULTS, SliderSize } from "./constants";
 
 /**
+ * The root's size modifier: none for the default XS, the lowercase name otherwise, or
+ * the pixel height for a numeric size. Shared with setSize, which swaps it. FLO-107.
+ */
+export const sliderSizeClass = (size: SliderSize): string =>
+  size === "XS" ? "" : `${PREFIX}-slider--${typeof size === "string" ? size.toLowerCase() : size}`;
+
+/**
  * Default configuration for the Slider component
  */
 export const defaultConfig: SliderConfig = {
@@ -60,18 +67,16 @@ export const getElementConfig = (config: SliderConfig) => {
     "slider",
     config.class,
     config.disabled ? `${PREFIX}-slider--disabled` : "",
-    config.size && config.size !== "XS"
-      ? `${PREFIX}-slider--${
-          typeof config.size === "string"
-            ? config.size.toLowerCase()
-            : config.size
-        }`
-      : "",
+    config.size ? sliderSizeClass(config.size) : "",
     config.color && config.color !== "primary" ? `${PREFIX}-slider--${config.color}` : "",
     config.range ? `${PREFIX}-slider--range` : "",
     config.centered ? `${PREFIX}-slider--centered` : "",
     config.orientation === "vertical" ? `${PREFIX}-slider--vertical` : "",
     config.icon ? `${PREFIX}-slider--icon` : "",
+    // Where the icon and the label go: the icon before or after the track (the M3
+    // guidelines' icons at either end), the label above or below it. FLO-107.
+    config.icon && config.iconPosition === "end" ? `${PREFIX}-slider--icon-end` : "",
+    config.label && config.labelPosition === "end" ? `${PREFIX}-slider--label-end` : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -131,7 +136,7 @@ interface SliderApiHost {
     showCurrentValue?: (show: boolean) => void;
   };
   setSize?: (size: SliderSize) => void;
-  getSize?: () => string;
+  getSize?: () => SliderSize;
   label?: { setText?: (text: string) => void; getText?: () => string };
   icon?: { setIcon?: (html: string) => void; getIcon?: () => string };
   setInsetIcon?: (icon: string, atMin?: string) => void;

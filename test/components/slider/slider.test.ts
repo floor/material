@@ -11,12 +11,6 @@
 // range slider kept its initial aria-valuenow however its value changed, and a
 // valueFormatter shaped the value bubble but never reached assistive technology
 // through aria-valuetext.
-//
-// Deliberately not asserted, because each is open: labelPosition and
-// iconPosition are typed and defaulted but nothing reads them; setValue()
-// does not snap to step, where keyboard and pointer input do; setSize() leaves
-// the size class from config in place and getSize() returns a track height as a
-// number, where the type promises a string.
 import { describe, test, expect, beforeEach } from 'bun:test';
 import { JSDOM } from 'jsdom';
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
@@ -799,5 +793,53 @@ describe('slider destroy removes the handle listeners', () => {
     expect(slider.getValue()).toBe(51);
     handle!.dispatchEvent(new dom.window.FocusEvent('focus'));
     expect(handle!.classList.contains('mtrl-slider__handle--focused')).toBe(true);
+  });
+});
+
+// FLO-107. Options and setters that did nothing or disagreed with the other paths:
+// the setters now snap to the step as keys and the pointer do (and as Compose's
+// SliderState snaps a value it is given), setSize swaps the size modifier instead
+// of adding a second one, getSize returns what was set under a type that says so,
+// and iconPosition / labelPosition place the icon and label.
+describe('slider options and setters agree', () => {
+  test('setValue and setSecondValue snap to the step', async () => {
+    const slider = await mount({ range: true, value: 20, secondValue: 80, step: 10 });
+    slider.setValue(43);
+    expect(slider.getValue()).toBe(40);
+    slider.setSecondValue(67);
+    expect(slider.getSecondValue()).toBe(70);
+    expect(handles(slider)[1]!.getAttribute('aria-valuenow')).toBe('70');
+  });
+
+  test('setSize swaps the size modifier', async () => {
+    const slider = await mount({ value: 50, size: 'M' });
+    const classes = () => Array.from(slider.element.classList).filter(c => /^mtrl-slider--(xs|s|m|l|xl|\d+)$/.test(c));
+    expect(classes()).toEqual(['mtrl-slider--m']);
+    slider.setSize('XL');
+    expect(classes()).toEqual(['mtrl-slider--xl']);
+    slider.setSize('XS');
+    expect(classes()).toEqual([]);
+    slider.setSize(32);
+    expect(classes()).toEqual(['mtrl-slider--32']);
+  });
+
+  test('getSize returns the size as it was set', async () => {
+    const slider = await mount({ value: 50, size: 'L' });
+    expect(slider.getSize()).toBe('L');
+    slider.setSize(32);
+    expect(slider.getSize()).toBe(32);
+  });
+
+  test('iconPosition and labelPosition place the icon and the label', async () => {
+    const icon = '<svg viewBox="0 0 24 24"><path d="M1 1h2"/></svg>';
+    const start = await mount({ value: 50, icon, label: 'Volume' });
+    expect(start.element.classList.contains('mtrl-slider--icon')).toBe(true);
+    expect(start.element.classList.contains('mtrl-slider--icon-end')).toBe(false);
+    expect(start.element.classList.contains('mtrl-slider--label-end')).toBe(false);
+    const end = await mount({ value: 50, icon, iconPosition: 'end', label: 'Volume', labelPosition: 'end' });
+    expect(end.element.classList.contains('mtrl-slider--icon-end')).toBe(true);
+    expect(end.element.classList.contains('mtrl-slider--label-end')).toBe(true);
+    expect(end.element.querySelector('.mtrl-slider__label--end')).not.toBeNull();
+    expect(end.element.querySelector('.mtrl-slider__icon--end')).not.toBeNull();
   });
 });

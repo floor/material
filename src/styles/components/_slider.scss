@@ -61,6 +61,8 @@ $component: '#{base.$prefix}-slider';
     font-weight: 400;
     color: t.color('on-surface');
     margin-bottom: 4px;
+    // labelPosition: 'end' puts it below the track.
+    &--end { margin-bottom: 0; margin-top: 4px; }
   }
   
   // Icon positioning
@@ -69,10 +71,8 @@ $component: '#{base.$prefix}-slider';
     align-items: center;
     justify-content: center;
     color: t.color('on-surface-variant');
-    position: absolute;
     width: 40px;
     height: 40px;
-    top: 16px;
     
     svg {
       width: 24px;
@@ -81,15 +81,26 @@ $component: '#{base.$prefix}-slider';
   }
   
   // When slider has icon at end position
+  // An icon outside the track sits level with it, before or after it (the M3
+  // guidelines' icons at either end); the label spans the track's column, above or
+  // below. It used to be absolutely placed at a fixed top on the start side, so
+  // iconPosition and labelPosition changed nothing on screen. FLO-107.
   &--icon {
-    .#{$component}__label {
-      margin-left: 48px;
-    }
-
-    .#{$component}__container {
-      margin-left: 48px;
-    }
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    grid-template-areas: ". label" "icon track";
+    column-gap: 8px;
+    align-items: center;
+    .#{$component}__label { grid-area: label; }
+    .#{$component}__container { grid-area: track; }
+    .#{$component}__icon { grid-area: icon; }
   }
+  &--icon.#{$component}--label-end { grid-template-areas: "icon track" ". label"; }
+  &--icon-end {
+    grid-template-columns: minmax(0, 1fr) 40px;
+    grid-template-areas: "label ." "track icon";
+  }
+  &--icon-end.#{$component}--label-end { grid-template-areas: "track icon" "label ."; }
 
   // Slider container - holds all the slider elements
   &__container {
