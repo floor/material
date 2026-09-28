@@ -34,6 +34,9 @@ export const withDom =
         text: config.label,
         container: component.element,
       });
+      // The visible label names the group; a <label> alone names nothing. FLO-256.
+      label.id = `${getClass("chips")}-label-${Math.random().toString(36).slice(2, 9)}`;
+      component.element.setAttribute("aria-labelledby", label.id);
     }
 
     // Create the chips container where individual chips will be added

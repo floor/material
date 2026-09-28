@@ -34,10 +34,12 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
   });
   const geometry = await page.evaluate(() => (window as unknown as ChipWindow).chipCases.map(chip => {
     const style = getComputedStyle(chip.element);
-    return { height: chip.element.getBoundingClientRect().height, radius: style.borderRadius, background: style.backgroundColor, border: style.borderTopWidth, shadow: style.boxShadow };
+    return { height: chip.element.getBoundingClientRect().height, radius: style.borderRadius, background: style.backgroundColor, border: style.borderTopWidth, outline: `${style.outlineStyle} ${style.outlineWidth} ${style.outlineOffset}`, shadow: style.boxShadow };
   }));
   for (const result of geometry) { assert.equal(result.height, 32); assert.equal(result.radius, "8px"); }
-  for (const result of geometry.slice(0, 4)) { assert.equal(result.background, "rgba(0, 0, 0, 0)"); assert.equal(result.border, "1px"); }
+  // The 1dp stroke is an outline drawn inside the chip, so it takes no room and the
+  // paddings measure from the edge as M3 gives them (FLO-256).
+  for (const result of geometry.slice(0, 4)) { assert.equal(result.background, "rgba(0, 0, 0, 0)"); assert.equal(result.border, "0px"); assert.equal(result.outline, "solid 1px -1px"); }
   assert.notEqual(geometry[4].shadow, "none");
   assert.notEqual(geometry[5].background, "rgba(0, 0, 0, 0)");
   assert.notEqual(geometry[6].background, "rgba(0, 0, 0, 0)");

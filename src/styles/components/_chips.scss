@@ -23,7 +23,12 @@ $container: "#{base.$prefix}-chips";
     box-sizing: border-box;
     height: v.chip("height");
     max-width: 100%;
-    border: 1px solid t.color("outline-variant");
+    // The outline is drawn over the container, as Compose draws a chip's border, so
+    // it takes no room: as a 1px border it moved every padding 1px further in than
+    // M3 measures (the remove icon sat 9px from the edge). FLO-256.
+    border: 0;
+    outline: 1px solid t.color("outline-variant");
+    outline-offset: -1px;
     border-radius: v.chip("border-radius");
     background: transparent;
     color: var(--#{base.$prefix}-chip-label-color);
@@ -56,11 +61,13 @@ $container: "#{base.$prefix}-chips";
         &:disabled { cursor: default; }
         &:focus-visible { outline: 2px solid t.color("secondary"); outline-offset: 2px; }
     }
+    // The 8dp between an icon and the label is the icon's margin, not the action's
+    // gap, so it can open and close with the icon (FLO-256).
     &__action {
         flex-shrink: 1;
         min-width: 0;
-        gap: 8px;
         padding: 0 16px;
+        transition: m.spring(padding-inline-start, fast-spatial), m.spring(padding-inline-end, fast-spatial);
     }
     &--leading &__action { padding-inline-start: 8px; }
     &--trailing &__action { padding-inline-end: 8px; }
@@ -68,9 +75,13 @@ $container: "#{base.$prefix}-chips";
     &--input.#{$component}--leading &__action { padding-inline-start: 8px; }
     &--input.#{$component}--trailing &__action { padding-inline-end: 8px; }
     &--input.#{$component}--avatar &__action { padding-inline-start: 4px; }
+    // The remove icon sits 8dp from the label (the action's end padding) and 8dp from
+    // the chip's edge (site, Compose): 18 + 8, the icon at the start.
     &__remove {
-        width: 32px;
-        padding: 0 8px 0 0;
+        width: calc(#{v.chip("icon-size")} + 8px);
+        padding: 0;
+        padding-inline-end: 8px;
+        justify-content: flex-start;
         border-start-start-radius: 0;
         border-end-start-radius: 0;
         color: var(--#{base.$prefix}-chip-trailing-color);
@@ -85,28 +96,48 @@ $container: "#{base.$prefix}-chips";
         justify-content: center;
         &[hidden] { display: none; }
     }
+    &__leading-icon, &__checkmark { margin-inline-end: 8px; }
+    &__trailing-icon { margin-inline-start: 8px; }
+    // A leading icon or checkmark that comes and goes with the selection expands and
+    // fades in, and collapses and fades out (Compose AnimatingChipContent: the size on
+    // the fast spatial spring, the fade in on slow effects, out on fast effects).
+    // `hidden` still decides; allow-discrete keeps it displayed while it closes.
+    &__leading-icon, &__checkmark {
+        overflow: hidden;
+        transition: m.spring(width, fast-spatial), m.spring(margin-inline-end, fast-spatial),
+            m.spring(opacity, slow-effects), display m.spring-duration(fast-spatial) allow-discrete;
+        @starting-style { width: 0; margin-inline-end: 0; opacity: 0; }
+        &[hidden] {
+            width: 0;
+            margin-inline-end: 0;
+            opacity: 0;
+            transition: m.spring(width, fast-spatial), m.spring(margin-inline-end, fast-spatial),
+                m.spring(opacity, fast-effects), display m.spring-duration(fast-spatial) allow-discrete;
+        }
+    }
     &__leading-icon { color: var(--#{base.$prefix}-chip-leading-color); }
     &__trailing-icon { color: var(--#{base.$prefix}-chip-trailing-color); }
     &__checkmark { color: var(--#{base.$prefix}-chip-checkmark-color); }
     &__leading-icon svg, &__trailing-icon svg, &__checkmark svg, &__remove svg { width: 18px; height: 18px; }
     &--avatar &__leading-icon { width: 24px; height: 24px; border-radius: 50%; overflow: hidden; }
+    &--disabled.#{$component}--avatar &__leading-icon { opacity: 0.38; }
     &--avatar &__leading-icon :is(svg, img) { width: 24px; height: 24px; object-fit: cover; }
 
     &--selected {
         background: t.color("secondary-container");
-        border-color: transparent;
+        outline-color: transparent;
         --#{base.$prefix}-chip-label-color: #{t.color("on-secondary-container")};
         --#{base.$prefix}-chip-leading-color: #{t.color("on-secondary-container")};
         --#{base.$prefix}-chip-trailing-color: #{t.color("on-secondary-container")};
     }
     &--input:not(.#{$component}--disabled) {
-        &.#{$component}--selected, &:hover, &:focus-within, &:active {
+        &.#{$component}--selected, &:hover, &:has(:focus-visible), &:active {
             --#{base.$prefix}-chip-leading-color: #{t.color("primary")};
             --#{base.$prefix}-chip-checkmark-color: #{t.color("primary")};
         }
     }
     &--elevated {
-        border-color: transparent;
+        outline-color: transparent;
         background: t.color("surface-container-low");
         box-shadow: f.get-elevation(1);
         &.#{$component}--selected { background: t.color("secondary-container"); }
@@ -115,8 +146,8 @@ $container: "#{base.$prefix}-chips";
     }
     &--filter.#{$component}--selected:not(.#{$component}--elevated):hover:not(.#{$component}--disabled) { box-shadow: f.get-elevation(1); }
     &--filter.#{$component}--selected:not(.#{$component}--elevated):active:not(.#{$component}--disabled) { box-shadow: none; }
-    &:focus-within:not(.#{$component}--disabled):not(.#{$component}--selected):not(.#{$component}--elevated) { border-color: t.color("on-surface-variant"); }
-    &--assist:focus-within:not(.#{$component}--disabled):not(.#{$component}--elevated) { border-color: t.color("on-surface"); }
+    &:has(:focus-visible):not(.#{$component}--disabled):not(.#{$component}--selected):not(.#{$component}--elevated) { outline-color: t.color("on-surface-variant"); }
+    &--assist:has(:focus-visible):not(.#{$component}--disabled):not(.#{$component}--elevated) { outline-color: t.color("on-surface"); }
     &::after {
         content: "";
         position: absolute;
@@ -127,20 +158,32 @@ $container: "#{base.$prefix}-chips";
         opacity: 0;
     }
     &:hover:not(.#{$component}--disabled)::after { opacity: v.state("hover-state-layer-opacity"); }
-    &:focus-within:not(.#{$component}--disabled)::after { opacity: v.state("focus-state-layer-opacity"); }
+    // Keyboard focus only: a click leaves no focus layer (FLO-256).
+    &:has(:focus-visible):not(.#{$component}--disabled)::after { opacity: v.state("focus-state-layer-opacity"); }
     &:active:not(.#{$component}--disabled)::after { opacity: v.state("pressed-state-layer-opacity"); }
     &--disabled {
-        border-color: t.alpha("on-surface", 0.12);
+        outline-color: t.alpha("on-surface", 0.12);
         box-shadow: none;
         --#{base.$prefix}-chip-label-color: #{t.alpha("on-surface", 0.38)};
         --#{base.$prefix}-chip-leading-color: #{t.alpha("on-surface", 0.38)};
         --#{base.$prefix}-chip-trailing-color: #{t.alpha("on-surface", 0.38)};
-        &.#{$component}--selected, &.#{$component}--elevated { background: t.alpha("on-surface", 0.12); border-color: transparent; }
+        &.#{$component}--selected, &.#{$component}--elevated { background: t.alpha("on-surface", 0.12); outline-color: transparent; }
         .#{base.$prefix}-ripple { display: none; }
     }
-    @media (pointer: coarse) {
-        margin-block: 8px;
-        &__action::before, &__remove::before { content: ""; position: absolute; inset: -8px 0; }
+    // 48dp touch targets on every pointer (site): the action reaches 8dp above and
+    // below the 32dp chip, and the remove button's 48 x 48 runs back from the chip's
+    // end over the label's end, so it never sticks out past the chip -- centred on
+    // the icon it overflowed by 7px, which a scrolling chip set would scroll to. It
+    // was only under pointer: coarse, only vertically, and the remove button 32 wide.
+    &__action::before { content: ""; position: absolute; inset-inline: 0; inset-block: -8px; }
+    &__remove::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        inset-inline-end: 0;
+        width: 48px;
+        height: 48px;
+        transform: translateY(-50%);
     }
 }
 

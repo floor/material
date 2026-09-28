@@ -134,7 +134,16 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
     base.emit("click", { event, originalEvent: event, element: root });
     options.onClick?.(api);
   });
+  // Backspace and Delete remove a focused removable chip (m3.material.io chips
+  // accessibility, keyboard table). FLO-256.
+  const removeFromKeyboard = (event: KeyboardEvent) => {
+    if (!remove || disabled || (event.key !== "Backspace" && event.key !== "Delete")) return false;
+    event.preventDefault();
+    remove.click();
+    return true;
+  };
   listen(action, "keydown", event => {
+    if (removeFromKeyboard(event)) return;
     if (!disabled) base.emit("keydown", { event, originalEvent: event, element: root });
   });
   for (const name of ["focus", "blur"] as const) {
@@ -147,8 +156,12 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
       base.emit("remove", api);
       options.onRemove?.(api);
     });
-    // The chips container's navigation must not activate selection for this button.
-    listen(remove, "keydown", event => event.stopPropagation());
+    // Enter and Space activate this button, so the set must not also select the chip
+    // for them; the arrows go on to the set's navigation, which they did not.
+    listen(remove, "keydown", event => {
+      if (removeFromKeyboard(event)) return;
+      if (event.key === "Enter" || event.key === " ") event.stopPropagation();
+    });
   }
   label.textContent = options.label ?? options.text ?? "";
   setHTML(leading, avatar || leadingIcon);
