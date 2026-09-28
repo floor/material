@@ -2,6 +2,7 @@
 @use 'sass:map';
 @use 'sass:list';
 @use 'sass:math';
+@use 'base' as base;
 @use 'variables' as v;
 @use 'functions' as f;
 
@@ -39,7 +40,20 @@ $icons: (
 // State Layers
 @mixin state-layer($color, $state: 'hover', $selector: false) {
   position: relative;
-  
+
+  // The ripple is the press (FLO-260, as Compose draws it: one pressed indication at
+  // 0.10). An element that carries a ripple leaves its pressed layer to the wave, so
+  // the two no longer add up to about 0.18; one without a ripple keeps it.
+  @if $state == 'pressed' {
+    &:not(:has(> .#{base.$prefix}-ripple)) {
+      @include -state-layer-surface($color, $state, $selector);
+    }
+  } @else {
+    @include -state-layer-surface($color, $state, $selector);
+  }
+}
+
+@mixin -state-layer-surface($color, $state, $selector) {
   @if $selector == false {
     // Default behavior - create a pseudo-element for the state layer
     &::before {

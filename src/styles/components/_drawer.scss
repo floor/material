@@ -399,7 +399,8 @@ $default-width: 360px;
         &:active:not([disabled]) {
             color: t.color("on-surface");
 
-            &::before {
+            // A rippled item leaves the press to its ripple (FLO-260).
+            &:not(:has(> .#{base.$prefix}-ripple))::before {
                 opacity: v.state("pressed-state-layer-opacity");
             }
         }

@@ -30,19 +30,19 @@ beforeEach(() => {
   }
   const add = document.addEventListener.bind(document), remove = document.removeEventListener.bind(document);
   replace(document, 'addEventListener', (type: string, fn: EventListener, options?: boolean | AddEventListenerOptions) => {
-    if (['mouseup', 'mouseleave'].includes(type)) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type)!.add(fn); }
+    if (['pointerup', 'pointercancel', 'mouseleave'].includes(type)) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type)!.add(fn); }
     add(type, fn, options);
   });
   replace(document, 'removeEventListener', (type: string, fn: EventListener, options?: boolean | EventListenerOptions) => { listeners.get(type)?.delete(fn); remove(type, fn, options); });
 });
 afterEach(() => { restore.reverse().forEach(fn => fn()); dom.window.close(); });
-const press = (element: HTMLElement) => element.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: 5, clientY: 5 }));
+const press = (element: HTMLElement) => element.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 5, clientY: 5 }));
 const released = () => { for (const set of listeners.values()) expect(set.size).toBe(0); expect(frames.size).toBe(0); expect(timers.size).toBe(0); };
 
 test('40 pressed button destroys release document listeners and delayed work', () => {
   for (let i = 0; i < 40; i++) {
     const button = createButton({ text: 'Save' }); document.body.append(button.element); press(button.element);
-    if (i % 2) document.dispatchEvent(new MouseEvent('mouseup'));
+    if (i % 2) document.dispatchEvent(new MouseEvent('pointerup'));
     button.destroy(); button.destroy(); released();
     expect(button.element.querySelector('.mtrl-ripple')).toBeNull();
   }
@@ -62,7 +62,7 @@ test('one controller isolates mounted elements and ignores repeated mounts', () 
   const ripple = createRipple(); const a = document.createElement('div'), b = document.createElement('div');
   ripple.mount(a); ripple.mount(a); ripple.mount(b); press(a); press(b);
   expect(a.querySelectorAll('.mtrl-ripple-wave').length).toBe(1);
-  ripple.unmount(a); expect(listeners.get('mouseup')!.size).toBe(1);
+  ripple.unmount(a); expect(listeners.get('pointerup')!.size).toBe(1);
   ripple.unmount(b); released();
 });
 test('DOM events distinguish identical closures and remove capture listeners', () => {

@@ -163,7 +163,7 @@ describe('button stylesheet: colour styles', () => {
     });
     expect(layer('.mtrl-button--filled:hover::before')).toEqual({ color: 'var(--mtrl-sys-color-on-primary)', opacity: '0.08' });
     expect(layer('.mtrl-button--outlined:focus-visible::before').color).toBe('var(--mtrl-sys-color-on-surface-variant)');
-    expect(layer('.mtrl-button--text:active::before, .mtrl-button--text.mtrl-button--active::before').color).toBe('var(--mtrl-sys-color-primary)');
+    expect(layer('.mtrl-button--text:active:not(:has(> .mtrl-ripple))::before, .mtrl-button--text.mtrl-button--active:not(:has(> .mtrl-ripple))::before').color).toBe('var(--mtrl-sys-color-primary)');
   });
 
   test('text button padding', () => {

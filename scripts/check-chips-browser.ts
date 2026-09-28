@@ -100,9 +100,9 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
     const hit = (x: number, y: number) => (document.elementFromPoint(x, y) as HTMLElement | null)?.className ?? "";
     const p = box(plain.element), removeIcon = box(input.element.querySelector(".mtrl-chip__remove svg")!);
     const waves = (chip: typeof input) => chip.element.querySelectorAll(".mtrl-ripple-wave").length;
-    input.element.querySelector(".mtrl-chip__remove")!.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: removeIcon.left + 9, clientY: removeIcon.top + 9 }));
+    input.element.querySelector(".mtrl-chip__remove")!.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, clientX: removeIcon.left + 9, clientY: removeIcon.top + 9 }));
     const removeRipples = waves(input);
-    plain.action.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: p.left + 20, clientY: p.top + 16 }));
+    plain.action.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, clientX: p.left + 20, clientY: p.top + 16 }));
     const actionRipples = plain.action.querySelectorAll(".mtrl-ripple-wave").length;
     plain.element.dispatchEvent(new Event("dragstart", { bubbles: true }));
     const dragged = { shadow: getComputedStyle(plain.element).boxShadow, layer: getComputedStyle(plain.element, "::after").opacity };
