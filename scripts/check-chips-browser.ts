@@ -56,7 +56,8 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
   assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("aria-label")), "Remove Ada");
   await page.keyboard.press("Enter");
   assert.equal(await page.evaluate(() => (window as unknown as ChipWindow).chipRemovals), 1);
-  assert.equal(await page.locator("#chip-2 .mtrl-chip__action").getAttribute("aria-checked"), "false");
+  // Input chips are always removable, and on its own a chip leaves the page (FLO-257).
+  assert.equal(await page.locator("#chip-2").count(), 0);
   await page.evaluate(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); });
   await page.screenshot({ path: join(artifacts, "chips-light.png"), animations: "disabled" });
   await page.evaluate(() => document.documentElement.setAttribute("data-theme-mode", "dark"));
@@ -65,6 +66,7 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
   assert.notEqual(dark, geometry[5].background, "Chip selection color must follow the dark theme");
   await page.evaluate(() => {
     const chip = (window as unknown as ChipWindow).chipCases[2];
+    document.body.append(chip.element); // back on the page for the truncation check
     chip.element.style.maxWidth = "140px";
     chip.setLabel("A long recipient label that must truncate");
   });

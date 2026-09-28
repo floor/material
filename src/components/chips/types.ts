@@ -20,7 +20,13 @@ export interface ChipConfig {
   trailingIcon?: string;
   /** Decorative avatar HTML for an input chip; takes precedence over leadingIcon. */
   avatar?: string;
-  /** Input-chip removal request. The owner decides when to remove the chip. */
+  /**
+   * Called when an input chip is removed, from its remove button or with Backspace or
+   * Delete. Input chips are always removable (m3.material.io chips): on its own the
+   * chip then leaves the page; in a set, the set removes it and emits `remove`. It
+   * used to be a request the owner had to act on, and without it there was no
+   * remove button. FLO-257.
+   */
   onRemove?: (chip: ChipComponent) => void;
   removeLabel?: string;
   onClick?: (chip: ChipComponent) => void;
@@ -114,10 +120,19 @@ export interface ChipsConfig {
   selector?: string | null;
 
   /**
-   * Whether multiple chips can be selected simultaneously
-   * @default false
+   * Whether several chips can be selected at once. Multi-select is the default, as
+   * Material's chip groups are (single-select is opt-in). FLO-257.
+   * @default true
    */
   multiSelect?: boolean;
+
+  /**
+   * Whether the set keeps at least one chip selected: deselecting the last selected
+   * chip is refused. Off by default, as in Material; single-select sets used to
+   * enforce it without a way to opt out. FLO-257.
+   * @default false
+   */
+  selectionRequired?: boolean;
 
   /**
    * Callback function when chip selection changes

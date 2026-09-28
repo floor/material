@@ -17,7 +17,8 @@ export const defaultConfig: ChipsConfig = {
   chips: [],
   scrollable: false,
   vertical: false,
-  multiSelect: false,
+  multiSelect: true,
+  selectionRequired: false,
   onChange: undefined,
   selector: null,
   labelPosition: "start",
@@ -124,7 +125,7 @@ export const getApiConfig = (
   config?: ChipsConfig,
 ): ApiOptions => ({
   config: {
-    multiSelect: config?.multiSelect ?? false,
+    multiSelect: config?.multiSelect ?? true,
   },
   chips: {
     addChip: function (chipConfig) {

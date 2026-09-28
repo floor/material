@@ -46,7 +46,8 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
   const avatar = type === "input" ? options.avatar : undefined;
   let trailingIcon = type === "suggestion" ? "" : options.trailingIcon ?? "";
   let remove: HTMLButtonElement | undefined;
-  if (type === "input" && options.onRemove) {
+  // Every input chip is removable (m3.material.io chips); it used to need onRemove.
+  if (type === "input") {
     remove = document.createElement("button");
     remove.type = "button";
     remove.className = base.getClass("chip__remove");
@@ -155,6 +156,9 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
       if (disabled) return;
       base.emit("remove", api);
       options.onRemove?.(api);
+      // On its own the chip leaves the page; in a set, the set's onRemove has
+      // already destroyed it. FLO-257.
+      if (!resources.destroyed) root.remove();
     });
     // Enter and Space activate this button, so the set must not also select the chip
     // for them; the arrows go on to the set's navigation, which they did not.
