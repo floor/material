@@ -48,7 +48,6 @@ export const getElementConfig = (config: ChipsConfig) => {
   // Set default values
   const scrollable = config.scrollable === true;
   const vertical = config.vertical === true;
-  const isMultiSelect = config.multiSelect === true;
   const hasLabel = config.label && config.label.trim().length > 0;
   const labelPosition = config.labelPosition || "start";
 
@@ -65,9 +64,10 @@ export const getElementConfig = (config: ChipsConfig) => {
 
   return createElementConfig(config, {
     tag: "div",
+    // aria-multiselectable is not allowed on a group (ARIA 1.2); whether several
+    // chips can be on is carried by each chip's own checked state. FLO-256.
     attributes: {
       role: "group",
-      "aria-multiselectable": isMultiSelect ? "true" : "false",
     },
     className: classes,
   });

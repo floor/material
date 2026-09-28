@@ -135,6 +135,12 @@ export const withController =
       const isVertical = component.layout && component.layout.isVertical();
       let newIndex = focusedChipIndex;
 
+      // Left and Right follow the reading direction: in a right-to-left layout the
+      // previous chip is to the right. FLO-256.
+      const rtl = component.element.closest("[dir]")?.getAttribute("dir")?.toLowerCase() === "rtl";
+      const back = rtl ? "ArrowRight" : "ArrowLeft";
+      const forward = rtl ? "ArrowLeft" : "ArrowRight";
+
       // If no chip is focused, start with the first one
       if (focusedChipIndex === -1) {
         newIndex = 0;
@@ -142,12 +148,12 @@ export const withController =
         // Move based on key and layout direction
         if (
           (isVertical && event.key === "ArrowUp") ||
-          (!isVertical && event.key === "ArrowLeft")
+          (!isVertical && event.key === back)
         ) {
           newIndex = Math.max(0, focusedChipIndex - 1);
         } else if (
           (isVertical && event.key === "ArrowDown") ||
-          (!isVertical && event.key === "ArrowRight")
+          (!isVertical && event.key === forward)
         ) {
           newIndex = Math.min(
             component.chipInstances.length - 1,
@@ -300,6 +306,7 @@ export const withController =
 
     if (index >= 0 && index < component.chipInstances.length) {
       const chip = component.chipInstances[index];
+      const hadFocus = chip.element.contains(document.activeElement);
 
       // Dispatch remove event before actual removal
       dispatchEvent(CHIPS_EVENTS.REMOVE, chip);
@@ -313,6 +320,19 @@ export const withController =
         focusedChipIndex = -1;
       } else if (index < focusedChipIndex) {
         focusedChipIndex--;
+      }
+
+      // Focus that was on the removed chip moves to the one that took its place, or
+      // to the one before when it was the last: it used to fall to the page. FLO-256.
+      if (hadFocus) {
+        const chips = component.chipInstances;
+        let next = Math.min(index, chips.length - 1);
+        while (next >= 0 && chips[next].isDisabled()) next--;
+        if (next < 0) next = chips.findIndex(candidate => !candidate.isDisabled());
+        if (next >= 0) {
+          focusedChipIndex = next;
+          chips[next].focus();
+        }
       }
     }
   };
