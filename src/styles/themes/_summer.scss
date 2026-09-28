@@ -40,6 +40,11 @@
 
     --#{$prefix}-sys-color-outline: #827568;
     --#{$prefix}-sys-color-outline-variant: #d5c8b9;
+    // Inverse roles (M3: inverse-surface N20, inverse-on-surface N95,
+    // inverse-primary P80), from this theme's neutral and primary palettes. FLO-254.
+    --#{$prefix}-sys-color-inverse-surface: #34302b;
+    --#{$prefix}-sys-color-inverse-on-surface: #f8efe7;
+    --#{$prefix}-sys-color-inverse-primary: #8bceff;
 
     // Workaround: Override surface-rgb for disabled button visibility
     --#{$prefix}-sys-color-surface-rgb: 31, 27, 22;
@@ -84,6 +89,11 @@
 
         --#{$prefix}-sys-color-outline: #9e8f80;
         --#{$prefix}-sys-color-outline-variant: #50453b;
+        // Inverse roles (M3: inverse-surface N90 = on-surface, inverse-on-surface N20,
+        // inverse-primary P40). FLO-254.
+        --#{$prefix}-sys-color-inverse-surface: #eae1d9;
+        --#{$prefix}-sys-color-inverse-on-surface: #34302b;
+        --#{$prefix}-sys-color-inverse-primary: #006492;
         // Include status colors for dark theme
         @include status-colors-dark();
     }

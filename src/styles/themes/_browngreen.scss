@@ -58,6 +58,11 @@
     --#{$prefix}-sys-color-outline: #76766c;
     --#{$prefix}-sys-color-outline-rgb: 118, 118, 108;
     --#{$prefix}-sys-color-outline-variant: #c7c7bd;
+    // Inverse roles (M3: inverse-surface N20, inverse-on-surface N95,
+    // inverse-primary P80), from this theme's neutral and primary palettes. FLO-254.
+    --#{$prefix}-sys-color-inverse-surface: #2f312e;
+    --#{$prefix}-sys-color-inverse-on-surface: #f1f1ed;
+    --#{$prefix}-sys-color-inverse-primary: #e3beb8;
     --#{$prefix}-sys-color-outline-variant-rgb: 199, 199, 189;
 
     // Include status colors for light theme
@@ -118,6 +123,11 @@
         --#{$prefix}-sys-color-outline: #909087;
         --#{$prefix}-sys-color-outline-rgb: 144, 144, 135;
         --#{$prefix}-sys-color-outline-variant: #46463c;
+        // Inverse roles (M3: inverse-surface N90 = on-surface, inverse-on-surface N20,
+        // inverse-primary P40). FLO-254.
+        --#{$prefix}-sys-color-inverse-surface: #e2e2dd;
+        --#{$prefix}-sys-color-inverse-on-surface: #2f312e;
+        --#{$prefix}-sys-color-inverse-primary: #745853;
         --#{$prefix}-sys-color-outline-variant-rgb: 70, 70, 60;
 
         // Include status colors for dark theme

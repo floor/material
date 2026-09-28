@@ -146,7 +146,10 @@ try {
     // Moving drawer, side sheet, bottom sheet and dialog onto the expressive springs adds
     // 530 (measured, 47,908 to 48,438 at 0c2d347): each open and close state spells out
     // its spring's linear() curve, and the copies sit too far apart for gzip to share.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 48700 },
+    // The inverse roles in every theme (FLO-254) add about 500 (dist/styles.css at gzip
+    // level 9, 44,479 to 44,986): three roles in the light and dark block of 17 themes,
+    // spread across 34 blocks too far apart for gzip to share. The fixture read 48,709.
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 49300 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);
