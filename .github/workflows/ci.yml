@@ -69,6 +69,8 @@ jobs:
         run: bun run react:check
       - name: Vue adapter, server rendering and hydration
         run: bun run vue:check
+      - name: Svelte adapter, server rendering and hydration
+        run: bun run svelte:check
       - name: Browser comparison artifacts
         if: always()
         uses: actions/upload-artifact@v4
