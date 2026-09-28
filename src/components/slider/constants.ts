@@ -51,23 +51,23 @@ export const SLIDER_MEASUREMENTS = {
   HANDLE_HEIGHT_OFFSET: 12,
   /** Minimum container height in pixels (M3 minimum touch target) */
   MIN_HEIGHT: 48,
-  /** Track border radius in pixels */
+  /** @deprecated Not read since FLO-250: the segments' inside corner is 2dp in the stylesheet. */
   TRACK_RADIUS: 3,
-  /** External track radius for XS and S sizes in pixels */
+  /** @deprecated Not read since FLO-250: getExternalTrackRadius gives 8 / 8 / 12 / 16 / 28 per size. */
   SMALL_TRACK_EXTERNAL_RADIUS: 10,
-  /** External track radius ratio for M, L, XL sizes (multiplied by track height) */
+  /** @deprecated Not read since FLO-250: getExternalTrackRadius gives 8 / 8 / 12 / 16 / 28 per size. */
   LARGE_TRACK_RADIUS_RATIO: 0.35,
   /** Tick size in pixels */
   TICK_SIZE: 4,
   /** Dot size in pixels */
   DOT_SIZE: 4,
   /** Handle gap pixels */
-  HANDLE_GAP: 6, // M3: 6dp between track and handle
-  /** Handle gap reduction when pressed in pixels */
+  HANDLE_GAP: 6, // M3: 6dp between the handle's edge and the track
+  /** @deprecated Not read since FLO-250: the gap is measured from the handle's edge and does not shrink. */
   HANDLE_GAP_PRESSED_REDUCTION: 2,
-  /** Center gap pixels for centered sliders */
+  /** @deprecated Not read since FLO-250: a centred slider's gap is the handle gap. */
   CENTER_GAP: 4,
-  /** Edge padding in pixels */
+  /** @deprecated Not read since FLO-250: values span the track, or a corner-radius inset when discrete. */
   EDGE_PADDING: 7
 } as const;
 

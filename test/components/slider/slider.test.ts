@@ -384,3 +384,262 @@ describe('a range slider given no second value', () => {
     expect(slider.getSecondValue()).toBeNull();
   });
 });
+
+// FLO-250. The track is drawn the way Compose's Slider.kt drawTrack draws it: values
+// span the whole track (a discrete slider insets its interior steps by the corner
+// radius), the gap between the handle's edge and the track is 6dp, so 8px from the
+// centre of a 4px handle and 7px from a 2px one, and a stop indicator ends every
+// inactive track longer than a corner radius. The container is given a 300px width.
+describe('slider track geometry', () => {
+  const WIDTH = 300;
+  const sized = async (config: Parameters<typeof createSlider>[0]) => {
+    const slider = createSlider(config);
+    const container = slider.element.querySelector<HTMLElement>('.mtrl-slider__container')!;
+    container.getBoundingClientRect = () => ({ width: WIDTH, height: 48, top: 0, left: 0, right: WIDTH, bottom: 48, x: 0, y: 0, toJSON() {} }) as DOMRect;
+    document.body.appendChild(slider.element);
+    await wait();
+    return slider;
+  };
+  const segments = (slider: { element: HTMLElement }) =>
+    Array.from(slider.element.querySelectorAll<HTMLElement>('.mtrl-slider__segment')).map(segment => ({
+      left: parseFloat(segment.style.left),
+      width: parseFloat(segment.style.width),
+      active: segment.classList.contains('mtrl-slider__segment--active'),
+    }));
+  const dots = (slider: { element: HTMLElement }) =>
+    Array.from(slider.element.querySelectorAll<HTMLElement>('.mtrl-slider__dot')).map(dot => dot.hidden ? null : parseFloat(dot.style.left));
+
+  test('a standard slider: active from the start, 8px gaps, an end stop only', async () => {
+    const slider = await sized({ value: 50 });
+    expect(segments(slider).slice(1)).toEqual([
+      { left: 0, width: 142, active: true },
+      { left: 158, width: 142, active: false },
+    ]);
+    // Centred one corner radius (8px on XS) from the end: its 4px box starts 2px before.
+    expect(dots(slider)).toEqual([null, 290]);
+    expect(handles(slider)[0]!.style.left).toBe('50%');
+  });
+
+  test('a focused handle narrows to 2px and the gap follows its edge', async () => {
+    const slider = await sized({ value: 50 });
+    handles(slider)[0]!.dispatchEvent(new dom.window.FocusEvent('focus'));
+    expect(segments(slider)[1]).toEqual({ left: 0, width: 143, active: true });
+    handles(slider)[0]!.dispatchEvent(new dom.window.FocusEvent('blur'));
+    expect(segments(slider)[1]).toEqual({ left: 0, width: 142, active: true });
+  });
+
+  test('at the maximum the inactive track and its stop are gone', async () => {
+    const slider = await sized({ value: 100 });
+    expect(segments(slider)[2]!.width).toBe(0);
+    expect(dots(slider)).toEqual([null, null]);
+  });
+
+  test('a range slider: active between the handles, a stop at each end', async () => {
+    const slider = await sized({ range: true, value: 20, secondValue: 80 });
+    expect(segments(slider)).toEqual([
+      { left: 0, width: 52, active: false },
+      { left: 68, width: 164, active: true },
+      { left: 248, width: 52, active: false },
+    ]);
+    expect(dots(slider)).toEqual([6, 290]);
+  });
+
+  test('a centred slider: active from the centre, the gap on the handle side only', async () => {
+    const above = await sized({ centered: true, min: -50, max: 50, value: 25 });
+    expect(segments(above)).toEqual([
+      { left: 0, width: 142, active: false },
+      { left: 150, width: 67, active: true },
+      { left: 233, width: 67, active: false },
+    ]);
+    expect(dots(above)).toEqual([6, 290]);
+    const below = await sized({ centered: true, min: -50, max: 50, value: -25 });
+    expect(segments(below)).toEqual([
+      { left: 0, width: 67, active: false },
+      { left: 83, width: 67, active: true },
+      { left: 158, width: 142, active: false },
+    ]);
+  });
+
+  test('a discrete slider insets its interior steps by the corner radius', async () => {
+    const slider = await sized({ value: 20, step: 10, ticks: true });
+    // 8 + 0.2 * (300 - 16)
+    const active = segments(slider)[1]!;
+    expect(active.left).toBe(0);
+    expect(active.width).toBeCloseTo(64.8 - 8, 6);
+    expect(active.active).toBe(true);
+    expect(handles(slider)[0]!.style.left).toBe('calc(20% + 4.8px)');
+    // The first and last steps still reach the edges.
+    slider.setValue(100);
+    expect(handles(slider)[0]!.style.left).toBe('100%');
+  });
+
+  test('the corner radius and the handle height follow the size', async () => {
+    const radii = { XS: 8, S: 8, M: 12, L: 16, XL: 28 } as const;
+    const heights = { XS: 44, S: 44, M: 52, L: 68, XL: 108 } as const;
+    for (const size of ['XS', 'S', 'M', 'L', 'XL'] as const) {
+      const slider = await sized({ value: 50, size });
+      expect(slider.element.querySelector<HTMLElement>('.mtrl-slider__track')!.style.borderRadius).toBe(`${radii[size]}px`);
+      expect(slider.element.style.getPropertyValue('--mtrl-slider-handle-height')).toBe(`${heights[size]}px`);
+    }
+  });
+});
+
+// FLO-249, FLO-250. A change of value that does not follow a pointer settles on a
+// spring (the stylesheet animates under `--settling`); the first render, a resize
+// and a drag set nothing, so the slider appears at its value and follows the finger.
+describe('slider settling', () => {
+  const SETTLING = 'mtrl-slider--settling';
+
+  test('the first render does not settle', async () => {
+    const slider = await mount({ value: 60 });
+    expect(slider.element.classList.contains(SETTLING)).toBe(false);
+  });
+
+  test('a key or setValue settles, and the class goes once the spring has', async () => {
+    const slider = await mount({ value: 60 });
+    key(handles(slider)[0]!, 'ArrowRight');
+    expect(slider.element.classList.contains(SETTLING)).toBe(true);
+    await wait(475);
+    expect(slider.element.classList.contains(SETTLING)).toBe(false);
+    slider.setValue(20);
+    expect(slider.element.classList.contains(SETTLING)).toBe(true);
+  });
+
+  test('a render that does not change the value does not settle', async () => {
+    const slider = await mount({ value: 60 });
+    slider.setValue(60);
+    handles(slider)[0]!.dispatchEvent(new dom.window.FocusEvent('focus'));
+    expect(slider.element.classList.contains(SETTLING)).toBe(false);
+  });
+
+  test('a tap on the track settles; dragging from it stops settling at once', async () => {
+    const slider = await mount({ value: 10 });
+    const container = slider.element.querySelector<HTMLElement>('.mtrl-slider__container')!;
+    container.getBoundingClientRect = () => ({ width: 300, height: 48, top: 0, left: 0, right: 300, bottom: 48, x: 0, y: 0, toJSON() {} }) as DOMRect;
+    container.dispatchEvent(new dom.window.MouseEvent('mousedown', { clientX: 240, bubbles: true }));
+    expect(slider.getValue()).toBe(80);
+    expect(slider.element.classList.contains(SETTLING)).toBe(true);
+    document.dispatchEvent(new dom.window.MouseEvent('mousemove', { clientX: 200, bubbles: true }));
+    expect(slider.element.classList.contains(SETTLING)).toBe(false);
+    document.dispatchEvent(new dom.window.MouseEvent('mouseup', { clientX: 200, bubbles: true }));
+  });
+});
+
+// FLO-252. The inset icon: standard sliders at M, L and XL, 10px from the start of
+// the active track, or of the inactive track when the active one cannot hold it and
+// its padding (m3.material.io slider guidelines, MDC BaseSlider).
+describe('slider inset icon', () => {
+  const VOLUME = '<svg viewBox="0 0 24 24"><path d="M1 1h2"/></svg>';
+  const MUTE = '<svg viewBox="0 0 24 24"><path d="M2 2h3"/></svg>';
+  const sized = async (config: Parameters<typeof createSlider>[0]) => {
+    const slider = createSlider(config);
+    const container = slider.element.querySelector<HTMLElement>('.mtrl-slider__container')!;
+    container.getBoundingClientRect = () => ({ width: 300, height: 52, top: 0, left: 0, right: 300, bottom: 52, x: 0, y: 0, toJSON() {} }) as DOMRect;
+    document.body.appendChild(slider.element);
+    await wait();
+    return slider;
+  };
+  const icon = (slider: { element: HTMLElement }) => slider.element.querySelector<HTMLElement>('.mtrl-slider__inset-icon')!;
+  const drawn = (slider: { element: HTMLElement }) => icon(slider).querySelector('path')?.getAttribute('d');
+
+  test('sits 10px into the active track, 24px on M', async () => {
+    const slider = await sized({ size: 'M', value: 50, insetIcon: VOLUME });
+    expect(icon(slider).hidden).toBe(false);
+    expect(drawn(slider)).toBe('M1 1h2');
+    expect(icon(slider).style.left).toBe('10px');
+    expect(icon(slider).style.width).toBe('24px');
+    expect(icon(slider).classList.contains('mtrl-slider__inset-icon--inactive')).toBe(false);
+  });
+
+  test('moves to the inactive track when the active one is too short', async () => {
+    // value 5: the handle at 15px, the inactive track from 23px.
+    const slider = await sized({ size: 'M', value: 5, insetIcon: VOLUME });
+    expect(icon(slider).style.left).toBe('33px');
+    expect(icon(slider).classList.contains('mtrl-slider__inset-icon--inactive')).toBe(true);
+  });
+
+  test('swaps to the minimum icon at the minimum, and back', async () => {
+    const slider = await sized({ size: 'L', value: 0, insetIcon: VOLUME, insetIconAtMin: MUTE });
+    expect(drawn(slider)).toBe('M2 2h3');
+    slider.setValue(60);
+    expect(drawn(slider)).toBe('M1 1h2');
+  });
+
+  test('is 32px on XL', async () => {
+    const slider = await sized({ size: 'XL', value: 50, insetIcon: VOLUME });
+    expect(icon(slider).style.width).toBe('32px');
+  });
+
+  test('is not shown on XS or S, on a range or a centred slider', async () => {
+    for (const config of [{ size: 'XS' }, { size: 'S' }, { size: 'M', range: true }, { size: 'M', centered: true, min: -50, max: 50 }] as const) {
+      const slider = await sized({ value: 20, insetIcon: VOLUME, ...config });
+      expect(icon(slider).hidden).toBe(true);
+    }
+  });
+
+  test('setInsetIcon replaces it and an empty string removes it', async () => {
+    const slider = await sized({ size: 'M', value: 50 });
+    expect(icon(slider).hidden).toBe(true);
+    slider.setInsetIcon(VOLUME);
+    expect(icon(slider).hidden).toBe(false);
+    slider.setInsetIcon('');
+    expect(icon(slider).hidden).toBe(true);
+  });
+});
+
+// FLO-252. A vertical slider runs bottom to top ("zero is at the bottom",
+// m3.material.io guidelines), or top to bottom with `topToBottom` (Compose
+// VerticalSlider's flag). Positions go to bottom/top and lengths to height; sizes
+// are thicknesses, across. The container is given a 300px height.
+describe('vertical slider', () => {
+  const sized = async (config: Parameters<typeof createSlider>[0]) => {
+    const slider = createSlider({ orientation: 'vertical', ...config });
+    const container = slider.element.querySelector<HTMLElement>('.mtrl-slider__container')!;
+    container.getBoundingClientRect = () => ({ width: 48, height: 300, top: 0, left: 0, right: 48, bottom: 300, x: 0, y: 0, toJSON() {} }) as DOMRect;
+    document.body.appendChild(slider.element);
+    await wait();
+    return slider;
+  };
+  const segments = (slider: { element: HTMLElement }, start: 'bottom' | 'top') =>
+    Array.from(slider.element.querySelectorAll<HTMLElement>('.mtrl-slider__segment')).slice(1).map(segment => ({
+      start: parseFloat(segment.style[start]), length: parseFloat(segment.style.height),
+    }));
+
+  test('says so to assistive technology and to the stylesheet', async () => {
+    const slider = await sized({ range: true, value: 20, secondValue: 80 });
+    expect(slider.element.classList.contains('mtrl-slider--vertical')).toBe(true);
+    for (const handle of handles(slider)) expect(handle.getAttribute('aria-orientation')).toBe('vertical');
+  });
+
+  test('runs bottom to top by default', async () => {
+    const slider = await sized({ value: 50 });
+    expect(segments(slider, 'bottom')).toEqual([{ start: 0, length: 142 }, { start: 158, length: 142 }]);
+    const handle = handles(slider)[0]!;
+    expect(handle.style.bottom).toBe('50%');
+    expect(handle.style.left).toBe('');
+    expect(handle.style.transform).toBe('translate(-50%, 50%)');
+  });
+
+  test('runs top to bottom with topToBottom', async () => {
+    const slider = await sized({ value: 25, topToBottom: true });
+    expect(segments(slider, 'top')).toEqual([{ start: 0, length: 67 }, { start: 83, length: 217 }]);
+    expect(handles(slider)[0]!.style.top).toBe('25%');
+  });
+
+  test('a tap maps its y coordinate onto the value, from the bottom', async () => {
+    const slider = await sized({ value: 10 });
+    const container = slider.element.querySelector<HTMLElement>('.mtrl-slider__container')!;
+    container.dispatchEvent(new dom.window.MouseEvent('mousedown', { clientX: 24, clientY: 60, bubbles: true }));
+    expect(slider.getValue()).toBe(80);
+    document.dispatchEvent(new dom.window.MouseEvent('mouseup', { clientX: 24, clientY: 60, bubbles: true }));
+  });
+
+  test('its size is a thickness: the container, track and handles are sized across', async () => {
+    const slider = await sized({ value: 50, size: 'M' });
+    const container = slider.element.querySelector<HTMLElement>('.mtrl-slider__container')!;
+    expect(container.style.width).toBe('52px');
+    expect(container.style.height).toBe('');
+    expect(slider.element.querySelector<HTMLElement>('.mtrl-slider__track')!.style.width).toBe('40px');
+    expect(handles(slider)[0]!.style.width).toBe('52px');
+  });
+});

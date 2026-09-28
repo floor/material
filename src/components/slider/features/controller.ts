@@ -9,9 +9,10 @@ import {
   SliderStateComponent,
   SliderUiRenderer,
 } from "../types";
-import { SLIDER_MEASUREMENTS } from "../constants";
 import { defaultConfig } from "../config";
 import { createHandlers } from "./handlers";
+import { getExternalTrackRadius, trackPositionCss } from "./tracks";
+import { bubbleTransform, getAxis, handleTransform, lengthOf, offsetAlong } from "./axis";
 import { setFormValue } from "../../../core/dom/form-value";
 
 /**
@@ -111,11 +112,14 @@ export const withController =
     return range === 0 ? 0 : ((value - state.min) / range) * 100;
   };
 
-  // Percentage plus a fixed inset stays aligned when the container resizes.
-  const visualPosition = (percent: number) => {
-    const ratio = Math.min(1, Math.max(0, percent / 100));
-    return `calc(${ratio * 100}% + ${SLIDER_MEASUREMENTS.EDGE_PADDING * (1 - 2 * ratio)}px)`;
-  };
+  // A discrete slider puts its interior steps on a scale inset by the track's corner
+  // radius; a continuous one spans the whole track (see trackPosition). FLO-250.
+  const axis = getAxis(config);
+  const inset = () => config.ticks ? getExternalTrackRadius(component.getSize?.() ?? config.size) : 0;
+
+  // Percentage plus the inset stays aligned when the container resizes.
+  const visualPosition = (percent: number) =>
+    trackPositionCss(Math.min(1, Math.max(0, percent / 100)), inset());
 
   /**
    * Gets slider value from a position on the track
@@ -131,18 +135,15 @@ export const withController =
       const containerRect = container.getBoundingClientRect();
       const range = state.max - state.min;
 
-      // Use EDGE_PADDING for consistent edge constraints
-      const leftEdge = containerRect.left + SLIDER_MEASUREMENTS.EDGE_PADDING;
-      const rightEdge = containerRect.right - SLIDER_MEASUREMENTS.EDGE_PADDING;
-      const effectiveWidth = rightEdge - leftEdge;
+      // The inverse of trackPosition: the interior of a discrete slider is on the
+      // inset scale, and anything beyond it clamps to the first or last step.
+      // `position` is a client coordinate on the slider's axis.
+      const edge = inset();
+      const span = lengthOf(containerRect, axis) - 2 * edge;
+      const along = offsetAlong(position, containerRect, axis) - edge;
+      const fraction = span > 0 ? Math.max(0, Math.min(1, along / span)) : 0;
 
-      const adjustedPosition = Math.max(
-        leftEdge,
-        Math.min(rightEdge, position),
-      );
-      const percentageFromLeft = (adjustedPosition - leftEdge) / effectiveWidth;
-
-      return state.min + percentageFromLeft * range;
+      return state.min + fraction * range;
     } catch (error) {
       console.warn("Error calculating value from position:", error);
       return state.min;
@@ -179,23 +180,20 @@ export const withController =
 
     if (!handle || !container) return;
 
-    handle.style.left = visualPosition(getPercentage(state.value));
-    handle.style.transform = "translate(-50%, -50%)";
-
-    if (valueBubble) {
-      valueBubble.style.left = visualPosition(getPercentage(state.value));
-      valueBubble.style.transform = "translateX(-50%)";
-    }
+    // Along the axis the position; across it the handle is centred on the track,
+    // which the stylesheet does for a vertical slider.
+    const place = (element: HTMLElement, value: number, transform: string) => {
+      if (axis.vertical) element.style.left = "";
+      element.style[axis.start] = visualPosition(getPercentage(value));
+      element.style.transform = transform;
+    };
+    place(handle, state.value, handleTransform(axis));
+    if (valueBubble) place(valueBubble, state.value, bubbleTransform(axis));
 
     // Update second handle if range slider
     if (config.range && secondHandle && state.secondValue !== null) {
-      secondHandle.style.left = visualPosition(getPercentage(state.secondValue));
-      secondHandle.style.transform = "translate(-50%, -50%)";
-
-      if (secondValueBubble) {
-        secondValueBubble.style.left = visualPosition(getPercentage(state.secondValue));
-        secondValueBubble.style.transform = "translateX(-50%)";
-      }
+      place(secondHandle, state.secondValue, handleTransform(axis));
+      if (secondValueBubble) place(secondValueBubble, state.secondValue, bubbleTransform(axis));
     }
 
     // Update ARIA attributes
@@ -271,8 +269,35 @@ export const withController =
    * Renders all UI elements to match current state
    * Central method for keeping UI in sync with state
    */
+  // A value change that does not follow a pointer settles on the default spatial
+  // spring; the stylesheet animates only while the root carries `--settling`, so a
+  // drag and a layout render (the first one, a resize) move nothing. FLO-250.
+  const SETTLE_MS = 450; // spring-default-spatial-duration
+  let rendered: { value: number; secondValue: number | null } | null = null;
+  let settleTimer: ReturnType<typeof setTimeout> | null = null;
+  const settle = () => {
+    const settling = component.getClass("slider--settling");
+    const changed = rendered !== null &&
+      (rendered.value !== state.value || rendered.secondValue !== state.secondValue);
+    rendered = { value: state.value, secondValue: state.secondValue };
+    if (state.dragging) {
+      if (settleTimer !== null) clearTimeout(settleTimer);
+      settleTimer = null;
+      component.element.classList.remove(settling);
+      return;
+    }
+    if (!changed) return;
+    component.element.classList.add(settling);
+    if (settleTimer !== null) clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => {
+      settleTimer = null;
+      component.element.classList.remove(settling);
+    }, SETTLE_MS);
+  };
+
   const render = () => {
     try {
+      settle();
       updateHandlePositions();
       updateValueBubbles();
 
@@ -355,6 +380,7 @@ export const withController =
     const originalDestroy = component.lifecycle.destroy || (() => {});
     component.lifecycle.destroy = () => {
       clearTimeout(initialization);
+      if (settleTimer !== null) clearTimeout(settleTimer);
       handlers.cleanupEventListeners();
       originalDestroy.call(component.lifecycle);
     };

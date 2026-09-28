@@ -70,6 +70,7 @@ export const getElementConfig = (config: SliderConfig) => {
     config.color && config.color !== "primary" ? `${PREFIX}-slider--${config.color}` : "",
     config.range ? `${PREFIX}-slider--range` : "",
     config.centered ? `${PREFIX}-slider--centered` : "",
+    config.orientation === "vertical" ? `${PREFIX}-slider--vertical` : "",
     config.icon ? `${PREFIX}-slider--icon` : "",
   ]
     .filter(Boolean)
@@ -133,6 +134,7 @@ interface SliderApiHost {
   getSize?: () => string;
   label?: { setText?: (text: string) => void; getText?: () => string };
   icon?: { setIcon?: (html: string) => void; getIcon?: () => string };
+  setInsetIcon?: (icon: string, atMin?: string) => void;
   on?: (event: string, handler: EventCallback) => unknown;
   off?: (event: string, handler: EventCallback) => unknown;
   lifecycle?: { destroy?: () => void };
@@ -172,6 +174,9 @@ export const getApiConfig = (comp: SliderApiHost): ApiOptions => ({
   icon: {
     setIcon: (h) => comp.icon?.setIcon?.(h),
     getIcon: () => comp.icon?.getIcon?.() ?? "",
+  },
+  insetIcon: {
+    setInsetIcon: (icon, atMin) => comp.setInsetIcon?.(icon, atMin),
   },
   events: {
     on: (e, h) => comp.on?.(e, h),
