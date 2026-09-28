@@ -51,15 +51,18 @@ export interface TabIndicator {
 const DEFAULT_CONFIG: TabIndicatorConfig = {
   widthStrategy: 'auto', // Changed to 'auto' to match variant behavior
   fixedWidth: 40,
-  animationDuration: 250,
-  animationTiming: 'cubic-bezier(0.4, 0, 0.2, 1)',
   visible: true,
   prefix: 'mtrl',
   variant: 'primary',
-  // PrimaryNavigationTabTokens.ActiveIndicatorHeight, which TabRowDefaults.SecondaryIndicator
-  // also takes (TabRow.kt:1080), so both variants are 3dp.
-  height: 3
 };
+
+// m3.material.io tabs specs: the primary indicator is 3dp and "inset 2dp on each
+// side" of its content, at least 24dp long; the secondary one is 2dp (Compose's
+// SecondaryIndicator takes the primary 3dp; the site wins). FLO-262.
+const PRIMARY_HEIGHT = 3;
+const SECONDARY_HEIGHT = 2;
+const PRIMARY_INSET = 2;
+const MIN_LENGTH = 24;
 
 /**
  * Creates a tab indicator component
@@ -74,11 +77,15 @@ export const createTabIndicator = (config: TabIndicatorConfig = {}): TabIndicato
   // Create indicator element
   const element = document.createElement('div');
   element.className = `${prefix}-tabs__indicator`;
-  element.style.transition = `transform ${mergedConfig.animationDuration}ms ${mergedConfig.animationTiming}, 
-                             width ${mergedConfig.animationDuration}ms ${mergedConfig.animationTiming}`;
+  // The stylesheet moves the indicator on the default spatial spring. An app that
+  // passes a duration or an easing gets that instead.
+  const custom = mergedConfig.animationDuration !== undefined || mergedConfig.animationTiming !== undefined;
+  const motion = (property: string): string =>
+    `${property} ${mergedConfig.animationDuration ?? 250}ms ${mergedConfig.animationTiming ?? 'cubic-bezier(0.4, 0, 0.2, 1)'}`;
+  const transition = custom ? `${motion('transform')}, ${motion('width')}` : '';
+  element.style.transition = transition;
   element.style.width = `${mergedConfig.fixedWidth}px`; // Set initial width
-  // The option was accepted and never read, so the stylesheet's hardcoded heights won.
-  element.style.height = `${mergedConfig.height}px`;
+  element.style.height = `${mergedConfig.height ?? (mergedConfig.variant === 'secondary' ? SECONDARY_HEIGHT : PRIMARY_HEIGHT)}px`;
   
   // Set initial visibility
   if (!mergedConfig.visible) {
@@ -105,8 +112,7 @@ export const createTabIndicator = (config: TabIndicatorConfig = {}): TabIndicato
       const textElement = tab.element.querySelector(`.${prefix}-button__text`);
       
       if (textElement) {
-        // maxOf(contentWidth, 24.dp) — TabRow.kt:461
-        return Math.max(textElement.clientWidth, 24);
+        return Math.max(textElement.getBoundingClientRect().width - 2 * PRIMARY_INSET, MIN_LENGTH);
       }
       
       // Fallback to dynamic if text element not found
@@ -174,9 +180,10 @@ export const createTabIndicator = (config: TabIndicatorConfig = {}): TabIndicato
         const tabRect = tab.element.getBoundingClientRect();
         const textLeft = textRect.left - tabRect.left;
         
-        // Center indicator under text
+        // Centred under the text: the 2dp inset on each side, or a short label's
+        // 24dp minimum overhanging it evenly.
         return {
-          left: left + textLeft
+          left: left + textLeft + (textRect.width - indicatorWidth) / 2
         };
       }
     }
@@ -229,8 +236,7 @@ export const createTabIndicator = (config: TabIndicatorConfig = {}): TabIndicato
     if (immediate) {
       // Need to use timeout to ensure browser processes the style change
       setTimeout(() => {
-        element.style.transition = `transform ${mergedConfig.animationDuration}ms ${mergedConfig.animationTiming}, 
-                                   width ${mergedConfig.animationDuration}ms ${mergedConfig.animationTiming}`;
+        element.style.transition = transition;
       }, 10);
     }
   };

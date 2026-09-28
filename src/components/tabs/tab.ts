@@ -48,6 +48,7 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
       icon: baseConfig.icon,
       iconSize: baseConfig.iconSize,
       disabled: baseConfig.disabled,
+      ariaLabel: baseConfig.ariaLabel,
       ripple: baseConfig.ripple !== false, // Enable ripple by default
       rippleConfig: {
         duration: 400,
@@ -278,13 +279,9 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
 
         // Add the appropriate layout class
         this.element.classList.add(`${this.getClass("tab")}--${layoutClass}`);
-
-        // Set appropriate aria-label when icon-only
-        if (layoutClass === TAB_LAYOUT.ICON_ONLY && hasText) {
-          this.element.setAttribute("aria-label", this.getText());
-        } else {
-          this.element.removeAttribute("aria-label");
-        }
+        // An icon-only tab is named by `ariaLabel`; a visually hidden label names
+        // the rest. What stood here could never set a name (icon-only means no
+        // text) and removed the one `ariaLabel` gave. FLO-263.
       },
     };
 

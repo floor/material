@@ -157,15 +157,30 @@ export function syncTabStops(component: TabsHost): void {
 }
 
 /**
- * Sets up keyboard navigation for tabs
+ * Sets up keyboard navigation for tabs.
+ *
+ * The arrows, Home and End move focus between the enabled tabs, and the tab stop
+ * with it; Space or Enter, through the native button, selects the focused tab.
+ * That is m3.material.io's model ("Don't use Space/Enter for navigating tabs")
+ * and material-web's default. `autoActivate` selects on every move instead. When
+ * focus leaves the tablist, the tab stop returns to the selected tab. FLO-263.
  * @param component - Tabs component
+ * @param options - `autoActivate`: select the tab an arrow key moves to
  */
-export function setupKeyboardNavigation(component: TabsHost): void {
+export function setupKeyboardNavigation(
+  component: TabsHost,
+  options: { autoActivate?: boolean } = {},
+): void {
   // Skip if element is missing
   if (!component.element) return;
   const tablist = component.element;
 
   syncTabStops(component);
+
+  tablist.addEventListener("focusout", (event: FocusEvent) => {
+    const next = event.relatedTarget as Node | null;
+    if (!next || !tablist.contains(next)) syncTabStops(component);
+  });
 
   tablist.addEventListener("keydown", (event: KeyboardEvent) => {
     // The key lands on the focused tab, never on the tablist itself
@@ -215,8 +230,12 @@ export function setupKeyboardNavigation(component: TabsHost): void {
     const target = tabs[newIndex];
     if (target === tabs[currentIndex]) return;
 
-    // Focus follows the key and selects, through the same path as a click
+    // Focus and the tab stop follow the key
+    component.getTabs().forEach((tab) => tab.element.setAttribute("tabindex", tab === target ? "0" : "-1"));
     target.element.focus();
+    if (!options.autoActivate) return;
+
+    // Selecting on the move, through the same path as a click
     if (typeof component.handleTabClick === "function") {
       component.handleTabClick(null, target);
     } else if (typeof component.setActiveTab === "function") {

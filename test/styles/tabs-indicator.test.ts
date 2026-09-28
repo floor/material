@@ -25,3 +25,38 @@ test('the indicator starts at the left edge the script measures from', () => {
 test('the scrollable row keeps its edge padding, which the indicator must not inherit', () => {
   expect(value('.mtrl-tabs--scrollable .mtrl-tabs__scroll', 'padding-inline')).toBe('52px');
 });
+
+// FLO-262: the conformance audit against m3.material.io tabs specs.
+test('the primary indicator has the shape 3, 3, 0, 0 and sits on the bottom edge', () => {
+  expect(value('.mtrl-tabs--primary .mtrl-tabs__indicator', 'border-radius')).toBe('3px 3px 0 0');
+  expect(value('.mtrl-tabs__indicator', 'bottom')).toBe('0');
+});
+
+test('the indicator moves on the default spatial spring', () => {
+  expect(value('.mtrl-tabs__indicator', 'transition')).toMatch(/^transform \d+ms linear\(.+\), width \d+ms linear\(/);
+});
+
+test('the label is Title Small', () => {
+  const titleSmall = compileString("@use 'abstract/mixins' as m; .t { @include m.typography('title-small'); }", { loadPaths: ['src/styles'] }).css;
+  const size = titleSmall.match(/font-size:\s*([^;]+);/)![1];
+  expect(value('.mtrl-button.mtrl-tab', 'font-size')).toBe(size);
+});
+
+test('the focus ring is md.comp.focus-ring, 3dp in secondary, drawn inward', () => {
+  expect(value('.mtrl-button.mtrl-tab:focus-visible', 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
+  expect(value('.mtrl-button.mtrl-tab:focus-visible', 'outline-offset')).toBe('-3px');
+  expect(css).not.toMatch(/\.mtrl-tab[^{]*\{[^}]*outline-color/);
+});
+
+test('a tab with an icon keeps 16dp on both sides', () => {
+  expect(value('.mtrl-button.mtrl-tab.mtrl-button--icon', 'padding')).toBe('0 16px');
+});
+
+test('an inactive tab turns on-surface in every state, over the M3 layer colours', () => {
+  const inactive = '.mtrl-tabs--primary .mtrl-button.mtrl-tab:not(.mtrl-button.mtrl-tab--active):not(.mtrl-button.mtrl-tab--disabled):not(:disabled)';
+  expect(value(`${inactive}:hover`, 'color')).toBe('var(--mtrl-sys-color-on-surface)');
+  expect(value(`${inactive}:hover`, 'background-color')).toContain('var(--mtrl-sys-color-on-surface) 8%');
+  expect(value(`${inactive}:focus-visible`, 'background-color')).toContain('var(--mtrl-sys-color-on-surface) 10%');
+  expect(value(`${inactive} .mtrl-ripple-wave`, 'background-color')).toBe('var(--mtrl-sys-color-primary)');
+  expect(css).not.toContain('5px 5px 0 0');
+});

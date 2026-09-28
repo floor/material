@@ -211,8 +211,43 @@ describe('tabs keyboard', () => {
     expect(stops(tabs)).toEqual(['-1', '0', '-1']);
   });
 
-  test('arrows move focus and selection, skip disabled tabs and wrap', () => {
+  // FLO-263: m3.material.io's tabs accessibility guidance. Arrows move focus;
+  // Space or Enter, through the native button's click, selects.
+  test('by default an arrow moves focus and the tab stop, not the selection', () => {
     const tabs = mount({ tabs: FOUR() });
+    const seen: string[] = [];
+    tabs.on('change', (event: { value: string }) => seen.push(event.value));
+    const flights = byValue(tabs, 'flights').element;
+    const trips = byValue(tabs, 'trips').element;
+    flights.focus();
+
+    expect(key(flights, 'ArrowRight').defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(trips);
+    expect(tabs.getActiveTab()?.getValue()).toBe('flights');
+    expect(stops(tabs)).toEqual(['-1', '0', '-1', '-1']);
+    expect(seen).toEqual([]);
+
+    // Space and Enter reach the native button as a click, which selects
+    trips.click();
+    expect(tabs.getActiveTab()?.getValue()).toBe('trips');
+    expect(seen).toEqual(['trips']);
+  });
+
+  test('leaving the tablist returns the tab stop to the selected tab', () => {
+    const tabs = mount({ tabs: FOUR() });
+    const outside = document.createElement('button');
+    document.body.append(outside);
+    const flights = byValue(tabs, 'flights').element;
+    flights.focus();
+    key(flights, 'ArrowRight');
+    expect(stops(tabs)).toEqual(['-1', '0', '-1', '-1']);
+
+    outside.focus();
+    expect(stops(tabs)).toEqual(['0', '-1', '-1', '-1']);
+  });
+
+  test('with autoActivate, arrows move focus and selection, skip disabled tabs and wrap', () => {
+    const tabs = mount({ tabs: FOUR(), autoActivate: true });
     const seen: string[] = [];
     tabs.on('change', (event: { value: string }) => seen.push(event.value));
     const flights = byValue(tabs, 'flights').element;
@@ -239,7 +274,7 @@ describe('tabs keyboard', () => {
   // `Event`, and why `isCancelable` guards before calling preventDefault.
   // Without the guard this path throws on null and the tab never activates.
   test('an arrow key activates through the click path, with no event to cancel', () => {
-    const tabs = mount({ tabs: FOUR() });
+    const tabs = mount({ tabs: FOUR(), autoActivate: true });
     const seen: string[] = [];
     tabs.on('change', (event: { value: string }) => seen.push(event.value));
     const flights = byValue(tabs, 'flights').element;
@@ -383,11 +418,8 @@ describe('two tab groups on one page do not reach into each other', () => {
   // The defect proper: activating a tab in one group used to hide the other
   // group's panel of the same value.
   //
-  // Driven by clicking rather than setActiveTab, because panels are updated
-  // on the click path only -- the public setActiveTab deactivates, activates
-  // and emits `change` without ever calling updateTabPanels. That is a
-  // separate gap, pre-existing, and recorded on FLO-229; a test written
-  // through setActiveTab would pass here while asserting nothing.
+  // Driven by clicking. setActiveTab only updated the panels from FLO-263 on;
+  // the test after this one covers that path.
   test('clicking a tab in one group leaves the other group\'s panel alone', () => {
     const leftTrips = panelFor('left', 'trips');
     const rightTrips = panelFor('right', 'trips');
@@ -406,6 +438,28 @@ describe('two tab groups on one page do not reach into each other', () => {
     expect(rightTrips.hasAttribute('hidden')).toBe(false);
   });
 
+  // FLO-263: the gap the note above records. setActiveTab now updates the panels too.
+  test('setActiveTab shows its panel and hides the others', () => {
+    const trips = panelFor('left', 'trips');
+    const flights = panelFor('left', 'flights');
+    const tabs = mount({ groupId: 'left' });
+
+    tabs.setActiveTab('trips');
+    expect(trips.hasAttribute('hidden')).toBe(false);
+    expect(flights.hasAttribute('hidden')).toBe(true);
+
+    tabs.setActiveTab(byValue(tabs, 'flights'));
+    expect(trips.hasAttribute('hidden')).toBe(true);
+    expect(flights.hasAttribute('hidden')).toBe(false);
+  });
+
+  test('a tab added later carries its group\'s id', () => {
+    const left = mount({ groupId: 'left' });
+    const right = mount({ groupId: 'right' });
+    expect(left.addTab({ text: 'Cars', value: 'cars' }).element.id).toBe('tab-left-cars');
+    expect(right.addTab({ text: 'Cars', value: 'cars' }).element.id).toBe('tab-right-cars');
+  });
+
   test('a panel belonging to no group on the page is not touched at all', () => {
     const orphan = panelFor('nobody', 'trips');
     const tabs = mount({ groupId: 'left' });
@@ -414,6 +468,19 @@ describe('two tab groups on one page do not reach into each other', () => {
 
     expect(orphan.hasAttribute('hidden')).toBe(false);
     expect(orphan.hasAttribute('tabindex')).toBe(false);
+  });
+});
+
+describe('icon-only tabs', () => {
+  // FLO-263: a tab with an icon and no text had no accessible name.
+  test('ariaLabel names a tab with an icon and no text, and keeps naming it', () => {
+    const icon = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
+    const tabs = mount({ tabs: [{ icon, ariaLabel: 'Flights', value: 'f', state: 'active' }, { icon, ariaLabel: 'Trips', value: 't' }] });
+    const [flights, trips] = tabs.getTabs();
+    expect(flights.element.getAttribute('aria-label')).toBe('Flights');
+    trips.element.click();
+    flights.setIcon(icon);
+    expect(flights.element.getAttribute('aria-label')).toBe('Flights');
   });
 });
 

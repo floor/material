@@ -56,6 +56,9 @@ export interface TabsManagementComponent {
   /** Tab click handler */
   handleTabClick: (event: Event | null, tab: TabComponent) => void;
 
+  /** This tablist's id, carried by every tab it builds, including added ones */
+  groupId: string;
+
   /** Get all tabs */
   getTabs?: () => TabComponent[];
 
@@ -177,6 +180,7 @@ export const withTabsManagement =
       tabs,
       tabsContainer,
       handleTabClick,
+      groupId,
       getTabs,
       getActiveTab,
     };
@@ -337,11 +341,12 @@ export const withIndicator =
         indicatorConfig.widthStrategy ||
         config.indicatorWidthStrategy ||
         "auto", // Changed default to 'auto'
-      height: indicatorConfig.height || config.indicatorHeight || 3,
+      // Left undefined, the indicator takes its variant's height and the stylesheet's
+      // spring (FLO-262); given, they override them.
+      height: indicatorConfig.height || config.indicatorHeight,
       fixedWidth: indicatorConfig.fixedWidth || 40,
-      animationDuration: indicatorConfig.animationDuration || 250,
-      animationTiming:
-        indicatorConfig.animationTiming || "cubic-bezier(0.4, 0, 0.2, 1)",
+      animationDuration: indicatorConfig.animationDuration,
+      animationTiming: indicatorConfig.animationTiming,
       color: indicatorConfig.color,
       // Pass the tabs variant to the indicator
       variant: config.variant ?? "primary",
