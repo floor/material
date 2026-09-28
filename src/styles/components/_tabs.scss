@@ -255,7 +255,8 @@ $container: "#{base.$prefix}-tabs";
             }
 
             // Pressed state for active tabs
-            &:active,
+            // A rippled tab leaves the press to its ripple (FLO-260).
+            &:active:not(:has(> .#{base.$prefix}-ripple)),
             &.#{$component}--pressed {
                 background-color: t.alpha("primary", v.state("pressed-state-layer-opacity"));
                 border-radius: 5px 5px 0 0;
@@ -282,7 +283,8 @@ $container: "#{base.$prefix}-tabs";
             }
 
             // Pressed state for inactive tabs
-            &:active,
+            // A rippled tab leaves the press to its ripple (FLO-260).
+            &:active:not(:has(> .#{base.$prefix}-ripple)),
             &.#{$component}--pressed {
                 background-color: t.alpha("on-surface-variant", v.state("pressed-state-layer-opacity"));
                 border-radius: 5px 5px 0 0;
@@ -314,7 +316,8 @@ $container: "#{base.$prefix}-tabs";
             }
 
             // Pressed state for active tabs - secondary
-            &:active,
+            // A rippled tab leaves the press to its ripple (FLO-260).
+            &:active:not(:has(> .#{base.$prefix}-ripple)),
             &.#{$component}--pressed {
                 background-color: t.alpha("on-surface", v.state("pressed-state-layer-opacity"));
             }
@@ -340,7 +343,8 @@ $container: "#{base.$prefix}-tabs";
             }
 
             // Pressed state for inactive tabs - secondary
-            &:active,
+            // A rippled tab leaves the press to its ripple (FLO-260).
+            &:active:not(:has(> .#{base.$prefix}-ripple)),
             &.#{$component}--pressed {
                 background-color: t.alpha("on-surface-variant", v.state("pressed-state-layer-opacity"));
                 border-radius: 5px 5px 0 0;

@@ -61,9 +61,9 @@ describe('menu stylesheet', () => {
     expect(value('.mtrl-menu__item:focus-visible::before, .mtrl-menu__item--active::before', 'opacity')).toBe('0.1');
     expect(value('.mtrl-menu__item:focus::before', 'opacity')).toBeUndefined();
     expect(value('.mtrl-menu__item:focus', 'outline')).toBe('none');
-    // the hover and pressed layers are unaffected
+    // the hover and pressed layers are unaffected (the pressed one yields to a ripple, FLO-260)
     expect(value('.mtrl-menu__item:hover::before', 'opacity')).toBe('0.08');
-    expect(value('.mtrl-menu__item:active::before', 'opacity')).toBe('0.1');
+    expect(value('.mtrl-menu__item:active:not(:has(> .mtrl-ripple))::before', 'opacity')).toBe('0.1');
   });
 
   test('a disabled item is dimmed but still reachable', () => {

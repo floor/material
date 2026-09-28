@@ -180,7 +180,9 @@ $container: "#{base.$prefix}-chips";
     &:hover:not(.#{$component}--disabled)::after { opacity: v.state("hover-state-layer-opacity"); }
     // Keyboard focus only: a click leaves no focus layer (FLO-256).
     &:is(:has(:focus-visible), :focus-visible):not(.#{$component}--disabled)::after { opacity: v.state("focus-state-layer-opacity"); }
-    &:active:not(.#{$component}--disabled)::after { opacity: v.state("pressed-state-layer-opacity"); }
+    // A press on a rippled action is the ripple's to draw (FLO-260); the remove and
+    // trailing buttons have none, so a press on them keeps the layer.
+    &:active:not(.#{$component}--disabled):not(:has(> .#{$component}__action:active > .#{base.$prefix}-ripple))::after { opacity: v.state("pressed-state-layer-opacity"); }
     // Dragged (Compose DraggedContainerElevation Level4, DraggedStateLayerOpacity),
     // set while an app drags a draggable chip. FLO-259.
     &--dragged { box-shadow: f.get-elevation(4); }

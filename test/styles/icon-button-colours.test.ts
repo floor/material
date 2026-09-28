@@ -75,7 +75,8 @@ describe('icon button colour tokens', () => {
   test('all state layers follow the icon colour with unchanged opacities', () => {
     expect(value(`${root}::before`, 'background-color')).toBe('currentColor');
     for (const [state, opacity] of [['hover', '0.08'], ['focus-visible', '0.1'], ['active', '0.1']]) {
-      expect(value(`${root}:${state}::before`, 'opacity')).toBe(opacity);
+      // The pressed layer yields to the ripple (FLO-260).
+      expect(value(`${root}:${state}${state === 'active' ? ':not(:has(> .mtrl-ripple))' : ''}::before`, 'opacity')).toBe(opacity);
     }
     for (const disabled of [':disabled', `${root}--disabled`]) {
       expect(value(`${root}${disabled}::before`, 'display')).toBe('none');
