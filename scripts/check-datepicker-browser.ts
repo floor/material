@@ -71,7 +71,40 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
   assert.equal(await page.evaluate(() => (window as unknown as PickerWindow).picker.getFormattedValue()), '09/26/2026');
   await page.keyboard.press('ArrowRight'); await page.keyboard.press('Enter');
   assert.equal(await page.evaluate(() => (window as unknown as PickerWindow).picker.getFormattedValue()), '09/27/2026');
+  // FLO-274: the months page horizontally, as m3.material.io's guidelines have it.
+  // With motion on, so the arrows take the sliding path (core:check reduces motion earlier).
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const month = () => page.locator('dialog [role="grid"]:not([aria-hidden])').getAttribute('aria-label');
+  const settled = (label: string) => page.waitForFunction(label => document.querySelector('dialog [role="grid"]:not([aria-hidden])')?.getAttribute('aria-label') === label, label);
+  assert.equal(await month(), 'September 2026');
+  const track = await page.locator('.mtrl-datepicker__track').evaluate(el => ({
+    snap: getComputedStyle(el).scrollSnapType, pages: el.children.length, centred: el.scrollLeft === el.clientWidth,
+    neighbours: [...el.children].filter(child => child.hasAttribute('inert') && child.getAttribute('aria-hidden') === 'true' && !child.querySelector('[data-date]')).length,
+  }));
+  assert.deepEqual(track, { snap: 'x mandatory', pages: 3, centred: true, neighbours: 2 }, 'three snapping pages, the current one centred, its neighbours inert and hidden');
+  // A horizontal wheel or trackpad swipe pages to the next month and re-centres.
+  const box = (await page.locator('.mtrl-datepicker__track').boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.wheel(box.width, 0);
+  await settled('October 2026');
+  assert.equal(await page.locator('.mtrl-datepicker__track').evaluate(el => el.scrollLeft === el.clientWidth), true, 'the track re-centres on the new month');
+  // The arrow slides the same way, and keeps focus on itself.
+  await page.locator('[data-action="prev"]').click();
+  assert.equal(await month(), 'October 2026', 'the arrow slides first; the month changes when the slide settles');
+  await settled('September 2026');
+  assert.equal(await page.evaluate(() => (document.activeElement as HTMLElement).dataset.action), 'prev', 'focus stays on the arrow');
+  // Right to left: swiping toward the start (a positive wheel still scrolls toward the end) pages forward.
+  await page.evaluate(() => { document.documentElement.dir = 'rtl'; });
+  await page.locator('[data-action="next"]').click();
+  await settled('October 2026');
+  assert.equal(await page.locator('.mtrl-datepicker__track').evaluate(el => Math.abs(el.scrollLeft) === el.clientWidth), true, 'right to left, the track re-centres');
+  await page.evaluate(() => { document.documentElement.dir = 'ltr'; });
+  // Reduced motion: the arrow changes the month at once.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.locator('[data-action="next"]').click();
+  assert.equal(await month(), 'November 2026', 'reduced motion changes the month without sliding');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.evaluate(() => (window as unknown as PickerWindow).picker.destroy());
   assert.equal(await page.locator('.mtrl-datepicker').count(), 0);
-  console.log('Passed packed date picker: selective CSS, token geometry, native modal/scrim, focus, keyboard, input validation, draft/commit/cancel, range, themes, mobile and cleanup.');
+  console.log('Passed packed date picker: selective CSS, token geometry, native modal/scrim, focus, keyboard, input validation, draft/commit/cancel, range, themes, mobile, month swiping in both directions and cleanup.');
 }

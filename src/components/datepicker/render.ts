@@ -15,6 +15,40 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
     if (icon) setHTML(element, icon);
     return element;
   };
+  /** One month of days: a grid of 6 weeks. Only the current month takes the tab stop. */
+  const monthGrid = (year: number, month: number, current: boolean): HTMLElement => {
+    const grid = make("div", "days", undefined, { role: "grid", "aria-label": `${MONTH_NAMES[month]} ${year}`, "aria-describedby": `${state.id}-keyboard` });
+    const weekdays = make("div", "weekdays", undefined, { role: "row" });
+    for (const name of ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]) weekdays.append(make("span", "weekday", name[0], { role: "columnheader", "aria-label": name }));
+    grid.append(weekdays);
+    const dates = generateCalendarDates(year, month, state.selectedDate, state.rangeEndDate, state.minDate, state.maxDate);
+    const focus = dates.find(item => isSameDay(item.date, state.focusedDate) && state.isAllowed(item.date)) ?? dates.find(item => item.isCurrentMonth && state.isAllowed(item.date));
+    for (let week = 0; week < 6; week++) {
+      const row = make("div", "week", undefined, { role: "row" });
+      for (const item of dates.slice(week * 7, week * 7 + 7)) {
+        const selected = !!state.selectedDate && (isSameDay(item.date, state.selectedDate) || !!state.rangeEndDate && isSameDay(item.date, state.rangeEndDate));
+        const inRange = !!state.selectedDate && !!state.rangeEndDate && item.date >= state.selectedDate && item.date <= state.rangeEndDate;
+        const cell = make("div", "cell", undefined, { role: "gridcell", "aria-selected": String(selected || inRange) });
+        if (inRange) cell.classList.add(cls("cell--range"));
+        if (state.selectedDate && isSameDay(item.date, state.selectedDate)) cell.classList.add(cls("cell--range-start"));
+        if (state.rangeEndDate && isSameDay(item.date, state.rangeEndDate)) cell.classList.add(cls("cell--range-end"));
+        const special = state.specialDates.find(special => { const date = parseDate(special.date); return date && isSameDay(date, item.date); });
+        const day = make("button", "day", String(item.day), {
+          type: "button", "data-date": formatDate(item.date, "YYYY-MM-DD"), "aria-label": item.date.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
+          "aria-pressed": String(selected), disabled: !state.isAllowed(item.date), tabindex: current && item === focus ? "0" : "-1",
+        });
+        if (!state.isAllowed(item.date)) day.classList.add(cls("day--disabled"));
+        if (item.isToday) { day.classList.add(cls("day--today")); day.setAttribute("aria-current", "date"); }
+        if (!item.isCurrentMonth) day.classList.add(cls("day--outside"));
+        if (selected) day.classList.add(cls("day--selected"));
+        if (special?.highlight) day.classList.add(cls("day--highlight"));
+        if (special?.tooltip) day.title = special.tooltip;
+        cell.append(day); row.append(cell);
+      }
+      grid.append(row);
+    }
+    return grid;
+  };
   const content = make("div", "content");
   const modal = state.variant !== "docked";
   if (modal) {
@@ -45,37 +79,23 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
     header.append(nav, button("prev", "‹", "prev", `Previous ${span}`), button("next", "›", "next", `Next ${span}`));
     content.append(header);
     if (state.currentView === "day") {
-      const grid = make("div", "days", undefined, { role: "grid", "aria-label": `${MONTH_NAMES[state.currentMonth]} ${state.currentYear}`, "aria-describedby": `${state.id}-keyboard` });
-      const weekdays = make("div", "weekdays", undefined, { role: "row" });
-      for (const name of ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]) weekdays.append(make("span", "weekday", name[0], { role: "columnheader", "aria-label": name }));
-      grid.append(weekdays);
-      const dates = generateCalendarDates(state.currentYear, state.currentMonth, state.selectedDate, state.rangeEndDate, state.minDate, state.maxDate);
-      const focus = dates.find(item => isSameDay(item.date, state.focusedDate) && state.isAllowed(item.date)) ?? dates.find(item => item.isCurrentMonth && state.isAllowed(item.date));
-      for (let week = 0; week < 6; week++) {
-        const row = make("div", "week", undefined, { role: "row" });
-        for (const item of dates.slice(week * 7, week * 7 + 7)) {
-          const selected = !!state.selectedDate && (isSameDay(item.date, state.selectedDate) || !!state.rangeEndDate && isSameDay(item.date, state.rangeEndDate));
-          const inRange = !!state.selectedDate && !!state.rangeEndDate && item.date >= state.selectedDate && item.date <= state.rangeEndDate;
-          const cell = make("div", "cell", undefined, { role: "gridcell", "aria-selected": String(selected || inRange) });
-          if (inRange) cell.classList.add(cls("cell--range"));
-          if (state.selectedDate && isSameDay(item.date, state.selectedDate)) cell.classList.add(cls("cell--range-start"));
-          if (state.rangeEndDate && isSameDay(item.date, state.rangeEndDate)) cell.classList.add(cls("cell--range-end"));
-          const special = state.specialDates.find(special => { const date = parseDate(special.date); return date && isSameDay(date, item.date); });
-          const day = make("button", "day", String(item.day), {
-            type: "button", "data-date": formatDate(item.date, "YYYY-MM-DD"), "aria-label": item.date.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
-            "aria-pressed": String(selected), disabled: !state.isAllowed(item.date), tabindex: item === focus ? "0" : "-1",
-          });
-          if (!state.isAllowed(item.date)) day.classList.add(cls("day--disabled"));
-          if (item.isToday) { day.classList.add(cls("day--today")); day.setAttribute("aria-current", "date"); }
-          if (!item.isCurrentMonth) day.classList.add(cls("day--outside"));
-          if (selected) day.classList.add(cls("day--selected"));
-          if (special?.highlight) day.classList.add(cls("day--highlight"));
-          if (special?.tooltip) day.title = special.tooltip;
-          cell.append(day); row.append(cell);
+      // The previous, current and next months side by side in a scroll-snapping track:
+      // a horizontal swipe, trackpad or wheel pages the months natively (m3.material.io:
+      // "To navigate across months, swipe horizontally"). Only the current month is
+      // reachable; its neighbours are inert and hidden from assistive tech. FLO-274.
+      const track = make("div", "track");
+      for (const offset of [-1, 0, 1]) {
+        const first = new Date(state.currentYear, state.currentMonth + offset, 1);
+        const grid = monthGrid(first.getFullYear(), first.getMonth(), offset === 0);
+        // A neighbour is only seen while it slides in: it keeps no date hooks, so the
+        // current month's buttons are the only [data-date] in the picker.
+        if (offset) {
+          grid.setAttribute("aria-hidden", "true"); grid.inert = true;
+          grid.querySelectorAll("[data-date]").forEach(day => day.removeAttribute("data-date"));
         }
-        grid.append(row);
+        track.append(grid);
       }
-      content.append(grid);
+      content.append(track);
     } else {
       const months = state.currentView === "month";
       const grid = make("div", months ? "months" : "years", undefined, { role: "group", "aria-label": months ? "Choose month" : "Choose year" });
