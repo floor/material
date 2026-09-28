@@ -36,8 +36,10 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) 
   if (reference && url.pathname === "/reference.js") return new Response(Bun.file(resolve(reference, "slider.js")), { headers: { "Content-Type": "text/javascript" } });
   if (reference && url.pathname === "/reference.css") return new Response(Bun.file(resolve(reference, "styles.css")));
   const old = url.searchParams.has("reference");
+  // ?motion keeps the slider's own transitions, for the spring check below.
+  const still = url.searchParams.has("motion") ? "" : ".mtrl-slider *{transition:none!important}";
   return new Response(`<!doctype html><html><head><link rel="stylesheet" href="/${old ? "reference" : "styles"}.css">
-  <style>body{margin:0;padding:24px}#host{width:320px}.mtrl-slider *{transition:none!important}</style></head><body><div id="host"></div>
+  <style>body{margin:0;padding:24px}#host{width:320px}${still}</style></head><body><div id="host"></div>
   <script type="module">import ${old ? "{createSlider}" : "createSlider"} from '/${old ? "reference" : "slider"}.js';
   window.mount = (config, width, theme, mode) => {
     window.slider?.destroy(); const host=document.querySelector('#host'); host.replaceChildren();host.style.width=width+'px';
@@ -123,6 +125,104 @@ try {
   assert.equal(await handle.getAttribute("aria-disabled"), "true");
   await page.evaluate(() => { const s = window.slider; s.enable(); s.destroy(); });
   assert.equal(await page.getByRole("slider").count(), 0);
+
+  // M3 conformance, measured on the painted page (FLO-250, FLO-252). Positions are
+  // relative to the track, in CSS pixels; the host is 320px wide.
+  const paint = async (config: SliderConfig, height = 0) => {
+    // As a JSON string, like the scenarios above: SliderConfig is too deep a type to
+    // cross page.evaluate's serialisation types.
+    await page.evaluate(({ config, height }) => {
+      window.mount(JSON.parse(config), 320, "baseline", "light");
+      (document.querySelector("#host") as HTMLElement).style.height = height ? `${height}px` : "";
+    }, { config: JSON.stringify(config), height });
+    await page.waitForTimeout(40);
+    return page.evaluate(() => {
+      const track = document.querySelector(".mtrl-slider__track")!.getBoundingClientRect();
+      const centre = (el: Element) => { const b = el.getBoundingClientRect(); return { x: b.x + b.width / 2 - track.x, y: b.y + b.height / 2 - track.y }; };
+      const icon = document.querySelector<HTMLElement>(".mtrl-slider__inset-icon");
+      const iconBox = icon && !icon.hidden ? icon.getBoundingClientRect() : null;
+      return {
+        track: { width: track.width, height: track.height },
+        handles: [...document.querySelectorAll('[role="slider"]')].map(h => ({ ...centre(h), orientation: h.getAttribute("aria-orientation") })),
+        dots: [...document.querySelectorAll<HTMLElement>(".mtrl-slider__dot")].filter(dot => !dot.hidden).map(centre),
+        icon: iconBox && { x: iconBox.x - track.x, y: iconBox.y - track.y, size: iconBox.width, inactive: icon!.classList.contains("mtrl-slider__inset-icon--inactive") },
+      };
+    });
+  };
+  const near = (actual: number, expected: number, what: string) =>
+    assert(Math.abs(actual - expected) < 1, `${what}: ${actual} where M3 puts ${expected}`);
+  // A standard slider ends its inactive track with one stop, a corner radius (8) from the end.
+  let shown = await paint({ value: 50, label: "Volume" });
+  near(shown.handles[0]!.x, 160, "standard handle");
+  assert.equal(shown.dots.length, 1, "standard slider stops");
+  near(shown.dots[0]!.x, 312, "standard end stop");
+  // Range and centred sliders are inactive at both ends, so both carry a stop.
+  for (const config of [{ range: true, value: 20, secondValue: 80 }, { centered: true, min: -50, max: 50, value: 25 }]) {
+    shown = await paint({ ...config, label: "Volume" });
+    assert.deepEqual(shown.dots.map(dot => Math.round(dot.x)), [8, 312], `stops of ${JSON.stringify(config)}`);
+  }
+  // The inset icon: 24px on M, 10px into the active track, centred across it...
+  shown = await paint({ value: 50, size: "M", insetIcon: '<svg viewBox="0 0 24 24"><path d="M3 9h4l5-5v16l-5-5H3z"/></svg>', label: "Volume" });
+  assert(shown.icon && !shown.icon.inactive, "inset icon on the active track");
+  near(shown.icon.x, 10, "inset icon start"); near(shown.icon.y, 8, "inset icon centring"); near(shown.icon.size, 24, "inset icon size");
+  // ...and 10px into the inactive track when the active one cannot hold it: the handle
+  // at 16, the inactive track from 16 + 8.
+  shown = await paint({ value: 5, size: "M", insetIcon: '<svg viewBox="0 0 24 24"><path d="M3 9h4l5-5v16l-5-5H3z"/></svg>', label: "Volume" });
+  assert(shown.icon?.inactive, "inset icon moves to the inactive track");
+  near(shown.icon!.x, 34, "inset icon on the inactive track");
+  // Vertical: zero at the bottom, the size a thickness, the length the slider's height.
+  // A visible label sits above and takes its share of that height, so these carry
+  // an accessible name only and the track gets all 240px.
+  shown = await paint({ orientation: "vertical", size: "L", value: 60, ariaLabel: "Volume" }, 240);
+  assert.equal(shown.handles[0]!.orientation, "vertical");
+  near(shown.track.height, 240, "vertical track length"); near(shown.track.width, 56, "vertical track thickness");
+  near(shown.handles[0]!.y, 96, "vertical handle"); near(shown.handles[0]!.x, 28, "vertical handle centring");
+  near(shown.dots[0]!.y, 16, "vertical end stop");
+  shown = await paint({ orientation: "vertical", topToBottom: true, value: 25, ariaLabel: "Volume" }, 240);
+  near(shown.handles[0]!.y, 60, "top-to-bottom handle");
+
+  // Motion, with the slider's own transitions: a tap settles on the default spatial
+  // spring (peaks about 270ms in, about 1.5% over, settled by 450ms), which the M3 sliders
+  // video approaches (about 300ms, 3-5%); nothing moves on the first render or in a drag.
+  const moving = await browser.newPage({ viewport: { width: 600, height: 250 } });
+  moving.on("pageerror", error => errors.push(error.message));
+  await moving.goto(`http://127.0.0.1:${server.port}/?motion`);
+  await moving.waitForFunction(() => window.ready);
+  await moving.evaluate(() => window.mount({ value: 50, label: "Volume" }, 320, "baseline", "light"));
+  await moving.waitForTimeout(60);
+  assert(!(await moving.locator(".mtrl-slider--settling").count()), "the first render settles");
+  const track = (await moving.locator(".mtrl-slider__container").boundingBox())!;
+  await moving.evaluate(() => {
+    const handle = document.querySelector('[role="slider"]')!;
+    const samples: [number, number][] = [];
+    (window as unknown as { samples: typeof samples }).samples = samples;
+    const start = performance.now();
+    const frame = () => {
+      const box = handle.getBoundingClientRect();
+      samples.push([performance.now() - start, box.x + box.width / 2]);
+      if (performance.now() - start < 900) requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  });
+  await moving.mouse.click(track.x + track.width * 0.8, track.y + track.height / 2);
+  await moving.waitForTimeout(1000);
+  const samples = await moving.evaluate(() => (window as unknown as { samples: [number, number][] }).samples);
+  const from = samples[0]![1], to = samples[samples.length - 1]![1];
+  const began = samples.find(([, x]) => Math.abs(x - from) > 0.5)![0];
+  const peak = samples.reduce((a, b) => (b[1] > a[1] ? b : a));
+  const overshoot = (peak[1] - to) / (to - from) * 100, peakAfter = peak[0] - began;
+  const settledAfter = samples.find(([t, x]) => t > peak[0] && Math.abs(x - to) < 0.5)![0] - began;
+  assert(overshoot > 0.5 && overshoot < 4, `tap overshoot ${overshoot.toFixed(2)}%`);
+  assert(peakAfter > 150 && peakAfter < 400, `tap peaks after ${Math.round(peakAfter)}ms`);
+  assert(settledAfter < 600, `tap settles after ${Math.round(settledAfter)}ms`);
+  // A drag follows the pointer: no settling while it moves.
+  const handleBox = (await moving.getByRole("slider").boundingBox())!;
+  await moving.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2);
+  await moving.mouse.down();
+  await moving.mouse.move(track.x + track.width * 0.3, track.y + track.height / 2, { steps: 5 });
+  assert(!(await moving.locator(".mtrl-slider--settling").count()), "a drag settles");
+  await moving.mouse.up();
+  await moving.close();
   assert.deepEqual(errors, []);
   const timings: Record<string, number> = {};
   for (const [name, target] of [["dom", page], ["canvas", old]] as const) {
@@ -139,7 +239,7 @@ try {
       return durations.sort((a,b) => a-b)[2];
     });
   }
-  const report = { size, comparisons, updateMedianMs: timings, errors };
+  const report = { size, comparisons, updateMedianMs: timings, errors, motion: { overshoot, peakAfter, settledAfter } };
   await writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
-  console.log(JSON.stringify({ size, updateMedianMs: timings, comparisons: comparisons.length, worst: [...comparisons].sort((a,b) => b.percent-a.percent).slice(0,8) }, null, 2));
+  console.log(JSON.stringify({ size, updateMedianMs: timings, motion: { overshootPct: +overshoot.toFixed(2), peakAfterMs: Math.round(peakAfter), settledAfterMs: Math.round(settledAfter) }, comparisons: comparisons.length, worst: [...comparisons].sort((a,b) => b.percent-a.percent).slice(0,8) }, null, 2));
 } finally { await browser.close(); server.stop(true); }
