@@ -51,11 +51,6 @@ jobs:
         run: bun run size:check
       - name: Install Chromium
         run: node node_modules/playwright/cli.js install --with-deps chromium
-      - name: TEMPORARY flake probe (full matrix x8, with the fix), remove before merge
-        continue-on-error: true
-        env:
-          CONSUMER_ROUNDS: "8"
-        run: bun run consumer:check
       - name: Vite and browser regression checks
         run: bun run consumer:check
       - name: Tabs layout checks
