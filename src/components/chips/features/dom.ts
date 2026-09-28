@@ -45,6 +45,8 @@ export const withDom =
       className: getClass("chips__container"),
       container: component.element,
     });
+    // The grid's one row of chip cells (FLO-261).
+    chipContainer.setAttribute("role", "row");
 
     // Return enhanced component with inner elements
     return {

@@ -65,10 +65,11 @@ export const getElementConfig = (config: ChipsConfig) => {
 
   return createElementConfig(config, {
     tag: "div",
-    // aria-multiselectable is not allowed on a group (ARIA 1.2); whether several
-    // chips can be on is carried by each chip's own checked state. FLO-256.
+    // A grid of chip cells (the m3.material.io chips' web roles, FLO-261), where
+    // aria-multiselectable is allowed and says whether several cells can be selected.
     attributes: {
-      role: "group",
+      role: "grid",
+      "aria-multiselectable": config.multiSelect === false ? "false" : "true",
     },
     className: classes,
   });

@@ -45,7 +45,15 @@ describe('chip targets and geometry', () => {
 describe('chip focus and motion', () => {
   test('focus layers follow keyboard focus only', () => {
     expect(css).not.toContain(':focus-within');
-    expect(value(`${root}:has(:focus-visible):not(${root}--disabled)::after`, 'opacity')).toBeDefined();
+    // The selector holds a comma inside :is(), which value() would split, so match it whole.
+    expect(css).toMatch(/\.mtrl-chip:is\(:has\(:focus-visible\), :focus-visible\):not\(\.mtrl-chip--disabled\)::after \{\s*opacity: 0\.1;/);
+  });
+
+  test('the focus ring is md.comp.focus-ring: 3px at a 2px offset, on buttons and on a focused cell (FLO-261)', () => {
+    expect(value(`${root}__action:focus-visible`, 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
+    expect(value(`${root}__action:focus-visible`, 'outline-offset')).toBe('2px');
+    expect(value(`${root}:focus-visible::before`, 'border')).toBe('3px solid var(--mtrl-sys-color-secondary)');
+    expect(value(`${root}:focus-visible::before`, 'inset')).toBe('-5px');
   });
 
   test('a leading icon or checkmark opens on the fast spatial spring and fades, once the chip has changed', () => {
