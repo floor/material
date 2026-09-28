@@ -63,6 +63,8 @@ jobs:
         run: bun run navigation-rail:check
       - name: Shared core rendering and lifecycle checks
         run: bun run core:check
+      - name: Web component elements in a real browser
+        run: bun run elements:check
       - name: Browser comparison artifacts
         if: always()
         uses: actions/upload-artifact@v4
