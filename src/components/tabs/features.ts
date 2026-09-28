@@ -3,6 +3,7 @@ import { createTab } from "./tab";
 import { TabConfig, TabComponent } from "./types";
 import { allocateTabsGroupId, updateTabPanels } from "./utils";
 import { createTabIndicator, TabIndicator } from "./indicator";
+import { TABS_DEFAULTS } from "./constants";
 
 // All component interfaces that are extended
 interface ComponentBase {
@@ -278,7 +279,7 @@ export interface IndicatorFeatureConfig {
   /** Tabs variant passed to the indicator */
   variant?: string;
   /** Width strategy for the indicator */
-  widthStrategy?: "fixed" | "dynamic" | "content";
+  widthStrategy?: "fixed" | "dynamic" | "content" | "auto";
   /** Height of the indicator in pixels */
   height?: number;
   /** Fixed width in pixels (when using fixed strategy) */
@@ -292,15 +293,16 @@ export interface IndicatorFeatureConfig {
   /** Legacy height property */
   indicatorHeight?: number;
   /** Legacy width strategy property */
-  indicatorWidthStrategy?: "fixed" | "dynamic" | "content";
+  indicatorWidthStrategy?: "fixed" | "dynamic" | "content" | "auto";
   /** Indicator configuration object */
   indicator?: {
-    widthStrategy?: "fixed" | "dynamic" | "content";
+    widthStrategy?: "fixed" | "dynamic" | "content" | "auto";
     height?: number;
     fixedWidth?: number;
     animationDuration?: number;
     animationTiming?: string;
     color?: string;
+    visible?: boolean;
   };
 }
 
@@ -340,14 +342,16 @@ export const withIndicator =
       widthStrategy:
         indicatorConfig.widthStrategy ||
         config.indicatorWidthStrategy ||
-        "auto", // Changed default to 'auto'
+        TABS_DEFAULTS.INDICATOR_WIDTH_STRATEGY,
       // Left undefined, the indicator takes its variant's height and the stylesheet's
       // spring (FLO-262); given, they override them.
       height: indicatorConfig.height || config.indicatorHeight,
-      fixedWidth: indicatorConfig.fixedWidth || 40,
+      fixedWidth: indicatorConfig.fixedWidth || TABS_DEFAULTS.INDICATOR_FIXED_WIDTH,
       animationDuration: indicatorConfig.animationDuration,
       animationTiming: indicatorConfig.animationTiming,
       color: indicatorConfig.color,
+      // Accepted and never passed on (FLO-264).
+      visible: indicatorConfig.visible,
       // Pass the tabs variant to the indicator
       variant: config.variant ?? "primary",
     });

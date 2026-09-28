@@ -44,6 +44,8 @@ export interface IndicatorConfig {
   animationTiming?: string;
   /** Custom color for the indicator */
   color?: string;
+  /** Whether the indicator shows; hide() and show() change it later */
+  visible?: boolean;
   /** Tab variant (primary or secondary) */
   variant?: string;
 }
@@ -263,7 +265,7 @@ export interface TabsConfig {
    * Tab indicator width strategy
    * @deprecated Use indicator.widthStrategy instead
    */
-  indicatorWidthStrategy?: 'fixed' | 'dynamic' | 'content';
+  indicatorWidthStrategy?: 'fixed' | 'dynamic' | 'content' | 'auto';
 }
 
 /**

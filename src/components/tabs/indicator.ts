@@ -88,8 +88,12 @@ export const createTabIndicator = (config: TabIndicatorConfig = {}): TabIndicato
   element.style.height = `${mergedConfig.height ?? (mergedConfig.variant === 'secondary' ? SECONDARY_HEIGHT : PRIMARY_HEIGHT)}px`;
   
   // Set initial visibility
-  if (!mergedConfig.visible) {
+  if (mergedConfig.visible === false) {
     element.style.opacity = '0';
+  }
+  // Accepted and never read; only setColor() coloured it (FLO-264).
+  if (mergedConfig.color) {
+    element.style.backgroundColor = mergedConfig.color;
   }
   
   // Track current tab to be able to update on resize

@@ -21,12 +21,23 @@ export interface ResponsiveConfig {
   responsive?: boolean;
   /** Options for small screens */
   smallScreen?: {
-    /** Layout to use on small screens */
+    /**
+     * Layout below the small breakpoint: `icon-only` hides the labels of tabs
+     * that have an icon (the label still names the tab), `text-only` hides the
+     * icons of tabs that have a label, `icon-and-text` keeps every tab as built.
+     * @default 'icon-only'
+     */
     layout?: 'icon-only' | 'text-only' | 'icon-and-text';
-    /** Maximum tabs to show before scrolling */
+    /**
+     * @deprecated Never had an effect (FLO-232). M3 advises no more than four
+     * tabs; for more, use a scrollable row.
+     */
     maxVisibleTabs?: number;
   };
-  /** Custom breakpoint values */
+  /**
+   * Breakpoints. Only `small` switches the layout; `medium` and `large` are
+   * accepted and unused.
+   */
   breakpoints?: {
     small?: number;
     medium?: number;
@@ -39,8 +50,19 @@ export interface ResponsiveConfig {
  */
 type ResponsiveTabs = TabsComponent & { _resizeObserver?: ResizeObserver };
 
+type Layout = 'icon-only' | 'text-only' | 'icon-and-text';
+const LAYOUTS: Layout[] = ['icon-only', 'text-only', 'icon-and-text'];
+
+/** The layout a tab's own content gives it, as the tab computes it. */
+const naturalLayout = (tab: TabComponent): Layout =>
+  tab.getIcon() && tab.getText() ? 'icon-and-text' : tab.getIcon() ? 'icon-only' : 'text-only';
+
 /**
- * Enhances tabs with responsive behavior
+ * Enhances tabs with responsive behavior.
+ *
+ * Every update reads the group's tabs and each tab's content as they are then,
+ * so tabs added later and labels or icons changed later follow the layout; it
+ * held a snapshot taken at setup and restored layouts from it. FLO-232.
  * @param tabs - The tabs component to enhance
  * @param config - Responsive configuration
  */
@@ -50,86 +72,61 @@ export const setupResponsiveBehavior = (
 ): void => {
   if (config.responsive === false) return;
   
-  // Merge custom breakpoints with defaults
-  const breakpoints = {
-    small: config.breakpoints?.small || RESPONSIVE_BREAKPOINTS.SMALL,
-    medium: config.breakpoints?.medium || RESPONSIVE_BREAKPOINTS.MEDIUM,
-    large: config.breakpoints?.large || RESPONSIVE_BREAKPOINTS.LARGE
+  const small = config.breakpoints?.small || RESPONSIVE_BREAKPOINTS.SMALL;
+  const smallLayout: Layout = config.smallScreen?.layout || 'icon-only';
+  let isSmall = false;
+
+  /** The layout a tab takes now: its own, or the small-screen one it can show. */
+  const layoutFor = (tab: TabComponent): Layout => {
+    const natural = naturalLayout(tab);
+    if (!isSmall || natural !== 'icon-and-text' || smallLayout === 'icon-and-text') return natural;
+    return smallLayout;
   };
-  
-  // Default small screen configuration
-  const smallScreen = {
-    layout: config.smallScreen?.layout || 'icon-only',
-    maxVisibleTabs: config.smallScreen?.maxVisibleTabs || 4
-  };
-  
-  // Store original tab layouts to restore later
-  const originalLayouts = new Map<TabComponent, string>();
-  
-  // Get all tabs
-  const allTabs = tabs.getTabs();
-  
-  // Save original layouts
-  allTabs.forEach(tab => {
-    // Determine current layout
-    let layout = 'text-only';
-    if (tab.getIcon() && tab.getText()) {
-      layout = 'icon-and-text';
-    } else if (tab.getIcon()) {
-      layout = 'icon-only';
+
+  const apply = (tab: TabComponent): void => {
+    const layout = layoutFor(tab);
+    for (const name of LAYOUTS) {
+      tab.element.classList.toggle(`${tab.getClass('tab')}--${name}`, name === layout);
     }
-    
-    originalLayouts.set(tab, layout);
-  });
-  
+  };
+
+  // A tab recomputes its own layout when its text or icon changes; the
+  // responsive one is applied again after it.
+  const followed = new WeakSet<TabComponent>();
+  const follow = (tab: TabComponent): void => {
+    if (followed.has(tab)) return;
+    followed.add(tab);
+    const own = tab.updateLayoutStyle.bind(tab);
+    tab.updateLayoutStyle = () => {
+      own();
+      apply(tab);
+    };
+  };
+
   /**
    * Update tabs layout based on screen size
    */
   const updateLayout = (): void => {
-    const width = window.innerWidth;
-    
-    if (width < breakpoints.small) {
-      // Small screen behavior
-      allTabs.forEach(tab => {
-        // Skip if tab has no icon but we want icon-only
-        if (smallScreen.layout === 'icon-only' && !tab.getIcon()) {
-          return;
-        }
-        
-        // Apply layout according to small screen config
-        if (smallScreen.layout === 'icon-only' && tab.getIcon()) {
-          // Keep text for accessibility but visually show only icon
-          tab.element.classList.remove(`${tab.getClass('tab')}--icon-and-text`);
-          tab.element.classList.remove(`${tab.getClass('tab')}--text-only`);
-          tab.element.classList.add(`${tab.getClass('tab')}--icon-only`);
-        } else if (smallScreen.layout === 'text-only') {
-          tab.element.classList.remove(`${tab.getClass('tab')}--icon-and-text`);
-          tab.element.classList.remove(`${tab.getClass('tab')}--icon-only`);
-          tab.element.classList.add(`${tab.getClass('tab')}--text-only`);
-        }
-      });
-      
-      // Add responsive class
-      tabs.element.classList.add(`${tabs.getClass('tabs')}--responsive-small`);
-    } else {
-      // Restore original layouts for medium and large screens
-      allTabs.forEach(tab => {
-        const originalLayout = originalLayouts.get(tab) || 'text-only';
-        
-        tab.element.classList.remove(`${tab.getClass('tab')}--icon-only`);
-        tab.element.classList.remove(`${tab.getClass('tab')}--text-only`);
-        tab.element.classList.remove(`${tab.getClass('tab')}--icon-and-text`);
-        
-        tab.element.classList.add(`${tab.getClass('tab')}--${originalLayout}`);
-      });
-      
-      // Remove responsive class
-      tabs.element.classList.remove(`${tabs.getClass('tabs')}--responsive-small`);
-    }
+    isSmall = window.innerWidth < small;
+    tabs.getTabs().forEach(tab => {
+      follow(tab);
+      apply(tab);
+    });
+    tabs.element.classList.toggle(`${tabs.getClass('tabs')}--responsive-small`, isSmall);
   };
   
   // Initial layout update
   updateLayout();
+
+  // Tabs added later take the current layout at once.
+  for (const method of ['addTab', 'add'] as const) {
+    const original = tabs[method] as (...args: unknown[]) => unknown;
+    (tabs as unknown as Record<string, unknown>)[method] = (...args: unknown[]) => {
+      const result = original.apply(tabs, args);
+      updateLayout();
+      return result;
+    };
+  }
   
   // Set up resize listener
   const resizeObserver = new ResizeObserver(updateLayout);
