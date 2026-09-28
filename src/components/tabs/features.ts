@@ -56,6 +56,9 @@ export interface TabsManagementComponent {
   /** Tab click handler */
   handleTabClick: (event: Event | null, tab: TabComponent) => void;
 
+  /** This tablist's id, carried by every tab it builds, including added ones */
+  groupId: string;
+
   /** Get all tabs */
   getTabs?: () => TabComponent[];
 
@@ -177,6 +180,7 @@ export const withTabsManagement =
       tabs,
       tabsContainer,
       handleTabClick,
+      groupId,
       getTabs,
       getActiveTab,
     };

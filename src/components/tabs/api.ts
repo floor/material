@@ -26,6 +26,8 @@ interface ComponentWithElements {
   tabsContainer: HTMLElement;
   /** Tab click handler */
   handleTabClick: (event: Event | null, tab: TabComponent) => void;
+  /** The tablist's id, which added tabs carry as the initial ones do */
+  groupId?: string;
   /** Scroll container (optional) */
   scrollContainer?: HTMLElement;
   /** Class name helper */
@@ -61,7 +63,10 @@ export const withAPI = ({ lifecycle }: ApiOptions) =>
       const mergedConfig = {
         ...config,
         prefix: component.config.prefix,
-        variant: config.variant || component.config.variant
+        variant: config.variant || component.config.variant,
+        // The group's id, as the initial tabs have: without it an added tab's id
+        // was `tab--<value>`, colliding across tablists (FLO-229, FLO-263).
+        groupId: component.groupId,
       };
       
       // Ensure value is set if not provided
