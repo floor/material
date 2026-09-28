@@ -121,7 +121,13 @@ try {
     // includes() in place of the Set measured 3 bytes worse, so this is close
     // to what the check costs. Writing disabled="false" for disabled: false
     // disabled the control, which is not a trade worth 71 bytes to keep.
-    { name: "slider", code: "export { createSlider } from 'mtrl';", gzip: 11750 },
+    // M3 conformance (FLO-249, FLO-250, FLO-252) adds 888, 11,594 to 12,482 against
+    // 6b2143b: the three variants' track geometry after Compose's drawTrack with a stop
+    // at each end, the handle narrowing on focus, settling on a spring only for value
+    // changes that do not follow the pointer, the inset icon placed on whichever track
+    // holds it, and vertical orientation through one axis description shared by the
+    // track, the controller and the pointer handlers rather than a second code path.
+    { name: "slider", code: "export { createSlider } from 'mtrl';", gzip: 12600 },
     { name: "navigation-rail", code: "export { createNavigationRail } from 'mtrl';", gzip: 7000 },
     { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 6500 },
     { name: "textfield", code: "export { createTextfield } from 'mtrl';", gzip: 8500 },
