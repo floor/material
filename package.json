@@ -46,10 +46,6 @@
       "types": "./dist/components/*/index.d.ts",
       "import": "./dist/components/*/index.js"
     },
-    "./elements": {
-      "types": "./dist/elements/index.d.ts",
-      "import": "./dist/elements/index.js"
-    },
     "./core": {
       "types": "./dist/core/index.d.ts",
       "import": "./dist/core/index.js"
