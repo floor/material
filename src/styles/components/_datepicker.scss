@@ -64,6 +64,14 @@ $component: '#{base.$prefix}-datepicker';
   &--animate[open] { animation: #{$component}-appear v.motion('duration-short3') v.motion('easing-standard'); }
   @media (prefers-reduced-motion: reduce) { &--animate[open] { animation: none; } }
   &__days { padding: 0 12px 8px; }
+  // The months' scroll-snapping track: one month per page, no visible scrollbar.
+  // Swipe, trackpad and wheel paging are the browser's own. FLO-274.
+  &__track {
+    display: flex; overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory; scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+    > .#{$component}__days { flex: 0 0 100%; box-sizing: border-box; scroll-snap-align: start; scroll-snap-stop: always; }
+  }
   &__weekdays, &__week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
   &__weekday, &__cell { display: flex; align-items: center; justify-content: center; height: 48px; min-width: 0; }
   &__weekday { @include m.typography('body-large'); }

@@ -24,6 +24,7 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
   const settings = createBaseConfig(config);
   const base = pipe(createBase, withEvents(), withElement(getContainerConfig(settings)), withDisabled(settings), withLifecycle())(settings);
   const doc = base.element.ownerDocument;
+  const view = doc.defaultView ?? window;
   const id = `${PREFIX}-datepicker-${++nextId}`;
   const cls = (name: string) => base.getClass(`datepicker__${name}`);
   const today = parseDate(new Date())!;
@@ -73,9 +74,17 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     const selector = state.inputMode ? '[data-entry="start"]' : '[data-date][tabindex="0"], [data-month][tabindex="0"], [data-year][tabindex="0"]';
     (dialog.querySelector<HTMLElement>(selector) ?? dialog.querySelector<HTMLElement>('button:not(:disabled)'))?.focus();
   };
+  const track = () => dialog.querySelector<HTMLElement>(`.${cls("track")}`);
+  const rtl = (element: HTMLElement) => view.getComputedStyle(element).direction === "rtl";
+  // The current month is the middle page; re-centred without motion after each render.
+  const centre = () => {
+    const element = track();
+    if (element?.clientWidth) element.scrollLeft = (rtl(element) ? -1 : 1) * element.clientWidth;
+  };
   const render = (focus = false, action?: string) => {
     if (!opened || destroyed) return;
     dialog.replaceChildren(renderCalendar(state), announcement);
+    centre();
     announcement.textContent = new Date(state.currentYear, state.currentMonth, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
     if (action) dialog.querySelector<HTMLElement>(`[data-action="${action}"]`)?.focus();
     else if (focus) focusCurrent();
@@ -111,6 +120,7 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     else if (!modal && typeof dialog.show === "function") dialog.show();
     else dialog.setAttribute("open", "");
     if (modal) unlock = lockScroll(doc);
+    centre();
     trigger.setAttribute("aria-expanded", "true"); focusCurrent(); base.emit("open", { value: getValue() });
   };
   const assignValue = (value: Date | string | [Date | string, Date | string], emit: boolean) => {
@@ -181,7 +191,14 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     else if (action === "confirm") { if (validateEntries()) { commitDraft(); close(); } }
     else if (action === "toggle-mode") { if (state.inputMode && !validateEntries()) return; state.inputMode = !state.inputMode; render(true); }
     else if (action === "month" || action === "year") { state.currentView = action; render(true); }
-    else if (action === "prev" || action === "next") { navigate(action === "prev" ? -1 : 1); render(false, action); }
+    else if (action === "prev" || action === "next") {
+      // In the day view the arrows slide the track as a swipe would; the month
+      // changes when it settles. Reduced motion, or no layout, changes it at once.
+      const element = state.currentView === "day" ? track() : null;
+      if (element?.clientWidth && !view.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+        element.scrollBy({ left: (action === "prev" ? -1 : 1) * (rtl(element) ? -1 : 1) * element.clientWidth, behavior: "smooth" });
+      } else { navigate(action === "prev" ? -1 : 1); render(false, action); }
+    }
   };
   const onKey = (event: KeyboardEvent) => {
     if (event.key === "Enter" && event.target === input && !modal) { event.preventDefault(); onInputChange(); return; }
@@ -228,6 +245,24 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     const target = event.target instanceof HTMLElement ? event.target : null;
     if (target?.dataset.date) { state.focusedDate = parseDate(target.dataset.date)!; dialog.querySelectorAll<HTMLElement>('[data-date]').forEach(el => el.tabIndex = el === target ? 0 : -1); }
   };
+  // A settled swipe, or an arrow's slide: the page it rests on becomes the month.
+  // scrollend where there is one; otherwise the scroll going quiet. FLO-274.
+  let quiet: ReturnType<typeof setTimeout> | undefined;
+  const settle = () => {
+    const element = track();
+    if (!opened || !element?.clientWidth) return;
+    const page = Math.round(Math.abs(element.scrollLeft) / element.clientWidth) - 1;
+    if (!page) return;
+    const active = doc.activeElement instanceof HTMLElement && dialog.contains(doc.activeElement) ? doc.activeElement : null;
+    navigate(page);
+    render(!!active?.dataset.date, active?.dataset.action);
+  };
+  const onScroll = (event: Event) => {
+    if (!(event.target instanceof HTMLElement) || event.target !== track()) return;
+    if (event.type === "scrollend") { settle(); return; }
+    if ("onscrollend" in view) return;
+    clearTimeout(quiet); quiet = setTimeout(settle, 150);
+  };
   const onCancel = (event: Event) => { event.preventDefault(); close(); };
   const onOutside = (event: MouseEvent) => {
     if (!opened) return;
@@ -244,6 +279,7 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
   base.element.addEventListener("click", onClick); base.element.addEventListener("keydown", onKey);
   base.element.addEventListener("focusout", onFocusOut); dialog.addEventListener("focusin", onFocus);
   dialog.addEventListener("click", onDialogClick); dialog.addEventListener("input", onEntry); dialog.addEventListener("cancel", onCancel);
+  dialog.addEventListener("scroll", onScroll, true); dialog.addEventListener("scrollend", onScroll, true);
   input.addEventListener("change", onInputChange); input.addEventListener("click", onInputClick); doc.addEventListener("click", onOutside);
   const setDisabled = (disabled: boolean) => {
     if (destroyed) return;
@@ -256,6 +292,7 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     doc.removeEventListener("click", onOutside); input.removeEventListener("change", onInputChange); input.removeEventListener("click", onInputClick);
     base.element.removeEventListener("click", onClick); base.element.removeEventListener("keydown", onKey); base.element.removeEventListener("focusout", onFocusOut);
     dialog.removeEventListener("focusin", onFocus); dialog.removeEventListener("click", onDialogClick); dialog.removeEventListener("input", onEntry); dialog.removeEventListener("cancel", onCancel);
+    dialog.removeEventListener("scroll", onScroll, true); dialog.removeEventListener("scrollend", onScroll, true); clearTimeout(quiet);
     base.lifecycle.destroy();
   };
   const api = withAPI({

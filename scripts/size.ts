@@ -121,8 +121,8 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   card: kb(7.0),
   carousel: kb(10.3),
   checkbox: kb(5.5),
-  chips: kb(9.0), // FLO-256..261 chips conformance
-  datepicker: kb(10.5), // FLO-238 calendar and input conformance
+  chips: kb(9.1), // FLO-256..261 chips conformance; #221 pointer focus
+  datepicker: kb(10.9), // FLO-238 calendar and input conformance; FLO-274 month swiping
   dialog: kb(11.8),
   divider: kb(3.7),
   drawer: kb(7.5),
@@ -141,13 +141,13 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "segmented-button": kb(9.3),
   slider: kb(12.6), // FLO-249..255 slider conformance
   snackbar: kb(11.3),
-  switch: kb(6.0),
+  switch: kb(6.1), // #214 conformance; #218 node labels
   tabs: kb(13.0),
   textfield: kb(8.1),
   timepicker: kb(10.3),
   "top-app-bar": kb(4.4),
   tooltip: kb(5.6),
-  all: kb(108.7), // the conformance work above, measured 2026-09-28
+  all: kb(109.1), // the conformance work above, measured 2026-09-29
 };
 
 export interface SizeGateInput {
