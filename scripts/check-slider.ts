@@ -25,7 +25,9 @@ const size = { raw: Buffer.byteLength(js), gzip: gzipSync(js, { level: 9 }).leng
 // The package budget for the slider (check-package-size.ts) moved to 11,500 when the URL
 // allowlist reached every bundle; this copy stayed at 11,000, 17 bytes above the slider
 // (10,983), until linking a label to its input (#67) added 19 and crossed it at 11,002.
-assert(size.gzip < 11500, `Slider JS exceeds 11,500 gzip bytes: ${size.gzip}`);
+// It follows check-package-size.ts again at 12,600 for M3 conformance (FLO-250, FLO-252),
+// which took this build from 11,410 to 12,308; the breakdown is in that fixture.
+assert(size.gzip < 12600, `Slider JS exceeds 12,600 gzip bytes: ${size.gzip}`);
 const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
   const url = new URL(request.url);
   if (url.pathname === "/slider.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
