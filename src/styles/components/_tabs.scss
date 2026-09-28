@@ -26,11 +26,10 @@ $container: "#{base.$prefix}-tabs";
             min-height: 64px;
         }
 
-        // Primary indicator specific styling
+        // Primary indicator: m3.material.io tabs specs, shape "3, 3, 0, 0" (the top
+        // corners only; Compose rounds all four) at 3dp, set by indicator.ts. FLO-262.
         .#{$container}__indicator {
-            // Height comes from the indicator's own option, defaulting to
-            // ActiveIndicatorHeight = 3dp; ActiveIndicatorShape is a 3px corner.
-            border-radius: 3px;
+            border-radius: 3px 3px 0 0;
             background-color: t.color("primary");
         }
     }
@@ -39,8 +38,8 @@ $container: "#{base.$prefix}-tabs";
         min-height: 48px;
         // Tab indicator styling for secondary variant
         .#{$container}__indicator {
-            // TabRowDefaults.SecondaryIndicator takes the primary token for both the
-            // height and the colour (TabRow.kt:1080-1081).
+            // 2dp, set by indicator.ts: the site's secondary indicator height (Compose's
+            // SecondaryIndicator takes the primary 3dp; the site wins). FLO-262.
             border-radius: 0;
             background-color: t.color("primary");
         }
@@ -106,15 +105,17 @@ $container: "#{base.$prefix}-tabs";
     // Tab indicator styling - base styles
     &__indicator {
         position: absolute;
-        bottom: 1px;
+        // On the row's bottom edge, over the divider, as the site draws it. FLO-262.
+        bottom: 0;
         // indicator.ts measures from the scroll container's left edge and moves the
         // indicator with translateX, so it has to start there. Without `left` an
         // absolute box sits at its static position: 0 in the fixed row, but past the
         // 52px padding-inline of the scrollable row, which offset every tab by that.
         left: 0;
-        transition:
-            transform 250ms cubic-bezier(0.4, 0, 0.2, 1),
-            width 250ms cubic-bezier(0.4, 0, 0.2, 1);
+        // Compose springs the indicator's offset and width (damping 0.9, stiffness
+        // 700): the default spatial spring. indicator.ts moves it without motion on
+        // the first render and on resize. FLO-262.
+        transition: m.spring(transform, default-spatial), m.spring(width, default-spatial);
         z-index: 1; // Ensure indicator appears above divider
     }
 }
@@ -136,8 +137,8 @@ $container: "#{base.$prefix}-tabs";
     user-select: none;
     flex-shrink: 0;
 
-    // Typography for label text (4. Label)
-    @include m.typography("label-large");
+    // Typography for label text (4. Label): LabelTextFont = TitleSmall
+    @include m.typography("title-small");
 
     // Transition for state changes
     transition:
@@ -158,14 +159,22 @@ $container: "#{base.$prefix}-tabs";
         flex-direction: column;
     }
 
+    // A tab with an icon is a button with an icon, whose text-button padding is
+    // 12dp on the icon side: the stacked icon sat 2px off-centre. FLO-262.
+    &.#{base.$prefix}-button--icon {
+        padding: 0 16px;
+    }
+
     // Focus styles (3/7. Focused state)
     &:focus {
         outline: none;
     }
 
+    // md.comp.focus-ring: 3dp in secondary, drawn inward because a tab sits at the
+    // row's edge and inside a scroll container that would clip it. FLO-262.
     &:focus-visible {
-        outline: 2px solid t.color("primary");
-        outline-offset: -2px;
+        outline: 3px solid t.color("secondary");
+        outline-offset: -3px;
         z-index: 1;
     }
 
@@ -244,14 +253,13 @@ $container: "#{base.$prefix}-tabs";
             // Hover state for active tabs
             &:hover,
             &.#{$component}--hover {
-                background-color: t.alpha("primary", 0.08);
+                background-color: t.alpha("primary", v.state("hover-state-layer-opacity"));
             }
 
             // Focused state for active tabs
             &:focus-visible,
             &.#{$component}--focus {
-                background-color: t.alpha("primary", 0.1);
-                outline-color: t.color("primary");
+                background-color: t.alpha("primary", v.state("focus-state-layer-opacity"));
             }
 
             // Pressed state for active tabs
@@ -259,7 +267,6 @@ $container: "#{base.$prefix}-tabs";
             &:active:not(:has(> .#{base.$prefix}-ripple)),
             &.#{$component}--pressed {
                 background-color: t.alpha("primary", v.state("pressed-state-layer-opacity"));
-                border-radius: 5px 5px 0 0;
             }
         }
 
@@ -269,25 +276,35 @@ $container: "#{base.$prefix}-tabs";
             ) {
             color: t.color("on-surface-variant");
 
-            // Hover state for inactive tabs
+            // An inactive tab's label and icon turn on-surface in every interaction
+            // state (InactiveHover/Focus/PressedLabelTextColor = OnSurface), over an
+            // on-surface layer; FLO-262.
             &:hover,
             &.#{$component}--hover {
-                background-color: t.alpha("on-surface-variant", 0.08);
+                color: t.color("on-surface");
+                background-color: t.alpha("on-surface", v.state("hover-state-layer-opacity"));
             }
 
-            // Focused state for inactive tabs
             &:focus-visible,
             &.#{$component}--focus {
-                background-color: t.alpha("on-surface-variant", 0.1);
-                outline-color: t.color("on-surface-variant");
+                color: t.color("on-surface");
+                background-color: t.alpha("on-surface", v.state("focus-state-layer-opacity"));
             }
 
-            // Pressed state for inactive tabs
-            // A rippled tab leaves the press to its ripple (FLO-260).
+            // The press is primary: "tapping a non-selected tab will select it"
+            // (MDC inactive_pressed_state_layer_color). The ripple draws it (FLO-260).
+            &:active,
+            &.#{$component}--pressed {
+                color: t.color("on-surface");
+            }
+
             &:active:not(:has(> .#{base.$prefix}-ripple)),
             &.#{$component}--pressed {
-                background-color: t.alpha("on-surface-variant", v.state("pressed-state-layer-opacity"));
-                border-radius: 5px 5px 0 0;
+                background-color: t.alpha("primary", v.state("pressed-state-layer-opacity"));
+            }
+
+            .#{base.$prefix}-ripple-wave {
+                background-color: t.color("primary");
             }
         }
     }
@@ -305,14 +322,13 @@ $container: "#{base.$prefix}-tabs";
             // Hover state for active tabs - secondary
             &:hover,
             &.#{$component}--hover {
-                background-color: t.alpha("on-surface", 0.08);
+                background-color: t.alpha("on-surface", v.state("hover-state-layer-opacity"));
             }
 
             // Focused state for active tabs - secondary
             &:focus-visible,
             &.#{$component}--focus {
-                background-color: t.alpha("on-surface", 0.1);
-                outline-color: t.color("on-surface");
+                background-color: t.alpha("on-surface", v.state("focus-state-layer-opacity"));
             }
 
             // Pressed state for active tabs - secondary
@@ -329,25 +345,29 @@ $container: "#{base.$prefix}-tabs";
             ) {
             color: t.color("on-surface-variant");
 
-            // Hover state for inactive tabs - secondary
+            // Secondary tabs: label, icon and layer on-surface in every interaction
+            // state, active or not (SecondaryNavigationTabTokens). FLO-262.
             &:hover,
             &.#{$component}--hover {
-                background-color: t.alpha("on-surface-variant", 0.08);
+                color: t.color("on-surface");
+                background-color: t.alpha("on-surface", v.state("hover-state-layer-opacity"));
             }
 
-            // Focused state for inactive tabs - secondary
             &:focus-visible,
             &.#{$component}--focus {
-                background-color: t.alpha("on-surface-variant", 0.1);
-                outline-color: t.color("on-surface-variant");
+                color: t.color("on-surface");
+                background-color: t.alpha("on-surface", v.state("focus-state-layer-opacity"));
             }
 
-            // Pressed state for inactive tabs - secondary
+            &:active,
+            &.#{$component}--pressed {
+                color: t.color("on-surface");
+            }
+
             // A rippled tab leaves the press to its ripple (FLO-260).
             &:active:not(:has(> .#{base.$prefix}-ripple)),
             &.#{$component}--pressed {
-                background-color: t.alpha("on-surface-variant", v.state("pressed-state-layer-opacity"));
-                border-radius: 5px 5px 0 0;
+                background-color: t.alpha("on-surface", v.state("pressed-state-layer-opacity"));
             }
         }
     }
