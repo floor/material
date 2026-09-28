@@ -161,7 +161,7 @@ async function checkRadios(page: Page): Promise<number> {
     host.style.cssText = "padding:24px";
     state.controlsHost = host;
     document.body.append(host);
-    const group = state.inputs.createRadios({ name: "size", value: "s", options: [{ value: "s", label: "Small" }, { value: "m", label: "Medium" }, { value: "l", label: "Large" }] });
+    const group = state.inputs.createRadios({ name: "size", value: "s", options: [{ value: "s", label: "Small" }, { value: "m", label: "Medium" }, { value: "l", label: "Large" }, { value: "x", label: "Before", labelBefore: true }] });
     group.element.id = "rd";
     host.append(group.element);
   }, dir);
@@ -174,7 +174,12 @@ async function checkRadios(page: Page): Promise<number> {
     await settle(page);
     const control = await box(page, `${item(1)} .mtrl-radios__control`), text = await box(page, `${item(1)} .mtrl-radios__text`);
     assert.equal(dir === "ltr" ? text.left - control.right : control.left - text.right, 8, `${dir}: 8dp between the control and its label`);
-    checks += 1;
+    // labelBefore: the text leads in reading order, 8dp from the control.
+    const beforeControl = await box(page, `${item(4)} .mtrl-radios__control`), beforeText = await box(page, `${item(4)} .mtrl-radios__text`);
+    assert.equal(dir === "ltr" ? beforeControl.left - beforeText.right : beforeText.left - beforeControl.right, 8, `${dir}: labelBefore puts the label first, 8dp from the control`);
+    // Vertical rows are their 48dp targets, with no gap.
+    assert.equal((await box(page, item(2))).top - (await box(page, item(1))).top, 48, `${dir}: 48dp between vertical rows`);
+    checks += 3;
   }
   await page.evaluate(() => { document.documentElement.dir = "ltr"; });
   await page.mouse.move(0, 0);

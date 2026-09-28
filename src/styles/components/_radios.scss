@@ -16,13 +16,8 @@ $component: '#{base.$prefix}-radios';
   &--vertical {
     flex-direction: column;
 
-    .#{$component}__item {
-      margin-bottom: 12px;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
+    // Each option is its own 48dp target, so the rows stack with no gap between
+    // them (a 12px margin made the pitch 60px).
   }
 
   // Horizontal layout
@@ -110,9 +105,9 @@ $component: '#{base.$prefix}-radios';
     // Typography for label
     @include m.typography('body-medium');
 
+    // The text already comes first in the DOM (radio.ts); reversing the row put it
+    // back after the control.
     &--before {
-      flex-direction: row-reverse;
-
       .#{$component}__text {
         margin-inline: 0 8px;
       }
