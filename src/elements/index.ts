@@ -22,6 +22,12 @@ export type {
   AttributeSpec, AttributeType, PropertySpec, EventSpec, SlotSpec, FormSpec,
 } from "./define";
 export { registerStyles, hasStyles } from "./styles";
+export {
+  describe, describeDeclaration, camel, pascal, toAttribute, getPrefix, configure, isBrowser,
+} from "./adapter";
+export type {
+  ComponentSpec, DeclarationSpec, DefaultProps, FormProps, ModelOf, Pascal, AttributeProp, Described,
+} from "./adapter";
 export { buttonElement, defineButton } from "./button";
 export type { ButtonSpec, ButtonElement } from "./button";
 export { switchElement, defineSwitch } from "./switch";
