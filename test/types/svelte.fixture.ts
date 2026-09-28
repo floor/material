@@ -1,0 +1,30 @@
+// test/types/svelte.fixture.ts
+//
+// The Svelte components' props are derived from the element specs; the
+// generated dist/svelte/*.svelte.d.ts files apply these types. Nothing here
+// runs; the assertions are the test.
+//
+// Compiled by `bun run tooling:check` via tsconfig.types.json.
+import type { Bindable, SvelteProps } from "../../src/svelte/runtime";
+import type { SwitchSpec, TabsSpec, ButtonSpec } from "../../src/elements";
+
+/** true when A and B are the same type */
+type Equals<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
+const assert = <T extends true>(): T => true as T;
+
+type SwitchProps = SvelteProps<SwitchSpec>;
+assert<Equals<SwitchProps["checked"], boolean | undefined>>();
+assert<Equals<SwitchProps["defaultChecked"], boolean | undefined>>();
+assert<Equals<SwitchProps["name"], string | undefined>>();
+// Svelte 5 names event props in lower case.
+assert<Equals<SwitchProps["onchange"], ((event: CustomEvent<{ checked: boolean; value: string }>) => void) | undefined>>();
+// `bind:checked` is allowed, and only the live properties are bindable.
+assert<Equals<Bindable<SwitchSpec>, "checked">>();
+assert<Equals<Bindable<TabsSpec>, "value">>();
+assert<Equals<Bindable<ButtonSpec>, never>>();
+assert<Equals<SvelteProps<TabsSpec>["value"], string | null | undefined>>();
+// Host attributes still pass through.
+assert<Equals<SvelteProps<ButtonSpec>["class"], import("svelte/elements").ClassValue | null | undefined>>();
+
+// @ts-expect-error -- checked is a boolean
+export const wrong: SwitchProps = { checked: "yes" };

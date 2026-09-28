@@ -33,6 +33,7 @@ const switchSpec = {
     checked: { get: (c) => c.isChecked(), set: (c, v) => void c.setValue(!!v), config: "checked" },
   },
   methods: ["toggle", "check", "uncheck"] as const,
+  model: "checked" as const,
   events: {
     change: {
       detail: (payload) => {

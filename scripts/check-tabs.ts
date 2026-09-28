@@ -152,10 +152,85 @@ try {
     checks += 2;
   }
 
+  // FLO-262: the painted indicator, the stacked icon and the interaction states,
+  // against m3.material.io tabs specs.
+  await page.evaluate(() => { document.documentElement.dir = "ltr"; });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  type Painted = { tab: DOMRectLike; label: DOMRectLike; icon: DOMRectLike | null; indicator: DOMRectLike & { radius: string }; root: DOMRectLike };
+  type DOMRectLike = { left: number; width: number; bottom: number };
+  const paint = async (config: Record<string, unknown>): Promise<Painted> => {
+    await page.evaluate((c) => (window as unknown as { mount: (c: unknown) => void }).mount(c), config);
+    await page.waitForTimeout(120);
+    return page.evaluate(() => {
+      const box = (el: Element | null) => {
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { left: r.left, width: r.width, bottom: r.bottom };
+      };
+      const root = document.querySelector(".mtrl-tabs")!;
+      const tab = root.querySelector('[role="tab"]')!;
+      const indicator = root.querySelector(".mtrl-tabs__indicator")!;
+      return {
+        root: box(root)!, tab: box(tab)!, label: box(tab.querySelector(".mtrl-button__text"))!,
+        icon: box(tab.querySelector(".mtrl-button__icon")),
+        indicator: { ...box(indicator)!, radius: getComputedStyle(indicator).borderRadius },
+      };
+    });
+  };
+  const near = (a: number, b: number, what: string) => assert.ok(Math.abs(a - b) <= 0.5, `${what}: ${a} against ${b}`);
+  const primary = await paint({ variant: "primary", scrollable: false });
+  near(primary.indicator.width, primary.label.width - 4, "primary indicator: the label's width, inset 2dp on each side");
+  near(primary.indicator.left, primary.label.left + 2, "primary indicator: centred under the label");
+  near(primary.indicator.bottom, primary.root.bottom, "primary indicator: on the row's bottom edge, over the divider");
+  assert.equal(primary.indicator.radius, "3px 3px 0px 0px", "primary indicator: shape 3, 3, 0, 0");
+  const secondary = await paint({ variant: "secondary", scrollable: false });
+  near(secondary.indicator.width, secondary.tab.width, "secondary indicator: the tab's full width");
+  assert.equal(await page.locator(".mtrl-tabs__indicator").evaluate((el) => el.getBoundingClientRect().height), 2, "secondary indicator: 2dp");
+  const icon = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h16v16H4z"/></svg>';
+  const stacked = await paint({ scrollable: false, tabs: [{ text: "Flights", value: "f", state: "active", icon }, { text: "Trips", value: "t", icon }] });
+  near(stacked.icon!.left + stacked.icon!.width / 2, stacked.tab.left + stacked.tab.width / 2, "stacked tab: the icon centred");
+  checks += 8;
+
+  // Inactive tab states: label and layer on-surface on hover; the press is primary,
+  // drawn by the ripple; the focus ring is 3dp secondary, inward.
+  await paint({ variant: "primary", scrollable: false });
+  const colours = await page.evaluate(() => {
+    const probe = document.createElement("div");
+    document.body.append(probe);
+    const role = (name: string) => { probe.style.color = `var(--mtrl-sys-color-${name})`; return getComputedStyle(probe).color; };
+    const result = { onSurface: role("on-surface"), primary: role("primary"), secondary: role("secondary") };
+    probe.remove();
+    return result;
+  });
+  const inactive = page.locator('[role="tab"]').nth(1);
+  const where = (await inactive.boundingBox())!;
+  await page.mouse.move(where.x + 20, where.y + 20);
+  // The colour fades in; sample it once settled.
+  await inactive.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+  assert.equal(await inactive.evaluate((el) => getComputedStyle(el).color), colours.onSurface, "hovered inactive tab: on-surface label");
+  await page.mouse.down();
+  assert.equal(await inactive.locator(".mtrl-ripple-wave").first().evaluate((el) => getComputedStyle(el).backgroundColor), colours.primary, "pressed inactive tab: a primary ripple");
+  await page.mouse.up();
+  await page.mouse.move(0, 500);
+  // From a button before the row into its one tab stop, by keyboard, so
+  // :focus-visible applies.
+  await page.evaluate(() => {
+    const before = document.createElement("button");
+    before.id = "before-tabs";
+    document.getElementById("host")!.before(before);
+    before.focus();
+  });
+  await page.keyboard.press("Tab");
+  await page.evaluate(() => Promise.all(document.activeElement!.getAnimations().map((a) => a.finished)));
+  const ring = await page.evaluate(() => { const c = getComputedStyle(document.activeElement!); return `${c.outlineWidth} ${c.outlineStyle} ${c.outlineColor} ${c.outlineOffset}`; });
+  assert.equal(ring, `3px solid ${colours.secondary} -3px`, "focused tab: a 3dp secondary ring drawn inward");
+  checks += 3;
+
   assert.deepEqual(errors, [], `page errors: ${errors.join(", ")}`);
   console.log(
-    `Passed ${checks} tabs layout checks: fixed tabs in an evenly divided row, ` +
-      `scrollable tabs in their scroller, both directions, divider and indicator out of flow.`
+    `Passed ${checks} tabs checks: fixed tabs in an evenly divided row, ` +
+      `scrollable tabs in their scroller, both directions, divider and indicator out of flow, ` +
+      `the M3 indicator per variant, a centred stacked icon, inactive state colours and the focus ring.`
   );
 } finally {
   await browser.close();
