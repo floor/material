@@ -135,7 +135,7 @@ describe('checkbox', () => {
     checkbox.on('change', payload => payloads.push(payload));
     checkbox.input.addEventListener('change', event => nativeEvents.push(event));
     checkbox.input.click();
-    const keydown = new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    const keydown = new dom.window.KeyboardEvent('keydown', { key: ' ', bubbles: true });
     checkbox.input.dispatchEvent(keydown);
     expect(payloads).toHaveLength(2);
     expect(payloads.map(payload => payload.checked)).toEqual([true, false]);
@@ -146,6 +146,26 @@ describe('checkbox', () => {
       expect(payload.nativeEvent?.target).toBe(checkbox.input);
     });
     expect(payloads[1].nativeEvent).not.toBe(keydown);
+    checkbox.destroy();
+  });
+
+  // FLO-265 (Dr Jones): Space toggles; Enter is left to the form, as natively.
+  test('Enter does not toggle a checkbox, and is not cancelled', () => {
+    const checkbox = mount();
+    const enter = new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+    checkbox.input.dispatchEvent(enter);
+    expect(checkbox.isChecked()).toBe(false);
+    expect(enter.defaultPrevented).toBe(false);
+    checkbox.destroy();
+  });
+
+  test('error marks the checkbox and its input invalid, and setError clears it', () => {
+    const checkbox = mount({ error: true });
+    expect(checkbox.element.classList.contains('mtrl-checkbox--error')).toBe(true);
+    expect(checkbox.input.getAttribute('aria-invalid')).toBe('true');
+    expect(checkbox.setError(false)).toBe(checkbox);
+    expect(checkbox.element.classList.contains('mtrl-checkbox--error')).toBe(false);
+    expect(checkbox.input.hasAttribute('aria-invalid')).toBe(false);
     checkbox.destroy();
   });
 

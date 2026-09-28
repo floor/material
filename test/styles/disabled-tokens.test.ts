@@ -67,9 +67,13 @@ describe('disabled states use the per-role tokens', () => {
   });
 
   test('checkbox: the selected container takes on-surface 38% and the checkmark surface', () => {
-    const checked = find('checkbox', /--disabled .*:checked ~ .mtrl-checkbox__icon$/)[0];
+    // The rule covers checked and indeterminate alike (FLO-265).
+    const checked = find('checkbox', /--disabled .*:checked ~ .mtrl-checkbox__icon,/)[0];
     expect(declaration(checked, 'background-color')).toBe(onSurface(38));
-    expect(declaration(checked, 'color')).toBe('var(--mtrl-sys-color-surface)');
+    const check = find('checkbox', /--disabled .mtrl-checkbox__icon svg$/)[0];
+    expect(declaration(check, 'color')).toBe('var(--mtrl-sys-color-surface)');
+    const dash = find('checkbox', /--disabled.mtrl-checkbox--indeterminate .mtrl-checkbox__icon::after$/)[0];
+    expect(declaration(dash, 'background-color')).toBe('var(--mtrl-sys-color-surface)');
   });
 
   test('switch: the track is 12%, which is its own token, not the handle 38%', () => {

@@ -81,10 +81,27 @@ export interface CheckboxConfig {
   labelPosition?: CheckboxLabelPosition | string;
 
   /**
-   * Visual variant (filled/outlined)
-   * @default "filled"
+   * @deprecated Has no effect (FLO-94): M3 has one checkbox style. FLO-265.
    */
   variant?: CheckboxVariant | string;
+
+  /**
+   * Error state: the outline, the selected container and the state layers
+   * take the error role, and the input is marked `aria-invalid`. FLO-265.
+   * @default false
+   */
+  error?: boolean;
+
+  /**
+   * Accessible name when there is no visible label
+   */
+  ariaLabel?: string;
+
+  /**
+   * Whether Enter toggles as Space does. Off for a checkbox (FLO-265).
+   * @internal
+   */
+  enterToggles?: boolean;
 
   /**
    * Additional CSS classes to apply to the checkbox
@@ -204,6 +221,13 @@ export interface CheckboxComponent {
   setIndeterminate: (state: boolean) => CheckboxComponent;
 
   /**
+   * Sets or clears the error state
+   * @param error - Whether the checkbox is in error
+   * @returns Checkbox component for method chaining
+   */
+  setError: (error: boolean) => CheckboxComponent;
+
+  /**
    * Sets the checkbox's label text
    * @param text - New label text
    * @returns Checkbox component for method chaining
@@ -285,6 +309,7 @@ export interface BaseComponent {
   getValue?: () => string;
   setValue?: (value: string) => void;
   setIndeterminate?: (state: boolean) => void;
+  setError?: (error: boolean) => void;
   label?: {
     setText: (content: string) => void;
     getText: () => string;

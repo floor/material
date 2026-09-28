@@ -77,6 +77,11 @@ export const withAPI =
       return this;
     },
 
+    setError(error: boolean): CheckboxComponent {
+      component.setError?.(error);
+      return this;
+    },
+
     // Label management
     setLabel(text: string): CheckboxComponent {
       component.label?.setText(text);
