@@ -1,6 +1,97 @@
 mtrl — full changelog
 initial commit → latest
-989 commits · Feb 22, 2025 – Sep 17, 2026
+1332 commits · Feb 22, 2025 – Sep 29, 2026
+
+
+0.10.0-next.1
+
+  A prerelease of 0.10.0, the conformance and frameworks release, on npm
+  under `next` (npm install mtrl@next). Everything since 0.9.8, including
+  0.10.0-next.0, which shipped without notes. 0.10.x continues both lines of
+  work; 1.0.0 follows when they are finished.
+
+  Breaking
+
+  - Class names: addClass and the element builders no longer prefix, and
+    element classes are BEM (mtrl-dialog__header, not mtrl-dialog-header);
+    getClass is the one place a prefix is applied.
+  - Inline styles are an object of properties, never a CSS string.
+  - A boolean attribute set to false is left off instead of written "false".
+  - Typed event maps: on() and off() take the component's own event names
+    and payloads (button, fab, extended FAB, icon button, snackbar, switch,
+    radios, checkbox, textfield, time and date pickers, carousel, drawer,
+    chips). Misspelled events no longer compile.
+  - Selection: one rule for setting a selection by code across radios,
+    segmented button, select and tabs.
+  - Tabs: tab ids carry their group, and panel updates stay inside it.
+  - Chips: four Material chip factories, chip sets as an ARIA grid with a
+    3px focus ring, Material's selection defaults, input chips always
+    removable.
+  - List: the full Material list anatomy. Date picker: complete calendar
+    and input conformance. Slider and time picker: options, setters,
+    callbacks and form values agree.
+  - The legacy navigation component is removed; use navigation rail, drawer
+    or tabs.
+
+  Added
+
+  - Web components (experimental): mtrl/elements with <m-button>,
+    <m-switch>, <m-tabs> and <m-tab>, their CSS as modules
+    (mtrl/elements/css), shadow DOM, slots, form association (value,
+    validity, reset, restore) and server-safe imports.
+  - Framework adapters (experimental): mtrl/react (React 18 and 19),
+    mtrl/vue, mtrl/svelte (Svelte 5) and mtrl/solid, generated from the
+    elements, with typed props and events, two-way binding and server
+    rendering. The frameworks are optional peer dependencies.
+  - Button text and switch label accept a DOM node as well as a string.
+  - Slider: M3 tokens, variants, motion, inset icon, vertical orientation,
+    centred variant.
+  - Chips: filter chip trailing action and the dragged state.
+
+  Fixed
+
+  - M3 conformance: checkbox (box, state layers, focus ring, error, Space
+    only), radios (2dp ring, 10dp dot, state layers, keyboard-only focus),
+    switch (RTL handle, icons, states, focus, label side), tabs (indicator,
+    inactive colours, focus ring, manual activation, icon-only names,
+    responsive layout), time picker (colour roles, headline type, AM/PM as
+    a radiogroup, an accessible text-input mode), badge (empty labels,
+    overflow, positioning).
+  - The ripple is the press, and rippleConfig timing and opacity, which
+    were never applied, are deprecated.
+  - Themes: every theme has its inverse colour roles; baseline has its
+    error-container roles.
+  - Slider: range handles stop at each other, PageUp moves by a tenth, RTL,
+    listeners removed on destroy, no stray piece of track at a short end.
+  - Types: noImplicitAny, strictNullChecks and noImplicitThis are on for the
+    whole library; the four flagship factories declare what they return.
+
+  → v0.10.0-next.1
+
+
+0.9.8
+
+  The types and security patch that closed the 0.9 line, including the
+  changes planned for 0.9.7.
+
+  Fixed
+
+  - Core: one markup sink with a consumer policy for sanitizing and Trusted
+    Types; a throwing listener no longer stops the others;
+    lifecycle.destroy works whatever its receiver.
+  - Reduced motion stops movement and keeps fades.
+  - Time picker: a second picker works, and AM/PM answer the keyboard.
+  - Tabs: aria-controls points at a panel that exists.
+  - Textfield: the icon, prefix and suffix setters create their slot.
+  - Slider and menu: element lookups are scoped to their own component.
+  - Types: a types condition for mtrl/styles; select, menu, core, tabs,
+    chips, progress and more pass strictNullChecks.
+
+  Added
+
+  - Search, time picker and slider take part in forms under a name.
+
+  → v0.9.8
 
 
 0.9.6
