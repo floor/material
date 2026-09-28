@@ -32,6 +32,7 @@ work, and 1.0.0 follows when they are finished.
 - Slider: M3 tokens, variants and motion, the inset icon, vertical orientation and the centred
   variant.
 - Chips: the filter chip's trailing action and the dragged state.
+- Date picker: swipe horizontally between months.
 
 ### Changed
 
