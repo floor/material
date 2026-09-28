@@ -46,6 +46,10 @@
       "types": "./dist/components/*/index.d.ts",
       "import": "./dist/components/*/index.js"
     },
+    "./elements": {
+      "types": "./dist/elements/index.d.ts",
+      "import": "./dist/elements/index.js"
+    },
     "./core": {
       "types": "./dist/core/index.d.ts",
       "import": "./dist/core/index.js"
@@ -99,6 +103,7 @@
     "drawer:check": "bun run scripts/check-drawer.ts",
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "core:check": "bun run scripts/check-core.ts",
+    "elements:check": "bun run scripts/check-elements.ts",
     "tooling:check": "tsc --project tsconfig.tools.json --noEmit && tsc --project tsconfig.types.json --noEmit"
   },
   "repository": {
