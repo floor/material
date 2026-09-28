@@ -29,6 +29,16 @@ export interface ChipConfig {
    */
   onRemove?: (chip: ChipComponent) => void;
   removeLabel?: string;
+  /**
+   * Filter chips: gives the trailing icon its own button, which calls this (the
+   * m3.material.io chips' trailing icon that "can be used to open a menu or remove
+   * the chip"). The chip's own action is unaffected. FLO-259.
+   */
+  onTrailingClick?: (chip: ChipComponent) => void;
+  /** The trailing button's accessible name; "{label} options" for a menu, "Remove {label}" otherwise. */
+  trailingLabel?: string;
+  /** The trailing button opens a menu: aria-haspopup="menu", and a drop-down arrow unless trailingIcon is set. */
+  trailingMenu?: boolean;
   onClick?: (chip: ChipComponent) => void;
   onChange?: (selected: boolean, chip: ChipComponent) => void;
   onSelect?: (chip: ChipComponent) => void;
@@ -40,11 +50,12 @@ export interface ChipConfig {
   managedSelection?: boolean;
 }
 
-type NamedChipConfig = Omit<ChipConfig, "type" | "text" | "selected" | "avatar" | "onRemove" | "removeLabel" | "managedSelection" | "onChange" | "onSelect"> & { label: string };
+type NamedChipConfig = Omit<ChipConfig, "type" | "text" | "selected" | "avatar" | "onRemove" | "removeLabel" | "managedSelection" | "onChange" | "onSelect" | "onTrailingClick" | "trailingLabel" | "trailingMenu"> & { label: string };
 export type AssistChipConfig = NamedChipConfig;
 export type SuggestionChipConfig = Omit<NamedChipConfig, "trailingIcon">;
-export type FilterChipConfig = NamedChipConfig & Pick<ChipConfig, "selected" | "onChange" | "onSelect">;
-export type InputChipConfig = Omit<FilterChipConfig, "elevated"> & Pick<ChipConfig, "avatar" | "onRemove" | "removeLabel">;
+export type FilterChipConfig = NamedChipConfig & Pick<ChipConfig, "selected" | "onChange" | "onSelect" | "onTrailingClick" | "trailingLabel" | "trailingMenu">;
+// An input chip's trailing button is its remove button, so it takes no trailing action.
+export type InputChipConfig = Omit<FilterChipConfig, "elevated" | "onTrailingClick" | "trailingLabel" | "trailingMenu"> & Pick<ChipConfig, "avatar" | "onRemove" | "removeLabel">;
 
 export interface ChipChangePayload { selected: boolean; chip: ChipComponent; }
 export interface ChipEvents {
@@ -54,6 +65,8 @@ export interface ChipEvents {
   blur: (payload: ForwardedEventPayload<FocusEvent, HTMLElement>) => void;
   change: (payload: ChipChangePayload) => void;
   remove: (chip: ChipComponent) => void;
+  /** A filter chip's trailing button was activated (FLO-259). */
+  trailing: (chip: ChipComponent) => void;
 }
 
 /** Shared API. Selection setters are inert on assist and suggestion chips. */
@@ -61,6 +74,11 @@ export interface ChipComponent {
   element: HTMLElement;
   /** Native primary action. Removal is a sibling button, never nested inside it. */
   action: HTMLButtonElement;
+  /**
+   * A filter chip's trailing button, when it has one (`onTrailingClick`): anchor a
+   * menu to it and keep its aria-expanded in step. FLO-259.
+   */
+  trailingAction?: HTMLButtonElement;
   getType: () => ChipType;
   getValue: () => string | null;
   setValue: (value: string) => ChipComponent;

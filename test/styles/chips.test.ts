@@ -55,3 +55,15 @@ describe('chip focus and motion', () => {
     expect(css).toMatch(/@starting-style\s*\{\s*\.mtrl-chip__leading-icon, \.mtrl-chip__checkmark\s*\{\s*width: 0;/);
   });
 });
+
+describe('trailing action and dragged state (FLO-259)', () => {
+  test('a filter chip\'s trailing button takes the remove button\'s place and target', () => {
+    expect(value(`${root}__trailing-action`, 'width')).toBe('calc(18px + 8px)');
+    expect(value(`${root}__trailing-action::before`, 'width')).toBe('48px');
+  });
+
+  test('dragged: elevation level 4 and a 0.16 layer', () => {
+    expect(value(`${root}--dragged`, 'box-shadow')).toBeDefined();
+    expect(value(`${root}--dragged:not(${root}--disabled)::after`, 'opacity')).toBe('0.16');
+  });
+});
