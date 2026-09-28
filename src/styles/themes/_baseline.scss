@@ -4,10 +4,18 @@
 
 // Variables for light theme (default)
 @mixin baseline-light-variables {
+    // The whole error family, as status-colors-light() in base-theme gives every
+    // other theme. Baseline had only error and on-error, so error-container and
+    // on-error-container resolved to nothing: an error slider lost its inactive
+    // track and drew its ticks and inset icon in the inherited text colour.
     --#{$prefix}-sys-color-error: #B3261E;
     --#{$prefix}-sys-color-error-rgb: 179, 38, 30;
     --#{$prefix}-sys-color-on-error: #FFFFFF;
     --#{$prefix}-sys-color-on-error-rgb: 255, 255, 255;
+    --#{$prefix}-sys-color-error-container: #F9DEDC;
+    --#{$prefix}-sys-color-error-container-rgb: 249, 222, 220;
+    --#{$prefix}-sys-color-on-error-container: #410E0B;
+    --#{$prefix}-sys-color-on-error-container-rgb: 65, 14, 11;
     // Key colors
     --#{$prefix}-sys-color-primary: #6750a4;
     --#{$prefix}-sys-color-primary-rgb: 103, 80, 164;
@@ -89,6 +97,10 @@
     --#{$prefix}-sys-color-error-rgb: 242, 184, 181;
     --#{$prefix}-sys-color-on-error: #601410;
     --#{$prefix}-sys-color-on-error-rgb: 96, 20, 16;
+    --#{$prefix}-sys-color-error-container: #8C1D18;
+    --#{$prefix}-sys-color-error-container-rgb: 140, 29, 24;
+    --#{$prefix}-sys-color-on-error-container: #F9DEDC;
+    --#{$prefix}-sys-color-on-error-container-rgb: 249, 222, 220;
     // Key colors
     --#{$prefix}-sys-color-primary: #d0bcff;
     --#{$prefix}-sys-color-primary-rgb: 208, 188, 255;
