@@ -82,12 +82,33 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
     root.setAttribute("role", "group");
   }
 
+  // In a chip set's grid (the m3.material.io chips' web roles, FLO-261) the chip is a
+  // gridcell. A chip with one action is itself the focus target: the cell carries
+  // the selection and answers Space and Enter, and its inner button stays for the
+  // pointer but leaves the accessibility tree, so the chip is announced once. A chip
+  // with two actions (select + remove, or a trailing action) keeps both buttons as
+  // the focus targets inside its cell, "button or checkbox" as the site gives them.
+  const oneActionCell = !!options.cell && !remove && !trailingAction;
+  if (options.cell) {
+    root.setAttribute("role", "gridcell");
+    root.removeAttribute("aria-label");
+    for (const button of [action, remove, trailingAction]) if (button) button.tabIndex = -1;
+  }
+  if (oneActionCell) {
+    root.tabIndex = -1;
+    action.setAttribute("aria-hidden", "true");
+    action.removeAttribute("role");
+  }
+
   const render = () => {
     root.classList.toggle(base.getClass("chip--selected"), selected);
     root.classList.toggle(base.getClass("chip--disabled"), disabled);
     root.classList.toggle(base.getClass("chip--avatar"), !!avatar);
     action.disabled = disabled;
-    if (selectable) action.setAttribute("aria-checked", String(selected));
+    if (oneActionCell) {
+      if (selectable) root.setAttribute("aria-selected", String(selected));
+      root.setAttribute("aria-disabled", String(disabled));
+    } else if (selectable) action.setAttribute("aria-checked", String(selected));
     leading.hidden = !avatar && (!leadingIcon || selected);
     check.hidden = !(selected && (type === "filter" || (type === "input" && !avatar)));
     trailing.hidden = !trailingIcon || !!remove || !!trailingAction;
@@ -96,13 +117,13 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
     if (remove) {
       remove.disabled = disabled;
       remove.setAttribute("aria-label", options.removeLabel ?? `Remove ${label.textContent ?? ""}`);
-      root.setAttribute("aria-label", label.textContent ?? "");
+      if (!options.cell) root.setAttribute("aria-label", label.textContent ?? "");
     }
     if (trailingAction) {
       trailingAction.disabled = disabled;
       const text = label.textContent ?? "";
       trailingAction.setAttribute("aria-label", options.trailingLabel ?? (options.trailingMenu ? `${text} options` : `Remove ${text}`));
-      root.setAttribute("aria-label", text);
+      if (!options.cell) root.setAttribute("aria-label", text);
     }
   };
   // Set once the chip has been made: a change after that animates its icons, the first
@@ -152,7 +173,7 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
     isSelected: () => selected,
     setSelected(next) { animateChanges(); selected = selectable && next; render(); return api; },
     toggleSelected() { return api.setSelected(!selected); },
-    focus() { action.focus(); return api; },
+    focus() { (oneActionCell ? root : action).focus(); return api; },
     destroy: () => base.lifecycle.destroy(),
     on<K extends keyof ChipEvents>(event: K, handler: ChipEvents[K]) { base.on(event, handler); return api; },
     off<K extends keyof ChipEvents>(event: K, handler: ChipEvents[K]) { base.off(event, handler); return api; },
@@ -217,6 +238,16 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
     listen(trailingAction, "keydown", event => {
       if (event.key === "Enter" || event.key === " ") event.stopPropagation();
     });
+  }
+  if (oneActionCell) {
+    // The cell answers Space and Enter for its hidden button, and a press on that
+    // button focuses the cell rather than the button.
+    listen(root, "keydown", event => {
+      if (event.target !== root || (event.key !== "Enter" && event.key !== " ")) return;
+      event.preventDefault();
+      if (!disabled) action.click();
+    });
+    listen(action, "mousedown", event => { event.preventDefault(); root.focus(); });
   }
   // The dragged state (Compose DraggedContainerElevation, DraggedStateLayerOpacity) for
   // a chip the app makes draggable; mtrl does no dragging itself. FLO-259.

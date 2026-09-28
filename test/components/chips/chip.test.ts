@@ -134,13 +134,22 @@ describe("chips-container integration", () => {
     const set = group([{ type: "assist", label: "Action" }, { type: "suggestion", label: "Suggest" }, { type: "filter", label: "Filter" }, { type: "input", label: "Input" }]);
     for (const chip of set.getChips()) chip.action.click();
     expect(set.getSelectedValues()).toEqual(["filter", "input"]);
-    for (const chip of set.getChips()) expect(chip.element.hasAttribute("aria-selected")).toBe(false);
+    // Grid cells (FLO-261): a one-action filter cell carries aria-selected; the input
+    // chip has two actions, so its checkbox action carries the state; assist and
+    // suggestion cells carry none.
+    const [assist, suggest, filter, input] = set.getChips();
+    expect(assist!.element.hasAttribute("aria-selected")).toBe(false);
+    expect(suggest!.element.hasAttribute("aria-selected")).toBe(false);
+    expect(filter!.element.getAttribute("aria-selected")).toBe("true");
+    expect(input!.action.getAttribute("aria-checked")).toBe("true");
   });
   test("a bubbled keyboard activation toggles once; input removal does not select", () => {
     const set = group([{ label: "Filter" }, { type: "input", label: "Input" }]);
     const [filter, input] = set.getChips();
     filter.focus();
-    filter.action.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    // The focused target is the filter chip's cell (FLO-261).
+    expect(document.activeElement).toBe(filter.element);
+    filter.element.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
     expect(set.getSelectedValues()).toEqual(["filter"]);
     input.element.querySelector<HTMLButtonElement>(".mtrl-chip__remove")!.click();
     expect(set.getChips()).toEqual([filter]);
@@ -150,10 +159,11 @@ describe("chips-container integration", () => {
     const set = group([{ label: "First" }, { label: "Disabled", disabled: true }, { label: "Last" }]);
     const [first, , last] = set.getChips();
     first.focus();
-    first.action.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
-    expect(document.activeElement).toBe(last.action);
-    last.action.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true, cancelable: true }));
-    expect(document.activeElement).toBe(first.action);
+    // One-action chips are focused as their cells (FLO-261).
+    first.element.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
+    expect(document.activeElement).toBe(last.element);
+    last.element.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true, cancelable: true }));
+    expect(document.activeElement).toBe(first.element);
   });
   test("destroy tears down child chips and ignores retained DOM references", () => {
     let calls = 0;

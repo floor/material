@@ -86,105 +86,59 @@ export const withController =
     dispatchEvent(CHIPS_EVENTS.CHANGE, selectedValues, changedValue);
   };
 
+  // The set is an ARIA grid with one Tab stop (the m3.material.io chips' web roles,
+  // FLO-261). Its focus targets, in order: a one-action chip's cell, or the buttons of
+  // a two-action chip (its action, then its remove or trailing button).
+  const targets = (): HTMLElement[] =>
+    component.chipInstances
+      .filter((chip) => !chip.isDisabled())
+      .flatMap((chip) =>
+        chip.element.hasAttribute("tabindex")
+          ? [chip.element]
+          : Array.from(chip.element.querySelectorAll<HTMLElement>(":scope > button")),
+      );
+  let current: HTMLElement | null = null;
+  // Roving tabindex: the last focused target takes the set's one Tab stop, or the first.
+  const syncTabStop = () => {
+    const list = targets();
+    if (!current || !list.includes(current)) current = list[0] ?? null;
+    for (const chip of component.chipInstances) {
+      if (chip.element.hasAttribute("tabindex")) chip.element.tabIndex = -1;
+      chip.element.querySelectorAll<HTMLElement>(":scope > button").forEach((button) => { button.tabIndex = -1; });
+    }
+    if (current) current.tabIndex = 0;
+  };
+
   /**
-   * Handles keyboard navigation between chips
+   * Moves focus between the set's focus targets: the arrows along the layout (Left and
+   * Right follow the reading direction), Home and End to the ends. Enter and Space
+   * belong to the focused chip.
    * @param {KeyboardEvent} event - Keyboard event
    */
   const handleKeyboardNavigation = (event: KeyboardEvent) => {
-    if (component.chipInstances.length === 0) return;
-
-    // Only handle arrow keys, Enter, and Space
-    if (
-      ![
-        "ArrowLeft",
-        "ArrowRight",
-        "ArrowUp",
-        "ArrowDown",
-        "Enter",
-        " ",
-      ].includes(event.key)
-    ) {
-      return;
-    }
-
+    const list = targets();
+    if (list.length === 0) return;
+    const isVertical = !!(component.layout && component.layout.isVertical());
+    const rtl = component.element.closest("[dir]")?.getAttribute("dir")?.toLowerCase() === "rtl";
+    const back = isVertical ? "ArrowUp" : rtl ? "ArrowRight" : "ArrowLeft";
+    const forward = isVertical ? "ArrowDown" : rtl ? "ArrowLeft" : "ArrowRight";
+    const from = list.indexOf(event.target as HTMLElement);
+    let next: number;
+    if (event.key === back) next = Math.max(0, from - 1);
+    else if (event.key === forward) next = Math.min(list.length - 1, from + 1);
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = list.length - 1;
+    else return;
+    event.preventDefault();
     event.stopPropagation();
-
-    // Handle enter and space for activation/selection
-    if (event.key === "Enter" || event.key === " ") {
-      if (
-        focusedChipIndex >= 0 &&
-        focusedChipIndex < component.chipInstances.length
-      ) {
-        event.preventDefault();
-        const chip = component.chipInstances[focusedChipIndex];
-        if (!chip.isDisabled()) {
-          chip.action.click();
-        }
-        return;
-      }
-    }
-
-    // Handle navigation keys
-    if (
-      ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)
-    ) {
-      event.preventDefault();
-      const isVertical = component.layout && component.layout.isVertical();
-      let newIndex = focusedChipIndex;
-
-      // Left and Right follow the reading direction: in a right-to-left layout the
-      // previous chip is to the right. FLO-256.
-      const rtl = component.element.closest("[dir]")?.getAttribute("dir")?.toLowerCase() === "rtl";
-      const back = rtl ? "ArrowRight" : "ArrowLeft";
-      const forward = rtl ? "ArrowLeft" : "ArrowRight";
-
-      // If no chip is focused, start with the first one
-      if (focusedChipIndex === -1) {
-        newIndex = 0;
-      } else {
-        // Move based on key and layout direction
-        if (
-          (isVertical && event.key === "ArrowUp") ||
-          (!isVertical && event.key === back)
-        ) {
-          newIndex = Math.max(0, focusedChipIndex - 1);
-        } else if (
-          (isVertical && event.key === "ArrowDown") ||
-          (!isVertical && event.key === forward)
-        ) {
-          newIndex = Math.min(
-            component.chipInstances.length - 1,
-            focusedChipIndex + 1,
-          );
-        }
-      }
-
-      // Native disabled buttons cannot receive focus; continue to the next enabled chip.
-      const direction = newIndex < focusedChipIndex ? -1 : 1;
-      while (newIndex >= 0 && newIndex < component.chipInstances.length && component.chipInstances[newIndex].isDisabled()) {
-        newIndex += direction;
-      }
-      if (newIndex < 0 || newIndex >= component.chipInstances.length) return;
-
-      // Update focus if changed
-      if (newIndex !== focusedChipIndex) {
-        // Remove focus from current chip
-        if (
-          focusedChipIndex >= 0 &&
-          focusedChipIndex < component.chipInstances.length
-        ) {
-          component.chipInstances[focusedChipIndex].action.blur();
-        }
-
-        // Focus new chip
-        focusedChipIndex = newIndex;
-        component.chipInstances[focusedChipIndex].focus();
-
-        // If scrollable, ensure the focused chip is visible
-        if (component.layout && component.layout.isScrollable()) {
-          scrollToChip(focusedChipIndex);
-        }
-      }
+    if (from === -1) next = 0;
+    current = list[next]!;
+    syncTabStop();
+    current.focus();
+    const owner = component.chipInstances.findIndex((chip) => chip.element.contains(current));
+    if (owner >= 0) {
+      focusedChipIndex = owner;
+      if (component.layout && component.layout.isScrollable()) scrollToChip(owner);
     }
   };
 
@@ -250,6 +204,7 @@ export const withController =
     const chipInstance = createChip({
       ...chipConfig,
       managedSelection: true,
+      cell: true,
       onRemove: chipConfig.type === "input" ? chip => {
         chipConfig.onRemove?.(chip);
         removeChip(chip);
@@ -284,6 +239,7 @@ export const withController =
       focusedChipIndex = component.chipInstances.indexOf(chipInstance);
     });
     chipInstance.element.addEventListener("keydown", handleKeyboardNavigation);
+    syncTabStop();
 
     // Dispatch add event
     dispatchEvent(CHIPS_EVENTS.ADD, chipInstance);
@@ -319,6 +275,7 @@ export const withController =
         focusedChipIndex--;
       }
 
+      syncTabStop();
       // Focus that was on the removed chip moves to the one that took its place, or
       // to the one before when it was the last: it used to fall to the page. FLO-256.
       if (hadFocus) {
@@ -448,13 +405,20 @@ export const withController =
   enableKeyboardNavigation();
 
   // Setup event listeners when element is available
+  // Focus that lands on a target by any means (a click, focus()) takes the Tab stop.
+  const trackFocus = (event: FocusEvent) => {
+    const target = event.target as HTMLElement;
+    if (targets().includes(target)) { current = target; syncTabStop(); }
+  };
   if (component.element) {
     component.element.addEventListener("keydown", handleKeyboardNavigation);
+    component.element.addEventListener("focusin", trackFocus);
   }
 
   // Share the base resource scope; withLifecycle is composed after this feature.
   getCleanup(component).add(() => {
     component.element.removeEventListener("keydown", handleKeyboardNavigation);
+    component.element.removeEventListener("focusin", trackFocus);
     component.chipInstances.forEach(chip => {
       chip.element.removeEventListener("keydown", handleKeyboardNavigation);
       chip.destroy();
