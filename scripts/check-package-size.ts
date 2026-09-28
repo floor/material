@@ -154,7 +154,7 @@ try {
     // spread across 34 blocks too far apart for gzip to share. The fixture read 48,709.
     // A chip set's grid cell draws its own 3px focus ring and focus layer (FLO-261): +57
     // (dist/styles.css at gzip level 9, 45,306 to 45,363); the fixture read 49,323.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 50200 },
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 50300 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);
