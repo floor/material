@@ -91,18 +91,18 @@ describe("arrows between chips", () => {
     const chips = mount({ chips: [{ label: "One" }, { label: "Two" }] }, host);
     const [one, two] = chips.getChips();
     one!.focus();
-    press(one!.action, "ArrowLeft");
-    expect(document.activeElement).toBe(two!.action);
-    press(two!.action, "ArrowRight");
-    expect(document.activeElement).toBe(one!.action);
+    press(one!.element, "ArrowLeft");
+    expect(document.activeElement).toBe(two!.element);
+    press(two!.element, "ArrowRight");
+    expect(document.activeElement).toBe(one!.element);
   });
 });
 
 describe("the set's accessibility", () => {
-  test("a named group, without aria-multiselectable", () => {
+  test("a named grid, which says whether several chips can be selected (FLO-261)", () => {
     const chips = mount({ label: "Interests", multiSelect: true, chips: [{ label: "One" }] });
-    expect(chips.element.getAttribute("role")).toBe("group");
-    expect(chips.element.hasAttribute("aria-multiselectable")).toBe(false);
+    expect(chips.element.getAttribute("role")).toBe("grid");
+    expect(chips.element.getAttribute("aria-multiselectable")).toBe("true");
     const label = chips.element.querySelector(".mtrl-chips__label")!;
     expect(label.id).not.toBe("");
     expect(chips.element.getAttribute("aria-labelledby")).toBe(label.id);

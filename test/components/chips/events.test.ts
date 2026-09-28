@@ -62,7 +62,8 @@ describe("chips container events", () => {
     const chips = mount({ multiSelect: true, chips: [{ value: "a", ripple: false }] });
     chips.on("change", (...args) => events.push(args));
     chips.element.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight" }));
-    chips.element.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter" }));
+    // Enter goes to the focused chip cell (FLO-261: the set is a grid of cells).
+    document.activeElement!.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
     expect(events).toEqual([[["a"], "a"]]);
   });
 

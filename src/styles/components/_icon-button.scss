@@ -195,8 +195,8 @@ $widths: (
         opacity: 0.1;
     }
 
-    // Pressed state layer (10%)
-    &:active::before {
+    // Pressed state layer (10%), left to the ripple when there is one (FLO-260)
+    &:active:not(:has(> .#{base.$prefix}-ripple))::before {
         opacity: 0.1;
     }
 

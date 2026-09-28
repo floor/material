@@ -63,6 +63,8 @@ export interface RippleComponent extends BaseComponent {
  * @param config - Ripple configuration
  * @returns Ripple controller
  */
+const RELEASE = ["pointerup", "pointercancel", "mouseleave"] as const;
+
 export const createRipple = (config: RippleConfig = {}): RippleController => {
   const options = {
     ...RIPPLE_CONFIG,
@@ -86,7 +88,9 @@ export const createRipple = (config: RippleConfig = {}): RippleController => {
       element.appendChild(container);
       const waves = new Set<() => void>();
 
-      const press = (event: MouseEvent): void => {
+      // Pointer events, so a touch shows its press while the finger is down: the ripple
+      // is the press (FLO-260), and mousedown only fires on touch after the finger lifts.
+      const press = (event: PointerEvent): void => {
         const bounds = element.getBoundingClientRect();
         const size = Math.max(bounds.width, bounds.height) * 2;
         const wave = doc.createElement("div");
@@ -99,8 +103,7 @@ export const createRipple = (config: RippleConfig = {}): RippleController => {
         let timer: number | undefined;
         let released = false;
         const removeListeners = (): void => {
-          doc.removeEventListener("mouseup", release);
-          doc.removeEventListener("mouseleave", release);
+          for (const type of RELEASE) doc.removeEventListener(type, release);
         };
         const dispose = (): void => {
           removeListeners();
@@ -116,13 +119,12 @@ export const createRipple = (config: RippleConfig = {}): RippleController => {
           timer = view.setTimeout(dispose, options.duration);
         };
         waves.add(dispose);
-        doc.addEventListener("mouseup", release);
-        doc.addEventListener("mouseleave", release);
+        for (const type of RELEASE) doc.addEventListener(type, release);
         container.appendChild(wave);
       };
-      element.addEventListener("mousedown", press);
+      element.addEventListener("pointerdown", press);
       mounts.set(element, () => {
-        element.removeEventListener("mousedown", press);
+        element.removeEventListener("pointerdown", press);
         for (const dispose of waves) dispose();
         container.remove();
       });

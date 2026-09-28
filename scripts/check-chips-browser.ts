@@ -100,9 +100,9 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
     const hit = (x: number, y: number) => (document.elementFromPoint(x, y) as HTMLElement | null)?.className ?? "";
     const p = box(plain.element), removeIcon = box(input.element.querySelector(".mtrl-chip__remove svg")!);
     const waves = (chip: typeof input) => chip.element.querySelectorAll(".mtrl-ripple-wave").length;
-    input.element.querySelector(".mtrl-chip__remove")!.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: removeIcon.left + 9, clientY: removeIcon.top + 9 }));
+    input.element.querySelector(".mtrl-chip__remove")!.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, clientX: removeIcon.left + 9, clientY: removeIcon.top + 9 }));
     const removeRipples = waves(input);
-    plain.action.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: p.left + 20, clientY: p.top + 16 }));
+    plain.action.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, clientX: p.left + 20, clientY: p.top + 16 }));
     const actionRipples = plain.action.querySelectorAll(".mtrl-ripple-wave").length;
     plain.element.dispatchEvent(new Event("dragstart", { bubbles: true }));
     const dragged = { shadow: getComputedStyle(plain.element).boxShadow, layer: getComputedStyle(plain.element, "::after").opacity };
@@ -134,11 +134,44 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
   assert.ok(painted.actionRipples > 0, "pressing the chip ripples its action");
   await page.emulateMedia({ reducedMotion: "reduce" });
 
+  // A chip set is a grid with one Tab stop (FLO-261): Tab lands on the first cell, an
+  // arrow moves on, the focused cell draws the 3px ring 2px outside the chip, and a
+  // real Space selects the cell.
+  await page.evaluate(() => {
+    const { createChips } = (window as unknown as ChipWindow).core;
+    const before = document.createElement("button");
+    before.id = "before-set"; before.textContent = "before";
+    document.body.append(before);
+    const set = createChips({ label: "Grid", chips: [{ label: "One", value: "one" }, { label: "Two", value: "two" }, { label: "Three", value: "three" }] });
+    set.element.id = "grid-set";
+    document.body.append(set.element);
+    (window as unknown as { gridSet: typeof set }).gridSet = set;
+    before.focus();
+  });
+  await page.keyboard.press("Tab");
+  const tabbed = await page.evaluate(() => ({ role: document.activeElement?.getAttribute("role"), label: document.activeElement?.textContent }));
+  assert.deepEqual(tabbed, { role: "gridcell", label: "One" }, "Tab enters the set on its first cell");
+  await page.keyboard.press("ArrowRight");
+  const ring = await page.evaluate(() => {
+    const cell = document.activeElement as HTMLElement, before = getComputedStyle(cell, "::before"), style = getComputedStyle(cell);
+    return { label: cell.textContent, width: before.borderTopWidth, inset: before.top, stroke: `${style.outlineWidth} ${style.outlineOffset}` };
+  });
+  assert.deepEqual(ring, { label: "Two", width: "3px", inset: "-5px", stroke: "1px -1px" }, "the focused cell's 3px ring 2px outside, the stroke kept");
+  await page.keyboard.press("Space");
+  assert.equal(await page.locator("#grid-set [role=gridcell]").nth(1).getAttribute("aria-selected"), "true", "Space selects the focused cell");
+  await page.keyboard.press("Tab");
+  assert.notEqual(await page.evaluate(() => document.activeElement?.closest("#grid-set") !== null), true, "Tab leaves the set: one Tab stop");
+  await page.evaluate(() => {
+    (window as unknown as { gridSet: { destroy: () => void } }).gridSet.destroy();
+    document.querySelector("#grid-set")?.remove();
+    document.querySelector("#before-set")?.remove();
+  });
+
   await page.evaluate(() => {
     for (const chip of (window as unknown as ChipWindow).chipCases) chip.destroy();
     document.documentElement.removeAttribute("data-theme");
     document.documentElement.removeAttribute("data-theme-mode");
   });
   assert.equal(await page.locator(".mtrl-chip").count(), 0);
-  console.log("Passed packed Material chips: 32px geometry, flat/elevated/selected styles, icons/avatar, native keyboard toggle/removal, M3 paddings and 48dp targets, trailing action, motion only after creation, dragged state, action-only ripple and cleanup.");
+  console.log("Passed packed Material chips: 32px geometry, flat/elevated/selected styles, icons/avatar, native keyboard toggle/removal, M3 paddings and 48dp targets, trailing action, motion only after creation, dragged state, action-only ripple, the set as a one-Tab-stop grid with a 3px focus ring, and cleanup.");
 }
