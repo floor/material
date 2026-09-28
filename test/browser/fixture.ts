@@ -96,6 +96,18 @@ try {
       await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     }
   }
+  // Let every finite animation end on its own before the screenshot: an open
+  // menu is still ~40% into its 250 ms transition when it takes focus.
+  // Playwright fast-forwards what is still running, but the two pages compared
+  // are captured at slightly different moments, and the band where the
+  // menu's shadow meets the buttons did not always rasterize the same
+  // (split-button-open, about 2% of full runs). Infinite ones (indeterminate
+  // progress) are left to Playwright.
+  const running = () => document.getAnimations().filter(
+    animation => animation.playState === "running" && animation.effect?.getComputedTiming().endTime !== Infinity);
+  await Promise.all(running().map(animation => animation.finished.catch(() => undefined)));
+  await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  if (running().length) throw new Error(`Animations still running at ready: ${running().length}`);
   document.body.dataset.ready = "true";
 } catch (error) {
   console.error(error);
