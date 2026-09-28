@@ -38,6 +38,11 @@
     // Strong outlines for better element definition
     --#{$prefix}-sys-color-outline: #000000;
     --#{$prefix}-sys-color-outline-variant: #4d4d4d;
+    // Inverse roles (M3: inverse-surface N20, inverse-on-surface N95,
+    // inverse-primary P80), from this theme's neutral and primary palettes. FLO-254.
+    --#{$prefix}-sys-color-inverse-surface: #2f3131;
+    --#{$prefix}-sys-color-inverse-on-surface: #f1f1f0;
+    --#{$prefix}-sys-color-inverse-primary: #b2c5ff;
 
     // Workaround: Override surface-rgb for disabled button visibility
     --#{$prefix}-sys-color-surface-rgb: 0, 0, 0;
@@ -115,6 +120,11 @@
         // Strong outlines for dark mode
         --#{$prefix}-sys-color-outline: #ffffff;
         --#{$prefix}-sys-color-outline-variant: #b3b3b3;
+        // Inverse roles (M3: inverse-surface N90 = on-surface, inverse-on-surface N20,
+        // inverse-primary P40). FLO-254.
+        --#{$prefix}-sys-color-inverse-surface: #ffffff;
+        --#{$prefix}-sys-color-inverse-on-surface: #2f3131;
+        --#{$prefix}-sys-color-inverse-primary: #0c56d0;
 
         // Status colors for dark mode - bright and distinct
         --#{$prefix}-sys-color-error: #ff6666;
