@@ -85,3 +85,23 @@ describe("dragged state", () => {
     expect(chip.element.classList.contains("mtrl-chip--dragged")).toBe(false);
   });
 });
+
+// A chip appears finished: its icons animate only on a change after it was made, since
+// @starting-style would otherwise grow them on the first render.
+describe("motion only after the chip was made", () => {
+  test("a new chip, selected or with an icon, carries no --motion; its first change adds it", () => {
+    const chip = mount(createFilterChip({ label: "Red", selected: true, leadingIcon: '<svg viewBox="0 0 24 24"></svg>' }));
+    expect(chip.element.classList.contains("mtrl-chip--motion")).toBe(false);
+    chip.setSelected(false);
+    expect(chip.element.classList.contains("mtrl-chip--motion")).toBe(true);
+  });
+
+  test("in a set too: built chips are still, a click animates", () => {
+    const chips = createChips({ chips: [{ label: "A", selected: true }, { label: "B" }] });
+    document.body.append(chips.element);
+    const [a, b] = chips.getChips();
+    expect(a!.element.classList.contains("mtrl-chip--motion")).toBe(false);
+    b!.action.click();
+    expect(b!.element.classList.contains("mtrl-chip--motion")).toBe(true);
+  });
+});

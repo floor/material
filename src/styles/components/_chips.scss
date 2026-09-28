@@ -67,7 +67,6 @@ $container: "#{base.$prefix}-chips";
         flex-shrink: 1;
         min-width: 0;
         padding: 0 16px;
-        transition: m.spring(padding-inline-start, fast-spatial), m.spring(padding-inline-end, fast-spatial);
     }
     &--leading &__action { padding-inline-start: 8px; }
     &--trailing &__action { padding-inline-end: 8px; }
@@ -103,8 +102,16 @@ $container: "#{base.$prefix}-chips";
     // fades in, and collapses and fades out (Compose AnimatingChipContent: the size on
     // the fast spatial spring, the fade in on slow effects, out on fast effects).
     // `hidden` still decides; allow-discrete keeps it displayed while it closes.
-    &__leading-icon, &__checkmark {
-        overflow: hidden;
+    //
+    // Only under --motion, which the chip sets on its first change after it was made:
+    // @starting-style also applies to an element's first render, so without it every
+    // chip grew its icons on page load. A chip appears finished and animates what
+    // changes after. FLO-256 follow-up.
+    &--motion &__action {
+        transition: m.spring(padding-inline-start, fast-spatial), m.spring(padding-inline-end, fast-spatial);
+    }
+    &__leading-icon, &__checkmark { overflow: hidden; }
+    &--motion &__leading-icon, &--motion &__checkmark {
         transition: m.spring(width, fast-spatial), m.spring(margin-inline-end, fast-spatial),
             m.spring(opacity, slow-effects), display m.spring-duration(fast-spatial) allow-discrete;
         @starting-style { width: 0; margin-inline-end: 0; opacity: 0; }
