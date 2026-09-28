@@ -193,18 +193,24 @@ export const withTracks =
       activeStart = 0; activeEnd = first;
       parts = [[0, 0, false], [0, first - firstGap, true], [first + firstGap, width, false]];
     }
+    // A piece of track that meets an end of the slider is drawn only while it is
+    // longer than the corner radius (drawTrack's activeTrackThreshold and inactive
+    // thresholds): below that its rounded end would paint as a sliver.
+    const standard = !config.centered && !(config.range && state.secondValue !== null);
+    parts.forEach((part, index) => {
+      const meetsEnd = index !== 1 || standard;
+      if (meetsEnd && part[1] - part[0] <= corner) part[1] = part[0];
+    });
     segments.forEach((segment, index) => {
       const [start, end, active] = parts[index] ?? [0, 0, false];
       segment.style[axis.start] = `${start}px`;
       segment.style[axis.size] = `${Math.max(0, end - start)}px`;
       segment.classList.toggle(component.getClass("slider__segment--active"), active);
     });
-    // A stop indicator is drawn while the inactive track it ends is longer than a
-    // corner radius (drawTrack's thresholds). With ticks the ends are ticks already.
-    const startInactive = Math.max(0, parts[0][1] - parts[0][0]);
-    const endInactive = Math.max(0, parts[2][1] - parts[2][0]);
-    dots[0].hidden = !!config.ticks || !(config.centered || config.range) || startInactive <= corner;
-    dots[1].hidden = !!config.ticks || endInactive <= corner;
+    // A stop indicator ends each inactive piece that is drawn. With ticks the ends are
+    // ticks already.
+    dots[0].hidden = !!config.ticks || standard || parts[0][1] <= parts[0][0];
+    dots[1].hidden = !!config.ticks || parts[2][1] <= parts[2][0];
     dots[0].style[axis.start] = `${corner - 2}px`;
     dots[1].style[axis.start] = `${width - corner - 2}px`;
     placeInsetIcon(parts);

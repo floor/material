@@ -428,6 +428,20 @@ describe('slider track geometry', () => {
     expect(segments(slider)[1]).toEqual({ left: 0, width: 142, active: true });
   });
 
+  test('a piece of track at an end shorter than the corner radius is not drawn', async () => {
+    // value 3: the handle at 9px, the active track would run 0 to 1px.
+    const low = await sized({ value: 3 });
+    expect(segments(low)[1]!.width).toBe(0);
+    // value 96: the inactive track would run 296 to 300.
+    const high = await sized({ value: 96 });
+    expect(segments(high)[2]!.width).toBe(0);
+    expect(dots(high)).toEqual([null, null]);
+    // a range whose low handle sits near the start drops its start piece and stop.
+    const range = await sized({ range: true, value: 2, secondValue: 80 });
+    expect(segments(range)[0]!.width).toBe(0);
+    expect(dots(range)).toEqual([null, 290]);
+  });
+
   test('at the maximum the inactive track and its stop are gone', async () => {
     const slider = await sized({ value: 100 });
     expect(segments(slider)[2]!.width).toBe(0);
