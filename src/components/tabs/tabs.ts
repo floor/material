@@ -11,7 +11,7 @@ import {
 } from './features';
 import { createTabsConfig, getTabsElementConfig } from './config';
 import { TabsConfig, TabsComponent } from './types';
-import { setupKeyboardNavigation, syncTabStops } from './utils';
+import { setupKeyboardNavigation, syncTabStops, updateTabPanels } from './utils';
 
 /**
  * Creates a new Tabs component following MD3 guidelines
@@ -62,7 +62,7 @@ const createTabs = (config: TabsConfig = {}): TabsComponent => {
     }
     
     // Set up keyboard navigation
-    setupKeyboardNavigation(component);
+    setupKeyboardNavigation(component, { autoActivate: config.autoActivate });
 
     // Whatever changes which tab is active, or which tabs exist, moves the
     // single tab stop with it
@@ -72,6 +72,9 @@ const createTabs = (config: TabsConfig = {}): TabsComponent => {
       (component as unknown as Record<string, unknown>)[method] = (...args: unknown[]) => {
         const result = original.apply(component, args);
         syncTabStops(component);
+        // Panels follow a selection made from code as they follow a click; only
+        // the click path updated them. FLO-263.
+        if (method === 'setActiveTab') updateTabPanels(component);
         return result;
       };
     }

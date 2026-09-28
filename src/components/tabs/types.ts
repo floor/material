@@ -77,6 +77,12 @@ export interface TabConfig {
    */
   groupId?: string;
 
+  /**
+   * Accessible name for a tab with an icon and no text, which otherwise has
+   * none. FLO-263.
+   */
+  ariaLabel?: string;
+
   /** 
    * Tab state that determines if it's the active destination
    * @default 'inactive'
@@ -183,6 +189,15 @@ export interface TabsConfig {
    * it when a page needs ids that survive a re-render. FLO-229.
    */
   groupId?: string;
+
+  /**
+   * Whether an arrow key also selects the tab it moves to. By default it only
+   * moves focus, and Space or Enter selects, as m3.material.io's tabs
+   * accessibility guidance has it: "Don't use Space/Enter for navigating tabs".
+   * FLO-263.
+   * @default false
+   */
+  autoActivate?: boolean;
 
   /**
    * Tabs variant (primary or secondary)
