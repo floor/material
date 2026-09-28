@@ -227,7 +227,7 @@ The policy sees every string, the library's own icons included; a `TrustedHTML` 
 - `title-large` uses weight 400, as M3 specifies.
 - The slider draws with DOM and CSS; styles for `.mtrl-slider-canvas` no longer apply.
 
-The full list, with every renamed property, is in [changelog.txt](changelog.txt).
+The full list, with every renamed property, is in the [0.8.0 changelog](CHANGELOG.md#080---2026-09-15).
 
 ## Browser support
 
