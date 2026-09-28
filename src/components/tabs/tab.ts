@@ -101,6 +101,10 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
         baseComponent.emit("click", event);
       }
     });
+    // TAB_EVENTS declares focus and blur; nothing emitted them (FLO-264).
+    for (const type of ["focus", "blur"] as const) {
+      button.element.addEventListener(type, (event) => baseComponent.emit?.(type, event));
+    }
 
     // Create the tab component with enhanced API
     const tab: TabComponent = {

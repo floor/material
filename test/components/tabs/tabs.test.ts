@@ -551,3 +551,13 @@ describe('tabs panel linking', () => {
   });
 });
 
+
+// FLO-264: the group passes its indicator options on; visible and color stopped short.
+describe('tabs indicator options', () => {
+  test('indicator.visible and indicator.color reach the indicator', () => {
+    const tabs = mount({ indicator: { visible: false, color: 'rgb(1, 2, 3)' } });
+    const indicator = tabs.element.querySelector('.mtrl-tabs__indicator') as HTMLElement;
+    expect(indicator.style.opacity).toBe('0');
+    expect(indicator.style.backgroundColor).toBe('rgb(1, 2, 3)');
+  });
+});
