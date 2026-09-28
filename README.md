@@ -134,6 +134,35 @@ const button = createButton({
 
 Button progress and card actions load on demand; enable code splitting in your build to keep them out of the initial chunk.
 
+## Web components and frameworks (experimental)
+
+From `0.10.0-next.1` (`npm install mtrl@next`), components also ship as custom elements, with thin adapters for React, Vue, Svelte and Solid. Button, switch and tabs are available so far; more follow through 0.10.x. The API may still change.
+
+```html
+<script type="module">
+  import 'mtrl/elements/css';            // the elements' styles
+  import { defineAll } from 'mtrl/elements';
+  defineAll();                           // registers <m-button>, <m-switch>, <m-tabs>, <m-tab>
+</script>
+
+<m-switch name="wifi" checked>Wi-Fi</m-switch>
+<m-tabs value="songs">
+  <m-tab value="songs">Songs</m-tab>
+  <m-tab value="albums">Albums</m-tab>
+</m-tabs>
+```
+
+The page still loads mtrl's base styles and a theme (see [Styles](#styles)); the elements render in shadow DOM and pick up the theme's tokens. Attributes are defaults and properties the live state, as on native controls; form controls take part in forms, reset and validation.
+
+| Framework | Import | Two-way binding |
+|-----------|--------|-----------------|
+| React 18 and 19 | `import { Switch } from 'mtrl/react'` | `checked` + `onChange`, or `defaultChecked` |
+| Vue 3 | `import { MSwitch } from 'mtrl/vue'` | `v-model` |
+| Svelte 5 | `import { Switch } from 'mtrl/svelte'` | `bind:checked` |
+| Solid | `import { Switch } from 'mtrl/solid'` | `checked` + `onChange` |
+
+Each framework is an optional peer dependency; mtrl installs none of them. All adapters render on the server and hydrate.
+
 ## Building your own components
 
 Components are composed from small features with `pipe`. The same building blocks are public:
@@ -198,7 +227,7 @@ The policy sees every string, the library's own icons included; a `TrustedHTML` 
 - `title-large` uses weight 400, as M3 specifies.
 - The slider draws with DOM and CSS; styles for `.mtrl-slider-canvas` no longer apply.
 
-The full list, with every renamed property, is in [changelog.txt](changelog.txt).
+The full list, with every renamed property, is in the [0.8.0 changelog](CHANGELOG.md#080---2026-09-15).
 
 ## Browser support
 
