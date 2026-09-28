@@ -9,6 +9,7 @@ import { checkDatePicker } from "./check-datepicker-browser";
 import { checkList } from "./check-list-browser";
 import { checkChips } from "./check-chips-browser";
 import { checkCard } from "./check-card-browser";
+import { checkRippleIsThePress } from "./check-ripple-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
 import { createPackageFixture } from "./package-fixture";
@@ -39,7 +40,7 @@ try {
     state.documentListeners = new Map(); state.offsetReads = 0;
     const add = document.addEventListener.bind(document), remove = document.removeEventListener.bind(document);
     document.addEventListener = (type: string, fn: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) => {
-      if (["mouseup", "mouseleave"].includes(type)) {
+      if (["pointerup", "pointercancel", "mouseleave"].includes(type)) {
         if (!state.documentListeners.has(type)) state.documentListeners.set(type, new Set());
         state.documentListeners.get(type)!.add(fn);
       }
@@ -73,14 +74,15 @@ try {
     state.button.destroy();
     for (let i = 0; i < 40; i++) {
       const button = state.core.createButton({ text: "Save" }); document.body.append(button.element);
-      button.element.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-      if (i % 2) document.dispatchEvent(new MouseEvent("mouseup"));
+      button.element.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+      if (i % 2) document.dispatchEvent(new MouseEvent("pointerup"));
       button.destroy(); button.destroy();
     }
   });
   await page.waitForTimeout(500);
   assert.equal(await page.evaluate(() => [...(window as unknown as CoreWindow).documentListeners.values()].reduce((sum, set) => sum + set.size, 0)), 0);
   assert.equal(await page.locator(".mtrl-ripple-wave").count(), 0);
+  await checkRippleIsThePress(page);
   await checkChips(page, artifacts);
   await checkList(page, artifacts);
   await checkInputBEM(page);
@@ -101,7 +103,7 @@ try {
   for (const name of ["base", "timepicker"]) await page.addStyleTag({ content: await readFile(join(fixture.installed, `dist/styles/${name}.css`), "utf8") });
   await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/themes/material.css"), "utf8") });
   await checkTimePicker(page, artifacts);
-  console.log("Passed packed ripple animation, reduced motion, no forced offsetHeight read, and 40 pressed teardown cycles.");
+  console.log("Passed packed ripple animation, reduced motion, the ripple as the press, no forced offsetHeight read, and 40 pressed teardown cycles.");
 } finally {
   await browser?.close();
   await fixture.cleanup();

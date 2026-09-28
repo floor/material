@@ -48,8 +48,10 @@ for (const component of ['fab', 'extended-fab']) {
     for (const [state, level, opacity] of [['hover', 4, '0.08'], ['focus-visible', 3, '0.1'], ['active', 3, '0.1']] as const) {
       test(`${state} elevation and currentColor layer`, () => {
         expect(value(`${root}:${state}`, 'box-shadow')).toBe(value(`.elevation-${level}`, 'box-shadow'));
-        expect(value(`${root}:${state}::before`, 'background-color')).toBe('currentColor');
-        expect(value(`${root}:${state}::before`, 'opacity')).toBe(opacity);
+        // The pressed layer yields to the ripple (FLO-260).
+        const layer = `${root}:${state}${state === 'active' ? ':not(:has(> .mtrl-ripple))' : ''}::before`;
+        expect(value(layer, 'background-color')).toBe('currentColor');
+        expect(value(layer, 'opacity')).toBe(opacity);
       });
     }
     test('lowered rest/hover/focus/pressed use 1/2/1/1 and do not translate', () => {

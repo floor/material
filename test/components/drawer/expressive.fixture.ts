@@ -32,9 +32,9 @@ test('enabled items ripple on press, disabled items do not', () => {
   expect(home.querySelector('.mtrl-ripple')).not.toBeNull();
   expect(mail.querySelector('.mtrl-ripple')).not.toBeNull();
   expect(off.querySelector('.mtrl-ripple')).toBeNull();
-  mail.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: 10, clientY: 10 }));
+  mail.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10 }));
   expect(mail.querySelector('.mtrl-ripple .mtrl-ripple-wave')).not.toBeNull();
-  document.dispatchEvent(new MouseEvent('mouseup'));
+  document.dispatchEvent(new MouseEvent('pointerup'));
 });
 test('ripple can be turned off', () => {
   const d = make({ ripple: false });

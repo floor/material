@@ -48,9 +48,14 @@ export interface ChipConfig {
   ripple?: boolean;
   /** @internal Selection belongs to the chips container. */
   managedSelection?: boolean;
+  /**
+   * @internal The chip is a cell of a chip set's grid (FLO-261): the root is a
+   * `gridcell`, and a one-action chip's cell is its focus target.
+   */
+  cell?: boolean;
 }
 
-type NamedChipConfig = Omit<ChipConfig, "type" | "text" | "selected" | "avatar" | "onRemove" | "removeLabel" | "managedSelection" | "onChange" | "onSelect" | "onTrailingClick" | "trailingLabel" | "trailingMenu"> & { label: string };
+type NamedChipConfig = Omit<ChipConfig, "type" | "text" | "selected" | "avatar" | "onRemove" | "removeLabel" | "managedSelection" | "cell" | "onChange" | "onSelect" | "onTrailingClick" | "trailingLabel" | "trailingMenu"> & { label: string };
 export type AssistChipConfig = NamedChipConfig;
 export type SuggestionChipConfig = Omit<NamedChipConfig, "trailingIcon">;
 export type FilterChipConfig = NamedChipConfig & Pick<ChipConfig, "selected" | "onChange" | "onSelect" | "onTrailingClick" | "trailingLabel" | "trailingMenu">;

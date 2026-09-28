@@ -69,7 +69,7 @@ describe("filter chip trailing action", () => {
     expect(price!.isSelected()).toBe(false);
     price!.focus();
     press(price!.trailingAction!, "ArrowRight");
-    expect(document.activeElement).toBe(size!.action);
+    expect(document.activeElement).toBe(size!.element); // a one-action chip's cell (FLO-261)
     price!.trailingAction!.click();
     expect(opened).toBe(1);
   });
