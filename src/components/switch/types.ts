@@ -48,8 +48,20 @@ export interface SwitchConfig {
   /** Component name */
   componentName?: string;
 
-  /** Icon HTML content */
+  /** Icon HTML in the selected handle; 'none' for no icon */
   icon?: string;
+
+  /**
+   * Icon HTML in the unselected handle, which then grows to 24dp (M3's icons on
+   * both states). FLO-267.
+   */
+  unselectedIcon?: string;
+
+  /**
+   * Which side of the switch the label sits on
+   * @default 'start'
+   */
+  labelPosition?: SwitchLabelPosition;
 
   /** Index signature for additional properties */
   [key: string]: unknown;
@@ -65,9 +77,11 @@ export interface SwitchChangePayload {
   nativeEvent?: Event;
 }
 
-/** Emitter events. Native input clicks/focus are not forwarded. */
+/** Emitter events: change, and the input's focus and blur (FLO-267). */
 export interface SwitchEvents {
   change: (payload: SwitchChangePayload) => void;
+  focus: (event: FocusEvent) => void;
+  blur: (event: FocusEvent) => void;
 }
 
 /**

@@ -38,6 +38,12 @@ const createSwitch = (config: SwitchConfig = {}): SwitchComponent => {
       (comp) => withAPI(getApiConfig(comp))(comp)
     )(baseConfig);
 
+    // SWITCH_EVENTS declares focus and blur; nothing emitted them. FLO-267.
+    const host = switchComponent as { input?: HTMLElement; emit?: (event: string, data: unknown) => unknown };
+    for (const type of ["focus", "blur"] as const) {
+      host.input?.addEventListener(type, (event) => host.emit?.(type, event));
+    }
+
     return switchComponent as SwitchComponent;
   } catch (error) {
     console.error(

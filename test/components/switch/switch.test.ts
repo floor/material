@@ -273,3 +273,40 @@ describe('switch', () => {
     expect(document.body.contains(s.element)).toBe(false);
   });
 });
+
+// FLO-267: the switch conformance audit.
+describe('switch error, description, icons and events', () => {
+  test('error alone marks the switch and its input invalid', () => {
+    const s = mount({ label: 'Sync', error: true });
+    expect(s.element.classList.contains('mtrl-switch--error')).toBe(true);
+    expect(s.input.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  test('supporting text describes the input, and follows set and remove', () => {
+    const s = mount({ label: 'Sync', supportingText: 'Uses mobile data' });
+    const helper = s.element.querySelector('.mtrl-switch__helper')!;
+    expect(s.input.getAttribute('aria-describedby')).toBe(helper.id);
+    s.setSupportingText('Offline', true);
+    expect(s.input.getAttribute('aria-invalid')).toBe('true');
+    s.removeSupportingText();
+    expect(s.input.hasAttribute('aria-describedby')).toBe(false);
+    expect(s.input.hasAttribute('aria-invalid')).toBe(false);
+  });
+
+  test('an unselected icon adds a second icon and the icons modifier', () => {
+    const s = mount({ label: 'Dark', unselectedIcon: '<svg></svg>' });
+    expect(s.element.classList.contains('mtrl-switch--icons')).toBe(true);
+    expect(s.element.querySelectorAll('.mtrl-switch__thumb-icon').length).toBe(2);
+    expect(s.element.querySelector('.mtrl-switch__thumb-icon--unselected')).not.toBeNull();
+  });
+
+  test('focus and blur reach handlers registered with on', () => {
+    const s = mount({ label: 'Sync' });
+    const seen: string[] = [];
+    s.on('focus', () => seen.push('focus'));
+    s.on('blur', () => seen.push('blur'));
+    s.input.focus();
+    s.input.blur();
+    expect(seen).toEqual(['focus', 'blur']);
+  });
+});

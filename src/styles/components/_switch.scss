@@ -24,14 +24,22 @@ $component: '#{base.$prefix}-switch';
     align-items: center;
     min-height: 48px;
     width: 100%;
+    // Between the label and the track on whichever side the label is, in either
+    // direction; it was a physical margin-right.
+    column-gap: 12px;
   }
 
-  // Content wrapper
+  // Content wrapper. The gap is on the container, so it stays between the label
+  // and the track whichever side the label is on, in either direction.
   &__content {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-    margin-right: 12px;
+  }
+
+  // labelPosition 'end' only added this class, and the label stayed first. FLO-267.
+  &--label-end &__container {
+    flex-direction: row-reverse;
   }
 
   // Label
@@ -55,77 +63,82 @@ $component: '#{base.$prefix}-switch';
       cursor: not-allowed;
     }
 
-    // Focus indicator
+    // md.comp.focus-ring around the track (material-web's switch ring), 3dp
+    // secondary at a 2dp offset. FLO-267.
     &:focus-visible ~ .#{$component}__track {
-      outline: 2px solid t.color('primary');
+      outline: 3px solid t.color('secondary');
       outline-offset: 2px;
     }
   }
 
-  // Switch track (background bar)
+  // The track (52 x 32dp, a 2dp outline). The handle and its state layer are
+  // placed with inset-inline-start, so both mirror in right-to-left layouts: a
+  // physical left plus translateX put the selected handle off the track. FLO-267.
   &__track {
     position: relative;
+    flex-shrink: 0;
     min-width: 52px;
     height: 32px;
+    box-sizing: border-box;
     border-radius: 16px;
     background-color: t.color('surface-container-highest');
     border: 2px solid t.color('outline');
-    @include m.motion-transition(background-color, border-color, outline);
+    transition: m.spring(background-color, fast-effects), m.spring(border-color, fast-effects);
 
-    // Ripple effect (consistent size for both hover and press)
+    // State layer: 40dp, centred on the handle.
     &::after {
       content: '';
       position: absolute;
       width: 40px;
       height: 40px;
       top: -6px;
-      background-color: transparent;
+      inset-inline-start: -6px;
+      background-color: t.color('on-surface');
       opacity: 0;
       border-radius: 50%;
       z-index: 0;
-      transform: translateX(-6px);
-      transition: opacity v.motion('duration-medium1') v.motion('easing-emphasized'),
-                  background-color v.motion('duration-medium1') v.motion('easing-emphasized'),
-                  transform v.motion('duration-medium1') cubic-bezier(0.2, 1.4, 0.35, 1);
+      transition: m.spring(opacity, fast-effects), m.spring(inset-inline-start, fast-spatial);
       pointer-events: none;
     }
   }
 
-  // Switch thumb (slider)
+  // The handle: 16dp unselected, 24dp selected or with an icon, 28dp pressed.
+  // Compose springs it on the fast spatial spring (damping 0.9, stiffness 1400).
   &__thumb {
     position: absolute;
     top: 6px;
-    left: 6px;
+    inset-inline-start: 6px;
     width: 16px;
     height: 16px;
     border-radius: 50%;
     background-color: t.color('outline');
-    transform: translateX(0);
-    transition: transform v.motion('duration-medium1') cubic-bezier(0.2, 1.4, 0.35, 1),
-                background-color v.motion('duration-medium1') v.motion('easing-emphasized'),
-                width v.motion('duration-medium1') v.motion('easing-emphasized'),
-                height v.motion('duration-medium1') v.motion('easing-emphasized'),
-                top v.motion('duration-medium1') v.motion('easing-emphasized'),
-                left v.motion('duration-medium1') v.motion('easing-emphasized');
+    transition: m.spring(inset-inline-start, fast-spatial), m.spring(top, fast-spatial),
+      m.spring(width, fast-spatial), m.spring(height, fast-spatial), m.spring(background-color, fast-effects);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1; /* Ensure thumb is above ripple */
     pointer-events: none;
 
-    // Icon inside thumb
+    // Icons: 16dp. The selected one is on-primary-container, the unselected one
+    // surface-container-highest (SwitchTokens). FLO-267.
     &-icon {
+      position: absolute;
       display: flex;
       align-items: center;
       justify-content: center;
       opacity: 0;
       transform: scale(0);
-      transition: all v.motion('duration-short4') v.motion('easing-emphasized');
-      color: t.color('primary');
+      transition: m.spring(opacity, fast-effects), m.spring(transform, fast-spatial);
+      color: t.color('on-primary-container');
 
       svg {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
+      }
+
+      &--unselected {
+        color: t.color('surface-container-highest');
       }
     }
   }
@@ -140,20 +153,18 @@ $component: '#{base.$prefix}-switch';
     }
   }
 
-  // RTL support
-  @include m.rtl {
-    &__container {
-      flex-direction: row;
+  // With an unselected icon, the unselected handle is 24dp and shows it.
+  &--icons:not(&--checked) {
+    .#{$component}__thumb {
+      width: 24px;
+      height: 24px;
+      top: 2px;
+      inset-inline-start: 2px;
     }
 
-    &__content {
-      margin-left: 12px;
-      margin-right: 0;
-    }
-
-    // Adjust thumb movement for RTL layout
-    &--checked .#{$component}__thumb {
-      transform: translateX(-20px);
+    .#{$component}__thumb-icon--unselected {
+      opacity: 1;
+      transform: scale(1);
     }
   }
 
@@ -164,22 +175,22 @@ $component: '#{base.$prefix}-switch';
       border-color: t.color('primary');
 
       &::after {
-        transform: translateX(14px);
+        inset-inline-start: 14px;
+        background-color: t.color('primary');
       }
     }
 
     .#{$component}__thumb {
       background-color: t.color('on-primary');
-      transform: translateX(20px);
       width: 24px;
       height: 24px;
       top: 2px;
-      left: 2px;
+      inset-inline-start: 22px;
+    }
 
-      &-icon {
-        opacity: 1;
-        transform: scale(1);
-      }
+    .#{$component}__thumb-icon:not(.#{$component}__thumb-icon--unselected) {
+      opacity: 1;
+      transform: scale(1);
     }
   }
 
@@ -210,6 +221,10 @@ $component: '#{base.$prefix}-switch';
 
     .#{$component}__thumb {
       background-color: t.alpha('on-surface', 0.38);
+
+      &-icon--unselected {
+        color: t.alpha('surface-container-highest', 0.38);
+      }
     }
 
     .#{$component}__label, .#{$component}__helper {
@@ -234,60 +249,40 @@ $component: '#{base.$prefix}-switch';
     }
   }
 
-  // Interactive states for enabled switches
+  // Interaction states. The handle takes on-surface-variant (unselected) or
+  // primary-container (selected) on hover, focus and press, over an on-surface or
+  // primary layer at the hover, focus and pressed opacities. FLO-267.
   &:not(.#{$component}--disabled) {
-    // Remove track hover effects
-    .#{$component}__input:hover + .#{$component}__track::before,
-    .#{$component}__input:active + .#{$component}__track::before {
-      display: none;
+    .#{$component}__input:is(:hover, :focus-visible, :active) ~ .#{$component}__track .#{$component}__thumb {
+      background-color: t.color('on-surface-variant');
     }
 
-    // Handle hover and active states for both unchecked
-    &:not(.#{$component}--checked) {
-      .#{$component}__input:hover ~ .#{$component}__track,
-      .#{$component}__input:active ~ .#{$component}__track {
-        .#{$component}__thumb {
-          background-color: t.color('on-surface-variant');
-        }
-
-        &::after {
-          background-color: t.color('on-surface');
-          opacity: v.state('hover-state-layer-opacity');
-          transform: translateX(-6px);
-        }
-      }
-
-      .#{$component}__input:active ~ .#{$component}__track::after {
-        opacity: v.state('pressed-state-layer-opacity');
-      }
+    &.#{$component}--checked .#{$component}__input:is(:hover, :focus-visible, :active) ~ .#{$component}__track .#{$component}__thumb {
+      background-color: t.color('primary-container');
     }
 
-    // Hover/active states for checked
-    &.#{$component}--checked {
-      .#{$component}__input:hover ~ .#{$component}__track,
-      .#{$component}__input:active ~ .#{$component}__track {
-        &::after {
-          background-color: t.color('primary');
-          opacity: v.state('hover-state-layer-opacity');
-          transform: translateX(14px);
-        }
-      }
-
-      .#{$component}__input:active ~ .#{$component}__track::after {
-        opacity: v.state('pressed-state-layer-opacity');
-      }
+    .#{$component}__input:hover ~ .#{$component}__track::after {
+      opacity: v.state('hover-state-layer-opacity');
     }
 
-    // Expand thumb on press for both checked and unchecked
+    .#{$component}__input:focus-visible ~ .#{$component}__track::after {
+      opacity: v.state('focus-state-layer-opacity');
+    }
+
+    .#{$component}__input:active ~ .#{$component}__track::after {
+      opacity: v.state('pressed-state-layer-opacity');
+    }
+
+    // Pressed handle: 28dp, centred where the handle sits.
     .#{$component}__input:active ~ .#{$component}__track .#{$component}__thumb {
       width: 28px;
       height: 28px;
       top: 0;
-      left: 0;
+      inset-inline-start: 0;
     }
 
     &.#{$component}--checked .#{$component}__input:active ~ .#{$component}__track .#{$component}__thumb {
-      left: 0;
+      inset-inline-start: 20px;
     }
   }
 

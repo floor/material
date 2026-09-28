@@ -12,6 +12,7 @@ import { checkCard } from "./check-card-browser";
 import { checkRippleIsThePress } from "./check-ripple-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
+import { checkControls } from "./check-controls-browser";
 import { createPackageFixture } from "./package-fixture";
 
 type CoreWindow = Window & {
@@ -86,6 +87,7 @@ try {
   await checkChips(page, artifacts);
   await checkList(page, artifacts);
   await checkInputBEM(page);
+  await checkControls(page);
   await checkTimePicker(page, artifacts);
   await checkCard(page, artifacts);
   // Datepicker must also work with only base + its selective stylesheet.

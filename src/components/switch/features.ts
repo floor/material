@@ -161,6 +161,25 @@ export const withSupportingText =
       COMPONENT
     );
 
+    const input = (component as { input?: HTMLElement }).input;
+    // The error state shows on the track and reaches assistive tech through
+    // aria-invalid, with or without supporting text; `error` alone was ignored.
+    // The supporting text describes the input. FLO-267.
+    const setError = (isError: boolean): void => {
+      component.element.classList.toggle(`${PREFIX}-${COMPONENT}--error`, isError);
+      if (isError) input?.setAttribute("aria-invalid", "true");
+      else input?.removeAttribute("aria-invalid");
+    };
+    const describe = (element: HTMLElement | null): void => {
+      if (!input) return;
+      if (!element) {
+        input.removeAttribute("aria-describedby");
+        return;
+      }
+      if (!element.id) element.id = `${PREFIX}-${COMPONENT}-helper-${Math.random().toString(36).slice(2, 9)}`;
+      input.setAttribute("aria-describedby", element.id);
+    };
+
     // Create supporting text element if needed
     let supportingElement: HTMLElement | null = null;
     if (config.supportingText) {
@@ -170,12 +189,13 @@ export const withSupportingText =
 
       if (config.error) {
         supportingElement.classList.add(`${PREFIX}-${COMPONENT}__helper--error`);
-        component.element.classList.add(`${PREFIX}-${COMPONENT}--error`);
       }
 
       // Add supporting text to the content wrapper
       contentWrapper.appendChild(supportingElement);
+      describe(supportingElement);
     }
+    setError(!!config.error);
 
     // Add lifecycle integration if available
     if (
@@ -210,6 +230,7 @@ export const withSupportingText =
           supportingElement.className = `${PREFIX}-${COMPONENT}__helper`;
           contentWrapper.appendChild(supportingElement);
           this.supportingTextElement = supportingElement;
+          describe(supportingElement);
         }
 
         supportingElement.textContent = text;
@@ -219,10 +240,7 @@ export const withSupportingText =
           `${PREFIX}-${COMPONENT}__helper--error`,
           isError
         );
-        component.element.classList.toggle(
-          `${PREFIX}-${COMPONENT}--error`,
-          isError
-        );
+        setError(isError);
 
         return this;
       },
@@ -234,7 +252,8 @@ export const withSupportingText =
         ) {
           this.supportingTextElement.remove();
           this.supportingTextElement = null;
-          component.element.classList.remove(`${PREFIX}-${COMPONENT}--error`);
+          describe(null);
+          setError(false);
         }
         return this;
       },
