@@ -96,8 +96,13 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
       root.setAttribute("aria-label", text);
     }
   };
+  // Set once the chip has been made: a change after that animates its icons, the first
+  // render does not (see --motion in the stylesheet).
+  let made = false;
+  const animateChanges = () => { if (made) root.classList.add(base.getClass("chip--motion")); };
   const setLabel = (text: string) => { label.textContent = text; render(); return api; };
   const setLeadingIcon = (icon: string) => {
+    animateChanges();
     leadingIcon = icon;
     setHTML(leading, avatar || icon);
     render();
@@ -136,7 +141,7 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
       return api;
     },
     isSelected: () => selected,
-    setSelected(next) { selected = selectable && next; render(); return api; },
+    setSelected(next) { animateChanges(); selected = selectable && next; render(); return api; },
     toggleSelected() { return api.setSelected(!selected); },
     focus() { action.focus(); return api; },
     destroy: () => base.lifecycle.destroy(),
@@ -213,6 +218,7 @@ const createChip = (config: ChipConfig = {}): ChipComponent => {
   setHTML(trailing, trailingIcon);
   render();
   api.getValue();
+  made = true;
   return api;
 };
 export default createChip;

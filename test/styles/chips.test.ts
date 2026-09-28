@@ -48,11 +48,17 @@ describe('chip focus and motion', () => {
     expect(value(`${root}:has(:focus-visible):not(${root}--disabled)::after`, 'opacity')).toBeDefined();
   });
 
-  test('a leading icon or checkmark opens on the fast spatial spring and fades', () => {
-    const transition = value(`${root}__leading-icon`, 'transition') ?? '';
+  test('a leading icon or checkmark opens on the fast spatial spring and fades, once the chip has changed', () => {
+    const transition = value(`${root}--motion ${root}__leading-icon`, 'transition') ?? '';
     expect(transition).toMatch(/^width 425ms linear\(/);
     expect(transition).toContain('allow-discrete');
-    expect(css).toMatch(/@starting-style\s*\{\s*\.mtrl-chip__leading-icon, \.mtrl-chip__checkmark\s*\{\s*width: 0;/);
+    expect(css).toMatch(/@starting-style\s*\{\s*\.mtrl-chip--motion \.mtrl-chip__leading-icon, \.mtrl-chip--motion \.mtrl-chip__checkmark\s*\{\s*width: 0;/);
+  });
+
+  test('nothing animates the first render: no transition or starting style outside --motion', () => {
+    expect(value(`${root}__leading-icon`, 'transition')).toBeUndefined();
+    expect(value(`${root}__action`, 'transition')).toBeUndefined();
+    expect(css).not.toMatch(/@starting-style\s*\{\s*\.mtrl-chip__/);
   });
 });
 
