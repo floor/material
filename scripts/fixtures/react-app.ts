@@ -7,6 +7,7 @@ import {
 } from "../../dist/react/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 import { Chip, Chips } from "../../dist/react/index.js";
+import { Select, SelectOption } from "../../dist/react/index.js";
 
 const h = React.createElement;
 const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
@@ -38,6 +39,7 @@ export const App = (): React.ReactElement => {
   const [show, setShow] = React.useState(true);
   const [progress, setProgress] = React.useState(30);
   const [fruit, setFruit] = React.useState<string | null>("b");
+  const [pet, setPet] = React.useState<string | null>("cat");
   const switchRef = React.useRef<SwitchElement | null>(null);
   const api = React.useRef<Api | null>(null);
 
@@ -115,6 +117,13 @@ export const App = (): React.ReactElement => {
       h(ListItem, { value: "c" }, "Cherry")
     ),
     h("output", { id: "fruit" }, fruit),
+    h(
+      Select,
+      { id: "se", label: "Pet", value: pet, onChange: (e) => setPet(e.detail.value) },
+      h(SelectOption, { value: "cat" }, "Cat"),
+      h(SelectOption, { value: "dog" }, "Dog")
+    ),
+    h("output", { id: "pet" }, pet),
     ...order.map((key) => h(Switch, { key, id: `o${key}` }, `Order ${key}`)),
     show ? h(Switch, { id: "gone" }, "Gone") : null,
     // Mounted in the browser after the element is defined: React 19 then

@@ -59,3 +59,7 @@ Object.assign((window as unknown as { mtrl: object }).mtrl, {
 // the way the elements do.
 import { registerStyles, applyStyles } from "../../dist/elements/styles.js";
 Object.assign((window as unknown as { mtrl: object }).mtrl, { registerStyles, applyStyles });
+
+// The split button factory, for the parity check of <m-split-button>.
+import createSplitButton from "../../dist/components/split-button/index.js";
+Object.assign((window as unknown as { mtrl: object }).mtrl, { createSplitButton });

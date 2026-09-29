@@ -223,6 +223,14 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("fruit")?.textContent === "c");
     assert.equal(await fruits.getByRole("button", { name: "Cherry", pressed: true }).count(), 1);
     check("list: a click on an item updates the controlled value through onChange");
+    // ------------------------------------------------------------- select
+    const pet = page.getByRole("combobox", { name: "Pet", exact: true });
+    assert.equal(await pet.inputValue(), "Cat");
+    await page.locator("#se").click();
+    await page.getByRole("option", { name: "Dog", exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("pet")?.textContent === "dog");
+    assert.equal(await pet.inputValue(), "Dog");
+    check("select: choosing an option updates the controlled value");
 
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);
