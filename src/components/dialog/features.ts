@@ -18,7 +18,8 @@ import type { DividerComponent } from "../divider/types";
 import { addClass, removeClass } from "../../core/dom/classes";
 
 import { setHTML } from "../../core/dom/html";
-import { activeElementOf, deepActiveElement } from "../../core/dom/focus";
+import { activeElementOf, deepActiveElement, tabStops, wrapTab } from "../../core/dom/focus";
+import { hideFromTopLayer, onTopLayerClose, showInTopLayer } from "../../core/dom/layer";
 const DIALOG_EVENTS = {
   OPEN: "open",
   CLOSE: "close",
@@ -240,12 +241,16 @@ export const withStructure =
     component.element.appendChild(footer);
   }
 
-  // Add the dialog element to the overlay
-  overlay.appendChild(component.element);
-
-  // Add overlay to container or document.body
+  // Add overlay to container or document.body. In the top layer the dialog
+  // is a <dialog> of its own, with ::backdrop for a scrim, and goes there
+  // without the overlay.
   const container = config.container || document.body;
-  container.appendChild(overlay);
+  if (config.layer === "top") {
+    container.appendChild(component.element);
+  } else {
+    overlay.appendChild(component.element);
+    container.appendChild(overlay);
+  }
 
   // Store elements in component
   return {
@@ -442,6 +447,11 @@ export const withVisibility =
   const openDuration = component.config.animationDuration ?? 500;
   const closeDuration = component.config.animationDuration ?? 150;
 
+  // In the top layer the dialog is a <dialog> shown with showModal(): its
+  // ::backdrop is the scrim, and a click on the backdrop lands on the dialog
+  const top = component.config.layer === "top";
+  const scrim = top ? component.element : component.overlay;
+
   // Helper functions to handle focus trap
   const focusableElements =
     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -501,7 +511,8 @@ export const withVisibility =
    */
   const inertBackground = (): void => {
     if (component.config.modal === false) return;
-    const parent = component.overlay.parentElement;
+    // showModal() has made the rest of the page inert already
+    const parent = top ? null : component.overlay.parentElement;
     if (parent) {
       (Array.from(parent.children) as HTMLElement[]).forEach((sibling) => {
         if (sibling === component.overlay) return;
@@ -527,6 +538,10 @@ export const withVisibility =
     }
   };
 
+  // In the top layer the dialog may hold slotted content, which its own query
+  // does not see: Tab moves as the browser moves it, wrapped at the ends
+  const handleWrap = (e: KeyboardEvent): void => wrapTab(component.element, e);
+
   const trapFocus = () => {
     inertBackground();
 
@@ -534,17 +549,18 @@ export const withVisibility =
     // dialog itself when it has none (M3 dialog accessibility, "Initial focus")
     if (component.config.autofocus !== false) {
       const requested = component.element.querySelector("[autofocus]") as HTMLElement | null;
-      const target = requested || focusable()[0] || component.element;
+      const target = requested || (top ? tabStops(component.element) : focusable())[0] || component.element;
       target.focus();
     }
 
     if (component.config.trapFocus !== false) {
-      component.element.addEventListener("keydown", handleTabKey);
+      component.element.addEventListener("keydown", top ? handleWrap : handleTabKey);
     }
   };
 
   const releaseFocus = () => {
     component.element.removeEventListener("keydown", handleTabKey);
+    component.element.removeEventListener("keydown", handleWrap);
     releaseBackground();
 
     // Focus goes back where it came from, whether or not it was trapped
@@ -558,34 +574,69 @@ export const withVisibility =
     // Handle overlay close: require both mousedown and mouseup on overlay
     // to prevent accidental closes when dragging from dialog content to overlay
     if (component.config.closeOnOverlayClick !== false) {
-      component.overlay.addEventListener("mousedown", handleOverlayMouseDown);
+      scrim.addEventListener("mousedown", handleOverlayMouseDown);
       document.addEventListener("mouseup", handleOverlayMouseUp);
     }
 
-    // Handle Escape key
-    if (component.config.closeOnEscape !== false) {
+    // Handle Escape key: in the top layer it is the dialog's cancel event,
+    // which reaches the topmost modal only
+    if (top) {
+      component.element.addEventListener("cancel", handleCancel);
+    } else if (component.config.closeOnEscape !== false) {
       document.addEventListener("keydown", handleEscKey);
     }
   };
 
   const cleanupEvents = () => {
-    component.overlay.removeEventListener("mousedown", handleOverlayMouseDown);
+    scrim.removeEventListener("mousedown", handleOverlayMouseDown);
     document.removeEventListener("mouseup", handleOverlayMouseUp);
     document.removeEventListener("keydown", handleEscKey);
+    component.element.removeEventListener("cancel", handleCancel);
+  };
+
+  /**
+   * Whether a mouse event is on the scrim. In the top layer that is the
+   * dialog outside its own box, which is where the backdrop is; the document
+   * sees the event retargeted to a shadow host, so the path says where it was.
+   */
+  const onScrim = (e: MouseEvent): boolean => {
+    if (!top) return e.target === component.overlay;
+    if (e.composedPath()[0] !== scrim) return false;
+    const box = scrim.getBoundingClientRect();
+    return e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom;
   };
 
   function handleOverlayMouseDown(e: MouseEvent) {
     // Track that mousedown started on the overlay itself
-    mouseDownOnOverlay = e.target === component.overlay;
+    mouseDownOnOverlay = onScrim(e);
   }
 
   function handleOverlayMouseUp(e: MouseEvent) {
     // Only close if both mousedown and mouseup were on the overlay
-    if (mouseDownOnOverlay && e.target === component.overlay) {
+    if (mouseDownOnOverlay && onScrim(e)) {
       visibility.close();
     }
     mouseDownOnOverlay = false;
   }
+
+  // The dialog stays open unless the dialog decides: Escape closes it through
+  // close(), so the close event comes once and beforeclose can keep it open
+  function handleCancel(e: Event) {
+    e.preventDefault();
+    if (component.config.closeOnEscape !== false && visibility.isOpen()) {
+      visibility.close();
+    }
+  }
+
+  /** Shows the <dialog> modal; without a document to show it in, just open */
+  const showModal = (): void => {
+    if (!component.element.isConnected) {
+      component.structure.container.appendChild(component.element);
+    }
+    if (!component.element.isConnected || !showInTopLayer(component.element, { kind: "modal" })) {
+      component.element.setAttribute("open", "");
+    }
+  };
 
   function handleEscKey(e: KeyboardEvent) {
     if (e.key === "Escape" && visibility.isOpen()) {
@@ -595,6 +646,7 @@ export const withVisibility =
 
   // Setup initial state
   if (isOpen) {
+    if (top) showModal();
     addClass(
       component.overlay,
       `${component.getClass("dialog__overlay")}--visible`,
@@ -630,6 +682,21 @@ export const withVisibility =
 
       // If event was prevented, don't open
       if (beforeOpenEvent.defaultPrevented) return;
+
+      // In the top layer everything happens now: the dialog is styled in its
+      // hidden state before it is made visible, which is what it animates from
+      if (top) {
+        showModal();
+        void component.element.offsetWidth;
+        addClass(component.element, `${component.getClass("dialog")}--visible`);
+        trapFocus();
+        setupEvents();
+        component.emit(DIALOG_EVENTS.OPEN, { dialog: getComponent() });
+        setTimeout(() => {
+          component.emit(DIALOG_EVENTS.AFTER_OPEN, { dialog: getComponent() });
+        }, openDuration);
+        return;
+      }
 
       // Add to DOM if needed
       if (component.overlay && !component.overlay.parentNode) {
@@ -695,6 +762,11 @@ export const withVisibility =
       // Remove overlay visible class
       removeClass(component.overlay, overlayVisibleClass);
 
+      // Out of the top layer first: the page is inert until then, and focus
+      // could not go back to it. The stylesheet keeps it painted, in the top
+      // layer, while it animates out.
+      if (top) hideFromTopLayer(component.element);
+
       // Release focus and cleanup events
       releaseFocus();
       cleanupEvents();
@@ -704,9 +776,10 @@ export const withVisibility =
         component.emit(DIALOG_EVENTS.CLOSE, { dialog: getComponent() });
       }
 
-      // Remove from DOM after animation completes
+      // Remove from DOM after animation completes; a top-layer dialog stays
+      // where it was rendered
       setTimeout(() => {
-        if (component.overlay && component.overlay.parentNode) {
+        if (!top && component.overlay && component.overlay.parentNode) {
           component.overlay.parentNode.removeChild(component.overlay);
         }
 
@@ -737,6 +810,14 @@ export const withVisibility =
   if (component && component.on) {
     component.on("dialog:close", () => {
       visibility.close();
+    });
+  }
+
+  // A close the browser made on its own (a form's dialog method, a repeated
+  // Escape it would not let the dialog cancel) still goes through close()
+  if (top) {
+    onTopLayerClose(component.element, () => {
+      if (visibility.isOpen()) visibility.close();
     });
   }
 

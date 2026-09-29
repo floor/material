@@ -26,8 +26,9 @@ export const withStructure =
     element.classList.add(`${root}--${config.variant}`);
     element.classList.add(`${root}--${config.position}`);
 
+    // In the top layer the root's ::backdrop is the scrim
     let scrim: HTMLElement | null = null;
-    if (isModal) {
+    if (isModal && config.layer !== "top") {
       scrim = document.createElement("div");
       scrim.className = getClass(SIDE_SHEET_CLASSES.SCRIM);
       element.appendChild(scrim);
