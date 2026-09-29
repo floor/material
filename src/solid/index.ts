@@ -18,6 +18,7 @@ import "mtrl/elements/css/icon-button";
 import "mtrl/elements/css/fab";
 import "mtrl/elements/css/extended-fab";
 import "mtrl/elements/css/checkbox";
+import "mtrl/elements/css/textfield";
 import {
   buttonElement,
   defineButton,
@@ -41,6 +42,8 @@ import {
   defineExtendedFab,
   checkboxElement,
   defineCheckbox,
+  textfieldElement,
+  defineTextfield,
   tabDeclaration,
 } from "../elements";
 import type {
@@ -66,6 +69,8 @@ import type {
   ExtendedFabElement,
   CheckboxSpec,
   CheckboxElement,
+  TextfieldSpec,
+  TextfieldElement,
   TabAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
@@ -84,4 +89,5 @@ export const IconButton: MComponent<IconButtonSpec, IconButtonElement> = createC
 export const Fab: MComponent<FabSpec, FabElement> = createComponent(fabElement.spec, defineFab, "Fab");
 export const ExtendedFab: MComponent<ExtendedFabSpec, ExtendedFabElement> = createComponent(extendedFabElement.spec, defineExtendedFab, "ExtendedFab");
 export const Checkbox: MComponent<CheckboxSpec, CheckboxElement> = createComponent(checkboxElement.spec, defineCheckbox, "Checkbox");
+export const Textfield: MComponent<TextfieldSpec, TextfieldElement> = createComponent(textfieldElement.spec, defineTextfield, "Textfield");
 export const Tab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "Tab");

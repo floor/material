@@ -160,6 +160,12 @@ const run = async (): Promise<void> => {
     assert.equal(await page.getByRole("checkbox", { name: "Agree", exact: true }).isChecked(), true);
     check("checkbox: v-model");
 
+    // ------------------------------------------------------------- textfield
+    await page.getByRole("textbox", { name: "Name", exact: true }).pressSequentially("Ada");
+    await page.waitForFunction(() => document.getElementById("text")?.textContent === "Ada");
+    assert.equal(await page.getByRole("textbox", { name: "Name", exact: true }).inputValue(), "Ada");
+    check("textfield: v-model");
+
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);
     await page.getByRole("tab", { name: "Flights", exact: true }).click();

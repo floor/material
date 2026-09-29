@@ -2,7 +2,7 @@
 // browser. Render functions, so no template compiler is needed. Built against
 // dist/vue.
 import { defineComponent, h, ref, onMounted, type Ref } from "vue";
-import { MButton, MCheckbox, MProgress, MSwitch, MTab, MTabs, type Exposed } from "../../dist/vue/index.js";
+import { MButton, MCheckbox, MProgress, MSwitch, MTab, MTabs, MTextfield, type Exposed } from "../../dist/vue/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 
 type Log = Array<{ id: string; detail: unknown }>;
@@ -21,6 +21,7 @@ export const App = defineComponent(() => {
   const model = ref(false);
   const named = ref(false);
   const agreed = ref(false);
+  const text = ref("");
   const tab = ref<string | null>("t2");
   const extra = ref(false);
   const order = ref(["a", "b"]);
@@ -65,6 +66,8 @@ export const App = defineComponent(() => {
       h(MProgress, { id: "pg", value: progress.value, ariaLabel: "Uploading" }),
       h(MCheckbox, { id: "cb", modelValue: agreed.value, "onUpdate:modelValue": (v: boolean) => (agreed.value = v) }, () => "Agree"),
       h("output", { id: "agreed" }, String(agreed.value)),
+      h(MTextfield, { id: "tf", label: "Name", modelValue: text.value, "onUpdate:modelValue": (v: string) => (text.value = v) }),
+      h("output", { id: "text" }, text.value),
       ...order.value.map((key) => h(MSwitch, { key, id: `o${key}` }, () => `Order ${key}`)),
       show.value ? h(MSwitch, { id: "gone" }, () => "Gone") : null,
       // Mounted in the browser after the element is defined: Vue writes a key

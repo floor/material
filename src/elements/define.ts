@@ -65,7 +65,7 @@ export interface FormSpec<C> {
   /** The value submitted with the form; null submits nothing. */
   value: (component: C) => string | null;
   /** The inner control whose validity the element reports. */
-  control?: (component: C) => HTMLInputElement | null;
+  control?: (component: C) => HTMLInputElement | HTMLTextAreaElement | null;
   /** Events after which the form value is read again. */
   events?: readonly string[];
   /** Called when a `<label for>` or the host itself is clicked. */
