@@ -5781,6 +5781,55 @@ try {
     );
     check("drawer: no-close-on-scrim-click alone, no-close-on-escape alone and both refuse only their own closing, in place");
 
+    // ------------------------------------------------ drawer: default value when items complete late
+    // A drawer item needs a label, not an icon: icons set late change
+    // nothing, a label set late (a framework setting the prop after creating
+    // the child) is the #247 case.
+    const lateDrawer = async (items: string, complete: (icon: string) => void): Promise<{ before: number; value: unknown; current: string | null }> => {
+      await fresh(page, "");
+      await page.evaluate((items) => {
+        (document.getElementById("host") as HTMLElement).innerHTML =
+          `<m-drawer id="ld" open value="b" aria-label="Late drawer">${items}</m-drawer>`;
+      }, items);
+      await wait(50);
+      const before = await page.evaluate(() => document.getElementById("ld")?.shadowRoot?.querySelectorAll("[data-id]").length ?? 0);
+      await page.evaluate(complete, ICON);
+      await wait(50);
+      return {
+        before,
+        value: await page.evaluate(() => (document.getElementById("ld") as GapHost).value),
+        current: await page.getByRole("navigation", { name: "Late drawer" }).getByRole("button", { name: "Sent" }).getAttribute("aria-current"),
+      };
+    };
+    const iconsLate = await lateDrawer(
+      '<m-drawer-item value="a">Inbox</m-drawer-item><m-drawer-item value="b">Sent</m-drawer-item>',
+      (icon) => document.querySelectorAll("#ld m-drawer-item").forEach((item) => item.setAttribute("icon", icon))
+    );
+    const labelsLate = await lateDrawer(
+      '<m-drawer-item value="a"></m-drawer-item><m-drawer-item value="b"></m-drawer-item>',
+      () => document.querySelectorAll("#ld m-drawer-item").forEach((item, i) => item.setAttribute("label", ["Inbox", "Sent"][i]))
+    );
+    // A dirty drawer keeps its own value when items change
+    await page.getByRole("navigation", { name: "Late drawer" }).getByRole("button", { name: "Inbox" }).click();
+    await page.evaluate(() => {
+      const item = document.createElement("m-drawer-item");
+      item.setAttribute("value", "c");
+      item.textContent = "Starred";
+      document.getElementById("ld")?.append(item);
+    });
+    await wait(50);
+    const dirtyDrawer = await page.evaluate(() => (document.getElementById("ld") as GapHost).value);
+    assert.deepEqual(
+      { iconsLate, labelsLate, dirtyDrawer },
+      {
+        iconsLate: { before: 2, value: "b", current: "page" },
+        labelsLate: { before: 0, value: "b", current: "page" },
+        dirtyDrawer: "a",
+      },
+      "drawer default value"
+    );
+    check("drawer: items completed after upgrade (icons, or labels) take the default value; a dirty drawer keeps its own");
+
     // ------------------------------------------------ dialog
     await fresh(
       page,

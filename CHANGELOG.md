@@ -192,6 +192,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Elements: `<m-drawer>` keeps its default `value` when items are completed after
+  upgrade.** An item without a label is left out until it has one; a clean drawer now takes
+  its `value` attribute again when the items are reconciled, as the rail does (#247).
 - **Bottom sheet: `peekHeight` sets the partial height.** The option was declared, with a
   documented default of 56, and did nothing: the partial sheet was always its content up to
   half the screen. Set, it is now the partial state's height in pixels; unset, the partial
