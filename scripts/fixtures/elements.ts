@@ -63,3 +63,7 @@ Object.assign((window as unknown as { mtrl: object }).mtrl, { registerStyles, ap
 // The split button factory, for the parity check of <m-split-button>.
 import createSplitButton from "../../dist/components/split-button/index.js";
 Object.assign((window as unknown as { mtrl: object }).mtrl, { createSplitButton });
+// The tooltip, for the top-layer tooltip and snackbar checks: the factory
+// rendering <m-tooltip> is compared with.
+import createTooltip from "../../dist/components/tooltip/index.js";
+Object.assign((window as unknown as { mtrl: object }).mtrl, { createTooltip });

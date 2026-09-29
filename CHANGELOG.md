@@ -12,6 +12,28 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Tooltip: `layer: "top"`.** With the option the tooltip renders after its target instead
+  of on `document.body` (or stays where its owner put it), in the target's tree, a shadow
+  root's included, and is shown in the top layer as a `popover="manual"` element, placed in
+  viewport coordinates. It leaves the top layer after its exit transition. Without popover
+  support the option does nothing. The default tooltip is unchanged.
+- **Snackbar: `layer: "top"`.** With the option the snackbar is a `popover="manual"` element,
+  shown in the top layer where its owner put it or on the body, at its usual place. While a
+  modal `<dialog>` is open, the rest of the page is inert, so it opens inside the topmost
+  one (found from focus, or in the document and its open shadow roots), carried in a shadow
+  root with its own root's stylesheets when it comes from another tree. It follows the
+  modals while it shows: into one that opens, back to the one below or home when its modal
+  closes, staying open with its timer running and closing once. Without popover support the
+  option does nothing. The default snackbar is unchanged.
+- **Elements: `<m-tooltip>`.** The target is `for` (an id in the element's root, then the
+  document) or the `target` property; the text is `text` or the element's text; `position`,
+  `variant`, `show-delay`, `hide-delay`, and `show()`/`hide()`. The surface stays in the
+  element's shadow root, in the top layer. The target is described by the text: its
+  `aria-describedby` names the host, which carries the text as an `aria-hidden` label.
+- **Elements: `<m-snackbar>`.** The message is `message` or the element's text; `action`,
+  `dismissible`, `close-label`, `duration`, `position`, `queue-behavior`, the `open`
+  property, `show()`/`hide()`, and the `open`, `action` and `close` events (`detail.reason`).
+  It shares the factory's queue and opens in the top layer, above modal dialogs.
 - **Menu: `layer: "top"`**, and a top-layer helper in `mtrl/core/dom`. With the option the
   menu renders next to its opener instead of on `document.body` or `container`, and is shown
   in the browser's top layer as a `popover="manual"` element: above any z-index, out of any

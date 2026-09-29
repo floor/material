@@ -34,6 +34,8 @@ import "mtrl/elements/css/carousel";
 import "mtrl/elements/css/menu";
 import "mtrl/elements/css/select";
 import "mtrl/elements/css/split-button";
+import "mtrl/elements/css/tooltip";
+import "mtrl/elements/css/snackbar";
 import {
   buttonElement,
   defineButton,
@@ -87,6 +89,10 @@ import {
   defineSelect,
   splitButtonElement,
   defineSplitButton,
+  tooltipElement,
+  defineTooltip,
+  snackbarElement,
+  defineSnackbar,
   tabDeclaration,
   radioDeclaration,
   navigationRailItemDeclaration,
@@ -151,6 +157,10 @@ import type {
   SelectElement,
   SplitButtonSpec,
   SplitButtonElement,
+  TooltipSpec,
+  TooltipElement,
+  SnackbarSpec,
+  SnackbarElement,
   TabAttributes,
   RadioAttributes,
   NavigationRailItemAttributes,
@@ -193,6 +203,8 @@ export const Carousel: MComponent<CarouselSpec, CarouselElement> = createCompone
 export const Menu: MComponent<MenuSpec, MenuElement> = createComponent(menuElement.spec, defineMenu, "Menu");
 export const Select: MComponent<SelectSpec, SelectElement> = createComponent(selectElement.spec, defineSelect, "Select");
 export const SplitButton: MComponent<SplitButtonSpec, SplitButtonElement> = createComponent(splitButtonElement.spec, defineSplitButton, "SplitButton");
+export const Tooltip: MComponent<TooltipSpec, TooltipElement> = createComponent(tooltipElement.spec, defineTooltip, "Tooltip");
+export const Snackbar: MComponent<SnackbarSpec, SnackbarElement> = createComponent(snackbarElement.spec, defineSnackbar, "Snackbar");
 export const Tab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "Tab");
 export const Radio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "Radio");
 export const NavigationRailItem: MDeclaration<NavigationRailItemAttributes> = createDeclaration(navigationRailItemDeclaration, "NavigationRailItem");

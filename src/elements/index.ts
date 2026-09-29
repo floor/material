@@ -37,6 +37,8 @@ import { carouselElement, carouselItemDeclaration, defineCarousel } from "./caro
 import { menuElement, menuItemDeclaration, defineMenu } from "./menu";
 import { selectElement, selectOptionDeclaration, defineSelect } from "./select";
 import { splitButtonElement, defineSplitButton } from "./split-button";
+import { tooltipElement, defineTooltip } from "./tooltip";
+import { snackbarElement, defineSnackbar } from "./snackbar";
 
 export { defineElement, DEFAULT_PREFIX, SHADOW_BASE_STYLES } from "./define";
 export type {
@@ -103,6 +105,10 @@ export { selectElement, selectOptionDeclaration, defineSelect } from "./select";
 export type { SelectSpec, SelectElement, SelectOptionAttributes } from "./select";
 export { splitButtonElement, defineSplitButton } from "./split-button";
 export type { SplitButtonSpec, SplitButtonElement } from "./split-button";
+export { tooltipElement, defineTooltip } from "./tooltip";
+export type { TooltipSpec, TooltipElement } from "./tooltip";
+export { snackbarElement, defineSnackbar } from "./snackbar";
+export type { SnackbarSpec, SnackbarElement } from "./snackbar";
 
 /**
  * Every element, by name. Framework adapters are generated from this list and
@@ -135,6 +141,8 @@ export const elements = {
   menu: menuElement,
   select: selectElement,
   splitButton: splitButtonElement,
+  tooltip: tooltipElement,
+  snackbar: snackbarElement,
 } as const;
 
 /** Declaration children, which render nothing and are read by their parent. */
@@ -179,4 +187,6 @@ export const defineAll = (options?: DefineOptions): void => {
   defineMenu(options);
   defineSelect(options);
   defineSplitButton(options);
+  defineTooltip(options);
+  defineSnackbar(options);
 };

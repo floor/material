@@ -7,6 +7,10 @@ import {
   DEFAULT_OFFSET,
 } from "./types";
 import { TOOLTIP_DEFAULTS } from "./constants";
+import { hideFromTopLayer, showInTopLayer } from "../../core/dom/layer";
+
+/** The tooltip's exit transition in the stylesheet, in milliseconds */
+const EXIT_DURATION = 150;
 
 interface ApiOptions {
   lifecycle: {
@@ -43,6 +47,10 @@ export const withAPI =
     const hideDelay = config.hideDelay ?? TOOLTIP_DEFAULTS.HIDE_DELAY;
     const showOnFocus = config.showOnFocus !== false;
     const showOnHover = config.showOnHover !== false;
+    // A top-layer tooltip renders after its target as a popover="manual"
+    // element, placed in viewport coordinates
+    const topLayer = config.layer === "top";
+    let layerTimer: number | null = null;
 
     // aria-describedby is a list. Add and remove only this tooltip's id, so an
     // existing description survives and a previous target stops pointing here.
@@ -62,8 +70,10 @@ export const withAPI =
     arrowElement.className = `${component.getClass("tooltip")}__arrow`;
     component.element.appendChild(arrowElement);
 
-    // Add to body (but hidden initially)
-    document.body.appendChild(component.element);
+    // Add to body (but hidden initially). A top-layer tooltip waits for its
+    // target, and as a closed popover it renders nothing until shown.
+    if (topLayer) component.element.setAttribute("popover", "manual");
+    else document.body.appendChild(component.element);
     component.element.setAttribute("aria-hidden", "true");
 
     /**
@@ -78,8 +88,8 @@ export const withAPI =
 
       const tooltipRect = component.element.getBoundingClientRect();
       const targetRect = target.getBoundingClientRect();
-      const scrollY = window.scrollY || window.pageYOffset;
-      const scrollX = window.scrollX || window.pageXOffset;
+      const scrollY = topLayer ? 0 : window.scrollY || window.pageYOffset;
+      const scrollX = topLayer ? 0 : window.scrollX || window.pageXOffset;
 
       // Default offset
       const offset = DEFAULT_OFFSET;
@@ -349,6 +359,12 @@ export const withAPI =
         // Set target's aria attributes
         describe(target);
 
+        // A top-layer tooltip goes after its target, in the target's tree,
+        // unless its owner already placed it
+        if (topLayer && !component.element.isConnected && target.parentNode) {
+          target.after(component.element);
+        }
+
         // Add events to new target
         addTargetEvents(target);
 
@@ -374,6 +390,16 @@ export const withAPI =
 
         const showTooltip = () => {
           if (!target) return this;
+
+          if (topLayer) {
+            if (layerTimer !== null) window.clearTimeout(layerTimer);
+            layerTimer = null;
+            if (!component.element.isConnected) document.body.appendChild(component.element);
+            showInTopLayer(component.element, { kind: "popover-manual" });
+            // Styled hidden first, so the enter transition runs and the
+            // tooltip is measured as the one on the body is
+            void component.element.offsetWidth;
+          }
 
           // Show the tooltip
           component.element.setAttribute("aria-hidden", "false");
@@ -424,6 +450,15 @@ export const withAPI =
           window.removeEventListener("resize", handleWindowResize);
           window.removeEventListener("scroll", handleWindowScroll);
           document.removeEventListener("keydown", handleDocumentKeydown);
+
+          // Out of the top layer once the exit transition has run
+          if (topLayer) {
+            if (layerTimer !== null) window.clearTimeout(layerTimer);
+            layerTimer = window.setTimeout(() => {
+              layerTimer = null;
+              if (!isVisible) hideFromTopLayer(component.element);
+            }, EXIT_DURATION);
+          }
         };
 
         if (immediate) {
@@ -470,6 +505,10 @@ export const withAPI =
 
         if (hideTimer !== null) {
           window.clearTimeout(hideTimer);
+        }
+
+        if (layerTimer !== null) {
+          window.clearTimeout(layerTimer);
         }
 
         // Remove target events
