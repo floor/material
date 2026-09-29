@@ -131,3 +131,32 @@ describe("clock dial colour roles, now styled (FLO-279: the canvas is gone)", ()
     expect(ruleFor(".mtrl-time-picker__dial-centre")).toContain("inset: calc(50% - 4px)");
   });
 });
+
+// FLO-280: the sizes and colours of each variant, and no overrides of the theme.
+describe("time picker variants (FLO-280)", () => {
+  test("the input mode's focused field is primary-container inside a 2dp primary outline", () => {
+    const rule = /__seconds\[type=number\]:focus \{([^}]*)\}/.exec(css)?.[1] ?? "";
+    expect(rule).toContain("background-color: var(--mtrl-sys-color-primary-container)");
+    expect(rule).toContain("outline: 2px solid var(--mtrl-sys-color-primary)");
+  });
+
+  test("AM/PM is 52x80dp with an outline, and unselected is transparent", () => {
+    const rule = ruleFor(".mtrl-time-picker__period");
+    expect(rule).toContain("width: 52px");
+    expect(rule).toContain("height: 80px");
+    expect(rule).not.toContain("background-color");
+  });
+
+  test("the 24-hour vertical dial widens its boxes to 114dp", () => {
+    expect(css).toMatch(/__dialog--dial\.mtrl-time-picker__dialog--24h\.mtrl-time-picker__dialog--vertical[^{]*\{\s*width: 114px/);
+  });
+
+  test("dark colours come from the theme: no prefers-color-scheme, no surface-tint overlay", () => {
+    expect(css).not.toContain("prefers-color-scheme");
+    expect(css).not.toContain("surface-tint");
+  });
+
+  test("no physical margins outside the dial", () => {
+    expect(css).not.toContain("margin-left");
+  });
+});

@@ -74,6 +74,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Time picker: M3 sizes and colours in every variant (FLO-280).** Dial mode's boxes are
+  96x80dp in Display Large (114dp wide in the 24-hour vertical layout), the colon 24dp and
+  on-surface. Input mode's fields are 96x72dp in Display Medium, labelled Hour and Minute
+  below them, and the focused one turns primary-container inside a 2dp primary outline (the
+  selected colours never showed: the number-field rule overrode them). AM/PM is 52x80dp
+  (52x72 in input mode, 216x38 lying flat in the horizontal layout), 12dp from the time,
+  with a 1dp outline and divider; the unselected half is transparent. In right-to-left
+  layouts the time still reads left to right and AM/PM moves to the other side. Dark
+  colours come from the theme: the `prefers-color-scheme` overrides and the surface-tint
+  overlay are gone, and so is the phone-width shrink of the fields.
 - **Date picker: focus inside a shadow root (FLO-284).** It read `document.activeElement`,
   which stops at the shadow host, so inside a web component Tab no longer wrapped in the
   modal, a swipe or the growing full-screen list lost the focused day, and closing could
