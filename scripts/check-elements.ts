@@ -11,6 +11,7 @@
 
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
+import { checkPickers } from "./check-elements-pickers";
 
 // Runs against the build: `bun run build` first, as CI does.
 const bundle = await Bun.build({
@@ -5626,6 +5627,9 @@ try {
     }
     check("modal elements: a snackbar appended to the open <dialog> is reachable by Tab, placed on the viewport, and changes no region or close");
   }
+
+  // ---------------------------------------------------------------- date and time pickers
+  await checkPickers({ page, browser, js, fresh, check });
 
   // ---------------------------------------------------------------- theme
   await fresh(page, `<m-switch id="s" checked>Theme</m-switch><section id="factory"></section>`);

@@ -8,6 +8,7 @@
   } from "../../dist/svelte/index.js";
   import { Select, SelectOption } from "../../dist/svelte/index.js";
   import { Dialog } from "../../dist/svelte/index.js";
+  import { Datepicker } from "../../dist/svelte/index.js";
 
   const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 
@@ -29,6 +30,7 @@
   let fruit = $state<string | null>("b");
   let pet = $state<string | null>("cat");
   let dialog = $state(false);
+  let due = $state("2026-09-10");
 
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
 
@@ -100,6 +102,8 @@
     <span slot="headline">Discard draft?</span>Your changes will be lost.
   </Dialog>
   <output id="dialog">{String(dialog)}</output>
+  <Datepicker id="dt" variant="modal" label="Due" bind:value={due} />
+  <output id="due">{due}</output>
   {#each order as key (key)}<Switch id={`o${key}`}>Order {key}</Switch>{/each}
   {#if show}<Switch id="gone">Gone</Switch>{/if}
   <!-- Mounted in the browser after the element is defined: Svelte writes a

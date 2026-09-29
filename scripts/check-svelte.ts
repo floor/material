@@ -84,6 +84,7 @@ const run = async (): Promise<void> => {
   assert.match(html, /<m-radios [^>]*value="m"[^>]*>(<!---->)?<m-radio value="s">/);
   assert.match(html, /<m-chips [^>]*value="veg"[^>]*>(<!---->)?<m-chip value="veg">/);
   assert.match(html, /<m-select [^>]*value="cat"[^>]*>(<!---->)?<m-select-option value="cat">/);
+  assert.match(html, /<m-datepicker [^>]*value="2026-09-10"/);
   assert.match(html, /<m-button id="b" type="submit" variant="filled" class="save" data-test="1">/);
   assert.match(html, /<m-dialog [^>]*id="dg"[^>]*>/);
   assert.doesNotMatch(html, /<m-dialog [^>]*open/);
@@ -221,6 +222,14 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("pet")?.textContent === "dog");
     assert.equal(await pet.inputValue(), "Dog");
     check("select: choosing an option updates the bound value");
+    // ------------------------------------------------------------- datepicker
+    assert.equal(await page.locator("#dt input").first().inputValue(), "09/10/2026");
+    await page.locator('#dt [data-action="open"]').click();
+    await page.locator('#dt dialog [data-date="2026-09-14"]').first().click();
+    await page.locator('#dt dialog [data-action="confirm"]').click();
+    await page.waitForFunction(() => document.getElementById("due")?.textContent === "2026-09-14");
+    assert.equal(await page.locator("#dt input").first().inputValue(), "09/14/2026");
+    check("datepicker: choosing a date and confirming updates the bound value");
 
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);

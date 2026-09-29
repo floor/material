@@ -10,6 +10,7 @@ import type { SwitchElement } from "../../dist/elements/index.js";
 import { Chip, Chips } from "../../dist/solid/index.js";
 import { Select, SelectOption } from "../../dist/solid/index.js";
 import { Dialog } from "../../dist/solid/index.js";
+import { Datepicker } from "../../dist/solid/index.js";
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 
@@ -31,6 +32,7 @@ export const App = () => {
   const [fruit, setFruit] = createSignal<string | null>("b");
   const [pet, setPet] = createSignal<string | null>("cat");
   const [dialog, setDialog] = createSignal(false);
+  const [due, setDue] = createSignal("2026-09-10");
   let switchRef: SwitchElement | undefined;
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
 
@@ -98,6 +100,8 @@ export const App = () => {
         <span slot="headline">Discard draft?</span>Your changes will be lost.
       </Dialog>
       <output id="dialog">{String(dialog())}</output>
+      <Datepicker id="dt" variant="modal" label="Due" value={due()} onChange={(e) => setDue(e.detail.value)} />
+      <output id="due">{due()}</output>
       <For each={order()}>{(key) => <Switch id={`o${key}`}>Order {key}</Switch>}</For>
       <Show when={show()}><Switch id="gone">Gone</Switch></Show>
       {/* Mounted in the browser after the element is defined: Solid writes a

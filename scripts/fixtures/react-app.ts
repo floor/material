@@ -9,6 +9,7 @@ import type { SwitchElement } from "../../dist/elements/index.js";
 import { Chip, Chips } from "../../dist/react/index.js";
 import { Select, SelectOption } from "../../dist/react/index.js";
 import { Dialog } from "../../dist/react/index.js";
+import { Datepicker } from "../../dist/react/index.js";
 
 const h = React.createElement;
 const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
@@ -43,6 +44,7 @@ export const App = (): React.ReactElement => {
   const [fruit, setFruit] = React.useState<string | null>("b");
   const [pet, setPet] = React.useState<string | null>("cat");
   const [dialog, setDialog] = React.useState(false);
+  const [due, setDue] = React.useState("2026-09-10");
   const switchRef = React.useRef<SwitchElement | null>(null);
   const api = React.useRef<Api | null>(null);
 
@@ -135,6 +137,8 @@ export const App = (): React.ReactElement => {
       "Your changes will be lost."
     ),
     h("output", { id: "dialog" }, String(dialog)),
+    h(Datepicker, { id: "dt", variant: "modal", label: "Due", value: due, onChange: (e) => setDue(e.detail.value) }),
+    h("output", { id: "due" }, due),
     ...order.map((key) => h(Switch, { key, id: `o${key}` }, `Order ${key}`)),
     show ? h(Switch, { id: "gone" }, "Gone") : null,
     // Mounted in the browser after the element is defined: React 19 then

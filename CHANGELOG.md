@@ -161,6 +161,22 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `button-url` and `value`; the carousel takes the layout `variant` and the item sizing
   attributes, with the current `index` as the model, `change` as it moves, and `next`,
   `prev` and `goTo`. Items update in place.
+- **Elements: `<m-datepicker>`**, and `Datepicker` in the adapters. A form-associated date
+  picker whose own field is its trigger: `value` is the model and the form value, an ISO date
+  (`YYYY-MM-DD`), or with `selection-mode="range"` a `start/end` interval, with `change`
+  (`{ value }`) on commit: Save in the `modal`, `modal-input` and `fullscreen` variants, which
+  open in the top layer, and each date chosen in the `docked` one. `min`, `max`,
+  `date-format`, `label`, `supporting-text`, `required` (reported as `valueMissing`),
+  `disabled`, `readonly`; reset, restore and `<label for>`. `open` reflects the calendar as on
+  `<dialog open>`, with `show()` and `close()`, and `open` and `close` are dispatched.
+- **Elements: `<m-timepicker>`**, and `Timepicker` in the adapters. A form-associated time
+  picker with no field of its own, opened by `show()`, the `open` attribute (reflected) or a
+  `<label for>`, in the top layer. `value` is the model and the form value, a 24-hour
+  `HH:MM` (`HH:MM:SS` with a `step` under a minute) as on `<input type=time>`; OK dispatches
+  `change` (`{ value }`) when the time differs, and Cancel, Escape or the backdrop put the
+  dial back. `format`, `type` (dial or input) and `orientation` change in place; `min`,
+  `max` and `step` (seconds, as the minute or second step); `label`, `required`
+  (`valueMissing`), `disabled`; reset and restore; `open` and `close` events.
 
 ### Fixed
 

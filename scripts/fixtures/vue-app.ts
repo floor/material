@@ -10,6 +10,7 @@ import type { SwitchElement } from "../../dist/elements/index.js";
 import { MChip, MChips } from "../../dist/vue/index.js";
 import { MSelect, MSelectOption } from "../../dist/vue/index.js";
 import { MDialog } from "../../dist/vue/index.js";
+import { MDatepicker } from "../../dist/vue/index.js";
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 
@@ -43,6 +44,7 @@ export const App = defineComponent(() => {
   const fruit = ref<string | null>("b");
   const pet = ref<string | null>("cat");
   const dialog = ref(false);
+  const due = ref("2026-09-10");
   const switchRef = ref<Exposed<SwitchElement> | null>(null);
   const api: Api = {
     log: [], submits: 0, model, extra, order, show, progress, switchRef,
@@ -127,6 +129,8 @@ export const App = defineComponent(() => {
         "Your changes will be lost.",
       ]),
       h("output", { id: "dialog" }, String(dialog.value)),
+      h(MDatepicker, { id: "dt", variant: "modal", label: "Due", modelValue: due.value, "onUpdate:modelValue": (v: string) => (due.value = v) }),
+      h("output", { id: "due" }, due.value),
       ...order.value.map((key) => h(MSwitch, { key, id: `o${key}` }, () => `Order ${key}`)),
       show.value ? h(MSwitch, { id: "gone" }, () => "Gone") : null,
       // Mounted in the browser after the element is defined: Vue writes a key
