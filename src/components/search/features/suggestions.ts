@@ -96,10 +96,12 @@ export const withSuggestions =
       itemClasses.push(getClass(SEARCH_CLASSES.SUGGESTION_ITEM_SELECTED));
     }
 
+    const listId = component.structure?.suggestionsList?.id;
     const item = createElement({
       tag: "li",
       className: itemClasses.join(" "),
       attributes: {
+        ...(listId && { id: `${listId}-${index}` }),
         role: "option",
         "aria-selected": isHighlighted ? "true" : "false",
         "data-index": String(index),
@@ -165,6 +167,13 @@ export const withSuggestions =
 
     // Clear existing content
     suggestionsList.replaceChildren();
+    // The list is drawn anew with nothing highlighted.
+    highlightedIndex = -1;
+    component.structure?.input.removeAttribute("aria-activedescendant");
+    // The count is announced as it changes, while the list shows (FLO-286).
+    const status = component.structure?.status;
+    const count = suggestions.length;
+    if (status) status.textContent = count && component.states?.isExpanded() ? `${count} suggestion${count === 1 ? "" : "s"}` : "";
 
     if (suggestions.length === 0) {
       return;
@@ -197,12 +206,6 @@ export const withSuggestions =
       suggestionsList.appendChild(item);
     });
 
-    // Update ARIA attributes
-    const visibleCount = suggestions.length;
-    suggestionsList.setAttribute(
-      "aria-label",
-      `${visibleCount} suggestion${visibleCount !== 1 ? "s" : ""} available`
-    );
   };
 
   /**
@@ -214,6 +217,8 @@ export const withSuggestions =
       suggestionsList.replaceChildren();
     }
     highlightedIndex = -1;
+    component.structure?.input.removeAttribute("aria-activedescendant");
+    if (component.structure?.status) component.structure.status.textContent = "";
   };
 
   /**
@@ -244,11 +249,14 @@ export const withSuggestions =
 
     highlightedIndex = index;
 
+    // The combobox points at the highlighted option, or at none.
+    const input = component.structure?.input;
+    const newItem = highlightedIndex >= 0 ? suggestionsList.querySelector(`[data-index="${highlightedIndex}"]`) : null;
+    if (newItem?.id) input?.setAttribute("aria-activedescendant", newItem.id);
+    else input?.removeAttribute("aria-activedescendant");
+
     // Add new highlight
     if (highlightedIndex >= 0) {
-      const newItem = suggestionsList.querySelector(
-        `[data-index="${highlightedIndex}"]`
-      );
       if (newItem) {
         newItem.classList.add(
           getClass(SEARCH_CLASSES.SUGGESTION_ITEM_SELECTED)

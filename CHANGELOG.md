@@ -172,6 +172,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   is inert, Escape cancels). A clipping parent no longer hides the results. Moving focus to
   the view's own back or clear button no longer closes it, and hovering a suggestion no
   longer selects it for the next Tab.
+- **Search: accessibility and M3 tokens (FLO-286).** The input is a combobox that controls
+  the suggestions listbox (`role="combobox"`, `aria-expanded`, `aria-controls`,
+  `aria-autocomplete="list"`), and the arrows move `aria-activedescendant` through the
+  options; a polite status announces how many suggestions show. The icon buttons are 48dp
+  tap targets (they were 24dp) with 8% hover and 10% focus and pressed layers and the 3dp
+  `secondary` focus ring; the bar has an 8% hover layer. Suggestions are 56dp one-line list
+  items, and the option the arrows reach looks focused. The divider is `outline`. The
+  suggestions listbox stays in the DOM, hidden, while the search is a bar.
 - **Time picker: `minTime`, `maxTime`, `minuteStep` and `secondStep` are applied
   (FLO-281).** They were accepted and documented, and did nothing. Dial numbers and AM/PM
   that cannot be reached are disabled (at 38%), a pointer between labels picks the nearest

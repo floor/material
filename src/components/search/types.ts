@@ -314,6 +314,8 @@ export interface SearchStructure {
   suggestionsContainer: HTMLElement | null;
   /** Suggestions list element */
   suggestionsList: HTMLElement | null;
+  /** The live region that announces the suggestion count (FLO-286) */
+  status: HTMLElement;
 }
 
 /**

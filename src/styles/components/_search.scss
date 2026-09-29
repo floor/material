@@ -24,10 +24,8 @@ $view-docked-min-height: 240px;
 
 $view-fullscreen-header-height: 72px;
 
-$padding-horizontal: 16px;
 $icon-size: 24px;
 $avatar-size: 30px;
-$icon-spacing: 16px;
 
 $transition-duration: 200ms;
 $transition-easing: cubic-bezier(0.2, 0, 0, 1);
@@ -188,38 +186,48 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
 // Container (Header/Bar area)
 // ============================================================================
 
+// Icons sit in 48dp tap targets 4dp from the ends, so an icon's centre is 28dp
+// in and the text starts 4dp after the leading target: 56dp, as M3 measures.
 .#{$component}__container {
     position: relative;
     display: flex;
     align-items: center;
     height: $bar-height;
-    padding: 0 $padding-horizontal;
+    padding: 0 4px;
     background-color: t.color("surface-container-high");
     transition:
         background-color $transition-duration $transition-easing,
         border-radius $transition-duration $transition-easing,
         height $transition-duration $transition-easing;
-    overflow: hidden;
+}
+
+// The bar's hover state layer: on-surface at 8%.
+.#{$component}--bar:not(.#{$component}--disabled) .#{$component}__container:hover {
+    background-color: color-mix(in srgb, #{t.color("on-surface")} 8%, #{t.color("surface-container-high")});
 }
 
 // ============================================================================
-// Leading Icon
+// Icon buttons: leading, clear, trailing
 // ============================================================================
 
-.#{$component}__leading-icon {
+// 48dp tap targets around 24dp icons (FLO-286: they were 24dp buttons), with
+// state layers in their icon colour and md.comp.focus-ring.
+.#{$component}__leading-icon,
+.#{$component}__clear-button,
+.#{$component}__trailing-icon {
+    --#{$component}-layer: 0%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: $icon-size;
-    height: $icon-size;
-    margin-right: $icon-spacing;
+    width: 48px;
+    height: 48px;
+    margin: 0;
     padding: 0;
     border: none;
-    background: transparent;
-    color: t.color("on-surface");
-    cursor: pointer;
     border-radius: 50%;
+    background-color: color-mix(in srgb, currentColor var(--#{$component}-layer), transparent);
+    cursor: pointer;
     transition: background-color $transition-duration $transition-easing;
 
     svg {
@@ -228,37 +236,78 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
         fill: currentColor;
     }
 
-    &:hover {
-        background-color: t.alpha("on-surface", 0.08);
-    }
-
-    &:focus {
-        outline: none;
-    }
-
-    &:focus-visible {
-        outline: 2px solid t.color("primary");
-        outline-offset: 2px;
-    }
+    &:hover { --#{$component}-layer: 8%; }
+    &:focus-visible, &:active { --#{$component}-layer: 10%; }
+    &:focus { outline: none; }
+    &:focus-visible { outline: 3px solid t.color("secondary"); outline-offset: 2px; }
 
     &[aria-disabled="true"] {
         cursor: not-allowed;
         opacity: 0.38;
-
-        &:hover {
-            background-color: transparent;
-        }
+        --#{$component}-layer: 0%;
     }
+}
+
+.#{$component}__leading-icon {
+    color: t.color("on-surface");
+}
+
+.#{$component}__clear-button,
+.#{$component}__trailing-icon {
+    color: t.color("on-surface-variant");
+}
+
+.#{$component}__clear-button {
+    opacity: 1;
+    visibility: visible;
+    transition:
+        opacity $transition-duration $transition-easing,
+        visibility 0s,
+        background-color $transition-duration $transition-easing;
+
+    &--hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition:
+            opacity $transition-duration $transition-easing,
+            visibility 0s $transition-duration;
+    }
+}
+
+// The avatar is 30dp, centred in a 48dp box like the icons.
+.#{$component}__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+
+    > * {
+        width: $avatar-size;
+        height: $avatar-size;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+}
+
+// Trailing items container
+.#{$component}__trailing {
+    display: flex;
+    align-items: center;
 }
 
 // ============================================================================
 // Input Wrapper & Input
 // ============================================================================
 
+// 4dp from the tap targets on either side.
 .#{$component}__input-wrapper {
     flex: 1;
     min-width: 0;
     height: 100%;
+    margin: 0 4px;
     display: flex;
     align-items: center;
 }
@@ -270,9 +319,7 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     padding: 8px 0;
     border: none;
     background: transparent;
-    font-family: inherit;
-    font-size: 16px;
-    line-height: 24px;
+    @include m.typography("body-large");
     color: t.color("on-surface");
     caret-color: t.color("primary");
     outline: none;
@@ -289,142 +336,14 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
 }
 
 // ============================================================================
-// Clear Button
-// ============================================================================
-
-.#{$component}__clear-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: $icon-size;
-    height: $icon-size;
-    margin-left: $icon-spacing;
-    padding: 0;
-    border: none;
-    background: transparent;
-    color: t.color("on-surface-variant");
-    cursor: pointer;
-    border-radius: 50%;
-    opacity: 1;
-    visibility: visible;
-    transition:
-        opacity $transition-duration $transition-easing,
-        visibility 0s,
-        background-color $transition-duration $transition-easing;
-
-    svg {
-        width: 20px;
-        height: 20px;
-        fill: currentColor;
-    }
-
-    &:hover {
-        background-color: t.alpha("on-surface", 0.08);
-    }
-
-    &:focus {
-        outline: none;
-    }
-
-    &:focus-visible {
-        outline: 2px solid t.color("primary");
-        outline-offset: 2px;
-    }
-
-    &--hidden {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transition:
-            opacity $transition-duration $transition-easing,
-            visibility 0s $transition-duration;
-    }
-}
-
-// ============================================================================
-// Trailing Icons & Avatar
-// ============================================================================
-
-.#{$component}__trailing-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: $icon-size;
-    height: $icon-size;
-    margin-left: $icon-spacing;
-    padding: 0;
-    border: none;
-    background: transparent;
-    color: t.color("on-surface-variant");
-    cursor: pointer;
-    border-radius: 50%;
-    transition: background-color $transition-duration $transition-easing;
-
-    svg {
-        width: $icon-size;
-        height: $icon-size;
-        fill: currentColor;
-    }
-
-    &:hover {
-        background-color: t.alpha("on-surface", 0.08);
-    }
-
-    &:focus {
-        outline: none;
-    }
-
-    &:focus-visible {
-        outline: 2px solid t.color("primary");
-        outline-offset: 2px;
-    }
-
-    &[aria-disabled="true"] {
-        cursor: not-allowed;
-        opacity: 0.38;
-
-        &:hover {
-            background-color: transparent;
-        }
-    }
-}
-
-.#{$component}__avatar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: $avatar-size;
-    height: $avatar-size;
-    margin-left: $icon-spacing;
-    border-radius: 50%;
-    overflow: hidden;
-
-    img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-}
-
-// Trailing items container
-.#{$component}__trailing {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: $icon-spacing;
-}
-
-// ============================================================================
 // Divider
 // ============================================================================
 
+// SearchViewTokens.DividerColor is outline (it was outline-variant).
 .#{$component}__divider {
     width: 100%;
     height: 1px;
-    background-color: t.color("outline-variant");
+    background-color: t.color("outline");
     flex-shrink: 0;
 }
 
@@ -440,27 +359,13 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
 }
 
 // ============================================================================
-// Suggestions
+// Suggestions: M3 one-line list items
 // ============================================================================
 
 .#{$component}__suggestions {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-
-    // Scrollbar styling
-    &::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    &::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background-color: t.alpha("on-surface", 0.2);
-        border-radius: 2px;
-    }
 }
 
 .#{$component}__suggestion-list {
@@ -469,29 +374,29 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     margin: 0;
 }
 
+// 56dp one-line items (they were 48), Body Large, 16dp padding; hover at 8%;
+// the option the arrows reach looks focused: 10% and the focus ring.
 .#{$component}__suggestion-item {
     display: flex;
     align-items: center;
-    padding: 12px $padding-horizontal;
-    min-height: 48px;
-    font-size: 16px;
-    line-height: 24px;
+    gap: 16px;
+    padding: 8px 16px;
+    min-height: 56px;
+    @include m.typography("body-large");
     color: t.color("on-surface");
     cursor: pointer;
     transition: background-color $transition-duration $transition-easing;
     box-sizing: border-box;
 
-    &:hover,
-    &:focus {
+    &:hover {
         background-color: t.alpha("on-surface", 0.08);
     }
 
-    &:focus {
-        outline: none;
-    }
-
-    &--selected {
-        background-color: t.alpha("on-surface", 0.12);
+    &--selected,
+    &--selected:hover {
+        background-color: t.alpha("on-surface", 0.1);
+        outline: 3px solid t.color("secondary");
+        outline-offset: -3px;
     }
 
     // Highlighted text in suggestions
@@ -508,12 +413,11 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     flex-shrink: 0;
     width: $icon-size;
     height: $icon-size;
-    margin-right: $icon-spacing;
     color: t.color("on-surface-variant");
 
     svg {
-        width: 20px;
-        height: 20px;
+        width: $icon-size;
+        height: $icon-size;
         fill: currentColor;
     }
 }
@@ -530,6 +434,16 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     height: 1px;
     margin: 8px 0;
     background-color: t.color("outline-variant");
+}
+
+// The live region: read, not seen.
+.#{$component}__status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
 
 // ============================================================================

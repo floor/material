@@ -74,10 +74,17 @@ describe('state layer opacities follow M3', () => {
   });
 
   test('a selected container fill keeps 12% as well', () => {
-    for (const component of ['search', 'select']) {
-      const selected = rulesOf(component).filter((rule) => /--selected/.test(withoutNegations(rule.selector)));
-      expect(selected.flatMap((rule) => alphaPercents(rule.body))).toContain(12);
-    }
+    const selected = rulesOf('select').filter((rule) => /--selected/.test(withoutNegations(rule.selector)));
+    expect(selected.flatMap((rule) => alphaPercents(rule.body))).toContain(12);
+  });
+
+  // Not search: its `--selected` suggestion is the option the arrows reach, the
+  // combobox's aria-activedescendant (FLO-286). That is keyboard focus, which
+  // commits nothing until Enter, so it takes the focus layer and the focus ring.
+  test("search's reached suggestion is focus: 10% and the ring", () => {
+    const reached = rulesOf('search').filter((rule) => /suggestion-item--selected/.test(withoutNegations(rule.selector)));
+    expect(reached.flatMap((rule) => alphaPercents(rule.body))).toEqual([10]);
+    expect(reached.map((rule) => rule.body).join(' ')).toMatch(/outline:\s*3px solid/);
   });
 
   test('the constants themselves still say what M3 says', () => {

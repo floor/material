@@ -24,6 +24,8 @@ import { createElement } from "../../../core/dom/create";
  * @param config Search configuration
  * @returns Component enhancer with DOM structure
  */
+let searches = 0;
+
 /** What this feature reads off the component it is handed. */
 interface StructureHost {
   element: HTMLElement;
@@ -124,11 +126,19 @@ export const withStructure =
     container,
   });
 
-  // Create input element
+  // The input is a combobox that owns the suggestions listbox; the arrows move
+  // aria-activedescendant through it (FLO-286). It was a plain text field, so
+  // a screen reader heard neither the list nor the suggestion the arrows
+  // reached.
+  const id = `${getClass(SEARCH_CLASSES.ROOT)}-${++searches}`;
   const inputAttributes: Record<string, string> = {
     type: "text",
     placeholder,
     "aria-label": placeholder,
+    role: "combobox",
+    "aria-autocomplete": "list",
+    "aria-expanded": String(isViewState),
+    "aria-controls": `${id}-listbox`,
   };
 
   if (value) {
@@ -240,16 +250,25 @@ export const withStructure =
     className: getClass(SEARCH_CLASSES.SUGGESTION_LIST),
     container: suggestionsContainer,
     attributes: {
+      id: `${id}-listbox`,
       role: "listbox",
       "aria-label": "Search suggestions",
     },
   });
 
-  // Only append to DOM if in view state initially
-  if (isViewState) {
-    surface.appendChild(divider);
-    surface.appendChild(contentArea);
-  }
+  // Announces how many suggestions there are as they change: M3 asks that the
+  // screen reader hears when suggestions appear.
+  const status = createElement({
+    tag: "div",
+    className: getClass(SEARCH_CLASSES.STATUS),
+    container: component.element,
+    attributes: { role: "status", "aria-live": "polite" },
+  });
+
+  // Always in the DOM, hidden by CSS while collapsed: the combobox's
+  // aria-controls names the listbox, which must exist (FLO-286).
+  surface.appendChild(divider);
+  surface.appendChild(contentArea);
 
   // Build structure object
   const structure: SearchStructure = {
@@ -263,6 +282,7 @@ export const withStructure =
     divider,
     suggestionsContainer,
     suggestionsList,
+    status,
   };
 
   // Return enhanced component with structure
