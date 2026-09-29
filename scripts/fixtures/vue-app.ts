@@ -4,6 +4,7 @@
 import { defineComponent, h, ref, onMounted, type Ref } from "vue";
 import { MButton, MCheckbox, MProgress, MRadio, MRadios, MSlider, MSwitch, MTab, MTabs, MTextfield, type Exposed } from "../../dist/vue/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
+import { MChip, MChips } from "../../dist/vue/index.js";
 
 type Log = Array<{ id: string; detail: unknown }>;
 export interface Api {
@@ -24,6 +25,7 @@ export const App = defineComponent(() => {
   const level = ref(50);
   const text = ref("");
   const size = ref<string | null>("m");
+  const diet = ref<string | string[] | null>(["veg"]);
   const tab = ref<string | null>("t2");
   const extra = ref(false);
   const order = ref(["a", "b"]);
@@ -78,6 +80,11 @@ export const App = defineComponent(() => {
         h(MRadio, { value: "l" }, () => "Large"),
       ]),
       h("output", { id: "size" }, String(size.value)),
+      h(MChips, { id: "ck", ariaLabel: "Diet", modelValue: diet.value, "onUpdate:modelValue": (v: string | string[]) => (diet.value = v) }, () => [
+        h(MChip, { value: "veg" }, () => "Vegetarian"),
+        h(MChip, { value: "gf" }, () => "Gluten free"),
+      ]),
+      h("output", { id: "diet" }, String(diet.value)),
       ...order.value.map((key) => h(MSwitch, { key, id: `o${key}` }, () => `Order ${key}`)),
       show.value ? h(MSwitch, { id: "gone" }, () => "Gone") : null,
       // Mounted in the browser after the element is defined: Vue writes a key

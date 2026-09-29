@@ -21,6 +21,8 @@ import "mtrl/elements/css/checkbox";
 import "mtrl/elements/css/slider";
 import "mtrl/elements/css/textfield";
 import "mtrl/elements/css/radios";
+import "mtrl/elements/css/button-group";
+import "mtrl/elements/css/chips";
 import {
   buttonElement,
   defineButton,
@@ -50,8 +52,14 @@ import {
   defineTextfield,
   radiosElement,
   defineRadios,
+  buttonGroupElement,
+  defineButtonGroup,
+  chipsElement,
+  defineChips,
   tabDeclaration,
   radioDeclaration,
+  buttonGroupItemDeclaration,
+  chipDeclaration,
 } from "../elements";
 import type {
   ButtonSpec,
@@ -82,8 +90,14 @@ import type {
   TextfieldElement,
   RadiosSpec,
   RadiosElement,
+  ButtonGroupSpec,
+  ButtonGroupElement,
+  ChipsSpec,
+  ChipsElement,
   TabAttributes,
   RadioAttributes,
+  ButtonGroupItemAttributes,
+  ChipAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
 
@@ -104,5 +118,9 @@ export const Checkbox: MComponent<CheckboxSpec, CheckboxElement> = createCompone
 export const Slider: MComponent<SliderSpec, SliderElement> = createComponent(sliderElement.spec, defineSlider, "Slider");
 export const Textfield: MComponent<TextfieldSpec, TextfieldElement> = createComponent(textfieldElement.spec, defineTextfield, "Textfield");
 export const Radios: MComponent<RadiosSpec, RadiosElement> = createComponent(radiosElement.spec, defineRadios, "Radios");
+export const ButtonGroup: MComponent<ButtonGroupSpec, ButtonGroupElement> = createComponent(buttonGroupElement.spec, defineButtonGroup, "ButtonGroup");
+export const Chips: MComponent<ChipsSpec, ChipsElement> = createComponent(chipsElement.spec, defineChips, "Chips");
 export const Tab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "Tab");
 export const Radio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "Radio");
+export const ButtonGroupItem: MDeclaration<ButtonGroupItemAttributes> = createDeclaration(buttonGroupItemDeclaration, "ButtonGroupItem");
+export const Chip: MDeclaration<ChipAttributes> = createDeclaration(chipDeclaration, "Chip");

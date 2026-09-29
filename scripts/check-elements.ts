@@ -1577,6 +1577,568 @@ try {
     check("radios: renders as the factory does with the global stylesheet");
   }
 
+  // ---------------------------------------------------------------- button group
+  await fresh(
+    page,
+    `<m-button-group id="al" selection="single" value="b" aria-label="Alignment">
+       <m-button-group-item value="a">Left</m-button-group-item>
+       <m-button-group-item value="b">Center</m-button-group-item>
+       <m-button-group-item value="c" label="Right"></m-button-group-item>
+     </m-button-group>
+     <m-button-group id="fm" selection="multi" aria-label="Format">
+       <m-button-group-item value="bold" selected>Bold</m-button-group-item>
+       <m-button-group-item value="italic">Italic</m-button-group-item>
+       <m-button-group-item value="under" icon="${ICON}" aria-label="Underline"></m-button-group-item>
+     </m-button-group>
+     <m-button-group id="ac" aria-label="Actions">
+       <m-button-group-item value="copy">Copy</m-button-group-item>
+       <m-button-group-item value="paste" disabled>Paste</m-button-group-item>
+     </m-button-group>
+     <section id="factory"></section>`
+  );
+  {
+    type Group = HTMLElement & { value: string | string[] | null; component: unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const alignment = page.getByRole("group", { name: "Alignment" });
+    assert.equal(await alignment.count(), 1);
+    for (const [name, pressed] of [["Left", false], ["Center", true], ["Right", false]] as const) {
+      assert.equal(await alignment.getByRole("button", { name, exact: true, pressed }).count(), 1, name);
+    }
+    const format = page.getByRole("group", { name: "Format" });
+    assert.equal(await format.getByRole("button", { name: "Bold", pressed: true }).count(), 1);
+    assert.equal(await format.getByRole("button", { name: "Underline", pressed: false }).count(), 1, "an icon item is named by aria-label");
+    check("button group: a group named by aria-label; items declare the buttons, value and selected press them");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      for (const id of ["al", "fm", "ac"]) {
+        for (const type of ["change", "action"]) {
+          document.getElementById(id)?.addEventListener(type, (e) => {
+            (w.events as unknown[]).push({ type, detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+          });
+        }
+      }
+    });
+    const events = (): Promise<unknown[]> =>
+      page.evaluate(() => {
+        const w = window as unknown as Win;
+        const list = w.events as unknown[];
+        w.events = [];
+        return list;
+      });
+    const live = (id: string): Promise<{ value: unknown; attribute: string | null }> =>
+      page.evaluate((id) => {
+        const g = document.getElementById(id) as Group;
+        return { value: g.value, attribute: g.getAttribute("value") };
+      }, id);
+
+    await alignment.getByRole("button", { name: "Left" }).click();
+    assert.deepEqual(await events(), [
+      { type: "action", detail: { value: "a", index: 0 }, target: "al" },
+      { type: "change", detail: { value: "a" }, target: "al" },
+    ]);
+    assert.deepEqual(await live("al"), { value: "a", attribute: "b" });
+    check("button group: a click dispatches action and change from the host; the live value moves, the attribute stays");
+
+    await alignment.getByRole("button", { name: "Right" }).focus();
+    await page.keyboard.press("Enter");
+    assert.deepEqual(await events(), [
+      { type: "action", detail: { value: "c", index: 2 }, target: "al" },
+      { type: "change", detail: { value: "c" }, target: "al" },
+    ]);
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Space");
+    assert.deepEqual((await events()).at(-1), { type: "change", detail: { value: "b" }, target: "al" });
+    assert.equal(await alignment.getByRole("button", { name: "Center", pressed: true }).count(), 1);
+    check("button group: Enter and Space press the focused button in the shadow root");
+
+    await format.getByRole("button", { name: "Italic" }).click();
+    assert.deepEqual((await events()).at(-1), { type: "change", detail: { value: ["bold", "italic"] }, target: "fm" });
+    assert.deepEqual((await live("fm")).value, ["bold", "italic"]);
+    check("button group: a multi group's value is an array");
+
+    await page.getByRole("group", { name: "Actions" }).getByRole("button", { name: "Copy" }).click();
+    assert.deepEqual(await events(), [{ type: "action", detail: { value: "copy", index: 0 }, target: "ac" }]);
+    assert.equal((await live("ac")).value, null, "a group without selection has no value");
+    check("button group: without selection a press dispatches action only");
+
+    const silent = await page.evaluate(() => {
+      const al = document.getElementById("al") as Group;
+      const fm = document.getElementById("fm") as Group;
+      al.value = "a";
+      const one = al.value;
+      al.value = null;
+      fm.value = ["under", "bold"];
+      const pressed = [...(fm.shadowRoot?.querySelectorAll("button") ?? [])].map((b) => b.getAttribute("aria-pressed"));
+      return { one, cleared: al.value, multi: fm.value, pressed };
+    });
+    assert.deepEqual(silent, { one: "a", cleared: null, multi: ["bold", "under"], pressed: ["true", "false", "true"] });
+    assert.deepEqual(await events(), []);
+    check("button group: setting value fires no event; null clears a single group, an array sets a multi one");
+
+    const disabled = await page.evaluate(() => {
+      const ac = document.getElementById("ac") as HTMLElement;
+      const states = (): boolean[] => [...(ac.shadowRoot?.querySelectorAll("button") ?? [])].map((b) => b.disabled);
+      const initial = states();
+      ac.setAttribute("disabled", "");
+      const group = states();
+      ac.removeAttribute("disabled");
+      return { initial, group, after: states() };
+    });
+    assert.deepEqual(disabled, { initial: [false, true], group: [true, true], after: [false, true] });
+    await page.getByRole("group", { name: "Actions" }).getByRole("button", { name: "Paste" }).click({ force: true });
+    assert.deepEqual(await events(), [], "a disabled button dispatches nothing");
+    await page.evaluate(() => document.querySelector('#ac [value="paste"]')?.removeAttribute("disabled"));
+    await settle();
+    const reenabled = await page.evaluate(() => {
+      const ac = document.getElementById("ac") as HTMLElement;
+      const states = (): boolean[] => [...(ac.shadowRoot?.querySelectorAll("button") ?? [])].map((b) => b.disabled);
+      const item = states();
+      ac.setAttribute("disabled", "");
+      ac.removeAttribute("disabled");
+      return { item, group: states() };
+    });
+    // The factory's enable() would disable Paste again: it was disabled at creation.
+    assert.deepEqual(reenabled, { item: [false, false], group: [false, false] });
+    check("button group: a disabled item and the disabled attribute reach the buttons, and enabling keeps each item's own state");
+
+    const inPlace = await page.evaluate(async () => {
+      const al = document.getElementById("al") as Group;
+      (window as unknown as Record<string, unknown>).__group = al.component;
+      al.value = "c";
+      const items = al.querySelectorAll("m-button-group-item");
+      items[0].textContent = "Start";
+      items[1].setAttribute("disabled", "");
+      items[2].setAttribute("icon", '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>');
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const buttons = [...(al.shadowRoot?.querySelectorAll("button") ?? [])];
+      return {
+        same: al.component === (window as unknown as Record<string, unknown>).__group,
+        disabled: buttons.map((b) => b.disabled),
+        icon: !!buttons[2].querySelector("svg"),
+        value: al.value,
+      };
+    });
+    assert.deepEqual(inPlace, { same: true, disabled: [false, true, false], icon: true, value: "c" });
+    assert.equal(await alignment.getByRole("button", { name: "Start", exact: true }).count(), 1);
+    check("button group: items relabelled, disabled and given an icon update the group in place");
+
+    const rebuilt = await page.evaluate(async () => {
+      const al = document.getElementById("al") as Group;
+      const item = document.createElement("m-button-group-item");
+      item.setAttribute("value", "j");
+      item.textContent = "Justify";
+      al.append(item);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const added = {
+        rebuilt: al.component !== (window as unknown as Record<string, unknown>).__group,
+        labels: [...(al.shadowRoot?.querySelectorAll("button") ?? [])].map((b) => b.textContent?.trim()),
+        value: al.value,
+      };
+      al.querySelector('[value="a"]')?.remove();
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const buttons = [...(al.shadowRoot?.querySelectorAll("button") ?? [])];
+      return { added, count: buttons.length, value: al.value, pressed: buttons.map((b) => b.getAttribute("aria-pressed")) };
+    });
+    assert.deepEqual(rebuilt, {
+      added: { rebuilt: true, labels: ["Start", "Center", "Right", "Justify"], value: "c" },
+      count: 3,
+      value: "c",
+      pressed: ["false", "true", "false"],
+    });
+    assert.deepEqual(await events(), []);
+    check("button group: items added and removed rebuild the group, keeping the live selection, without events");
+
+    const declared = await page.evaluate(async () => {
+      const al = document.getElementById("al") as Group;
+      const item = document.createElement("m-button-group-item") as HTMLElement & { value: string; label: string; disabled: boolean };
+      item.value = "x";
+      item.label = "Extra";
+      item.disabled = true;
+      al.append(item);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const last = [...(al.shadowRoot?.querySelectorAll("button") ?? [])].at(-1) as HTMLButtonElement;
+      return { attributes: [item.getAttribute("value"), item.getAttribute("label"), item.hasAttribute("disabled")], last: [last.textContent?.trim(), last.disabled] };
+    });
+    assert.deepEqual(declared, { attributes: ["x", "Extra", true], last: ["Extra", true] });
+    check("button group: <m-button-group-item> properties write the attributes the group reads");
+
+    const early = await page.evaluate(async () => {
+      const w = window as unknown as { mtrl: { defineButtonGroup: (o?: object) => string } };
+      const group = document.createElement("late-button-group") as HTMLElement & { value?: unknown; selection?: string };
+      for (const [value, label] of [["first", "First"], ["second", "Second"]]) {
+        const item = document.createElement("late-button-group-item") as HTMLElement & { value?: string; label?: string };
+        item.value = value;
+        item.label = label;
+        group.append(item);
+      }
+      group.setAttribute("selection", "single");
+      group.value = "second";
+      document.getElementById("host")?.append(group);
+      w.mtrl.defineButtonGroup({ prefix: "late" });
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const buttons = [...(group.shadowRoot?.querySelectorAll("button") ?? [])];
+      return { labels: buttons.map((b) => b.textContent?.trim()), value: (group as Group).value };
+    });
+    assert.deepEqual(early, { labels: ["First", "Second"], value: "second" });
+    check("button group: item and group properties set before the elements are defined are kept");
+
+    const dirty = await page.evaluate(async () => {
+      const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
+      const host = document.getElementById("host") as HTMLElement;
+      const make = (): Group => {
+        const g = document.createElement("m-button-group") as Group;
+        g.setAttribute("selection", "multi");
+        g.setAttribute("aria-label", "Dirty group");
+        g.innerHTML = '<m-button-group-item value="p">P</m-button-group-item><m-button-group-item value="q">Q</m-button-group-item>';
+        host.replaceChildren(g);
+        return g;
+      };
+      let g = make();
+      g.setAttribute("value", "p,q");
+      const clean = g.value;
+      g.querySelector("m-button-group-item")?.setAttribute("selected", "");
+      g.removeAttribute("value");
+      await frame();
+      const byItem = g.value;
+      (g.shadowRoot?.querySelectorAll("button")[1] as HTMLButtonElement).click();
+      g.setAttribute("value", "q");
+      const afterUser = g.value;
+      g.querySelectorAll("m-button-group-item")[1].setAttribute("selected", "");
+      await frame();
+      const afterItem = g.value;
+      g = make();
+      g.value = ["q"];
+      g.setAttribute("value", "p");
+      return { clean, byItem, afterUser, afterItem, afterScript: g.value };
+    });
+    assert.deepEqual(dirty, { clean: ["p", "q"], byItem: ["p"], afterUser: ["p", "q"], afterItem: ["p", "q"], afterScript: ["q"] });
+    check("button group: value and selected are defaults, until the user or a script changes the selection");
+
+    await fresh(page, `<section id="factory"></section>`);
+    const parity = await page.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createButtonGroup: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createButtonGroup({
+        selection: "single", variant: "tonal", ariaLabel: "Factory",
+        buttons: [{ value: "a", text: "Left", selected: true }, { value: "b", text: "Center" }, { value: "c", text: "Right", disabled: true }],
+      });
+      document.getElementById("factory")?.append(factory.element);
+      const element = document.createElement("m-button-group");
+      element.setAttribute("selection", "single");
+      element.setAttribute("variant", "tonal");
+      element.setAttribute("value", "a");
+      element.innerHTML = '<m-button-group-item value="a">Left</m-button-group-item><m-button-group-item value="b">Center</m-button-group-item><m-button-group-item value="c" disabled>Right</m-button-group-item>';
+      document.getElementById("factory")?.before(element);
+      await new Promise((r) => setTimeout(r, 400));
+      const measure = (group: HTMLElement): Array<Record<string, string | number>> =>
+        [...group.querySelectorAll("button")].map((button) => {
+          const box = button.getBoundingClientRect();
+          const style = getComputedStyle(button);
+          return {
+            w: Math.round(box.width), h: Math.round(box.height), background: style.backgroundColor, color: style.color,
+            radius: style.borderRadius, font: style.font,
+          };
+        });
+      const root = element.shadowRoot?.firstElementChild as HTMLElement;
+      return { factory: measure(factory.element), element: measure(root) };
+    });
+    assert.equal(parity.element.length, 3);
+    assert.deepEqual(parity.element, parity.factory);
+    check("button group: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- chips
+  await fresh(
+    page,
+    `<button id="before">before</button>
+     <m-chips id="ch" aria-label="Filters" value="veg,fish">
+       <m-chip value="veg">Vegetarian</m-chip>
+       <m-chip value="fish">Fish</m-chip>
+       <m-chip value="gf" label="Gluten free"></m-chip>
+       <m-chip value="na" disabled>Unavailable</m-chip>
+     </m-chips>
+     <button id="after">after</button>
+     <m-chips id="so" selection="single" aria-label="Sort">
+       <m-chip value="new" selected>Newest</m-chip><m-chip value="old">Oldest</m-chip>
+     </m-chips>
+     <m-chips id="to" aria-label="Recipients">
+       <m-chip variant="input" value="ada">Ada</m-chip><m-chip variant="input" value="bob">Bob</m-chip>
+     </m-chips>
+     <section id="factory"></section>`
+  );
+  {
+    type Chips = HTMLElement & { value: string | string[] | null; component: unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const filters = page.getByRole("grid", { name: "Filters" });
+    assert.equal(await filters.count(), 1);
+    for (const [name, selected] of [["Vegetarian", true], ["Fish", true], ["Gluten free", false], ["Unavailable", false]] as const) {
+      assert.equal(await filters.getByRole("gridcell", { name, exact: true, selected }).count(), 1, name);
+    }
+    const sort = page.getByRole("grid", { name: "Sort" });
+    assert.equal(await sort.getByRole("gridcell", { name: "Newest", selected: true }).count(), 1);
+    check("chips: a grid named by aria-label; chips declare the cells, value and selected select them");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      for (const id of ["ch", "so", "to"]) {
+        for (const type of ["change", "remove"]) {
+          document.getElementById(id)?.addEventListener(type, (e) => {
+            (w.events as unknown[]).push({ type, detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+          });
+        }
+      }
+    });
+    const events = (): Promise<unknown[]> =>
+      page.evaluate(() => {
+        const w = window as unknown as Win;
+        const list = w.events as unknown[];
+        w.events = [];
+        return list;
+      });
+    const live = (id: string): Promise<{ value: unknown; attribute: string | null }> =>
+      page.evaluate((id) => {
+        const c = document.getElementById(id) as Chips;
+        return { value: c.value, attribute: c.getAttribute("value") };
+      }, id);
+
+    await filters.getByRole("gridcell", { name: "Gluten free" }).click();
+    assert.deepEqual(await events(), [{ type: "change", detail: { value: ["veg", "fish", "gf"] }, target: "ch" }]);
+    assert.deepEqual(await live("ch"), { value: ["veg", "fish", "gf"], attribute: "veg,fish" });
+    const ring = await page.evaluate(() => {
+      const cell = (document.getElementById("ch") as HTMLElement).shadowRoot?.activeElement as HTMLElement;
+      return { cell: cell.getAttribute("role"), pointer: [...cell.classList].some((c) => c.endsWith("chip--pointer-focus")) };
+    });
+    assert.deepEqual(ring, { cell: "gridcell", pointer: true }, "a click focuses the cell without the keyboard ring");
+    check("chips: a click dispatches one change from the host, draws no focus ring; the live value moves, the attribute stays");
+
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("Space");
+    assert.deepEqual(await events(), [{ type: "change", detail: { value: ["veg", "gf"] }, target: "ch" }]);
+    const keyboard = await page.evaluate(() => {
+      const cell = (document.getElementById("ch") as HTMLElement).shadowRoot?.activeElement as HTMLElement;
+      return [...cell.classList].some((c) => c.endsWith("chip--pointer-focus"));
+    });
+    assert.equal(keyboard, false, "keyboard focus shows the ring");
+    check("chips: the arrows move between cells and Space toggles the focused one");
+
+    await page.locator("#before").focus();
+    await page.keyboard.press("Tab");
+    const entered = await page.evaluate(() => (document.getElementById("ch") as HTMLElement).shadowRoot?.activeElement?.textContent);
+    await page.keyboard.press("Tab");
+    const left = await page.evaluate(() => document.activeElement?.id);
+    assert.deepEqual({ entered, left }, { entered: "Fish", left: "after" });
+    check("chips: the set is one tab stop, landing on the last focused chip");
+
+    await sort.getByRole("gridcell", { name: "Oldest" }).click();
+    assert.deepEqual(await events(), [{ type: "change", detail: { value: "old" }, target: "so" }]);
+    assert.equal((await live("so")).value, "old");
+    check("chips: a single-select set's value is one value");
+
+    const silent = await page.evaluate(() => {
+      const ch = document.getElementById("ch") as Chips;
+      const so = document.getElementById("so") as Chips;
+      ch.value = ["gf", "veg"];
+      so.value = null;
+      const cleared = so.value;
+      so.value = "new";
+      return { multi: ch.value, cleared, single: so.value };
+    });
+    assert.deepEqual(silent, { multi: ["veg", "gf"], cleared: null, single: "new" });
+    assert.deepEqual(await events(), []);
+    check("chips: setting value fires no event; null clears the selection");
+
+    await filters.getByRole("gridcell", { name: "Unavailable" }).click({ force: true });
+    await page.evaluate(() => document.querySelector('#ch [value="na"]')?.removeAttribute("disabled"));
+    await settle();
+    const enabled = await filters.getByRole("gridcell", { name: "Unavailable" }).getAttribute("aria-disabled");
+    await page.evaluate(() => document.querySelector('#ch [value="na"]')?.setAttribute("disabled", ""));
+    await settle();
+    assert.deepEqual({ events: await events(), enabled }, { events: [], enabled: "false" });
+    assert.equal(await filters.getByRole("gridcell", { name: "Unavailable" }).getAttribute("aria-disabled"), "true");
+    check("chips: a disabled chip dispatches nothing; disabled updates in place");
+
+    const recipients = page.getByRole("grid", { name: "Recipients" });
+    await recipients.getByRole("button", { name: "Remove Bob" }).click();
+    assert.deepEqual(await events(), [{ type: "remove", detail: { value: "bob" }, target: "to" }]);
+    await page.evaluate(() => {
+      const ada = document.querySelector('#to [value="ada"]') as HTMLElement;
+      ada.textContent = "Ada L.";
+    });
+    await settle();
+    const lingering = await page.evaluate(() => [...(document.getElementById("to")?.shadowRoot?.querySelectorAll('[role="gridcell"]') ?? [])].map((c) => c.textContent));
+    assert.deepEqual(lingering, ["Ada L."], "a removed chip stays removed while its <m-chip> is there");
+    await recipients.getByRole("button", { name: "Remove Ada L." }).focus();
+    await page.keyboard.press("Delete");
+    assert.deepEqual(await events(), [{ type: "remove", detail: { value: "ada" }, target: "to" }]);
+    const readded = await page.evaluate(async () => {
+      const to = document.getElementById("to") as HTMLElement;
+      to.replaceChildren();
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      to.innerHTML = '<m-chip variant="input" value="bob">Bob</m-chip>';
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return [...(to.shadowRoot?.querySelectorAll('[role="gridcell"]') ?? [])].map((c) => c.textContent);
+    });
+    assert.deepEqual(readded, ["Bob"]);
+    assert.deepEqual(await events(), [], "declarations removing chips dispatch no remove");
+    check("chips: removing an input chip, by its button or Delete, dispatches remove; a new <m-chip> brings it back");
+
+    const inPlace = await page.evaluate(async () => {
+      const ch = document.getElementById("ch") as Chips;
+      (window as unknown as Record<string, unknown>).__chips = ch.component;
+      const chips = ch.querySelectorAll("m-chip");
+      chips[0].textContent = "Veggie";
+      chips[2].setAttribute("icon", '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>');
+      const extra = document.createElement("m-chip");
+      extra.setAttribute("value", "nuts");
+      extra.textContent = "Nut free";
+      ch.append(extra);
+      chips[2].remove(); // a selected one
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return {
+        same: ch.component === (window as unknown as Record<string, unknown>).__chips,
+        cells: [...(ch.shadowRoot?.querySelectorAll('[role="gridcell"]') ?? [])].map((c) => c.textContent),
+        value: ch.value,
+      };
+    });
+    assert.deepEqual(inPlace, { same: true, cells: ["Veggie", "Fish", "Unavailable", "Nut free"], value: ["veg"] });
+    assert.equal(await filters.getByRole("gridcell", { name: "Veggie", exact: true, selected: true }).count(), 1, "a relabelled cell is named by its new label");
+    assert.deepEqual(await events(), []);
+    check("chips: chips relabelled, added and removed update the set in place, without events");
+
+    const reordered = await page.evaluate(async () => {
+      const ch = document.getElementById("ch") as Chips;
+      ch.value = ["nuts"];
+      ch.prepend(ch.children[3]);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return {
+        rebuilt: ch.component !== (window as unknown as Record<string, unknown>).__chips,
+        cells: [...(ch.shadowRoot?.querySelectorAll('[role="gridcell"]') ?? [])].map((c) => c.textContent),
+        value: ch.value,
+      };
+    });
+    assert.deepEqual(reordered, { rebuilt: true, cells: ["Nut free", "Veggie", "Fish", "Unavailable"], value: ["nuts"] });
+    check("chips: a reorder rebuilds the set and keeps the selection");
+
+    const declared = await page.evaluate(async () => {
+      const ch = document.getElementById("ch") as Chips;
+      const chip = document.createElement("m-chip") as HTMLElement & { value: string; label: string; variant: string; elevated: boolean };
+      chip.value = "tip";
+      chip.label = "Tip";
+      chip.variant = "assist";
+      chip.elevated = true;
+      ch.append(chip);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const last = [...(ch.shadowRoot?.querySelectorAll('[role="gridcell"]') ?? [])].at(-1) as HTMLElement;
+      return {
+        attributes: [chip.getAttribute("value"), chip.getAttribute("label"), chip.getAttribute("variant"), chip.hasAttribute("elevated")],
+        classes: ["chip--assist", "chip--elevated"].map((name) => [...last.classList].some((c) => c.endsWith(name))),
+      };
+    });
+    assert.deepEqual(declared, { attributes: ["tip", "Tip", "assist", true], classes: [true, true] });
+    check("chips: <m-chip> properties write the attributes the set reads");
+
+    const early = await page.evaluate(async () => {
+      const w = window as unknown as { mtrl: { defineChips: (o?: object) => string } };
+      const set = document.createElement("late-chips") as HTMLElement & { value?: unknown };
+      for (const [value, label] of [["first", "First"], ["second", "Second"]]) {
+        const chip = document.createElement("late-chip") as HTMLElement & { value?: string; label?: string };
+        chip.value = value;
+        chip.label = label;
+        set.append(chip);
+      }
+      set.value = ["second"];
+      document.getElementById("host")?.append(set);
+      w.mtrl.defineChips({ prefix: "late" });
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const cells = [...(set.shadowRoot?.querySelectorAll('[role="gridcell"]') ?? [])];
+      return { labels: cells.map((c) => c.textContent), value: (set as Chips).value };
+    });
+    assert.deepEqual(early, { labels: ["First", "Second"], value: ["second"] });
+    check("chips: <m-chip> and <m-chips> properties set before the elements are defined are kept");
+
+    const layout = await page.evaluate(() => {
+      const ch = document.getElementById("ch") as HTMLElement;
+      const root = ch.shadowRoot?.firstElementChild as HTMLElement;
+      const component = (ch as Chips).component;
+      ch.setAttribute("scrollable", "");
+      ch.setAttribute("label", "Diet");
+      ch.setAttribute("aria-label", "Diet filters");
+      const classes = ["chips--scrollable", "chips--with-label"].map((name) => [...root.classList].some((c) => c.endsWith(name)));
+      return { classes, labelled: !!root.getAttribute("aria-labelledby"), same: (ch as Chips).component === component };
+    });
+    assert.deepEqual(layout, { classes: [true, true], labelled: true, same: true });
+    check("chips: scrollable, label and aria-label update the set in place");
+
+    const dirty = await page.evaluate(async () => {
+      const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
+      const host = document.getElementById("host") as HTMLElement;
+      const make = (): Chips => {
+        const c = document.createElement("m-chips") as Chips;
+        c.setAttribute("aria-label", "Dirty chips");
+        c.innerHTML = '<m-chip value="p">P</m-chip><m-chip value="q">Q</m-chip>';
+        host.replaceChildren(c);
+        return c;
+      };
+      let c = make();
+      c.setAttribute("value", "p,q");
+      const clean = c.value;
+      c.querySelector("m-chip")?.setAttribute("selected", "");
+      c.removeAttribute("value");
+      await frame();
+      const byChip = c.value;
+      (c.shadowRoot?.querySelectorAll('[role="gridcell"]')[1] as HTMLElement).click();
+      c.setAttribute("value", "q");
+      const afterUser = c.value;
+      c.querySelectorAll("m-chip")[1].setAttribute("selected", "");
+      await frame();
+      const afterChip = c.value;
+      c = make();
+      c.value = ["q"];
+      c.setAttribute("value", "p");
+      return { clean, byChip, afterUser, afterChip, afterScript: c.value };
+    });
+    assert.deepEqual(dirty, { clean: ["p", "q"], byChip: ["p"], afterUser: ["p", "q"], afterChip: ["p", "q"], afterScript: ["q"] });
+    check("chips: value and selected are defaults, until the user or a script changes the selection");
+
+    await fresh(page, `<section id="factory"></section>`);
+    const parity = await page.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createChips: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createChips({
+        ariaLabel: "Factory",
+        chips: [
+          { value: "a", label: "Alpha", selected: true }, { value: "b", label: "Beta" },
+          { type: "assist", value: "c", label: "Gamma", elevated: true }, { type: "input", value: "d", label: "Delta" },
+          { value: "e", label: "Epsilon", disabled: true },
+        ],
+      });
+      document.getElementById("factory")?.append(factory.element);
+      const element = document.createElement("m-chips");
+      element.setAttribute("value", "a");
+      element.innerHTML = '<m-chip value="a">Alpha</m-chip><m-chip value="b">Beta</m-chip>' +
+        '<m-chip variant="assist" value="c" elevated>Gamma</m-chip><m-chip variant="input" value="d">Delta</m-chip>' +
+        '<m-chip value="e" disabled>Epsilon</m-chip>';
+      document.getElementById("factory")?.before(element);
+      await new Promise((r) => setTimeout(r, 400));
+      const measure = (set: HTMLElement): Array<Record<string, string | number>> =>
+        [...set.querySelectorAll('[role="gridcell"]')].map((chip) => {
+          const box = chip.getBoundingClientRect();
+          const style = getComputedStyle(chip);
+          const label = chip.querySelector('[class*="chip__label"]') as HTMLElement;
+          return {
+            w: Math.round(box.width), h: Math.round(box.height), background: style.backgroundColor, border: style.borderColor,
+            shadow: style.boxShadow, radius: style.borderRadius, color: getComputedStyle(label).color, font: getComputedStyle(label).font,
+          };
+        });
+      const root = element.shadowRoot?.firstElementChild as HTMLElement;
+      return { factory: measure(factory.element), element: measure(root) };
+    });
+    assert.equal(parity.element.length, 5);
+    assert.deepEqual(parity.element, parity.factory);
+    check("chips: renders as the factory does with the global stylesheet");
+  }
+
   // ---------------------------------------------------------------- progress
   await fresh(
     page,

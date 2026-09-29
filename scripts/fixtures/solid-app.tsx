@@ -4,6 +4,7 @@
 import { createSignal, For, onMount, Show } from "solid-js";
 import { Button, Checkbox, Progress, Radio, Radios, Slider, Switch, Tab, Tabs, Textfield } from "../../dist/solid/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
+import { Chip, Chips } from "../../dist/solid/index.js";
 
 export const App = () => {
   const log: Array<{ id: string; detail: unknown }> = [];
@@ -13,6 +14,7 @@ export const App = () => {
   const [level, setLevel] = createSignal(50);
   const [text, setText] = createSignal("");
   const [size, setSize] = createSignal<string | null>("m");
+  const [diet, setDiet] = createSignal<string | string[] | null>(["veg"]);
   const [tab, setTab] = createSignal<string | null>("t2");
   const [extra, setExtra] = createSignal(false);
   const [order, setOrder] = createSignal(["a", "b"]);
@@ -58,6 +60,11 @@ export const App = () => {
         <Radio value="l">Large</Radio>
       </Radios>
       <output id="size">{String(size())}</output>
+      <Chips id="ck" ariaLabel="Diet" value={diet()} onChange={(e) => setDiet(e.detail.value)}>
+        <Chip value="veg">Vegetarian</Chip>
+        <Chip value="gf">Gluten free</Chip>
+      </Chips>
+      <output id="diet">{String(diet())}</output>
       <For each={order()}>{(key) => <Switch id={`o${key}`}>Order {key}</Switch>}</For>
       <Show when={show()}><Switch id="gone">Gone</Switch></Show>
       {/* Mounted in the browser after the element is defined: Solid writes a

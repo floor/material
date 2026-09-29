@@ -27,3 +27,8 @@ const factories = {
   createRadios,
 };
 Object.assign(window, { mtrl: { ...elements, ...factories }, ready: true });
+
+// Button group and chips, the factories their elements wrap.
+import createButtonGroup from "../../dist/components/button-group/index.js";
+import { createChips } from "../../dist/components/chips/index.js";
+Object.assign((window as unknown as { mtrl: object }).mtrl, { createButtonGroup, createChips });

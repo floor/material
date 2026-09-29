@@ -200,6 +200,13 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("size")?.textContent === "l");
     assert.equal(await sizes.getByRole("radio", { name: "Large", exact: true, checked: true }).count(), 1);
     check("radios: controlled value and onChange");
+    // ------------------------------------------------------------- chips
+    const diet = page.getByRole("grid", { name: "Diet" });
+    assert.equal(await diet.getByRole("gridcell", { name: "Vegetarian", exact: true, selected: true }).count(), 1);
+    await diet.getByRole("gridcell", { name: "Gluten free", exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("diet")?.textContent === "veg,gf");
+    assert.equal(await diet.getByRole("gridcell", { name: "Gluten free", exact: true, selected: true }).count(), 1);
+    check("chips: controlled value and onChange");
 
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);
