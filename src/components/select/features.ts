@@ -419,7 +419,9 @@ export const withMenu =
       items: menuItems,
       position: (config.placement || "bottom-start") as MenuPosition,
       width: "100%",
-      class: "select__menu",
+      // Prefixed: `class` is not (FLO-117), so the menu carried a bare
+      // `select__menu` and `.mtrl-select__menu` matched nothing (FLO-295).
+      class: `${config.prefix || "mtrl"}-select__menu`,
       closeOnSelect: true,
       closeOnClickOutside: true,
       closeOnEscape: true,
