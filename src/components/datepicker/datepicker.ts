@@ -269,8 +269,10 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     if (target?.dataset.date) {
       const date = parseDate(target.dataset.date)!;
       let next: Date;
-      if (event.key === "ArrowLeft") next = addDays(date, -1);
-      else if (event.key === "ArrowRight") next = addDays(date, 1);
+      // Left and right follow the reading direction. FLO-277.
+      const ahead = rtl(dialog) ? -1 : 1;
+      if (event.key === "ArrowLeft") next = addDays(date, -ahead);
+      else if (event.key === "ArrowRight") next = addDays(date, ahead);
       else if (event.key === "ArrowUp") next = addDays(date, -7);
       else if (event.key === "ArrowDown") next = addDays(date, 7);
       else if (event.key === "Home") next = addDays(date, -date.getDay());
@@ -287,7 +289,8 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     } else if (target?.hasAttribute('data-month') || target?.hasAttribute('data-year')) {
       const buttons = Array.from(dialog.querySelectorAll<HTMLElement>('[data-month], [data-year]'));
       let index = buttons.indexOf(target!);
-      const delta = ({ ArrowLeft: -1, ArrowRight: 1, ArrowUp: -3, ArrowDown: 3 } as Record<string, number>)[event.key];
+      const ahead = rtl(dialog) ? -1 : 1;
+      const delta = ({ ArrowLeft: -ahead, ArrowRight: ahead, ArrowUp: -3, ArrowDown: 3 } as Record<string, number>)[event.key];
       if (event.key === "Home") index = 0; else if (event.key === "End") index = buttons.length - 1; else if (delta) index = Math.min(buttons.length - 1, Math.max(0, index + delta)); else return;
       event.preventDefault(); buttons.forEach(button => button.tabIndex = -1); buttons[index].tabIndex = 0; buttons[index].focus();
     }
