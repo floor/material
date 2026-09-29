@@ -9,7 +9,7 @@ import {
   TIME_FORMAT,
   TIME_PERIOD
 } from './types';
-import { TIMEPICKER_EVENTS as EVENTS, TIMEPICKER_SELECTORS as SELECTORS } from './constants';
+import { TIMEPICKER_EVENTS as EVENTS } from './constants';
 import { formatFormValue } from './utils';
 import { renderTimePicker } from './render';
 import { renderClockDial } from './clockdial';
@@ -62,21 +62,35 @@ export const createTimePickerAPI = (
     renderTimePicker(dialogElement, timeValue, config, notifyChange);
     setFormValue(formValue, getValue());
   };
+  // Selectors from the picker's own prefix: TIMEPICKER_SELECTORS spells `.mtrl-`,
+  // so with a custom prefix cancel, confirm, the toggle and setTitle found
+  // nothing. FLO-278.
+  const part = (name: string) => `.${config.prefix}-time-picker__${name}`;
+  const dialog = dialogElement as HTMLDialogElement;
   // Track open state
-  let isOpen = !!config.isOpen;
-  
-  // Create event handlers
-  const handleKeydown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') {
-      timePickerAPI.close();
-      options.events.emit(EVENTS.CANCEL);
-    }
+  let isOpen = false;
+  let returnFocus: HTMLElement | null = null;
+
+  const cancel = () => {
+    timePickerAPI.close();
+    options.events.emit(EVENTS.CANCEL);
+    config.onCancel?.();
   };
-  
+  // Escape reaches this picker only, through its dialog's cancel event; it was a
+  // document listener that closed every open picker. FLO-278.
+  const handleCancel = (event: Event) => {
+    event.preventDefault();
+    cancel();
+  };
+  // A click on the backdrop lands on the dialog element itself, outside its box.
   const handleClickOutside = (event: MouseEvent) => {
-    if (event.target === modalElement) {
-      timePickerAPI.close();
-    }
+    if (event.target !== dialog) return;
+    const box = dialog.getBoundingClientRect();
+    if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) cancel();
+  };
+  const focusField = () => {
+    const field = dialog.querySelector<HTMLElement>('[data-active="true"]') ?? dialog.querySelector<HTMLElement>('input, button');
+    field?.focus();
   };
   
   // Create time picker API
@@ -98,18 +112,14 @@ export const createTimePickerAPI = (
     open() {
       if (isOpen) return this;
       
-      // Show modal
-      modalElement.style.display = 'block';
-      
-      // Add the active class to trigger animations
-      // We need to force a reflow before adding the active class for the transition to work
-      void modalElement.offsetWidth; // Force reflow
-      modalElement.classList.add('active');
+      const active = document.activeElement;
+      returnFocus = active instanceof HTMLElement && active !== document.body ? active : null;
+      // The top layer, scrim and inert page are the browser's; environments
+      // without dialog methods still get the open state.
+      if (typeof dialog.showModal === 'function' && dialog.isConnected) dialog.showModal();
+      else dialog.setAttribute('open', '');
       dialogElement.classList.add('active');
-      
-      // Add event listeners
-      document.addEventListener('keydown', handleKeydown);
-      modalElement.addEventListener('click', handleClickOutside);
+      focusField();
       
       // Update state
       isOpen = true;
@@ -117,7 +127,7 @@ export const createTimePickerAPI = (
       
       // Refresh the dial's theme after opening, keeping the live inputs and
       // their focus/selection intact. A delayed full render lost quick edits.
-      const canvas = dialogElement.querySelector<HTMLCanvasElement>(SELECTORS.DIAL_CANVAS);
+      const canvas = dialogElement.querySelector<HTMLCanvasElement>(part('dial-canvas'));
       if (canvas && config.type === TIME_PICKER_TYPE.DIAL) {
         const active = dialogElement.querySelector('[data-active="true"]')?.getAttribute('data-type');
         renderClockDial(canvas, timeValue, {
@@ -140,19 +150,11 @@ export const createTimePickerAPI = (
     close() {
       if (!isOpen) return this;
       
-      // Remove active classes to trigger fade-out transition
-      modalElement.classList.remove('active');
       dialogElement.classList.remove('active');
-      
-      // Use setTimeout to let the transition finish before hiding completely
-      setTimeout(() => {
-        // Hide modal
-        modalElement.style.display = 'none';
-      }, 300); // Match the transition duration
-      
-      // Remove event listeners
-      document.removeEventListener('keydown', handleKeydown);
-      modalElement.removeEventListener('click', handleClickOutside);
+      if (typeof dialog.close === 'function' && dialog.open) dialog.close();
+      else dialog.removeAttribute('open');
+      if (returnFocus?.isConnected) returnFocus.focus();
+      returnFocus = null;
       
       // Update state
       isOpen = false;
@@ -305,7 +307,7 @@ export const createTimePickerAPI = (
       config.title = title;
       
       // Update title element if it exists
-      const titleElement = dialogElement.querySelector(SELECTORS.TITLE);
+      const titleElement = dialogElement.querySelector(part('title'));
       if (titleElement) {
         titleElement.textContent = title;
       } else {
@@ -351,18 +353,10 @@ export const createTimePickerAPI = (
     const target = event.target as HTMLElement;
     
     // Handle cancel button click
-    if (target.closest(SELECTORS.CANCEL_BUTTON)) {
-      timePickerAPI.close();
-      options.events.emit(EVENTS.CANCEL);
-      
-      // Call onCancel callback if provided
-      if (config.onCancel) {
-        config.onCancel();
-      }
-    }
+    if (target.closest(part('cancel'))) cancel();
     
     // Handle confirm button click
-    if (target.closest(SELECTORS.CONFIRM_BUTTON)) {
+    if (target.closest(part('confirm'))) {
       timePickerAPI.close();
       options.events.emit(EVENTS.CONFIRM, timePickerAPI.getValue());
       
@@ -373,14 +367,22 @@ export const createTimePickerAPI = (
     }
     
     // Handle toggle type button click (switch between dial and input)
-    if (target.closest(SELECTORS.TOGGLE_TYPE_BUTTON)) {
+    if (target.closest(part('toggle-type'))) {
       const newType = config.type === TIME_PICKER_TYPE.DIAL 
         ? TIME_PICKER_TYPE.INPUT 
         : TIME_PICKER_TYPE.DIAL;
       timePickerAPI.setType(newType);
+      // The re-render replaced the toggle; keep focus where the person pressed,
+      // or on the hour field when they switched to typing.
+      const next = newType === TIME_PICKER_TYPE.INPUT ? dialogElement.querySelector<HTMLInputElement>(part('hours')) : dialogElement.querySelector<HTMLElement>(part('toggle-type'));
+      next?.focus();
+      if (next instanceof HTMLInputElement) next.select();
     }
     
   });
+
+  dialog.addEventListener('cancel', handleCancel);
+  dialog.addEventListener('click', handleClickOutside);
 
   // The initial render uses the same synchronization path as later renders.
   render();

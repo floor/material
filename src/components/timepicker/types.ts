@@ -256,7 +256,10 @@ export type ResolvedTimePickerConfig = TimePickerConfig &
       | "keyboardIcon"
       | "prefix"
     >
-  >;
+  > & {
+    /** The dialog title's id, unique per picker (FLO-278). */
+    titleId?: string;
+  };
 
 /**
  * Time value object
