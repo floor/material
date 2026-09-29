@@ -39,6 +39,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Types the runtime already took (FLO-295).** `DrawerConfig` has `ariaLabel`, which the drawer
+  always read; a segmented button's `mode` takes `'single'` / `'multi'` as well as the enum, as
+  its `density` already did.
 - **Select's menu class and Progress's duplicate classes (FLO-295).** Found by md3.io's docs
   audit. Since `class` stopped being prefixed, the select passed `select__menu` bare, so
   `.mtrl-select__menu` matched nothing; it is prefixed now, and the rules under it, which never
