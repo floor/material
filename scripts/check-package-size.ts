@@ -17,11 +17,14 @@ function measure(data: Uint8Array) {
 }
 try {
   assert(!pack.files.some((file: { path: string }) => file.path.endsWith(".map")), "Unexpected source maps in npm package");
-  assert(pack.size < 900_000, "npm tarball exceeds 900,000 bytes");
-  // Raised from 4,500,000 on 2026-09-28 for the elements and framework adapters,
-  // whose shadow-root CSS repeats the per-component CSS. The tarball limit above
-  // is what an install downloads, and it stays.
-  assert(pack.unpackedSize < 5_000_000, "Unpacked package exceeds 5,000,000 bytes");
+  // What an install downloads. Raised from 900,000 on 2026-09-29 (Dr Jones) for the
+  // overlay elements of wave 2; 830,286 measured after wave 1 (#245).
+  assert(pack.size < 1_000_000, "npm tarball exceeds 1,000,000 bytes");
+  // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
+  // the elements and framework adapters, whose shadow-root CSS repeats the
+  // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
+  // ESM 23%, CSS 18%, SCSS sources 11%, the CommonJS bundle 8% (a 1.0.0 decision).
+  assert(pack.unpackedSize < 6_000_000, "Unpacked package exceeds 6,000,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
   const smoke = join(temporary, "smoke.mjs");
