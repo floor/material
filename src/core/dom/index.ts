@@ -25,3 +25,11 @@ export { setHTML, configureHTML, getHTMLPolicy } from "./html";
 export type { HTMLPolicy, HTMLInput, TrustedHTMLLike } from "./html";
 
 export { activeElementOf, deepActiveElement } from "./focus";
+
+export {
+  supportsTopLayer,
+  showInTopLayer,
+  hideFromTopLayer,
+  onTopLayerClose,
+} from "./layer";
+export type { TopLayerKind, TopLayerOptions } from "./layer";

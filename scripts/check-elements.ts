@@ -28,6 +28,7 @@ const server = Bun.serve({
     const path = new URL(request.url).pathname;
     if (path === "/elements.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
     if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
+    if (path === "/menu.css") return new Response(Bun.file("dist/styles/menu.css"));
     if (path === "/away") return new Response("<!doctype html><p>away</p>", { headers: { "Content-Type": "text/html" } });
     if (path === "/restore") {
       // no-store keeps the page out of the back/forward cache, so going back
@@ -4016,6 +4017,236 @@ try {
     await wait(100);
     assert.deepEqual({ reached, back: await landed() }, { reached: "Undo", back: "opener" });
     check("factories in a shadow root: a snackbar's action takes focus and hands it back to the opener");
+  }
+
+  // ---------------------------------------------------------------- menu in the top layer
+  // `layer: "top"` renders the menu next to its opener and shows it as a
+  // popover: inside the opener's shadow root, with that root's adopted menu
+  // CSS, above a z-index 9999 sibling, out of a clipping parent, and at the
+  // place a menu without a layer opens. Checked in a shadow root and in light DOM.
+  {
+    type TopMenu = {
+      element: HTMLElement;
+      open: () => unknown;
+      close: () => unknown;
+      isOpen: () => boolean;
+      destroy: () => void;
+      on: (name: string, handler: (event: unknown) => void) => unknown;
+    };
+    type TopWin = Win & {
+      mtrl: {
+        createMenu: (config: object) => TopMenu;
+        registerStyles: (css: Record<string, string>) => void;
+        applyStyles: (root: ShadowRoot, names: string[]) => void;
+      };
+      __tl: { menu: TopMenu; closes: number; root: Document | ShadowRoot };
+    };
+    const menuCss = await (await fetch(`http://127.0.0.1:${server.port}/menu.css`)).text();
+    const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
+
+    const stage = async (shadow: boolean): Promise<void> => {
+      await fresh(page, `<div style="height: 500px"></div><div id="tl"></div><div style="height: 2000px"></div>`);
+      await page.evaluate(({ shadow, css }) => {
+        const w = window as unknown as TopWin;
+        const host = document.getElementById("tl") as HTMLElement;
+        let root: ShadowRoot | HTMLElement = host;
+        if (shadow) {
+          root = host.attachShadow({ mode: "open" });
+          w.mtrl.registerStyles({ menu: css });
+          w.mtrl.applyStyles(root, ["menu"]);
+        }
+        // The opener in a clipping parent, and after it a sibling on z-index 9999
+        // where the menu opens
+        root.innerHTML = `<div style="position: relative; overflow: hidden; height: 48px; z-index: 1">
+            <button id="tl-opener" type="button" style="margin-left: 40px">Open</button></div>
+          <div id="tl-cover" style="position: relative; z-index: 9999; height: 400px; background: rgb(255, 0, 0)"></div>
+          <button id="tl-outside" type="button">Outside</button>`;
+        window.scrollTo(0, 300);
+      }, { shadow, css: menuCss });
+    };
+
+    const ITEMS = [
+      { id: "share", text: "Share", hasSubmenu: true, submenu: [{ id: "link", text: "Copy link" }, { id: "mail", text: "Email" }] },
+      { id: "copy", text: "Copy" },
+      { id: "paste", text: "Paste" },
+    ];
+
+    /** Mounts a menu on the stage's opener; the top layer when asked. */
+    const mount = (layer: "top" | undefined): Promise<void> =>
+      page.evaluate(({ layer, items }) => {
+        const w = window as unknown as TopWin;
+        const host = document.getElementById("tl") as HTMLElement;
+        const root = host.shadowRoot ?? document;
+        const opener = (host.shadowRoot ?? host).querySelector("#tl-opener") as HTMLElement;
+        w.__tl?.menu.destroy();
+        const menu = w.mtrl.createMenu({ opener, items, ...(layer ? { layer } : {}) });
+        w.__tl = { menu, closes: 0, root };
+        menu.on("close", () => void w.__tl.closes++);
+      }, { layer, items: ITEMS });
+
+    const openMenu = async (): Promise<void> => {
+      await page.evaluate(() => void (window as unknown as TopWin).__tl.menu.open());
+      // Positioned on a timer, then the 300ms open transition
+      await wait(450);
+    };
+    const state = (): Promise<{ open: boolean; closes: number; connected: boolean; focus: string | null }> =>
+      page.evaluate(() => {
+        const { menu, closes } = (window as unknown as TopWin).__tl;
+        let active = document.activeElement;
+        while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+        return { open: menu.isOpen(), closes, connected: menu.element.isConnected, focus: active?.id || null };
+      });
+    const center = (selector: string): Promise<{ x: number; y: number }> =>
+      page.evaluate((selector) => {
+        const { root, menu } = (window as unknown as TopWin).__tl;
+        const el = (selector === "menu" ? menu.element : root.querySelector(selector)) as HTMLElement;
+        const r = el.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      }, selector);
+
+    for (const shadow of [true, false]) {
+      const where = shadow ? "in a shadow root" : "in light DOM";
+
+      // Where a menu without a layer opens, the global stylesheet on the body
+      await stage(shadow);
+      await mount(undefined);
+      await openMenu();
+      const expected = await page.evaluate(() => {
+        const { element } = (window as unknown as TopWin).__tl.menu;
+        const { top, left, width, height } = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return { top, left, width, height, background: style.backgroundColor, shadow: style.boxShadow };
+      });
+      await page.evaluate(() => void (window as unknown as TopWin).__tl.menu.close());
+      await wait(450);
+
+      await mount("top");
+      await openMenu();
+      const shown = await page.evaluate(() => {
+        const { menu, root } = (window as unknown as TopWin).__tl;
+        const element = menu.element;
+        const r = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        const hit = root.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        const opener = root.querySelector("#tl-opener") as HTMLElement;
+        return {
+          inRoot: element.getRootNode() === root,
+          besideOpener: opener.nextElementSibling === element,
+          popoverOpen: element.matches(":popover-open"),
+          rect: { top: r.top, left: r.left, width: r.width, height: r.height },
+          background: style.backgroundColor,
+          shadow: style.boxShadow,
+          border: style.borderTopWidth,
+          margin: style.marginTop,
+          aboveCover: !!hit && element.contains(hit),
+          scrolled: window.scrollY,
+        };
+      });
+      assert.equal(shown.inRoot, true, `${where}: the surface is in the opener's root`);
+      assert.equal(shown.besideOpener, true, `${where}: the surface is next to its opener`);
+      assert.equal(shown.popoverOpen, true, `${where}: the surface is :popover-open`);
+      assert.equal(shown.scrolled, 300, "the page is scrolled");
+      for (const key of ["top", "left", "width", "height"] as const) {
+        assert.ok(Math.abs(shown.rect[key] - expected[key]) <= 1, `${where}: ${key} ${shown.rect[key]} is the unlayered menu's ${expected[key]}`);
+      }
+      assert.deepEqual(
+        { background: shown.background, shadow: shown.shadow, border: shown.border, margin: shown.margin },
+        { background: expected.background, shadow: expected.shadow, border: "0px", margin: "0px" },
+        `${where}: the menu's own colour and elevation, not the popover defaults`
+      );
+      assert.notEqual(shown.shadow, "none", "the elevation is drawn");
+      assert.equal(shown.aboveCover, true, `${where}: the menu is above the z-index 9999 sibling`);
+      check(`menu top layer ${where}: in its opener's root, styled, at the unlayered position with the page scrolled, above z-index 9999`);
+
+      // A click outside: on the cover, beside the menu
+      const cover = await page.evaluate(() => {
+        const { root, menu } = (window as unknown as TopWin).__tl;
+        const r = (root.querySelector("#tl-cover") as HTMLElement).getBoundingClientRect();
+        return { x: menu.element.getBoundingClientRect().right + 100, y: r.top + 150 };
+      });
+      await page.mouse.click(cover.x, cover.y);
+      await wait(450);
+      assert.deepEqual(await state(), { open: false, closes: 1, connected: false, focus: null }, `${where}: a click outside`);
+
+      // Escape, focus back on the opener
+      await openMenu();
+      await page.keyboard.press("Escape");
+      await wait(450);
+      assert.deepEqual(await state(), { open: false, closes: 2, connected: false, focus: "tl-opener" }, `${where}: Escape`);
+
+      // An item
+      await openMenu();
+      const copy = await center('[data-id="copy"]');
+      await page.mouse.click(copy.x, copy.y);
+      await wait(450);
+      assert.deepEqual(await state(), { open: false, closes: 3, connected: false, focus: "tl-opener" }, `${where}: an item`);
+
+      // Two dismissals at once: the opener has focus when the pointer goes
+      // down outside, so its blur and the click both close the menu
+      await openMenu();
+      await page.evaluate(() => {
+        const { root } = (window as unknown as TopWin).__tl;
+        (root.querySelector("#tl-opener") as HTMLElement).focus();
+      });
+      const outside = await center("#tl-outside");
+      await page.mouse.click(outside.x, outside.y, { delay: 70 });
+      await wait(450);
+      assert.deepEqual(await state(), { open: false, closes: 4, connected: false, focus: "tl-outside" }, `${where}: blur and click`);
+
+      // Taken out of the top layer by something else
+      await openMenu();
+      await page.evaluate(() => (window as unknown as TopWin).__tl.menu.element.hidePopover());
+      await wait(450);
+      assert.deepEqual((await state()).closes, 5, `${where}: hidePopover from outside`);
+      assert.equal((await state()).open, false);
+      check(`menu top layer ${where}: a click outside, Escape, an item, blur with a click and hidePopover each close it once`);
+
+      // A submenu: above the menu and the cover, the menu still open; Escape
+      // closes the submenu, then the menu
+      await openMenu();
+      const share = await center('[data-id="share"]');
+      await page.mouse.click(share.x, share.y);
+      await wait(450);
+      const nested = await page.evaluate(() => {
+        const { menu, root } = (window as unknown as TopWin).__tl;
+        const submenu = root.querySelector('[class*="menu--submenu"]') as HTMLElement | null;
+        if (!submenu) return null;
+        const r = submenu.getBoundingClientRect();
+        const hit = root.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        const style = getComputedStyle(submenu);
+        return {
+          inRoot: submenu.getRootNode() === root,
+          open: [menu.element.matches(":popover-open"), submenu.matches(":popover-open")],
+          above: !!hit && submenu.contains(hit),
+          styled: style.backgroundColor === getComputedStyle(menu.element).backgroundColor && style.boxShadow !== "none",
+          beside: Math.round(r.left) >= Math.round(menu.element.getBoundingClientRect().right),
+        };
+      });
+      assert.deepEqual(nested, { inRoot: true, open: [true, true], above: true, styled: true, beside: true }, `${where}: the submenu`);
+      await page.keyboard.press("Escape");
+      await wait(300);
+      const afterOne = await page.evaluate(() => {
+        const { menu, root } = (window as unknown as TopWin).__tl;
+        return { menu: menu.isOpen(), submenus: root.querySelectorAll('[class*="menu--submenu"]').length };
+      });
+      assert.deepEqual(afterOne, { menu: true, submenus: 0 }, `${where}: Escape closes the submenu only`);
+      await page.keyboard.press("Escape");
+      await wait(450);
+      assert.deepEqual(await state(), { open: false, closes: 6, connected: false, focus: "tl-opener" }, `${where}: then the menu`);
+
+      // An item of the submenu closes both, once
+      await openMenu();
+      await page.mouse.click(share.x, share.y);
+      await wait(450);
+      const link = await center('[data-id="link"]');
+      await page.mouse.click(link.x, link.y);
+      await wait(450);
+      const both = await page.evaluate(() => (window as unknown as TopWin).__tl.root.querySelectorAll('[class*="mtrl-menu"]').length);
+      assert.deepEqual({ ...(await state()), both }, { open: false, closes: 7, connected: false, focus: "tl-opener", both: 0 }, `${where}: a submenu item`);
+      check(`menu top layer ${where}: a submenu opens above it, Escape closes it then the menu, and its item closes both once`);
+
+      await page.evaluate(() => (window as unknown as TopWin).__tl.menu.destroy());
+    }
   }
 
   // ---------------------------------------------------------------- theme

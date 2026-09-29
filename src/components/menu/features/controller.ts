@@ -12,6 +12,8 @@ import {
   MenuPosition,
 } from "../types";
 import { menuOpened, menuClosed } from "./registry";
+import { eventWithin } from "./layer";
+import { onTopLayerClose, showInTopLayer } from "../../../core/dom/layer";
 
 import { setHTML } from "../../../core/dom/html";
 /**
@@ -31,6 +33,16 @@ const withController =
   // type a union of enhanced and not, which collapsed to C and erased this
   // feature from the pipeline type. The host type requires the element.
   const tasks = createMenuTasks();
+
+  // A top-layer menu renders next to its opener as a popover="manual"
+  // element. Manual, not auto: the menu's own dismissal stays the one that
+  // decides -- outside click with the opener exempt, Escape closing a
+  // submenu before the menu, one menu open at a time -- and a submenu, a
+  // popover beside its parent rather than inside it, cannot light-dismiss it.
+  const topLayer = config.layer === "top";
+  // Set from the first close call until the menu is closed. Outside a top
+  // layer a second call in that window is let through, as it always was.
+  let closing = false;
 
   // As the listbox of a combobox, options need ids the combobox can point at
   // with aria-activedescendant, and nothing inside may take focus from it
@@ -435,10 +447,13 @@ const withController =
       component.element.style.transform = "scaleY(0)";
       component.element.style.opacity = "0";
 
-      // Add to DOM - use container if provided, otherwise use document.body
-      const container = config.container || document.body;
-      container.appendChild(component.element);
+      // Add to DOM - use container if provided, otherwise use document.body.
+      // A top-layer menu goes next to its opener, in the opener's tree.
+      const opener = topLayer ? getOpenerElement() : null;
+      if (opener?.parentNode) opener.after(component.element);
+      else (config.container || document.body).appendChild(component.element);
     }
+    if (topLayer) showInTopLayer(component.element, { kind: "popover-manual" });
 
     // Step 2: Use a small delay to ensure DOM operations are complete
     tasks.setTimeout(() => {
@@ -525,7 +540,10 @@ const withController =
    * @param {boolean} [restoreFocus=true] - Whether to restore focus to the opener element
    */
   const closeMenu = (event?: Event, restoreFocus: boolean = true): void => {
-    if (!state.visible) return;
+    // A top-layer menu closes once, whichever of its dismissals comes first:
+    // an outside click also blurs the opener, and each used to close it
+    if (!state.visible || (topLayer && closing)) return;
+    closing = true;
 
     menuClosed(registryEntry);
 
@@ -540,6 +558,7 @@ const withController =
     tasks.setTimeout(() => {
       // Update state
       state.visible = false;
+      closing = false;
 
       // Set attributes
       component.element.setAttribute("aria-hidden", "true");
@@ -562,7 +581,8 @@ const withController =
         event,
       );
 
-      // Remove from DOM after animation completes
+      // Remove from DOM after animation completes. Removing a popover takes it
+      // out of the top layer, with no toggle event.
       tasks.setTimeout(() => {
         if (component.element.parentNode && !state.visible) {
           component.element.parentNode.removeChild(component.element);
@@ -598,13 +618,13 @@ const withController =
    */
   const handleDocumentClick = (e: MouseEvent): void => {
     // Don't close if clicked inside menu
-    if (component.element.contains(e.target as Node)) {
+    if (eventWithin(config, component.element, e)) {
       return;
     }
 
     // Check if clicked on opener element
     const opener = getOpenerElement();
-    if (opener && opener.contains(e.target as Node)) {
+    if (opener && eventWithin(config, opener, e)) {
       return;
     }
 
@@ -612,7 +632,7 @@ const withController =
     if (component.submenu && component.submenu.hasOpenSubmenu()) {
       const activeSubmenus = component.submenu.getActiveSubmenus();
       for (const submenu of activeSubmenus) {
-        if (submenu.element.contains(e.target as Node)) {
+        if (eventWithin(config, submenu.element, e)) {
           return;
         }
       }
@@ -627,13 +647,13 @@ const withController =
    */
   const handleDocumentKeydown = (e: KeyboardEvent): void => {
     // Check if the event target is already inside the menu or submenu
-    const isTargetInsideMenu = component.element.contains(e.target as Node);
+    const isTargetInsideMenu = eventWithin(config, component.element, e);
     const isTargetInsideSubmenu =
       component.submenu &&
       component.submenu.hasOpenSubmenu() &&
       component.submenu
         .getActiveSubmenus()
-        .some((s) => s.element.contains(e.target as Node));
+        .some((s) => eventWithin(config, s.element, e));
 
     // If the event target is inside the menu/submenu, the dedicated menu keydown handler
     // will already process it, so we only need to handle Escape here
@@ -786,12 +806,19 @@ const withController =
   // Initialize after DOM is ready
   tasks.setTimeout(initMenu, 0);
 
+  // Something other than the menu took it out of the top layer: close, so
+  // the state and the `close` event follow
+  const stopLayerClose = topLayer
+    ? onTopLayerClose(component.element, () => closeMenu(undefined, false))
+    : null;
+
   // Register with lifecycle if available
   if (component.lifecycle) {
     const originalDestroy = component.lifecycle.destroy || (() => {});
     component.lifecycle.destroy = () => {
       if (tasks.destroyed) return;
       tasks.destroy();
+      stopLayerClose?.();
       state.visible = false;
       // A menu destroyed while open must not stay the registered one
       menuClosed(registryEntry);

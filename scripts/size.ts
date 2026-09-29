@@ -130,14 +130,15 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "extended-fab": kb(6.1),
   "icon-button": kb(6.6),
   list: kb(6.5), // FLO-100 full list anatomy
-  menu: kb(12.3),
+  // layer: "top" and the core/dom top-layer helper add 485 (12,519 to 13,004)
+  menu: kb(12.8),
   "navigation-rail": kb(6.6),
   progress: kb(10.4),
   "loading-indicator": kb(9.1),
-  "split-button": kb(17.3),
+  "split-button": kb(17.8), // the menu's top layer: 17,644 to 18,122
   radios: kb(5.1),
   search: kb(9.0),
-  select: kb(19.4),
+  select: kb(19.8), // the menu's top layer: 19,600 to 20,115
   "segmented-button": kb(9.3),
   slider: kb(12.6), // FLO-249..255 slider conformance
   snackbar: kb(11.3),
@@ -147,7 +148,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   timepicker: kb(10.3),
   "top-app-bar": kb(4.4),
   tooltip: kb(5.6),
-  all: kb(110.0), // the conformance work above, measured 2026-09-29
+  all: kb(110.2), // the conformance work above, measured 2026-09-29; the menu's top layer to 112,692
 };
 
 export interface SizeGateInput {
