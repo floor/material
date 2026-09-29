@@ -12,6 +12,8 @@ import "mtrl/elements/css/button";
 import "mtrl/elements/css/switch";
 import "mtrl/elements/css/badge";
 import "mtrl/elements/css/tabs";
+import "mtrl/elements/css/loading-indicator";
+import "mtrl/elements/css/divider";
 import {
   buttonElement,
   defineButton,
@@ -19,6 +21,14 @@ import {
   defineSwitch,
   tabsElement,
   defineTabs,
+  progressElement,
+  defineProgress,
+  loadingIndicatorElement,
+  defineLoadingIndicator,
+  badgeElement,
+  defineBadge,
+  dividerElement,
+  defineDivider,
   tabDeclaration,
 } from "../elements";
 import type {
@@ -28,6 +38,14 @@ import type {
   SwitchElement,
   TabsSpec,
   TabsElement,
+  ProgressSpec,
+  ProgressElement,
+  LoadingIndicatorSpec,
+  LoadingIndicatorElement,
+  BadgeSpec,
+  BadgeElement,
+  DividerSpec,
+  DividerElement,
   TabAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
@@ -38,4 +56,8 @@ export type { SolidProps, DeclarationProps, EventProps, DefaultProps, FormProps,
 export const Button: MComponent<ButtonSpec, ButtonElement> = createComponent(buttonElement.spec, defineButton, "Button");
 export const Switch: MComponent<SwitchSpec, SwitchElement> = createComponent(switchElement.spec, defineSwitch, "Switch");
 export const Tabs: MComponent<TabsSpec, TabsElement> = createComponent(tabsElement.spec, defineTabs, "Tabs");
+export const Progress: MComponent<ProgressSpec, ProgressElement> = createComponent(progressElement.spec, defineProgress, "Progress");
+export const LoadingIndicator: MComponent<LoadingIndicatorSpec, LoadingIndicatorElement> = createComponent(loadingIndicatorElement.spec, defineLoadingIndicator, "LoadingIndicator");
+export const Badge: MComponent<BadgeSpec, BadgeElement> = createComponent(badgeElement.spec, defineBadge, "Badge");
+export const Divider: MComponent<DividerSpec, DividerElement> = createComponent(dividerElement.spec, defineDivider, "Divider");
 export const Tab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "Tab");
