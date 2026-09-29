@@ -7,6 +7,7 @@ import {
 import { MenuConfig, MenuFeatureHost } from "./types";
 import type { ApiOptions } from "./api";
 import { MENU_DEFAULTS, MENU_CLASSES } from "./constants";
+import { supportsTopLayer } from "../../core/dom/layer";
 
 /**
  * Default configuration for the Menu component
@@ -43,7 +44,13 @@ export const createBaseConfig = (config: MenuConfig): MenuConfig => {
   }
 
   // Apply default configuration
-  return createComponentConfig(defaultConfig, config, "menu") as MenuConfig;
+  const merged = createComponentConfig(defaultConfig, config, "menu") as MenuConfig;
+  // Without popover support the menu keeps its usual layer, so the features
+  // only ever see a top layer they can use
+  if (merged.layer === "top" && !supportsTopLayer("popover-manual")) {
+    merged.layer = undefined;
+  }
+  return merged;
 };
 
 /**

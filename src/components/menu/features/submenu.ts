@@ -2,6 +2,8 @@
 
 import { createMenuTasks } from "./tasks";
 import { activeElementOf } from "../../../core/dom/focus";
+import { showInTopLayer } from "../../../core/dom/layer";
+import { eventWithin } from "./layer";
 import { MenuConfig, MenuContent, MenuItem, MenuFeatureHost } from "../types";
 
 /**
@@ -360,8 +362,12 @@ const withSubmenu =
 
     submenuElement.appendChild(submenuList);
 
-    // Add to DOM to enable measurement and transitions
-    document.body.appendChild(submenuElement);
+    // Add to DOM to enable measurement and transitions. A top-layer menu's
+    // submenu goes beside it, in its tree, and is shown after it, so above it.
+    if (config.layer === "top") {
+      component.element.after(submenuElement);
+      showInTopLayer(submenuElement, { kind: "popover-manual" });
+    } else document.body.appendChild(submenuElement);
     ownedElements.add(submenuElement);
 
     // Position the submenu using position component
@@ -589,8 +595,8 @@ const withSubmenu =
 
     // Check if click was inside submenu or parent menu item
     if (
-      submenuElement.contains(e.target as Node) ||
-      (menuItemElement && menuItemElement.contains(e.target as Node))
+      eventWithin(config, submenuElement, e) ||
+      (menuItemElement && eventWithin(config, menuItemElement, e))
     ) {
       return;
     }

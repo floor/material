@@ -12,6 +12,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Menu: `layer: "top"`**, and a top-layer helper in `mtrl/core/dom`. With the option the
+  menu renders next to its opener instead of on `document.body` or `container`, and is shown
+  in the browser's top layer as a `popover="manual"` element: above any z-index, out of any
+  clipping parent, and inside the opener's shadow root with that root's styles. It is placed
+  in viewport coordinates with the same flip and clamp, keeps its own dismissal (a close
+  emits `close` once), and closes if something else hides it; submenus open in the top layer
+  too. Without popover support the option does nothing. The helper is `showInTopLayer`
+  (`popover-auto`, `popover-manual` or `modal`), `hideFromTopLayer`, `onTopLayerClose`, which
+  reports the browser's own closes, and `supportsTopLayer`. The default menu is unchanged.
 - **Elements: `<m-navigation-rail>` with `<m-navigation-rail-item>` children**, and
   `NavigationRail` and `NavigationRailItem` in the React, Vue, Svelte and Solid adapters.
   The standard rail: a navigation landmark named by `aria-label`, each item a button, or a

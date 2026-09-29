@@ -75,15 +75,15 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     const parentId = menuElement.getAttribute("data-parent-item");
     if (!parentId) return null;
     const level = parseInt(menuElement.getAttribute("data-level") || "1", 10);
-    // Submenus live on document.body, so they have to be found there — but
-    // only this menu's. Matching on level alone returned the first submenu at
+    // Submenus live on document.body, or beside a top-layer menu in its own
+    // tree, so they are found from this submenu's root — but only this menu's. Matching on level alone returned the first submenu at
     // that level on the page, which with two menus open is the wrong one.
     const owner = component.element.id;
     const ownerFilter = owner ? `[data-owner="${owner}"]` : "";
     const scope =
       level <= 1
         ? component.element
-        : document.querySelector(
+        : (menuElement.getRootNode() as ParentNode).querySelector(
             `.${component.getClass(
               "menu--submenu"
             )}${ownerFilter}[data-level="${level - 1}"]`
