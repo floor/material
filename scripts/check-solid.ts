@@ -186,6 +186,11 @@ const run = async (): Promise<void> => {
     assert.equal(await page.getByRole("tab", { name: "Flights", exact: true, selected: true }).count(), 1);
     check("tabs: a Tab rendered later is added, and the selection is kept");
 
+    // Rendered in the browser, not on the server: Solid sets the Tab's value as a property.
+    await page.getByRole("tab", { name: "Hotels", exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("tab")?.textContent === "t3");
+    check("a Tab rendered in the browser reports its value, not its label");
+
     const late = await page.evaluate(() => {
       const el = document.getElementById("late") as HTMLElement & { checked: boolean };
       return { checked: el.checked, attribute: el.getAttribute("checked"), disabled: el.shadowRoot?.querySelector("input")?.disabled };

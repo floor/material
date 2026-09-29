@@ -509,6 +509,31 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
   return MElement;
 };
 
+/**
+ * The class of a declaration element (`<m-tab>`): it renders nothing, and each
+ * declared attribute has a property that reads and writes it. Frameworks that set
+ * a custom element's props as properties (Solid always does) then reach the
+ * attributes its parent reads, as frameworks that set attributes already did.
+ * Called on first use, never at import.
+ */
+export const createDeclarationClass = (
+  attributes: Record<string, { type: AttributeType }>
+): CustomElementConstructor => {
+  class Declaration extends HTMLElement {}
+  for (const [name, attribute] of Object.entries(attributes)) {
+    Object.defineProperty(Declaration.prototype, camel(name), {
+      configurable: true,
+      get(this: HTMLElement) {
+        return read(this, name, attribute.type);
+      },
+      set(this: HTMLElement, value: unknown) {
+        write(this, name, attribute.type, value);
+      },
+    });
+  }
+  return Declaration;
+};
+
 /** A spec with its element class and registration. */
 export interface ElementDefinition<C extends ElementComponent> {
   spec: ElementSpec<C>;
