@@ -368,6 +368,25 @@ try {
     });
     assert.deepEqual(reordered, { labels: ["Flights", "Cars", "Trips"], value: "t1" });
     check("tabs: an insertion in the middle and a removal keep order and selection");
+
+    // Frameworks that set a custom element's props as properties (Solid does, always)
+    // must reach the attributes <m-tabs> reads.
+    const declared = await page.evaluate(async () => {
+      const tab = document.createElement("m-tab") as HTMLElement & { value: string; disabled: boolean; badge: string };
+      tab.value = "t7";
+      tab.badge = "2";
+      tab.disabled = true;
+      tab.textContent = "Trains";
+      document.getElementById("t")?.append(tab);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const t = document.getElementById("t") as HTMLElement & {
+        component: { getTabs: () => Array<{ getValue: () => string; getBadge: () => string }> };
+      };
+      const last = t.component.getTabs().at(-1);
+      return { attributes: [tab.getAttribute("value"), tab.getAttribute("badge"), tab.hasAttribute("disabled")], value: last?.getValue(), badge: last?.getBadge() };
+    });
+    assert.deepEqual(declared, { attributes: ["t7", "2", true], value: "t7", badge: "2" });
+    check("tabs: <m-tab> properties write the attributes the tabs read");
   }
 
   // ---------------------------------------------------------------- lifecycle
