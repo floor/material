@@ -64,6 +64,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   on the selected year, as the m3.material.io guidelines have it ("To navigate across
   years, scroll vertically"). It was ±10 years paged by the arrows, which the year view no
   longer shows (FLO-275).
+- **Elements: the model attribute is the default, as natively.** On `<m-switch>`,
+  `<m-checkbox>`, `<m-radios>`, `<m-icon-button>`, `<m-slider>` (`value` and `second-value`),
+  `<m-tabs>` and `<m-textfield>`, a change of `checked`, `selected` or `value` moves the live
+  state only until it is dirty: changed by the user, or set by script through the property
+  or a method. Then the attribute is only the default `form.reset()` returns to, which also
+  makes the element clean again; a restored form state is dirty. The attribute used to move
+  the live state always, and `<m-tabs>` never.
 
 ### Fixed
 

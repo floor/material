@@ -4,8 +4,10 @@
  *
  * The element owns one factory instance, built inside its shadow root on first
  * connection. Attributes are the component's defaults, as on native controls;
- * properties carry its live state. Factory events are re-dispatched from the
- * host under the same names.
+ * properties carry its live state. The model's attribute (`checked`, `value`)
+ * moves the live state until the state is dirty: changed by the user or set by
+ * script, as a native input's dirty value and checkedness flags. Factory
+ * events are re-dispatched from the host under the same names.
  *
  * Nothing here touches the DOM at import time: the element class is built on
  * first use, so every element module can be imported on a server.
@@ -100,8 +102,18 @@ export interface ElementSpec<C extends ElementComponent> {
   attributes?: Record<string, AttributeSpec<C>>;
   properties?: Record<string, PropertySpec<C>>;
   methods?: readonly string[];
-  /** The live property two-way binding drives (`v-model`, Svelte's `bind:`). */
+  /**
+   * The live property two-way binding drives (`v-model`, Svelte's `bind:`).
+   * Its attribute (the kebab-cased name) is its default: see `defaults`.
+   */
   model?: string;
+  /**
+   * Live properties beyond `model` whose attribute is their default the same
+   * way (the slider's `secondValue` and `second-value`). A change of such an
+   * attribute moves the live state until the element is dirty, and a form
+   * reset returns to it.
+   */
+  defaults?: readonly string[];
   events?: Record<string, EventSpec>;
   slot?: SlotSpec;
   form?: FormSpec<C>;
@@ -190,6 +202,7 @@ export type ElementInstance<S, C extends ElementComponent> = ElementHost<C> & El
 // ---------------------------------------------------------------------------
 
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
+const kebab = (name: string): string => name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
 const read = (host: HTMLElement, name: string, type: AttributeType): AttributeValue => {
   const raw = host.getAttribute(name);
@@ -220,6 +233,10 @@ const hasContent = (host: HTMLElement): boolean =>
 
 /** The element class for a spec. Called on first use, never at import. */
 const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): CustomElementConstructor => {
+  // The live properties an attribute is the default of, and those attributes.
+  const backed = [...(spec.model ? [spec.model] : []), ...(spec.defaults ?? [])];
+  const backing = new Set(backed.map(kebab));
+
   class MElement extends HTMLElement implements ElementHost<C> {
     static formAssociated = !!spec.form;
     static observedAttributes = [
@@ -233,6 +250,8 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
     #pending = new Map<string, unknown>();
     #restoreState: string | null = null;
     #silent = 0;
+    /** The model was changed by the user or by script: its attributes no longer move it. */
+    #dirty = false;
     #cleanup: Array<() => void> = [];
     #observer: MutationObserver | null = null;
     #slot: HTMLSlotElement | null = null;
@@ -241,6 +260,15 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       super();
       this.attachShadow({ mode: "open", delegatesFocus: true });
       this.internals = spec.form && typeof this.attachInternals === "function" ? this.attachInternals() : null;
+      if (backed.length) {
+        // Every event the host dispatches, from the factory or a spec's setup,
+        // reports a user change: silent changes dispatch nothing.
+        for (const event of Object.keys(spec.events ?? {})) {
+          this.addEventListener(event, (e) => {
+            if (e.target === this) this.#dirty = true;
+          });
+        }
+      }
     }
 
     connectedCallback(): void {
@@ -263,6 +291,8 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       }
       const attribute = spec.attributes?.[name];
       if (!attribute) return;
+      // A default no longer moves a dirty state; a reset reads it again.
+      if (this.#dirty && backing.has(name)) return;
       if (attribute.update) {
         this.#quietly(() => attribute.update?.(this.component as C, read(this, name, attribute.type), this));
         this.#syncForm();
@@ -275,12 +305,14 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
 
     formResetCallback(): void {
       // Attributes are the defaults: rebuilding from them is the reset.
+      this.#dirty = false;
       this.#pending.clear();
       this.#rebuild(false);
     }
 
     formStateRestoreCallback(state: unknown): void {
       if (typeof state !== "string" || !spec.form?.restore) return;
+      this.#dirty = true; // a restored state is the user's, as natively
       if (!this.component) {
         this.#restoreState = state; // applied once the component is built
         return;
@@ -303,6 +335,7 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
     setProperty(name: string, value: unknown): void {
       const property = spec.properties?.[name];
       if (!property) return;
+      if (backed.includes(name)) this.#dirty = true;
       if (!this.component) {
         this.#pending.set(name, value);
         return;
@@ -315,7 +348,10 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       const component = this.component as unknown as Record<string, unknown> | null;
       const method = component?.[name];
       if (typeof method !== "function") return undefined;
+      const before = backed.map((property) => this.getProperty(property));
       const result = (method as (...a: unknown[]) => unknown).apply(component, args);
+      // A method that moves the model (`toggle()`, `select()`) sets it by script.
+      if (backed.some((property, i) => this.getProperty(property) !== before[i])) this.#dirty = true;
       this.#syncForm();
       return result === component ? this : result;
     }
@@ -456,10 +492,14 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       this.#slot = null;
     }
 
-    /** Recreates the component, keeping its live state when asked. */
+    /**
+     * Recreates the component, keeping its live state when asked. A clean
+     * model's state is its attributes', which the new component reads again.
+     */
     #rebuild(keepState: boolean): void {
       if (this.component && keepState) {
         for (const [name, property] of Object.entries(spec.properties ?? {})) {
+          if (!this.#dirty && backed.includes(name)) continue;
           this.#pending.set(name, property.get(this.component));
         }
       }
