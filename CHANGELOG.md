@@ -10,6 +10,18 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Fixed
+
+- **Select's menu class and Progress's duplicate classes (FLO-295).** Found by md3.io's docs
+  audit. Since `class` stopped being prefixed, the select passed `select__menu` bare, so
+  `.mtrl-select__menu` matched nothing; it is prefixed now, and the rules under it, which never
+  applied (a 460px max width, a 4px margin, fade classes nothing set), are gone. Progress roots
+  no longer carry unprefixed `progress progress--linear` copies of their classes.
+
+### Deprecated
+
+- **Text field:** `TEXTFIELD_CLASSES.LABEL_FLOATING`, applied and styled nowhere (FLO-295).
+
 ## [0.10.0-next.3] - 2026-09-29
 
 The third prerelease of 0.10.0, on the npm `next` tag (`npm install mtrl@next`); `latest`

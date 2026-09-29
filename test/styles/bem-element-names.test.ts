@@ -29,7 +29,8 @@ const MIGRATED: Record<string, string[]> = {
   progress: ["canvas"],
   snackbar: ["action", "close"],
   "bottom-app-bar": ["actions", "fab-container"],
-  select: ["menu"],
+  // select's menu has no rules of its own since FLO-295: they never applied
+  // (the class was unprefixed), and applying them broke its width and placement.
   checkbox: ["input", "icon"],
   "top-app-bar": ["headline", "leading", "trailing", "row"],
   "side-sheet": ["scrim", "container", "header", "title", "close", "content"],
