@@ -30,6 +30,7 @@ export interface CanvasContext {
 }
 
 interface BaseComponent {
+  emit?: (event: string, data?: unknown) => unknown;
   element: HTMLElement;
   getClass: (name: string) => string;
   lifecycle?: {
@@ -276,9 +277,8 @@ export const withCanvas =
     };
 
     const complete = (value: number): void => {
-      component.element.dispatchEvent(
-        new CustomEvent("complete", { detail: { value, max: max() } })
-      );
+      // The emitter's `complete`, with `{ value, max }` (FLO-295).
+      component.emit?.("complete", { value, max: max() });
     };
 
     // ---------------------------------------------------------------------

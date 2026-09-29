@@ -10,6 +10,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Changed
+
+- **Progress: `on()` uses the emitter, and handlers get `{ value, max }` (FLO-295).** They
+  were DOM listeners on the element, handed a `CustomEvent` with the payload in `detail`,
+  unlike every other component. Migration: `progress.on('change', (e) => e.detail.value)`
+  becomes `progress.on('change', ({ value }) => value)`. `ProgressEvents` types the two
+  events, `change` and `complete`.
+
 ### Fixed
 
 - **Select's menu class and Progress's duplicate classes (FLO-295).** Found by md3.io's docs
