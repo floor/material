@@ -36,61 +36,39 @@ $component: '#{base.$prefix}-time-picker';
 
     &::backdrop { background: t.alpha('scrim', 0.32); }
     
-    // State layer for elevations
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border-radius: inherit;
-      background-color: t.color('surface-tint');
-      opacity: 0.05;
-      pointer-events: none;
-    }
-    
-    // Orientations
-    &--vertical {
-      // min-height: 460px;
-      
-      .#{$component}__input-container {
-        flex-direction: row;
-      }
-      
-      .#{$component}__period {
-        flex-direction: column;
-        width: 52px;
-        height: 80px;
-        margin-left: 12px;
-      }
-    }
-    
+    // Horizontal (landscape): the time and AM/PM stack beside the dial, and
+    // AM/PM lies flat, 216x38dp.
     &--horizontal {
       min-width: 520px;
       min-height: 360px;
-      
+
       .#{$component}__content {
         flex-direction: row;
         align-items: center;
       }
-      
+
       .#{$component}__input-container {
-        flex-direction: row;
-      }
-      
-      .#{$component}__period {
         flex-direction: column;
-        width: 52px;
-        height: 80px;
-        margin-left: 12px;
+        align-items: center;
       }
-      
+
+      .#{$component}__period {
+        flex-direction: row;
+        width: 216px;
+        height: 38px;
+        margin: 12px 0 0;
+      }
+
+      .#{$component}__period-pm {
+        border-block-start: 0;
+        border-inline-start: 1px solid t.color('outline');
+      }
+
       .#{$component}__dial {
-        margin-left: 24px;
+        margin-inline-start: 24px;
       }
     }
-    
+
     // Time formats
     &--24h {
       .#{$component}__period {
@@ -118,61 +96,61 @@ $component: '#{base.$prefix}-time-picker';
     align-items: center;
   }
   
-  // Input container for both modes
+  // The time row: the fields, then AM/PM 12dp after them.
   &__input-container {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     margin: 0 0 24px 0;
   }
-  
-  // Input field containers
+
+  // The fields and separators read left to right in any direction, as a time is
+  // written (Compose keeps them LTR); AM/PM follows the page's direction.
+  &__selectors {
+    display: flex;
+    align-items: flex-start;
+    direction: ltr;
+  }
+
   &__time-input-field {
-    position: relative;
     display: flex;
     flex-direction: column;
   }
-  
-  // Time input styles - shared for both modes
+
+  // Dial mode's boxes (TimeSelector): 96x80dp, Display Large, corner small.
+  // Input mode's fields (TimeInput) are 96x72dp in Display Medium, below.
   &__hours,
   &__minutes,
   &__seconds {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    box-sizing: border-box;
     width: 96px;
     height: 80px;
-    font-size: 3.5rem;
-    font-weight: 400;
-    border: none;
-    background: transparent;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: f.get-shape('small');
+    text-align: center;
     cursor: pointer;
-    
-    // TimeSelectorSelectedContainerColor is PrimaryContainer and its label
-    // OnPrimaryContainer. Only the text colour changed before, so the active
-    // field was signalled by a tint rather than the filled container M3
-    // describes.
-    &[data-active="true"] {
-      background-color: t.color('primary-container');
-      color: t.color('on-primary-container');
-    }
-    
-    // Style for HTML input elements
-    // Size, type and border come from the rule above; the mobile sizes too.
+    @include m.typography('display-large');
+
+    // Input mode: TimeFieldContainerColor surface-container-highest with an
+    // on-surface label; focused, primary-container and on-primary-container
+    // inside a 2dp primary outline. The selected colours never showed before:
+    // this rule overrode them.
     &[type="number"] {
-      height: 76px;
-      text-align: center;
+      height: 72px;
+      @include m.typography('display-medium');
       background-color: t.color('surface-container-highest');
-      border-radius: f.get-shape('small');
-      padding: 0;
-      margin: 0;
       color: t.color('on-surface');
-      
+      cursor: text;
+
       &:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px t.color('primary');
+        outline: 2px solid t.color('primary');
+        outline-offset: -2px;
+        background-color: t.color('primary-container');
+        color: t.color('on-primary-container');
       }
-      
+
       // Remove spinner arrows
       -moz-appearance: textfield;
       &::-webkit-outer-spin-button,
@@ -181,17 +159,13 @@ $component: '#{base.$prefix}-time-picker';
         margin: 0;
       }
     }
-    
+
     // Dial mode: the boxes are radios (FLO-283). TimeSelector tokens: an 8dp
     // surface-container-highest container with an on-surface label, filled
     // primary-container when selected; state layers in the label colour.
     &:not([type="number"]) {
       --#{$component}-container: #{t.color('surface-container-highest')};
       --#{$component}-label: #{t.color('on-surface')};
-      padding: 0;
-      font-family: inherit;
-      line-height: 1;
-      border-radius: f.get-shape('small');
       background-color: color-mix(in srgb, var(--#{$component}-label) var(--#{$component}-layer, 0%), var(--#{$component}-container));
       color: var(--#{$component}-label);
 
@@ -209,78 +183,83 @@ $component: '#{base.$prefix}-time-picker';
     }
   }
 
-  // The dial mode's radiogroup: a role, not a box, so the row lays out as before.
-  &__selectors {
-    display: contents;
-  }
-
-  // Separator between hours, minutes, seconds
-  &__separator {
-    font-size: 3.5rem;
-    font-weight: 400;
-    margin: 0 4px;
+  // Input mode names its fields below them, in Body Small on-surface-variant.
+  &__input-label {
+    margin-top: 4px;
+    @include m.typography('body-small');
     color: t.color('on-surface-variant');
   }
-  
-  // Period selector (AM/PM)
+
+  // The colon: 24dp wide, as tall as the boxes, on-surface.
+  &__separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 80px;
+    @include m.typography('display-large');
+    color: t.color('on-surface');
+  }
+
+  // Period selector (AM/PM): 52x80dp beside the time (52x72 in input mode),
+  // corner small with a 1dp outline and a divider; unselected is transparent.
   &__period {
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    background-color: t.color('surface-container-highest');
+    flex-shrink: 0;
+    width: 52px;
+    height: 80px;
+    margin-inline-start: 12px;
     border-radius: f.get-shape('small');
     overflow: hidden;
     // PeriodSelectorOutlineColor is Outline, not OutlineVariant.
     border: 1px solid t.color('outline');
-    margin-left: 16px;
-    
+
     &-am,
     &-pm {
       display: flex;
+      flex: 1;
       align-items: center;
       justify-content: center;
-      width: 100%;
-      height: 50%;
-      padding: 8px;
       cursor: pointer;
       @include m.typography('title-medium');
       // PeriodSelectorUnselectedLabelTextColor. It was inherited before, so an
       // unselected period took the dialog's on-surface.
       color: t.color('on-surface-variant');
-      
-      // Improve touch target sizes on mobile
-      @media (max-width: 599px) {
-        min-height: 48px;
-      }
-      
+
       // Improve focus styles for keyboard navigation
       &:focus-visible {
         outline: 2px solid t.color('primary');
-        outline-offset: 2px;
+        outline-offset: -2px;
       }
-      
+
       &:hover {
-        background-color: t.alpha('on-surface', 0.08);
+        background-color: t.alpha('on-surface-variant', 0.08);
       }
-      
+
       &:active {
-        background-color: t.alpha('on-surface', v.state('pressed-state-layer-opacity'));
+        background-color: t.alpha('on-surface-variant', v.state('pressed-state-layer-opacity'));
       }
     }
-    
+
+    &-pm {
+      border-block-start: 1px solid t.color('outline');
+    }
+
     // PeriodSelectorSelectedContainerColor is TertiaryContainer and its label
     // OnTertiaryContainer. The primary pair it used belongs to the time
     // selector, which is why AM/PM and the hour field looked alike.
     &--selected {
       background-color: t.color('tertiary-container');
       color: t.color('on-tertiary-container');
-      
+
       &:hover {
-        background-color: t.color('tertiary-container');
+        background-color: color-mix(in srgb, t.color('on-tertiary-container') 8%, t.color('tertiary-container'));
       }
     }
   }
-  
+
   // Clock dial
   &__dial {
     display: flex;
@@ -485,7 +464,7 @@ $component: '#{base.$prefix}-time-picker';
         }
         
         .#{$component}__dial {
-          margin-left: 0;
+          margin-inline-start: 0;
         }
       }
     }
@@ -494,31 +473,6 @@ $component: '#{base.$prefix}-time-picker';
       margin: 16px 0;
     }
     
-    // Smaller inputs on mobile
-    &__hours,
-    &__minutes,
-    &__seconds {
-      width: 80px;
-      height: 76px;
-      font-size: 3rem;
-    }
-  }
-  
-  // Dark mode adjustments
-  @media (prefers-color-scheme: dark) {
-    &__dialog {
-      &::before {
-        opacity: 0.08;
-      }
-    }
-    
-    &__hours,
-    &__minutes,
-    &__seconds {
-      &[type="number"] {
-        background-color: t.alpha('on-surface', 0.05);
-      }
-    }
   }
   
   // Accessibility
@@ -533,6 +487,18 @@ $component: '#{base.$prefix}-time-picker';
     white-space: nowrap;
     border: 0;
   }
+}
+
+// Input mode: fields and AM/PM are 72dp tall.
+.#{$component}__dialog--input {
+  .#{$component}__separator { height: 72px; }
+  .#{$component}__period { height: 72px; }
+}
+
+// 24-hour dial, vertical: the two boxes widen to 114dp (Compose), there being no
+// AM/PM beside them.
+.#{$component}__dialog--dial.#{$component}__dialog--24h.#{$component}__dialog--vertical .#{$component}__selectors:not(:has(.#{$component}__seconds)) :is(.#{$component}__hours, .#{$component}__minutes) {
+  width: 114px;
 }
 
 @keyframes #{$component}-appear {
