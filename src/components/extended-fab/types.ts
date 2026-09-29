@@ -265,8 +265,9 @@ export interface ExtendedFabConfig {
   /**
    * Accessible label for screen readers
    *
-   * Sets the aria-label attribute for accessibility. Especially important
-   * if the Extended FAB doesn't include text content.
+   * Sets the aria-label attribute. The visible text already names the
+   * Extended FAB, so set this only when the name should differ from it or
+   * there is no text. Nothing is derived from `text` or `icon` (#232).
    *
    * @example
    * ```typescript

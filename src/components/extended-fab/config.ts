@@ -62,8 +62,11 @@ export const getElementConfig = (config: ExtendedFabConfig) => {
   // Create the attributes object
   const attributes: Record<string, string | boolean | undefined> = {
     type: config.type || "button",
-    "aria-label":
-      config.ariaLabel || config.text || (config.icon ? "action" : undefined),
+    // Only an explicit label. The visible text already names the button, and
+    // this used to read `|| config.text || (config.icon ? "action" : undefined)`:
+    // a Node as text became "[object HTMLSlotElement]", and no text became
+    // "action", as the FAB did before FLO-110. #232.
+    "aria-label": config.ariaLabel,
   };
 
   if (config.value !== undefined) {

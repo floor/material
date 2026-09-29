@@ -6,8 +6,9 @@
  * Each `<m-radio>` declares one option (`value`, `disabled`, and its text as
  * the label). The group reads them into the factory's config and updates in
  * place when they change; the children stay where the framework put them.
- * `value` on `<m-radios>` is the default selection, which a form reset returns
- * to; the `value` property is the live one.
+ * `value` on `<m-radios>` is the default selection, which moves the live one
+ * until the user or script changes it and which a form reset returns to; the
+ * `value` property is the live one.
  *
  * @module elements
  */

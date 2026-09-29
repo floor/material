@@ -6,11 +6,12 @@ let dom: JSDOM;
 let restore: (() => void)[];
 let fields: ReturnType<typeof createTextfield>[];
 let activeObservers: Set<MutationObserver>;
+let activeResizeObservers: Set<object>;
 let listeners: Map<string, Set<EventListenerOrEventListenerObject>>;
 const tick = (ms = 20) => new Promise(resolve => setTimeout(resolve, ms));
 beforeEach(() => {
   dom = new JSDOM('<!doctype html><html><body><main style="background: rgb(12, 34, 56)"></main></body></html>', { pretendToBeVisual: true });
-  restore = []; fields = []; activeObservers = new Set(); listeners = new Map();
+  restore = []; fields = []; activeObservers = new Set(); activeResizeObservers = new Set(); listeners = new Map();
   const replace = (target: object, name: string, value: unknown) => {
     const previous = Object.getOwnPropertyDescriptor(target, name);
     Object.defineProperty(target, name, { value, writable: true, configurable: true });
@@ -21,6 +22,12 @@ beforeEach(() => {
   replace(globalThis, "MutationObserver", class extends dom.window.MutationObserver {
     observe(target: Node, options?: MutationObserverInit) { activeObservers.add(this); super.observe(target, options); }
     disconnect() { activeObservers.delete(this); super.disconnect(); }
+  });
+  // JSDOM has no ResizeObserver: the notch's label observer is counted here
+  replace(globalThis, "ResizeObserver", class {
+    observe() { activeResizeObservers.add(this); }
+    unobserve() {}
+    disconnect() { activeResizeObservers.delete(this); }
   });
   for (const [target, type] of [[window, "resize"], [document, "themechange"]] as const) {
     const set = new Set<EventListenerOrEventListenerObject>(); listeners.set(type, set);
@@ -41,15 +48,19 @@ const make = () => {
 const released = () => {
   for (const set of listeners.values()) expect(set.size).toBe(0);
   expect(activeObservers.size).toBe(0);
+  expect(activeResizeObservers.size).toBe(0);
 };
 test("destroy before initialization never installs resize listeners or observers", async () => {
   const field = make(); field.destroy(); await tick(); released();
 });
-test("destroy releases placement, background and autofill observers", async () => {
+test("destroy releases placement, notch and autofill observers", async () => {
   const field = make(); await tick();
   expect(listeners.get("resize")!.size).toBe(1);
-  expect(listeners.get("themechange")!.size).toBe(1);
-  expect(activeObservers.size).toBeGreaterThan(0);
+  // #234: no theme listener and no observer per ancestor for a copied label
+  // background: the class and autofill observers and one label observer remain
+  expect(listeners.get("themechange")!.size).toBe(0);
+  expect(activeObservers.size).toBe(2);
+  expect(activeResizeObservers.size).toBe(1);
   field.destroy(); released(); await tick(); released();
 });
 test("pending placement changes cannot restart a destroyed field", async () => {

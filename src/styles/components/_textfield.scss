@@ -45,7 +45,6 @@ $component: "#{base.$prefix}-textfield";
         transform: translateY(-50%);
         transform-origin: left top;
         pointer-events: none;
-        border-radius: 2px;
         color: t.color("on-surface-variant");
         transition:
             transform v.motion("duration-short4") v.motion("easing-emphasized"),
@@ -336,7 +335,10 @@ $component: "#{base.$prefix}-textfield";
 
     // Accessibility
     @include m.reduced-motion {
-        &__label {
+        &__label,
+        &__outline-leading,
+        &__outline-notch,
+        &__outline-trailing {
             transition: none;
         }
 
@@ -635,15 +637,81 @@ $component: "#{base.$prefix}-textfield";
     }
 
     // ===== OUTLINED VARIANT =====
+    // The container is drawn by __outline in three segments: the leading
+    // corner, the notch the floated label sits in, and the trailing rest.
+    // While the label floats the notch drops its top edge, leaving a gap
+    // around the label, so nothing is painted behind the label and the field
+    // shows whatever surface it is on. placement.ts sizes the notch to the
+    // floated label plus the 4dp cutout padding on each side.
+    &__outline {
+        display: none;
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+
+        &-leading,
+        &-notch,
+        &-trailing {
+            border: var(--#{$component}-outline-width, 1px) solid
+                var(--#{$component}-outline-color, #{t.color("outline")});
+            @include m.motion-transition(border-color);
+        }
+
+        // 12dp: the label starts 16dp in, less the 4dp cutout padding
+        &-leading {
+            flex: 0 0 12px;
+            border-inline-end: 0;
+            border-radius: f.get-shape("extra-small") 0 0
+                f.get-shape("extra-small");
+        }
+
+        &-notch {
+            flex: 0 0 auto;
+            width: 0;
+            max-width: calc(100% - 24px);
+            border-inline: 0;
+        }
+
+        &-trailing {
+            flex: 1 1 auto;
+            border-inline-start: 0;
+            border-radius: 0 f.get-shape("extra-small")
+                f.get-shape("extra-small") 0;
+        }
+
+        &--notched .#{$component}__outline-notch {
+            border-top-color: transparent;
+        }
+    }
+
     &--outlined {
-        background-color: inherit;
+        --#{$component}-outline-color: #{t.color("outline")};
+        --#{$component}-outline-width: 1px;
         border-radius: f.get-shape("extra-small");
-        @include m.motion-transition(border-color);
+
+        .#{$component}__outline {
+            display: flex;
+        }
+
+        // Before placement.ts has run, the notch opens from the input's own state
+        .#{$component}__input:not(:placeholder-shown)
+            ~ .#{$component}__outline
+            .#{$component}__outline-notch,
+        .#{$component}__input:-webkit-autofill
+            ~ .#{$component}__outline
+            .#{$component}__outline-notch,
+        .#{$component}__input:autofill
+            ~ .#{$component}__outline
+            .#{$component}__outline-notch {
+            border-top-color: transparent;
+        }
 
         .#{$component}__input {
             background-color: transparent;
             padding: 12px 15px 13px;
-            border: 1px solid t.color("outline");
+            // transparent: the outline draws the edge, this keeps the text
+            // where the old input border put it
+            border: 1px solid transparent;
             @include m.motion-transition(padding);
 
             // Autofill styles for outlined variant
@@ -651,14 +719,14 @@ $component: "#{base.$prefix}-textfield";
                 border-radius: f.get-shape("extra-small");
 
                 & ~ .#{$component}__label {
-                    background-color: t.color("surface");
+                    background-color: transparent;
                     transform: translateY(-145%) scale(0.75);
                 }
             }
 
             &:autofill {
                 & ~ .#{$component}__label {
-                    background-color: t.color("surface");
+                    background-color: transparent;
                     transform: translateY(-145%) scale(0.75);
                 }
             }
@@ -666,56 +734,35 @@ $component: "#{base.$prefix}-textfield";
 
         .#{$component}__label {
             opacity: 0.5;
-            background-color: inherit;
-            padding: 0 4px;
-            left: 14px;
+            left: 16px;
             top: 50%;
-        }
-
-        &::before {
-            content: "";
-            position: absolute;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            border: 1.5px solid t.color("primary");
-            border-radius: f.get-shape("extra-small");
-            pointer-events: none;
-            transition: 0.1s opacity ease;
         }
 
         // Populated field (not empty) or focused field label position
         &:not(.#{$component}--empty) .#{$component}__label,
         &.#{$component}--focused .#{$component}__label {
-            padding: 0 4px;
             opacity: 1;
             transform: translateY(-147%) scale(0.75);
-            // Important change: For outlined variant, when focused/populated
-            // we want to reset the left position back to default (or to JS calculated equivalent)
-            // to handle the label moving up above the field
-            // The JS will handle special positioning depending on if it's prefixed
-            left: 14px;
+            // The floated label starts 16dp in, inside the notch, whatever
+            // the icon or prefix at rest
+            left: 16px;
         }
 
         // CSS-only fallback for when input has value (works without JS)
         .#{$component}__input:not(:placeholder-shown) ~ .#{$component}__label {
-            padding: 0 4px;
             transform: translateY(-147%) scale(0.75);
-            left: 14px;
-            background-color: t.color("surface");
+            left: 16px;
+        }
+
+        // Hover state
+        &:hover:not(.#{$component}--focused):not(.#{$component}--disabled) {
+            --#{$component}-outline-color: #{t.color("on-surface")};
         }
 
         // Focus state
         &.#{$component}--focused {
-            &::before {
-                opacity: 1;
-                border-width: 2px;
-            }
-            // &:hover {
-            //   &::before {
-
-            //   }
-            // }
+            --#{$component}-outline-color: #{t.color("primary")};
+            --#{$component}-outline-width: 2px;
 
             .#{$component}__label {
                 color: t.color("primary");
@@ -724,9 +771,10 @@ $component: "#{base.$prefix}-textfield";
 
         // Error state
         &.#{$component}--error {
-            &::before {
-                opacity: 1;
-                border: 2px solid t.color("error");
+            --#{$component}-outline-color: #{t.color("error")};
+
+            &:hover:not(.#{$component}--focused) {
+                --#{$component}-outline-color: #{t.color("on-error-container")};
             }
 
             .#{$component}__label {
@@ -736,11 +784,8 @@ $component: "#{base.$prefix}-textfield";
 
         // Disabled state
         &.#{$component}--disabled {
+            --#{$component}-outline-color: #{t.alpha("on-surface", 0.12)};
             pointer-events: none;
-            &::before {
-                opacity: 1;
-                border: 1px solid t.alpha("on-surface", 0.38);
-            }
         }
 
         // Prefix/suffix vertical alignment for outlined variant
@@ -766,11 +811,9 @@ $component: "#{base.$prefix}-textfield";
                 left: 44px;
             }
 
-            // Important change: For outlined variant, when focused/populated
-            // we still reset to 12px position (default)
             &:not(.#{$component}--empty) .#{$component}__label,
             &.#{$component}--focused .#{$component}__label {
-                left: 14px;
+                left: 16px;
             }
         }
 
@@ -780,38 +823,47 @@ $component: "#{base.$prefix}-textfield";
             }
         }
 
-        // RTL support
-        @include m.rtl {
-            &:not(.#{$component}--empty) .#{$component}__label,
-            &.#{$component}--focused .#{$component}__label {
+        // Right to left follows --rtl, which placement.ts sets from the
+        // computed direction: the [dir] selectors cannot see a direction set
+        // outside a shadow root, and bundlers lower logical insets, corners
+        // and :dir() into :lang() lists that miss dir="rtl"
+        &.#{$component}--rtl {
+            .#{$component}__label {
                 left: auto;
-                right: 12px;
+                right: 16px;
+                transform-origin: right top;
             }
 
-            &.#{$component}--focused .#{$component}__label {
-                right: 12px;
+            &.#{$component}--with-leading-icon .#{$component}__label {
+                left: auto;
+                right: 44px;
             }
 
-            &.#{$component}--error .#{$component}__label {
-                right: 12px;
+            &:not(.#{$component}--empty) .#{$component}__label,
+            &.#{$component}--focused .#{$component}__label,
+            .#{$component}__input:not(:placeholder-shown)
+                ~ .#{$component}__label {
+                left: auto;
+                right: 16px;
             }
 
+            .#{$component}__outline-leading {
+                border-radius: 0 f.get-shape("extra-small")
+                    f.get-shape("extra-small") 0;
+            }
+
+            .#{$component}__outline-trailing {
+                border-radius: f.get-shape("extra-small") 0 0
+                    f.get-shape("extra-small");
+            }
+        }
+
+        // RTL support for the light DOM
+        @include m.rtl {
             &.#{$component}--with-leading-icon {
                 .#{$component}__input {
                     padding-left: 16px;
                     padding-right: 44px;
-                }
-
-                .#{$component}__label {
-                    left: auto;
-                    right: 44px;
-                }
-
-                &:not(.#{$component}--empty) .#{$component}__label,
-                &.#{$component}--focused .#{$component}__label {
-                    // Reset to default value for focused state
-                    right: 12px;
-                    left: auto;
                 }
             }
 
