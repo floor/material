@@ -60,8 +60,9 @@ export interface BottomSheetConfig {
   dragHandle?: boolean;
 
   /**
-   * Height of the partially expanded state, in pixels.
-   * @default 56
+   * Height of the partially expanded state, in pixels: a sheet with more
+   * content shows this much of it until it is expanded. Unset, the partial
+   * sheet shows its content up to half the screen.
    */
   peekHeight?: number;
 

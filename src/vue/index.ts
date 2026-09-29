@@ -38,6 +38,9 @@ import "mtrl/elements/css/snackbar";
 import "mtrl/elements/css/dialog";
 import "mtrl/elements/css/bottom-sheet";
 import "mtrl/elements/css/side-sheet";
+import "mtrl/elements/css/datepicker";
+import "mtrl/elements/css/timepicker";
+import "mtrl/elements/css/search";
 import {
   buttonElement,
   defineButton,
@@ -101,6 +104,12 @@ import {
   defineBottomSheet,
   sideSheetElement,
   defineSideSheet,
+  datepickerElement,
+  defineDatepicker,
+  timepickerElement,
+  defineTimepicker,
+  searchElement,
+  defineSearch,
   tabDeclaration,
   radioDeclaration,
   navigationRailItemDeclaration,
@@ -111,6 +120,7 @@ import {
   carouselItemDeclaration,
   menuItemDeclaration,
   selectOptionDeclaration,
+  searchSuggestionDeclaration,
 } from "../elements";
 import type {
   ButtonSpec,
@@ -175,6 +185,12 @@ import type {
   BottomSheetElement,
   SideSheetSpec,
   SideSheetElement,
+  DatepickerSpec,
+  DatepickerElement,
+  TimepickerSpec,
+  TimepickerElement,
+  SearchSpec,
+  SearchElement,
   TabAttributes,
   RadioAttributes,
   NavigationRailItemAttributes,
@@ -185,6 +201,7 @@ import type {
   CarouselItemAttributes,
   MenuItemAttributes,
   SelectOptionAttributes,
+  SearchSuggestionAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
 
@@ -222,6 +239,9 @@ export const MSnackbar: MComponent<SnackbarSpec, SnackbarElement> = createCompon
 export const MDialog: MComponent<DialogSpec, DialogElement> = createComponent(dialogElement.spec, defineDialog, "MDialog");
 export const MBottomSheet: MComponent<BottomSheetSpec, BottomSheetElement> = createComponent(bottomSheetElement.spec, defineBottomSheet, "MBottomSheet");
 export const MSideSheet: MComponent<SideSheetSpec, SideSheetElement> = createComponent(sideSheetElement.spec, defineSideSheet, "MSideSheet");
+export const MDatepicker: MComponent<DatepickerSpec, DatepickerElement> = createComponent(datepickerElement.spec, defineDatepicker, "MDatepicker");
+export const MTimepicker: MComponent<TimepickerSpec, TimepickerElement> = createComponent(timepickerElement.spec, defineTimepicker, "MTimepicker");
+export const MSearch: MComponent<SearchSpec, SearchElement> = createComponent(searchElement.spec, defineSearch, "MSearch");
 export const MTab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "MTab");
 export const MRadio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "MRadio");
 export const MNavigationRailItem: MDeclaration<NavigationRailItemAttributes> = createDeclaration(navigationRailItemDeclaration, "MNavigationRailItem");
@@ -232,3 +252,4 @@ export const MListItem: MDeclaration<ListItemAttributes> = createDeclaration(lis
 export const MCarouselItem: MDeclaration<CarouselItemAttributes> = createDeclaration(carouselItemDeclaration, "MCarouselItem");
 export const MMenuItem: MDeclaration<MenuItemAttributes> = createDeclaration(menuItemDeclaration, "MMenuItem");
 export const MSelectOption: MDeclaration<SelectOptionAttributes> = createDeclaration(selectOptionDeclaration, "MSelectOption");
+export const MSearchSuggestion: MDeclaration<SearchSuggestionAttributes> = createDeclaration(searchSuggestionDeclaration, "MSearchSuggestion");

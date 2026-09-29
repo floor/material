@@ -12,6 +12,43 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Elements: state events that leave the model clean.** An event spec with `state: true`
+  reports a change beside the model (`open`, `expanded`): dispatching it does not mark the
+  element dirty, so the model's attribute still moves it. The open and close events of
+  `<m-dialog>`, the sheets, `<m-menu>`, `<m-snackbar>` and `<m-drawer>` are state events;
+  `<m-drawer>`'s marked its `value` dirty before.
+- **Elements: `<m-navigation-rail>` `expand` and `collapse` events (#257).** Dispatched when the
+  user or a method changes `expanded`, after the attribute reflects it, and not when the
+  attribute is what changed. They leave the rail clean, so frameworks can keep `expanded` as
+  state and drive a modal rail from it.
+- **Elements: `<m-dialog>` `size`, `close-button`, `subtitle`, `divider`, `footer-alignment`,
+  `no-close-on-scrim-click` and `no-close-on-escape` (#257).** The factory's `size`,
+  `closeButton`, `subtitle`, `divider`, `footerAlignment`, `closeOnOverlayClick: false` and
+  `closeOnEscape: false`; `cancel` is still dispatched on Escape.
+- **Elements: `<m-bottom-sheet>` `expanded`, with `expand` and `collapse` events (#257).**
+  `expanded` reflects the full height as `open` reflects showing; set while closed, the sheet
+  opens expanded. The events come from the user and the methods, closing from the full height
+  included, and leave the element clean.
+- **Elements: `<m-side-sheet>` `width` (#257).** The factory's `width`, in pixels.
+- **Elements: `no-close-on-scrim-click` and `no-close-on-escape` on the sheets and
+  `<m-drawer modal>` (#257).** The sheets' `closeOnScrimClick: false` and `closeOnEscape:
+  false`; on the drawer, whose factory has one `dismissible` for both, each is refused on its
+  own, in place.
+- **Elements: `<m-menu>` `color`, `no-close-on-select`, and `<m-menu-item gap>` (#257).** The
+  factory's `color` (`vibrant` for the vertical menu), `closeOnSelect: false`, and its gap
+  items, which split the vertical menu into groups; `<m-split-button>` reads gap items too.
+- **Elements: `<m-tooltip>` `no-show-on-hover` and `no-show-on-focus` (#257).** The factory's
+  `showOnHover: false` and `showOnFocus: false`.
+
+- **Elements: `<m-search>` with `<m-search-suggestion>`.** Form-associated: the query is
+  `value`, the model and the form value, under the host's `name`. Suggestions are declared
+  as children (`value`, text or `label`, `icon`, `group`) and redrawn in place once per
+  change, not at all when they come back the same, so an app can replace them as the user
+  types. `placeholder`, `variant`, `view-mode` (`docked`/`fullscreen`), `full-width`,
+  `disabled`, `aria-label` and `open` (reflected) update in place; `leading-icon`,
+  `trailing-icon`, `avatar` and their labels recreate it. Events: `input`, `change` on
+  Enter, `select`, `open`, `close`, and `action` for the trailing icon and avatar; methods
+  `show()`, `close()` and `focus()`. The open view is the factory's, in the top layer.
 - **Tooltip: `layer: "top"`.** With the option the tooltip renders after its target instead
   of on `document.body` (or stays where its owner put it), in the target's tree, a shadow
   root's included, and is shown in the top layer as a `popover="manual"` element, placed in
@@ -161,6 +198,23 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `button-url` and `value`; the carousel takes the layout `variant` and the item sizing
   attributes, with the current `index` as the model, `change` as it moves, and `next`,
   `prev` and `goTo`. Items update in place.
+- **Elements: `<m-datepicker>`**, and `Datepicker` in the adapters. A form-associated date
+  picker whose own field is its trigger: `value` is the model and the form value, an ISO date
+  (`YYYY-MM-DD`), or with `selection-mode="range"` a `start/end` interval, with `change`
+  (`{ value }`) on commit: Save in the `modal`, `modal-input` and `fullscreen` variants, which
+  open in the top layer, and each date chosen in the `docked` one. `min`, `max`,
+  `date-format`, `label`, `supporting-text`, `required` (reported as `valueMissing`),
+  `disabled`, `readonly`; reset, restore and `<label for>`. `open` reflects the calendar as on
+  `<dialog open>`, with `show()` and `close()`, and `open` and `close` are dispatched.
+- **Elements: `<m-timepicker>`**, and `Timepicker` in the adapters. A form-associated time
+  picker with no field of its own, opened by `show()`, the `open` attribute (reflected) or a
+  `<label for>`, in the top layer. `value` is the model and the form value, a 24-hour
+  `HH:MM` (`HH:MM:SS` with a `step` under a minute) as on `<input type=time>`, or `""`
+  until one is set or confirmed. The dial edits the factory's draft (FLO-288): `input`
+  (`{ value }`) as it moves, `change` (`{ value }`) when OK commits a different time (or
+  fills an empty picker), and Cancel, Escape or the backdrop discard it. `format`, `type` (dial or input) and `orientation` change in place; `min`,
+  `max` and `step` (seconds, as the minute or second step); `label`, `required`
+  (`valueMissing`), `disabled`; reset and restore; `open` and `close` events.
 
 ### Fixed
 
@@ -192,6 +246,21 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `secondary` focus ring; the bar has an 8% hover layer. Suggestions are 56dp one-line list
   items, and the option the arrows reach looks focused. The divider is `outline`. The
   suggestions listbox stays in the DOM, hidden, while the search is a bar.
+- **Elements: `<m-drawer>` keeps its default `value` when items are completed after
+  upgrade.** An item without a label is left out until it has one; a clean drawer now takes
+  its `value` attribute again when the items are reconciled, as the rail does (#247).
+- **Elements: `<m-list>` `activate` and `<m-button-group>` `action` leave the model clean.**
+  They report a press, and `change` carries the selection; they marked the element dirty, so
+  its `value` attribute stopped moving it. `<m-chips>` `remove` still does: removing a
+  selected chip changes the selection, and no `change` comes with it.
+- **Bottom sheet: `peekHeight` sets the partial height.** The option was declared, with a
+  documented default of 56, and did nothing: the partial sheet was always its content up to
+  half the screen. Set, it is now the partial state's height in pixels; unset, the partial
+  state is unchanged. `<m-bottom-sheet>` takes it as `peek-height`.
+- **Elements: `<m-navigation-rail>` keeps its default `value` when items are completed after
+  upgrade (#247).** An item without an icon is left out until it has one, as frameworks set
+  attributes after creating the child; a clean rail now takes its `value` attribute again when
+  the items are reconciled, so the default destination is selected once its item is complete.
 - **Time picker: `minTime`, `maxTime`, `minuteStep` and `secondStep` are applied
   (FLO-281).** They were accepted and documented, and did nothing. Dial numbers and AM/PM
   that cannot be reached are disabled (at 38%), a pointer between labels picks the nearest

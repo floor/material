@@ -44,6 +44,7 @@ type Win = Window & {
     setShow: (v: boolean) => void;
     setProgress: (v: number) => void;
     setDialog: (v: boolean) => void;
+    setRail: (v: boolean) => void;
     switchRef: { current: (HTMLElement & { toggle: () => void; checked: boolean }) | null };
   };
 };
@@ -75,6 +76,9 @@ const run = async (version: 18 | 19): Promise<void> => {
   assert.match(html, /<m-radios [^>]*value="m"[^>]*>.*<m-radio value="s">Small<\/m-radio>/s);
   assert.match(html, /<m-chips [^>]*value="veg"[^>]*>.*<m-chip value="veg">Vegetarian<\/m-chip>/s);
   assert.match(html, /<m-select [^>]*value="cat"[^>]*>.*<m-select-option value="cat">Cat<\/m-select-option>/s);
+  assert.match(html, /<m-datepicker [^>]*value="2026-09-10"/);
+  assert.match(html, /<m-search [^>]*value="ap"[^>]*>.*?<m-search-suggestion [^>]*value="apple"[^>]*>(<!---->)?Apple<.*?<m-search-suggestion [^>]*value="apricot"[^>]*>(<!---->)?Apricot</s);
+  assert.doesNotMatch(html, /<m-search-suggestion [^>]*value="banana"/);
   assert.match(html, /<m-button id="b" type="submit" variant="filled" class="save" data-test="1">Save<\/m-button>/);
   assert.match(html, /<m-dialog [^>]*id="dg"[^>]*>/);
   assert.doesNotMatch(html, /<m-dialog [^>]*open/);
@@ -214,6 +218,27 @@ const run = async (version: 18 | 19): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("pet")?.textContent === "dog");
     assert.equal(await pet.inputValue(), "Dog");
     check("select: choosing an option updates the controlled value");
+    // ------------------------------------------------------------- datepicker
+    assert.equal(await page.locator("#dt input").first().inputValue(), "09/10/2026");
+    await page.locator('#dt [data-action="open"]').click();
+    await page.locator('#dt dialog [data-date="2026-09-14"]').first().click();
+    await page.locator('#dt dialog [data-action="confirm"]').click();
+    await page.waitForFunction(() => document.getElementById("due")?.textContent === "2026-09-14");
+    assert.equal(await page.locator("#dt input").first().inputValue(), "09/14/2026");
+    check("datepicker: choosing a date and confirming updates the controlled value");
+
+    // ------------------------------------------------------------- search
+    const query = page.getByRole("combobox", { name: "Query", exact: true });
+    assert.equal(await query.inputValue(), "ap");
+    await query.click();
+    await page.keyboard.type("r");
+    await page.waitForFunction(() => document.getElementById("query")?.textContent === "apr");
+    // The app filters its suggestions by the query: the element redraws them in place
+    await page.waitForFunction(() => document.getElementById("sq")?.shadowRoot?.querySelectorAll('[role="option"]').length === 1);
+    await page.getByRole("option", { name: "Apricot", exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("query")?.textContent === "apricot");
+    assert.equal(await query.inputValue(), "apricot");
+    check("search: typing updates the controlled value, the suggestions follow it, and choosing one updates it");
 
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);
@@ -264,6 +289,29 @@ const run = async (version: 18 | 19): Promise<void> => {
     await page.waitForFunction(() => !document.getElementById("dg")?.shadowRoot?.querySelector("dialog")?.open);
     assert.equal(await modal(), false);
     check("dialog: open follows the state; Escape closes it and the close handler updates the state");
+
+    // ------------------------------------------------------------- navigation rail: expanded
+    // Controlled: state expands the modal rail in the top layer, Escape
+    // collapses it and the collapse handler puts the state in step; state
+    // collapses it again.
+    const railModal = (): Promise<boolean> =>
+      page.evaluate(() => !!document.getElementById("mr")?.shadowRoot?.querySelector("dialog")?.matches(":modal"));
+    assert.equal(await railModal(), false);
+    await page.evaluate(() => (window as unknown as Win).api.setRail(true));
+    await page.waitForFunction(() => !!document.getElementById("mr")?.shadowRoot?.querySelector("dialog")?.matches(":modal"));
+    assert.equal(await page.evaluate(() => document.getElementById("mr")?.hasAttribute("expanded")), true);
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(() => document.getElementById("rail")?.textContent === "false");
+    assert.deepEqual(
+      await page.evaluate(() => ({ modal: !!document.getElementById("mr")?.shadowRoot?.querySelector("dialog")?.open, expanded: document.getElementById("mr")?.hasAttribute("expanded") })),
+      { modal: false, expanded: false }
+    );
+    await page.evaluate(() => (window as unknown as Win).api.setRail(true));
+    await page.waitForFunction(() => !!document.getElementById("mr")?.shadowRoot?.querySelector("dialog")?.matches(":modal"));
+    await page.evaluate(() => (window as unknown as Win).api.setRail(false));
+    await page.waitForFunction(() => !document.getElementById("mr")?.shadowRoot?.querySelector("dialog")?.open);
+    assert.equal(await railModal(), false);
+    check("navigation rail: expanded follows the state; Escape collapses it and the collapse handler updates the state");
 
     // ------------------------------------------------------------- lifecycle
     const reordered = await page.evaluate(async () => {

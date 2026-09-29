@@ -51,6 +51,11 @@ export interface PropertySpec<C> {
 export interface EventSpec {
   /** Maps the factory payload to the event's `detail`. Default: the payload. */
   detail?: (payload: unknown) => unknown;
+  /**
+   * The event reports a change of state beside the model (`open`,
+   * `expanded`), not of the model: dispatching it leaves the element clean.
+   */
+  state?: boolean;
 }
 
 export interface SlotSpec {
@@ -89,6 +94,8 @@ export interface ElementHost<C extends ElementComponent> extends HTMLElement {
   /** The factory instance, while connected. */
   readonly component: C | null;
   readonly internals: ElementInternals | null;
+  /** The model was changed by the user or by script: its attributes no longer move it. */
+  readonly dirty: boolean;
 }
 
 export interface ElementSpec<C extends ElementComponent> {
@@ -256,14 +263,20 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
     #observer: MutationObserver | null = null;
     #slot: HTMLSlotElement | null = null;
 
+    get dirty(): boolean {
+      return this.#dirty;
+    }
+
     constructor() {
       super();
       this.attachShadow({ mode: "open", delegatesFocus: true });
       this.internals = spec.form && typeof this.attachInternals === "function" ? this.attachInternals() : null;
       if (backed.length) {
         // Every event the host dispatches, from the factory or a spec's setup,
-        // reports a user change: silent changes dispatch nothing.
-        for (const event of Object.keys(spec.events ?? {})) {
+        // reports a user change: silent changes dispatch nothing. A state
+        // event reports one beside the model.
+        for (const [event, eventSpec] of Object.entries(spec.events ?? {})) {
+          if (eventSpec.state) continue;
           this.addEventListener(event, (e) => {
             if (e.target === this) this.#dirty = true;
           });

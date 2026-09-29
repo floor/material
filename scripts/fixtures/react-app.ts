@@ -9,9 +9,13 @@ import type { SwitchElement } from "../../dist/elements/index.js";
 import { Chip, Chips } from "../../dist/react/index.js";
 import { Select, SelectOption } from "../../dist/react/index.js";
 import { Dialog } from "../../dist/react/index.js";
+import { Datepicker } from "../../dist/react/index.js";
+import { Search, SearchSuggestion } from "../../dist/react/index.js";
 
 const h = React.createElement;
 const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
+// The suggestions a search offers, filtered by the query as the user types.
+const FRUITS = ["Apple", "Apricot", "Banana"];
 // JSX accepts data-* on any element; createElement with an object literal does not.
 const dataTest = { "data-test": "1" } as React.HTMLAttributes<HTMLElement>;
 
@@ -24,6 +28,7 @@ type Api = {
   setShow: (v: boolean) => void;
   setProgress: (v: number) => void;
   setDialog: (v: boolean) => void;
+  setRail: (v: boolean) => void;
   switchRef: React.RefObject<SwitchElement | null>;
 };
 
@@ -43,12 +48,15 @@ export const App = (): React.ReactElement => {
   const [fruit, setFruit] = React.useState<string | null>("b");
   const [pet, setPet] = React.useState<string | null>("cat");
   const [dialog, setDialog] = React.useState(false);
+  const [rail, setRail] = React.useState(false);
+  const [due, setDue] = React.useState("2026-09-10");
+  const [query, setQuery] = React.useState("ap");
   const switchRef = React.useRef<SwitchElement | null>(null);
   const api = React.useRef<Api | null>(null);
 
   React.useEffect(() => {
     const w = window as unknown as { api?: Api };
-    api.current = w.api ?? { log: [], submits: 0, setExtra, setOrder, setShow, setProgress, setDialog, switchRef };
+    api.current = w.api ?? { log: [], submits: 0, setExtra, setOrder, setShow, setProgress, setDialog, setRail, switchRef };
     w.api = api.current;
   }, []);
   const log = (id: string) => (event: CustomEvent<unknown>): void => {
@@ -135,6 +143,29 @@ export const App = (): React.ReactElement => {
       "Your changes will be lost."
     ),
     h("output", { id: "dialog" }, String(dialog)),
+    // Controlled: expanded is state; Escape collapses the modal rail, and
+    // onCollapse puts the state in step
+    h(
+      NavigationRail,
+      {
+        id: "mr", layout: "modal", ariaLabel: "Modal rail", expanded: rail,
+        onExpand: () => setRail(true), onCollapse: () => setRail(false),
+      },
+      h(NavigationRailItem, { value: "inbox", icon: ICON }, "Inbox"),
+      h(NavigationRailItem, { value: "sent", icon: ICON }, "Sent")
+    ),
+    h("output", { id: "rail" }, String(rail)),
+    h(Datepicker, { id: "dt", variant: "modal", label: "Due", value: due, onChange: (e) => setDue(e.detail.value) }),
+    h("output", { id: "due" }, due),
+    // Controlled, its suggestions replaced as the query changes
+    h(
+      Search,
+      { id: "sq", ariaLabel: "Query", value: query, onInput: (e) => setQuery(e.detail.value), onSelect: (e) => setQuery(e.detail.value) },
+      ...FRUITS.filter((f) => f.toLowerCase().includes(query.toLowerCase())).map((f) =>
+        h(SearchSuggestion, { key: f, value: f.toLowerCase() }, f)
+      )
+    ),
+    h("output", { id: "query" }, query),
     ...order.map((key) => h(Switch, { key, id: `o${key}` }, `Order ${key}`)),
     show ? h(Switch, { id: "gone" }, "Gone") : null,
     // Mounted in the browser after the element is defined: React 19 then

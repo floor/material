@@ -185,9 +185,11 @@ const buttonGroupSpec = {
       detail: (payload) => ({ value: model((payload as ButtonGroupChangeEvent).buttonGroup) }),
     },
     // Dispatched by `setup` from the factory's `click`; listed here for its
-    // type and the adapters.
+    // type and the adapters. A press, beside the model: `change` carries the
+    // selection.
     action: {
       detail: (payload) => payload as { value: string; index: number },
+      state: true,
     },
   },
   config: readGroup,

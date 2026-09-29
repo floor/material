@@ -8,8 +8,12 @@
   } from "../../dist/svelte/index.js";
   import { Select, SelectOption } from "../../dist/svelte/index.js";
   import { Dialog } from "../../dist/svelte/index.js";
+  import { Datepicker } from "../../dist/svelte/index.js";
+  import { Search, SearchSuggestion } from "../../dist/svelte/index.js";
 
   const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
+  // The suggestions a search offers, filtered by the query as the user types.
+  const FRUITS = ["Apple", "Apricot", "Banana"];
 
   type Log = Array<{ id: string; detail: unknown }>;
   const log: Log = [];
@@ -29,6 +33,9 @@
   let fruit = $state<string | null>("b");
   let pet = $state<string | null>("cat");
   let dialog = $state(false);
+  let rail = $state(false);
+  let due = $state("2026-09-10");
+  let query = $state("ap");
 
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
 
@@ -42,6 +49,7 @@
       setShow: (v: boolean) => (show = v),
       setProgress: (v: number) => (progress = v),
       setDialog: (v: boolean) => (dialog = v),
+      setRail: (v: boolean) => (rail = v),
     };
   });
 </script>
@@ -100,6 +108,22 @@
     <span slot="headline">Discard draft?</span>Your changes will be lost.
   </Dialog>
   <output id="dialog">{String(dialog)}</output>
+  <!-- Controlled: expanded is state; Escape collapses the modal rail, and oncollapse puts the state in step -->
+  <NavigationRail id="mr" layout="modal" ariaLabel="Modal rail" expanded={rail}
+    onexpand={() => (rail = true)} oncollapse={() => (rail = false)}>
+    <NavigationRailItem value="inbox" icon={ICON}>Inbox</NavigationRailItem>
+    <NavigationRailItem value="sent" icon={ICON}>Sent</NavigationRailItem>
+  </NavigationRail>
+  <output id="rail">{String(rail)}</output>
+  <Datepicker id="dt" variant="modal" label="Due" bind:value={due} />
+  <output id="due">{due}</output>
+  <!-- Bound, its suggestions replaced as the query changes -->
+  <Search id="sq" ariaLabel="Query" bind:value={query}>
+    {#each FRUITS.filter((f) => f.toLowerCase().includes(query.toLowerCase())) as f (f)}
+      <SearchSuggestion value={f.toLowerCase()}>{f}</SearchSuggestion>
+    {/each}
+  </Search>
+  <output id="query">{query}</output>
   {#each order as key (key)}<Switch id={`o${key}`}>Order {key}</Switch>{/each}
   {#if show}<Switch id="gone">Gone</Switch>{/if}
   <!-- Mounted in the browser after the element is defined: Svelte writes a

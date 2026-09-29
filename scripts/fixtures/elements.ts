@@ -67,3 +67,7 @@ Object.assign((window as unknown as { mtrl: object }).mtrl, { createSplitButton 
 // rendering <m-tooltip> is compared with.
 import createTooltip from "../../dist/components/tooltip/index.js";
 Object.assign((window as unknown as { mtrl: object }).mtrl, { createTooltip });
+// The date and time pickers, for the parity checks of <m-datepicker> and <m-timepicker>.
+import createDatePicker from "../../dist/components/datepicker/index.js";
+import createTimePicker from "../../dist/components/timepicker/index.js";
+Object.assign((window as unknown as { mtrl: object }).mtrl, { createDatePicker, createTimePicker });

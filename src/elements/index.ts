@@ -42,6 +42,9 @@ import { snackbarElement, defineSnackbar } from "./snackbar";
 import { dialogElement, defineDialog } from "./dialog";
 import { bottomSheetElement, defineBottomSheet } from "./bottom-sheet";
 import { sideSheetElement, defineSideSheet } from "./side-sheet";
+import { datepickerElement, defineDatepicker } from "./datepicker";
+import { timepickerElement, defineTimepicker } from "./timepicker";
+import { searchElement, searchSuggestionDeclaration, defineSearch } from "./search";
 
 export { defineElement, DEFAULT_PREFIX, SHADOW_BASE_STYLES } from "./define";
 export type {
@@ -118,6 +121,12 @@ export { bottomSheetElement, defineBottomSheet } from "./bottom-sheet";
 export type { BottomSheetSpec, BottomSheetElement, BottomSheetElementComponent } from "./bottom-sheet";
 export { sideSheetElement, defineSideSheet } from "./side-sheet";
 export type { SideSheetSpec, SideSheetElement, SideSheetElementComponent } from "./side-sheet";
+export { datepickerElement, defineDatepicker } from "./datepicker";
+export type { DatepickerSpec, DatepickerElement, DatepickerElementComponent } from "./datepicker";
+export { timepickerElement, defineTimepicker } from "./timepicker";
+export type { TimepickerSpec, TimepickerElement, TimepickerElementComponent } from "./timepicker";
+export { searchElement, searchSuggestionDeclaration, defineSearch } from "./search";
+export type { SearchSpec, SearchElement, SearchSuggestionAttributes, SearchElementComponent } from "./search";
 
 /**
  * Every element, by name. Framework adapters are generated from this list and
@@ -155,6 +164,9 @@ export const elements = {
   dialog: dialogElement,
   bottomSheet: bottomSheetElement,
   sideSheet: sideSheetElement,
+  datepicker: datepickerElement,
+  timepicker: timepickerElement,
+  search: searchElement,
 } as const;
 
 /** Declaration children, which render nothing and are read by their parent. */
@@ -169,6 +181,7 @@ export const declarations = {
   carouselItem: carouselItemDeclaration,
   menuItem: menuItemDeclaration,
   selectOption: selectOptionDeclaration,
+  searchSuggestion: searchSuggestionDeclaration,
 } as const;
 
 /** Registers every element. */
@@ -204,4 +217,7 @@ export const defineAll = (options?: DefineOptions): void => {
   defineDialog(options);
   defineBottomSheet(options);
   defineSideSheet(options);
+  defineDatepicker(options);
+  defineTimepicker(options);
+  defineSearch(options);
 };
