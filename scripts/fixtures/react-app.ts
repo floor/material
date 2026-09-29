@@ -1,7 +1,7 @@
 // The app scripts/check-react.ts renders on the server and hydrates in the
 // browser, with React 18 and with React 19. Built against dist/react.
 import * as React from "react";
-import { Button, Checkbox, Progress, Switch, Tab, Tabs } from "../../dist/react/index.js";
+import { Button, Checkbox, Progress, Slider, Switch, Tab, Tabs } from "../../dist/react/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 
 const h = React.createElement;
@@ -22,6 +22,7 @@ type Api = {
 export const App = (): React.ReactElement => {
   const [controlled, setControlled] = React.useState(false);
   const [agreed, setAgreed] = React.useState(false);
+  const [level, setLevel] = React.useState(50);
   const [tab, setTab] = React.useState<string | null>("t2");
   const [extra, setExtra] = React.useState(false);
   const [order, setOrder] = React.useState(["a", "b"]);
@@ -69,6 +70,8 @@ export const App = (): React.ReactElement => {
     h(Progress, { id: "pg", value: progress, ariaLabel: "Uploading" }),
     h(Checkbox, { id: "cb", checked: agreed, onChange: (e) => setAgreed(e.detail.checked) }, "Agree"),
     h("output", { id: "agreed" }, String(agreed)),
+    h(Slider, { id: "sl", ariaLabel: "Level", value: level, onChange: (e) => setLevel(e.detail.value) }),
+    h("output", { id: "level" }, String(level)),
     ...order.map((key) => h(Switch, { key, id: `o${key}` }, `Order ${key}`)),
     show ? h(Switch, { id: "gone" }, "Gone") : null,
     // Mounted in the browser after the element is defined: React 19 then

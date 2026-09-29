@@ -62,8 +62,11 @@ export interface SlotSpec {
 }
 
 export interface FormSpec<C> {
-  /** The value submitted with the form; null submits nothing. */
-  value: (component: C) => string | null;
+  /**
+   * The value submitted with the form under the host's `name`; FormData
+   * submits its own entries instead (several values); null submits nothing.
+   */
+  value: (component: C, host: HTMLElement) => string | FormData | null;
   /** The inner control whose validity the element reports. */
   control?: (component: C) => HTMLInputElement | null;
   /** Events after which the form value is read again. */
@@ -465,7 +468,7 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       const form = spec.form;
       const internals = this.internals;
       if (!form || !internals || !this.component) return;
-      const value = form.value(this.component);
+      const value = form.value(this.component, this);
       if (form.state) internals.setFormValue(value, form.state(this.component));
       else internals.setFormValue(value);
       const control = form.control?.(this.component);

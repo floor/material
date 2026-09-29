@@ -34,6 +34,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   host's form. The checkbox is a form control like `<m-switch>` (`checked` as default and
   live state, `indeterminate` as a property, `change`, form value, reset, validity, `<label
   for>`, state restore).
+- **Elements: `<m-slider>`**, with `Slider` in the React, Vue, Svelte and Solid adapters. A
+  form control: `value` is the default as an attribute and the live state as a property,
+  `range` adds a second handle with `second-value` / `secondValue`, and both ends submit
+  under the host's `name`. `input` fires while the value moves and `change` when an
+  interaction ends, with `{ value }` (and `secondValue` on a range). `aria-label` names the
+  handles; `min`, `max`, `step`, `ticks`, `show-value`, `color` and `size` update in place.
+  Form elements can now submit several values: `FormSpec.value` may return `FormData`.
 
 ### Changed
 

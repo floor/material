@@ -13,11 +13,13 @@ import createIconButton from "../../dist/components/icon-button/index.js";
 import createFab from "../../dist/components/fab/index.js";
 import createExtendedFab from "../../dist/components/extended-fab/index.js";
 import createCheckbox from "../../dist/components/checkbox/index.js";
+import createSlider from "../../dist/components/slider/index.js";
 
 elements.defineAll();
 const factories = {
   createSwitch, createButton,
   createProgress, createLoadingIndicator, createBadge, createDivider,
   createIconButton, createFab, createExtendedFab, createCheckbox,
+  createSlider,
 };
 Object.assign(window, { mtrl: { ...elements, ...factories }, ready: true });

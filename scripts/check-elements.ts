@@ -40,6 +40,15 @@ const server = Bun.serve({
         { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } }
       );
     }
+    if (path === "/restore-slider") {
+      return new Response(
+        `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
+<body><form><m-slider id="rs" name="rs" value="30" aria-label="Restored"></m-slider>
+<m-slider id="rr" name="rr" range value="20" second-value="80" aria-label="Restored range"></m-slider></form>
+<a id="go" href="/away">away</a><script type="module" src="/elements.js"></script></body></html>`,
+        { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } }
+      );
+    }
     return new Response(
       `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css">
 <style>body{margin:0;font-family:sans-serif}section{padding:8px}</style></head>
@@ -555,6 +564,224 @@ try {
     });
     assert.deepEqual(parity.element, parity.factory);
     check("checkbox: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- slider
+  await fresh(
+    page,
+    `<form id="f"><m-slider id="s" name="volume" value="30" aria-label="Volume"></m-slider>
+     <m-slider id="r" name="price" range value="20" second-value="80" aria-label="Price"></m-slider>
+     <fieldset id="fs"><m-slider id="d" name="off" value="50" aria-label="Off"></m-slider></fieldset></form>
+     <section id="factory"></section>`
+  );
+  {
+    type Slider = HTMLElement & { value: number; secondValue: number | null };
+    const volume = page.getByRole("slider", { name: "Volume", exact: true });
+    assert.equal(await volume.count(), 1, "aria-label names the inner slider handle");
+    assert.equal(await volume.getAttribute("aria-valuenow"), "30");
+    check("slider: aria-label names the handle, which carries role and value");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      for (const id of ["s", "r"]) {
+        for (const type of ["input", "change"]) {
+          document.getElementById(id)?.addEventListener(type, (e) => {
+            (w.events as unknown[]).push({ type, detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+          });
+        }
+      }
+    });
+    const read = (): Promise<Record<string, unknown>> =>
+      page.evaluate(() => {
+        const w = window as unknown as Win;
+        const s = document.getElementById("s") as Slider;
+        const form = new FormData(document.getElementById("f") as HTMLFormElement);
+        const events = w.events;
+        w.events = [];
+        return { events, value: s.value, attribute: s.getAttribute("value"), volume: form.get("volume") };
+      });
+
+    await volume.focus();
+    await page.keyboard.press("ArrowRight");
+    assert.deepEqual(await read(), {
+      events: [
+        { type: "input", detail: { value: 31 }, target: "s" },
+        { type: "change", detail: { value: 31 }, target: "s" },
+      ],
+      value: 31,
+      attribute: "30",
+      volume: "31",
+    });
+    check("slider: a key dispatches input then change from the host; the form sees the value, the attribute stays");
+
+    const box = await page.evaluate(() => {
+      const root = (document.getElementById("s") as HTMLElement).shadowRoot as ShadowRoot;
+      const r = (root.querySelector('[class*="slider__container"]') as HTMLElement).getBoundingClientRect();
+      return { x: r.x, y: r.y, w: r.width, h: r.height };
+    });
+    await page.mouse.move(box.x + box.w * 0.6, box.y + box.h / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.w * 0.75, box.y + box.h / 2, { steps: 4 });
+    await page.mouse.up();
+    const dragged = await read();
+    const events = dragged.events as Array<{ type: string; detail: { value: number } }>;
+    assert.ok(events.length >= 3, "input on press and while moving, change on release");
+    assert.ok(events.slice(0, -1).every((e) => e.type === "input"));
+    const last = events[events.length - 1];
+    assert.equal(last.type, "change");
+    assert.equal(last.detail.value, dragged.value);
+    assert.ok(Math.abs(Number(dragged.value) - 75) <= 2, `dragged to about 75, got ${dragged.value}`);
+    assert.equal(dragged.volume, String(dragged.value));
+    check("slider: a drag dispatches input while moving and change on release");
+
+    await page.evaluate(() => ((document.getElementById("s") as Slider).value = 10));
+    const set = await read();
+    const now = await volume.getAttribute("aria-valuenow");
+    assert.deepEqual({ ...set, now }, { events: [], value: 10, attribute: "30", volume: "10", now: "10" });
+    check("slider: setting the value property fires no event and updates the handle and the form value");
+
+    await page.evaluate(() => document.getElementById("s")?.setAttribute("max", "20"));
+    assert.equal(await volume.getAttribute("aria-valuemax"), "20");
+    await page.evaluate(() => document.getElementById("s")?.removeAttribute("max"));
+    check("slider: min, max and step update in place");
+
+    await page.evaluate(() => (document.getElementById("f") as HTMLFormElement).reset());
+    assert.equal((await read()).value, 30);
+    // The factory binds its handles a task after creation, and reset recreates it.
+    await page.evaluate(() => new Promise((r) => setTimeout(r, 0)));
+    check("slider: form.reset() restores the value attribute");
+
+    // Range: two handles, both ends in the form under the host's name.
+    const min = page.getByRole("slider", { name: "Price minimum", exact: true });
+    const max = page.getByRole("slider", { name: "Price maximum", exact: true });
+    assert.deepEqual([await min.count(), await max.count()], [1, 1]);
+    const prices = (): Promise<FormDataEntryValue[]> =>
+      page.evaluate(() => new FormData(document.getElementById("f") as HTMLFormElement).getAll("price"));
+    assert.deepEqual(await prices(), ["20", "80"]);
+    await page.evaluate(() => ((document.getElementById("r") as Slider).secondValue = 70));
+    assert.deepEqual(await prices(), ["20", "70"]);
+    await max.focus();
+    await page.keyboard.press("ArrowLeft");
+    const range = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      const r = document.getElementById("r") as Slider;
+      const events = w.events;
+      w.events = [];
+      return { events, value: r.value, second: r.secondValue };
+    });
+    assert.deepEqual(range, {
+      events: [
+        { type: "input", detail: { value: 20, secondValue: 69 }, target: "r" },
+        { type: "change", detail: { value: 20, secondValue: 69 }, target: "r" },
+      ],
+      value: 20,
+      second: 69,
+    });
+    assert.deepEqual(await prices(), ["20", "69"]);
+    await page.evaluate(() => (document.getElementById("f") as HTMLFormElement).reset());
+    assert.deepEqual(await prices(), ["20", "80"]);
+    check("slider: range names both handles, submits both ends under its name, and resets both");
+
+    const toggled = await page.evaluate(() => {
+      const s = document.getElementById("s") as Slider;
+      s.value = 40;
+      s.setAttribute("range", "");
+      s.setAttribute("second-value", "90");
+      const handles = s.shadowRoot?.querySelectorAll('[role="slider"]').length;
+      const result = { handles, value: s.value, second: s.secondValue };
+      s.removeAttribute("range");
+      s.removeAttribute("second-value");
+      return result;
+    });
+    assert.deepEqual(toggled, { handles: 2, value: 40, second: 90 });
+    check("slider: the range attribute recreates it with a second handle, keeping the value");
+
+    const disabled = await page.evaluate(() => {
+      const d = document.getElementById("d") as Slider;
+      const handle = (): HTMLElement => d.shadowRoot?.querySelector('[role="slider"]') as HTMLElement;
+      const inForm = (): boolean => new FormData(document.getElementById("f") as HTMLFormElement).has("off");
+      const before = { aria: handle().getAttribute("aria-disabled"), tab: handle().tabIndex, inForm: inForm() };
+      (document.getElementById("fs") as HTMLFieldSetElement).disabled = true;
+      const fieldset = { aria: handle().getAttribute("aria-disabled"), tab: handle().tabIndex, inForm: inForm() };
+      (document.getElementById("fs") as HTMLFieldSetElement).disabled = false;
+      d.setAttribute("disabled", "");
+      const attribute = { aria: handle().getAttribute("aria-disabled"), tab: handle().tabIndex, inForm: inForm() };
+      return { before, fieldset, attribute };
+    });
+    assert.deepEqual(disabled, {
+      before: { aria: "false", tab: 0, inForm: true },
+      fieldset: { aria: "true", tab: -1, inForm: false },
+      attribute: { aria: "true", tab: -1, inForm: false },
+    });
+    await page.getByRole("slider", { name: "Off", exact: true }).focus();
+    await page.keyboard.press("ArrowRight");
+    assert.equal(await page.evaluate(() => (document.getElementById("d") as Slider).value), 50);
+    check("slider: disabled by attribute or fieldset, it leaves the form and ignores keys");
+
+    const parity = await page.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createSlider: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createSlider({ value: 30, ticks: true, step: 10, size: "M", color: "tertiary" });
+      document.getElementById("factory")?.append(factory.element);
+      const s = document.getElementById("s") as Slider;
+      s.setAttribute("ticks", "");
+      s.setAttribute("step", "10");
+      s.setAttribute("size", "m");
+      s.setAttribute("color", "tertiary");
+      s.value = 30;
+      // Same width as the factory's, which sits in a padded section.
+      s.style.width = `${factory.element.getBoundingClientRect().width}px`;
+      const element = s.shadowRoot?.firstElementChild as HTMLElement;
+      // The factory draws its track a task after creation, and moves the handle with a transition.
+      await new Promise((r) => setTimeout(r, 0));
+      await Promise.all([factory.element, element].flatMap((root) => root.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => a))));
+      const measure = (root: HTMLElement): Record<string, string | number> => {
+        const handle = root.querySelector('[class*="slider__handle"]') as HTMLElement;
+        const track = root.querySelector('[class*="slider__track"]') as HTMLElement;
+        const active = root.querySelector('[class*="slider__segment--active"]') as HTMLElement;
+        const origin = root.getBoundingClientRect();
+        const h = handle.getBoundingClientRect();
+        const a = active.getBoundingClientRect();
+        return {
+          rootW: origin.width, rootH: origin.height,
+          handleX: h.x - origin.x, handleW: h.width, handleH: h.height,
+          trackH: track.getBoundingClientRect().height, activeW: a.width,
+          ticks: root.querySelectorAll('[class*="slider__tick"]').length,
+          handleBg: getComputedStyle(handle, "::before").backgroundColor,
+          activeBg: getComputedStyle(active).backgroundColor,
+          trackRadius: getComputedStyle(track).borderRadius,
+        };
+      };
+      return { factory: measure(factory.element), element: measure(element), host: s.getBoundingClientRect().height };
+    });
+    assert.deepEqual(parity.element, parity.factory);
+    assert.equal(parity.host, parity.element.rootH, "the host is the slider's height");
+    check("slider: renders as the factory does with the global stylesheet, after in-place attribute updates");
+
+    const restorePage = await browser.newPage();
+    await restorePage.goto(`http://127.0.0.1:${server.port}/restore-slider`);
+    await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
+    await restorePage.getByRole("slider", { name: "Restored", exact: true }).focus();
+    await restorePage.keyboard.press("End");
+    await restorePage.getByRole("slider", { name: "Restored range minimum", exact: true }).focus();
+    await restorePage.keyboard.press("ArrowRight");
+    await restorePage.click("#go");
+    await restorePage.waitForURL(/\/away$/);
+    await restorePage.goBack();
+    await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
+    const values = (): number[] =>
+      ["rs", "rr"].flatMap((id) => {
+        const s = document.getElementById(id) as HTMLElement & { value: number; secondValue: number | null };
+        return s.secondValue === null ? [s.value] : [s.value, s.secondValue];
+      });
+    await restorePage.waitForFunction(() => {
+      const s = document.getElementById("rs") as HTMLElement & { value: number };
+      return s.value === 100;
+    }, undefined, { timeout: 5_000 }).catch(() => undefined);
+    const restored = await restorePage.evaluate(values);
+    await restorePage.close();
+    assert.deepEqual(restored, [100, 21, 80], "going back restores both sliders' values");
+    check("slider: going back restores the value, and both ends of a range");
   }
 
   // ---------------------------------------------------------------- tabs
