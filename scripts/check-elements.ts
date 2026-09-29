@@ -4581,6 +4581,53 @@ try {
     await wait(100);
     assert.deepEqual({ named, refused, closed, labelled }, { named: 1, refused: true, closed: true, labelled: 1 });
     check("dialog element: the headline attribute or aria-label names it; a refused cancel keeps it open");
+
+    // A snackbar shown while a modal is open goes into the topmost <dialog>, in a
+    // display:contents wrapper: its action is a Tab stop, its fixed box is placed
+    // against the viewport, the slots keep their regions, and closes still come once.
+    for (const tag of ["m-dialog", "m-bottom-sheet", "m-side-sheet"]) {
+      await fresh(page, `<${tag} id="guest" modal headline="Host"><button type="button">Own</button></${tag}>`);
+      await page.evaluate(() => {
+        const w = window as unknown as ModalWin;
+        w.__modal = { closes: 0, outside: 0 };
+        const host = document.getElementById("guest") as HTMLElement & { show: () => unknown };
+        host.addEventListener("close", () => void w.__modal.closes++);
+        host.show();
+      });
+      await wait(600);
+      const guest = await page.evaluate(() => {
+        const dialog = document.getElementById("guest")?.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+        const wrapper = document.createElement("div");
+        wrapper.style.display = "contents";
+        wrapper.innerHTML = '<div id="bar" style="position:fixed;left:0;bottom:0;width:100px;height:20px"><button type="button" id="undo">Undo</button></div>';
+        dialog.append(wrapper);
+        const bar = (wrapper.firstElementChild as HTMLElement).getBoundingClientRect();
+        return { left: Math.round(bar.left), bottom: Math.round(bar.bottom), viewport: window.innerHeight };
+      });
+      const reached: string[] = [];
+      for (let i = 0; i < 4; i++) {
+        await page.keyboard.press("Tab");
+        reached.push(await page.evaluate(() => {
+          let active = document.activeElement;
+          while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+          return active?.id || active?.textContent?.trim() || "";
+        }));
+      }
+      const regions = await page.evaluate(() => {
+        const root = document.getElementById("guest")?.shadowRoot as ShadowRoot;
+        const slot = root.querySelector("slot:not([name])") as HTMLSlotElement;
+        return slot.assignedElements().map((el) => el.textContent);
+      });
+      await page.keyboard.press("Escape");
+      await wait(300);
+      const closes = await page.evaluate(() => (window as unknown as ModalWin).__modal.closes);
+      assert.deepEqual(
+        { left: guest.left, bottom: guest.bottom, undo: reached.includes("undo"), own: reached.includes("Own"), regions, closes },
+        { left: 0, bottom: guest.viewport, undo: true, own: true, regions: ["Own"], closes: 1 },
+        `${tag}: a snackbar in its <dialog> ${JSON.stringify(reached)}`
+      );
+    }
+    check("modal elements: a snackbar appended to the open <dialog> is reachable by Tab, placed on the viewport, and changes no region or close");
   }
 
   // ---------------------------------------------------------------- theme

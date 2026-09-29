@@ -196,7 +196,11 @@ dialog.#{$component} {
         display v.motion("duration-short3") allow-discrete,
         overlay v.motion("duration-short3") allow-discrete;
 
+    // Open, it has no transform at all rather than an identity one: a transform
+    // would make the dialog the containing block of fixed children, such as a
+    // snackbar shown inside the topmost modal
     &.#{$component}--visible {
+        transform: none;
         transition:
             transform v.motion("duration-long2") v.motion("easing-emphasized"),
             opacity v.motion("duration-short1") linear;
