@@ -139,7 +139,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "loading-indicator": kb(9.1),
   "split-button": kb(17.8), // the menu's top layer: 17,644 to 18,122
   radios: kb(5.1),
-  search: kb(9.9), // the open view in the top layer (FLO-285): 9,759; combobox, contained and divided (FLO-286, FLO-287): 10,114
+  search: kb(10.0), // the open view in the top layer (FLO-285): 9,759; combobox, contained and divided (FLO-286, FLO-287): 10,114; minWidth and maxWidth (FLO-290): 10,161
   select: kb(19.8), // the menu's top layer: 19,600 to 20,115
   "segmented-button": kb(9.3),
   slider: kb(12.6), // FLO-249..255 slider conformance
