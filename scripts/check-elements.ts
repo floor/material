@@ -1048,6 +1048,115 @@ try {
     assert.deepEqual(parity.outlined.element, parity.outlined.factory);
     check("textfield: renders as the factory does with the global stylesheet, filled and outlined");
 
+    // #234: the outline leaves a notch for the floated label. The label used
+    // to be painted with a background copied from the nearest ancestor, which
+    // found document.body from inside a shadow root and covered any surface
+    // that is not one flat colour.
+    await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createTextfield: (c: object) => { element: HTMLElement } } };
+      const host = document.getElementById("factory") as HTMLElement;
+      host.innerHTML = `<div style="background: rgb(200, 230, 255); padding: 24px; display: grid; gap: 24px; width: 320px">
+        <m-textfield id="na" variant="outlined" label="Element label" value="Ada"></m-textfield>
+        <div id="nb"></div>
+        <m-textfield id="nc" variant="outlined" label="Empty"></m-textfield>
+        <div dir="rtl"><m-textfield id="nd" variant="outlined" label="Right to left" value="Ada"></m-textfield></div>
+      </div>`;
+      const factory = w.mtrl.createTextfield({ variant: "outlined", label: "Factory label", value: "Ada" });
+      (document.getElementById("nb") as HTMLElement).append(factory.element);
+    });
+    // placement, the label's float and the border-colour transition
+    await page.waitForTimeout(500);
+    type Box = { left: number; right: number; top: number; bottom: number; width: number };
+    const notches = await page.evaluate(() => {
+      // A missing segment measures as nothing, so the label is judged first
+      const box = (el: Element | null): Box => {
+        const { left, right, top, bottom, width } = el?.getBoundingClientRect() ?? new DOMRect();
+        return { left, right, top, bottom, width };
+      };
+      const measure = (root: HTMLElement) => {
+        const label = root.querySelector("label") as HTMLElement;
+        const part = (name: string): HTMLElement | null => root.querySelector(`[class*="textfield__outline-${name}"]`);
+        const color = (el: HTMLElement | null, side: "Top" | "Bottom"): string =>
+          el ? getComputedStyle(el)[`border${side}Color`] : "missing";
+        const notch = part("notch");
+        return {
+          root: box(root), label: box(label), notch: box(notch),
+          labelBackground: getComputedStyle(label).backgroundColor,
+          notchTop: color(notch, "Top"),
+          notchBottom: color(notch, "Bottom"),
+          leadingTop: color(part("leading"), "Top"),
+          trailingTop: color(part("trailing"), "Top"),
+        };
+      };
+      const shadow = (id: string): HTMLElement =>
+        (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
+      const light = (document.getElementById("nb") as HTMLElement).firstElementChild as HTMLElement;
+      return { element: measure(shadow("na")), factory: measure(light), empty: measure(shadow("nc")), rtl: measure(shadow("nd")) };
+    });
+    // Pixels on the top edge: in the notch's cutout padding, beside the
+    // label, the card shows through; along the trailing segment the outline
+    // is drawn.
+    const png = (await page.screenshot()).toString("base64");
+    const edge = (n: typeof notches.element, x: number): [number, number] => [x, Math.round(n.root.top)];
+    const points = [
+      edge(notches.element, notches.element.label.left - 2), edge(notches.element, notches.element.root.right - 30),
+      edge(notches.factory, notches.factory.label.left - 2), edge(notches.factory, notches.factory.root.right - 30),
+      edge(notches.rtl, notches.rtl.label.right + 2), edge(notches.rtl, notches.rtl.root.left + 30),
+      edge(notches.empty, notches.empty.label.left),
+    ];
+    const pixels = await page.evaluate(async ({ png, points }) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${png}`;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+      context.drawImage(image, 0, 0);
+      return points.map(([x, y]) => Array.from(context.getImageData(Math.floor(x), Math.floor(y), 1, 1).data.slice(0, 3)).join(","));
+    }, { png, points });
+    const CARD = "200,230,255";
+    const TRANSPARENT = "rgba(0, 0, 0, 0)";
+    for (const [name, n] of [["element", notches.element], ["factory", notches.factory], ["rtl", notches.rtl]] as const) {
+      assert.equal(n.labelBackground, TRANSPARENT, `${name}: nothing is painted behind the label`);
+      assert.equal(n.notchTop, TRANSPARENT, `${name}: the notch is open`);
+      assert.notEqual(n.leadingTop, TRANSPARENT, `${name}: the leading corner is drawn`);
+      assert.notEqual(n.trailingTop, TRANSPARENT, `${name}: the trailing edge is drawn`);
+      assert.notEqual(n.notchBottom, TRANSPARENT, `${name}: the bottom edge runs under the notch`);
+      assert(n.notch.width >= n.label.width, `${name}: the notch (${n.notch.width}) is as wide as the label (${n.label.width})`);
+      assert(n.notch.left <= n.label.left && n.notch.right >= n.label.right, `${name}: the notch spans the label`);
+      assert(n.label.top < n.root.top && n.label.bottom > n.root.top, `${name}: the label sits on the top edge`);
+    }
+    // M3: the label starts 16dp in and the cutout adds 4dp on each side
+    assert(Math.abs(notches.element.notch.left - notches.element.root.left - 12) < 0.5, "the notch starts 12dp in");
+    assert(Math.abs(notches.element.label.left - notches.element.notch.left - 4) < 1, "4dp cutout before the label");
+    assert(Math.abs(notches.element.notch.right - notches.element.label.right - 4) < 1, "4dp cutout after the label");
+    assert(notches.rtl.label.left > notches.rtl.root.left + notches.rtl.root.width / 2, "rtl: the label is on the right");
+    assert(Math.abs(notches.rtl.root.right - notches.rtl.notch.right - 12) < 0.5, "rtl: the notch starts 12dp from the right");
+    assert.notEqual(notches.empty.notchTop, TRANSPARENT, "empty and unfocused: the notch is closed");
+    assert.equal(notches.empty.notchTop, notches.empty.trailingTop, "empty and unfocused: the top edge is one colour");
+    assert.deepEqual(pixels.slice(0, 6).map((p) => p === CARD), [true, false, true, false, true, false], `top-edge pixels ${pixels}`);
+    assert.notEqual(pixels[6], CARD, "empty and unfocused: the top edge is drawn where the label would float");
+    check("textfield: outlined leaves a notch for the floated label on a coloured card, in shadow DOM, light DOM and rtl, closed at rest");
+
+    const focusNotch = await page.evaluate(async () => {
+      const c = document.getElementById("nc") as HTMLElement;
+      const root = c.shadowRoot?.firstElementChild as HTMLElement;
+      const notch = root.querySelector('[class*="textfield__outline-notch"]') as HTMLElement;
+      const label = root.querySelector("label") as HTMLElement;
+      c.focus();
+      await new Promise((r) => setTimeout(r, 400));
+      const focused = { top: getComputedStyle(notch).borderTopColor, width: notch.getBoundingClientRect().width, label: label.getBoundingClientRect().width };
+      c.blur();
+      await new Promise((r) => setTimeout(r, 400));
+      return { focused, blurred: getComputedStyle(notch).borderTopColor };
+    });
+    assert.equal(focusNotch.focused.top, TRANSPARENT, "focus opens the notch");
+    assert(focusNotch.focused.width >= focusNotch.focused.label, "the notch fits the focused label");
+    assert.notEqual(focusNotch.blurred, TRANSPARENT, "blur on an empty field closes it");
+    await page.evaluate(() => ((document.getElementById("factory") as HTMLElement).innerHTML = ""));
+    check("textfield: focus opens the notch of an empty outlined field and blur closes it");
+
     const layout = await page.evaluate(() => {
       const host = document.getElementById("factory") as HTMLElement;
       host.innerHTML = `<m-textfield id="w" label="Wide" style="width:400px"></m-textfield>`;
