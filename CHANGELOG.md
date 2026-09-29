@@ -215,6 +215,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   fills an empty picker), and Cancel, Escape or the backdrop discard it. `format`, `type` (dial or input) and `orientation` change in place; `min`,
   `max` and `step` (seconds, as the minute or second step); `label`, `required`
   (`valueMissing`), `disabled`; reset and restore; `open` and `close` events.
+- **Elements: the remaining factory options (#263).** `<m-dialog>` `animation` (`scale`,
+  `slide-up`, `slide-down`, `fade`); `<m-bottom-sheet>` `max-width` (pixels, 640 by default);
+  `<m-navigation-rail>` `no-ripple`; `<m-timepicker>` `show-seconds`, which shows seconds
+  with a minute `step` (`HH:MM:SS`); `<m-datepicker>` `initial-view` (`day`, `month`, `year`)
+  and `close-on-select`. The factories read each once: a change recreates the component.
 
 ### Fixed
 

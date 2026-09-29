@@ -15,7 +15,8 @@
  * menu button sets and removes it. `expand` and `collapse` are dispatched as
  * the user or a method changes it (not when the attribute is what changed);
  * they are state, not the model, so the `value` attribute still moves a rail
- * that was only expanded. `no-toggle` drops the menu button, and an
+ * that was only expanded. `no-ripple` drops the items' ripple (a change
+ * recreates the rail). `no-toggle` drops the menu button, and an
  * element with `slot="header"` (a FAB) goes below it. `layout="modal"` is the
  * modal layout: the expanded rail is a native `<dialog>` in the element's
  * shadow root, shown with `showModal()` in the top layer, the page outside
@@ -80,6 +81,7 @@ const readRail = (host: HTMLElement): Config =>
   ({
     items: declaredItems(host, host.getAttribute("value")),
     showToggle: !host.hasAttribute("no-toggle"),
+    ripple: !host.hasAttribute("no-ripple"),
     header: headerSlot(host),
   }) satisfies NavigationRailConfig;
 
@@ -130,6 +132,7 @@ const navigationRailSpec = {
     layout: { type: "string", config: "layout" },
     "expanded-width": { type: "number", config: "expandedWidth" },
     "no-toggle": { type: "boolean" },
+    "no-ripple": { type: "boolean" },
     "expand-label": { type: "string", config: "expandLabel" },
     "collapse-label": { type: "string", config: "collapseLabel" },
     "expand-icon": { type: "string", config: "expandIcon" },

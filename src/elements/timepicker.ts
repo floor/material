@@ -22,9 +22,10 @@
  * `step` is in seconds, as on `<input type=time>`: under a minute it shows
  * seconds and is their step (`secondStep`); from a minute up it is the
  * minute step (`minuteStep`), rounded to whole minutes, which is the finest
- * the dial has. `min` and `max` are the factory's `minTime` and `maxTime`.
- * Those three and `name` have no setter: changing one recreates the picker,
- * keeping the value. `disabled` is the factory's: it does not open. The
+ * the dial has. `show-seconds` shows seconds whatever the step, so a 5- or
+ * 15-minute step can go with them; the value is then `HH:MM:SS`. `min` and
+ * `max` are the factory's `minTime` and `maxTime`. Those four and `name` have
+ * no setter: changing one recreates the picker, keeping the value. `disabled` is the factory's: it does not open. The
  * element reports `required` itself, as `valueMissing`.
  *
  * @module elements
@@ -175,10 +176,11 @@ const timepickerSpec = {
       update: (c, v) =>
         void c.picker.setOrientation(v === "horizontal" ? TIME_PICKER_ORIENTATION.HORIZONTAL : TIME_PICKER_ORIENTATION.VERTICAL),
     },
-    // The factory's limits and steps are read once: a change recreates it.
+    // The factory's limits, steps and seconds are read once: a change recreates it.
     min: { type: "string", config: "minTime" },
     max: { type: "string", config: "maxTime" },
     step: { type: "number", config: "step" },
+    "show-seconds": { type: "boolean", config: "showSeconds" },
     label: { type: "string", config: "title", update: (c, v) => void c.picker.setTitle(v === null ? "" : String(v)) },
     required: {
       type: "boolean",

@@ -614,6 +614,129 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     await page.evaluate(() => (window as unknown as Record<string, { destroy: () => void }>).__factory.destroy());
   }
 
+  // ================================================================ options (#263)
+  /** The picker's component, kept to tell an update in place from a recreation. */
+  const keep = (): Promise<void> =>
+    page.evaluate(() => {
+      const host = document.getElementById("wrap")?.shadowRoot?.getElementById("x") as HTMLElement & { component: unknown };
+      (window as unknown as Record<string, unknown>).__kept = host.component;
+    });
+  const recreated = (): Promise<boolean> =>
+    page.evaluate(() => {
+      const host = document.getElementById("wrap")?.shadowRoot?.getElementById("x") as HTMLElement & { component: unknown };
+      return host.component !== (window as unknown as Record<string, unknown>).__kept;
+    });
+  const setAttr = (name: string, value: string | null): Promise<void> =>
+    page.evaluate(({ name, value }) => {
+      const host = document.getElementById("wrap")?.shadowRoot?.getElementById("x") as HTMLElement;
+      if (value === null) host.removeAttribute(name);
+      else host.setAttribute(name, value);
+    }, { name, value });
+
+  // show-seconds with a quarter-hour step: seconds shown, minutes on the step.
+  await stage(`<form id="f"><button id="opener" type="button">Pick</button>
+    <m-timepicker id="x" name="x" type="input" format="24h" value="09:30" step="900" show-seconds></m-timepicker></form>`);
+  {
+    const secondsField = (): Promise<boolean> =>
+      page.evaluate(() => {
+        const host = document.getElementById("wrap")?.shadowRoot?.getElementById("x") as HTMLElement;
+        return !!host.shadowRoot?.querySelector('input[class~="mtrl-time-picker__seconds"]');
+      });
+    const initial = await state();
+    await page.locator("#wrap #opener").click();
+    await wait(200);
+    const shown = await secondsField();
+    const field = (name: string): ReturnType<Page["locator"]> => page.locator(`#wrap #x dialog input[class~="mtrl-time-picker__${name}"]`).first();
+    await field("hours").fill("11");
+    await field("minutes").fill("44");
+    await field("seconds").fill("20");
+    await field("seconds").press("Enter");
+    await timeButton("confirm").click();
+    await wait(200);
+    const typed = await state();
+    await keep();
+    await setAttr("show-seconds", null);
+    const without = { recreated: await recreated(), value: (await state()).value, seconds: await secondsField() };
+    await page.locator("#wrap #opener").click();
+    await wait(200);
+    without.seconds = await secondsField();
+    await timeButton("cancel").click();
+    await wait(200);
+    assert.deepEqual(
+      { initial: initial.value, shown, value: typed.value, form: typed.form, without },
+      {
+        initial: "09:30:00", shown: true, value: "11:45:20", form: "11:45:20",
+        without: { recreated: true, value: "11:45", seconds: false },
+      }
+    );
+    check("timepicker: show-seconds shows seconds with a 15-minute step, which still rounds the minutes; removing it recreates the picker");
+  }
+
+  // initial-view: the view the calendar first opens on.
+  await stage(`<form id="f"><m-datepicker id="x" name="x" variant="modal" label="Year" value="2026-09-10" initial-view="year"></m-datepicker></form>`);
+  {
+    const view = async (): Promise<{ view: string; years: boolean; months: boolean; days: boolean }> => {
+      await dateTrigger().click();
+      await wait(200);
+      const result = await page.evaluate(() => {
+        const host = document.getElementById("wrap")?.shadowRoot?.getElementById("x") as HTMLElement & {
+          component: { calendar: { getCurrentView: () => string } };
+        };
+        const dialog = host.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+        return {
+          view: host.component.calendar.getCurrentView(),
+          years: !!dialog.querySelector("[data-year]"),
+          months: !!dialog.querySelector("[data-month]"),
+          days: !!dialog.querySelector("[data-date]"),
+        };
+      });
+      await dateAction("cancel").click();
+      await wait(200);
+      return result;
+    };
+    const year = await view();
+    await keep();
+    await setAttr("initial-view", "month");
+    const month = { ...(await view()), recreated: await recreated() };
+    await setAttr("initial-view", null);
+    const day = await view();
+    assert.deepEqual({ year, month, day }, {
+      year: { view: "year", years: true, months: false, days: false },
+      month: { view: "month", years: false, months: true, days: false, recreated: true },
+      day: { view: "day", years: false, months: false, days: true },
+    });
+    check("datepicker: initial-view opens the calendar on the years or the months, the days without it; a change recreates the picker");
+  }
+
+  // close-on-select: a modal calendar commits and closes on the date chosen.
+  await stage(`<form id="f"><m-datepicker id="x" name="x" variant="modal" label="Quick" value="2026-09-10" close-on-select></m-datepicker></form>`);
+  {
+    await dateTrigger().click();
+    await wait(200);
+    await page.locator('#wrap #x dialog [data-date="2026-09-12"]').first().click();
+    await wait(200);
+    const chosen = await state();
+    await keep();
+    await setAttr("close-on-select", null);
+    const again = await recreated();
+    await dateTrigger().click();
+    await wait(200);
+    await page.locator('#wrap #x dialog [data-date="2026-09-14"]').first().click();
+    await wait(200);
+    const draft = await state();
+    await dateAction("cancel").click();
+    await wait(200);
+    assert.deepEqual(
+      { value: chosen.value, open: chosen.open, form: chosen.form, log: chosen.log, again, draft: [draft.value, draft.open, draft.log] },
+      {
+        value: "2026-09-12", open: false, form: "2026-09-12",
+        log: [["open", null], ["change", { value: "2026-09-12" }], ["close", null]],
+        again: true, draft: ["2026-09-12", true, [["open", null]]],
+      }
+    );
+    check("datepicker: close-on-select commits and closes on the date chosen; without it the modal keeps a draft; a change recreates the picker");
+  }
+
   // ================================================================ form restore
   // A page of its own, served no-store so going back reloads it and the browser
   // restores the form's state into it.

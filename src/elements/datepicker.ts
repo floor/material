@@ -26,6 +26,11 @@
  * calendar's state, as on `<dialog open>`; `open` and `close` are dispatched
  * as it opens and closes (not when the attribute is what changed).
  *
+ * `initial-view` is the view the calendar first opens on: `day`, `month` or
+ * `year` (the full-screen variant has the days only). `close-on-select`
+ * closes the calendar on a date chosen, committing it: a modal variant then
+ * needs no Save. The factory reads both once: a change recreates the picker.
+ *
  * The input of a modal variant is read-only, which takes it out of constraint
  * validation: the element reports `required` itself, as `valueMissing`.
  * `readonly` keeps the value and the calendar closed.
@@ -145,6 +150,8 @@ const datepickerSpec = {
     min: { type: "string", config: "minDate" },
     max: { type: "string", config: "maxDate" },
     "date-format": { type: "string", config: "dateFormat" },
+    "initial-view": { type: "string", config: "initialView" },
+    "close-on-select": { type: "boolean", config: "closeOnSelect" },
     label: { type: "string", config: "label" },
     "supporting-text": {
       type: "string",
