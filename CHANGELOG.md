@@ -15,6 +15,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - `<m-tab>` has a property for each attribute it declares (`value`, `label`, `icon`, `badge`,
   `disabled`), writing the attribute. Solid sets a custom element's props as properties, so a
   `<Tab value="…">` rendered in the browser lost its value and the tabs reported its label.
+- `<m-tab>` values set before the elements are defined are kept: a client-rendered Solid app
+  sets them before it registers the elements on mount. `defineTabs` also defines `<m-tab>`
+  before `<m-tabs>`, so the tabs read upgraded children.
 
 ## [0.10.0-next.1] - 2026-09-29
 

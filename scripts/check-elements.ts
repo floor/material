@@ -387,6 +387,26 @@ try {
     });
     assert.deepEqual(declared, { attributes: ["t7", "2", true], value: "t7", badge: "2" });
     check("tabs: <m-tab> properties write the attributes the tabs read");
+
+    // A framework that renders before the elements are defined (Solid on the client
+    // registers them on mount) sets properties on plain, not yet upgraded elements.
+    const early = await page.evaluate(async () => {
+      const w = window as unknown as { mtrl: { defineTabs: (o?: object) => string } };
+      const tabs = document.createElement("late-tabs") as HTMLElement & { value?: string };
+      for (const [value, label] of [["first", "First"], ["second", "Second"]]) {
+        const tab = document.createElement("late-tab") as HTMLElement & { value?: string };
+        tab.value = value;
+        tab.textContent = label;
+        tabs.append(tab);
+      }
+      document.getElementById("host")?.append(tabs);
+      w.mtrl.defineTabs({ prefix: "late" });
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const upgraded = tabs as HTMLElement & { component: { getTabs: () => Array<{ getValue: () => string }> } };
+      return upgraded.component.getTabs().map((tab) => tab.getValue());
+    });
+    assert.deepEqual(early, ["first", "second"]);
+    check("tabs: <m-tab> values set before the elements are defined are kept");
   }
 
   // ---------------------------------------------------------------- lifecycle

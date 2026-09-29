@@ -519,7 +519,21 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
 export const createDeclarationClass = (
   attributes: Record<string, { type: AttributeType }>
 ): CustomElementConstructor => {
-  class Declaration extends HTMLElement {}
+  const names = Object.keys(attributes).map(camel);
+  class Declaration extends HTMLElement {
+    // A property set before the element was defined is an own property that hides
+    // the accessor: move it onto the attribute, as the elements do on upgrade.
+    connectedCallback(): void {
+      const self = this as unknown as Record<string, unknown>;
+      for (const name of names) {
+        if (Object.prototype.hasOwnProperty.call(this, name)) {
+          const value = self[name];
+          delete self[name];
+          self[name] = value;
+        }
+      }
+    }
+  }
   for (const [name, attribute] of Object.entries(attributes)) {
     Object.defineProperty(Declaration.prototype, camel(name), {
       configurable: true,

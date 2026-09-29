@@ -130,10 +130,10 @@ export type TabAttributes = ElementAttributes<typeof tabDeclaration>;
 
 /** Registers `<m-tabs>` and `<m-tab>` (or with another prefix). */
 export const defineTabs = (options?: DefineOptions): string => {
-  const tag = tabsElement.define(options);
   const tabTag = `${options?.prefix ?? DEFAULT_PREFIX}-${tabDeclaration.name}`;
   // A tab only declares data: it renders nothing, and its properties write the
-  // attributes the tabs read.
+  // attributes the tabs read. Defined first, so tabs already in the page are
+  // upgraded before the tabs element reads them.
   if (!customElements.get(tabTag)) customElements.define(tabTag, createDeclarationClass(tabDeclaration.attributes));
-  return tag;
+  return tabsElement.define(options);
 };
