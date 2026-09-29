@@ -5913,6 +5913,22 @@ try {
     );
     check("bottom sheet: expanded reflects the full height; expand and collapse come from the user and methods, not the attributes");
 
+    // peek-height is the partial height; without it, half the screen
+    const partialHeight = async (markup: string): Promise<number> => {
+      await fresh(page, markup);
+      await page.evaluate(() => (document.getElementById("gph") as GapHost & { show: () => unknown }).show());
+      await wait(500);
+      return page.evaluate(() => {
+        const container = document.getElementById("gph")?.shadowRoot?.querySelector('[class~="mtrl-bottom-sheet__container"]') as HTMLElement;
+        return Math.round(container.getBoundingClientRect().height);
+      });
+    };
+    const peeked = await partialHeight(`<m-bottom-sheet id="gph" peek-height="120"><p style="height:900px">Tall</p></m-bottom-sheet>`);
+    const half = await partialHeight(`<m-bottom-sheet id="gph"><p style="height:900px">Tall</p></m-bottom-sheet>`);
+    const viewport = await page.evaluate(() => window.innerHeight);
+    assert.deepEqual({ peeked, half }, { peeked: 120, half: Math.round(viewport / 2) }, "bottom sheet peek-height");
+    check("bottom sheet: peek-height sets the partial height, which is half the screen without it");
+
     // ------------------------------------------------ sheets: closing refused; side sheet width
     for (const tag of ["m-bottom-sheet", "m-side-sheet"]) {
       await fresh(page, `<${tag} id="gsk" modal headline="Stay" no-close-on-escape no-close-on-scrim-click><button type="button">In</button></${tag}>`);

@@ -195,6 +195,14 @@ describe('bottom sheet', () => {
     expect(narrow.style.maxWidth).toBe('400px');
   });
 
+  test('peekHeight sets the partial height; unset, the stylesheet keeps half the screen', () => {
+    const peek = '--mtrl-bottom-sheet-peek-height';
+    const unset = make().element.querySelector('.mtrl-bottom-sheet__container') as HTMLElement;
+    expect(unset.style.getPropertyValue(peek)).toBe('');
+    const set = make({ peekHeight: 120 }).element.querySelector('.mtrl-bottom-sheet__container') as HTMLElement;
+    expect(set.style.getPropertyValue(peek)).toBe('120px');
+  });
+
   test('destroy takes the sheet off the page and stops listening', () => {
     const sheet = createBottomSheet();
     sheet.open();

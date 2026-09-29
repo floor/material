@@ -16,7 +16,8 @@
  * `close` are dispatched as it opens and closes (not when the attribute is
  * what changed).
  *
- * An open sheet is partially expanded, or with `expanded` at its full
+ * An open sheet is partially expanded, `peek-height` pixels tall (by
+ * default its content up to half the screen), or with `expanded` at its full
  * height. `expanded` reflects that state as `open` does: set while the sheet
  * is closed, it opens expanded. `expand` and `collapse` are dispatched as the
  * user or a method moves it to its full height and away from it, closing
@@ -129,6 +130,7 @@ const bottomSheetSpec = {
         syncSheet(host, c, PARTS);
       },
     },
+    "peek-height": { type: "number", config: "peekHeight" },
     "no-drag-handle": { type: "boolean", config: "noDragHandle" },
     "no-close-on-scrim-click": { type: "boolean", config: "noCloseOnScrimClick" },
     "no-close-on-escape": { type: "boolean", config: "noCloseOnEscape" },

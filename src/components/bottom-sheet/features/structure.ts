@@ -3,6 +3,7 @@
 import { BottomSheetConfig } from "../types";
 import { BOTTOM_SHEET_CLASSES, BOTTOM_SHEET_VARIANTS } from "../constants";
 
+import { PREFIX } from "../../../core/config";
 import { setHTML } from "../../../core/dom/html";
 /**
  * Builds the parts of the sheet and puts the whole thing on the page.
@@ -43,6 +44,10 @@ export const withStructure =
     container.tabIndex = -1;
     if (config.maxWidth) {
       container.style.maxWidth = `${config.maxWidth}px`;
+    }
+    // Read by the partial state only, which falls back to half the screen
+    if (config.peekHeight) {
+      container.style.setProperty(`--${PREFIX}-bottom-sheet-peek-height`, `${config.peekHeight}px`);
     }
 
     // The handle says the sheet can be dragged, so dragging without one would

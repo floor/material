@@ -192,6 +192,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Bottom sheet: `peekHeight` sets the partial height.** The option was declared, with a
+  documented default of 56, and did nothing: the partial sheet was always its content up to
+  half the screen. Set, it is now the partial state's height in pixels; unset, the partial
+  state is unchanged. `<m-bottom-sheet>` takes it as `peek-height`.
 - **Elements: `<m-navigation-rail>` keeps its default `value` when items are completed after
   upgrade (#247).** An item without an icon is left out until it has one, as frameworks set
   attributes after creating the child; a clean rail now takes its `value` attribute again when
