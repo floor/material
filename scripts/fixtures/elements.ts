@@ -15,6 +15,7 @@ import createExtendedFab from "../../dist/components/extended-fab/index.js";
 import createCheckbox from "../../dist/components/checkbox/index.js";
 import createSlider from "../../dist/components/slider/index.js";
 import createTextfield from "../../dist/components/textfield/index.js";
+import createRadios from "../../dist/components/radios/index.js";
 
 elements.defineAll();
 const factories = {
@@ -23,5 +24,6 @@ const factories = {
   createIconButton, createFab, createExtendedFab, createCheckbox,
   createSlider,
   createTextfield,
+  createRadios,
 };
 Object.assign(window, { mtrl: { ...elements, ...factories }, ready: true });

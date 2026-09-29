@@ -24,6 +24,7 @@ import { extendedFabElement, defineExtendedFab } from "./extended-fab";
 import { checkboxElement, defineCheckbox } from "./checkbox";
 import { sliderElement, defineSlider } from "./slider";
 import { textfieldElement, defineTextfield } from "./textfield";
+import { radiosElement, radioDeclaration, defineRadios } from "./radios";
 
 export { defineElement, DEFAULT_PREFIX, SHADOW_BASE_STYLES } from "./define";
 export type {
@@ -64,6 +65,8 @@ export { sliderElement, defineSlider } from "./slider";
 export type { SliderSpec, SliderElement } from "./slider";
 export { textfieldElement, defineTextfield } from "./textfield";
 export type { TextfieldSpec, TextfieldElement, TextfieldElementComponent } from "./textfield";
+export { radiosElement, radioDeclaration, defineRadios } from "./radios";
+export type { RadiosSpec, RadiosElement, RadioAttributes } from "./radios";
 
 /**
  * Every element, by name. Framework adapters are generated from this list and
@@ -83,11 +86,13 @@ export const elements = {
   checkbox: checkboxElement,
   slider: sliderElement,
   textfield: textfieldElement,
+  radios: radiosElement,
 } as const;
 
 /** Declaration children, which render nothing and are read by their parent. */
 export const declarations = {
   tab: tabDeclaration,
+  radio: radioDeclaration,
 } as const;
 
 /** Registers every element. */
@@ -105,4 +110,5 @@ export const defineAll = (options?: DefineOptions): void => {
   defineCheckbox(options);
   defineSlider(options);
   defineTextfield(options);
+  defineRadios(options);
 };

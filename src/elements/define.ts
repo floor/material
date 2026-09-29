@@ -427,7 +427,10 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
         // Content arriving later than creation needs a container the factory builds.
         this.#observer = new MutationObserver(() => {
           const observe = spec.observeChildren;
-          if (typeof observe === "function" && this.component && observe(this, this.component)) return;
+          if (typeof observe === "function" && this.component && observe(this, this.component)) {
+            this.#syncForm(); // an in-place update can change the form value (a removed selection)
+            return;
+          }
           if (observe || (!this.#slot && hasContent(this))) this.#rebuild(true);
         });
         this.#observer.observe(this, {

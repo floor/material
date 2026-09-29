@@ -80,6 +80,7 @@ const run = async (): Promise<void> => {
   assert.match(tag("d"), /\sdisabled(=""|\s|>)/);
   assert.match(tag("d"), /supporting-text="Unavailable"/);
   assert.match(tag("t"), /value="t2"/);
+  assert.match(tag("rd"), /value="m"/);
   assert.match(tag("b"), /variant="filled"/);
   assert.match(tag("b"), /class="save ?"/); // Solid's server renderer may leave a trailing space
   check("renders on a server without a DOM, attributes in the markup");
@@ -192,6 +193,13 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("text")?.textContent === "Ada");
     assert.equal(await page.getByRole("textbox", { name: "Name", exact: true }).inputValue(), "Ada");
     check("textfield: controlled value and onInput");
+    // ------------------------------------------------------------- radios
+    const sizes = page.getByRole("radiogroup", { name: "Size" });
+    assert.equal(await sizes.getByRole("radio", { name: "Medium", exact: true, checked: true }).count(), 1);
+    await sizes.getByText("Large", { exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("size")?.textContent === "l");
+    assert.equal(await sizes.getByRole("radio", { name: "Large", exact: true, checked: true }).count(), 1);
+    check("radios: controlled value and onChange");
 
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);
