@@ -12,7 +12,10 @@
  * until the user or script changes it; the `value` property is the live one.
  *
  * `expanded` reflects the rail's state, as `open` does on `<details>`: the
- * menu button sets and removes it. `no-toggle` drops the menu button, and an
+ * menu button sets and removes it. `expand` and `collapse` are dispatched as
+ * the user or a method changes it (not when the attribute is what changed);
+ * they are state, not the model, so the `value` attribute still moves a rail
+ * that was only expanded. `no-toggle` drops the menu button, and an
  * element with `slot="header"` (a FAB) goes below it. `layout="modal"` is the
  * modal layout: the expanded rail is a native `<dialog>` in the element's
  * shadow root, shown with `showModal()` in the top layer, the page outside
@@ -104,9 +107,17 @@ const setAriaLabel = (component: NavigationRailComponent, value: unknown): void 
 
 const navigationRailSpec = {
   name: "navigation-rail",
+  // `config` below supplies the host
   create: (config) => {
-    const { layout, ...rest } = config as NavigationRailConfig;
-    return createNavigationRail({ ...rest, layout: layout === "modal" ? "modal" : "standard" });
+    const { layout, host, ...rest } = config as unknown as NavigationRailConfig & { host: HTMLElement };
+    const rail = createNavigationRail({ ...rest, layout: layout === "modal" ? "modal" : "standard" });
+    // `expanded` reflects the state the menu button changes, before the
+    // element dispatches `expand` or `collapse`, so a listener reads it.
+    // Setting it back to the same value is a no-op for the factory.
+    const reflect = (): void => void host.toggleAttribute("expanded", rail.isExpanded());
+    rail.on("expand", reflect);
+    rail.on("collapse", reflect);
+    return rail;
   },
   styles: ["navigation-rail"],
   hostStyles: ":host{display:block;flex-shrink:0}",
@@ -138,23 +149,17 @@ const navigationRailSpec = {
     change: {
       detail: (payload) => ({ value: (payload as { value: string }).value }),
     },
+    // State beside the model: the rail stays clean, so `value` still moves it.
+    expand: { detail: () => null, state: true },
+    collapse: { detail: () => null, state: true },
   },
-  config: readRail,
+  config: (host) => ({ ...readRail(host), host }),
   setup: (host, component) => {
     const onSelect = ({ id }: { id: string }): void => {
       host.dispatchEvent(new CustomEvent("change", { detail: { value: id }, bubbles: true, composed: true }));
     };
-    // `expanded` reflects the state the menu button changes; setting it back
-    // to the same value is a no-op for the factory.
-    const reflect = (): void => void host.toggleAttribute("expanded", component.isExpanded());
     component.on("select", onSelect);
-    component.on("expand", reflect);
-    component.on("collapse", reflect);
-    return () => {
-      component.off("select", onSelect);
-      component.off("expand", reflect);
-      component.off("collapse", reflect);
-    };
+    return () => component.off("select", onSelect);
   },
   observeChildren: updateRail,
 } satisfies ElementSpec<NavigationRailComponent>;

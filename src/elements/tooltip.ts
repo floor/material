@@ -7,7 +7,8 @@
  * `target` property, which wins over `for`. The text is the `text` attribute,
  * or the element's text when there is none; the factory writes a string, so
  * the text is read rather than slotted. The tooltip shows on hover and focus
- * as the factory does, and `show()`/`hide()` drive it from script.
+ * as the factory does, and `show()`/`hide()` drive it from script;
+ * `no-show-on-hover` and `no-show-on-focus` turn either trigger off.
  *
  * The surface stays in the element's shadow root, with its styles, and opens
  * in the top layer (`layer: "top"`). An id reference cannot cross into that
@@ -108,7 +109,13 @@ const retarget = (component: TooltipComponent, force = false): void => {
 
 const tooltipSpec = {
   name: "tooltip",
-  create: (config) => createTooltip({ ...(config as TooltipConfig), layer: "top" }),
+  create: (config) => {
+    const { noShowOnHover, noShowOnFocus, ...rest } = config as TooltipConfig & {
+      noShowOnHover?: boolean;
+      noShowOnFocus?: boolean;
+    };
+    return createTooltip({ ...rest, showOnHover: !noShowOnHover, showOnFocus: !noShowOnFocus, layer: "top" });
+  },
   styles: ["tooltip"],
   // The host renders nothing itself: the surface is in the top layer
   hostStyles: ":host{display:contents}",
@@ -130,6 +137,8 @@ const tooltipSpec = {
     variant: { type: "string", config: "variant" },
     "show-delay": { type: "number", config: "showDelay" },
     "hide-delay": { type: "number", config: "hideDelay" },
+    "no-show-on-hover": { type: "boolean", config: "noShowOnHover" },
+    "no-show-on-focus": { type: "boolean", config: "noShowOnFocus" },
   },
   properties: {
     target: {

@@ -36,6 +36,7 @@ type Win = Window & {
     show: { value: boolean };
     progress: { value: number };
     setDialog: (v: boolean) => void;
+    setRail: (v: boolean) => void;
     switchRef: { value: { element: (HTMLElement & { toggle: () => void; checked: boolean }) | null } | null };
   };
 };
@@ -269,6 +270,29 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => !document.getElementById("dg")?.shadowRoot?.querySelector("dialog")?.open);
     assert.equal(await modal(), false);
     check("dialog: open follows the state; Escape closes it and the close handler updates the state");
+
+    // ------------------------------------------------------------- navigation rail: expanded
+    // Controlled: state expands the modal rail in the top layer, Escape
+    // collapses it and the collapse handler puts the state in step; state
+    // collapses it again.
+    const railModal = (): Promise<boolean> =>
+      page.evaluate(() => !!document.getElementById("mr")?.shadowRoot?.querySelector("dialog")?.matches(":modal"));
+    assert.equal(await railModal(), false);
+    await page.evaluate(() => (window as unknown as Win).api.setRail(true));
+    await page.waitForFunction(() => !!document.getElementById("mr")?.shadowRoot?.querySelector("dialog")?.matches(":modal"));
+    assert.equal(await page.evaluate(() => document.getElementById("mr")?.hasAttribute("expanded")), true);
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(() => document.getElementById("rail")?.textContent === "false");
+    assert.deepEqual(
+      await page.evaluate(() => ({ modal: !!document.getElementById("mr")?.shadowRoot?.querySelector("dialog")?.open, expanded: document.getElementById("mr")?.hasAttribute("expanded") })),
+      { modal: false, expanded: false }
+    );
+    await page.evaluate(() => (window as unknown as Win).api.setRail(true));
+    await page.waitForFunction(() => !!document.getElementById("mr")?.shadowRoot?.querySelector("dialog")?.matches(":modal"));
+    await page.evaluate(() => (window as unknown as Win).api.setRail(false));
+    await page.waitForFunction(() => !document.getElementById("mr")?.shadowRoot?.querySelector("dialog")?.open);
+    assert.equal(await railModal(), false);
+    check("navigation rail: expanded follows the state; Escape collapses it and the collapse handler updates the state");
 
     // ------------------------------------------------------------- lifecycle
     const reordered = await page.evaluate(async () => {

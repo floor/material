@@ -24,6 +24,7 @@ type Api = {
   setShow: (v: boolean) => void;
   setProgress: (v: number) => void;
   setDialog: (v: boolean) => void;
+  setRail: (v: boolean) => void;
   switchRef: React.RefObject<SwitchElement | null>;
 };
 
@@ -43,12 +44,13 @@ export const App = (): React.ReactElement => {
   const [fruit, setFruit] = React.useState<string | null>("b");
   const [pet, setPet] = React.useState<string | null>("cat");
   const [dialog, setDialog] = React.useState(false);
+  const [rail, setRail] = React.useState(false);
   const switchRef = React.useRef<SwitchElement | null>(null);
   const api = React.useRef<Api | null>(null);
 
   React.useEffect(() => {
     const w = window as unknown as { api?: Api };
-    api.current = w.api ?? { log: [], submits: 0, setExtra, setOrder, setShow, setProgress, setDialog, switchRef };
+    api.current = w.api ?? { log: [], submits: 0, setExtra, setOrder, setShow, setProgress, setDialog, setRail, switchRef };
     w.api = api.current;
   }, []);
   const log = (id: string) => (event: CustomEvent<unknown>): void => {
@@ -135,6 +137,18 @@ export const App = (): React.ReactElement => {
       "Your changes will be lost."
     ),
     h("output", { id: "dialog" }, String(dialog)),
+    // Controlled: expanded is state; Escape collapses the modal rail, and
+    // onCollapse puts the state in step
+    h(
+      NavigationRail,
+      {
+        id: "mr", layout: "modal", ariaLabel: "Modal rail", expanded: rail,
+        onExpand: () => setRail(true), onCollapse: () => setRail(false),
+      },
+      h(NavigationRailItem, { value: "inbox", icon: ICON }, "Inbox"),
+      h(NavigationRailItem, { value: "sent", icon: ICON }, "Sent")
+    ),
+    h("output", { id: "rail" }, String(rail)),
     ...order.map((key) => h(Switch, { key, id: `o${key}` }, `Order ${key}`)),
     show ? h(Switch, { id: "gone" }, "Gone") : null,
     // Mounted in the browser after the element is defined: React 19 then

@@ -5627,6 +5627,347 @@ try {
     check("modal elements: a snackbar appended to the open <dialog> is reachable by Tab, placed on the viewport, and changes no region or close");
   }
 
+  // ---------------------------------------------------------------- API gaps (#257, #247)
+  // State events (`expand`, `collapse`, `open`, `close`) leave the model
+  // clean; the attributes md3.io's generated code needs; a rail's default
+  // value kept when its items are completed after upgrade.
+  {
+    type GapHost = HTMLElement & Record<string, unknown> & { component: Record<string, unknown> | null };
+    type GapWin = Win & { __gaps: Array<{ type: string; attribute?: boolean }> };
+    const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
+    /** Records the host's events, with whether `attribute` was set as each was dispatched. */
+    const record = (id: string, events: string[], attribute?: string): Promise<void> =>
+      page.evaluate(({ id, events, attribute }) => {
+        const w = window as unknown as GapWin;
+        w.__gaps = [];
+        const host = document.getElementById(id) as HTMLElement;
+        for (const type of events) {
+          host.addEventListener(type, () =>
+            w.__gaps.push(attribute ? { type, attribute: host.hasAttribute(attribute) } : { type })
+          );
+        }
+      }, { id, events, attribute });
+    const recorded = (): Promise<Array<{ type: string; attribute?: boolean }>> =>
+      page.evaluate(() => (window as unknown as GapWin).__gaps.splice(0));
+
+    // ------------------------------------------------ navigation rail: expand and collapse
+    await fresh(
+      page,
+      `<m-navigation-rail id="gr" value="a" aria-label="Gaps">
+         <m-navigation-rail-item value="a" icon='${ICON}'>Inbox</m-navigation-rail-item>
+         <m-navigation-rail-item value="b" icon='${ICON}'>Sent</m-navigation-rail-item>
+         <m-navigation-rail-item value="c" icon='${ICON}'>Starred</m-navigation-rail-item>
+       </m-navigation-rail>`
+    );
+    await record("gr", ["expand", "collapse", "change"], "expanded");
+    const railValue = (): Promise<unknown> => page.evaluate(() => (document.getElementById("gr") as GapHost).value);
+    await page.getByRole("navigation", { name: "Gaps" }).getByRole("button", { name: "Expand navigation" }).click();
+    await wait(50);
+    const byUser = await recorded();
+    await page.evaluate(() => (document.getElementById("gr") as GapHost & { collapse: () => unknown }).collapse());
+    const byMethod = await recorded();
+    await page.evaluate(() => (document.getElementById("gr") as GapHost & { expand: () => unknown }).expand());
+    await recorded();
+    await page.evaluate(() => document.getElementById("gr")?.removeAttribute("expanded"));
+    await page.evaluate(() => document.getElementById("gr")?.setAttribute("expanded", ""));
+    const byAttribute = await recorded();
+    await page.evaluate(() => document.getElementById("gr")?.setAttribute("value", "b"));
+    const moved = await railValue();
+    assert.deepEqual(
+      { byUser, byMethod, byAttribute, moved },
+      {
+        byUser: [{ type: "expand", attribute: true }],
+        byMethod: [{ type: "collapse", attribute: false }],
+        byAttribute: [],
+        moved: "b",
+      },
+      "rail: expand and collapse are state events"
+    );
+    check("navigation rail: expand and collapse are dispatched by the user and by a method, after expanded reflects, not by the attribute");
+    check("navigation rail: after expand, a value attribute change still moves the clean rail");
+
+    // ------------------------------------------------ drawer: open and close leave it clean; closing refused
+    await fresh(
+      page,
+      `<m-drawer id="gd" modal open value="a" aria-label="Gaps drawer">
+         <m-drawer-item value="a">Inbox</m-drawer-item><m-drawer-item value="b">Sent</m-drawer-item>
+       </m-drawer>`
+    );
+    await wait(400);
+    await record("gd", ["open", "close"]);
+    await page.keyboard.press("Escape");
+    await wait(300);
+    const drawerClosed = await recorded();
+    await page.evaluate(() => document.getElementById("gd")?.setAttribute("value", "b"));
+    const drawerValue = await page.evaluate(() => (document.getElementById("gd") as GapHost).value);
+    assert.deepEqual({ drawerClosed, drawerValue }, { drawerClosed: [{ type: "close" }], drawerValue: "b" }, "drawer clean");
+    check("drawer: closing dispatches close and leaves the drawer clean: the value attribute still moves it");
+
+    const drawerOpen = (): Promise<boolean> =>
+      page.evaluate(() => !!(document.getElementById("gd")?.shadowRoot?.querySelector("dialog") as HTMLDialogElement).open);
+    await page.evaluate(() => {
+      const host = document.getElementById("gd") as HTMLElement;
+      host.setAttribute("no-close-on-escape", "");
+      host.setAttribute("no-close-on-scrim-click", "");
+      host.setAttribute("open", "");
+    });
+    await wait(400);
+    /** Keeps the current component, to tell an in-place change from a recreation. */
+    const keep = (id: string): Promise<void> =>
+      page.evaluate((id) => void ((window as unknown as Win).__kept = (document.getElementById(id) as GapHost).component), id);
+    const isKept = (id: string): Promise<boolean> =>
+      page.evaluate((id) => (document.getElementById(id) as GapHost).component === (window as unknown as Win).__kept, id);
+    await keep("gd");
+    await page.keyboard.press("Escape");
+    await wait(300);
+    const afterEscape = await drawerOpen();
+    await page.mouse.click(870, 650);
+    await wait(300);
+    const afterClick = await drawerOpen();
+    await page.evaluate(() => document.getElementById("gd")?.removeAttribute("no-close-on-scrim-click"));
+    await page.mouse.click(870, 650);
+    await wait(300);
+    const scrimCloses = !(await drawerOpen());
+    await page.evaluate(() => {
+      const host = document.getElementById("gd") as HTMLElement;
+      host.removeAttribute("no-close-on-escape");
+      host.setAttribute("open", "");
+    });
+    await wait(400);
+    await page.keyboard.press("Escape");
+    await wait(300);
+    const escapeCloses = !(await drawerOpen());
+    const same = await isKept("gd");
+    assert.deepEqual(
+      { afterEscape, afterClick, scrimCloses, escapeCloses, same },
+      { afterEscape: true, afterClick: true, scrimCloses: true, escapeCloses: true, same: true },
+      "drawer no-close-on-*"
+    );
+    check("drawer: no-close-on-escape and no-close-on-scrim-click each keep the modal drawer open, in place");
+
+    // ------------------------------------------------ dialog
+    await fresh(
+      page,
+      `<m-dialog id="gdl" headline="Title" subtitle="More" size="small" divider footer-alignment="center">Body
+         <m-button slot="actions" variant="text">OK</m-button></m-dialog>`
+    );
+    const dialogParts = (): Promise<Record<string, unknown>> =>
+      page.evaluate(() => {
+        const host = document.getElementById("gdl") as GapHost;
+        const root = host.shadowRoot as ShadowRoot;
+        const dialog = root.querySelector("dialog") as HTMLElement;
+        const footer = root.querySelector('[class~="mtrl-dialog__footer"]') as HTMLElement;
+        return {
+          size: [...dialog.classList].filter((c) => /dialog--(small|large|fullwidth|fullscreen)$/.test(c)),
+          subtitle: root.querySelector('[class~="mtrl-dialog__header-subtitle"]')?.textContent ?? null,
+          dividers: [...root.querySelectorAll('[class~="mtrl-dialog__divider"]')].map((d) =>
+            d.classList.contains("mtrl-dialog__header-divider") ? "header" : "footer"
+          ),
+          alignment: getComputedStyle(footer).justifyContent,
+          close: !!root.querySelector('[class~="mtrl-dialog__header-close"]'),
+        };
+      });
+    const first = await dialogParts();
+    await keep("gdl");
+    await page.evaluate(() => {
+      const host = document.getElementById("gdl") as HTMLElement;
+      host.setAttribute("subtitle", "Less");
+      host.setAttribute("footer-alignment", "space-between");
+    });
+    const inPlace = await dialogParts();
+    const kept = await isKept("gdl");
+    await page.evaluate(() => {
+      const host = document.getElementById("gdl") as HTMLElement;
+      host.removeAttribute("subtitle");
+      host.setAttribute("size", "large");
+      host.setAttribute("close-button", "");
+      host.removeAttribute("divider");
+    });
+    const recreated = await dialogParts();
+    assert.deepEqual(
+      [first, inPlace, recreated],
+      [
+        { size: ["mtrl-dialog--small"], subtitle: "More", dividers: ["header", "footer"], alignment: "center", close: false },
+        { size: ["mtrl-dialog--small"], subtitle: "Less", dividers: ["header", "footer"], alignment: "space-between", close: false },
+        { size: ["mtrl-dialog--large"], subtitle: null, dividers: [], alignment: "space-between", close: true },
+      ],
+      "dialog attributes"
+    );
+    assert.equal(kept, true, "subtitle and footer-alignment are applied in place");
+    assert.equal(await isKept("gdl"), false, "size, close-button and divider recreate it");
+    check("dialog: size, close-button and divider recreate it; subtitle and footer-alignment apply in place");
+
+    await fresh(page, `<m-dialog id="gdk" headline="Stay" no-close-on-escape no-close-on-scrim-click>Body</m-dialog>`);
+    await record("gdk", ["cancel", "close"]);
+    await page.evaluate(() => (document.getElementById("gdk") as GapHost & { show: () => unknown }).show());
+    await wait(600);
+    await page.keyboard.press("Escape");
+    await wait(200);
+    await page.mouse.click(20, 680);
+    await wait(300);
+    const stayed = await page.evaluate(() => document.getElementById("gdk")?.hasAttribute("open"));
+    const dialogEvents = await recorded();
+    await page.evaluate(() => {
+      const host = document.getElementById("gdk") as HTMLElement;
+      host.removeAttribute("no-close-on-escape");
+      host.setAttribute("open", "");
+    });
+    await wait(600);
+    await page.keyboard.press("Escape");
+    await wait(300);
+    const escaped = await page.evaluate(() => !document.getElementById("gdk")?.hasAttribute("open"));
+    assert.deepEqual({ stayed, dialogEvents, escaped }, { stayed: true, dialogEvents: [{ type: "cancel" }], escaped: true }, "dialog no-close-on-*");
+    check("dialog: no-close-on-escape and no-close-on-scrim-click keep it open; cancel is still dispatched");
+
+    // ------------------------------------------------ bottom sheet: expanded
+    await fresh(page, `<m-bottom-sheet id="gbs" headline="Share"><p style="height:900px">Tall</p></m-bottom-sheet>`);
+    await record("gbs", ["open", "close", "expand", "collapse"], "expanded");
+    type Sheet = GapHost & { show: () => unknown; close: () => unknown; expand: () => unknown; collapse: () => unknown };
+    const sheetState = (): Promise<{ state: string; expanded: boolean; open: boolean }> =>
+      page.evaluate(() => {
+        const host = document.getElementById("gbs") as GapHost;
+        return {
+          state: (host.component?.getState as () => string)(),
+          expanded: host.hasAttribute("expanded"),
+          open: host.hasAttribute("open"),
+        };
+      });
+    const call = (method: string): Promise<void> =>
+      page.evaluate((method) => void ((document.getElementById("gbs") as Sheet)[method] as () => unknown)(), method);
+    await call("show");
+    await wait(400);
+    const shown = { state: await sheetState(), events: await recorded() };
+    await call("expand");
+    const expanded = { state: await sheetState(), events: await recorded() };
+    await call("collapse");
+    const collapsed = { state: await sheetState(), events: await recorded() };
+    // The user drags the handle up
+    await wait(400);
+    const handle = await page.evaluate(() => {
+      const el = document.getElementById("gbs")?.shadowRoot?.querySelector('[class~="mtrl-bottom-sheet__handle"]') as HTMLElement;
+      const box = el.getBoundingClientRect();
+      return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+    });
+    await page.mouse.move(handle.x, handle.y);
+    await page.mouse.down();
+    await page.mouse.move(handle.x, handle.y - 200, { steps: 4 });
+    await page.mouse.up();
+    const dragged = { state: await sheetState(), events: await recorded() };
+    await call("close");
+    const closed = { state: await sheetState(), events: await recorded() };
+    // By attribute: expanded then open opens it expanded; silently
+    await page.evaluate(() => {
+      const host = document.getElementById("gbs") as HTMLElement;
+      host.setAttribute("expanded", "");
+      host.setAttribute("open", "");
+    });
+    const byAttributes = { state: await sheetState(), events: await recorded() };
+    await page.evaluate(() => document.getElementById("gbs")?.removeAttribute("expanded"));
+    const unexpanded = { state: await sheetState(), events: await recorded() };
+    assert.deepEqual(
+      { shown, expanded, collapsed, dragged, closed, byAttributes, unexpanded },
+      {
+        shown: { state: { state: "partial", expanded: false, open: true }, events: [{ type: "open", attribute: false }] },
+        expanded: { state: { state: "expanded", expanded: true, open: true }, events: [{ type: "expand", attribute: true }] },
+        collapsed: { state: { state: "partial", expanded: false, open: true }, events: [{ type: "collapse", attribute: false }] },
+        dragged: { state: { state: "expanded", expanded: true, open: true }, events: [{ type: "expand", attribute: true }] },
+        closed: {
+          state: { state: "hidden", expanded: false, open: false },
+          events: [{ type: "collapse", attribute: false }, { type: "close", attribute: false }],
+        },
+        byAttributes: { state: { state: "expanded", expanded: true, open: true }, events: [] },
+        unexpanded: { state: { state: "partial", expanded: false, open: true }, events: [] },
+      },
+      "bottom sheet expanded"
+    );
+    check("bottom sheet: expanded reflects the full height; expand and collapse come from the user and methods, not the attributes");
+
+    // ------------------------------------------------ sheets: closing refused; side sheet width
+    for (const tag of ["m-bottom-sheet", "m-side-sheet"]) {
+      await fresh(page, `<${tag} id="gsk" modal headline="Stay" no-close-on-escape no-close-on-scrim-click><button type="button">In</button></${tag}>`);
+      await page.evaluate(() => (document.getElementById("gsk") as GapHost & { show: () => unknown }).show());
+      await wait(500);
+      await page.keyboard.press("Escape");
+      await wait(200);
+      await page.mouse.click(20, 20);
+      await wait(300);
+      const stays = await page.evaluate(() => document.getElementById("gsk")?.hasAttribute("open"));
+      await page.evaluate(() => {
+        const host = document.getElementById("gsk") as HTMLElement;
+        host.removeAttribute("no-close-on-scrim-click");
+      });
+      await wait(500);
+      await page.mouse.click(20, 20);
+      await wait(300);
+      const scrim = await page.evaluate(() => !document.getElementById("gsk")?.hasAttribute("open"));
+      assert.deepEqual({ stays, scrim }, { stays: true, scrim: true }, `${tag} no-close-on-*`);
+    }
+    check("sheets: no-close-on-escape and no-close-on-scrim-click keep a modal sheet open");
+
+    await fresh(page, `<m-side-sheet id="gss" width="320" headline="Wide" open>Body</m-side-sheet>`);
+    await wait(400);
+    const sheetWidth = (): Promise<number> =>
+      page.evaluate(() => {
+        const container = document.getElementById("gss")?.shadowRoot?.querySelector('[class~="mtrl-side-sheet__container"]') as HTMLElement;
+        return Math.round(container.getBoundingClientRect().width);
+      });
+    const wide = await sheetWidth();
+    await page.evaluate(() => document.getElementById("gss")?.setAttribute("width", "280"));
+    await wait(400);
+    assert.deepEqual({ wide, narrow: await sheetWidth() }, { wide: 320, narrow: 280 });
+    check("side sheet: width sets the container's width, and a change recreates it");
+
+    // ------------------------------------------------ menu: color, gap items, no-close-on-select
+    await fresh(
+      page,
+      `<button id="gmb" type="button">More</button>
+       <m-menu id="gm" anchor="gmb" variant="vertical" color="vibrant" no-close-on-select aria-label="More">
+         <m-menu-item value="a">Alpha</m-menu-item><m-menu-item gap></m-menu-item><m-menu-item value="b">Beta</m-menu-item>
+       </m-menu>`
+    );
+    await record("gm", ["select", "close"]);
+    await page.click("#gmb");
+    await wait(400);
+    const menu = await page.evaluate(() => {
+      const root = document.getElementById("gm")?.shadowRoot as ShadowRoot;
+      const surface = root.querySelector('[role="menu"]') as HTMLElement;
+      return {
+        vibrant: surface.classList.contains("mtrl-menu--vibrant"),
+        groups: [...root.querySelectorAll('[class~="mtrl-menu__group"]')].map((g) => [...g.querySelectorAll("[data-id]")].map((i) => i.getAttribute("data-id"))),
+      };
+    });
+    await page.evaluate(() => {
+      const item = document.getElementById("gm")?.shadowRoot?.querySelector('[data-id="b"]') as HTMLElement;
+      item.click();
+    });
+    await wait(200);
+    const keptOpen = await page.evaluate(() => document.getElementById("gm")?.hasAttribute("open"));
+    assert.deepEqual(
+      { ...menu, keptOpen, events: await recorded() },
+      { vibrant: true, groups: [["a"], ["b"]], keptOpen: true, events: [{ type: "select" }] },
+      "menu attributes"
+    );
+    check("menu: color is the factory's, a gap item splits the groups, no-close-on-select keeps it open after a choice");
+
+    // ------------------------------------------------ tooltip: triggers
+    for (const [attribute, hover, focus] of [["no-show-on-hover", false, true], ["no-show-on-focus", true, false]] as const) {
+      await fresh(page, `<button id="gtb" type="button">Save</button><m-tooltip id="gt" for="gtb" ${attribute} show-delay="0">Save it</m-tooltip>`);
+      const visible = (): Promise<boolean> =>
+        page.evaluate(() => (((document.getElementById("gt") as GapHost).component?.element as HTMLElement).className.includes("tooltip--visible")));
+      await page.hover("#gtb");
+      await wait(300);
+      const hovered = await visible();
+      await page.mouse.move(600, 600);
+      await wait(400);
+      await page.focus("#gtb");
+      await wait(300);
+      const focused = await visible();
+      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+      assert.deepEqual({ hovered, focused }, { hovered: hover, focused: focus }, `tooltip ${attribute}`);
+    }
+    check("tooltip: no-show-on-hover and no-show-on-focus turn off each trigger");
+  }
+
   // ---------------------------------------------------------------- theme
   await fresh(page, `<m-switch id="s" checked>Theme</m-switch><section id="factory"></section>`);
   {

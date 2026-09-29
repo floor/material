@@ -16,7 +16,8 @@
  * factory's top layer (`layer: "top"`): a native `<dialog>` in the element's
  * shadow root, shown with `showModal()`, above every z-index, the page
  * outside inert, the scrim its `::backdrop`. Escape and a click on the
- * backdrop close it, and `open` then reflects its state. `open` and `close`
+ * backdrop close it, and `open` then reflects its state;
+ * `no-close-on-scrim-click` and `no-close-on-escape` keep it open instead. `open` and `close`
  * are dispatched as it opens and closes (not when the attribute is what
  * changed).
  *
@@ -112,6 +113,9 @@ const drawerSpec = {
     position: { type: "string", config: "position" },
     width: { type: "string", config: "width" },
     dense: { type: "boolean", config: "dense" },
+    // Read as the user asks to close (see `setup`): nothing to update
+    "no-close-on-scrim-click": { type: "boolean", update: () => undefined },
+    "no-close-on-escape": { type: "boolean", update: () => undefined },
     "aria-label": {
       type: "string",
       config: "ariaLabel",
@@ -130,8 +134,9 @@ const drawerSpec = {
     change: {
       detail: (payload) => ({ value: (payload as { value: string }).value }),
     },
-    open: { detail: () => null },
-    close: { detail: () => null },
+    // State beside the model: opening leaves the drawer clean.
+    open: { detail: () => null, state: true },
+    close: { detail: () => null, state: true },
   },
   config: readDrawer,
   setup: (host, component) => {
@@ -142,10 +147,25 @@ const drawerSpec = {
     const reflect = (): void => {
       if (host.hasAttribute("modal")) host.toggleAttribute("open", component.isOpen());
     };
+    // The factory's `dismissible` turns off the scrim and Escape together:
+    // each is refused here on its own, before the factory's listener closes.
+    const root = component.element;
+    const onClick = (event: MouseEvent): void => {
+      if (event.target === root && host.hasAttribute("no-close-on-scrim-click")) event.stopImmediatePropagation();
+    };
+    const onCancel = (event: Event): void => {
+      if (!host.hasAttribute("no-close-on-escape")) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    };
+    root.addEventListener("click", onClick, true);
+    root.addEventListener("cancel", onCancel, true);
     component.on("select", onSelect);
     component.on("open", reflect);
     component.on("close", reflect);
     return () => {
+      root.removeEventListener("click", onClick, true);
+      root.removeEventListener("cancel", onCancel, true);
       component.off("select", onSelect);
       component.off("open", reflect);
       component.off("close", reflect);

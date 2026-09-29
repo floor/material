@@ -31,6 +31,7 @@ export const App = () => {
   const [fruit, setFruit] = createSignal<string | null>("b");
   const [pet, setPet] = createSignal<string | null>("cat");
   const [dialog, setDialog] = createSignal(false);
+  const [rail, setRail] = createSignal(false);
   let switchRef: SwitchElement | undefined;
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
 
@@ -38,7 +39,7 @@ export const App = () => {
     (window as unknown as { api: unknown }).api = {
       log,
       get submits() { return submits; },
-      setControlled, setExtra, setOrder, setShow, setProgress, setDialog,
+      setControlled, setExtra, setOrder, setShow, setProgress, setDialog, setRail,
       element: () => switchRef,
     };
   });
@@ -98,6 +99,13 @@ export const App = () => {
         <span slot="headline">Discard draft?</span>Your changes will be lost.
       </Dialog>
       <output id="dialog">{String(dialog())}</output>
+      {/* Controlled: expanded is state; Escape collapses the modal rail, and onCollapse puts the state in step */}
+      <NavigationRail id="mr" layout="modal" ariaLabel="Modal rail" expanded={rail()}
+        onExpand={() => setRail(true)} onCollapse={() => setRail(false)}>
+        <NavigationRailItem value="inbox" icon={ICON}>Inbox</NavigationRailItem>
+        <NavigationRailItem value="sent" icon={ICON}>Sent</NavigationRailItem>
+      </NavigationRail>
+      <output id="rail">{String(rail())}</output>
       <For each={order()}>{(key) => <Switch id={`o${key}`}>Order {key}</Switch>}</For>
       <Show when={show()}><Switch id="gone">Gone</Switch></Show>
       {/* Mounted in the browser after the element is defined: Solid writes a

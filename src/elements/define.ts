@@ -51,6 +51,11 @@ export interface PropertySpec<C> {
 export interface EventSpec {
   /** Maps the factory payload to the event's `detail`. Default: the payload. */
   detail?: (payload: unknown) => unknown;
+  /**
+   * The event reports a change of state beside the model (`open`,
+   * `expanded`), not of the model: dispatching it leaves the element clean.
+   */
+  state?: boolean;
 }
 
 export interface SlotSpec {
@@ -262,8 +267,10 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       this.internals = spec.form && typeof this.attachInternals === "function" ? this.attachInternals() : null;
       if (backed.length) {
         // Every event the host dispatches, from the factory or a spec's setup,
-        // reports a user change: silent changes dispatch nothing.
-        for (const event of Object.keys(spec.events ?? {})) {
+        // reports a user change: silent changes dispatch nothing. A state
+        // event reports one beside the model.
+        for (const [event, eventSpec] of Object.entries(spec.events ?? {})) {
+          if (eventSpec.state) continue;
           this.addEventListener(event, (e) => {
             if (e.target === this) this.#dirty = true;
           });

@@ -29,6 +29,7 @@
   let fruit = $state<string | null>("b");
   let pet = $state<string | null>("cat");
   let dialog = $state(false);
+  let rail = $state(false);
 
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
 
@@ -42,6 +43,7 @@
       setShow: (v: boolean) => (show = v),
       setProgress: (v: number) => (progress = v),
       setDialog: (v: boolean) => (dialog = v),
+      setRail: (v: boolean) => (rail = v),
     };
   });
 </script>
@@ -100,6 +102,13 @@
     <span slot="headline">Discard draft?</span>Your changes will be lost.
   </Dialog>
   <output id="dialog">{String(dialog)}</output>
+  <!-- Controlled: expanded is state; Escape collapses the modal rail, and oncollapse puts the state in step -->
+  <NavigationRail id="mr" layout="modal" ariaLabel="Modal rail" expanded={rail}
+    onexpand={() => (rail = true)} oncollapse={() => (rail = false)}>
+    <NavigationRailItem value="inbox" icon={ICON}>Inbox</NavigationRailItem>
+    <NavigationRailItem value="sent" icon={ICON}>Sent</NavigationRailItem>
+  </NavigationRail>
+  <output id="rail">{String(rail)}</output>
   {#each order as key (key)}<Switch id={`o${key}`}>Order {key}</Switch>{/each}
   {#if show}<Switch id="gone">Gone</Switch>{/if}
   <!-- Mounted in the browser after the element is defined: Svelte writes a
