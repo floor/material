@@ -13,8 +13,11 @@
  *
  * `expanded` reflects the rail's state, as `open` does on `<details>`: the
  * menu button sets and removes it. `no-toggle` drops the menu button, and an
- * element with `slot="header"` (a FAB) goes below it. The modal layout, a
- * top-layer dialog, is not offered here.
+ * element with `slot="header"` (a FAB) goes below it. `layout="modal"` is the
+ * modal layout: the expanded rail is a native `<dialog>` in the element's
+ * shadow root, shown with `showModal()` in the top layer, the page outside
+ * inert and the scrim its `::backdrop`; collapsed, it is hidden. Escape and a
+ * click on the backdrop collapse it.
  *
  * @module elements
  */
@@ -101,13 +104,17 @@ const setAriaLabel = (component: NavigationRailComponent, value: unknown): void 
 
 const navigationRailSpec = {
   name: "navigation-rail",
-  create: (config) => createNavigationRail({ ...(config as NavigationRailConfig), layout: "standard" }),
+  create: (config) => {
+    const { layout, ...rest } = config as NavigationRailConfig;
+    return createNavigationRail({ ...rest, layout: layout === "modal" ? "modal" : "standard" });
+  },
   styles: ["navigation-rail"],
   hostStyles: ":host{display:block;flex-shrink:0}",
   attributes: {
     value: { type: "string", update: (c, v) => void c.setActive(v === null ? null : String(v)) },
     expanded: { type: "boolean", config: "expanded", update: (c, v) => void (v ? c.expand() : c.collapse()) },
     "hide-when-collapsed": { type: "boolean", config: "hideWhenCollapsed" },
+    layout: { type: "string", config: "layout" },
     "expanded-width": { type: "number", config: "expandedWidth" },
     "no-toggle": { type: "boolean" },
     "expand-label": { type: "string", config: "expandLabel" },

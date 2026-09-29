@@ -15,6 +15,8 @@ import {
 import { SNACKBAR_CLASSES, SNACKBAR_DEFAULTS } from './constants';
 import { durationToMs } from './config';
 import { activeElementOf, deepActiveElement } from '../../core/dom/focus';
+import { hideFromTopLayer, showInTopLayer } from '../../core/dom/layer';
+import { placeInLayer } from './layer';
 
 /**
  * Enhances snackbar component with API methods
@@ -36,6 +38,24 @@ export const withAPI =
     let previouslyFocused: Element | null = null;
     let removal: ReturnType<typeof setTimeout> | null = null;
     let onTransitionEnd: ((event: TransitionEvent) => void) | null = null;
+    // A top-layer snackbar is a popover="manual" element, hidden (display:
+    // none) while closed; `restore` puts it back where it was once hidden
+    const topLayer = config.layer === 'top';
+    let restore: (() => void) | null = null;
+    if (topLayer) element.setAttribute('popover', 'manual');
+
+    const showOnTop = (): void => void showInTopLayer(element, { kind: 'popover-manual' });
+
+    /** Takes the element off the page, or out of the top layer back to its place */
+    const takeOff = (): void => {
+      if (!topLayer) {
+        element.remove();
+        return;
+      }
+      hideFromTopLayer(element);
+      restore?.();
+      restore = null;
+    };
 
     const emit = (type: SnackbarEventType, extra: Partial<SnackbarEvent> = {}): void => {
       component.emit?.(type, { snackbar: api, originalEvent: null, ...extra });
@@ -74,7 +94,7 @@ export const withAPI =
       cancelRemoval();
       const remove = (): void => {
         cancelRemoval();
-        element.remove();
+        takeOff();
       };
       onTransitionEnd = (event: TransitionEvent): void => {
         if (event.target === element && event.propertyName === 'opacity') remove();
@@ -106,7 +126,13 @@ export const withAPI =
     const open = (): void => {
       cancelRemoval();
       previouslyFocused = deepActiveElement();
-      element.ownerDocument.body.appendChild(element);
+      if (topLayer) {
+        // Shown again before it was taken off: it is still in place
+        restore ??= placeInLayer(element, showOnTop);
+        showOnTop();
+      } else {
+        element.ownerDocument.body.appendChild(element);
+      }
       layout();
       // Force reflow so the enter transition runs from the hidden state
       void element.offsetHeight;
@@ -257,6 +283,7 @@ export const withAPI =
       destroy(): void {
         isVisible = false;
         cancelRemoval();
+        takeOff();
         element.remove();
         component.timer?.stop();
         component.action?.destroy();

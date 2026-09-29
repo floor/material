@@ -9,6 +9,7 @@ import {
   DialogEventType,
 } from "./types";
 import { removeClass } from "../../core/dom/classes";
+import { hideFromTopLayer } from "../../core/dom/layer";
 import type { EventCallback } from "../../core/state/emitter";
 
 /**
@@ -312,6 +313,8 @@ export const withAPI =
         // Remove visibility classes using core utilities
         removeClass(component.element, dialogVisibleClass);
         removeClass(component.overlay, overlayVisibleClass);
+        // Out of the top layer, so focus can go back to the page
+        hideFromTopLayer(component.element);
 
         // Call any cleanup needed
         if (options.focus && options.focus.releaseFocus) {
@@ -325,6 +328,10 @@ export const withAPI =
       // Immediately remove from DOM
       if (component.overlay && component.overlay.parentNode) {
         component.overlay.parentNode.removeChild(component.overlay);
+      }
+      // A top-layer dialog is rendered without the overlay
+      if (component.element.parentNode !== component.overlay) {
+        component.element.remove();
       }
     },
 

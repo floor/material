@@ -54,6 +54,18 @@ $margin: 16px;
     pointer-events: auto;
   }
 
+  // A top-layer snackbar is a popover (`layer: "top"`). The browser's popover
+  // defaults centre it in the viewport inside a border; the snackbar keeps its
+  // place at the bottom. `:where` keeps this rule under the positions and the
+  // high-contrast border that follow.
+  &:where([popover]) {
+    inset: auto;
+    bottom: $margin;
+    margin: 0;
+    border: 0;
+    overflow: visible;
+  }
+
   // ---------------------------------------------------------------------------
   // Position along the bottom edge
   // ---------------------------------------------------------------------------

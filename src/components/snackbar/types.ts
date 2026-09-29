@@ -113,6 +113,19 @@ export interface SnackbarConfig {
    */
   queueBehavior?: SnackbarQueueBehavior;
 
+  /**
+   * `"top"` shows the snackbar in the browser's top layer as a
+   * `popover="manual"` element: above every z-index, modal dialogs included,
+   * at its usual place in viewport coordinates. It opens where its owner put
+   * it (an element's shadow root, with that root's styles), or on the body.
+   * While a modal `<dialog>` is open, the rest of the page is inert, so the
+   * snackbar opens inside that dialog and goes back when it closes.
+   *
+   * Where the browser has no popover support, the snackbar behaves as
+   * without it. Unset, the snackbar is appended to `document.body`.
+   */
+  layer?: 'top';
+
   /** Action button callback function */
   onAction?: (event: SnackbarEvent) => void;
 

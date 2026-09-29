@@ -202,3 +202,44 @@ $component: "#{base.$prefix}-side-sheet";
         }
     }
 }
+
+// -----------------------------------------------------------------------------
+// layer: "top": a modal sheet's root is a <dialog> the browser shows in the top
+// layer with showModal(). It stays the fixed layer over the page it is without
+// it, so this undoes the user agent's dialog box, and the scrim is its
+// ::backdrop, faded as the scrim was. `overlay` changes at the end of the
+// transition (allow-discrete), so the sheet slides out in the top layer.
+// -----------------------------------------------------------------------------
+dialog.#{$component} {
+    width: auto;
+    height: auto;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: visible;
+    background: transparent;
+    color: inherit;
+    transition: overlay m.spring-duration(fast-effects) allow-discrete;
+
+    &::backdrop {
+        background-color: t.alpha("scrim", 0.32);
+        opacity: 0;
+        transition: m.spring(opacity, fast-effects);
+    }
+
+    // Opacity past 1 is clamped, so the backdrop takes the sheet's timing
+    // without overshooting
+    &.#{$component}--open::backdrop {
+        opacity: 1;
+        transition: m.spring(opacity, default-spatial);
+    }
+
+    @include m.reduced-motion {
+        &,
+        &::backdrop {
+            transition: none;
+        }
+    }
+}

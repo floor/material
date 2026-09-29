@@ -81,6 +81,19 @@ export interface SideSheetConfig {
   /** Where to mount the sheet. Defaults to `document.body` */
   container?: HTMLElement;
 
+  /**
+   * `"top"` makes a modal sheet's root a `<dialog>` element, rendered in
+   * `container` like any sheet, and opens it with `showModal()`: in the
+   * browser's top layer, above every z-index and outside any clipping
+   * ancestor, with the rest of the page inert. The scrim is its `::backdrop`,
+   * and Escape reaches the sheet as the dialog's `cancel` event. The sheet
+   * slides as without it.
+   *
+   * A standard sheet stays in the page, and where the browser has no
+   * `showModal()` the sheet behaves as without it.
+   */
+  layer?: "top";
+
   /** Handlers registered at creation, equivalent to calling `on` for each */
   on?: SideSheetEventHandlers;
 

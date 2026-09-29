@@ -117,6 +117,14 @@ export interface SelectConfig {
   };
 
   /**
+   * `"top"` renders the menu next to the field, in the field's own tree (a
+   * shadow root included), and shows it in the browser's top layer: above
+   * every z-index and outside any clipping ancestor. `menu.container` is then
+   * not used. See the menu's `layer`.
+   */
+  layer?: "top";
+
+  /**
    * Whether select is disabled
    */
   disabled?: boolean;

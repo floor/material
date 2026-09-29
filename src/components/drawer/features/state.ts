@@ -1,6 +1,7 @@
 import { DrawerConfig } from "../types";
 import { DRAWER_EVENTS } from "../constants";
 import { activeElementOf, deepActiveElement } from "../../../core/dom/focus";
+import { hideFromTopLayer, onTopLayerClose, showInTopLayer } from "../../../core/dom/layer";
 
 interface StateBaseComponent {
   element: HTMLElement;
@@ -30,10 +31,14 @@ interface ModalState {
   priority: string;
 }
 const modals = new WeakMap<Document, ModalState>();
+// Roots shown with showModal(): the browser makes everything outside the
+// topmost of them inert, across shadow roots, which the walk below cannot.
+const layered = new WeakSet<Element>();
 function updateBackground(doc: Document, state: ModalState): void {
   state.inerted.forEach(element => element.removeAttribute("inert"));
   state.inerted = [];
-  let branch: Element | undefined = state.roots.at(-1);
+  const topmost = state.roots.at(-1);
+  let branch: Element | undefined = topmost && !layered.has(topmost) ? topmost : undefined;
   while (branch?.parentElement) {
     for (const sibling of branch.parentElement.children) {
       if (sibling !== branch && !sibling.hasAttribute("inert")) {
@@ -73,12 +78,15 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   const root = component.element;
   const doc = root.ownerDocument;
   const isModal = config.variant === "modal";
+  const top = config.layer === "top";
+  if (top) layered.add(root);
   const dismissible = config.dismissible !== false;
   let isOpen = config.open === true;
   let destroyed = false;
   let frame: number | null = null;
   let previousFocus: HTMLElement | null = null;
-  const scrimElement = isModal ? doc.createElement("div") : null;
+  // In the top layer the root's ::backdrop is the scrim
+  const scrimElement = isModal && !top ? doc.createElement("div") : null;
   if (scrimElement) {
     scrimElement.className = component.getClass("drawer__scrim");
     scrimElement.setAttribute("aria-hidden", "true");
@@ -99,7 +107,8 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   const isTopModal = () => modals.get(doc)?.roots.at(-1) === root;
   function handleKeydown(event: KeyboardEvent): void {
     if (!isOpen || !isTopModal() || event.defaultPrevented) return;
-    if (event.key === "Escape" && dismissible) {
+    // In the top layer Escape is the dialog's cancel event
+    if (event.key === "Escape" && dismissible && !top) {
       event.preventDefault(); close();
     } else if (event.key === "Tab") {
       const items = focusable();
@@ -118,6 +127,20 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   function handleFocus(): void {
     if (isOpen && isTopModal() && !root.contains(activeElementOf(root))) focusInside();
   }
+  // Escape reaches the topmost modal as its cancel event; the drawer decides
+  const handleCancel = (event: Event): void => {
+    event.preventDefault();
+    if (dismissible) close();
+  };
+  // The root covers the page, so a click beside the sheet lands on it, as on
+  // the ::backdrop behind it
+  const handleBackdropClick = (event: MouseEvent): void => {
+    if (event.target === root && dismissible) close();
+  };
+  // A drawer opened before it is on the page is shown from activate's frame
+  const showTop = (): void => {
+    if (root.isConnected) showInTopLayer(root, { kind: "modal" });
+  };
   const synchronize = () => {
     root.classList.toggle(`${component.getClass("drawer")}--open`, isOpen);
     root.toggleAttribute("inert", !isOpen);
@@ -133,6 +156,7 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
     frame = requestAnimationFrame(() => {
       frame = null;
       if (destroyed || !isOpen || !root.isConnected) return;
+      if (top) showTop();
       acquireModal(root);
       if (isTopModal()) focusInside();
     });
@@ -142,13 +166,19 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
     doc.removeEventListener("keydown", handleKeydown);
     doc.removeEventListener("focusin", handleFocus);
     const restore = isTopModal();
+    // Out of the top layer first: the page is inert until then. The
+    // stylesheet keeps it in the top layer while the sheet slides out.
+    if (top) hideFromTopLayer(root);
     releaseModal(root);
     if (restore && previousFocus?.isConnected && !previousFocus.closest('[inert]')) previousFocus.focus();
     previousFocus = null;
   };
   function open(): void {
     if (destroyed || isOpen) return;
-    isOpen = true; synchronize(); activate();
+    isOpen = true;
+    // Shown closed first, so the sheet slides and the backdrop fades in
+    if (top) { showTop(); void root.offsetWidth; }
+    synchronize(); activate();
     component.emit(DRAWER_EVENTS.OPEN); config.onOpen?.();
   }
   function close(): void {
@@ -156,8 +186,18 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
     isOpen = false; deactivate(); synchronize();
     component.emit(DRAWER_EVENTS.CLOSE); config.onClose?.();
   }
+  let stopCloses: (() => void) | null = null;
+  if (top) {
+    root.addEventListener("cancel", handleCancel);
+    root.addEventListener("click", handleBackdropClick);
+    // A close the browser made on its own still closes the drawer
+    stopCloses = onTopLayerClose(root, close);
+  }
   synchronize();
-  if (isOpen) activate();
+  if (isOpen) {
+    if (top) showTop();
+    activate();
+  }
   return {
     ...component,
     scrimElement,
@@ -167,6 +207,9 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
       destroyed = true; isOpen = false; deactivate(); synchronize();
       scrimElement?.removeEventListener("click", close);
       scrimElement?.remove();
+      root.removeEventListener("cancel", handleCancel);
+      root.removeEventListener("click", handleBackdropClick);
+      stopCloses?.();
     },
   };
 };

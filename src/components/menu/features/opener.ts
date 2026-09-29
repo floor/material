@@ -8,6 +8,7 @@ import {
   OpenerComponent,
   OpenerTarget,
 } from "../types";
+import { focusWithin } from "./layer";
 
 /**
  * A component used as the menu opener. It is resolved by its element,
@@ -379,7 +380,7 @@ const withOpener =
     // 3. To another menu button/opener
     if (relatedTarget) {
       // Check if focus moved to menu or its children
-      if (component.element.contains(relatedTarget)) {
+      if (focusWithin(config, component.element, relatedTarget)) {
         return;
       }
 

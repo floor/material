@@ -5,6 +5,7 @@ import {
 } from "../../core/config/component";
 import { DrawerConfig } from "./types";
 import { DRAWER_DEFAULTS } from "./constants";
+import { supportsTopLayer } from "../../core/dom/layer";
 
 /**
  * Default configuration for the Drawer component.
@@ -32,8 +33,14 @@ export const defaultConfig: DrawerConfig = {
  * @category Components
  * @internal
  */
-export const createBaseConfig = (config: DrawerConfig = {}): DrawerConfig =>
-  createComponentConfig(defaultConfig, config, "drawer") as DrawerConfig;
+export const createBaseConfig = (config: DrawerConfig = {}): DrawerConfig => {
+  const merged = createComponentConfig(defaultConfig, config, "drawer") as DrawerConfig;
+  // Only a modal drawer goes to the top layer, and only where it can
+  if (merged.layer === "top" && (merged.variant !== "modal" || !supportsTopLayer("modal"))) {
+    merged.layer = undefined;
+  }
+  return merged;
+};
 
 /**
  * Generates element configuration for the Drawer component.
@@ -62,7 +69,8 @@ export const getElementConfig = (config: DrawerConfig) => {
   attributes.tabindex = "-1";
 
   return createElementConfig(config, {
-    tag: "aside",
+    // In the top layer the modal root is a native <dialog>, shown with showModal()
+    tag: config.layer === "top" ? "dialog" : "aside",
     attributes,
     className: [
       config.dense ? `${config.prefix}-drawer--dense` : null,

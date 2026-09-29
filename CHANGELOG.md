@@ -12,6 +12,28 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Tooltip: `layer: "top"`.** With the option the tooltip renders after its target instead
+  of on `document.body` (or stays where its owner put it), in the target's tree, a shadow
+  root's included, and is shown in the top layer as a `popover="manual"` element, placed in
+  viewport coordinates. It leaves the top layer after its exit transition. Without popover
+  support the option does nothing. The default tooltip is unchanged.
+- **Snackbar: `layer: "top"`.** With the option the snackbar is a `popover="manual"` element,
+  shown in the top layer where its owner put it or on the body, at its usual place. While a
+  modal `<dialog>` is open, the rest of the page is inert, so it opens inside the topmost
+  one (found from focus, or in the document and its open shadow roots), carried in a shadow
+  root with its own root's stylesheets when it comes from another tree. It follows the
+  modals while it shows: into one that opens, back to the one below or home when its modal
+  closes, staying open with its timer running and closing once. Without popover support the
+  option does nothing. The default snackbar is unchanged.
+- **Elements: `<m-tooltip>`.** The target is `for` (an id in the element's root, then the
+  document) or the `target` property; the text is `text` or the element's text; `position`,
+  `variant`, `show-delay`, `hide-delay`, and `show()`/`hide()`. The surface stays in the
+  element's shadow root, in the top layer. The target is described by the text: its
+  `aria-describedby` names the host, which carries the text as an `aria-hidden` label.
+- **Elements: `<m-snackbar>`.** The message is `message` or the element's text; `action`,
+  `dismissible`, `close-label`, `duration`, `position`, `queue-behavior`, the `open`
+  property, `show()`/`hide()`, and the `open`, `action` and `close` events (`detail.reason`).
+  It shares the factory's queue and opens in the top layer, above modal dialogs.
 - **Menu: `layer: "top"`**, and a top-layer helper in `mtrl/core/dom`. With the option the
   menu renders next to its opener instead of on `document.body` or `container`, and is shown
   in the browser's top layer as a `popover="manual"` element: above any z-index, out of any
@@ -21,19 +43,78 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   too. Without popover support the option does nothing. The helper is `showInTopLayer`
   (`popover-auto`, `popover-manual` or `modal`), `hideFromTopLayer`, `onTopLayerClose`, which
   reports the browser's own closes, and `supportsTopLayer`. The default menu is unchanged.
+- **Menu: a top-layer menu in another shadow root than its opener** stays open when focus
+  moves into it. The opener's blur names the shadow host there, not the menu, and closed it
+  right after a pointer opened it. Menus without `layer` are unchanged.
+- **Select: `layer: "top"`**, passed to its menu: the listbox renders beside the field, in the
+  field's tree, and opens in the top layer; focus moving into it does not count as leaving
+  the select. The default select is unchanged.
+- **Split button: `layer: "top"`**, passed to its menu, which then renders beside the trailing
+  button in the top layer. The default split button is unchanged.
+- **Elements: `<m-menu>` with `<m-menu-item>` children**, and `Menu` and `MenuItem` in the
+  adapters. Items declare `value`, their text or `label`, `icon`, `shortcut`,
+  `supporting-text`, `disabled`, or `divider`; nested items are a submenu. `anchor` is the
+  opener's id (the menu's root first, then the document), or as a property an element. The
+  surface stays in the element's shadow root and opens in the top layer. `open` reflects the
+  state as on `<details>`, with `show()`, `hide()` and `toggle()`; `open`, `close` and
+  `select` (`{ value }`) are dispatched. Items update in place.
+- **Elements: `<m-select>` with `<m-select-option>` children**, and `Select` and
+  `SelectOption` in the adapters. A form-associated select: `value` is the model and the form
+  value, with `change`; `label`, `variant`, `required` (reported as `valueMissing`),
+  `disabled`, `supporting-text`, reset, restore and `<label for>` as on `<m-textfield>`.
+  Options declare `value`, their text or `label`, `icon` and `disabled`, and update in place.
+  The listbox opens in the top layer.
+- **Elements: `<m-split-button>`**, with `<m-menu-item>` children as its menu, and
+  `SplitButton` in the adapters. The text or `label` is the leading action, whose native
+  `click` is the element's; a chosen item dispatches `select` (`{ value }`). `variant`,
+  `size`, `disabled` and `icon`; the menu opens in the top layer.
+- **Dialog: `layer: "top"`**. The dialog itself becomes a `<dialog>`, rendered in place in
+  `container` and kept there when it closes, and opens with `showModal()`: in the top layer,
+  the page outside inert (a shadow root's page too), the scrim its `::backdrop`, fading as
+  the overlay did; the overlay element is not used. Escape arrives as the dialog's `cancel`
+  and closes it through `close()`, once; a press and release on the backdrop closes it as a
+  click on the overlay did; focus goes in on open and back to the opener; Tab wraps through
+  slotted content. It animates out in the top layer. Without `showModal()` the option does
+  nothing, and the default dialog is unchanged.
+- **Bottom sheet: `layer: "top"`** for the modal variant: the root is a `<dialog>` shown with
+  `showModal()`, the scrim its `::backdrop`, Escape its `cancel`, a click beside the sheet the
+  scrim's click, Tab wrapped inside; the sheet slides as before, in and out of the top layer.
+  Standard sheets and the default modal sheet are unchanged.
+- **Side sheet: `layer: "top"`** for the modal variant, as for the bottom sheet.
+- **Drawer: `layer: "top"`** for the modal variant: the root is a `<dialog>` shown with
+  `showModal()`, which makes the whole page inert where the drawer's own `inert` walk stopped at
+  a shadow root (#249); the scrim is its `::backdrop`, Escape its `cancel`, and a drawer opened
+  before it is on the page is shown once it is. The standard drawer and the default modal
+  drawer are unchanged.
+- **Elements: `<m-dialog>`**, and `Dialog` in the adapters. The top-layer dialog in the
+  element's shadow root. Slots: `headline` (the `headline` attribute is its fallback), which
+  names it, the default slot, which describes it, and `actions`. `open` shows it and reflects
+  it, as on `<dialog open>`; `fullscreen` is the full-screen dialog; `aria-label` names one
+  without a headline. `show()` and `close()`; `open`, `close`, and `cancel` on Escape, which
+  `preventDefault()` refuses.
+- **Elements: `<m-bottom-sheet>`**, and `BottomSheet` in the adapters. Slots `headline` and
+  the default one; `open` (reflected), `modal` (the top-layer modal sheet; standard without
+  it), `headline`, `no-drag-handle`, `aria-label`; `show()`, `close()`, `expand()`,
+  `collapse()`; `open` and `close` events.
+- **Elements: `<m-side-sheet>`**, and `SideSheet` in the adapters. Slots `headline` and the
+  default one; `open` (reflected), `modal`, `headline`, `position`, `no-close-button`,
+  `aria-label`; `show()` and `close()`; `open` and `close` events.
+- **Elements: `<m-drawer modal>`**: the modal drawer in the top layer. `open` reflects it
+  closing on Escape or the backdrop, and the drawer dispatches `open` and `close`.
+- **Elements: `<m-navigation-rail layout="modal">`**: the modal rail, a `<dialog>` shown with
+  `showModal()` while expanded; `expanded` reflects Escape and the backdrop collapsing it.
 - **Elements: `<m-navigation-rail>` with `<m-navigation-rail-item>` children**, and
   `NavigationRail` and `NavigationRailItem` in the React, Vue, Svelte and Solid adapters.
   The standard rail: a navigation landmark named by `aria-label`, each item a button, or a
   link with `href`, declaring `value`, `icon`, `selected-icon`, `badge` (empty for the dot),
   `badge-label` and `disabled`. `value` is the model, with `change` on a click or Enter;
   `expanded` reflects the menu button as `open` does on `<details>`, `no-toggle` drops it,
-  and `slot="header"` takes a FAB. Items update in place. The modal layout is not offered.
+  and `slot="header"` takes a FAB. Items update in place.
 - **Elements: `<m-drawer>` with `<m-drawer-item>` children**, and `Drawer` and `DrawerItem`
   in the adapters. The standard (in-page) drawer, named by its `headline` or `aria-label`:
   items declare `value`, `icon`, `badge` and `disabled`, or with `type="section"` and
   `type="divider"` a section headline and a divider. `value` is the model, with `change`;
-  `open` and `headline` apply in place, `position`, `width` and `dense` recreate it. The
-  modal drawer is not offered as an element.
+  `open` and `headline` apply in place, `position`, `width` and `dense` recreate it.
 - **Elements: `<m-top-app-bar>`**, and `TopAppBar` in the adapters. Children are the
   headline (`headline` is the text when there are none), `slot="leading"` the navigation
   icon button and `slot="trailing"` the actions. `type` (`small`, `center`, `medium`,

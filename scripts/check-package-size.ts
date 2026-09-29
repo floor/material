@@ -163,8 +163,11 @@ try {
     // The outlined text field's notched outline (#234): +202, the fixture read 50,865 to
     // 51,067. The time picker's DOM dial (FLO-279): measured 51,497 with both in. Its
     // hour and minute radios (FLO-283): measured 51,628. The menu's top-layer rule
-    // (#251), with main at 312ca0e and the time picker tokens: measured 51,667.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 51770 },
+    // (#251), with main at 312ca0e and the time picker tokens: measured 51,667. The
+    // modal surfaces in the top layer: +328, measured 51,995 at dba5ba9: the dialog, the
+    // two sheets and the modal drawer each undo the user agent's <dialog> box and fade a
+    // ::backdrop, with `overlay` held for the exit, in four stylesheets gzip cannot share.
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 52100 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);

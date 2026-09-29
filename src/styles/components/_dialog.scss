@@ -177,6 +177,58 @@ $component: "#{base.$prefix}-dialog";
     }
 }
 
+// layer: "top": the dialog is a <dialog> the browser shows in the top layer
+// with showModal(). This undoes the user agent's dialog box and centres it
+// within the 24px the overlay pads by, and the scrim is its ::backdrop, which
+// fades as the overlay did. Closing, `display` and `overlay` change at the end
+// of the transition (allow-discrete), so it animates out in the top layer.
+dialog.#{$component} {
+    position: fixed;
+    inset: 0;
+    height: fit-content;
+    max-height: calc(100% - 48px);
+    padding: 0;
+    border: 0;
+    overflow: visible;
+    transition:
+        transform v.motion("duration-short3") v.motion("easing-emphasized-accelerate"),
+        opacity v.motion("duration-short1") linear v.motion("duration-short2"),
+        display v.motion("duration-short3") allow-discrete,
+        overlay v.motion("duration-short3") allow-discrete;
+
+    // Open, it has no transform at all rather than an identity one: a transform
+    // would make the dialog the containing block of fixed children, such as a
+    // snackbar shown inside the topmost modal
+    &.#{$component}--visible {
+        transform: none;
+        transition:
+            transform v.motion("duration-long2") v.motion("easing-emphasized"),
+            opacity v.motion("duration-short1") linear;
+    }
+
+    &.#{$component}--fullwidth {
+        width: auto;
+    }
+
+    &.#{$component}--fullscreen {
+        height: 100%;
+        max-height: none;
+    }
+
+    &::backdrop {
+        background-color: transparent;
+        transition:
+            background-color v.motion("duration-short3") linear,
+            display v.motion("duration-short3") allow-discrete,
+            overlay v.motion("duration-short3") allow-discrete;
+    }
+
+    &.#{$component}--visible::backdrop {
+        background-color: t.alpha("scrim", 0.32);
+        transition: background-color v.motion("duration-long2") linear;
+    }
+}
+
 // Dialog icon (optional, MD3 spec)
 // Centered above headline, 24dp, secondary color
 .#{$component}__icon {
