@@ -127,7 +127,11 @@ export const TEXTFIELD_CLASSES = {
   ERROR: "textfield--error",
   /** Required indicator class */
   REQUIRED: "textfield--required",
-  /** Floating label class */
+  /**
+   * @deprecated Applied nowhere and styled by nothing: a floating label is the
+   * field's `--populated` or `--focused` state (FLO-295). Kept for
+   * compatibility.
+   */
   LABEL_FLOATING: "textfield__label--floating",
   /** Supporting text class */
   SUPPORTING_TEXT: "textfield__helper",

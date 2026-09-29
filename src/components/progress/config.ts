@@ -8,8 +8,6 @@ import { ProgressConfig, ProgressThickness, ProgressShape } from "./types";
 import type { ComponentWithLifecycle, ProgressState } from "./features/state";
 import {
   PROGRESS_CLASSES,
-  PROGRESS_VARIANTS,
-  PROGRESS_SHAPES,
   PROGRESS_THICKNESS,
   PROGRESS_DEFAULTS,
 } from "./constants";
@@ -56,7 +54,6 @@ export const createBaseConfig = (
  */
 export const getElementConfig = (config: ProgressConfig) => {
   const isIndeterminate = config.indeterminate === true;
-  const isCircular = config.variant === PROGRESS_VARIANTS.CIRCULAR;
 
   // Create the attributes object. The label says what is loading, as the M3
   // accessibility guidance asks.
@@ -77,17 +74,10 @@ export const getElementConfig = (config: ProgressConfig) => {
     attributes["aria-disabled"] = "true";
   }
 
-  // Build class list
-  const classList = [
-    config.class,
-    PROGRESS_CLASSES.CONTAINER,
-    isCircular ? PROGRESS_CLASSES.CIRCULAR : PROGRESS_CLASSES.LINEAR,
-  ].filter(Boolean);
-
-  // Add shape class for linear progress
-  if (!isCircular && config.shape && config.shape !== PROGRESS_SHAPES.FLAT) {
-    classList.push(`${PROGRESS_CLASSES.CONTAINER}--${config.shape}`);
-  }
+  // Only the caller's classes: the prefixed block, type and shape classes are
+  // set by the component. These unprefixed copies (`progress progress--linear`)
+  // doubled them since `class` stopped being prefixed (FLO-117, FLO-295).
+  const classList = [config.class].filter(Boolean);
 
   return createElementConfig(config, {
     tag: "div",
