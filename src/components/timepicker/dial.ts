@@ -52,7 +52,8 @@ const dialValue = (time: TimeValue, selector: DialSelector, format: TIME_FORMAT)
   : selector === "second" ? time.seconds ?? 0
   : format === TIME_FORMAT.MILITARY ? time.hours : time.hours % 12 || 12;
 
-const nameFor = (selector: DialSelector, format: TIME_FORMAT, value: number): string =>
+/** How a value on the dial is named: "9 o'clock", "20 hours", "15 minutes". */
+export const nameFor = (selector: DialSelector, format: TIME_FORMAT, value: number): string =>
   selector === "minute" ? `${value} minutes`
   : selector === "second" ? `${value} seconds`
   : format === TIME_FORMAT.MILITARY ? `${value} hours` : `${value} o'clock`;
