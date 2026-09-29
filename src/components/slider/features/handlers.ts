@@ -101,6 +101,8 @@ export const createHandlers = (
     clearBubbleHideTimer();
     if (!bubble || !config.showValue) return;
 
+    // A timer by design: the value label lingers after a release or a blur so
+    // it can still be read. Cleared on the next show and on destroy.
     if (delay > 0) {
       state.valueHideTimer = setTimeout(() => {
         showValueBubble(bubble, false);

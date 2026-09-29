@@ -658,8 +658,6 @@ try {
 
     await page.evaluate(() => (document.getElementById("f") as HTMLFormElement).reset());
     assert.equal((await read()).value, 30);
-    // The factory binds its handles a task after creation, and reset recreates it.
-    await page.evaluate(() => new Promise((r) => setTimeout(r, 0)));
     check("slider: form.reset() restores the value attribute");
 
     // Range: two handles, both ends in the form under the host's name.
@@ -742,8 +740,11 @@ try {
       // Same width as the factory's, which sits in a padded section.
       s.style.width = `${factory.element.getBoundingClientRect().width}px`;
       const element = s.shadowRoot?.firstElementChild as HTMLElement;
-      // The factory draws its track a task after creation, and moves the handle with a transition.
-      await new Promise((r) => setTimeout(r, 0));
+      // The track measures its length once laid out, which a ResizeObserver reports
+      // in the frame after the append; then the handle moves with a transition.
+      const frame = () => new Promise((r) => requestAnimationFrame(r));
+      await frame();
+      await frame();
       await Promise.all([factory.element, element].flatMap((root) => root.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => a))));
       const measure = (root: HTMLElement): Record<string, string | number> => {
         const handle = root.querySelector('[class*="slider__handle"]') as HTMLElement;

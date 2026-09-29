@@ -30,7 +30,14 @@ g.MutationObserver = dom.window.MutationObserver;
 g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
 g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0);
 g.cancelAnimationFrame = () => {};
-g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
+// Reports each observed box once, a task later, as a browser does when the
+// slider is first laid out: the track and the handles measure and place then.
+g.ResizeObserver = class {
+  constructor(private callback: () => void) {}
+  observe() { setTimeout(() => this.callback(), 0); }
+  disconnect() {}
+  unobserve() {}
+};
 dom.window.HTMLCanvasElement.prototype.getContext = function () {
   return new Proxy({}, { get: () => () => {} });
 } as any;
@@ -43,7 +50,8 @@ const handles = (slider: { element: HTMLElement }) =>
 const key = (target: HTMLElement, name: string) =>
   target.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: name, bubbles: true }));
 
-// The controller wires listeners and renders on the next task.
+// The slider is live as soon as it is created (#236, tested below); the
+// wait lets anything a test schedules run before it looks.
 const mount = async (config: Parameters<typeof createSlider>[0] = {}) => {
   const slider = createSlider(config);
   document.body.appendChild(slider.element);
@@ -194,6 +202,42 @@ describe('range slider', () => {
     const slider = await mount({ value: 20 });
     slider.setSecondValue(70);
     expect(slider.getSecondValue()).toBeNull();
+  });
+});
+
+// #236. The controller used to wire its listeners a task after creation, so
+// input in the same task as createSlider() went nowhere.
+describe('slider wiring in the task that creates it', () => {
+  const create = (config: Parameters<typeof createSlider>[0] = {}) => {
+    const slider = createSlider(config);
+    document.body.appendChild(slider.element);
+    return slider;
+  };
+
+  test('a key steps the value', () => {
+    const slider = create({ value: 30 });
+    const [handle] = handles(slider);
+    key(handle, 'ArrowRight');
+    expect(slider.getValue()).toBe(31);
+    expect(handle.getAttribute('aria-valuenow')).toBe('31');
+  });
+
+  test('a press, move and release on the track drag the value', () => {
+    const slider = create({ value: 10 });
+    const container = slider.element.querySelector<HTMLElement>('.mtrl-slider__container')!;
+    container.getBoundingClientRect = () => ({ width: 300, height: 48, top: 0, left: 0, right: 300, bottom: 48, x: 0, y: 0, toJSON() {} }) as DOMRect;
+    container.dispatchEvent(new dom.window.MouseEvent('mousedown', { clientX: 150, bubbles: true }));
+    document.dispatchEvent(new dom.window.MouseEvent('mousemove', { clientX: 210, bubbles: true }));
+    document.dispatchEvent(new dom.window.MouseEvent('mouseup', { clientX: 210, bubbles: true }));
+    expect(slider.getValue()).toBe(70);
+  });
+
+  test('a slider disabled from config ignores keys', () => {
+    const slider = create({ value: 50, disabled: true });
+    const [handle] = handles(slider);
+    expect(handle.getAttribute('tabindex')).toBe('-1');
+    key(handle, 'ArrowRight');
+    expect(slider.getValue()).toBe(50);
   });
 });
 

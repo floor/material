@@ -85,6 +85,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - `<m-tab>` values set before the elements are defined are kept: a client-rendered Solid app
   sets them before it registers the elements on mount. `defineTabs` also defines `<m-tab>`
   before `<m-tabs>`, so the tabs read upgraded children.
+- Slider: keys and the pointer work in the task that creates it (#236). The listeners were
+  attached a task later, so input right after `createSlider()`, a form reset or toggling
+  `range` on `<m-slider>` was ignored. Placing the handles for a right-to-left layout now
+  follows the slider's first layout, as the track's measurement already did.
 
 ## [0.10.0-next.1] - 2026-09-29
 
