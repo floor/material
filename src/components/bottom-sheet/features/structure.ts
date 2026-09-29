@@ -27,9 +27,10 @@ export const withStructure =
     );
 
     // The scrim belongs to modal sheets only: a standard sheet leaves the page
-    // usable, so covering it would be wrong
+    // usable, so covering it would be wrong. In the top layer the root's
+    // ::backdrop is the scrim.
     let scrim: HTMLElement | null = null;
-    if (isModal) {
+    if (isModal && config.layer !== "top") {
       scrim = document.createElement("div");
       scrim.className = getClass(BOTTOM_SHEET_CLASSES.SCRIM);
       element.appendChild(scrim);

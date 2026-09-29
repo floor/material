@@ -8,6 +8,7 @@ import {
 import type { SwitchElement } from "../../dist/elements/index.js";
 import { Chip, Chips } from "../../dist/react/index.js";
 import { Select, SelectOption } from "../../dist/react/index.js";
+import { Dialog } from "../../dist/react/index.js";
 
 const h = React.createElement;
 const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
@@ -22,6 +23,7 @@ type Api = {
   setOrder: (v: string[]) => void;
   setShow: (v: boolean) => void;
   setProgress: (v: number) => void;
+  setDialog: (v: boolean) => void;
   switchRef: React.RefObject<SwitchElement | null>;
 };
 
@@ -40,12 +42,13 @@ export const App = (): React.ReactElement => {
   const [progress, setProgress] = React.useState(30);
   const [fruit, setFruit] = React.useState<string | null>("b");
   const [pet, setPet] = React.useState<string | null>("cat");
+  const [dialog, setDialog] = React.useState(false);
   const switchRef = React.useRef<SwitchElement | null>(null);
   const api = React.useRef<Api | null>(null);
 
   React.useEffect(() => {
     const w = window as unknown as { api?: Api };
-    api.current = w.api ?? { log: [], submits: 0, setExtra, setOrder, setShow, setProgress, switchRef };
+    api.current = w.api ?? { log: [], submits: 0, setExtra, setOrder, setShow, setProgress, setDialog, switchRef };
     w.api = api.current;
   }, []);
   const log = (id: string) => (event: CustomEvent<unknown>): void => {
@@ -124,6 +127,14 @@ export const App = (): React.ReactElement => {
       h(SelectOption, { value: "dog" }, "Dog")
     ),
     h("output", { id: "pet" }, pet),
+    // Controlled: Escape closes the dialog, and onClose puts the state in step
+    h(
+      Dialog,
+      { id: "dg", open: dialog, onClose: () => setDialog(false) },
+      h("span", { slot: "headline" }, "Discard draft?"),
+      "Your changes will be lost."
+    ),
+    h("output", { id: "dialog" }, String(dialog)),
     ...order.map((key) => h(Switch, { key, id: `o${key}` }, `Order ${key}`)),
     show ? h(Switch, { id: "gone" }, "Gone") : null,
     // Mounted in the browser after the element is defined: React 19 then

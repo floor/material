@@ -5246,6 +5246,387 @@ try {
     check("snackbar: of nested modals the topmost takes it, then the one below, then home");
   }
 
+  // ---------------------------------------------------------------- modal surfaces in the top layer
+  // <m-dialog>, the modal sheets, the modal drawer and the modal rail are a
+  // native <dialog> in their shadow root, shown with showModal() (the
+  // factories' layer: "top"). Each is checked inside another shadow root that
+  // holds its opener, with a button on the page outside it: :modal and
+  // styled, the page inert (#249: a drawer in a shadow root made only its own
+  // root inert), Tab kept inside, Escape and a backdrop click closing once,
+  // focus back on the opener, slotted content in its region, and the same
+  // surface and scrim as the factory's without a layer.
+  {
+    type Host = HTMLElement & { component: { on: (event: string, handler: () => void) => unknown } | null };
+    type ModalWin = Win & {
+      __modal: { closes: number; outside: number };
+      mtrl: Record<string, (config: object) => { element: HTMLElement; open?: () => unknown; expand?: () => unknown; destroy: () => void }>;
+    };
+    interface ModalCase {
+      name: string;
+      markup: string;
+      /** How the opener opens it: a method, or the attribute it reflects. */
+      opens: "show" | "open" | "expanded";
+      /** The painted surface, in the element's shadow root and in the factory's element. */
+      surface: string;
+      /** Slot name ("" for the default) to the region class it must sit in. */
+      regions: Record<string, string>;
+      factory: string;
+      config: object;
+      /** The factory's scrim without a layer, which the ::backdrop must match. */
+      scrim: string;
+      /** A backdrop point: beside the surface, off the outside button. */
+      beside: { x: number; y: number };
+    }
+    const ITEMS = [{ id: "a", label: "Inbox", icon: ICON }, { id: "b", label: "Sent", icon: ICON }];
+    const cases: ModalCase[] = [
+      {
+        name: "dialog",
+        markup: `<m-dialog id="m"><span slot="headline">Discard draft?</span>Your changes will be lost.
+          <m-button slot="actions" variant="text">Keep</m-button><m-button slot="actions" variant="text">Discard</m-button></m-dialog>`,
+        opens: "show",
+        surface: '[class~="mtrl-dialog"]',
+        regions: { headline: "dialog__header-title", "": "dialog__content", actions: "dialog__footer" },
+        factory: "createDialog",
+        config: { title: "Discard draft?", content: "Your changes will be lost.", buttons: [{ text: "Keep" }, { text: "Discard" }] },
+        scrim: '[class~="mtrl-dialog__overlay"]',
+        beside: { x: 30, y: 650 },
+      },
+      {
+        name: "bottom sheet",
+        markup: `<m-bottom-sheet id="m" modal><span slot="headline">Share</span><button type="button">Copy link</button><button type="button">Email</button></m-bottom-sheet>`,
+        opens: "show",
+        surface: '[class~="mtrl-bottom-sheet__container"]',
+        regions: { headline: "bottom-sheet__title", "": "bottom-sheet__content" },
+        factory: "createBottomSheet",
+        config: { title: "Share", content: '<button type="button">Copy link</button><button type="button">Email</button>' },
+        scrim: '[class~="mtrl-bottom-sheet__scrim"]',
+        beside: { x: 30, y: 100 },
+      },
+      {
+        name: "side sheet",
+        markup: `<m-side-sheet id="m" modal><span slot="headline">Filters</span><button type="button">Recent</button><button type="button">Starred</button></m-side-sheet>`,
+        opens: "show",
+        surface: '[class~="mtrl-side-sheet__container"]',
+        regions: { headline: "side-sheet__title", "": "side-sheet__content" },
+        factory: "createSideSheet",
+        config: { title: "Filters", content: '<button type="button">Recent</button><button type="button">Starred</button>' },
+        scrim: '[class~="mtrl-side-sheet__scrim"]',
+        beside: { x: 30, y: 650 },
+      },
+      {
+        name: "drawer",
+        markup: `<m-drawer id="m" modal aria-label="Mail"><m-drawer-item value="a">Inbox</m-drawer-item>
+          <m-drawer-item value="b">Sent</m-drawer-item></m-drawer>`,
+        opens: "open",
+        surface: '[class~="mtrl-drawer__sheet"]',
+        regions: {},
+        factory: "createDrawer",
+        config: { variant: "modal", ariaLabel: "Mail", items: [{ id: "a", label: "Inbox" }, { id: "b", label: "Sent" }] },
+        scrim: '[class~="mtrl-drawer__scrim"]',
+        beside: { x: 870, y: 650 },
+      },
+      {
+        name: "navigation rail",
+        markup: `<m-navigation-rail id="m" layout="modal" aria-label="Main">
+          <m-navigation-rail-item value="a" icon='${ICON}'>Inbox</m-navigation-rail-item>
+          <m-navigation-rail-item value="b" icon='${ICON}'>Sent</m-navigation-rail-item></m-navigation-rail>`,
+        opens: "expanded",
+        surface: '[class~="mtrl-navigation-rail"]',
+        regions: {},
+        factory: "createNavigationRail",
+        config: { layout: "modal", ariaLabel: "Main", items: ITEMS },
+        // The factory's modal rail is a <dialog> already: its own ::backdrop
+        scrim: "::backdrop",
+        beside: { x: 870, y: 650 },
+      },
+    ];
+    const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
+
+    const stage = async (item: ModalCase): Promise<void> => {
+      await fresh(page, `<button id="outside" type="button" style="position:fixed;top:8px;left:400px">Outside</button>
+        <div id="wrap"></div><section id="factory"></section>`);
+      await page.evaluate(({ markup, opens }) => {
+        const w = window as unknown as ModalWin;
+        w.__modal = { closes: 0, outside: 0 };
+        document.getElementById("outside")?.addEventListener("click", () => void w.__modal.outside++);
+        const root = (document.getElementById("wrap") as HTMLElement).attachShadow({ mode: "open" });
+        root.innerHTML = `<button id="opener" type="button">Open</button>${markup}`;
+        const host = root.getElementById("m") as Host & Record<string, () => unknown>;
+        (root.getElementById("opener") as HTMLElement).addEventListener("click", () => {
+          if (opens === "show") host.show();
+          else host.setAttribute(opens, "");
+        });
+        if (host.localName === "m-navigation-rail") host.component?.on("collapse", () => void w.__modal.closes++);
+        else host.addEventListener("close", () => void w.__modal.closes++);
+      }, { markup: item.markup, opens: item.opens });
+      await page.waitForFunction(() => {
+        const host = document.getElementById("wrap")?.shadowRoot?.getElementById("m") as Host | null;
+        return !!host?.component;
+      });
+    };
+    const openIt = async (): Promise<void> => {
+      await page.locator("#wrap").getByRole("button", { name: "Open", exact: true }).click();
+      await wait(700);
+    };
+    /** The inner <dialog>, whether it is open and modal, and the host's reflected state. */
+    const state = (opens: string): Promise<{ modal: boolean; open: boolean; reflected: boolean; closes: number; outside: number }> =>
+      page.evaluate((opens) => {
+        const host = document.getElementById("wrap")?.shadowRoot?.getElementById("m") as Host;
+        const dialog = host.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+        const { closes, outside } = (window as unknown as ModalWin).__modal;
+        return {
+          modal: dialog.matches(":modal"),
+          open: dialog.open,
+          reflected: host.hasAttribute(opens === "expanded" ? "expanded" : "open"),
+          closes,
+          outside,
+        };
+      }, opens);
+    /** Where focus is, and whether it is inside the element (its light DOM or its shadow root). */
+    const focus = (): Promise<{ inside: boolean; opener: boolean; label: string }> =>
+      page.evaluate(() => {
+        const host = document.getElementById("wrap")?.shadowRoot?.getElementById("m") as HTMLElement;
+        let active = document.activeElement;
+        while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+        let node: Node | null = active;
+        while (node && node !== host) node = node.parentNode instanceof ShadowRoot ? node.parentNode.host : node.parentNode;
+        return {
+          inside: node === host,
+          opener: active?.id === "opener",
+          // A button in a shadow root takes its text from its host's slot
+          label: (active?.textContent?.trim() || ((active?.getRootNode() as ShadowRoot).host?.textContent ?? "")).trim(),
+        };
+      });
+
+    for (const item of cases) {
+      await stage(item);
+      await openIt();
+      // The page outside is inert: it takes no focus, and a click on it lands
+      // on the backdrop (checked with the backdrop click below).
+      // Checked first: without showModal() this is what fails
+      // Focus is not taken at all, not taken and pulled back: the modal
+      // drawer's own focus handler would pull it back without the platform.
+      const outsideFocus = await page.evaluate(() => {
+        const outside = document.getElementById("outside") as HTMLElement;
+        let focused = 0;
+        outside.addEventListener("focus", () => void focused++);
+        outside.focus();
+        return { focused, active: document.activeElement === outside };
+      });
+      assert.deepEqual(outsideFocus, { focused: 0, active: false }, `${item.name}: a button on the page outside cannot be focused`);
+      const opened = await state(item.opens);
+      const styled = await page.evaluate((selector) => {
+        const host = document.getElementById("wrap")?.shadowRoot?.getElementById("m") as HTMLElement;
+        const root = host.shadowRoot as ShadowRoot;
+        const dialog = root.querySelector("dialog") as HTMLDialogElement;
+        const surface = (dialog.matches(selector) ? dialog : dialog.querySelector(selector)) as HTMLElement;
+        const box = surface.getBoundingClientRect();
+        return {
+          painted: getComputedStyle(surface).backgroundColor !== "rgba(0, 0, 0, 0)" && box.width > 0 && box.height > 0,
+          inShadow: dialog.getRootNode() === root,
+        };
+      }, item.surface);
+      assert.deepEqual(
+        { ...opened, ...styled },
+        { modal: true, open: true, reflected: true, closes: 0, outside: 0, painted: true, inShadow: true },
+        `${item.name}: open`
+      );
+      check(`${item.name} in the top layer: a :modal <dialog> in its shadow root, painted, its state reflected`);
+
+
+      const stops: Array<{ inside: boolean; label: string }> = [];
+      for (let i = 0; i < 6; i++) {
+        await page.keyboard.press(i % 3 === 2 ? "Shift+Tab" : "Tab");
+        stops.push(await focus());
+      }
+      assert.ok(
+        stops.every((stop) => stop.inside) && new Set(stops.map((stop) => stop.label)).size >= 2,
+        `${item.name}: Tab moves between its stops and stays inside ${JSON.stringify(stops)}`
+      );
+      check(`${item.name} in the top layer: the page outside takes no focus, and Tab stays inside`);
+
+      await page.keyboard.press("Escape");
+      await wait(400);
+      const escaped = await state(item.opens);
+      const back = await focus();
+      assert.deepEqual(
+        { ...escaped, opener: back.opener },
+        { modal: false, open: false, reflected: false, closes: 1, outside: 0, opener: true },
+        `${item.name}: Escape`
+      );
+      check(`${item.name} in the top layer: Escape closes it once and focus returns to the opener in the shadow root`);
+
+      await openIt();
+      const outside = await page.evaluate(() => {
+        const box = (document.getElementById("outside") as HTMLElement).getBoundingClientRect();
+        return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+      });
+      await page.mouse.click(outside.x, outside.y);
+      await wait(400);
+      const clicked = await state(item.opens);
+      assert.deepEqual(
+        { outside: clicked.outside, closes: clicked.closes, open: clicked.open, opener: (await focus()).opener },
+        { outside: 0, closes: 2, open: false, opener: true },
+        `${item.name}: a click on the outside button`
+      );
+      await openIt();
+      await page.mouse.click(item.beside.x, item.beside.y);
+      await wait(400);
+      const beside = await state(item.opens);
+      assert.deepEqual({ closes: beside.closes, open: beside.open }, { closes: 3, open: false }, `${item.name}: backdrop click`);
+      check(`${item.name} in the top layer: a click on the page's button reaches the backdrop, not the button, and closes it once, as the factory's scrim does`);
+
+      if (Object.keys(item.regions).length) {
+        const regions = await page.evaluate((regions) => {
+          const host = document.getElementById("wrap")?.shadowRoot?.getElementById("m") as HTMLElement;
+          const root = host.shadowRoot as ShadowRoot;
+          const result: Record<string, boolean> = {};
+          for (const [name, region] of Object.entries(regions)) {
+            const slot = root.querySelector(name ? `slot[name="${name}"]` : "slot:not([name])") as HTMLSlotElement;
+            result[name] = !!slot.closest(`[class~="mtrl-${region}"]`) && slot.assignedNodes().some((n) => (n.textContent ?? "").trim() !== "");
+          }
+          return result;
+        }, item.regions);
+        assert.deepEqual(regions, Object.fromEntries(Object.keys(item.regions).map((name) => [name, true])), `${item.name}: regions`);
+        check(`${item.name} in the top layer: slotted content renders in its regions`);
+      }
+
+      // Factory parity: the same surface and scrim as the factory's own
+      // without a layer, in light DOM with the global stylesheet.
+      await openIt();
+      const measure = (): Promise<Record<string, string | number>> =>
+        page.evaluate((selector) => {
+          const host = document.getElementById("wrap")?.shadowRoot?.getElementById("m") as HTMLElement;
+          const dialog = host.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+          const surface = (dialog.matches(selector) ? dialog : dialog.querySelector(selector)) as HTMLElement;
+          const box = surface.getBoundingClientRect();
+          const style = getComputedStyle(surface);
+          const backdrop = getComputedStyle(dialog, "::backdrop");
+          return {
+            width: Math.round(box.width),
+            height: Math.round(box.height),
+            left: Math.round(box.left),
+            top: Math.round(box.top),
+            radius: style.borderRadius,
+            background: style.backgroundColor,
+            scrim: backdrop.backgroundColor,
+            scrimOpacity: backdrop.opacity,
+          };
+        }, item.surface);
+      const layered = await measure();
+      const factory = await page.evaluate(({ name, config, surface, scrim }) => {
+        const w = window as unknown as ModalWin;
+        const component = w.mtrl[name](config);
+        if (!component.element.isConnected) (document.getElementById("factory") as HTMLElement).append(component.element);
+        (component.open ?? component.expand)?.call(component);
+        return new Promise<Record<string, string | number>>((resolve) =>
+          setTimeout(() => {
+            const root = component.element;
+            const surfaceElement = (root.matches(surface) ? root : root.querySelector(surface)) as HTMLElement;
+            const box = surfaceElement.getBoundingClientRect();
+            const style = getComputedStyle(surfaceElement);
+            const scrimStyle = scrim === "::backdrop"
+              ? getComputedStyle(root, "::backdrop")
+              : getComputedStyle((root.closest(scrim) ?? root.querySelector(scrim)) as HTMLElement);
+            const result = {
+              width: Math.round(box.width),
+              height: Math.round(box.height),
+              left: Math.round(box.left),
+              top: Math.round(box.top),
+              radius: style.borderRadius,
+              background: style.backgroundColor,
+              scrim: scrimStyle.backgroundColor,
+              scrimOpacity: scrimStyle.opacity,
+            };
+            component.destroy();
+            resolve(result);
+          }, 700)
+        );
+      }, { name: item.factory, config: item.config, surface: item.surface, scrim: item.scrim });
+      // Within a pixel: slotted text lays out its line box a rounding apart
+      const near = (a: Record<string, string | number>): Record<string, string | number> =>
+        Object.fromEntries(Object.entries(a).map(([k, v]) => [k, typeof v === "number" && Math.abs(v - (factory[k] as number)) <= 1 ? factory[k] : v]));
+      assert.deepEqual(near(layered), factory, `${item.name}: the same surface and scrim as the factory's`);
+      check(`${item.name} in the top layer: the factory's size, place, corners and colours, and its scrim colour on ::backdrop`);
+      await page.keyboard.press("Escape");
+    }
+
+    // <m-dialog>: the headline attribute names it without a slotted headline,
+    // aria-label in place of one, and a refused cancel keeps it open.
+    await fresh(page, `<m-dialog id="named" headline="Delete file?">It goes for good.</m-dialog>`);
+    await page.evaluate(() => {
+      const host = document.getElementById("named") as HTMLElement & { show: () => unknown };
+      host.addEventListener("cancel", (event) => event.preventDefault(), { once: true });
+      host.show();
+    });
+    await wait(600);
+    const named = await page.getByRole("alertdialog", { name: "Delete file?" }).count();
+    await page.keyboard.press("Escape");
+    await wait(100);
+    const refused = await page.evaluate(() => document.getElementById("named")?.hasAttribute("open"));
+    await page.keyboard.press("Escape");
+    await wait(100);
+    const closed = await page.evaluate(() => !document.getElementById("named")?.hasAttribute("open"));
+    await page.evaluate(() => {
+      const host = document.getElementById("named") as HTMLElement;
+      host.setAttribute("aria-label", "Confirm");
+      host.setAttribute("open", "");
+    });
+    await wait(600);
+    const labelled = await page.getByRole("alertdialog", { name: "Confirm" }).count();
+    await page.evaluate(() => document.getElementById("named")?.removeAttribute("open"));
+    await wait(100);
+    assert.deepEqual({ named, refused, closed, labelled }, { named: 1, refused: true, closed: true, labelled: 1 });
+    check("dialog element: the headline attribute or aria-label names it; a refused cancel keeps it open");
+
+    // A snackbar shown while a modal is open goes into the topmost <dialog>, in a
+    // display:contents wrapper: its action is a Tab stop, its fixed box is placed
+    // against the viewport, the slots keep their regions, and closes still come once.
+    for (const tag of ["m-dialog", "m-bottom-sheet", "m-side-sheet"]) {
+      await fresh(page, `<${tag} id="guest" modal headline="Host"><button type="button">Own</button></${tag}>`);
+      await page.evaluate(() => {
+        const w = window as unknown as ModalWin;
+        w.__modal = { closes: 0, outside: 0 };
+        const host = document.getElementById("guest") as HTMLElement & { show: () => unknown };
+        host.addEventListener("close", () => void w.__modal.closes++);
+        host.show();
+      });
+      await wait(600);
+      const guest = await page.evaluate(() => {
+        const dialog = document.getElementById("guest")?.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+        const wrapper = document.createElement("div");
+        wrapper.style.display = "contents";
+        wrapper.innerHTML = '<div id="bar" style="position:fixed;left:0;bottom:0;width:100px;height:20px"><button type="button" id="undo">Undo</button></div>';
+        dialog.append(wrapper);
+        const bar = (wrapper.firstElementChild as HTMLElement).getBoundingClientRect();
+        return { left: Math.round(bar.left), bottom: Math.round(bar.bottom), viewport: window.innerHeight };
+      });
+      const reached: string[] = [];
+      for (let i = 0; i < 4; i++) {
+        await page.keyboard.press("Tab");
+        reached.push(await page.evaluate(() => {
+          let active = document.activeElement;
+          while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+          return active?.id || active?.textContent?.trim() || "";
+        }));
+      }
+      const regions = await page.evaluate(() => {
+        const root = document.getElementById("guest")?.shadowRoot as ShadowRoot;
+        const slot = root.querySelector("slot:not([name])") as HTMLSlotElement;
+        return slot.assignedElements().map((el) => el.textContent);
+      });
+      await page.keyboard.press("Escape");
+      await wait(300);
+      const closes = await page.evaluate(() => (window as unknown as ModalWin).__modal.closes);
+      assert.deepEqual(
+        { left: guest.left, bottom: guest.bottom, undo: reached.includes("undo"), own: reached.includes("Own"), regions, closes },
+        { left: 0, bottom: guest.viewport, undo: true, own: true, regions: ["Own"], closes: 1 },
+        `${tag}: a snackbar in its <dialog> ${JSON.stringify(reached)}`
+      );
+    }
+    check("modal elements: a snackbar appended to the open <dialog> is reachable by Tab, placed on the viewport, and changes no region or close");
+  }
+
   // ---------------------------------------------------------------- theme
   await fresh(page, `<m-switch id="s" checked>Theme</m-switch><section id="factory"></section>`);
   {

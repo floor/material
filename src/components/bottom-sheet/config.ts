@@ -8,7 +8,9 @@ import { BottomSheetConfig } from "./types";
 import {
   BOTTOM_SHEET_DEFAULTS,
   BOTTOM_SHEET_STATES,
+  BOTTOM_SHEET_VARIANTS,
 } from "./constants";
+import { supportsTopLayer } from "../../core/dom/layer";
 
 /**
  * What the component applies when the caller says nothing.
@@ -28,19 +30,29 @@ export const defaultConfig: Partial<BottomSheetConfig> = {
  */
 export const createBaseConfig = (
   config: BottomSheetConfig = {}
-): BottomSheetConfig =>
-  createComponentConfig(
+): BottomSheetConfig => {
+  const merged = createComponentConfig(
     defaultConfig,
     config,
     "bottom-sheet"
   ) as BottomSheetConfig;
+  // Only a modal sheet goes to the top layer, and only where it can
+  if (
+    merged.layer === "top" &&
+    (merged.variant !== BOTTOM_SHEET_VARIANTS.MODAL || !supportsTopLayer("modal"))
+  ) {
+    merged.layer = undefined;
+  }
+  return merged;
+};
 
 /**
  * The root element: a fixed layer holding the scrim and the sheet itself.
  */
 export const getElementConfig = (config: BottomSheetConfig) =>
   createElementConfig(config, {
-    tag: "div",
+    // In the top layer the root is a native <dialog>, shown with showModal()
+    tag: config.layer === "top" ? "dialog" : "div",
     className: [config.class].filter(Boolean),
     attributes: {
       // hidden until it opens, so nothing in it is reachable meanwhile

@@ -173,6 +173,18 @@ export interface DialogConfig {
    * @default document.body
    */
   container?: HTMLElement;
+
+  /**
+   * `"top"` makes the dialog itself a `<dialog>` element, rendered in place in
+   * `container` (or `document.body`) and kept there when it closes, and opens
+   * it with `showModal()`: in the browser's top layer, above every z-index and
+   * outside any clipping ancestor, with the rest of the page inert. The scrim
+   * is its `::backdrop`, and the overlay element is not used. Escape reaches
+   * the dialog as its `cancel` event.
+   *
+   * Where the browser has no `showModal()`, the dialog behaves as without it.
+   */
+  layer?: "top";
   
   /** 
    * Footer buttons configuration

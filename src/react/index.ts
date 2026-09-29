@@ -36,6 +36,9 @@ import "mtrl/elements/css/select";
 import "mtrl/elements/css/split-button";
 import "mtrl/elements/css/tooltip";
 import "mtrl/elements/css/snackbar";
+import "mtrl/elements/css/dialog";
+import "mtrl/elements/css/bottom-sheet";
+import "mtrl/elements/css/side-sheet";
 import {
   buttonElement,
   defineButton,
@@ -93,6 +96,12 @@ import {
   defineTooltip,
   snackbarElement,
   defineSnackbar,
+  dialogElement,
+  defineDialog,
+  bottomSheetElement,
+  defineBottomSheet,
+  sideSheetElement,
+  defineSideSheet,
   tabDeclaration,
   radioDeclaration,
   navigationRailItemDeclaration,
@@ -161,6 +170,12 @@ import type {
   TooltipElement,
   SnackbarSpec,
   SnackbarElement,
+  DialogSpec,
+  DialogElement,
+  BottomSheetSpec,
+  BottomSheetElement,
+  SideSheetSpec,
+  SideSheetElement,
   TabAttributes,
   RadioAttributes,
   NavigationRailItemAttributes,
@@ -205,6 +220,9 @@ export const Select: MComponent<SelectSpec, SelectElement> = createComponent(sel
 export const SplitButton: MComponent<SplitButtonSpec, SplitButtonElement> = createComponent(splitButtonElement.spec, defineSplitButton, "SplitButton");
 export const Tooltip: MComponent<TooltipSpec, TooltipElement> = createComponent(tooltipElement.spec, defineTooltip, "Tooltip");
 export const Snackbar: MComponent<SnackbarSpec, SnackbarElement> = createComponent(snackbarElement.spec, defineSnackbar, "Snackbar");
+export const Dialog: MComponent<DialogSpec, DialogElement> = createComponent(dialogElement.spec, defineDialog, "Dialog");
+export const BottomSheet: MComponent<BottomSheetSpec, BottomSheetElement> = createComponent(bottomSheetElement.spec, defineBottomSheet, "BottomSheet");
+export const SideSheet: MComponent<SideSheetSpec, SideSheetElement> = createComponent(sideSheetElement.spec, defineSideSheet, "SideSheet");
 export const Tab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "Tab");
 export const Radio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "Radio");
 export const NavigationRailItem: MDeclaration<NavigationRailItemAttributes> = createDeclaration(navigationRailItemDeclaration, "NavigationRailItem");

@@ -9,6 +9,7 @@ import {
 import type { SwitchElement } from "../../dist/elements/index.js";
 import { Chip, Chips } from "../../dist/solid/index.js";
 import { Select, SelectOption } from "../../dist/solid/index.js";
+import { Dialog } from "../../dist/solid/index.js";
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 
@@ -29,6 +30,7 @@ export const App = () => {
   const [progress, setProgress] = createSignal(30);
   const [fruit, setFruit] = createSignal<string | null>("b");
   const [pet, setPet] = createSignal<string | null>("cat");
+  const [dialog, setDialog] = createSignal(false);
   let switchRef: SwitchElement | undefined;
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
 
@@ -36,7 +38,7 @@ export const App = () => {
     (window as unknown as { api: unknown }).api = {
       log,
       get submits() { return submits; },
-      setControlled, setExtra, setOrder, setShow, setProgress,
+      setControlled, setExtra, setOrder, setShow, setProgress, setDialog,
       element: () => switchRef,
     };
   });
@@ -91,6 +93,11 @@ export const App = () => {
         <SelectOption value="dog">Dog</SelectOption>
       </Select>
       <output id="pet">{String(pet())}</output>
+      {/* Controlled: Escape closes the dialog, and onClose puts the state in step */}
+      <Dialog id="dg" open={dialog()} onClose={() => setDialog(false)}>
+        <span slot="headline">Discard draft?</span>Your changes will be lost.
+      </Dialog>
+      <output id="dialog">{String(dialog())}</output>
       <For each={order()}>{(key) => <Switch id={`o${key}`}>Order {key}</Switch>}</For>
       <Show when={show()}><Switch id="gone">Gone</Switch></Show>
       {/* Mounted in the browser after the element is defined: Solid writes a

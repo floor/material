@@ -6,6 +6,7 @@ import {
 import { DialogConfig } from './types';
 import type { ApiOptions } from './api';
 import type { EventCallback } from '../../core/state/emitter';
+import { supportsTopLayer } from '../../core/dom/layer';
 
 /**
  * Default configuration for the Dialog component
@@ -29,8 +30,13 @@ export const defaultConfig: DialogConfig = {
  * @param {DialogConfig} config - User provided configuration
  * @returns {DialogConfig} Complete configuration with defaults applied
  */
-export const createBaseConfig = (config: DialogConfig = {}): DialogConfig => 
-  createComponentConfig(defaultConfig, config, 'dialog') as DialogConfig;
+export const createBaseConfig = (config: DialogConfig = {}): DialogConfig => {
+  const merged = createComponentConfig(defaultConfig, config, 'dialog') as DialogConfig;
+  // Without showModal() the dialog keeps its overlay, so the features only
+  // ever see a top layer they can use
+  if (merged.layer === 'top' && !supportsTopLayer('modal')) merged.layer = undefined;
+  return merged;
+};
 
 /**
  * Generates element configuration for the Dialog component
@@ -55,7 +61,8 @@ export const getElementConfig = (config: DialogConfig) => {
   }
 
   return createElementConfig(config, {
-    tag: 'div',
+    // In the top layer the dialog is a native <dialog>, shown with showModal()
+    tag: config.layer === 'top' ? 'dialog' : 'div',
     attributes,
     className: config.class
   });

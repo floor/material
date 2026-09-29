@@ -114,8 +114,10 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   core: kb(3.1),
   badge: kb(5.3),
   "bottom-app-bar": kb(4.1),
-  "bottom-sheet": kb(5.6),
-  "side-sheet": kb(5.3),
+  // layer: "top" (the top-layer helper, the Tab wrap for slotted content, cancel and
+  // the backdrop): the bottom sheet 5,652 to 6,409, the side sheet 5,279 to 6,021
+  "bottom-sheet": kb(6.4),
+  "side-sheet": kb(6.0),
   button: kb(7.6),
   "button-group": kb(11.6),
   card: kb(7.0),
@@ -123,9 +125,9 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   checkbox: kb(5.5),
   chips: kb(9.1), // FLO-256..261 chips conformance; #221 pointer focus
   datepicker: kb(11.8), // FLO-238 conformance; FLO-274 swiping; FLO-275 year list; FLO-276 full screen
-  dialog: kb(11.8),
+  dialog: kb(12.7), // layer: "top", as the sheets: 12,047 to 12,870
   divider: kb(3.7),
-  drawer: kb(7.5),
+  drawer: kb(8.1), // the modal drawer's layer: "top": 7,622 to 8,109
   fab: kb(5.6),
   "extended-fab": kb(6.1),
   "icon-button": kb(6.6),
@@ -152,9 +154,9 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   tooltip: kb(5.9), // layer: "top" and the core/dom top-layer helper: 5,562 to 5,952
   // the conformance work above, measured 2026-09-29; the menu's top layer (#251) to 112,692; select and
   // split button passing the layer, and the opener's focus test across shadow roots, to 112,845; the
-  // tooltip and snackbar top layer to 113,481; the time picker limits and steps (FLO-281): 113,297 on
-  // main. WAVE2_ALL_MEASURED
-  all: kb(110.9),
+  // tooltip and snackbar top layer to 113,481; the modal surfaces' top layer to 113,761 (each measured
+  // alone on dba5ba9); the time picker limits and steps (FLO-281): 113,297 on main. WAVE2_ALL_MEASURED
+  all: kb(111.2),
 };
 
 export interface SizeGateInput {
