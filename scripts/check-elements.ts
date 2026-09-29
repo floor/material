@@ -4580,6 +4580,145 @@ try {
       action: { recreated: true, label: "Restore" },
     });
     check("snackbar: its text and message change in place, action recreates");
+
+    // The modals move while the snackbar shows. They are plain dialogs in
+    // another element's open shadow root, as <m-dialog> renders one: the
+    // snackbar is not their descendant, so it finds them by focus.
+    await fresh(page, `<div id="ps"></div><div id="ps-other"></div><button id="ps-page" type="button">Page</button>`);
+    await page.evaluate(() => {
+      const w = window as unknown as PopWin & { __modals: Record<string, HTMLDialogElement> };
+      const root = (document.getElementById("ps") as HTMLElement).attachShadow({ mode: "open" });
+      root.innerHTML = `<m-snackbar id="ps-bar" action="Undo" duration="0">Archived</m-snackbar>`;
+      const other = (document.getElementById("ps-other") as HTMLElement).attachShadow({ mode: "open" });
+      const full = "width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0";
+      other.innerHTML = `<dialog id="outer" style="${full}"><button type="button">Outer</button>
+          <dialog id="inner" style="${full}"><button type="button">Inner</button></dialog></dialog>`;
+      w.__modals = { outer: other.getElementById("outer") as HTMLDialogElement, inner: other.getElementById("inner") as HTMLDialogElement };
+      w.__pop = { root, events: [] };
+      const bar = root.getElementById("ps-bar") as HTMLElement;
+      for (const type of ["open", "action", "close"]) {
+        bar.addEventListener(type, (event) => {
+          const reason = (event as CustomEvent<{ reason?: string } | null>).detail?.reason;
+          w.__pop.events.push(reason ? `${type}:${reason}` : type);
+        });
+      }
+    });
+    const modals = (fn: "outer" | "inner" | "closeOuter" | "closeInner"): Promise<void> =>
+      page.evaluate((fn) => {
+        const { outer, inner } = (window as unknown as { __modals: Record<string, HTMLDialogElement> }).__modals;
+        ({
+          outer: () => outer.showModal(),
+          inner: () => inner.showModal(),
+          closeOuter: () => outer.close(),
+          closeInner: () => inner.close(),
+        })[fn]();
+      }, fn);
+    /** Where the surface is, whether it is on top at its action, and whether Chrome exposes its live region */
+    const where = async (): Promise<{ open: boolean; place: string; above: boolean; live: boolean; events: string[] }> => {
+      const state = await page.evaluate(() => {
+        const { root, events } = (window as unknown as PopWin).__pop;
+        const bar = root.getElementById("ps-bar") as Host;
+        const surface = bar.component?.element as HTMLElement;
+        const action = surface.querySelector("button") as HTMLElement;
+        const r = action.getBoundingClientRect();
+        const hit = (surface.getRootNode() as ShadowRoot).elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        let place = "home";
+        for (let node: Node | null = surface; node; node = node.parentNode ?? (node as ShadowRoot).host ?? null) {
+          if (node instanceof HTMLDialogElement) {
+            place = node.id;
+            break;
+          }
+        }
+        return { open: surface.matches(":popover-open"), place, above: !!hit && action.contains(hit), events: [...events] };
+      });
+      const { nodes } = (await client.send("Accessibility.getFullAXTree")) as {
+        nodes: Array<{ role?: { value: string }; ignored?: boolean }>;
+      };
+      // Asked only while it shows: a closed one's node may linger in the tree
+      return { ...state, live: state.open && nodes.some((n) => n.role?.value === "status" && !n.ignored) };
+    };
+
+    // 1. The modal it opened in closes: it goes home, still open and on top,
+    // and its duration runs on from the start, closing once
+    await modals("outer");
+    await page.evaluate(() => {
+      const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host;
+      bar.setAttribute("duration", "1500");
+      bar.show();
+    });
+    await wait(400);
+    const inModal = await where();
+    await modals("closeOuter");
+    await wait(200);
+    const backHome = await where();
+    await wait(600);
+    const stillOpen = (await where()).open;
+    await wait(800);
+    assert.deepEqual(
+      { inModal, backHome, stillOpen, after: await where() },
+      {
+        inModal: { open: true, place: "outer", above: true, live: true, events: ["open"] },
+        backHome: { open: true, place: "home", above: true, live: true, events: ["open"] },
+        stillOpen: true,
+        after: { open: false, place: "home", above: false, live: false, events: ["open", "close:timeout"] },
+      }
+    );
+    check("snackbar: the modal it is in closing sends it home, still on top, its timer running on, closing once");
+
+    // 2. A modal opens while it shows: it moves in, clickable, its live region
+    // still exposed (not announced again: its text has not changed)
+    await page.evaluate(() => {
+      const { root, events } = (window as unknown as PopWin).__pop;
+      events.length = 0;
+      const bar = root.getElementById("ps-bar") as Host;
+      bar.setAttribute("duration", "0");
+      bar.show();
+    });
+    await wait(400);
+    const before = await where();
+    await modals("outer");
+    await wait(100);
+    const opened = await where();
+    assert.deepEqual(
+      { before, opened },
+      {
+        before: { open: true, place: "home", above: true, live: true, events: ["open"] },
+        opened: { open: true, place: "outer", above: true, live: true, events: ["open"] },
+      }
+    );
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
+    await wait(600);
+    const undone = await where();
+    await modals("closeOuter");
+    assert.deepEqual(undone, { open: false, place: "home", above: false, live: false, events: ["open", "action", "close:action"] });
+    check("snackbar: a modal opening while it shows takes it in, clickable, its live region exposed, the action once");
+
+    // 3. Nested modals: the topmost wins, and closing it hands the snackbar
+    // to the one below
+    await page.evaluate(() => void ((window as unknown as PopWin).__pop.events.length = 0));
+    await modals("outer");
+    await modals("inner");
+    await page.evaluate(() => void ((window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host).show());
+    await wait(400);
+    const top = await where();
+    await modals("closeInner");
+    await wait(100);
+    const below = await where();
+    await modals("closeOuter");
+    await wait(100);
+    const out = await where();
+    await page.evaluate(() => void ((window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host & { hide: () => unknown }).hide());
+    await wait(600);
+    assert.deepEqual(
+      { top, below, out, events: (await where()).events },
+      {
+        top: { open: true, place: "inner", above: true, live: true, events: ["open"] },
+        below: { open: true, place: "outer", above: true, live: true, events: ["open"] },
+        out: { open: true, place: "home", above: true, live: true, events: ["open"] },
+        events: ["open", "close:api"],
+      }
+    );
+    check("snackbar: of nested modals the topmost takes it, then the one below, then home");
   }
 
   // ---------------------------------------------------------------- theme

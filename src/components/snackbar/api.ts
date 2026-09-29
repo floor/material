@@ -44,6 +44,8 @@ export const withAPI =
     let restore: (() => void) | null = null;
     if (topLayer) element.setAttribute('popover', 'manual');
 
+    const showOnTop = (): void => void showInTopLayer(element, { kind: 'popover-manual' });
+
     /** Takes the element off the page, or out of the top layer back to its place */
     const takeOff = (): void => {
       if (!topLayer) {
@@ -126,8 +128,8 @@ export const withAPI =
       previouslyFocused = deepActiveElement();
       if (topLayer) {
         // Shown again before it was taken off: it is still in place
-        restore ??= placeInLayer(element);
-        showInTopLayer(element, { kind: 'popover-manual' });
+        restore ??= placeInLayer(element, showOnTop);
+        showOnTop();
       } else {
         element.ownerDocument.body.appendChild(element);
       }

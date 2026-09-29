@@ -184,6 +184,58 @@ describe('snackbar layer: top', () => {
     expect(snackbar.element.parentNode).toBe(dialog);
   });
 
+  test('a modal in another element\'s shadow root is found with focus on the body', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const root = host.attachShadow({ mode: 'open' });
+    const dialog = document.createElement('dialog');
+    root.append(dialog);
+    modal.add(dialog);
+    (document.activeElement as HTMLElement | null)?.blur();
+    const snackbar = make({ layer: 'top' });
+    snackbar.show();
+    expect(snackbar.element.parentNode).toBe(dialog);
+  });
+
+  test('the modal closing sends it home, still open and shown, closing once later', async () => {
+    const owner = document.createElement('section');
+    const outside = document.createElement('button');
+    document.body.append(owner, outside);
+    const snackbar = make({ layer: 'top' });
+    const closes: unknown[] = [];
+    snackbar.on('close', (event) => closes.push(event.reason));
+    owner.append(snackbar.element);
+    const dialog = openModal();
+    snackbar.show();
+    expect(snackbar.element.parentNode).toBe(dialog);
+    modal.delete(dialog);
+    outside.focus();
+    dialog.dispatchEvent(new dom.window.Event('close'));
+    expect(snackbar.element.parentNode).toBe(owner);
+    expect(snackbar.state).toBe('visible');
+    expect(snackbar.element.matches(':popover-open')).toBe(true);
+    expect(closes).toEqual([]);
+    snackbar.hide();
+    await after(500);
+    expect(closes).toEqual(['api']);
+  });
+
+  test('a modal opening while it shows takes it in; the topmost of nested modals wins', () => {
+    const snackbar = make({ layer: 'top' });
+    snackbar.show();
+    expect(snackbar.element.parentNode).toBe(document.body);
+    const outer = openModal();
+    expect(snackbar.element.parentNode).toBe(outer);
+    const inner = openModal(outer);
+    expect(snackbar.element.parentNode).toBe(inner);
+    expect(snackbar.element.matches(':popover-open')).toBe(true);
+    // The inner closes: focus goes back into the outer
+    modal.delete(inner);
+    (outer.querySelector('button') as HTMLElement).focus();
+    inner.dispatchEvent(new dom.window.Event('close'));
+    expect(snackbar.element.parentNode).toBe(outer);
+  });
+
   test('without popover support it is the snackbar without a layer', async () => {
     removePopover();
     const snackbar = make({ layer: 'top' });
