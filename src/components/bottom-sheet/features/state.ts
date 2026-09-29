@@ -7,6 +7,7 @@ import {
   BOTTOM_SHEET_STATES,
   BOTTOM_SHEET_VARIANTS,
 } from "../constants";
+import { deepActiveElement } from "../../../core/dom/focus";
 
 interface StateComponent {
   element: HTMLElement;
@@ -72,7 +73,7 @@ export const withState =
       const wasHidden = state === BOTTOM_SHEET_STATES.HIDDEN;
 
       if (wasHidden && isModal) {
-        previouslyFocused = document.activeElement as HTMLElement | null;
+        previouslyFocused = deepActiveElement() as HTMLElement | null;
       }
 
       setState(to);

@@ -3,6 +3,7 @@
 import type { SearchComponent } from "../types";
 import { SearchConfig, SearchStructure, SearchSuggestion, SearchViewMode } from "../types";
 import { SEARCH_CLASSES, SEARCH_EVENTS } from "../constants";
+import { activeElementOf } from "../../../core/dom/focus";
 
 /**
  * Normalizes suggestions to SearchSuggestion[] format
@@ -324,7 +325,7 @@ export const withInput =
         const delay = config.collapseDelay ?? 150;
         setTimeout(() => {
           // Only collapse if still blurred (not re-focused)
-          if (document.activeElement !== input) {
+          if (activeElementOf(input) !== input) {
             component.states.collapse();
           }
         }, delay);

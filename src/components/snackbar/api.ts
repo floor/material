@@ -14,6 +14,7 @@ import {
 } from './types';
 import { SNACKBAR_CLASSES, SNACKBAR_DEFAULTS } from './constants';
 import { durationToMs } from './config';
+import { activeElementOf, deepActiveElement } from '../../core/dom/focus';
 
 /**
  * Enhances snackbar component with API methods
@@ -90,7 +91,7 @@ export const withAPI =
 
       // Focus goes back where it came from if it was inside the snackbar;
       // otherwise it is not touched (M3 snackbar accessibility: focus).
-      const active = element.ownerDocument.activeElement;
+      const active = activeElementOf(element);
       if (active && element.contains(active) && previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) {
         previouslyFocused.focus();
       }
@@ -104,7 +105,7 @@ export const withAPI =
 
     const open = (): void => {
       cancelRemoval();
-      previouslyFocused = element.ownerDocument.activeElement;
+      previouslyFocused = deepActiveElement();
       element.ownerDocument.body.appendChild(element);
       layout();
       // Force reflow so the enter transition runs from the hidden state

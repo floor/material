@@ -4,6 +4,7 @@ import createMenu from "../menu";
 import { MenuItem, MenuContent, MenuDivider, MenuPosition } from "../menu/types";
 import { SelectOption, SelectConfig, SelectComponent, BaseComponent } from "./types";
 import { warnUnknownValue } from "../../core/utils/warn";
+import { activeElementOf } from "../../core/dom/focus";
 
 /**
  * Creates a textfield for the select component
@@ -542,9 +543,9 @@ export const withMenu =
       // Just update styling based on actual focus state with a small delay
       setTimeout(() => {
         const PREFIX = config.prefix || "mtrl";
+        const active = activeElementOf(textfield.element);
         const isFocused =
-          document.activeElement === textfield.input ||
-          textfield.element.contains(document.activeElement);
+          active === textfield.input || textfield.element.contains(active);
 
         // Update styling based on actual focus state
         if (isFocused) {

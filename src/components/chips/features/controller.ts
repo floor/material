@@ -11,6 +11,7 @@ import {
 } from "../types";
 import createChip from "../chip/chip";
 import { CHIPS_EVENTS } from "../constants";
+import { activeElementOf } from "../../../core/dom/focus";
 
 /**
  * Add controller functionality to chips component
@@ -259,7 +260,7 @@ export const withController =
 
     if (index >= 0 && index < component.chipInstances.length) {
       const chip = component.chipInstances[index];
-      const hadFocus = chip.element.contains(document.activeElement);
+      const hadFocus = chip.element.contains(activeElementOf(chip.element));
 
       // Dispatch remove event before actual removal
       dispatchEvent(CHIPS_EVENTS.REMOVE, chip);
