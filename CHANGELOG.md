@@ -67,6 +67,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Text field: the outlined variant's floating label sits in a notch of the outline
+  (#234).** The outline is drawn in three segments, and while the label floats the middle
+  one drops its top edge: the label's floated width plus 4dp on each side, starting 12dp
+  in. Nothing is painted behind the label any more. It used to copy the nearest ancestor's
+  background onto the label, which found `document.body` from inside `<m-textfield>`'s
+  shadow root, covered any card that is not one flat colour, and kept a mutation observer
+  per ancestor and a `themechange` listener for each field. The notch follows the label's
+  text, density and direction; the outline is 1dp in `outline` at rest, `on-surface` on
+  hover and 2dp `primary` on focus, in `error` for errors and `on-surface` at 12% disabled.
 - **Time picker: a native modal dialog (FLO-278).** It opens with `showModal()`, over a
   0.32 scrim, with the page inert; it takes focus on open and returns it on close. Escape and
   a click on the backdrop cancel that picker only (Escape closed every open picker, and the
