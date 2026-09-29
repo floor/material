@@ -13,20 +13,19 @@
  * minute, as on `<input type=time>`; empty is `""`. The dial starts on the
  * value, or on the current time when there is none.
  *
- * The factory's time changes as the dial moves and stays when it is
- * cancelled. The element keeps the committed value apart: OK commits the
- * time and dispatches `change` with `{ value }` when it differs; Cancel,
- * Escape, the backdrop and `close()` put the dial back. `open` reflects the
- * dialog's state, as on `<dialog open>`; `open` and `close` are dispatched as
- * it opens and closes (not when the attribute is what changed).
+ * The dial edits a draft (FLO-288): `input` is dispatched with `{ value }`
+ * as it moves, and OK commits it, dispatching `change` with `{ value }` when
+ * the time differs; Cancel, Escape and the backdrop discard it. `open`
+ * reflects the dialog's state, as on `<dialog open>`; `open` and `close` are
+ * dispatched as it opens and closes (not when the attribute is what changed).
  *
  * `step` is in seconds, as on `<input type=time>`: under a minute it shows
  * seconds and is their step (`secondStep`); from a minute up it is the
  * minute step (`minuteStep`), rounded to whole minutes, which is the finest
  * the dial has. `min` and `max` are the factory's `minTime` and `maxTime`.
  * Those three and `name` have no setter: changing one recreates the picker,
- * keeping the value. The element reports `required` itself, as
- * `valueMissing`.
+ * keeping the value. `disabled` is the factory's: it does not open. The
+ * element reports `required` itself, as `valueMissing`.
  *
  * @module elements
  */
@@ -37,14 +36,13 @@ import {
   type TimePickerComponent, type TimePickerConfig,
 } from "../components/timepicker/types";
 import { createEmitter, type EventCallback } from "../core/state/emitter";
-import { PREFIX } from "../core/config";
 import { defineElement, type DefineOptions, type ElementHost, type ElementInstance, type ElementSpec } from "./define";
 
-/** The time picker with a committed value, as the element sees it. */
+/** The time picker as the element sees it: its value can be empty. */
 export interface TimepickerElementComponent {
   element: HTMLElement;
   picker: TimePickerComponent;
-  /** The committed time, or "". */
+  /** The committed time, or "" before one is set or confirmed. */
   getValue: () => string;
   setValue: (value: string) => void;
   /** Opens the dialog, unless the picker is disabled. */
@@ -52,7 +50,6 @@ export interface TimepickerElementComponent {
   /** Closes the dialog without committing. */
   close: () => void;
   isOpen: () => boolean;
-  disabled: boolean;
   required: boolean;
   on: (event: string, handler: EventCallback) => void;
   off: (event: string, handler: EventCallback) => void;
@@ -62,7 +59,6 @@ export interface TimepickerElementComponent {
 interface TimepickerElementConfig extends TimePickerConfig {
   step?: number;
   required?: boolean;
-  disabled?: boolean;
 }
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/;
@@ -74,74 +70,54 @@ const steps = (step: number | undefined): Partial<TimePickerConfig> => {
   return { minuteStep: Math.round(step / 60) };
 };
 
+/**
+ * The factory keeps the draft and the committed time (FLO-288), but always
+ * holds a time: the element adds only whether its value is empty, as
+ * `<input type=time>`'s can be. The first OK fills it, with a `change` even
+ * when the factory's committed time did not move.
+ */
 const create = (config: TimepickerElementConfig): TimepickerElementComponent => {
-  const { step, required, disabled, value, ...rest } = config;
-  const holder = document.createElement("div");
+  const { step, required, value, ...rest } = config;
   const initial = value && TIME.test(value) ? value : "";
-  const picker = createTimePicker({ ...rest, ...steps(step), value: initial || undefined, container: holder });
-  // The dialog lives in the picker's own element, which the shadow root holds.
-  picker.element.append(picker.dialogElement);
-  const events = createEmitter();
-  let committed = initial && picker.getValue();
-  // The dial's time when it opened, which Cancel puts back, and whether OK closed it.
-  let draft = "";
-  let confirming = false;
+  const picker = createTimePicker({ ...rest, ...steps(step), value: initial || undefined });
+  const changes = createEmitter();
+  let empty = !initial;
+  const onChange = (time: string): void => {
+    empty = false;
+    changes.emit("change", time);
+  };
+  const onConfirm = (time: string): void => {
+    if (empty) onChange(time);
+  };
+  picker.on("change", onChange);
+  picker.on("confirm", onConfirm);
 
-  const onOpen = (): void => {
-    draft = picker.getValue();
-    confirming = false;
-    events.emit("open");
-  };
-  const onClose = (): void => {
-    if (confirming) {
-      const previous = committed;
-      committed = picker.getValue();
-      if (committed !== previous) events.emit("change", committed);
-    } else if (picker.getValue() !== draft) {
-      picker.setValue(draft);
-    }
-    confirming = false;
-    events.emit("close");
-  };
-  // OK closes the dialog, then emits `confirm`: it is known here first, before
-  // the factory's own click listener closes it.
-  const onClick = (event: MouseEvent): void => {
-    if (event.target instanceof Element && event.target.closest(`.${PREFIX}-time-picker__confirm`)) confirming = true;
-  };
-  picker.on("open", onOpen);
-  picker.on("close", onClose);
-  picker.dialogElement.addEventListener("click", onClick, true);
-
-  const component: TimepickerElementComponent = {
+  return {
     element: picker.element,
     picker,
-    getValue: () => committed,
+    getValue: () => (empty ? "" : picker.getValue()),
     setValue: (next) => {
       if (next && TIME.test(next)) {
+        empty = false;
         picker.setValue(next);
-        committed = picker.getValue();
       } else {
-        committed = "";
+        empty = true;
       }
     },
-    show: () => {
-      if (!component.disabled) picker.open();
-    },
+    show: () => void picker.open(),
     close: () => void picker.close(),
     isOpen: () => picker.isOpen,
-    disabled: !!disabled,
     required: !!required,
-    on: (event, handler) => void events.on(event, handler),
-    off: (event, handler) => events.off(event, handler),
+    // `change` is the element's; the rest are the factory's own.
+    on: (event, handler) => void (event === "change" ? changes.on(event, handler) : picker.on(event as "input", handler as (v: string) => void)),
+    off: (event, handler) => void (event === "change" ? changes.off(event, handler) : picker.off(event as "input", handler as (v: string) => void)),
     destroy: () => {
-      picker.off("open", onOpen);
-      picker.off("close", onClose);
-      picker.dialogElement.removeEventListener("click", onClick, true);
-      events.clear();
+      picker.off("change", onChange);
+      picker.off("confirm", onConfirm);
+      changes.clear();
       picker.destroy();
     },
   };
-  return component;
 };
 
 const hosts = new WeakMap<TimepickerElementComponent, ElementHost<TimepickerElementComponent>>();
@@ -164,10 +140,8 @@ const setValue = (c: TimepickerElementComponent, value: unknown): void => {
   validate(c);
 };
 
-const setDisabled = (c: TimepickerElementComponent, disabled: boolean): void => {
-  c.disabled = disabled;
-  if (disabled) c.close();
-};
+const setDisabled = (c: TimepickerElementComponent, disabled: boolean): void =>
+  void (disabled ? c.picker.disable() : c.picker.enable());
 
 /** Opens or closes the dialog; `open` then says whether it did (a disabled picker stays closed). */
 const setOpen = (c: TimepickerElementComponent, open: boolean, host: HTMLElement): void => {
@@ -224,6 +198,8 @@ const timepickerSpec = {
   methods: ["show", "close"] as const,
   events: {
     change: { detail: (payload) => ({ value: payload as string }) },
+    // The draft, live, as the dial and the fields move.
+    input: { detail: (payload) => ({ value: payload as string }) },
     open: { detail: () => null },
     close: { detail: () => null },
   },
@@ -244,11 +220,16 @@ const timepickerSpec = {
     c.on("open", reflect);
     c.on("close", reflect);
     c.on("change", onChange);
+    // The input mode's native `input` events are composed and would reach the
+    // host beside the element's own `input`, which carries the time.
+    const stop = (event: Event): void => event.stopPropagation();
+    c.element.addEventListener("input", stop);
     if (host.hasAttribute("open")) setOpen(c, true, host);
     return () => {
       c.off("open", reflect);
       c.off("close", reflect);
       c.off("change", onChange);
+      c.element.removeEventListener("input", stop);
     };
   },
 } satisfies ElementSpec<TimepickerElementComponent>;

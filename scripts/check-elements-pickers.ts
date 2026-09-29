@@ -40,7 +40,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
       const root = (document.getElementById("wrap") as HTMLElement).attachShadow({ mode: "open" });
       root.innerHTML = markup;
       const host = root.getElementById("x") as HTMLElement & { show: () => void };
-      for (const type of ["change", "open", "close"]) {
+      for (const type of ["change", "input", "open", "close"]) {
         host.addEventListener(type, (event) => void w.__log.push([type, (event as CustomEvent).detail]));
       }
       root.getElementById("opener")?.addEventListener("click", () => host.show());
@@ -374,12 +374,13 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     });
   const dial = (): Promise<{ draft: string; focused: string; disabled: string[] }> =>
     page.evaluate(() => {
-      const host = document.getElementById("wrap")?.shadowRoot?.getElementById("x") as HTMLElement & {
-        component: { picker: { getValue: () => string } };
-      };
+      const host = document.getElementById("wrap")?.shadowRoot?.getElementById("x") as HTMLElement;
       const root = host.shadowRoot as ShadowRoot;
+      // The draft, as the hour and minute boxes show it.
+      const box = (name: string): string =>
+        (root.querySelector(`[class~="mtrl-time-picker__${name}"]`)?.textContent ?? "").trim().padStart(2, "0");
       return {
-        draft: host.component.picker.getValue(),
+        draft: `${box("hours")}:${box("minutes")}`,
         focused: root.activeElement?.textContent ?? "",
         disabled: [...root.querySelectorAll('[role="option"][aria-disabled="true"]')].map((o) => o.textContent ?? ""),
       };
@@ -429,7 +430,8 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     await wait(200);
     const cancelled = await state();
     assert.deepEqual({ ...cancelled, draft: (await dial()).draft }, {
-      value: "09:30", open: false, modal: false, reflected: false, form: "09:30", log: [["close", null]], focus: "opener", draft: "09:30",
+      value: "09:30", open: false, modal: false, reflected: false, form: "09:30",
+      log: [["input", { value: "10:30" }], ["close", null]], focus: "opener", draft: "09:30",
     });
     check("timepicker: Cancel commits nothing, dispatches no change, puts the dial back and returns focus to the opener");
 
@@ -442,7 +444,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     await wait(200);
     const escaped = await state();
     assert.deepEqual({ value: escaped.value, log: escaped.log, draft: (await dial()).draft }, {
-      value: "09:30", log: [["open", null], ["close", null]], draft: "09:30",
+      value: "09:30", log: [["open", null], ["input", { value: "10:30" }], ["close", null]], draft: "09:30",
     });
     check("timepicker: Escape commits nothing and puts the dial back");
 
@@ -451,12 +453,17 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     await focusDial();
     await page.keyboard.press("ArrowRight");
     await page.keyboard.press("Enter");
+    const drafted = await state();
+    assert.deepEqual({ value: drafted.value, form: drafted.form, log: drafted.log }, {
+      value: "09:30", form: "09:30", log: [["open", null], ["input", { value: "10:30" }]],
+    });
+    check("timepicker: input carries the draft as the dial moves; change waits for OK");
     await timeButton("confirm").click();
     await wait(200);
     const confirmed = await state();
     assert.deepEqual(confirmed, {
       value: "10:30", open: false, modal: false, reflected: false, form: "10:30",
-      log: [["open", null], ["change", { value: "10:30" }], ["close", null]], focus: "opener",
+      log: [["change", { value: "10:30" }], ["close", null]], focus: "opener",
     });
     check("timepicker: OK commits once: one change with the 24-hour time, the form value, focus back on the opener");
 
@@ -493,11 +500,32 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     await timeButton("confirm").click();
     await wait(200);
     const typed = await state();
-    assert.deepEqual({ initial: initial.value, value: typed.value, form: typed.form, log: typed.log }, {
+    const committed = typed.log.filter(([type]) => type !== "input");
+    assert.deepEqual({ initial: initial.value, value: typed.value, form: typed.form, log: committed }, {
       initial: "09:30:00", value: "11:45:15", form: "11:45:15",
       log: [["open", null], ["change", { value: "11:45:15" }], ["close", null]],
     });
     check("timepicker: input mode takes typing; step 15 shows seconds and rounds them to the step");
+  }
+
+  // An empty picker: the first OK fills it, with a change, even on the time the dial opened on.
+  await stage(`<form id="f"><button id="opener" type="button">Pick</button>
+    <m-timepicker id="x" name="x" format="24h" required></m-timepicker></form>`);
+  {
+    const before = await state();
+    const invalid = await page.evaluate(() => (document.getElementById("wrap")?.shadowRoot?.getElementById("x") as HTMLElement).matches(":invalid"));
+    await page.locator("#wrap #opener").click();
+    await wait(200);
+    await timeButton("confirm").click();
+    await wait(200);
+    const after = await state();
+    const valid = await page.evaluate(() => (document.getElementById("wrap")?.shadowRoot?.getElementById("x") as HTMLElement).matches(":valid"));
+    const change = after.log.find(([type]) => type === "change");
+    assert.deepEqual(
+      { before: [before.value, before.form, invalid], filled: /^\d\d:\d\d$/.test(after.value), form: after.form === after.value, change, valid },
+      { before: ["", "", true], filled: true, form: true, change: ["change", { value: after.value }], valid: true }
+    );
+    check("timepicker: an empty picker is valueMissing until OK fills it, with one change");
   }
 
   // Model rule, form value, reset, validity and <label for>.

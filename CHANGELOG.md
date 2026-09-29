@@ -172,9 +172,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - **Elements: `<m-timepicker>`**, and `Timepicker` in the adapters. A form-associated time
   picker with no field of its own, opened by `show()`, the `open` attribute (reflected) or a
   `<label for>`, in the top layer. `value` is the model and the form value, a 24-hour
-  `HH:MM` (`HH:MM:SS` with a `step` under a minute) as on `<input type=time>`; OK dispatches
-  `change` (`{ value }`) when the time differs, and Cancel, Escape or the backdrop put the
-  dial back. `format`, `type` (dial or input) and `orientation` change in place; `min`,
+  `HH:MM` (`HH:MM:SS` with a `step` under a minute) as on `<input type=time>`, or `""`
+  until one is set or confirmed. The dial edits the factory's draft (FLO-288): `input`
+  (`{ value }`) as it moves, `change` (`{ value }`) when OK commits a different time (or
+  fills an empty picker), and Cancel, Escape or the backdrop discard it. `format`, `type` (dial or input) and `orientation` change in place; `min`,
   `max` and `step` (seconds, as the minute or second step); `label`, `required`
   (`valueMissing`), `disabled`; reset and restore; `open` and `close` events.
 
