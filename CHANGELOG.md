@@ -160,6 +160,17 @@ variant and a scrolling year picker, and the outlined text field an M3 notched o
 
 ### Fixed
 
+- **Keyboard and focus inside a shadow root (#244).** Factories found the focused element
+  with `document.activeElement`, which is the shadow host when focus is inside a shadow
+  root: the navigation rail's and the drawer's arrow keys did nothing there, a menu's arrows
+  jumped back to the first item, a chip removed from the keyboard dropped focus, a list or
+  rail rendering again lost the focused item, a select lost its focused styling, a search
+  collapsed with focus back in its field, a modal drawer or rail let Tab out, and a
+  dialog, modal sheet, modal drawer or snackbar returned focus to the host rather than its
+  opener. They now read their own root through
+  `activeElementOf(node)` in `core/dom`, and an overlay saves the focused element through
+  open shadow roots with `deepActiveElement()`. `<m-navigation-rail>` and `<m-drawer>` drop
+  the key handlers that covered for it.
 - **Extended FAB: no manufactured `aria-label` (#232).** It is set only from `ariaLabel`. The
   factory copied `text` into it, which named `<m-extended-fab>`'s button
   "[object HTMLSlotElement]" until the element removed it again, and gave an extended FAB

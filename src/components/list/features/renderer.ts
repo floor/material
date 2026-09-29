@@ -1,5 +1,6 @@
 import { LIST_EVENTS } from "../constants";
 import { getCleanup } from "../../../core/compose/cleanup";
+import { activeElementOf } from "../../../core/dom/focus";
 import { isDataItem, itemId, itemLabel, renderAnatomy } from "./anatomy";
 import type { ListConfig, ListFeatureHost, ListItem, ListRenderer, ListRow, ScrollPosition } from "../types";
 
@@ -24,7 +25,7 @@ export const withRenderer = (config: ListConfig<ListItem>) =>
       if (ids.has(id)) throw new Error(`Duplicate list item ID: ${id}`);
       ids.add(id);
     }
-    const active = rows.find(row => row.action === document.activeElement)?.id;
+    const active = rows.find(row => row.action === activeElementOf(container))?.id;
     rows = [];
     const fragment = document.createDocumentFragment();
     items.forEach((item, index) => {

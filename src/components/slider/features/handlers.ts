@@ -1,6 +1,7 @@
 // src/components/slider/features/handlers.ts
 import { SLIDER_EVENTS } from "../types";
 import { arrowSign, getAxis, isRtl } from "./axis";
+import { activeElementOf } from "../../../core/dom/focus";
 import {
   SliderConfig,
   SliderEventHelpers,
@@ -141,7 +142,7 @@ export const createHandlers = (
 
       // Only blur a handle belonging to this slider. Blurring on the strength
       // of a class name alone took focus off another component's handle.
-      const active = document.activeElement as HTMLElement | null;
+      const active = activeElementOf(state.component.element) as HTMLElement | null;
       if (
         active &&
         state.component.element.contains(active) &&

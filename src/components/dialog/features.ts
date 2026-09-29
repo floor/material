@@ -18,6 +18,7 @@ import type { DividerComponent } from "../divider/types";
 import { addClass, removeClass } from "../../core/dom/classes";
 
 import { setHTML } from "../../core/dom/html";
+import { activeElementOf, deepActiveElement } from "../../core/dom/focus";
 const DIALOG_EVENTS = {
   OPEN: "open",
   CLOSE: "close",
@@ -463,7 +464,7 @@ export const withVisibility =
       (el) =>
         !el.hasAttribute("disabled") &&
         el.getAttribute("aria-hidden") !== "true" &&
-        (el.offsetWidth > 0 || el.offsetHeight > 0 || el === document.activeElement)
+        (el.offsetWidth > 0 || el.offsetHeight > 0 || el === activeElementOf(el))
     );
 
   /**
@@ -482,7 +483,7 @@ export const withVisibility =
     }
     const first = elements[0];
     const last = elements[elements.length - 1];
-    const active = document.activeElement;
+    const active = activeElementOf(component.element);
     if (e.shiftKey && (active === first || !component.element.contains(active))) {
       last.focus();
       e.preventDefault();
@@ -612,7 +613,7 @@ export const withVisibility =
       if (this.isOpen()) return;
 
       // Store the currently focused element
-      previouslyFocusedElement = document.activeElement as HTMLElement;
+      previouslyFocusedElement = deepActiveElement() as HTMLElement;
 
       // Trigger before open event
       const beforeOpenEvent = {

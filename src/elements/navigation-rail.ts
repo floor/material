@@ -80,9 +80,6 @@ const readRail = (host: HTMLElement): Config =>
 const withoutActive = (items: NavigationRailItemConfig[]): string =>
   JSON.stringify(items.map(({ active: _active, ...item }) => item));
 
-const itemElements = (component: NavigationRailComponent): HTMLElement[] =>
-  Array.from(component.element.querySelectorAll<HTMLElement>(`.${component.getClass("navigation-rail__item")}`));
-
 /**
  * Applies the declared items in place, keeping the selection. Returns false
  * when a header appears or goes, which the factory places only at creation.
@@ -92,31 +89,9 @@ const updateRail = (host: ElementHost<NavigationRailComponent>, component: Navig
   if (header !== !!headerSlot(host)) return false;
   const items = declaredItems(host, component.getActive());
   if (withoutActive(items) === withoutActive(component.getItems())) return true;
-  // The factory renders its items again and restores focus from
-  // document.activeElement, which is the host when focus is in its shadow root.
-  const focused = (host.shadowRoot?.activeElement as HTMLElement | null)?.dataset.id;
+  // The factory renders its items again and keeps the focused one focused.
   component.setItems(items);
-  if (focused !== undefined) {
-    itemElements(component).find((element) => element.dataset.id === focused && !element.hasAttribute("aria-disabled"))?.focus();
-  }
   return true;
-};
-
-/**
- * Arrow keys, Home and End move focus between the items, as the factory does
- * in light DOM: its handler looks for document.activeElement among the items,
- * and in a shadow root that is the host, so it never moves.
- */
-const moveFocus = (component: NavigationRailComponent) => (event: KeyboardEvent): void => {
-  if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
-  const enabled = itemElements(component).filter((element) => !element.hasAttribute("aria-disabled"));
-  const index = enabled.indexOf(event.target as HTMLElement);
-  if (index < 0) return;
-  const targets: Partial<Record<string, number>> = { ArrowDown: index + 1, ArrowUp: index - 1, Home: 0, End: enabled.length - 1 };
-  const next = targets[event.key];
-  if (next === undefined) return;
-  event.preventDefault();
-  enabled[(next + enabled.length) % enabled.length].focus();
 };
 
 const setAriaLabel = (component: NavigationRailComponent, value: unknown): void => {
@@ -165,13 +140,10 @@ const navigationRailSpec = {
     // `expanded` reflects the state the menu button changes; setting it back
     // to the same value is a no-op for the factory.
     const reflect = (): void => void host.toggleAttribute("expanded", component.isExpanded());
-    const onKeydown = moveFocus(component);
     component.on("select", onSelect);
     component.on("expand", reflect);
     component.on("collapse", reflect);
-    component.element.addEventListener("keydown", onKeydown);
     return () => {
-      component.element.removeEventListener("keydown", onKeydown);
       component.off("select", onSelect);
       component.off("expand", reflect);
       component.off("collapse", reflect);

@@ -9,6 +9,7 @@ import { createBaseConfig } from './config';
 import type { NavigationRailConfig, NavigationRailComponent, NavigationRailItemConfig } from './types';
 import { safeUrl } from '../../core/utils/url';
 import { setHTML } from "../../core/dom/html";
+import { activeElementOf } from "../../core/dom/focus";
 const copyItems = (items: NavigationRailItemConfig[]): NavigationRailItemConfig[] => {
     const ids = new Set<string>();
     let selected = false;
@@ -107,7 +108,7 @@ export default function createNavigationRail(config: NavigationRailConfig = {}):
         }
     };
     const render = (): void => {
-        const focusedId = [...nodes].find(([, element]) => element === document.activeElement)?.[0];
+        const focusedId = [...nodes].find(([, element]) => element === activeElementOf(destinations))?.[0];
         nodes.clear();
         destinations.replaceChildren();
         for (const item of items) {
@@ -235,7 +236,7 @@ export default function createNavigationRail(config: NavigationRailConfig = {}):
     };
     const handleKeydown = (event: KeyboardEvent): void => {
         const enabled = [...nodes.values()].filter(element => !element.hasAttribute('aria-disabled'));
-        const index = enabled.indexOf(document.activeElement as HTMLElement);
+        const index = enabled.indexOf(activeElementOf(destinations) as HTMLElement);
         if (index < 0 || event.altKey || event.ctrlKey || event.metaKey)
             return;
         let next: number;
@@ -261,7 +262,7 @@ export default function createNavigationRail(config: NavigationRailConfig = {}):
         if (event.key !== 'Tab' || event.defaultPrevented)
             return;
         const focusable = [...root.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex]')].filter(element => element.tabIndex >= 0 && !element.matches(':disabled, [aria-disabled="true"]') && element.getClientRects().length > 0);
-        const first = focusable[0], last = focusable.at(-1), focused = root.ownerDocument.activeElement;
+        const first = focusable[0], last = focusable.at(-1), focused = activeElementOf(root);
         if (!first) {
             event.preventDefault();
             root.focus();

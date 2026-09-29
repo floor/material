@@ -81,32 +81,6 @@ const updateDrawer = (host: ElementHost<DrawerComponent>, component: DrawerCompo
   return true;
 };
 
-/**
- * Arrow keys, Home and End move focus between the items, and Enter or Space
- * selects the focused one, as the factory does in light DOM: its handler
- * looks for document.activeElement among the items, and in a shadow root that
- * is the host. It still prevents the default of Enter and Space, so the
- * button's own activation never happens either.
- */
-const handleKeys = (component: DrawerComponent) => (event: KeyboardEvent): void => {
-  if (event.altKey || event.ctrlKey || event.metaKey) return;
-  const enabled = Array.from(
-    component.element.querySelectorAll<HTMLElement>(`.${component.getClass("drawer__item")}:not([disabled])`)
-  );
-  const index = enabled.indexOf(event.target as HTMLElement);
-  if (index < 0) return;
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault();
-    enabled[index].click();
-    return;
-  }
-  const targets: Partial<Record<string, number>> = { ArrowDown: index + 1, ArrowUp: index - 1, Home: 0, End: enabled.length - 1 };
-  const next = targets[event.key];
-  if (next === undefined) return;
-  event.preventDefault();
-  enabled[(next + enabled.length) % enabled.length].focus();
-};
-
 /** Selects an item; null clears the selection, which the factory does for an empty id. */
 const select = (component: DrawerComponent, value: unknown): void =>
   void component.setActive(value === null || value === undefined ? "" : String(value));
@@ -153,11 +127,8 @@ const drawerSpec = {
     const onSelect = ({ id }: { id: string }): void => {
       host.dispatchEvent(new CustomEvent("change", { detail: { value: id }, bubbles: true, composed: true }));
     };
-    const onKeydown = handleKeys(component);
     component.on("select", onSelect);
-    component.element.addEventListener("keydown", onKeydown);
     return () => {
-      component.element.removeEventListener("keydown", onKeydown);
       component.off("select", onSelect);
     };
   },

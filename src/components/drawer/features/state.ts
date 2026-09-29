@@ -1,5 +1,6 @@
 import { DrawerConfig } from "../types";
 import { DRAWER_EVENTS } from "../constants";
+import { activeElementOf, deepActiveElement } from "../../../core/dom/focus";
 
 interface StateBaseComponent {
   element: HTMLElement;
@@ -103,16 +104,19 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
     } else if (event.key === "Tab") {
       const items = focusable();
       const first = items[0], last = items.at(-1);
+      const active = activeElementOf(root);
       if (!first) { event.preventDefault(); root.focus(); }
-      else if (event.shiftKey && (doc.activeElement === first || doc.activeElement === root || !root.contains(doc.activeElement))) {
+      else if (event.shiftKey && (active === first || active === root || !root.contains(active))) {
         event.preventDefault(); last!.focus();
-      } else if (!event.shiftKey && (doc.activeElement === last || doc.activeElement === root || !root.contains(doc.activeElement))) {
+      } else if (!event.shiftKey && (active === last || active === root || !root.contains(active))) {
         event.preventDefault(); first.focus();
       }
     }
   }
-  function handleFocus(event: FocusEvent): void {
-    if (isOpen && isTopModal() && !root.contains(event.target as Node)) focusInside();
+  // The event's target is retargeted to the shadow host when focus moves
+  // inside a shadow root: where focus went is read from the drawer's own root.
+  function handleFocus(): void {
+    if (isOpen && isTopModal() && !root.contains(activeElementOf(root))) focusInside();
   }
   const synchronize = () => {
     root.classList.toggle(`${component.getClass("drawer")}--open`, isOpen);
@@ -122,7 +126,7 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   };
   const activate = () => {
     if (!isModal) return;
-    previousFocus = doc.activeElement as HTMLElement | null;
+    previousFocus = deepActiveElement() as HTMLElement | null;
     if (root.isConnected) acquireModal(root);
     doc.addEventListener("keydown", handleKeydown);
     doc.addEventListener("focusin", handleFocus);

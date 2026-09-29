@@ -8,6 +8,7 @@ import {
 } from "../../../core/compose/features/ripple";
 
 import { setHTML } from "../../../core/dom/html";
+import { activeElementOf } from "../../../core/dom/focus";
 /**
  * Component shape expected by withItems
  */
@@ -304,7 +305,7 @@ export const withItems =
 
       if (!items.length) return;
 
-      const currentIndex = items.indexOf(document.activeElement as HTMLElement);
+      const currentIndex = items.indexOf(activeElementOf(itemsContainer) as HTMLElement);
 
       let nextIndex = -1;
 
