@@ -141,8 +141,18 @@ export const TEXTFIELD_CLASSES = {
   PREFIX_TEXT: "textfield__prefix",
   /** Suffix text class */
   SUFFIX_TEXT: "textfield__suffix",
-  /** Reserved slot; the current outline is drawn on the root element. */
+  /** Outline of the outlined variant, drawn in three segments */
   OUTLINE: "textfield__outline",
+  /** Outline segment before the label (start corner) */
+  OUTLINE_LEADING: "textfield__outline-leading",
+  /** Outline segment the floating label sits in */
+  OUTLINE_NOTCH: "textfield__outline-notch",
+  /** Outline segment after the label */
+  OUTLINE_TRAILING: "textfield__outline-trailing",
+  /** Outline whose notch is open around the floating label */
+  OUTLINE_NOTCHED: "textfield__outline--notched",
+  /** Outlined field laid out right to left, from its computed direction */
+  RTL: "textfield--rtl",
   /** Multiline class */
   MULTILINE: "textfield--multiline",
 } as const;

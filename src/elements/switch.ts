@@ -3,7 +3,8 @@
  * `<m-switch>`: the switch as a form-associated custom element.
  *
  * The `checked` attribute is the default state and the `checked` property the
- * live one, as on a native checkbox. Children are the label.
+ * live one, as on a native checkbox: the attribute moves the state until the
+ * user or script changes it. Children are the label.
  *
  * @module elements
  */

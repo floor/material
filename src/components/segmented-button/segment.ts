@@ -74,7 +74,9 @@ export const createSegment = (
     ripple: options.ripple,
     rippleConfig: options.rippleConfig,
     class: config.class,
-    ariaLabel: config.text || config.value,
+    // The text names a segment that has it; only an icon-only one needs a
+    // label (#232).
+    ariaLabel: isIconOnly ? config.value : undefined,
   });
 
   // Add segment-specific classes

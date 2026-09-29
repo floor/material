@@ -3,7 +3,8 @@
  * `<m-textfield>`: the text field as a form-associated custom element.
  *
  * The `value` attribute is the default value and the `value` property the
- * live one, as on a native input. The `label` attribute is the floating
+ * live one, as on a native input: the attribute moves the value until the
+ * user or script changes it. The `label` attribute is the floating
  * label, which the factory renders; there is no slot.
  *
  * `label` and `type` have no setter on the text field: changing one
@@ -62,7 +63,7 @@ const textfieldSpec = {
     label: { type: "string", config: "label" },
     type: { type: "string", config: "type" },
     // The default value: the inner input's own, which the live value follows
-    // until it is edited, as natively.
+    // until it is edited, as natively. Not called once the element is dirty.
     value: {
       type: "string",
       config: "value",

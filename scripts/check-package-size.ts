@@ -141,7 +141,10 @@ try {
     { name: "form", code: "export { createButton, createTextfield, createCheckbox } from 'mtrl';", gzip: 22000 },
     { name: "all-js", code: "export * from 'mtrl';", gzip: 125000 },
     { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 6500 },
-    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 8000 },
+    // The outlined text field's notched outline (#234) adds 202, 7,863 to 8,065: three
+    // segments with their corners each way round, and the outline colour and width per
+    // state, in place of an input border and a focus overlay.
+    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 8200 },
     { name: "slider-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/slider';", gzip: 6500 },
     // The .43 rail-motion baseline is 47,117 bytes; core ripple adds about 20 bytes.
     // The tooltip stylesheet adds 486 (measured): it was authored but registered in no
@@ -154,7 +157,9 @@ try {
     // spread across 34 blocks too far apart for gzip to share. The fixture read 48,709.
     // A chip set's grid cell draws its own 3px focus ring and focus layer (FLO-261): +57
     // (dist/styles.css at gzip level 9, 45,306 to 45,363); the fixture read 49,323.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 51300 },
+    // The outlined text field's notched outline (#234): +202, the fixture read 50,865 to
+    // 51,067. The time picker's DOM dial (FLO-279): measured 51,497 with both in.
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 51500 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);

@@ -201,6 +201,15 @@ test('icon-only segments retain their icon while selected', () => {
   expect(group.element.querySelector('[data-icon="check"]')).toBeNull();
 });
 
+// #232. segment.ts passed `ariaLabel: config.text || config.value`, copying the
+// visible text into aria-label. Only an icon-only segment, which has no text, is
+// named from its value.
+test('a text segment is named by its text, an icon-only one by its value', () => {
+  const group = make({ segments: [{ text: 'Day', value: 'day' }, { value: 'week', icon }] });
+  expect(group.segments[0].element.hasAttribute('aria-label')).toBe(false);
+  expect(group.segments[1].element.getAttribute('aria-label')).toBe('week');
+});
+
 test('off removes a change subscription', () => {
   const group = make(); const events: SegmentedButtonEvent[] = []; const handler = (event: SegmentedButtonEvent) => events.push(event);
   group.on('change', handler).off('change', handler); click(group, 1); expect(events).toHaveLength(0);
