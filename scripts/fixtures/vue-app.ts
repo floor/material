@@ -8,6 +8,7 @@ import {
 } from "../../dist/vue/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 import { MChip, MChips } from "../../dist/vue/index.js";
+import { MSelect, MSelectOption } from "../../dist/vue/index.js";
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 
@@ -38,6 +39,7 @@ export const App = defineComponent(() => {
   const show = ref(true);
   const progress = ref(30);
   const fruit = ref<string | null>("b");
+  const pet = ref<string | null>("cat");
   const switchRef = ref<Exposed<SwitchElement> | null>(null);
   const api: Api = { log: [], submits: 0, model, extra, order, show, progress, switchRef };
   onMounted(() => {
@@ -108,6 +110,11 @@ export const App = defineComponent(() => {
         h(MListItem, { value: "c" }, () => "Cherry"),
       ]),
       h("output", { id: "fruit" }, String(fruit.value)),
+      h(MSelect, { id: "se", label: "Pet", modelValue: pet.value, "onUpdate:modelValue": (v: string) => (pet.value = v) }, () => [
+        h(MSelectOption, { value: "cat" }, () => "Cat"),
+        h(MSelectOption, { value: "dog" }, () => "Dog"),
+      ]),
+      h("output", { id: "pet" }, String(pet.value)),
       ...order.value.map((key) => h(MSwitch, { key, id: `o${key}` }, () => `Order ${key}`)),
       show.value ? h(MSwitch, { id: "gone" }, () => "Gone") : null,
       // Mounted in the browser after the element is defined: Vue writes a key

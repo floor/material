@@ -51,6 +51,15 @@ const server = Bun.serve({
         { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } }
       );
     }
+    if (path === "/restore-select") {
+      return new Response(
+        `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
+<body><form><m-select id="rs" name="rs" label="Restored select" value="a">
+<m-select-option value="a">Alpha</m-select-option><m-select-option value="b">Beta</m-select-option></m-select></form>
+<a id="go" href="/away">away</a><script type="module" src="/elements.js"></script></body></html>`,
+        { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } }
+      );
+    }
     if (path === "/restore-radios") {
       return new Response(
         `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
@@ -4247,6 +4256,522 @@ try {
 
       await page.evaluate(() => (window as unknown as TopWin).__tl.menu.destroy());
     }
+  }
+
+  // ---------------------------------------------------------------- menus: menu, select, split button
+  // The menu family's elements open their surface in the top layer, inside
+  // their own shadow root: styled by the adopted CSS, above a z-index 9999
+  // sibling, dismissed once, with focus back on the opener. Declarations
+  // update in place, and the closed triggers render as the factories do.
+  {
+    type Host = HTMLElement & Record<string, unknown> & { component: Record<string, unknown> | null };
+    type MenuWin = Win & { __log: Array<{ type: string; detail: unknown }> };
+    const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
+    /** Records the events of an element, and the closes of its factory menu. */
+    const listen = (id: string, types: string[]): Promise<void> =>
+      page.evaluate(({ id, types }) => {
+        const w = window as unknown as MenuWin;
+        w.__log = [];
+        const el = document.getElementById(id) as Host;
+        for (const type of types) {
+          el.addEventListener(type, (e) => w.__log.push({ type, detail: e instanceof CustomEvent ? e.detail : null }));
+        }
+      }, { id, types });
+    const log = (): Promise<Array<{ type: string; detail: unknown }>> =>
+      page.evaluate(() => (window as unknown as MenuWin).__log.splice(0));
+    /** The deepest focused element: a combobox, or its id, name or text. */
+    const focused = (): Promise<string | null> =>
+      page.evaluate(() => {
+        let active = document.activeElement;
+        while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+        if (active?.getAttribute("role") === "combobox") return "combobox";
+        return active ? active.id || active.getAttribute("aria-label") || (active.textContent ?? "").trim() : null;
+      });
+    /** The open surface of an element: where it is and how it looks. */
+    const surface = (id: string, selector: string): Promise<Record<string, unknown> | null> =>
+      page.evaluate(({ id, selector }) => {
+        const el = document.getElementById(id) as HTMLElement;
+        const root = el.shadowRoot as ShadowRoot;
+        const menu = root.querySelector(selector) as HTMLElement | null;
+        if (!menu) return null;
+        const r = menu.getBoundingClientRect();
+        const style = getComputedStyle(menu);
+        const hit = root.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        const cover = document.getElementById("cover") as HTMLElement;
+        const c = cover.getBoundingClientRect();
+        return {
+          inRoot: menu.getRootNode() === root,
+          popoverOpen: menu.matches(":popover-open"),
+          styled: style.backgroundColor !== "rgba(0, 0, 0, 0)" && style.backgroundColor !== "rgb(255, 0, 0)" && style.boxShadow !== "none",
+          overCover: r.bottom > c.top && r.top < c.bottom,
+          above: !!hit && menu.contains(hit),
+        };
+      }, { id, selector });
+    const OPEN = { inRoot: true, popoverOpen: true, styled: true, overCover: true, above: true };
+    const center = (id: string, selector: string): Promise<{ x: number; y: number }> =>
+      page.evaluate(({ id, selector }) => {
+        const root = (document.getElementById(id) as HTMLElement).shadowRoot as ShadowRoot;
+        const r = (root.querySelector(selector) as HTMLElement).getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      }, { id, selector });
+    const clickIn = async (id: string, selector: string): Promise<void> => {
+      const { x, y } = await center(id, selector);
+      await page.mouse.click(x, y);
+    };
+    const outside = async (): Promise<void> => {
+      await page.getByRole("button", { name: "Outside", exact: true }).click();
+    };
+    // The surface opens on a timer, then its 300ms transition
+    const settle = (): Promise<unknown> => wait(450);
+    const COVER = `<div id="cover" style="position: relative; z-index: 9999; height: 300px; background: rgb(255, 0, 0)"></div>
+      <button id="out" type="button">Outside</button>`;
+
+    // ------------------------------------------------------------ <m-menu>
+    await fresh(
+      page,
+      `<div style="position: relative; overflow: hidden; height: 48px; z-index: 1"><button id="mb" type="button">Actions</button></div>
+       ${COVER}
+       <m-menu id="mm" anchor="mb" aria-label="Actions">
+         <m-menu-item value="copy" icon='${ICON}'>Copy</m-menu-item>
+         <m-menu-item value="cut" disabled>Cut</m-menu-item>
+         <m-menu-item divider></m-menu-item>
+         <m-menu-item value="share">Share<m-menu-item value="link">Copy link</m-menu-item><m-menu-item value="mail">Email</m-menu-item></m-menu-item>
+         <m-menu-item value="paste" shortcut="Ctrl+V">Paste</m-menu-item>
+       </m-menu>`
+    );
+    await listen("mm", ["open", "close", "select"]);
+    const menuState = (): Promise<{ open: boolean; attribute: boolean }> =>
+      page.evaluate(() => {
+        const el = document.getElementById("mm") as Host;
+        return { open: (el.component?.isOpen as () => boolean)(), attribute: el.hasAttribute("open") };
+      });
+
+    await page.click("#mb");
+    await settle();
+    assert.deepEqual(await surface("mm", '[role="menu"]'), OPEN, "menu: the surface");
+    assert.deepEqual(await menuState(), { open: true, attribute: true });
+    assert.deepEqual(await log(), [{ type: "open", detail: {} }]);
+    check("menu: the anchor opens it in its shadow root, :popover-open, styled, above z-index 9999; open reflects");
+
+    // Opened by pointer, focus is on the menu: arrows step over the divider
+    // (a disabled item takes focus, as the factory has it), a letter jumps,
+    // Enter chooses
+    const moves: Array<string | null> = [];
+    for (const key of ["ArrowDown", "ArrowDown", "p"]) {
+      await page.keyboard.press(key);
+      moves.push(await focused());
+    }
+    assert.deepEqual(moves, ["Copy", "Cut", "PasteCtrl+V"]);
+    await page.keyboard.press("Enter");
+    await settle();
+    assert.deepEqual(await log(), [{ type: "select", detail: { value: "paste" } }, { type: "close", detail: {} }]);
+    assert.deepEqual(await menuState(), { open: false, attribute: false });
+    assert.equal(await focused(), "mb", "focus is back on the anchor");
+    check("menu: arrows, typeahead and Enter select once, close once, and return focus to the anchor");
+
+    await page.focus("#mb");
+    await page.keyboard.press("Enter");
+    await settle();
+    assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
+    await page.keyboard.press("Escape");
+    await settle();
+    assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
+    assert.equal(await focused(), "mb");
+    check("menu: Enter on the anchor focuses the first item; Escape closes once and returns focus");
+
+    await page.click("#mb");
+    await settle();
+    await clickIn("mm", '[data-id="cut"]');
+    await wait(150);
+    assert.equal((await menuState()).open, true, "a click inside the surface, on a disabled item, keeps it open");
+    await outside();
+    await settle();
+    assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
+    assert.deepEqual(await menuState(), { open: false, attribute: false });
+    check("menu: a click in the surface keeps it open, a click outside closes it once");
+
+    await page.click("#mb");
+    await settle();
+    await clickIn("mm", '[data-id="share"]');
+    await settle();
+    const submenu = await page.evaluate(() => {
+      const root = (document.getElementById("mm") as HTMLElement).shadowRoot as ShadowRoot;
+      const sub = root.querySelector('[class*="menu--submenu"]');
+      return sub ? { open: sub.matches(":popover-open"), items: [...sub.querySelectorAll("[data-id]")].map((i) => i.getAttribute("data-id")) } : null;
+    });
+    assert.deepEqual(submenu, { open: true, items: ["link", "mail"] }, "nested items are the submenu, in the shadow root");
+    await clickIn("mm", '[data-id="link"]');
+    await settle();
+    assert.deepEqual(await log(), [
+      { type: "open", detail: {} }, { type: "select", detail: { value: "link" } }, { type: "close", detail: {} },
+    ]);
+    check("menu: nested items open a submenu in the top layer; its item selects and closes once");
+
+    await page.evaluate(() => (document.getElementById("mm") as Host & { show: () => void }).show());
+    await settle();
+    assert.deepEqual(await menuState(), { open: true, attribute: true });
+    await page.evaluate(() => (document.getElementById("mm") as Host & { hide: () => void }).hide());
+    await settle();
+    await page.evaluate(() => document.getElementById("mm")?.setAttribute("open", ""));
+    await settle();
+    assert.deepEqual(await menuState(), { open: true, attribute: true });
+    await page.evaluate(() => document.getElementById("mm")?.removeAttribute("open"));
+    await settle();
+    assert.deepEqual(await menuState(), { open: false, attribute: false });
+    await page.evaluate(() => (document.getElementById("mm") as Host & { toggle: () => void }).toggle());
+    await settle();
+    await page.evaluate(() => (document.getElementById("mm") as Host & { toggle: () => void }).toggle());
+    await settle();
+    assert.deepEqual((await log()).map((e) => e.type), ["open", "close", "open", "close", "open", "close"]);
+    check("menu: show(), hide(), toggle() and the open attribute open and close it, each with its event");
+
+    const declared = await page.evaluate(async () => {
+      const el = document.getElementById("mm") as Host;
+      const before = el.component;
+      const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
+      const texts = (): string[] =>
+        [...(el.shadowRoot as ShadowRoot).querySelectorAll('[role="menuitem"]')].map((i) => (i.textContent ?? "").trim());
+      const added = document.createElement("m-menu-item");
+      added.setAttribute("value", "delete");
+      added.textContent = "Delete";
+      el.append(added);
+      await frame();
+      const afterAdd = texts();
+      el.querySelector('[value="cut"]')?.remove();
+      await frame();
+      const afterRemove = texts();
+      (el.querySelector('[value="copy"]') as HTMLElement).setAttribute("label", "Duplicate");
+      await frame();
+      return { same: el.component === before, afterAdd, afterRemove, afterRelabel: texts() };
+    });
+    assert.deepEqual(declared, {
+      same: true,
+      afterAdd: ["Copy", "Cut", "Share", "PasteCtrl+V", "Delete"],
+      afterRemove: ["Copy", "Share", "PasteCtrl+V", "Delete"],
+      afterRelabel: ["Duplicate", "Share", "PasteCtrl+V", "Delete"],
+    });
+    check("menu: items added, removed and relabelled in place");
+
+    // The anchor as a property, and an id in the menu's own shadow root
+    await page.evaluate(() => {
+      const other = document.createElement("button");
+      other.id = "mb2";
+      other.type = "button";
+      other.textContent = "Other";
+      document.getElementById("mm")?.before(other);
+      (document.getElementById("mm") as Host).anchor = other;
+    });
+    await page.click("#mb2");
+    await settle();
+    const byProperty = await menuState();
+    await page.keyboard.press("Escape");
+    await settle();
+    assert.equal(await focused(), "mb2");
+    await page.evaluate(() => {
+      const shadow = document.createElement("div");
+      shadow.id = "mshadow";
+      document.getElementById("host")?.append(shadow);
+      shadow.attachShadow({ mode: "open" }).innerHTML =
+        `<button id="mb" type="button">Inner</button><m-menu id="inner" anchor="mb"><m-menu-item value="x">Ex</m-menu-item></m-menu>`;
+    });
+    await page.getByRole("button", { name: "Inner", exact: true }).click();
+    await settle();
+    const inRoot = await page.evaluate(() => {
+      const inner = (document.getElementById("mshadow") as HTMLElement).shadowRoot?.getElementById("inner") as Host;
+      return { open: (inner.component?.isOpen as () => boolean)(), outer: (document.getElementById("mm") as Host).hasAttribute("open") };
+    });
+    assert.deepEqual({ byProperty, inRoot }, { byProperty: { open: true, attribute: true }, inRoot: { open: true, outer: false } });
+    await page.keyboard.press("Escape");
+    await settle();
+    check("menu: the anchor property takes an element; an anchor id resolves in the menu's own root first");
+
+    // ------------------------------------------------------------ <m-select>
+    await fresh(
+      page,
+      `<form id="sf"><label for="ms" id="sl">Pick</label>
+         <div><m-select id="ms" name="fruit" label="Fruit" value="b" required style="width: 280px">
+           <m-select-option value="a">Apple</m-select-option>
+           <m-select-option value="b">Banana</m-select-option>
+           <m-select-option value="c" disabled>Cherry</m-select-option>
+           <m-select-option value="d">Date</m-select-option>
+         </m-select></div></form>
+       ${COVER}
+       <div id="sfactory" style="width: 280px"></div>`
+    );
+    await listen("ms", ["change"]);
+    await page.evaluate(() => {
+      const el = document.getElementById("ms") as Host;
+      const w = window as unknown as MenuWin & { __closes: number };
+      w.__closes = 0;
+      (el.component?.on as (n: string, h: () => void) => void)("close", () => void w.__closes++);
+    });
+    const selectState = (): Promise<Record<string, unknown>> =>
+      page.evaluate(() => {
+        const el = document.getElementById("ms") as Host & { value: string | null };
+        const form = document.getElementById("sf") as HTMLFormElement;
+        return {
+          value: el.value,
+          form: new FormData(form).get("fruit"),
+          text: (el.shadowRoot?.querySelector("input") as HTMLInputElement).value,
+          open: (el.component?.isOpen as () => boolean)(),
+          closes: (window as unknown as { __closes: number }).__closes,
+        };
+      });
+    assert.deepEqual(await selectState(), { value: "b", form: "b", text: "Banana", open: false, closes: 0 });
+    check("select: the value attribute is the default and the form value");
+
+    // The input lets the pointer through to the field
+    const combobox = page.getByRole("combobox", { name: "Fruit" });
+    const field = page.locator("#ms");
+    await field.click();
+    await settle();
+    assert.deepEqual(await surface("ms", ".mtrl-menu"), OPEN, "select: the listbox");
+    check("select: the listbox opens in its shadow root, :popover-open, styled, above z-index 9999");
+
+    await clickIn("ms", '[data-id="c"]');
+    await wait(150);
+    assert.equal((await selectState()).open, true, "a click on a disabled option keeps it open");
+    await outside();
+    await settle();
+    assert.deepEqual(await selectState(), { value: "b", form: "b", text: "Banana", open: false, closes: 1 });
+    check("select: a click inside the listbox keeps it open, a click outside closes it once");
+
+    await combobox.focus();
+    await page.keyboard.press("ArrowDown");
+    await settle();
+    const active = (): Promise<string | null> =>
+      page.evaluate(() => {
+        const root = (document.getElementById("ms") as HTMLElement).shadowRoot as ShadowRoot;
+        const id = root.querySelector("input")?.getAttribute("aria-activedescendant");
+        return id ? (root.getElementById(id)?.getAttribute("data-id") ?? null) : null;
+      });
+    const path = [await active()];
+    await page.keyboard.press("ArrowDown");
+    path.push(await active());
+    await page.keyboard.press("a");
+    path.push(await active());
+    await page.keyboard.press("End");
+    path.push(await active());
+    assert.deepEqual(path, ["b", "d", "a", "d"], "the selected option, then Cherry skipped, typeahead, End");
+    await page.keyboard.press("Enter");
+    await settle();
+    assert.deepEqual(await log(), [{ type: "change", detail: { value: "d" } }]);
+    assert.deepEqual(await selectState(), { value: "d", form: "d", text: "Date", open: false, closes: 2 });
+    assert.equal(await focused(), "combobox", "focus stays on the combobox");
+    await page.keyboard.press("ArrowDown");
+    await settle();
+    await page.keyboard.press("Escape");
+    await settle();
+    assert.deepEqual(await selectState(), { value: "d", form: "d", text: "Date", open: false, closes: 3 });
+    assert.deepEqual(await log(), []);
+    check("select: arrows, typeahead and Enter change it once and close once; Escape closes; focus stays on the combobox");
+
+    await field.click();
+    await settle();
+    await clickIn("ms", '[data-id="a"]');
+    await settle();
+    assert.deepEqual(await log(), [{ type: "change", detail: { value: "a" } }]);
+    assert.deepEqual(await selectState(), { value: "a", form: "a", text: "Apple", open: false, closes: 4 });
+    assert.equal(await focused(), "combobox");
+    check("select: a click on an option changes it once and closes once");
+
+    const validity = await page.evaluate(() => {
+      const el = document.getElementById("ms") as Host & { value: string | null; internals: ElementInternals };
+      const form = document.getElementById("sf") as HTMLFormElement;
+      form.reset();
+      const reset = el.value;
+      el.value = null;
+      const empty = { missing: el.internals.validity.valueMissing, valid: form.checkValidity(), invalid: el.matches(":invalid"), form: new FormData(form).get("fruit") };
+      el.value = "d";
+      return { reset, empty, filled: form.checkValidity() };
+    });
+    assert.deepEqual(validity, { reset: "b", empty: { missing: true, valid: false, invalid: true, form: null }, filled: true });
+    check("select: a reset returns to the value attribute; required reports valueMissing while empty");
+
+    await page.click("#sl");
+    assert.equal(await focused(), "combobox", "a <label for> focuses the combobox");
+    check("select: <label for> focuses the combobox");
+
+    const options = await page.evaluate(async () => {
+      const el = document.getElementById("ms") as Host & { value: string | null };
+      const before = el.component;
+      const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
+      const text = (): string => (el.shadowRoot?.querySelector("input") as HTMLInputElement).value;
+      const options = (): string[] => ((el.component?.getOptions as () => Array<{ text: string }>)()).map((o) => o.text);
+      const added = document.createElement("m-select-option");
+      added.setAttribute("value", "e");
+      added.textContent = "Elderberry";
+      el.append(added);
+      await frame();
+      const afterAdd = options();
+      (el.querySelector('[value="d"]') as HTMLElement).textContent = "Dates";
+      await frame();
+      const relabelled = { text: text(), value: el.value };
+      el.querySelector('[value="d"]')?.remove();
+      await frame();
+      return { same: el.component === before, afterAdd, relabelled, removed: { options: options(), value: el.value, text: text() } };
+    });
+    assert.deepEqual(options, {
+      same: true,
+      afterAdd: ["Apple", "Banana", "Cherry", "Date", "Elderberry"],
+      relabelled: { text: "Dates", value: "d" },
+      removed: { options: ["Apple", "Banana", "Cherry", "Elderberry"], value: null, text: "" },
+    });
+    check("select: options added, removed and relabelled in place; the selected option's new text shows");
+
+    // The closed field against the factory's, in light DOM
+    const selectParity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createSelect: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createSelect({ label: "Fruit", value: "a", options: [{ id: "a", text: "Apple" }] });
+      (document.getElementById("sfactory") as HTMLElement).append(factory.element);
+      const el = document.getElementById("ms") as Host & { value: string | null };
+      el.value = "a";
+      const read = (field: HTMLElement): Record<string, unknown> => {
+        const r = field.getBoundingClientRect();
+        const input = field.querySelector("input") as HTMLInputElement;
+        const label = field.querySelector('[class*="textfield__label"]') as HTMLElement;
+        const icon = field.querySelector('[class*="trailing-icon"]') as HTMLElement;
+        return {
+          width: Math.round(r.width), height: Math.round(r.height),
+          background: getComputedStyle(field).backgroundColor,
+          font: getComputedStyle(input).font, color: getComputedStyle(input).color,
+          label: getComputedStyle(label).font, icon: Math.round(icon.getBoundingClientRect().left - r.left),
+        };
+      };
+      return { element: read(el.shadowRoot?.firstElementChild as HTMLElement), factory: read(factory.element) };
+    });
+    assert.deepEqual(selectParity.element, selectParity.factory);
+    check("select: the closed field renders as the factory's in light DOM");
+
+    // Going back restores the chosen option over the value attribute
+    {
+      const restorePage = await browser.newPage();
+      await restorePage.goto(`http://127.0.0.1:${server.port}/restore-select`);
+      await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
+      await restorePage.locator("#rs").click();
+      await restorePage.waitForTimeout(450);
+      await restorePage.getByRole("option", { name: "Beta", exact: true }).click();
+      await restorePage.click("#go");
+      await restorePage.waitForURL(/\/away$/);
+      await restorePage.goBack();
+      await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
+      const value = (): string | null => (document.getElementById("rs") as HTMLElement & { value: string | null }).value;
+      await restorePage.waitForFunction(() => (document.getElementById("rs") as HTMLElement & { value: string | null }).value === "b", undefined, { timeout: 5_000 })
+        .catch(() => undefined);
+      const restored = await restorePage.evaluate(value);
+      await restorePage.close();
+      assert.equal(restored, "b", "going back restores the option the user chose over the value attribute");
+      check("select: going back restores the chosen option");
+    }
+
+    // ------------------------------------------------------------ <m-split-button>
+    await fresh(
+      page,
+      `<m-split-button id="sb">Save<m-menu-item value="draft">Save draft</m-menu-item><m-menu-item value="pdf">Export PDF</m-menu-item></m-split-button>
+       ${COVER}
+       <div id="bfactory"></div>`
+    );
+    await listen("sb", ["click", "select"]);
+    await page.evaluate(() => {
+      const el = document.getElementById("sb") as Host;
+      const w = window as unknown as { __closes: number };
+      w.__closes = 0;
+      const menu = (el.component as { menu: { on: (n: string, h: () => void) => void } }).menu;
+      menu.on("close", () => void w.__closes++);
+    });
+    const splitState = (): Promise<{ open: boolean; closes: number }> =>
+      page.evaluate(() => {
+        const el = document.getElementById("sb") as Host;
+        return {
+          open: (el.component as { menu: { isOpen: () => boolean } }).menu.isOpen(),
+          closes: (window as unknown as { __closes: number }).__closes,
+        };
+      });
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await page.getByRole("button", { name: "More options", exact: true }).click();
+    await settle();
+    assert.deepEqual((await log()).map((e) => e.type), ["click"], "the leading button's click only");
+    assert.deepEqual(await surface("sb", '[role="menu"]'), OPEN, "split button: the menu");
+    check("split button: click is the leading action's; the trailing button opens the menu in its shadow root, above z-index 9999");
+
+    await page.keyboard.press("ArrowDown");
+    assert.equal(await focused(), "Save draft");
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    await settle();
+    assert.deepEqual(await log(), [{ type: "select", detail: { value: "pdf" } }]);
+    assert.deepEqual(await splitState(), { open: false, closes: 1 });
+    assert.equal(await focused(), "More options", "focus is back on the trailing button");
+    await page.keyboard.press("Enter");
+    await settle();
+    await page.keyboard.press("Escape");
+    await settle();
+    assert.deepEqual(await splitState(), { open: false, closes: 2 });
+    assert.equal(await focused(), "More options");
+    check("split button: arrows and Enter select once, close once and return focus; Escape closes");
+
+    await page.getByRole("button", { name: "More options", exact: true }).click();
+    await settle();
+    await outside();
+    await settle();
+    await page.getByRole("button", { name: "More options", exact: true }).click();
+    await settle();
+    await clickIn("sb", '[data-id="draft"]');
+    await settle();
+    assert.deepEqual(await log(), [{ type: "select", detail: { value: "draft" } }], "no click event from the menu");
+    assert.deepEqual(await splitState(), { open: false, closes: 4 });
+    check("split button: a click outside closes it once; a click on an item selects once");
+
+    const splitDeclared = await page.evaluate(async () => {
+      const el = document.getElementById("sb") as Host;
+      const before = el.component;
+      const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
+      const menu = (): { getItems: () => Array<{ text?: string }> } => (el.component as { menu: { getItems: () => Array<{ text?: string }> } }).menu;
+      const added = document.createElement("m-menu-item");
+      added.setAttribute("value", "png");
+      added.textContent = "Export PNG";
+      el.append(added);
+      await frame();
+      const afterAdd = menu().getItems().map((i) => i.text);
+      el.querySelector('[value="draft"]')?.remove();
+      (el.querySelector('[value="pdf"]') as HTMLElement).setAttribute("label", "PDF");
+      el.firstChild!.textContent = "Keep";
+      await frame();
+      return {
+        same: el.component === before,
+        afterAdd,
+        after: menu().getItems().map((i) => i.text),
+        label: (el.component as { getText: () => string }).getText(),
+      };
+    });
+    assert.deepEqual(splitDeclared, {
+      same: true,
+      afterAdd: ["Save draft", "Export PDF", "Export PNG"],
+      after: ["PDF", "Export PNG"],
+      label: "Keep",
+    });
+    check("split button: items added, removed and relabelled, and the label changed, in place");
+
+    // After the trailing button's shape has settled from the last close
+    await wait(600);
+    const splitParity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createSplitButton: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createSplitButton({ text: "Keep", items: [{ id: "x", text: "X" }] });
+      (document.getElementById("bfactory") as HTMLElement).append(factory.element);
+      const el = document.getElementById("sb") as Host;
+      const read = (group: HTMLElement): Record<string, unknown> => {
+        const [leading, trailing] = [...group.querySelectorAll("button")];
+        const box = (b: HTMLElement): unknown => {
+          const r = b.getBoundingClientRect();
+          const s = getComputedStyle(b);
+          return { width: Math.round(r.width), height: Math.round(r.height), background: s.backgroundColor, color: s.color, radius: s.borderRadius, font: s.font };
+        };
+        return { leading: box(leading), trailing: box(trailing), gap: Math.round(trailing.getBoundingClientRect().left - leading.getBoundingClientRect().right) };
+      };
+      return { element: read(el.shadowRoot?.firstElementChild as HTMLElement), factory: read(factory.element) };
+    });
+    assert.deepEqual(splitParity.element, splitParity.factory);
+    check("split button: the closed button renders as the factory's in light DOM");
   }
 
   // ---------------------------------------------------------------- theme

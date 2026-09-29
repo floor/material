@@ -21,6 +21,31 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   too. Without popover support the option does nothing. The helper is `showInTopLayer`
   (`popover-auto`, `popover-manual` or `modal`), `hideFromTopLayer`, `onTopLayerClose`, which
   reports the browser's own closes, and `supportsTopLayer`. The default menu is unchanged.
+- **Menu: a top-layer menu in another shadow root than its opener** stays open when focus
+  moves into it. The opener's blur names the shadow host there, not the menu, and closed it
+  right after a pointer opened it. Menus without `layer` are unchanged.
+- **Select: `layer: "top"`**, passed to its menu: the listbox renders beside the field, in the
+  field's tree, and opens in the top layer; focus moving into it does not count as leaving
+  the select. The default select is unchanged.
+- **Split button: `layer: "top"`**, passed to its menu, which then renders beside the trailing
+  button in the top layer. The default split button is unchanged.
+- **Elements: `<m-menu>` with `<m-menu-item>` children**, and `Menu` and `MenuItem` in the
+  adapters. Items declare `value`, their text or `label`, `icon`, `shortcut`,
+  `supporting-text`, `disabled`, or `divider`; nested items are a submenu. `anchor` is the
+  opener's id (the menu's root first, then the document), or as a property an element. The
+  surface stays in the element's shadow root and opens in the top layer. `open` reflects the
+  state as on `<details>`, with `show()`, `hide()` and `toggle()`; `open`, `close` and
+  `select` (`{ value }`) are dispatched. Items update in place.
+- **Elements: `<m-select>` with `<m-select-option>` children**, and `Select` and
+  `SelectOption` in the adapters. A form-associated select: `value` is the model and the form
+  value, with `change`; `label`, `variant`, `required` (reported as `valueMissing`),
+  `disabled`, `supporting-text`, reset, restore and `<label for>` as on `<m-textfield>`.
+  Options declare `value`, their text or `label`, `icon` and `disabled`, and update in place.
+  The listbox opens in the top layer.
+- **Elements: `<m-split-button>`**, with `<m-menu-item>` children as its menu, and
+  `SplitButton` in the adapters. The text or `label` is the leading action, whose native
+  `click` is the element's; a chosen item dispatches `select` (`{ value }`). `variant`,
+  `size`, `disabled` and `icon`; the menu opens in the top layer.
 - **Elements: `<m-navigation-rail>` with `<m-navigation-rail-item>` children**, and
   `NavigationRail` and `NavigationRailItem` in the React, Vue, Svelte and Solid adapters.
   The standard rail: a navigation landmark named by `aria-label`, each item a button, or a

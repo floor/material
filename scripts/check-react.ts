@@ -73,6 +73,7 @@ const run = async (version: 18 | 19): Promise<void> => {
   assert.match(html, /<m-tabs id="t" value="t2">/);
   assert.match(html, /<m-radios [^>]*value="m"[^>]*>.*<m-radio value="s">Small<\/m-radio>/s);
   assert.match(html, /<m-chips [^>]*value="veg"[^>]*>.*<m-chip value="veg">Vegetarian<\/m-chip>/s);
+  assert.match(html, /<m-select [^>]*value="cat"[^>]*>.*<m-select-option value="cat">Cat<\/m-select-option>/s);
   assert.match(html, /<m-button id="b" type="submit" variant="filled" class="save" data-test="1">Save<\/m-button>/);
   check("renders on a server without a DOM, attributes in the markup");
 
@@ -202,6 +203,14 @@ const run = async (version: 18 | 19): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("fruit")?.textContent === "c");
     assert.equal(await fruits.getByRole("button", { name: "Cherry", pressed: true }).count(), 1);
     check("list: a click on an item updates the controlled value through onChange");
+    // ------------------------------------------------------------- select
+    const pet = page.getByRole("combobox", { name: "Pet", exact: true });
+    assert.equal(await pet.inputValue(), "Cat");
+    await page.locator("#se").click();
+    await page.getByRole("option", { name: "Dog", exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("pet")?.textContent === "dog");
+    assert.equal(await pet.inputValue(), "Dog");
+    check("select: choosing an option updates the controlled value");
 
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);
