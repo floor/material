@@ -50,6 +50,7 @@ import createDialog from "../../dist/components/dialog/index.js";
 import createBottomSheet from "../../dist/components/bottom-sheet/index.js";
 import createSideSheet from "../../dist/components/side-sheet/index.js";
 import createSearch from "../../dist/components/search/index.js";
+import createSnackbar from "../../dist/components/snackbar/index.js";
 Object.assign((window as unknown as { mtrl: object }).mtrl, {
-  createMenu, createSelect, createDialog, createBottomSheet, createSideSheet, createSearch,
+  createMenu, createSelect, createDialog, createBottomSheet, createSideSheet, createSearch, createSnackbar,
 });

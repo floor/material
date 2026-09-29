@@ -3935,6 +3935,87 @@ try {
     const collapsed = await page.evaluate(() => !((window as unknown as Win).__search as { isExpanded: () => boolean }).isExpanded());
     assert.deepEqual({ expanded, collapsed }, { expanded: true, collapsed: true });
     check("factories in a shadow root: search stays expanded when focus comes back in time, and collapses when it leaves");
+
+    // Focus by item id, then id, then text: where Tab lands inside the shadow root.
+    const landed = (): Promise<string | null | undefined> =>
+      page.evaluate(() => {
+        const active = document.getElementById("shadow")?.shadowRoot?.activeElement as HTMLElement | null | undefined;
+        return active ? active.dataset.id || active.id || active.getAttribute("aria-label") || active.textContent?.trim() : null;
+      });
+    const tabs = async (keys: string[]): Promise<unknown[]> => {
+      const seen: unknown[] = [];
+      for (const key of keys) {
+        await page.keyboard.press(key);
+        seen.push(await landed());
+      }
+      return seen;
+    };
+
+    await stage();
+    await page.evaluate(() => {
+      const root = document.getElementById("shadow")?.shadowRoot as ShadowRoot;
+      const mtrl = (window as unknown as { mtrl: Factories }).mtrl;
+      const drawer = mtrl.createDrawer({
+        variant: "modal",
+        items: [{ id: "a", label: "Inbox" }, { id: "b", label: "Sent" }, { id: "c", label: "Trash" }],
+      });
+      (root.getElementById("mount") as HTMLElement).append(drawer.element);
+      (window as unknown as Win).__overlay = drawer;
+      (root.getElementById("opener") as HTMLElement).addEventListener("click", () => void drawer.open());
+    });
+    await page.locator("#shadow").getByRole("button", { name: "Open", exact: true }).click();
+    await wait(100);
+    const drawerTabs = [await landed(), ...(await tabs(["Tab", "Tab", "Tab", "Shift+Tab", "Shift+Tab"]))];
+    await page.evaluate(() => void ((window as unknown as Win).__overlay as { close: () => unknown }).close());
+    await wait(100);
+    assert.deepEqual({ drawerTabs, back: await landed() }, { drawerTabs: ["a", "b", "c", "a", "c", "b"], back: "opener" });
+    check("factories in a shadow root: a modal drawer keeps Tab inside and returns focus to its opener");
+
+    await stage();
+    await page.evaluate((icon) => {
+      const root = document.getElementById("shadow")?.shadowRoot as ShadowRoot;
+      const mtrl = (window as unknown as { mtrl: Factories }).mtrl;
+      const rail = mtrl.createNavigationRail({
+        layout: "modal",
+        items: [{ id: "a", label: "Inbox", icon }, { id: "b", label: "Sent", icon }],
+      });
+      (root.getElementById("mount") as HTMLElement).append(rail.element);
+      (window as unknown as Win).__overlay = rail;
+      rail.expand();
+    }, ICON);
+    await wait(100);
+    const railStops = await page.evaluate(() => {
+      const rail = (window as unknown as Win).__overlay as { element: HTMLElement };
+      return [...rail.element.querySelectorAll<HTMLElement>("button, a[href]")].filter((el) => el.tabIndex >= 0).length;
+    });
+    await page.evaluate(() => {
+      const rail = (window as unknown as Win).__overlay as { element: HTMLElement };
+      (rail.element.querySelector("[data-id='a']") as HTMLElement).focus();
+    });
+    // Tab past the last stop and back: it wraps to the first, and Shift+Tab to the last.
+    const railTabs = await tabs(Array.from({ length: railStops }, () => "Tab"));
+    const railBack = await tabs(["Shift+Tab"]);
+    assert.equal(railTabs.at(-1), "a", `Tab wraps to the first stop: ${JSON.stringify(railTabs)}`);
+    assert.deepEqual(railBack, [railTabs.at(-2)], "Shift+Tab goes back to the last stop");
+    check("factories in a shadow root: a modal rail keeps Tab inside");
+
+    await stage();
+    await page.evaluate(() => {
+      const mtrl = (window as unknown as { mtrl: Factories }).mtrl;
+      const snackbar = mtrl.createSnackbar({ message: "Archived", action: "Undo", duration: 10_000 });
+      (window as unknown as Win).__overlay = snackbar;
+      const opener = document.getElementById("shadow")?.shadowRoot?.getElementById("opener") as HTMLElement;
+      opener.addEventListener("click", () => void snackbar.show());
+    });
+    await page.locator("#shadow").getByRole("button", { name: "Open", exact: true }).click();
+    await wait(100);
+    const undo = page.getByRole("button", { name: "Undo", exact: true });
+    await undo.focus();
+    const reached = await page.evaluate(() => document.activeElement?.textContent?.trim());
+    await page.keyboard.press("Enter");
+    await wait(100);
+    assert.deepEqual({ reached, back: await landed() }, { reached: "Undo", back: "opener" });
+    check("factories in a shadow root: a snackbar's action takes focus and hands it back to the opener");
   }
 
   // ---------------------------------------------------------------- theme

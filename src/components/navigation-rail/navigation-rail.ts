@@ -262,7 +262,7 @@ export default function createNavigationRail(config: NavigationRailConfig = {}):
         if (event.key !== 'Tab' || event.defaultPrevented)
             return;
         const focusable = [...root.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex]')].filter(element => element.tabIndex >= 0 && !element.matches(':disabled, [aria-disabled="true"]') && element.getClientRects().length > 0);
-        const first = focusable[0], last = focusable.at(-1), focused = root.ownerDocument.activeElement;
+        const first = focusable[0], last = focusable.at(-1), focused = activeElementOf(root);
         if (!first) {
             event.preventDefault();
             root.focus();
