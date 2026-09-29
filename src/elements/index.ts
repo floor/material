@@ -25,6 +25,15 @@ import { checkboxElement, defineCheckbox } from "./checkbox";
 import { sliderElement, defineSlider } from "./slider";
 import { textfieldElement, defineTextfield } from "./textfield";
 import { radiosElement, radioDeclaration, defineRadios } from "./radios";
+import { navigationRailElement, navigationRailItemDeclaration, defineNavigationRail } from "./navigation-rail";
+import { drawerElement, drawerItemDeclaration, defineDrawer } from "./drawer";
+import { topAppBarElement, defineTopAppBar } from "./top-app-bar";
+import { bottomAppBarElement, defineBottomAppBar } from "./bottom-app-bar";
+import { buttonGroupElement, buttonGroupItemDeclaration, defineButtonGroup } from "./button-group";
+import { chipsElement, chipDeclaration, defineChips } from "./chips";
+import { listElement, listItemDeclaration, defineList } from "./list";
+import { cardElement, defineCard } from "./card";
+import { carouselElement, carouselItemDeclaration, defineCarousel } from "./carousel";
 
 export { defineElement, DEFAULT_PREFIX, SHADOW_BASE_STYLES } from "./define";
 export type {
@@ -67,6 +76,24 @@ export { textfieldElement, defineTextfield } from "./textfield";
 export type { TextfieldSpec, TextfieldElement, TextfieldElementComponent } from "./textfield";
 export { radiosElement, radioDeclaration, defineRadios } from "./radios";
 export type { RadiosSpec, RadiosElement, RadioAttributes } from "./radios";
+export { navigationRailElement, navigationRailItemDeclaration, defineNavigationRail } from "./navigation-rail";
+export type { NavigationRailSpec, NavigationRailElement, NavigationRailItemAttributes } from "./navigation-rail";
+export { drawerElement, drawerItemDeclaration, defineDrawer } from "./drawer";
+export type { DrawerSpec, DrawerElement, DrawerItemAttributes } from "./drawer";
+export { topAppBarElement, defineTopAppBar } from "./top-app-bar";
+export type { TopAppBarSpec, TopAppBarElement } from "./top-app-bar";
+export { bottomAppBarElement, defineBottomAppBar } from "./bottom-app-bar";
+export type { BottomAppBarSpec, BottomAppBarElement } from "./bottom-app-bar";
+export { buttonGroupElement, buttonGroupItemDeclaration, defineButtonGroup } from "./button-group";
+export type { ButtonGroupSpec, ButtonGroupElement, ButtonGroupItemAttributes, ButtonGroupValue } from "./button-group";
+export { chipsElement, chipDeclaration, defineChips } from "./chips";
+export type { ChipsSpec, ChipsElement, ChipAttributes, ChipsValue } from "./chips";
+export { listElement, listItemDeclaration, defineList } from "./list";
+export type { ListSpec, ListElement, ListItemAttributes } from "./list";
+export { cardElement, defineCard } from "./card";
+export type { CardSpec, CardElement } from "./card";
+export { carouselElement, carouselItemDeclaration, defineCarousel } from "./carousel";
+export type { CarouselSpec, CarouselElement, CarouselItemAttributes } from "./carousel";
 
 /**
  * Every element, by name. Framework adapters are generated from this list and
@@ -87,12 +114,27 @@ export const elements = {
   slider: sliderElement,
   textfield: textfieldElement,
   radios: radiosElement,
+  navigationRail: navigationRailElement,
+  drawer: drawerElement,
+  topAppBar: topAppBarElement,
+  bottomAppBar: bottomAppBarElement,
+  buttonGroup: buttonGroupElement,
+  chips: chipsElement,
+  list: listElement,
+  card: cardElement,
+  carousel: carouselElement,
 } as const;
 
 /** Declaration children, which render nothing and are read by their parent. */
 export const declarations = {
   tab: tabDeclaration,
   radio: radioDeclaration,
+  navigationRailItem: navigationRailItemDeclaration,
+  drawerItem: drawerItemDeclaration,
+  buttonGroupItem: buttonGroupItemDeclaration,
+  chip: chipDeclaration,
+  listItem: listItemDeclaration,
+  carouselItem: carouselItemDeclaration,
 } as const;
 
 /** Registers every element. */
@@ -111,4 +153,13 @@ export const defineAll = (options?: DefineOptions): void => {
   defineSlider(options);
   defineTextfield(options);
   defineRadios(options);
+  defineNavigationRail(options);
+  defineDrawer(options);
+  defineTopAppBar(options);
+  defineBottomAppBar(options);
+  defineButtonGroup(options);
+  defineChips(options);
+  defineList(options);
+  defineCard(options);
+  defineCarousel(options);
 };

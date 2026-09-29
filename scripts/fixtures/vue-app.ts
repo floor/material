@@ -2,8 +2,14 @@
 // browser. Render functions, so no template compiler is needed. Built against
 // dist/vue.
 import { defineComponent, h, ref, onMounted, type Ref } from "vue";
-import { MButton, MCheckbox, MProgress, MRadio, MRadios, MSlider, MSwitch, MTab, MTabs, MTextfield, type Exposed } from "../../dist/vue/index.js";
+import {
+  MButton, MCheckbox, MList, MListItem, MNavigationRail, MNavigationRailItem, MProgress, MRadio, MRadios, MSlider, MSwitch,
+  MTab, MTabs, MTextfield, type Exposed,
+} from "../../dist/vue/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
+import { MChip, MChips } from "../../dist/vue/index.js";
+
+const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 
 type Log = Array<{ id: string; detail: unknown }>;
 export interface Api {
@@ -24,11 +30,14 @@ export const App = defineComponent(() => {
   const level = ref(50);
   const text = ref("");
   const size = ref<string | null>("m");
+  const diet = ref<string | string[] | null>(["veg"]);
   const tab = ref<string | null>("t2");
+  const destination = ref<string | null>("inbox");
   const extra = ref(false);
   const order = ref(["a", "b"]);
   const show = ref(true);
   const progress = ref(30);
+  const fruit = ref<string | null>("b");
   const switchRef = ref<Exposed<SwitchElement> | null>(null);
   const api: Api = { log: [], submits: 0, model, extra, order, show, progress, switchRef };
   onMounted(() => {
@@ -78,6 +87,27 @@ export const App = defineComponent(() => {
         h(MRadio, { value: "l" }, () => "Large"),
       ]),
       h("output", { id: "size" }, String(size.value)),
+      h(
+        MNavigationRail,
+        { id: "nr", ariaLabel: "Main", modelValue: destination.value, "onUpdate:modelValue": (v: string) => (destination.value = v) },
+        () => [
+          h(MNavigationRailItem, { value: "inbox", icon: ICON }, () => "Inbox"),
+          h(MNavigationRailItem, { value: "sent", icon: ICON }, () => "Sent"),
+          h(MNavigationRailItem, { value: "starred", icon: ICON }, () => "Starred"),
+        ]
+      ),
+      h("output", { id: "destination" }, String(destination.value)),
+      h(MChips, { id: "ck", ariaLabel: "Diet", modelValue: diet.value, "onUpdate:modelValue": (v: string | string[]) => (diet.value = v) }, () => [
+        h(MChip, { value: "veg" }, () => "Vegetarian"),
+        h(MChip, { value: "gf" }, () => "Gluten free"),
+      ]),
+      h("output", { id: "diet" }, String(diet.value)),
+      h(MList, { id: "li", ariaLabel: "Fruits", modelValue: fruit.value, "onUpdate:modelValue": (v: string) => (fruit.value = v) }, () => [
+        h(MListItem, { value: "a" }, () => "Apple"),
+        h(MListItem, { value: "b" }, () => "Banana"),
+        h(MListItem, { value: "c" }, () => "Cherry"),
+      ]),
+      h("output", { id: "fruit" }, String(fruit.value)),
       ...order.value.map((key) => h(MSwitch, { key, id: `o${key}` }, () => `Order ${key}`)),
       show.value ? h(MSwitch, { id: "gone" }, () => "Gone") : null,
       // Mounted in the browser after the element is defined: Vue writes a key

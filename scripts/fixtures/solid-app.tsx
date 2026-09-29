@@ -2,8 +2,14 @@
 // browser. Solid JSX, compiled by babel-preset-solid as a Solid app's build
 // compiles it. Built against dist/solid.
 import { createSignal, For, onMount, Show } from "solid-js";
-import { Button, Checkbox, Progress, Radio, Radios, Slider, Switch, Tab, Tabs, Textfield } from "../../dist/solid/index.js";
+import {
+  Button, Checkbox, List, ListItem, NavigationRail, NavigationRailItem, Progress, Radio, Radios, Slider, Switch, Tab, Tabs,
+  Textfield,
+} from "../../dist/solid/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
+import { Chip, Chips } from "../../dist/solid/index.js";
+
+const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 
 export const App = () => {
   const log: Array<{ id: string; detail: unknown }> = [];
@@ -13,11 +19,14 @@ export const App = () => {
   const [level, setLevel] = createSignal(50);
   const [text, setText] = createSignal("");
   const [size, setSize] = createSignal<string | null>("m");
+  const [diet, setDiet] = createSignal<string | string[] | null>(["veg"]);
   const [tab, setTab] = createSignal<string | null>("t2");
+  const [destination, setDestination] = createSignal<string | null>("inbox");
   const [extra, setExtra] = createSignal(false);
   const [order, setOrder] = createSignal(["a", "b"]);
   const [show, setShow] = createSignal(true);
   const [progress, setProgress] = createSignal(30);
+  const [fruit, setFruit] = createSignal<string | null>("b");
   let switchRef: SwitchElement | undefined;
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
 
@@ -58,6 +67,23 @@ export const App = () => {
         <Radio value="l">Large</Radio>
       </Radios>
       <output id="size">{String(size())}</output>
+      <NavigationRail id="nr" ariaLabel="Main" value={destination()} onChange={(e) => setDestination(e.detail.value)}>
+        <NavigationRailItem value="inbox" icon={ICON}>Inbox</NavigationRailItem>
+        <NavigationRailItem value="sent" icon={ICON}>Sent</NavigationRailItem>
+        <NavigationRailItem value="starred" icon={ICON}>Starred</NavigationRailItem>
+      </NavigationRail>
+      <output id="destination">{String(destination())}</output>
+      <Chips id="ck" ariaLabel="Diet" value={diet()} onChange={(e) => setDiet(e.detail.value)}>
+        <Chip value="veg">Vegetarian</Chip>
+        <Chip value="gf">Gluten free</Chip>
+      </Chips>
+      <output id="diet">{String(diet())}</output>
+      <List id="li" ariaLabel="Fruits" value={fruit()} onChange={(e) => setFruit(e.detail.value)}>
+        <ListItem value="a">Apple</ListItem>
+        <ListItem value="b">Banana</ListItem>
+        <ListItem value="c">Cherry</ListItem>
+      </List>
+      <output id="fruit">{String(fruit())}</output>
       <For each={order()}>{(key) => <Switch id={`o${key}`}>Order {key}</Switch>}</For>
       <Show when={show()}><Switch id="gone">Gone</Switch></Show>
       {/* Mounted in the browser after the element is defined: Solid writes a

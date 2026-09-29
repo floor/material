@@ -10,6 +10,68 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Added
+
+- **Elements: `<m-navigation-rail>` with `<m-navigation-rail-item>` children**, and
+  `NavigationRail` and `NavigationRailItem` in the React, Vue, Svelte and Solid adapters.
+  The standard rail: a navigation landmark named by `aria-label`, each item a button, or a
+  link with `href`, declaring `value`, `icon`, `selected-icon`, `badge` (empty for the dot),
+  `badge-label` and `disabled`. `value` is the model, with `change` on a click or Enter;
+  `expanded` reflects the menu button as `open` does on `<details>`, `no-toggle` drops it,
+  and `slot="header"` takes a FAB. Items update in place. The modal layout is not offered.
+- **Elements: `<m-drawer>` with `<m-drawer-item>` children**, and `Drawer` and `DrawerItem`
+  in the adapters. The standard (in-page) drawer, named by its `headline` or `aria-label`:
+  items declare `value`, `icon`, `badge` and `disabled`, or with `type="section"` and
+  `type="divider"` a section headline and a divider. `value` is the model, with `change`;
+  `open` and `headline` apply in place, `position`, `width` and `dense` recreate it. The
+  modal drawer is not offered as an element.
+- **Elements: `<m-top-app-bar>`**, and `TopAppBar` in the adapters. Children are the
+  headline (`headline` is the text when there are none), `slot="leading"` the navigation
+  icon button and `slot="trailing"` the actions. `type` (`small`, `center`, `medium`,
+  `large`) changes in place; `scroll-threshold`, `no-scroll` and `no-compress` set the
+  scrolled state, and `scroll-target` follows an element's scroll instead of the window,
+  as `setScrollState()` does from script.
+- **Elements: `<m-bottom-app-bar>`**, and `BottomAppBar` in the adapters. Children are the
+  actions and `slot="fab"` the FAB, at the end or with `fab-position="center"` in the
+  middle; `auto-hide` hides it on a scroll down, `show()` and `hide()` from script.
+- **Elements: `<m-button-group>` with `<m-button-group-item>` children**, and `ButtonGroup`
+  and `ButtonGroupItem` in the React, Vue, Svelte and Solid adapters (`MButtonGroup` and
+  `MButtonGroupItem` in Vue). Each item declares a button (its text or `label`, `value`,
+  `icon`, `selected-icon`, `aria-label`, `disabled`, `selected`); the group takes the
+  factory's `variant`, `kind`, `selection`, `required`, `size`, `shape`, `labels`,
+  `orientation`, `density`, `equal-width` and `disabled`, and is named by `aria-label`. With
+  `selection="single"` or `"multi"`, `value` is the default selection (comma-separated when
+  multi) and the live property (a string, or an array when multi), with `change` and
+  `{ value }`; every press dispatches `action` with `{ value, index }`. Items relabelled,
+  given an icon or disabled update the group in place; the rest rebuilds it, keeping the
+  selection.
+- **Elements: `<m-chips>` with `<m-chip>` children**, and `Chips` and `Chip` in the React,
+  Vue, Svelte and Solid adapters (`MChips` and `MChip` in Vue). Each `<m-chip>` declares a
+  chip (its text or `label`, `value`, `variant`: filter by default, assist, input or
+  suggestion, `icon`, `trailing-icon`, `avatar`, `remove-label`, `selected`, `disabled`,
+  `elevated`); the set is a grid with one Tab stop, named by `aria-label` or its `label`,
+  multi-select unless `selection="single"`, with `selection-required`, `scrollable`,
+  `vertical` and `label-position`. `value` is the default selection (comma-separated when
+  multi) and the live property (an array, or a string when single), with `change` and
+  `{ value }`; removing an input chip dispatches `remove` with `{ value }`. Chips added at the
+  end, removed, relabelled or disabled update the set in place. In-place updates of any
+  element's children no longer re-dispatch what they make the factory emit.
+- **Elements: `<m-list>` with `<m-list-item>`**, and `List` and `ListItem` in the React,
+  Vue, Svelte and Solid adapters. Each item declares a row (its text or `headline`,
+  `overline`, `supporting-text`, a leading icon, avatar or image, a trailing icon or text,
+  `value`, `disabled`, `selected`), or a divider or subheader with `kind`. `selection` is
+  `single`, `multiple` or `none`; `value` is the live selection and the model, `values` all
+  of it, and a row dispatches `activate` and then `change`. Items update in place.
+- **Elements: `<m-card>`**, and `Card` in the adapters. A container whose regions are
+  slots: `media`, the header's `avatar`, `headline`, `subhead` and `header-action`, the
+  default slot for supporting content, and `actions`. `variant`, `clickable` (a button
+  named by its headline), `full-width`, `disabled` and `aria-label`.
+- **Elements: `<m-carousel>` with `<m-carousel-item>`**, and `Carousel` and `CarouselItem`
+  in the adapters. Items declare `src`, `alt`, a label, `description`, `button-text`,
+  `button-url` and `value`; the carousel takes the layout `variant` and the item sizing
+  attributes, with the current `index` as the model, `change` as it moves, and `next`,
+  `prev` and `goTo`. Items update in place.
+
 ## [0.10.0-next.2] - 2026-09-29
 
 The second prerelease of 0.10.0, on the npm `next` tag (`npm install mtrl@next`); `latest`

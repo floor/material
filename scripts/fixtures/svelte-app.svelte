@@ -2,7 +2,12 @@
      browser. Built against dist/svelte. -->
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Button, Checkbox, Progress, Radio, Radios, Slider, Switch, Tab, Tabs, Textfield } from "../../dist/svelte/index.js";
+  import {
+    Button, Checkbox, Chip, Chips, List, ListItem, NavigationRail, NavigationRailItem, Progress, Radio, Radios, Slider,
+    Switch, Tab, Tabs, Textfield,
+  } from "../../dist/svelte/index.js";
+
+  const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 
   type Log = Array<{ id: string; detail: unknown }>;
   const log: Log = [];
@@ -12,11 +17,14 @@
   let level = $state(50);
   let text = $state("");
   let size = $state<string | null>("m");
+  let diet = $state<string | string[] | null>(["veg"]);
   let tab = $state<string | null>("t2");
+  let destination = $state<string | null>("inbox");
   let extra = $state(false);
   let order = $state(["a", "b"]);
   let show = $state(true);
   let progress = $state(30);
+  let fruit = $state<string | null>("b");
 
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
 
@@ -60,6 +68,23 @@
     <Radio value="l">Large</Radio>
   </Radios>
   <output id="size">{String(size)}</output>
+  <NavigationRail id="nr" ariaLabel="Main" bind:value={destination}>
+    <NavigationRailItem value="inbox" icon={ICON}>Inbox</NavigationRailItem>
+    <NavigationRailItem value="sent" icon={ICON}>Sent</NavigationRailItem>
+    <NavigationRailItem value="starred" icon={ICON}>Starred</NavigationRailItem>
+  </NavigationRail>
+  <output id="destination">{String(destination)}</output>
+  <Chips id="ck" ariaLabel="Diet" bind:value={diet}>
+    <Chip value="veg">Vegetarian</Chip>
+    <Chip value="gf">Gluten free</Chip>
+  </Chips>
+  <output id="diet">{String(diet)}</output>
+  <List id="li" ariaLabel="Fruits" bind:value={fruit}>
+    <ListItem value="a">Apple</ListItem>
+    <ListItem value="b">Banana</ListItem>
+    <ListItem value="c">Cherry</ListItem>
+  </List>
+  <output id="fruit">{String(fruit)}</output>
   {#each order as key (key)}<Switch id={`o${key}`}>Order {key}</Switch>{/each}
   {#if show}<Switch id="gone">Gone</Switch>{/if}
   <!-- Mounted in the browser after the element is defined: Svelte writes a

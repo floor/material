@@ -22,6 +22,15 @@ import "mtrl/elements/css/checkbox";
 import "mtrl/elements/css/slider";
 import "mtrl/elements/css/textfield";
 import "mtrl/elements/css/radios";
+import "mtrl/elements/css/navigation-rail";
+import "mtrl/elements/css/drawer";
+import "mtrl/elements/css/top-app-bar";
+import "mtrl/elements/css/bottom-app-bar";
+import "mtrl/elements/css/button-group";
+import "mtrl/elements/css/chips";
+import "mtrl/elements/css/list";
+import "mtrl/elements/css/card";
+import "mtrl/elements/css/carousel";
 import {
   buttonElement,
   defineButton,
@@ -51,8 +60,32 @@ import {
   defineTextfield,
   radiosElement,
   defineRadios,
+  navigationRailElement,
+  defineNavigationRail,
+  drawerElement,
+  defineDrawer,
+  topAppBarElement,
+  defineTopAppBar,
+  bottomAppBarElement,
+  defineBottomAppBar,
+  buttonGroupElement,
+  defineButtonGroup,
+  chipsElement,
+  defineChips,
+  listElement,
+  defineList,
+  cardElement,
+  defineCard,
+  carouselElement,
+  defineCarousel,
   tabDeclaration,
   radioDeclaration,
+  navigationRailItemDeclaration,
+  drawerItemDeclaration,
+  buttonGroupItemDeclaration,
+  chipDeclaration,
+  listItemDeclaration,
+  carouselItemDeclaration,
 } from "../elements";
 import type {
   ButtonSpec,
@@ -83,8 +116,32 @@ import type {
   TextfieldElement,
   RadiosSpec,
   RadiosElement,
+  NavigationRailSpec,
+  NavigationRailElement,
+  DrawerSpec,
+  DrawerElement,
+  TopAppBarSpec,
+  TopAppBarElement,
+  BottomAppBarSpec,
+  BottomAppBarElement,
+  ButtonGroupSpec,
+  ButtonGroupElement,
+  ChipsSpec,
+  ChipsElement,
+  ListSpec,
+  ListElement,
+  CardSpec,
+  CardElement,
+  CarouselSpec,
+  CarouselElement,
   TabAttributes,
   RadioAttributes,
+  NavigationRailItemAttributes,
+  DrawerItemAttributes,
+  ButtonGroupItemAttributes,
+  ChipAttributes,
+  ListItemAttributes,
+  CarouselItemAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
 
@@ -105,5 +162,20 @@ export const Checkbox: MComponent<CheckboxSpec, CheckboxElement> = createCompone
 export const Slider: MComponent<SliderSpec, SliderElement> = createComponent(sliderElement.spec, defineSlider, "Slider");
 export const Textfield: MComponent<TextfieldSpec, TextfieldElement> = createComponent(textfieldElement.spec, defineTextfield, "Textfield");
 export const Radios: MComponent<RadiosSpec, RadiosElement> = createComponent(radiosElement.spec, defineRadios, "Radios");
+export const NavigationRail: MComponent<NavigationRailSpec, NavigationRailElement> = createComponent(navigationRailElement.spec, defineNavigationRail, "NavigationRail");
+export const Drawer: MComponent<DrawerSpec, DrawerElement> = createComponent(drawerElement.spec, defineDrawer, "Drawer");
+export const TopAppBar: MComponent<TopAppBarSpec, TopAppBarElement> = createComponent(topAppBarElement.spec, defineTopAppBar, "TopAppBar");
+export const BottomAppBar: MComponent<BottomAppBarSpec, BottomAppBarElement> = createComponent(bottomAppBarElement.spec, defineBottomAppBar, "BottomAppBar");
+export const ButtonGroup: MComponent<ButtonGroupSpec, ButtonGroupElement> = createComponent(buttonGroupElement.spec, defineButtonGroup, "ButtonGroup");
+export const Chips: MComponent<ChipsSpec, ChipsElement> = createComponent(chipsElement.spec, defineChips, "Chips");
+export const List: MComponent<ListSpec, ListElement> = createComponent(listElement.spec, defineList, "List");
+export const Card: MComponent<CardSpec, CardElement> = createComponent(cardElement.spec, defineCard, "Card");
+export const Carousel: MComponent<CarouselSpec, CarouselElement> = createComponent(carouselElement.spec, defineCarousel, "Carousel");
 export const Tab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "Tab");
 export const Radio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "Radio");
+export const NavigationRailItem: MDeclaration<NavigationRailItemAttributes> = createDeclaration(navigationRailItemDeclaration, "NavigationRailItem");
+export const DrawerItem: MDeclaration<DrawerItemAttributes> = createDeclaration(drawerItemDeclaration, "DrawerItem");
+export const ButtonGroupItem: MDeclaration<ButtonGroupItemAttributes> = createDeclaration(buttonGroupItemDeclaration, "ButtonGroupItem");
+export const Chip: MDeclaration<ChipAttributes> = createDeclaration(chipDeclaration, "Chip");
+export const ListItem: MDeclaration<ListItemAttributes> = createDeclaration(listItemDeclaration, "ListItem");
+export const CarouselItem: MDeclaration<CarouselItemAttributes> = createDeclaration(carouselItemDeclaration, "CarouselItem");

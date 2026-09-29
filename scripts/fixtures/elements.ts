@@ -16,6 +16,13 @@ import createCheckbox from "../../dist/components/checkbox/index.js";
 import createSlider from "../../dist/components/slider/index.js";
 import createTextfield from "../../dist/components/textfield/index.js";
 import createRadios from "../../dist/components/radios/index.js";
+import createNavigationRail from "../../dist/components/navigation-rail/index.js";
+import createDrawer from "../../dist/components/drawer/index.js";
+import createTopAppBar from "../../dist/components/top-app-bar/index.js";
+import createBottomAppBar from "../../dist/components/bottom-app-bar/index.js";
+import createList from "../../dist/components/list/index.js";
+import createCard from "../../dist/components/card/index.js";
+import createCarousel from "../../dist/components/carousel/index.js";
 
 elements.defineAll();
 const factories = {
@@ -25,5 +32,12 @@ const factories = {
   createSlider,
   createTextfield,
   createRadios,
+  createNavigationRail, createDrawer, createTopAppBar, createBottomAppBar,
+  createList, createCard, createCarousel,
 };
 Object.assign(window, { mtrl: { ...elements, ...factories }, ready: true });
+
+// Button group and chips, the factories their elements wrap.
+import createButtonGroup from "../../dist/components/button-group/index.js";
+import { createChips } from "../../dist/components/chips/index.js";
+Object.assign((window as unknown as { mtrl: object }).mtrl, { createButtonGroup, createChips });

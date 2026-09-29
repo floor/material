@@ -61,7 +61,7 @@ const server = Bun.serve({
     }
     return new Response(
       `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css">
-<style>body{margin:0;font-family:sans-serif}section{padding:8px}</style></head>
+<style>body{margin:0;font-family:sans-serif}section{padding:8px}.stage{position:relative;height:240px;overflow:auto}</style></head>
 <body><main id="host"></main><script type="module" src="/elements.js"></script></body></html>`,
       { headers: { "Content-Type": "text/html" } }
     );
@@ -1577,6 +1577,568 @@ try {
     check("radios: renders as the factory does with the global stylesheet");
   }
 
+  // ---------------------------------------------------------------- button group
+  await fresh(
+    page,
+    `<m-button-group id="al" selection="single" value="b" aria-label="Alignment">
+       <m-button-group-item value="a">Left</m-button-group-item>
+       <m-button-group-item value="b">Center</m-button-group-item>
+       <m-button-group-item value="c" label="Right"></m-button-group-item>
+     </m-button-group>
+     <m-button-group id="fm" selection="multi" aria-label="Format">
+       <m-button-group-item value="bold" selected>Bold</m-button-group-item>
+       <m-button-group-item value="italic">Italic</m-button-group-item>
+       <m-button-group-item value="under" icon="${ICON}" aria-label="Underline"></m-button-group-item>
+     </m-button-group>
+     <m-button-group id="ac" aria-label="Actions">
+       <m-button-group-item value="copy">Copy</m-button-group-item>
+       <m-button-group-item value="paste" disabled>Paste</m-button-group-item>
+     </m-button-group>
+     <section id="factory"></section>`
+  );
+  {
+    type Group = HTMLElement & { value: string | string[] | null; component: unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const alignment = page.getByRole("group", { name: "Alignment" });
+    assert.equal(await alignment.count(), 1);
+    for (const [name, pressed] of [["Left", false], ["Center", true], ["Right", false]] as const) {
+      assert.equal(await alignment.getByRole("button", { name, exact: true, pressed }).count(), 1, name);
+    }
+    const format = page.getByRole("group", { name: "Format" });
+    assert.equal(await format.getByRole("button", { name: "Bold", pressed: true }).count(), 1);
+    assert.equal(await format.getByRole("button", { name: "Underline", pressed: false }).count(), 1, "an icon item is named by aria-label");
+    check("button group: a group named by aria-label; items declare the buttons, value and selected press them");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      for (const id of ["al", "fm", "ac"]) {
+        for (const type of ["change", "action"]) {
+          document.getElementById(id)?.addEventListener(type, (e) => {
+            (w.events as unknown[]).push({ type, detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+          });
+        }
+      }
+    });
+    const events = (): Promise<unknown[]> =>
+      page.evaluate(() => {
+        const w = window as unknown as Win;
+        const list = w.events as unknown[];
+        w.events = [];
+        return list;
+      });
+    const live = (id: string): Promise<{ value: unknown; attribute: string | null }> =>
+      page.evaluate((id) => {
+        const g = document.getElementById(id) as Group;
+        return { value: g.value, attribute: g.getAttribute("value") };
+      }, id);
+
+    await alignment.getByRole("button", { name: "Left" }).click();
+    assert.deepEqual(await events(), [
+      { type: "action", detail: { value: "a", index: 0 }, target: "al" },
+      { type: "change", detail: { value: "a" }, target: "al" },
+    ]);
+    assert.deepEqual(await live("al"), { value: "a", attribute: "b" });
+    check("button group: a click dispatches action and change from the host; the live value moves, the attribute stays");
+
+    await alignment.getByRole("button", { name: "Right" }).focus();
+    await page.keyboard.press("Enter");
+    assert.deepEqual(await events(), [
+      { type: "action", detail: { value: "c", index: 2 }, target: "al" },
+      { type: "change", detail: { value: "c" }, target: "al" },
+    ]);
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Space");
+    assert.deepEqual((await events()).at(-1), { type: "change", detail: { value: "b" }, target: "al" });
+    assert.equal(await alignment.getByRole("button", { name: "Center", pressed: true }).count(), 1);
+    check("button group: Enter and Space press the focused button in the shadow root");
+
+    await format.getByRole("button", { name: "Italic" }).click();
+    assert.deepEqual((await events()).at(-1), { type: "change", detail: { value: ["bold", "italic"] }, target: "fm" });
+    assert.deepEqual((await live("fm")).value, ["bold", "italic"]);
+    check("button group: a multi group's value is an array");
+
+    await page.getByRole("group", { name: "Actions" }).getByRole("button", { name: "Copy" }).click();
+    assert.deepEqual(await events(), [{ type: "action", detail: { value: "copy", index: 0 }, target: "ac" }]);
+    assert.equal((await live("ac")).value, null, "a group without selection has no value");
+    check("button group: without selection a press dispatches action only");
+
+    const silent = await page.evaluate(() => {
+      const al = document.getElementById("al") as Group;
+      const fm = document.getElementById("fm") as Group;
+      al.value = "a";
+      const one = al.value;
+      al.value = null;
+      fm.value = ["under", "bold"];
+      const pressed = [...(fm.shadowRoot?.querySelectorAll("button") ?? [])].map((b) => b.getAttribute("aria-pressed"));
+      return { one, cleared: al.value, multi: fm.value, pressed };
+    });
+    assert.deepEqual(silent, { one: "a", cleared: null, multi: ["bold", "under"], pressed: ["true", "false", "true"] });
+    assert.deepEqual(await events(), []);
+    check("button group: setting value fires no event; null clears a single group, an array sets a multi one");
+
+    const disabled = await page.evaluate(() => {
+      const ac = document.getElementById("ac") as HTMLElement;
+      const states = (): boolean[] => [...(ac.shadowRoot?.querySelectorAll("button") ?? [])].map((b) => b.disabled);
+      const initial = states();
+      ac.setAttribute("disabled", "");
+      const group = states();
+      ac.removeAttribute("disabled");
+      return { initial, group, after: states() };
+    });
+    assert.deepEqual(disabled, { initial: [false, true], group: [true, true], after: [false, true] });
+    await page.getByRole("group", { name: "Actions" }).getByRole("button", { name: "Paste" }).click({ force: true });
+    assert.deepEqual(await events(), [], "a disabled button dispatches nothing");
+    await page.evaluate(() => document.querySelector('#ac [value="paste"]')?.removeAttribute("disabled"));
+    await settle();
+    const reenabled = await page.evaluate(() => {
+      const ac = document.getElementById("ac") as HTMLElement;
+      const states = (): boolean[] => [...(ac.shadowRoot?.querySelectorAll("button") ?? [])].map((b) => b.disabled);
+      const item = states();
+      ac.setAttribute("disabled", "");
+      ac.removeAttribute("disabled");
+      return { item, group: states() };
+    });
+    // The factory's enable() would disable Paste again: it was disabled at creation.
+    assert.deepEqual(reenabled, { item: [false, false], group: [false, false] });
+    check("button group: a disabled item and the disabled attribute reach the buttons, and enabling keeps each item's own state");
+
+    const inPlace = await page.evaluate(async () => {
+      const al = document.getElementById("al") as Group;
+      (window as unknown as Record<string, unknown>).__group = al.component;
+      al.value = "c";
+      const items = al.querySelectorAll("m-button-group-item");
+      items[0].textContent = "Start";
+      items[1].setAttribute("disabled", "");
+      items[2].setAttribute("icon", '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>');
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const buttons = [...(al.shadowRoot?.querySelectorAll("button") ?? [])];
+      return {
+        same: al.component === (window as unknown as Record<string, unknown>).__group,
+        disabled: buttons.map((b) => b.disabled),
+        icon: !!buttons[2].querySelector("svg"),
+        value: al.value,
+      };
+    });
+    assert.deepEqual(inPlace, { same: true, disabled: [false, true, false], icon: true, value: "c" });
+    assert.equal(await alignment.getByRole("button", { name: "Start", exact: true }).count(), 1);
+    check("button group: items relabelled, disabled and given an icon update the group in place");
+
+    const rebuilt = await page.evaluate(async () => {
+      const al = document.getElementById("al") as Group;
+      const item = document.createElement("m-button-group-item");
+      item.setAttribute("value", "j");
+      item.textContent = "Justify";
+      al.append(item);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const added = {
+        rebuilt: al.component !== (window as unknown as Record<string, unknown>).__group,
+        labels: [...(al.shadowRoot?.querySelectorAll("button") ?? [])].map((b) => b.textContent?.trim()),
+        value: al.value,
+      };
+      al.querySelector('[value="a"]')?.remove();
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const buttons = [...(al.shadowRoot?.querySelectorAll("button") ?? [])];
+      return { added, count: buttons.length, value: al.value, pressed: buttons.map((b) => b.getAttribute("aria-pressed")) };
+    });
+    assert.deepEqual(rebuilt, {
+      added: { rebuilt: true, labels: ["Start", "Center", "Right", "Justify"], value: "c" },
+      count: 3,
+      value: "c",
+      pressed: ["false", "true", "false"],
+    });
+    assert.deepEqual(await events(), []);
+    check("button group: items added and removed rebuild the group, keeping the live selection, without events");
+
+    const declared = await page.evaluate(async () => {
+      const al = document.getElementById("al") as Group;
+      const item = document.createElement("m-button-group-item") as HTMLElement & { value: string; label: string; disabled: boolean };
+      item.value = "x";
+      item.label = "Extra";
+      item.disabled = true;
+      al.append(item);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const last = [...(al.shadowRoot?.querySelectorAll("button") ?? [])].at(-1) as HTMLButtonElement;
+      return { attributes: [item.getAttribute("value"), item.getAttribute("label"), item.hasAttribute("disabled")], last: [last.textContent?.trim(), last.disabled] };
+    });
+    assert.deepEqual(declared, { attributes: ["x", "Extra", true], last: ["Extra", true] });
+    check("button group: <m-button-group-item> properties write the attributes the group reads");
+
+    const early = await page.evaluate(async () => {
+      const w = window as unknown as { mtrl: { defineButtonGroup: (o?: object) => string } };
+      const group = document.createElement("late-button-group") as HTMLElement & { value?: unknown; selection?: string };
+      for (const [value, label] of [["first", "First"], ["second", "Second"]]) {
+        const item = document.createElement("late-button-group-item") as HTMLElement & { value?: string; label?: string };
+        item.value = value;
+        item.label = label;
+        group.append(item);
+      }
+      group.setAttribute("selection", "single");
+      group.value = "second";
+      document.getElementById("host")?.append(group);
+      w.mtrl.defineButtonGroup({ prefix: "late" });
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const buttons = [...(group.shadowRoot?.querySelectorAll("button") ?? [])];
+      return { labels: buttons.map((b) => b.textContent?.trim()), value: (group as Group).value };
+    });
+    assert.deepEqual(early, { labels: ["First", "Second"], value: "second" });
+    check("button group: item and group properties set before the elements are defined are kept");
+
+    const dirty = await page.evaluate(async () => {
+      const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
+      const host = document.getElementById("host") as HTMLElement;
+      const make = (): Group => {
+        const g = document.createElement("m-button-group") as Group;
+        g.setAttribute("selection", "multi");
+        g.setAttribute("aria-label", "Dirty group");
+        g.innerHTML = '<m-button-group-item value="p">P</m-button-group-item><m-button-group-item value="q">Q</m-button-group-item>';
+        host.replaceChildren(g);
+        return g;
+      };
+      let g = make();
+      g.setAttribute("value", "p,q");
+      const clean = g.value;
+      g.querySelector("m-button-group-item")?.setAttribute("selected", "");
+      g.removeAttribute("value");
+      await frame();
+      const byItem = g.value;
+      (g.shadowRoot?.querySelectorAll("button")[1] as HTMLButtonElement).click();
+      g.setAttribute("value", "q");
+      const afterUser = g.value;
+      g.querySelectorAll("m-button-group-item")[1].setAttribute("selected", "");
+      await frame();
+      const afterItem = g.value;
+      g = make();
+      g.value = ["q"];
+      g.setAttribute("value", "p");
+      return { clean, byItem, afterUser, afterItem, afterScript: g.value };
+    });
+    assert.deepEqual(dirty, { clean: ["p", "q"], byItem: ["p"], afterUser: ["p", "q"], afterItem: ["p", "q"], afterScript: ["q"] });
+    check("button group: value and selected are defaults, until the user or a script changes the selection");
+
+    await fresh(page, `<section id="factory"></section>`);
+    const parity = await page.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createButtonGroup: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createButtonGroup({
+        selection: "single", variant: "tonal", ariaLabel: "Factory",
+        buttons: [{ value: "a", text: "Left", selected: true }, { value: "b", text: "Center" }, { value: "c", text: "Right", disabled: true }],
+      });
+      document.getElementById("factory")?.append(factory.element);
+      const element = document.createElement("m-button-group");
+      element.setAttribute("selection", "single");
+      element.setAttribute("variant", "tonal");
+      element.setAttribute("value", "a");
+      element.innerHTML = '<m-button-group-item value="a">Left</m-button-group-item><m-button-group-item value="b">Center</m-button-group-item><m-button-group-item value="c" disabled>Right</m-button-group-item>';
+      document.getElementById("factory")?.before(element);
+      await new Promise((r) => setTimeout(r, 400));
+      const measure = (group: HTMLElement): Array<Record<string, string | number>> =>
+        [...group.querySelectorAll("button")].map((button) => {
+          const box = button.getBoundingClientRect();
+          const style = getComputedStyle(button);
+          return {
+            w: Math.round(box.width), h: Math.round(box.height), background: style.backgroundColor, color: style.color,
+            radius: style.borderRadius, font: style.font,
+          };
+        });
+      const root = element.shadowRoot?.firstElementChild as HTMLElement;
+      return { factory: measure(factory.element), element: measure(root) };
+    });
+    assert.equal(parity.element.length, 3);
+    assert.deepEqual(parity.element, parity.factory);
+    check("button group: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- chips
+  await fresh(
+    page,
+    `<button id="before">before</button>
+     <m-chips id="ch" aria-label="Filters" value="veg,fish">
+       <m-chip value="veg">Vegetarian</m-chip>
+       <m-chip value="fish">Fish</m-chip>
+       <m-chip value="gf" label="Gluten free"></m-chip>
+       <m-chip value="na" disabled>Unavailable</m-chip>
+     </m-chips>
+     <button id="after">after</button>
+     <m-chips id="so" selection="single" aria-label="Sort">
+       <m-chip value="new" selected>Newest</m-chip><m-chip value="old">Oldest</m-chip>
+     </m-chips>
+     <m-chips id="to" aria-label="Recipients">
+       <m-chip variant="input" value="ada">Ada</m-chip><m-chip variant="input" value="bob">Bob</m-chip>
+     </m-chips>
+     <section id="factory"></section>`
+  );
+  {
+    type Chips = HTMLElement & { value: string | string[] | null; component: unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const filters = page.getByRole("grid", { name: "Filters" });
+    assert.equal(await filters.count(), 1);
+    for (const [name, selected] of [["Vegetarian", true], ["Fish", true], ["Gluten free", false], ["Unavailable", false]] as const) {
+      assert.equal(await filters.getByRole("gridcell", { name, exact: true, selected }).count(), 1, name);
+    }
+    const sort = page.getByRole("grid", { name: "Sort" });
+    assert.equal(await sort.getByRole("gridcell", { name: "Newest", selected: true }).count(), 1);
+    check("chips: a grid named by aria-label; chips declare the cells, value and selected select them");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      for (const id of ["ch", "so", "to"]) {
+        for (const type of ["change", "remove"]) {
+          document.getElementById(id)?.addEventListener(type, (e) => {
+            (w.events as unknown[]).push({ type, detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+          });
+        }
+      }
+    });
+    const events = (): Promise<unknown[]> =>
+      page.evaluate(() => {
+        const w = window as unknown as Win;
+        const list = w.events as unknown[];
+        w.events = [];
+        return list;
+      });
+    const live = (id: string): Promise<{ value: unknown; attribute: string | null }> =>
+      page.evaluate((id) => {
+        const c = document.getElementById(id) as Chips;
+        return { value: c.value, attribute: c.getAttribute("value") };
+      }, id);
+
+    await filters.getByRole("gridcell", { name: "Gluten free" }).click();
+    assert.deepEqual(await events(), [{ type: "change", detail: { value: ["veg", "fish", "gf"] }, target: "ch" }]);
+    assert.deepEqual(await live("ch"), { value: ["veg", "fish", "gf"], attribute: "veg,fish" });
+    const ring = await page.evaluate(() => {
+      const cell = (document.getElementById("ch") as HTMLElement).shadowRoot?.activeElement as HTMLElement;
+      return { cell: cell.getAttribute("role"), pointer: [...cell.classList].some((c) => c.endsWith("chip--pointer-focus")) };
+    });
+    assert.deepEqual(ring, { cell: "gridcell", pointer: true }, "a click focuses the cell without the keyboard ring");
+    check("chips: a click dispatches one change from the host, draws no focus ring; the live value moves, the attribute stays");
+
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("Space");
+    assert.deepEqual(await events(), [{ type: "change", detail: { value: ["veg", "gf"] }, target: "ch" }]);
+    const keyboard = await page.evaluate(() => {
+      const cell = (document.getElementById("ch") as HTMLElement).shadowRoot?.activeElement as HTMLElement;
+      return [...cell.classList].some((c) => c.endsWith("chip--pointer-focus"));
+    });
+    assert.equal(keyboard, false, "keyboard focus shows the ring");
+    check("chips: the arrows move between cells and Space toggles the focused one");
+
+    await page.locator("#before").focus();
+    await page.keyboard.press("Tab");
+    const entered = await page.evaluate(() => (document.getElementById("ch") as HTMLElement).shadowRoot?.activeElement?.textContent);
+    await page.keyboard.press("Tab");
+    const left = await page.evaluate(() => document.activeElement?.id);
+    assert.deepEqual({ entered, left }, { entered: "Fish", left: "after" });
+    check("chips: the set is one tab stop, landing on the last focused chip");
+
+    await sort.getByRole("gridcell", { name: "Oldest" }).click();
+    assert.deepEqual(await events(), [{ type: "change", detail: { value: "old" }, target: "so" }]);
+    assert.equal((await live("so")).value, "old");
+    check("chips: a single-select set's value is one value");
+
+    const silent = await page.evaluate(() => {
+      const ch = document.getElementById("ch") as Chips;
+      const so = document.getElementById("so") as Chips;
+      ch.value = ["gf", "veg"];
+      so.value = null;
+      const cleared = so.value;
+      so.value = "new";
+      return { multi: ch.value, cleared, single: so.value };
+    });
+    assert.deepEqual(silent, { multi: ["veg", "gf"], cleared: null, single: "new" });
+    assert.deepEqual(await events(), []);
+    check("chips: setting value fires no event; null clears the selection");
+
+    await filters.getByRole("gridcell", { name: "Unavailable" }).click({ force: true });
+    await page.evaluate(() => document.querySelector('#ch [value="na"]')?.removeAttribute("disabled"));
+    await settle();
+    const enabled = await filters.getByRole("gridcell", { name: "Unavailable" }).getAttribute("aria-disabled");
+    await page.evaluate(() => document.querySelector('#ch [value="na"]')?.setAttribute("disabled", ""));
+    await settle();
+    assert.deepEqual({ events: await events(), enabled }, { events: [], enabled: "false" });
+    assert.equal(await filters.getByRole("gridcell", { name: "Unavailable" }).getAttribute("aria-disabled"), "true");
+    check("chips: a disabled chip dispatches nothing; disabled updates in place");
+
+    const recipients = page.getByRole("grid", { name: "Recipients" });
+    await recipients.getByRole("button", { name: "Remove Bob" }).click();
+    assert.deepEqual(await events(), [{ type: "remove", detail: { value: "bob" }, target: "to" }]);
+    await page.evaluate(() => {
+      const ada = document.querySelector('#to [value="ada"]') as HTMLElement;
+      ada.textContent = "Ada L.";
+    });
+    await settle();
+    const lingering = await page.evaluate(() => [...(document.getElementById("to")?.shadowRoot?.querySelectorAll('[role="gridcell"]') ?? [])].map((c) => c.textContent));
+    assert.deepEqual(lingering, ["Ada L."], "a removed chip stays removed while its <m-chip> is there");
+    await recipients.getByRole("button", { name: "Remove Ada L." }).focus();
+    await page.keyboard.press("Delete");
+    assert.deepEqual(await events(), [{ type: "remove", detail: { value: "ada" }, target: "to" }]);
+    const readded = await page.evaluate(async () => {
+      const to = document.getElementById("to") as HTMLElement;
+      to.replaceChildren();
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      to.innerHTML = '<m-chip variant="input" value="bob">Bob</m-chip>';
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return [...(to.shadowRoot?.querySelectorAll('[role="gridcell"]') ?? [])].map((c) => c.textContent);
+    });
+    assert.deepEqual(readded, ["Bob"]);
+    assert.deepEqual(await events(), [], "declarations removing chips dispatch no remove");
+    check("chips: removing an input chip, by its button or Delete, dispatches remove; a new <m-chip> brings it back");
+
+    const inPlace = await page.evaluate(async () => {
+      const ch = document.getElementById("ch") as Chips;
+      (window as unknown as Record<string, unknown>).__chips = ch.component;
+      const chips = ch.querySelectorAll("m-chip");
+      chips[0].textContent = "Veggie";
+      chips[2].setAttribute("icon", '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>');
+      const extra = document.createElement("m-chip");
+      extra.setAttribute("value", "nuts");
+      extra.textContent = "Nut free";
+      ch.append(extra);
+      chips[2].remove(); // a selected one
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return {
+        same: ch.component === (window as unknown as Record<string, unknown>).__chips,
+        cells: [...(ch.shadowRoot?.querySelectorAll('[role="gridcell"]') ?? [])].map((c) => c.textContent),
+        value: ch.value,
+      };
+    });
+    assert.deepEqual(inPlace, { same: true, cells: ["Veggie", "Fish", "Unavailable", "Nut free"], value: ["veg"] });
+    assert.equal(await filters.getByRole("gridcell", { name: "Veggie", exact: true, selected: true }).count(), 1, "a relabelled cell is named by its new label");
+    assert.deepEqual(await events(), []);
+    check("chips: chips relabelled, added and removed update the set in place, without events");
+
+    const reordered = await page.evaluate(async () => {
+      const ch = document.getElementById("ch") as Chips;
+      ch.value = ["nuts"];
+      ch.prepend(ch.children[3]);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return {
+        rebuilt: ch.component !== (window as unknown as Record<string, unknown>).__chips,
+        cells: [...(ch.shadowRoot?.querySelectorAll('[role="gridcell"]') ?? [])].map((c) => c.textContent),
+        value: ch.value,
+      };
+    });
+    assert.deepEqual(reordered, { rebuilt: true, cells: ["Nut free", "Veggie", "Fish", "Unavailable"], value: ["nuts"] });
+    check("chips: a reorder rebuilds the set and keeps the selection");
+
+    const declared = await page.evaluate(async () => {
+      const ch = document.getElementById("ch") as Chips;
+      const chip = document.createElement("m-chip") as HTMLElement & { value: string; label: string; variant: string; elevated: boolean };
+      chip.value = "tip";
+      chip.label = "Tip";
+      chip.variant = "assist";
+      chip.elevated = true;
+      ch.append(chip);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const last = [...(ch.shadowRoot?.querySelectorAll('[role="gridcell"]') ?? [])].at(-1) as HTMLElement;
+      return {
+        attributes: [chip.getAttribute("value"), chip.getAttribute("label"), chip.getAttribute("variant"), chip.hasAttribute("elevated")],
+        classes: ["chip--assist", "chip--elevated"].map((name) => [...last.classList].some((c) => c.endsWith(name))),
+      };
+    });
+    assert.deepEqual(declared, { attributes: ["tip", "Tip", "assist", true], classes: [true, true] });
+    check("chips: <m-chip> properties write the attributes the set reads");
+
+    const early = await page.evaluate(async () => {
+      const w = window as unknown as { mtrl: { defineChips: (o?: object) => string } };
+      const set = document.createElement("late-chips") as HTMLElement & { value?: unknown };
+      for (const [value, label] of [["first", "First"], ["second", "Second"]]) {
+        const chip = document.createElement("late-chip") as HTMLElement & { value?: string; label?: string };
+        chip.value = value;
+        chip.label = label;
+        set.append(chip);
+      }
+      set.value = ["second"];
+      document.getElementById("host")?.append(set);
+      w.mtrl.defineChips({ prefix: "late" });
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const cells = [...(set.shadowRoot?.querySelectorAll('[role="gridcell"]') ?? [])];
+      return { labels: cells.map((c) => c.textContent), value: (set as Chips).value };
+    });
+    assert.deepEqual(early, { labels: ["First", "Second"], value: ["second"] });
+    check("chips: <m-chip> and <m-chips> properties set before the elements are defined are kept");
+
+    const layout = await page.evaluate(() => {
+      const ch = document.getElementById("ch") as HTMLElement;
+      const root = ch.shadowRoot?.firstElementChild as HTMLElement;
+      const component = (ch as Chips).component;
+      ch.setAttribute("scrollable", "");
+      ch.setAttribute("label", "Diet");
+      ch.setAttribute("aria-label", "Diet filters");
+      const classes = ["chips--scrollable", "chips--with-label"].map((name) => [...root.classList].some((c) => c.endsWith(name)));
+      return { classes, labelled: !!root.getAttribute("aria-labelledby"), same: (ch as Chips).component === component };
+    });
+    assert.deepEqual(layout, { classes: [true, true], labelled: true, same: true });
+    check("chips: scrollable, label and aria-label update the set in place");
+
+    const dirty = await page.evaluate(async () => {
+      const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
+      const host = document.getElementById("host") as HTMLElement;
+      const make = (): Chips => {
+        const c = document.createElement("m-chips") as Chips;
+        c.setAttribute("aria-label", "Dirty chips");
+        c.innerHTML = '<m-chip value="p">P</m-chip><m-chip value="q">Q</m-chip>';
+        host.replaceChildren(c);
+        return c;
+      };
+      let c = make();
+      c.setAttribute("value", "p,q");
+      const clean = c.value;
+      c.querySelector("m-chip")?.setAttribute("selected", "");
+      c.removeAttribute("value");
+      await frame();
+      const byChip = c.value;
+      (c.shadowRoot?.querySelectorAll('[role="gridcell"]')[1] as HTMLElement).click();
+      c.setAttribute("value", "q");
+      const afterUser = c.value;
+      c.querySelectorAll("m-chip")[1].setAttribute("selected", "");
+      await frame();
+      const afterChip = c.value;
+      c = make();
+      c.value = ["q"];
+      c.setAttribute("value", "p");
+      return { clean, byChip, afterUser, afterChip, afterScript: c.value };
+    });
+    assert.deepEqual(dirty, { clean: ["p", "q"], byChip: ["p"], afterUser: ["p", "q"], afterChip: ["p", "q"], afterScript: ["q"] });
+    check("chips: value and selected are defaults, until the user or a script changes the selection");
+
+    await fresh(page, `<section id="factory"></section>`);
+    const parity = await page.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createChips: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createChips({
+        ariaLabel: "Factory",
+        chips: [
+          { value: "a", label: "Alpha", selected: true }, { value: "b", label: "Beta" },
+          { type: "assist", value: "c", label: "Gamma", elevated: true }, { type: "input", value: "d", label: "Delta" },
+          { value: "e", label: "Epsilon", disabled: true },
+        ],
+      });
+      document.getElementById("factory")?.append(factory.element);
+      const element = document.createElement("m-chips");
+      element.setAttribute("value", "a");
+      element.innerHTML = '<m-chip value="a">Alpha</m-chip><m-chip value="b">Beta</m-chip>' +
+        '<m-chip variant="assist" value="c" elevated>Gamma</m-chip><m-chip variant="input" value="d">Delta</m-chip>' +
+        '<m-chip value="e" disabled>Epsilon</m-chip>';
+      document.getElementById("factory")?.before(element);
+      await new Promise((r) => setTimeout(r, 400));
+      const measure = (set: HTMLElement): Array<Record<string, string | number>> =>
+        [...set.querySelectorAll('[role="gridcell"]')].map((chip) => {
+          const box = chip.getBoundingClientRect();
+          const style = getComputedStyle(chip);
+          const label = chip.querySelector('[class*="chip__label"]') as HTMLElement;
+          return {
+            w: Math.round(box.width), h: Math.round(box.height), background: style.backgroundColor, border: style.borderColor,
+            shadow: style.boxShadow, radius: style.borderRadius, color: getComputedStyle(label).color, font: getComputedStyle(label).font,
+          };
+        });
+      const root = element.shadowRoot?.firstElementChild as HTMLElement;
+      return { factory: measure(factory.element), element: measure(root) };
+    });
+    assert.equal(parity.element.length, 5);
+    assert.deepEqual(parity.element, parity.factory);
+    check("chips: renders as the factory does with the global stylesheet");
+  }
+
   // ---------------------------------------------------------------- progress
   await fresh(
     page,
@@ -1818,6 +2380,1049 @@ try {
     check("divider: full-width and inset render as the factory does with the global stylesheet");
   }
 
+  // ---------------------------------------------------------------- navigation rail
+  await fresh(
+    page,
+    `<m-navigation-rail id="nr" value="b" aria-label="Main">
+       <m-navigation-rail-item value="a" icon='${ICON}'>Inbox</m-navigation-rail-item>
+       <m-navigation-rail-item value="b" icon='${ICON}' badge="3" badge-label="3 new">Sent</m-navigation-rail-item>
+       <m-navigation-rail-item value="c" icon='${ICON}' href="#starred">Starred</m-navigation-rail-item>
+       <m-navigation-rail-item value="d" icon='${ICON}' disabled>Trash</m-navigation-rail-item>
+     </m-navigation-rail><section id="factory"></section>`
+  );
+  {
+    type Rail = HTMLElement & { value: string | null; component: unknown; expanded: boolean };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const nav = page.getByRole("navigation", { name: "Main" });
+    assert.equal(await nav.count(), 1);
+    assert.equal(await nav.getByRole("button", { name: "Inbox", exact: true }).count(), 1);
+    assert.equal(await nav.getByRole("button", { name: "Sent, 3 new", exact: true }).getAttribute("aria-current"), "page");
+    assert.equal(await nav.getByRole("link", { name: "Starred", exact: true }).getAttribute("href"), "#starred");
+    assert.equal(await nav.getByRole("button", { name: "Trash", exact: true }).isDisabled(), true);
+    assert.equal(await nav.locator('[aria-current="page"]').count(), 1);
+    check("navigation rail: a navigation landmark named by aria-label; items are buttons or links, value is aria-current");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      document.getElementById("nr")?.addEventListener("change", (e) => {
+        (w.events as unknown[]).push({ detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+      });
+    });
+    const state = (): Promise<{ events: unknown; value: string | null; attribute: string | null; current: string | undefined }> =>
+      page.evaluate(() => {
+        const r = document.getElementById("nr") as Rail;
+        const current = r.shadowRoot?.querySelector('[aria-current="page"]') as HTMLElement | null;
+        return { events: (window as unknown as Win).events, value: r.value, attribute: r.getAttribute("value"), current: current?.dataset.id };
+      });
+    await nav.getByRole("button", { name: "Inbox", exact: true }).click();
+    assert.deepEqual(await state(), { events: [{ detail: { value: "a" }, target: "nr" }], value: "a", attribute: "b", current: "a" });
+    check("navigation rail: a click dispatches one change from the host; the live value moves, the attribute stays");
+
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    assert.deepEqual((await state()).events, [
+      { detail: { value: "a" }, target: "nr" },
+      { detail: { value: "b" }, target: "nr" },
+    ]);
+    assert.equal((await state()).current, "b");
+    check("navigation rail: arrow keys move focus and Enter selects, dispatching change");
+
+    const silent = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      const r = document.getElementById("nr") as Rail;
+      r.value = "c";
+      const after = r.value;
+      r.value = "d"; // disabled: not selectable
+      return { events: w.events, after, disabled: r.value };
+    });
+    assert.deepEqual(silent, { events: [], after: "c", disabled: "c" });
+    check("navigation rail: setting value fires no event; a disabled item cannot be selected");
+
+    await nav.getByRole("button", { name: "Trash", exact: true }).dispatchEvent("click");
+    assert.deepEqual(await state(), { events: [], value: "c", attribute: "b", current: "c" });
+    check("navigation rail: a click on a disabled item does nothing");
+
+    await nav.getByRole("button", { name: "Inbox", exact: true }).focus();
+    await page.evaluate(() => {
+      const r = document.getElementById("nr") as Rail;
+      (window as unknown as Record<string, unknown>).__rail = r.component;
+      const items = r.querySelectorAll("m-navigation-rail-item");
+      items[0].textContent = "Mail";
+      items[1].setAttribute("badge", "7");
+      items[1].removeAttribute("badge-label");
+      items[3].remove();
+      const added = document.createElement("m-navigation-rail-item") as HTMLElement & { value: string; icon: string };
+      added.value = "e";
+      added.icon = items[0].getAttribute("icon") ?? "";
+      added.textContent = "Archive";
+      r.append(added);
+    });
+    await settle();
+    const updated = await page.evaluate(() => {
+      const r = document.getElementById("nr") as Rail;
+      const items = [...(r.shadowRoot?.querySelectorAll("[data-id]") ?? [])] as HTMLElement[];
+      return {
+        same: r.component === (window as unknown as Record<string, unknown>).__rail,
+        names: items.map((item) => item.getAttribute("aria-label")),
+        value: r.value,
+        focused: (r.shadowRoot?.activeElement as HTMLElement | null)?.dataset.id,
+      };
+    });
+    assert.deepEqual(updated, { same: true, names: ["Mail", "Sent, 7", "Starred", "Archive"], value: "c", focused: "a" });
+    check("navigation rail: children added, removed and relabelled update in place, keeping selection and focus");
+
+    await nav.getByRole("button", { name: "Expand navigation" }).click();
+    let expanded = await page.evaluate(() => {
+      const r = document.getElementById("nr") as Rail;
+      return { attribute: r.hasAttribute("expanded"), property: r.expanded };
+    });
+    assert.deepEqual(expanded, { attribute: true, property: true });
+    await page.evaluate(() => document.getElementById("nr")?.removeAttribute("expanded"));
+    expanded = await page.evaluate(() => {
+      const r = document.getElementById("nr") as Rail & { component: { isExpanded: () => boolean } };
+      return { attribute: r.hasAttribute("expanded"), property: r.component.isExpanded() };
+    });
+    assert.deepEqual(expanded, { attribute: false, property: false });
+    check("navigation rail: the menu button reflects expanded, and the attribute collapses it");
+
+    await page.evaluate(() => {
+      const fab = document.createElement("button");
+      fab.slot = "header";
+      fab.textContent = "Compose";
+      document.getElementById("nr")?.prepend(fab);
+    });
+    await settle();
+    const header = await page.evaluate(() => {
+      const r = document.getElementById("nr") as Rail;
+      const slot = r.querySelector("button")?.assignedSlot;
+      return { region: slot?.parentElement?.className, value: r.value, items: r.shadowRoot?.querySelectorAll("[data-id]").length };
+    });
+    assert.match(header.region ?? "", /navigation-rail__header/);
+    assert.deepEqual({ value: header.value, items: header.items }, { value: "c", items: 4 });
+    check("navigation rail: slot=header content goes in the header, below the menu button");
+
+    const parity = await page.evaluate((icon) => {
+      const w = window as unknown as Win & { mtrl: { createNavigationRail: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createNavigationRail({
+        items: [{ id: "a", label: "Inbox", icon, active: true }, { id: "b", label: "Sent", icon }],
+      });
+      document.getElementById("factory")?.append(factory.element);
+      const host = document.createElement("m-navigation-rail");
+      host.setAttribute("value", "a");
+      host.innerHTML = `<m-navigation-rail-item value="a">Inbox</m-navigation-rail-item><m-navigation-rail-item value="b">Sent</m-navigation-rail-item>`;
+      host.querySelectorAll("m-navigation-rail-item").forEach((item) => item.setAttribute("icon", icon));
+      document.getElementById("factory")?.append(host);
+      const measure = (root: HTMLElement): Record<string, string | number> => {
+        const item = root.querySelector('[class*="navigation-rail__item"]') as HTMLElement;
+        const indicator = root.querySelector('[class*="navigation-rail__indicator"]') as HTMLElement;
+        const label = root.querySelector('[class*="navigation-rail__label"]') as HTMLElement;
+        const r = root.getBoundingClientRect();
+        const i = item.getBoundingClientRect();
+        return {
+          width: r.width, itemW: i.width, itemH: i.height,
+          bg: getComputedStyle(root).backgroundColor,
+          indicator: getComputedStyle(indicator).backgroundColor,
+          labelColor: getComputedStyle(label).color, labelFont: getComputedStyle(label).font,
+        };
+      };
+      return { factory: measure(factory.element), element: measure(host.shadowRoot?.firstElementChild as HTMLElement) };
+    }, ICON);
+    assert.deepEqual(parity.element, parity.factory);
+    check("navigation rail: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- drawer
+  await fresh(
+    page,
+    `<m-drawer id="dr" open headline="Mail" value="inbox">
+       <m-drawer-item value="inbox" icon='${ICON}' badge="24">Inbox</m-drawer-item>
+       <m-drawer-item value="sent" icon='${ICON}'>Sent</m-drawer-item>
+       <m-drawer-item type="divider"></m-drawer-item>
+       <m-drawer-item type="section">Labels</m-drawer-item>
+       <m-drawer-item value="family" disabled>Family</m-drawer-item>
+     </m-drawer><section id="factory"></section>`
+  );
+  {
+    type Drawer = HTMLElement & { value: string | null; component: unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const nav = page.getByRole("navigation", { name: "Mail" });
+    assert.equal(await nav.count(), 1);
+    assert.equal(await nav.getByRole("button", { name: /^Inbox/ }).getAttribute("aria-current"), "page");
+    assert.equal(await nav.getByRole("button", { name: "Family" }).isDisabled(), true);
+    const structure = await page.evaluate(() => {
+      const root = document.getElementById("dr")?.shadowRoot as ShadowRoot;
+      return {
+        headline: root.querySelector('[class*="drawer__headline"]')?.textContent,
+        separators: root.querySelectorAll('hr[role="separator"]').length,
+        section: root.querySelector('[class*="drawer__section-label"]')?.textContent,
+      };
+    });
+    assert.deepEqual(structure, { headline: "Mail", separators: 1, section: "Labels" });
+    check("drawer: a navigation landmark named by its headline; items, a divider and a section headline; value is aria-current");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      document.getElementById("dr")?.addEventListener("change", (e) => {
+        (w.events as unknown[]).push({ detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+      });
+    });
+    const state = (): Promise<{ events: unknown; value: string | null; attribute: string | null; current: string | undefined }> =>
+      page.evaluate(() => {
+        const d = document.getElementById("dr") as Drawer;
+        const current = d.shadowRoot?.querySelector('[aria-current="page"]') as HTMLElement | null;
+        return { events: (window as unknown as Win).events, value: d.value, attribute: d.getAttribute("value"), current: current?.dataset.id };
+      });
+    await nav.getByRole("button", { name: "Sent", exact: true }).click();
+    assert.deepEqual(await state(), { events: [{ detail: { value: "sent" }, target: "dr" }], value: "sent", attribute: "inbox", current: "sent" });
+    check("drawer: a click dispatches one change from the host; the live value moves, the attribute stays");
+
+    await page.keyboard.press("ArrowUp");
+    await page.keyboard.press("Enter");
+    assert.deepEqual(((await state()).events as unknown[]).at(-1), { detail: { value: "inbox" }, target: "dr" });
+    assert.equal(((await state()).events as unknown[]).length, 2);
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press(" ");
+    assert.deepEqual(await state(), {
+      events: [
+        { detail: { value: "sent" }, target: "dr" },
+        { detail: { value: "inbox" }, target: "dr" },
+        { detail: { value: "sent" }, target: "dr" },
+      ],
+      value: "sent", attribute: "inbox", current: "sent",
+    });
+    check("drawer: arrow keys move focus and Enter or Space selects, dispatching change once");
+
+    const silent = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      const d = document.getElementById("dr") as Drawer;
+      d.value = "inbox";
+      const after = d.value;
+      d.value = "family"; // disabled: not selectable
+      const disabled = d.value;
+      d.value = null;
+      return { events: w.events, after, disabled, cleared: d.value };
+    });
+    assert.deepEqual(silent, { events: [], after: "inbox", disabled: "inbox", cleared: null });
+    await nav.getByRole("button", { name: "Family" }).dispatchEvent("click");
+    assert.deepEqual((await state()).events, []);
+    check("drawer: setting value fires no event and null clears; a disabled item cannot be selected");
+
+    await page.evaluate(() => ((document.getElementById("dr") as Drawer).value = "sent"));
+    await nav.getByRole("button", { name: "Sent", exact: true }).focus();
+    await page.evaluate(() => {
+      const d = document.getElementById("dr") as Drawer;
+      (window as unknown as Record<string, unknown>).__drawer = d.component;
+      const items = d.querySelectorAll("m-drawer-item");
+      items[1].textContent = "Outbox";
+      items[0].setAttribute("badge", "25");
+      items[4].remove();
+      const added = document.createElement("m-drawer-item") as HTMLElement & { value: string };
+      added.value = "work";
+      added.textContent = "Work";
+      d.append(added);
+    });
+    await settle();
+    const updated = await page.evaluate(() => {
+      const d = document.getElementById("dr") as Drawer;
+      const items = [...(d.shadowRoot?.querySelectorAll("[data-id]") ?? [])] as HTMLElement[];
+      return {
+        same: d.component === (window as unknown as Record<string, unknown>).__drawer,
+        labels: items.map((item) => item.textContent),
+        value: d.value,
+        focused: (d.shadowRoot?.activeElement as HTMLElement | null)?.dataset.id,
+      };
+    });
+    assert.deepEqual(updated, { same: true, labels: ["Inbox25", "Outbox", "Work"], value: "sent", focused: "sent" });
+    check("drawer: children added, removed and relabelled update in place, keeping selection and focus");
+
+    const open = await page.evaluate(() => {
+      const d = document.getElementById("dr") as Drawer & { component: { isOpen: () => boolean } };
+      const root = d.shadowRoot?.firstElementChild as HTMLElement;
+      d.removeAttribute("open");
+      const closed = { open: d.component.isOpen(), inert: root.hasAttribute("inert") };
+      d.setAttribute("open", "");
+      d.setAttribute("headline", "Post");
+      return { closed, open: d.component.isOpen(), inert: root.hasAttribute("inert"), same: d.component === (window as unknown as Record<string, unknown>).__drawer };
+    });
+    assert.deepEqual(open, { closed: { open: false, inert: true }, open: true, inert: false, same: true });
+    assert.equal(await page.getByRole("navigation", { name: "Post" }).count(), 1);
+    check("drawer: open and headline apply in place");
+
+    const parity = await page.evaluate(async (icon) => {
+      const w = window as unknown as Win & { mtrl: { createDrawer: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createDrawer({
+        open: true, headline: "Mail",
+        items: [{ id: "inbox", label: "Inbox", icon, active: true }, { id: "sent", label: "Sent", icon }],
+      });
+      document.getElementById("factory")?.append(factory.element);
+      const host = document.createElement("m-drawer");
+      host.setAttribute("open", "");
+      host.setAttribute("headline", "Mail");
+      host.setAttribute("value", "inbox");
+      host.innerHTML = `<m-drawer-item value="inbox">Inbox</m-drawer-item><m-drawer-item value="sent">Sent</m-drawer-item>`;
+      host.querySelectorAll("m-drawer-item").forEach((item) => item.setAttribute("icon", icon));
+      document.getElementById("factory")?.append(host);
+      await new Promise((r) => setTimeout(r, 700)); // the width spring
+      const measure = (root: HTMLElement): Record<string, string | number> => {
+        const sheet = root.querySelector('[class*="drawer__sheet"]') as HTMLElement;
+        const item = root.querySelector('[class*="drawer__item"]') as HTMLElement;
+        const indicator = root.querySelector('[class*="drawer__active-indicator"]') as HTMLElement;
+        const headline = root.querySelector('[class*="drawer__headline"]') as HTMLElement;
+        const r = root.getBoundingClientRect();
+        const i = item.getBoundingClientRect();
+        return {
+          width: r.width, itemW: i.width, itemH: i.height,
+          bg: getComputedStyle(sheet).backgroundColor,
+          indicator: getComputedStyle(indicator).backgroundColor,
+          itemColor: getComputedStyle(item).color,
+          headline: getComputedStyle(headline).font,
+        };
+      };
+      return { factory: measure(factory.element), element: measure(host.shadowRoot?.firstElementChild as HTMLElement) };
+    }, ICON);
+    assert.deepEqual(parity.element, parity.factory);
+    check("drawer: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- top app bar
+  await fresh(
+    page,
+    `<div class="stage" id="tstage"><m-top-app-bar id="tb" headline="Fallback" aria-label="Mail bar">
+       <m-icon-button slot="leading" aria-label="Menu" icon='${ICON}'></m-icon-button>
+       Inbox
+       <m-icon-button slot="trailing" aria-label="Search" icon='${ICON}'></m-icon-button>
+       <m-icon-button slot="trailing" aria-label="More" icon='${ICON}'></m-icon-button>
+     </m-top-app-bar></div>
+     <div class="stage" id="scroller"><div class="stage"></div><div class="stage"></div></div>
+     <div class="stage" id="fstage"></div>`
+  );
+  {
+    type Bar = HTMLElement & { component: unknown; setScrollState: (scrolled: boolean) => unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const banner = page.getByRole("banner", { name: "Mail bar" });
+    assert.equal(await banner.count(), 1);
+    assert.equal(await page.getByRole("heading", { level: 1, name: "Inbox" }).count(), 1);
+    const regions = await page.evaluate(() => {
+      const bar = document.getElementById("tb") as Bar;
+      const region = (label: string): string | undefined =>
+        bar.querySelector(`[aria-label="${label}"]`)?.assignedSlot?.parentElement?.className;
+      const fallback = bar.shadowRoot?.querySelector("h1 span") as HTMLElement;
+      return { menu: region("Menu"), search: region("Search"), more: region("More"), fallbackHidden: fallback.hidden };
+    });
+    assert.match(regions.menu ?? "", /top-app-bar__leading/);
+    assert.match(regions.search ?? "", /top-app-bar__trailing/);
+    assert.match(regions.more ?? "", /top-app-bar__trailing/);
+    assert.equal(regions.fallbackHidden, true);
+    check("top app bar: a banner; leading, headline and trailing content in their regions");
+
+    await page.evaluate(() => {
+      const bar = document.getElementById("tb") as Bar;
+      for (const node of [...bar.childNodes]) if (node.nodeType === Node.TEXT_NODE) node.remove();
+    });
+    await settle();
+    assert.equal(await page.getByRole("heading", { level: 1, name: "Fallback" }).count(), 1);
+    await page.evaluate(() => document.getElementById("tb")?.setAttribute("headline", "Updated"));
+    assert.equal(await page.getByRole("heading", { level: 1, name: "Updated" }).count(), 1);
+    check("top app bar: headline is the text while there is no headline content, and updates in place");
+
+    const type = await page.evaluate(() => {
+      const bar = document.getElementById("tb") as Bar;
+      const before = bar.component;
+      bar.setAttribute("type", "large");
+      const root = bar.shadowRoot?.firstElementChild as HTMLElement;
+      const rows = root.querySelectorAll('[class*="top-app-bar__row"]').length;
+      const menu = bar.querySelector('[aria-label="Menu"]')?.assignedSlot?.parentElement?.className;
+      return { same: bar.component === before, large: root.className.includes("top-app-bar--large"), rows, menu, height: root.getBoundingClientRect().height };
+    });
+    assert.equal(type.same, true);
+    assert.equal(type.large, true);
+    assert.equal(type.rows, 2);
+    assert.match(type.menu ?? "", /top-app-bar__leading/);
+    check("top app bar: type changes in place and keeps the slotted content");
+
+    const scrolled = await page.evaluate(async () => {
+      const bar = document.getElementById("tb") as Bar;
+      bar.setAttribute("type", "small");
+      bar.setAttribute("scroll-target", "scroller");
+      const root = (): HTMLElement => bar.shadowRoot?.firstElementChild as HTMLElement;
+      const is = (): boolean => root().className.includes("top-app-bar--scrolled");
+      const before = is();
+      const scroller = document.getElementById("scroller") as HTMLElement;
+      scroller.scrollTop = 100;
+      await new Promise((r) => setTimeout(r, 50));
+      const down = is();
+      scroller.scrollTop = 0;
+      await new Promise((r) => setTimeout(r, 50));
+      const up = is();
+      bar.setScrollState(true);
+      return { before, down, up, manual: is() };
+    });
+    assert.deepEqual(scrolled, { before: false, down: true, up: false, manual: true });
+    check("top app bar: scroll-target follows an element's scroll; setScrollState() drives it by script");
+
+    const parity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createTopAppBar: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createTopAppBar({ title: "Inbox", scrollable: false });
+      document.getElementById("fstage")?.append(factory.element);
+      const bar = document.getElementById("tb") as Bar;
+      bar.remove();
+      const host = document.createElement("m-top-app-bar");
+      host.setAttribute("no-scroll", "");
+      host.textContent = "Inbox";
+      document.getElementById("tstage")?.append(host);
+      const measure = (root: HTMLElement): Record<string, string | number> => {
+        const headline = root.querySelector("h1") as HTMLElement;
+        const r = root.getBoundingClientRect();
+        const h = headline.getBoundingClientRect();
+        return {
+          width: r.width, height: r.height, headlineH: h.height,
+          bg: getComputedStyle(root).backgroundColor,
+          color: getComputedStyle(headline).color, font: getComputedStyle(headline).font,
+        };
+      };
+      return { factory: measure(factory.element), element: measure(host.shadowRoot?.firstElementChild as HTMLElement) };
+    });
+    assert.deepEqual(parity.element, parity.factory);
+    check("top app bar: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- bottom app bar
+  await fresh(
+    page,
+    `<div class="stage"><m-bottom-app-bar id="bb" aria-label="Actions">
+       <m-icon-button aria-label="Archive" icon='${ICON}'></m-icon-button>
+       <m-icon-button aria-label="Delete" icon='${ICON}'></m-icon-button>
+       <m-fab slot="fab" aria-label="Compose" icon='${ICON}'></m-fab>
+     </m-bottom-app-bar></div><div class="stage" id="fstage"></div>`
+  );
+  {
+    type Bar = HTMLElement & { component: unknown; hide: () => unknown; show: () => unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const toolbar = page.getByRole("toolbar", { name: "Actions" });
+    assert.equal(await toolbar.count(), 1);
+    const regions = await page.evaluate(() => {
+      const bar = document.getElementById("bb") as Bar;
+      const region = (label: string): string | undefined =>
+        bar.querySelector(`[aria-label="${label}"]`)?.assignedSlot?.parentElement?.className;
+      const root = bar.shadowRoot?.firstElementChild as HTMLElement;
+      return { archive: region("Archive"), del: region("Delete"), fab: region("Compose"), withFab: root.className.includes("--with-fab") };
+    });
+    assert.match(regions.archive ?? "", /bottom-app-bar__actions/);
+    assert.match(regions.del ?? "", /bottom-app-bar__actions/);
+    assert.match(regions.fab ?? "", /bottom-app-bar__fab-container/);
+    assert.equal(regions.withFab, true);
+    check("bottom app bar: a toolbar; actions and the FAB in their regions");
+
+    await page.evaluate(() => document.querySelector("#bb m-fab")?.remove());
+    await settle();
+    const without = await page.evaluate(() => {
+      const bar = document.getElementById("bb") as Bar;
+      return (bar.shadowRoot?.firstElementChild as HTMLElement).className.includes("--with-fab");
+    });
+    assert.equal(without, false);
+    check("bottom app bar: the bar follows whether a FAB is slotted");
+
+    const methods = await page.evaluate(() => {
+      const bar = document.getElementById("bb") as Bar;
+      const root = (): HTMLElement => bar.shadowRoot?.firstElementChild as HTMLElement;
+      bar.hide();
+      const hidden = root().className.includes("--hidden");
+      bar.show();
+      const shown = !root().className.includes("--hidden");
+      const before = bar.component;
+      bar.setAttribute("fab-position", "center");
+      return { hidden, shown, recreated: bar.component !== before, center: root().className.includes("--fab-center") };
+    });
+    assert.deepEqual(methods, { hidden: true, shown: true, recreated: true, center: true });
+    check("bottom app bar: hide() and show(); fab-position recreates the bar");
+
+    const parity = await page.evaluate((icon) => {
+      const w = window as unknown as Win & {
+        mtrl: {
+          createBottomAppBar: (c: object) => { element: HTMLElement; addAction: (e: HTMLElement) => unknown; addFab: (e: HTMLElement) => unknown };
+          createIconButton: (c: object) => { element: HTMLElement };
+          createFab: (c: object) => { element: HTMLElement };
+        };
+      };
+      const factory = w.mtrl.createBottomAppBar({});
+      factory.addAction(w.mtrl.createIconButton({ icon, ariaLabel: "Archive" }).element);
+      factory.addFab(w.mtrl.createFab({ icon, ariaLabel: "Compose" }).element);
+      document.getElementById("fstage")?.append(factory.element);
+      const bar = document.getElementById("bb") as Bar;
+      bar.removeAttribute("fab-position");
+      const fab = document.createElement("m-fab");
+      fab.slot = "fab";
+      fab.setAttribute("icon", icon);
+      fab.setAttribute("aria-label", "Compose");
+      bar.append(fab);
+      return new Promise<{ factory: Record<string, string | number>; element: Record<string, string | number> }>((resolve) =>
+        requestAnimationFrame(() => {
+          const measure = (root: HTMLElement): Record<string, string | number> => {
+            const r = root.getBoundingClientRect();
+            const style = getComputedStyle(root);
+            return { width: r.width, height: r.height, bg: style.backgroundColor, radius: style.borderTopLeftRadius, shadow: style.boxShadow };
+          };
+          resolve({ factory: measure(factory.element), element: measure(bar.shadowRoot?.firstElementChild as HTMLElement) });
+        })
+      );
+    }, ICON);
+    assert.deepEqual(parity.element, parity.factory);
+    check("bottom app bar: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- list
+  await fresh(
+    page,
+    `<m-list id="l" aria-label="Fruits" value="b">
+       <m-list-item value="a" supporting-text="Red" leading-icon='${ICON}'>Apple</m-list-item>
+       <m-list-item value="b" overline="Yellow">Banana</m-list-item>
+       <m-list-item value="c" trailing-text="100+" disabled>Cherry</m-list-item>
+     </m-list>
+     <m-list id="m" selection="multiple" aria-label="Multi">
+       <m-list-item value="x" selected>Ex</m-list-item><m-list-item value="y">Why</m-list-item><m-list-item value="z" selected>Zed</m-list-item>
+     </m-list>
+     <m-list id="n" selection="none" aria-label="Plain">
+       <m-list-item>One</m-list-item><m-list-item kind="divider"></m-list-item>
+       <m-list-item kind="subheader">Section</m-list-item><m-list-item>Two</m-list-item>
+     </m-list>
+     <section id="factory"></section>`
+  );
+  {
+    type List = HTMLElement & { value: string | null; values: string[]; component: unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const fruits = page.getByRole("list", { name: "Fruits" });
+    assert.equal(await fruits.count(), 1);
+    assert.equal(await fruits.getByRole("listitem").count(), 3);
+    assert.equal(await fruits.getByRole("button", { name: "Banana", pressed: true }).count(), 1);
+    assert.equal(await fruits.getByRole("button", { name: "Apple", pressed: false }).count(), 1);
+    assert.equal(await fruits.getByRole("button", { name: "Cherry" }).isDisabled(), true);
+    const anatomy = await page.evaluate(() => {
+      const root = (document.getElementById("l") as HTMLElement).shadowRoot as ShadowRoot;
+      const text = (selector: string): string | undefined => root.querySelector(selector)?.textContent ?? undefined;
+      return {
+        supporting: text('[class*="list__supporting"]'),
+        overline: text('[class*="list__overline"]'),
+        trailing: text('[class*="list__trailing--text"]'),
+        icon: !!root.querySelector('[class*="list__leading--icon"] svg'),
+      };
+    });
+    assert.deepEqual(anatomy, { supporting: "Red", overline: "Yellow", trailing: "100+", icon: true });
+    check("list: a list named by aria-label; children declare rows with their anatomy, value selects one");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      for (const type of ["activate", "change"]) {
+        document.getElementById("l")?.addEventListener(type, (e) => {
+          (w.events as unknown[]).push({ type, detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+        });
+      }
+    });
+    await fruits.getByRole("button", { name: "Apple" }).click();
+    let state = await page.evaluate(() => {
+      const l = document.getElementById("l") as List;
+      return { events: (window as unknown as Win).events, value: l.value, values: l.values, attribute: l.getAttribute("value") };
+    });
+    assert.deepEqual(state, {
+      events: [
+        { type: "activate", detail: { value: "a" }, target: "l" },
+        { type: "change", detail: { value: "a", values: ["a"] }, target: "l" },
+      ],
+      value: "a", values: ["a"], attribute: "b",
+    });
+    check("list: a click dispatches activate, then change with the moved selection; the attribute stays");
+
+    await page.keyboard.press("ArrowDown");
+    const focused = await page.evaluate(() => (document.getElementById("l")?.shadowRoot?.activeElement as HTMLElement | null)?.getAttribute("aria-labelledby"));
+    assert.ok(focused);
+    await page.evaluate(() => ((window as unknown as Win).events = []));
+    await page.keyboard.press("Space");
+    state = await page.evaluate(() => {
+      const l = document.getElementById("l") as List;
+      return { events: (window as unknown as Win).events, value: l.value, values: l.values, attribute: l.getAttribute("value") };
+    });
+    assert.deepEqual((state.events as unknown[]).at(-1), { type: "change", detail: { value: "b", values: ["b"] }, target: "l" });
+    assert.equal(await fruits.getByRole("button", { name: "Banana", pressed: true }).count(), 1);
+    check("list: an arrow key moves focus to the next row and Space selects it");
+
+    await page.evaluate(() => ((window as unknown as Win).events = []));
+    await fruits.getByRole("button", { name: "Cherry" }).click({ force: true });
+    assert.deepEqual(await page.evaluate(() => [(window as unknown as Win).events, (document.getElementById("l") as List).value]), [[], "b"]);
+    check("list: a disabled row dispatches nothing");
+
+    const silent = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      const l = document.getElementById("l") as List;
+      l.value = "a";
+      const single = l.values;
+      l.values = ["b", "a"];
+      const first = l.value;
+      l.value = null;
+      return { events: w.events, single, first, cleared: [l.value, l.values] };
+    });
+    assert.deepEqual(silent, { events: [], single: ["a"], first: "b", cleared: [null, []] });
+    check("list: setting value or values fires no event; a single list keeps the first value");
+
+    const disabled = await page.evaluate(async () => {
+      const l = document.getElementById("l") as List;
+      const before = l.component;
+      const read = (): boolean[] => [...(l.shadowRoot?.querySelectorAll("button") ?? [])].map((b) => b.disabled);
+      l.setAttribute("disabled", "");
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const on = read();
+      l.removeAttribute("disabled");
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return { on, off: read(), same: l.component === before };
+    });
+    assert.deepEqual(disabled, { on: [true, true, true], off: [false, false, true], same: true });
+    check("list: disabled disables every row in place, and its removal keeps the rows' own");
+
+    const multi = page.getByRole("list", { name: "Multi" });
+    assert.deepEqual(await page.evaluate(() => (document.getElementById("m") as List).values), ["x", "z"]);
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      document.getElementById("m")?.addEventListener("change", (e) => (w.events as unknown[]).push((e as CustomEvent).detail));
+    });
+    await multi.getByRole("button", { name: "Why" }).click();
+    await multi.getByRole("button", { name: "Ex" }).click();
+    const picked = await page.evaluate(() => ({ events: (window as unknown as Win).events, value: (document.getElementById("m") as List).value }));
+    assert.deepEqual(picked, {
+      events: [{ value: "x", values: ["x", "y", "z"] }, { value: "y", values: ["y", "z"] }],
+      value: "y",
+    });
+    check("list: selection=multiple toggles rows; items' selected are the default, values come in row order");
+
+    const plain = page.getByRole("list", { name: "Plain" });
+    assert.equal(await plain.getByRole("button").count(), 0);
+    assert.equal(await plain.getByRole("separator").count(), 1);
+    assert.equal(await plain.getByRole("listitem").count(), 2);
+    assert.equal(await plain.getByText("Section", { exact: true }).count(), 1);
+    check("list: selection=none renders rows that are not interactive, with a divider and a subheader");
+
+    const updated = await page.evaluate(async () => {
+      const l = document.getElementById("l") as List;
+      l.value = "b";
+      const before = l.component;
+      const item = document.createElement("m-list-item") as HTMLElement & { value: string; supportingText: string };
+      item.value = "d";
+      item.supportingText = "Brown";
+      item.textContent = "Date";
+      l.append(item);
+      l.querySelector('[value="a"]')?.remove();
+      const banana = l.querySelector('[value="b"]') as HTMLElement;
+      banana.textContent = "Blueberry";
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const buttons = [...(l.shadowRoot?.querySelectorAll('[role="listitem"]') ?? [])].map((row) => row.querySelector('[class*="list__headline"]')?.textContent);
+      return { same: l.component === before, buttons, value: l.value, supporting: item.getAttribute("supporting-text") };
+    });
+    assert.deepEqual(updated, { same: true, buttons: ["Blueberry", "Cherry", "Date"], value: "b", supporting: "Brown" });
+    assert.equal(await fruits.getByRole("button", { name: "Blueberry", pressed: true }).count(), 1);
+    check("list: items added, removed and changed update in place and keep the selection");
+
+    const removed = await page.evaluate(async () => {
+      const l = document.getElementById("l") as List;
+      l.querySelector('[value="b"]')?.remove();
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return l.value;
+    });
+    assert.equal(removed, null);
+    check("list: removing the selected item clears it from the selection");
+
+    await settle();
+    const renamed = await page.evaluate(() => {
+      const l = document.getElementById("l") as List;
+      const before = l.component;
+      l.setAttribute("aria-label", "Produce");
+      return l.component === before;
+    });
+    assert.equal(renamed, true);
+    assert.equal(await page.getByRole("list", { name: "Produce" }).count(), 1);
+    check("list: aria-label updates in place");
+
+    // Same look as the factory in light DOM with the full stylesheet.
+    const parity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createList({
+        ariaLabel: "Factory",
+        items: [{ id: "x", headline: "Ex" }, { id: "y", headline: "Why", supportingText: "Two" }, { id: "z", headline: "Zed" }],
+        multiSelect: true,
+        initialSelection: ["x", "z"],
+      });
+      document.getElementById("factory")?.append(factory.element);
+      const element = (document.getElementById("m") as HTMLElement & { values: string[] });
+      element.values = ["x", "z"];
+      element.querySelector('[value="y"]')?.setAttribute("supporting-text", "Two");
+      return new Promise<{ factory: string[][]; element: string[][] }>((resolve) =>
+        requestAnimationFrame(() => {
+          const look = (root: ParentNode): string[][] =>
+            [...root.querySelectorAll('[role="listitem"]')].map((row) => {
+              const style = getComputedStyle(row);
+              const headline = getComputedStyle(row.querySelector('[class*="list__headline"]') as HTMLElement);
+              return [String(row.getBoundingClientRect().height), style.backgroundColor, style.paddingLeft, headline.color, headline.fontSize, headline.lineHeight];
+            });
+          resolve({ factory: look(factory.element), element: look(element.shadowRoot as ShadowRoot) });
+        })
+      );
+    });
+    assert.equal(parity.element.length, 3);
+    assert.deepEqual(parity.element, parity.factory);
+    check("list: rows match the factory's size and colours, selected and not");
+  }
+
+  // ---------------------------------------------------------------- list defaults
+  {
+    type List = HTMLElement & { value: string | null; values: string[]; component: unknown };
+    const markup = `<m-list id="x" aria-label="Dirty"><m-list-item value="a">Alpha</m-list-item>
+      <m-list-item value="b">Beta</m-list-item><m-list-item value="c">Gamma</m-list-item></m-list>`;
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const live = (): Promise<string | null> => page.evaluate(() => (document.getElementById("x") as List).value);
+    const attribute = (value: string): Promise<string | null> =>
+      page.evaluate((v) => {
+        const x = document.getElementById("x") as List;
+        x.setAttribute("value", v);
+        return x.value;
+      }, value);
+    const selectItem = async (value: string): Promise<string | null> => {
+      await page.evaluate((v) => {
+        const x = document.getElementById("x") as HTMLElement;
+        for (const item of x.querySelectorAll("m-list-item")) item.toggleAttribute("selected", item.getAttribute("value") === v);
+      }, value);
+      await settle();
+      return live();
+    };
+
+    await fresh(page, markup);
+    assert.equal(await attribute("b"), "b");
+    assert.equal(await selectItem("c"), "b", "the value attribute wins over an item's selected in a single list");
+    await page.evaluate(() => document.getElementById("x")?.removeAttribute("value"));
+    await settle();
+    assert.equal(await selectItem("a"), "a", "a clean list follows its items' selected");
+    check("list: before any interaction, the value attribute and the items' selected move the selection");
+
+    await page.getByRole("list", { name: "Dirty" }).getByRole("button", { name: "Gamma" }).click();
+    assert.equal(await live(), "c");
+    assert.equal(await attribute("b"), "c");
+    assert.equal(await selectItem("b"), "c");
+    check("list: after a user interaction, neither the value attribute nor an item's selected moves it");
+
+    await fresh(page, markup);
+    await page.evaluate(() => ((document.getElementById("x") as List).values = ["b"]));
+    assert.equal(await attribute("c"), "b");
+    assert.equal(await selectItem("a"), "b");
+    check("list: after a values set, the defaults do not move it");
+
+    const recreated = await page.evaluate(async () => {
+      const x = document.getElementById("x") as List;
+      const before = x.component;
+      x.setAttribute("selection", "multiple");
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return { rebuilt: x.component !== before, values: x.values };
+    });
+    assert.deepEqual(recreated, { rebuilt: true, values: ["b"] });
+    check("list: selection recreates the list and keeps a dirty selection");
+  }
+
+  // ---------------------------------------------------------------- card
+  await fresh(
+    page,
+    `<section id="a"><m-card id="c" variant="outlined" headline="Fallback">
+       <span slot="headline">Trip to Lisbon</span><span slot="subhead">Three days</span>
+       <p>Walks and trams.</p><button slot="actions">Book</button>
+     </m-card>
+     <m-card id="k" clickable headline="Open me">Body</m-card></section>
+     <section id="factory"></section>`
+  );
+  {
+    type Card = HTMLElement & { component: unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const regions = (id: string): Promise<Record<string, string | number>> =>
+      page.evaluate((cardId) => {
+        const root = (document.getElementById(cardId) as HTMLElement).shadowRoot as ShadowRoot;
+        const card = root.firstElementChild as HTMLElement;
+        const assigned = (name: string): number =>
+          (root.querySelector(name ? `slot[name="${name}"]` : "slot:not([name])") as HTMLSlotElement | null)?.assignedElements().length ?? -1;
+        return {
+          regions: [...card.children].map((child) => child.className.replace(/^.*card__(\w[\w-]*).*$/, "$1")).join(" "),
+          headline: assigned("headline"), subhead: assigned("subhead"), content: assigned(""), actions: assigned("actions"),
+          outlined: card.className.includes("card--outlined") ? 1 : 0,
+        };
+      }, id);
+    assert.deepEqual(await regions("c"), { regions: "header content actions", headline: 1, subhead: 1, content: 1, actions: 1, outlined: 1 });
+    assert.equal(await page.getByRole("region", { name: "Trip to Lisbon" }).count(), 1);
+    assert.equal(await page.locator("#c").getByRole("group").count(), 1, "the actions row is a group");
+    assert.equal(await page.getByRole("button", { name: "Book" }).count(), 1);
+    check("card: children fill the header, content and actions slots; the headline names the card");
+
+    const clickable = page.getByRole("button", { name: "Open me" });
+    assert.equal(await clickable.count(), 1);
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      document.getElementById("k")?.addEventListener("click", (e) => (w.events as unknown[]).push((e.target as Element).id));
+    });
+    await clickable.click();
+    await clickable.focus();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Space");
+    assert.deepEqual(await page.evaluate(() => (window as unknown as Win).events), ["k", "k", "k"]);
+    check("card: clickable is a button named by its headline; a click, Enter and Space each click the host once");
+
+    const disabled = await page.evaluate(() => {
+      const k = document.getElementById("k") as Card;
+      k.setAttribute("disabled", "");
+      const card = k.shadowRoot?.firstElementChild as HTMLElement;
+      return { aria: card.getAttribute("aria-disabled"), tabindex: card.getAttribute("tabindex"), opacity: getComputedStyle(card).opacity };
+    });
+    assert.deepEqual(disabled, { aria: "true", tabindex: null, opacity: "0.38" });
+    await page.evaluate(() => ((window as unknown as Win).events = []));
+    await page.locator("#k").click({ force: true });
+    assert.deepEqual(await page.evaluate(() => (window as unknown as Win).events), []);
+    await page.evaluate(() => document.getElementById("k")?.removeAttribute("disabled"));
+    assert.equal(await page.evaluate(() => document.getElementById("k")?.shadowRoot?.firstElementChild?.getAttribute("tabindex")), "0");
+    check("card: disabled dims the card, takes it out of the tab order and stops clicks");
+
+    const changed = await page.evaluate(async () => {
+      const c = document.getElementById("c") as Card;
+      const before = c.component;
+      (c.querySelector('[slot="headline"]') as HTMLElement).textContent = "Trip to Porto";
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return c.component === before;
+    });
+    assert.equal(changed, true);
+    assert.equal(await page.getByRole("region", { name: "Trip to Porto" }).count(), 1);
+    check("card: a change inside a region is the slot's, with no recreation");
+
+    const regrown = await page.evaluate(async () => {
+      const c = document.getElementById("c") as Card;
+      const before = c.component;
+      c.querySelector('[slot="actions"]')?.remove();
+      const media = document.createElement("div");
+      media.slot = "media";
+      media.textContent = "Photo";
+      c.prepend(media);
+      const avatar = document.createElement("span");
+      avatar.slot = "avatar";
+      avatar.textContent = "AL";
+      c.append(avatar);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return c.component !== before;
+    });
+    assert.equal(regrown, true);
+    assert.deepEqual(await regions("c"), { regions: "media header content", headline: 1, subhead: 1, content: 1, actions: -1, outlined: 1 });
+    assert.equal(await page.evaluate(() => !!document.getElementById("c")?.shadowRoot?.querySelector('[class*="card__header-avatar"] slot[name="avatar"]')), true);
+    check("card: a region added or emptied recreates the card with the regions it now has");
+
+    await page.evaluate(() => document.getElementById("c")?.setAttribute("aria-label", "Holiday"));
+    assert.equal(await page.getByRole("region", { name: "Holiday" }).count(), 1);
+    await page.evaluate(() => document.getElementById("c")?.removeAttribute("aria-label"));
+    assert.equal(await page.getByRole("region", { name: "Trip to Porto" }).count(), 1);
+    check("card: aria-label replaces the headline's name in place, and its removal gives it back");
+
+    await page.evaluate(() => document.getElementById("k")?.setAttribute("headline", "Open this"));
+    await settle();
+    assert.equal(await page.getByRole("button", { name: "Open this" }).count(), 1);
+    check("card: the headline attribute is the slot's fallback text");
+
+    // Same look as the factory in light DOM with the full stylesheet.
+    const parity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createCard: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createCard({ variant: "outlined", header: { title: "Trip to Porto", subtitle: "Three days" }, content: { text: "Walks and trams." } });
+      document.getElementById("factory")?.append(factory.element);
+      const element = document.getElementById("c") as HTMLElement;
+      element.querySelector('[slot="media"]')?.remove();
+      element.querySelector('[slot="avatar"]')?.remove();
+      return new Promise<{ factory: string[]; element: string[] }>((resolve) =>
+        requestAnimationFrame(() => {
+          const look = (card: HTMLElement): string[] => {
+            const style = getComputedStyle(card);
+            const title = getComputedStyle(card.querySelector('[class*="card__header-title"]') as HTMLElement);
+            const content = getComputedStyle(card.querySelector('[class*="card__content"]') as HTMLElement);
+            return [
+              String(card.getBoundingClientRect().width), style.backgroundColor, style.borderTopColor, style.borderRadius,
+              title.color, title.fontSize, content.paddingLeft, content.paddingTop,
+            ];
+          };
+          resolve({ factory: look(factory.element), element: look(element.shadowRoot?.firstElementChild as HTMLElement) });
+        })
+      );
+    });
+    assert.deepEqual(parity.element, parity.factory);
+    check("card: matches the factory's size, colours, shape and padding");
+  }
+
+  // ---------------------------------------------------------------- carousel
+  // The carousel fills its container's height, as the factory's does: the page sizes it.
+  await page.addStyleTag({ content: ".tall{height:240px}.tall>m-carousel{height:100%}" });
+  const slide = (value: string, label: string): string =>
+    `<m-carousel-item value="${value}" src="/photo-${value}" alt="Photo ${label}" description="About ${label}">${label}</m-carousel-item>`;
+  await fresh(
+    page,
+    `<section id="a" class="tall"><m-carousel id="r" aria-label="Photos" index="1" item-width="200">
+       ${[["a", "Alpha"], ["b", "Beta"], ["c", "Gamma"], ["d", "Delta"], ["e", "Epsilon"]].map(([v, l]) => slide(v, l)).join("")}
+     </m-carousel></section><section id="factory" class="tall"></section>`
+  );
+  {
+    type Carousel = HTMLElement & { index: number; component: unknown };
+    const settle = (): Promise<unknown> =>
+      page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))));
+    await settle();
+    const photos = page.getByRole("region", { name: "Photos" });
+    assert.equal(await photos.count(), 1);
+    assert.equal(await photos.getAttribute("aria-roledescription"), "carousel");
+    assert.equal(await photos.getByRole("group").count(), 5);
+    assert.equal(await photos.getByRole("group", { name: "2 of 5" }).getByText("Beta", { exact: true }).count(), 1);
+    assert.equal(await photos.getByRole("img", { name: "Photo Beta" }).count(), 1);
+    assert.equal(await page.evaluate(() => (document.getElementById("r") as Carousel).index), 1);
+    check("carousel: a region named by aria-label; children declare the items, index sets the current one");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      document.getElementById("r")?.addEventListener("change", (e) => {
+        (w.events as unknown[]).push({ detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+      });
+    });
+    await photos.getByRole("group", { name: "2 of 5" }).focus();
+    await page.keyboard.press("ArrowRight");
+    let state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
+    assert.deepEqual(state, { events: [{ detail: { index: 2 }, target: "r" }], index: 2 });
+    check("carousel: an arrow key moves to the next item and dispatches change");
+
+    await page.evaluate(() => ((window as unknown as Win).events = []));
+    await photos.getByRole("group", { name: "4 of 5" }).click();
+    state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
+    assert.deepEqual(state, { events: [{ detail: { index: 3 }, target: "r" }], index: 3 });
+    check("carousel: a click on an item makes it current and dispatches change");
+
+    state = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      const r = document.getElementById("r") as Carousel;
+      r.index = 1;
+      return { events: w.events, index: r.index };
+    });
+    assert.deepEqual(state, { events: [], index: 1 });
+    check("carousel: setting index fires no event");
+
+    const updated = await page.evaluate(async () => {
+      const r = document.getElementById("r") as Carousel;
+      const before = r.component;
+      const item = document.createElement("m-carousel-item") as HTMLElement & { value: string; description: string };
+      item.value = "f";
+      item.description = "About Zeta";
+      item.textContent = "Zeta";
+      r.append(item);
+      r.querySelector('[value="b"]')?.remove();
+      (r.querySelector('[value="c"]') as HTMLElement).setAttribute("label", "Gamma ray");
+      r.prepend(r.querySelector('[value="e"]') as HTMLElement);
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      const items = [...(r.shadowRoot?.querySelectorAll('[role="group"]') ?? [])] as HTMLElement[];
+      return {
+        same: r.component === before,
+        titles: items.map((el) => el.querySelector('[class*="carousel__title"]')?.textContent),
+        labels: items.map((el) => el.getAttribute("aria-label")),
+      };
+    });
+    assert.deepEqual(updated, {
+      same: true,
+      titles: ["Epsilon", "Alpha", "Gamma ray", "Delta", "Zeta"],
+      labels: ["1 of 5", "2 of 5", "3 of 5", "4 of 5", "5 of 5"],
+    });
+    check("carousel: items added, removed, moved and changed update in place");
+
+    const renamed = await page.evaluate(() => {
+      const r = document.getElementById("r") as Carousel;
+      const before = r.component;
+      r.setAttribute("aria-label", "Pictures");
+      return r.component === before;
+    });
+    assert.equal(renamed, true);
+    assert.equal(await page.getByRole("region", { name: "Pictures" }).count(), 1);
+    check("carousel: aria-label updates in place");
+
+    const relaid = await page.evaluate(async () => {
+      const r = document.getElementById("r") as Carousel;
+      const before = r.component;
+      r.setAttribute("variant", "hero");
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      return { rebuilt: r.component !== before, hero: r.shadowRoot?.firstElementChild?.className.includes("carousel--hero"), index: r.index };
+    });
+    assert.deepEqual(relaid, { rebuilt: true, hero: true, index: 1 });
+    check("carousel: variant recreates the carousel and keeps a dirty index");
+
+    // Same layout as the factory in light DOM with the full stylesheet.
+    await fresh(
+      page,
+      `<section id="a" class="tall"><m-carousel id="r" aria-label="Photos" item-width="200">
+         ${[["a", "Alpha"], ["b", "Beta"], ["c", "Gamma"], ["d", "Delta"], ["e", "Epsilon"]].map(([v, l]) => slide(v, l)).join("")}
+       </m-carousel></section><section id="factory" class="tall"></section>`
+    );
+    await settle();
+    const parity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createCarousel: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createCarousel({
+        ariaLabel: "Factory",
+        itemWidth: 200,
+        slides: ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"].map((title, i) => ({
+          image: `/photo-${"abcde"[i]}`, alt: `Photo ${title}`, title, description: `About ${title}`,
+        })),
+      });
+      document.getElementById("factory")?.append(factory.element);
+      return new Promise<{ factory: string[][]; element: string[][] }>((resolve) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            const look = (root: ParentNode): string[][] =>
+              [...root.querySelectorAll('[role="group"]')].map((item) => {
+                const style = getComputedStyle(item);
+                const title = getComputedStyle(item.querySelector('[class*="carousel__title"]') as HTMLElement);
+                return [style.width, style.clipPath, style.transform, title.color, title.fontSize];
+              });
+            resolve({ factory: look(factory.element), element: look(document.getElementById("r")?.shadowRoot as ShadowRoot) });
+          })
+        )
+      );
+    });
+    assert.equal(parity.element.length, 5);
+    assert.deepEqual(parity.element, parity.factory);
+    check("carousel: items match the factory's sizes, masks, positions and colours");
+  }
+
+  // ---------------------------------------------------------------- carousel defaults
+  {
+    type Carousel = HTMLElement & { index: number };
+    const markup = `<section class="tall"><m-carousel id="x" aria-label="Dirty" item-width="200">
+      ${[["a", "Alpha"], ["b", "Beta"], ["c", "Gamma"], ["d", "Delta"]].map(([v, l]) => slide(v, l)).join("")}</m-carousel></section>`;
+    const live = (): Promise<number> => page.evaluate(() => (document.getElementById("x") as Carousel).index);
+    const attribute = (value: number): Promise<number> =>
+      page.evaluate((v) => {
+        const x = document.getElementById("x") as Carousel;
+        x.setAttribute("index", String(v));
+        return x.index;
+      }, value);
+
+    await fresh(page, markup);
+    assert.equal(await live(), 0);
+    assert.equal(await attribute(2), 2);
+    check("carousel: before any interaction, the index attribute moves the current item");
+
+    await page.getByRole("group", { name: "3 of 4" }).focus();
+    await page.keyboard.press("ArrowLeft");
+    assert.equal(await live(), 1);
+    assert.equal(await attribute(3), 1);
+    check("carousel: after a user interaction, the index attribute does not move it");
+
+    await fresh(page, markup);
+    await page.evaluate(() => ((document.getElementById("x") as Carousel).index = 1));
+    assert.equal(await attribute(3), 1);
+    check("carousel: after a property set, the index attribute does not move it");
+  }
+
   // ---------------------------------------------------------------- model attributes are defaults
   // The native rule (dirty checkedness and value flags): the model's attribute
   // moves the live state until the user or script changes it; form.reset()
@@ -1875,6 +3480,27 @@ try {
         property: "value",
         a: "t2", b: "t3", c: "t1", set: "t2", after: "t3",
         user: () => page.getByRole("tab", { name: "One" }).click(),
+        noForm: true,
+      },
+      {
+        name: "navigation rail",
+        markup: `<m-navigation-rail id="x" aria-label="Dirty"><m-navigation-rail-item value="r1" icon='${ICON}'>One</m-navigation-rail-item>
+          <m-navigation-rail-item value="r2" icon='${ICON}'>Two</m-navigation-rail-item>
+          <m-navigation-rail-item value="r3" icon='${ICON}'>Three</m-navigation-rail-item></m-navigation-rail>`,
+        attribute: "value",
+        property: "value",
+        a: "r2", b: "r3", c: "r1", set: "r2", after: "r3",
+        user: () => page.getByRole("navigation", { name: "Dirty" }).getByRole("button", { name: "One" }).click(),
+        noForm: true,
+      },
+      {
+        name: "drawer",
+        markup: `<m-drawer id="x" open aria-label="Dirty"><m-drawer-item value="d1">One</m-drawer-item>
+          <m-drawer-item value="d2">Two</m-drawer-item><m-drawer-item value="d3">Three</m-drawer-item></m-drawer>`,
+        attribute: "value",
+        property: "value",
+        a: "d2", b: "d3", c: "d1", set: "d2", after: "d3",
+        user: () => page.getByRole("navigation", { name: "Dirty" }).getByRole("button", { name: "One" }).click(),
         noForm: true,
       },
       {
