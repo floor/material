@@ -183,6 +183,75 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
 
 
 // ============================================================================
+// Styles (FLO-287)
+// ============================================================================
+
+// The rules above draw the divided style, the baseline: the bar squares off
+// when focused and a divider separates the results. Contained, M3 Expressive's
+// recommended style and the default, keeps the bar's pill and filled container,
+// and gives the results their own container: docked 2dp below the bar with
+// 12dp corners (Compose dockedDropdownShape, dockedDropdownGapSize), full
+// screen on surface-container-low with the bar inset 12dp.
+@mixin contained-fullscreen {
+    .#{$component}__surface {
+        box-sizing: border-box;
+        padding: 12px;
+        background-color: t.color("surface-container-low");
+    }
+
+    .#{$component}__container {
+        height: $bar-height;
+        border-radius: v.shape("pill");
+    }
+
+    .#{$component}__content {
+        margin-top: 8px;
+        background-color: transparent;
+        border-radius: 0;
+    }
+}
+
+.#{$component}--contained.#{$component}--view {
+    .#{$component}__container {
+        border-radius: v.shape("pill");
+    }
+
+    .#{$component}__divider {
+        display: none;
+    }
+}
+
+.#{$component}--contained.#{$component}--docked.#{$component}--view {
+    .#{$component}__content {
+        margin-top: 2px;
+        border-radius: 12px;
+    }
+}
+
+.#{$component}--contained.#{$component}--fullscreen.#{$component}--view {
+    @include contained-fullscreen;
+}
+
+// The results reveal on the emphasized decelerate curve (FLO-287: the
+// --expanding and --collapsing classes were never driven, and are gone).
+.#{$component}--view .#{$component}__content {
+    animation: #{$component}-reveal v.motion("duration-medium2") v.motion("easing-emphasized-decelerate");
+}
+
+@keyframes #{$component}-reveal {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .#{$component}--view .#{$component}__content {
+        animation: none;
+    }
+}
+
+// ============================================================================
 // Container (Header/Bar area)
 // ============================================================================
 
@@ -475,40 +544,9 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
             }
         }
     }
-}
 
-// ============================================================================
-// Animation Classes (for JavaScript transitions)
-// ============================================================================
-
-.#{$component}--expanding {
-    .#{$component}__container {
-        animation: search-expand $transition-duration $transition-easing
-            forwards;
-    }
-}
-
-.#{$component}--collapsing {
-    .#{$component}__container {
-        animation: search-collapse $transition-duration $transition-easing
-            forwards;
-    }
-}
-
-@keyframes search-expand {
-    from {
-        border-radius: v.shape("pill");
-    }
-    to {
-        border-radius: v.shape("extra-large") v.shape("extra-large") 0 0;
-    }
-}
-
-@keyframes search-collapse {
-    from {
-        border-radius: v.shape("extra-large") v.shape("extra-large") 0 0;
-    }
-    to {
-        border-radius: v.shape("pill");
+    // Contained on a compact window, as full screen.
+    .#{$component}--contained.#{$component}--docked.#{$component}--view {
+        @include contained-fullscreen;
     }
 }

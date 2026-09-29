@@ -6,6 +6,7 @@ import {
   SearchEventType,
   SearchState,
   SearchViewMode,
+  SearchVariant,
   SearchSuggestion,
 } from "./types";
 import type { EventCallback } from "../../core/state/emitter";
@@ -31,6 +32,8 @@ interface ApiOptions {
     isExpanded: () => boolean;
     setViewMode: (mode: SearchViewMode) => void;
     getViewMode: () => SearchViewMode;
+    setVariant: (variant: SearchVariant) => void;
+    getVariant: () => SearchVariant;
   };
   disabled: {
     enable: () => void;
@@ -118,6 +121,15 @@ export const withAPI =
 
       getViewMode() {
         return options.state.getViewMode();
+      },
+
+      setVariant(variant: SearchVariant) {
+        options.state.setVariant(variant);
+        return this;
+      },
+
+      getVariant() {
+        return options.state.getVariant();
       },
 
       // === Input Controls ===

@@ -15,6 +15,13 @@ export const SEARCH_STATES = {
  * Search view display modes
  * @category Components
  */
+export const SEARCH_VARIANTS = {
+  /** M3 Expressive: a filled bar, results in their own container */
+  CONTAINED: "contained",
+  /** Baseline: a divider between the bar and its results */
+  DIVIDED: "divided",
+} as const;
+
 export const SEARCH_VIEW_MODES = {
   /** Inline docked view (360-720dp width, max 2/3 screen height) */
   DOCKED: "docked",
@@ -128,6 +135,10 @@ export const SEARCH_CLASSES = {
   // View mode modifiers
   VIEW_DOCKED: "search--docked",
   VIEW_FULLSCREEN: "search--fullscreen",
+
+  // Style modifiers (FLO-287)
+  VARIANT_CONTAINED: "search--contained",
+  VARIANT_DIVIDED: "search--divided",
 
   // Interactive state modifiers
   FOCUSED: "search--focused",

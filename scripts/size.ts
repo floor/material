@@ -139,7 +139,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "loading-indicator": kb(9.1),
   "split-button": kb(17.8), // the menu's top layer: 17,644 to 18,122
   radios: kb(5.1),
-  search: kb(9.6), // the open view in the top layer (FLO-285): 9,759
+  search: kb(9.9), // the open view in the top layer (FLO-285): 9,759; combobox, contained and divided (FLO-286, FLO-287): 10,114
   select: kb(19.8), // the menu's top layer: 19,600 to 20,115
   "segmented-button": kb(9.3),
   slider: kb(12.6), // FLO-249..255 slider conformance
@@ -156,7 +156,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // split button passing the layer, and the opener's focus test across shadow roots, to 112,845; the
   // tooltip and snackbar top layer to 113,481; the modal surfaces' top layer to 113,761 (each measured
   // alone on dba5ba9); the time picker limits and steps (FLO-281): 113,297 on main; all of wave 2 together on 91e4d77: 115,162.
-  all: kb(113.0), // search in the top layer (FLO-285): 115,628
+  all: kb(113.3), // search in the top layer (FLO-285): 115,628; its combobox and variants (FLO-286, FLO-287): 115,909
 };
 
 export interface SizeGateInput {
