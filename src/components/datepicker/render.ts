@@ -11,14 +11,19 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
     createElement({ tag, className: cls(name), text, attributes });
   const button = (name: string, text: string, action: string, label = text) => {
     const element = make("button", name, text, { type: "button", "data-action": action, "aria-label": label });
-    const icon = action === "toggle-mode" ? (state.inputMode ? DATEPICKER_ICONS.calendar : DATEPICKER_ICONS.edit) : action === "prev" ? DATEPICKER_ICONS.previous : action === "next" ? DATEPICKER_ICONS.next : null;
+    const icon = name === "close" ? DATEPICKER_ICONS.close : action === "toggle-mode" ? (state.inputMode ? DATEPICKER_ICONS.calendar : DATEPICKER_ICONS.edit) : action === "prev" ? DATEPICKER_ICONS.previous : action === "next" ? DATEPICKER_ICONS.next : null;
     if (icon) setHTML(element, icon);
     return element;
   };
-  /** One month of days: a grid of 6 weeks. Only the current month takes the tab stop. */
-  const monthGrid = (year: number, month: number, current: boolean): HTMLElement => {
+  /**
+   * One month of days: a grid of 6 weeks. Only the current month takes the tab stop.
+   * In the full-screen list a month shows its own days only, under a subhead, and its
+   * weekday row is for assistive tech (one visible row heads the list). FLO-276.
+   */
+  const monthGrid = (year: number, month: number, current: boolean, list = false): HTMLElement => {
     const grid = make("div", "days", undefined, { role: "grid", "aria-label": `${MONTH_NAMES[month]} ${year}`, "aria-describedby": `${state.id}-keyboard` });
     const weekdays = make("div", "weekdays", undefined, { role: "row" });
+    if (list) weekdays.classList.add(cls("sr-only"));
     for (const name of ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]) weekdays.append(make("span", "weekday", name[0], { role: "columnheader", "aria-label": name }));
     grid.append(weekdays);
     const dates = generateCalendarDates(year, month, state.selectedDate, state.rangeEndDate, state.minDate, state.maxDate);
@@ -28,6 +33,7 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
       for (const item of dates.slice(week * 7, week * 7 + 7)) {
         const selected = !!state.selectedDate && (isSameDay(item.date, state.selectedDate) || !!state.rangeEndDate && isSameDay(item.date, state.rangeEndDate));
         const inRange = !!state.selectedDate && !!state.rangeEndDate && item.date >= state.selectedDate && item.date <= state.rangeEndDate;
+        if (list && !item.isCurrentMonth) { row.append(make("div", "cell", undefined, { role: "gridcell" })); continue; }
         const cell = make("div", "cell", undefined, { role: "gridcell", "aria-selected": String(selected || inRange) });
         if (inRange) cell.classList.add(cls("cell--range"));
         if (state.selectedDate && isSameDay(item.date, state.selectedDate)) cell.classList.add(cls("cell--range-start"));
@@ -51,11 +57,24 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
   };
   const content = make("div", "content");
   const modal = state.variant !== "docked";
+  const fullscreen = state.variant === "fullscreen";
+  const confirmDisabled = !state.selectedDate || !state.isAllowed(state.selectedDate) || state.selectionMode === "range" && (!state.rangeEndDate || !state.isAllowed(state.rangeEndDate));
   if (modal) {
     const header = make("div", "modal-header");
+    // Full screen: a close (x) icon button and a Save text button above the headline
+    // (m3.material.io: "Mobile full-screen pickers also have an additional close
+    // affordance (x) icon button and Save confirmation"). FLO-276.
+    if (fullscreen) {
+      const save = button("save", "Save", "confirm") as HTMLButtonElement;
+      save.disabled = confirmDisabled;
+      header.append(button("close", "", "cancel", "Close"), save);
+    }
     header.append(make("div", "title", state.label, { id: `${state.id}-title` }));
-    const headline = state.selectedDate ? formatDate(state.selectedDate, "MMM D, YYYY") : "Select date";
-    header.append(make("div", "headline", state.selectionMode === "range" && state.rangeEndDate ? `${headline} – ${formatDate(state.rangeEndDate, "MMM D, YYYY")}` : headline));
+    // The full-screen headline drops the year, as m3's does ("Aug 17 – Aug 23"), to fit
+    // one line of Title Large.
+    const pattern = fullscreen ? "MMM D" : "MMM D, YYYY";
+    const headline = state.selectedDate ? formatDate(state.selectedDate, pattern) : state.selectionMode === "range" ? "Select range" : "Select date";
+    header.append(make("div", "headline", state.selectionMode === "range" && state.rangeEndDate ? `${headline} – ${formatDate(state.rangeEndDate, pattern)}` : headline));
     header.append(button("mode-toggle", state.inputMode ? "▦" : "✎", "toggle-mode", state.inputMode ? "Switch to calendar" : "Switch to date input"));
     content.append(header);
   }
@@ -71,6 +90,23 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
       fields.append(wrapper);
     }
     content.append(fields);
+  } else if (fullscreen) {
+    // Full screen: one weekday row over a vertically scrolling list of months
+    // (m3.material.io: "To navigate across months, scroll vertically"). Only the months
+    // of state.listStart/listLength are rendered; the picker extends them as the list
+    // scrolls. FLO-276.
+    const weekdays = make("div", "weekdays", undefined, { "aria-hidden": "true" });
+    for (const name of ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]) weekdays.append(make("span", "weekday", name[0]));
+    const list = make("div", "list");
+    const start = state.listStart ?? new Date(state.currentYear, state.currentMonth, 1);
+    for (let index = 0; index < (state.listLength ?? 1); index++) {
+      const first = new Date(start.getFullYear(), start.getMonth() + index, 1);
+      const section = make("section", "month-section", undefined, { "data-month-key": `${first.getFullYear()}-${first.getMonth()}` });
+      section.append(make("div", "subhead", `${MONTH_NAMES[first.getMonth()]} ${first.getFullYear()}`, { "aria-hidden": "true" }));
+      section.append(monthGrid(first.getFullYear(), first.getMonth(), first.getFullYear() === state.focusedDate.getFullYear() && first.getMonth() === state.focusedDate.getMonth(), true));
+      list.append(section);
+    }
+    content.append(weekdays, list, make("div", "sr-only", "Use arrow keys for days, Home and End for the week, Page Up and Page Down for months, with Shift for years.", { id: `${state.id}-keyboard` }));
   } else {
     const header = make("div", "header");
     const nav = make("div", "navigation");
@@ -117,10 +153,10 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
     }
     content.append(make("div", "sr-only", "Use arrow keys for days, Home and End for the week, Page Up and Page Down for months, with Shift for years.", { id: `${state.id}-keyboard` }));
   }
-  if (modal) {
+  if (modal && !fullscreen) {
     const footer = make("div", "footer");
     const confirm = button("confirm", "OK", "confirm") as HTMLButtonElement;
-    confirm.disabled = !state.selectedDate || !state.isAllowed(state.selectedDate) || state.selectionMode === "range" && (!state.rangeEndDate || !state.isAllowed(state.rangeEndDate));
+    confirm.disabled = confirmDisabled;
     footer.append(button("cancel", "Cancel", "cancel"), confirm); content.append(footer);
   }
   return content;

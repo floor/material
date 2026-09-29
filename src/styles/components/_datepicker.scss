@@ -38,6 +38,22 @@ $component: '#{base.$prefix}-datepicker';
     &::backdrop { background: t.alpha('scrim', 0.32); }
   }
   &--modal { position: fixed; inset: 0; margin: auto; }
+  // Full screen (m3.material.io: recommended on compact screens; the range picker's
+  // form): the whole viewport, no corners, level 0 (range-selection.container tokens).
+  // FLO-276.
+  &--fullscreen {
+    width: 100%; max-width: none; height: 100%; max-height: none;
+    border-radius: 0; box-shadow: none; overflow: hidden;
+    .#{$component}__content { height: 100%; }
+    .#{$component}__modal-header { min-height: 128px; padding: 64px 64px 12px; }
+    .#{$component}__close { position: absolute; inset-inline-start: 4px; top: 4px; }
+    .#{$component}__save { position: absolute; inset-inline-end: 12px; top: 8px; }
+    .#{$component}__title { margin-bottom: 0; }
+    .#{$component}__headline { @include m.typography('title-large'); }
+    .#{$component}__weekdays { padding: 0 12px; }
+  }
+  &__list { flex: 1; min-height: 0; position: relative; overflow-y: auto; overscroll-behavior: contain; }
+  &__subhead { @include m.typography('title-small'); color: t.color('on-surface-variant'); padding: 20px 24px 8px; }
   &--docked { position: absolute; inset: auto; top: 100%; inset-inline-start: 0; margin: 8px 0 0; z-index: v.z-index('dropdown'); }
   &__content { display: flex; flex-direction: column; }
   &__modal-header {
@@ -53,14 +69,14 @@ $component: '#{base.$prefix}-datepicker';
   &__navigation { display: flex; flex: 1; }
   &__month-selector, &__year-selector { @include m.typography('label-large'); padding: 0 8px; }
   &__trigger, &__mode-toggle, &__prev, &__next, &__month-selector, &__year-selector,
-  &__cancel, &__confirm {
+  &__cancel, &__confirm, &__close, &__save {
     box-sizing: border-box; min-width: 48px; min-height: 48px; border: 0; border-radius: v.shape('full');
     color: t.color('on-surface-variant'); background: transparent; cursor: pointer;
     &:hover:not(:disabled) { background: t.alpha('on-surface', 0.08); }
     &:focus-visible { outline: 2px solid t.color('primary'); outline-offset: -2px; background: t.alpha('on-surface', v.state('focus-state-layer-opacity')); }
     &:disabled { opacity: 0.38; cursor: default; }
   }
-  &__trigger, &__mode-toggle, &__prev, &__next { display: inline-flex; align-items: center; justify-content: center; }
+  &__trigger, &__mode-toggle, &__prev, &__next, &__close { display: inline-flex; align-items: center; justify-content: center; }
   &--animate[open] { animation: #{$component}-appear v.motion('duration-short3') v.motion('easing-standard'); }
   @media (prefers-reduced-motion: reduce) { &--animate[open] { animation: none; } }
   &__days { padding: 0 12px 8px; }
@@ -106,7 +122,7 @@ $component: '#{base.$prefix}-datepicker';
   &__fields { display: grid; gap: 16px; padding: 24px; }
   &__field { display: flex; flex-direction: column; }
   &__footer { display: flex; justify-content: flex-end; gap: 8px; padding: 8px 12px; }
-  &__cancel, &__confirm { @include m.typography('label-large'); padding: 0 12px; color: t.color('primary'); }
+  &__cancel, &__confirm, &__save { @include m.typography('label-large'); padding: 0 12px; color: t.color('primary'); }
   &__sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
 

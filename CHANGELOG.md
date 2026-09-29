@@ -10,6 +10,17 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Added
+
+- **Date picker: a full-screen variant, `variant: 'fullscreen'`.** The m3.material.io
+  full-screen picker, recommended on compact screens and the range picker's form: the whole
+  viewport, no corners, a close (x) icon button and **Save** above a Title Large headline,
+  one weekday row, and the months in a vertically scrolling list with Title Small subheads
+  ("To navigate across months, scroll vertically"). The list renders a window of months
+  around the focused one, within `minDate` and `maxDate`, and extends it by a year as it
+  nears either end without moving what is shown. Selections are drafts until Save, as in
+  the modal (FLO-276).
+
 ### Changed
 
 - **Date picker: the year picker scrolls.** It lists every year from `minDate` to `maxDate`

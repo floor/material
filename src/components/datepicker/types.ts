@@ -43,7 +43,7 @@ export interface DatePickerEvents {
  * DatePicker variant types
  * @category Components
  */
-export type DatePickerVariant = 'docked' | 'modal' | 'modal-input';
+export type DatePickerVariant = 'docked' | 'modal' | 'modal-input' | 'fullscreen';
 
 /**
  * DatePicker view types
@@ -437,4 +437,7 @@ export interface DatePickerState {
   label: string;
   specialDates: NonNullable<DatePickerConfig["specialDates"]>;
   isAllowed(date: Date): boolean;
+  /** Full screen: the first month of the rendered list, and how many follow. FLO-276. */
+  listStart?: Date;
+  listLength?: number;
 }
