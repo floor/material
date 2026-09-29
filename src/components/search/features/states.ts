@@ -15,6 +15,9 @@ import {
 } from "../constants";
 
 import { setHTML } from "../../../core/dom/html";
+import { PREFIX } from "../../../core/config";
+import { hideFromTopLayer, showInTopLayer } from "../../../core/dom/layer";
+import { activeElementOf } from "../../../core/dom/focus";
 /**
  * Adds state management features to the search component
  * Handles bar ↔ view transitions per MD3 specifications
@@ -47,11 +50,91 @@ export const withStates =
     return component.getClass ? component.getClass(className) : className;
   };
 
+  // The open view (FLO-285). It was in the page's flow, so a docked view pushed
+  // the page down, and a full-screen search covered the page even collapsed.
+  // Now the bar and its results show in the top layer together, over the bar's
+  // place: docked under the bar's width over a scrim, full screen as a modal
+  // surface. The root keeps the bar's height in the page meanwhile.
+  const prefix = config.prefix ?? PREFIX;
+  const property = (name: string) => `--${prefix}-search-${name}`;
+  const place = (): void => {
+    const surface = component.structure?.surface;
+    if (!surface) return;
+    const box = component.element.getBoundingClientRect();
+    surface.style.setProperty(property("top"), `${box.top}px`);
+    surface.style.setProperty(property("left"), `${box.left}px`);
+    surface.style.setProperty(property("width"), `${box.width}px`);
+  };
+  // A press on the scrim closes the docked view. A popover's backdrop is not
+  // its own target, as a dialog's is: the press lands on whatever is under it,
+  // which may not even take focus from the input, so it is caught here.
+  const onOutside = (event: PointerEvent): void => {
+    const surface = component.structure?.surface;
+    if (surface && !event.composedPath().includes(surface)) collapseToBar(false);
+  };
+  // Escape on a full-screen view, from anywhere in it but the input (which
+  // clears its text first): the modal dialog's cancel.
+  const onCancel = (event: Event): void => {
+    event.preventDefault();
+    collapseToBar();
+  };
+  // Set while the surface moves in or out of the top layer, and focus is put
+  // back, so that focus does not reopen the view.
+  let refocusing = false;
+  const openSurface = (): void => {
+    const surface = component.structure?.surface;
+    if (!surface) return;
+    const focused = activeElementOf(component.element);
+    place();
+    refocusing = true;
+    if (currentViewMode === SEARCH_VIEW_MODES.FULLSCREEN) {
+      // A real modal: the page is inert, and Escape is the dialog's cancel.
+      surface.removeAttribute("role");
+      surface.setAttribute("aria-label", component.structure?.input.getAttribute("aria-label") || "Search");
+      showInTopLayer(surface, { kind: "modal" });
+      surface.addEventListener("cancel", onCancel);
+    } else {
+      showInTopLayer(surface, { kind: "popover-manual" });
+      document.addEventListener("pointerdown", onOutside, true);
+    }
+    // showModal() focuses the first control, the back button; the person was
+    // typing.
+    if (focused instanceof HTMLElement && surface.contains(focused) && activeElementOf(component.element) !== focused) {
+      focused.focus({ preventScroll: true });
+    }
+    refocusing = false;
+    window.addEventListener("scroll", place, true);
+    window.addEventListener("resize", place);
+  };
+  const closeSurface = (restoreFocus = true): void => {
+    const surface = component.structure?.surface;
+    if (!surface) return;
+    // Leaving the top layer hides the surface for a moment, which drops focus:
+    // it goes back to where it was, unless the view was dismissed from outside.
+    const focused = activeElementOf(component.element);
+    const hadFocus = focused instanceof HTMLElement && surface.contains(focused);
+    refocusing = true;
+    hideFromTopLayer(surface);
+    // A closed popover is hidden, and the bar must show in the page.
+    surface.removeAttribute("popover");
+    surface.removeAttribute("aria-label");
+    // Closed, the <dialog> is only the bar's box.
+    surface.setAttribute("role", "none");
+    const now = activeElementOf(component.element);
+    if (hadFocus && restoreFocus && now !== focused) focused.focus({ preventScroll: true });
+    else if (!restoreFocus && now instanceof HTMLElement && surface.contains(now)) now.blur();
+    refocusing = false;
+    window.removeEventListener("scroll", place, true);
+    window.removeEventListener("resize", place);
+    surface.removeEventListener("cancel", onCancel);
+    document.removeEventListener("pointerdown", onOutside, true);
+  };
+
   /**
    * Transitions from bar state to view state
    */
   const expandToView = (): void => {
-    if (currentState === SEARCH_STATES.VIEW || isDisabled) {
+    if (currentState === SEARCH_STATES.VIEW || isDisabled || refocusing) {
       return;
     }
 
@@ -73,15 +156,17 @@ export const withStates =
 
     // Append divider and content area if not already present
     if (structure?.divider && !element.contains(structure.divider)) {
-      element.appendChild(structure.divider);
+      structure.surface.appendChild(structure.divider);
     }
 
     if (
       structure?.suggestionsContainer?.parentElement &&
       !element.contains(structure.suggestionsContainer.parentElement)
     ) {
-      element.appendChild(structure.suggestionsContainer.parentElement);
+      structure.surface.appendChild(structure.suggestionsContainer.parentElement);
     }
+
+    openSurface();
 
     // Focus input after transition
     if (structure?.input) {
@@ -106,7 +191,7 @@ export const withStates =
   /**
    * Transitions from view state to bar state
    */
-  const collapseToBar = (): void => {
+  const collapseToBar = (restoreFocus = true): void => {
     if (currentState === SEARCH_STATES.BAR) {
       return;
     }
@@ -129,15 +214,17 @@ export const withStates =
 
     // Remove divider and content area from DOM (keep references)
     if (structure?.divider && element.contains(structure.divider)) {
-      element.removeChild(structure.divider);
+      structure.divider.remove();
     }
 
     if (
       structure?.suggestionsContainer?.parentElement &&
       element.contains(structure.suggestionsContainer.parentElement)
     ) {
-      element.removeChild(structure.suggestionsContainer.parentElement);
+      structure.suggestionsContainer.parentElement.remove();
     }
+
+    closeSurface(restoreFocus);
 
     // Emit collapse event
     if (component.emit) {
@@ -180,6 +267,12 @@ export const withStates =
           : SEARCH_CLASSES.VIEW_FULLSCREEN,
       ),
     );
+
+    // An open view reopens in the new mode: modal or not.
+    if (currentState === SEARCH_STATES.VIEW) {
+      closeSurface();
+      openSurface();
+    }
   };
 
   /**
@@ -288,6 +381,14 @@ export const withStates =
       element.classList.remove(getClass(SEARCH_CLASSES.FOCUSED));
     }
   };
+
+  // Created open: the surface goes to the top layer once the search is in the
+  // page, which it cannot be before.
+  if (currentState === SEARCH_STATES.VIEW) {
+    setTimeout(() => {
+      if (currentState === SEARCH_STATES.VIEW && component.element.isConnected) openSurface();
+    }, 0);
+  }
 
   // Apply initial disabled state if needed
   if (isDisabled) {

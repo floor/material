@@ -291,6 +291,11 @@ export interface SearchComponent {
  * @internal
  */
 export interface SearchStructure {
+  /**
+   * The bar and, when expanded, its results: what shows in the top layer while
+   * the view is open (FLO-285)
+   */
+  surface: HTMLElement;
   /** Main container element */
   container: HTMLElement;
   /** Input element */

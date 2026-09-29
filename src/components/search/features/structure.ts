@@ -8,7 +8,8 @@ import { createElement } from "../../../core/dom/create";
  * Creates the search component DOM structure following MD3 specifications
  *
  * Structure:
- * - search (root)
+ * - search (root; keeps the bar's place in the page)
+ *   - search__surface (in the top layer while the view is open)
  *   - search__container (header/bar area)
  *     - search__leading-icon
  *     - search__input-wrapper
@@ -81,11 +82,22 @@ export const withStructure =
     isDisabled ? "true" : "false",
   );
 
+  // The bar and its results, which leave the page for the top layer together
+  // while the view is open. FLO-285.
+  // A <dialog>, shown with showModal() when the view is full screen. Closed, it
+  // is only the bar's box, and says so.
+  const surface = createElement({
+    tag: "dialog",
+    className: getClass(SEARCH_CLASSES.SURFACE),
+    container: component.element,
+    attributes: { role: "none" },
+  });
+
   // Create container (header in view mode, bar in bar mode)
   const container = createElement({
     tag: "div",
     className: getClass(SEARCH_CLASSES.CONTAINER),
-    container: component.element,
+    container: surface,
   });
 
   // Create leading icon (search icon in bar, back arrow in view)
@@ -235,12 +247,13 @@ export const withStructure =
 
   // Only append to DOM if in view state initially
   if (isViewState) {
-    component.element.appendChild(divider);
-    component.element.appendChild(contentArea);
+    surface.appendChild(divider);
+    surface.appendChild(contentArea);
   }
 
   // Build structure object
   const structure: SearchStructure = {
+    surface,
     container,
     input,
     inputWrapper,

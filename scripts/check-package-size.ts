@@ -167,7 +167,8 @@ try {
     // modal surfaces in the top layer: +328, measured 51,995 at dba5ba9: the dialog, the
     // two sheets and the modal drawer each undo the user agent's <dialog> box and fade a
     // ::backdrop, with `overlay` held for the exit, in four stylesheets gzip cannot share.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 52100 },
+    // Search's surface, a <dialog> in the top layer (FLO-285): measured 52,194.
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 52250 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);

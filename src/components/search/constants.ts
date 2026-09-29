@@ -136,6 +136,7 @@ export const SEARCH_CLASSES = {
   FULL_WIDTH: "search--full-width",
 
   // Structure elements
+  SURFACE: "search__surface",
   CONTAINER: "search__container",
   HEADER: "search__header",
   INPUT_WRAPPER: "search__input-wrapper",

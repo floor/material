@@ -164,6 +164,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Search: the open view no longer moves or covers the page (FLO-285).** A docked view grew
+  in the page's flow and pushed everything below it down; a full-screen search covered the
+  whole page even as a bar. Opening now shows the bar and its results in the top layer,
+  over the bar's place, which the page keeps: docked under the bar over a 0.32 scrim (a
+  press on it closes the view), full screen as a modal `<dialog>` (`showModal()`: the page
+  is inert, Escape cancels). A clipping parent no longer hides the results. Moving focus to
+  the view's own back or clear button no longer closes it, and hovering a suggestion no
+  longer selects it for the next Tab.
 - **Time picker: `minTime`, `maxTime`, `minuteStep` and `secondStep` are applied
   (FLO-281).** They were accepted and documented, and did nothing. Dial numbers and AM/PM
   that cannot be reached are disabled (at 38%), a pointer between labels picks the nearest

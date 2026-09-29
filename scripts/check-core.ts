@@ -13,6 +13,7 @@ import { checkRippleIsThePress } from "./check-ripple-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
 import { checkControls } from "./check-controls-browser";
+import { checkSearch } from "./check-search-browser";
 import { createPackageFixture } from "./package-fixture";
 
 type CoreWindow = Window & {
@@ -29,6 +30,7 @@ try {
   await writeFile(entry, `${await readFile(entry, "utf8")} import * as cardParts from 'mtrl/components/card'; window.cardParts = cardParts;`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createCheckbox, createSwitch, createTextfield, createRadios } from 'mtrl'; window.inputs = { createCheckbox, createSwitch, createTextfield, createRadios };`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createTimePicker } from 'mtrl'; window.createTimePicker = createTimePicker;`);
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { createSearch } from 'mtrl'; window.createSearch = createSearch;`);
   const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "iife", minify: true });
   assert(bundle.success, String(bundle.logs));
   browser = await chromium.launch({ headless: true });
@@ -88,6 +90,7 @@ try {
   await checkList(page, artifacts);
   await checkInputBEM(page);
   await checkControls(page);
+  await checkSearch(page);
   await checkTimePicker(page, artifacts);
   await checkCard(page, artifacts);
   // Datepicker must also work with only base + its selective stylesheet.
