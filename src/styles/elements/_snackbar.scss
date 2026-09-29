@@ -1,0 +1,6 @@
+// src/styles/elements/_snackbar.scss
+// <m-snackbar> before upgrade: nothing. It opens in the top layer once upgraded,
+// and reserves no space in the page.
+@use 'config' as c;
+
+@include c.overlay('snackbar');

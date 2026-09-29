@@ -15,7 +15,7 @@
  * @module elements
  */
 
-import { applyStyles, hasStyles, registerStyles } from "./styles";
+import { applyStyles, DEFAULT_PREFIX, hasStyles, registerStyles, usePreupgradePrefix } from "./styles";
 
 /** The part of a component the element relies on. */
 export interface ElementComponent {
@@ -141,7 +141,7 @@ export interface DefineOptions {
   prefix?: string;
 }
 
-export const DEFAULT_PREFIX = "m";
+export { DEFAULT_PREFIX };
 
 /**
  * Global base styles components rely on, which a shadow root does not inherit.
@@ -642,6 +642,8 @@ export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>):
     },
     define(options: DefineOptions = {}) {
       const tag = `${options.prefix ?? DEFAULT_PREFIX}-${spec.name}`;
+      // Elements of this prefix not defined yet keep their box meanwhile.
+      if (options.prefix) usePreupgradePrefix(options.prefix);
       // Once per definition: framework adapters call define() on every mount,
       // and registering again would drop the shared host stylesheet.
       if (!prepared) {

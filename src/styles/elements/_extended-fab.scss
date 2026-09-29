@@ -1,0 +1,57 @@
+// src/styles/elements/_extended-fab.scss
+// <m-extended-fab> before upgrade: the container, with the label as its text
+// and the icon's place before it.
+@use 'sass:map';
+@use '../abstract/functions' as f;
+@use '../abstract/mixins' as m;
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As $sizes in components/_extended-fab.scss.
+$sizes: (
+  'small': (height: 56px, icon: 24px, label: 'title-medium', padding: 16px, gap: 8px, shape: 'large'),
+  'medium': (height: 80px, icon: 28px, label: 'title-large', padding: 26px, gap: 16px, shape: 'large-increased'),
+  'large': (height: 96px, icon: 32px, label: 'headline-small', padding: 28px, gap: 20px, shape: 'extra-large')
+);
+
+@mixin size($size) {
+  $tokens: map.get($sizes, $size);
+  height: map.get($tokens, height);
+  min-width: map.get($tokens, height);
+  padding: 0 map.get($tokens, padding);
+  gap: map.get($tokens, gap);
+  border-radius: f.get-shape(map.get($tokens, shape));
+  @include m.typography(map.get($tokens, label));
+
+  &[icon]::before {
+    width: map.get($tokens, icon);
+    height: map.get($tokens, icon);
+  }
+}
+
+@include c.host('extended-fab') {
+  display: inline-flex;
+  vertical-align: middle;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  white-space: nowrap;
+  background-color: t.color('primary-container');
+  color: t.color('on-primary-container');
+  @include size('small');
+
+  &[icon]::before {
+    content: '';
+    flex: none;
+  }
+
+  &[icon-position='end']::before {
+    order: 1;
+  }
+
+  @each $size in ('medium', 'large') {
+    &[size='#{$size}'] {
+      @include size($size);
+    }
+  }
+}

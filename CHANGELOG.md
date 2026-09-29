@@ -12,6 +12,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Pre-upgrade styles for server-rendered elements (FLO-293, SSR Phase A).** Until its script
+  defines it, a server-rendered element no longer shows as unstyled text that then jumps: rules
+  scoped to `:not(:defined)` give each of the 34 elements its upgraded box, set its label in the
+  final type style, hide declaration children (`<m-tab>`, `<m-menu-item>`, …) while keeping
+  their space, and hide overlays. They ship as `mtrl/elements/preupgrade.css` for a page's
+  `<head>`, as `preupgradeStyles(prefix)` from `mtrl/elements/preupgrade` for another tag
+  prefix, and inside each element's CSS module. `bun run preupgrade:check` measures the layout
+  shift of every element and of a React server render, which must stay under 0.01.
+
 - **Date picker: read-only, required and supporting text (FLO-289).** `readOnly` /
   `setReadOnly()` keep the value and the calendar closed; `required` / `setRequired()` with
   `checkValidity()` and `reportValidity()`, as on native inputs (a modal variant's read-only
@@ -21,6 +30,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   own workarounds, so a read-only element's trigger is disabled.
 
 ### Changed
+
+- **An unsized text field, select or date picker is 280px wide** (`TextFieldDefaults.MinWidth`),
+  instead of as wide as its input's 20 average characters. Chrome measures that differently per
+  platform for the same Roboto (167px on macOS, 220px on Linux), so the same page laid out
+  differently, and no pre-upgrade style could match it (FLO-293). A width from the page still
+  applies.
 
 - **Date picker: one `change` shape, one-day ranges, and a value typed by the mode
   (FLO-295).** `change` carried `{ value, formattedValue }` from the API but

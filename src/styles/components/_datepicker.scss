@@ -12,6 +12,10 @@ $component: '#{base.$prefix}-datepicker';
   flex-direction: column;
   width: 100%;
   max-width: 360px;
+  // Where it shrinks to fit (an element's host), 280px as the text field,
+  // not its input's platform-dependent width (FLO-293).
+  contain: inline-size;
+  contain-intrinsic-inline-size: v.textfield('width');
   color: t.color('on-surface');
   &__anchor { display: flex; position: relative; }
   &__label { @include m.typography('body-small'); margin-block-end: 4px; }

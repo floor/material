@@ -32,7 +32,12 @@ $component: "#{base.$prefix}-textfield";
     position: relative;
     display: inline-flex;
     flex-direction: column;
-    // min-width: 210px;
+    // Unsized, the field is 280px wide (TextFieldDefaults.MinWidth), not as
+    // wide as its input's 20 average characters, which Chrome measures
+    // differently per platform for the same font: 167px on macOS, 220px on
+    // Linux (FLO-293). A width from the page still applies.
+    contain: inline-size;
+    contain-intrinsic-inline-size: v.textfield('width');
     // align-self: flex-start; // Prevents growing to fill the container's height
     flex: 0 0 auto; // Don't grow or shrink; keep natural size
     // Label

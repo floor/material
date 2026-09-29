@@ -1,0 +1,12 @@
+// src/styles/elements/_carousel.scss
+// <m-carousel> before upgrade: its box, which the page sizes; the
+// <m-carousel-item> declarations are drawn on upgrade.
+@use 'config' as c;
+
+@include c.host('carousel') {
+  display: block;
+}
+
+@include c.declarations('carousel') {
+  display: none;
+}

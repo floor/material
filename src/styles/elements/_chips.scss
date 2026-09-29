@@ -1,0 +1,33 @@
+// src/styles/elements/_chips.scss
+// <m-chips> before upgrade: the chip set's rows, with a box per <m-chip>,
+// which is drawn on upgrade.
+@use '../abstract/variables' as v;
+@use '../abstract/mixins' as m;
+@use 'config' as c;
+
+@include c.host('chips') {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  &[vertical] {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  &[scrollable] {
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+}
+
+// As components/_chips.scss: the chip's height and the 16px beside its label.
+@include c.declarations('chips') {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: v.chip('height');
+  padding: 0 16px;
+  white-space: nowrap;
+  @include m.typography('label-large');
+}

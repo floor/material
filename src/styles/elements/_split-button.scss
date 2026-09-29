@@ -1,0 +1,53 @@
+// src/styles/elements/_split-button.scss
+// <m-split-button> before upgrade: the leading button with its label, then
+// the trailing button; the <m-menu-item> declarations are drawn on upgrade.
+@use '../abstract/variables' as v;
+@use '../abstract/mixins' as m;
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As components/_split-button.scss (small, filled): the leading button's
+// 16px and 12px beside the label, the 2px gap, the 48px trailing button,
+// and their 4px inner corners.
+$gap: 2px;
+$trailing: 48px;
+
+@include c.host('split-button') {
+  display: inline-flex;
+  vertical-align: middle;
+  align-items: center;
+  position: relative;
+  z-index: 0;
+  box-sizing: border-box;
+  height: v.button('height-s');
+  padding: 0 calc(12px + #{$gap + $trailing}) 0 v.button('padding-s');
+  color: t.color('on-primary');
+  white-space: nowrap;
+  @include m.typography('label-large');
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    bottom: 0;
+    background-color: t.color('primary');
+  }
+
+  &::before {
+    left: 0;
+    right: $gap + $trailing;
+    border-radius: v.button('shape-round-s') 4px 4px v.button('shape-round-s');
+  }
+
+  &::after {
+    right: 0;
+    width: $trailing;
+    border-radius: 4px v.button('shape-round-s') v.button('shape-round-s') 4px;
+  }
+
+  > * {
+    display: none;
+  }
+}

@@ -1,0 +1,19 @@
+// src/styles/elements/_divider.scss
+// <m-divider> before upgrade: the 1px line, horizontal or vertical.
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+@include c.host('divider') {
+  display: block;
+  height: 1px;
+  overflow: hidden;
+  color: transparent;
+  background-color: t.color('outline-variant');
+
+  &[orientation='vertical'] {
+    display: inline-block;
+    align-self: stretch;
+    width: 1px;
+    height: auto;
+  }
+}

@@ -1,0 +1,27 @@
+// src/styles/elements/_bottom-app-bar.scss
+// <m-bottom-app-bar> before upgrade: the bar, placed as the upgraded one is
+// (along the bottom of its positioned container), with its actions in a row
+// and the FAB at the end.
+@use '../abstract/functions' as f;
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As components/_bottom-app-bar.scss: 80px, padded 12px 16px 12px 4px,
+// actions 4px apart.
+@include c.host('bottom-app-bar') {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  height: 80px;
+  padding: 12px 16px 12px 4px;
+  background-color: t.color('surface-container');
+
+  > [slot='fab'] {
+    margin-left: auto;
+  }
+}

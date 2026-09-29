@@ -1,0 +1,24 @@
+// src/styles/elements/_progress.scss
+// <m-progress> before upgrade: the linear track's height, or the circle's box.
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As the factory's canvas: 4px thin linear (2px from each end), 40px circle.
+@include c.host('progress') {
+  display: block;
+  box-sizing: border-box;
+  height: 4px;
+  padding: 0 4px;
+  overflow: hidden;
+  color: transparent;
+  background: t.color('secondary-container') content-box;
+
+  &[variant='circular'] {
+    display: inline-flex;
+    vertical-align: middle;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: none;
+  }
+}

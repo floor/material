@@ -396,6 +396,8 @@ $spacing-scale: (
 
 // Textfield configuration
 $textfield: (
+  // The width of a field the page does not size (TextFieldDefaults.MinWidth)
+  'width': 280px,
   'height': 56px,
   'height-small': 48px,
   'height-large': 64px,

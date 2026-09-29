@@ -1,0 +1,12 @@
+// src/styles/elements/_badge.scss
+// <m-badge> before upgrade: as the upgraded host, which lays out no box of
+// its own (the badge is positioned from it). Its text is drawn on upgrade.
+@use 'config' as c;
+
+@include c.host('badge') {
+  display: inline-flex;
+  vertical-align: middle;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}

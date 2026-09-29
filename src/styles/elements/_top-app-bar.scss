@@ -1,0 +1,57 @@
+// src/styles/elements/_top-app-bar.scss
+// <m-top-app-bar> before upgrade: the bar, placed as the upgraded one is
+// (over the top of its positioned container), with the headline in its
+// type style; leading and trailing children in their places.
+@use '../abstract/functions' as f;
+@use '../abstract/mixins' as m;
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As components/_top-app-bar.scss: 64px small and center bars, the headline
+// 16px after the 12px padding; medium (112px) and large (152px) bars set it
+// in a second row, 24px and 28px above the bottom.
+@include c.host('top-app-bar') {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: f.get-z-index('fixed');
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 64px;
+  padding: 0 12px 0 28px;
+  background-color: t.color('surface');
+  color: t.color('on-surface');
+  white-space: nowrap;
+  overflow: hidden;
+  @include m.typography('title-large');
+
+  &[type='center'] {
+    justify-content: center;
+  }
+
+  &[type='medium'],
+  &[type='large'] {
+    align-items: flex-end;
+    padding-left: 44px;
+    padding-bottom: 24px;
+    height: 112px;
+    @include m.typography('headline-small');
+  }
+
+  &[type='large'] {
+    padding-bottom: 28px;
+    height: 152px;
+    @include m.typography('headline-medium');
+  }
+
+  > [slot='leading'] {
+    order: -1;
+  }
+
+  > [slot='trailing'] {
+    order: 1;
+    margin-left: auto;
+  }
+}

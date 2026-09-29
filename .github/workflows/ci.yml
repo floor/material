@@ -122,7 +122,7 @@ jobs:
           - group: adapters
             checks: react:check vue:check svelte:check solid:check
           - group: components
-            checks: consumer:check tabs:check slider:check drawer:check navigation-rail:check core:check
+            checks: consumer:check tabs:check slider:check drawer:check navigation-rail:check core:check preupgrade:check
     name: browser (${{ matrix.group }})
     steps:
       - uses: actions/checkout@v4

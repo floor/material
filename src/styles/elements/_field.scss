@@ -1,0 +1,82 @@
+// src/styles/elements/_field.scss
+// The text field's box before upgrade, shared by <m-textfield>, <m-select>
+// and <m-datepicker>: the container (filled or outlined, default or
+// compact), the label and the value on the input's line.
+@use '../abstract/variables' as v;
+@use '../abstract/mixins' as m;
+@use '../abstract/theme' as t;
+
+/**
+ * The field: a text field, or a select (`$trailing`: the space its trailing
+ * icon takes beside the text).
+ */
+@mixin field($trailing: 0px) {
+  display: inline-block;
+  position: relative;
+  box-sizing: border-box;
+  // The unsized field's width, as components/_textfield.scss sets it.
+  width: v.textfield('width');
+  height: v.textfield('height');
+  // The input's line: its text is centred in the space its padding leaves.
+  padding: 22px (v.textfield('padding-horizontal') + $trailing) 0 v.textfield('padding-horizontal');
+  border-radius: v.textfield('border-radius') v.textfield('border-radius') 0 0;
+  border-bottom: v.textfield('border-width') solid t.color('on-surface-variant');
+  background-color: t.color('surface-container-highest');
+  color: t.color('on-surface');
+  white-space: nowrap;
+  // Clipped without moving the baseline, as `hidden` would.
+  overflow: clip;
+  @include m.typography('body-large');
+
+  // The value, or a space holding its line; then the label.
+  &::before {
+    content: attr(value) ' ';
+    white-space: pre;
+  }
+
+  &[label]::after {
+    content: attr(label);
+    position: absolute;
+    top: v.textfield('padding-vertical');
+    left: v.textfield('padding-horizontal');
+    color: t.color('on-surface-variant');
+  }
+
+  &[label][value]:not([value=''])::after {
+    top: 8px;
+    @include m.typography('body-small');
+  }
+
+  &[variant='outlined'] {
+    padding-top: 15.5px;
+    border: v.textfield('border-width') solid t.color('outline');
+    border-radius: v.textfield('border-radius');
+    background: none;
+
+    &[label][value]:not([value=''])::after {
+      top: -8px;
+      padding: 0 4px;
+      left: 12px;
+    }
+  }
+
+  &[density='compact'] {
+    height: 40px;
+    padding-top: 13.5px;
+    @include m.typography('body-medium');
+
+    &::after {
+      top: 10px;
+      @include m.typography('body-medium');
+    }
+
+    &[variant='outlined'] {
+      padding-top: 9.5px;
+    }
+  }
+
+  // Children are the element's own content only after upgrade.
+  > * {
+    display: none;
+  }
+}
