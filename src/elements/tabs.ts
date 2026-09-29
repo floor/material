@@ -14,7 +14,7 @@
 import createTabs from "../components/tabs";
 import type { TabConfig, TabsComponent, TabsConfig } from "../components/tabs/types";
 import {
-  defineElement, DEFAULT_PREFIX, type Config, type DefineOptions, type ElementAttributes,
+  createDeclarationClass, defineElement, DEFAULT_PREFIX, type Config, type DefineOptions, type ElementAttributes,
   type ElementInstance, type ElementSpec,
 } from "./define";
 
@@ -132,7 +132,8 @@ export type TabAttributes = ElementAttributes<typeof tabDeclaration>;
 export const defineTabs = (options?: DefineOptions): string => {
   const tag = tabsElement.define(options);
   const tabTag = `${options?.prefix ?? DEFAULT_PREFIX}-${tabDeclaration.name}`;
-  // A tab only declares data; it renders nothing and has no behaviour.
-  if (!customElements.get(tabTag)) customElements.define(tabTag, class extends HTMLElement {});
+  // A tab only declares data: it renders nothing, and its properties write the
+  // attributes the tabs read.
+  if (!customElements.get(tabTag)) customElements.define(tabTag, createDeclarationClass(tabDeclaration.attributes));
   return tag;
 };
