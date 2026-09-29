@@ -30,6 +30,9 @@ import "mtrl/elements/css/chips";
 import "mtrl/elements/css/list";
 import "mtrl/elements/css/card";
 import "mtrl/elements/css/carousel";
+import "mtrl/elements/css/dialog";
+import "mtrl/elements/css/bottom-sheet";
+import "mtrl/elements/css/side-sheet";
 import {
   buttonElement,
   defineButton,
@@ -77,6 +80,12 @@ import {
   defineCard,
   carouselElement,
   defineCarousel,
+  dialogElement,
+  defineDialog,
+  bottomSheetElement,
+  defineBottomSheet,
+  sideSheetElement,
+  defineSideSheet,
   tabDeclaration,
   radioDeclaration,
   navigationRailItemDeclaration,
@@ -133,6 +142,12 @@ import type {
   CardElement,
   CarouselSpec,
   CarouselElement,
+  DialogSpec,
+  DialogElement,
+  BottomSheetSpec,
+  BottomSheetElement,
+  SideSheetSpec,
+  SideSheetElement,
   TabAttributes,
   RadioAttributes,
   NavigationRailItemAttributes,
@@ -170,6 +185,9 @@ export const MChips: MComponent<ChipsSpec, ChipsElement> = createComponent(chips
 export const MList: MComponent<ListSpec, ListElement> = createComponent(listElement.spec, defineList, "MList");
 export const MCard: MComponent<CardSpec, CardElement> = createComponent(cardElement.spec, defineCard, "MCard");
 export const MCarousel: MComponent<CarouselSpec, CarouselElement> = createComponent(carouselElement.spec, defineCarousel, "MCarousel");
+export const MDialog: MComponent<DialogSpec, DialogElement> = createComponent(dialogElement.spec, defineDialog, "MDialog");
+export const MBottomSheet: MComponent<BottomSheetSpec, BottomSheetElement> = createComponent(bottomSheetElement.spec, defineBottomSheet, "MBottomSheet");
+export const MSideSheet: MComponent<SideSheetSpec, SideSheetElement> = createComponent(sideSheetElement.spec, defineSideSheet, "MSideSheet");
 export const MTab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "MTab");
 export const MRadio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "MRadio");
 export const MNavigationRailItem: MDeclaration<NavigationRailItemAttributes> = createDeclaration(navigationRailItemDeclaration, "MNavigationRailItem");

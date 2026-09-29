@@ -12,8 +12,13 @@
  * changes it; the `value` property is the live one.
  *
  * `open` shows the drawer, as on the factory: without it the drawer is
- * collapsed to no width and inert. The modal variant (scrim, focus trap) is
- * not offered here: the element always creates the standard one.
+ * collapsed to no width and inert. `modal` makes it the modal drawer in the
+ * factory's top layer (`layer: "top"`): a native `<dialog>` in the element's
+ * shadow root, shown with `showModal()`, above every z-index, the page
+ * outside inert, the scrim its `::backdrop`. Escape and a click on the
+ * backdrop close it, and `open` then reflects its state. `open` and `close`
+ * are dispatched as it opens and closes (not when the attribute is what
+ * changed).
  *
  * @module elements
  */
@@ -85,10 +90,13 @@ const updateDrawer = (host: ElementHost<DrawerComponent>, component: DrawerCompo
 const select = (component: DrawerComponent, value: unknown): void =>
   void component.setActive(value === null || value === undefined ? "" : String(value));
 
-/** The standard drawer; a bare number `width` is pixels, as a number is for the factory. */
-const create = (config: DrawerConfig): DrawerComponent => {
+/**
+ * The standard drawer, or with `modal` the modal one in the top layer; a bare
+ * number `width` is pixels, as a number is for the factory.
+ */
+const create = ({ modal, ...config }: DrawerConfig & { modal?: boolean }): DrawerComponent => {
   const width = typeof config.width === "string" && /^\d+(\.\d+)?$/.test(config.width) ? Number(config.width) : config.width;
-  return createDrawer({ ...config, width, variant: "standard" });
+  return createDrawer({ ...config, width, ...(modal ? { variant: "modal", layer: "top" } : { variant: "standard" }) });
 };
 
 const drawerSpec = {
@@ -99,6 +107,7 @@ const drawerSpec = {
   attributes: {
     value: { type: "string", update: (c, v) => select(c, v) },
     open: { type: "boolean", config: "open", update: (c, v) => void (v ? c.open() : c.close()) },
+    modal: { type: "boolean", config: "modal" },
     headline: { type: "string", config: "headline", update: (c, v) => void c.setHeadline(v === null ? "" : String(v)) },
     position: { type: "string", config: "position" },
     width: { type: "string", config: "width" },
@@ -121,15 +130,25 @@ const drawerSpec = {
     change: {
       detail: (payload) => ({ value: (payload as { value: string }).value }),
     },
+    open: { detail: () => null },
+    close: { detail: () => null },
   },
   config: readDrawer,
   setup: (host, component) => {
     const onSelect = ({ id }: { id: string }): void => {
       host.dispatchEvent(new CustomEvent("change", { detail: { value: id }, bubbles: true, composed: true }));
     };
+    // A modal drawer closes itself (Escape, the backdrop): `open` reflects it.
+    const reflect = (): void => {
+      if (host.hasAttribute("modal")) host.toggleAttribute("open", component.isOpen());
+    };
     component.on("select", onSelect);
+    component.on("open", reflect);
+    component.on("close", reflect);
     return () => {
       component.off("select", onSelect);
+      component.off("open", reflect);
+      component.off("close", reflect);
     };
   },
   observeChildren: updateDrawer,

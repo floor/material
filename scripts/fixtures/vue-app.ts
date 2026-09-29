@@ -8,6 +8,7 @@ import {
 } from "../../dist/vue/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 import { MChip, MChips } from "../../dist/vue/index.js";
+import { MDialog } from "../../dist/vue/index.js";
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 
@@ -20,6 +21,7 @@ export interface Api {
   order: Ref<string[]>;
   show: Ref<boolean>;
   progress: Ref<number>;
+  setDialog: (v: boolean) => void;
   switchRef: Ref<Exposed<SwitchElement> | null>;
 }
 
@@ -38,8 +40,12 @@ export const App = defineComponent(() => {
   const show = ref(true);
   const progress = ref(30);
   const fruit = ref<string | null>("b");
+  const dialog = ref(false);
   const switchRef = ref<Exposed<SwitchElement> | null>(null);
-  const api: Api = { log: [], submits: 0, model, extra, order, show, progress, switchRef };
+  const api: Api = {
+    log: [], submits: 0, model, extra, order, show, progress, switchRef,
+    setDialog: (v: boolean) => void (dialog.value = v),
+  };
   onMounted(() => {
     (window as unknown as { api: Api }).api = api;
   });
@@ -108,6 +114,12 @@ export const App = defineComponent(() => {
         h(MListItem, { value: "c" }, () => "Cherry"),
       ]),
       h("output", { id: "fruit" }, String(fruit.value)),
+      // Controlled: Escape closes the dialog, and onClose puts the state in step
+      h(MDialog, { id: "dg", open: dialog.value, onClose: () => (dialog.value = false) }, () => [
+        h("span", { slot: "headline" }, "Discard draft?"),
+        "Your changes will be lost.",
+      ]),
+      h("output", { id: "dialog" }, String(dialog.value)),
       ...order.value.map((key) => h(MSwitch, { key, id: `o${key}` }, () => `Order ${key}`)),
       show.value ? h(MSwitch, { id: "gone" }, () => "Gone") : null,
       // Mounted in the browser after the element is defined: Vue writes a key
