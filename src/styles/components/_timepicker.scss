@@ -158,13 +158,10 @@ $component: '#{base.$prefix}-time-picker';
     }
     
     // Style for HTML input elements
+    // Size, type and border come from the rule above; the mobile sizes too.
     &[type="number"] {
-      font-size: 3.5rem;
-      font-weight: 400;
-      width: 96px;
       height: 76px;
       text-align: center;
-      border: none;
       background-color: t.color('surface-container-highest');
       border-radius: f.get-shape('small');
       padding: 0;
@@ -185,23 +182,38 @@ $component: '#{base.$prefix}-time-picker';
       }
     }
     
-    // When in dial mode, add highlighting for active element
+    // Dial mode: the boxes are radios (FLO-283). TimeSelector tokens: an 8dp
+    // surface-container-highest container with an on-surface label, filled
+    // primary-container when selected; state layers in the label colour.
     &:not([type="number"]) {
-      // Same pair as the numeric field above: the selected time selector is a
-      // filled PrimaryContainer, not a 10% primary tint.
+      --#{$component}-container: #{t.color('surface-container-highest')};
+      --#{$component}-label: #{t.color('on-surface')};
+      padding: 0;
+      font-family: inherit;
+      line-height: 1;
+      border-radius: f.get-shape('small');
+      background-color: color-mix(in srgb, var(--#{$component}-label) var(--#{$component}-layer, 0%), var(--#{$component}-container));
+      color: var(--#{$component}-label);
+
+      &:hover { --#{$component}-layer: 8%; }
+      &:focus-visible, &:active { --#{$component}-layer: 10%; }
+
       &[data-active="true"] {
-        color: t.color('on-primary-container');
-        background-color: t.color('primary-container');
-        border-radius: f.get-shape('small');
+        --#{$component}-container: #{t.color('primary-container')};
+        --#{$component}-label: #{t.color('on-primary-container')};
       }
-      
-      &:hover {
-        background-color: t.alpha('on-surface', 0.04);
-        border-radius: f.get-shape('small');
-      }
+
+      // md.comp.focus-ring
+      &:focus { outline: none; }
+      &:focus-visible { outline: 3px solid t.color('secondary'); outline-offset: 2px; }
     }
   }
-  
+
+  // The dial mode's radiogroup: a role, not a box, so the row lays out as before.
+  &__selectors {
+    display: contents;
+  }
+
   // Separator between hours, minutes, seconds
   &__separator {
     font-size: 3.5rem;
@@ -489,12 +501,6 @@ $component: '#{base.$prefix}-time-picker';
       width: 80px;
       height: 76px;
       font-size: 3rem;
-      
-      &[type="number"] {
-        width: 80px;
-        height: 76px;
-        font-size: 3rem;
-      }
     }
   }
   

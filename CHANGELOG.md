@@ -67,6 +67,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   dial moves on to minutes once a pointer has picked the hour. Its colours come from the
   theme. In 24-hour mode noon and midnight now sit on the inner and outer rings at the top
   (the hand pointed at 00 at noon).
+- **Time picker: the dial's hour and minute boxes are radios (FLO-283).** In dial mode they
+  choose which part the dial sets, so they are a radiogroup of buttons named as Compose names
+  them, with their value ("Select hour: 9 o'clock", "Select minutes: 35 minutes"): one tab
+  stop, the arrows move the check. They are filled surface-container-highest, primary-container
+  when checked, with state layers and the focus ring. Typing a time is the input mode's; the
+  dial mode's boxes were number fields.
 - **Date picker: the year picker scrolls.** It lists every year from `minDate` to `maxDate`
   (1900 to 2100 by default) in a vertically scrolling grid the height of the calendar, opened
   on the selected year, as the m3.material.io guidelines have it ("To navigate across

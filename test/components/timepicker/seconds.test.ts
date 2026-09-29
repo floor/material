@@ -42,7 +42,7 @@ import { TIME_FORMAT, TIME_PERIOD, TIME_PICKER_TYPE } from "../../../src/compone
 
 const PREFIX = "mtrl";
 
-function picker(showSeconds: boolean, seconds = 45) {
+function picker(showSeconds: boolean, seconds = 45, type = TIME_PICKER_TYPE.INPUT) {
   const container = document.createElement("div");
   document.body.append(container);
   const changes: Array<[string, number]> = [];
@@ -52,7 +52,7 @@ function picker(showSeconds: boolean, seconds = 45) {
     {
       prefix: PREFIX,
       format: TIME_FORMAT.AMPM,
-      type: TIME_PICKER_TYPE.DIAL,
+      type,
       showSeconds,
     } as never,
     (unit: string, value: number) => changes.push([unit, value]),
@@ -63,13 +63,7 @@ function picker(showSeconds: boolean, seconds = 45) {
     changes,
     inputs,
     byType: (type: string) =>
-      container.querySelector(`input[data-type="${type}"]`) as HTMLInputElement | null,
-    // The field clicks only act while the dial is showing, which a DIAL
-    // picker already is.
-    dial: () =>
-      container.querySelector(
-        `.${PREFIX}-time-picker__dial`,
-      ) as HTMLElement | null,
+      container.querySelector(`[data-type="${type}"]`) as HTMLInputElement | null,
   };
 }
 
@@ -126,23 +120,26 @@ describe("with showSeconds on", () => {
   });
 });
 
-describe("clicking the seconds field makes it the active one", () => {
+// In dial mode the fields are radios (FLO-283); clicking one makes it the part
+// the dial sets.
+describe("clicking the seconds radio makes it the active one", () => {
   test("it takes data-active and the other two give it up", () => {
-    const p = picker(true);
-    expect(p.dial()!.style.display).toBe("block");
+    const p = picker(true, 45, TIME_PICKER_TYPE.DIAL);
     const hours = p.byType("hour")!;
     const minutes = p.byType("minute")!;
     const seconds = p.byType("second")!;
+    expect(seconds.textContent).toBe("45");
 
     seconds.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
 
     expect(seconds.getAttribute("data-active")).toBe("true");
+    expect(seconds.getAttribute("aria-checked")).toBe("true");
     expect(hours.getAttribute("data-active")).toBe("false");
     expect(minutes.getAttribute("data-active")).toBe("false");
   });
 
   test("and clicking hours hands it back", () => {
-    const p = picker(true);
+    const p = picker(true, 45, TIME_PICKER_TYPE.DIAL);
     const hours = p.byType("hour")!;
     const seconds = p.byType("second")!;
 
@@ -151,19 +148,5 @@ describe("clicking the seconds field makes it the active one", () => {
 
     expect(hours.getAttribute("data-active")).toBe("true");
     expect(seconds.getAttribute("data-active")).toBe("false");
-  });
-
-  // The handler checks the dial's display itself, so hiding it stops the
-  // click acting. A DIAL picker starts with the dial showing, which is why the
-  // tests above do not have to arrange anything.
-  test("with the dial hidden the click does nothing", () => {
-    const p = picker(true);
-    p.dial()!.style.display = "none";
-    const seconds = p.byType("second")!;
-    const before = seconds.getAttribute("data-active");
-
-    seconds.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
-
-    expect(seconds.getAttribute("data-active")).toBe(before);
   });
 });

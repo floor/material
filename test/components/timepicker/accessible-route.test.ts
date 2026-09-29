@@ -1,8 +1,8 @@
 // test/components/timepicker/accessible-route.test.ts
 //
 // Dr Jones decided (2026-09-20) that the text-input mode is the time picker's
-// accessible route: the dial stays pointer-only rather than growing keyboard
-// navigation. M3 says the same thing — manual entry through text input rather
+// accessible route. Since FLO-279 the dial is accessible as well, and since
+// FLO-283 its hour and minute boxes are radios, as in Compose. M3 says the same thing — manual entry through text input rather
 // than exclusively the dial, with the input selector reachable from the dial
 // through the keyboard icon.
 //
@@ -67,38 +67,86 @@ const q = (c: HTMLElement, sel: string) => c.querySelector(sel) as HTMLElement;
 
 beforeEach(() => { document.body.innerHTML = ""; });
 
-describe("the time fields are named for assistive technology", () => {
+describe("in input mode the time fields are named inputs", () => {
+  const input = { type: TIME_PICKER_TYPE.INPUT };
+
   test("the hour field is labelled Hour", () => {
-    const c = picker();
+    const c = picker(input);
     expect(q(c, `.${PREFIX}-time-picker__hours`).getAttribute("aria-label")).toBe("Hour");
   });
 
   test("the minute field is labelled Minute", () => {
-    const c = picker();
+    const c = picker(input);
     expect(q(c, `.${PREFIX}-time-picker__minutes`).getAttribute("aria-label")).toBe("Minute");
   });
 
   test("the second field is labelled Second when it is shown", () => {
-    const c = picker({ showSeconds: true });
+    const c = picker({ ...input, showSeconds: true });
     expect(q(c, `.${PREFIX}-time-picker__seconds`).getAttribute("aria-label")).toBe("Second");
   });
 
-  // The fields are the accessible route, so they have to be reachable in dial
-  // mode too — not only after switching.
-  test("the fields exist in dial mode, not only in input mode", () => {
-    const c = picker({ type: TIME_PICKER_TYPE.DIAL });
-
-    expect(q(c, `.${PREFIX}-time-picker__hours`)).not.toBeNull();
-    expect(q(c, `.${PREFIX}-time-picker__minutes`)).not.toBeNull();
-  });
-
   test("they are real text inputs, which is the role M3 asks for", () => {
-    const c = picker();
+    const c = picker(input);
     for (const cls of ["hours", "minutes"]) {
       const field = q(c, `.${PREFIX}-time-picker__${cls}`) as HTMLInputElement;
       expect(field.tagName).toBe("INPUT");
       expect(field.disabled).toBe(false);
     }
+    expect(c.querySelector("[role=radio][data-type]")).toBeNull();
+  });
+});
+
+// FLO-283: in dial mode the boxes only choose what the dial sets, so they are
+// radios named as Compose names them, with the value they show.
+describe("in dial mode the hour and minute boxes are radios", () => {
+  const boxes = (c: HTMLElement) => Array.from(c.querySelectorAll<HTMLButtonElement>("[data-type]"));
+
+  test("buttons with the radio role in a radiogroup, named Select hour and Select minutes", () => {
+    const c = picker();
+    const [hour, minute] = boxes(c);
+    expect(c.querySelector("input")).toBeNull();
+    expect(hour.closest("[role=radiogroup]")).not.toBeNull();
+    expect([hour.tagName, hour.getAttribute("type"), hour.getAttribute("role")]).toEqual(["BUTTON", "button", "radio"]);
+    expect(hour.getAttribute("aria-label")).toBe("Select hour: 10 o'clock");
+    expect(minute.getAttribute("aria-label")).toBe("Select minutes: 30 minutes");
+    expect(hour.textContent).toBe("10");
+    expect(minute.textContent).toBe("30");
+  });
+
+  test("the hour is checked first and is the one tab stop", () => {
+    const c = picker({ showSeconds: true });
+    expect(boxes(c).map(box => [box.getAttribute("aria-checked"), box.tabIndex])).toEqual([["true", 0], ["false", -1], ["false", -1]]);
+  });
+
+  test("a click checks a box and turns the dial to it", () => {
+    const c = picker();
+    const [hour, minute] = boxes(c);
+    minute.click();
+    expect([hour.getAttribute("aria-checked"), minute.getAttribute("aria-checked")]).toEqual(["false", "true"]);
+    expect(q(c, `.${PREFIX}-time-picker__dial-face`).getAttribute("aria-label")).toBe("Minute");
+  });
+
+  test("the arrows move the check and the focus, and wrap", () => {
+    const c = picker({ showSeconds: true });
+    const [hour, minute, second] = boxes(c);
+    hour.focus();
+    hour.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    expect(document.activeElement === second).toBe(true);
+    expect(second.getAttribute("aria-checked")).toBe("true");
+    expect(q(c, `.${PREFIX}-time-picker__dial-face`).getAttribute("aria-label")).toBe("Second");
+    second.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    hour.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+    expect(document.activeElement === minute).toBe(true);
+    expect(minute.tabIndex).toBe(0);
+  });
+
+  test("a value picked on the dial renames the box", () => {
+    const c = picker({ format: TIME_FORMAT.MILITARY });
+    const [hour] = boxes(c);
+    const twenty = Array.from(c.querySelectorAll<HTMLElement>("[role=option]")).find(option => option.dataset.value === "20")!;
+    twenty.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(hour.textContent).toBe("20");
+    expect(hour.getAttribute("aria-label")).toBe("Select hour: 20 hours");
   });
 });
 
