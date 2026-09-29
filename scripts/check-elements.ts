@@ -5627,6 +5627,10 @@ try {
     check("modal elements: a snackbar appended to the open <dialog> is reachable by Tab, placed on the viewport, and changes no region or close");
   }
 
+  // ---------------------------------------------------------------- <m-search>
+  const { checkSearch } = await import("./check-elements-search");
+  await checkSearch({ browser, page, origin: `http://127.0.0.1:${server.port}`, check, fresh });
+
   // ---------------------------------------------------------------- theme
   await fresh(page, `<m-switch id="s" checked>Theme</m-switch><section id="factory"></section>`);
   {

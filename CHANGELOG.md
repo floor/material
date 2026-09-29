@@ -12,6 +12,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Elements: `<m-search>` with `<m-search-suggestion>`.** Form-associated: the query is
+  `value`, the model and the form value, under the host's `name`. Suggestions are declared
+  as children (`value`, text or `label`, `icon`, `group`) and redrawn in place once per
+  change, not at all when they come back the same, so an app can replace them as the user
+  types. `placeholder`, `variant`, `view-mode` (`docked`/`fullscreen`), `full-width`,
+  `disabled`, `aria-label` and `open` (reflected) update in place; `leading-icon`,
+  `trailing-icon`, `avatar` and their labels recreate it. Events: `input`, `change` on
+  Enter, `select`, `open`, `close`, and `action` for the trailing icon and avatar; methods
+  `show()`, `close()` and `focus()`. The open view is the factory's, in the top layer.
 - **Tooltip: `layer: "top"`.** With the option the tooltip renders after its target instead
   of on `document.body` (or stays where its owner put it), in the target's tree, a shadow
   root's included, and is shown in the top layer as a `popover="manual"` element, placed in

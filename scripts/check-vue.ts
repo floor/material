@@ -66,6 +66,8 @@ const run = async (): Promise<void> => {
   assert.match(html, /<m-radios [^>]*value="m"[^>]*>.*<m-radio value="s">Small<\/m-radio>/s);
   assert.match(html, /<m-chips [^>]*value="veg"[^>]*>.*<m-chip value="veg">Vegetarian<\/m-chip>/s);
   assert.match(html, /<m-select [^>]*value="cat"[^>]*>.*<m-select-option value="cat">Cat<\/m-select-option>/s);
+  assert.match(html, /<m-search [^>]*value="ap"[^>]*>.*?<m-search-suggestion [^>]*value="apple"[^>]*>(<!---->)?Apple<.*?<m-search-suggestion [^>]*value="apricot"[^>]*>(<!---->)?Apricot</s);
+  assert.doesNotMatch(html, /<m-search-suggestion [^>]*value="banana"/);
   assert.match(html, /<m-button variant="filled" type="submit" id="b" class="save" data-test="1">Save<\/m-button>/);
   assert.match(html, /<m-dialog [^>]*id="dg"[^>]*>/);
   assert.doesNotMatch(html, /<m-dialog [^>]*open/);
@@ -215,6 +217,19 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("pet")?.textContent === "dog");
     assert.equal(await pet.inputValue(), "Dog");
     check("select: choosing an option updates the v-model value");
+
+    // ------------------------------------------------------------- search
+    const query = page.getByRole("combobox", { name: "Query", exact: true });
+    assert.equal(await query.inputValue(), "ap");
+    await query.click();
+    await page.keyboard.type("r");
+    await page.waitForFunction(() => document.getElementById("query")?.textContent === "apr");
+    // The app filters its suggestions by the query: the element redraws them in place
+    await page.waitForFunction(() => document.getElementById("sq")?.shadowRoot?.querySelectorAll('[role="option"]').length === 1);
+    await page.getByRole("option", { name: "Apricot", exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("query")?.textContent === "apricot");
+    assert.equal(await query.inputValue(), "apricot");
+    check("search: typing updates the v-model value, the suggestions follow it, and choosing one updates it");
 
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);

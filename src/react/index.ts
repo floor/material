@@ -39,6 +39,7 @@ import "mtrl/elements/css/snackbar";
 import "mtrl/elements/css/dialog";
 import "mtrl/elements/css/bottom-sheet";
 import "mtrl/elements/css/side-sheet";
+import "mtrl/elements/css/search";
 import {
   buttonElement,
   defineButton,
@@ -102,6 +103,8 @@ import {
   defineBottomSheet,
   sideSheetElement,
   defineSideSheet,
+  searchElement,
+  defineSearch,
   tabDeclaration,
   radioDeclaration,
   navigationRailItemDeclaration,
@@ -112,6 +115,7 @@ import {
   carouselItemDeclaration,
   menuItemDeclaration,
   selectOptionDeclaration,
+  searchSuggestionDeclaration,
 } from "../elements";
 import type {
   ButtonSpec,
@@ -176,6 +180,8 @@ import type {
   BottomSheetElement,
   SideSheetSpec,
   SideSheetElement,
+  SearchSpec,
+  SearchElement,
   TabAttributes,
   RadioAttributes,
   NavigationRailItemAttributes,
@@ -186,6 +192,7 @@ import type {
   CarouselItemAttributes,
   MenuItemAttributes,
   SelectOptionAttributes,
+  SearchSuggestionAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
 
@@ -223,6 +230,7 @@ export const Snackbar: MComponent<SnackbarSpec, SnackbarElement> = createCompone
 export const Dialog: MComponent<DialogSpec, DialogElement> = createComponent(dialogElement.spec, defineDialog, "Dialog");
 export const BottomSheet: MComponent<BottomSheetSpec, BottomSheetElement> = createComponent(bottomSheetElement.spec, defineBottomSheet, "BottomSheet");
 export const SideSheet: MComponent<SideSheetSpec, SideSheetElement> = createComponent(sideSheetElement.spec, defineSideSheet, "SideSheet");
+export const Search: MComponent<SearchSpec, SearchElement> = createComponent(searchElement.spec, defineSearch, "Search");
 export const Tab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "Tab");
 export const Radio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "Radio");
 export const NavigationRailItem: MDeclaration<NavigationRailItemAttributes> = createDeclaration(navigationRailItemDeclaration, "NavigationRailItem");
@@ -233,3 +241,4 @@ export const ListItem: MDeclaration<ListItemAttributes> = createDeclaration(list
 export const CarouselItem: MDeclaration<CarouselItemAttributes> = createDeclaration(carouselItemDeclaration, "CarouselItem");
 export const MenuItem: MDeclaration<MenuItemAttributes> = createDeclaration(menuItemDeclaration, "MenuItem");
 export const SelectOption: MDeclaration<SelectOptionAttributes> = createDeclaration(selectOptionDeclaration, "SelectOption");
+export const SearchSuggestion: MDeclaration<SearchSuggestionAttributes> = createDeclaration(searchSuggestionDeclaration, "SearchSuggestion");
