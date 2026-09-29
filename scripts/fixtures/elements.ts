@@ -5,6 +5,13 @@ import "../../dist/elements/css/index.js";
 import * as elements from "../../dist/elements/index.js";
 import createSwitch from "../../dist/components/switch/index.js";
 import createButton from "../../dist/components/button/index.js";
+import createIconButton from "../../dist/components/icon-button/index.js";
+import createFab from "../../dist/components/fab/index.js";
+import createExtendedFab from "../../dist/components/extended-fab/index.js";
+import createCheckbox from "../../dist/components/checkbox/index.js";
 
 elements.defineAll();
-Object.assign(window, { mtrl: { ...elements, createSwitch, createButton }, ready: true });
+Object.assign(window, { mtrl: {
+  ...elements, createSwitch, createButton,
+  createIconButton, createFab, createExtendedFab, createCheckbox,
+}, ready: true });

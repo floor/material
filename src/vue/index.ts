@@ -12,6 +12,10 @@ import "mtrl/elements/css/button";
 import "mtrl/elements/css/switch";
 import "mtrl/elements/css/badge";
 import "mtrl/elements/css/tabs";
+import "mtrl/elements/css/icon-button";
+import "mtrl/elements/css/fab";
+import "mtrl/elements/css/extended-fab";
+import "mtrl/elements/css/checkbox";
 import {
   buttonElement,
   defineButton,
@@ -19,6 +23,14 @@ import {
   defineSwitch,
   tabsElement,
   defineTabs,
+  iconButtonElement,
+  defineIconButton,
+  fabElement,
+  defineFab,
+  extendedFabElement,
+  defineExtendedFab,
+  checkboxElement,
+  defineCheckbox,
   tabDeclaration,
 } from "../elements";
 import type {
@@ -28,6 +40,14 @@ import type {
   SwitchElement,
   TabsSpec,
   TabsElement,
+  IconButtonSpec,
+  IconButtonElement,
+  FabSpec,
+  FabElement,
+  ExtendedFabSpec,
+  ExtendedFabElement,
+  CheckboxSpec,
+  CheckboxElement,
   TabAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
@@ -38,4 +58,8 @@ export type { VueProps, VueEmits, ModelProps, Exposed, MComponent, MDeclaration 
 export const MButton: MComponent<ButtonSpec, ButtonElement> = createComponent(buttonElement.spec, defineButton, "MButton");
 export const MSwitch: MComponent<SwitchSpec, SwitchElement> = createComponent(switchElement.spec, defineSwitch, "MSwitch");
 export const MTabs: MComponent<TabsSpec, TabsElement> = createComponent(tabsElement.spec, defineTabs, "MTabs");
+export const MIconButton: MComponent<IconButtonSpec, IconButtonElement> = createComponent(iconButtonElement.spec, defineIconButton, "MIconButton");
+export const MFab: MComponent<FabSpec, FabElement> = createComponent(fabElement.spec, defineFab, "MFab");
+export const MExtendedFab: MComponent<ExtendedFabSpec, ExtendedFabElement> = createComponent(extendedFabElement.spec, defineExtendedFab, "MExtendedFab");
+export const MCheckbox: MComponent<CheckboxSpec, CheckboxElement> = createComponent(checkboxElement.spec, defineCheckbox, "MCheckbox");
 export const MTab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "MTab");

@@ -12,6 +12,10 @@ import "mtrl/elements/css/button";
 import "mtrl/elements/css/switch";
 import "mtrl/elements/css/badge";
 import "mtrl/elements/css/tabs";
+import "mtrl/elements/css/icon-button";
+import "mtrl/elements/css/fab";
+import "mtrl/elements/css/extended-fab";
+import "mtrl/elements/css/checkbox";
 import {
   buttonElement,
   defineButton,
@@ -19,6 +23,14 @@ import {
   defineSwitch,
   tabsElement,
   defineTabs,
+  iconButtonElement,
+  defineIconButton,
+  fabElement,
+  defineFab,
+  extendedFabElement,
+  defineExtendedFab,
+  checkboxElement,
+  defineCheckbox,
   tabDeclaration,
 } from "../elements";
 import type {
@@ -28,6 +40,14 @@ import type {
   SwitchElement,
   TabsSpec,
   TabsElement,
+  IconButtonSpec,
+  IconButtonElement,
+  FabSpec,
+  FabElement,
+  ExtendedFabSpec,
+  ExtendedFabElement,
+  CheckboxSpec,
+  CheckboxElement,
   TabAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
@@ -38,4 +58,8 @@ export type { SolidProps, DeclarationProps, EventProps, DefaultProps, FormProps,
 export const Button: MComponent<ButtonSpec, ButtonElement> = createComponent(buttonElement.spec, defineButton, "Button");
 export const Switch: MComponent<SwitchSpec, SwitchElement> = createComponent(switchElement.spec, defineSwitch, "Switch");
 export const Tabs: MComponent<TabsSpec, TabsElement> = createComponent(tabsElement.spec, defineTabs, "Tabs");
+export const IconButton: MComponent<IconButtonSpec, IconButtonElement> = createComponent(iconButtonElement.spec, defineIconButton, "IconButton");
+export const Fab: MComponent<FabSpec, FabElement> = createComponent(fabElement.spec, defineFab, "Fab");
+export const ExtendedFab: MComponent<ExtendedFabSpec, ExtendedFabElement> = createComponent(extendedFabElement.spec, defineExtendedFab, "ExtendedFab");
+export const Checkbox: MComponent<CheckboxSpec, CheckboxElement> = createComponent(checkboxElement.spec, defineCheckbox, "Checkbox");
 export const Tab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "Tab");

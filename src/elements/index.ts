@@ -14,6 +14,10 @@ import type { DefineOptions } from "./define";
 import { buttonElement, defineButton } from "./button";
 import { switchElement, defineSwitch } from "./switch";
 import { tabsElement, tabDeclaration, defineTabs } from "./tabs";
+import { iconButtonElement, defineIconButton } from "./icon-button";
+import { fabElement, defineFab } from "./fab";
+import { extendedFabElement, defineExtendedFab } from "./extended-fab";
+import { checkboxElement, defineCheckbox } from "./checkbox";
 
 export { defineElement, DEFAULT_PREFIX, SHADOW_BASE_STYLES } from "./define";
 export type {
@@ -34,12 +38,24 @@ export { switchElement, defineSwitch } from "./switch";
 export type { SwitchSpec, SwitchElement } from "./switch";
 export { tabsElement, tabDeclaration, defineTabs } from "./tabs";
 export type { TabsSpec, TabsElement, TabAttributes } from "./tabs";
+export { iconButtonElement, defineIconButton } from "./icon-button";
+export type { IconButtonSpec, IconButtonElement } from "./icon-button";
+export { fabElement, defineFab } from "./fab";
+export type { FabSpec, FabElement } from "./fab";
+export { extendedFabElement, defineExtendedFab } from "./extended-fab";
+export type { ExtendedFabSpec, ExtendedFabElement } from "./extended-fab";
+export { checkboxElement, defineCheckbox } from "./checkbox";
+export type { CheckboxSpec, CheckboxElement } from "./checkbox";
 
 /** Every element, by name. Framework adapters are generated from this list. */
 export const elements = {
   button: buttonElement,
   switch: switchElement,
   tabs: tabsElement,
+  iconButton: iconButtonElement,
+  fab: fabElement,
+  extendedFab: extendedFabElement,
+  checkbox: checkboxElement,
 } as const;
 
 /** Declaration children, which render nothing and are read by their parent. */
@@ -52,4 +68,8 @@ export const defineAll = (options?: DefineOptions): void => {
   defineButton(options);
   defineSwitch(options);
   defineTabs(options);
+  defineIconButton(options);
+  defineFab(options);
+  defineExtendedFab(options);
+  defineCheckbox(options);
 };
