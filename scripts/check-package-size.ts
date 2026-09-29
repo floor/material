@@ -158,8 +158,8 @@ try {
     // A chip set's grid cell draws its own 3px focus ring and focus layer (FLO-261): +57
     // (dist/styles.css at gzip level 9, 45,306 to 45,363); the fixture read 49,323.
     // The outlined text field's notched outline (#234): +202, the fixture read 50,865 to
-    // 51,067.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 51100 },
+    // 51,067. The time picker's DOM dial (FLO-279): measured 51,497 with both in.
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 51500 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);

@@ -23,8 +23,7 @@
 //   ClockDialSelectedLabelTextColor        = OnPrimary
 //   ClockDialSelectorHandleContainerColor  = Primary
 //
-// The dial is drawn into a canvas rather than styled, so its three tokens are
-// checked against clockdial.ts instead of the compiled CSS.
+// The dial's tokens are checked in the compiled CSS, like the rest (FLO-279).
 
 import { describe, test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
@@ -54,7 +53,6 @@ const ruleFor = (selector: string): string => {
   return pattern.exec(css)?.[1] ?? "";
 };
 
-const dial = readFileSync(join(root, "src/components/timepicker/clockdial.ts"), "utf8");
 
 describe("time picker headline", () => {
   test("HeadlineColor is OnSurfaceVariant", () => {
@@ -111,29 +109,25 @@ describe("time selector colour roles", () => {
   });
 });
 
-describe("clock dial colour roles, which are drawn rather than styled", () => {
+describe("clock dial colour roles, now styled (FLO-279: the canvas is gone)", () => {
   test("ClockDialColor is SurfaceContainerHighest", () => {
-    expect(dial).toContain("sys-color-surface-container-highest");
+    expect(ruleFor(".mtrl-time-picker__dial-face")).toContain("surface-container-highest");
   });
 
-  test("ClockDialSelectorHandleContainerColor is Primary, a solid disc", () => {
-    expect(dial).toContain("const selectedBgColor = primaryColor");
+  test("ClockDialSelectorHandleContainerColor is Primary, a solid disc; the track and centre too", () => {
+    for (const part of ["dial-handle", "dial-track", "dial-centre"]) expect(ruleFor(`.mtrl-time-picker__${part}`)).toContain("var(--mtrl-sys-color-primary)");
   });
 
-  // The defect behind the token: a selected number was drawn primary on a 10%
-  // primary disc — the same hue as its own background.
-  test("ClockDialSelectedLabelTextColor is OnPrimary", () => {
-    expect(dial).toContain("isSelected ? colors.onPrimaryColor : colors.onSurfaceColor");
-    expect(dial).not.toContain("isSelected ? colors.primaryColor : colors.onSurfaceColor");
+  test("ClockDialSelectedLabelTextColor is OnPrimary, clipped to the handle", () => {
+    const rule = ruleFor(".mtrl-time-picker__dial-numbers--selected");
+    expect(rule).toContain("var(--mtrl-sys-color-on-primary)");
+    expect(rule).toContain("clip-path: circle(24px");
   });
 
-  test("the selected disc is no longer a 10% wash", () => {
-    expect(dial).not.toMatch(/selectedBgColor = `rgba\(\$\{primaryRgb\}, 0\.1\)`/);
-  });
-
-  // The centre knob always did this correctly; the rings now agree with it.
-  test("the knob and the rings use the same pair", () => {
-    expect(dial).toContain("colors.onPrimaryColor");
-    expect(dial).toContain("ctx.fillStyle = colors.primaryColor");
+  test("the handle is 48dp, the track 2dp, the centre dot 8dp", () => {
+    expect(ruleFor(".mtrl-time-picker__dial-handle")).toContain("width: 48px");
+    expect(ruleFor(".mtrl-time-picker__dial-track")).toContain("width: 2px");
+    // The centre dot is inset 4px either side of the middle: 8dp across.
+    expect(ruleFor(".mtrl-time-picker__dial-centre")).toContain("inset: calc(50% - 4px)");
   });
 });

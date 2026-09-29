@@ -59,6 +59,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- **Time picker: an accessible DOM dial (FLO-279).** The clock dial is no longer a canvas
+  hidden from assistive tech: it is a listbox of its numbers ("9 o'clock", "20 hours",
+  "15 minutes"), reachable by Tab, moved through with the arrows and selected with Enter or
+  Space, and a pointer can click or drag it. The hand, its 48dp handle and the on-primary
+  label under it move together on the default spatial spring, the short way round, and the
+  dial moves on to minutes once a pointer has picked the hour. Its colours come from the
+  theme. In 24-hour mode noon and midnight now sit on the inner and outer rings at the top
+  (the hand pointed at 00 at noon).
 - **Date picker: the year picker scrolls.** It lists every year from `minDate` to `maxDate`
   (1900 to 2100 by default) in a vertically scrolling grid the height of the calendar, opened
   on the selected year, as the m3.material.io guidelines have it ("To navigate across

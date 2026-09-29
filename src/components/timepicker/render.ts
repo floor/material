@@ -7,9 +7,9 @@ import {
   TIME_FORMAT,
   TIME_PERIOD,
 } from "./types";
-import { TIMEPICKER_DIAL, TIMEPICKER_ICONS } from "./constants";
+import { TIMEPICKER_ICONS } from "./constants";
 import { padZero, convertTo12Hour } from "./utils";
-import { renderClockDial, getTimeValueFromClick } from "./clockdial";
+import { createDial } from "./dial";
 
 import { setHTML } from "../../core/dom/html";
 /**
@@ -170,20 +170,15 @@ export const renderTimePicker = (
     config.type === TIME_PICKER_TYPE.DIAL ? "block" : "none";
   content.appendChild(dialContainer);
 
-  // Create canvas element
-  const canvas = document.createElement("canvas");
-  canvas.className = `${config.prefix}-time-picker__dial-canvas`;
-  canvas.width = TIMEPICKER_DIAL.DIAMETER;
-  canvas.height = TIMEPICKER_DIAL.DIAMETER;
-  canvas.style.width = `${TIMEPICKER_DIAL.DIAMETER}px`;
-  canvas.style.height = `${TIMEPICKER_DIAL.DIAMETER}px`;
-  // Hidden from assistive technology on purpose. The dial is a pointer
-  // convenience drawn into a canvas, which cannot expose a button per number;
-  // the hour and minute inputs are present in both modes and set the same
-  // value, so they are the accessible route (M3: manual entry through text
-  // input rather than exclusively the dial).
-  canvas.setAttribute("aria-hidden", "true");
-  dialContainer.appendChild(canvas);
+  // The dial, in the DOM: a listbox of its numbers, operable by pointer and by
+  // keyboard, with a hand that springs between values. It was a canvas hidden
+  // from assistive tech. FLO-279.
+  const dial = createDial({
+    prefix: config.prefix,
+    format: config.format,
+    onSelect: (value, final, pointer) => selectFromDial(value, final, pointer),
+  });
+  dialContainer.appendChild(dial.element);
 
   // Create actions container
   const actions = document.createElement("div");
@@ -230,18 +225,8 @@ export const renderTimePicker = (
   // Track active selector for clock dial
   let activeSelector: "hour" | "minute" | "second" = "hour";
 
-  // Render initial clock dial if in dial mode
-  if (config.type === TIME_PICKER_TYPE.DIAL) {
-    setTimeout(() => {
-      renderClockDial(canvas, timeValue, {
-        type: config.type,
-        format: config.format,
-        showSeconds: config.showSeconds,
-        prefix: config.prefix,
-        activeSelector,
-      });
-    }, 0);
-  }
+  // The dial shows the time at once; it no longer waits for a canvas to size.
+  dial.update(timeValue, activeSelector);
 
   // The mode toggle is handled once, by the API, which re-renders the picker and
   // keeps focus on the toggle. This listener switched the view in place as well,
@@ -294,13 +279,7 @@ export const renderTimePicker = (
       if (secondsInput) secondsInput.setAttribute("data-active", "false");
 
       // Always update the dial regardless of visibility
-      renderClockDial(canvas, timeValue, {
-        type: TIME_PICKER_TYPE.DIAL,
-        format: config.format,
-        showSeconds: config.showSeconds,
-        prefix: config.prefix,
-        activeSelector,
-      });
+      dial.update(timeValue, activeSelector);
 
       if (timeValue.hours !== previousValue.hours && onTimeChange) {
         onTimeChange("hours", newHours);
@@ -323,13 +302,7 @@ export const renderTimePicker = (
       if (secondsInput) secondsInput.setAttribute("data-active", "false");
 
       // Always update the dial regardless of visibility
-      renderClockDial(canvas, timeValue, {
-        type: TIME_PICKER_TYPE.DIAL,
-        format: config.format,
-        showSeconds: config.showSeconds,
-        prefix: config.prefix,
-        activeSelector,
-      });
+      dial.update(timeValue, activeSelector);
 
       if (timeValue.minutes !== previousValue.minutes && onTimeChange) {
         onTimeChange("minutes", newMinutes);
@@ -352,13 +325,7 @@ export const renderTimePicker = (
       if (secondsInput) secondsInput.setAttribute("data-active", "true");
 
       // Always update the dial regardless of visibility
-      renderClockDial(canvas, timeValue, {
-        type: TIME_PICKER_TYPE.DIAL,
-        format: config.format,
-        showSeconds: config.showSeconds,
-        prefix: config.prefix,
-        activeSelector,
-      });
+      dial.update(timeValue, activeSelector);
 
       if (timeValue.seconds !== previousValue.seconds && onTimeChange) {
         onTimeChange("seconds", newSeconds);
@@ -464,13 +431,7 @@ export const renderTimePicker = (
 
       // Update dial if visible
       if (dialContainer.style.display === "block") {
-        renderClockDial(canvas, timeValue, {
-          type: TIME_PICKER_TYPE.DIAL,
-          format: config.format,
-          showSeconds: config.showSeconds,
-          prefix: config.prefix,
-          activeSelector,
-        });
+        dial.update(timeValue, activeSelector);
       }
 
       if (onTimeChange) {
@@ -537,84 +498,74 @@ export const renderTimePicker = (
     wirePeriod(pmPeriodElement, TIME_PERIOD.PM, TIME_PERIOD.AM);
   }
 
+  // A value picked on the dial: by pointer (dragging updates the fields and the
+  // dial as it goes, and notifies on release) or by keyboard. After a pointer
+  // picks an hour, the dial moves on to minutes once the hand has landed, as in
+  // Compose; not from the keyboard. FLO-279.
+  // The value before a drag began: what a release compares against to notify.
+  let started: TimeValue | null = null;
+  function selectFromDial(value: number, final: boolean, pointer: boolean): void {
+    if (!final && !started) started = { ...timeValue };
+    const previousValue = started ?? { ...timeValue };
+    if (activeSelector === "hour") {
+      let newHours = value;
+
+      // Adjust for 12-hour format
+      if (config.format === TIME_FORMAT.AMPM) {
+        if (timeValue.period === TIME_PERIOD.PM && value !== 12) {
+          newHours += 12;
+        } else if (
+          timeValue.period === TIME_PERIOD.AM &&
+          value === 12
+        ) {
+          newHours = 0;
+        }
+      }
+
+      timeValue.hours = newHours;
+      timeValue.period = newHours >= 12 ? TIME_PERIOD.PM : TIME_PERIOD.AM;
+
+      // Update input display
+      if (config.format === TIME_FORMAT.AMPM) {
+        const displayHours =
+          newHours === 0 ? 12 : newHours > 12 ? newHours - 12 : newHours;
+        hoursInput.value = padZero(displayHours);
+      } else {
+        hoursInput.value = padZero(newHours);
+      }
+
+      if (timeValue.hours !== previousValue.hours && final && onTimeChange) {
+        onTimeChange("hours", newHours);
+      }
+    } else if (activeSelector === "minute") {
+      timeValue.minutes = value;
+      minutesInput.value = padZero(value);
+
+      if (timeValue.minutes !== previousValue.minutes && final && onTimeChange) {
+        onTimeChange("minutes", value);
+      }
+    } else if (activeSelector === "second" && secondsInput) {
+      timeValue.seconds = value;
+      secondsInput.value = padZero(value);
+
+      if (timeValue.seconds !== previousValue.seconds && final && onTimeChange) {
+        onTimeChange("seconds", value);
+      }
+    }
+
+    dial.update(timeValue, activeSelector);
+    if (!final) return;
+    started = null;
+    if (pointer && activeSelector === "hour") {
+      setTimeout(() => { if (dial.element.isConnected && activeSelector === "hour") minutesInput.click(); }, 200);
+    }
+  }
+
   // Set up the clock dial interaction
   if (
     config.type === TIME_PICKER_TYPE.DIAL ||
     dialContainer.style.display === "block"
   ) {
-    // Handle clock dial
-    canvas.addEventListener("click", (event) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      const selectedValue = getTimeValueFromClick(canvas, x, y, {
-        type: TIME_PICKER_TYPE.DIAL,
-        format: config.format,
-        showSeconds: config.showSeconds,
-        prefix: config.prefix,
-        activeSelector,
-      });
-
-      if (selectedValue !== null) {
-        const previousValue = { ...timeValue };
-        if (activeSelector === "hour") {
-          let newHours = selectedValue;
-
-          // Adjust for 12-hour format
-          if (config.format === TIME_FORMAT.AMPM) {
-            if (timeValue.period === TIME_PERIOD.PM && selectedValue !== 12) {
-              newHours += 12;
-            } else if (
-              timeValue.period === TIME_PERIOD.AM &&
-              selectedValue === 12
-            ) {
-              newHours = 0;
-            }
-          }
-
-          timeValue.hours = newHours;
-          timeValue.period = newHours >= 12 ? TIME_PERIOD.PM : TIME_PERIOD.AM;
-
-          // Update input display
-          if (config.format === TIME_FORMAT.AMPM) {
-            const displayHours =
-              newHours === 0 ? 12 : newHours > 12 ? newHours - 12 : newHours;
-            hoursInput.value = padZero(displayHours);
-          } else {
-            hoursInput.value = padZero(newHours);
-          }
-
-          if (timeValue.hours !== previousValue.hours && onTimeChange) {
-            onTimeChange("hours", newHours);
-          }
-        } else if (activeSelector === "minute") {
-          timeValue.minutes = selectedValue;
-          minutesInput.value = padZero(selectedValue);
-
-          if (timeValue.minutes !== previousValue.minutes && onTimeChange) {
-            onTimeChange("minutes", selectedValue);
-          }
-        } else if (activeSelector === "second" && secondsInput) {
-          timeValue.seconds = selectedValue;
-          secondsInput.value = padZero(selectedValue);
-
-          if (timeValue.seconds !== previousValue.seconds && onTimeChange) {
-            onTimeChange("seconds", selectedValue);
-          }
-        }
-
-        // Update dial
-        renderClockDial(canvas, timeValue, {
-          type: TIME_PICKER_TYPE.DIAL,
-          format: config.format,
-          showSeconds: config.showSeconds,
-          prefix: config.prefix,
-          activeSelector,
-        });
-      }
-    });
-
     // Setup clicking on input fields to change active selector in dial mode
     hoursInput.addEventListener("click", () => {
       if (dialContainer.style.display === "block") {
@@ -626,13 +577,7 @@ export const renderTimePicker = (
         if (secondsInput) secondsInput.setAttribute("data-active", "false");
 
         // Update dial
-        renderClockDial(canvas, timeValue, {
-          type: TIME_PICKER_TYPE.DIAL,
-          format: config.format,
-          showSeconds: config.showSeconds,
-          prefix: config.prefix,
-          activeSelector,
-        });
+        dial.update(timeValue, activeSelector);
       }
     });
 
@@ -646,13 +591,7 @@ export const renderTimePicker = (
         if (secondsInput) secondsInput.setAttribute("data-active", "false");
 
         // Update dial
-        renderClockDial(canvas, timeValue, {
-          type: TIME_PICKER_TYPE.DIAL,
-          format: config.format,
-          showSeconds: config.showSeconds,
-          prefix: config.prefix,
-          activeSelector,
-        });
+        dial.update(timeValue, activeSelector);
       }
     });
 
@@ -667,13 +606,7 @@ export const renderTimePicker = (
           secondsInput.setAttribute("data-active", "true");
 
           // Update dial
-          renderClockDial(canvas, timeValue, {
-            type: TIME_PICKER_TYPE.DIAL,
-            format: config.format,
-            showSeconds: config.showSeconds,
-            prefix: config.prefix,
-            activeSelector,
-          });
+          dial.update(timeValue, activeSelector);
         }
       });
     }
