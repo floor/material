@@ -190,7 +190,7 @@ A server-rendered page sends each element as its tag and light DOM; the element 
 <link rel="stylesheet" href="/node_modules/mtrl/dist/elements/preupgrade.css">
 ```
 
-With another tag prefix, `preupgradeStyles('x')` from `mtrl/elements/preupgrade` returns the same stylesheet for `<x-*>`, to inline on the server. The CSS modules (`mtrl/elements/css`) also apply these rules until the elements are defined, for the default prefix and the one given to `configure()` or `define()`. An unsized text field is as wide as 20 average characters of Roboto, as its input is; in another typeface it can differ by a few pixels, so give fields a width in the page's layout.
+With another tag prefix, `preupgradeStyles('x')` from `mtrl/elements/preupgrade` returns the same stylesheet for `<x-*>`, to inline on the server. The CSS modules (`mtrl/elements/css`) also apply these rules until the elements are defined, for the default prefix and the one given to `configure()` or `define()`.
 
 ## Building your own components
 

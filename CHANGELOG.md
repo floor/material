@@ -23,6 +23,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- **An unsized text field, select or date picker is 280px wide** (`TextFieldDefaults.MinWidth`),
+  instead of as wide as its input's 20 average characters. Chrome measures that differently per
+  platform for the same Roboto (167px on macOS, 220px on Linux), so the same page laid out
+  differently, and no pre-upgrade style could match it (FLO-293). A width from the page still
+  applies.
+
+### Changed
+
 - **Icon button: `change` with `{ selected }`, and `toggle` deprecated (FLO-295).** A toggle
   icon button dispatched a DOM `toggle` on its element, which shares its name with the native
   ToggleEvent, so TypeScript typed its listeners wrongly. It now emits `change` through its

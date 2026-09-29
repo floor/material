@@ -254,42 +254,6 @@ const report = (results: Result[]): void => {
 
 const browser = await chromium.launch({ headless: true });
 try {
-  // DIAGNOSTIC (temporary): which font the text field's input uses, here.
-  {
-    const p = await browser.newPage();
-    await p.goto(`http://127.0.0.1:${server.port}/${cases.findIndex((c) => c.element === "textfield")}?pre=0`);
-    await p.evaluate(() => {
-      document.body.insertAdjacentHTML("beforeend",
-        `<input id="dr" style="font:16px Roboto,sans-serif;padding:0;border:0"><input id="ds" style="font:16px sans-serif;padding:0;border:0"><input id="dm" style="font:16px monospace;padding:0;border:0"><span id="dt" style="font:16px Roboto,sans-serif">Ada 0x</span>`);
-    });
-    await p.addScriptTag({ url: "/elements.js", type: "module" });
-    await p.waitForFunction(() => !document.querySelector("#stage :not(:defined)"));
-    await p.waitForTimeout(300);
-    const info = await p.evaluate(() => {
-      const w = (id: string) => (document.getElementById(id) as HTMLElement).getBoundingClientRect().width;
-      const input = document.querySelector("m-textfield")?.shadowRoot?.querySelector("input") as HTMLInputElement;
-      const cs = getComputedStyle(input);
-      const ctx = document.createElement("canvas").getContext("2d") as CanvasRenderingContext2D;
-      const m = (font: string, text: string) => { ctx.font = font; return ctx.measureText(text).width; };
-      return {
-        lightRoboto: w("dr"), lightSans: w("ds"), lightMono: w("dm"),
-        shadowInput: { width: input.getBoundingClientRect().width, font: cs.font, family: cs.fontFamily, padding: cs.padding },
-        canvasZeroRoboto: m("16px Roboto", "0"), canvasZeroSans: m("16px sans-serif", "0"),
-        canvasXRoboto: m("16px Roboto", "x"), fontsCheck: document.fonts.check("16px Roboto"),
-      };
-    });
-    console.log("DIAGNOSTIC", JSON.stringify(info));
-    const cdp = await p.context().newCDPSession(p);
-    await cdp.send("DOM.enable");
-    await cdp.send("CSS.enable");
-    const { root } = (await cdp.send("DOM.getDocument", { depth: -1, pierce: true })) as { root: { nodeId: number } };
-    for (const selector of ["#dt", "#dr", "#ds"]) {
-      const { nodeId } = (await cdp.send("DOM.querySelector", { nodeId: root.nodeId, selector })) as { nodeId: number };
-      const fonts = await cdp.send("CSS.getPlatformFontsForNode", { nodeId });
-      console.log("DIAGNOSTIC platform fonts", selector, JSON.stringify(fonts));
-    }
-    await p.close();
-  }
   // Every element has a default case.
   const kebab = (name: string): string => name.replace(/[A-Z]/g, (ch) => `-${ch.toLowerCase()}`);
   const covered = new Set(cases.filter((item) => item.variant === "default").map((item) => item.element));

@@ -1,22 +1,17 @@
 // src/styles/elements/_datepicker.scss
 // <m-datepicker> before upgrade: the label above the field, the field and the
 // line under it for the supporting text.
-@use 'sass:map';
-@use '../abstract/functions' as f;
 @use '../abstract/variables' as v;
 @use '../abstract/mixins' as m;
 @use '../abstract/theme' as t;
 @use 'config' as c;
-@use 'field';
 
-// As components/_datepicker.scss: the label 4px above the 56px field, which
-// leaves 56px for the calendar button, and 4px + one body-small line under it.
-$field-font-size: map.get(f.get-typography('body-large'), 'font-size');
-
+// As components/_datepicker.scss: the text field's width, the label 4px above
+// the 56px field, and 4px + one body-small line under it.
 @include c.host('datepicker') {
   display: inline-block;
   box-sizing: border-box;
-  width: 20 * field.$average-character-ratio * $field-font-size + v.textfield('padding-horizontal') + 56px + 2 * v.textfield('border-width');
+  width: v.textfield('width');
   vertical-align: baseline;
   white-space: nowrap;
 

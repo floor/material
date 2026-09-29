@@ -6,12 +6,6 @@
 @use '../abstract/mixins' as m;
 @use '../abstract/theme' as t;
 
-// Roboto's average character width. An input without a width is 20 of them
-// wide (the `size` default), which no CSS unit expresses: in another font
-// the unsized field's width differs by the fonts' difference.
-$average-character-ratio: 0.522;
-$average-character: $average-character-ratio * 1em;
-
 /**
  * The field: a text field, or a select (`$trailing`: the space its trailing
  * icon takes beside the text).
@@ -20,7 +14,8 @@ $average-character: $average-character-ratio * 1em;
   display: inline-block;
   position: relative;
   box-sizing: border-box;
-  width: calc(20 * #{$average-character} + #{2 * v.textfield('padding-horizontal') + $trailing});
+  // The unsized field's width, as components/_textfield.scss sets it.
+  width: v.textfield('width');
   height: v.textfield('height');
   // The input's line: its text is centred in the space its padding leaves.
   padding: 22px (v.textfield('padding-horizontal') + $trailing) 0 v.textfield('padding-horizontal');
@@ -54,10 +49,6 @@ $average-character: $average-character-ratio * 1em;
 
   &[variant='outlined'] {
     padding-top: 15.5px;
-    @if $trailing > 0 {
-      // The outlined input keeps its end padding inside the 1px outline.
-      width: calc(20 * #{$average-character} + #{2 * v.textfield('padding-horizontal') + $trailing + 1px});
-    }
     border: v.textfield('border-width') solid t.color('outline');
     border-radius: v.textfield('border-radius');
     background: none;
