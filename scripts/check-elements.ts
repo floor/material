@@ -290,7 +290,9 @@ try {
       w.events = [];
       w.clicks = 0;
       const ib = document.getElementById("ib");
-      ib?.addEventListener("toggle", (e) => (w.events as unknown[]).push((e as CustomEvent).detail));
+      // `change` (FLO-295), and the deprecated `toggle` beside it for one release.
+      ib?.addEventListener("change", (e) => (w.events as unknown[]).push({ change: (e as CustomEvent).detail }));
+      ib?.addEventListener("toggle", (e) => (w.events as unknown[]).push({ toggle: (e as CustomEvent).detail }));
       ib?.addEventListener("click", () => (w.clicks = (w.clicks as number) + 1));
     });
     await page.getByRole("button", { name: "Favorite" }).click();
@@ -299,9 +301,9 @@ try {
       const ib = document.getElementById("ib") as HTMLElement & { selected: boolean };
       return { events: w.events, clicks: w.clicks, selected: ib.selected };
     });
-    assert.deepEqual(state, { events: [{ selected: true }], clicks: 1, selected: true });
+    assert.deepEqual(state, { events: [{ change: { selected: true } }, { toggle: { selected: true } }], clicks: 1, selected: true });
     assert.equal(await page.getByRole("button", { name: "Favorite", pressed: true }).count(), 1);
-    check("icon button: a click dispatches one toggle from the host with the typed detail; click stays native");
+    check("icon button: a click dispatches one change from the host with { selected }, and the deprecated toggle; click stays native");
 
     state = await page.evaluate(() => {
       const w = window as unknown as Win;

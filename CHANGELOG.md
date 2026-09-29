@@ -22,6 +22,17 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 - **Text field:** `TEXTFIELD_CLASSES.LABEL_FLOATING`, applied and styled nowhere (FLO-295).
 
+### Changed
+
+- **Icon button: `change` with `{ selected }`, and `toggle` deprecated (FLO-295).** A toggle
+  icon button dispatched a DOM `toggle` on its element, which shares its name with the native
+  ToggleEvent, so TypeScript typed its listeners wrongly. It now emits `change` through its
+  emitter, as a switch or checkbox reports its state; `<m-icon-button>` dispatches `change`
+  with `{ selected }`, as `<m-switch>` and `<m-checkbox>` do, and the adapters get
+  `onChange` / `@change`. Migration: `button.element.addEventListener('toggle', …)` or
+  `<m-icon-button>`'s `toggle` becomes `button.on('change', ({ selected }) => …)` or
+  `change`. `toggle` is still dispatched, deprecated, until the next release.
+
 ## [0.10.0-next.3] - 2026-09-29
 
 The third prerelease of 0.10.0, on the npm `next` tag (`npm install mtrl@next`); `latest`

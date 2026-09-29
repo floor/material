@@ -232,10 +232,15 @@ export interface ToggleManager {
 }
 
 /**
- * Native events forwarded through the icon button's emitter.
- * Toggle notifications are DOM-only events: listen on `element` for those.
+ * The icon button's events: native ones forwarded through its emitter, and a
+ * toggle button's `change`.
  */
 export interface IconButtonEvents {
+  /**
+   * A toggle button's selected state changed on a click (FLO-295). The DOM
+   * `toggle` event on `element` is deprecated and goes in the next release.
+   */
+  change: (payload: { selected: boolean }) => void;
   /** Clicks are not forwarded while the button is disabled. */
   click: (payload: ForwardedEventPayload<MouseEvent, HTMLButtonElement>) => void;
   /** The button took focus. */
