@@ -10,6 +10,7 @@ export type {
   SearchEvent,
   SearchState,
   SearchViewMode,
+  SearchVariant,
   SearchEventType,
   SearchSuggestion,
   SearchTrailingItem,

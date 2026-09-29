@@ -6,6 +6,7 @@ import {
   SearchState,
   SearchStructure,
   SearchViewMode,
+  SearchVariant,
 } from "../types";
 import {
   SEARCH_STATES,
@@ -43,6 +44,7 @@ export const withStates =
   let currentState: SearchState = config.initialState || SEARCH_STATES.BAR;
   let currentViewMode: SearchViewMode =
     config.viewMode || SEARCH_VIEW_MODES.DOCKED;
+  let currentVariant: SearchVariant = config.variant === "divided" ? "divided" : "contained";
   let isDisabled = config.disabled === true;
 
   // Helper to get prefixed class names
@@ -255,6 +257,16 @@ export const withStates =
     }
   };
 
+  /** Sets the variant, contained or divided (FLO-287). */
+  const setVariant = (variant: SearchVariant): void => {
+    if (variant === currentVariant) return;
+    component.element.classList.replace(
+      getClass(currentVariant === "divided" ? SEARCH_CLASSES.VARIANT_DIVIDED : SEARCH_CLASSES.VARIANT_CONTAINED),
+      getClass(variant === "divided" ? SEARCH_CLASSES.VARIANT_DIVIDED : SEARCH_CLASSES.VARIANT_CONTAINED),
+    );
+    currentVariant = variant;
+  };
+
   /**
    * Disables the component
    */
@@ -413,6 +425,10 @@ export const withStates =
        * Gets the current view mode
        */
       getViewMode: (): SearchViewMode => currentViewMode,
+
+      setVariant,
+
+      getVariant: (): SearchVariant => currentVariant,
 
       /**
        * Updates populated state

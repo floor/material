@@ -207,6 +207,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- **Search: the contained style by default, with `variant: 'divided'` for the baseline
+  (FLO-287).** M3 marks the divided style "not recommended, use contained" in M3 Expressive,
+  and it was the only one mtrl drew. Contained keeps the bar's pill and filled container
+  when focused and gives the results their own container: docked 2dp below the bar with
+  12dp corners, full screen on `surface-container-low` with the bar inset 12dp. `variant:
+  'divided'` (and `setVariant()`) keeps the look apps had. The results reveal on the
+  emphasized decelerate curve, not with reduced motion; the never-driven `--expanding` and
+  `--collapsing` classes are gone.
 - **Time picker: edits are a draft until OK (FLO-288).** Every move of the dial was the value,
   with a `change` each time, and Cancel kept it; in M3, Cancel discards and OK commits, as
   the date picker already did. While open, the dial, fields and AM/PM edit a draft,
