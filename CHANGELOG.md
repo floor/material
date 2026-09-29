@@ -10,6 +10,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+## [0.10.0-next.2] - 2026-09-29
+
+The second prerelease of 0.10.0, on the npm `next` tag (`npm install mtrl@next`); `latest`
+stays at 0.9.8. Fourteen components now ship as custom elements with React, Vue, Svelte
+and Solid components: icon button, FAB, extended FAB, checkbox, radios, slider, text field,
+progress, loading indicator, badge and divider join button, switch and tabs, and every
+element's model attribute now behaves as on native controls. On the conformance side, the
+time picker gets an accessible dial and a native modal, the date picker a full-screen
+variant and a scrolling year picker, and the outlined text field an M3 notched outline.
+
 ### Added
 
 - **Date picker: a full-screen variant, `variant: 'fullscreen'`.** The m3.material.io
@@ -103,7 +113,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   per ancestor and a `themechange` listener for each field. The notch follows the label's
   text, density and direction; the outline is 1dp in `outline` at rest, `on-surface` on
   hover and 2dp `primary` on focus, in `error` for errors and `on-surface` at 12% disabled.
-- **Selection controls: one label type.** The checkbox, radio and switch labels are all Body
+- **Selection controls: one label type (FLO-282).** The checkbox, radio and switch labels are all Body
   Large, a list item's headline. The radio label was Body Medium with a 1.2 line height, and
   the switch label Title Medium enlarged to 18px.
 - **Time picker: a native modal dialog (FLO-278).** It opens with `showModal()`, over a
@@ -574,7 +584,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.0-next.1...HEAD
+[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.0-next.2...HEAD
+[0.10.0-next.2]: https://github.com/floor/mtrl/compare/v0.10.0-next.1...v0.10.0-next.2
 [0.10.0-next.1]: https://github.com/floor/mtrl/compare/v0.10.0-next.0...v0.10.0-next.1
 [0.10.0-next.0]: https://github.com/floor/mtrl/compare/v0.9.8...v0.10.0-next.0
 [0.9.8]: https://github.com/floor/mtrl/compare/v0.9.6...v0.9.8
