@@ -1,6 +1,7 @@
 // src/components/timepicker/dial.ts
 
 import { TIME_FORMAT, TimeValue } from "./types";
+import { activeElementOf } from "../../core/dom/focus";
 
 /** Which part of the time the dial is setting. */
 export type DialSelector = "hour" | "minute" | "second";
@@ -13,6 +14,11 @@ export interface DialOptions {
    * when it is released or a key selects; `pointer` says which it was.
    */
   onSelect: (value: number, final: boolean, pointer: boolean) => void;
+  /**
+   * Whether a value can be picked (minTime, maxTime and the steps, FLO-281).
+   * Numbers it rejects are disabled; all can be picked without it.
+   */
+  allowed?: (selector: DialSelector, value: number) => boolean;
 }
 
 export interface Dial {
@@ -141,7 +147,10 @@ export const createDial = (options: DialOptions): Dial => {
   const update = (time: TimeValue, next: DialSelector) => {
     // Rebuilding the face removes the focused number; focus moves to the new
     // face's tab stop rather than falling back to the dialog.
-    const refocus = next !== selector && numbers.contains(document.activeElement);
+    // Read from the dial's own root: inside a shadow root the document sees only
+    // the host (FLO-284).
+    const focused = activeElementOf(element);
+    const refocus = next !== selector && numbers.contains(focused);
     if (next !== selector) build(next);
     current = dialValue(time, next, format);
     const index = items.findIndex(item => item.value === current);
@@ -155,7 +164,9 @@ export const createDial = (options: DialOptions): Dial => {
     const stop = nearest(current);
     numbers.querySelectorAll<HTMLElement>("[role=option]").forEach((option, i) => {
       option.setAttribute("aria-selected", String(i === index));
-      if (option !== document.activeElement) option.tabIndex = i === stop ? 0 : -1;
+      if (options.allowed?.(next, items[i].value) === false) option.setAttribute("aria-disabled", "true");
+      else option.removeAttribute("aria-disabled");
+      if (option !== focused) option.tabIndex = i === stop ? 0 : -1;
     });
     if (refocus) numbers.querySelector<HTMLElement>('[tabindex="0"]')?.focus({ preventScroll: true });
   };

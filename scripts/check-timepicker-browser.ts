@@ -185,7 +185,8 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.destroy());
   assert.equal(await page.locator(".mtrl-time-picker__dialog").count(), 0);
   await checkTimePickerTokens(page);
-  console.log("Passed packed Time Picker: BEM layout, dial/input switching, AM/PM, input edits, form value, format/orientation, a native modal dialog with its own Escape and focus return, the DOM dial (positions, 24h rings, keyboard, drag, spring), its hour and minute radios, the M3 sizes and colours of each variant (FLO-280), and teardown.");
+  await checkTimePickerShadow(page);
+  console.log("Passed packed Time Picker: BEM layout, dial/input switching, AM/PM, input edits, form value, format/orientation, a native modal dialog with its own Escape and focus return, the DOM dial (positions, 24h rings, keyboard, drag, spring), its hour and minute radios, the M3 sizes and colours of each variant (FLO-280), focus inside a shadow root (FLO-284), and teardown.");
 }
 
 /**
@@ -252,4 +253,38 @@ async function checkTimePickerTokens(page: Page): Promise<void> {
   const rtl = await measure({ type: "dial", format: "12h" }, "rtl");
   assert.ok(rtl.hours!.left < rtl.minutes!.left, "rtl: hours before minutes, left to right");
   assert.equal(rtl.selectors!.left - rtl.period!.right, 12, "rtl: AM/PM on the left, 12dp from the time");
+}
+
+/**
+ * FLO-284: inside a shadow root, as in a web component, where the document sees
+ * only the host. The dial keeps focus on its numbers when its face changes, and
+ * closing returns focus to the opener inside the root.
+ */
+async function checkTimePickerShadow(page: Page): Promise<void> {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.evaluate(() => {
+    const state = window as unknown as TimePickerWindow;
+    // A focusable host, as custom elements often are.
+    const host = document.createElement("div"); host.id = "time-host"; host.tabIndex = -1; document.body.append(host);
+    const root = host.attachShadow({ mode: "open" });
+    for (const style of document.querySelectorAll("style")) root.append(style.cloneNode(true));
+    const opener = document.createElement("button"); opener.id = "time-opener"; opener.textContent = "Pick a time"; root.append(opener);
+    const holder = document.createElement("div"); root.append(holder);
+    state.timePicker = state.createTimePicker({ value: "09:30", container: holder });
+    opener.focus();
+    state.timePicker.open();
+  });
+  const focused = () => page.evaluate(() => {
+    const active = document.getElementById("time-host")!.shadowRoot!.activeElement as HTMLElement | null;
+    return active ? active.getAttribute("aria-label") || active.id || active.textContent : null;
+  });
+  assert.equal(await page.evaluate(() => document.getElementById("time-host")!.shadowRoot!.contains((window as unknown as TimePickerWindow).timePicker.dialogElement)), true, "the dialog is inside the shadow root");
+  // A mouse click on a number focuses it; the pick moves the dial to minutes,
+  // and focus follows onto the new face.
+  await page.getByRole("option", { name: "3 o'clock" }).click();
+  await page.waitForFunction(() => document.getElementById("time-host")!.shadowRoot!.querySelector(".mtrl-time-picker__dial-face")?.getAttribute("aria-label") === "Minute");
+  assert.equal(await focused(), "30 minutes", "in a shadow root, focus moves onto the minutes face");
+  await page.keyboard.press("Escape");
+  assert.equal(await focused(), "time-opener", "closing returns focus to the opener inside the shadow root");
+  await page.evaluate(() => { (window as unknown as TimePickerWindow).timePicker.destroy(); document.getElementById("time-host")?.remove(); });
 }

@@ -74,52 +74,6 @@ export const getContainerConfig = (config: ResolvedTimePickerConfig) => {
 };
 
 /**
- * Generates element configuration for the TimePicker modal
- * @param {TimePickerConfig} config - TimePicker configuration
- * @returns {Object} Element configuration object for withElement
- */
-export const getModalConfig = (config: ResolvedTimePickerConfig) => {
-  return createElementConfig(config, {
-    tag: "div",
-    attributes: {
-      role: "presentation",
-    },
-    className: `${config.prefix}-time-picker__modal`,
-    forwardEvents: {
-      click: (component, event) => {
-        // Only close if clicking directly on the modal backdrop
-        if (event.target === component.element) {
-          return true;
-        }
-        return false;
-      },
-    },
-    interactive: true,
-  });
-};
-
-/**
- * Generates element configuration for the TimePicker dialog
- * @param {TimePickerConfig} config - TimePicker configuration
- * @returns {Object} Element configuration object for withElement
- */
-export const getDialogConfig = (config: ResolvedTimePickerConfig) => {
-  return createElementConfig(config, {
-    tag: "div",
-    className: [
-      `${config.prefix}-time-picker__dialog`,
-      `${config.prefix}-time-picker__dialog--${config.type}`,
-      `${config.prefix}-time-picker__dialog--${config.orientation}`,
-      `${config.prefix}-time-picker__dialog--${config.format}`,
-    ],
-    forwardEvents: {
-      click: true,
-    },
-    interactive: true,
-  });
-};
-
-/**
  * Creates API configuration for the TimePicker component
  * @param {Object} comp - Component with events and lifecycle features
  * @returns {Object} API configuration object

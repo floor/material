@@ -66,53 +66,6 @@ export const parseTime = (
 };
 
 /**
- * Formats a TimeValue object as a time string
- * @param {TimeValue} timeValue - Time value to format
- * @param {boolean} use24HourFormat - Whether to use 24-hour format
- * @returns {string} Formatted time string
- */
-export const formatTime = (
-  timeValue: TimeValue,
-  use24HourFormat: boolean
-): string => {
-  const { hours, minutes, seconds } = timeValue;
-
-  if (use24HourFormat) {
-    if (seconds !== undefined) {
-      return `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
-    }
-    return `${padZero(hours)}:${padZero(minutes)}`;
-  } else {
-    // Convert 24-hour to 12-hour display format
-    let displayHours = hours % 12;
-    if (displayHours === 0) {
-      displayHours = 12;
-    }
-
-    if (seconds !== undefined) {
-      return `${padZero(displayHours)}:${padZero(minutes)}:${padZero(
-        seconds
-      )} ${timeValue.period}`;
-    }
-    return `${padZero(displayHours)}:${padZero(minutes)} ${timeValue.period}`;
-  }
-};
-
-/**
- * Converts 12-hour format to 24-hour format
- * @param {number} hours - Hours in 12-hour format (1-12)
- * @param {TIME_PERIOD} period - Period (AM or PM)
- * @returns {number} Hours in 24-hour format (0-23)
- */
-export const convertTo24Hour = (hours: number, period: TIME_PERIOD): number => {
-  if (period === TIME_PERIOD.AM) {
-    return hours === 12 ? 0 : hours;
-  } else {
-    return hours === 12 ? 12 : hours + 12;
-  }
-};
-
-/**
  * Converts 24-hour format to 12-hour format
  * @param {number} hours24 - Hours in 24-hour format (0-23)
  * @returns {object} Object with hours in 12-hour format and period
@@ -129,150 +82,78 @@ export const convertTo12Hour = (
   return { hours: hours12, period };
 };
 
-/**
- * Calculates angle for clock dial based on time value
- * @param {number} value - Time value (hour 0-23 or minute/second 0-59)
- * @param {number} max - Maximum value (12 for hours in 12h format, 24 for 24h, 60 for minutes/seconds)
- * @returns {number} Angle in degrees
- */
-export const getAngle = (value: number, max: number): number => {
-  return (value / max) * 360;
+/** The earliest and latest selectable times, in seconds since midnight. */
+export interface TimeLimits {
+  min: number;
+  max: number;
+}
+
+const LAST_SECOND = 24 * 3600 - 1;
+
+/** Seconds since midnight of an `HH:MM` or `HH:MM:SS` bound; undefined if absent or invalid. */
+const secondsOf = (time: string | undefined): number | undefined => {
+  if (!time) return undefined;
+  const [h, m, sec = 0] = time.split(":").map(part => parseInt(part, 10));
+  if ([h, m, sec].some(Number.isNaN) || h < 0 || h > 23 || m < 0 || m > 59 || sec < 0 || sec > 59) return undefined;
+  return h * 3600 + m * 60 + sec;
 };
 
 /**
- * Calculates coordinates for a point on a circle
- * @param {number} radius - Circle radius
- * @param {number} angle - Angle in degrees
- * @returns {object} Coordinates { x, y }
+ * The limits `minTime` and `maxTime` set (FLO-281). Missing or invalid bounds
+ * leave the day open at that end.
  */
-export const getCoordinates = (
-  radius: number,
-  angle: number
-): { x: number; y: number } => {
-  // Convert angle to radians and adjust to start from top (subtract 90 degrees)
-  // In CSS, 0 degrees is at 3 o'clock position, so we subtract 90 to start from 12 o'clock
-  const radians = ((angle - 90) * Math.PI) / 180;
+export const limitsOf = (minTime?: string, maxTime?: string): TimeLimits => ({
+  min: secondsOf(minTime) ?? 0,
+  max: secondsOf(maxTime) ?? LAST_SECOND,
+});
 
-  return {
-    x: radius * Math.cos(radians),
-    y: radius * Math.sin(radians),
-  };
-};
+/** Whether any moment from `from` to `to` (seconds, inclusive) is within the limits. */
+export const reachable = (limits: TimeLimits, from: number, to: number = from): boolean =>
+  from <= limits.max && to >= limits.min;
+
+/** Seconds since midnight of a time value. */
+export const secondsOfTime = (time: TimeValue): number =>
+  time.hours * 3600 + time.minutes * 60 + (time.seconds ?? 0);
 
 /**
- * Calculates time value from click position on dial
- * @param {number} centerX - X coordinate of the dial center
- * @param {number} centerY - Y coordinate of the dial center
- * @param {number} clickX - X coordinate of the click position
- * @param {number} clickY - Y coordinate of the click position
- * @param {number} max - Maximum value (12 for hours in 12h format, 24 for 24h, 60 for minutes/seconds)
- * @param {number} innerRadius - Inner radius for 24-hour clock inner ring
- * @param {number} outerRadius - Outer radius for dial
- * @returns {number} Calculated time value
+ * The nearest selectable time: inside the limits and on the minute and second
+ * steps. A time before the earliest moves up to the first step at or after it,
+ * one after the latest down to the last step at or before it (FLO-281).
  */
-export const getTimeFromPosition = (
-  centerX: number,
-  centerY: number,
-  clickX: number,
-  clickY: number,
-  max: number,
-  innerRadius?: number,
-  outerRadius?: number
-): number => {
-  // Calculate angle from center to click position
-  const deltaX = clickX - centerX;
-  const deltaY = clickY - centerY;
-
-  // Calculate angle in degrees (0 at top, clockwise)
-  let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI) + 90;
-  if (angle < 0) {
-    angle += 360;
-  }
-
-  // Calculate distance from center
-  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-  // For 24h clock, check if click is in inner or outer ring
-  if (max === 24 && innerRadius && outerRadius) {
-    const isInnerRing = distance < (innerRadius + outerRadius) / 2;
-
-    // Calculate value based on angle
-    let value = Math.round((angle / 360) * 12);
-    if (value === 0) {
-      value = 12;
-    }
-
-    // Adjust for inner ring (add 12 hours)
-    if (isInnerRing) {
-      value = value === 12 ? 0 : value + 12;
-    }
-
-    return value;
-  }
-
-  // For standard 12h clock or minutes/seconds
-  let value = Math.round((angle / 360) * max);
-  if (value === max) {
-    value = 0;
-  }
-
-  return value;
-};
-
-/**
- * Checks if a time is within min/max constraints
- * @param {TimeValue} time - Time value to check
- * @param {string} minTime - Minimum time in 24-hour format (HH:MM or HH:MM:SS)
- * @param {string} maxTime - Maximum time in 24-hour format (HH:MM or HH:MM:SS)
- * @returns {boolean} Whether the time is within constraints
- */
-export const isTimeWithinConstraints = (
+export const constrainTime = (
   time: TimeValue,
-  minTime?: string,
-  maxTime?: string
-): boolean => {
-  if (!minTime && !maxTime) {
-    return true;
-  }
-
-  const timeToCheck =
-    time.hours * 3600 + time.minutes * 60 + (time.seconds || 0);
-
-  if (minTime) {
-    const minParts = minTime.split(":");
-    const minHours = parseInt(minParts[0], 10);
-    const minMinutes = parseInt(minParts[1], 10);
-    const minSeconds = minParts[2] ? parseInt(minParts[2], 10) : 0;
-    const minValue = minHours * 3600 + minMinutes * 60 + minSeconds;
-
-    if (timeToCheck < minValue) {
-      return false;
-    }
-  }
-
-  if (maxTime) {
-    const maxParts = maxTime.split(":");
-    const maxHours = parseInt(maxParts[0], 10);
-    const maxMinutes = parseInt(maxParts[1], 10);
-    const maxSeconds = maxParts[2] ? parseInt(maxParts[2], 10) : 0;
-    const maxValue = maxHours * 3600 + maxMinutes * 60 + maxSeconds;
-
-    if (timeToCheck > maxValue) {
-      return false;
-    }
-  }
-
-  return true;
+  limits: TimeLimits,
+  minuteStep = 1,
+  secondStep = 1
+): TimeValue => {
+  const lastSecond = 59 - (59 % secondStep);
+  const split = (total: number) => [Math.floor(total / 3600), Math.floor((total % 3600) / 60), total % 60];
+  // The last step at or before `total`.
+  const down = (total: number): number => {
+    const [h, m, sec] = split(total);
+    return m % minuteStep ? h * 3600 + (m - (m % minuteStep)) * 60 + lastSecond : h * 3600 + m * 60 + sec - (sec % secondStep);
+  };
+  // The first step at or after `total`.
+  const up = (total: number): number => {
+    const [h, m, sec] = split(total);
+    if (m % minuteStep) return Math.min(LAST_SECOND, h * 3600 + (m + minuteStep - (m % minuteStep)) * 60);
+    const next = sec % secondStep ? sec + secondStep - (sec % secondStep) : sec;
+    return next < 60 ? h * 3600 + m * 60 + next : Math.min(LAST_SECOND, h * 3600 + (m + minuteStep) * 60);
+  };
+  let total = secondsOfTime(time);
+  if (total < limits.min) total = Math.min(up(limits.min), limits.max);
+  else if (total > limits.max) total = Math.max(down(limits.max), limits.min);
+  else return time;
+  const [hours, minutes, seconds] = split(total);
+  return { hours, minutes, seconds, period: hours >= 12 ? TIME_PERIOD.PM : TIME_PERIOD.AM };
 };
 
 /**
  * Formats a time for submission in a form: 24-hour `HH:mm`, or `HH:mm:ss`
  * when the picker shows seconds.
  *
- * Separate from `formatTime` on purpose. What a form submits should not change
- * because the picker happens to display 12-hour time, and `formatTime` appends
- * seconds whenever the value carries them — which it always does, since the
- * picker stores 0 when seconds are hidden.
+ * What a form submits does not change with the picker's 12-hour display, and
+ * carries seconds only when the picker shows them (it stores 0 otherwise).
  *
  * @param timeValue - Current time value, whose hours are 24-hour
  * @param showSeconds - Whether the picker shows seconds

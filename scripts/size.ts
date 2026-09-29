@@ -148,7 +148,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   timepicker: kb(10.3),
   "top-app-bar": kb(4.4),
   tooltip: kb(5.6),
-  all: kb(110.2), // the conformance work above, measured 2026-09-29; the menu's top layer to 112,692
+  all: kb(110.7), // the conformance work above; the menu's top layer (#251) and the time picker limits and steps (FLO-281): 113,297
 };
 
 export interface SizeGateInput {

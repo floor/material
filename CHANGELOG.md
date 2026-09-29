@@ -83,6 +83,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Time picker: `minTime`, `maxTime`, `minuteStep` and `secondStep` are applied
+  (FLO-281).** They were accepted and documented, and did nothing. Dial numbers and AM/PM
+  that cannot be reached are disabled (at 38%), a pointer between labels picks the nearest
+  step, a picked time outside the limits moves to the nearest one inside, and a typed time
+  is held to them when committed (on change or Enter), not while typing. `setValue` is not
+  held to them.
+- **Time picker: focus inside a shadow root (FLO-284).** The dial kept focus on its numbers
+  when its face changed, and closing returned focus to the opener, only when the document
+  could see them; inside a web component it saw the host.
 - **Time picker: M3 sizes and colours in every variant (FLO-280).** Dial mode's boxes are
   96x80dp in Display Large (114dp wide in the 24-hour vertical layout), the colon 24dp and
   on-surface. Input mode's fields are 96x72dp in Display Medium, labelled Hour and Minute
@@ -98,6 +107,21 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   modal, a swipe or the growing full-screen list lost the focused day, and closing could
   return focus to the host rather than the control that opened it. It now reads focus from
   its own root, and the opener through open shadow roots.
+
+### Changed
+
+- **Time picker: `change` fires once per new value (FLO-281).** `setFormat` no longer emits
+  `change` (the value is 24-hour whatever the display, and it emitted without calling
+  `onChange`), and `setValue` notifies only when the value differs, with the event and
+  `onChange` together.
+
+### Deprecated
+
+- **Time picker (FLO-281):** `closeOnSelect` (never applied; the picker is confirmed with
+  OK), `TIMEPICKER_DIAL` (not the dial's geometry, which is CSS), `TIMEPICKER_Z_INDEX`
+  (the native top layer needs none), `TIMEPICKER_CLASSES` (use `TIMEPICKER_SELECTORS`;
+  its `DIAL_CENTER` and `PERIOD_ACTIVE` now name the classes the picker uses), and the
+  selectors `MODAL`, `DIAL_CANVAS` and `DIAL_HAND`, which match nothing.
 
 ## [0.10.0-next.2] - 2026-09-29
 

@@ -141,29 +141,35 @@ export interface TimePickerConfig {
   /**
    * Whether to close the picker when time is selected
    * @default true
+   * @deprecated Never applied, and has no effect: the time picker is confirmed
+   * with OK, as M3 specifies (FLO-281).
    */
   closeOnSelect?: boolean;
 
   /**
-   * Minimum selectable time in 24-hour format (HH:MM)
+   * Earliest selectable time, 24-hour `HH:MM` or `HH:MM:SS`. Dial numbers and
+   * AM/PM that cannot reach it are disabled, and a picked or typed time before
+   * it moves up to it. `setValue` is not held to it.
    * @example '09:00'
    */
   minTime?: string;
 
   /**
-   * Maximum selectable time in 24-hour format (HH:MM)
+   * Latest selectable time, 24-hour `HH:MM` or `HH:MM:SS`; as `minTime`, at the
+   * other end.
    * @example '18:00'
    */
   maxTime?: string;
 
   /**
-   * Step interval for minute selection in minutes
+   * Minute step: dial minutes off it are disabled, a pointer between them picks
+   * the nearest, and a typed minute rounds to it when committed.
    * @default 1
    */
   minuteStep?: number;
 
   /**
-   * Step interval for second selection in seconds
+   * Second step, as `minuteStep`, when seconds are shown.
    * @default 1
    */
   secondStep?: number;
