@@ -67,6 +67,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Selection controls: one label type.** The checkbox, radio and switch labels are all Body
+  Large, a list item's headline. The radio label was Body Medium with a 1.2 line height, and
+  the switch label Title Medium enlarged to 18px.
 - **Time picker: a native modal dialog (FLO-278).** It opens with `showModal()`, over a
   0.32 scrim, with the page inert; it takes focus on open and returns it on close. Escape and
   a click on the backdrop cancel that picker only (Escape closed every open picker, and the
