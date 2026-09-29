@@ -109,6 +109,18 @@ describe("Material date picker", () => {
     key(day(picker, '2025-03-01'), 'Home'); expect(document.activeElement).toBe(day(picker, '2025-02-23'));
     expect(picker.element.querySelectorAll('[data-date][tabindex="0"]')).toHaveLength(1);
   });
+  // FLO-275: the year picker is one scrolling list, from minDate to maxDate or
+  // 1900-2100, with no arrows to page it.
+  test("the year view lists every allowed year, with no paging arrows", () => {
+    const bounded = mount({ minDate: '2019-03-01', maxDate: '2031-06-30' }); bounded.open(); bounded.calendar.showYearView();
+    const years = Array.from(bounded.element.querySelectorAll('[data-year]')).map(el => Number(el.getAttribute('data-year')));
+    expect([years[0], years.at(-1), years.length]).toEqual([2019, 2031, 13]);
+    expect(bounded.element.querySelector('[data-action="prev"], [data-action="next"]')).toBeNull();
+    const open = mount(); open.open(); open.calendar.showYearView();
+    const all = open.element.querySelectorAll('[data-year]');
+    expect([all[0].getAttribute('data-year'), all[all.length - 1].getAttribute('data-year')]).toEqual(['1900', '2100']);
+  });
+
   test("month/year views expose navigation and keyboard focus", () => {
     const picker = mount(); picker.open(); picker.calendar.showYearView();
     const selected = query(picker, '[data-year="2026"]'); selected.focus(); key(selected, 'ArrowRight');

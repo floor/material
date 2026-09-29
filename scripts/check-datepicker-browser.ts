@@ -104,7 +104,21 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
   await page.locator('[data-action="next"]').click();
   assert.equal(await month(), 'November 2026', 'reduced motion changes the month without sliding');
   await page.emulateMedia({ reducedMotion: 'no-preference' });
+  // FLO-275: the year picker scrolls vertically in the calendar's own height, opened
+  // with the selected year in the middle, and has no paging arrows.
+  const calendarHeight = await page.locator('.mtrl-datepicker__track').evaluate(el => el.getBoundingClientRect().height);
+  await page.locator('[data-action="year"]').click();
+  const years = await page.locator('.mtrl-datepicker__years').evaluate(list => {
+    const selected = list.querySelector<HTMLElement>('[aria-pressed="true"]')!;
+    const l = list.getBoundingClientRect(), s = selected.getBoundingClientRect();
+    return { height: l.height, scrolls: list.scrollHeight > list.clientHeight, selected: selected.dataset.year, offCentre: Math.abs((s.top + s.height / 2) - (l.top + l.height / 2)), arrows: document.querySelectorAll('dialog [data-action="prev"], dialog [data-action="next"]').length };
+  });
+  assert.equal(years.height, calendarHeight, 'the year list takes the calendar height');
+  assert.equal(years.scrolls, true, 'the year list scrolls');
+  assert.equal(years.selected, '2026', 'the selected year is the current one');
+  assert.ok(years.offCentre <= 30, `the selected year opens in the middle (${years.offCentre}px off)`);
+  assert.equal(years.arrows, 0, 'no paging arrows on the year list');
   await page.evaluate(() => (window as unknown as PickerWindow).picker.destroy());
   assert.equal(await page.locator('.mtrl-datepicker').count(), 0);
-  console.log('Passed packed date picker: selective CSS, token geometry, native modal/scrim, focus, keyboard, input validation, draft/commit/cancel, range, themes, mobile, month swiping in both directions and cleanup.');
+  console.log('Passed packed date picker: selective CSS, token geometry, native modal/scrim, focus, keyboard, input validation, draft/commit/cancel, range, themes, mobile, month swiping in both directions, the scrolling year list and cleanup.');
 }

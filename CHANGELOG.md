@@ -10,6 +10,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Changed
+
+- **Date picker: the year picker scrolls.** It lists every year from `minDate` to `maxDate`
+  (1900 to 2100 by default) in a vertically scrolling grid the height of the calendar, opened
+  on the selected year, as the m3.material.io guidelines have it ("To navigate across
+  years, scroll vertically"). It was ±10 years paged by the arrows, which the year view no
+  longer shows (FLO-275).
+
 ## [0.10.0-next.1] - 2026-09-29
 
 A prerelease of 0.10.0, the conformance and frameworks release, on the npm `next` tag

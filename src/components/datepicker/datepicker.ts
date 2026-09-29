@@ -77,9 +77,13 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
   const track = () => dialog.querySelector<HTMLElement>(`.${cls("track")}`);
   const rtl = (element: HTMLElement) => view.getComputedStyle(element).direction === "rtl";
   // The current month is the middle page; re-centred without motion after each render.
+  // The year list opens with the selected year in its middle. FLO-274, FLO-275.
   const centre = () => {
     const element = track();
     if (element?.clientWidth) element.scrollLeft = (rtl(element) ? -1 : 1) * element.clientWidth;
+    const years = dialog.querySelector<HTMLElement>(`.${cls("years")}`);
+    const year = years?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (years && year) years.scrollTop = year.offsetTop - (years.clientHeight - year.offsetHeight) / 2;
   };
   const render = (focus = false, action?: string) => {
     if (!opened || destroyed) return;
@@ -172,7 +176,8 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     if (settings.closeOnSelect && (state.selectionMode !== "range" || state.rangeEndDate)) close(); else render(true);
   };
   const navigate = (amount: number) => {
-    const count = state.currentView === "day" ? amount : state.currentView === "month" ? amount * 12 : amount * 12 * 21;
+    // The year view has no arrows: its list scrolls. FLO-275.
+    const count = state.currentView === "day" ? amount : amount * 12;
     const anchor = new Date(state.currentYear, state.currentMonth, 1);
     anchor.setDate(Math.min(state.focusedDate.getDate(), new Date(state.currentYear, state.currentMonth + 1, 0).getDate()));
     setDisplayDate(addMonths(anchor, count));
