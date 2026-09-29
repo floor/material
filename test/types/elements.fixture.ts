@@ -8,6 +8,7 @@
 // Compiled by `bun run tooling:check` via tsconfig.types.json.
 import type {
   ButtonElement, ElementEvents, ElementProps, SwitchElement, SwitchSpec, TabAttributes, TabsSpec,
+  TextfieldElement, TextfieldSpec,
 } from "../../src/elements";
 
 /** true when A and B are the same type */
@@ -45,3 +46,14 @@ declare const button: ButtonElement;
 button.variant = "outlined";
 // @ts-expect-error -- attributes keep their declared type
 button.disabled = "yes";
+
+// The text field's live value is a string; input and change carry it.
+type TextfieldProps = ElementProps<TextfieldSpec>;
+assert<Equals<TextfieldProps["value"], string | undefined>>();
+assert<Equals<TextfieldProps["maxlength"], number | undefined>>();
+assert<Equals<keyof ElementEvents<TextfieldSpec>, "input" | "change">>();
+assert<Equals<ElementEvents<TextfieldSpec>["input"], CustomEvent<{ value: string }>>>();
+declare const field: TextfieldElement;
+field.select();
+field.setError(true, "Required");
+field.value = "text";

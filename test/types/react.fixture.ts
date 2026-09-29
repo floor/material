@@ -6,7 +6,7 @@
 //
 // Compiled by `bun run tooling:check` via tsconfig.types.json.
 import type { ComponentProps as ReactProps } from "react";
-import type { Button, Switch, Tab, Tabs } from "../../src/react";
+import type { Button, Switch, Tab, Tabs, Textfield } from "../../src/react";
 import type { SwitchElement } from "../../src/elements";
 
 /** true when A and B are the same type */
@@ -37,6 +37,12 @@ assert<Equals<ButtonProps["variant"], string | undefined>>();
 // Host attributes still pass through.
 assert<Equals<ButtonProps["className"], string | undefined>>();
 assert<Equals<ButtonProps["onClick"], React.MouseEventHandler<HTMLElement> | undefined>>();
+
+type TextfieldProps = ReactProps<typeof Textfield>;
+// `value` is the live text; the attribute it shadows is `defaultValue`.
+assert<Equals<TextfieldProps["value"], string | undefined>>();
+assert<Equals<TextfieldProps["defaultValue"], string | undefined>>();
+assert<Equals<TextfieldProps["onInput"], ((event: CustomEvent<{ value: string }>) => void) | undefined>>();
 
 // @ts-expect-error -- a switch's checked is a boolean
 export const wrong: SwitchProps = { checked: "yes" };
