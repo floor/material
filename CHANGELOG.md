@@ -164,6 +164,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Search: events and controls found building `<m-search>` (FLO-291).** Enter on the
+  suggestion the arrows reached selects it without first submitting the typed text; a click
+  or a keystroke in an input that already has focus reopens the view; emptying the query
+  (the clear button, Escape, `clear()`) emits `input` with the empty value before `clear`;
+  `trailingItems[].onClick` is wired, and `setLeadingIcon`, `setTrailingItems`,
+  `addTrailingItem` and `removeTrailingItem` work (they only warned); an avatar is a
+  button when it has `onClick`, and otherwise an image out of the tab order (it was a
+  focusable div with no role); suggestions take `supportingText`, as a 72dp two-line item;
+  the icon buttons inherit the font inside a shadow root.
 - **Search: `minWidth` and `maxWidth` apply (FLO-290).** They were documented and given
   defaults, and nothing read them: the stylesheet's 360dp and 720dp applied whatever was
   passed. They now set `--mtrl-search-min-width` and `--mtrl-search-max-width` on the root.

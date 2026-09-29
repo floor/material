@@ -8,6 +8,7 @@ import {
   SearchViewMode,
   SearchVariant,
   SearchSuggestion,
+  SearchTrailingItem,
 } from "./types";
 import type { EventCallback } from "../../core/state/emitter";
 
@@ -39,6 +40,12 @@ interface ApiOptions {
     enable: () => void;
     disable: () => void;
     isDisabled: () => boolean;
+  };
+  content: {
+    setLeadingIcon: (html: string) => void;
+    setTrailingItems: (items: SearchTrailingItem[]) => void;
+    addTrailingItem: (item: SearchTrailingItem) => void;
+    removeTrailingItem: (id: string) => void;
   };
   suggestions: {
     set: (suggestions: SearchSuggestion[] | string[]) => void;
@@ -156,27 +163,24 @@ export const withAPI =
 
       // === Content Management ===
 
-      setLeadingIcon() {
-        // TODO: Implement in a separate icons feature if needed
-        console.warn("setLeadingIcon: Not yet implemented");
+      // These only warned (FLO-291).
+      setLeadingIcon(iconHtml: string) {
+        options.content.setLeadingIcon(iconHtml);
         return this;
       },
 
-      addTrailingItem() {
-        // TODO: Implement trailing items management
-        console.warn("addTrailingItem: Not yet implemented");
+      addTrailingItem(item: SearchTrailingItem) {
+        options.content.addTrailingItem(item);
         return this;
       },
 
-      removeTrailingItem() {
-        // TODO: Implement trailing items management
-        console.warn("removeTrailingItem: Not yet implemented");
+      removeTrailingItem(id: string) {
+        options.content.removeTrailingItem(id);
         return this;
       },
 
-      setTrailingItems() {
-        // TODO: Implement trailing items management
-        console.warn("setTrailingItems: Not yet implemented");
+      setTrailingItems(items: SearchTrailingItem[]) {
+        options.content.setTrailingItems(items);
         return this;
       },
 

@@ -138,6 +138,13 @@ export const withSuggestions =
     });
     label.append(...highlightMatch(suggestion.text, query));
 
+    // A second line: M3's two-line list item (FLO-291). Text, not markup.
+    if (suggestion.supportingText) {
+      item.classList.add(getClass(`${SEARCH_CLASSES.SUGGESTION_ITEM}--two-line`));
+      const supporting = createElement({ tag: "span", className: getClass(SEARCH_CLASSES.SUGGESTION_SUPPORTING), container: label });
+      supporting.textContent = suggestion.supportingText;
+    }
+
     return item;
   };
 
