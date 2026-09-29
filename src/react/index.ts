@@ -31,6 +31,14 @@ import "mtrl/elements/css/chips";
 import "mtrl/elements/css/list";
 import "mtrl/elements/css/card";
 import "mtrl/elements/css/carousel";
+import "mtrl/elements/css/menu";
+import "mtrl/elements/css/select";
+import "mtrl/elements/css/split-button";
+import "mtrl/elements/css/tooltip";
+import "mtrl/elements/css/snackbar";
+import "mtrl/elements/css/dialog";
+import "mtrl/elements/css/bottom-sheet";
+import "mtrl/elements/css/side-sheet";
 import {
   buttonElement,
   defineButton,
@@ -78,6 +86,22 @@ import {
   defineCard,
   carouselElement,
   defineCarousel,
+  menuElement,
+  defineMenu,
+  selectElement,
+  defineSelect,
+  splitButtonElement,
+  defineSplitButton,
+  tooltipElement,
+  defineTooltip,
+  snackbarElement,
+  defineSnackbar,
+  dialogElement,
+  defineDialog,
+  bottomSheetElement,
+  defineBottomSheet,
+  sideSheetElement,
+  defineSideSheet,
   tabDeclaration,
   radioDeclaration,
   navigationRailItemDeclaration,
@@ -86,6 +110,8 @@ import {
   chipDeclaration,
   listItemDeclaration,
   carouselItemDeclaration,
+  menuItemDeclaration,
+  selectOptionDeclaration,
 } from "../elements";
 import type {
   ButtonSpec,
@@ -134,6 +160,22 @@ import type {
   CardElement,
   CarouselSpec,
   CarouselElement,
+  MenuSpec,
+  MenuElement,
+  SelectSpec,
+  SelectElement,
+  SplitButtonSpec,
+  SplitButtonElement,
+  TooltipSpec,
+  TooltipElement,
+  SnackbarSpec,
+  SnackbarElement,
+  DialogSpec,
+  DialogElement,
+  BottomSheetSpec,
+  BottomSheetElement,
+  SideSheetSpec,
+  SideSheetElement,
   TabAttributes,
   RadioAttributes,
   NavigationRailItemAttributes,
@@ -142,6 +184,8 @@ import type {
   ChipAttributes,
   ListItemAttributes,
   CarouselItemAttributes,
+  MenuItemAttributes,
+  SelectOptionAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
 
@@ -171,6 +215,14 @@ export const Chips: MComponent<ChipsSpec, ChipsElement> = createComponent(chipsE
 export const List: MComponent<ListSpec, ListElement> = createComponent(listElement.spec, defineList, "List");
 export const Card: MComponent<CardSpec, CardElement> = createComponent(cardElement.spec, defineCard, "Card");
 export const Carousel: MComponent<CarouselSpec, CarouselElement> = createComponent(carouselElement.spec, defineCarousel, "Carousel");
+export const Menu: MComponent<MenuSpec, MenuElement> = createComponent(menuElement.spec, defineMenu, "Menu");
+export const Select: MComponent<SelectSpec, SelectElement> = createComponent(selectElement.spec, defineSelect, "Select");
+export const SplitButton: MComponent<SplitButtonSpec, SplitButtonElement> = createComponent(splitButtonElement.spec, defineSplitButton, "SplitButton");
+export const Tooltip: MComponent<TooltipSpec, TooltipElement> = createComponent(tooltipElement.spec, defineTooltip, "Tooltip");
+export const Snackbar: MComponent<SnackbarSpec, SnackbarElement> = createComponent(snackbarElement.spec, defineSnackbar, "Snackbar");
+export const Dialog: MComponent<DialogSpec, DialogElement> = createComponent(dialogElement.spec, defineDialog, "Dialog");
+export const BottomSheet: MComponent<BottomSheetSpec, BottomSheetElement> = createComponent(bottomSheetElement.spec, defineBottomSheet, "BottomSheet");
+export const SideSheet: MComponent<SideSheetSpec, SideSheetElement> = createComponent(sideSheetElement.spec, defineSideSheet, "SideSheet");
 export const Tab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "Tab");
 export const Radio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "Radio");
 export const NavigationRailItem: MDeclaration<NavigationRailItemAttributes> = createDeclaration(navigationRailItemDeclaration, "NavigationRailItem");
@@ -179,3 +231,5 @@ export const ButtonGroupItem: MDeclaration<ButtonGroupItemAttributes> = createDe
 export const Chip: MDeclaration<ChipAttributes> = createDeclaration(chipDeclaration, "Chip");
 export const ListItem: MDeclaration<ListItemAttributes> = createDeclaration(listItemDeclaration, "ListItem");
 export const CarouselItem: MDeclaration<CarouselItemAttributes> = createDeclaration(carouselItemDeclaration, "CarouselItem");
+export const MenuItem: MDeclaration<MenuItemAttributes> = createDeclaration(menuItemDeclaration, "MenuItem");
+export const SelectOption: MDeclaration<SelectOptionAttributes> = createDeclaration(selectOptionDeclaration, "SelectOption");

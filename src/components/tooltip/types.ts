@@ -126,6 +126,19 @@ export interface TooltipConfig {
   zIndex?: number;
   
   /**
+   * `"top"` renders the tooltip in place, after its target, and shows it in
+   * the browser's top layer as a `popover="manual"` element: above every
+   * z-index, outside any clipping ancestor, and in the target's tree (a shadow
+   * root's included), so it takes that tree's styles. It is positioned in
+   * viewport coordinates. A tooltip element already in a document when the
+   * target is set stays where its owner put it.
+   *
+   * Where the browser has no popover support, the tooltip behaves as without
+   * it. Unset, the tooltip is appended to `document.body`.
+   */
+  layer?: "top";
+
+  /**
    * Whether to enable rich (HTML) content
    * @default false
    */

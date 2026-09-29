@@ -45,6 +45,7 @@ type Win = Window & {
     setOrder: (v: string[]) => void;
     setShow: (v: boolean) => void;
     setProgress: (v: number) => void;
+    setDialog: (v: boolean) => void;
   };
 };
 
@@ -82,7 +83,10 @@ const run = async (): Promise<void> => {
   assert.match(html, /<m-tabs id="t" value="t2">/);
   assert.match(html, /<m-radios [^>]*value="m"[^>]*>(<!---->)?<m-radio value="s">/);
   assert.match(html, /<m-chips [^>]*value="veg"[^>]*>(<!---->)?<m-chip value="veg">/);
+  assert.match(html, /<m-select [^>]*value="cat"[^>]*>(<!---->)?<m-select-option value="cat">/);
   assert.match(html, /<m-button id="b" type="submit" variant="filled" class="save" data-test="1">/);
+  assert.match(html, /<m-dialog [^>]*id="dg"[^>]*>/);
+  assert.doesNotMatch(html, /<m-dialog [^>]*open/);
   check("renders on a server without a DOM, attributes in the markup");
 
   const client = await bundle("scripts/fixtures/svelte-client.ts", "browser");
@@ -209,6 +213,14 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("fruit")?.textContent === "c");
     assert.equal(await fruits.getByRole("button", { name: "Cherry", pressed: true }).count(), 1);
     check("list: a click on an item updates bind:value");
+    // ------------------------------------------------------------- select
+    const pet = page.getByRole("combobox", { name: "Pet", exact: true });
+    assert.equal(await pet.inputValue(), "Cat");
+    await page.locator("#se").click();
+    await page.getByRole("option", { name: "Dog", exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("pet")?.textContent === "dog");
+    assert.equal(await pet.inputValue(), "Dog");
+    check("select: choosing an option updates the bound value");
 
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);
@@ -241,6 +253,28 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("pg")?.shadowRoot?.firstElementChild?.getAttribute("aria-valuenow") === "70");
     assert.equal(await valueNow(), "70");
     check("progress: the value prop sets aria-valuenow, and a new value updates it");
+
+    // ------------------------------------------------------------- dialog
+    // Controlled: state opens the dialog in the top layer, Escape closes it
+    // and the close handler puts the state in step; state closes it again.
+    const modal = (): Promise<boolean> =>
+      page.evaluate(() => !!document.getElementById("dg")?.shadowRoot?.querySelector("dialog")?.matches(":modal"));
+    assert.equal(await modal(), false);
+    await page.evaluate(() => (window as unknown as Win).api.setDialog(true));
+    await page.waitForFunction(() => !!document.getElementById("dg")?.shadowRoot?.querySelector("dialog")?.matches(":modal"));
+    assert.equal(await page.evaluate(() => document.getElementById("dg")?.hasAttribute("open")), true);
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(() => document.getElementById("dialog")?.textContent === "false");
+    assert.deepEqual(
+      await page.evaluate(() => ({ modal: !!document.getElementById("dg")?.shadowRoot?.querySelector("dialog")?.open, open: document.getElementById("dg")?.hasAttribute("open") })),
+      { modal: false, open: false }
+    );
+    await page.evaluate(() => (window as unknown as Win).api.setDialog(true));
+    await page.waitForFunction(() => !!document.getElementById("dg")?.shadowRoot?.querySelector("dialog")?.matches(":modal"));
+    await page.evaluate(() => (window as unknown as Win).api.setDialog(false));
+    await page.waitForFunction(() => !document.getElementById("dg")?.shadowRoot?.querySelector("dialog")?.open);
+    assert.equal(await modal(), false);
+    check("dialog: open follows the state; Escape closes it and the close handler updates the state");
 
     // ------------------------------------------------------------- lifecycle
     const reordered = await page.evaluate(async () => {

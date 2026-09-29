@@ -256,6 +256,24 @@ describe("menu layer: top", () => {
     expect(root.querySelector(".mtrl-menu")).toBeNull();
   });
 
+  test("focus moving from an opener outside into the shadow root the menu is in keeps it open", async () => {
+    // A menu element's surface is in its own shadow root, its anchor in the
+    // page: the opener's blur names the host, not the menu
+    const { opener } = setup();
+    const host = document.createElement("div");
+    document.body.append(host);
+    const root = host.attachShadow({ mode: "open" });
+    const { menu, closes } = make({ opener, layer: "top" });
+    root.append(menu.element);
+    await opened(menu);
+    opener.dispatchEvent(new dom.window.FocusEvent("blur", { relatedTarget: host }));
+    await after(100);
+    expect(menu.isOpen()).toBe(true);
+    opener.dispatchEvent(new dom.window.FocusEvent("blur", { relatedTarget: document.body }));
+    await after(400);
+    expect(closes.length).toBe(1);
+  });
+
   test("without popover support it behaves as a menu without a layer", async () => {
     removePopover();
     const { opener } = setup();

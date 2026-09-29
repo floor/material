@@ -103,6 +103,19 @@ export interface DrawerConfig extends BaseComponentConfig {
   dismissible?: boolean;
 
   /**
+   * `"top"` makes a modal drawer's root a `<dialog>` element, rendered where
+   * the drawer is, and opens it with `showModal()`: in the browser's top
+   * layer, above every z-index and outside any clipping ancestor, with the
+   * rest of the page inert, a shadow root's page included. The scrim is its
+   * `::backdrop`, and Escape reaches the drawer as the dialog's `cancel`
+   * event. The sheet slides as without it.
+   *
+   * A standard drawer stays in the page, and where the browser has no
+   * `showModal()` the drawer behaves as without it.
+   */
+  layer?: "top";
+
+  /**
    * Optional headline text displayed at the top of the drawer
    * @example 'Mail'
    */

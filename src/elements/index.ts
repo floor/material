@@ -34,6 +34,14 @@ import { chipsElement, chipDeclaration, defineChips } from "./chips";
 import { listElement, listItemDeclaration, defineList } from "./list";
 import { cardElement, defineCard } from "./card";
 import { carouselElement, carouselItemDeclaration, defineCarousel } from "./carousel";
+import { menuElement, menuItemDeclaration, defineMenu } from "./menu";
+import { selectElement, selectOptionDeclaration, defineSelect } from "./select";
+import { splitButtonElement, defineSplitButton } from "./split-button";
+import { tooltipElement, defineTooltip } from "./tooltip";
+import { snackbarElement, defineSnackbar } from "./snackbar";
+import { dialogElement, defineDialog } from "./dialog";
+import { bottomSheetElement, defineBottomSheet } from "./bottom-sheet";
+import { sideSheetElement, defineSideSheet } from "./side-sheet";
 
 export { defineElement, DEFAULT_PREFIX, SHADOW_BASE_STYLES } from "./define";
 export type {
@@ -94,6 +102,22 @@ export { cardElement, defineCard } from "./card";
 export type { CardSpec, CardElement } from "./card";
 export { carouselElement, carouselItemDeclaration, defineCarousel } from "./carousel";
 export type { CarouselSpec, CarouselElement, CarouselItemAttributes } from "./carousel";
+export { menuElement, menuItemDeclaration, defineMenu } from "./menu";
+export type { MenuSpec, MenuElement, MenuItemAttributes, MenuAnchor, MenuElementComponent } from "./menu";
+export { selectElement, selectOptionDeclaration, defineSelect } from "./select";
+export type { SelectSpec, SelectElement, SelectOptionAttributes } from "./select";
+export { splitButtonElement, defineSplitButton } from "./split-button";
+export type { SplitButtonSpec, SplitButtonElement } from "./split-button";
+export { tooltipElement, defineTooltip } from "./tooltip";
+export type { TooltipSpec, TooltipElement } from "./tooltip";
+export { snackbarElement, defineSnackbar } from "./snackbar";
+export type { SnackbarSpec, SnackbarElement } from "./snackbar";
+export { dialogElement, defineDialog } from "./dialog";
+export type { DialogSpec, DialogElement, DialogElementComponent } from "./dialog";
+export { bottomSheetElement, defineBottomSheet } from "./bottom-sheet";
+export type { BottomSheetSpec, BottomSheetElement, BottomSheetElementComponent } from "./bottom-sheet";
+export { sideSheetElement, defineSideSheet } from "./side-sheet";
+export type { SideSheetSpec, SideSheetElement, SideSheetElementComponent } from "./side-sheet";
 
 /**
  * Every element, by name. Framework adapters are generated from this list and
@@ -123,6 +147,14 @@ export const elements = {
   list: listElement,
   card: cardElement,
   carousel: carouselElement,
+  menu: menuElement,
+  select: selectElement,
+  splitButton: splitButtonElement,
+  tooltip: tooltipElement,
+  snackbar: snackbarElement,
+  dialog: dialogElement,
+  bottomSheet: bottomSheetElement,
+  sideSheet: sideSheetElement,
 } as const;
 
 /** Declaration children, which render nothing and are read by their parent. */
@@ -135,6 +167,8 @@ export const declarations = {
   chip: chipDeclaration,
   listItem: listItemDeclaration,
   carouselItem: carouselItemDeclaration,
+  menuItem: menuItemDeclaration,
+  selectOption: selectOptionDeclaration,
 } as const;
 
 /** Registers every element. */
@@ -162,4 +196,12 @@ export const defineAll = (options?: DefineOptions): void => {
   defineList(options);
   defineCard(options);
   defineCarousel(options);
+  defineMenu(options);
+  defineSelect(options);
+  defineSplitButton(options);
+  defineTooltip(options);
+  defineSnackbar(options);
+  defineDialog(options);
+  defineBottomSheet(options);
+  defineSideSheet(options);
 };

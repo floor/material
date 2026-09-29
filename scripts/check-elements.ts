@@ -51,6 +51,15 @@ const server = Bun.serve({
         { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } }
       );
     }
+    if (path === "/restore-select") {
+      return new Response(
+        `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
+<body><form><m-select id="rs" name="rs" label="Restored select" value="a">
+<m-select-option value="a">Alpha</m-select-option><m-select-option value="b">Beta</m-select-option></m-select></form>
+<a id="go" href="/away">away</a><script type="module" src="/elements.js"></script></body></html>`,
+        { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } }
+      );
+    }
     if (path === "/restore-radios") {
       return new Response(
         `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
@@ -4247,6 +4256,1375 @@ try {
 
       await page.evaluate(() => (window as unknown as TopWin).__tl.menu.destroy());
     }
+  }
+
+  // ---------------------------------------------------------------- menus: menu, select, split button
+  // The menu family's elements open their surface in the top layer, inside
+  // their own shadow root: styled by the adopted CSS, above a z-index 9999
+  // sibling, dismissed once, with focus back on the opener. Declarations
+  // update in place, and the closed triggers render as the factories do.
+  {
+    type Host = HTMLElement & Record<string, unknown> & { component: Record<string, unknown> | null };
+    type MenuWin = Win & { __log: Array<{ type: string; detail: unknown }> };
+    const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
+    /** Records the events of an element, and the closes of its factory menu. */
+    const listen = (id: string, types: string[]): Promise<void> =>
+      page.evaluate(({ id, types }) => {
+        const w = window as unknown as MenuWin;
+        w.__log = [];
+        const el = document.getElementById(id) as Host;
+        for (const type of types) {
+          el.addEventListener(type, (e) => w.__log.push({ type, detail: e instanceof CustomEvent ? e.detail : null }));
+        }
+      }, { id, types });
+    const log = (): Promise<Array<{ type: string; detail: unknown }>> =>
+      page.evaluate(() => (window as unknown as MenuWin).__log.splice(0));
+    /** The deepest focused element: a combobox, or its id, name or text. */
+    const focused = (): Promise<string | null> =>
+      page.evaluate(() => {
+        let active = document.activeElement;
+        while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+        if (active?.getAttribute("role") === "combobox") return "combobox";
+        return active ? active.id || active.getAttribute("aria-label") || (active.textContent ?? "").trim() : null;
+      });
+    /** The open surface of an element: where it is and how it looks. */
+    const surface = (id: string, selector: string): Promise<Record<string, unknown> | null> =>
+      page.evaluate(({ id, selector }) => {
+        const el = document.getElementById(id) as HTMLElement;
+        const root = el.shadowRoot as ShadowRoot;
+        const menu = root.querySelector(selector) as HTMLElement | null;
+        if (!menu) return null;
+        const r = menu.getBoundingClientRect();
+        const style = getComputedStyle(menu);
+        const hit = root.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        const cover = document.getElementById("cover") as HTMLElement;
+        const c = cover.getBoundingClientRect();
+        return {
+          inRoot: menu.getRootNode() === root,
+          popoverOpen: menu.matches(":popover-open"),
+          styled: style.backgroundColor !== "rgba(0, 0, 0, 0)" && style.backgroundColor !== "rgb(255, 0, 0)" && style.boxShadow !== "none",
+          overCover: r.bottom > c.top && r.top < c.bottom,
+          above: !!hit && menu.contains(hit),
+        };
+      }, { id, selector });
+    const OPEN = { inRoot: true, popoverOpen: true, styled: true, overCover: true, above: true };
+    const center = (id: string, selector: string): Promise<{ x: number; y: number }> =>
+      page.evaluate(({ id, selector }) => {
+        const root = (document.getElementById(id) as HTMLElement).shadowRoot as ShadowRoot;
+        const r = (root.querySelector(selector) as HTMLElement).getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      }, { id, selector });
+    const clickIn = async (id: string, selector: string): Promise<void> => {
+      const { x, y } = await center(id, selector);
+      await page.mouse.click(x, y);
+    };
+    const outside = async (): Promise<void> => {
+      await page.getByRole("button", { name: "Outside", exact: true }).click();
+    };
+    // The surface opens on a timer, then its 300ms transition
+    const settle = (): Promise<unknown> => wait(450);
+    const COVER = `<div id="cover" style="position: relative; z-index: 9999; height: 300px; background: rgb(255, 0, 0)"></div>
+      <button id="out" type="button">Outside</button>`;
+
+    // ------------------------------------------------------------ <m-menu>
+    await fresh(
+      page,
+      `<div style="position: relative; overflow: hidden; height: 48px; z-index: 1"><button id="mb" type="button">Actions</button></div>
+       ${COVER}
+       <m-menu id="mm" anchor="mb" aria-label="Actions">
+         <m-menu-item value="copy" icon='${ICON}'>Copy</m-menu-item>
+         <m-menu-item value="cut" disabled>Cut</m-menu-item>
+         <m-menu-item divider></m-menu-item>
+         <m-menu-item value="share">Share<m-menu-item value="link">Copy link</m-menu-item><m-menu-item value="mail">Email</m-menu-item></m-menu-item>
+         <m-menu-item value="paste" shortcut="Ctrl+V">Paste</m-menu-item>
+       </m-menu>`
+    );
+    await listen("mm", ["open", "close", "select"]);
+    const menuState = (): Promise<{ open: boolean; attribute: boolean }> =>
+      page.evaluate(() => {
+        const el = document.getElementById("mm") as Host;
+        return { open: (el.component?.isOpen as () => boolean)(), attribute: el.hasAttribute("open") };
+      });
+
+    await page.click("#mb");
+    await settle();
+    assert.deepEqual(await surface("mm", '[role="menu"]'), OPEN, "menu: the surface");
+    assert.deepEqual(await menuState(), { open: true, attribute: true });
+    assert.deepEqual(await log(), [{ type: "open", detail: {} }]);
+    check("menu: the anchor opens it in its shadow root, :popover-open, styled, above z-index 9999; open reflects");
+
+    // Opened by pointer, focus is on the menu: arrows step over the divider
+    // (a disabled item takes focus, as the factory has it), a letter jumps,
+    // Enter chooses
+    const moves: Array<string | null> = [];
+    for (const key of ["ArrowDown", "ArrowDown", "p"]) {
+      await page.keyboard.press(key);
+      moves.push(await focused());
+    }
+    assert.deepEqual(moves, ["Copy", "Cut", "PasteCtrl+V"]);
+    await page.keyboard.press("Enter");
+    await settle();
+    assert.deepEqual(await log(), [{ type: "select", detail: { value: "paste" } }, { type: "close", detail: {} }]);
+    assert.deepEqual(await menuState(), { open: false, attribute: false });
+    assert.equal(await focused(), "mb", "focus is back on the anchor");
+    check("menu: arrows, typeahead and Enter select once, close once, and return focus to the anchor");
+
+    await page.focus("#mb");
+    await page.keyboard.press("Enter");
+    await settle();
+    assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
+    await page.keyboard.press("Escape");
+    await settle();
+    assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
+    assert.equal(await focused(), "mb");
+    check("menu: Enter on the anchor focuses the first item; Escape closes once and returns focus");
+
+    await page.click("#mb");
+    await settle();
+    await clickIn("mm", '[data-id="cut"]');
+    await wait(150);
+    assert.equal((await menuState()).open, true, "a click inside the surface, on a disabled item, keeps it open");
+    await outside();
+    await settle();
+    assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
+    assert.deepEqual(await menuState(), { open: false, attribute: false });
+    check("menu: a click in the surface keeps it open, a click outside closes it once");
+
+    await page.click("#mb");
+    await settle();
+    await clickIn("mm", '[data-id="share"]');
+    await settle();
+    const submenu = await page.evaluate(() => {
+      const root = (document.getElementById("mm") as HTMLElement).shadowRoot as ShadowRoot;
+      const sub = root.querySelector('[class*="menu--submenu"]');
+      return sub ? { open: sub.matches(":popover-open"), items: [...sub.querySelectorAll("[data-id]")].map((i) => i.getAttribute("data-id")) } : null;
+    });
+    assert.deepEqual(submenu, { open: true, items: ["link", "mail"] }, "nested items are the submenu, in the shadow root");
+    await clickIn("mm", '[data-id="link"]');
+    await settle();
+    assert.deepEqual(await log(), [
+      { type: "open", detail: {} }, { type: "select", detail: { value: "link" } }, { type: "close", detail: {} },
+    ]);
+    check("menu: nested items open a submenu in the top layer; its item selects and closes once");
+
+    await page.evaluate(() => (document.getElementById("mm") as Host & { show: () => void }).show());
+    await settle();
+    assert.deepEqual(await menuState(), { open: true, attribute: true });
+    await page.evaluate(() => (document.getElementById("mm") as Host & { hide: () => void }).hide());
+    await settle();
+    await page.evaluate(() => document.getElementById("mm")?.setAttribute("open", ""));
+    await settle();
+    assert.deepEqual(await menuState(), { open: true, attribute: true });
+    await page.evaluate(() => document.getElementById("mm")?.removeAttribute("open"));
+    await settle();
+    assert.deepEqual(await menuState(), { open: false, attribute: false });
+    await page.evaluate(() => (document.getElementById("mm") as Host & { toggle: () => void }).toggle());
+    await settle();
+    await page.evaluate(() => (document.getElementById("mm") as Host & { toggle: () => void }).toggle());
+    await settle();
+    assert.deepEqual((await log()).map((e) => e.type), ["open", "close", "open", "close", "open", "close"]);
+    check("menu: show(), hide(), toggle() and the open attribute open and close it, each with its event");
+
+    const declared = await page.evaluate(async () => {
+      const el = document.getElementById("mm") as Host;
+      const before = el.component;
+      const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
+      const texts = (): string[] =>
+        [...(el.shadowRoot as ShadowRoot).querySelectorAll('[role="menuitem"]')].map((i) => (i.textContent ?? "").trim());
+      const added = document.createElement("m-menu-item");
+      added.setAttribute("value", "delete");
+      added.textContent = "Delete";
+      el.append(added);
+      await frame();
+      const afterAdd = texts();
+      el.querySelector('[value="cut"]')?.remove();
+      await frame();
+      const afterRemove = texts();
+      (el.querySelector('[value="copy"]') as HTMLElement).setAttribute("label", "Duplicate");
+      await frame();
+      return { same: el.component === before, afterAdd, afterRemove, afterRelabel: texts() };
+    });
+    assert.deepEqual(declared, {
+      same: true,
+      afterAdd: ["Copy", "Cut", "Share", "PasteCtrl+V", "Delete"],
+      afterRemove: ["Copy", "Share", "PasteCtrl+V", "Delete"],
+      afterRelabel: ["Duplicate", "Share", "PasteCtrl+V", "Delete"],
+    });
+    check("menu: items added, removed and relabelled in place");
+
+    // The anchor as a property, and an id in the menu's own shadow root
+    await page.evaluate(() => {
+      const other = document.createElement("button");
+      other.id = "mb2";
+      other.type = "button";
+      other.textContent = "Other";
+      document.getElementById("mm")?.before(other);
+      (document.getElementById("mm") as Host).anchor = other;
+    });
+    await page.click("#mb2");
+    await settle();
+    const byProperty = await menuState();
+    await page.keyboard.press("Escape");
+    await settle();
+    assert.equal(await focused(), "mb2");
+    await page.evaluate(() => {
+      const shadow = document.createElement("div");
+      shadow.id = "mshadow";
+      document.getElementById("host")?.append(shadow);
+      shadow.attachShadow({ mode: "open" }).innerHTML =
+        `<button id="mb" type="button">Inner</button><m-menu id="inner" anchor="mb"><m-menu-item value="x">Ex</m-menu-item></m-menu>`;
+    });
+    await page.getByRole("button", { name: "Inner", exact: true }).click();
+    await settle();
+    const inRoot = await page.evaluate(() => {
+      const inner = (document.getElementById("mshadow") as HTMLElement).shadowRoot?.getElementById("inner") as Host;
+      return { open: (inner.component?.isOpen as () => boolean)(), outer: (document.getElementById("mm") as Host).hasAttribute("open") };
+    });
+    assert.deepEqual({ byProperty, inRoot }, { byProperty: { open: true, attribute: true }, inRoot: { open: true, outer: false } });
+    await page.keyboard.press("Escape");
+    await settle();
+    check("menu: the anchor property takes an element; an anchor id resolves in the menu's own root first");
+
+    // ------------------------------------------------------------ <m-select>
+    await fresh(
+      page,
+      `<form id="sf"><label for="ms" id="sl">Pick</label>
+         <div><m-select id="ms" name="fruit" label="Fruit" value="b" required style="width: 280px">
+           <m-select-option value="a">Apple</m-select-option>
+           <m-select-option value="b">Banana</m-select-option>
+           <m-select-option value="c" disabled>Cherry</m-select-option>
+           <m-select-option value="d">Date</m-select-option>
+         </m-select></div></form>
+       ${COVER}
+       <div id="sfactory" style="width: 280px"></div>`
+    );
+    await listen("ms", ["change"]);
+    await page.evaluate(() => {
+      const el = document.getElementById("ms") as Host;
+      const w = window as unknown as MenuWin & { __closes: number };
+      w.__closes = 0;
+      (el.component?.on as (n: string, h: () => void) => void)("close", () => void w.__closes++);
+    });
+    const selectState = (): Promise<Record<string, unknown>> =>
+      page.evaluate(() => {
+        const el = document.getElementById("ms") as Host & { value: string | null };
+        const form = document.getElementById("sf") as HTMLFormElement;
+        return {
+          value: el.value,
+          form: new FormData(form).get("fruit"),
+          text: (el.shadowRoot?.querySelector("input") as HTMLInputElement).value,
+          open: (el.component?.isOpen as () => boolean)(),
+          closes: (window as unknown as { __closes: number }).__closes,
+        };
+      });
+    assert.deepEqual(await selectState(), { value: "b", form: "b", text: "Banana", open: false, closes: 0 });
+    check("select: the value attribute is the default and the form value");
+
+    // The input lets the pointer through to the field
+    const combobox = page.getByRole("combobox", { name: "Fruit" });
+    const field = page.locator("#ms");
+    await field.click();
+    await settle();
+    assert.deepEqual(await surface("ms", ".mtrl-menu"), OPEN, "select: the listbox");
+    check("select: the listbox opens in its shadow root, :popover-open, styled, above z-index 9999");
+
+    await clickIn("ms", '[data-id="c"]');
+    await wait(150);
+    assert.equal((await selectState()).open, true, "a click on a disabled option keeps it open");
+    await outside();
+    await settle();
+    assert.deepEqual(await selectState(), { value: "b", form: "b", text: "Banana", open: false, closes: 1 });
+    check("select: a click inside the listbox keeps it open, a click outside closes it once");
+
+    await combobox.focus();
+    await page.keyboard.press("ArrowDown");
+    await settle();
+    const active = (): Promise<string | null> =>
+      page.evaluate(() => {
+        const root = (document.getElementById("ms") as HTMLElement).shadowRoot as ShadowRoot;
+        const id = root.querySelector("input")?.getAttribute("aria-activedescendant");
+        return id ? (root.getElementById(id)?.getAttribute("data-id") ?? null) : null;
+      });
+    const path = [await active()];
+    await page.keyboard.press("ArrowDown");
+    path.push(await active());
+    await page.keyboard.press("a");
+    path.push(await active());
+    await page.keyboard.press("End");
+    path.push(await active());
+    assert.deepEqual(path, ["b", "d", "a", "d"], "the selected option, then Cherry skipped, typeahead, End");
+    await page.keyboard.press("Enter");
+    await settle();
+    assert.deepEqual(await log(), [{ type: "change", detail: { value: "d" } }]);
+    assert.deepEqual(await selectState(), { value: "d", form: "d", text: "Date", open: false, closes: 2 });
+    assert.equal(await focused(), "combobox", "focus stays on the combobox");
+    await page.keyboard.press("ArrowDown");
+    await settle();
+    await page.keyboard.press("Escape");
+    await settle();
+    assert.deepEqual(await selectState(), { value: "d", form: "d", text: "Date", open: false, closes: 3 });
+    assert.deepEqual(await log(), []);
+    check("select: arrows, typeahead and Enter change it once and close once; Escape closes; focus stays on the combobox");
+
+    await field.click();
+    await settle();
+    await clickIn("ms", '[data-id="a"]');
+    await settle();
+    assert.deepEqual(await log(), [{ type: "change", detail: { value: "a" } }]);
+    assert.deepEqual(await selectState(), { value: "a", form: "a", text: "Apple", open: false, closes: 4 });
+    assert.equal(await focused(), "combobox");
+    check("select: a click on an option changes it once and closes once");
+
+    const validity = await page.evaluate(() => {
+      const el = document.getElementById("ms") as Host & { value: string | null; internals: ElementInternals };
+      const form = document.getElementById("sf") as HTMLFormElement;
+      form.reset();
+      const reset = el.value;
+      el.value = null;
+      const empty = { missing: el.internals.validity.valueMissing, valid: form.checkValidity(), invalid: el.matches(":invalid"), form: new FormData(form).get("fruit") };
+      el.value = "d";
+      return { reset, empty, filled: form.checkValidity() };
+    });
+    assert.deepEqual(validity, { reset: "b", empty: { missing: true, valid: false, invalid: true, form: null }, filled: true });
+    check("select: a reset returns to the value attribute; required reports valueMissing while empty");
+
+    await page.click("#sl");
+    assert.equal(await focused(), "combobox", "a <label for> focuses the combobox");
+    check("select: <label for> focuses the combobox");
+
+    const options = await page.evaluate(async () => {
+      const el = document.getElementById("ms") as Host & { value: string | null };
+      const before = el.component;
+      const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
+      const text = (): string => (el.shadowRoot?.querySelector("input") as HTMLInputElement).value;
+      const options = (): string[] => ((el.component?.getOptions as () => Array<{ text: string }>)()).map((o) => o.text);
+      const added = document.createElement("m-select-option");
+      added.setAttribute("value", "e");
+      added.textContent = "Elderberry";
+      el.append(added);
+      await frame();
+      const afterAdd = options();
+      (el.querySelector('[value="d"]') as HTMLElement).textContent = "Dates";
+      await frame();
+      const relabelled = { text: text(), value: el.value };
+      el.querySelector('[value="d"]')?.remove();
+      await frame();
+      return { same: el.component === before, afterAdd, relabelled, removed: { options: options(), value: el.value, text: text() } };
+    });
+    assert.deepEqual(options, {
+      same: true,
+      afterAdd: ["Apple", "Banana", "Cherry", "Date", "Elderberry"],
+      relabelled: { text: "Dates", value: "d" },
+      removed: { options: ["Apple", "Banana", "Cherry", "Elderberry"], value: null, text: "" },
+    });
+    check("select: options added, removed and relabelled in place; the selected option's new text shows");
+
+    // The closed field against the factory's, in light DOM
+    const selectParity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createSelect: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createSelect({ label: "Fruit", value: "a", options: [{ id: "a", text: "Apple" }] });
+      (document.getElementById("sfactory") as HTMLElement).append(factory.element);
+      const el = document.getElementById("ms") as Host & { value: string | null };
+      el.value = "a";
+      const read = (field: HTMLElement): Record<string, unknown> => {
+        const r = field.getBoundingClientRect();
+        const input = field.querySelector("input") as HTMLInputElement;
+        const label = field.querySelector('[class*="textfield__label"]') as HTMLElement;
+        const icon = field.querySelector('[class*="trailing-icon"]') as HTMLElement;
+        return {
+          width: Math.round(r.width), height: Math.round(r.height),
+          background: getComputedStyle(field).backgroundColor,
+          font: getComputedStyle(input).font, color: getComputedStyle(input).color,
+          label: getComputedStyle(label).font, icon: Math.round(icon.getBoundingClientRect().left - r.left),
+        };
+      };
+      return { element: read(el.shadowRoot?.firstElementChild as HTMLElement), factory: read(factory.element) };
+    });
+    assert.deepEqual(selectParity.element, selectParity.factory);
+    check("select: the closed field renders as the factory's in light DOM");
+
+    // Going back restores the chosen option over the value attribute
+    {
+      const restorePage = await browser.newPage();
+      await restorePage.goto(`http://127.0.0.1:${server.port}/restore-select`);
+      await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
+      await restorePage.locator("#rs").click();
+      await restorePage.waitForTimeout(450);
+      await restorePage.getByRole("option", { name: "Beta", exact: true }).click();
+      await restorePage.click("#go");
+      await restorePage.waitForURL(/\/away$/);
+      await restorePage.goBack();
+      await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
+      const value = (): string | null => (document.getElementById("rs") as HTMLElement & { value: string | null }).value;
+      await restorePage.waitForFunction(() => (document.getElementById("rs") as HTMLElement & { value: string | null }).value === "b", undefined, { timeout: 5_000 })
+        .catch(() => undefined);
+      const restored = await restorePage.evaluate(value);
+      await restorePage.close();
+      assert.equal(restored, "b", "going back restores the option the user chose over the value attribute");
+      check("select: going back restores the chosen option");
+    }
+
+    // ------------------------------------------------------------ <m-split-button>
+    await fresh(
+      page,
+      `<m-split-button id="sb">Save<m-menu-item value="draft">Save draft</m-menu-item><m-menu-item value="pdf">Export PDF</m-menu-item></m-split-button>
+       ${COVER}
+       <div id="bfactory"></div>`
+    );
+    await listen("sb", ["click", "select"]);
+    await page.evaluate(() => {
+      const el = document.getElementById("sb") as Host;
+      const w = window as unknown as { __closes: number };
+      w.__closes = 0;
+      const menu = (el.component as { menu: { on: (n: string, h: () => void) => void } }).menu;
+      menu.on("close", () => void w.__closes++);
+    });
+    const splitState = (): Promise<{ open: boolean; closes: number }> =>
+      page.evaluate(() => {
+        const el = document.getElementById("sb") as Host;
+        return {
+          open: (el.component as { menu: { isOpen: () => boolean } }).menu.isOpen(),
+          closes: (window as unknown as { __closes: number }).__closes,
+        };
+      });
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await page.getByRole("button", { name: "More options", exact: true }).click();
+    await settle();
+    assert.deepEqual((await log()).map((e) => e.type), ["click"], "the leading button's click only");
+    assert.deepEqual(await surface("sb", '[role="menu"]'), OPEN, "split button: the menu");
+    check("split button: click is the leading action's; the trailing button opens the menu in its shadow root, above z-index 9999");
+
+    await page.keyboard.press("ArrowDown");
+    assert.equal(await focused(), "Save draft");
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    await settle();
+    assert.deepEqual(await log(), [{ type: "select", detail: { value: "pdf" } }]);
+    assert.deepEqual(await splitState(), { open: false, closes: 1 });
+    assert.equal(await focused(), "More options", "focus is back on the trailing button");
+    await page.keyboard.press("Enter");
+    await settle();
+    await page.keyboard.press("Escape");
+    await settle();
+    assert.deepEqual(await splitState(), { open: false, closes: 2 });
+    assert.equal(await focused(), "More options");
+    check("split button: arrows and Enter select once, close once and return focus; Escape closes");
+
+    await page.getByRole("button", { name: "More options", exact: true }).click();
+    await settle();
+    await outside();
+    await settle();
+    await page.getByRole("button", { name: "More options", exact: true }).click();
+    await settle();
+    await clickIn("sb", '[data-id="draft"]');
+    await settle();
+    assert.deepEqual(await log(), [{ type: "select", detail: { value: "draft" } }], "no click event from the menu");
+    assert.deepEqual(await splitState(), { open: false, closes: 4 });
+    check("split button: a click outside closes it once; a click on an item selects once");
+
+    const splitDeclared = await page.evaluate(async () => {
+      const el = document.getElementById("sb") as Host;
+      const before = el.component;
+      const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
+      const menu = (): { getItems: () => Array<{ text?: string }> } => (el.component as { menu: { getItems: () => Array<{ text?: string }> } }).menu;
+      const added = document.createElement("m-menu-item");
+      added.setAttribute("value", "png");
+      added.textContent = "Export PNG";
+      el.append(added);
+      await frame();
+      const afterAdd = menu().getItems().map((i) => i.text);
+      el.querySelector('[value="draft"]')?.remove();
+      (el.querySelector('[value="pdf"]') as HTMLElement).setAttribute("label", "PDF");
+      el.firstChild!.textContent = "Keep";
+      await frame();
+      return {
+        same: el.component === before,
+        afterAdd,
+        after: menu().getItems().map((i) => i.text),
+        label: (el.component as { getText: () => string }).getText(),
+      };
+    });
+    assert.deepEqual(splitDeclared, {
+      same: true,
+      afterAdd: ["Save draft", "Export PDF", "Export PNG"],
+      after: ["PDF", "Export PNG"],
+      label: "Keep",
+    });
+    check("split button: items added, removed and relabelled, and the label changed, in place");
+
+    // After the trailing button's shape has settled from the last close
+    await wait(600);
+    const splitParity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createSplitButton: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createSplitButton({ text: "Keep", items: [{ id: "x", text: "X" }] });
+      (document.getElementById("bfactory") as HTMLElement).append(factory.element);
+      const el = document.getElementById("sb") as Host;
+      const read = (group: HTMLElement): Record<string, unknown> => {
+        const [leading, trailing] = [...group.querySelectorAll("button")];
+        const box = (b: HTMLElement): unknown => {
+          const r = b.getBoundingClientRect();
+          const s = getComputedStyle(b);
+          return { width: Math.round(r.width), height: Math.round(r.height), background: s.backgroundColor, color: s.color, radius: s.borderRadius, font: s.font };
+        };
+        return { leading: box(leading), trailing: box(trailing), gap: Math.round(trailing.getBoundingClientRect().left - leading.getBoundingClientRect().right) };
+      };
+      return { element: read(el.shadowRoot?.firstElementChild as HTMLElement), factory: read(factory.element) };
+    });
+    assert.deepEqual(splitParity.element, splitParity.factory);
+    check("split button: the closed button renders as the factory's in light DOM");
+  }
+
+  // ---------------------------------------------------------------- tooltip and snackbar in the top layer
+  // <m-tooltip> and <m-snackbar> render their surface in their own shadow
+  // root, with its adopted CSS, and show it as a popover (`layer: "top"`):
+  // above a z-index 9999 sibling and a modal dialog, where the factory
+  // without a layer puts it, and styled as the factory in light DOM is.
+  {
+    type Tip = { element: HTMLElement; target: HTMLElement | null; show: (now?: boolean) => unknown; destroy: () => void };
+    type Snack = { element: HTMLElement; show: () => unknown; hide: () => unknown; destroy: () => void };
+    type Host = HTMLElement & { component: { element: HTMLElement } | null; show: (now?: boolean) => unknown; target: HTMLElement | null };
+    type PopWin = Win & {
+      mtrl: { createTooltip: (config: object) => Tip; createSnackbar: (config: object) => Snack };
+      __pop: { root: ShadowRoot; events: string[] };
+    };
+    const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
+    const client = await page.context().newCDPSession(page);
+
+    /** The description Chrome computes, and whether Playwright's own matches the text. */
+    const description = async (selector: string, name: string, text: string): Promise<{ chrome: unknown; playwright: boolean }> => {
+      const locator = page.locator(selector);
+      const { nodes } = (await client.send("Accessibility.getFullAXTree")) as {
+        nodes: Array<{ role?: { value: string }; name?: { value: string }; description?: { value: string } }>;
+      };
+      const button = nodes.find((n) => n.role?.value === "button" && n.name?.value === name);
+      // What `expect(locator).toHaveAccessibleDescription()` runs; `playwright`
+      // has the matcher without the test runner's expect
+      const matcher = locator as unknown as {
+        _expect: (name: string, options: object) => Promise<{ matches: boolean }>;
+      };
+      const { matches } = await matcher._expect("to.have.accessible.description", {
+        expectedText: [{ string: text, normalizeWhiteSpace: true }],
+        isNot: false,
+        timeout: 1000,
+      });
+      return { chrome: button?.description?.value, playwright: matches };
+    };
+
+    // ------------------------------------------------ tooltip
+    await fresh(page, `<div style="height: 500px"></div><div id="pt"></div><div style="height: 2000px"></div>`);
+    await page.evaluate(() => {
+      const host = document.getElementById("pt") as HTMLElement;
+      const root = host.attachShadow({ mode: "open" });
+      // The target in a clipping parent, and below it a sibling on z-index
+      // 9999 where the tooltip opens
+      root.innerHTML = `<div style="position: relative; overflow: hidden; height: 48px; z-index: 1">
+          <button id="pt-save" type="button" style="margin-left: 40px">Save</button>
+          <button id="pt-share" type="button">Share</button>
+          <m-tooltip id="pt-tip" for="pt-save">Save the file</m-tooltip></div>
+        <div id="pt-cover" style="position: relative; z-index: 9999; height: 300px; background: rgb(255, 0, 0)"></div>
+        <button id="pt-outside" type="button">Outside</button>`;
+      (window as unknown as PopWin).__pop = { root, events: [] };
+      // At once: the document may scroll smoothly
+      window.scrollTo({ top: 300, behavior: "instant" });
+    });
+
+    // Where the factory without a layer puts it, on the body with the global
+    // stylesheet, hovered on the same target alongside the element's. That
+    // tooltip is `position: fixed` at page coordinates, so with the page
+    // scrolled it sits the scroll offset below its place: the top-layer one
+    // is compared with it less the scroll.
+    await page.evaluate(() => {
+      const w = window as unknown as PopWin & { __unlayered: Tip };
+      w.__unlayered = w.mtrl.createTooltip({ target: w.__pop.root.getElementById("pt-save"), text: "Save the file" });
+    });
+    const unlayered = (): Promise<{ rect: Record<"top" | "left" | "width" | "height", number>; style: Record<string, string>; classes: string }> =>
+      page.evaluate(() => {
+        const tip = (window as unknown as { __unlayered: Tip }).__unlayered;
+        const { top, left, width, height } = tip.element.getBoundingClientRect();
+        const style = getComputedStyle(tip.element);
+        const result = {
+          rect: { top: top - window.scrollY, left, width, height },
+          style: { background: style.backgroundColor, color: style.color, shadow: style.boxShadow, margin: style.marginTop, font: style.font, padding: style.padding },
+          classes: [...tip.element.classList].sort().join(" "),
+        };
+        tip.destroy();
+        return result;
+      });
+
+    const tipState = (): Promise<{ open: boolean; visible: boolean }> =>
+      page.evaluate(() => {
+        const tip = (window as unknown as PopWin).__pop.root.getElementById("pt-tip") as Host;
+        const surface = tip.component?.element as HTMLElement;
+        return { open: surface.matches(":popover-open"), visible: surface.className.includes("tooltip--visible") };
+      });
+    const centerOf = (id: string): Promise<{ x: number; y: number }> =>
+      page.evaluate((id) => {
+        const r = ((window as unknown as PopWin).__pop.root.getElementById(id) as HTMLElement).getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      }, id);
+
+    // Hover shows it after the delay
+    const save = await centerOf("pt-save");
+    await page.mouse.move(save.x, save.y);
+    await wait(450);
+    const expected = await unlayered();
+    const shown = await page.evaluate(() => {
+      const { root } = (window as unknown as PopWin).__pop;
+      const tip = root.getElementById("pt-tip") as Host;
+      const surface = tip.component?.element as HTMLElement;
+      const r = surface.getBoundingClientRect();
+      const style = getComputedStyle(surface);
+      const hit = (surface.getRootNode() as ShadowRoot).elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return {
+        inRoot: surface.getRootNode() === tip.shadowRoot,
+        popoverOpen: surface.matches(":popover-open"),
+        rect: { top: r.top, left: r.left, width: r.width, height: r.height },
+        style: { background: style.backgroundColor, color: style.color, shadow: style.boxShadow, margin: style.marginTop, font: style.font, padding: style.padding },
+        border: style.borderTopWidth,
+        classes: [...surface.classList].sort().join(" "),
+        aboveCover: !!hit && surface.contains(hit),
+        scrolled: window.scrollY,
+      };
+    });
+    assert.equal(shown.inRoot, true, "the tooltip's surface is in the element's shadow root");
+    assert.equal(shown.popoverOpen, true, "the tooltip's surface is :popover-open");
+    assert.equal(shown.scrolled, 300, "the page is scrolled");
+    for (const key of ["top", "left", "width", "height"] as const) {
+      assert.ok(Math.abs(shown.rect[key] - expected.rect[key]) <= 1, `tooltip ${key} ${shown.rect[key]} is the unlayered tooltip's ${expected.rect[key]}`);
+    }
+    assert.deepEqual(shown.style, expected.style, "the tooltip's own colours, font, padding and margin, as the factory's in light DOM");
+    assert.equal(shown.border, "0px", "no popover border");
+    assert.equal(shown.classes, expected.classes, "the factory's classes");
+    assert.equal(shown.aboveCover, true, "the tooltip is above the z-index 9999 sibling");
+    check("tooltip top layer in a shadow root: shown on hover in its element's root, styled, at the unlayered position with the page scrolled, above z-index 9999");
+
+    // Leaving hides it: the hide delay, then the exit transition
+    const outside = await centerOf("pt-outside");
+    await page.mouse.move(outside.x, outside.y);
+    await wait(400);
+    const left = await tipState();
+    // Focus shows it, blur hides it
+    await page.evaluate(() => ((window as unknown as PopWin).__pop.root.getElementById("pt-save") as HTMLElement).focus());
+    await wait(450);
+    const focused = await tipState();
+    await page.evaluate(() => ((window as unknown as PopWin).__pop.root.getElementById("pt-outside") as HTMLElement).focus());
+    await wait(400);
+    const blurred = await tipState();
+    // Escape hides it at once, focus staying on the target
+    await page.evaluate(() => ((window as unknown as PopWin).__pop.root.getElementById("pt-save") as HTMLElement).focus());
+    await wait(450);
+    await page.keyboard.press("Escape");
+    await wait(250);
+    const escaped = await tipState();
+    const stayed = await page.evaluate(() => (window as unknown as PopWin).__pop.root.activeElement?.id);
+    const off = { open: false, visible: false };
+    assert.deepEqual(
+      { left, focused, blurred, escaped, stayed },
+      { left: off, focused: { open: true, visible: true }, blurred: off, escaped: off, stayed: "pt-save" }
+    );
+    check("tooltip top layer in a shadow root: shown on focus, hidden on leave, blur and Escape, out of the top layer after");
+
+    const described = await description("#pt-save", "Save", "Save the file");
+    assert.deepEqual(described, { chrome: "Save the file", playwright: true }, "the target is described by the tooltip text");
+    check("tooltip: the target's accessible description is the text, in Chrome and in Playwright");
+
+    // Attributes: text in place, for in place, variant recreates
+    const tipChanges = await page.evaluate(async () => {
+      const { root } = (window as unknown as PopWin).__pop;
+      const tip = root.getElementById("pt-tip") as Host;
+      const before = tip.component;
+      tip.setAttribute("text", "Save to disk");
+      const text = { same: tip.component === before, text: tip.component?.element.textContent };
+      tip.setAttribute("for", "pt-share");
+      const moved = {
+        same: tip.component === before,
+        share: root.getElementById("pt-share")?.getAttribute("aria-describedby"),
+        save: root.getElementById("pt-save")?.getAttribute("aria-describedby"),
+      };
+      tip.setAttribute("variant", "plain");
+      const variant = {
+        recreated: tip.component !== before,
+        plain: !!tip.component?.element.className.includes("tooltip--plain"),
+        target: tip.target?.id,
+      };
+      const share = root.getElementById("pt-save") as HTMLElement;
+      tip.target = share;
+      return { text, moved, variant, property: tip.target?.id, save: share.getAttribute("aria-describedby") };
+    });
+    assert.deepEqual(tipChanges, {
+      text: { same: true, text: "Save to disk" },
+      moved: { same: true, share: "pt-tip", save: null },
+      variant: { recreated: true, plain: true, target: "pt-share" },
+      property: "pt-save",
+      save: "pt-tip",
+    });
+    assert.deepEqual(await description("#pt-save", "Save", "Save to disk"), { chrome: "Save to disk", playwright: true });
+    check("tooltip: text and for change in place, variant recreates, the target property wins, the description follows");
+
+    // ------------------------------------------------ snackbar
+    // The factory without a layer in light DOM, for its place and style
+    await fresh(page, `<div id="ps"></div><dialog id="ps-modal" style="width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0">
+      <button id="ps-save" type="button">Save</button>
+      <div style="position: fixed; left: 0; right: 0; bottom: 0; height: 160px; z-index: 2147483647; background: rgb(255, 0, 0)"></div></dialog>`);
+    const snackExpected = await page.evaluate(async () => {
+      const w = window as unknown as PopWin;
+      const snack = w.mtrl.createSnackbar({ message: "Archived", action: "Undo", duration: 0 });
+      snack.show();
+      await new Promise((r) => setTimeout(r, 500));
+      const { top, left, width, height } = snack.element.getBoundingClientRect();
+      const style = getComputedStyle(snack.element);
+      const result = {
+        rect: { top, left, width, height },
+        style: { background: style.backgroundColor, color: style.color, shadow: style.boxShadow, radius: style.borderRadius, padding: style.padding, font: style.font },
+        classes: [...snack.element.classList].sort().join(" "),
+      };
+      snack.destroy();
+      return result;
+    });
+    await wait(300);
+
+    await page.evaluate(() => {
+      const host = document.getElementById("ps") as HTMLElement;
+      const root = host.attachShadow({ mode: "open" });
+      root.innerHTML = `<m-snackbar id="ps-bar" action="Undo" duration="0">Archived</m-snackbar>`;
+      const w = window as unknown as PopWin;
+      w.__pop = { root, events: [] };
+      const bar = root.getElementById("ps-bar") as HTMLElement;
+      for (const type of ["open", "action", "close"]) {
+        bar.addEventListener(type, (event) => {
+          const reason = (event as CustomEvent<{ reason?: string } | null>).detail?.reason;
+          w.__pop.events.push(reason ? `${type}:${reason}` : type);
+        });
+      }
+      // Save, inside the modal dialog, shows the snackbar
+      (document.getElementById("ps-save") as HTMLElement).addEventListener("click", () => void (bar as Host).show());
+    });
+    const snackState = (): Promise<{ open: boolean; home: boolean; events: string[] }> =>
+      page.evaluate(() => {
+        const { root, events } = (window as unknown as PopWin).__pop;
+        const bar = root.getElementById("ps-bar") as Host;
+        const surface = bar.component?.element as HTMLElement;
+        return { open: surface.matches(":popover-open"), home: surface.getRootNode() === bar.shadowRoot, events: [...events] };
+      });
+
+    // Shown on its own: in its root, where the factory puts it, styled
+    await page.evaluate(() => void ((window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host).show());
+    await wait(500);
+    const alone = await page.evaluate(() => {
+      const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host;
+      const surface = bar.component?.element as HTMLElement;
+      const { top, left, width, height } = surface.getBoundingClientRect();
+      const style = getComputedStyle(surface);
+      return {
+        inRoot: surface.getRootNode() === bar.shadowRoot,
+        popoverOpen: surface.matches(":popover-open"),
+        rect: { top, left, width, height },
+        style: { background: style.backgroundColor, color: style.color, shadow: style.boxShadow, radius: style.borderRadius, padding: style.padding, font: style.font },
+        classes: [...surface.classList].sort().join(" "),
+      };
+    });
+    assert.deepEqual({ inRoot: alone.inRoot, popoverOpen: alone.popoverOpen }, { inRoot: true, popoverOpen: true });
+    for (const key of ["top", "left", "width", "height"] as const) {
+      assert.ok(Math.abs(alone.rect[key] - snackExpected.rect[key]) <= 1, `snackbar ${key} ${alone.rect[key]} is the unlayered snackbar's ${snackExpected.rect[key]}`);
+    }
+    assert.deepEqual(alone.style, snackExpected.style, "the snackbar's own colours, elevation, shape and font, as the factory's in light DOM");
+    assert.equal(alone.classes, snackExpected.classes, "the factory's classes");
+    await page.evaluate(() => void ((window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host & { hide: () => unknown }).hide());
+    await wait(500);
+    assert.deepEqual(await snackState(), { open: false, home: true, events: ["open", "close:api"] });
+    check("snackbar top layer in a shadow root: shown in its element's root at the unlayered place, styled as the factory in light DOM");
+
+    // Over a modal dialog: Save inside it shows the snackbar, which opens
+    // inside the dialog, above it, and takes the action
+    await page.evaluate(() => {
+      (window as unknown as PopWin).__pop.events.length = 0;
+      (document.getElementById("ps-modal") as HTMLDialogElement).showModal();
+    });
+    await page.locator("#ps-save").click();
+    await wait(500);
+    const overModal = await page.evaluate(() => {
+      const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host;
+      const surface = bar.component?.element as HTMLElement;
+      const action = surface.querySelector("button") as HTMLElement;
+      const r = action.getBoundingClientRect();
+      const hit = (surface.getRootNode() as ShadowRoot).elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      const style = getComputedStyle(surface);
+      return {
+        popoverOpen: surface.matches(":popover-open"),
+        above: !!hit && action.contains(hit),
+        inModal: (document.getElementById("ps-modal") as HTMLElement).contains((surface.getRootNode() as ShadowRoot).host),
+        styled: style.backgroundColor,
+      };
+    });
+    assert.deepEqual(overModal, { popoverOpen: true, above: true, inModal: true, styled: snackExpected.style.background });
+    check("snackbar top layer: above an open modal dialog and a z-index sibling in it, inside it and styled");
+
+    // The action by keyboard: `action` once, `close` once, focus back on Save
+    await page.getByRole("button", { name: "Undo", exact: true }).focus();
+    await page.keyboard.press("Enter");
+    await wait(600);
+    const acted = await snackState();
+    const focus = await page.evaluate(() => document.activeElement?.id);
+    assert.deepEqual({ ...acted, focus }, { open: false, home: true, events: ["open", "action", "close:action"], focus: "ps-save" });
+    await page.evaluate(() => (document.getElementById("ps-modal") as HTMLDialogElement).close());
+    check("snackbar: its action dispatches action once and closes once, focus returns, and it goes back to its root");
+
+    // duration in place: it hides on its own after it
+    await page.evaluate(() => {
+      const { root, events } = (window as unknown as PopWin).__pop;
+      events.length = 0;
+      const bar = root.getElementById("ps-bar") as Host;
+      bar.setAttribute("duration", "600");
+      bar.show();
+    });
+    await wait(400);
+    const during = (await snackState()).open;
+    await wait(800);
+    assert.deepEqual({ during, after: await snackState() }, { during: true, after: { open: false, home: true, events: ["open", "close:timeout"] } });
+    check("snackbar: it hides after its duration, closing once");
+
+    // message in place, action recreates
+    const snackChanges = await page.evaluate(() => {
+      const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host;
+      const before = bar.component;
+      bar.textContent = "Moved";
+      return new Promise((resolve) =>
+        queueMicrotask(() => {
+          const text = { same: bar.component === before, text: bar.component?.element.querySelector('[class*="snackbar__text"]')?.textContent };
+          bar.setAttribute("message", "Deleted");
+          const message = { same: bar.component === before, text: bar.component?.element.querySelector('[class*="snackbar__text"]')?.textContent };
+          bar.setAttribute("action", "Restore");
+          const action = { recreated: bar.component !== before, label: bar.component?.element.querySelector("button")?.textContent?.trim() };
+          resolve({ text, message, action });
+        })
+      );
+    });
+    assert.deepEqual(snackChanges, {
+      text: { same: true, text: "Moved" },
+      message: { same: true, text: "Deleted" },
+      action: { recreated: true, label: "Restore" },
+    });
+    check("snackbar: its text and message change in place, action recreates");
+
+    // The modals move while the snackbar shows. They are plain dialogs in
+    // another element's open shadow root, as <m-dialog> renders one: the
+    // snackbar is not their descendant, so it finds them by focus.
+    await fresh(page, `<div id="ps"></div><div id="ps-other"></div><button id="ps-page" type="button">Page</button>`);
+    await page.evaluate(() => {
+      const w = window as unknown as PopWin & { __modals: Record<string, HTMLDialogElement> };
+      const root = (document.getElementById("ps") as HTMLElement).attachShadow({ mode: "open" });
+      root.innerHTML = `<m-snackbar id="ps-bar" action="Undo" duration="0">Archived</m-snackbar>`;
+      const other = (document.getElementById("ps-other") as HTMLElement).attachShadow({ mode: "open" });
+      const full = "width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0";
+      other.innerHTML = `<dialog id="outer" style="${full}"><button type="button">Outer</button>
+          <dialog id="inner" style="${full}"><button type="button">Inner</button></dialog></dialog>`;
+      w.__modals = { outer: other.getElementById("outer") as HTMLDialogElement, inner: other.getElementById("inner") as HTMLDialogElement };
+      w.__pop = { root, events: [] };
+      const bar = root.getElementById("ps-bar") as HTMLElement;
+      for (const type of ["open", "action", "close"]) {
+        bar.addEventListener(type, (event) => {
+          const reason = (event as CustomEvent<{ reason?: string } | null>).detail?.reason;
+          w.__pop.events.push(reason ? `${type}:${reason}` : type);
+        });
+      }
+    });
+    const modals = (fn: "outer" | "inner" | "closeOuter" | "closeInner"): Promise<void> =>
+      page.evaluate((fn) => {
+        const { outer, inner } = (window as unknown as { __modals: Record<string, HTMLDialogElement> }).__modals;
+        ({
+          outer: () => outer.showModal(),
+          inner: () => inner.showModal(),
+          closeOuter: () => outer.close(),
+          closeInner: () => inner.close(),
+        })[fn]();
+      }, fn);
+    /** Where the surface is, whether it is on top at its action, and whether Chrome exposes its live region */
+    const where = async (): Promise<{ open: boolean; place: string; above: boolean; live: boolean; events: string[] }> => {
+      const state = await page.evaluate(() => {
+        const { root, events } = (window as unknown as PopWin).__pop;
+        const bar = root.getElementById("ps-bar") as Host;
+        const surface = bar.component?.element as HTMLElement;
+        const action = surface.querySelector("button") as HTMLElement;
+        const r = action.getBoundingClientRect();
+        const hit = (surface.getRootNode() as ShadowRoot).elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        let place = "home";
+        for (let node: Node | null = surface; node; node = node.parentNode ?? (node as ShadowRoot).host ?? null) {
+          if (node instanceof HTMLDialogElement) {
+            place = node.id;
+            break;
+          }
+        }
+        return { open: surface.matches(":popover-open"), place, above: !!hit && action.contains(hit), events: [...events] };
+      });
+      const { nodes } = (await client.send("Accessibility.getFullAXTree")) as {
+        nodes: Array<{ role?: { value: string }; ignored?: boolean }>;
+      };
+      // Asked only while it shows: a closed one's node may linger in the tree
+      return { ...state, live: state.open && nodes.some((n) => n.role?.value === "status" && !n.ignored) };
+    };
+
+    // 1. The modal it opened in closes: it goes home, still open and on top,
+    // and its duration runs on from the start, closing once
+    await modals("outer");
+    await page.evaluate(() => {
+      const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host;
+      bar.setAttribute("duration", "1500");
+      bar.show();
+    });
+    await wait(400);
+    const inModal = await where();
+    await modals("closeOuter");
+    await wait(200);
+    const backHome = await where();
+    await wait(600);
+    const stillOpen = (await where()).open;
+    await wait(800);
+    assert.deepEqual(
+      { inModal, backHome, stillOpen, after: await where() },
+      {
+        inModal: { open: true, place: "outer", above: true, live: true, events: ["open"] },
+        backHome: { open: true, place: "home", above: true, live: true, events: ["open"] },
+        stillOpen: true,
+        after: { open: false, place: "home", above: false, live: false, events: ["open", "close:timeout"] },
+      }
+    );
+    check("snackbar: the modal it is in closing sends it home, still on top, its timer running on, closing once");
+
+    // 2. A modal opens while it shows: it moves in, clickable, its live region
+    // still exposed (not announced again: its text has not changed)
+    await page.evaluate(() => {
+      const { root, events } = (window as unknown as PopWin).__pop;
+      events.length = 0;
+      const bar = root.getElementById("ps-bar") as Host;
+      bar.setAttribute("duration", "0");
+      bar.show();
+    });
+    await wait(400);
+    const before = await where();
+    await modals("outer");
+    await wait(100);
+    const opened = await where();
+    assert.deepEqual(
+      { before, opened },
+      {
+        before: { open: true, place: "home", above: true, live: true, events: ["open"] },
+        opened: { open: true, place: "outer", above: true, live: true, events: ["open"] },
+      }
+    );
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
+    await wait(600);
+    const undone = await where();
+    await modals("closeOuter");
+    assert.deepEqual(undone, { open: false, place: "home", above: false, live: false, events: ["open", "action", "close:action"] });
+    check("snackbar: a modal opening while it shows takes it in, clickable, its live region exposed, the action once");
+
+    // 3. Nested modals: the topmost wins, and closing it hands the snackbar
+    // to the one below
+    await page.evaluate(() => void ((window as unknown as PopWin).__pop.events.length = 0));
+    await modals("outer");
+    await modals("inner");
+    await page.evaluate(() => void ((window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host).show());
+    await wait(400);
+    const top = await where();
+    await modals("closeInner");
+    await wait(100);
+    const below = await where();
+    await modals("closeOuter");
+    await wait(100);
+    const out = await where();
+    await page.evaluate(() => void ((window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host & { hide: () => unknown }).hide());
+    await wait(600);
+    assert.deepEqual(
+      { top, below, out, events: (await where()).events },
+      {
+        top: { open: true, place: "inner", above: true, live: true, events: ["open"] },
+        below: { open: true, place: "outer", above: true, live: true, events: ["open"] },
+        out: { open: true, place: "home", above: true, live: true, events: ["open"] },
+        events: ["open", "close:api"],
+      }
+    );
+    check("snackbar: of nested modals the topmost takes it, then the one below, then home");
+  }
+
+  // ---------------------------------------------------------------- modal surfaces in the top layer
+  // <m-dialog>, the modal sheets, the modal drawer and the modal rail are a
+  // native <dialog> in their shadow root, shown with showModal() (the
+  // factories' layer: "top"). Each is checked inside another shadow root that
+  // holds its opener, with a button on the page outside it: :modal and
+  // styled, the page inert (#249: a drawer in a shadow root made only its own
+  // root inert), Tab kept inside, Escape and a backdrop click closing once,
+  // focus back on the opener, slotted content in its region, and the same
+  // surface and scrim as the factory's without a layer.
+  {
+    type Host = HTMLElement & { component: { on: (event: string, handler: () => void) => unknown } | null };
+    type ModalWin = Win & {
+      __modal: { closes: number; outside: number };
+      mtrl: Record<string, (config: object) => { element: HTMLElement; open?: () => unknown; expand?: () => unknown; destroy: () => void }>;
+    };
+    interface ModalCase {
+      name: string;
+      markup: string;
+      /** How the opener opens it: a method, or the attribute it reflects. */
+      opens: "show" | "open" | "expanded";
+      /** The painted surface, in the element's shadow root and in the factory's element. */
+      surface: string;
+      /** Slot name ("" for the default) to the region class it must sit in. */
+      regions: Record<string, string>;
+      factory: string;
+      config: object;
+      /** The factory's scrim without a layer, which the ::backdrop must match. */
+      scrim: string;
+      /** A backdrop point: beside the surface, off the outside button. */
+      beside: { x: number; y: number };
+    }
+    const ITEMS = [{ id: "a", label: "Inbox", icon: ICON }, { id: "b", label: "Sent", icon: ICON }];
+    const cases: ModalCase[] = [
+      {
+        name: "dialog",
+        markup: `<m-dialog id="m"><span slot="headline">Discard draft?</span>Your changes will be lost.
+          <m-button slot="actions" variant="text">Keep</m-button><m-button slot="actions" variant="text">Discard</m-button></m-dialog>`,
+        opens: "show",
+        surface: '[class~="mtrl-dialog"]',
+        regions: { headline: "dialog__header-title", "": "dialog__content", actions: "dialog__footer" },
+        factory: "createDialog",
+        config: { title: "Discard draft?", content: "Your changes will be lost.", buttons: [{ text: "Keep" }, { text: "Discard" }] },
+        scrim: '[class~="mtrl-dialog__overlay"]',
+        beside: { x: 30, y: 650 },
+      },
+      {
+        name: "bottom sheet",
+        markup: `<m-bottom-sheet id="m" modal><span slot="headline">Share</span><button type="button">Copy link</button><button type="button">Email</button></m-bottom-sheet>`,
+        opens: "show",
+        surface: '[class~="mtrl-bottom-sheet__container"]',
+        regions: { headline: "bottom-sheet__title", "": "bottom-sheet__content" },
+        factory: "createBottomSheet",
+        config: { title: "Share", content: '<button type="button">Copy link</button><button type="button">Email</button>' },
+        scrim: '[class~="mtrl-bottom-sheet__scrim"]',
+        beside: { x: 30, y: 100 },
+      },
+      {
+        name: "side sheet",
+        markup: `<m-side-sheet id="m" modal><span slot="headline">Filters</span><button type="button">Recent</button><button type="button">Starred</button></m-side-sheet>`,
+        opens: "show",
+        surface: '[class~="mtrl-side-sheet__container"]',
+        regions: { headline: "side-sheet__title", "": "side-sheet__content" },
+        factory: "createSideSheet",
+        config: { title: "Filters", content: '<button type="button">Recent</button><button type="button">Starred</button>' },
+        scrim: '[class~="mtrl-side-sheet__scrim"]',
+        beside: { x: 30, y: 650 },
+      },
+      {
+        name: "drawer",
+        markup: `<m-drawer id="m" modal aria-label="Mail"><m-drawer-item value="a">Inbox</m-drawer-item>
+          <m-drawer-item value="b">Sent</m-drawer-item></m-drawer>`,
+        opens: "open",
+        surface: '[class~="mtrl-drawer__sheet"]',
+        regions: {},
+        factory: "createDrawer",
+        config: { variant: "modal", ariaLabel: "Mail", items: [{ id: "a", label: "Inbox" }, { id: "b", label: "Sent" }] },
+        scrim: '[class~="mtrl-drawer__scrim"]',
+        beside: { x: 870, y: 650 },
+      },
+      {
+        name: "navigation rail",
+        markup: `<m-navigation-rail id="m" layout="modal" aria-label="Main">
+          <m-navigation-rail-item value="a" icon='${ICON}'>Inbox</m-navigation-rail-item>
+          <m-navigation-rail-item value="b" icon='${ICON}'>Sent</m-navigation-rail-item></m-navigation-rail>`,
+        opens: "expanded",
+        surface: '[class~="mtrl-navigation-rail"]',
+        regions: {},
+        factory: "createNavigationRail",
+        config: { layout: "modal", ariaLabel: "Main", items: ITEMS },
+        // The factory's modal rail is a <dialog> already: its own ::backdrop
+        scrim: "::backdrop",
+        beside: { x: 870, y: 650 },
+      },
+    ];
+    const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
+
+    const stage = async (item: ModalCase): Promise<void> => {
+      await fresh(page, `<button id="outside" type="button" style="position:fixed;top:8px;left:400px">Outside</button>
+        <div id="wrap"></div><section id="factory"></section>`);
+      await page.evaluate(({ markup, opens }) => {
+        const w = window as unknown as ModalWin;
+        w.__modal = { closes: 0, outside: 0 };
+        document.getElementById("outside")?.addEventListener("click", () => void w.__modal.outside++);
+        const root = (document.getElementById("wrap") as HTMLElement).attachShadow({ mode: "open" });
+        root.innerHTML = `<button id="opener" type="button">Open</button>${markup}`;
+        const host = root.getElementById("m") as Host & Record<string, () => unknown>;
+        (root.getElementById("opener") as HTMLElement).addEventListener("click", () => {
+          if (opens === "show") host.show();
+          else host.setAttribute(opens, "");
+        });
+        if (host.localName === "m-navigation-rail") host.component?.on("collapse", () => void w.__modal.closes++);
+        else host.addEventListener("close", () => void w.__modal.closes++);
+      }, { markup: item.markup, opens: item.opens });
+      await page.waitForFunction(() => {
+        const host = document.getElementById("wrap")?.shadowRoot?.getElementById("m") as Host | null;
+        return !!host?.component;
+      });
+    };
+    const openIt = async (): Promise<void> => {
+      await page.locator("#wrap").getByRole("button", { name: "Open", exact: true }).click();
+      await wait(700);
+    };
+    /** The inner <dialog>, whether it is open and modal, and the host's reflected state. */
+    const state = (opens: string): Promise<{ modal: boolean; open: boolean; reflected: boolean; closes: number; outside: number }> =>
+      page.evaluate((opens) => {
+        const host = document.getElementById("wrap")?.shadowRoot?.getElementById("m") as Host;
+        const dialog = host.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+        const { closes, outside } = (window as unknown as ModalWin).__modal;
+        return {
+          modal: dialog.matches(":modal"),
+          open: dialog.open,
+          reflected: host.hasAttribute(opens === "expanded" ? "expanded" : "open"),
+          closes,
+          outside,
+        };
+      }, opens);
+    /** Where focus is, and whether it is inside the element (its light DOM or its shadow root). */
+    const focus = (): Promise<{ inside: boolean; opener: boolean; label: string }> =>
+      page.evaluate(() => {
+        const host = document.getElementById("wrap")?.shadowRoot?.getElementById("m") as HTMLElement;
+        let active = document.activeElement;
+        while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+        let node: Node | null = active;
+        while (node && node !== host) node = node.parentNode instanceof ShadowRoot ? node.parentNode.host : node.parentNode;
+        return {
+          inside: node === host,
+          opener: active?.id === "opener",
+          // A button in a shadow root takes its text from its host's slot
+          label: (active?.textContent?.trim() || ((active?.getRootNode() as ShadowRoot).host?.textContent ?? "")).trim(),
+        };
+      });
+
+    for (const item of cases) {
+      await stage(item);
+      await openIt();
+      // The page outside is inert: it takes no focus, and a click on it lands
+      // on the backdrop (checked with the backdrop click below).
+      // Checked first: without showModal() this is what fails
+      // Focus is not taken at all, not taken and pulled back: the modal
+      // drawer's own focus handler would pull it back without the platform.
+      const outsideFocus = await page.evaluate(() => {
+        const outside = document.getElementById("outside") as HTMLElement;
+        let focused = 0;
+        outside.addEventListener("focus", () => void focused++);
+        outside.focus();
+        return { focused, active: document.activeElement === outside };
+      });
+      assert.deepEqual(outsideFocus, { focused: 0, active: false }, `${item.name}: a button on the page outside cannot be focused`);
+      const opened = await state(item.opens);
+      const styled = await page.evaluate((selector) => {
+        const host = document.getElementById("wrap")?.shadowRoot?.getElementById("m") as HTMLElement;
+        const root = host.shadowRoot as ShadowRoot;
+        const dialog = root.querySelector("dialog") as HTMLDialogElement;
+        const surface = (dialog.matches(selector) ? dialog : dialog.querySelector(selector)) as HTMLElement;
+        const box = surface.getBoundingClientRect();
+        return {
+          painted: getComputedStyle(surface).backgroundColor !== "rgba(0, 0, 0, 0)" && box.width > 0 && box.height > 0,
+          inShadow: dialog.getRootNode() === root,
+        };
+      }, item.surface);
+      assert.deepEqual(
+        { ...opened, ...styled },
+        { modal: true, open: true, reflected: true, closes: 0, outside: 0, painted: true, inShadow: true },
+        `${item.name}: open`
+      );
+      check(`${item.name} in the top layer: a :modal <dialog> in its shadow root, painted, its state reflected`);
+
+
+      const stops: Array<{ inside: boolean; label: string }> = [];
+      for (let i = 0; i < 6; i++) {
+        await page.keyboard.press(i % 3 === 2 ? "Shift+Tab" : "Tab");
+        stops.push(await focus());
+      }
+      assert.ok(
+        stops.every((stop) => stop.inside) && new Set(stops.map((stop) => stop.label)).size >= 2,
+        `${item.name}: Tab moves between its stops and stays inside ${JSON.stringify(stops)}`
+      );
+      check(`${item.name} in the top layer: the page outside takes no focus, and Tab stays inside`);
+
+      await page.keyboard.press("Escape");
+      await wait(400);
+      const escaped = await state(item.opens);
+      const back = await focus();
+      assert.deepEqual(
+        { ...escaped, opener: back.opener },
+        { modal: false, open: false, reflected: false, closes: 1, outside: 0, opener: true },
+        `${item.name}: Escape`
+      );
+      check(`${item.name} in the top layer: Escape closes it once and focus returns to the opener in the shadow root`);
+
+      await openIt();
+      const outside = await page.evaluate(() => {
+        const box = (document.getElementById("outside") as HTMLElement).getBoundingClientRect();
+        return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+      });
+      await page.mouse.click(outside.x, outside.y);
+      await wait(400);
+      const clicked = await state(item.opens);
+      assert.deepEqual(
+        { outside: clicked.outside, closes: clicked.closes, open: clicked.open, opener: (await focus()).opener },
+        { outside: 0, closes: 2, open: false, opener: true },
+        `${item.name}: a click on the outside button`
+      );
+      await openIt();
+      await page.mouse.click(item.beside.x, item.beside.y);
+      await wait(400);
+      const beside = await state(item.opens);
+      assert.deepEqual({ closes: beside.closes, open: beside.open }, { closes: 3, open: false }, `${item.name}: backdrop click`);
+      check(`${item.name} in the top layer: a click on the page's button reaches the backdrop, not the button, and closes it once, as the factory's scrim does`);
+
+      if (Object.keys(item.regions).length) {
+        const regions = await page.evaluate((regions) => {
+          const host = document.getElementById("wrap")?.shadowRoot?.getElementById("m") as HTMLElement;
+          const root = host.shadowRoot as ShadowRoot;
+          const result: Record<string, boolean> = {};
+          for (const [name, region] of Object.entries(regions)) {
+            const slot = root.querySelector(name ? `slot[name="${name}"]` : "slot:not([name])") as HTMLSlotElement;
+            result[name] = !!slot.closest(`[class~="mtrl-${region}"]`) && slot.assignedNodes().some((n) => (n.textContent ?? "").trim() !== "");
+          }
+          return result;
+        }, item.regions);
+        assert.deepEqual(regions, Object.fromEntries(Object.keys(item.regions).map((name) => [name, true])), `${item.name}: regions`);
+        check(`${item.name} in the top layer: slotted content renders in its regions`);
+      }
+
+      // Factory parity: the same surface and scrim as the factory's own
+      // without a layer, in light DOM with the global stylesheet.
+      await openIt();
+      const measure = (): Promise<Record<string, string | number>> =>
+        page.evaluate((selector) => {
+          const host = document.getElementById("wrap")?.shadowRoot?.getElementById("m") as HTMLElement;
+          const dialog = host.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+          const surface = (dialog.matches(selector) ? dialog : dialog.querySelector(selector)) as HTMLElement;
+          const box = surface.getBoundingClientRect();
+          const style = getComputedStyle(surface);
+          const backdrop = getComputedStyle(dialog, "::backdrop");
+          return {
+            width: Math.round(box.width),
+            height: Math.round(box.height),
+            left: Math.round(box.left),
+            top: Math.round(box.top),
+            radius: style.borderRadius,
+            background: style.backgroundColor,
+            scrim: backdrop.backgroundColor,
+            scrimOpacity: backdrop.opacity,
+          };
+        }, item.surface);
+      const layered = await measure();
+      const factory = await page.evaluate(({ name, config, surface, scrim }) => {
+        const w = window as unknown as ModalWin;
+        const component = w.mtrl[name](config);
+        if (!component.element.isConnected) (document.getElementById("factory") as HTMLElement).append(component.element);
+        (component.open ?? component.expand)?.call(component);
+        return new Promise<Record<string, string | number>>((resolve) =>
+          setTimeout(() => {
+            const root = component.element;
+            const surfaceElement = (root.matches(surface) ? root : root.querySelector(surface)) as HTMLElement;
+            const box = surfaceElement.getBoundingClientRect();
+            const style = getComputedStyle(surfaceElement);
+            const scrimStyle = scrim === "::backdrop"
+              ? getComputedStyle(root, "::backdrop")
+              : getComputedStyle((root.closest(scrim) ?? root.querySelector(scrim)) as HTMLElement);
+            const result = {
+              width: Math.round(box.width),
+              height: Math.round(box.height),
+              left: Math.round(box.left),
+              top: Math.round(box.top),
+              radius: style.borderRadius,
+              background: style.backgroundColor,
+              scrim: scrimStyle.backgroundColor,
+              scrimOpacity: scrimStyle.opacity,
+            };
+            component.destroy();
+            resolve(result);
+          }, 700)
+        );
+      }, { name: item.factory, config: item.config, surface: item.surface, scrim: item.scrim });
+      // Within a pixel: slotted text lays out its line box a rounding apart
+      const near = (a: Record<string, string | number>): Record<string, string | number> =>
+        Object.fromEntries(Object.entries(a).map(([k, v]) => [k, typeof v === "number" && Math.abs(v - (factory[k] as number)) <= 1 ? factory[k] : v]));
+      assert.deepEqual(near(layered), factory, `${item.name}: the same surface and scrim as the factory's`);
+      check(`${item.name} in the top layer: the factory's size, place, corners and colours, and its scrim colour on ::backdrop`);
+      await page.keyboard.press("Escape");
+    }
+
+    // <m-dialog>: the headline attribute names it without a slotted headline,
+    // aria-label in place of one, and a refused cancel keeps it open.
+    await fresh(page, `<m-dialog id="named" headline="Delete file?">It goes for good.</m-dialog>`);
+    await page.evaluate(() => {
+      const host = document.getElementById("named") as HTMLElement & { show: () => unknown };
+      host.addEventListener("cancel", (event) => event.preventDefault(), { once: true });
+      host.show();
+    });
+    await wait(600);
+    const named = await page.getByRole("alertdialog", { name: "Delete file?" }).count();
+    await page.keyboard.press("Escape");
+    await wait(100);
+    const refused = await page.evaluate(() => document.getElementById("named")?.hasAttribute("open"));
+    await page.keyboard.press("Escape");
+    await wait(100);
+    const closed = await page.evaluate(() => !document.getElementById("named")?.hasAttribute("open"));
+    await page.evaluate(() => {
+      const host = document.getElementById("named") as HTMLElement;
+      host.setAttribute("aria-label", "Confirm");
+      host.setAttribute("open", "");
+    });
+    await wait(600);
+    const labelled = await page.getByRole("alertdialog", { name: "Confirm" }).count();
+    await page.evaluate(() => document.getElementById("named")?.removeAttribute("open"));
+    await wait(100);
+    assert.deepEqual({ named, refused, closed, labelled }, { named: 1, refused: true, closed: true, labelled: 1 });
+    check("dialog element: the headline attribute or aria-label names it; a refused cancel keeps it open");
+
+    // A snackbar shown while a modal is open goes into the topmost <dialog>, in a
+    // display:contents wrapper: its action is a Tab stop, its fixed box is placed
+    // against the viewport, the slots keep their regions, and closes still come once.
+    for (const tag of ["m-dialog", "m-bottom-sheet", "m-side-sheet"]) {
+      await fresh(page, `<${tag} id="guest" modal headline="Host"><button type="button">Own</button></${tag}>`);
+      await page.evaluate(() => {
+        const w = window as unknown as ModalWin;
+        w.__modal = { closes: 0, outside: 0 };
+        const host = document.getElementById("guest") as HTMLElement & { show: () => unknown };
+        host.addEventListener("close", () => void w.__modal.closes++);
+        host.show();
+      });
+      await wait(600);
+      const guest = await page.evaluate(() => {
+        const dialog = document.getElementById("guest")?.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+        const wrapper = document.createElement("div");
+        wrapper.style.display = "contents";
+        wrapper.innerHTML = '<div id="bar" style="position:fixed;left:0;bottom:0;width:100px;height:20px"><button type="button" id="undo">Undo</button></div>';
+        dialog.append(wrapper);
+        const bar = (wrapper.firstElementChild as HTMLElement).getBoundingClientRect();
+        return { left: Math.round(bar.left), bottom: Math.round(bar.bottom), viewport: window.innerHeight };
+      });
+      const reached: string[] = [];
+      for (let i = 0; i < 4; i++) {
+        await page.keyboard.press("Tab");
+        reached.push(await page.evaluate(() => {
+          let active = document.activeElement;
+          while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+          return active?.id || active?.textContent?.trim() || "";
+        }));
+      }
+      const regions = await page.evaluate(() => {
+        const root = document.getElementById("guest")?.shadowRoot as ShadowRoot;
+        const slot = root.querySelector("slot:not([name])") as HTMLSlotElement;
+        return slot.assignedElements().map((el) => el.textContent);
+      });
+      await page.keyboard.press("Escape");
+      await wait(300);
+      const closes = await page.evaluate(() => (window as unknown as ModalWin).__modal.closes);
+      assert.deepEqual(
+        { left: guest.left, bottom: guest.bottom, undo: reached.includes("undo"), own: reached.includes("Own"), regions, closes },
+        { left: 0, bottom: guest.viewport, undo: true, own: true, regions: ["Own"], closes: 1 },
+        `${tag}: a snackbar in its <dialog> ${JSON.stringify(reached)}`
+      );
+    }
+    check("modal elements: a snackbar appended to the open <dialog> is reachable by Tab, placed on the viewport, and changes no region or close");
   }
 
   // ---------------------------------------------------------------- theme

@@ -38,6 +38,17 @@ $arrow-size: 8px;
     opacity 150ms cubic-bezier(0, 0, 0.2, 1),
     transform 150ms cubic-bezier(0, 0, 0.2, 1);
   
+  // A top-layer tooltip is a popover (`layer: "top"`). The browser's popover
+  // defaults centre it in the viewport inside a border and clip its arrow; the
+  // tooltip places itself, so they are cleared. `:where` keeps this rule under
+  // the position margins and the plain variant's border that follow.
+  &:where([popover]) {
+    inset: auto;
+    margin: 0;
+    border: 0;
+    overflow: visible;
+  }
+
   // States
   &--visible {
     opacity: 0.9;

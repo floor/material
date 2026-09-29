@@ -6,17 +6,22 @@
 // through open shadow roots, for focus saved around an overlay.
 import { describe, test, expect, beforeAll, afterAll, afterEach } from 'bun:test';
 import { JSDOM } from 'jsdom';
-import { activeElementOf, deepActiveElement } from '../../../src/core/dom/focus';
+import { activeElementOf, deepActiveElement, tabStops, wrapTab } from '../../../src/core/dom/focus';
 
 const g = globalThis as unknown as Record<string, unknown>;
 let previousDocument: unknown;
 let document: Document;
+let dom: JSDOM;
 
 beforeAll(() => {
-  const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'http://localhost/' });
+  dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'http://localhost/' });
   previousDocument = g.document;
   document = dom.window.document;
   g.document = document;
+  // JSDOM lays nothing out: every element has a box, so each counts as rendered
+  dom.window.Element.prototype.getClientRects = function () {
+    return [{}] as unknown as DOMRectList;
+  };
 });
 
 afterAll(() => {
@@ -87,5 +92,59 @@ describe('deepActiveElement', () => {
     document.body.append(input);
     input.focus();
     expect(deepActiveElement()).toBe(input);
+  });
+});
+
+describe('tabStops and wrapTab', () => {
+  /**
+   * A modal in a shadow root: a first button in the shadow, then a slot the
+   * host's children go to (a disabled button and one in a nested shadow
+   * root), then a last button.
+   */
+  const modal = (): { container: HTMLElement; ids: () => string[] } => {
+    const host = document.createElement('div');
+    host.innerHTML = '<button id="disabled" disabled></button><span id="nested"></span>';
+    const nested = (host.querySelector('#nested') as HTMLElement).attachShadow({ mode: 'open' });
+    nested.innerHTML = '<button id="inner"></button>';
+    document.body.append(host);
+    const root = host.attachShadow({ mode: 'open' });
+    root.innerHTML = '<div id="modal"><button id="first"></button><slot></slot><button id="last"></button></div>';
+    const container = root.getElementById('modal') as HTMLElement;
+    return { container, ids: () => tabStops(container).map((element) => element.id) };
+  };
+  const press = (container: HTMLElement, shiftKey = false): KeyboardEvent => {
+    const event = new dom.window.KeyboardEvent('keydown', { key: 'Tab', shiftKey, cancelable: true, bubbles: true });
+    wrapTab(container, event);
+    return event;
+  };
+
+  test('finds the tab stops through slots and shadow roots, in order, skipping the disabled', () => {
+    expect(modal().ids()).toEqual(['first', 'inner', 'last']);
+  });
+
+  test('Tab from the last stop goes to the first, Shift+Tab from the first to the last', () => {
+    const { container } = modal();
+    const [first, , last] = tabStops(container);
+    last.focus();
+    expect(press(container).defaultPrevented).toBe(true);
+    expect(deepActiveElement()).toBe(first);
+    expect(press(container, true).defaultPrevented).toBe(true);
+    expect(deepActiveElement()).toBe(last);
+  });
+
+  test('between the ends the browser moves focus: nothing is prevented', () => {
+    const { container } = modal();
+    const [first] = tabStops(container);
+    first.focus();
+    expect(press(container).defaultPrevented).toBe(false);
+    expect(deepActiveElement()).toBe(first);
+  });
+
+  test('Shift+Tab from the modal itself goes to the last stop', () => {
+    const { container } = modal();
+    container.tabIndex = -1;
+    container.focus();
+    expect(press(container, true).defaultPrevented).toBe(true);
+    expect(deepActiveElement()?.id).toBe('last');
   });
 });
