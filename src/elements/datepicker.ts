@@ -14,8 +14,8 @@
  * The value is an ISO date, `YYYY-MM-DD`, as on `<input type=date>`. With
  * `selection-mode="range"` a complete range is an ISO 8601 interval,
  * `YYYY-MM-DD/YYYY-MM-DD`: one string for the form, with a separator no date
- * contains. A range with only its start is the start date, as the factory's
- * `getValue()` returns it. Empty is `""`. A value that is not one of these, or
+ * contains. A lone date in range mode is a one-day range, `d/d`, as the
+ * factory holds it. Empty is `""`. A value that is not one of these, or
  * that `min`, `max` or the mode rule out, empties the picker (the factory
  * keeps no such date).
  *
@@ -32,8 +32,9 @@
  * needs no Save. The factory reads both once: a change recreates the picker.
  *
  * The input of a modal variant is read-only, which takes it out of constraint
- * validation: the element reports `required` itself, as `valueMissing`.
- * `readonly` keeps the value and the calendar closed.
+ * validation: the element reports the factory's `required` check as
+ * `valueMissing`. `readonly` is the factory's: the value stays and the
+ * calendar closed. `supporting-text` is the factory's supporting text.
  *
  * @module elements
  */
@@ -47,15 +48,6 @@ import { defineElement, type DefineOptions, type ElementHost, type ElementInstan
 export interface DatepickerElementComponent extends DatePickerComponent {
   /** Opens the calendar, unless the picker is disabled or read-only. */
   show: () => void;
-  /** `readonly`: the value cannot change and the calendar does not open. */
-  readOnly: boolean;
-  setReadOnly: (readOnly: boolean) => void;
-}
-
-interface DatepickerElementConfig extends DatePickerConfig {
-  supportingText?: string;
-  required?: boolean;
-  readOnly?: boolean;
 }
 
 const iso = (date: Date | null | undefined): string => (date ? formatDate(date, "YYYY-MM-DD") : "");
@@ -72,11 +64,11 @@ const valueMissingMessage = (): string =>
   (missing ??= Object.assign(document.createElement("input"), { type: "date", required: true }).validationMessage ||
     "Please fill out this field.");
 
-/** Reports `required`, which the read-only input does not. */
+/** Reports the factory's `required` check, which the read-only input does not. */
 const validate = (c: DatepickerElementComponent): void => {
   const internals = hosts.get(c)?.internals;
   if (!internals) return;
-  if (c.input.required && c.getValue() === null) internals.setValidity({ valueMissing: true }, valueMissingMessage(), c.input);
+  if (!c.checkValidity()) internals.setValidity({ valueMissing: true }, valueMissingMessage(), c.input);
   else internals.setValidity({});
 };
 
@@ -85,46 +77,21 @@ const setValue = (c: DatepickerElementComponent, value: unknown): void => {
   const text = value === null || value === undefined ? "" : String(value);
   const [start, end] = text.split("/");
   if (start) c.setValue(end === undefined ? start : [start, end]);
-  if (c.getValue() !== null && toValue(c.getValue()) !== text) c.clear();
+  // In range mode the factory holds a lone date as a one-day range.
+  const held = c.getValue();
+  const expected = Array.isArray(held) && end === undefined ? `${text}/${text}` : text;
+  if (held !== null && toValue(held) !== expected) c.clear();
   validate(c);
 };
 
-const setHelp = (c: DatepickerElementComponent, text: string): void => {
-  const help = c.element.querySelector(`.${c.getClass("datepicker__help")}`);
-  if (help) help.textContent = text;
-};
-
-const create = (config: DatepickerElementConfig): DatepickerElementComponent => {
-  const { supportingText, required, readOnly, value, ...rest } = config;
+const create = (config: DatePickerConfig): DatepickerElementComponent => {
+  const { value, ...rest } = config;
   const picker = createDatePicker(rest);
-  // A modal variant's input only opens the calendar; the docked one is typed in.
-  const typed = !picker.input.readOnly;
   const component: DatepickerElementComponent = Object.assign(picker, {
-    readOnly: false,
-    show: (): void => {
-      if (!component.readOnly) picker.open();
-    },
-    setReadOnly: (value: boolean): void => {
-      component.readOnly = value;
-      picker.input.readOnly = value || !typed;
-      if (value) picker.close();
-    },
+    show: (): void => void picker.open(),
   });
   // The value's string form, a range's included, as the property takes it.
   if (value) setValue(component, value);
-  if (supportingText) setHelp(component, supportingText);
-  if (required) picker.input.required = true;
-  if (readOnly) component.setReadOnly(true);
-  // A read-only picker keeps its calendar closed: the ways a person opens it
-  // stop here, before the factory's own listeners.
-  const guard = (event: Event): void => {
-    if (!component.readOnly || !(event.target instanceof Element)) return;
-    const opener = event.target === picker.input || !!event.target.closest('[data-action="open"]');
-    const opens = event.type === "click" || (event instanceof KeyboardEvent && event.key === "ArrowDown");
-    if (opener && opens) event.stopPropagation();
-  };
-  picker.element.addEventListener("click", guard, true);
-  picker.element.addEventListener("keydown", guard, true);
   return component;
 };
 
@@ -139,7 +106,7 @@ const setOpen = (c: DatepickerElementComponent, open: boolean, host: HTMLElement
 
 const datepickerSpec = {
   name: "datepicker",
-  create: (config) => create(config as DatepickerElementConfig),
+  create: (config) => create(config as DatePickerConfig),
   styles: ["datepicker"],
   attributes: {
     variant: { type: "string", config: "variant" },
@@ -156,19 +123,19 @@ const datepickerSpec = {
     "supporting-text": {
       type: "string",
       config: "supportingText",
-      // Without its own text, the help line shows the format, as the factory's does.
-      update: (c, v, host) => setHelp(c, v === null ? (host.getAttribute("date-format") ?? "MM/DD/YYYY") : String(v)),
+      // Without its own text, the help line shows the format.
+      update: (c, v) => void c.setSupportingText(v === null ? null : String(v)),
     },
     required: {
       type: "boolean",
       config: "required",
       update: (c, v) => {
-        c.input.required = !!v;
+        c.setRequired(!!v);
         validate(c);
       },
     },
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
-    readonly: { type: "boolean", config: "readOnly", update: (c, v) => c.setReadOnly(!!v) },
+    readonly: { type: "boolean", config: "readOnly", update: (c, v) => void c.setReadOnly(!!v) },
     open: { type: "boolean", update: (c, v, host) => setOpen(c, !!v, host) },
   },
   properties: {

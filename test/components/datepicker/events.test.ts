@@ -33,31 +33,36 @@ const start = new Date(2026, 8, 10);
 const end = new Date(2026, 8, 15);
 
 describe("datepicker event contract", () => {
-  test("setValue and clear emit API values and formatted strings without rangeEndDate", () => {
+  test("setValue and clear emit the one change shape", () => {
     const picker = mount({ selectionMode: "range" });
     const events: DatePickerChangePayload[] = [];
     picker.on("change", payload => events.push(payload));
     expect(picker.setValue(start).setValue([end, start]).clear()).toBe(picker);
+    // A lone date in range mode is a one-day range.
     expect(events).toEqual([
-      { value: start, formattedValue: "09/10/2026" },
-      { value: [start, end], formattedValue: "09/10/2026 - 09/15/2026" },
-      { value: null, formattedValue: "" },
+      { value: [start, start], rangeEndDate: start, formattedValue: "09/10/2026 - 09/10/2026" },
+      { value: [start, end], rangeEndDate: end, formattedValue: "09/10/2026 - 09/15/2026" },
+      { value: null, rangeEndDate: null, formattedValue: "" },
     ]);
-    for (const payload of events) expect("rangeEndDate" in payload).toBe(false);
   });
 
-  test("calendar range selections emit separate start and end dates", () => {
+  test("a range takes a { start, end } object and a config value", () => {
+    const picker = mount({ selectionMode: "range", value: start });
+    expect(picker.getValue()).toEqual([start, start]);
+    picker.setValue({ start: end, end: start });
+    expect(picker.getValue()).toEqual([start, end]);
+  });
+
+  test("a docked range commits once, when whole", () => {
     const picker = mount({ selectionMode: "range", closeOnSelect: false });
     picker.open();
     picker.calendar.goToDate(start);
     const events: DatePickerChangePayload[] = [];
     picker.on("change", payload => events.push(payload));
     day(picker, end);
+    expect(events).toEqual([]);
     day(picker, start);
-    expect(events).toEqual([
-      { value: end, rangeEndDate: null, formattedValue: "09/15/2026" },
-      { value: start, rangeEndDate: end, formattedValue: "09/10/2026 - 09/15/2026" },
-    ]);
+    expect(events).toEqual([{ value: [start, end], rangeEndDate: end, formattedValue: "09/10/2026 - 09/15/2026" }]);
     expect(picker.getValue()).toEqual([start, end]);
   });
 

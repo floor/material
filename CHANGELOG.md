@@ -10,7 +10,28 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Added
+
+- **Date picker: read-only, required and supporting text (FLO-289).** `readOnly` /
+  `setReadOnly()` keep the value and the calendar closed; `required` / `setRequired()` with
+  `checkValidity()` and `reportValidity()`, as on native inputs (a modal variant's read-only
+  input is otherwise outside constraint validation); `supportingText` / `setSupportingText()`
+  replace the format hint, which returns without them. A range also takes `{ start, end }`.
+  `<m-datepicker>` maps `readonly`, `required` and `supporting-text` to them in place of its
+  own workarounds, so a read-only element's trigger is disabled.
+
 ### Changed
+
+- **Date picker: one `change` shape, one-day ranges, and a value typed by the mode
+  (FLO-295).** `change` carried `{ value, formattedValue }` from the API but
+  `{ value: start, rangeEndDate }` from the calendar, and a docked range emitted once for its
+  start and again for its end. Every `change` is now `{ value, rangeEndDate, formattedValue }`,
+  `value` as `getValue()` returns it, and a docked range emits once, when whole. In range mode
+  a lone date (`setValue(d)`, a config `value`, `<m-datepicker value="d">`) is the one-day
+  range `[d, d]` (`d/d` on the element), not a range with only its start. `getValue()` and the
+  payloads are `[Date, Date] | null` for `selectionMode: 'range'` and `Date | null`
+  otherwise. Migration: read the range from `value` (`const [start, end] = value`), not from
+  `value` plus `rangeEndDate`; a range with only its start now reads `[d, d]`.
 
 - **Icon button: `change` with `{ selected }`, and `toggle` deprecated (FLO-295).** A toggle
   icon button dispatched a DOM `toggle` on its element, which shares its name with the native

@@ -21,7 +21,7 @@ export const tapAlias: Equals<DatePickerTapPayload, NormalizedEvent> = true;
 export const swipe: Equals<Parameters<DatePickerEvents["swipe"]>[0], DatePickerSwipePayload> = true;
 export const swipeShape: Equals<DatePickerSwipePayload, { direction: "left" | "right"; deltaX: number; deltaY: number }> = true;
 const picker = createDatePicker({ name: "departure" });
-export const inferred: Equals<Parameters<Parameters<typeof picker.on<"change">>[1]>, [DatePickerChangePayload]> = true;
+export const inferred: Equals<Parameters<Parameters<typeof picker.on<"change">>[1]>, [DatePickerChangePayload<Date | null>]> = true;
 const handler: DatePickerEvents["change"] = payload => { payload.formattedValue.toUpperCase(); payload.rangeEndDate?.getTime(); };
 export const chained: DatePickerComponent = picker.on("change", handler).off("change", handler);
 picker.on("open", ({ value }) => { if (Array.isArray(value)) value[1].getTime(); else value?.getTime(); });
@@ -30,9 +30,16 @@ picker.on("click", payload => payload.event.clientX);
 picker.on("keydown", payload => payload.originalEvent.key);
 picker.on("tap", payload => payload.preventDefault());
 picker.on("swipe", payload => payload.direction);
-export const apiRange: DatePickerChangePayload = { value: [new Date(), new Date()], formattedValue: "range" };
-export const calendarRange: DatePickerChangePayload = { value: new Date(), rangeEndDate: new Date(), formattedValue: "range" };
-export const cleared: DatePickerChangePayload = { value: null, formattedValue: "" };
+// FLO-295: one change shape, whoever commits the value.
+export const range: DatePickerChangePayload = { value: [new Date(), new Date()], rangeEndDate: new Date(), formattedValue: "range" };
+export const single: DatePickerChangePayload = { value: new Date(), rangeEndDate: null, formattedValue: "date" };
+export const cleared: DatePickerChangePayload = { value: null, rangeEndDate: null, formattedValue: "" };
+// The mode narrows the value.
+const ranged = createDatePicker({ selectionMode: "range" });
+export const rangeValue: Equals<ReturnType<typeof ranged.getValue>, [Date, Date] | null> = true;
+export const singleValue: Equals<ReturnType<typeof picker.getValue>, Date | null> = true;
+export const rangeChange: Equals<Parameters<Parameters<typeof ranged.on<"change">>[1]>[0]["value"], [Date, Date] | null> = true;
+ranged.setValue({ start: new Date(), end: new Date() }).setValue("2026-09-10");
 // @ts-expect-error event names are closed
 picker.on("chnage", () => {});
 // @ts-expect-error off shares the closed map
@@ -43,8 +50,12 @@ picker.on("change", (date: Date) => date.getTime());
 picker.off("open", (value: string) => value.toUpperCase());
 // @ts-expect-error change has no DOM event target
 picker.on("change", payload => payload.target);
+// @ts-expect-error a range picker's value is a tuple
+ranged.on("close", payload => payload.value?.getTime());
+// An unnarrowed picker's value can be either.
+const either = createDatePicker({ selectionMode: "range" as string });
 // @ts-expect-error getValue can be a range tuple
-picker.on("close", payload => payload.value?.getTime());
+either.on("close", payload => payload.value?.getTime());
 // @ts-expect-error click is wrapped
 picker.on("click", (event: MouseEvent) => event.clientX);
 // @ts-expect-error keyboard events retain their native type
@@ -57,7 +68,9 @@ picker.on("dateSelected", () => {});
 picker.on("confirm", () => {});
 // @ts-expect-error lifecycle uses a separate emitter
 picker.on("destroy", () => {});
-// @ts-expect-error calendar changes carry a single start date, not a tuple
-export const invalidRange: DatePickerChangePayload = { value: [new Date(), new Date()], rangeEndDate: new Date(), formattedValue: "range" };
+// @ts-expect-error rangeEndDate is always present
+export const missingEnd: DatePickerChangePayload = { value: null, formattedValue: "" };
+// @ts-expect-error a range picker's value is never a lone date
+export const loneRange: typeof ranged extends { getValue: () => infer V } ? V : never = new Date();
 // @ts-expect-error formattedValue is required
-export const missingFormatted: DatePickerChangePayload = { value: new Date() };
+export const missingFormatted: DatePickerChangePayload = { value: new Date(), rangeEndDate: null };
