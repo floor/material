@@ -31,6 +31,13 @@ export interface SplitButtonConfig {
   /** Label of the leading button */
   text?: string;
 
+  /**
+   * `"top"` renders the menu next to the trailing button, in its tree (a
+   * shadow root included), and shows it in the browser's top layer. See the
+   * menu's `layer`.
+   */
+  layer?: "top";
+
   /** Icon of the leading button, as an HTML string */
   icon?: string;
 

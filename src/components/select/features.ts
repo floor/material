@@ -369,9 +369,11 @@ const setupCombobox = (
     else open("selected", e);
   });
 
-  // Focus leaving the select closes the listbox without choosing
+  // Focus leaving the select closes the listbox without choosing. A
+  // top-layer listbox is beside the field rather than inside it.
   input.addEventListener("blur", (e: FocusEvent) => {
-    if (menu.isOpen() && !field.contains(e.relatedTarget as Node)) close(e);
+    const next = e.relatedTarget as Node | null;
+    if (menu.isOpen() && !field.contains(next) && !menu.element.contains(next)) close(e);
   });
 };
 
@@ -424,6 +426,7 @@ export const withMenu =
       closeOnResize: true,
       offset: 0,
       container: component.element,
+      ...(config.layer ? { layer: config.layer } : {}),
       ...(listbox ? { manualOpen: true, listbox: true, closeOnEscape: false } : {}),
       ...(config.menu ?? {}),
     });

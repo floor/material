@@ -32,6 +32,7 @@ export const withMenu =
       position: "bottom-end",
       offset: SPLIT_BUTTON_DEFAULTS.MENU_OFFSET,
       manualOpen: true,
+      ...(config.layer ? { layer: config.layer } : {}),
       prefix: config.prefix,
     } as never);
 
