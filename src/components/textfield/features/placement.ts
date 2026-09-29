@@ -2,7 +2,18 @@ import {
   BaseComponent,
   ElementComponent,
 } from "../../../core/compose/component";
-import { getInheritedBackground } from "../../../core/utils/background";
+
+/**
+ * The floated label is Body Small (12sp) drawn from Body Large (16sp)
+ * (m3.material.io text fields; Android TextInputLayout's collapsed hint).
+ */
+const FLOATED_LABEL_SCALE = 0.75;
+
+/**
+ * Gap between the floated label and each end of the notch (Android
+ * `mtrl_textinput_box_label_cutout_padding`, 4dp).
+ */
+const NOTCH_PADDING = 4;
 
 /**
  * Extended element component with input field
@@ -50,11 +61,40 @@ export const withPlacement =
       }, 10);
     };
 
-    // Use WeakMaps to store observers without extending HTMLElement
-    const bgSourceObservers = new WeakMap<HTMLElement, MutationObserver>();
-    const parentObservers = new WeakMap<HTMLElement, MutationObserver[]>();
-    const themeChangeHandlers = new WeakMap<HTMLElement, EventListener>();
     const classObservers = new WeakMap<HTMLElement, MutationObserver>();
+    let labelObserver: ResizeObserver | null = null;
+
+    const outlineClass = `${PREFIX}-${COMPONENT}__outline`;
+    let outline: HTMLElement | null = null;
+    let notch: HTMLElement | null = null;
+
+    /**
+     * Builds the outline the outlined variant draws its container with: a
+     * leading corner, a notch the floating label sits in, and the trailing
+     * rest. The notch leaves a gap in the top edge instead of painting over
+     * it, so the field shows whatever is behind it. Inserted after the input
+     * so the stylesheet can open the notch from the input's own state.
+     */
+    const ensureOutline = () => {
+      if (outline) return;
+      outline = document.createElement("div");
+      outline.className = outlineClass;
+      outline.setAttribute("aria-hidden", "true");
+      for (const part of ["leading", "notch", "trailing"]) {
+        const segment = document.createElement("div");
+        segment.className = `${outlineClass}-${part}`;
+        outline.appendChild(segment);
+        if (part === "notch") notch = segment;
+      }
+      if (component.input && component.input.parentNode === component.element)
+        component.input.after(outline);
+      else component.element.appendChild(outline);
+    };
+
+    if (
+      component.element.classList.contains(`${PREFIX}-${COMPONENT}--outlined`)
+    )
+      ensureOutline();
 
     /**
      * Updates positions of labels and adjusts input padding
@@ -89,89 +129,29 @@ export const withPlacement =
         `${PREFIX}-${COMPONENT}--with-leading-icon`
       );
 
-      // For outlined variant, set the label background color to match parent
-      if (isOutlined && labelEl) {
-        // Get the inherited background color and its source element
-        const { color: parentBgColor, element: bgSourceElement } =
-          getInheritedBackground(component.element);
-
-        // Apply the background color to the label (only in focus/filled state)
-        if (isFocused || !isEmpty) {
-          labelEl.style.backgroundColor = parentBgColor;
-
-          // Add padding to create the proper "floating label" appearance
-          labelEl.style.paddingLeft = "4px";
-          labelEl.style.paddingRight = "4px";
-
-          // Set up observer for background source element if not already done
-          if (bgSourceElement && !bgSourceObservers.has(component.element)) {
-            const observer = new MutationObserver(() => {
-              // Update label background when source element changes
-              const { color } = getInheritedBackground(component.element);
-              labelEl.style.backgroundColor = color;
-            });
-
-            observer.observe(bgSourceElement, {
-              attributes: true,
-              attributeFilter: ["style", "class"],
-            });
-
-            // Store the observer in our WeakMap
-            bgSourceObservers.set(component.element, observer);
-
-            // Observe parent nodes to catch theme changes, including dark mode
-            let parent = bgSourceElement.parentElement;
-            const observers: MutationObserver[] = [];
-
-            while (parent && parent !== document.documentElement) {
-              const parentObserver = new MutationObserver(() => {
-                // Update label background when parent attributes change
-                const { color: newColor } = getInheritedBackground(
-                  component.element
-                );
-                labelEl.style.backgroundColor = newColor;
-              });
-
-              parentObserver.observe(parent, {
-                attributes: true,
-                attributeFilter: [
-                  "style",
-                  "class",
-                  "data-theme",
-                  "data-theme-mode",
-                ],
-              });
-
-              observers.push(parentObserver);
-              parent = parent.parentElement;
-            }
-
-            // Store parent observers
-            if (observers.length) {
-              parentObservers.set(component.element, observers);
-            }
-          }
-
-          // Set up theme change listener if not already done
-          if (!themeChangeHandlers.has(component.element)) {
-            const themeChangeHandler = () => {
-              // Update label background on theme change
-              const { color } = getInheritedBackground(component.element);
-              if (isFocused || !isEmpty) {
-                labelEl.style.backgroundColor = color;
-              }
-            };
-
-            // Only listen for themechange, as it's the event dispatched by theme-manager.js
-            document.addEventListener("themechange", themeChangeHandler);
-
-            themeChangeHandlers.set(component.element, themeChangeHandler);
-          }
-        } else {
-          // Reset background when not floating
-          labelEl.style.backgroundColor = "";
-          labelEl.style.padding = "";
+      // Size the notch to the floated label and open it while the label floats
+      if (isOutlined) {
+        ensureOutline();
+        // The direction as computed, which reaches into a shadow root where
+        // the stylesheet's [dir] selectors do not
+        component.element.classList.toggle(
+          `${PREFIX}-${COMPONENT}--rtl`,
+          getComputedStyle(component.element).direction === "rtl"
+        );
+      }
+      if (outline && notch) {
+        // offsetWidth is the label's untransformed width, so this holds
+        // mid-transition too
+        const labelWidth = labelEl ? labelEl.offsetWidth : 0;
+        if (labelWidth > 0) {
+          notch.style.width = `${
+            labelWidth * FLOATED_LABEL_SCALE + NOTCH_PADDING * 2
+          }px`;
         }
+        outline.classList.toggle(
+          `${outlineClass}--notched`,
+          isOutlined && !!labelEl && (isFocused || !isEmpty)
+        );
       }
 
       // Handle prefix positioning and input padding
@@ -196,22 +176,15 @@ export const withPlacement =
             // When unfocused and empty, align with prefix/input
             labelEl.style.left = `${labelPosition}px`;
           } else {
-            // When focused or filled, move to default position
-            labelEl.style.left = "12px";
+            // When focused or filled, move to default position: the
+            // stylesheet's for outlined, where the notch expects the label
+            labelEl.style.left = isOutlined ? "" : "12px";
           }
         }
-      } else if (hasLeadingIcon && labelEl) {
-        // Handle case with leading icon but no prefix
-        if (isOutlined) {
-          if (!isFocused && isEmpty) {
-            // When unfocused and empty, align with icon
-            labelEl.style.left = "44px";
-          } else {
-            // When focused or filled, move to default position
-            labelEl.style.left = "12px";
-          }
-        }
-        // For filled variant, the CSS handles this
+      } else if (hasLeadingIcon && labelEl && isOutlined) {
+        // The stylesheet places the label by the icon at rest and at the
+        // start of the notch when floated, per density and direction
+        labelEl.style.left = "";
       }
 
       // Handle suffix positioning and input padding
@@ -253,6 +226,16 @@ export const withPlacement =
 
       // Store the observer for cleanup
       classObservers.set(component.element, classObserver);
+
+      // The notch follows the label's width: its text, density and fonts
+      // loading, and a field first laid out after being hidden
+      const labelEl = component.element.querySelector(
+        `.${PREFIX}-${COMPONENT}__label`
+      );
+      if (labelEl && typeof ResizeObserver !== "undefined") {
+        labelObserver = new ResizeObserver(schedulePositionUpdate);
+        labelObserver.observe(labelEl);
+      }
     };
 
     // Perform initial setup
@@ -280,26 +263,8 @@ export const withPlacement =
           classObservers.delete(component.element);
         }
 
-        // Disconnect background source observer
-        const bgObserver = bgSourceObservers.get(component.element);
-        if (bgObserver) {
-          bgObserver.disconnect();
-          bgSourceObservers.delete(component.element);
-        }
-
-        // Disconnect parent observers
-        const observers = parentObservers.get(component.element);
-        if (observers) {
-          observers.forEach((observer) => observer.disconnect());
-          parentObservers.delete(component.element);
-        }
-
-        // Remove theme change listener
-        const themeHandler = themeChangeHandlers.get(component.element);
-        if (themeHandler) {
-          document.removeEventListener("themechange", themeHandler);
-          themeChangeHandlers.delete(component.element);
-        }
+        labelObserver?.disconnect();
+        labelObserver = null;
 
         originalDestroy.call(component.lifecycle);
       };

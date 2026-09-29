@@ -16,15 +16,8 @@ import type { ExtendedFabComponent, ExtendedFabConfig } from "../components/exte
 import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 import { buttonForm, submitOnClick, typeAttribute } from "./form-button";
 
-const create = (config: ExtendedFabConfig): ExtendedFabComponent => {
-  const fab = createExtendedFab({ ...config, type: "button" });
-  // Without an aria-label the factory names the button with its text, which
-  // here is the <slot> node, not a string. The slotted text names it instead.
-  if (!config.ariaLabel && config.text !== undefined && typeof config.text !== "string") {
-    fab.element.removeAttribute("aria-label");
-  }
-  return fab;
-};
+const create = (config: ExtendedFabConfig): ExtendedFabComponent =>
+  createExtendedFab({ ...config, type: "button" });
 
 const extendedFabSpec = {
   name: "extended-fab",

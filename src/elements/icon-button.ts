@@ -4,7 +4,8 @@
  * `aria-label` is its accessible name.
  *
  * With `toggle`, the `selected` attribute is the default state and the
- * `selected` property the live one; a click dispatches `toggle` from the host.
+ * `selected` property the live one: the attribute moves the state until the
+ * user or script changes it. A click dispatches `toggle` from the host.
  * `type="submit"` and `type="reset"` act on the host's form.
  *
  * @module elements

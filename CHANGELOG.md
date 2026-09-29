@@ -78,9 +78,31 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   on the selected year, as the m3.material.io guidelines have it ("To navigate across
   years, scroll vertically"). It was ±10 years paged by the arrows, which the year view no
   longer shows (FLO-275).
+- **Elements: the model attribute is the default, as natively.** On `<m-switch>`,
+  `<m-checkbox>`, `<m-radios>`, `<m-icon-button>`, `<m-slider>` (`value` and `second-value`),
+  `<m-tabs>` and `<m-textfield>`, a change of `checked`, `selected` or `value` moves the live
+  state only until it is dirty: changed by the user, or set by script through the property
+  or a method. Then the attribute is only the default `form.reset()` returns to, which also
+  makes the element clean again; a restored form state is dirty. The attribute used to move
+  the live state always, and `<m-tabs>` never.
 
 ### Fixed
 
+- **Extended FAB: no manufactured `aria-label` (#232).** It is set only from `ariaLabel`. The
+  factory copied `text` into it, which named `<m-extended-fab>`'s button
+  "[object HTMLSlotElement]" until the element removed it again, and gave an extended FAB
+  with no text the name "action", as the FAB did before FLO-110. The visible text is the
+  name. A segmented button's text segment no longer copies its text into `aria-label`
+  either; an icon-only segment is still named by its value.
+- **Text field: the outlined variant's floating label sits in a notch of the outline
+  (#234).** The outline is drawn in three segments, and while the label floats the middle
+  one drops its top edge: the label's floated width plus 4dp on each side, starting 12dp
+  in. Nothing is painted behind the label any more. It used to copy the nearest ancestor's
+  background onto the label, which found `document.body` from inside `<m-textfield>`'s
+  shadow root, covered any card that is not one flat colour, and kept a mutation observer
+  per ancestor and a `themechange` listener for each field. The notch follows the label's
+  text, density and direction; the outline is 1dp in `outline` at rest, `on-surface` on
+  hover and 2dp `primary` on focus, in `error` for errors and `on-surface` at 12% disabled.
 - **Time picker: a native modal dialog (FLO-278).** It opens with `showModal()`, over a
   0.32 scrim, with the page inert; it takes focus on open and returns it on close. Escape and
   a click on the backdrop cancel that picker only (Escape closed every open picker, and the
@@ -99,6 +121,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - `<m-tab>` values set before the elements are defined are kept: a client-rendered Solid app
   sets them before it registers the elements on mount. `defineTabs` also defines `<m-tab>`
   before `<m-tabs>`, so the tabs read upgraded children.
+- Slider: keys and the pointer work in the task that creates it (#236). The listeners were
+  attached a task later, so input right after `createSlider()`, a form reset or toggling
+  `range` on `<m-slider>` was ignored. Placing the handles for a right-to-left layout now
+  follows the slider's first layout, as the track's measurement already did.
 
 ## [0.10.0-next.1] - 2026-09-29
 

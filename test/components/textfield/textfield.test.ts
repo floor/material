@@ -330,6 +330,106 @@ describe('textfield', () => {
   });
 });
 
+// #234: the outlined variant draws its outline in three segments and opens a
+// notch for the floated label, instead of painting the label with a copied
+// background. JSDOM has no layout, so the label's width is stubbed; the
+// browser check in scripts/check-elements.ts proves the geometry.
+describe('textfield outline notch', () => {
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 30));
+  const part = (field: { element: HTMLElement }, name: string) =>
+    field.element.querySelector(`.mtrl-textfield__outline-${name}`) as HTMLElement | null;
+  const outline = (field: { element: HTMLElement }) =>
+    field.element.querySelector('.mtrl-textfield__outline') as HTMLElement | null;
+  const notched = (field: { element: HTMLElement }) =>
+    outline(field)?.classList.contains('mtrl-textfield__outline--notched');
+  // 10px per character, the label's untransformed width
+  const measureLabel = (field: { element: HTMLElement }) => {
+    const label = field.element.querySelector('label') as HTMLElement;
+    Object.defineProperty(label, 'offsetWidth', { configurable: true, get: () => (label.textContent || '').length * 10 });
+  };
+
+  test('outlined has a leading, notch and trailing segment after the input, hidden from assistive technology', () => {
+    const field = mount({ label: 'Name', variant: 'outlined' });
+    const el = outline(field) as HTMLElement;
+    expect(el).not.toBeNull();
+    expect(el.getAttribute('aria-hidden')).toBe('true');
+    expect(Array.from(el.children).map((child) => child.className)).toEqual([
+      'mtrl-textfield__outline-leading',
+      'mtrl-textfield__outline-notch',
+      'mtrl-textfield__outline-trailing',
+    ]);
+    expect(field.input.nextElementSibling).toBe(el);
+    expect(outline(mount({ label: 'Name' }))).toBeNull();
+    field.destroy();
+  });
+
+  test('the notch is the floated label width (0.75) plus 4px on each side', async () => {
+    const field = mount({ label: 'Name', variant: 'outlined', value: 'Ada' });
+    measureLabel(field);
+    await settle();
+    expect(part(field, 'notch')?.style.width).toBe(`${40 * 0.75 + 8}px`);
+    field.setLabel('Full name');
+    await settle();
+    expect(part(field, 'notch')?.style.width).toBe(`${90 * 0.75 + 8}px`);
+    field.destroy();
+  });
+
+  test('the notch opens while the label floats and closes at rest', async () => {
+    const field = mount({ label: 'Name', variant: 'outlined' });
+    measureLabel(field);
+    // This JSDOM matches :-webkit-autofill, which the autofill check reads as
+    // a value and clears the empty mark with
+    Object.defineProperty(field.input, 'matches', { value: () => false });
+    await settle();
+    expect(notched(field)).toBe(false);
+    field.input.focus();
+    await settle();
+    expect(notched(field)).toBe(true);
+    field.input.blur();
+    await settle();
+    expect(notched(field)).toBe(false);
+    field.setValue('Ada');
+    await settle();
+    expect(notched(field)).toBe(true);
+    field.setValue('');
+    await settle();
+    expect(notched(field)).toBe(false);
+    field.destroy();
+  });
+
+  test('nothing is painted behind the label', async () => {
+    const field = mount({ label: 'Name', variant: 'outlined', value: 'Ada' });
+    field.input.focus();
+    await settle();
+    const label = field.element.querySelector('label') as HTMLElement;
+    expect(label.style.backgroundColor).toBe('');
+    expect(label.style.paddingLeft).toBe('');
+    expect(label.style.paddingRight).toBe('');
+    field.destroy();
+  });
+
+  test('a field switched to outlined gets the outline; switched back, it is left closed', async () => {
+    const field = mount({ label: 'Name', value: 'Ada' });
+    measureLabel(field);
+    field.setVariant('outlined');
+    await settle();
+    expect(outline(field)).not.toBeNull();
+    expect(notched(field)).toBe(true);
+    field.setVariant('filled');
+    await settle();
+    expect(notched(field)).toBe(false);
+    field.destroy();
+  });
+
+  test('without a label the notch never opens', async () => {
+    const field = mount({ variant: 'outlined', value: 'Ada' });
+    await settle();
+    expect(notched(field)).toBe(false);
+    expect(part(field, 'notch')?.style.width).toBe('');
+    field.destroy();
+  });
+});
+
 
 // FLO-114: exercise the actual emitter for both input elements supported by the factory.
 for (const inputType of ['text', 'multiline'] as const) {

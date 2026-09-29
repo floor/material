@@ -407,10 +407,16 @@ try {
   {
     assert.equal(await page.getByRole("button", { name: "Compose" }).count(), 1);
     assert.equal(await page.getByRole("button", { name: "From attribute" }).count(), 1);
-    assert.equal(
-      await page.evaluate(() => document.getElementById("eb")?.shadowRoot?.querySelector("button")?.hasAttribute("aria-label")),
-      false
-    );
+    // #232: the factory no longer copies text into aria-label, so the inner
+    // button carries none and is named by the slotted text itself.
+    for (const [id, name] of [["eb", "Compose"], ["ep", "Untouched"]]) {
+      assert.equal(
+        await page.evaluate((id) => document.getElementById(id)?.shadowRoot?.querySelector("button")?.hasAttribute("aria-label"), id),
+        false,
+        `#${id}'s inner button has no aria-label`
+      );
+      assert.equal(await page.locator(`#${id}`).getByRole("button", { name, exact: true }).count(), 1);
+    }
     check("extended fab: slotted and attribute labels are accessible names");
 
     await page.evaluate(() => document.getElementById("ea")?.setAttribute("label", "Renamed"));
@@ -658,8 +664,6 @@ try {
 
     await page.evaluate(() => (document.getElementById("f") as HTMLFormElement).reset());
     assert.equal((await read()).value, 30);
-    // The factory binds its handles a task after creation, and reset recreates it.
-    await page.evaluate(() => new Promise((r) => setTimeout(r, 0)));
     check("slider: form.reset() restores the value attribute");
 
     // Range: two handles, both ends in the form under the host's name.
@@ -696,8 +700,9 @@ try {
     const toggled = await page.evaluate(() => {
       const s = document.getElementById("s") as Slider;
       s.value = 40;
-      s.setAttribute("range", "");
+      // The value is dirty now, so the second end's default only counts at creation.
       s.setAttribute("second-value", "90");
+      s.setAttribute("range", "");
       const handles = s.shadowRoot?.querySelectorAll('[role="slider"]').length;
       const result = { handles, value: s.value, second: s.secondValue };
       s.removeAttribute("range");
@@ -742,8 +747,11 @@ try {
       // Same width as the factory's, which sits in a padded section.
       s.style.width = `${factory.element.getBoundingClientRect().width}px`;
       const element = s.shadowRoot?.firstElementChild as HTMLElement;
-      // The factory draws its track a task after creation, and moves the handle with a transition.
-      await new Promise((r) => setTimeout(r, 0));
+      // The track measures its length once laid out, which a ResizeObserver reports
+      // in the frame after the append; then the handle moves with a transition.
+      const frame = () => new Promise((r) => requestAnimationFrame(r));
+      await frame();
+      await frame();
       await Promise.all([factory.element, element].flatMap((root) => root.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => a))));
       const measure = (root: HTMLElement): Record<string, string | number> => {
         const handle = root.querySelector('[class*="slider__handle"]') as HTMLElement;
@@ -1039,6 +1047,115 @@ try {
     assert.deepEqual(parity.filled.element, parity.filled.factory);
     assert.deepEqual(parity.outlined.element, parity.outlined.factory);
     check("textfield: renders as the factory does with the global stylesheet, filled and outlined");
+
+    // #234: the outline leaves a notch for the floated label. The label used
+    // to be painted with a background copied from the nearest ancestor, which
+    // found document.body from inside a shadow root and covered any surface
+    // that is not one flat colour.
+    await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createTextfield: (c: object) => { element: HTMLElement } } };
+      const host = document.getElementById("factory") as HTMLElement;
+      host.innerHTML = `<div style="background: rgb(200, 230, 255); padding: 24px; display: grid; gap: 24px; width: 320px">
+        <m-textfield id="na" variant="outlined" label="Element label" value="Ada"></m-textfield>
+        <div id="nb"></div>
+        <m-textfield id="nc" variant="outlined" label="Empty"></m-textfield>
+        <div dir="rtl"><m-textfield id="nd" variant="outlined" label="Right to left" value="Ada"></m-textfield></div>
+      </div>`;
+      const factory = w.mtrl.createTextfield({ variant: "outlined", label: "Factory label", value: "Ada" });
+      (document.getElementById("nb") as HTMLElement).append(factory.element);
+    });
+    // placement, the label's float and the border-colour transition
+    await page.waitForTimeout(500);
+    type Box = { left: number; right: number; top: number; bottom: number; width: number };
+    const notches = await page.evaluate(() => {
+      // A missing segment measures as nothing, so the label is judged first
+      const box = (el: Element | null): Box => {
+        const { left, right, top, bottom, width } = el?.getBoundingClientRect() ?? new DOMRect();
+        return { left, right, top, bottom, width };
+      };
+      const measure = (root: HTMLElement) => {
+        const label = root.querySelector("label") as HTMLElement;
+        const part = (name: string): HTMLElement | null => root.querySelector(`[class*="textfield__outline-${name}"]`);
+        const color = (el: HTMLElement | null, side: "Top" | "Bottom"): string =>
+          el ? getComputedStyle(el)[`border${side}Color`] : "missing";
+        const notch = part("notch");
+        return {
+          root: box(root), label: box(label), notch: box(notch),
+          labelBackground: getComputedStyle(label).backgroundColor,
+          notchTop: color(notch, "Top"),
+          notchBottom: color(notch, "Bottom"),
+          leadingTop: color(part("leading"), "Top"),
+          trailingTop: color(part("trailing"), "Top"),
+        };
+      };
+      const shadow = (id: string): HTMLElement =>
+        (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
+      const light = (document.getElementById("nb") as HTMLElement).firstElementChild as HTMLElement;
+      return { element: measure(shadow("na")), factory: measure(light), empty: measure(shadow("nc")), rtl: measure(shadow("nd")) };
+    });
+    // Pixels on the top edge: in the notch's cutout padding, beside the
+    // label, the card shows through; along the trailing segment the outline
+    // is drawn.
+    const png = (await page.screenshot()).toString("base64");
+    const edge = (n: typeof notches.element, x: number): [number, number] => [x, Math.round(n.root.top)];
+    const points = [
+      edge(notches.element, notches.element.label.left - 2), edge(notches.element, notches.element.root.right - 30),
+      edge(notches.factory, notches.factory.label.left - 2), edge(notches.factory, notches.factory.root.right - 30),
+      edge(notches.rtl, notches.rtl.label.right + 2), edge(notches.rtl, notches.rtl.root.left + 30),
+      edge(notches.empty, notches.empty.label.left),
+    ];
+    const pixels = await page.evaluate(async ({ png, points }) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${png}`;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+      context.drawImage(image, 0, 0);
+      return points.map(([x, y]) => Array.from(context.getImageData(Math.floor(x), Math.floor(y), 1, 1).data.slice(0, 3)).join(","));
+    }, { png, points });
+    const CARD = "200,230,255";
+    const TRANSPARENT = "rgba(0, 0, 0, 0)";
+    for (const [name, n] of [["element", notches.element], ["factory", notches.factory], ["rtl", notches.rtl]] as const) {
+      assert.equal(n.labelBackground, TRANSPARENT, `${name}: nothing is painted behind the label`);
+      assert.equal(n.notchTop, TRANSPARENT, `${name}: the notch is open`);
+      assert.notEqual(n.leadingTop, TRANSPARENT, `${name}: the leading corner is drawn`);
+      assert.notEqual(n.trailingTop, TRANSPARENT, `${name}: the trailing edge is drawn`);
+      assert.notEqual(n.notchBottom, TRANSPARENT, `${name}: the bottom edge runs under the notch`);
+      assert(n.notch.width >= n.label.width, `${name}: the notch (${n.notch.width}) is as wide as the label (${n.label.width})`);
+      assert(n.notch.left <= n.label.left && n.notch.right >= n.label.right, `${name}: the notch spans the label`);
+      assert(n.label.top < n.root.top && n.label.bottom > n.root.top, `${name}: the label sits on the top edge`);
+    }
+    // M3: the label starts 16dp in and the cutout adds 4dp on each side
+    assert(Math.abs(notches.element.notch.left - notches.element.root.left - 12) < 0.5, "the notch starts 12dp in");
+    assert(Math.abs(notches.element.label.left - notches.element.notch.left - 4) < 1, "4dp cutout before the label");
+    assert(Math.abs(notches.element.notch.right - notches.element.label.right - 4) < 1, "4dp cutout after the label");
+    assert(notches.rtl.label.left > notches.rtl.root.left + notches.rtl.root.width / 2, "rtl: the label is on the right");
+    assert(Math.abs(notches.rtl.root.right - notches.rtl.notch.right - 12) < 0.5, "rtl: the notch starts 12dp from the right");
+    assert.notEqual(notches.empty.notchTop, TRANSPARENT, "empty and unfocused: the notch is closed");
+    assert.equal(notches.empty.notchTop, notches.empty.trailingTop, "empty and unfocused: the top edge is one colour");
+    assert.deepEqual(pixels.slice(0, 6).map((p) => p === CARD), [true, false, true, false, true, false], `top-edge pixels ${pixels}`);
+    assert.notEqual(pixels[6], CARD, "empty and unfocused: the top edge is drawn where the label would float");
+    check("textfield: outlined leaves a notch for the floated label on a coloured card, in shadow DOM, light DOM and rtl, closed at rest");
+
+    const focusNotch = await page.evaluate(async () => {
+      const c = document.getElementById("nc") as HTMLElement;
+      const root = c.shadowRoot?.firstElementChild as HTMLElement;
+      const notch = root.querySelector('[class*="textfield__outline-notch"]') as HTMLElement;
+      const label = root.querySelector("label") as HTMLElement;
+      c.focus();
+      await new Promise((r) => setTimeout(r, 400));
+      const focused = { top: getComputedStyle(notch).borderTopColor, width: notch.getBoundingClientRect().width, label: label.getBoundingClientRect().width };
+      c.blur();
+      await new Promise((r) => setTimeout(r, 400));
+      return { focused, blurred: getComputedStyle(notch).borderTopColor };
+    });
+    assert.equal(focusNotch.focused.top, TRANSPARENT, "focus opens the notch");
+    assert(focusNotch.focused.width >= focusNotch.focused.label, "the notch fits the focused label");
+    assert.notEqual(focusNotch.blurred, TRANSPARENT, "blur on an empty field closes it");
+    await page.evaluate(() => ((document.getElementById("factory") as HTMLElement).innerHTML = ""));
+    check("textfield: focus opens the notch of an empty outlined field and blur closes it");
 
     const layout = await page.evaluate(() => {
       const host = document.getElementById("factory") as HTMLElement;
@@ -1699,6 +1816,172 @@ try {
     });
     assert.deepEqual(parity.element, parity.factory);
     check("divider: full-width and inset render as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- model attributes are defaults
+  // The native rule (dirty checkedness and value flags): the model's attribute
+  // moves the live state until the user or script changes it; form.reset()
+  // returns to the attribute and makes the element clean again.
+  {
+    type Live = string | number | boolean | null;
+    interface DefaultCase {
+      name: string;
+      markup: string;
+      attribute: string;
+      property: string;
+      /** Attribute values as live values, each different from the live state before it. */
+      a: Live;
+      b: Live;
+      c: Live;
+      /** A property value, then an attribute value, on a fresh element. */
+      set: Live;
+      after: Live;
+      /** A user interaction that moves the live state away from `b`. */
+      user: () => Promise<void>;
+      /** Not form-associated: no reset. */
+      noForm?: true;
+    }
+    const cases: DefaultCase[] = [
+      ...(["switch", "checkbox"] as const).map((name) => ({
+        name,
+        markup: `<m-${name} id="x" name="x">Dirty</m-${name}>`,
+        attribute: "checked",
+        property: "checked",
+        a: true, b: true, c: false, set: true, after: false,
+        user: () => page.getByRole(name, { name: "Dirty" }).click(),
+      })),
+      {
+        name: "icon button",
+        markup: `<m-icon-button id="x" toggle aria-label="Dirty" icon="${ICON}"></m-icon-button>`,
+        attribute: "selected",
+        property: "selected",
+        a: true, b: true, c: false, set: true, after: false,
+        user: () => page.getByRole("button", { name: "Dirty" }).click(),
+      },
+      {
+        name: "radios",
+        markup: `<m-radios id="x" name="x" aria-label="Dirty"><m-radio value="a">Alpha</m-radio>
+          <m-radio value="b">Beta</m-radio><m-radio value="c">Gamma</m-radio></m-radios>`,
+        attribute: "value",
+        property: "value",
+        a: "b", b: "c", c: "a", set: "b", after: "c",
+        user: () => page.getByRole("radiogroup", { name: "Dirty" }).getByText("Alpha", { exact: true }).click(),
+      },
+      {
+        name: "tabs",
+        markup: `<m-tabs id="x"><m-tab value="t1">One</m-tab><m-tab value="t2">Two</m-tab>
+          <m-tab value="t3">Three</m-tab></m-tabs>`,
+        attribute: "value",
+        property: "value",
+        a: "t2", b: "t3", c: "t1", set: "t2", after: "t3",
+        user: () => page.getByRole("tab", { name: "One" }).click(),
+        noForm: true,
+      },
+      {
+        name: "slider value",
+        markup: `<m-slider id="x" name="x" aria-label="Dirty"></m-slider>`,
+        attribute: "value",
+        property: "value",
+        a: 30, b: 50, c: 60, set: 70, after: 20,
+        user: async () => {
+          await page.getByRole("slider", { name: "Dirty" }).focus();
+          await page.keyboard.press("ArrowRight");
+        },
+      },
+      {
+        name: "slider second-value",
+        markup: `<m-slider id="x" name="x" range value="20" second-value="80" aria-label="Dirty"></m-slider>`,
+        attribute: "second-value",
+        property: "secondValue",
+        a: 70, b: 90, c: 85, set: 75, after: 60,
+        user: async () => {
+          await page.getByRole("slider", { name: "Dirty maximum" }).focus();
+          await page.keyboard.press("ArrowLeft");
+        },
+      },
+      {
+        name: "textfield",
+        markup: `<m-textfield id="x" name="x" label="Dirty"></m-textfield>`,
+        attribute: "value",
+        property: "value",
+        a: "a", b: "b", c: "c", set: "p", after: "d",
+        user: async () => {
+          await page.getByRole("textbox", { name: "Dirty" }).press("End");
+          await page.keyboard.type("z");
+        },
+      },
+    ];
+
+    /**
+     * Sets the attribute for a live value (a boolean is present or absent) and
+     * reads the live state. An attribute already there goes through another
+     * value first, so the element always sees a change.
+     */
+    const attribute = (spec: DefaultCase, value: Live): Promise<Live> =>
+      page.evaluate(
+        ({ name, property, value }) => {
+          const x = document.getElementById("x") as HTMLElement & Record<string, Live>;
+          const target = value === false || value === null ? null : value === true ? "" : String(value);
+          const apply = (v: string | null): void => (v === null ? x.removeAttribute(name) : x.setAttribute(name, v));
+          if (x.getAttribute(name) === target) apply(target === null ? "" : null);
+          apply(target);
+          return x[property];
+        },
+        { name: spec.attribute, property: spec.property, value }
+      );
+    const live = (spec: DefaultCase): Promise<Live> =>
+      page.evaluate((property) => (document.getElementById("x") as HTMLElement & Record<string, Live>)[property], spec.property);
+    // The slider binds its handles a task after creation.
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => setTimeout(r, 0)));
+
+    for (const spec of cases) {
+      await fresh(page, `<form id="df">${spec.markup}</form>`);
+      await settle();
+      assert.notEqual(await live(spec), spec.a);
+      assert.equal(await attribute(spec, spec.a), spec.a, `${spec.name}: a clean element follows its attribute`);
+      check(`${spec.name}: before any interaction, the ${spec.attribute} attribute moves the live state`);
+
+      await spec.user();
+      const moved = await live(spec);
+      assert.notEqual(moved, spec.a, `${spec.name}: the interaction changes the state`);
+      assert.notEqual(moved, spec.b);
+      assert.equal(await attribute(spec, spec.b), moved, `${spec.name}: the user's state stays`);
+      check(`${spec.name}: after a user interaction, the ${spec.attribute} attribute does not move it`);
+
+      if (!spec.noForm) {
+        await page.evaluate(() => (document.getElementById("df") as HTMLFormElement).reset());
+        await settle();
+        assert.equal(await live(spec), spec.b, `${spec.name}: reset returns to the current attribute`);
+        assert.equal(await attribute(spec, spec.c), spec.c, `${spec.name}: reset makes it clean again`);
+        check(`${spec.name}: form.reset() returns to the ${spec.attribute} attribute and clears the dirty flag`);
+      }
+
+      await fresh(page, `<form id="df">${spec.markup}</form>`);
+      await settle();
+      await page.evaluate(
+        ({ property, value }) => {
+          (document.getElementById("x") as HTMLElement & Record<string, Live>)[property] = value;
+        },
+        { property: spec.property, value: spec.set }
+      );
+      assert.equal(await live(spec), spec.set);
+      assert.equal(await attribute(spec, spec.after), spec.set, `${spec.name}: the script's state stays`);
+      check(`${spec.name}: after a property set, the ${spec.attribute} attribute does not move it`);
+    }
+
+    // A recreation (label has no setter) keeps both the live value and the flag.
+    const field = cases.find((spec) => spec.name === "textfield") as DefaultCase;
+    await fresh(page, `<form id="df"><m-textfield id="x" name="x" label="Dirty" value="a"></m-textfield></form>`);
+    const relabel = (label: string): Promise<void> =>
+      page.evaluate((text) => document.getElementById("x")?.setAttribute("label", text), label);
+    await relabel("Clean");
+    assert.equal(await attribute(field, "b"), "b", "still clean after a recreation");
+    await page.getByRole("textbox", { name: "Clean" }).press("End");
+    await page.keyboard.type("z");
+    await relabel("Dirty");
+    assert.equal(await live(field), "bz");
+    assert.equal(await attribute(field, "c"), "bz", "still dirty after a recreation");
+    check("textfield: a recreation keeps the live value and whether it is dirty");
   }
 
   // ---------------------------------------------------------------- lifecycle
