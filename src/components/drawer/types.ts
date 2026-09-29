@@ -122,6 +122,12 @@ export interface DrawerConfig extends BaseComponentConfig {
   headline?: string;
 
   /**
+   * The drawer's accessible name. Read at runtime and missing from the type
+   * (FLO-295). Default: the headline, or "Navigation".
+   */
+  ariaLabel?: string;
+
+  /**
    * Navigation items configuration array.
    * Supports destination items, dividers, and section labels.
    * @example
