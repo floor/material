@@ -118,7 +118,31 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
   assert.equal(years.selected, '2026', 'the selected year is the current one');
   assert.ok(years.offCentre <= 30, `the selected year opens in the middle (${years.offCentre}px off)`);
   assert.equal(years.arrows, 0, 'no paging arrows on the year list');
+  // FLO-276: the full-screen range picker fills the viewport, opens on the value's
+  // month, and extends its month list as it scrolls without moving what is shown.
+  await page.evaluate(() => {
+    const state = window as unknown as PickerWindow; state.picker.destroy();
+    state.picker = state.core.createDatePicker({ variant: 'fullscreen', selectionMode: 'range', label: 'Trip', value: ['2026-09-10', '2026-09-15'] });
+    document.body.append(state.picker.element); state.picker.open();
+  });
+  const full = await page.evaluate(() => {
+    const dialog = document.querySelector('dialog')!, list = document.querySelector<HTMLElement>('.mtrl-datepicker__list')!;
+    const rect = dialog.getBoundingClientRect(), top = list.getBoundingClientRect().top;
+    const first = [...list.querySelectorAll('.mtrl-datepicker__subhead')].find(el => el.getBoundingClientRect().bottom > top)?.textContent;
+    return { fills: rect.width === innerWidth && rect.height === innerHeight, radius: getComputedStyle(dialog).borderRadius, header: document.querySelector('.mtrl-datepicker__modal-header')!.getBoundingClientRect().height, first, modal: dialog.matches(':modal') };
+  });
+  assert.deepEqual(full, { fills: true, radius: '0px', header: 128, first: 'September 2026', modal: true }, 'full screen, no corners, a 128dp header, opened on the value month');
+  const anchor = () => page.evaluate(() => { const list = document.querySelector<HTMLElement>('.mtrl-datepicker__list')!; const month = [...list.querySelectorAll('.mtrl-datepicker__subhead')].find(el => el.getBoundingClientRect().bottom > list.getBoundingClientRect().top)!; return { month: month.textContent, count: list.querySelectorAll('.mtrl-datepicker__subhead').length }; });
+  await page.locator('.mtrl-datepicker__list').evaluate(el => { el.scrollTop = 0; });
+  await page.waitForFunction(() => document.querySelectorAll('.mtrl-datepicker__subhead').length > 25);
+  assert.deepEqual(await anchor(), { month: 'September 2025', count: 37 }, 'a year added above, the view kept on the same month');
+  await page.locator('[data-date="2025-09-02"]').click(); await page.locator('[data-date="2025-09-05"]').click();
+  await page.locator('.mtrl-datepicker__save').click();
+  assert.equal(await page.evaluate(() => (window as unknown as PickerWindow).picker.getFormattedValue()), '09/02/2025 - 09/05/2025', 'Save commits the range');
+  await page.evaluate(() => (window as unknown as PickerWindow).picker.open());
+  await page.locator('[aria-label="Close"]').click();
+  assert.equal(await page.evaluate(() => document.querySelector('dialog')!.open), false, 'Close dismisses');
   await page.evaluate(() => (window as unknown as PickerWindow).picker.destroy());
   assert.equal(await page.locator('.mtrl-datepicker').count(), 0);
-  console.log('Passed packed date picker: selective CSS, token geometry, native modal/scrim, focus, keyboard, input validation, draft/commit/cancel, range, themes, mobile, month swiping in both directions, the scrolling year list and cleanup.');
+  console.log('Passed packed date picker: selective CSS, token geometry, native modal/scrim, focus, keyboard, input validation, draft/commit/cancel, range, themes, mobile, month swiping in both directions, the scrolling year list, the full-screen range picker and cleanup.');
 }

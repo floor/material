@@ -30,10 +30,11 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
   const today = parseDate(new Date())!;
   const state: DatePickerState = {
     id, prefix: PREFIX, label: settings.label || "Select date", selectedDate: null, rangeEndDate: null,
-    currentView: ["month", "year"].includes(settings.initialView ?? "") ? settings.initialView as DatePickerView : "day",
+    // The full-screen list has no month or year views. FLO-276.
+    currentView: settings.variant !== "fullscreen" && ["month", "year"].includes(settings.initialView ?? "") ? settings.initialView as DatePickerView : "day",
     currentMonth: today.getMonth(), currentYear: today.getFullYear(), focusedDate: today,
     minDate: parseDate(settings.minDate ?? null), maxDate: parseDate(settings.maxDate ?? null),
-    dateFormat: settings.dateFormat || "MM/DD/YYYY", variant: settings.variant === "modal" || settings.variant === "modal-input" ? settings.variant : "docked",
+    dateFormat: settings.dateFormat || "MM/DD/YYYY", variant: settings.variant === "modal" || settings.variant === "modal-input" || settings.variant === "fullscreen" ? settings.variant : "docked",
     selectionMode: settings.selectionMode === "range" ? "range" : "single", inputMode: settings.variant === "modal-input",
     specialDates: (settings.specialDates ?? []).map(item => ({ ...item })),
     isAllowed: date => (!state.minDate || date >= state.minDate) && (!state.maxDate || date <= state.maxDate) && !state.specialDates.some(item => { const special = parseDate(item.date); return item.disabled && special && isSameDay(date, special); }),
@@ -56,6 +57,7 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
   const error = createElement({ tag: "div", className: cls("error"), attributes: { id: `${id}-error`, "aria-live": "polite" } });
   const dialog = doc.createElement("dialog"); dialog.id = `${id}-dialog`; dialog.className = cls("calendar");
   dialog.classList.add(base.getClass(`datepicker--${modal ? "modal" : "docked"}`));
+  if (state.variant === "fullscreen") dialog.classList.add(base.getClass("datepicker--fullscreen"));
   dialog.setAttribute("aria-modal", String(modal));
   if (settings.animate) dialog.classList.add(base.getClass("datepicker--animate"));
   if (state.selectionMode === "range") dialog.classList.add(base.getClass("datepicker--range"));
@@ -85,9 +87,53 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     const year = years?.querySelector<HTMLElement>('[aria-pressed="true"]');
     if (years && year) years.scrollTop = year.offsetTop - (years.clientHeight - year.offsetHeight) / 2;
   };
+  // Full screen: the rendered months are a window around the focused month, clamped
+  // to minDate and maxDate, and extended by a year as the list nears either end. The
+  // list keeps its scroll position across renders; months added above shift it by
+  // their height. FLO-276.
+  const monthIndex = (date: Date) => date.getFullYear() * 12 + date.getMonth();
+  const fromIndex = (index: number) => new Date(Math.floor(index / 12), index % 12, 1);
+  const list = () => dialog.querySelector<HTMLElement>(`.${cls("list")}`);
+  const limits = () => [state.minDate ? monthIndex(state.minDate) : -Infinity, state.maxDate ? monthIndex(state.maxDate) : Infinity];
+  let shiftBy: number | null = null;
+  const ensureWindow = () => {
+    if (state.variant !== "fullscreen") return;
+    const focus = state.currentYear * 12 + state.currentMonth;
+    const start = state.listStart ? monthIndex(state.listStart) : NaN;
+    if (start <= focus && focus < start + (state.listLength ?? 0)) return;
+    const [min, max] = limits();
+    const first = Math.max(min, focus - 12), last = Math.min(max, focus + 12);
+    state.listStart = fromIndex(first); state.listLength = last - first + 1;
+  };
+  const extend = (element: HTMLElement) => {
+    const [min, max] = limits();
+    const start = monthIndex(state.listStart!), end = start + state.listLength! - 1;
+    const margin = element.clientHeight;
+    if (element.scrollTop < margin && start > min) {
+      const first = Math.max(min, start - 12);
+      state.listStart = fromIndex(first); state.listLength = end - first + 1; shiftBy = element.scrollHeight;
+    } else if (element.scrollHeight - element.scrollTop - element.clientHeight < margin && end < max) {
+      state.listLength = Math.min(max, end + 12) - start + 1;
+    } else return;
+    const active = doc.activeElement instanceof HTMLElement ? doc.activeElement.dataset.date : undefined;
+    render();
+    if (active) dialog.querySelector<HTMLElement>(`[data-date="${active}"]`)?.focus({ preventScroll: true });
+  };
+  // Opening shows the focused month at the top of the list.
+  const reveal = () => {
+    const element = list();
+    const section = element?.querySelector<HTMLElement>(`[data-month-key="${state.currentYear}-${state.currentMonth}"]`);
+    if (element && section) element.scrollTop = section.offsetTop;
+  };
   const render = (focus = false, action?: string) => {
     if (!opened || destroyed) return;
+    ensureWindow();
+    const previous = list();
+    const kept = previous && { top: previous.scrollTop, height: previous.scrollHeight };
     dialog.replaceChildren(renderCalendar(state), announcement);
+    const current = list();
+    if (current && kept) current.scrollTop = kept.top + (shiftBy === null ? 0 : current.scrollHeight - kept.height);
+    shiftBy = null;
     centre();
     announcement.textContent = new Date(state.currentYear, state.currentMonth, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
     if (action) dialog.querySelector<HTMLElement>(`[data-action="${action}"]`)?.focus();
@@ -110,7 +156,7 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
   };
   const open = () => {
     if (destroyed || opened || base.disabled.isDisabled()) return;
-    opened = true; resetDraft(); state.inputMode = state.variant === "modal-input";
+    opened = true; resetDraft(); state.inputMode = state.variant === "modal-input"; state.listStart = undefined;
     let initial = committed ?? today;
     if (state.minDate && initial < state.minDate) initial = state.minDate;
     if (state.maxDate && initial > state.maxDate) initial = state.maxDate;
@@ -124,7 +170,7 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     else if (!modal && typeof dialog.show === "function") dialog.show();
     else dialog.setAttribute("open", "");
     if (modal) unlock = lockScroll(doc);
-    centre();
+    centre(); reveal();
     trigger.setAttribute("aria-expanded", "true"); focusCurrent(); base.emit("open", { value: getValue() });
   };
   const assignValue = (value: Date | string | [Date | string, Date | string], emit: boolean) => {
@@ -263,6 +309,7 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     render(!!active?.dataset.date, active?.dataset.action);
   };
   const onScroll = (event: Event) => {
+    if (event.type === "scroll" && event.target instanceof HTMLElement && event.target === list()) { extend(event.target); return; }
     if (!(event.target instanceof HTMLElement) || event.target !== track()) return;
     if (event.type === "scrollend") { settle(); return; }
     if ("onscrollend" in view) return;

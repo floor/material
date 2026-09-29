@@ -21,6 +21,36 @@ const day = (picker: DatePickerComponent, date: string) => query<HTMLButtonEleme
 const inputDate = (input: HTMLInputElement, value: string, event = "input") => { input.value = value; input.dispatchEvent(new Event(event, { bubbles: true })); };
 
 describe("Material date picker", () => {
+  // FLO-276: the full-screen range picker (m3.material.io: close (x) and Save, months
+  // scrolling vertically).
+  test("full screen: close and Save above a list of months, each date once, no footer", () => {
+    const picker = mount({ variant: "fullscreen", selectionMode: "range", value: ["2026-09-10", "2026-09-15"] }); picker.open();
+    expect(query(picker, '[aria-label="Close"]')).not.toBeNull();
+    expect(query(picker, '.mtrl-datepicker__save').textContent).toBe('Save');
+    expect(picker.element.querySelector('.mtrl-datepicker__footer, [data-action="month"], [data-action="prev"]')).toBeNull();
+    const subheads = Array.from(picker.element.querySelectorAll('.mtrl-datepicker__subhead')).map(el => el.textContent);
+    expect([subheads[0], subheads[12], subheads.at(-1), subheads.length]).toEqual(['September 2025', 'September 2026', 'September 2027', 25]);
+    const dates = Array.from(picker.element.querySelectorAll('[data-date]')).map(el => el.getAttribute('data-date'));
+    expect(new Set(dates).size).toBe(dates.length);
+    expect(picker.element.querySelectorAll('[data-date][tabindex="0"]').length).toBe(1);
+    expect(query(picker, '.mtrl-datepicker__headline').textContent).toBe('Sep 10 – Sep 15');
+  });
+
+  test("full screen: the list stays within minDate and maxDate", () => {
+    const picker = mount({ variant: "fullscreen", selectionMode: "range", minDate: '2026-08-01', maxDate: '2026-11-30' }); picker.open();
+    const subheads = Array.from(picker.element.querySelectorAll('.mtrl-datepicker__subhead')).map(el => el.textContent);
+    expect(subheads).toEqual(['August 2026', 'September 2026', 'October 2026', 'November 2026']);
+  });
+
+  test("full screen: Save commits the range, Close discards the draft", () => {
+    const picker = mount({ variant: "fullscreen", selectionMode: "range", value: ["2026-09-10", "2026-09-15"] });
+    picker.open(); day(picker, '2026-10-02').click(); day(picker, '2026-10-20').click(); click(picker, '.mtrl-datepicker__save');
+    expect(picker.getFormattedValue()).toBe('10/02/2026 - 10/20/2026');
+    picker.open(); day(picker, '2026-11-01').click(); click(picker, '[aria-label="Close"]');
+    expect(picker.getFormattedValue()).toBe('10/02/2026 - 10/20/2026');
+    expect(query(picker, 'dialog').hasAttribute('open')).toBe(false);
+  });
+
   test("labels, controls and descriptions resolve uniquely across instances", () => {
     const a = mount({ label: '<b>Departure</b>' }), b = mount({ label: 'Return' });
     expect(a.element.querySelector('b')).toBeNull();
