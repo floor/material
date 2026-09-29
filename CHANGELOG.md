@@ -10,6 +10,18 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+## [0.10.0-next.3] - 2026-09-29
+
+The third prerelease of 0.10.0, on the npm `next` tag (`npm install mtrl@next`); `latest`
+stays at 0.9.8. Every component now ships as a custom element with React, Vue, Svelte and
+Solid components: 20 more since next.2, among them the overlays (menu, select, split button,
+tooltip, snackbar, dialog, sheets, the modal drawer and rail), which open in the browser's top
+layer from inside their shadow root through a new `layer: "top"` option on their factories.
+The element API gained state events, which leave a form value untouched, and the options
+md3.io's playgrounds needed. On the conformance side, search is reworked (contained style,
+combobox semantics, top layer), the time picker edits a draft until OK, and focus is read from
+the component's own root in every factory, inside shadow roots too.
+
 ### Added
 
 - **Elements: state events that leave the model clean.** An event spec with `state: true`
@@ -223,6 +235,17 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Keyboard and focus inside a shadow root (#244).** Factories found the focused element
+  with `document.activeElement`, which is the shadow host when focus is inside a shadow
+  root: the navigation rail's and the drawer's arrow keys did nothing there, a menu's arrows
+  jumped back to the first item, a chip removed from the keyboard dropped focus, a list or
+  rail rendering again lost the focused item, a select lost its focused styling, a search
+  collapsed with focus back in its field, a modal drawer or rail let Tab out, and a
+  dialog, modal sheet, modal drawer or snackbar returned focus to the host rather than its
+  opener. They now read their own root through
+  `activeElementOf(node)` in `core/dom`, and an overlay saves the focused element through
+  open shadow roots with `deepActiveElement()`. `<m-navigation-rail>` and `<m-drawer>` drop
+  the key handlers that covered for it.
 - **Search: events and controls found building `<m-search>` (FLO-291).** Enter on the
   suggestion the arrows reached selects it without first submitting the typed text; a click
   or a keystroke in an input that already has focus reopens the view; emptying the query
@@ -417,17 +440,6 @@ variant and a scrolling year picker, and the outlined text field an M3 notched o
 
 ### Fixed
 
-- **Keyboard and focus inside a shadow root (#244).** Factories found the focused element
-  with `document.activeElement`, which is the shadow host when focus is inside a shadow
-  root: the navigation rail's and the drawer's arrow keys did nothing there, a menu's arrows
-  jumped back to the first item, a chip removed from the keyboard dropped focus, a list or
-  rail rendering again lost the focused item, a select lost its focused styling, a search
-  collapsed with focus back in its field, a modal drawer or rail let Tab out, and a
-  dialog, modal sheet, modal drawer or snackbar returned focus to the host rather than its
-  opener. They now read their own root through
-  `activeElementOf(node)` in `core/dom`, and an overlay saves the focused element through
-  open shadow roots with `deepActiveElement()`. `<m-navigation-rail>` and `<m-drawer>` drop
-  the key handlers that covered for it.
 - **Extended FAB: no manufactured `aria-label` (#232).** It is set only from `ariaLabel`. The
   factory copied `text` into it, which named `<m-extended-fab>`'s button
   "[object HTMLSlotElement]" until the element removed it again, and gave an extended FAB
@@ -914,7 +926,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.0-next.2...HEAD
+[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.0-next.3...HEAD
+[0.10.0-next.3]: https://github.com/floor/mtrl/compare/v0.10.0-next.2...v0.10.0-next.3
 [0.10.0-next.2]: https://github.com/floor/mtrl/compare/v0.10.0-next.1...v0.10.0-next.2
 [0.10.0-next.1]: https://github.com/floor/mtrl/compare/v0.10.0-next.0...v0.10.0-next.1
 [0.10.0-next.0]: https://github.com/floor/mtrl/compare/v0.9.8...v0.10.0-next.0

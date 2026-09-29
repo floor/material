@@ -136,23 +136,19 @@ Button progress and card actions load on demand; enable code splitting in your b
 
 ## Web components and frameworks (experimental)
 
-From the 0.10.0 prereleases (`npm install mtrl@next`), components also ship as custom elements, with thin adapters for React, Vue, Svelte and Solid. The API may still change.
+From the 0.10.0 prereleases (`npm install mtrl@next`), every component also ships as a custom element, with thin adapters for React, Vue, Svelte and Solid. The API may still change before 1.0.
 
-| Element | Framework component (Vue: `M` prefix, e.g. `MTextfield`) | Kind |
-|---------|---------------------|------|
-| `<m-button>` | `Button` | action, submits or resets its form |
-| `<m-icon-button>` | `IconButton` | action or toggle (`selected`) |
-| `<m-fab>`, `<m-extended-fab>` | `Fab`, `ExtendedFab` | action |
-| `<m-checkbox>` | `Checkbox` | form control (`checked`, `indeterminate`) |
-| `<m-switch>` | `Switch` | form control (`checked`) |
-| `<m-radios>` with `<m-radio>` | `Radios`, `Radio` | form control (`value`) |
-| `<m-slider>` | `Slider` | form control (`value`, `secondValue` with `range`) |
-| `<m-textfield>` | `Textfield` | form control (`value`) |
-| `<m-tabs>` with `<m-tab>` | `Tabs`, `Tab` | selection (`value`) |
-| `<m-progress>`, `<m-loading-indicator>` | `Progress`, `LoadingIndicator` | indicator |
-| `<m-badge>`, `<m-divider>` | `Badge`, `Divider` | display |
+| Kind | Elements | Framework components (Vue: `M` prefix, e.g. `MDialog`) |
+|------|----------|--------------------------------------------------------|
+| Actions | `<m-button>`, `<m-icon-button>`, `<m-fab>`, `<m-extended-fab>`, `<m-split-button>`, `<m-button-group>` + `<m-button-group-item>` | `Button`, `IconButton`, `Fab`, `ExtendedFab`, `SplitButton`, `ButtonGroup`, `ButtonGroupItem` |
+| Form controls | `<m-checkbox>`, `<m-switch>`, `<m-radios>` + `<m-radio>`, `<m-slider>`, `<m-textfield>`, `<m-select>` + `<m-select-option>`, `<m-search>` + `<m-search-suggestion>`, `<m-datepicker>`, `<m-timepicker>` | `Checkbox`, `Switch`, `Radios`, `Radio`, `Slider`, `Textfield`, `Select`, `SelectOption`, `Search`, `SearchSuggestion`, `Datepicker`, `Timepicker` |
+| Selection | `<m-chips>` + `<m-chip>`, `<m-tabs>` + `<m-tab>`, `<m-list>` + `<m-list-item>` | `Chips`, `Chip`, `Tabs`, `Tab`, `List`, `ListItem` |
+| Navigation | `<m-navigation-rail>` + `<m-navigation-rail-item>`, `<m-drawer>` + `<m-drawer-item>`, `<m-top-app-bar>`, `<m-bottom-app-bar>` | `NavigationRail`, `NavigationRailItem`, `Drawer`, `DrawerItem`, `TopAppBar`, `BottomAppBar` |
+| Overlays (top layer) | `<m-menu>` + `<m-menu-item>`, `<m-dialog>`, `<m-bottom-sheet>`, `<m-side-sheet>`, `<m-tooltip>`, `<m-snackbar>` | `Menu`, `MenuItem`, `Dialog`, `BottomSheet`, `SideSheet`, `Tooltip`, `Snackbar` |
+| Containment | `<m-card>`, `<m-carousel>` + `<m-carousel-item>` | `Card`, `Carousel`, `CarouselItem` |
+| Indicators | `<m-progress>`, `<m-loading-indicator>`, `<m-badge>`, `<m-divider>` | `Progress`, `LoadingIndicator`, `Badge`, `Divider` |
 
-More components follow through 0.10.x; the others are available as factories today.
+Overlays open in the browser's top layer (`showModal()` or `popover`) from inside their own shadow root, so they keep their styles, trap focus and make the page inert where M3 says so. Form controls are form-associated: `name`, the form value, reset, validation, `<label for>` and back-navigation restore work as on native controls.
 
 ```html
 <script type="module">
