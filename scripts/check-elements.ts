@@ -6068,6 +6068,93 @@ try {
       assert.deepEqual({ hovered, focused }, { hovered: hover, focused: focus }, `tooltip ${attribute}`);
     }
     check("tooltip: no-show-on-hover and no-show-on-focus turn off each trigger");
+
+    // ------------------------------------------------ options (#263)
+    // The dialog's animation is where it comes from: the transform its
+    // opening transition starts at
+    await fresh(page, `<m-dialog id="gan" headline="Motion" animation="fade">Body</m-dialog>`);
+    const motion = (): Promise<{ classes: string[]; from: string; open: boolean }> =>
+      page.evaluate(async () => {
+        const host = document.getElementById("gan") as GapHost & { show: () => unknown; close: () => unknown };
+        const dialog = host.shadowRoot?.querySelector("dialog") as HTMLDialogElement;
+        host.show();
+        const transition = dialog
+          .getAnimations()
+          .find((a): a is CSSTransition => a instanceof CSSTransition && a.transitionProperty === "transform");
+        const from = transition ? String((transition.effect as KeyframeEffect).getKeyframes()[0].transform) : "none";
+        await Promise.all(dialog.getAnimations().map((a) => a.finished));
+        // Opened, it is in place whatever it came from
+        const settled = getComputedStyle(dialog).transform;
+        const open = dialog.open && (settled === "none" || settled === "matrix(1, 0, 0, 1, 0, 0)");
+        host.close();
+        await new Promise((r) => setTimeout(r, 300));
+        return { classes: [...dialog.classList].filter((c) => /dialog--(scale|slide-up|slide-down|fade)$/.test(c)), from, open };
+      });
+    const fade = await motion();
+    await keep("gan");
+    await page.evaluate(() => document.getElementById("gan")?.setAttribute("animation", "slide-up"));
+    const slideUp = { ...(await motion()), recreated: !(await isKept("gan")) };
+    await page.evaluate(() => document.getElementById("gan")?.removeAttribute("animation"));
+    const grown = await motion();
+    assert.deepEqual(
+      { fade, slideUp, grown },
+      {
+        fade: { classes: ["mtrl-dialog--fade"], from: "none", open: true },
+        slideUp: { classes: ["mtrl-dialog--slide-up"], from: "translateY(24px) scaleY(0.35)", open: true, recreated: true },
+        grown: { classes: [], from: "translateY(-50px) scaleY(0.35)", open: true },
+      },
+      "dialog animation"
+    );
+    check("dialog: animation is the factory's, fade or slide-up from their own closed state; a change recreates it");
+
+    // The bottom sheet's max-width; 640 without it
+    await fresh(page, `<m-bottom-sheet id="gmw" max-width="400" open headline="Narrow">Body</m-bottom-sheet>`);
+    await wait(400);
+    const sheetBox = (): Promise<{ width: number; centred: boolean; open: boolean }> =>
+      page.evaluate(() => {
+        const container = document.getElementById("gmw")?.shadowRoot?.querySelector('[class~="mtrl-bottom-sheet__container"]') as HTMLElement;
+        const box = container.getBoundingClientRect();
+        return {
+          width: Math.round(box.width),
+          centred: Math.abs(box.left - (window.innerWidth - box.right)) <= 1,
+          open: !!document.getElementById("gmw")?.hasAttribute("open"),
+        };
+      });
+    const narrow = await sheetBox();
+    await keep("gmw");
+    await page.evaluate(() => document.getElementById("gmw")?.removeAttribute("max-width"));
+    await wait(400);
+    const standard = { ...(await sheetBox()), recreated: !(await isKept("gmw")) };
+    assert.deepEqual(
+      { narrow, standard },
+      { narrow: { width: 400, centred: true, open: true }, standard: { width: 640, centred: true, open: true, recreated: true } },
+      "bottom sheet max-width"
+    );
+    check("bottom sheet: max-width is the widest it grows, centred, 640 without it; a change recreates it");
+
+    // The rail's ripple, on a press of an item
+    await fresh(
+      page,
+      `<m-navigation-rail id="grr" value="a" aria-label="Ripple" no-ripple>
+         <m-navigation-rail-item value="a" icon='${ICON}'>Inbox</m-navigation-rail-item>
+         <m-navigation-rail-item value="b" icon='${ICON}'>Sent</m-navigation-rail-item>
+       </m-navigation-rail>`
+    );
+    const ripples = (): Promise<number> =>
+      page.evaluate(() => {
+        const root = document.getElementById("grr")?.shadowRoot as ShadowRoot;
+        const item = root.querySelector('[class~="mtrl-navigation-rail__item"]') as HTMLElement;
+        const box = item.getBoundingClientRect();
+        item.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, composed: true, button: 0, clientX: box.left + 4, clientY: box.top + 4 }));
+        return root.querySelectorAll('[class~="mtrl-navigation-rail__ripple"]').length;
+      });
+    const withoutRipple = await ripples();
+    await keep("grr");
+    await page.evaluate(() => document.getElementById("grr")?.removeAttribute("no-ripple"));
+    await wait(50);
+    const withRipple = { count: await ripples(), recreated: !(await isKept("grr")) };
+    assert.deepEqual({ withoutRipple, withRipple }, { withoutRipple: 0, withRipple: { count: 1, recreated: true } }, "rail no-ripple");
+    check("navigation rail: no-ripple drops the items' ripple; a change recreates the rail");
   }
 
   // ---------------------------------------------------------------- events beside the model

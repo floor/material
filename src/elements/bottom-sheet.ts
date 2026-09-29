@@ -18,7 +18,8 @@
  *
  * An open sheet is partially expanded, `peek-height` pixels tall (by
  * default its content up to half the screen), or with `expanded` at its full
- * height. `expanded` reflects that state as `open` does: set while the sheet
+ * height. `max-width` is the widest it grows, in pixels (640 by default),
+ * past which it centres itself; a change recreates it. `expanded` reflects that state as `open` does: set while the sheet
  * is closed, it opens expanded. `expand` and `collapse` are dispatched as the
  * user or a method moves it to its full height and away from it, closing
  * included, so an app keeping `expanded` in its state follows them.
@@ -131,6 +132,7 @@ const bottomSheetSpec = {
       },
     },
     "peek-height": { type: "number", config: "peekHeight" },
+    "max-width": { type: "number", config: "maxWidth" },
     "no-drag-handle": { type: "boolean", config: "noDragHandle" },
     "no-close-on-scrim-click": { type: "boolean", config: "noCloseOnScrimClick" },
     "no-close-on-escape": { type: "boolean", config: "noCloseOnEscape" },

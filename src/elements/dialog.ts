@@ -22,6 +22,8 @@
  * gives any size. `subtitle` is the text below the headline, `divider`
  * draws the dividers above and below the content, and `footer-alignment`
  * places the actions (`right`, `left`, `center`, `space-between`).
+ * `animation` is the factory's (`scale`, `slide-up`, `slide-down`, `fade`);
+ * the factory reads it once, so a change recreates the dialog.
  * `no-close-on-scrim-click` and `no-close-on-escape` keep it open on a click
  * on the backdrop and on Escape (the factory's `closeOnOverlayClick` and
  * `closeOnEscape`); `cancel` is still dispatched on Escape.
@@ -161,6 +163,7 @@ const dialogSpec = {
     },
     subtitle: { type: "string", config: "subtitle", update: (c, v) => setSubtitle(c, v) },
     size: { type: "string", config: "size" },
+    animation: { type: "string", config: "animation" },
     fullscreen: { type: "boolean", config: "fullscreen" },
     "close-button": { type: "boolean", config: "closeButton" },
     divider: { type: "boolean", config: "divider" },
