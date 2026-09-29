@@ -21,6 +21,10 @@ import "mtrl/elements/css/checkbox";
 import "mtrl/elements/css/slider";
 import "mtrl/elements/css/textfield";
 import "mtrl/elements/css/radios";
+import "mtrl/elements/css/navigation-rail";
+import "mtrl/elements/css/drawer";
+import "mtrl/elements/css/top-app-bar";
+import "mtrl/elements/css/bottom-app-bar";
 import {
   buttonElement,
   defineButton,
@@ -50,8 +54,18 @@ import {
   defineTextfield,
   radiosElement,
   defineRadios,
+  navigationRailElement,
+  defineNavigationRail,
+  drawerElement,
+  defineDrawer,
+  topAppBarElement,
+  defineTopAppBar,
+  bottomAppBarElement,
+  defineBottomAppBar,
   tabDeclaration,
   radioDeclaration,
+  navigationRailItemDeclaration,
+  drawerItemDeclaration,
 } from "../elements";
 import type {
   ButtonSpec,
@@ -82,8 +96,18 @@ import type {
   TextfieldElement,
   RadiosSpec,
   RadiosElement,
+  NavigationRailSpec,
+  NavigationRailElement,
+  DrawerSpec,
+  DrawerElement,
+  TopAppBarSpec,
+  TopAppBarElement,
+  BottomAppBarSpec,
+  BottomAppBarElement,
   TabAttributes,
   RadioAttributes,
+  NavigationRailItemAttributes,
+  DrawerItemAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
 
@@ -104,5 +128,11 @@ export const MCheckbox: MComponent<CheckboxSpec, CheckboxElement> = createCompon
 export const MSlider: MComponent<SliderSpec, SliderElement> = createComponent(sliderElement.spec, defineSlider, "MSlider");
 export const MTextfield: MComponent<TextfieldSpec, TextfieldElement> = createComponent(textfieldElement.spec, defineTextfield, "MTextfield");
 export const MRadios: MComponent<RadiosSpec, RadiosElement> = createComponent(radiosElement.spec, defineRadios, "MRadios");
+export const MNavigationRail: MComponent<NavigationRailSpec, NavigationRailElement> = createComponent(navigationRailElement.spec, defineNavigationRail, "MNavigationRail");
+export const MDrawer: MComponent<DrawerSpec, DrawerElement> = createComponent(drawerElement.spec, defineDrawer, "MDrawer");
+export const MTopAppBar: MComponent<TopAppBarSpec, TopAppBarElement> = createComponent(topAppBarElement.spec, defineTopAppBar, "MTopAppBar");
+export const MBottomAppBar: MComponent<BottomAppBarSpec, BottomAppBarElement> = createComponent(bottomAppBarElement.spec, defineBottomAppBar, "MBottomAppBar");
 export const MTab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "MTab");
 export const MRadio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "MRadio");
+export const MNavigationRailItem: MDeclaration<NavigationRailItemAttributes> = createDeclaration(navigationRailItemDeclaration, "MNavigationRailItem");
+export const MDrawerItem: MDeclaration<DrawerItemAttributes> = createDeclaration(drawerItemDeclaration, "MDrawerItem");

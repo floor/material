@@ -61,7 +61,7 @@ const server = Bun.serve({
     }
     return new Response(
       `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css">
-<style>body{margin:0;font-family:sans-serif}section{padding:8px}</style></head>
+<style>body{margin:0;font-family:sans-serif}section{padding:8px}.stage{position:relative;height:240px;overflow:auto}</style></head>
 <body><main id="host"></main><script type="module" src="/elements.js"></script></body></html>`,
       { headers: { "Content-Type": "text/html" } }
     );
@@ -1818,6 +1818,500 @@ try {
     check("divider: full-width and inset render as the factory does with the global stylesheet");
   }
 
+  // ---------------------------------------------------------------- navigation rail
+  await fresh(
+    page,
+    `<m-navigation-rail id="nr" value="b" aria-label="Main">
+       <m-navigation-rail-item value="a" icon='${ICON}'>Inbox</m-navigation-rail-item>
+       <m-navigation-rail-item value="b" icon='${ICON}' badge="3" badge-label="3 new">Sent</m-navigation-rail-item>
+       <m-navigation-rail-item value="c" icon='${ICON}' href="#starred">Starred</m-navigation-rail-item>
+       <m-navigation-rail-item value="d" icon='${ICON}' disabled>Trash</m-navigation-rail-item>
+     </m-navigation-rail><section id="factory"></section>`
+  );
+  {
+    type Rail = HTMLElement & { value: string | null; component: unknown; expanded: boolean };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const nav = page.getByRole("navigation", { name: "Main" });
+    assert.equal(await nav.count(), 1);
+    assert.equal(await nav.getByRole("button", { name: "Inbox", exact: true }).count(), 1);
+    assert.equal(await nav.getByRole("button", { name: "Sent, 3 new", exact: true }).getAttribute("aria-current"), "page");
+    assert.equal(await nav.getByRole("link", { name: "Starred", exact: true }).getAttribute("href"), "#starred");
+    assert.equal(await nav.getByRole("button", { name: "Trash", exact: true }).isDisabled(), true);
+    assert.equal(await nav.locator('[aria-current="page"]').count(), 1);
+    check("navigation rail: a navigation landmark named by aria-label; items are buttons or links, value is aria-current");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      document.getElementById("nr")?.addEventListener("change", (e) => {
+        (w.events as unknown[]).push({ detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+      });
+    });
+    const state = (): Promise<{ events: unknown; value: string | null; attribute: string | null; current: string | undefined }> =>
+      page.evaluate(() => {
+        const r = document.getElementById("nr") as Rail;
+        const current = r.shadowRoot?.querySelector('[aria-current="page"]') as HTMLElement | null;
+        return { events: (window as unknown as Win).events, value: r.value, attribute: r.getAttribute("value"), current: current?.dataset.id };
+      });
+    await nav.getByRole("button", { name: "Inbox", exact: true }).click();
+    assert.deepEqual(await state(), { events: [{ detail: { value: "a" }, target: "nr" }], value: "a", attribute: "b", current: "a" });
+    check("navigation rail: a click dispatches one change from the host; the live value moves, the attribute stays");
+
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    assert.deepEqual((await state()).events, [
+      { detail: { value: "a" }, target: "nr" },
+      { detail: { value: "b" }, target: "nr" },
+    ]);
+    assert.equal((await state()).current, "b");
+    check("navigation rail: arrow keys move focus and Enter selects, dispatching change");
+
+    const silent = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      const r = document.getElementById("nr") as Rail;
+      r.value = "c";
+      const after = r.value;
+      r.value = "d"; // disabled: not selectable
+      return { events: w.events, after, disabled: r.value };
+    });
+    assert.deepEqual(silent, { events: [], after: "c", disabled: "c" });
+    check("navigation rail: setting value fires no event; a disabled item cannot be selected");
+
+    await nav.getByRole("button", { name: "Trash", exact: true }).dispatchEvent("click");
+    assert.deepEqual(await state(), { events: [], value: "c", attribute: "b", current: "c" });
+    check("navigation rail: a click on a disabled item does nothing");
+
+    await nav.getByRole("button", { name: "Inbox", exact: true }).focus();
+    await page.evaluate(() => {
+      const r = document.getElementById("nr") as Rail;
+      (window as unknown as Record<string, unknown>).__rail = r.component;
+      const items = r.querySelectorAll("m-navigation-rail-item");
+      items[0].textContent = "Mail";
+      items[1].setAttribute("badge", "7");
+      items[1].removeAttribute("badge-label");
+      items[3].remove();
+      const added = document.createElement("m-navigation-rail-item") as HTMLElement & { value: string; icon: string };
+      added.value = "e";
+      added.icon = items[0].getAttribute("icon") ?? "";
+      added.textContent = "Archive";
+      r.append(added);
+    });
+    await settle();
+    const updated = await page.evaluate(() => {
+      const r = document.getElementById("nr") as Rail;
+      const items = [...(r.shadowRoot?.querySelectorAll("[data-id]") ?? [])] as HTMLElement[];
+      return {
+        same: r.component === (window as unknown as Record<string, unknown>).__rail,
+        names: items.map((item) => item.getAttribute("aria-label")),
+        value: r.value,
+        focused: (r.shadowRoot?.activeElement as HTMLElement | null)?.dataset.id,
+      };
+    });
+    assert.deepEqual(updated, { same: true, names: ["Mail", "Sent, 7", "Starred", "Archive"], value: "c", focused: "a" });
+    check("navigation rail: children added, removed and relabelled update in place, keeping selection and focus");
+
+    await nav.getByRole("button", { name: "Expand navigation" }).click();
+    let expanded = await page.evaluate(() => {
+      const r = document.getElementById("nr") as Rail;
+      return { attribute: r.hasAttribute("expanded"), property: r.expanded };
+    });
+    assert.deepEqual(expanded, { attribute: true, property: true });
+    await page.evaluate(() => document.getElementById("nr")?.removeAttribute("expanded"));
+    expanded = await page.evaluate(() => {
+      const r = document.getElementById("nr") as Rail & { component: { isExpanded: () => boolean } };
+      return { attribute: r.hasAttribute("expanded"), property: r.component.isExpanded() };
+    });
+    assert.deepEqual(expanded, { attribute: false, property: false });
+    check("navigation rail: the menu button reflects expanded, and the attribute collapses it");
+
+    await page.evaluate(() => {
+      const fab = document.createElement("button");
+      fab.slot = "header";
+      fab.textContent = "Compose";
+      document.getElementById("nr")?.prepend(fab);
+    });
+    await settle();
+    const header = await page.evaluate(() => {
+      const r = document.getElementById("nr") as Rail;
+      const slot = r.querySelector("button")?.assignedSlot;
+      return { region: slot?.parentElement?.className, value: r.value, items: r.shadowRoot?.querySelectorAll("[data-id]").length };
+    });
+    assert.match(header.region ?? "", /navigation-rail__header/);
+    assert.deepEqual({ value: header.value, items: header.items }, { value: "c", items: 4 });
+    check("navigation rail: slot=header content goes in the header, below the menu button");
+
+    const parity = await page.evaluate((icon) => {
+      const w = window as unknown as Win & { mtrl: { createNavigationRail: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createNavigationRail({
+        items: [{ id: "a", label: "Inbox", icon, active: true }, { id: "b", label: "Sent", icon }],
+      });
+      document.getElementById("factory")?.append(factory.element);
+      const host = document.createElement("m-navigation-rail");
+      host.setAttribute("value", "a");
+      host.innerHTML = `<m-navigation-rail-item value="a">Inbox</m-navigation-rail-item><m-navigation-rail-item value="b">Sent</m-navigation-rail-item>`;
+      host.querySelectorAll("m-navigation-rail-item").forEach((item) => item.setAttribute("icon", icon));
+      document.getElementById("factory")?.append(host);
+      const measure = (root: HTMLElement): Record<string, string | number> => {
+        const item = root.querySelector('[class*="navigation-rail__item"]') as HTMLElement;
+        const indicator = root.querySelector('[class*="navigation-rail__indicator"]') as HTMLElement;
+        const label = root.querySelector('[class*="navigation-rail__label"]') as HTMLElement;
+        const r = root.getBoundingClientRect();
+        const i = item.getBoundingClientRect();
+        return {
+          width: r.width, itemW: i.width, itemH: i.height,
+          bg: getComputedStyle(root).backgroundColor,
+          indicator: getComputedStyle(indicator).backgroundColor,
+          labelColor: getComputedStyle(label).color, labelFont: getComputedStyle(label).font,
+        };
+      };
+      return { factory: measure(factory.element), element: measure(host.shadowRoot?.firstElementChild as HTMLElement) };
+    }, ICON);
+    assert.deepEqual(parity.element, parity.factory);
+    check("navigation rail: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- drawer
+  await fresh(
+    page,
+    `<m-drawer id="dr" open headline="Mail" value="inbox">
+       <m-drawer-item value="inbox" icon='${ICON}' badge="24">Inbox</m-drawer-item>
+       <m-drawer-item value="sent" icon='${ICON}'>Sent</m-drawer-item>
+       <m-drawer-item type="divider"></m-drawer-item>
+       <m-drawer-item type="section">Labels</m-drawer-item>
+       <m-drawer-item value="family" disabled>Family</m-drawer-item>
+     </m-drawer><section id="factory"></section>`
+  );
+  {
+    type Drawer = HTMLElement & { value: string | null; component: unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const nav = page.getByRole("navigation", { name: "Mail" });
+    assert.equal(await nav.count(), 1);
+    assert.equal(await nav.getByRole("button", { name: /^Inbox/ }).getAttribute("aria-current"), "page");
+    assert.equal(await nav.getByRole("button", { name: "Family" }).isDisabled(), true);
+    const structure = await page.evaluate(() => {
+      const root = document.getElementById("dr")?.shadowRoot as ShadowRoot;
+      return {
+        headline: root.querySelector('[class*="drawer__headline"]')?.textContent,
+        separators: root.querySelectorAll('hr[role="separator"]').length,
+        section: root.querySelector('[class*="drawer__section-label"]')?.textContent,
+      };
+    });
+    assert.deepEqual(structure, { headline: "Mail", separators: 1, section: "Labels" });
+    check("drawer: a navigation landmark named by its headline; items, a divider and a section headline; value is aria-current");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      document.getElementById("dr")?.addEventListener("change", (e) => {
+        (w.events as unknown[]).push({ detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+      });
+    });
+    const state = (): Promise<{ events: unknown; value: string | null; attribute: string | null; current: string | undefined }> =>
+      page.evaluate(() => {
+        const d = document.getElementById("dr") as Drawer;
+        const current = d.shadowRoot?.querySelector('[aria-current="page"]') as HTMLElement | null;
+        return { events: (window as unknown as Win).events, value: d.value, attribute: d.getAttribute("value"), current: current?.dataset.id };
+      });
+    await nav.getByRole("button", { name: "Sent", exact: true }).click();
+    assert.deepEqual(await state(), { events: [{ detail: { value: "sent" }, target: "dr" }], value: "sent", attribute: "inbox", current: "sent" });
+    check("drawer: a click dispatches one change from the host; the live value moves, the attribute stays");
+
+    await page.keyboard.press("ArrowUp");
+    await page.keyboard.press("Enter");
+    assert.deepEqual(((await state()).events as unknown[]).at(-1), { detail: { value: "inbox" }, target: "dr" });
+    assert.equal(((await state()).events as unknown[]).length, 2);
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press(" ");
+    assert.deepEqual(await state(), {
+      events: [
+        { detail: { value: "sent" }, target: "dr" },
+        { detail: { value: "inbox" }, target: "dr" },
+        { detail: { value: "sent" }, target: "dr" },
+      ],
+      value: "sent", attribute: "inbox", current: "sent",
+    });
+    check("drawer: arrow keys move focus and Enter or Space selects, dispatching change once");
+
+    const silent = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      const d = document.getElementById("dr") as Drawer;
+      d.value = "inbox";
+      const after = d.value;
+      d.value = "family"; // disabled: not selectable
+      const disabled = d.value;
+      d.value = null;
+      return { events: w.events, after, disabled, cleared: d.value };
+    });
+    assert.deepEqual(silent, { events: [], after: "inbox", disabled: "inbox", cleared: null });
+    await nav.getByRole("button", { name: "Family" }).dispatchEvent("click");
+    assert.deepEqual((await state()).events, []);
+    check("drawer: setting value fires no event and null clears; a disabled item cannot be selected");
+
+    await page.evaluate(() => ((document.getElementById("dr") as Drawer).value = "sent"));
+    await nav.getByRole("button", { name: "Sent", exact: true }).focus();
+    await page.evaluate(() => {
+      const d = document.getElementById("dr") as Drawer;
+      (window as unknown as Record<string, unknown>).__drawer = d.component;
+      const items = d.querySelectorAll("m-drawer-item");
+      items[1].textContent = "Outbox";
+      items[0].setAttribute("badge", "25");
+      items[4].remove();
+      const added = document.createElement("m-drawer-item") as HTMLElement & { value: string };
+      added.value = "work";
+      added.textContent = "Work";
+      d.append(added);
+    });
+    await settle();
+    const updated = await page.evaluate(() => {
+      const d = document.getElementById("dr") as Drawer;
+      const items = [...(d.shadowRoot?.querySelectorAll("[data-id]") ?? [])] as HTMLElement[];
+      return {
+        same: d.component === (window as unknown as Record<string, unknown>).__drawer,
+        labels: items.map((item) => item.textContent),
+        value: d.value,
+        focused: (d.shadowRoot?.activeElement as HTMLElement | null)?.dataset.id,
+      };
+    });
+    assert.deepEqual(updated, { same: true, labels: ["Inbox25", "Outbox", "Work"], value: "sent", focused: "sent" });
+    check("drawer: children added, removed and relabelled update in place, keeping selection and focus");
+
+    const open = await page.evaluate(() => {
+      const d = document.getElementById("dr") as Drawer & { component: { isOpen: () => boolean } };
+      const root = d.shadowRoot?.firstElementChild as HTMLElement;
+      d.removeAttribute("open");
+      const closed = { open: d.component.isOpen(), inert: root.hasAttribute("inert") };
+      d.setAttribute("open", "");
+      d.setAttribute("headline", "Post");
+      return { closed, open: d.component.isOpen(), inert: root.hasAttribute("inert"), same: d.component === (window as unknown as Record<string, unknown>).__drawer };
+    });
+    assert.deepEqual(open, { closed: { open: false, inert: true }, open: true, inert: false, same: true });
+    assert.equal(await page.getByRole("navigation", { name: "Post" }).count(), 1);
+    check("drawer: open and headline apply in place");
+
+    const parity = await page.evaluate(async (icon) => {
+      const w = window as unknown as Win & { mtrl: { createDrawer: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createDrawer({
+        open: true, headline: "Mail",
+        items: [{ id: "inbox", label: "Inbox", icon, active: true }, { id: "sent", label: "Sent", icon }],
+      });
+      document.getElementById("factory")?.append(factory.element);
+      const host = document.createElement("m-drawer");
+      host.setAttribute("open", "");
+      host.setAttribute("headline", "Mail");
+      host.setAttribute("value", "inbox");
+      host.innerHTML = `<m-drawer-item value="inbox">Inbox</m-drawer-item><m-drawer-item value="sent">Sent</m-drawer-item>`;
+      host.querySelectorAll("m-drawer-item").forEach((item) => item.setAttribute("icon", icon));
+      document.getElementById("factory")?.append(host);
+      await new Promise((r) => setTimeout(r, 700)); // the width spring
+      const measure = (root: HTMLElement): Record<string, string | number> => {
+        const sheet = root.querySelector('[class*="drawer__sheet"]') as HTMLElement;
+        const item = root.querySelector('[class*="drawer__item"]') as HTMLElement;
+        const indicator = root.querySelector('[class*="drawer__active-indicator"]') as HTMLElement;
+        const headline = root.querySelector('[class*="drawer__headline"]') as HTMLElement;
+        const r = root.getBoundingClientRect();
+        const i = item.getBoundingClientRect();
+        return {
+          width: r.width, itemW: i.width, itemH: i.height,
+          bg: getComputedStyle(sheet).backgroundColor,
+          indicator: getComputedStyle(indicator).backgroundColor,
+          itemColor: getComputedStyle(item).color,
+          headline: getComputedStyle(headline).font,
+        };
+      };
+      return { factory: measure(factory.element), element: measure(host.shadowRoot?.firstElementChild as HTMLElement) };
+    }, ICON);
+    assert.deepEqual(parity.element, parity.factory);
+    check("drawer: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- top app bar
+  await fresh(
+    page,
+    `<div class="stage" id="tstage"><m-top-app-bar id="tb" headline="Fallback" aria-label="Mail bar">
+       <m-icon-button slot="leading" aria-label="Menu" icon='${ICON}'></m-icon-button>
+       Inbox
+       <m-icon-button slot="trailing" aria-label="Search" icon='${ICON}'></m-icon-button>
+       <m-icon-button slot="trailing" aria-label="More" icon='${ICON}'></m-icon-button>
+     </m-top-app-bar></div>
+     <div class="stage" id="scroller"><div class="stage"></div><div class="stage"></div></div>
+     <div class="stage" id="fstage"></div>`
+  );
+  {
+    type Bar = HTMLElement & { component: unknown; setScrollState: (scrolled: boolean) => unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const banner = page.getByRole("banner", { name: "Mail bar" });
+    assert.equal(await banner.count(), 1);
+    assert.equal(await page.getByRole("heading", { level: 1, name: "Inbox" }).count(), 1);
+    const regions = await page.evaluate(() => {
+      const bar = document.getElementById("tb") as Bar;
+      const region = (label: string): string | undefined =>
+        bar.querySelector(`[aria-label="${label}"]`)?.assignedSlot?.parentElement?.className;
+      const fallback = bar.shadowRoot?.querySelector("h1 span") as HTMLElement;
+      return { menu: region("Menu"), search: region("Search"), more: region("More"), fallbackHidden: fallback.hidden };
+    });
+    assert.match(regions.menu ?? "", /top-app-bar__leading/);
+    assert.match(regions.search ?? "", /top-app-bar__trailing/);
+    assert.match(regions.more ?? "", /top-app-bar__trailing/);
+    assert.equal(regions.fallbackHidden, true);
+    check("top app bar: a banner; leading, headline and trailing content in their regions");
+
+    await page.evaluate(() => {
+      const bar = document.getElementById("tb") as Bar;
+      for (const node of [...bar.childNodes]) if (node.nodeType === Node.TEXT_NODE) node.remove();
+    });
+    await settle();
+    assert.equal(await page.getByRole("heading", { level: 1, name: "Fallback" }).count(), 1);
+    await page.evaluate(() => document.getElementById("tb")?.setAttribute("headline", "Updated"));
+    assert.equal(await page.getByRole("heading", { level: 1, name: "Updated" }).count(), 1);
+    check("top app bar: headline is the text while there is no headline content, and updates in place");
+
+    const type = await page.evaluate(() => {
+      const bar = document.getElementById("tb") as Bar;
+      const before = bar.component;
+      bar.setAttribute("type", "large");
+      const root = bar.shadowRoot?.firstElementChild as HTMLElement;
+      const rows = root.querySelectorAll('[class*="top-app-bar__row"]').length;
+      const menu = bar.querySelector('[aria-label="Menu"]')?.assignedSlot?.parentElement?.className;
+      return { same: bar.component === before, large: root.className.includes("top-app-bar--large"), rows, menu, height: root.getBoundingClientRect().height };
+    });
+    assert.equal(type.same, true);
+    assert.equal(type.large, true);
+    assert.equal(type.rows, 2);
+    assert.match(type.menu ?? "", /top-app-bar__leading/);
+    check("top app bar: type changes in place and keeps the slotted content");
+
+    const scrolled = await page.evaluate(async () => {
+      const bar = document.getElementById("tb") as Bar;
+      bar.setAttribute("type", "small");
+      bar.setAttribute("scroll-target", "scroller");
+      const root = (): HTMLElement => bar.shadowRoot?.firstElementChild as HTMLElement;
+      const is = (): boolean => root().className.includes("top-app-bar--scrolled");
+      const before = is();
+      const scroller = document.getElementById("scroller") as HTMLElement;
+      scroller.scrollTop = 100;
+      await new Promise((r) => setTimeout(r, 50));
+      const down = is();
+      scroller.scrollTop = 0;
+      await new Promise((r) => setTimeout(r, 50));
+      const up = is();
+      bar.setScrollState(true);
+      return { before, down, up, manual: is() };
+    });
+    assert.deepEqual(scrolled, { before: false, down: true, up: false, manual: true });
+    check("top app bar: scroll-target follows an element's scroll; setScrollState() drives it by script");
+
+    const parity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createTopAppBar: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createTopAppBar({ title: "Inbox", scrollable: false });
+      document.getElementById("fstage")?.append(factory.element);
+      const bar = document.getElementById("tb") as Bar;
+      bar.remove();
+      const host = document.createElement("m-top-app-bar");
+      host.setAttribute("no-scroll", "");
+      host.textContent = "Inbox";
+      document.getElementById("tstage")?.append(host);
+      const measure = (root: HTMLElement): Record<string, string | number> => {
+        const headline = root.querySelector("h1") as HTMLElement;
+        const r = root.getBoundingClientRect();
+        const h = headline.getBoundingClientRect();
+        return {
+          width: r.width, height: r.height, headlineH: h.height,
+          bg: getComputedStyle(root).backgroundColor,
+          color: getComputedStyle(headline).color, font: getComputedStyle(headline).font,
+        };
+      };
+      return { factory: measure(factory.element), element: measure(host.shadowRoot?.firstElementChild as HTMLElement) };
+    });
+    assert.deepEqual(parity.element, parity.factory);
+    check("top app bar: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- bottom app bar
+  await fresh(
+    page,
+    `<div class="stage"><m-bottom-app-bar id="bb" aria-label="Actions">
+       <m-icon-button aria-label="Archive" icon='${ICON}'></m-icon-button>
+       <m-icon-button aria-label="Delete" icon='${ICON}'></m-icon-button>
+       <m-fab slot="fab" aria-label="Compose" icon='${ICON}'></m-fab>
+     </m-bottom-app-bar></div><div class="stage" id="fstage"></div>`
+  );
+  {
+    type Bar = HTMLElement & { component: unknown; hide: () => unknown; show: () => unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const toolbar = page.getByRole("toolbar", { name: "Actions" });
+    assert.equal(await toolbar.count(), 1);
+    const regions = await page.evaluate(() => {
+      const bar = document.getElementById("bb") as Bar;
+      const region = (label: string): string | undefined =>
+        bar.querySelector(`[aria-label="${label}"]`)?.assignedSlot?.parentElement?.className;
+      const root = bar.shadowRoot?.firstElementChild as HTMLElement;
+      return { archive: region("Archive"), del: region("Delete"), fab: region("Compose"), withFab: root.className.includes("--with-fab") };
+    });
+    assert.match(regions.archive ?? "", /bottom-app-bar__actions/);
+    assert.match(regions.del ?? "", /bottom-app-bar__actions/);
+    assert.match(regions.fab ?? "", /bottom-app-bar__fab-container/);
+    assert.equal(regions.withFab, true);
+    check("bottom app bar: a toolbar; actions and the FAB in their regions");
+
+    await page.evaluate(() => document.querySelector("#bb m-fab")?.remove());
+    await settle();
+    const without = await page.evaluate(() => {
+      const bar = document.getElementById("bb") as Bar;
+      return (bar.shadowRoot?.firstElementChild as HTMLElement).className.includes("--with-fab");
+    });
+    assert.equal(without, false);
+    check("bottom app bar: the bar follows whether a FAB is slotted");
+
+    const methods = await page.evaluate(() => {
+      const bar = document.getElementById("bb") as Bar;
+      const root = (): HTMLElement => bar.shadowRoot?.firstElementChild as HTMLElement;
+      bar.hide();
+      const hidden = root().className.includes("--hidden");
+      bar.show();
+      const shown = !root().className.includes("--hidden");
+      const before = bar.component;
+      bar.setAttribute("fab-position", "center");
+      return { hidden, shown, recreated: bar.component !== before, center: root().className.includes("--fab-center") };
+    });
+    assert.deepEqual(methods, { hidden: true, shown: true, recreated: true, center: true });
+    check("bottom app bar: hide() and show(); fab-position recreates the bar");
+
+    const parity = await page.evaluate((icon) => {
+      const w = window as unknown as Win & {
+        mtrl: {
+          createBottomAppBar: (c: object) => { element: HTMLElement; addAction: (e: HTMLElement) => unknown; addFab: (e: HTMLElement) => unknown };
+          createIconButton: (c: object) => { element: HTMLElement };
+          createFab: (c: object) => { element: HTMLElement };
+        };
+      };
+      const factory = w.mtrl.createBottomAppBar({});
+      factory.addAction(w.mtrl.createIconButton({ icon, ariaLabel: "Archive" }).element);
+      factory.addFab(w.mtrl.createFab({ icon, ariaLabel: "Compose" }).element);
+      document.getElementById("fstage")?.append(factory.element);
+      const bar = document.getElementById("bb") as Bar;
+      bar.removeAttribute("fab-position");
+      const fab = document.createElement("m-fab");
+      fab.slot = "fab";
+      fab.setAttribute("icon", icon);
+      fab.setAttribute("aria-label", "Compose");
+      bar.append(fab);
+      return new Promise<{ factory: Record<string, string | number>; element: Record<string, string | number> }>((resolve) =>
+        requestAnimationFrame(() => {
+          const measure = (root: HTMLElement): Record<string, string | number> => {
+            const r = root.getBoundingClientRect();
+            const style = getComputedStyle(root);
+            return { width: r.width, height: r.height, bg: style.backgroundColor, radius: style.borderTopLeftRadius, shadow: style.boxShadow };
+          };
+          resolve({ factory: measure(factory.element), element: measure(bar.shadowRoot?.firstElementChild as HTMLElement) });
+        })
+      );
+    }, ICON);
+    assert.deepEqual(parity.element, parity.factory);
+    check("bottom app bar: renders as the factory does with the global stylesheet");
+  }
+
   // ---------------------------------------------------------------- model attributes are defaults
   // The native rule (dirty checkedness and value flags): the model's attribute
   // moves the live state until the user or script changes it; form.reset()
@@ -1875,6 +2369,27 @@ try {
         property: "value",
         a: "t2", b: "t3", c: "t1", set: "t2", after: "t3",
         user: () => page.getByRole("tab", { name: "One" }).click(),
+        noForm: true,
+      },
+      {
+        name: "navigation rail",
+        markup: `<m-navigation-rail id="x" aria-label="Dirty"><m-navigation-rail-item value="r1" icon='${ICON}'>One</m-navigation-rail-item>
+          <m-navigation-rail-item value="r2" icon='${ICON}'>Two</m-navigation-rail-item>
+          <m-navigation-rail-item value="r3" icon='${ICON}'>Three</m-navigation-rail-item></m-navigation-rail>`,
+        attribute: "value",
+        property: "value",
+        a: "r2", b: "r3", c: "r1", set: "r2", after: "r3",
+        user: () => page.getByRole("navigation", { name: "Dirty" }).getByRole("button", { name: "One" }).click(),
+        noForm: true,
+      },
+      {
+        name: "drawer",
+        markup: `<m-drawer id="x" open aria-label="Dirty"><m-drawer-item value="d1">One</m-drawer-item>
+          <m-drawer-item value="d2">Two</m-drawer-item><m-drawer-item value="d3">Three</m-drawer-item></m-drawer>`,
+        attribute: "value",
+        property: "value",
+        a: "d2", b: "d3", c: "d1", set: "d2", after: "d3",
+        user: () => page.getByRole("navigation", { name: "Dirty" }).getByRole("button", { name: "One" }).click(),
         noForm: true,
       },
       {

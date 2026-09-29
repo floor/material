@@ -180,6 +180,14 @@ const run = async (): Promise<void> => {
     assert.equal(await sizes.getByRole("radio", { name: "Large", exact: true, checked: true }).count(), 1);
     check("radios: v-model");
 
+    // ------------------------------------------------------------- navigation rail
+    const rail = page.getByRole("navigation", { name: "Main" });
+    assert.equal(await rail.getByRole("button", { name: "Inbox", exact: true }).getAttribute("aria-current"), "page");
+    await rail.getByRole("button", { name: "Sent", exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("destination")?.textContent === "sent");
+    assert.equal(await rail.getByRole("button", { name: "Sent", exact: true }).getAttribute("aria-current"), "page");
+    check("navigation rail: v-model");
+
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);
     await page.getByRole("tab", { name: "Flights", exact: true }).click();
