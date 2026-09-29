@@ -71,6 +71,7 @@ const run = async (version: 18 | 19): Promise<void> => {
   assert.match(html, /<m-switch id="u" name="u" checked="">Uncontrolled<\/m-switch>/);
   assert.match(html, /<m-switch id="d" disabled="" supporting-text="Unavailable">/);
   assert.match(html, /<m-tabs id="t" value="t2">/);
+  assert.match(html, /<m-radios [^>]*value="m"[^>]*>.*<m-radio value="s">Small<\/m-radio>/s);
   assert.match(html, /<m-button id="b" type="submit" variant="filled" class="save" data-test="1">Save<\/m-button>/);
   check("renders on a server without a DOM, attributes in the markup");
 
@@ -159,6 +160,25 @@ const run = async (version: 18 | 19): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("agreed")?.textContent === "true");
     assert.equal(await page.getByRole("checkbox", { name: "Agree", exact: true }).isChecked(), true);
     check("checkbox: controlled checked and onChange");
+
+    // ------------------------------------------------------------- slider
+    await page.getByRole("slider", { name: "Level", exact: true }).focus();
+    await page.keyboard.press("ArrowRight");
+    await page.waitForFunction(() => document.getElementById("level")?.textContent === "51");
+    assert.equal(await page.getByRole("slider", { name: "Level", exact: true }).getAttribute("aria-valuenow"), "51");
+    check("slider: controlled value and onChange");
+    // ------------------------------------------------------------- textfield
+    await page.getByRole("textbox", { name: "Name", exact: true }).pressSequentially("Ada");
+    await page.waitForFunction(() => document.getElementById("text")?.textContent === "Ada");
+    assert.equal(await page.getByRole("textbox", { name: "Name", exact: true }).inputValue(), "Ada");
+    check("textfield: controlled value and onInput");
+    // ------------------------------------------------------------- radios
+    const sizes = page.getByRole("radiogroup", { name: "Size" });
+    assert.equal(await sizes.getByRole("radio", { name: "Medium", exact: true, checked: true }).count(), 1);
+    await sizes.getByText("Large", { exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("size")?.textContent === "l");
+    assert.equal(await sizes.getByRole("radio", { name: "Large", exact: true, checked: true }).count(), 1);
+    check("radios: controlled value and onChange");
 
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);

@@ -62,10 +62,13 @@ export interface SlotSpec {
 }
 
 export interface FormSpec<C> {
-  /** The value submitted with the form; null submits nothing. */
-  value: (component: C) => string | null;
+  /**
+   * The value submitted with the form under the host's `name`; FormData
+   * submits its own entries instead (several values); null submits nothing.
+   */
+  value: (component: C, host: HTMLElement) => string | FormData | null;
   /** The inner control whose validity the element reports. */
-  control?: (component: C) => HTMLInputElement | null;
+  control?: (component: C) => HTMLInputElement | HTMLTextAreaElement | null;
   /** Events after which the form value is read again. */
   events?: readonly string[];
   /** Called when a `<label for>` or the host itself is clicked. */
@@ -424,7 +427,10 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
         // Content arriving later than creation needs a container the factory builds.
         this.#observer = new MutationObserver(() => {
           const observe = spec.observeChildren;
-          if (typeof observe === "function" && this.component && observe(this, this.component)) return;
+          if (typeof observe === "function" && this.component && observe(this, this.component)) {
+            this.#syncForm(); // an in-place update can change the form value (a removed selection)
+            return;
+          }
           if (observe || (!this.#slot && hasContent(this))) this.#rebuild(true);
         });
         this.#observer.observe(this, {
@@ -465,7 +471,7 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       const form = spec.form;
       const internals = this.internals;
       if (!form || !internals || !this.component) return;
-      const value = form.value(this.component);
+      const value = form.value(this.component, this);
       if (form.state) internals.setFormValue(value, form.state(this.component));
       else internals.setFormValue(value);
       const control = form.control?.(this.component);
