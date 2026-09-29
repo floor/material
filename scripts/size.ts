@@ -155,8 +155,8 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // the conformance work above, measured 2026-09-29; the menu's top layer (#251) to 112,692; select and
   // split button passing the layer, and the opener's focus test across shadow roots, to 112,845; the
   // tooltip and snackbar top layer to 113,481; the modal surfaces' top layer to 113,761 (each measured
-  // alone on dba5ba9); the time picker limits and steps (FLO-281): 113,297 on main. WAVE2_ALL_MEASURED
-  all: kb(111.2),
+  // alone on dba5ba9); the time picker limits and steps (FLO-281): 113,297 on main; all of wave 2 together on 91e4d77: 115,162.
+  all: kb(112.6),
 };
 
 export interface SizeGateInput {
