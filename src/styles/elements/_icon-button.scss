@@ -1,0 +1,55 @@
+// src/styles/elements/_icon-button.scss
+// <m-icon-button> before upgrade: the container, round, at its size and width.
+@use 'sass:list';
+@use 'sass:map';
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As $sizes and $widths in components/_icon-button.scss: container height,
+// then the narrow, default and wide widths.
+$sizes: (
+  'xs': (32px, 28px, 32px, 40px),
+  's': (40px, 32px, 40px, 52px),
+  'm': (56px, 48px, 56px, 72px),
+  'l': (96px, 64px, 96px, 128px),
+  'xl': (136px, 104px, 136px, 184px)
+);
+
+@mixin size($size, $width) {
+  $values: map.get($sizes, $size);
+  height: list.nth($values, 1);
+  width: list.nth($values, map.get(('narrow': 2, 'default': 3, 'wide': 4), $width));
+  border-radius: list.nth($values, 1) * 0.5;
+}
+
+@include c.host('icon-button') {
+  display: inline-block;
+  vertical-align: middle;
+  box-sizing: border-box;
+  overflow: hidden;
+  color: transparent;
+  @include size('s', 'default');
+
+  @each $size in map.keys($sizes) {
+    @each $width in ('default', 'narrow', 'wide') {
+      $selector: if($size == 's', '', "[size='#{$size}']") + if($width == 'default', '', "[width='#{$width}']");
+      @if $selector != '' {
+        &#{$selector} {
+          @include size($size, $width);
+        }
+      }
+    }
+  }
+
+  &[variant='filled'] {
+    background-color: t.color('primary');
+  }
+
+  &[variant='tonal'] {
+    background-color: t.color('secondary-container');
+  }
+
+  &[variant='outlined'] {
+    border: 1px solid t.color('outline-variant');
+  }
+}

@@ -1,0 +1,33 @@
+// src/styles/elements/_fab.scss
+// <m-fab> before upgrade: the container, at its size.
+@use 'sass:list';
+@use 'sass:map';
+@use '../abstract/functions' as f;
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As the sizes in components/_fab.scss: container and shape.
+$sizes: ('small': (40px, 'medium'), 'default': (56px, 'large'), 'medium': (80px, 'large-increased'), 'large': (96px, 'extra-large'));
+
+@mixin size($size) {
+  $values: map.get($sizes, $size);
+  width: list.nth($values, 1);
+  height: list.nth($values, 1);
+  border-radius: f.get-shape(list.nth($values, 2));
+}
+
+@include c.host('fab') {
+  display: inline-block;
+  vertical-align: middle;
+  box-sizing: border-box;
+  overflow: hidden;
+  color: transparent;
+  background-color: t.color('primary-container');
+  @include size('default');
+
+  @each $size in map.keys($sizes) {
+    &[size='#{$size}'] {
+      @include size($size);
+    }
+  }
+}

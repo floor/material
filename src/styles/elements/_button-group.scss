@@ -1,0 +1,25 @@
+// src/styles/elements/_button-group.scss
+// <m-button-group> before upgrade: a box per <m-button-group-item>, the size
+// of its button, which is drawn on upgrade.
+@use '../abstract/variables' as v;
+@use '../abstract/mixins' as m;
+@use 'config' as c;
+
+// As components/_button-group.scss: the standard group's 12px between
+// outlined buttons of the small size.
+@include c.host('button-group') {
+  display: inline-flex;
+  vertical-align: middle;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+@include c.declarations('button-group') {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: v.button('height-s');
+  padding: 0 v.button('padding-s');
+  border: v.button('outline-width-s') solid transparent;
+  @include m.typography('label-large');
+}

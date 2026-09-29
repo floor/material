@@ -1,0 +1,38 @@
+// src/styles/elements/_checkbox.scss
+// <m-checkbox> before upgrade: the box, then the label.
+@use '../abstract/mixins' as m;
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As components/_checkbox.scss: the 18px box with its 2px outline, 12px
+// from the label, in a 40px row with 4px above and below.
+@include c.host('checkbox') {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 4px 0;
+  color: t.color('on-surface');
+  @include m.typography('body-large');
+
+  &::before {
+    content: '';
+    flex: none;
+    box-sizing: border-box;
+    width: 18px;
+    height: 18px;
+    margin-inline-end: 12px;
+    border: 2px solid t.color('on-surface-variant');
+    border-radius: 2px;
+  }
+
+  &[checked]::before {
+    border-color: t.color('primary');
+    background-color: t.color('primary');
+  }
+
+  &[label-position='start']::before {
+    order: 1;
+    margin-inline: 12px 0;
+  }
+}

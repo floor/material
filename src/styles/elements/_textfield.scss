@@ -1,0 +1,9 @@
+// src/styles/elements/_textfield.scss
+// <m-textfield> before upgrade: the field's container, the label at rest and
+// the value on the input's line.
+@use 'config' as c;
+@use 'field';
+
+@include c.host('textfield') {
+  @include field.field;
+}

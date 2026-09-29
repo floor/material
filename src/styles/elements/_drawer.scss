@@ -1,0 +1,23 @@
+// src/styles/elements/_drawer.scss
+// <m-drawer> before upgrade: the sheet's height, with a place per
+// <m-drawer-item>, which is drawn on upgrade. Closed, the upgraded drawer
+// keeps that height with nothing in it; open, its sheet is painted.
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As components/_drawer.scss: 12px above and below 56px items.
+@include c.host('drawer') {
+  display: block;
+  flex-shrink: 0;
+  padding: 12px 0;
+
+  &[open] {
+    background-color: t.color('surface');
+  }
+}
+
+@include c.declarations('drawer') {
+  display: block;
+  height: 56px;
+  overflow: hidden;
+}

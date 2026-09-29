@@ -59,6 +59,14 @@
       "types": "./dist/elements/css/*.d.ts",
       "import": "./dist/elements/css/*.js"
     },
+    "./elements/preupgrade.css": {
+      "types": "./dist/elements/preupgrade.css.d.ts",
+      "default": "./dist/elements/preupgrade.css"
+    },
+    "./elements/preupgrade": {
+      "types": "./dist/elements/preupgrade.d.ts",
+      "import": "./dist/elements/preupgrade.js"
+    },
     "./react": {
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.js"
@@ -131,6 +139,7 @@
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "core:check": "bun run scripts/check-core.ts",
     "elements:check": "bun run scripts/check-elements.ts",
+    "preupgrade:check": "bun run scripts/check-preupgrade.ts",
     "adapters:generate": "bun run scripts/generate-adapters.ts",
     "react:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react.ts",
     "vue:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-vue.ts",

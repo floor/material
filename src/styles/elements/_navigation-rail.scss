@@ -1,0 +1,24 @@
+// src/styles/elements/_navigation-rail.scss
+// <m-navigation-rail> before upgrade: the rail's surface and height, with a
+// place per <m-navigation-rail-item>, which is drawn on upgrade.
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As components/_navigation-rail.scss: 44px above the 48px menu button and
+// 40px under it, 64px items 4px apart, 16px at the end; the rail 96px wide.
+@include c.host('navigation-rail') {
+  display: block;
+  box-sizing: border-box;
+  padding: 44px + 48px + 40px 0 16px;
+  background: linear-gradient(t.color('surface'), t.color('surface')) no-repeat 0 0 / 96px 100%;
+}
+
+@include c.declarations('navigation-rail') {
+  display: block;
+  height: 64px;
+  overflow: hidden;
+
+  & + * {
+    margin-top: 4px;
+  }
+}

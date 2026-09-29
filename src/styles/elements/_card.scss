@@ -1,0 +1,57 @@
+// src/styles/elements/_card.scss
+// <m-card> before upgrade: the card's container, its header from the
+// `headline` and `subhead` attributes, then the content.
+@use '../abstract/variables' as v;
+@use '../abstract/mixins' as m;
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As components/_card.scss: the header padded 16px on top and at the sides,
+// the content padded 16px all round.
+@include c.host('card') {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: v.card('padding');
+  border-radius: v.card('border-radius');
+  background-color: t.color('surface-container-low');
+  color: t.color('on-surface');
+  @include m.typography('body-medium');
+
+  &[variant='filled'] {
+    background-color: t.color('surface-container-highest');
+  }
+
+  &[variant='outlined'] {
+    border: 1px solid t.color('outline-variant');
+    background-color: t.color('surface');
+  }
+
+  // The header: headline, then subhead, 16px above the content.
+  &[headline]::before {
+    content: attr(headline);
+    order: -2;
+    @include m.typography('title-large');
+  }
+
+  &[subhead]::after {
+    content: attr(subhead);
+    order: -1;
+    color: t.color('on-surface-variant');
+  }
+
+  &[headline]:not([subhead])::before,
+  &[subhead]::after {
+    margin-bottom: v.card('padding');
+  }
+
+  > [slot='headline'] {
+    order: -2;
+    @include m.typography('title-large');
+  }
+
+  > [slot='subhead'] {
+    order: -1;
+    color: t.color('on-surface-variant');
+  }
+}

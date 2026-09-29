@@ -1,0 +1,48 @@
+// src/styles/elements/_config.scss
+// =============================================================================
+// PRE-UPGRADE STYLES: shared configuration
+// =============================================================================
+// Until its script defines it, an element is its server-rendered light DOM,
+// unstyled. These rules give the undefined host the box it will have once
+// upgraded, so nothing moves when the shadow root arrives (ssr.md, Phase A).
+//
+// Every rule is scoped to `:not(:defined)`, so none can reach an upgraded
+// element. Sizes come from the same tokens and variables the components use.
+//
+// The tag prefix is a module variable: with a custom prefix, configure it
+//   @use 'mtrl/src/styles/elements' with ($tag-prefix: 'x');
+// or, at runtime, use `preupgradeStyles('x')` from `mtrl/elements/preupgrade`.
+// =============================================================================
+
+$tag-prefix: 'm' !default;
+
+/** The element's tag: `tag('button')` is `m-button`. */
+@function tag($name) {
+  @return '#{$tag-prefix}-#{$name}';
+}
+
+/** Rules for the undefined host. */
+@mixin host($name) {
+  #{tag($name)}:not(:defined) {
+    @content;
+  }
+}
+
+/**
+ * Declaration children (`<m-tab>`) and other content that only means
+ * something after upgrade: kept in the flow to reserve their space, but not
+ * painted.
+ */
+@mixin declarations($name, $selector: '*') {
+  #{tag($name)}:not(:defined) > #{$selector} {
+    visibility: hidden;
+    @content;
+  }
+}
+
+/** An overlay renders nothing until upgrade, open or not: it opens in the top layer. */
+@mixin overlay($name) {
+  @include host($name) {
+    display: none;
+  }
+}

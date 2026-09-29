@@ -10,6 +10,17 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Added
+
+- **Pre-upgrade styles for server-rendered elements (FLO-293, SSR Phase A).** Until its script
+  defines it, a server-rendered element no longer shows as unstyled text that then jumps: rules
+  scoped to `:not(:defined)` give each of the 34 elements its upgraded box, set its label in the
+  final type style, hide declaration children (`<m-tab>`, `<m-menu-item>`, …) while keeping
+  their space, and hide overlays. They ship as `mtrl/elements/preupgrade.css` for a page's
+  `<head>`, as `preupgradeStyles(prefix)` from `mtrl/elements/preupgrade` for another tag
+  prefix, and inside each element's CSS module. `bun run preupgrade:check` measures the layout
+  shift of every element and of a React server render, which must stay under 0.01.
+
 ### Fixed
 
 - **Select's menu class and Progress's duplicate classes (FLO-295).** Found by md3.io's docs

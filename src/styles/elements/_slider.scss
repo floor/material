@@ -1,0 +1,10 @@
+// src/styles/elements/_slider.scss
+// <m-slider> before upgrade: the 48px row of the default size.
+@use 'config' as c;
+
+@include c.host('slider') {
+  display: block;
+  height: 48px;
+  overflow: hidden;
+  color: transparent;
+}

@@ -1,0 +1,23 @@
+// src/styles/elements/_radios.scss
+// <m-radios> before upgrade: a row per <m-radio>, which is drawn on upgrade.
+@use '../abstract/mixins' as m;
+@use 'config' as c;
+
+@include c.host('radios') {
+  display: block;
+  @include m.typography('body-large');
+
+  &[direction='horizontal'] {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+
+// As components/_radios.scss: a 48px row, the 40px control and 8px before the text.
+@include c.declarations('radios') {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 48px;
+  padding-inline-start: 48px;
+}

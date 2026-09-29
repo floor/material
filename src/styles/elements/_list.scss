@@ -1,0 +1,34 @@
+// src/styles/elements/_list.scss
+// <m-list> before upgrade: a row per <m-list-item>, which is drawn on upgrade.
+@use '../abstract/mixins' as m;
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As components/_list.scss: 8px above and below the rows, one-line rows
+// 56px, two-line 72px, a 1px divider and the subheader's padded line.
+@include c.host('list') {
+  display: block;
+  padding: 8px 0;
+  background-color: t.color('surface');
+}
+
+@include c.declarations('list') {
+  display: block;
+  height: 56px;
+  overflow: hidden;
+
+  &[supporting-text],
+  &[overline] {
+    height: 72px;
+  }
+
+  &[kind='divider'] {
+    height: 1px;
+  }
+
+  &[kind='subheader'] {
+    height: auto;
+    padding: 16px 16px 8px;
+    @include m.typography('label-large');
+  }
+}

@@ -184,6 +184,14 @@ The page still loads mtrl's base styles and a theme (see [Styles](#styles)); the
 
 Each framework is an optional peer dependency; mtrl installs none of them. All adapters render on the server and hydrate. Angular apps use the elements directly, with `CUSTOM_ELEMENTS_SCHEMA`.
 
+A server-rendered page sends each element as its tag and light DOM; the element takes its real look once its script defines it. So that nothing moves meanwhile, put the pre-upgrade stylesheet in `<head>`: it gives every element not defined yet the box it will have (and its label the final type style), hides what it declares (`<m-tab>`, `<m-menu-item>`, …) and overlays. Its rules match only `:not(:defined)`, in the `mtrl.preupgrade` cascade layer.
+
+```html
+<link rel="stylesheet" href="/node_modules/mtrl/dist/elements/preupgrade.css">
+```
+
+With another tag prefix, `preupgradeStyles('x')` from `mtrl/elements/preupgrade` returns the same stylesheet for `<x-*>`, to inline on the server. The CSS modules (`mtrl/elements/css`) also apply these rules until the elements are defined, for the default prefix and the one given to `configure()` or `define()`. An unsized text field is as wide as 20 average characters of Roboto, as its input is; in another typeface it can differ by a few pixels, so give fields a width in the page's layout.
+
 ## Building your own components
 
 Components are composed from small features with `pipe`. The same building blocks are public:

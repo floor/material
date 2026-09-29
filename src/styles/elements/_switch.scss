@@ -1,0 +1,50 @@
+// src/styles/elements/_switch.scss
+// <m-switch> before upgrade: the label, then the track (unchecked or checked),
+// with the supporting text under the label.
+@use '../abstract/mixins' as m;
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As components/_switch.scss: the 48px row with 4px above and below, the
+// 12px gap, the 52 x 32 track with its 2px outline and its 16px thumb.
+@include c.host('switch') {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-content: center;
+  align-items: center;
+  column-gap: 12px;
+  box-sizing: border-box;
+  min-height: 56px;
+  padding: 4px 0;
+  color: t.color('on-surface');
+  @include m.typography('body-large');
+
+  &::after {
+    content: '';
+    grid-column: 2;
+    grid-row: 1;
+    box-sizing: border-box;
+    width: 52px;
+    height: 32px;
+    border: 2px solid t.color('outline');
+    border-radius: 16px;
+    background: radial-gradient(circle at 14px 50%, t.color('outline') 8px, transparent 8.5px) t.color('surface-container-highest');
+  }
+
+  &[checked]::after {
+    border-color: t.color('primary');
+    background: radial-gradient(circle at calc(100% - 14px) 50%, t.color('on-primary') 12px, transparent 12.5px) t.color('primary');
+  }
+
+  &[supporting-text]::after {
+    grid-row: 1 / span 2;
+  }
+
+  &[supporting-text]::before {
+    content: attr(supporting-text);
+    grid-column: 1;
+    grid-row: 2;
+    color: t.color('on-surface-variant');
+    @include m.typography('body-medium');
+  }
+}

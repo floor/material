@@ -1,0 +1,15 @@
+// src/styles/elements/_select.scss
+// <m-select> before upgrade: the text field it is, with the dropdown icon's
+// space; the <m-select-option> declarations are drawn on upgrade.
+@use 'config' as c;
+@use 'field';
+
+// As components/_select.scss: the 24px icon, 12px from the end, beside the text.
+@include c.host('select') {
+  @include field.field(28px);
+
+  // The value is an option's, shown on upgrade; the label floats above it.
+  &::before {
+    content: ' ';
+  }
+}

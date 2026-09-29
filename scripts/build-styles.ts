@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as sass from "sass";
@@ -83,7 +83,7 @@ export async function buildStyles(outdir: string, banner: string) {
     await emit(`styles/${name}`, [entry.source], entry.dependencies);
   }
   for (const name of themeStyles) await emit(`themes/${name}`, [`themes/${name}`]);
-  await emitElementStyles(outdir, options);
+  await emitElementStyles(outdir, options, banner);
 }
 
 /**
@@ -93,22 +93,70 @@ export async function buildStyles(outdir: string, banner: string) {
  * also proves the elements import without a DOM.
  * The shadow base (`ripple`) is what the global base stylesheet gives a
  * component in light DOM and a shadow root does not inherit.
+ *
+ * Each element's module also registers its pre-upgrade rules
+ * (src/styles/elements), which apply to the page until the element is
+ * defined. The same rules for every element are `elements/preupgrade.css`,
+ * for a server-rendered page's <head>, and `preupgradeStyles(prefix)` in
+ * `elements/preupgrade.js` builds them for another tag prefix.
  */
-async function emitElementStyles(outdir: string, options: sass.StringOptions<"sync">) {
+async function emitElementStyles(outdir: string, options: sass.StringOptions<"sync">, banner: string) {
   const dir = `${outdir}/elements/css`;
   await mkdir(dir, { recursive: true });
+  const { elements } = await import("../src/elements");
+  const { preupgradeSheet } = await import("../src/elements/styles");
+  const preupgrade = await preupgradeStyles(Object.values(elements).map(element => element.spec.name), options);
   const write = async (name: string, source: string, imports: string[]) => {
     const css = sass.compileString(`@use "${source}";`, options).css;
+    const rules = preupgrade.get(name);
     await writeFile(`${dir}/${name}.js`,
       imports.map(dependency => `import "./${dependency}.js";`).join("\n") +
-      `\nimport { registerStyles } from "../styles.js";\nregisterStyles({ ${JSON.stringify(name)}: ${JSON.stringify(css)} });\n`);
+      `\nimport { registerStyles${rules ? ", registerPreupgrade" : ""} } from "../styles.js";` +
+      `\nregisterStyles({ ${JSON.stringify(name)}: ${JSON.stringify(css)} });\n` +
+      (rules ? `registerPreupgrade({ ${JSON.stringify(name)}: ${JSON.stringify(rules)} });\n` : ""));
     await writeFile(`${dir}/${name}.d.ts`, "export {};\n");
   };
   await write("ripple", "utilities/ripple", []);
   // Only components that have an element, and what their CSS depends on.
-  const { elements } = await import("../src/elements");
   const names = resolveStyleDependencies(Object.values(elements).flatMap(element => [...element.spec.styles]));
+  const missing = [...preupgrade.keys()].filter(name => !names.includes(name));
+  assert.deepEqual(missing, [], "Pre-upgrade rules for an element without a CSS module");
   for (const name of names) await write(name, componentStyles[name].source, ["ripple", ...componentStyles[name].dependencies]);
   await writeFile(`${dir}/index.js`, names.map(name => `import "./${name}.js";`).join("\n") + "\n");
   await writeFile(`${dir}/index.d.ts`, "export {};\n");
+
+  const all = [...preupgrade.values()].join("");
+  await writeFile(`${outdir}/elements/preupgrade.css`, `${banner}\n${preupgradeSheet(all)}\n`);
+  // `import 'mtrl/elements/preupgrade.css'` resolves through the types condition, as `mtrl/styles` does
+  await writeFile(`${outdir}/elements/preupgrade.css.d.ts`, "export {};\n");
+  await writeFile(`${outdir}/elements/preupgrade.js`,
+    `import { DEFAULT_PREFIX, preupgradeSheet } from "./styles.js";\nconst css = ${JSON.stringify(all)};\n` +
+    `/** The pre-upgrade stylesheet (elements/preupgrade.css) for a tag prefix, default "m". */\n` +
+    `export const preupgradeStyles = (prefix = DEFAULT_PREFIX) => preupgradeSheet(css, [prefix]);\n`);
+  await writeFile(`${outdir}/elements/preupgrade.d.ts`,
+    `/** The pre-upgrade stylesheet (elements/preupgrade.css) for a tag prefix, default "m". */\n` +
+    `export declare const preupgradeStyles: (prefix?: string) => string;\n`);
+}
+
+/** Partials in src/styles/elements that are shared, not an element's. */
+const SHARED_PREUPGRADE = ["config", "field", "index"];
+
+/**
+ * Each element's pre-upgrade rules (src/styles/elements/_<name>.scss), by
+ * name. Every element has them, and every partial is an element's or shared.
+ */
+export async function preupgradeStyles(names: string[], options: sass.StringOptions<"sync">): Promise<Map<string, string>> {
+  const partials = (await readdir("src/styles/elements"))
+    .map(file => /^_(.+)\.scss$/.exec(file)?.[1])
+    .filter((name): name is string => !!name && !SHARED_PREUPGRADE.includes(name));
+  assert.deepEqual([...partials].sort(), [...names].sort(), "Pre-upgrade partials differ from the elements");
+  const rules = new Map<string, string>();
+  for (const name of names) {
+    const css = sass.compileString(`@use "elements/${name}";`, options).css;
+    // Non-ASCII output would start with a byte order mark, which breaks the
+    // first selector once the rules are concatenated.
+    assert(/^[\x20-\x7e\n]*$/.test(css), `Pre-upgrade CSS for ${name} is not printable ASCII`);
+    rules.set(name, css);
+  }
+  return rules;
 }

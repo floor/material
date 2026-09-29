@@ -1,0 +1,78 @@
+// src/styles/elements/_button.scss
+// <m-button> before upgrade: the button's container, with the label as its
+// text. From the $button tokens, as components/_button.scss.
+@use 'sass:map';
+@use 'sass:list';
+@use '../abstract/variables' as v;
+@use '../abstract/mixins' as m;
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As $label-typescale and $content-color in components/_button.scss.
+$label-typescale: ('xs': 'label-large', 's': 'label-large', 'm': 'title-medium', 'l': 'headline-small', 'xl': 'headline-large');
+$containers: (
+  'filled': ('primary', 'on-primary'),
+  'elevated': ('surface-container-low', 'primary'),
+  'tonal': ('secondary-container', 'on-secondary-container'),
+  'outlined': (transparent, 'on-surface-variant'),
+  'text': (transparent, 'primary')
+);
+
+@mixin size($size) {
+  height: v.button('height-#{$size}');
+  padding: 0 v.button('padding-#{$size}');
+  gap: v.button('icon-gap-#{$size}');
+  border-radius: v.button('shape-round-#{$size}');
+  @include m.typography(map.get($label-typescale, $size));
+
+  // The leading icon's place (its markup is an attribute, drawn on upgrade).
+  &[icon]::before {
+    width: v.button('icon-size-#{$size}');
+    height: v.button('icon-size-#{$size}');
+  }
+}
+
+@include c.host('button') {
+  display: inline-flex;
+  vertical-align: middle;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: v.button('min-width');
+  white-space: nowrap;
+  background-color: t.color('primary');
+  color: t.color('on-primary');
+  @include size('s');
+
+  @each $size in map.keys($label-typescale) {
+    &[size='#{$size}'] {
+      @include size($size);
+    }
+  }
+
+  @each $variant, $roles in $containers {
+    &[variant='#{$variant}'] {
+      $bg: list.nth($roles, 1);
+      background-color: if($bg == transparent, transparent, t.color($bg));
+      color: t.color(list.nth($roles, 2));
+    }
+  }
+
+  &[variant='outlined'] {
+    border: v.button('outline-width-s') solid t.color('outline-variant');
+  }
+
+  &[variant='text'] {
+    padding: 0 v.button('padding-horizontal-small');
+  }
+
+  &[icon]::before {
+    content: '';
+    flex: none;
+  }
+
+  &[icon]:not([size]),
+  &[icon][size='s'] {
+    padding-left: v.button('padding-icon');
+  }
+}

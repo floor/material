@@ -1,0 +1,22 @@
+// src/styles/elements/_tabs.scss
+// <m-tabs> before upgrade: the row of tabs, 48px, or 64px when they have
+// icons; the <m-tab> declarations are drawn on upgrade.
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As components/_tabs.scss: the tab heights and the 1px divider under them.
+@include c.host('tabs') {
+  display: block;
+  box-sizing: border-box;
+  height: 48px;
+  overflow: hidden;
+  border-bottom: 1px solid t.color('outline-variant');
+
+  &:has(> [icon]) {
+    height: 64px;
+  }
+}
+
+@include c.declarations('tabs') {
+  display: none;
+}

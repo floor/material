@@ -122,7 +122,7 @@ jobs:
           - group: adapters
             checks: react:check vue:check svelte:check solid:check
           - group: components
-            checks: consumer:check tabs:check slider:check drawer:check navigation-rail:check core:check
+            checks: consumer:check tabs:check slider:check drawer:check navigation-rail:check core:check preupgrade:check
     name: browser (${{ matrix.group }})
     steps:
       - uses: actions/checkout@v4
@@ -147,6 +147,11 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install Chromium
         run: node node_modules/playwright/cli.js install --with-deps chromium
+      # preupgrade:check measures text in the library's typeface: the width of
+      # an unsized text field follows the font's average character width.
+      - name: Install Roboto
+        if: matrix.group == 'components'
+        run: sudo apt-get install -y --no-install-recommends fonts-roboto
       - name: Checks (${{ matrix.checks }})
         run: |
           for script in ${{ matrix.checks }}; do
