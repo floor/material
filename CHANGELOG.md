@@ -17,9 +17,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   ToggleEvent, so TypeScript typed its listeners wrongly. It now emits `change` through its
   emitter, as a switch or checkbox reports its state; `<m-icon-button>` dispatches `change`
   with `{ selected }`, as `<m-switch>` and `<m-checkbox>` do, and the adapters get
-  `onChange` / `@change`. Migration: `button.element.addEventListener('toggle', …)` or
-  `<m-icon-button>`'s `toggle` becomes `button.on('change', ({ selected }) => …)` or
-  `change`. `toggle` is still dispatched, deprecated, until the next release.
+  `onChange` / `@change`. Migration: `<m-icon-button>` and `createIconButton`: `toggle` →
+  `change` (`{ selected }`); `toggle` still fires, deprecated, until the next minor.
 
 - **Progress: `on()` uses the emitter, and handlers get `{ value, max }` (FLO-295).** They
   were DOM listeners on the element, handed a `CustomEvent` with the payload in `detail`,
