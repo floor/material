@@ -136,23 +136,48 @@ Button progress and card actions load on demand; enable code splitting in your b
 
 ## Web components and frameworks (experimental)
 
-From `0.10.0-next.1` (`npm install mtrl@next`), components also ship as custom elements, with thin adapters for React, Vue, Svelte and Solid. Button, switch and tabs are available so far; more follow through 0.10.x. The API may still change.
+From the 0.10.0 prereleases (`npm install mtrl@next`), components also ship as custom elements, with thin adapters for React, Vue, Svelte and Solid. The API may still change.
+
+| Element | Framework component (Vue: `M` prefix, e.g. `MTextfield`) | Kind |
+|---------|---------------------|------|
+| `<m-button>` | `Button` | action, submits or resets its form |
+| `<m-icon-button>` | `IconButton` | action or toggle (`selected`) |
+| `<m-fab>`, `<m-extended-fab>` | `Fab`, `ExtendedFab` | action |
+| `<m-checkbox>` | `Checkbox` | form control (`checked`, `indeterminate`) |
+| `<m-switch>` | `Switch` | form control (`checked`) |
+| `<m-radios>` with `<m-radio>` | `Radios`, `Radio` | form control (`value`) |
+| `<m-slider>` | `Slider` | form control (`value`, `secondValue` with `range`) |
+| `<m-textfield>` | `Textfield` | form control (`value`) |
+| `<m-tabs>` with `<m-tab>` | `Tabs`, `Tab` | selection (`value`) |
+| `<m-progress>`, `<m-loading-indicator>` | `Progress`, `LoadingIndicator` | indicator |
+| `<m-badge>`, `<m-divider>` | `Badge`, `Divider` | display |
+
+More components follow through 0.10.x; the others are available as factories today.
 
 ```html
 <script type="module">
   import 'mtrl/elements/css';            // the elements' styles
   import { defineAll } from 'mtrl/elements';
-  defineAll();                           // registers <m-button>, <m-switch>, <m-tabs>, <m-tab>
+  defineAll();                           // registers every element (<m-button>, <m-switch>, …)
 </script>
 
-<m-switch name="wifi" checked>Wi-Fi</m-switch>
+<form>
+  <m-textfield name="email" type="email" label="Email" required></m-textfield>
+  <m-radios name="plan" value="free" aria-label="Plan">
+    <m-radio value="free">Free</m-radio>
+    <m-radio value="pro">Pro</m-radio>
+  </m-radios>
+  <m-switch name="news" checked>Newsletter</m-switch>
+  <m-button type="submit">Sign up</m-button>
+</form>
+
 <m-tabs value="songs">
   <m-tab value="songs">Songs</m-tab>
   <m-tab value="albums">Albums</m-tab>
 </m-tabs>
 ```
 
-The page still loads mtrl's base styles and a theme (see [Styles](#styles)); the elements render in shadow DOM and pick up the theme's tokens. Attributes are defaults and properties the live state, as on native controls; form controls take part in forms, reset and validation.
+The page still loads mtrl's base styles and a theme (see [Styles](#styles)); the elements render in shadow DOM and pick up the theme's tokens. Attributes are defaults and properties the live state, as on native controls: a `checked` or `value` attribute sets the state until the user or a script changes it, and `form.reset()` goes back to it. Form controls take part in forms (their host's `name`), reset, validation and back-navigation restore.
 
 | Framework | Import | Two-way binding |
 |-----------|--------|-----------------|
@@ -161,7 +186,7 @@ The page still loads mtrl's base styles and a theme (see [Styles](#styles)); the
 | Svelte 5 | `import { Switch } from 'mtrl/svelte'` | `bind:checked` |
 | Solid | `import { Switch } from 'mtrl/solid'` | `checked` + `onChange` |
 
-Each framework is an optional peer dependency; mtrl installs none of them. All adapters render on the server and hydrate.
+Each framework is an optional peer dependency; mtrl installs none of them. All adapters render on the server and hydrate. Angular apps use the elements directly, with `CUSTOM_ELEMENTS_SCHEMA`.
 
 ## Building your own components
 
