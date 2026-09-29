@@ -3,6 +3,7 @@ import { createBase, withElement } from "../../core/compose/component";
 import { withEvents, withDisabled, withLifecycle } from "../../core/compose/features";
 import { createElement } from "../../core/dom/create";
 import { setHTML } from "../../core/dom/html";
+import { activeElementOf, deepActiveElement } from "../../core/dom/focus";
 import { DATEPICKER_ICONS } from "./constants";
 import { PREFIX } from "../../core/config";
 import { createBaseConfig, getContainerConfig } from "./config";
@@ -115,7 +116,10 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     } else if (element.scrollHeight - element.scrollTop - element.clientHeight < margin && end < max) {
       state.listLength = Math.min(max, end + 12) - start + 1;
     } else return;
-    const active = doc.activeElement instanceof HTMLElement ? doc.activeElement.dataset.date : undefined;
+    // Focus is read from the picker's own root: inside a shadow root the
+    // document only sees the host. FLO-284.
+    const focused = activeElementOf(dialog);
+    const active = focused instanceof HTMLElement ? focused.dataset.date : undefined;
     render();
     if (active) dialog.querySelector<HTMLElement>(`[data-date="${active}"]`)?.focus({ preventScroll: true });
   };
@@ -162,7 +166,9 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     if (state.maxDate && initial > state.maxDate) initial = state.maxDate;
     if (!navigationRequested) setDisplayDate(initial);
     navigationRequested = false;
-    returnFocus = doc.activeElement instanceof HTMLElement && doc.activeElement !== doc.body ? doc.activeElement : trigger;
+    // Whatever really had focus, through any shadow roots, gets it back. FLO-284.
+    const opener = deepActiveElement();
+    returnFocus = opener instanceof HTMLElement && opener !== doc.body ? opener : trigger;
     render();
     // The native top layer supplies the scrim and makes the background inert.
     // DOM-only environments without dialog methods still expose the open state.
@@ -261,8 +267,9 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     if (event.key === "Tab" && modal) {
       const elements = Array.from(dialog.querySelectorAll<HTMLElement>('button:not(:disabled):not([tabindex="-1"]), input:not(:disabled)'));
       const first = elements[0], last = elements.at(-1);
-      if (event.shiftKey && doc.activeElement === first) { event.preventDefault(); last?.focus(); }
-      else if (!event.shiftKey && doc.activeElement === last) { event.preventDefault(); first?.focus(); }
+      const focused = activeElementOf(dialog);
+      if (event.shiftKey && focused === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && focused === last) { event.preventDefault(); first?.focus(); }
       return;
     }
     const target = event.target instanceof HTMLElement ? event.target : null;
@@ -307,7 +314,8 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     if (!opened || !element?.clientWidth) return;
     const page = Math.round(Math.abs(element.scrollLeft) / element.clientWidth) - 1;
     if (!page) return;
-    const active = doc.activeElement instanceof HTMLElement && dialog.contains(doc.activeElement) ? doc.activeElement : null;
+    const focused = activeElementOf(dialog);
+    const active = focused instanceof HTMLElement && dialog.contains(focused) ? focused : null;
     navigate(page);
     render(!!active?.dataset.date, active?.dataset.action);
   };

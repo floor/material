@@ -180,7 +180,47 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
   assert.equal(await page.evaluate(() => (document.activeElement as HTMLElement).dataset.date), '2026-09-14', 'right to left, ArrowRight goes back a day');
   assert.equal(await page.locator('[data-action="next"] svg').evaluate(el => getComputedStyle(el).transform), 'matrix(-1, 0, 0, 1, 0, 0)', 'right to left, the chevrons mirror');
   await page.evaluate(() => { document.documentElement.dir = 'ltr'; });
-  await page.evaluate(() => (window as unknown as PickerWindow).picker.destroy());
+  // FLO-284: inside a shadow root, as in a web component. The document sees only
+  // the host there, so focus is read from the picker's own root.
+  await page.evaluate(() => {
+    const state = window as unknown as PickerWindow; state.picker.destroy();
+    // A focusable host, as custom elements often are: reading the document's
+    // active element, the picker returned focus to the host, not to the opener.
+    const host = document.createElement('div'); host.id = 'date-host'; host.tabIndex = -1; document.body.append(host);
+    const root = host.attachShadow({ mode: 'open' });
+    for (const style of document.querySelectorAll('style')) root.append(style.cloneNode(true));
+    const opener = document.createElement('button'); opener.id = 'shadow-opener'; opener.textContent = 'Pick a date'; root.append(opener);
+    state.picker = state.core.createDatePicker({ variant: 'modal', value: '2026-09-15' }); root.append(state.picker.element);
+    opener.focus(); state.picker.open();
+  });
+  const shadowFocus = () => page.evaluate(() => { const active = document.getElementById('date-host')!.shadowRoot!.activeElement as HTMLElement | null; return active ? active.dataset.date || active.id || active.getAttribute('aria-label') || active.textContent : null; });
+  const ends = await page.evaluate(() => {
+    const dialog = document.getElementById('date-host')!.shadowRoot!.querySelector('dialog')!;
+    const elements = Array.from(dialog.querySelectorAll<HTMLElement>('button:not(:disabled):not([tabindex="-1"]), input:not(:disabled)'));
+    const name = (element: HTMLElement) => element.dataset.date || element.id || element.getAttribute('aria-label') || element.textContent;
+    elements.at(-1)!.focus();
+    return [name(elements[0]), name(elements.at(-1)!)];
+  });
+  await page.keyboard.press('Tab');
+  assert.equal(await shadowFocus(), ends[0], 'in a shadow root, Tab from the last control wraps to the first');
+  await page.keyboard.press('Shift+Tab');
+  assert.equal(await shadowFocus(), ends[1], 'and Shift+Tab from the first wraps to the last');
+  await page.locator('[data-date="2026-09-15"]').focus();
+  await page.keyboard.press('ArrowRight');
+  await page.locator('.mtrl-datepicker__track').evaluate(el => { el.scrollLeft = el.clientWidth * 2; });
+  await page.waitForFunction(() => /^2026-10/.test((document.getElementById('date-host')!.shadowRoot!.activeElement as HTMLElement | null)?.dataset.date ?? ''));
+  assert.equal(await shadowFocus(), '2026-10-16', 'a swipe with a day focused keeps a day focused, in the new month');
+  await page.keyboard.press('Escape');
+  assert.equal(await shadowFocus(), 'shadow-opener', 'closing returns focus to the opener inside the shadow root');
+  await page.evaluate(() => {
+    const state = window as unknown as PickerWindow; state.picker.destroy();
+    state.picker = state.core.createDatePicker({ variant: 'fullscreen', value: '2026-09-15' }); document.getElementById('date-host')!.shadowRoot!.append(state.picker.element); state.picker.open();
+  });
+  await page.locator('[data-date="2026-09-15"]').focus();
+  await page.locator('.mtrl-datepicker__list').evaluate(el => { el.scrollTop = el.scrollHeight; });
+  await page.waitForFunction(() => document.querySelector('#date-host')!.shadowRoot!.querySelectorAll('[data-month-key]').length > 25);
+  assert.equal(await shadowFocus(), '2026-09-15', 'the full-screen list grows without losing the focused day');
+  await page.evaluate(() => { (window as unknown as PickerWindow).picker.destroy(); document.getElementById('date-host')?.remove(); });
   assert.equal(await page.locator('.mtrl-datepicker').count(), 0);
-  console.log('Passed packed date picker: selective CSS, token geometry, native modal/scrim, focus, keyboard, input validation, draft/commit/cancel, range, themes, mobile, month swiping in both directions, the scrolling year list, the full-screen range picker, M3 day states, corners, colours, the range band, right-to-left keys and cleanup.');
+  console.log('Passed packed date picker: selective CSS, token geometry, native modal/scrim, focus, keyboard, input validation, draft/commit/cancel, range, themes, mobile, month swiping in both directions, the scrolling year list, the full-screen range picker, M3 day states, corners, colours, the range band, right-to-left keys, focus inside a shadow root (Tab wrap, swipe, list growth, focus return) and cleanup.');
 }

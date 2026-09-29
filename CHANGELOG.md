@@ -72,6 +72,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   attributes, with the current `index` as the model, `change` as it moves, and `next`,
   `prev` and `goTo`. Items update in place.
 
+### Fixed
+
+- **Date picker: focus inside a shadow root (FLO-284).** It read `document.activeElement`,
+  which stops at the shadow host, so inside a web component Tab no longer wrapped in the
+  modal, a swipe or the growing full-screen list lost the focused day, and closing could
+  return focus to the host rather than the control that opened it. It now reads focus from
+  its own root, and the opener through open shadow roots.
+
 ## [0.10.0-next.2] - 2026-09-29
 
 The second prerelease of 0.10.0, on the npm `next` tag (`npm install mtrl@next`); `latest`
