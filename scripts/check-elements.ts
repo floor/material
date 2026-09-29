@@ -6069,6 +6069,98 @@ try {
     check("tooltip: no-show-on-hover and no-show-on-focus turn off each trigger");
   }
 
+  // ---------------------------------------------------------------- events beside the model
+  // `activate` and `action` report a press, not a change of the selection,
+  // which `change` carries: they leave the element clean. A removed input
+  // chip is different: it changes the selected values and no `change` comes
+  // with it, so `remove` still marks the set dirty.
+  {
+    type Model = HTMLElement & { value: unknown };
+    interface ModelCase {
+      name: string;
+      markup: string;
+      /** The user doing it, then the events expected. */
+      event: () => Promise<unknown>;
+      eventTypes: string[];
+      /** A value attribute set after the event, and the live value then: moved while clean, kept once dirty. */
+      after: { attribute: string; value: unknown };
+      /** A real change of the model by the user. */
+      change: () => Promise<unknown>;
+      /** A value attribute set after the change, which must not move it. */
+      ignored: string;
+    }
+    const cases: ModelCase[] = [
+      {
+        name: "list activate",
+        markup: `<m-list id="x" value="a" aria-label="Events"><m-list-item value="a">Apple</m-list-item>
+          <m-list-item value="b">Banana</m-list-item><m-list-item value="c">Cherry</m-list-item></m-list>`,
+        // Every activation of a row toggles it, so the factory never
+        // activates without a change: the element's own dispatch stands in
+        event: () =>
+          page.evaluate(() => {
+            document.getElementById("x")?.dispatchEvent(new CustomEvent("activate", { detail: { value: "a" }, bubbles: true, composed: true }));
+          }),
+        eventTypes: ["activate"],
+        after: { attribute: "b", value: "b" },
+        change: () => page.getByRole("list", { name: "Events" }).getByRole("button", { name: "Cherry" }).click(),
+        ignored: "a",
+      },
+      {
+        name: "button group action",
+        markup: `<m-button-group id="x" selection="single" required value="a" aria-label="Events">
+          <m-button-group-item value="a">Left</m-button-group-item><m-button-group-item value="b">Center</m-button-group-item>
+          <m-button-group-item value="c">Right</m-button-group-item></m-button-group>`,
+        // The selected button again, which `required` keeps selected
+        event: () => page.getByRole("group", { name: "Events" }).getByRole("button", { name: "Left" }).click(),
+        eventTypes: ["action"],
+        after: { attribute: "b", value: "b" },
+        change: () => page.getByRole("group", { name: "Events" }).getByRole("button", { name: "Right" }).click(),
+        ignored: "a",
+      },
+      {
+        name: "chips remove",
+        markup: `<m-chips id="x" value="ada,bob" aria-label="Events"><m-chip variant="input" value="ada">Ada</m-chip>
+          <m-chip variant="input" value="bob">Bob</m-chip><m-chip variant="input" value="cy">Cy</m-chip></m-chips>`,
+        // Removing a selected chip changes the selection without a change event
+        event: () => page.getByRole("grid", { name: "Events" }).getByRole("button", { name: "Remove Ada" }).click(),
+        eventTypes: ["remove"],
+        after: { attribute: "cy", value: ["bob"] },
+        change: () => page.getByRole("grid", { name: "Events" }).getByRole("checkbox", { name: "Cy", exact: true }).click({ position: { x: 10, y: 10 } }),
+        ignored: "ada",
+      },
+    ];
+    const value = (): Promise<unknown> => page.evaluate(() => (document.getElementById("x") as Model).value);
+    const setValue = async (attribute: string): Promise<unknown> => {
+      await page.evaluate((attribute) => document.getElementById("x")?.setAttribute("value", attribute), attribute);
+      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+      return value();
+    };
+    const results: Record<string, unknown> = {};
+    const expected: Record<string, unknown> = {};
+    for (const item of cases) {
+      await fresh(page, item.markup);
+      await page.evaluate(() => {
+        const w = window as unknown as Win & { __model: string[] };
+        w.__model = [];
+        for (const type of ["activate", "action", "remove", "change"]) {
+          document.getElementById("x")?.addEventListener(type, () => w.__model.push(type));
+        }
+      });
+      await item.event();
+      const types = await page.evaluate(() => (window as unknown as Win & { __model: string[] }).__model.splice(0));
+      const afterEvent = await setValue(item.after.attribute);
+      await item.change();
+      const changeTypes = await page.evaluate(() => (window as unknown as Win & { __model: string[] }).__model.filter((t) => t === "change"));
+      const live = await value();
+      const afterChange = await setValue(item.ignored);
+      results[item.name] = { types, afterEvent, changed: changeTypes.length > 0, kept: JSON.stringify(afterChange) === JSON.stringify(live) };
+      expected[item.name] = { types: item.eventTypes, afterEvent: item.after.value, changed: true, kept: true };
+    }
+    assert.deepEqual(results, expected, "events beside the model");
+    check("list activate and button group action leave the element clean: the value attribute still moves it, and not after a change");
+    check("chips: removing a selected input chip changes the selection and marks the set dirty; a change does too");
+  }
+
   // ---------------------------------------------------------------- theme
   await fresh(page, `<m-switch id="s" checked>Theme</m-switch><section id="factory"></section>`);
   {
