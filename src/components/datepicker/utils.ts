@@ -252,24 +252,6 @@ export const generateCalendarDates = (
 };
 
 /**
- * Generates an array of years for year selection
- * @param currentYear - Center year for the range
- * @param range - Number of years before and after current year
- * @returns Array of years
- */
-export const generateYearRange = (currentYear: number, range: number = 10): number[] => {
-  const years: number[] = [];
-  const startYear = currentYear - range;
-  const endYear = currentYear + range;
-  
-  for (let year = startYear; year <= endYear; year++) {
-    years.push(year);
-  }
-  
-  return years;
-};
-
-/**
  * Adds days to a date
  * @param date - Base date
  * @param days - Number of days to add

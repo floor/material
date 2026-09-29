@@ -2,7 +2,7 @@ import { DATEPICKER_ICONS } from "./constants";
 import { setHTML } from "../../core/dom/html";
 import { createElement } from "../../core/dom/create";
 import { MONTH_NAMES, MONTH_NAMES_SHORT, type DatePickerState } from "./types";
-import { formatDate, generateCalendarDates, generateYearRange, isSameDay, parseDate } from "./utils";
+import { formatDate, generateCalendarDates, isSameDay, parseDate } from "./utils";
 
 /** Rendering is passive: one delegated listener owns each picker, including rerenders. */
 export function renderCalendar(state: DatePickerState): HTMLElement {
@@ -75,8 +75,12 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
     const header = make("div", "header");
     const nav = make("div", "navigation");
     nav.append(button("month-selector", MONTH_NAMES[state.currentMonth], "month", "Select month"), button("year-selector", String(state.currentYear), "year", "Select year"));
-    const span = state.currentView === "day" ? "month" : state.currentView === "month" ? "year" : "year range";
-    header.append(nav, button("prev", "‹", "prev", `Previous ${span}`), button("next", "›", "next", `Next ${span}`));
+    header.append(nav);
+    // The year list scrolls (FLO-275), so it has no arrows to page it.
+    if (state.currentView !== "year") {
+      const span = state.currentView === "day" ? "month" : "year";
+      header.append(button("prev", "‹", "prev", `Previous ${span}`), button("next", "›", "next", `Next ${span}`));
+    }
     content.append(header);
     if (state.currentView === "day") {
       // The previous, current and next months side by side in a scroll-snapping track:
@@ -99,7 +103,11 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
     } else {
       const months = state.currentView === "month";
       const grid = make("div", months ? "months" : "years", undefined, { role: "group", "aria-label": months ? "Choose month" : "Choose year" });
-      for (const value of months ? Array.from({ length: 12 }, (_, i) => i) : generateYearRange(state.currentYear)) {
+      // Every year from minDate to maxDate, or Compose's default 1900-2100, in a list
+      // that scrolls vertically (m3.material.io: "To navigate across years, scroll
+      // vertically"); it was ±10 years paged by the arrows. FLO-275.
+      const first = state.minDate?.getFullYear() ?? 1900, last = state.maxDate?.getFullYear() ?? 2100;
+      for (const value of months ? Array.from({ length: 12 }, (_, i) => i) : Array.from({ length: last - first + 1 }, (_, i) => first + i)) {
         const selected = value === (months ? state.currentMonth : state.currentYear);
         grid.append(make("button", months ? "month" : "year", months ? MONTH_NAMES_SHORT[value] : String(value), {
           type: "button", [months ? "data-month" : "data-year"]: String(value), "aria-pressed": String(selected), tabindex: selected ? "0" : "-1",

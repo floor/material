@@ -92,6 +92,9 @@ $component: '#{base.$prefix}-datepicker';
     &:disabled { opacity: 0.38; cursor: default; }
   }
   &__months, &__years { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 8px; padding: 16px 24px; }
+  // The year list scrolls vertically within the calendar's own height (a weekday row,
+  // six weeks and the bottom padding), so the picker keeps its size. FLO-275.
+  &__years { position: relative; box-sizing: border-box; height: 344px; overflow-y: auto; overscroll-behavior: contain; }
   &__month, &__year {
     position: relative; isolation: isolate; min-width: 0; height: 48px; border: 0; background: transparent;
     color: t.color('on-surface-variant'); @include m.typography('body-large'); cursor: pointer;

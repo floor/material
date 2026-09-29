@@ -122,7 +122,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   carousel: kb(10.3),
   checkbox: kb(5.5),
   chips: kb(9.1), // FLO-256..261 chips conformance; #221 pointer focus
-  datepicker: kb(10.9), // FLO-238 calendar and input conformance; FLO-274 month swiping
+  datepicker: kb(11.0), // FLO-238 calendar and input conformance; FLO-274 month swiping; FLO-275 year list
   dialog: kb(11.8),
   divider: kb(3.7),
   drawer: kb(7.5),

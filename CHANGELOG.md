@@ -10,6 +10,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Changed
+
+- **Date picker: the year picker scrolls.** It lists every year from `minDate` to `maxDate`
+  (1900 to 2100 by default) in a vertically scrolling grid the height of the calendar, opened
+  on the selected year, as the m3.material.io guidelines have it ("To navigate across
+  years, scroll vertically"). It was ±10 years paged by the arrows, which the year view no
+  longer shows (FLO-275).
+
 ### Fixed
 
 - `<m-tab>` has a property for each attribute it declares (`value`, `label`, `icon`, `badge`,
