@@ -49,19 +49,47 @@ export const createTimePickerAPI = (
   options: ApiOptions,
   formValue: HTMLInputElement | null = null
 ): TimePickerComponent => {
-  const getValue = () => formatFormValue(timeValue, config.showSeconds === true);
-  // Renderer interactions update timeValue in place. Synchronize submission
-  // before notifying consumers, without replacing the focused input/radio.
+  // A draft and a committed value (FLO-288). The renderer edits `timeValue`
+  // in place: that is the draft, shown while the picker is open. OK commits
+  // it; Cancel, Escape and the backdrop put the committed value back. M3's
+  // Cancel discards, as the date picker's does; here every move of the dial
+  // was the value, with a `change` each time, and Cancel kept it.
+  let committed: TimeValue = { ...timeValue };
+  const format = (time: TimeValue) => formatFormValue(time, config.showSeconds === true);
+  const getValue = () => format(committed);
+  // The committed value changed: the form, then `change` and onChange.
   const notifyChange = () => {
     const value = getValue();
     setFormValue(formValue, value);
     options.events.emit(EVENTS.CHANGE, value);
     config.onChange?.(value);
   };
+  // The draft changed: `input` and onInput, as a native input's.
+  const notifyInput = () => {
+    const value = format(timeValue);
+    options.events.emit(EVENTS.INPUT, value);
+    config.onInput?.(value);
+  };
   const render = () => {
-    renderTimePicker(dialogElement, timeValue, config, notifyChange);
+    renderTimePicker(dialogElement, timeValue, config, notifyInput);
     setFormValue(formValue, getValue());
   };
+  const restoreDraft = () => {
+    Object.assign(timeValue, committed);
+    render();
+  };
+  const commit = () => {
+    const before = getValue();
+    committed = { ...timeValue };
+    if (getValue() !== before) notifyChange();
+  };
+  let disabled = config.disabled === true;
+  const markDisabled = () => {
+    baseComponent.element.classList.toggle(`${config.prefix}-time-picker--disabled`, disabled);
+    if (disabled) baseComponent.element.setAttribute("aria-disabled", "true");
+    else baseComponent.element.removeAttribute("aria-disabled");
+  };
+  markDisabled();
   // Selectors from the picker's own prefix: TIMEPICKER_SELECTORS spells `.mtrl-`,
   // so with a custom prefix cancel, confirm, the toggle and setTitle found
   // nothing. FLO-278.
@@ -71,10 +99,21 @@ export const createTimePickerAPI = (
   let isOpen = false;
   let returnFocus: HTMLElement | null = null;
 
+  // Cancel discards the draft. The event goes out while the picker is still
+  // open, as confirm's does.
   const cancel = () => {
-    timePickerAPI.close();
+    restoreDraft();
     options.events.emit(EVENTS.CANCEL);
     config.onCancel?.();
+    timePickerAPI.close();
+  };
+  // OK commits the draft: one `change` if it differs, then `confirm`, both
+  // while the picker is open; it emitted confirm after closing (FLO-288).
+  const confirm = () => {
+    commit();
+    options.events.emit(EVENTS.CONFIRM, getValue());
+    config.onConfirm?.(getValue());
+    timePickerAPI.close();
   };
   // Escape reaches this picker only, through its dialog's cancel event; it was a
   // document listener that closed every open picker. FLO-278.
@@ -110,7 +149,12 @@ export const createTimePickerAPI = (
 
     
     open() {
-      if (isOpen) return this;
+      if (isOpen || disabled) return this;
+      // Each opening edits a fresh draft of the committed value.
+      restoreDraft();
+      // The dialog is in the component's own element (FLO-288); an app that
+      // only calls open() never put that element in the page.
+      if (!baseComponent.element.isConnected && !dialog.isConnected) document.body.append(baseComponent.element);
       
       // Whatever really had focus, through any shadow roots (FLO-284).
       const active = deepActiveElement();
@@ -170,7 +214,7 @@ export const createTimePickerAPI = (
     },
     
     getTimeObject() {
-      return { ...timeValue };
+      return { ...committed };
     },
     
     setValue(time: string) {
@@ -191,12 +235,14 @@ export const createTimePickerAPI = (
         
         const before = getValue();
 
-        // Update time value
+        // Update time value: committed, and the draft with it
         timeValue.hours = hours;
         timeValue.minutes = minutes;
         timeValue.seconds = seconds;
         timeValue.period = hours >= 12 ? TIME_PERIOD.PM : TIME_PERIOD.AM;
         
+        committed = { ...timeValue };
+
         // Re-render time picker
         render();
         
@@ -308,6 +354,24 @@ export const createTimePickerAPI = (
     getTitle() {
       return config.title || '';
     },
+
+    // A disabled picker does not open (FLO-288); disabling closes an open one.
+    enable() {
+      disabled = false;
+      markDisabled();
+      return this;
+    },
+
+    disable() {
+      if (isOpen) cancel();
+      disabled = true;
+      markDisabled();
+      return this;
+    },
+
+    isDisabled() {
+      return disabled;
+    },
     
     destroy() {
       // Close if open
@@ -343,15 +407,7 @@ export const createTimePickerAPI = (
     if (target.closest(part('cancel'))) cancel();
     
     // Handle confirm button click
-    if (target.closest(part('confirm'))) {
-      timePickerAPI.close();
-      options.events.emit(EVENTS.CONFIRM, timePickerAPI.getValue());
-      
-      // Call onConfirm callback if provided
-      if (config.onConfirm) {
-        config.onConfirm(timePickerAPI.getValue());
-      }
-    }
+    if (target.closest(part('confirm'))) confirm();
     
     // Handle toggle type button click (switch between dial and input)
     if (target.closest(part('toggle-type'))) {
@@ -369,6 +425,11 @@ export const createTimePickerAPI = (
   });
 
   dialog.addEventListener('cancel', handleCancel);
+  // The dialog is in the component's element, which can sit in a form: Enter
+  // in its fields moves between them and must not submit that form.
+  dialog.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && event.target instanceof HTMLInputElement) event.preventDefault();
+  });
   dialog.addEventListener('click', handleClickOutside);
 
   // The initial render uses the same synchronization path as later renders.

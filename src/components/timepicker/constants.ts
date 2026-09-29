@@ -49,8 +49,10 @@ export const TIMEPICKER_PERIODS = {
  * @category Components
  */
 export const TIMEPICKER_EVENTS = {
-  /** Fired when time value changes */
+  /** Fired when the committed time changes: on OK, or setValue */
   CHANGE: 'change',
+  /** Fired as the dial, fields or AM/PM change the draft, while open */
+  INPUT: 'input',
   /** Fired when time picker opens */
   OPEN: 'open',
   /** Fired when time picker closes */
