@@ -12,9 +12,15 @@ type Equals<A, B> =
 
 const button = createIconButton({ ariaLabel: "Favorite" });
 
-export const exactlyTheForwardedEvents: Equals<
+// The forwarded native events, and a toggle button's `change` (FLO-295).
+export const exactlyTheEvents: Equals<
   keyof IconButtonEvents,
-  "click" | "focus" | "blur"
+  "click" | "focus" | "blur" | "change"
+> = true;
+
+export const changePayload: Equals<
+  Parameters<Parameters<typeof button.on<"change">>[1]>[0],
+  { selected: boolean }
 > = true;
 
 export const clickPayload: Equals<

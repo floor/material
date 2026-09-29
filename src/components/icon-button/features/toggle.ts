@@ -111,6 +111,7 @@ export interface ToggleComponent {
  * Component with icon capabilities (for updating icon on toggle)
  */
 interface ComponentWithIcon extends ElementComponent {
+  emit?: (event: string, data?: unknown) => unknown;
   icon?: {
     setIcon: (html: string) => unknown;
     getIcon: () => string;
@@ -283,7 +284,11 @@ export const withToggle =
     const handleClick = (): void => {
       toggleState.toggle();
 
-      // Emit custom toggle event
+      // `change` through the emitter, as a switch or checkbox reports its
+      // state (FLO-295): the DOM `toggle` this dispatched shares its name with
+      // the native ToggleEvent, so TypeScript typed its listeners wrongly.
+      component.emit?.("change", { selected: isSelected });
+      // Deprecated: the DOM `toggle`, kept for one release.
       const event = new CustomEvent("toggle", {
         bubbles: true,
         detail: { selected: isSelected },
