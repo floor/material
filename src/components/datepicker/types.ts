@@ -6,16 +6,28 @@ import type { NormalizedEvent } from "../../core/utils/mobile";
 export type DatePickerValue = Date | [Date, Date] | null;
 
 /**
- * Calendar selections supply a start date and separate range end. API changes
- * supply getValue() (a tuple for a complete range), with no rangeEndDate field.
+ * The value as the selection mode shapes it (FLO-295): a range is a pair, a
+ * single date a date; an unknown mode, either.
  */
-export type DatePickerChangePayload =
-  | { value: Date; rangeEndDate: Date | null; formattedValue: string }
-  | { value: DatePickerValue; rangeEndDate?: never; formattedValue: string };
+export type DatePickerValueOf<M> = M extends "range" ? [Date, Date] | null : M extends "single" ? Date | null : DatePickerValue;
+
+/** What setValue and `value` take: a date, a range as a pair, or as { start, end } (FLO-289). */
+export type DatePickerInput = Date | string | [Date | string, Date | string] | { start: Date | string; end: Date | string };
+
+/**
+ * One shape whatever committed the value (FLO-295): a range's `value` is the
+ * pair, and `rangeEndDate` its end, kept for compatibility (null otherwise).
+ * The docked calendar sent the start as the value and the end apart.
+ */
+export interface DatePickerChangePayload<V = DatePickerValue> {
+  value: V;
+  rangeEndDate: Date | null;
+  formattedValue: string;
+}
 
 /** Visibility events carry the committed value, including complete ranges. */
-export interface DatePickerVisibilityPayload {
-  value: DatePickerValue;
+export interface DatePickerVisibilityPayload<V = DatePickerValue> {
+  value: V;
 }
 
 /** Normalized touch-end event emitted by the interactive root. */
@@ -29,10 +41,10 @@ export interface DatePickerSwipePayload {
 }
 
 /** Events emitted by the picker API, calendar selections and interactive root. */
-export interface DatePickerEvents {
-  change: (payload: DatePickerChangePayload) => void;
-  open: (payload: DatePickerVisibilityPayload) => void;
-  close: (payload: DatePickerVisibilityPayload) => void;
+export interface DatePickerEvents<V = DatePickerValue> {
+  change: (payload: DatePickerChangePayload<V>) => void;
+  open: (payload: DatePickerVisibilityPayload<V>) => void;
+  close: (payload: DatePickerVisibilityPayload<V>) => void;
   click: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
   keydown: (payload: ForwardedEventPayload<KeyboardEvent, HTMLElement>) => void;
   tap: (payload: DatePickerTapPayload) => void;
@@ -160,7 +172,16 @@ export interface DatePickerConfig {
    * Initial selected date(s)
    * Accepts a Date object, Date string, or two dates for range selection
    */
-  value?: Date | string | [Date | string, Date | string];
+  value?: DatePickerInput;
+
+  /** The value shows and cannot change: no typing, no calendar (FLO-289). */
+  readOnly?: boolean;
+
+  /** A date is required: on the input for forms, and checkValidity() (FLO-289). */
+  required?: boolean;
+
+  /** The supporting text under the field. Default: the date format (FLO-289). */
+  supportingText?: string;
   
   /** 
    * Minimum selectable date
@@ -300,7 +321,7 @@ export interface CalendarAPI {
  * DatePicker component interface
  * @category Components
  */
-export interface DatePickerComponent {
+export interface DatePickerComponent<V = DatePickerValue> {
   /** The datepicker's main DOM element */
   element: HTMLElement;
   
@@ -337,26 +358,47 @@ export interface DatePickerComponent {
    * Opens the datepicker dropdown/modal
    * @returns The datepicker component for chaining
    */
-  open: () => DatePickerComponent;
+  open: () => DatePickerComponent<V>;
   
   /**
    * Closes the datepicker dropdown/modal
    * @returns The datepicker component for chaining
    */
-  close: () => DatePickerComponent;
+  close: () => DatePickerComponent<V>;
   
   /**
    * Gets the selected date(s)
    * @returns Date object, array of two Date objects for range, or null if none selected
    */
-  getValue: () => Date | [Date, Date] | null;
+  getValue: () => V;
   
   /**
    * Sets the selected date(s)
    * @param value - Date, string, or array of dates for range selection
    * @returns The datepicker component for chaining
    */
-  setValue: (value: Date | string | [Date | string, Date | string]) => DatePickerComponent;
+  setValue: (value: DatePickerInput) => DatePickerComponent<V>;
+
+  /** Read-only: the value shows and cannot change (FLO-289) */
+  setReadOnly: (readOnly: boolean) => DatePickerComponent<V>;
+
+  /** Whether the picker is read-only */
+  isReadOnly: () => boolean;
+
+  /** Whether a date is required (FLO-289) */
+  setRequired: (required: boolean) => DatePickerComponent<V>;
+
+  /**
+   * False when a date is required and missing. A dialog variant's input is
+   * read-only, which forms do not validate.
+   */
+  checkValidity: () => boolean;
+
+  /** As checkValidity(), and shows the error on the field when false */
+  reportValidity: () => boolean;
+
+  /** The supporting text; empty or null shows the date format (FLO-289) */
+  setSupportingText: (text: string | null) => DatePickerComponent<V>;
   
   /**
    * Gets the formatted date string based on the selected date(s)
@@ -368,33 +410,33 @@ export interface DatePickerComponent {
    * Clears the selected date(s)
    * @returns The datepicker component for chaining
    */
-  clear: () => DatePickerComponent;
+  clear: () => DatePickerComponent<V>;
   
   /**
    * Enables the datepicker
    * @returns The datepicker component for chaining
    */
-  enable: () => DatePickerComponent;
+  enable: () => DatePickerComponent<V>;
   
   /**
    * Disables the datepicker
    * @returns The datepicker component for chaining
    */
-  disable: () => DatePickerComponent;
+  disable: () => DatePickerComponent<V>;
   
   /**
    * Sets the minimum selectable date
    * @param date - Date object or string
    * @returns The datepicker component for chaining
    */
-  setMinDate: (date: Date | string) => DatePickerComponent;
+  setMinDate: (date: Date | string) => DatePickerComponent<V>;
   
   /**
    * Sets the maximum selectable date
    * @param date - Date object or string
    * @returns The datepicker component for chaining
    */
-  setMaxDate: (date: Date | string) => DatePickerComponent;
+  setMaxDate: (date: Date | string) => DatePickerComponent<V>;
   
   /**
    * Destroys the datepicker component and cleans up resources
@@ -407,7 +449,7 @@ export interface DatePickerComponent {
    * @param handler - Event handler function
    * @returns The datepicker component for chaining
    */
-  on: <K extends keyof DatePickerEvents>(event: K, handler: DatePickerEvents[K]) => DatePickerComponent;
+  on: <K extends keyof DatePickerEvents<V>>(event: K, handler: DatePickerEvents<V>[K]) => DatePickerComponent<V>;
   
   /**
    * Removes an event listener from the datepicker
@@ -415,7 +457,7 @@ export interface DatePickerComponent {
    * @param handler - Event handler function
    * @returns The datepicker component for chaining
    */
-  off: <K extends keyof DatePickerEvents>(event: K, handler: DatePickerEvents[K]) => DatePickerComponent;
+  off: <K extends keyof DatePickerEvents<V>>(event: K, handler: DatePickerEvents<V>[K]) => DatePickerComponent<V>;
 }
 
 /** Internal calendar view model. Dates are local civil dates, without a time. */

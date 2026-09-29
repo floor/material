@@ -5,6 +5,8 @@ export type {
   DatePickerComponent,
   DatePickerEvents,
   DatePickerValue,
+  DatePickerValueOf,
+  DatePickerInput,
   DatePickerChangePayload,
   DatePickerVisibilityPayload,
   DatePickerTapPayload,

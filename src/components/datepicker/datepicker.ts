@@ -10,7 +10,10 @@ import { createBaseConfig, getContainerConfig } from "./config";
 import { withAPI } from "./api";
 import { renderCalendar } from "./render";
 import { addDays, addMonths, formatDate, isSameDay, parseDate, parseInputDate } from "./utils";
-import type { DatePickerComponent, DatePickerConfig, DatePickerState, DatePickerValue, DatePickerView } from "./types";
+import type { DatePickerComponent, DatePickerConfig, DatePickerInput, DatePickerState, DatePickerValue, DatePickerValueOf, DatePickerView } from "./types";
+
+const isRangeObject = (value: DatePickerInput): value is { start: Date | string; end: Date | string } =>
+  typeof value === "object" && value !== null && !(value instanceof Date) && !Array.isArray(value);
 
 let nextId = 0;
 const scrollLocks = new WeakMap<Document, { count: number; overflow: string }>();
@@ -21,7 +24,13 @@ function lockScroll(doc: Document): () => void {
 }
 
 /** M3 calendar/input modes share a draft; modal acceptance is the commit boundary. */
-const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent => {
+/**
+ * The value's type follows a literal selectionMode (FLO-295): `'range'` makes
+ * it a pair, the default a date.
+ */
+const createDatePicker = <M extends string = "single">(
+  config: DatePickerConfig & { selectionMode?: M } = {},
+): DatePickerComponent<DatePickerValueOf<M>> => {
   const settings = createBaseConfig(config);
   const base = pipe(createBase, withEvents(), withElement(getContainerConfig(settings)), withDisabled(settings), withLifecycle())(settings);
   const doc = base.element.ownerDocument;
@@ -41,7 +50,7 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     isAllowed: date => (!state.minDate || date >= state.minDate) && (!state.maxDate || date <= state.maxDate) && !state.specialDates.some(item => { const special = parseDate(item.date); return item.disabled && special && isSameDay(date, special); }),
   };
   const modal = state.variant !== "docked";
-  let opened = false, destroyed = false, navigationRequested = false;
+  let opened = false, destroyed = false, navigationRequested = false, readOnly = false;
   let committed: Date | null = null, committedEnd: Date | null = null;
   let returnFocus: HTMLElement | null = null;
   let unlock: (() => void) | undefined;
@@ -54,7 +63,8 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
   input.setAttribute("aria-describedby", `${id}-help ${id}-error`);
   const trigger = doc.createElement("button"); trigger.type = "button"; trigger.className = cls("trigger"); setHTML(trigger, DATEPICKER_ICONS.calendar);
   trigger.dataset.action = "open"; trigger.setAttribute("aria-label", "Choose date"); trigger.setAttribute("aria-haspopup", "dialog"); trigger.setAttribute("aria-controls", `${id}-dialog`); trigger.setAttribute("aria-expanded", "false");
-  const help = createElement({ tag: "div", className: cls("help"), text: state.dateFormat, attributes: { id: `${id}-help` } });
+  // The supporting text, the date format unless given (FLO-289).
+  const help = createElement({ tag: "div", className: cls("help"), text: settings.supportingText || state.dateFormat, attributes: { id: `${id}-help` } });
   const error = createElement({ tag: "div", className: cls("error"), attributes: { id: `${id}-error`, "aria-live": "polite" } });
   const dialog = doc.createElement("dialog"); dialog.id = `${id}-dialog`; dialog.className = cls("calendar");
   dialog.classList.add(base.getClass(`datepicker--${modal ? "modal" : "docked"}`));
@@ -143,11 +153,13 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     if (action) dialog.querySelector<HTMLElement>(`[data-action="${action}"]`)?.focus();
     else if (focus) focusCurrent();
   };
-  const emitChange = () => base.emit("change", { value: getValue(), formattedValue: formatted(committed, committedEnd) });
-  const commitDraft = (calendar = false) => {
+  // One shape, whatever committed it: a range's value is the pair, and
+  // rangeEndDate its end, kept for compatibility. The docked calendar sent the
+  // start as the value and the end apart; the dialog's Save, the pair. FLO-295.
+  const emitChange = () => base.emit("change", { value: getValue(), rangeEndDate: committedEnd && new Date(committedEnd), formattedValue: formatted(committed, committedEnd) });
+  const commitDraft = () => {
     committed = state.selectedDate && new Date(state.selectedDate); committedEnd = state.rangeEndDate && new Date(state.rangeEndDate); syncInput();
-    if (calendar && committed) base.emit("change", { value: new Date(committed), rangeEndDate: committedEnd && new Date(committedEnd), formattedValue: formatted(committed, committedEnd) });
-    else emitChange();
+    emitChange();
   };
   const close = (restoreFocus = true) => {
     if (!opened) return;
@@ -159,7 +171,7 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     if (!destroyed) base.emit("close", { value: getValue() });
   };
   const open = () => {
-    if (destroyed || opened || base.disabled.isDisabled()) return;
+    if (destroyed || opened || base.disabled.isDisabled() || readOnly) return;
     opened = true; resetDraft(); state.inputMode = state.variant === "modal-input"; state.listStart = undefined;
     let initial = committed ?? today;
     if (state.minDate && initial < state.minDate) initial = state.minDate;
@@ -179,7 +191,12 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     centre(); reveal();
     trigger.setAttribute("aria-expanded", "true"); focusCurrent(); base.emit("open", { value: getValue() });
   };
-  const assignValue = (value: Date | string | [Date | string, Date | string], emit: boolean) => {
+  const assignValue = (input: DatePickerInput, emit: boolean) => {
+    // A range as { start, end } too (FLO-289), besides the pair.
+    const given = isRangeObject(input) ? [input.start, input.end] as [Date | string, Date | string] : input;
+    // In range mode a lone date is a one-day range, so a range's value is
+    // always a pair (FLO-295): it was the start alone.
+    const value = state.selectionMode === "range" && !Array.isArray(given) ? [given, given] as [Date | string, Date | string] : given;
     if (destroyed || Array.isArray(value) && state.selectionMode !== "range") return;
     const start = parseDate(Array.isArray(value) ? value[0] : value);
     const end = Array.isArray(value) ? parseDate(value[1]) : null;
@@ -224,7 +241,9 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
       state.selectedDate = date < state.selectedDate ? date : state.selectedDate;
     } else { state.selectedDate = date; state.rangeEndDate = null; }
     setDisplayDate(date);
-    if (!modal || settings.closeOnSelect && (state.selectionMode !== "range" || state.rangeEndDate)) commitDraft(true);
+    // A docked range commits once it is whole: its start alone is not a value.
+    const whole = state.selectionMode !== "range" || !!state.rangeEndDate;
+    if ((!modal || settings.closeOnSelect) && whole) commitDraft();
     if (settings.closeOnSelect && (state.selectionMode !== "range" || state.rangeEndDate)) close(); else render(true);
   };
   const navigate = (amount: number) => {
@@ -347,7 +366,27 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
   const setDisabled = (disabled: boolean) => {
     if (destroyed) return;
     if (disabled) { close(); base.disabled.disable(); } else base.disabled.enable();
-    input.disabled = disabled; trigger.disabled = disabled;
+    input.disabled = disabled; trigger.disabled = disabled || readOnly;
+  };
+  // Read-only (FLO-289): the value shows and cannot change; the field takes
+  // no typing and the calendar does not open.
+  const setReadOnly = (value: boolean) => {
+    if (destroyed) return;
+    readOnly = value;
+    if (value) close();
+    input.readOnly = value || modal;
+    trigger.disabled = value || base.disabled.isDisabled();
+    base.element.classList.toggle(base.getClass("datepicker--readonly"), value);
+  };
+  // Required (FLO-289): on the input for forms, where the docked field is
+  // typed in; a dialog variant's input is read-only, which forms do not
+  // validate. checkValidity() says whether a required date is missing, and
+  // reportValidity() shows it on the field as well, as native inputs do.
+  const checkValidity = (): boolean => !(input.required && !committed);
+  const reportValidity = (): boolean => {
+    const valid = checkValidity();
+    if (!valid) { input.setAttribute("aria-invalid", "true"); error.textContent = `Select a ${state.selectionMode === "range" ? "date range" : "date"}.`; }
+    return valid;
   };
   const destroy = () => {
     if (destroyed) return;
@@ -364,6 +403,9 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
     open() { open(); return api; }, close() { close(); return api; }, getValue,
     getFormattedValue: () => formatted(committed, committedEnd),
     setValue(value) { assignValue(value, true); return api; },
+    setReadOnly(value) { setReadOnly(value); return api; }, isReadOnly: () => readOnly,
+    setRequired(value) { input.required = value; if (!value) syncInput(); return api; }, checkValidity, reportValidity,
+    setSupportingText(text) { help.textContent = text || state.dateFormat; return api; },
     clear() { if (!destroyed) { committed = null; committedEnd = null; resetDraft(); syncInput(); render(); emitChange(); } return api; },
     enable() { setDisabled(false); return api; }, disable() { setDisabled(true); return api; },
     setMinDate(value) { const date = parseDate(value); if (date && !destroyed) { state.minDate = date; render(); if (state.inputMode) validateEntries(); } return api; },
@@ -382,6 +424,9 @@ const createDatePicker = (config: DatePickerConfig = {}): DatePickerComponent =>
   if (settings.value) assignValue(settings.value, false); else syncInput();
   dialog.append(renderCalendar(state), announcement);
   setDisabled(!!settings.disabled);
-  return api;
+  if (settings.required) input.required = true;
+  if (settings.readOnly) setReadOnly(true);
+  // The runtime value follows the same mode the type names.
+  return api as unknown as DatePickerComponent<DatePickerValueOf<M>>;
 };
 export default createDatePicker;
