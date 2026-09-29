@@ -19,7 +19,6 @@ interface StatesHost {
   structure?: Record<string, HTMLElement | undefined>;
   formFields?: (HTMLInputElement | null)[] | null;
   renderTracks?: (state?: unknown) => void;
-  lifecycle?: { destroy: () => void };
 }
 
 export const withStates =
@@ -30,18 +29,6 @@ export const withStates =
   <C extends StatesHost>(component: C) => {
   const handle = component.handle ?? component.structure?.handle;
   const secondHandle = component.secondHandle ?? component.structure?.secondHandle;
-
-  // Track initial disabled state
-  const isDisabled = config.disabled === true;
-
-  let initialization: ReturnType<typeof setTimeout> | null = null;
-
-  // Apply initial disabled state if needed
-  if (isDisabled) {
-    initialization = setTimeout(() => {
-      disableComponent();
-    }, 0);
-  }
 
   const setFieldsDisabled = (disabled: boolean) => {
     for (const field of component.formFields ?? []) {
@@ -135,13 +122,10 @@ export const withStates =
     return foundKey || "XS"; // Default to 'XS' (extra small)
   }
 
-  if (component.lifecycle) {
-    const originalDestroy = component.lifecycle.destroy;
-    component.lifecycle.destroy = () => {
-      if (initialization !== null) clearTimeout(initialization);
-      originalDestroy.call(component.lifecycle);
-    };
-  }
+  // Disabled from the start, before the listeners exist: this waited a task,
+  // which let a disabled slider take keys until then. The track draws itself
+  // next (withTracks), so there is nothing to redraw yet. #236.
+  if (config.disabled === true) disableComponent();
 
   // Share the instance so these callbacks see track methods installed next.
   return Object.assign(component, {

@@ -283,6 +283,7 @@ export const withController =
   // A value change that does not follow a pointer settles on the default spatial
   // spring; the stylesheet animates only while the root carries `--settling`, so a
   // drag and a layout render (the first one, a resize) move nothing. FLO-250.
+  // The timer is the spring's duration, by design: it takes the class off again.
   const SETTLE_MS = 450; // spring-default-spatial-duration
   let rendered: { value: number; secondValue: number | null } | null = null;
   let settleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -384,14 +385,25 @@ export const withController =
     }
   };
 
-  const initialization = setTimeout(initController, 0);
+  // Listeners, ARIA and the first render are synchronous: keys and the pointer
+  // work as soon as the slider exists, and a pointer reads the track's box at
+  // event time. They used to wait a task, so an element recreating the slider
+  // (a form reset, toggling range) ignored input until then. #236.
+  initController();
+
+  // What needs the slider placed is redone once it is: the direction comes from
+  // an ancestor's dir, and the track measures its length (withTracks observes it
+  // too). The observer reports a box when it is first laid out, then on resizes.
+  const layout = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => updateHandlePositions()) : null;
+  layout?.observe(component.element);
 
   // Register with lifecycle if available
   if (component.lifecycle) {
     const originalDestroy = component.lifecycle.destroy || (() => {});
     component.lifecycle.destroy = () => {
-      clearTimeout(initialization);
+      layout?.disconnect();
       if (settleTimer !== null) clearTimeout(settleTimer);
+      if (state.valueHideTimer !== null) clearTimeout(state.valueHideTimer);
       handlers.cleanupEventListeners();
       originalDestroy.call(component.lifecycle);
     };
