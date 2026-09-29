@@ -3,6 +3,7 @@
 import { SearchConfig, SearchStructure } from "../types";
 import { SEARCH_CLASSES, SEARCH_ICONS, SEARCH_STATES } from "../constants";
 import { createElement } from "../../../core/dom/create";
+import { PREFIX } from "../../../core/config";
 
 /**
  * Creates the search component DOM structure following MD3 specifications
@@ -84,6 +85,12 @@ export const withStructure =
   // Apply classes to root element
   component.element.className = rootClasses.filter(Boolean).join(" ");
   component.element.setAttribute("role", "search");
+
+  // minWidth and maxWidth, which nothing read (FLO-290): custom properties the
+  // stylesheet takes over its M3 360 and 720dp.
+  const prefix = config.prefix ?? PREFIX;
+  if (typeof config.minWidth === "number") component.element.style.setProperty(`--${prefix}-search-min-width`, `${config.minWidth}px`);
+  if (typeof config.maxWidth === "number") component.element.style.setProperty(`--${prefix}-search-max-width`, `${config.maxWidth}px`);
   component.element.setAttribute(
     "aria-disabled",
     isDisabled ? "true" : "false",

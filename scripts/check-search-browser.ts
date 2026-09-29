@@ -107,7 +107,7 @@ export async function checkSearch(page: Page): Promise<void> {
   await checkSearchTokens(page);
   await checkSearchVariants(page);
   await page.evaluate(() => { (window as unknown as SearchWindow).search.destroy(); document.body.replaceChildren(); });
-  console.log("Passed packed search: the open view over the page in the top layer (docked under the bar with a scrim, full screen as a modal dialog), the bar's place kept, a clipping parent escaped, scrim and Escape dismissal (FLO-285); 48dp tap targets, the focus ring, state layers, combobox semantics with a live count, the outline divider and 56dp suggestions (FLO-286); the contained default and the divided variant, docked and full screen, and the results' reveal (FLO-287).");
+  console.log("Passed packed search: the open view over the page in the top layer (docked under the bar with a scrim, full screen as a modal dialog), the bar's place kept, a clipping parent escaped, scrim and Escape dismissal (FLO-285); 48dp tap targets, the focus ring, state layers, combobox semantics with a live count, the outline divider and 56dp suggestions (FLO-286); the contained default and the divided variant, docked and full screen, and the results' reveal (FLO-287); minWidth and maxWidth (FLO-290).");
 }
 
 /** FLO-286: tap targets, focus ring, state layers, combobox semantics, divider and list items. */
@@ -172,6 +172,9 @@ async function checkSearchTokens(page: Page): Promise<void> {
 
 /** FLO-287: contained (the default) and divided, docked and full screen, and the reveal. */
 async function checkSearchVariants(page: Page): Promise<void> {
+  // FLO-290: minWidth and maxWidth apply; the M3 360-720dp by default.
+  const width = (config: Parameters<typeof createSearch>[0]) => mount(page, config).then(() => page.locator(".mtrl-search").evaluate(el => el.getBoundingClientRect().width));
+  assert.deepEqual([await width({}), await width({ maxWidth: 480 })], [720, 480], "maxWidth applies; 720dp by default");
   const open = async (config: Parameters<typeof createSearch>[0]) => {
     await mount(page, { suggestions: ["Apple", "Banana"], ...config });
     await page.locator(".mtrl-search__input").click();

@@ -164,6 +164,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Search: `minWidth` and `maxWidth` apply (FLO-290).** They were documented and given
+  defaults, and nothing read them: the stylesheet's 360dp and 720dp applied whatever was
+  passed. They now set `--mtrl-search-min-width` and `--mtrl-search-max-width` on the root.
 - **Search: the open view no longer moves or covers the page (FLO-285).** A docked view grew
   in the page's flow and pushed everything below it down; a full-screen search covered the
   whole page even as a bar. Opening now shows the bar and its results in the top layer,
