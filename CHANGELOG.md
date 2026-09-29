@@ -12,6 +12,17 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Tooltip: `layer: "top"`.** With the option the tooltip renders after its target instead
+  of on `document.body` (or stays where its owner put it), in the target's tree, a shadow
+  root's included, and is shown in the top layer as a `popover="manual"` element, placed in
+  viewport coordinates. It leaves the top layer after its exit transition. Without popover
+  support the option does nothing. The default tooltip is unchanged.
+- **Snackbar: `layer: "top"`.** With the option the snackbar is a `popover="manual"` element,
+  shown in the top layer where its owner put it or on the body, at its usual place. While a
+  modal `<dialog>` is open, the rest of the page is inert, so it opens inside that dialog,
+  carried in a shadow root with its own root's stylesheets when it comes from another tree,
+  and goes back once closed. Without popover support the option does nothing. The default
+  snackbar is unchanged.
 - **Menu: `layer: "top"`**, and a top-layer helper in `mtrl/core/dom`. With the option the
   menu renders next to its opener instead of on `document.body` or `container`, and is shown
   in the browser's top layer as a `popover="manual"` element: above any z-index, out of any

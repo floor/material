@@ -6,6 +6,7 @@ import {
 } from '../../core/config/component';
 import { SnackbarConfig, SnackbarDuration, BaseComponent, ApiOptions, SnackbarQueue } from './types';
 import { SNACKBAR_DEFAULTS, SNACKBAR_DURATION_MS } from './constants';
+import { supportsTopLayer } from '../../core/dom/layer';
 
 /**
  * Default configuration for the Snackbar component
@@ -21,12 +22,18 @@ export const defaultConfig: Partial<SnackbarConfig> = {
  * @param {SnackbarConfig} config - User provided configuration
  * @returns {SnackbarConfig} Complete configuration with defaults applied
  */
-export const createBaseConfig = (config: SnackbarConfig): SnackbarConfig =>
-  createComponentConfig(
+export const createBaseConfig = (config: SnackbarConfig): SnackbarConfig => {
+  const merged = createComponentConfig(
     defaultConfig as BaseComponentConfig,
     config,
     'snackbar'
   ) as SnackbarConfig;
+  // Without popover support the snackbar keeps its usual layer
+  if (merged.layer === 'top' && !supportsTopLayer('popover-manual')) {
+    merged.layer = undefined;
+  }
+  return merged;
+};
 
 /**
  * Resolves a duration to milliseconds; 0 means the snackbar stays.

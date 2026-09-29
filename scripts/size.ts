@@ -141,14 +141,17 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   select: kb(19.8), // the menu's top layer: 19,600 to 20,115
   "segmented-button": kb(9.3),
   slider: kb(12.6), // FLO-249..255 slider conformance
-  snackbar: kb(11.3),
+  // layer: "top", the core/dom top-layer helper and the modal-dialog placement: 11,533 to 12,134
+  snackbar: kb(11.9),
   switch: kb(6.1), // #214 conformance; #218 node labels
   tabs: kb(13.0),
   textfield: kb(8.1),
   timepicker: kb(10.3),
   "top-app-bar": kb(4.4),
-  tooltip: kb(5.6),
-  all: kb(110.2), // the conformance work above, measured 2026-09-29; the menu's top layer to 112,692
+  tooltip: kb(5.9), // layer: "top" and the core/dom top-layer helper: 5,562 to 5,952
+  // the conformance work above, measured 2026-09-29; the menu's top layer to 112,692;
+  // the tooltip and snackbar top layer, 112,725 to 113,345
+  all: kb(110.8),
 };
 
 export interface SizeGateInput {
