@@ -154,19 +154,8 @@ export const withStates =
       structure.leadingIcon.setAttribute("aria-label", "Go back");
     }
 
-    // Append divider and content area if not already present
-    if (structure?.divider && !element.contains(structure.divider)) {
-      structure.surface.appendChild(structure.divider);
-    }
-
-    if (
-      structure?.suggestionsContainer?.parentElement &&
-      !element.contains(structure.suggestionsContainer.parentElement)
-    ) {
-      structure.surface.appendChild(structure.suggestionsContainer.parentElement);
-    }
-
     openSurface();
+    structure?.input.setAttribute("aria-expanded", "true");
 
     // Focus input after transition
     if (structure?.input) {
@@ -212,19 +201,10 @@ export const withStates =
       structure.leadingIcon.setAttribute("aria-label", "Search");
     }
 
-    // Remove divider and content area from DOM (keep references)
-    if (structure?.divider && element.contains(structure.divider)) {
-      structure.divider.remove();
-    }
-
-    if (
-      structure?.suggestionsContainer?.parentElement &&
-      element.contains(structure.suggestionsContainer.parentElement)
-    ) {
-      structure.suggestionsContainer.parentElement.remove();
-    }
-
     closeSurface(restoreFocus);
+    structure?.input.setAttribute("aria-expanded", "false");
+    structure?.input.removeAttribute("aria-activedescendant");
+    if (structure?.status) structure.status.textContent = "";
 
     // Emit collapse event
     if (component.emit) {
