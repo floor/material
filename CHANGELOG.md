@@ -20,6 +20,20 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   around the focused one, within `minDate` and `maxDate`, and extends it by a year as it
   nears either end without moving what is shown. Selections are drafts until Save, as in
   the modal (FLO-276).
+- **Elements: `<m-progress>`, `<m-loading-indicator>`, `<m-badge>` and `<m-divider>`**, and
+  `Progress`, `LoadingIndicator`, `Badge` and `Divider` in the React, Vue, Svelte and Solid
+  adapters. Progress takes `value` and `indeterminate` as live properties, the loading
+  indicator `size`, `contained` and `value`, both named by `aria-label`; the badge is
+  standalone, labelled by its text or `label` and capped by `max`, with a live `visible`;
+  the divider takes `orientation`, `variant`, insets, `thickness` and `color`.
+- **Elements: `<m-icon-button>`, `<m-fab>`, `<m-extended-fab>` and `<m-checkbox>`**, with
+  their React, Vue, Svelte and Solid components (`IconButton`, `Fab`, `ExtendedFab`,
+  `Checkbox`). The icon button and the FAB are named by `aria-label`; the extended FAB and the
+  checkbox by their children. A toggle icon button has a live `selected` property and a
+  `toggle` event; the button-like elements' `type="submit"` and `type="reset"` act on the
+  host's form. The checkbox is a form control like `<m-switch>` (`checked` as default and
+  live state, `indeterminate` as a property, `change`, form value, reset, validity, `<label
+  for>`, state restore).
 
 ### Changed
 

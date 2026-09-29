@@ -42,6 +42,7 @@ type Win = Window & {
     setExtra: (v: boolean) => void;
     setOrder: (v: string[]) => void;
     setShow: (v: boolean) => void;
+    setProgress: (v: number) => void;
     switchRef: { current: (HTMLElement & { toggle: () => void; checked: boolean }) | null };
   };
 };
@@ -153,6 +154,12 @@ const run = async (version: 18 | 19): Promise<void> => {
     assert.equal(await page.evaluate(() => (window as unknown as Win).api.submits), 1);
     check("button: host props pass through, type=submit reaches React's onSubmit");
 
+    // ------------------------------------------------------------- checkbox
+    await page.getByRole("checkbox", { name: "Agree", exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("agreed")?.textContent === "true");
+    assert.equal(await page.getByRole("checkbox", { name: "Agree", exact: true }).isChecked(), true);
+    check("checkbox: controlled checked and onChange");
+
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);
     await page.getByRole("tab", { name: "Flights", exact: true }).click();
@@ -171,6 +178,15 @@ const run = async (version: 18 | 19): Promise<void> => {
     });
     assert.deepEqual(late, { checked: true, attribute: "", disabled: true });
     check("a component mounted after hydration takes defaultChecked and booleans");
+
+    // ------------------------------------------------------------- progress
+    const valueNow = (): Promise<string | null | undefined> =>
+      page.evaluate(() => document.getElementById("pg")?.shadowRoot?.firstElementChild?.getAttribute("aria-valuenow"));
+    assert.equal(await valueNow(), "30");
+    await page.evaluate(() => (window as unknown as Win).api.setProgress(70));
+    await page.waitForFunction(() => document.getElementById("pg")?.shadowRoot?.firstElementChild?.getAttribute("aria-valuenow") === "70");
+    assert.equal(await valueNow(), "70");
+    check("progress: the value prop sets aria-valuenow, and a new value updates it");
 
     // ------------------------------------------------------------- lifecycle
     const reordered = await page.evaluate(async () => {
