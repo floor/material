@@ -34,8 +34,8 @@
  * });
  *
  * // Listen for toggle events
- * favoriteButton.element.addEventListener('toggle', () => {
- *   console.log('Selected:', favoriteButton.isSelected());
+ * favoriteButton.on('change', ({ selected }) => {
+ *   console.log('Selected:', selected);
  * });
  *
  * // Attach to DOM
