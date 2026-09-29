@@ -31,6 +31,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Date picker, measured against the M3 tokens (FLO-277).** Days show 0.08 hover, 0.10
+  pressed and 0.10 focus layers in `on-surface-variant` (`on-primary` on the selected day),
+  with the 3dp focus ring. The docked calendar has 16dp corners, outside-month days are
+  `on-surface` at 38%, in-range days `on-secondary-container`, and the range band starts
+  and ends square at the centre of its endpoints. The modal is 568dp tall. In right-to-left
+  layouts the arrow keys follow the reading direction and the chevrons mirror.
 - `<m-tab>` has a property for each attribute it declares (`value`, `label`, `icon`, `badge`,
   `disabled`), writing the attribute. Solid sets a custom element's props as properties, so a
   `<Tab value="…">` rendered in the browser lost its value and the tabs reported its label.

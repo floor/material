@@ -54,6 +54,8 @@ $component: '#{base.$prefix}-datepicker';
   }
   &__list { flex: 1; min-height: 0; position: relative; overflow-y: auto; overscroll-behavior: contain; }
   &__subhead { @include m.typography('title-small'); color: t.color('on-surface-variant'); padding: 20px 24px 8px; }
+  // Docked: corner-large (16dp), where the dialogs are extra-large. FLO-277.
+  &--docked { border-radius: v.shape('large'); }
   &--docked { position: absolute; inset: auto; top: 100%; inset-inline-start: 0; margin: 8px 0 0; z-index: v.z-index('dropdown'); }
   &__content { display: flex; flex-direction: column; }
   &__modal-header {
@@ -65,7 +67,8 @@ $component: '#{base.$prefix}-datepicker';
   &__title { @include m.typography('label-large'); margin-bottom: 20px; }
   &__headline { @include m.typography('headline-large'); overflow-wrap: anywhere; }
   &__mode-toggle { position: absolute; inset-inline-end: 12px; bottom: 12px; font-size: 24px; }
-  &__header { display: flex; align-items: center; padding: 8px 12px; min-height: 56px; }
+  // The month and year row is 56dp, as in Compose (48dp buttons, 4dp above and below).
+  &__header { display: flex; align-items: center; padding: 4px 12px; min-height: 56px; box-sizing: border-box; }
   &__navigation { display: flex; flex: 1; }
   &__month-selector, &__year-selector { @include m.typography('label-large'); padding: 0 8px; }
   &__trigger, &__mode-toggle, &__prev, &__next, &__month-selector, &__year-selector,
@@ -79,7 +82,8 @@ $component: '#{base.$prefix}-datepicker';
   &__trigger, &__mode-toggle, &__prev, &__next, &__close { display: inline-flex; align-items: center; justify-content: center; }
   &--animate[open] { animation: #{$component}-appear v.motion('duration-short3') v.motion('easing-standard'); }
   @media (prefers-reduced-motion: reduce) { &--animate[open] { animation: none; } }
-  &__days { padding: 0 12px 8px; }
+  // No bottom padding: the modal is Compose's 568dp, the footer included. FLO-277.
+  &__days { padding: 0 12px; }
   // The months' scroll-snapping track: one month per page, no visible scrollbar.
   // Swipe, trackpad and wheel paging are the browser's own. FLO-274.
   &__track {
@@ -91,26 +95,39 @@ $component: '#{base.$prefix}-datepicker';
   &__weekdays, &__week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
   &__weekday, &__cell { display: flex; align-items: center; justify-content: center; height: 48px; min-width: 0; }
   &__weekday { @include m.typography('body-large'); }
-  &__cell--range { background: linear-gradient(transparent 4px, t.color('secondary-container') 4px, t.color('secondary-container') 44px, transparent 44px); }
-  &__cell--range-start { border-start-start-radius: 50%; border-end-start-radius: 50%; }
-  &__cell--range-end { border-start-end-radius: 50%; border-end-end-radius: 50%; }
+  // The in-range band: a 40dp secondary-container strip, starting and ending at the
+  // centre of the endpoint circles, square, under the selection (Compose's
+  // drawRangeBackground); it was rounded to the cell edge. In-range days read
+  // on-secondary-container. FLO-277.
+  &__cell--range {
+    background: linear-gradient(transparent 4px, t.color('secondary-container') 4px, t.color('secondary-container') 44px, transparent 44px) no-repeat;
+    .#{$component}__day:not(.#{$component}__day--selected) { color: t.color('on-secondary-container'); }
+  }
+  &__cell--range-start { background-size: 50% 100%; background-position: 100% 0; &:dir(rtl) { background-position: 0 0; } }
+  &__cell--range-end { background-size: 50% 100%; background-position: 0 0; &:dir(rtl) { background-position: 100% 0; } }
+  &__cell--range-start#{&}__cell--range-end { background: none; }
   &__day {
     position: relative; isolation: isolate; width: 100%; height: 48px; padding: 0; border: 0;
     background: transparent; color: t.color('on-surface'); cursor: pointer;
     @include m.typography('body-large');
-    &::before { content: ''; position: absolute; z-index: -1; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border-radius: 50%; box-sizing: border-box; }
-    &:hover:not(:disabled)::before { background: t.alpha('on-surface', 0.08); }
-    &:focus-visible { outline: none; &::before { outline: 2px solid t.color('primary'); outline-offset: 2px; } }
-    &--outside { color: t.color('on-surface-variant'); }
+    // ::before is the 40dp selection (fill, today's ring); ::after is the state layer
+    // above it: on-surface-variant, on-primary on the selected day, at 0.08 hover and
+    // 0.10 focus and pressed, with md.comp.focus-ring 2dp outside it. FLO-277.
+    &::before, &::after { content: ''; position: absolute; z-index: -1; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border-radius: 50%; box-sizing: border-box; }
+    --#{$component}-day-layer: #{t.color('on-surface-variant')};
+    &:hover:not(:disabled)::after { background: color-mix(in srgb, var(--#{$component}-day-layer) #{v.state('hover-state-layer-opacity') * 100%}, transparent); }
+    &:focus-visible { outline: none; &::after { background: color-mix(in srgb, var(--#{$component}-day-layer) #{v.state('focus-state-layer-opacity') * 100%}, transparent); outline: 3px solid t.color('secondary'); outline-offset: 2px; } }
+    &:active:not(:disabled)::after { background: color-mix(in srgb, var(--#{$component}-day-layer) #{v.state('pressed-state-layer-opacity') * 100%}, transparent); }
+    &--outside { color: t.alpha('on-surface', 0.38); }
     &--today { color: t.color('primary'); &::before { border: 1px solid t.color('primary'); } }
     &--highlight { text-decoration: underline; }
-    &--selected, &--selected:hover:not(:disabled) { color: t.color('on-primary'); &::before { background: t.color('primary'); } }
+    &--selected, &--selected:hover:not(:disabled) { color: t.color('on-primary'); --#{$component}-day-layer: #{t.color('on-primary')}; &::before { background: t.color('primary'); } }
     &:disabled { opacity: 0.38; cursor: default; }
   }
   &__months, &__years { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 8px; padding: 16px 24px; }
-  // The year list scrolls vertically within the calendar's own height (a weekday row,
-  // six weeks and the bottom padding), so the picker keeps its size. FLO-275.
-  &__years { position: relative; box-sizing: border-box; height: 344px; overflow-y: auto; overscroll-behavior: contain; }
+  // The year list scrolls vertically within the calendar's own height (a weekday row
+  // and six weeks), so the picker keeps its size. FLO-275.
+  &__years { position: relative; box-sizing: border-box; height: 336px; overflow-y: auto; overscroll-behavior: contain; }
   &__month, &__year {
     position: relative; isolation: isolate; min-width: 0; height: 48px; border: 0; background: transparent;
     color: t.color('on-surface-variant'); @include m.typography('body-large'); cursor: pointer;
@@ -121,7 +138,9 @@ $component: '#{base.$prefix}-datepicker';
   }
   &__fields { display: grid; gap: 16px; padding: 24px; }
   &__field { display: flex; flex-direction: column; }
-  &__footer { display: flex; justify-content: flex-end; gap: 8px; padding: 8px 12px; }
+  &__footer { display: flex; justify-content: flex-end; gap: 8px; padding: 4px 12px; }
+  // The chevrons point the way the months go: mirrored right to left. FLO-277.
+  &__prev svg, &__next svg { &:dir(rtl) { transform: scaleX(-1); } }
   &__cancel, &__confirm, &__save { @include m.typography('label-large'); padding: 0 12px; color: t.color('primary'); }
   &__sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }

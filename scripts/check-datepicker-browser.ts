@@ -142,7 +142,45 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
   await page.evaluate(() => (window as unknown as PickerWindow).picker.open());
   await page.locator('[aria-label="Close"]').click();
   assert.equal(await page.evaluate(() => document.querySelector('dialog')!.open), false, 'Close dismisses');
+  // FLO-277: the painted audit. Day states, container corners and height, outside and
+  // in-range colours, the range band's square ends, and right-to-left keys and chevrons.
+  const role = (name: string) => page.evaluate(name => { const probe = document.createElement('i'); probe.style.color = `var(--mtrl-sys-color-${name})`; document.body.append(probe); const colour = getComputedStyle(probe).color; probe.remove(); return colour; }, name);
+  const mix = (name: string, percent: number) => page.evaluate(([name, percent]) => { const probe = document.createElement('i'); probe.style.color = `color-mix(in srgb, var(--mtrl-sys-color-${name}) ${percent}%, transparent)`; document.body.append(probe); const colour = getComputedStyle(probe).color; probe.remove(); return colour; }, [name, percent] as const);
+  const remount = (config: Record<string, unknown>) => page.evaluate(config => {
+    const state = window as unknown as PickerWindow; state.picker.destroy();
+    state.picker = state.core.createDatePicker(config as Parameters<typeof state.core.createDatePicker>[0]); document.body.append(state.picker.element); state.picker.open();
+  }, config);
+  const layer = (date: string) => page.locator(`[data-date="${date}"]`).evaluate(el => { const c = getComputedStyle(el, '::after'); return { background: c.backgroundColor, ring: `${c.outlineWidth} ${c.outlineStyle} ${c.outlineColor} ${c.outlineOffset}` }; });
+  await remount({ variant: 'modal', value: '2026-09-15' });
+  assert.equal(await page.locator('dialog').evaluate(el => el.getBoundingClientRect().height), 568, 'the modal is 568dp, as in Compose');
+  assert.equal(await page.locator('[data-date="2026-10-01"]').count() + await page.locator('.mtrl-datepicker__track > :not([aria-hidden]) .mtrl-datepicker__day--outside').count() > 0, true);
+  assert.equal(await page.locator('.mtrl-datepicker__track > :not([aria-hidden]) .mtrl-datepicker__day--outside').first().evaluate(el => getComputedStyle(el).color), await mix('on-surface', 38), 'outside-month days: on-surface 38%');
+  await page.keyboard.press('ArrowRight');
+  assert.deepEqual(await layer('2026-09-16'), { background: await mix('on-surface-variant', 10), ring: `3px solid ${await role('secondary')} 2px` }, 'a focused day: a 0.10 layer and the 3dp focus ring');
+  await page.locator('[data-date="2026-09-17"]').hover();
+  assert.equal((await layer('2026-09-17')).background, await mix('on-surface-variant', 8), 'hover: on-surface-variant 0.08');
+  await page.mouse.down();
+  assert.equal((await layer('2026-09-17')).background, await mix('on-surface-variant', 10), 'pressed: 0.10');
+  await page.mouse.up(); await page.mouse.move(0, 0);
+  await page.locator('[data-date="2026-09-17"]').hover();
+  assert.equal((await layer('2026-09-17')).background, await mix('on-primary', 8), 'the selected day: an on-primary layer');
+  await page.mouse.move(0, 0);
+  await remount({ value: '2026-09-15' });
+  assert.equal(await page.locator('dialog').evaluate(el => getComputedStyle(el).borderRadius), '16px', 'docked: corner-large');
+  await remount({ variant: 'modal', selectionMode: 'range', value: ['2026-09-09', '2026-09-17'] });
+  const band = await page.evaluate(() => {
+    const start = document.querySelector('.mtrl-datepicker__track > :not([aria-hidden]) .mtrl-datepicker__cell--range-start')!;
+    const c = getComputedStyle(start);
+    return { size: c.backgroundSize, position: c.backgroundPosition, radius: c.borderRadius, inRange: getComputedStyle(document.querySelector('[data-date="2026-09-11"]')!).color };
+  });
+  assert.deepEqual(band, { size: '50% 100%', position: '100% 0px', radius: '0px', inRange: await role('on-secondary-container') }, 'the band starts square at the centre of the start date; in-range days on-secondary-container');
+  await page.evaluate(() => { document.documentElement.dir = 'rtl'; });
+  await remount({ variant: 'modal', value: '2026-09-15' });
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await page.evaluate(() => (document.activeElement as HTMLElement).dataset.date), '2026-09-14', 'right to left, ArrowRight goes back a day');
+  assert.equal(await page.locator('[data-action="next"] svg').evaluate(el => getComputedStyle(el).transform), 'matrix(-1, 0, 0, 1, 0, 0)', 'right to left, the chevrons mirror');
+  await page.evaluate(() => { document.documentElement.dir = 'ltr'; });
   await page.evaluate(() => (window as unknown as PickerWindow).picker.destroy());
   assert.equal(await page.locator('.mtrl-datepicker').count(), 0);
-  console.log('Passed packed date picker: selective CSS, token geometry, native modal/scrim, focus, keyboard, input validation, draft/commit/cancel, range, themes, mobile, month swiping in both directions, the scrolling year list, the full-screen range picker and cleanup.');
+  console.log('Passed packed date picker: selective CSS, token geometry, native modal/scrim, focus, keyboard, input validation, draft/commit/cancel, range, themes, mobile, month swiping in both directions, the scrolling year list, the full-screen range picker, M3 day states, corners, colours, the range band, right-to-left keys and cleanup.');
 }
