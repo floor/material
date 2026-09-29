@@ -407,10 +407,16 @@ try {
   {
     assert.equal(await page.getByRole("button", { name: "Compose" }).count(), 1);
     assert.equal(await page.getByRole("button", { name: "From attribute" }).count(), 1);
-    assert.equal(
-      await page.evaluate(() => document.getElementById("eb")?.shadowRoot?.querySelector("button")?.hasAttribute("aria-label")),
-      false
-    );
+    // #232: the factory no longer copies text into aria-label, so the inner
+    // button carries none and is named by the slotted text itself.
+    for (const [id, name] of [["eb", "Compose"], ["ep", "Untouched"]]) {
+      assert.equal(
+        await page.evaluate((id) => document.getElementById(id)?.shadowRoot?.querySelector("button")?.hasAttribute("aria-label"), id),
+        false,
+        `#${id}'s inner button has no aria-label`
+      );
+      assert.equal(await page.locator(`#${id}`).getByRole("button", { name, exact: true }).count(), 1);
+    }
     check("extended fab: slotted and attribute labels are accessible names");
 
     await page.evaluate(() => document.getElementById("ea")?.setAttribute("label", "Renamed"));

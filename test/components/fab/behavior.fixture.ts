@@ -35,7 +35,9 @@ for (const component of ['fab', 'extended-fab'] as const) {
     expect(b.element.classList.contains(root)).toBe(true);
     expect(b.element.classList.contains(`${root}--primary-container`)).toBe(true);
     expect(b.element.classList.contains(`${root}--${component === 'fab' ? 'default' : 'small'}`)).toBe(true);
-    expect(b.element.getAttribute('aria-label')).toBe('Create');
+    // The FAB is named by its label; the extended FAB by its visible text (#232).
+    if (component === 'fab') expect(b.element.getAttribute('aria-label')).toBe('Create');
+    else expect(b.element.hasAttribute('aria-label')).toBe(false);
   });
   // FLO-110. config.ts used to read
   // `config.ariaLabel || (config.icon ? "action" : undefined)`, so a FAB
@@ -51,9 +53,7 @@ for (const component of ['fab', 'extended-fab'] as const) {
     );
 
     expect(b.element.getAttribute('aria-label')).not.toBe('action');
-    if (component === 'fab') {
-      expect(b.element.hasAttribute('aria-label')).toBe(false);
-    }
+    expect(b.element.hasAttribute('aria-label')).toBe(false);
   });
 
   for (const variant of variants) {

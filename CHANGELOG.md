@@ -67,6 +67,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Extended FAB: no manufactured `aria-label` (#232).** It is set only from `ariaLabel`. The
+  factory copied `text` into it, which named `<m-extended-fab>`'s button
+  "[object HTMLSlotElement]" until the element removed it again, and gave an extended FAB
+  with no text the name "action", as the FAB did before FLO-110. The visible text is the
+  name. A segmented button's text segment no longer copies its text into `aria-label`
+  either; an icon-only segment is still named by its value.
 - **Time picker: a native modal dialog (FLO-278).** It opens with `showModal()`, over a
   0.32 scrim, with the page inert; it takes focus on open and returns it on close. Escape and
   a click on the backdrop cancel that picker only (Escape closed every open picker, and the
