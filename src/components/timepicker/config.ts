@@ -60,11 +60,7 @@ export const createBaseConfig = (
 export const getContainerConfig = (config: ResolvedTimePickerConfig) => {
   return createElementConfig(config, {
     tag: "div",
-    attributes: {
-      role: "dialog",
-      "aria-modal": "true",
-      "aria-labelledby": `${config.prefix}-time-picker__title`,
-    },
+    // The dialog semantics are the native <dialog>'s, not this host's. FLO-278.
     className: [
       config.class,
       config.isOpen ? `${config.prefix}-time-picker--open` : "",

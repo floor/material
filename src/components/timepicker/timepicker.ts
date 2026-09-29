@@ -10,7 +10,6 @@ import {
   TIME_PERIOD,
 } from "./types";
 import { createBaseConfig, getContainerConfig, getApiConfig } from "./config";
-import { TIMEPICKER_Z_INDEX as Z_INDEX } from "./constants";
 import { createTimePickerAPI } from "./api";
 import { parseTime, formatFormValue } from "./utils";
 import { createFormValue } from "../../core/dom/form-value";
@@ -20,6 +19,8 @@ import { createFormValue } from "../../core/dom/form-value";
  * @param {TimePickerConfig} config - TimePicker configuration object
  * @returns {TimePickerComponent} TimePicker component instance
  */
+let pickers = 0;
+
 const createTimePicker = (
   config: TimePickerConfig = {}
 ): TimePickerComponent => {
@@ -34,35 +35,21 @@ const createTimePicker = (
       withLifecycle()
     )(baseConfig);
 
-    // Create modal element
-    const modalElement = document.createElement("div");
-    modalElement.className = `${baseConfig.prefix}-time-picker__modal`;
-    modalElement.style.display = "none";
-    modalElement.style.position = "fixed";
-    modalElement.style.top = "0";
-    modalElement.style.left = "0";
-    modalElement.style.width = "100%";
-    modalElement.style.height = "100%";
-    modalElement.style.backgroundColor = "rgba(0, 0, 0, 0.4)";
-    modalElement.style.zIndex = Z_INDEX.MODAL.toString();
-    modalElement.setAttribute("role", "presentation");
-
-    // Create dialog element
-    const dialogElement = document.createElement("div");
+    // A native modal dialog (FLO-278): showModal() puts it in the top layer with
+    // its ::backdrop scrim, makes the page inert and keeps focus inside, and its
+    // cancel event is this picker's Escape. It was a portaled div with an inline
+    // backdrop, no focus handling, and a document-wide Escape. `modalElement`
+    // stays in the API and is the same element.
+    baseConfig.titleId = `${baseConfig.prefix}-time-picker-${++pickers}__title`;
+    const dialogElement = document.createElement("dialog");
+    dialogElement.setAttribute("aria-labelledby", baseConfig.titleId);
     dialogElement.className = [
       `${baseConfig.prefix}-time-picker__dialog`,
       `${baseConfig.prefix}-time-picker__dialog--${baseConfig.type}`,
       `${baseConfig.prefix}-time-picker__dialog--${baseConfig.orientation}`,
       `${baseConfig.prefix}-time-picker__dialog--${baseConfig.format}`,
     ].join(" ");
-    dialogElement.style.position = "absolute";
-    dialogElement.style.top = "50%";
-    dialogElement.style.left = "50%";
-    dialogElement.style.transform = "translate(-50%, -50%)";
-    dialogElement.style.zIndex = Z_INDEX.DIALOG.toString();
-
-    // Append dialog to modal
-    modalElement.appendChild(dialogElement);
+    const modalElement = dialogElement;
 
     // Append modal to container (document.body by default)
     const container =

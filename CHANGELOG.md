@@ -67,6 +67,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Time picker: a native modal dialog (FLO-278).** It opens with `showModal()`, over a
+  0.32 scrim, with the page inert; it takes focus on open and returns it on close. Escape and
+  a click on the backdrop cancel that picker only (Escape closed every open picker, and the
+  backdrop did not emit `cancel`). Each picker's title has its own id, the mode toggle keeps
+  focus, and `isOpen: true` opens the picker as documented. `modalElement` is now the dialog
+  itself.
 - **Date picker, measured against the M3 tokens (FLO-277).** Days show 0.08 hover, 0.10
   pressed and 0.10 focus layers in `on-surface-variant` (`on-primary` on the selected day),
   with the 3dp focus ring. The docked calendar has 16dp corners, outside-month days are

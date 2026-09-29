@@ -33,7 +33,7 @@ export const renderTimePicker = (
     const title = document.createElement("div");
     title.className = `${config.prefix}-time-picker__title`;
     title.textContent = config.title;
-    title.id = `${config.prefix}-time-picker__title`;
+    title.id = config.titleId ?? `${config.prefix}-time-picker__title`;
     container.appendChild(title);
   }
 
@@ -243,59 +243,9 @@ export const renderTimePicker = (
     }, 0);
   }
 
-  // Add event listener for toggle button
-  toggleTypeButton.addEventListener("click", () => {
-    // Toggle dial visibility
-    if (dialContainer.style.display === "none") {
-      // Switch to dial mode
-      dialContainer.style.display = "block";
-      setHTML(toggleTypeButton, config.keyboardIcon || TIMEPICKER_ICONS.KEYBOARD);
-      toggleTypeButton.setAttribute("aria-label", "Toggle input picker");
-
-      setTimeout(() => {
-        // No focus call here. A canvas is not focusable, so the previous
-        // `canvas.focus()` did nothing, and making it focusable would promise
-        // a keyboard interaction the dial does not have. Focus stays on the
-        // toggle, which is where the person pressed.
-
-        // Apply active state to hour input by default
-        const hourElements = container.querySelectorAll(
-          `.${config.prefix}-time-picker__hours`
-        );
-        hourElements.forEach((el) => el.setAttribute("data-active", "true"));
-
-        const minuteElements = container.querySelectorAll(
-          `.${config.prefix}-time-picker__minutes`
-        );
-        minuteElements.forEach((el) => el.setAttribute("data-active", "false"));
-
-        const secondElements = container.querySelectorAll(
-          `.${config.prefix}-time-picker__seconds`
-        );
-        secondElements.forEach((el) => el.setAttribute("data-active", "false"));
-
-        // Render clock dial
-        renderClockDial(canvas, timeValue, {
-          type: TIME_PICKER_TYPE.DIAL,
-          format: config.format,
-          showSeconds: config.showSeconds,
-          prefix: config.prefix,
-          activeSelector: "hour",
-        });
-      }, 50);
-    } else {
-      // Switch to input mode
-      dialContainer.style.display = "none";
-      setHTML(toggleTypeButton, config.clockIcon || TIMEPICKER_ICONS.CLOCK);
-      toggleTypeButton.setAttribute("aria-label", "Toggle dial picker");
-
-      // Focus on hours input
-      setTimeout(() => {
-        hoursInput.focus();
-        hoursInput.select();
-      }, 50);
-    }
-  });
+  // The mode toggle is handled once, by the API, which re-renders the picker and
+  // keeps focus on the toggle. This listener switched the view in place as well,
+  // and its delayed focus landed on nodes the re-render had replaced. FLO-278.
 
   // Handle input time changes
   const handleInputChange = (e: Event) => {

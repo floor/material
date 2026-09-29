@@ -13,29 +13,13 @@ $component: '#{base.$prefix}-time-picker';
   position: relative;
   display: inline-block;
   
-  &__modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: map.get(v.$z-index, 'modal');
-    opacity: 0;
-    transition: opacity 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
-    
-    &.active {
-      opacity: 1;
-    }
-  }
-  
+  // A native modal <dialog> (FLO-278): the browser centres it in the top layer and
+  // draws ::backdrop; the scrim is scrim at 0.32, as for every M3 dialog.
   &__dialog {
-    position: relative;
-    display: flex;
-    flex-direction: column;
+    box-sizing: border-box;
+    margin: auto;
+    padding: 0;
+    border: 0;
     min-width: 280px;
     max-width: 328px;
     max-height: 520px;
@@ -43,14 +27,14 @@ $component: '#{base.$prefix}-time-picker';
     color: t.color('on-surface');
     border-radius: f.get-shape('extra-large');
     @include m.elevation(3);
-    transform: translateY(20px) scale(0.9);
-    opacity: 0;
-    transition: transform 0.25s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
-    
-    &.active {
-      transform: translateY(0) scale(1);
-      opacity: 1;
+
+    &[open] {
+      display: flex;
+      flex-direction: column;
+      animation: #{$component}-appear 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
     }
+
+    &::backdrop { background: t.alpha('scrim', 0.32); }
     
     // State layer for elevations
     &::before {
@@ -464,4 +448,12 @@ $component: '#{base.$prefix}-time-picker';
     white-space: nowrap;
     border: 0;
   }
+}
+
+@keyframes #{$component}-appear {
+  from { opacity: 0; transform: translateY(20px) scale(0.9); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .#{$component}__dialog[open] { animation: none; }
 }

@@ -94,7 +94,29 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   assert.equal(await dialog.locator(".mtrl-time-picker__period").count(), 0);
   assert.deepEqual(await page.locator('[class*="mtrl-time-picker"]').evaluateAll(elements => elements.flatMap(element => [...element.classList].filter(name => /^mtrl-time-picker-[^-]/.test(name)))), []);
   await dialog.locator(".mtrl-time-picker__cancel").click();
+  // FLO-278: a native modal dialog. Opened from a trigger, it is :modal over a 0.32
+  // scrim, takes focus, and Escape closes it alone and returns focus.
+  await page.evaluate(() => {
+    const state = window as unknown as TimePickerWindow;
+    const trigger = document.createElement("button"); trigger.id = "time-trigger"; trigger.textContent = "Time"; document.body.append(trigger);
+    (window as unknown as { otherPicker: ReturnType<typeof state.createTimePicker> }).otherPicker = state.createTimePicker({ title: "Other" });
+  });
+  await page.locator("#time-trigger").focus();
+  await page.evaluate(() => { (window as unknown as { otherPicker: { open(): void } }).otherPicker.open(); (window as unknown as TimePickerWindow).timePicker.open(); });
+  const modal = await page.evaluate(() => {
+    const open = [...document.querySelectorAll<HTMLDialogElement>("dialog.mtrl-time-picker__dialog")].filter(el => el.open);
+    const top = (window as unknown as TimePickerWindow).timePicker.dialogElement as HTMLDialogElement;
+    const probe = document.createElement("i"); probe.style.color = "color-mix(in srgb, var(--mtrl-sys-color-scrim) 32%, transparent)"; document.body.append(probe);
+    const scrim = getComputedStyle(probe).color; probe.remove();
+    return { open: open.length, modal: top.matches(":modal"), backdrop: getComputedStyle(top, "::backdrop").backgroundColor === scrim, focusInside: top.contains(document.activeElement), named: document.getElementById(top.getAttribute("aria-labelledby")!)?.textContent };
+  });
+  assert.deepEqual(modal, { open: 2, modal: true, backdrop: true, focusInside: true, named: "Updated" }, "a native modal over a 0.32 scrim, focused, named by its title");
+  await page.keyboard.press("Escape");
+  assert.deepEqual(await page.evaluate(() => [(window as unknown as TimePickerWindow).timePicker.isOpen, (window as unknown as { otherPicker: { isOpen: boolean } }).otherPicker.isOpen]), [false, true], "Escape closes the top picker only");
+  await page.keyboard.press("Escape");
+  assert.equal(await page.evaluate(() => document.activeElement?.id), "time-trigger", "focus returns to the trigger");
+  await page.evaluate(() => { (window as unknown as { otherPicker: { destroy(): void } }).otherPicker.destroy(); document.getElementById("time-trigger")?.remove(); });
   await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.destroy());
-  assert.equal(await page.locator(".mtrl-time-picker__modal").count(), 0);
-  console.log("Passed packed Time Picker: BEM layout, dial/input switching, AM/PM, input edits, form value, format/orientation and teardown.");
+  assert.equal(await page.locator(".mtrl-time-picker__dialog").count(), 0);
+  console.log("Passed packed Time Picker: BEM layout, dial/input switching, AM/PM, input edits, form value, format/orientation, a native modal dialog with its own Escape and focus return, and teardown.");
 }
