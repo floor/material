@@ -207,6 +207,18 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- **Time picker: edits are a draft until OK (FLO-288).** Every move of the dial was the value,
+  with a `change` each time, and Cancel kept it; in M3, Cancel discards and OK commits, as
+  the date picker already did. While open, the dial, fields and AM/PM edit a draft,
+  reported by a new `input` event (and `onInput`). OK commits it with one `change` (if it
+  differs), then `confirm`, both while the picker is still open, then `close`; Cancel,
+  Escape and the backdrop put the committed value back and emit `cancel` before `close`.
+  `getValue()`, `getTimeObject()` and the form value are the committed time throughout;
+  `setValue` still commits directly. The dialog now stays in the component's element
+  (it was appended to `document.body`; `open()` adds an element the app never placed to
+  the page), so the root's `click` and `keydown` leave out the dialog's own, and Enter in
+  its fields does not submit a surrounding form. New `disabled`, `enable()`, `disable()`
+  and `isDisabled()`: a disabled picker does not open.
 - **Time picker: `change` fires once per new value (FLO-281).** `setFormat` no longer emits
   `change` (the value is 24-hour whatever the display, and it emitted without calling
   `onChange`), and `setValue` notifies only when the value differs, with the event and

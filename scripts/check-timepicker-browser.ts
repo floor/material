@@ -11,6 +11,7 @@ type TimePickerWindow = Window & {
   confirmedTime: string | undefined;
   openingInput: HTMLInputElement;
   timeChanges: string[];
+  timeDrafts: string[];
 };
 
 export async function checkTimePicker(page: Page, artifacts: string): Promise<void> {
@@ -27,7 +28,10 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
     form.append(state.timePicker.element);
     document.body.append(form);
     state.timeChanges = [];
+    state.timeDrafts = [];
     state.timePicker.on("change", value => { state.timeChanges.push(value); });
+    // Edits are a draft until OK (FLO-288): they show in `input`.
+    state.timePicker.on("input", value => { state.timeDrafts.push(value); });
     state.timePicker.on("confirm", value => { state.confirmedTime = value; });
     state.timePicker.open();
     // Edit in the same task as open(), before the former 50ms redraw.
@@ -46,8 +50,12 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
       value: state.timePicker.getValue(),
       submitted: new FormData(document.querySelector("form")!).get("appointment"),
       changes: state.timeChanges,
+      drafts: state.timeDrafts,
     };
-  }), { connected: true, focused: true, value: "09:35", submitted: "09:35", changes: ["09:35"] });
+  }), { connected: true, focused: true, value: "09:30", submitted: "09:30", changes: [], drafts: ["09:35"] }, "an edit is a draft: the value and the form wait for OK");
+  // OK commits it.
+  await page.locator(".mtrl-time-picker__confirm").click();
+  await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.open());
   const dialog = page.locator(".mtrl-time-picker__dialog");
   await dialog.waitFor();
   const styles = await dialog.evaluate(element => {
@@ -105,11 +113,12 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   assert.equal((await hand()).label, "Hour", "ArrowLeft goes back to hours");
   const stop = dialog.locator('.mtrl-time-picker__dial-number[tabindex="0"]');
   await stop.focus(); await page.keyboard.press("ArrowRight"); await page.keyboard.press("Enter");
-  assert.equal(await page.locator('input[name="appointment"]').inputValue(), "10:35", "the keyboard selects on the dial");
+  const draft = () => page.evaluate(() => (window as unknown as TimePickerWindow).timeDrafts.at(-1));
+  assert.equal(await draft(), "10:35", "the keyboard selects on the dial");
   const face = (await dialog.locator(".mtrl-time-picker__dial-face").boundingBox())!;
   await page.mouse.move(face.x + 128, face.y + 28); await page.mouse.down();
   await page.mouse.move(face.x + 228, face.y + 128); await page.mouse.up();
-  assert.equal(await page.locator('input[name="appointment"]').inputValue(), "03:35", "a drag to three o'clock picks 3");
+  assert.equal(await draft(), "03:35", "a drag to three o'clock picks 3");
   await page.waitForFunction(() => document.querySelector(".mtrl-time-picker__dial-face")?.getAttribute("aria-label") === "Minute");
   assert.equal((await hand()).selected, "35 minutes", "then the dial moves on to minutes");
   assert.equal((await selector("minutes")).checked, "true", "and checks the minute box");
@@ -129,14 +138,14 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.setFormat("12h" as never).setValue("09:35"));
   // The dial section's own changes are asserted above; the log below is the input
   // path's, from 09:35.
-  await page.evaluate(() => { (window as unknown as TimePickerWindow).timeChanges.splice(1); });
+  await page.evaluate(() => { (window as unknown as TimePickerWindow).timeChanges.splice(0); });
   await dialog.locator(".mtrl-time-picker__toggle-type").click();
   assert.equal(await dialog.locator(".mtrl-time-picker__dial-face").isVisible(), false);
   assert.equal(await dialog.locator(".mtrl-time-picker__hours").evaluate(element => getComputedStyle(element).width), "96px");
   const minutes = dialog.locator(".mtrl-time-picker__minutes");
   await minutes.fill("45");
   await minutes.press("Tab");
-  assert.equal(await page.locator('input[name="appointment"]').inputValue(), "09:45");
+  assert.deepEqual([await draft(), await page.locator('input[name="appointment"]').inputValue()], ["09:45", "09:35"], "typing edits the draft; the form keeps the committed value");
   await dialog.locator(".mtrl-time-picker__period-pm").click();
   assert.equal(await dialog.locator(".mtrl-time-picker__period-pm").getAttribute("aria-checked"), "true");
   assert.equal(await dialog.locator(".mtrl-time-picker__period--selected").textContent(), "PM");
@@ -150,7 +159,7 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
       submitted: new FormData(document.querySelector("form")!).get("appointment"),
       changes: state.timeChanges,
     };
-  }), { value: "21:45", submitted: "21:45", changes: ["09:35", "09:45", "21:45"] });
+  }), { value: "21:45", submitted: "21:45", changes: ["21:45"] }, "OK commits the draft with one change");
   await page.evaluate(({ format, orientation }) => {
     const picker = (window as unknown as TimePickerWindow).timePicker;
     picker.setFormat(format).setOrientation(orientation).setTitle("Updated").open();
@@ -186,7 +195,7 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   assert.equal(await page.locator(".mtrl-time-picker__dialog").count(), 0);
   await checkTimePickerTokens(page);
   await checkTimePickerShadow(page);
-  console.log("Passed packed Time Picker: BEM layout, dial/input switching, AM/PM, input edits, form value, format/orientation, a native modal dialog with its own Escape and focus return, the DOM dial (positions, 24h rings, keyboard, drag, spring), its hour and minute radios, the M3 sizes and colours of each variant (FLO-280), focus inside a shadow root (FLO-284), and teardown.");
+  console.log("Passed packed Time Picker: BEM layout, dial/input switching, AM/PM, input edits, form value, format/orientation, a native modal dialog with its own Escape and focus return, the DOM dial (positions, 24h rings, keyboard, drag, spring), its hour and minute radios, the M3 sizes and colours of each variant (FLO-280), focus inside a shadow root (FLO-284), edits as a draft until OK (FLO-288), and teardown.");
 }
 
 /**
