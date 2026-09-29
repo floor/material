@@ -66,12 +66,21 @@ describe("what a time picker is made of", () => {
   // The modal is attached at creation and hidden, rather than attached on
   // open. So "closed" is display:none, not absence -- which is what the
   // mock's own style.display assertions were getting at.
-  test("it starts closed, with the modal attached but hidden", () => {
-    const picker = mount();
+  // FLO-278: a native modal <dialog>, named by its own title.
+  test("it starts closed: a native dialog, attached, named by a title of its own", () => {
+    const picker = mount({ title: "Alarm" });
+    const other = mount({ title: "Alarm" });
 
     expect(picker.isOpen).toBe(false);
-    expect(document.body.contains(picker.modalElement)).toBe(true);
-    expect(picker.modalElement.style.display).toBe("none");
+    expect(picker.modalElement).toBe(picker.dialogElement);
+    expect(picker.dialogElement.tagName).toBe("DIALOG");
+    expect(document.body.contains(picker.dialogElement)).toBe(true);
+    expect(picker.dialogElement.hasAttribute("open")).toBe(false);
+    const titleId = picker.dialogElement.getAttribute("aria-labelledby")!;
+    expect(picker.dialogElement.querySelector(`#${titleId}`)?.textContent).toBe("Alarm");
+    expect(other.dialogElement.getAttribute("aria-labelledby")).not.toBe(titleId);
+    expect(picker.element.hasAttribute("role")).toBe(false);
+    other.destroy();
   });
 });
 
@@ -122,12 +131,13 @@ describe("opening and closing", () => {
 
     picker.open();
     expect(picker.isOpen).toBe(true);
-    expect(picker.modalElement.style.display).toBe("block");
-    expect(picker.modalElement.classList.contains("active")).toBe(true);
+    expect(picker.dialogElement.hasAttribute("open")).toBe(true);
+    expect(picker.dialogElement.classList.contains("active")).toBe(true);
 
     picker.close();
     expect(picker.isOpen).toBe(false);
-    expect(picker.modalElement.classList.contains("active")).toBe(false);
+    expect(picker.dialogElement.hasAttribute("open")).toBe(false);
+    expect(picker.dialogElement.classList.contains("active")).toBe(false);
   });
 
   test("toggle opens a closed picker and closes an open one", () => {
@@ -373,7 +383,8 @@ describe("typed event payloads (FLO-114)", () => {
     } finally { picker.destroy(); }
   });
 
-  test("cancel button and Escape notify without payload; backdrop only closes", () => {
+  // FLO-278: Escape is the dialog's own cancel event, and a backdrop click cancels.
+  test("cancel button, Escape and the backdrop cancel without payload", () => {
     const picker = mount({ type: TIME_PICKER_TYPE.INPUT, value: "09:30" });
     const canceled = mock((..._args: unknown[]) => {});
     const closed = mock((..._args: unknown[]) => {});
@@ -381,14 +392,14 @@ describe("typed event payloads (FLO-114)", () => {
       picker.on("cancel", canceled).on("close", closed).open();
       picker.dialogElement.querySelector<HTMLButtonElement>(TIMEPICKER_SELECTORS.CANCEL_BUTTON)!.click();
       picker.open();
-      document.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Escape" }));
+      picker.dialogElement.dispatchEvent(new dom.window.Event("cancel", { cancelable: true }));
       picker.open();
-      picker.modalElement.click();
-      expect(canceled.mock.calls).toEqual([[undefined], [undefined]]);
+      picker.dialogElement.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true, clientX: -10, clientY: -10 }));
+      expect(canceled.mock.calls).toEqual([[undefined], [undefined], [undefined]]);
       expect(closed).toHaveBeenCalledTimes(3);
       picker.off("cancel", canceled).open();
       picker.dialogElement.querySelector<HTMLButtonElement>(TIMEPICKER_SELECTORS.CANCEL_BUTTON)!.click();
-      expect(canceled).toHaveBeenCalledTimes(2);
+      expect(canceled).toHaveBeenCalledTimes(3);
     } finally { picker.destroy(); }
   });
 
@@ -477,7 +488,7 @@ describe("BEM element names (FLO-120)", () => {
       return result!;
     };
     try {
-      expect(picker.modalElement.className).toBe(`${prefix}-time-picker__modal`);
+      expect(picker.modalElement).toBe(picker.dialogElement);
       expect(picker.dialogElement.classList.contains(`${prefix}-time-picker__dialog`)).toBe(true);
       picker.open();
       find<HTMLButtonElement>("toggle-type").click();
@@ -502,5 +513,28 @@ describe("BEM element names (FLO-120)", () => {
       expect(confirmed).toHaveBeenCalledTimes(1);
       expect(picker.isOpen).toBe(false);
     } finally { picker.destroy(); }
+  });
+});
+
+// FLO-278: each picker handles its own Escape and restores focus.
+describe("a native modal dialog", () => {
+  test("Escape on one open picker leaves another open", () => {
+    const first = mount(); const second = mount();
+    try {
+      first.open(); second.open();
+      second.dialogElement.dispatchEvent(new dom.window.Event("cancel", { cancelable: true }));
+      expect([first.isOpen, second.isOpen]).toEqual([true, false]);
+    } finally { first.destroy(); second.destroy(); }
+  });
+
+  test("focus returns to where it was when the picker closes", () => {
+    const trigger = document.createElement("button"); document.body.append(trigger); trigger.focus();
+    const picker = mount({ value: "09:30" });
+    try {
+      picker.open();
+      expect(picker.dialogElement.contains(document.activeElement)).toBe(true);
+      picker.close();
+      expect(document.activeElement).toBe(trigger);
+    } finally { picker.destroy(); trigger.remove(); }
   });
 });
