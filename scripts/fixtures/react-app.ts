@@ -1,7 +1,7 @@
 // The app scripts/check-react.ts renders on the server and hydrates in the
 // browser, with React 18 and with React 19. Built against dist/react.
 import * as React from "react";
-import { Button, Checkbox, Progress, Switch, Tab, Tabs } from "../../dist/react/index.js";
+import { Button, Checkbox, Progress, Radio, Radios, Switch, Tab, Tabs } from "../../dist/react/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 
 const h = React.createElement;
@@ -22,6 +22,7 @@ type Api = {
 export const App = (): React.ReactElement => {
   const [controlled, setControlled] = React.useState(false);
   const [agreed, setAgreed] = React.useState(false);
+  const [size, setSize] = React.useState<string | null>("m");
   const [tab, setTab] = React.useState<string | null>("t2");
   const [extra, setExtra] = React.useState(false);
   const [order, setOrder] = React.useState(["a", "b"]);
@@ -69,6 +70,14 @@ export const App = (): React.ReactElement => {
     h(Progress, { id: "pg", value: progress, ariaLabel: "Uploading" }),
     h(Checkbox, { id: "cb", checked: agreed, onChange: (e) => setAgreed(e.detail.checked) }, "Agree"),
     h("output", { id: "agreed" }, String(agreed)),
+    h(
+      Radios,
+      { id: "rd", value: size, ariaLabel: "Size", onChange: (e) => setSize(e.detail.value) },
+      h(Radio, { value: "s" }, "Small"),
+      h(Radio, { value: "m" }, "Medium"),
+      h(Radio, { value: "l" }, "Large")
+    ),
+    h("output", { id: "size" }, size),
     ...order.map((key) => h(Switch, { key, id: `o${key}` }, `Order ${key}`)),
     show ? h(Switch, { id: "gone" }, "Gone") : null,
     // Mounted in the browser after the element is defined: React 19 then

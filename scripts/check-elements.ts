@@ -40,6 +40,15 @@ const server = Bun.serve({
         { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } }
       );
     }
+    if (path === "/restore-radios") {
+      return new Response(
+        `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
+<body><form><m-radios id="rr" name="rr" value="a" aria-label="Restored radios">
+<m-radio value="a">Alpha</m-radio><m-radio value="b">Beta</m-radio></m-radios></form><a id="go" href="/away">away</a>
+<script type="module" src="/elements.js"></script></body></html>`,
+        { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } }
+      );
+    }
     return new Response(
       `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css">
 <style>body{margin:0;font-family:sans-serif}section{padding:8px}</style></head>
@@ -729,6 +738,237 @@ try {
     check("tabs: <m-tab> values set before the elements are defined are kept");
   }
 
+  // ---------------------------------------------------------------- radios
+  await fresh(
+    page,
+    `<form id="f"><m-radios id="g" name="size" value="m" aria-label="Size">
+       <m-radio value="s">Small</m-radio><m-radio value="m">Medium</m-radio><m-radio value="l" label="Large"></m-radio>
+     </m-radios>
+     <fieldset id="fs"><m-radios id="o" name="other"><m-radio value="x">Ex</m-radio><m-radio value="y" disabled>Why</m-radio></m-radios></fieldset>
+     </form><section id="factory"></section>`
+  );
+  {
+    type Radios = HTMLElement & { value: string | null; component: unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const group = page.getByRole("radiogroup", { name: "Size" });
+    assert.equal(await group.count(), 1);
+    const radios = group.getByRole("radio");
+    assert.equal(await radios.count(), 3);
+    for (const [name, checked] of [["Small", false], ["Medium", true], ["Large", false]] as const) {
+      assert.equal(await group.getByRole("radio", { name, exact: true, checked }).count(), 1, name);
+    }
+    check("radios: a radiogroup named by aria-label; children declare the radios, value checks one");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      document.getElementById("g")?.addEventListener("change", (e) => {
+        (w.events as unknown[]).push({ detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+      });
+    });
+    await group.getByText("Small", { exact: true }).click();
+    let state = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      const g = document.getElementById("g") as HTMLElement & { value: string | null };
+      const form = new FormData(document.getElementById("f") as HTMLFormElement);
+      return { events: w.events, value: g.value, attribute: g.getAttribute("value"), size: form.get("size"), other: form.get("other") };
+    });
+    assert.deepEqual(state, { events: [{ detail: { value: "s" }, target: "g" }], value: "s", attribute: "m", size: "s", other: null });
+    check("radios: a click dispatches one change from the host; the live value moves, the attribute stays");
+
+    await page.keyboard.press("ArrowDown");
+    state = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      const g = document.getElementById("g") as HTMLElement & { value: string | null };
+      const form = new FormData(document.getElementById("f") as HTMLFormElement);
+      return { events: w.events, value: g.value, attribute: g.getAttribute("value"), size: form.get("size"), other: form.get("other") };
+    });
+    assert.deepEqual((state.events as unknown[]).at(-1), { detail: { value: "m" }, target: "g" });
+    assert.equal(state.size, "m");
+    assert.equal(await group.getByRole("radio", { name: "Medium", exact: true, checked: true }).count(), 1);
+    check("radios: an arrow key moves the selection in the shadow root and dispatches change");
+
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Shift+Tab");
+    const focused = await page.evaluate(() => {
+      const g = document.getElementById("g") as HTMLElement;
+      return { host: document.activeElement === g, value: (g.shadowRoot?.activeElement as HTMLInputElement | null)?.value };
+    });
+    assert.deepEqual(focused, { host: true, value: "m" }, "tabbing into the group lands on the checked radio");
+    check("radios: the group is one tab stop, landing on the checked radio");
+
+    const silent = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      const g = document.getElementById("g") as HTMLElement & { value: string | null };
+      g.value = "l";
+      const after = { value: g.value, size: new FormData(document.getElementById("f") as HTMLFormElement).get("size") };
+      g.value = null;
+      return {
+        events: w.events, after, cleared: g.value, attribute: g.getAttribute("value"),
+        size: new FormData(document.getElementById("f") as HTMLFormElement).get("size"),
+      };
+    });
+    assert.deepEqual(silent, { events: [], after: { value: "l", size: "l" }, cleared: null, attribute: "m", size: null });
+    check("radios: setting value fires no event and updates the form value; null clears it");
+
+    const reset = await page.evaluate(() => {
+      (document.getElementById("f") as HTMLFormElement).reset();
+      const value = (id: string): string | null => (document.getElementById(id) as HTMLElement & { value: string | null }).value;
+      return { g: value("g"), o: value("o"), size: new FormData(document.getElementById("f") as HTMLFormElement).get("size") };
+    });
+    assert.deepEqual(reset, { g: "m", o: null, size: "m" });
+    check("radios: form.reset() restores the value attribute");
+
+    const validity = await page.evaluate(() => {
+      const o = document.getElementById("o") as HTMLElement & { value: string | null };
+      o.setAttribute("required", "");
+      const form = document.getElementById("f") as HTMLFormElement;
+      const invalid = form.checkValidity();
+      const missing = (o as HTMLElement & { internals?: ElementInternals }).internals?.validity.valueMissing;
+      o.value = "x";
+      const valid = form.checkValidity();
+      o.value = null;
+      o.removeAttribute("required");
+      return { invalid, missing, valid, released: form.checkValidity() };
+    });
+    assert.deepEqual(validity, { invalid: false, missing: true, valid: true, released: true });
+    check("radios: required reports a missing value to the form until one is selected");
+
+    const disabled = await page.evaluate(() => {
+      const inputs = (id: string): boolean[] =>
+        [...((document.getElementById(id) as HTMLElement).shadowRoot?.querySelectorAll("input") ?? [])].map((i) => i.disabled);
+      const initial = inputs("o");
+      const fieldset = document.getElementById("fs") as HTMLFieldSetElement;
+      fieldset.disabled = true;
+      const inFieldset = inputs("o");
+      fieldset.disabled = false;
+      const reenabled = inputs("o");
+      const g = document.getElementById("g") as HTMLElement;
+      g.setAttribute("disabled", "");
+      const group = inputs("g");
+      const submitted = new FormData(document.getElementById("f") as HTMLFormElement).get("size");
+      g.removeAttribute("disabled");
+      return { initial, inFieldset, reenabled, group, submitted, after: inputs("g") };
+    });
+    assert.deepEqual(disabled, {
+      initial: [false, true], inFieldset: [true, true], reenabled: [false, true],
+      group: [true, true, true], submitted: null, after: [false, false, false],
+    });
+    check("radios: a disabled child, the disabled attribute and a disabled fieldset reach the inputs");
+
+    const before = await page.evaluate(() => {
+      const g = document.getElementById("g") as Radios;
+      (window as unknown as Record<string, unknown>).__radios = g.component;
+      g.value = "l";
+      const radios = g.querySelectorAll("m-radio");
+      radios[0].textContent = "Tiny";
+      radios[1].setAttribute("disabled", "");
+      const extra = document.createElement("m-radio");
+      extra.setAttribute("value", "xl");
+      extra.textContent = "Huge";
+      g.append(extra);
+      radios[2].remove(); // the selected one
+      return null;
+    });
+    assert.equal(before, null);
+    await settle();
+    const updated = await page.evaluate(() => {
+      const g = document.getElementById("g") as Radios;
+      const inputs = [...(g.shadowRoot?.querySelectorAll("input") ?? [])];
+      return {
+        same: g.component === (window as unknown as Record<string, unknown>).__radios,
+        values: inputs.map((i) => i.value),
+        disabled: inputs.map((i) => i.disabled),
+        value: g.value,
+        size: new FormData(document.getElementById("f") as HTMLFormElement).get("size"),
+      };
+    });
+    assert.deepEqual(updated, { same: true, values: ["s", "m", "xl"], disabled: [false, true, false], value: null, size: null });
+    for (const name of ["Tiny", "Medium", "Huge"]) assert.equal(await group.getByRole("radio", { name, exact: true }).count(), 1, name);
+    check("radios: children relabelled, disabled, added and removed update the group in place; removing the selection clears the form value");
+
+    const reordered = await page.evaluate(async () => {
+      const g = document.getElementById("g") as Radios;
+      g.value = "xl";
+      g.prepend(g.children[2]);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const inputs = [...(g.shadowRoot?.querySelectorAll("input") ?? [])];
+      return {
+        rebuilt: g.component !== (window as unknown as Record<string, unknown>).__radios,
+        values: inputs.map((i) => i.value), value: g.value, checked: inputs.map((i) => i.checked),
+      };
+    });
+    assert.deepEqual(reordered, { rebuilt: true, values: ["xl", "s", "m"], value: "xl", checked: [true, false, false] });
+    check("radios: a reorder rebuilds the group and keeps the selection");
+
+    const declared = await page.evaluate(async () => {
+      const g = document.getElementById("g") as Radios & { component: { radios: Array<{ config: { value: string; label: string; disabled?: boolean } }> } };
+      const radio = document.createElement("m-radio") as HTMLElement & { value: string; label: string; disabled: boolean };
+      radio.value = "xs";
+      radio.label = "Extra small";
+      radio.disabled = true;
+      g.append(radio);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const last = g.component.radios.at(-1)?.config;
+      return { attributes: [radio.getAttribute("value"), radio.getAttribute("label"), radio.hasAttribute("disabled")], last: { ...last } };
+    });
+    assert.deepEqual(declared, { attributes: ["xs", "Extra small", true], last: { value: "xs", label: "Extra small", disabled: true } });
+    check("radios: <m-radio> properties write the attributes the group reads");
+
+    const early = await page.evaluate(async () => {
+      const w = window as unknown as { mtrl: { defineRadios: (o?: object) => string } };
+      const radios = document.createElement("late-radios") as HTMLElement & { value?: string | null };
+      for (const [value, label] of [["first", "First"], ["second", "Second"]]) {
+        const radio = document.createElement("late-radio") as HTMLElement & { value?: string; label?: string };
+        radio.value = value;
+        radio.label = label;
+        radios.append(radio);
+      }
+      radios.value = "second";
+      document.getElementById("host")?.append(radios);
+      w.mtrl.defineRadios({ prefix: "late" });
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const upgraded = radios as HTMLElement & { value: string | null; component: { radios: Array<{ config: { value: string; label: string } }> } };
+      return { options: upgraded.component.radios.map((r) => `${r.config.value}:${r.config.label}`), value: upgraded.value };
+    });
+    assert.deepEqual(early, { options: ["first:First", "second:Second"], value: "second" });
+    check("radios: <m-radio> and <m-radios> properties set before the elements are defined are kept");
+
+    const parity = await page.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createRadios: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createRadios({
+        name: "parity", value: "x", options: [{ value: "x", label: "Ex" }, { value: "y", label: "Why", disabled: true }],
+      });
+      document.getElementById("factory")?.append(factory.element);
+      // Built checked, as the factory is: a selection made afterwards is mid-transition.
+      const element = document.createElement("m-radios");
+      element.setAttribute("value", "x");
+      element.innerHTML = '<m-radio value="x">Ex</m-radio><m-radio value="y" disabled>Why</m-radio>';
+      document.getElementById("factory")?.before(element);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const root = element.shadowRoot?.firstElementChild as HTMLElement;
+      const measure = (group: HTMLElement): Array<Record<string, string | number>> =>
+        [...group.querySelectorAll('[class*="radios__item"]')].map((item) => {
+          const circle = item.querySelector('[class*="radios__circle"]') as HTMLElement;
+          const text = item.querySelector('[class*="radios__text"]') as HTMLElement;
+          // The label, not the item, which stretches to its container's width.
+          const box = (item.querySelector("label") as HTMLElement).getBoundingClientRect();
+          const c = circle.getBoundingClientRect();
+          return {
+            w: Math.round(box.width), h: Math.round(box.height), circleW: c.width, circleH: c.height,
+            border: getComputedStyle(circle).borderColor,
+            dot: getComputedStyle(circle, "::after").backgroundColor,
+            textColor: getComputedStyle(text).color, font: getComputedStyle(text).font,
+          };
+        });
+      return { factory: measure(factory.element), element: measure(root) };
+    });
+    assert.equal(parity.element.length, 2);
+    assert.deepEqual(parity.element, parity.factory);
+    check("radios: renders as the factory does with the global stylesheet");
+  }
+
   // ---------------------------------------------------------------- progress
   await fresh(
     page,
@@ -1032,6 +1272,24 @@ try {
     check("forms: going back restores a switch's state");
     assert.equal(restored.rc, true, "going back restores the checkbox the user checked");
     check("forms: going back restores a checkbox's state");
+  }
+
+  {
+    const restorePage = await browser.newPage();
+    await restorePage.goto(`http://127.0.0.1:${server.port}/restore-radios`);
+    await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
+    await restorePage.getByRole("radiogroup", { name: "Restored radios" }).getByText("Beta", { exact: true }).click();
+    await restorePage.click("#go");
+    await restorePage.waitForURL(/\/away$/);
+    await restorePage.goBack();
+    await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
+    const value = (): string | null => (document.getElementById("rr") as HTMLElement & { value: string | null }).value;
+    await restorePage.waitForFunction(() => (document.getElementById("rr") as HTMLElement & { value: string | null }).value === "b", undefined, { timeout: 5_000 })
+      .catch(() => undefined);
+    const restored = await restorePage.evaluate(value);
+    await restorePage.close();
+    assert.equal(restored, "b", "going back restores the radio the user selected over the value attribute");
+    check("forms: going back restores a radio group's selection");
   }
 
   // ---------------------------------------------------------------- theme

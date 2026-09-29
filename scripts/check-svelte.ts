@@ -80,6 +80,7 @@ const run = async (): Promise<void> => {
   assert.match(html, /<m-switch id="u" name="u" checked="">/);
   assert.match(html, /<m-switch id="d" disabled="" supporting-text="Unavailable">/);
   assert.match(html, /<m-tabs id="t" value="t2">/);
+  assert.match(html, /<m-radios [^>]*value="m"[^>]*>(<!---->)?<m-radio value="s">/);
   assert.match(html, /<m-button id="b" type="submit" variant="filled" class="save" data-test="1">/);
   check("renders on a server without a DOM, attributes in the markup");
 
@@ -165,6 +166,14 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("agreed")?.textContent === "true");
     assert.equal(await page.getByRole("checkbox", { name: "Agree", exact: true }).isChecked(), true);
     check("checkbox: bind:checked");
+
+    // ------------------------------------------------------------- radios
+    const sizes = page.getByRole("radiogroup", { name: "Size" });
+    assert.equal(await sizes.getByRole("radio", { name: "Medium", exact: true, checked: true }).count(), 1);
+    await sizes.getByText("Large", { exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("size")?.textContent === "l");
+    assert.equal(await sizes.getByRole("radio", { name: "Large", exact: true, checked: true }).count(), 1);
+    check("radios: bind:value");
 
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);

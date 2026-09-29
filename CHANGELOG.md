@@ -34,6 +34,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   host's form. The checkbox is a form control like `<m-switch>` (`checked` as default and
   live state, `indeterminate` as a property, `change`, form value, reset, validity, `<label
   for>`, state restore).
+- **Elements: `<m-radios>` with `<m-radio>` children**, and `Radios` and `Radio` in the
+  React, Vue, Svelte and Solid adapters (`MRadios` and `MRadio` in Vue). Each `<m-radio>`
+  declares an option (`value`, `disabled`, its text or `label` as the label); the group is
+  named by `aria-label` and takes `value` as its default selection and live property,
+  `disabled`, `required` and `direction`. It dispatches `change` with `{ value }` on a click
+  or an arrow key and is a form control (form value, reset, `required` validity, disabled
+  fieldset, state restore). Children added at the end, removed, relabelled or disabled
+  update the group in place.
 
 ### Changed
 

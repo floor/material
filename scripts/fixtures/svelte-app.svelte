@@ -2,13 +2,14 @@
      browser. Built against dist/svelte. -->
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Button, Checkbox, Progress, Switch, Tab, Tabs } from "../../dist/svelte/index.js";
+  import { Button, Checkbox, Progress, Radio, Radios, Switch, Tab, Tabs } from "../../dist/svelte/index.js";
 
   type Log = Array<{ id: string; detail: unknown }>;
   const log: Log = [];
   let submits = 0;
   let bound = $state(false);
   let agreed = $state(false);
+  let size = $state<string | null>("m");
   let tab = $state<string | null>("t2");
   let extra = $state(false);
   let order = $state(["a", "b"]);
@@ -47,6 +48,12 @@
   <Progress id="pg" value={progress} ariaLabel="Uploading" />
   <Checkbox id="cb" bind:checked={agreed}>Agree</Checkbox>
   <output id="agreed">{String(agreed)}</output>
+  <Radios id="rd" ariaLabel="Size" bind:value={size}>
+    <Radio value="s">Small</Radio>
+    <Radio value="m">Medium</Radio>
+    <Radio value="l">Large</Radio>
+  </Radios>
+  <output id="size">{String(size)}</output>
   {#each order as key (key)}<Switch id={`o${key}`}>Order {key}</Switch>{/each}
   {#if show}<Switch id="gone">Gone</Switch>{/if}
   <!-- Mounted in the browser after the element is defined: Svelte writes a

@@ -18,6 +18,7 @@ import "mtrl/elements/css/icon-button";
 import "mtrl/elements/css/fab";
 import "mtrl/elements/css/extended-fab";
 import "mtrl/elements/css/checkbox";
+import "mtrl/elements/css/radios";
 import {
   buttonElement,
   defineButton,
@@ -41,7 +42,10 @@ import {
   defineExtendedFab,
   checkboxElement,
   defineCheckbox,
+  radiosElement,
+  defineRadios,
   tabDeclaration,
+  radioDeclaration,
 } from "../elements";
 import type {
   ButtonSpec,
@@ -66,7 +70,10 @@ import type {
   ExtendedFabElement,
   CheckboxSpec,
   CheckboxElement,
+  RadiosSpec,
+  RadiosElement,
   TabAttributes,
+  RadioAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
 
@@ -84,4 +91,6 @@ export const MIconButton: MComponent<IconButtonSpec, IconButtonElement> = create
 export const MFab: MComponent<FabSpec, FabElement> = createComponent(fabElement.spec, defineFab, "MFab");
 export const MExtendedFab: MComponent<ExtendedFabSpec, ExtendedFabElement> = createComponent(extendedFabElement.spec, defineExtendedFab, "MExtendedFab");
 export const MCheckbox: MComponent<CheckboxSpec, CheckboxElement> = createComponent(checkboxElement.spec, defineCheckbox, "MCheckbox");
+export const MRadios: MComponent<RadiosSpec, RadiosElement> = createComponent(radiosElement.spec, defineRadios, "MRadios");
 export const MTab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "MTab");
+export const MRadio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "MRadio");
