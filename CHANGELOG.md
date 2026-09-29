@@ -10,6 +10,31 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Added
+
+- **Elements: `<m-navigation-rail>` with `<m-navigation-rail-item>` children**, and
+  `NavigationRail` and `NavigationRailItem` in the React, Vue, Svelte and Solid adapters.
+  The standard rail: a navigation landmark named by `aria-label`, each item a button, or a
+  link with `href`, declaring `value`, `icon`, `selected-icon`, `badge` (empty for the dot),
+  `badge-label` and `disabled`. `value` is the model, with `change` on a click or Enter;
+  `expanded` reflects the menu button as `open` does on `<details>`, `no-toggle` drops it,
+  and `slot="header"` takes a FAB. Items update in place. The modal layout is not offered.
+- **Elements: `<m-drawer>` with `<m-drawer-item>` children**, and `Drawer` and `DrawerItem`
+  in the adapters. The standard (in-page) drawer, named by its `headline` or `aria-label`:
+  items declare `value`, `icon`, `badge` and `disabled`, or with `type="section"` and
+  `type="divider"` a section headline and a divider. `value` is the model, with `change`;
+  `open` and `headline` apply in place, `position`, `width` and `dense` recreate it. The
+  modal drawer is not offered as an element.
+- **Elements: `<m-top-app-bar>`**, and `TopAppBar` in the adapters. Children are the
+  headline (`headline` is the text when there are none), `slot="leading"` the navigation
+  icon button and `slot="trailing"` the actions. `type` (`small`, `center`, `medium`,
+  `large`) changes in place; `scroll-threshold`, `no-scroll` and `no-compress` set the
+  scrolled state, and `scroll-target` follows an element's scroll instead of the window,
+  as `setScrollState()` does from script.
+- **Elements: `<m-bottom-app-bar>`**, and `BottomAppBar` in the adapters. Children are the
+  actions and `slot="fab"` the FAB, at the end or with `fab-position="center"` in the
+  middle; `auto-hide` hides it on a scroll down, `show()` and `hide()` from script.
+
 ## [0.10.0-next.2] - 2026-09-29
 
 The second prerelease of 0.10.0, on the npm `next` tag (`npm install mtrl@next`); `latest`

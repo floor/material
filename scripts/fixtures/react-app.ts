@@ -1,10 +1,13 @@
 // The app scripts/check-react.ts renders on the server and hydrates in the
 // browser, with React 18 and with React 19. Built against dist/react.
 import * as React from "react";
-import { Button, Checkbox, Progress, Radio, Radios, Slider, Switch, Tab, Tabs, Textfield } from "../../dist/react/index.js";
+import {
+  Button, Checkbox, NavigationRail, NavigationRailItem, Progress, Radio, Radios, Slider, Switch, Tab, Tabs, Textfield,
+} from "../../dist/react/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 
 const h = React.createElement;
+const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 // JSX accepts data-* on any element; createElement with an object literal does not.
 const dataTest = { "data-test": "1" } as React.HTMLAttributes<HTMLElement>;
 
@@ -26,6 +29,7 @@ export const App = (): React.ReactElement => {
   const [text, setText] = React.useState("");
   const [size, setSize] = React.useState<string | null>("m");
   const [tab, setTab] = React.useState<string | null>("t2");
+  const [destination, setDestination] = React.useState<string | null>("inbox");
   const [extra, setExtra] = React.useState(false);
   const [order, setOrder] = React.useState(["a", "b"]);
   const [show, setShow] = React.useState(true);
@@ -84,6 +88,14 @@ export const App = (): React.ReactElement => {
       h(Radio, { value: "l" }, "Large")
     ),
     h("output", { id: "size" }, size),
+    h(
+      NavigationRail,
+      { id: "nr", value: destination, ariaLabel: "Main", onChange: (e) => setDestination(e.detail.value) },
+      h(NavigationRailItem, { value: "inbox", icon: ICON }, "Inbox"),
+      h(NavigationRailItem, { value: "sent", icon: ICON }, "Sent"),
+      h(NavigationRailItem, { value: "starred", icon: ICON }, "Starred")
+    ),
+    h("output", { id: "destination" }, destination),
     ...order.map((key) => h(Switch, { key, id: `o${key}` }, `Order ${key}`)),
     show ? h(Switch, { id: "gone" }, "Gone") : null,
     // Mounted in the browser after the element is defined: React 19 then

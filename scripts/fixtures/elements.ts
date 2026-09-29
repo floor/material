@@ -16,6 +16,10 @@ import createCheckbox from "../../dist/components/checkbox/index.js";
 import createSlider from "../../dist/components/slider/index.js";
 import createTextfield from "../../dist/components/textfield/index.js";
 import createRadios from "../../dist/components/radios/index.js";
+import createNavigationRail from "../../dist/components/navigation-rail/index.js";
+import createDrawer from "../../dist/components/drawer/index.js";
+import createTopAppBar from "../../dist/components/top-app-bar/index.js";
+import createBottomAppBar from "../../dist/components/bottom-app-bar/index.js";
 
 elements.defineAll();
 const factories = {
@@ -25,5 +29,6 @@ const factories = {
   createSlider,
   createTextfield,
   createRadios,
+  createNavigationRail, createDrawer, createTopAppBar, createBottomAppBar,
 };
 Object.assign(window, { mtrl: { ...elements, ...factories }, ready: true });
