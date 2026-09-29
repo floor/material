@@ -1,0 +1,214 @@
+// src/elements/datepicker.ts
+/**
+ * `<m-datepicker>`: the date picker as a form-associated custom element.
+ *
+ * The factory renders its own field, a text input with a calendar button:
+ * that field is the trigger. A click on the button (or on the input of a
+ * modal variant), ArrowDown in the input, the `open` attribute or `show()`
+ * opens the calendar. The modal variants (`modal`, `modal-input`,
+ * `fullscreen`) are a native `<dialog>` in the element's shadow root shown
+ * with `showModal()`: the page outside is inert and Save commits, Cancel,
+ * Escape and the backdrop do not. The docked calendar opens beside the field
+ * (`show()`, not modal) and commits each date chosen.
+ *
+ * The value is an ISO date, `YYYY-MM-DD`, as on `<input type=date>`. With
+ * `selection-mode="range"` a complete range is an ISO 8601 interval,
+ * `YYYY-MM-DD/YYYY-MM-DD`: one string for the form, with a separator no date
+ * contains. A range with only its start is the start date, as the factory's
+ * `getValue()` returns it. Empty is `""`. A value that is not one of these, or
+ * that `min`, `max` or the mode rule out, empties the picker (the factory
+ * keeps no such date).
+ *
+ * The `value` attribute is the default and the `value` property the live
+ * value, as on a native input: the attribute moves the value until the user
+ * or script changes it, and a form reset returns to it. `change` is
+ * dispatched with `{ value }` when a date is committed. `open` reflects the
+ * calendar's state, as on `<dialog open>`; `open` and `close` are dispatched
+ * as it opens and closes (not when the attribute is what changed).
+ *
+ * The input of a modal variant is read-only, which takes it out of constraint
+ * validation: the element reports `required` itself, as `valueMissing`.
+ * `readonly` keeps the value and the calendar closed.
+ *
+ * @module elements
+ */
+
+import createDatePicker from "../components/datepicker";
+import type { DatePickerComponent, DatePickerConfig, DatePickerValue } from "../components/datepicker/types";
+import { formatDate } from "../components/datepicker/utils";
+import { defineElement, type DefineOptions, type ElementHost, type ElementInstance, type ElementSpec } from "./define";
+
+/** The date picker, with what the element adds to it. */
+export interface DatepickerElementComponent extends DatePickerComponent {
+  /** Opens the calendar, unless the picker is disabled or read-only. */
+  show: () => void;
+  /** `readonly`: the value cannot change and the calendar does not open. */
+  readOnly: boolean;
+  setReadOnly: (readOnly: boolean) => void;
+}
+
+interface DatepickerElementConfig extends DatePickerConfig {
+  supportingText?: string;
+  required?: boolean;
+  readOnly?: boolean;
+}
+
+const iso = (date: Date | null | undefined): string => (date ? formatDate(date, "YYYY-MM-DD") : "");
+
+/** The element's value: a date, a `start/end` interval, or "". */
+const toValue = (value: DatePickerValue, end?: Date | null): string =>
+  Array.isArray(value) ? `${iso(value[0])}/${iso(value[1])}` : value && end ? `${iso(value)}/${iso(end)}` : iso(value);
+
+const hosts = new WeakMap<DatepickerElementComponent, ElementHost<DatepickerElementComponent>>();
+
+let missing: string | null = null;
+/** The browser's own message for a required date left empty. */
+const valueMissingMessage = (): string =>
+  (missing ??= Object.assign(document.createElement("input"), { type: "date", required: true }).validationMessage ||
+    "Please fill out this field.");
+
+/** Reports `required`, which the read-only input does not. */
+const validate = (c: DatepickerElementComponent): void => {
+  const internals = hosts.get(c)?.internals;
+  if (!internals) return;
+  if (c.input.required && c.getValue() === null) internals.setValidity({ valueMissing: true }, valueMissingMessage(), c.input);
+  else internals.setValidity({});
+};
+
+/** Sets the value from its string form; anything the picker cannot hold empties it. */
+const setValue = (c: DatepickerElementComponent, value: unknown): void => {
+  const text = value === null || value === undefined ? "" : String(value);
+  const [start, end] = text.split("/");
+  if (start) c.setValue(end === undefined ? start : [start, end]);
+  if (c.getValue() !== null && toValue(c.getValue()) !== text) c.clear();
+  validate(c);
+};
+
+const setHelp = (c: DatepickerElementComponent, text: string): void => {
+  const help = c.element.querySelector(`.${c.getClass("datepicker__help")}`);
+  if (help) help.textContent = text;
+};
+
+const create = (config: DatepickerElementConfig): DatepickerElementComponent => {
+  const { supportingText, required, readOnly, value, ...rest } = config;
+  const picker = createDatePicker(rest);
+  // A modal variant's input only opens the calendar; the docked one is typed in.
+  const typed = !picker.input.readOnly;
+  const component: DatepickerElementComponent = Object.assign(picker, {
+    readOnly: false,
+    show: (): void => {
+      if (!component.readOnly) picker.open();
+    },
+    setReadOnly: (value: boolean): void => {
+      component.readOnly = value;
+      picker.input.readOnly = value || !typed;
+      if (value) picker.close();
+    },
+  });
+  // The value's string form, a range's included, as the property takes it.
+  if (value) setValue(component, value);
+  if (supportingText) setHelp(component, supportingText);
+  if (required) picker.input.required = true;
+  if (readOnly) component.setReadOnly(true);
+  // A read-only picker keeps its calendar closed: the ways a person opens it
+  // stop here, before the factory's own listeners.
+  const guard = (event: Event): void => {
+    if (!component.readOnly || !(event.target instanceof Element)) return;
+    const opener = event.target === picker.input || !!event.target.closest('[data-action="open"]');
+    const opens = event.type === "click" || (event instanceof KeyboardEvent && event.key === "ArrowDown");
+    if (opener && opens) event.stopPropagation();
+  };
+  picker.element.addEventListener("click", guard, true);
+  picker.element.addEventListener("keydown", guard, true);
+  return component;
+};
+
+const isOpen = (c: DatepickerElementComponent): boolean => !!c.element.querySelector("dialog")?.open;
+
+/** Opens or closes the calendar; `open` then says whether it did (a disabled picker stays closed). */
+const setOpen = (c: DatepickerElementComponent, open: boolean, host: HTMLElement): void => {
+  if (open) c.show();
+  else c.close();
+  host.toggleAttribute("open", isOpen(c));
+};
+
+const datepickerSpec = {
+  name: "datepicker",
+  create: (config) => create(config as DatepickerElementConfig),
+  styles: ["datepicker"],
+  attributes: {
+    variant: { type: "string", config: "variant" },
+    "selection-mode": { type: "string", config: "selectionMode" },
+    // The default value; not called once the element is dirty.
+    value: { type: "string", config: "value", update: (c, v) => setValue(c, v) },
+    // The factory can set a limit but not remove one: a change recreates it.
+    min: { type: "string", config: "minDate" },
+    max: { type: "string", config: "maxDate" },
+    "date-format": { type: "string", config: "dateFormat" },
+    label: { type: "string", config: "label" },
+    "supporting-text": {
+      type: "string",
+      config: "supportingText",
+      // Without its own text, the help line shows the format, as the factory's does.
+      update: (c, v, host) => setHelp(c, v === null ? (host.getAttribute("date-format") ?? "MM/DD/YYYY") : String(v)),
+    },
+    required: {
+      type: "boolean",
+      config: "required",
+      update: (c, v) => {
+        c.input.required = !!v;
+        validate(c);
+      },
+    },
+    disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
+    readonly: { type: "boolean", config: "readOnly", update: (c, v) => c.setReadOnly(!!v) },
+    open: { type: "boolean", update: (c, v, host) => setOpen(c, !!v, host) },
+  },
+  properties: {
+    value: { get: (c): string => toValue(c.getValue()), set: setValue },
+  },
+  model: "value" as const,
+  methods: ["show", "close"] as const,
+  events: {
+    change: {
+      detail: (payload) => {
+        const { value, rangeEndDate } = payload as { value: DatePickerValue; rangeEndDate?: Date | null };
+        return { value: toValue(value, rangeEndDate) };
+      },
+    },
+    open: { detail: () => null },
+    close: { detail: () => null },
+  },
+  form: {
+    value: (c) => toValue(c.getValue()),
+    events: ["change"],
+    activate: (c) => c.input.focus(),
+    state: (c) => toValue(c.getValue()),
+    restore: (c, state) => setValue(c, state),
+    disable: (c, disabled) => void (disabled ? c.disable() : c.enable()),
+  },
+  setup: (host, c) => {
+    hosts.set(c, host);
+    validate(c);
+    // `open` reflects the calendar's state, as on <dialog>.
+    const reflect = (): void => void host.toggleAttribute("open", isOpen(c));
+    const onChange = (): void => validate(c);
+    c.on("open", reflect);
+    c.on("close", reflect);
+    c.on("change", onChange);
+    if (host.hasAttribute("open")) setOpen(c, true, host);
+    return () => {
+      c.off("open", reflect);
+      c.off("close", reflect);
+      c.off("change", onChange);
+    };
+  },
+} satisfies ElementSpec<DatepickerElementComponent>;
+
+export const datepickerElement = defineElement<DatepickerElementComponent>(datepickerSpec);
+export type DatepickerSpec = typeof datepickerSpec;
+/** `<m-datepicker>` as a ref or a query returns it. */
+export type DatepickerElement = ElementInstance<DatepickerSpec, DatepickerElementComponent>;
+
+/** Registers `<m-datepicker>` (or `<prefix-datepicker>`). */
+export const defineDatepicker = (options?: DefineOptions): string => datepickerElement.define(options);

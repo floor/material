@@ -38,6 +38,8 @@ import "mtrl/elements/css/snackbar";
 import "mtrl/elements/css/dialog";
 import "mtrl/elements/css/bottom-sheet";
 import "mtrl/elements/css/side-sheet";
+import "mtrl/elements/css/datepicker";
+import "mtrl/elements/css/timepicker";
 import {
   buttonElement,
   defineButton,
@@ -101,6 +103,10 @@ import {
   defineBottomSheet,
   sideSheetElement,
   defineSideSheet,
+  datepickerElement,
+  defineDatepicker,
+  timepickerElement,
+  defineTimepicker,
   tabDeclaration,
   radioDeclaration,
   navigationRailItemDeclaration,
@@ -175,6 +181,10 @@ import type {
   BottomSheetElement,
   SideSheetSpec,
   SideSheetElement,
+  DatepickerSpec,
+  DatepickerElement,
+  TimepickerSpec,
+  TimepickerElement,
   TabAttributes,
   RadioAttributes,
   NavigationRailItemAttributes,
@@ -222,6 +232,8 @@ export const Snackbar: MComponent<SnackbarSpec, SnackbarElement> = createCompone
 export const Dialog: MComponent<DialogSpec, DialogElement> = createComponent(dialogElement.spec, defineDialog, "Dialog");
 export const BottomSheet: MComponent<BottomSheetSpec, BottomSheetElement> = createComponent(bottomSheetElement.spec, defineBottomSheet, "BottomSheet");
 export const SideSheet: MComponent<SideSheetSpec, SideSheetElement> = createComponent(sideSheetElement.spec, defineSideSheet, "SideSheet");
+export const Datepicker: MComponent<DatepickerSpec, DatepickerElement> = createComponent(datepickerElement.spec, defineDatepicker, "Datepicker");
+export const Timepicker: MComponent<TimepickerSpec, TimepickerElement> = createComponent(timepickerElement.spec, defineTimepicker, "Timepicker");
 export const Tab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "Tab");
 export const Radio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "Radio");
 export const NavigationRailItem: MDeclaration<NavigationRailItemAttributes> = createDeclaration(navigationRailItemDeclaration, "NavigationRailItem");

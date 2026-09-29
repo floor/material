@@ -11,6 +11,7 @@
 
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
+import { checkPickers } from "./check-elements-pickers";
 
 // Runs against the build: `bun run build` first, as CI does.
 const bundle = await Bun.build({
@@ -6160,6 +6161,8 @@ try {
     check("list activate and button group action leave the element clean: the value attribute still moves it, and not after a change");
     check("chips: removing a selected input chip changes the selection and marks the set dirty; a change does too");
   }
+  // ---------------------------------------------------------------- date and time pickers
+  await checkPickers({ page, browser, js, fresh, check });
 
   // ---------------------------------------------------------------- theme
   await fresh(page, `<m-switch id="s" checked>Theme</m-switch><section id="factory"></section>`);
