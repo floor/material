@@ -14,9 +14,11 @@ import { callbacksFixture } from "../callbacks.fixture";
 const mount = callbacksFixture();
 
 const setup = (config: TimePickerConfig) => {
+  // Edits are a draft until OK (FLO-288): what they did shows in `input`.
   const changes: string[] = [];
   const picker = mount(createTimePicker({ value: "10:15", ...config }));
-  picker.on("change", value => changes.push(value));
+  picker.on("input", value => changes.push(value));
+  const draft = () => changes.at(-1) ?? picker.getValue();
   const dialog = picker.dialogElement;
   const options = () => Array.from(dialog.querySelectorAll<HTMLElement>("[role=option]"));
   const option = (value: number) => options().find(element => element.dataset.value === String(value))!;
@@ -24,7 +26,7 @@ const setup = (config: TimePickerConfig) => {
   const press = (element: HTMLElement, key: string) => element.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
   const box = (unit: string) => dialog.querySelector<HTMLElement>(`[data-type="${unit}"]`)!;
   const period = (name: string) => dialog.querySelector<HTMLElement>(`.mtrl-time-picker__period-${name}`)!;
-  return { picker, changes, options, option, disabled, press, box, period };
+  return { picker, changes, draft, options, option, disabled, press, box, period };
 };
 
 describe("constrainTime", () => {
@@ -68,11 +70,11 @@ describe("minTime and maxTime on the dial", () => {
   test("a disabled hour cannot be picked; an allowed one moves the time inside the limits", () => {
     const p = setup({ minTime: "09:30", maxTime: "17:00" });
     p.press(p.option(8), "Enter");
-    expect(p.picker.getValue()).toBe("10:15");
+    expect(p.draft()).toBe("10:15");
     expect(p.changes).toEqual([]);
     // Nine o'clock at a quarter past is before 09:30.
     p.press(p.option(9), "Enter");
-    expect(p.picker.getValue()).toBe("09:30");
+    expect(p.draft()).toBe("09:30");
     expect(p.changes).toEqual(["09:30"]);
     expect(p.box("minute").textContent).toBe("30");
   });
@@ -84,7 +86,7 @@ describe("minTime and maxTime on the dial", () => {
     const at = { clientX: Math.round(Math.sin(240 * Math.PI / 180) * 100), clientY: Math.round(-Math.cos(240 * Math.PI / 180) * 100), button: 0, bubbles: true };
     face.dispatchEvent(new MouseEvent("pointerdown", at));
     face.dispatchEvent(new MouseEvent("pointerup", at));
-    expect(p.picker.getValue()).toBe("10:15");
+    expect(p.draft()).toBe("10:15");
     expect(p.changes).toEqual([]);
     expect(face.getAttribute("aria-label")).toBe("Hour");
   });
@@ -103,14 +105,14 @@ describe("minTime and maxTime on the dial", () => {
     p.period("pm").focus();
     p.press(p.period("pm"), "ArrowLeft");
     expect(document.activeElement === p.period("pm")).toBe(true);
-    expect(p.picker.getValue()).toBe("14:00");
+    expect(p.draft()).toBe("14:00");
     expect(p.changes).toEqual([]);
   });
 
   test("switching AM/PM moves the time inside the limits", () => {
     const p = setup({ maxTime: "15:00", value: "04:30" });
     p.period("pm").click();
-    expect(p.picker.getValue()).toBe("15:00");
+    expect(p.draft()).toBe("15:00");
   });
 });
 
@@ -129,7 +131,7 @@ describe("minuteStep and secondStep", () => {
     const at = { clientX: Math.round(Math.sin(132 * Math.PI / 180) * 100), clientY: Math.round(-Math.cos(132 * Math.PI / 180) * 100), button: 0, bubbles: true };
     face.dispatchEvent(new MouseEvent("pointerdown", at));
     face.dispatchEvent(new MouseEvent("pointerup", at));
-    expect(p.picker.getValue()).toBe("10:15");
+    expect(p.draft()).toBe("10:15");
     expect(p.changes).toEqual(["10:15"]);
   });
 
@@ -156,9 +158,9 @@ describe("typed times are held to the limits and steps when committed", () => {
   test("a minute rounds to the step on commit, not while typing", () => {
     const p = typed({ minuteStep: 15 });
     p.edit("minute", "2", false);
-    expect(p.picker.getValue()).toBe("10:02");
+    expect(p.draft()).toBe("10:02");
     const input = p.edit("minute", "22");
-    expect(p.picker.getValue()).toBe("10:15");
+    expect(p.draft()).toBe("10:15");
     expect(input.value).toBe("15");
   });
 
@@ -166,13 +168,13 @@ describe("typed times are held to the limits and steps when committed", () => {
     const p = typed({});
     const input = p.edit("minute", "");
     expect(input.value).toBe("15");
-    expect(p.picker.getValue()).toBe("10:15");
+    expect(p.draft()).toBe("10:15");
   });
 
   test("an hour before the earliest moves up to it on commit", () => {
     const p = typed({ minTime: "09:30" });
     const input = p.edit("hour", "8");
-    expect(p.picker.getValue()).toBe("09:30");
+    expect(p.draft()).toBe("09:30");
     expect(input.value).toBe("09");
     expect((p.box("minute") as HTMLInputElement).value).toBe("30");
     expect(p.changes.at(-1)).toBe("09:30");

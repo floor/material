@@ -14,14 +14,20 @@ export interface TimePickerSwipePayload {
 
 /** Events emitted by the picker API and its interactive root. */
 export interface TimePickerEvents {
-  /** The current 24-hour value (HH:MM, or HH:MM:SS with showSeconds), also submitted by the form. */
+  /**
+   * The committed 24-hour value (HH:MM, or HH:MM:SS with showSeconds), also
+   * submitted by the form: once when OK commits a different time, or on
+   * setValue. Moves on the dial or in the fields are `input` (FLO-288).
+   */
   change: (value: string) => void;
+  /** The draft, as the dial, fields or AM/PM change it while the picker is open (FLO-288). */
+  input: (value: string) => void;
   /** The confirmed 24-hour value, matching getValue() and the submitted form value. */
   confirm: (value: string) => void;
   open: () => void;
   close: () => void;
   cancel: () => void;
-  /** Root events; the dialog is portaled outside the root and does not bubble here. */
+  /** Root events; the dialog is inside the root (FLO-288), so its clicks and keys reach these too. */
   click: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
   keydown: (payload: ForwardedEventPayload<KeyboardEvent, HTMLElement>) => void;
   tap: (payload: TimePickerTapPayload) => void;
@@ -193,8 +199,15 @@ export interface TimePickerConfig {
   isOpen?: boolean;
 
   /**
-   * CSS selector or HTMLElement to append the time picker to
-   * @default document.body
+   * Whether the picker is disabled: it does not open (FLO-288)
+   * @default false
+   */
+  disabled?: boolean;
+
+  /**
+   * Where the dialog is appended. By default it stays in the component's own
+   * element, as the other modals' do (FLO-288); it was document.body.
+   * @default the component's element
    */
   container?: string | HTMLElement;
 
@@ -209,9 +222,15 @@ export interface TimePickerConfig {
   keyboardIcon?: string;
 
   /**
-   * Callback when time is changed; receives HH:MM or HH:MM:SS in 24-hour format
+   * Callback when the committed time changes (on OK, or setValue); receives
+   * HH:MM or HH:MM:SS in 24-hour format
    */
   onChange?: (time: string) => void;
+
+  /**
+   * Callback as the draft changes while the picker is open (FLO-288)
+   */
+  onInput?: (time: string) => void;
 
   /**
    * Callback when time picker is opened
@@ -387,6 +406,15 @@ export interface TimePickerComponent {
    * @returns Current title text
    */
   getTitle: () => string;
+
+  /** Enables the picker (FLO-288) */
+  enable: () => TimePickerComponent;
+
+  /** Disables the picker: it does not open, and an open one is cancelled */
+  disable: () => TimePickerComponent;
+
+  /** Whether the picker is disabled */
+  isDisabled: () => boolean;
 
   /**
    * Destroys the time picker component and cleans up resources

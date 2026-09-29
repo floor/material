@@ -51,11 +51,13 @@ const createTimePicker = (
     ].join(" ");
     const modalElement = dialogElement;
 
-    // Append modal to container (document.body by default)
+    // In the component's own element unless a container is given, as the
+    // other modals are (FLO-288): it was portaled to document.body, out of the
+    // component's tree and any shadow root the component is in.
     const container =
       typeof baseConfig.container === "string"
-        ? document.querySelector(baseConfig.container) || document.body
-        : baseConfig.container || document.body;
+        ? document.querySelector(baseConfig.container) || baseComponent.element
+        : baseConfig.container || baseComponent.element;
 
     container.appendChild(modalElement);
 
