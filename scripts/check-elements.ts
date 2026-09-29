@@ -700,8 +700,9 @@ try {
     const toggled = await page.evaluate(() => {
       const s = document.getElementById("s") as Slider;
       s.value = 40;
-      s.setAttribute("range", "");
+      // The value is dirty now, so the second end's default only counts at creation.
       s.setAttribute("second-value", "90");
+      s.setAttribute("range", "");
       const handles = s.shadowRoot?.querySelectorAll('[role="slider"]').length;
       const result = { handles, value: s.value, second: s.secondValue };
       s.removeAttribute("range");
@@ -1706,6 +1707,172 @@ try {
     });
     assert.deepEqual(parity.element, parity.factory);
     check("divider: full-width and inset render as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- model attributes are defaults
+  // The native rule (dirty checkedness and value flags): the model's attribute
+  // moves the live state until the user or script changes it; form.reset()
+  // returns to the attribute and makes the element clean again.
+  {
+    type Live = string | number | boolean | null;
+    interface DefaultCase {
+      name: string;
+      markup: string;
+      attribute: string;
+      property: string;
+      /** Attribute values as live values, each different from the live state before it. */
+      a: Live;
+      b: Live;
+      c: Live;
+      /** A property value, then an attribute value, on a fresh element. */
+      set: Live;
+      after: Live;
+      /** A user interaction that moves the live state away from `b`. */
+      user: () => Promise<void>;
+      /** Not form-associated: no reset. */
+      noForm?: true;
+    }
+    const cases: DefaultCase[] = [
+      ...(["switch", "checkbox"] as const).map((name) => ({
+        name,
+        markup: `<m-${name} id="x" name="x">Dirty</m-${name}>`,
+        attribute: "checked",
+        property: "checked",
+        a: true, b: true, c: false, set: true, after: false,
+        user: () => page.getByRole(name, { name: "Dirty" }).click(),
+      })),
+      {
+        name: "icon button",
+        markup: `<m-icon-button id="x" toggle aria-label="Dirty" icon="${ICON}"></m-icon-button>`,
+        attribute: "selected",
+        property: "selected",
+        a: true, b: true, c: false, set: true, after: false,
+        user: () => page.getByRole("button", { name: "Dirty" }).click(),
+      },
+      {
+        name: "radios",
+        markup: `<m-radios id="x" name="x" aria-label="Dirty"><m-radio value="a">Alpha</m-radio>
+          <m-radio value="b">Beta</m-radio><m-radio value="c">Gamma</m-radio></m-radios>`,
+        attribute: "value",
+        property: "value",
+        a: "b", b: "c", c: "a", set: "b", after: "c",
+        user: () => page.getByRole("radiogroup", { name: "Dirty" }).getByText("Alpha", { exact: true }).click(),
+      },
+      {
+        name: "tabs",
+        markup: `<m-tabs id="x"><m-tab value="t1">One</m-tab><m-tab value="t2">Two</m-tab>
+          <m-tab value="t3">Three</m-tab></m-tabs>`,
+        attribute: "value",
+        property: "value",
+        a: "t2", b: "t3", c: "t1", set: "t2", after: "t3",
+        user: () => page.getByRole("tab", { name: "One" }).click(),
+        noForm: true,
+      },
+      {
+        name: "slider value",
+        markup: `<m-slider id="x" name="x" aria-label="Dirty"></m-slider>`,
+        attribute: "value",
+        property: "value",
+        a: 30, b: 50, c: 60, set: 70, after: 20,
+        user: async () => {
+          await page.getByRole("slider", { name: "Dirty" }).focus();
+          await page.keyboard.press("ArrowRight");
+        },
+      },
+      {
+        name: "slider second-value",
+        markup: `<m-slider id="x" name="x" range value="20" second-value="80" aria-label="Dirty"></m-slider>`,
+        attribute: "second-value",
+        property: "secondValue",
+        a: 70, b: 90, c: 85, set: 75, after: 60,
+        user: async () => {
+          await page.getByRole("slider", { name: "Dirty maximum" }).focus();
+          await page.keyboard.press("ArrowLeft");
+        },
+      },
+      {
+        name: "textfield",
+        markup: `<m-textfield id="x" name="x" label="Dirty"></m-textfield>`,
+        attribute: "value",
+        property: "value",
+        a: "a", b: "b", c: "c", set: "p", after: "d",
+        user: async () => {
+          await page.getByRole("textbox", { name: "Dirty" }).press("End");
+          await page.keyboard.type("z");
+        },
+      },
+    ];
+
+    /**
+     * Sets the attribute for a live value (a boolean is present or absent) and
+     * reads the live state. An attribute already there goes through another
+     * value first, so the element always sees a change.
+     */
+    const attribute = (spec: DefaultCase, value: Live): Promise<Live> =>
+      page.evaluate(
+        ({ name, property, value }) => {
+          const x = document.getElementById("x") as HTMLElement & Record<string, Live>;
+          const target = value === false || value === null ? null : value === true ? "" : String(value);
+          const apply = (v: string | null): void => (v === null ? x.removeAttribute(name) : x.setAttribute(name, v));
+          if (x.getAttribute(name) === target) apply(target === null ? "" : null);
+          apply(target);
+          return x[property];
+        },
+        { name: spec.attribute, property: spec.property, value }
+      );
+    const live = (spec: DefaultCase): Promise<Live> =>
+      page.evaluate((property) => (document.getElementById("x") as HTMLElement & Record<string, Live>)[property], spec.property);
+    // The slider binds its handles a task after creation.
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => setTimeout(r, 0)));
+
+    for (const spec of cases) {
+      await fresh(page, `<form id="df">${spec.markup}</form>`);
+      await settle();
+      assert.notEqual(await live(spec), spec.a);
+      assert.equal(await attribute(spec, spec.a), spec.a, `${spec.name}: a clean element follows its attribute`);
+      check(`${spec.name}: before any interaction, the ${spec.attribute} attribute moves the live state`);
+
+      await spec.user();
+      const moved = await live(spec);
+      assert.notEqual(moved, spec.a, `${spec.name}: the interaction changes the state`);
+      assert.notEqual(moved, spec.b);
+      assert.equal(await attribute(spec, spec.b), moved, `${spec.name}: the user's state stays`);
+      check(`${spec.name}: after a user interaction, the ${spec.attribute} attribute does not move it`);
+
+      if (!spec.noForm) {
+        await page.evaluate(() => (document.getElementById("df") as HTMLFormElement).reset());
+        await settle();
+        assert.equal(await live(spec), spec.b, `${spec.name}: reset returns to the current attribute`);
+        assert.equal(await attribute(spec, spec.c), spec.c, `${spec.name}: reset makes it clean again`);
+        check(`${spec.name}: form.reset() returns to the ${spec.attribute} attribute and clears the dirty flag`);
+      }
+
+      await fresh(page, `<form id="df">${spec.markup}</form>`);
+      await settle();
+      await page.evaluate(
+        ({ property, value }) => {
+          (document.getElementById("x") as HTMLElement & Record<string, Live>)[property] = value;
+        },
+        { property: spec.property, value: spec.set }
+      );
+      assert.equal(await live(spec), spec.set);
+      assert.equal(await attribute(spec, spec.after), spec.set, `${spec.name}: the script's state stays`);
+      check(`${spec.name}: after a property set, the ${spec.attribute} attribute does not move it`);
+    }
+
+    // A recreation (label has no setter) keeps both the live value and the flag.
+    const field = cases.find((spec) => spec.name === "textfield") as DefaultCase;
+    await fresh(page, `<form id="df"><m-textfield id="x" name="x" label="Dirty" value="a"></m-textfield></form>`);
+    const relabel = (label: string): Promise<void> =>
+      page.evaluate((text) => document.getElementById("x")?.setAttribute("label", text), label);
+    await relabel("Clean");
+    assert.equal(await attribute(field, "b"), "b", "still clean after a recreation");
+    await page.getByRole("textbox", { name: "Clean" }).press("End");
+    await page.keyboard.type("z");
+    await relabel("Dirty");
+    assert.equal(await live(field), "bz");
+    assert.equal(await attribute(field, "c"), "bz", "still dirty after a recreation");
+    check("textfield: a recreation keeps the live value and whether it is dirty");
   }
 
   // ---------------------------------------------------------------- lifecycle
