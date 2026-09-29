@@ -2,7 +2,7 @@
      browser. Built against dist/svelte. -->
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Button, Checkbox, Progress, Slider, Switch, Tab, Tabs } from "../../dist/svelte/index.js";
+  import { Button, Checkbox, Progress, Slider, Switch, Tab, Tabs, Textfield } from "../../dist/svelte/index.js";
 
   type Log = Array<{ id: string; detail: unknown }>;
   const log: Log = [];
@@ -10,6 +10,7 @@
   let bound = $state(false);
   let agreed = $state(false);
   let level = $state(50);
+  let text = $state("");
   let tab = $state<string | null>("t2");
   let extra = $state(false);
   let order = $state(["a", "b"]);
@@ -50,6 +51,8 @@
   <output id="agreed">{String(agreed)}</output>
   <Slider id="sl" ariaLabel="Level" bind:value={level} />
   <output id="level">{String(level)}</output>
+  <Textfield id="tf" label="Name" bind:value={text} />
+  <output id="text">{text}</output>
   {#each order as key (key)}<Switch id={`o${key}`}>Order {key}</Switch>{/each}
   {#if show}<Switch id="gone">Gone</Switch>{/if}
   <!-- Mounted in the browser after the element is defined: Svelte writes a

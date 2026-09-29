@@ -41,6 +41,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   interaction ends, with `{ value }` (and `secondValue` on a range). `aria-label` names the
   handles; `min`, `max`, `step`, `ticks`, `show-value`, `color` and `size` update in place.
   Form elements can now submit several values: `FormSpec.value` may return `FormData`.
+- **Elements: `<m-textfield>`**, and `Textfield` in the React, Vue, Svelte and Solid
+  adapters. A form control like a native input: the `value` attribute is the default and the
+  `value` property the live text, bound by `v-model` and `bind:value`; `input` on each
+  keystroke and `change` on commit, both with `{ value }`; form value, reset, validity from
+  `required`, `maxlength`, `pattern` and `type`, `<label for>` and state restore. Named by
+  its `label`; `variant`, `supporting-text`, `prefix-text`, `suffix-text`, the icons,
+  `error`, `readonly` and `disabled` update in place, `type="multiline"` renders a textarea.
 
 ### Changed
 

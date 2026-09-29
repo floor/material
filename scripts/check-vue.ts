@@ -166,6 +166,11 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("level")?.textContent === "51");
     assert.equal(await page.getByRole("slider", { name: "Level", exact: true }).getAttribute("aria-valuenow"), "51");
     check("slider: v-model");
+    // ------------------------------------------------------------- textfield
+    await page.getByRole("textbox", { name: "Name", exact: true }).pressSequentially("Ada");
+    await page.waitForFunction(() => document.getElementById("text")?.textContent === "Ada");
+    assert.equal(await page.getByRole("textbox", { name: "Name", exact: true }).inputValue(), "Ada");
+    check("textfield: v-model");
 
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);

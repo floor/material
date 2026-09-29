@@ -35,7 +35,8 @@ const server = Bun.serve({
       return new Response(
         `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
 <body><form><m-switch id="r" name="r">Restored</m-switch>
-<m-checkbox id="rc" name="rc">Restored checkbox</m-checkbox></form><a id="go" href="/away">away</a>
+<m-checkbox id="rc" name="rc">Restored checkbox</m-checkbox>
+<m-textfield id="rt" name="rt" label="Restored text"></m-textfield></form><a id="go" href="/away">away</a>
 <script type="module" src="/elements.js"></script></body></html>`,
         { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } }
       );
@@ -784,6 +785,269 @@ try {
     check("slider: going back restores the value, and both ends of a range");
   }
 
+  // ---------------------------------------------------------------- textfield
+  await fresh(
+    page,
+    `<form id="f"><m-textfield id="t" name="email" label="Email" value="a@b.c" required></m-textfield>
+     <label for="t" id="outer">Outer label</label>
+     <m-textfield id="p" name="plain" label="Plain" value="first"></m-textfield>
+     <m-textfield id="o" name="notes" label="Notes" variant="outlined" supporting-text="Optional"></m-textfield>
+     <fieldset id="fs"><m-textfield id="in" name="inner" label="Inner"></m-textfield></fieldset></form>
+     <section id="factory"></section>`
+  );
+  {
+    const field = page.getByRole("textbox", { name: "Email", exact: true });
+    assert.equal(await field.count(), 1, "the label attribute names the inner input");
+    check("textfield: the label attribute is the accessible name");
+
+    type TextHost = HTMLElement & { value: string; component: unknown };
+    let state = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      const t = document.getElementById("t") as HTMLElement & { value: string };
+      for (const type of ["input", "change"]) {
+        t.addEventListener(type, (e) => {
+          (w.events as unknown[]).push({ type, custom: e instanceof CustomEvent, detail: (e as CustomEvent).detail });
+        });
+      }
+      const before = t.value;
+      t.value = "live@b.c";
+      const form = new FormData(document.getElementById("f") as HTMLFormElement);
+      return { before, value: t.value, attribute: t.getAttribute("value"), email: form.get("email"), events: w.events };
+    });
+    assert.deepEqual(state, { before: "a@b.c", value: "live@b.c", attribute: "a@b.c", email: "live@b.c", events: [] });
+    check("textfield: the value attribute is the default, the value property the live value, set silently");
+
+    await field.fill("");
+    await page.evaluate(() => ((window as unknown as Win).events = []));
+    await field.pressSequentially("hi");
+    await field.press("Tab");
+    state = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      const t = document.getElementById("t") as HTMLElement & { value: string };
+      const form = new FormData(document.getElementById("f") as HTMLFormElement);
+      return { value: t.value, email: form.get("email"), events: w.events } as typeof state;
+    });
+    assert.deepEqual(state.events, [
+      { type: "input", custom: true, detail: { value: "h" } },
+      { type: "input", custom: true, detail: { value: "hi" } },
+      { type: "change", custom: true, detail: { value: "hi" } },
+    ]);
+    assert.equal(state.email, "hi");
+    check("textfield: typing dispatches one input per keystroke and change on commit, and the form sees the value");
+
+    const defaults = await page.evaluate(() => {
+      const t = document.getElementById("t") as HTMLElement & { value: string };
+      const p = document.getElementById("p") as HTMLElement & { value: string };
+      t.setAttribute("value", "new@b.c");
+      p.setAttribute("value", "second");
+      return { t: t.value, p: p.value };
+    });
+    assert.deepEqual(defaults, { t: "hi", p: "second" });
+    check("textfield: a new value attribute moves the value until the field is edited, as natively");
+
+    const reset = await page.evaluate(() => {
+      (document.getElementById("f") as HTMLFormElement).reset();
+      const get = (id: string): string => (document.getElementById(id) as HTMLElement & { value: string }).value;
+      return { t: get("t"), p: get("p") };
+    });
+    assert.deepEqual(reset, { t: "new@b.c", p: "second" });
+    check("textfield: form.reset() restores the value attribute");
+
+    const validity = await page.evaluate(() => {
+      const t = document.getElementById("t") as HTMLElement & { value: string };
+      const form = document.getElementById("f") as HTMLFormElement;
+      t.value = "";
+      const missing = form.checkValidity();
+      t.value = "x";
+      const filled = form.checkValidity();
+      t.removeAttribute("required");
+      t.value = "";
+      return { missing, filled, optional: form.checkValidity() };
+    });
+    assert.deepEqual(validity, { missing: false, filled: true, optional: true });
+    await page.evaluate(() => document.getElementById("t")?.setAttribute("type", "email"));
+    await field.fill("");
+    await field.pressSequentially("nope");
+    const typed = await page.evaluate(() => {
+      const t = document.getElementById("t") as HTMLElement & { value: string };
+      const form = document.getElementById("f") as HTMLFormElement;
+      const invalid = form.checkValidity();
+      const input = t.shadowRoot?.querySelector("input") as HTMLInputElement;
+      return { invalid, type: input.type, value: t.value };
+    });
+    assert.deepEqual(typed, { invalid: false, type: "email", value: "nope" });
+    check("textfield: required and type constraints report validity to the form, and type recreates keeping the value");
+
+    await page.evaluate(() => ((document.getElementById("t") as HTMLElement & { value: string }).value = ""));
+    await page.click("#outer");
+    const focused = await page.evaluate(() => {
+      const t = document.getElementById("t") as HTMLElement;
+      return { host: document.activeElement === t, input: t.shadowRoot?.activeElement === t.shadowRoot?.querySelector("input") };
+    });
+    assert.deepEqual(focused, { host: true, input: true });
+    await page.keyboard.type("ok");
+    assert.equal(await page.evaluate(() => (document.getElementById("t") as HTMLElement & { value: string }).value), "ok");
+    check("textfield: an outer <label for> focuses the input");
+
+    const selected = await page.evaluate(() => {
+      // Email inputs have no selection range: the plain field shows it.
+      const p = document.getElementById("p") as HTMLElement & { select: () => void };
+      p.select();
+      const input = p.shadowRoot?.querySelector("input") as HTMLInputElement;
+      return [input.selectionStart, input.selectionEnd];
+    });
+    assert.deepEqual(selected, [0, 6]);
+    check("textfield: select() selects the text");
+
+    await page.evaluate(() => {
+      const p = document.getElementById("p") as HTMLElement;
+      p.setAttribute("readonly", "");
+      p.setAttribute("disabled", "");
+    });
+    const readonly = page.getByRole("textbox", { name: "Plain", exact: true });
+    const disabled = await page.evaluate(() => {
+      const p = document.getElementById("p") as HTMLElement;
+      const input = p.shadowRoot?.querySelector("input") as HTMLInputElement;
+      const form = new FormData(document.getElementById("f") as HTMLFormElement);
+      const result = { disabled: input.disabled, readOnly: input.readOnly, submitted: form.has("plain") };
+      p.removeAttribute("disabled");
+      return result;
+    });
+    assert.deepEqual(disabled, { disabled: true, readOnly: true, submitted: false });
+    await readonly.pressSequentially("zz");
+    assert.equal(await page.evaluate(() => (document.getElementById("p") as HTMLElement & { value: string }).value), "second");
+    const fieldset = await page.evaluate(() => {
+      const fs = document.getElementById("fs") as HTMLFieldSetElement;
+      const input = (document.getElementById("in") as HTMLElement).shadowRoot?.querySelector("input") as HTMLInputElement;
+      fs.disabled = true;
+      const off = input.disabled;
+      fs.disabled = false;
+      return { off, on: input.disabled };
+    });
+    assert.deepEqual(fieldset, { off: true, on: false });
+    check("textfield: disabled, readonly and a disabled fieldset reach the inner input");
+
+    const error = await page.evaluate(() => {
+      const o = document.getElementById("o") as HTMLElement & { setError: (e: boolean, m?: string) => void };
+      const root = o.shadowRoot?.firstElementChild as HTMLElement;
+      const input = root.querySelector("input") as HTMLInputElement;
+      const helper = (): string | null => root.querySelector('[class*="textfield__helper"]')?.className ?? null;
+      o.setAttribute("error", "");
+      const on = { invalid: input.getAttribute("aria-invalid"), root: root.className.includes("--error"), helper: helper() };
+      o.setAttribute("supporting-text", "Required field");
+      const text = { helper: helper(), content: root.querySelector('[class*="textfield__helper"]')?.textContent, root: root.className.includes("--error") };
+      o.removeAttribute("supporting-text");
+      const noText = { helper: helper(), root: root.className.includes("--error") };
+      o.removeAttribute("error");
+      const off = { invalid: input.getAttribute("aria-invalid"), root: root.className.includes("--error") };
+      o.setError(true, "Bad");
+      const message = root.querySelector('[class*="textfield__helper"]')?.textContent;
+      o.setError(false);
+      return { on, text, noText, off, message };
+    });
+    assert.deepEqual(error, {
+      on: { invalid: "true", root: true, helper: "mtrl-textfield__helper mtrl-textfield__helper--error" },
+      text: { helper: "mtrl-textfield__helper mtrl-textfield__helper--error", content: "Required field", root: true },
+      noText: { helper: null, root: true },
+      off: { invalid: null, root: false },
+      message: "Bad",
+    });
+    check("textfield: the error attribute and setError() show the error state");
+
+    const inPlace = await page.evaluate(async () => {
+      const o = document.getElementById("o") as TextHost;
+      const before = o.component;
+      o.setAttribute("variant", "filled");
+      o.setAttribute("prefix-text", "$");
+      o.setAttribute("leading-icon", "<svg viewBox='0 0 24 24'></svg>");
+      o.setAttribute("placeholder", "Write");
+      o.setAttribute("maxlength", "5");
+      const root = o.shadowRoot?.firstElementChild as HTMLElement;
+      const input = root.querySelector("input") as HTMLInputElement;
+      const updated = {
+        kept: o.component === before,
+        filled: root.className.includes("textfield--filled"),
+        prefix: root.querySelector('[class*="textfield__prefix"]')?.textContent,
+        icon: !!root.querySelector('[class*="textfield__leading-icon"] svg'),
+        placeholder: input.placeholder,
+        maxLength: input.maxLength,
+      };
+      o.value = "typed";
+      o.setAttribute("label", "Remarks");
+      return { ...updated, recreated: o.component !== before, value: o.value };
+    });
+    assert.deepEqual(inPlace, {
+      kept: true, filled: true, prefix: "$", icon: true, placeholder: "Write", maxLength: 5, recreated: true, value: "typed",
+    });
+    assert.equal(await page.getByRole("textbox", { name: "Remarks", exact: true }).count(), 1);
+    check("textfield: attributes with a setter update in place; label recreates keeping the value");
+
+    const multiline = await page.evaluate(async () => {
+      const host = document.getElementById("factory") as HTMLElement;
+      host.innerHTML = `<m-textfield id="m" type="multiline" label="Bio" value="Hello"></m-textfield>`;
+      const m = document.getElementById("m") as HTMLElement & { value: string };
+      const area = m.shadowRoot?.querySelector("textarea") as HTMLTextAreaElement;
+      const result = { value: m.value, area: area.value };
+      host.innerHTML = "";
+      return result;
+    });
+    assert.deepEqual(multiline, { value: "Hello", area: "Hello" });
+    check("textfield: type=multiline renders a textarea with the default value");
+
+    const parity = await page.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createTextfield: (c: object) => { element: HTMLElement } } };
+      const host = document.getElementById("factory") as HTMLElement;
+      host.innerHTML = `<m-textfield id="pf" label="Name" value="Ada" supporting-text="Help"></m-textfield>
+        <m-textfield id="po" variant="outlined" label="Name" supporting-text="Help"></m-textfield>`;
+      const filled = w.mtrl.createTextfield({ label: "Name", value: "Ada", supportingText: "Help" });
+      const outlined = w.mtrl.createTextfield({ variant: "outlined", label: "Name", supportingText: "Help" });
+      host.append(filled.element, outlined.element);
+      await new Promise((r) => setTimeout(r, 50));
+      const measure = (root: HTMLElement): Record<string, string | number> => {
+        const input = root.querySelector("input") as HTMLElement;
+        const label = root.querySelector("label") as HTMLElement;
+        const helper = root.querySelector('[class*="textfield__helper"]') as HTMLElement;
+        const r = root.getBoundingClientRect();
+        const i = input.getBoundingClientRect();
+        const l = label.getBoundingClientRect();
+        const style = getComputedStyle(input);
+        return {
+          w: Math.round(r.width), h: Math.round(r.height), inputH: Math.round(i.height),
+          labelX: Math.round(l.left - r.left), labelY: Math.round(l.top - r.top),
+          inputBg: style.backgroundColor, inputColor: style.color, inputFont: style.font, inputBorder: style.border,
+          inputRadius: style.borderRadius, labelColor: getComputedStyle(label).color, labelFont: getComputedStyle(label).font,
+          helperColor: getComputedStyle(helper).color, helperFont: getComputedStyle(helper).font,
+        };
+      };
+      const shadow = (id: string): HTMLElement =>
+        (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
+      return {
+        filled: { factory: measure(filled.element), element: measure(shadow("pf")) },
+        outlined: { factory: measure(outlined.element), element: measure(shadow("po")) },
+      };
+    });
+    assert.deepEqual(parity.filled.element, parity.filled.factory);
+    assert.deepEqual(parity.outlined.element, parity.outlined.factory);
+    check("textfield: renders as the factory does with the global stylesheet, filled and outlined");
+
+    const layout = await page.evaluate(() => {
+      const host = document.getElementById("factory") as HTMLElement;
+      host.innerHTML = `<m-textfield id="w" label="Wide" style="width:400px"></m-textfield>`;
+      const w = document.getElementById("w") as HTMLElement;
+      const inline = getComputedStyle(w).display;
+      const width = (w.shadowRoot?.firstElementChild as HTMLElement).getBoundingClientRect().width;
+      w.focus();
+      const focused = w.shadowRoot?.activeElement?.tagName;
+      w.blur();
+      const blurred = w.shadowRoot?.activeElement ?? null;
+      host.innerHTML = "";
+      return { inline, width, focused, blurred };
+    });
+    assert.deepEqual(layout, { inline: "inline-block", width: 400, focused: "INPUT", blurred: null });
+    check("textfield: an inline-block host whose width the field fills; focus() and blur() reach the input");
+  }
+
   // ---------------------------------------------------------------- tabs
   await fresh(
     page,
@@ -1245,6 +1509,7 @@ try {
     await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
     await restorePage.getByRole("switch", { name: "Restored", exact: true }).click();
     await restorePage.getByRole("checkbox", { name: "Restored checkbox", exact: true }).click();
+    await restorePage.getByRole("textbox", { name: "Restored text", exact: true }).fill("kept");
     await restorePage.click("#go");
     await restorePage.waitForURL(/\/away$/);
     await restorePage.goBack();
@@ -1254,11 +1519,14 @@ try {
     await restorePage.waitForFunction(() => ["r", "rc"].every((id) => (document.getElementById(id) as HTMLElement & { checked: boolean }).checked), undefined, { timeout: 5_000 })
       .catch(() => undefined);
     const restored = await restorePage.evaluate(checked);
+    const restoredText = await restorePage.evaluate(() => (document.getElementById("rt") as HTMLElement & { value: string }).value);
     await restorePage.close();
     assert.equal(restored.r, true, "going back restores the switch the user turned on");
     check("forms: going back restores a switch's state");
     assert.equal(restored.rc, true, "going back restores the checkbox the user checked");
     check("forms: going back restores a checkbox's state");
+    assert.equal(restoredText, "kept", "going back restores the text the user typed");
+    check("forms: going back restores a text field's value");
   }
 
   // ---------------------------------------------------------------- theme

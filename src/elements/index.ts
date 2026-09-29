@@ -23,6 +23,7 @@ import { fabElement, defineFab } from "./fab";
 import { extendedFabElement, defineExtendedFab } from "./extended-fab";
 import { checkboxElement, defineCheckbox } from "./checkbox";
 import { sliderElement, defineSlider } from "./slider";
+import { textfieldElement, defineTextfield } from "./textfield";
 
 export { defineElement, DEFAULT_PREFIX, SHADOW_BASE_STYLES } from "./define";
 export type {
@@ -61,6 +62,8 @@ export { checkboxElement, defineCheckbox } from "./checkbox";
 export type { CheckboxSpec, CheckboxElement } from "./checkbox";
 export { sliderElement, defineSlider } from "./slider";
 export type { SliderSpec, SliderElement } from "./slider";
+export { textfieldElement, defineTextfield } from "./textfield";
+export type { TextfieldSpec, TextfieldElement, TextfieldElementComponent } from "./textfield";
 
 /**
  * Every element, by name. Framework adapters are generated from this list and
@@ -79,6 +82,7 @@ export const elements = {
   extendedFab: extendedFabElement,
   checkbox: checkboxElement,
   slider: sliderElement,
+  textfield: textfieldElement,
 } as const;
 
 /** Declaration children, which render nothing and are read by their parent. */
@@ -100,4 +104,5 @@ export const defineAll = (options?: DefineOptions): void => {
   defineExtendedFab(options);
   defineCheckbox(options);
   defineSlider(options);
+  defineTextfield(options);
 };

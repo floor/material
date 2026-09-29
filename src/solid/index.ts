@@ -19,6 +19,7 @@ import "mtrl/elements/css/fab";
 import "mtrl/elements/css/extended-fab";
 import "mtrl/elements/css/checkbox";
 import "mtrl/elements/css/slider";
+import "mtrl/elements/css/textfield";
 import {
   buttonElement,
   defineButton,
@@ -44,6 +45,8 @@ import {
   defineCheckbox,
   sliderElement,
   defineSlider,
+  textfieldElement,
+  defineTextfield,
   tabDeclaration,
 } from "../elements";
 import type {
@@ -71,6 +74,8 @@ import type {
   CheckboxElement,
   SliderSpec,
   SliderElement,
+  TextfieldSpec,
+  TextfieldElement,
   TabAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
@@ -90,4 +95,5 @@ export const Fab: MComponent<FabSpec, FabElement> = createComponent(fabElement.s
 export const ExtendedFab: MComponent<ExtendedFabSpec, ExtendedFabElement> = createComponent(extendedFabElement.spec, defineExtendedFab, "ExtendedFab");
 export const Checkbox: MComponent<CheckboxSpec, CheckboxElement> = createComponent(checkboxElement.spec, defineCheckbox, "Checkbox");
 export const Slider: MComponent<SliderSpec, SliderElement> = createComponent(sliderElement.spec, defineSlider, "Slider");
+export const Textfield: MComponent<TextfieldSpec, TextfieldElement> = createComponent(textfieldElement.spec, defineTextfield, "Textfield");
 export const Tab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "Tab");
