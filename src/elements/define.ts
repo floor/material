@@ -94,6 +94,8 @@ export interface ElementHost<C extends ElementComponent> extends HTMLElement {
   /** The factory instance, while connected. */
   readonly component: C | null;
   readonly internals: ElementInternals | null;
+  /** The model was changed by the user or by script: its attributes no longer move it. */
+  readonly dirty: boolean;
 }
 
 export interface ElementSpec<C extends ElementComponent> {
@@ -260,6 +262,10 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
     #cleanup: Array<() => void> = [];
     #observer: MutationObserver | null = null;
     #slot: HTMLSlotElement | null = null;
+
+    get dirty(): boolean {
+      return this.#dirty;
+    }
 
     constructor() {
       super();

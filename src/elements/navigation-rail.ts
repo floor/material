@@ -87,13 +87,15 @@ const withoutActive = (items: NavigationRailItemConfig[]): string =>
   JSON.stringify(items.map(({ active: _active, ...item }) => item));
 
 /**
- * Applies the declared items in place, keeping the selection. Returns false
- * when a header appears or goes, which the factory places only at creation.
+ * Applies the declared items in place, keeping the selection. A clean rail
+ * takes its `value` attribute again, whose item may only now be complete.
+ * Returns false when a header appears or goes, which the factory places only
+ * at creation.
  */
 const updateRail = (host: ElementHost<NavigationRailComponent>, component: NavigationRailComponent): boolean => {
   const header = component.element.querySelector('slot[name="header"]') !== null;
   if (header !== !!headerSlot(host)) return false;
-  const items = declaredItems(host, component.getActive());
+  const items = declaredItems(host, host.dirty ? component.getActive() : host.getAttribute("value"));
   if (withoutActive(items) === withoutActive(component.getItems())) return true;
   // The factory renders its items again and keeps the focused one focused.
   component.setItems(items);

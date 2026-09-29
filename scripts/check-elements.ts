@@ -5686,6 +5686,37 @@ try {
     check("navigation rail: expand and collapse are dispatched by the user and by a method, after expanded reflects, not by the attribute");
     check("navigation rail: after expand, a value attribute change still moves the clean rail");
 
+    // #247: items completed after upgrade, as frameworks set the icons after
+    // creating the child
+    await fresh(page, "");
+    await page.evaluate(() => {
+      const host = document.getElementById("host") as HTMLElement;
+      host.innerHTML = `<m-navigation-rail id="late" value="b" aria-label="Late">
+        <m-navigation-rail-item value="a">Inbox</m-navigation-rail-item>
+        <m-navigation-rail-item value="b">Sent</m-navigation-rail-item></m-navigation-rail>`;
+    });
+    await wait(50);
+    const before = await page.evaluate(() => document.getElementById("late")?.shadowRoot?.querySelectorAll("[data-id]").length);
+    await page.evaluate((icon) => {
+      document.querySelectorAll("#late m-navigation-rail-item").forEach((item) => item.setAttribute("icon", icon));
+    }, ICON);
+    await wait(50);
+    const late = await page.evaluate(() => (document.getElementById("late") as GapHost).value);
+    const current = await page.getByRole("navigation", { name: "Late" }).getByRole("button", { name: "Sent" }).getAttribute("aria-current");
+    // A dirty rail keeps its own value when items change
+    await page.getByRole("navigation", { name: "Late" }).getByRole("button", { name: "Inbox" }).click();
+    await page.evaluate((icon) => {
+      const item = document.createElement("m-navigation-rail-item");
+      item.setAttribute("value", "c");
+      item.setAttribute("icon", icon);
+      item.textContent = "Starred";
+      document.getElementById("late")?.append(item);
+    }, ICON);
+    await wait(50);
+    const dirty = await page.evaluate(() => (document.getElementById("late") as GapHost).value);
+    assert.deepEqual({ before, late, current, dirty }, { before: 0, late: "b", current: "page", dirty: "a" }, "rail #247");
+    check("navigation rail: items without icons, completed after upgrade, take the default value (#247); a dirty rail keeps its own");
+
     // ------------------------------------------------ drawer: open and close leave it clean; closing refused
     await fresh(
       page,

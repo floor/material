@@ -192,6 +192,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Elements: `<m-navigation-rail>` keeps its default `value` when items are completed after
+  upgrade (#247).** An item without an icon is left out until it has one, as frameworks set
+  attributes after creating the child; a clean rail now takes its `value` attribute again when
+  the items are reconciled, so the default destination is selected once its item is complete.
 - **Time picker: `minTime`, `maxTime`, `minuteStep` and `secondStep` are applied
   (FLO-281).** They were accepted and documented, and did nothing. Dial numbers and AM/PM
   that cannot be reached are disabled (at 38%), a pointer between labels picks the nearest
