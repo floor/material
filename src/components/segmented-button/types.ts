@@ -102,7 +102,8 @@ export interface SegmentedButtonConfig {
    * Selection mode for the segmented button group
    * @default SelectionMode.SINGLE
    */
-  mode?: SelectionMode;
+  // The enum or its string values, as the runtime takes (FLO-295).
+  mode?: SelectionMode | `${SelectionMode}`;
 
   /**
    * Array of segment configurations
