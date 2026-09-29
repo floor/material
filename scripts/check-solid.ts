@@ -175,6 +175,12 @@ const run = async (): Promise<void> => {
     assert.equal(await page.evaluate(() => (window as unknown as Win).api.submits), 1);
     check("button: host props pass through, type=submit reaches onSubmit");
 
+    // ------------------------------------------------------------- checkbox
+    await page.getByRole("checkbox", { name: "Agree", exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("agreed")?.textContent === "true");
+    assert.equal(await page.getByRole("checkbox", { name: "Agree", exact: true }).isChecked(), true);
+    check("checkbox: controlled checked and onChange");
+
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);
     await page.getByRole("tab", { name: "Flights", exact: true }).click();

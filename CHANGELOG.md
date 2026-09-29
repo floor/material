@@ -26,6 +26,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   indicator `size`, `contained` and `value`, both named by `aria-label`; the badge is
   standalone, labelled by its text or `label` and capped by `max`, with a live `visible`;
   the divider takes `orientation`, `variant`, insets, `thickness` and `color`.
+- **Elements: `<m-icon-button>`, `<m-fab>`, `<m-extended-fab>` and `<m-checkbox>`**, with
+  their React, Vue, Svelte and Solid components (`IconButton`, `Fab`, `ExtendedFab`,
+  `Checkbox`). The icon button and the FAB are named by `aria-label`; the extended FAB and the
+  checkbox by their children. A toggle icon button has a live `selected` property and a
+  `toggle` event; the button-like elements' `type="submit"` and `type="reset"` act on the
+  host's form. The checkbox is a form control like `<m-switch>` (`checked` as default and
+  live state, `indeterminate` as a property, `change`, form value, reset, validity, `<label
+  for>`, state restore).
 
 ### Changed
 

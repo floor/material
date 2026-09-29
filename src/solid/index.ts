@@ -14,6 +14,10 @@ import "mtrl/elements/css/badge";
 import "mtrl/elements/css/tabs";
 import "mtrl/elements/css/loading-indicator";
 import "mtrl/elements/css/divider";
+import "mtrl/elements/css/icon-button";
+import "mtrl/elements/css/fab";
+import "mtrl/elements/css/extended-fab";
+import "mtrl/elements/css/checkbox";
 import {
   buttonElement,
   defineButton,
@@ -29,6 +33,14 @@ import {
   defineBadge,
   dividerElement,
   defineDivider,
+  iconButtonElement,
+  defineIconButton,
+  fabElement,
+  defineFab,
+  extendedFabElement,
+  defineExtendedFab,
+  checkboxElement,
+  defineCheckbox,
   tabDeclaration,
 } from "../elements";
 import type {
@@ -46,6 +58,14 @@ import type {
   BadgeElement,
   DividerSpec,
   DividerElement,
+  IconButtonSpec,
+  IconButtonElement,
+  FabSpec,
+  FabElement,
+  ExtendedFabSpec,
+  ExtendedFabElement,
+  CheckboxSpec,
+  CheckboxElement,
   TabAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
@@ -60,4 +80,8 @@ export const Progress: MComponent<ProgressSpec, ProgressElement> = createCompone
 export const LoadingIndicator: MComponent<LoadingIndicatorSpec, LoadingIndicatorElement> = createComponent(loadingIndicatorElement.spec, defineLoadingIndicator, "LoadingIndicator");
 export const Badge: MComponent<BadgeSpec, BadgeElement> = createComponent(badgeElement.spec, defineBadge, "Badge");
 export const Divider: MComponent<DividerSpec, DividerElement> = createComponent(dividerElement.spec, defineDivider, "Divider");
+export const IconButton: MComponent<IconButtonSpec, IconButtonElement> = createComponent(iconButtonElement.spec, defineIconButton, "IconButton");
+export const Fab: MComponent<FabSpec, FabElement> = createComponent(fabElement.spec, defineFab, "Fab");
+export const ExtendedFab: MComponent<ExtendedFabSpec, ExtendedFabElement> = createComponent(extendedFabElement.spec, defineExtendedFab, "ExtendedFab");
+export const Checkbox: MComponent<CheckboxSpec, CheckboxElement> = createComponent(checkboxElement.spec, defineCheckbox, "Checkbox");
 export const Tab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "Tab");

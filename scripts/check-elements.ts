@@ -34,7 +34,8 @@ const server = Bun.serve({
       // reloads it and the browser restores the form's state into it.
       return new Response(
         `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
-<body><form><m-switch id="r" name="r">Restored</m-switch></form><a id="go" href="/away">away</a>
+<body><form><m-switch id="r" name="r">Restored</m-switch>
+<m-checkbox id="rc" name="rc">Restored checkbox</m-checkbox></form><a id="go" href="/away">away</a>
 <script type="module" src="/elements.js"></script></body></html>`,
         { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } }
       );
@@ -49,6 +50,8 @@ const server = Bun.serve({
 });
 
 type Win = Window & Record<string, unknown>;
+/** Icon markup for the icon-only elements, quoted with ' in attributes. */
+const ICON = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4h16v16H4z"/></svg>';
 const browser = await chromium.launch({ headless: true });
 let checks = 0;
 const check = (name: string): void => {
@@ -235,6 +238,323 @@ try {
     });
     assert.deepEqual(parity.element, parity.factory);
     check("button: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- icon button
+  await fresh(
+    page,
+    `<form id="f" onsubmit="event.preventDefault(); window.submits = (window.submits || 0) + 1">
+       <m-icon-button id="ib" aria-label="Favorite" toggle icon='${ICON}'></m-icon-button>
+       <m-icon-button id="is" type="submit" aria-label="Send" icon='${ICON}'></m-icon-button>
+       <m-icon-button id="ip" variant="filled" aria-label="Plain" icon='${ICON}'></m-icon-button>
+       <m-icon-button id="iq" variant="filled" aria-label="Untouched" icon='${ICON}'></m-icon-button>
+     </form><section id="factory"></section>`
+  );
+  {
+    assert.equal(await page.getByRole("button", { name: "Favorite", pressed: false }).count(), 1);
+    assert.equal(await page.getByRole("button", { name: "Send" }).count(), 1);
+    check("icon button: aria-label is the accessible name, toggle sets aria-pressed");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      w.clicks = 0;
+      const ib = document.getElementById("ib");
+      ib?.addEventListener("toggle", (e) => (w.events as unknown[]).push((e as CustomEvent).detail));
+      ib?.addEventListener("click", () => (w.clicks = (w.clicks as number) + 1));
+    });
+    await page.getByRole("button", { name: "Favorite" }).click();
+    let state = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      const ib = document.getElementById("ib") as HTMLElement & { selected: boolean };
+      return { events: w.events, clicks: w.clicks, selected: ib.selected };
+    });
+    assert.deepEqual(state, { events: [{ selected: true }], clicks: 1, selected: true });
+    assert.equal(await page.getByRole("button", { name: "Favorite", pressed: true }).count(), 1);
+    check("icon button: a click dispatches one toggle from the host with the typed detail; click stays native");
+
+    state = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      const ib = document.getElementById("ib") as HTMLElement & { selected: boolean };
+      ib.selected = false;
+      return { events: w.events, clicks: w.clicks, selected: ib.selected };
+    });
+    assert.deepEqual(state, { events: [], clicks: 1, selected: false });
+    assert.equal(await page.getByRole("button", { name: "Favorite", pressed: false }).count(), 1);
+    check("icon button: setting selected fires no event");
+
+    const updated = await page.evaluate(() => {
+      const ib = document.getElementById("ib") as HTMLElement & { component: { element: HTMLElement } };
+      const before = ib.component;
+      ib.setAttribute("variant", "outlined");
+      ib.setAttribute("aria-label", "Like");
+      return { same: ib.component === before, outlined: ib.component.element.classList.contains("mtrl-icon-button--outlined") };
+    });
+    assert.deepEqual(updated, { same: true, outlined: true });
+    assert.equal(await page.getByRole("button", { name: "Like" }).count(), 1);
+    check("icon button: variant and aria-label attributes update the component in place");
+
+    await page.evaluate(() => ((window as unknown as Win).submits = 0));
+    await page.getByRole("button", { name: "Send" }).click();
+    await page.getByRole("button", { name: "Plain" }).click();
+    assert.equal(await page.evaluate(() => (window as unknown as Win).submits), 1);
+    check("icon button: type=submit submits the host's form; a plain one does not");
+
+    const parity = await page.evaluate((icon) => {
+      const w = window as unknown as Win & { mtrl: { createIconButton: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createIconButton({ icon, variant: "filled", ariaLabel: "Untouched" });
+      document.getElementById("factory")?.append(factory.element);
+      const element = (document.getElementById("iq") as HTMLElement).shadowRoot?.querySelector("button") as HTMLElement;
+      const measure = (el: HTMLElement): Record<string, string | number> => {
+        const r = el.getBoundingClientRect();
+        const s = getComputedStyle(el);
+        const svg = el.querySelector("svg") as SVGElement;
+        return {
+          w: Math.round(r.width), h: Math.round(r.height), bg: s.backgroundColor, color: s.color, radius: s.borderRadius,
+          iconW: Math.round(svg.getBoundingClientRect().width),
+        };
+      };
+      return { factory: measure(factory.element), element: measure(element) };
+    }, ICON);
+    assert.deepEqual(parity.element, parity.factory);
+    check("icon button: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- fab
+  await fresh(
+    page,
+    `<form id="f" onsubmit="event.preventDefault(); window.submits = (window.submits || 0) + 1">
+       <m-fab id="fb" aria-label="Compose" icon='${ICON}'></m-fab>
+       <m-fab id="fs" type="submit" aria-label="Submit" icon='${ICON}'></m-fab>
+       <m-fab id="fp" aria-label="Plain" icon='${ICON}'></m-fab>
+     </form><section id="factory"></section>`
+  );
+  {
+    assert.equal(await page.getByRole("button", { name: "Compose" }).count(), 1);
+    check("fab: aria-label is the accessible name");
+
+    const clicks = await page.evaluate(async () => {
+      const fb = document.getElementById("fb") as HTMLElement;
+      let count = 0;
+      fb.addEventListener("click", () => count++);
+      (fb.shadowRoot?.querySelector("button") as HTMLElement).click();
+      return count;
+    });
+    assert.equal(clicks, 1);
+    check("fab: a click reaches the host once, not re-dispatched");
+
+    const updated = await page.evaluate(() => {
+      const fb = document.getElementById("fb") as HTMLElement & { component: { element: HTMLButtonElement } };
+      fb.setAttribute("variant", "tertiary");
+      const tertiary = fb.component.element.classList.contains("mtrl-fab--tertiary");
+      fb.setAttribute("disabled", "");
+      return { tertiary, disabled: fb.component.element.disabled };
+    });
+    assert.deepEqual(updated, { tertiary: true, disabled: true });
+    check("fab: a variant change recreates it, disabled disables the inner button");
+
+    await page.evaluate(() => ((window as unknown as Win).submits = 0));
+    await page.getByRole("button", { name: "Submit" }).click();
+    assert.equal(await page.evaluate(() => (window as unknown as Win).submits), 1);
+    check("fab: type=submit submits the host's form");
+
+    const parity = await page.evaluate((icon) => {
+      const w = window as unknown as Win & { mtrl: { createFab: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createFab({ icon, ariaLabel: "Plain" });
+      document.getElementById("factory")?.append(factory.element);
+      const element = (document.getElementById("fp") as HTMLElement).shadowRoot?.querySelector("button") as HTMLElement;
+      const measure = (el: HTMLElement): Record<string, string | number> => {
+        const r = el.getBoundingClientRect();
+        const s = getComputedStyle(el);
+        return { w: Math.round(r.width), h: Math.round(r.height), bg: s.backgroundColor, color: s.color, radius: s.borderRadius, shadow: s.boxShadow };
+      };
+      return { factory: measure(factory.element), element: measure(element) };
+    }, ICON);
+    assert.deepEqual(parity.element, parity.factory);
+    check("fab: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- extended fab
+  await fresh(
+    page,
+    `<form id="f"><input id="txt" value="a">
+       <m-extended-fab id="eb" icon='${ICON}'>Compose</m-extended-fab>
+       <m-extended-fab id="ea" label="From attribute"></m-extended-fab>
+       <m-extended-fab id="er" type="reset">Clear</m-extended-fab>
+       <m-extended-fab id="ep">Untouched</m-extended-fab>
+     </form><section id="factory"></section>`
+  );
+  {
+    assert.equal(await page.getByRole("button", { name: "Compose" }).count(), 1);
+    assert.equal(await page.getByRole("button", { name: "From attribute" }).count(), 1);
+    assert.equal(
+      await page.evaluate(() => document.getElementById("eb")?.shadowRoot?.querySelector("button")?.hasAttribute("aria-label")),
+      false
+    );
+    check("extended fab: slotted and attribute labels are accessible names");
+
+    await page.evaluate(() => document.getElementById("ea")?.setAttribute("label", "Renamed"));
+    assert.equal(await page.getByRole("button", { name: "Renamed" }).count(), 1);
+    const size = await page.evaluate(() => {
+      const eb = document.getElementById("eb") as HTMLElement & { component: { element: HTMLElement } };
+      eb.setAttribute("size", "large");
+      return eb.component.element.classList.contains("mtrl-extended-fab--large");
+    });
+    assert.equal(size, true);
+    check("extended fab: label and size attribute changes update it");
+
+    await page.fill("#txt", "b");
+    await page.getByRole("button", { name: "Clear" }).click();
+    assert.equal(await page.inputValue("#txt"), "a");
+    check("extended fab: type=reset resets the host's form");
+
+    const clicks = await page.evaluate(() => {
+      const eb = document.getElementById("eb") as HTMLElement;
+      let count = 0;
+      eb.addEventListener("click", () => count++);
+      (eb.shadowRoot?.querySelector("button") as HTMLElement).click();
+      return count;
+    });
+    assert.equal(clicks, 1);
+    check("extended fab: a click reaches the host once, not re-dispatched");
+
+    const parity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createExtendedFab: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createExtendedFab({ text: "Untouched" });
+      document.getElementById("factory")?.append(factory.element);
+      const element = (document.getElementById("ep") as HTMLElement).shadowRoot?.querySelector("button") as HTMLElement;
+      const measure = (el: HTMLElement): Record<string, string | number> => {
+        const r = el.getBoundingClientRect();
+        const s = getComputedStyle(el);
+        return { w: Math.round(r.width), h: Math.round(r.height), bg: s.backgroundColor, color: s.color, radius: s.borderRadius, font: s.font };
+      };
+      return { factory: measure(factory.element), element: measure(element) };
+    });
+    assert.deepEqual(parity.element, parity.factory);
+    check("extended fab: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- checkbox
+  await fresh(
+    page,
+    `<form id="f"><m-checkbox id="c" name="agree" value="yes">Agree</m-checkbox>
+     <label for="c" id="outer">Outer label</label>
+     <m-checkbox id="d" name="news" checked>News</m-checkbox></form>
+     <section id="factory"></section>`
+  );
+  {
+    const box = page.getByRole("checkbox", { name: "Agree" });
+    assert.equal(await box.count(), 1, "the slotted text names the inner checkbox");
+    check("checkbox: slotted label is the accessible name");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      document.getElementById("c")?.addEventListener("change", (e) => {
+        (w.events as unknown[]).push({ detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+      });
+    });
+    await box.click();
+    let state = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      const c = document.getElementById("c") as HTMLElement & { checked: boolean };
+      const form = new FormData(document.getElementById("f") as HTMLFormElement);
+      return { events: w.events, checked: c.checked, agree: form.get("agree"), news: form.get("news") };
+    });
+    assert.deepEqual(state.events, [{ detail: { checked: true, value: "yes" }, target: "c" }]);
+    assert.equal(state.checked, true);
+    assert.equal(state.agree, "yes");
+    assert.equal(state.news, "on");
+    check("checkbox: a click dispatches one change from the host, and the form sees the value");
+
+    state = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      const c = document.getElementById("c") as HTMLElement & { checked: boolean };
+      c.checked = false;
+      const form = new FormData(document.getElementById("f") as HTMLFormElement);
+      return { events: w.events, checked: c.checked, agree: form.get("agree"), news: form.get("news") };
+    });
+    assert.deepEqual(state.events, []);
+    assert.equal(state.checked, false);
+    assert.equal(state.agree, null);
+    check("checkbox: setting the property fires no event and updates the form value");
+
+    const mixed = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      const c = document.getElementById("c") as HTMLElement & { indeterminate: boolean };
+      c.indeterminate = true;
+      const input = c.shadowRoot?.querySelector("input") as HTMLInputElement;
+      return { events: w.events, indeterminate: c.indeterminate, input: input.indeterminate };
+    });
+    assert.deepEqual(mixed, { events: [], indeterminate: true, input: true });
+    await box.click();
+    const cleared = await page.evaluate(() => {
+      const c = document.getElementById("c") as HTMLElement & { indeterminate: boolean; checked: boolean };
+      return { indeterminate: c.indeterminate, checked: c.checked };
+    });
+    assert.deepEqual(cleared, { indeterminate: false, checked: true });
+    check("checkbox: indeterminate is a live property, cleared by a click");
+
+    await page.evaluate(() => ((document.getElementById("c") as HTMLElement & { checked: boolean }).checked = false));
+    await page.click("#outer");
+    assert.equal(await page.evaluate(() => (document.getElementById("c") as HTMLElement & { checked: boolean }).checked), true);
+    check("checkbox: an outer <label for> toggles it");
+
+    const reset = await page.evaluate(() => {
+      (document.getElementById("f") as HTMLFormElement).reset();
+      const get = (id: string): boolean => (document.getElementById(id) as HTMLElement & { checked: boolean }).checked;
+      return { c: get("c"), d: get("d") };
+    });
+    assert.deepEqual(reset, { c: false, d: true });
+    check("checkbox: form.reset() restores the checked attribute");
+
+    const validity = await page.evaluate(() => {
+      const c = document.getElementById("c") as HTMLElement;
+      c.setAttribute("required", "");
+      const form = document.getElementById("f") as HTMLFormElement;
+      const invalid = form.checkValidity();
+      (c as HTMLElement & { checked: boolean }).checked = true;
+      return { invalid, valid: form.checkValidity() };
+    });
+    assert.deepEqual(validity, { invalid: false, valid: true });
+    check("checkbox: required reports validity to the form");
+
+    const attributes = await page.evaluate(() => {
+      const c = document.getElementById("c") as HTMLElement;
+      c.setAttribute("error", "");
+      c.setAttribute("disabled", "");
+      const input = c.shadowRoot?.querySelector("input") as HTMLInputElement;
+      return { invalid: input.getAttribute("aria-invalid"), disabled: input.disabled };
+    });
+    assert.deepEqual(attributes, { invalid: "true", disabled: true });
+    check("checkbox: error and disabled attributes reach the inner input");
+
+    const parity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createCheckbox: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createCheckbox({ label: "News", checked: true });
+      document.getElementById("factory")?.append(factory.element);
+      const element = (document.getElementById("d") as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
+      const measure = (root: HTMLElement): Record<string, string | number> => {
+        const input = root.querySelector("input") as HTMLElement;
+        const icon = root.querySelector('[class*="checkbox__icon"]') as HTMLElement;
+        const label = root.querySelector("label") as HTMLElement;
+        const b = input.getBoundingClientRect();
+        const l = label.getBoundingClientRect();
+        return {
+          boxW: b.width, boxH: b.height, labelW: Math.round(l.width), labelH: Math.round(l.height),
+          boxBg: getComputedStyle(input).backgroundColor,
+          boxBorder: getComputedStyle(input).border,
+          iconColor: getComputedStyle(icon).color,
+          labelColor: getComputedStyle(label).color,
+          labelFont: getComputedStyle(label).font,
+        };
+      };
+      return { factory: measure(factory.element), element: measure(element) };
+    });
+    assert.deepEqual(parity.element, parity.factory);
+    check("checkbox: renders as the factory does with the global stylesheet");
   }
 
   // ---------------------------------------------------------------- tabs
@@ -697,16 +1017,21 @@ try {
     await restorePage.goto(`http://127.0.0.1:${server.port}/restore`);
     await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
     await restorePage.getByRole("switch", { name: "Restored", exact: true }).click();
+    await restorePage.getByRole("checkbox", { name: "Restored checkbox", exact: true }).click();
     await restorePage.click("#go");
     await restorePage.waitForURL(/\/away$/);
     await restorePage.goBack();
     await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
-    await restorePage.waitForFunction(() => (document.getElementById("r") as HTMLElement & { checked: boolean }).checked === true, undefined, { timeout: 5_000 })
+    const checked = (): Record<string, boolean> =>
+      Object.fromEntries(["r", "rc"].map((id) => [id, (document.getElementById(id) as HTMLElement & { checked: boolean }).checked]));
+    await restorePage.waitForFunction(() => ["r", "rc"].every((id) => (document.getElementById(id) as HTMLElement & { checked: boolean }).checked), undefined, { timeout: 5_000 })
       .catch(() => undefined);
-    const restored = await restorePage.evaluate(() => (document.getElementById("r") as HTMLElement & { checked: boolean }).checked);
+    const restored = await restorePage.evaluate(checked);
     await restorePage.close();
-    assert.equal(restored, true, "going back restores the switch the user turned on");
+    assert.equal(restored.r, true, "going back restores the switch the user turned on");
     check("forms: going back restores a switch's state");
+    assert.equal(restored.rc, true, "going back restores the checkbox the user checked");
+    check("forms: going back restores a checkbox's state");
   }
 
   // ---------------------------------------------------------------- theme
