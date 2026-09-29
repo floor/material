@@ -4249,6 +4249,339 @@ try {
     }
   }
 
+  // ---------------------------------------------------------------- tooltip and snackbar in the top layer
+  // <m-tooltip> and <m-snackbar> render their surface in their own shadow
+  // root, with its adopted CSS, and show it as a popover (`layer: "top"`):
+  // above a z-index 9999 sibling and a modal dialog, where the factory
+  // without a layer puts it, and styled as the factory in light DOM is.
+  {
+    type Tip = { element: HTMLElement; target: HTMLElement | null; show: (now?: boolean) => unknown; destroy: () => void };
+    type Snack = { element: HTMLElement; show: () => unknown; hide: () => unknown; destroy: () => void };
+    type Host = HTMLElement & { component: { element: HTMLElement } | null; show: (now?: boolean) => unknown; target: HTMLElement | null };
+    type PopWin = Win & {
+      mtrl: { createTooltip: (config: object) => Tip; createSnackbar: (config: object) => Snack };
+      __pop: { root: ShadowRoot; events: string[] };
+    };
+    const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
+    const client = await page.context().newCDPSession(page);
+
+    /** The description Chrome computes, and whether Playwright's own matches the text. */
+    const description = async (selector: string, name: string, text: string): Promise<{ chrome: unknown; playwright: boolean }> => {
+      const locator = page.locator(selector);
+      const { nodes } = (await client.send("Accessibility.getFullAXTree")) as {
+        nodes: Array<{ role?: { value: string }; name?: { value: string }; description?: { value: string } }>;
+      };
+      const button = nodes.find((n) => n.role?.value === "button" && n.name?.value === name);
+      // What `expect(locator).toHaveAccessibleDescription()` runs; `playwright`
+      // has the matcher without the test runner's expect
+      const matcher = locator as unknown as {
+        _expect: (name: string, options: object) => Promise<{ matches: boolean }>;
+      };
+      const { matches } = await matcher._expect("to.have.accessible.description", {
+        expectedText: [{ string: text, normalizeWhiteSpace: true }],
+        isNot: false,
+        timeout: 1000,
+      });
+      return { chrome: button?.description?.value, playwright: matches };
+    };
+
+    // ------------------------------------------------ tooltip
+    await fresh(page, `<div style="height: 500px"></div><div id="pt"></div><div style="height: 2000px"></div>`);
+    await page.evaluate(() => {
+      const host = document.getElementById("pt") as HTMLElement;
+      const root = host.attachShadow({ mode: "open" });
+      // The target in a clipping parent, and below it a sibling on z-index
+      // 9999 where the tooltip opens
+      root.innerHTML = `<div style="position: relative; overflow: hidden; height: 48px; z-index: 1">
+          <button id="pt-save" type="button" style="margin-left: 40px">Save</button>
+          <button id="pt-share" type="button">Share</button>
+          <m-tooltip id="pt-tip" for="pt-save">Save the file</m-tooltip></div>
+        <div id="pt-cover" style="position: relative; z-index: 9999; height: 300px; background: rgb(255, 0, 0)"></div>
+        <button id="pt-outside" type="button">Outside</button>`;
+      (window as unknown as PopWin).__pop = { root, events: [] };
+      // At once: the document may scroll smoothly
+      window.scrollTo({ top: 300, behavior: "instant" });
+    });
+
+    // Where the factory without a layer puts it, on the body with the global
+    // stylesheet, hovered on the same target alongside the element's. That
+    // tooltip is `position: fixed` at page coordinates, so with the page
+    // scrolled it sits the scroll offset below its place: the top-layer one
+    // is compared with it less the scroll.
+    await page.evaluate(() => {
+      const w = window as unknown as PopWin & { __unlayered: Tip };
+      w.__unlayered = w.mtrl.createTooltip({ target: w.__pop.root.getElementById("pt-save"), text: "Save the file" });
+    });
+    const unlayered = (): Promise<{ rect: Record<"top" | "left" | "width" | "height", number>; style: Record<string, string>; classes: string }> =>
+      page.evaluate(() => {
+        const tip = (window as unknown as { __unlayered: Tip }).__unlayered;
+        const { top, left, width, height } = tip.element.getBoundingClientRect();
+        const style = getComputedStyle(tip.element);
+        const result = {
+          rect: { top: top - window.scrollY, left, width, height },
+          style: { background: style.backgroundColor, color: style.color, shadow: style.boxShadow, margin: style.marginTop, font: style.font, padding: style.padding },
+          classes: [...tip.element.classList].sort().join(" "),
+        };
+        tip.destroy();
+        return result;
+      });
+
+    const tipState = (): Promise<{ open: boolean; visible: boolean }> =>
+      page.evaluate(() => {
+        const tip = (window as unknown as PopWin).__pop.root.getElementById("pt-tip") as Host;
+        const surface = tip.component?.element as HTMLElement;
+        return { open: surface.matches(":popover-open"), visible: surface.className.includes("tooltip--visible") };
+      });
+    const centerOf = (id: string): Promise<{ x: number; y: number }> =>
+      page.evaluate((id) => {
+        const r = ((window as unknown as PopWin).__pop.root.getElementById(id) as HTMLElement).getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      }, id);
+
+    // Hover shows it after the delay
+    const save = await centerOf("pt-save");
+    await page.mouse.move(save.x, save.y);
+    await wait(450);
+    const expected = await unlayered();
+    const shown = await page.evaluate(() => {
+      const { root } = (window as unknown as PopWin).__pop;
+      const tip = root.getElementById("pt-tip") as Host;
+      const surface = tip.component?.element as HTMLElement;
+      const r = surface.getBoundingClientRect();
+      const style = getComputedStyle(surface);
+      const hit = (surface.getRootNode() as ShadowRoot).elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return {
+        inRoot: surface.getRootNode() === tip.shadowRoot,
+        popoverOpen: surface.matches(":popover-open"),
+        rect: { top: r.top, left: r.left, width: r.width, height: r.height },
+        style: { background: style.backgroundColor, color: style.color, shadow: style.boxShadow, margin: style.marginTop, font: style.font, padding: style.padding },
+        border: style.borderTopWidth,
+        classes: [...surface.classList].sort().join(" "),
+        aboveCover: !!hit && surface.contains(hit),
+        scrolled: window.scrollY,
+      };
+    });
+    assert.equal(shown.inRoot, true, "the tooltip's surface is in the element's shadow root");
+    assert.equal(shown.popoverOpen, true, "the tooltip's surface is :popover-open");
+    assert.equal(shown.scrolled, 300, "the page is scrolled");
+    for (const key of ["top", "left", "width", "height"] as const) {
+      assert.ok(Math.abs(shown.rect[key] - expected.rect[key]) <= 1, `tooltip ${key} ${shown.rect[key]} is the unlayered tooltip's ${expected.rect[key]}`);
+    }
+    assert.deepEqual(shown.style, expected.style, "the tooltip's own colours, font, padding and margin, as the factory's in light DOM");
+    assert.equal(shown.border, "0px", "no popover border");
+    assert.equal(shown.classes, expected.classes, "the factory's classes");
+    assert.equal(shown.aboveCover, true, "the tooltip is above the z-index 9999 sibling");
+    check("tooltip top layer in a shadow root: shown on hover in its element's root, styled, at the unlayered position with the page scrolled, above z-index 9999");
+
+    // Leaving hides it: the hide delay, then the exit transition
+    const outside = await centerOf("pt-outside");
+    await page.mouse.move(outside.x, outside.y);
+    await wait(400);
+    const left = await tipState();
+    // Focus shows it, blur hides it
+    await page.evaluate(() => ((window as unknown as PopWin).__pop.root.getElementById("pt-save") as HTMLElement).focus());
+    await wait(450);
+    const focused = await tipState();
+    await page.evaluate(() => ((window as unknown as PopWin).__pop.root.getElementById("pt-outside") as HTMLElement).focus());
+    await wait(400);
+    const blurred = await tipState();
+    // Escape hides it at once, focus staying on the target
+    await page.evaluate(() => ((window as unknown as PopWin).__pop.root.getElementById("pt-save") as HTMLElement).focus());
+    await wait(450);
+    await page.keyboard.press("Escape");
+    await wait(250);
+    const escaped = await tipState();
+    const stayed = await page.evaluate(() => (window as unknown as PopWin).__pop.root.activeElement?.id);
+    const off = { open: false, visible: false };
+    assert.deepEqual(
+      { left, focused, blurred, escaped, stayed },
+      { left: off, focused: { open: true, visible: true }, blurred: off, escaped: off, stayed: "pt-save" }
+    );
+    check("tooltip top layer in a shadow root: shown on focus, hidden on leave, blur and Escape, out of the top layer after");
+
+    const described = await description("#pt-save", "Save", "Save the file");
+    assert.deepEqual(described, { chrome: "Save the file", playwright: true }, "the target is described by the tooltip text");
+    check("tooltip: the target's accessible description is the text, in Chrome and in Playwright");
+
+    // Attributes: text in place, for in place, variant recreates
+    const tipChanges = await page.evaluate(async () => {
+      const { root } = (window as unknown as PopWin).__pop;
+      const tip = root.getElementById("pt-tip") as Host;
+      const before = tip.component;
+      tip.setAttribute("text", "Save to disk");
+      const text = { same: tip.component === before, text: tip.component?.element.textContent };
+      tip.setAttribute("for", "pt-share");
+      const moved = {
+        same: tip.component === before,
+        share: root.getElementById("pt-share")?.getAttribute("aria-describedby"),
+        save: root.getElementById("pt-save")?.getAttribute("aria-describedby"),
+      };
+      tip.setAttribute("variant", "plain");
+      const variant = {
+        recreated: tip.component !== before,
+        plain: !!tip.component?.element.className.includes("tooltip--plain"),
+        target: tip.target?.id,
+      };
+      const share = root.getElementById("pt-save") as HTMLElement;
+      tip.target = share;
+      return { text, moved, variant, property: tip.target?.id, save: share.getAttribute("aria-describedby") };
+    });
+    assert.deepEqual(tipChanges, {
+      text: { same: true, text: "Save to disk" },
+      moved: { same: true, share: "pt-tip", save: null },
+      variant: { recreated: true, plain: true, target: "pt-share" },
+      property: "pt-save",
+      save: "pt-tip",
+    });
+    assert.deepEqual(await description("#pt-save", "Save", "Save to disk"), { chrome: "Save to disk", playwright: true });
+    check("tooltip: text and for change in place, variant recreates, the target property wins, the description follows");
+
+    // ------------------------------------------------ snackbar
+    // The factory without a layer in light DOM, for its place and style
+    await fresh(page, `<div id="ps"></div><dialog id="ps-modal" style="width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0">
+      <button id="ps-save" type="button">Save</button>
+      <div style="position: fixed; left: 0; right: 0; bottom: 0; height: 160px; z-index: 2147483647; background: rgb(255, 0, 0)"></div></dialog>`);
+    const snackExpected = await page.evaluate(async () => {
+      const w = window as unknown as PopWin;
+      const snack = w.mtrl.createSnackbar({ message: "Archived", action: "Undo", duration: 0 });
+      snack.show();
+      await new Promise((r) => setTimeout(r, 500));
+      const { top, left, width, height } = snack.element.getBoundingClientRect();
+      const style = getComputedStyle(snack.element);
+      const result = {
+        rect: { top, left, width, height },
+        style: { background: style.backgroundColor, color: style.color, shadow: style.boxShadow, radius: style.borderRadius, padding: style.padding, font: style.font },
+        classes: [...snack.element.classList].sort().join(" "),
+      };
+      snack.destroy();
+      return result;
+    });
+    await wait(300);
+
+    await page.evaluate(() => {
+      const host = document.getElementById("ps") as HTMLElement;
+      const root = host.attachShadow({ mode: "open" });
+      root.innerHTML = `<m-snackbar id="ps-bar" action="Undo" duration="0">Archived</m-snackbar>`;
+      const w = window as unknown as PopWin;
+      w.__pop = { root, events: [] };
+      const bar = root.getElementById("ps-bar") as HTMLElement;
+      for (const type of ["open", "action", "close"]) {
+        bar.addEventListener(type, (event) => {
+          const reason = (event as CustomEvent<{ reason?: string } | null>).detail?.reason;
+          w.__pop.events.push(reason ? `${type}:${reason}` : type);
+        });
+      }
+      // Save, inside the modal dialog, shows the snackbar
+      (document.getElementById("ps-save") as HTMLElement).addEventListener("click", () => void (bar as Host).show());
+    });
+    const snackState = (): Promise<{ open: boolean; home: boolean; events: string[] }> =>
+      page.evaluate(() => {
+        const { root, events } = (window as unknown as PopWin).__pop;
+        const bar = root.getElementById("ps-bar") as Host;
+        const surface = bar.component?.element as HTMLElement;
+        return { open: surface.matches(":popover-open"), home: surface.getRootNode() === bar.shadowRoot, events: [...events] };
+      });
+
+    // Shown on its own: in its root, where the factory puts it, styled
+    await page.evaluate(() => void ((window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host).show());
+    await wait(500);
+    const alone = await page.evaluate(() => {
+      const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host;
+      const surface = bar.component?.element as HTMLElement;
+      const { top, left, width, height } = surface.getBoundingClientRect();
+      const style = getComputedStyle(surface);
+      return {
+        inRoot: surface.getRootNode() === bar.shadowRoot,
+        popoverOpen: surface.matches(":popover-open"),
+        rect: { top, left, width, height },
+        style: { background: style.backgroundColor, color: style.color, shadow: style.boxShadow, radius: style.borderRadius, padding: style.padding, font: style.font },
+        classes: [...surface.classList].sort().join(" "),
+      };
+    });
+    assert.deepEqual({ inRoot: alone.inRoot, popoverOpen: alone.popoverOpen }, { inRoot: true, popoverOpen: true });
+    for (const key of ["top", "left", "width", "height"] as const) {
+      assert.ok(Math.abs(alone.rect[key] - snackExpected.rect[key]) <= 1, `snackbar ${key} ${alone.rect[key]} is the unlayered snackbar's ${snackExpected.rect[key]}`);
+    }
+    assert.deepEqual(alone.style, snackExpected.style, "the snackbar's own colours, elevation, shape and font, as the factory's in light DOM");
+    assert.equal(alone.classes, snackExpected.classes, "the factory's classes");
+    await page.evaluate(() => void ((window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host & { hide: () => unknown }).hide());
+    await wait(500);
+    assert.deepEqual(await snackState(), { open: false, home: true, events: ["open", "close:api"] });
+    check("snackbar top layer in a shadow root: shown in its element's root at the unlayered place, styled as the factory in light DOM");
+
+    // Over a modal dialog: Save inside it shows the snackbar, which opens
+    // inside the dialog, above it, and takes the action
+    await page.evaluate(() => {
+      (window as unknown as PopWin).__pop.events.length = 0;
+      (document.getElementById("ps-modal") as HTMLDialogElement).showModal();
+    });
+    await page.locator("#ps-save").click();
+    await wait(500);
+    const overModal = await page.evaluate(() => {
+      const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host;
+      const surface = bar.component?.element as HTMLElement;
+      const action = surface.querySelector("button") as HTMLElement;
+      const r = action.getBoundingClientRect();
+      const hit = (surface.getRootNode() as ShadowRoot).elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      const style = getComputedStyle(surface);
+      return {
+        popoverOpen: surface.matches(":popover-open"),
+        above: !!hit && action.contains(hit),
+        inModal: (document.getElementById("ps-modal") as HTMLElement).contains((surface.getRootNode() as ShadowRoot).host),
+        styled: style.backgroundColor,
+      };
+    });
+    assert.deepEqual(overModal, { popoverOpen: true, above: true, inModal: true, styled: snackExpected.style.background });
+    check("snackbar top layer: above an open modal dialog and a z-index sibling in it, inside it and styled");
+
+    // The action by keyboard: `action` once, `close` once, focus back on Save
+    await page.getByRole("button", { name: "Undo", exact: true }).focus();
+    await page.keyboard.press("Enter");
+    await wait(600);
+    const acted = await snackState();
+    const focus = await page.evaluate(() => document.activeElement?.id);
+    assert.deepEqual({ ...acted, focus }, { open: false, home: true, events: ["open", "action", "close:action"], focus: "ps-save" });
+    await page.evaluate(() => (document.getElementById("ps-modal") as HTMLDialogElement).close());
+    check("snackbar: its action dispatches action once and closes once, focus returns, and it goes back to its root");
+
+    // duration in place: it hides on its own after it
+    await page.evaluate(() => {
+      const { root, events } = (window as unknown as PopWin).__pop;
+      events.length = 0;
+      const bar = root.getElementById("ps-bar") as Host;
+      bar.setAttribute("duration", "600");
+      bar.show();
+    });
+    await wait(400);
+    const during = (await snackState()).open;
+    await wait(800);
+    assert.deepEqual({ during, after: await snackState() }, { during: true, after: { open: false, home: true, events: ["open", "close:timeout"] } });
+    check("snackbar: it hides after its duration, closing once");
+
+    // message in place, action recreates
+    const snackChanges = await page.evaluate(() => {
+      const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host;
+      const before = bar.component;
+      bar.textContent = "Moved";
+      return new Promise((resolve) =>
+        queueMicrotask(() => {
+          const text = { same: bar.component === before, text: bar.component?.element.querySelector('[class*="snackbar__text"]')?.textContent };
+          bar.setAttribute("message", "Deleted");
+          const message = { same: bar.component === before, text: bar.component?.element.querySelector('[class*="snackbar__text"]')?.textContent };
+          bar.setAttribute("action", "Restore");
+          const action = { recreated: bar.component !== before, label: bar.component?.element.querySelector("button")?.textContent?.trim() };
+          resolve({ text, message, action });
+        })
+      );
+    });
+    assert.deepEqual(snackChanges, {
+      text: { same: true, text: "Moved" },
+      message: { same: true, text: "Deleted" },
+      action: { recreated: true, label: "Restore" },
+    });
+    check("snackbar: its text and message change in place, action recreates");
+  }
+
   // ---------------------------------------------------------------- theme
   await fresh(page, `<m-switch id="s" checked>Theme</m-switch><section id="factory"></section>`);
   {

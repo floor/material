@@ -34,6 +34,8 @@ import { chipsElement, chipDeclaration, defineChips } from "./chips";
 import { listElement, listItemDeclaration, defineList } from "./list";
 import { cardElement, defineCard } from "./card";
 import { carouselElement, carouselItemDeclaration, defineCarousel } from "./carousel";
+import { tooltipElement, defineTooltip } from "./tooltip";
+import { snackbarElement, defineSnackbar } from "./snackbar";
 
 export { defineElement, DEFAULT_PREFIX, SHADOW_BASE_STYLES } from "./define";
 export type {
@@ -94,6 +96,10 @@ export { cardElement, defineCard } from "./card";
 export type { CardSpec, CardElement } from "./card";
 export { carouselElement, carouselItemDeclaration, defineCarousel } from "./carousel";
 export type { CarouselSpec, CarouselElement, CarouselItemAttributes } from "./carousel";
+export { tooltipElement, defineTooltip } from "./tooltip";
+export type { TooltipSpec, TooltipElement } from "./tooltip";
+export { snackbarElement, defineSnackbar } from "./snackbar";
+export type { SnackbarSpec, SnackbarElement } from "./snackbar";
 
 /**
  * Every element, by name. Framework adapters are generated from this list and
@@ -123,6 +129,8 @@ export const elements = {
   list: listElement,
   card: cardElement,
   carousel: carouselElement,
+  tooltip: tooltipElement,
+  snackbar: snackbarElement,
 } as const;
 
 /** Declaration children, which render nothing and are read by their parent. */
@@ -162,4 +170,6 @@ export const defineAll = (options?: DefineOptions): void => {
   defineList(options);
   defineCard(options);
   defineCarousel(options);
+  defineTooltip(options);
+  defineSnackbar(options);
 };

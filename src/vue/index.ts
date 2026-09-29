@@ -30,6 +30,8 @@ import "mtrl/elements/css/chips";
 import "mtrl/elements/css/list";
 import "mtrl/elements/css/card";
 import "mtrl/elements/css/carousel";
+import "mtrl/elements/css/tooltip";
+import "mtrl/elements/css/snackbar";
 import {
   buttonElement,
   defineButton,
@@ -77,6 +79,10 @@ import {
   defineCard,
   carouselElement,
   defineCarousel,
+  tooltipElement,
+  defineTooltip,
+  snackbarElement,
+  defineSnackbar,
   tabDeclaration,
   radioDeclaration,
   navigationRailItemDeclaration,
@@ -133,6 +139,10 @@ import type {
   CardElement,
   CarouselSpec,
   CarouselElement,
+  TooltipSpec,
+  TooltipElement,
+  SnackbarSpec,
+  SnackbarElement,
   TabAttributes,
   RadioAttributes,
   NavigationRailItemAttributes,
@@ -170,6 +180,8 @@ export const MChips: MComponent<ChipsSpec, ChipsElement> = createComponent(chips
 export const MList: MComponent<ListSpec, ListElement> = createComponent(listElement.spec, defineList, "MList");
 export const MCard: MComponent<CardSpec, CardElement> = createComponent(cardElement.spec, defineCard, "MCard");
 export const MCarousel: MComponent<CarouselSpec, CarouselElement> = createComponent(carouselElement.spec, defineCarousel, "MCarousel");
+export const MTooltip: MComponent<TooltipSpec, TooltipElement> = createComponent(tooltipElement.spec, defineTooltip, "MTooltip");
+export const MSnackbar: MComponent<SnackbarSpec, SnackbarElement> = createComponent(snackbarElement.spec, defineSnackbar, "MSnackbar");
 export const MTab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "MTab");
 export const MRadio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "MRadio");
 export const MNavigationRailItem: MDeclaration<NavigationRailItemAttributes> = createDeclaration(navigationRailItemDeclaration, "MNavigationRailItem");

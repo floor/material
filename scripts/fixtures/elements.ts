@@ -59,3 +59,8 @@ Object.assign((window as unknown as { mtrl: object }).mtrl, {
 // the way the elements do.
 import { registerStyles, applyStyles } from "../../dist/elements/styles.js";
 Object.assign((window as unknown as { mtrl: object }).mtrl, { registerStyles, applyStyles });
+
+// The tooltip, for the top-layer tooltip and snackbar checks: the factory
+// rendering <m-tooltip> is compared with.
+import createTooltip from "../../dist/components/tooltip/index.js";
+Object.assign((window as unknown as { mtrl: object }).mtrl, { createTooltip });

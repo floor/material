@@ -23,6 +23,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   carried in a shadow root with its own root's stylesheets when it comes from another tree,
   and goes back once closed. Without popover support the option does nothing. The default
   snackbar is unchanged.
+- **Elements: `<m-tooltip>`.** The target is `for` (an id in the element's root, then the
+  document) or the `target` property; the text is `text` or the element's text; `position`,
+  `variant`, `show-delay`, `hide-delay`, and `show()`/`hide()`. The surface stays in the
+  element's shadow root, in the top layer. The target is described by the text: its
+  `aria-describedby` names the host, which carries the text as an `aria-hidden` label.
+- **Elements: `<m-snackbar>`.** The message is `message` or the element's text; `action`,
+  `dismissible`, `close-label`, `duration`, `position`, `queue-behavior`, the `open`
+  property, `show()`/`hide()`, and the `open`, `action` and `close` events (`detail.reason`).
+  It shares the factory's queue and opens in the top layer, above modal dialogs.
 - **Menu: `layer: "top"`**, and a top-layer helper in `mtrl/core/dom`. With the option the
   menu renders next to its opener instead of on `document.body` or `container`, and is shown
   in the browser's top layer as a `popover="manual"` element: above any z-index, out of any
