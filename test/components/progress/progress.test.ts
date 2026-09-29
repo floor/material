@@ -206,7 +206,8 @@ describe('progress', () => {
   test('values are clamped, reported and announced', () => {
     const progress = createProgress({ value: 10 });
     const changes: number[] = [];
-    progress.on('change', (e: CustomEvent) => changes.push((e.detail as { value: number }).value));
+    // The emitter's payload, `{ value, max }`, not a DOM event (FLO-295).
+    progress.on('change', ({ value }) => changes.push(value));
     progress.setValue(60, false);
     expect(progress.getValue()).toBe(60);
     expect(progress.element.getAttribute('aria-valuenow')).toBe('60');
@@ -220,9 +221,24 @@ describe('progress', () => {
   test('reaching the maximum fires complete once the value is there', () => {
     const progress = createProgress({ value: 0 });
     let completed = 0;
-    progress.element.addEventListener('complete', () => completed++);
+    progress.on('complete', ({ value, max }) => { if (value === max) completed++; });
     progress.setValue(100, false);
     expect(completed).toBe(1);
+  });
+
+  // FLO-295: the emitter, as every component's; not DOM CustomEvents.
+  test('events carry { value, max } through the emitter, and off() stops them', () => {
+    const progress = createProgress({ value: 0, max: 50 });
+    const seen: unknown[] = [];
+    let dom = 0;
+    progress.element.addEventListener('change', () => dom++);
+    const handler = (payload: { value: number; max: number }) => seen.push(payload);
+    progress.on('change', handler);
+    progress.setValue(20, false);
+    progress.off('change', handler);
+    progress.setValue(30, false);
+    expect(seen).toEqual([{ value: 20, max: 50 }]);
+    expect(dom).toBe(0);
   });
 
   test('thickness and shape can change after creation', () => {

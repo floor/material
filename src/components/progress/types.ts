@@ -140,6 +140,23 @@ export interface ProgressConfig {
  * Progress component interface
  * @category Components
  */
+/** What progress events carry. */
+export interface ProgressEventPayload {
+  value: number;
+  max: number;
+}
+
+/**
+ * The progress events.
+ * @category Components
+ */
+export interface ProgressEvents {
+  /** The value was set */
+  change: (event: ProgressEventPayload) => void;
+  /** The value reached the maximum */
+  complete: (event: ProgressEventPayload) => void;
+}
+
 export interface ProgressComponent {
   /** The component's root DOM element */
   element: HTMLElement;
@@ -320,20 +337,14 @@ export interface ProgressComponent {
   painted: () => Promise<void>;
 
   /**
-   * Adds an event listener to the progress
-   * @param event - Event name ('change', 'complete')
-   * @param handler - Event handler function
-   * @returns The progress component for chaining
+   * Adds an event listener: `change` when the value is set, `complete` when it
+   * reaches the maximum. Handlers get `{ value, max }` (FLO-295: they got a DOM
+   * CustomEvent, the payload in `event.detail`).
    */
-  on: (event: string, handler: Function) => ProgressComponent;
+  on: <K extends keyof ProgressEvents>(event: K, handler: ProgressEvents[K]) => ProgressComponent;
 
-  /**
-   * Removes an event listener from the progress
-   * @param event - Event name
-   * @param handler - Event handler function
-   * @returns The progress component for chaining
-   */
-  off: (event: string, handler: Function) => ProgressComponent;
+  /** Removes an event listener */
+  off: <K extends keyof ProgressEvents>(event: K, handler: ProgressEvents[K]) => ProgressComponent;
 
   /**
    * Destroys the progress component and cleans up resources
