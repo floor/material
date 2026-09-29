@@ -3,8 +3,9 @@
  * `<m-slider>`: the slider as a form-associated custom element.
  *
  * The `value` attribute is the default and the `value` property the live one,
- * as on a native range input; `range` adds a second handle, whose
- * `second-value` and `secondValue` work the same way. `input` fires while the
+ * as on a native range input: the attribute moves the value until the user or
+ * script changes it. `range` adds a second handle, whose `second-value` and
+ * `secondValue` work the same way. `input` fires while the
  * value moves and `change` when an interaction ends. `aria-label` names the
  * handles.
  *
@@ -136,6 +137,7 @@ const sliderSpec = {
     },
   },
   model: "value" as const,
+  defaults: ["secondValue"] as const,
   events: {
     input: { detail },
     change: { detail },

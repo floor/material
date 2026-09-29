@@ -28,9 +28,6 @@ g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
 g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0);
 g.cancelAnimationFrame = () => {};
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
-// The dial draws into a canvas; JSDOM has no 2D context and does not need one
-// for anything asserted here.
-(dom.window as any).HTMLCanvasElement.prototype.getContext = () => null;
 
 import createTimePicker, { type TimePickerEvents, TIMEPICKER_SELECTORS } from "../../../src/components/timepicker";
 import {

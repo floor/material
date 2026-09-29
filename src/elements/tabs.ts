@@ -5,8 +5,9 @@
  * Each `<m-tab>` declares one tab (`value`, `icon`, `badge`, `disabled`, and its
  * text as content). The tabs element reads them into the factory's config and
  * rebuilds when they change; the children stay where the framework put them.
- * `value` on `<m-tabs>` is the initially selected tab; the `value` property is
- * the live selection.
+ * `value` on `<m-tabs>` is the default selection, which moves the live one
+ * until the user or script changes it; the `value` property is the live
+ * selection.
  *
  * @module elements
  */

@@ -12,7 +12,6 @@ import {
 import { TIMEPICKER_EVENTS as EVENTS } from './constants';
 import { formatFormValue } from './utils';
 import { renderTimePicker } from './render';
-import { renderClockDial } from './clockdial';
 import type { TimePickerEvents } from './types';
 import type { EventCallback } from '../../core/state/emitter';
 import type { ElementComponent } from '../../core/compose/component';
@@ -125,17 +124,6 @@ export const createTimePickerAPI = (
       isOpen = true;
       baseComponent.element.classList.add(`${config.prefix}-time-picker--open`);
       
-      // Refresh the dial's theme after opening, keeping the live inputs and
-      // their focus/selection intact. A delayed full render lost quick edits.
-      const canvas = dialogElement.querySelector<HTMLCanvasElement>(part('dial-canvas'));
-      if (canvas && config.type === TIME_PICKER_TYPE.DIAL) {
-        const active = dialogElement.querySelector('[data-active="true"]')?.getAttribute('data-type');
-        renderClockDial(canvas, timeValue, {
-          ...config,
-          activeSelector: active === 'minute' || active === 'second' ? active : 'hour'
-        });
-      }
-
       // Emit open event
       options.events.emit(EVENTS.OPEN);
       

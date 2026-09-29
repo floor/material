@@ -22,7 +22,7 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
     document.documentElement.setAttribute("data-theme", "material");
     document.documentElement.setAttribute("data-theme-mode", "light");
     state.confirmedTime = undefined;
-    state.timePicker = state.createTimePicker({ title: "Appointment", value: "09:30", name: "appointment" });
+    state.timePicker = state.createTimePicker({ title: "Appointment", value: "09:30", name: "appointment", type: "input" as never });
     const form = document.createElement("form");
     form.append(state.timePicker.element);
     document.body.append(form);
@@ -57,15 +57,81 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
       radius: getComputedStyle(element).borderRadius,
       content: style(".mtrl-time-picker__content").display,
       inputs: style(".mtrl-time-picker__input-container").display,
-      canvasWidth: style(".mtrl-time-picker__dial-canvas").width,
+      faceWidth: style(".mtrl-time-picker__dial-face").width,
       periodDirection: style(".mtrl-time-picker__period").flexDirection,
       actions: style(".mtrl-time-picker__actions").display,
       buttons: style(".mtrl-time-picker__action-buttons").gap,
     };
   });
-  assert.deepEqual(styles, { dialog: "flex", radius: "28px", content: "flex", inputs: "flex", canvasWidth: "256px", periodDirection: "column", actions: "flex", buttons: "8px" });
+  assert.deepEqual(styles, { dialog: "flex", radius: "28px", content: "flex", inputs: "flex", faceWidth: "256px", periodDirection: "column", actions: "flex", buttons: "8px" });
+  // FLO-279: the DOM dial. Its hand, handle and on-primary labels sit where the
+  // value is, the 24h rings are right at noon and midnight, the keyboard selects,
+  // a drag picks and moves on to minutes, and the spring takes the short way.
+  const hand = () => dialog.locator(".mtrl-time-picker__dial-face").evaluate(face => {
+    const f = face.getBoundingClientRect(), h = face.querySelector(".mtrl-time-picker__dial-handle")!.getBoundingClientRect();
+    const dx = h.left + h.width / 2 - (f.left + f.width / 2), dy = h.top + h.height / 2 - (f.top + f.height / 2);
+    return { angle: Math.round((Math.atan2(dx, -dy) * 180 / Math.PI + 360) % 360), radius: Math.round(Math.hypot(dx, dy)), label: face.getAttribute("aria-label"), selected: face.querySelector('[aria-selected="true"]')?.getAttribute("aria-label") ?? null };
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await dialog.locator(".mtrl-time-picker__toggle-type").click();
-  assert.equal(await dialog.locator(".mtrl-time-picker__dial-canvas").isVisible(), false);
+  await dialog.locator(".mtrl-time-picker__hours").click();
+  assert.deepEqual(await hand(), { angle: 270, radius: 101, label: "Hour", selected: "9 o'clock" }, "9:35 puts the hand at nine, on the outer ring");
+  // FLO-283: in dial mode the boxes are radios, filled primary-container when
+  // checked; the arrows move the check, the focus and the dial.
+  const selector = (unit: string) => dialog.locator(`.mtrl-time-picker__${unit}`).evaluate(element => {
+    // Painted, so rgb() and color(srgb ...) serialisations compare equal.
+    const pixel = (css: string) => { const context = document.createElement("canvas").getContext("2d")!; context.fillStyle = css; context.fillRect(0, 0, 1, 1); return context.getImageData(0, 0, 1, 1).data.join(); };
+    const colour = (name: string) => { const probe = document.createElement("i"); probe.style.color = `var(--mtrl-sys-color-${name})`; document.body.append(probe); const c = getComputedStyle(probe).color; probe.remove(); return pixel(c); };
+    const style = getComputedStyle(element);
+    const painted = pixel(style.backgroundColor);
+    const fill = painted === colour("primary-container") ? "primary-container" : painted === colour("surface-container-highest") ? "surface-container-highest" : style.backgroundColor;
+    return { tag: element.tagName, role: element.getAttribute("role"), checked: element.getAttribute("aria-checked"), name: element.getAttribute("aria-label"), fill, radius: style.borderRadius, ring: style.outlineStyle === "none" ? "none" : `${style.outlineWidth} ${style.outlineStyle}` };
+  });
+  await page.mouse.move(0, 0);
+  assert.deepEqual(await selector("hours"), { tag: "BUTTON", role: "radio", checked: "true", name: "Select hour: 9 o'clock", fill: "primary-container", radius: "8px", ring: "none" }, "the hour box is a checked radio, filled, with no ring after a click");
+  assert.deepEqual(await selector("minutes"), { tag: "BUTTON", role: "radio", checked: "false", name: "Select minutes: 35 minutes", fill: "surface-container-highest", radius: "8px", ring: "none" }, "the minute box is an unchecked radio");
+  await dialog.locator(".mtrl-time-picker__minutes").hover();
+  assert.ok(await dialog.locator(".mtrl-time-picker__minutes").evaluate(element => {
+    const pixel = (css: string) => { const probe = document.createElement("i"); probe.style.color = css; document.body.append(probe); const context = document.createElement("canvas").getContext("2d")!; context.fillStyle = getComputedStyle(probe).color; probe.remove(); context.fillRect(0, 0, 1, 1); return context.getImageData(0, 0, 1, 1).data.join(); };
+    return pixel(getComputedStyle(element).backgroundColor) === pixel("color-mix(in srgb, var(--mtrl-sys-color-on-surface) 8%, var(--mtrl-sys-color-surface-container-highest))");
+  }), "hovering an unchecked box lays on-surface at 8% over its container");
+  await dialog.locator(".mtrl-time-picker__hours").focus();
+  await page.mouse.move(0, 0);
+  await page.keyboard.press("ArrowRight");
+  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("data-type")), "minute", "ArrowRight moves the focus to minutes");
+  assert.deepEqual(await selector("minutes").then(({ checked, ring }) => ({ checked, ring })), { checked: "true", ring: "3px solid" }, "and checks it, with the focus ring");
+  assert.equal((await hand()).label, "Minute", "the dial turns to minutes");
+  await page.keyboard.press("ArrowLeft");
+  assert.equal((await hand()).label, "Hour", "ArrowLeft goes back to hours");
+  const stop = dialog.locator('.mtrl-time-picker__dial-number[tabindex="0"]');
+  await stop.focus(); await page.keyboard.press("ArrowRight"); await page.keyboard.press("Enter");
+  assert.equal(await page.locator('input[name="appointment"]').inputValue(), "10:35", "the keyboard selects on the dial");
+  const face = (await dialog.locator(".mtrl-time-picker__dial-face").boundingBox())!;
+  await page.mouse.move(face.x + 128, face.y + 28); await page.mouse.down();
+  await page.mouse.move(face.x + 228, face.y + 128); await page.mouse.up();
+  assert.equal(await page.locator('input[name="appointment"]').inputValue(), "03:35", "a drag to three o'clock picks 3");
+  await page.waitForFunction(() => document.querySelector(".mtrl-time-picker__dial-face")?.getAttribute("aria-label") === "Minute");
+  assert.equal((await hand()).selected, "35 minutes", "then the dial moves on to minutes");
+  assert.equal((await selector("minutes")).checked, "true", "and checks the minute box");
+  await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.setFormat("24h" as never).setValue("12:00"));
+  await dialog.locator(".mtrl-time-picker__hours").click();
+  assert.deepEqual(await hand(), { angle: 0, radius: 69, label: "Hour", selected: "12 hours" }, "noon is on the inner ring, at the top");
+  await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.setValue("00:00"));
+  assert.deepEqual(await hand(), { angle: 0, radius: 101, label: "Hour", selected: "0 hours" }, "midnight is on the outer ring, at the top");
+  await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.setFormat("12h" as never).setValue("11:00"));
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.setValue("13:00"));
+  const path: number[] = [];
+  for (let i = 0; i < 6; i++) { path.push((await hand()).angle); await page.waitForTimeout(40); }
+  assert.ok(path.every(angle => angle >= 330 || angle <= 31), `11 to 1 springs forward through 12, not back round the dial (${path.join(", ")})`);
+  assert.ok(new Set(path).size > 1, "the hand moves rather than jumping");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.setFormat("12h" as never).setValue("09:35"));
+  // The dial section's own changes are asserted above; the log below is the input
+  // path's, from 09:35.
+  await page.evaluate(() => { (window as unknown as TimePickerWindow).timeChanges.splice(1); });
+  await dialog.locator(".mtrl-time-picker__toggle-type").click();
+  assert.equal(await dialog.locator(".mtrl-time-picker__dial-face").isVisible(), false);
   assert.equal(await dialog.locator(".mtrl-time-picker__hours").evaluate(element => getComputedStyle(element).width), "96px");
   const minutes = dialog.locator(".mtrl-time-picker__minutes");
   await minutes.fill("45");
@@ -118,5 +184,5 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   await page.evaluate(() => { (window as unknown as { otherPicker: { destroy(): void } }).otherPicker.destroy(); document.getElementById("time-trigger")?.remove(); });
   await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.destroy());
   assert.equal(await page.locator(".mtrl-time-picker__dialog").count(), 0);
-  console.log("Passed packed Time Picker: BEM layout, dial/input switching, AM/PM, input edits, form value, format/orientation, a native modal dialog with its own Escape and focus return, and teardown.");
+  console.log("Passed packed Time Picker: BEM layout, dial/input switching, AM/PM, input edits, form value, format/orientation, a native modal dialog with its own Escape and focus return, the DOM dial (positions, 24h rings, keyboard, drag, spring), its hour and minute radios, and teardown.");
 }
