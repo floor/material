@@ -3696,6 +3696,247 @@ try {
     check("forms: going back restores a radio group's selection");
   }
 
+  // ---------------------------------------------------------------- focus in a shadow root (#244)
+  // The factories found the focused item with document.activeElement, which
+  // is the shadow host when focus is inside a shadow root. The rail and the
+  // drawer carried their own key handlers for it; these run on the factories'.
+  {
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const focusedIn = (id: string): Promise<string | null | undefined> =>
+      page.evaluate((id) => {
+        const active = document.getElementById(id)?.shadowRoot?.activeElement as HTMLElement | null | undefined;
+        return active?.dataset.id ?? active?.textContent?.trim();
+      }, id);
+    const changes = (id: string): Promise<unknown[]> =>
+      page.evaluate((id) => {
+        const w = window as unknown as Win;
+        w.events = [];
+        document.getElementById(id)?.addEventListener("change", (e) => (w.events as unknown[]).push((e as CustomEvent).detail));
+        return [];
+      }, id);
+    const events = (): Promise<unknown> => page.evaluate(() => (window as unknown as Win).events);
+
+    await fresh(
+      page,
+      `<m-navigation-rail id="kr" aria-label="Keys">
+         <m-navigation-rail-item value="a" icon='${ICON}'>Inbox</m-navigation-rail-item>
+         <m-navigation-rail-item value="b" icon='${ICON}'>Sent</m-navigation-rail-item>
+         <m-navigation-rail-item value="c" icon='${ICON}' disabled>Trash</m-navigation-rail-item>
+         <m-navigation-rail-item value="d" icon='${ICON}'>Spam</m-navigation-rail-item>
+       </m-navigation-rail>`
+    );
+    await changes("kr");
+    await page.getByRole("navigation", { name: "Keys" }).getByRole("button", { name: "Inbox", exact: true }).focus();
+    const rail: unknown[] = [];
+    for (const key of ["ArrowDown", "ArrowDown", "ArrowDown", "ArrowUp", "End", "Home", "ArrowUp"]) {
+      await page.keyboard.press(key);
+      rail.push(await focusedIn("kr"));
+    }
+    assert.deepEqual(rail, ["b", "d", "a", "d", "d", "a", "d"], "arrows skip the disabled item and wrap; Home and End");
+    await page.keyboard.press("Space");
+    await page.keyboard.press("ArrowUp");
+    await page.keyboard.press("Enter");
+    assert.deepEqual(await events(), [{ value: "d" }, { value: "b" }]);
+    check("focus in a shadow root: the rail's own arrows, Home and End move focus; Space and Enter select");
+
+    await fresh(
+      page,
+      `<m-drawer id="kd" open aria-label="Keys">
+         <m-drawer-item value="inbox">Inbox</m-drawer-item>
+         <m-drawer-item value="sent">Sent</m-drawer-item>
+         <m-drawer-item value="spam" disabled>Spam</m-drawer-item>
+         <m-drawer-item value="trash">Trash</m-drawer-item>
+       </m-drawer>`
+    );
+    await changes("kd");
+    await page.getByRole("navigation", { name: "Keys" }).getByRole("button", { name: "Inbox", exact: true }).focus();
+    const drawer: unknown[] = [];
+    for (const key of ["ArrowDown", "ArrowDown", "ArrowDown", "ArrowUp", "End", "Home"]) {
+      await page.keyboard.press(key);
+      drawer.push(await focusedIn("kd"));
+    }
+    assert.deepEqual(drawer, ["sent", "trash", "inbox", "trash", "trash", "inbox"], "arrows skip the disabled item and wrap; Home and End");
+    await page.keyboard.press("Space");
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    assert.deepEqual(await events(), [{ value: "inbox" }, { value: "sent" }]);
+    check("focus in a shadow root: the drawer's own arrows, Home and End move focus; Space and Enter select once");
+
+    await fresh(
+      page,
+      `<m-chips id="kc" aria-label="People">
+         <m-chip variant="input" value="a">Ann</m-chip><m-chip variant="input" value="b">Ben</m-chip><m-chip variant="input" value="c">Cy</m-chip>
+       </m-chips>
+       <m-chips id="kf" aria-label="Kinds"><m-chip value="x">Ex</m-chip><m-chip value="y">Why</m-chip></m-chips>`
+    );
+    await changes("kf");
+    const people = page.getByRole("grid", { name: "People" });
+    await people.getByRole("gridcell", { name: "Ben" }).locator("button").first().focus();
+    const beforeDelete = await focusedIn("kc");
+    await page.keyboard.press("Delete");
+    await settle();
+    assert.deepEqual({ beforeDelete, afterDelete: await focusedIn("kc") }, { beforeDelete: "Ben", afterDelete: "Cy" });
+    await page.getByRole("grid", { name: "Kinds" }).getByRole("gridcell", { name: "Ex" }).focus();
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("Space");
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("Enter");
+    assert.deepEqual(await events(), [{ value: ["y"] }, { value: ["x", "y"] }]);
+    check("focus in a shadow root: chips' arrows move focus, Space and Enter toggle, a removed chip hands focus on");
+
+    await fresh(
+      page,
+      `<m-list id="kl" aria-label="Keys"><m-list-item value="a">Alpha</m-list-item>
+         <m-list-item value="b">Beta</m-list-item><m-list-item value="c">Gamma</m-list-item></m-list>`
+    );
+    await changes("kl");
+    const rowName = (): Promise<string | undefined> =>
+      page.evaluate(() => {
+        const root = document.getElementById("kl")?.shadowRoot;
+        const active = root?.activeElement;
+        return active ? root?.getElementById(active.getAttribute("aria-labelledby") ?? "")?.textContent?.trim() : undefined;
+      });
+    await page.getByRole("list", { name: "Keys" }).getByRole("button", { name: "Alpha" }).focus();
+    const list: unknown[] = [];
+    for (const key of ["ArrowDown", "End", "Home"]) {
+      await page.keyboard.press(key);
+      list.push(await rowName());
+    }
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Space");
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    assert.deepEqual(list, ["Beta", "Gamma", "Alpha"]);
+    assert.deepEqual(((await events()) as { value: string }[]).map((e) => e.value), ["b", "c"]);
+    await page.evaluate(() => document.querySelector('#kl [value="a"]')?.setAttribute("supporting-text", "First"));
+    await settle();
+    assert.equal(await rowName(), "Gamma", "the list renders again and keeps the focused row");
+    check("focus in a shadow root: the list's arrows, Home and End move focus, Space and Enter select; a render keeps focus");
+  }
+
+  // ---------------------------------------------------------------- factories in a shadow root (#244)
+  // The factories with no element yet, mounted in a plain shadow root: an
+  // open one with the stylesheet, a text before and an opener after it, so
+  // focus handed to the host (not focusable) or to its first control shows.
+  {
+    const stage = async (): Promise<void> => {
+      await fresh(page, `<div id="shadow"></div>`);
+      await page.evaluate(() => {
+        const root = (document.getElementById("shadow") as HTMLElement).attachShadow({ mode: "open" });
+        root.innerHTML = `<link rel="stylesheet" href="/styles.css"><input id="first" aria-label="First">
+          <button id="opener" type="button">Open</button><div id="mount"></div>`;
+      });
+      await page.waitForFunction(() => !!document.getElementById("shadow")?.shadowRoot?.querySelector("link")?.sheet);
+    };
+    type Factories = Record<string, (config: object) => Record<string, (...args: unknown[]) => unknown> & { element: HTMLElement }>;
+    const inShadow = (): Promise<string | null | undefined> =>
+      page.evaluate(() => {
+        const active = document.getElementById("shadow")?.shadowRoot?.activeElement as HTMLElement | null | undefined;
+        return active ? active.id || active.textContent?.trim() : null;
+      });
+    const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
+
+    await stage();
+    await page.evaluate(() => {
+      const root = document.getElementById("shadow")?.shadowRoot as ShadowRoot;
+      const mtrl = (window as unknown as { mtrl: Factories }).mtrl;
+      const menu = mtrl.createMenu({
+        opener: root.getElementById("opener") as HTMLElement,
+        container: root.getElementById("mount") as HTMLElement,
+        items: [{ id: "cut", text: "Cut" }, { id: "copy", text: "Copy" }, { id: "paste", text: "Paste" }],
+      });
+      (window as unknown as Win).__menu = menu;
+    });
+    await page.evaluate(() => (document.getElementById("shadow")?.shadowRoot?.getElementById("opener") as HTMLElement).focus());
+    await page.keyboard.press("ArrowDown");
+    await wait(350);
+    const menu: unknown[] = [await inShadow()];
+    for (const key of ["ArrowDown", "ArrowDown", "ArrowDown", "ArrowUp"]) {
+      await page.keyboard.press(key);
+      menu.push(await inShadow());
+    }
+    assert.deepEqual(menu, ["Cut", "Copy", "Paste", "Cut", "Paste"], "opens on the first item; the arrows move and wrap");
+    check("factories in a shadow root: menu arrows move focus between items");
+
+    await stage();
+    await page.evaluate(() => {
+      const root = document.getElementById("shadow")?.shadowRoot as ShadowRoot;
+      const mtrl = (window as unknown as { mtrl: Factories }).mtrl;
+      const select = mtrl.createSelect({
+        label: "Fruit",
+        options: [{ id: "a", text: "Apple" }, { id: "b", text: "Banana" }],
+      });
+      (root.getElementById("mount") as HTMLElement).append(select.element);
+      (window as unknown as Win).__select = select;
+    });
+    const field = page.locator("#shadow").getByRole("combobox", { name: "Fruit" }).or(page.locator("#shadow").getByRole("textbox", { name: "Fruit" }));
+    await field.first().focus();
+    await page.keyboard.press("ArrowDown");
+    await wait(350);
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    await wait(350);
+    const select = await page.evaluate(() => {
+      const s = (window as unknown as Win).__select as { element: HTMLElement; getValue: () => unknown };
+      const root = document.getElementById("shadow")?.shadowRoot as ShadowRoot;
+      return {
+        value: s.getValue(),
+        focused: s.element.contains(root.activeElement),
+        styled: [...s.element.querySelectorAll("*"), s.element].some((el) => [...el.classList].some((c) => c.endsWith("textfield--focused"))),
+      };
+    });
+    assert.deepEqual(select, { value: "b", focused: true, styled: true });
+    check("factories in a shadow root: select keeps its focused styling when the menu closes onto it");
+
+    const returnsFocus = async (name: string, create: string): Promise<void> => {
+      await stage();
+      await page.evaluate((create) => {
+        const mtrl = (window as unknown as { mtrl: Factories }).mtrl;
+        const factory = mtrl[create];
+        const component = create === "createDialog"
+          ? factory({ title: "Shadow", content: "Inside", closeOnEscape: true })
+          : factory({ title: "Shadow", content: "Inside", variant: "modal" });
+        (window as unknown as Win).__overlay = component;
+        const opener = document.getElementById("shadow")?.shadowRoot?.getElementById("opener") as HTMLElement;
+        opener.addEventListener("click", () => void component.open());
+      }, create);
+      await page.locator("#shadow").getByRole("button", { name: "Open", exact: true }).click();
+      await wait(400);
+      const moved = await inShadow();
+      await page.evaluate(() => void ((window as unknown as Win).__overlay as { close: () => unknown }).close());
+      await wait(400);
+      assert.deepEqual({ moved, back: await inShadow() }, { moved: null, back: "opener" }, `${name}: focus returns to the opener`);
+    };
+    await returnsFocus("dialog", "createDialog");
+    check("factories in a shadow root: a dialog returns focus to its opener inside the shadow root");
+    await returnsFocus("bottom sheet", "createBottomSheet");
+    check("factories in a shadow root: a modal bottom sheet returns focus to its opener inside the shadow root");
+    await returnsFocus("side sheet", "createSideSheet");
+    check("factories in a shadow root: a modal side sheet returns focus to its opener inside the shadow root");
+
+    await stage();
+    await page.evaluate(() => {
+      const root = document.getElementById("shadow")?.shadowRoot as ShadowRoot;
+      const mtrl = (window as unknown as { mtrl: Factories }).mtrl;
+      const search = mtrl.createSearch({ placeholder: "Search", collapseOnBlur: true });
+      (root.getElementById("mount") as HTMLElement).append(search.element);
+      (window as unknown as Win).__search = search;
+    });
+    const input = page.locator("#shadow input:not(#first)").first();
+    await input.focus();
+    await wait(50);
+    // Focus leaves and comes back within the collapse delay: still expanded.
+    await page.locator("#shadow #first").focus();
+    await input.focus();
+    await wait(300);
+    const expanded = await page.evaluate(() => ((window as unknown as Win).__search as { isExpanded: () => boolean }).isExpanded());
+    await page.locator("#shadow #first").focus();
+    await wait(300);
+    const collapsed = await page.evaluate(() => !((window as unknown as Win).__search as { isExpanded: () => boolean }).isExpanded());
+    assert.deepEqual({ expanded, collapsed }, { expanded: true, collapsed: true });
+    check("factories in a shadow root: search stays expanded when focus comes back in time, and collapses when it leaves");
+  }
+
   // ---------------------------------------------------------------- theme
   await fresh(page, `<m-switch id="s" checked>Theme</m-switch><section id="factory"></section>`);
   {

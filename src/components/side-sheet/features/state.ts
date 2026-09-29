@@ -6,6 +6,7 @@ import {
   SIDE_SHEET_EVENTS,
   SIDE_SHEET_VARIANTS,
 } from "../constants";
+import { deepActiveElement } from "../../../core/dom/focus";
 
 interface StateComponent {
   element: HTMLElement;
@@ -43,7 +44,7 @@ export const withState =
 
     function show(): void {
       if (open) return;
-      if (isModal) previouslyFocused = document.activeElement as HTMLElement | null;
+      if (isModal) previouslyFocused = deepActiveElement() as HTMLElement | null;
       open = true;
       apply();
       if (isModal) structure.container.focus();

@@ -1,6 +1,7 @@
 // src/components/menu/features/submenu.ts
 
 import { createMenuTasks } from "./tasks";
+import { activeElementOf } from "../../../core/dom/focus";
 import { MenuConfig, MenuContent, MenuItem, MenuFeatureHost } from "../types";
 
 /**
@@ -447,7 +448,7 @@ const withSubmenu =
         // Focus the first item in the submenu if keyboard navigation is being used
         if (submenuItems.length > 0) {
           // If we're at level 2 or above, we should always focus the first item
-          if (currentLevel >= 2 || document.activeElement === itemElement) {
+          if (currentLevel >= 2 || activeElementOf(itemElement) === itemElement) {
             submenuItems[0].setAttribute("tabindex", "0");
             submenuItems[0].focus();
           }

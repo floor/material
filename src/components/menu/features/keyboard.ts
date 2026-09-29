@@ -1,6 +1,7 @@
 // src/components/menu/features/keyboard.ts
 
 import { createMenuTasks } from "./tasks";
+import { activeElementOf } from "../../../core/dom/focus";
 import {
   KeyboardActions,
   KeyboardMenuState,
@@ -179,7 +180,7 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     if (items.length === 0) return;
 
     // Find the currently focused item
-    const focusedElement = document.activeElement as HTMLElement;
+    const focusedElement = activeElementOf(menuElement) as HTMLElement;
     let focusedItemIndex = -1;
 
     if (focusedElement && items.includes(focusedElement)) {
