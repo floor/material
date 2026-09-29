@@ -14,6 +14,8 @@ import { createDial, nameFor, type DialSelector } from "./dial";
 /** An hour, minute or second box: a radio in dial mode, a number input in input mode. */
 type TimeField = HTMLInputElement | HTMLButtonElement;
 
+let fieldIds = 0;
+
 import { setHTML } from "../../core/dom/html";
 /**
  * Renders the time picker dialog
@@ -60,13 +62,16 @@ export const renderTimePicker = (
   // they are radios, "Select hour" and "Select minutes", as in Compose; typing
   // a time is the input mode's. They were number fields in both modes. FLO-283.
   const dialMode = config.type === TIME_PICKER_TYPE.DIAL;
-  const selectors = dialMode ? document.createElement("div") : inputContainer;
+  // The fields and their separators: a box of their own, kept left to right in
+  // any direction, as a time is written (Compose); the AM/PM selector follows the
+  // page's direction beside it.
+  const selectors = document.createElement("div");
+  selectors.className = `${config.prefix}-time-picker__selectors`;
   if (dialMode) {
-    selectors.className = `${config.prefix}-time-picker__selectors`;
     selectors.setAttribute("role", "radiogroup");
     selectors.setAttribute("aria-label", "Time");
-    inputContainer.appendChild(selectors);
   }
+  inputContainer.appendChild(selectors);
 
   const SELECT: Record<DialSelector, string> = { hour: "Select hour", minute: "Select minutes", second: "Select seconds" };
   const NAME: Record<DialSelector, string> = { hour: "Hour", minute: "Minute", second: "Second" };
@@ -112,10 +117,14 @@ export const renderTimePicker = (
     field.setAttribute("data-type", unit);
     show(field, value);
     wrapper.appendChild(field);
-    if (unit === "second") {
+    // Input mode labels its fields below them: Hour, Minute (M3's supporting
+    // text). Only a seconds field had one, in both modes. FLO-280.
+    if (!dialMode) {
+      field.id = `${config.prefix}-time-picker-${unit}-${++fieldIds}`;
       const label = document.createElement("label");
       label.className = `${config.prefix}-time-picker__input-label`;
-      label.textContent = "Second";
+      label.htmlFor = field.id;
+      label.textContent = NAME[unit];
       wrapper.appendChild(label);
     }
     selectors.appendChild(wrapper);

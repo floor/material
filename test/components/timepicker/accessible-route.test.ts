@@ -94,6 +94,23 @@ describe("in input mode the time fields are named inputs", () => {
     }
     expect(c.querySelector("[role=radio][data-type]")).toBeNull();
   });
+
+  // FLO-280: M3 labels the input mode's fields below them.
+  test("each field has a visible label below it, tied to it", () => {
+    const c = picker({ ...input, showSeconds: true });
+    const labels = Array.from(c.querySelectorAll<HTMLLabelElement>(`.${PREFIX}-time-picker__input-label`));
+    expect(labels.map(label => label.textContent)).toEqual(["Hour", "Minute", "Second"]);
+    for (const label of labels) {
+      const field = label.parentElement!.querySelector("input")!;
+      expect(label.htmlFor).toBe(field.id);
+      expect(label.previousElementSibling === field).toBe(true);
+    }
+  });
+
+  test("dial mode's boxes have no field labels", () => {
+    const c = picker({ showSeconds: true });
+    expect(c.querySelectorAll(`.${PREFIX}-time-picker__input-label`)).toHaveLength(0);
+  });
 });
 
 // FLO-283: in dial mode the boxes only choose what the dial sets, so they are
