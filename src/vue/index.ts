@@ -18,6 +18,7 @@ import "mtrl/elements/css/icon-button";
 import "mtrl/elements/css/fab";
 import "mtrl/elements/css/extended-fab";
 import "mtrl/elements/css/checkbox";
+import "mtrl/elements/css/slider";
 import {
   buttonElement,
   defineButton,
@@ -41,6 +42,8 @@ import {
   defineExtendedFab,
   checkboxElement,
   defineCheckbox,
+  sliderElement,
+  defineSlider,
   tabDeclaration,
 } from "../elements";
 import type {
@@ -66,6 +69,8 @@ import type {
   ExtendedFabElement,
   CheckboxSpec,
   CheckboxElement,
+  SliderSpec,
+  SliderElement,
   TabAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
@@ -84,4 +89,5 @@ export const MIconButton: MComponent<IconButtonSpec, IconButtonElement> = create
 export const MFab: MComponent<FabSpec, FabElement> = createComponent(fabElement.spec, defineFab, "MFab");
 export const MExtendedFab: MComponent<ExtendedFabSpec, ExtendedFabElement> = createComponent(extendedFabElement.spec, defineExtendedFab, "MExtendedFab");
 export const MCheckbox: MComponent<CheckboxSpec, CheckboxElement> = createComponent(checkboxElement.spec, defineCheckbox, "MCheckbox");
+export const MSlider: MComponent<SliderSpec, SliderElement> = createComponent(sliderElement.spec, defineSlider, "MSlider");
 export const MTab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "MTab");

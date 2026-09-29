@@ -166,6 +166,13 @@ const run = async (): Promise<void> => {
     assert.equal(await page.getByRole("checkbox", { name: "Agree", exact: true }).isChecked(), true);
     check("checkbox: bind:checked");
 
+    // ------------------------------------------------------------- slider
+    await page.getByRole("slider", { name: "Level", exact: true }).focus();
+    await page.keyboard.press("ArrowRight");
+    await page.waitForFunction(() => document.getElementById("level")?.textContent === "51");
+    assert.equal(await page.getByRole("slider", { name: "Level", exact: true }).getAttribute("aria-valuenow"), "51");
+    check("slider: bind:value");
+
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);
     await page.getByRole("tab", { name: "Flights", exact: true }).click();
