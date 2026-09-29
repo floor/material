@@ -120,6 +120,8 @@ const create = (config: SearchElementConfig): SearchElementComponent => {
   // avatar with onClick as one, and one without as an image out of the tab
   // order (FLO-291). The click itself is handled by `action` in setup.
   if (avatar) trailingItems.push({ id: "avatar", type: "avatar", content: avatar, ariaLabel: avatarLabel, onClick: () => {} });
+  // A button needs a name, and none is invented for it.
+  if (avatar && !avatarLabel) console.warn("[mtrl] search: an avatar without avatar-label is a button with no accessible name.");
   const search = createSearch({
     ...rest,
     // The `no-` attributes turn the factory's defaults off (#263).

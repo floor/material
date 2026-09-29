@@ -488,6 +488,27 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
   assert.equal(await page.evaluate(() => document.getElementById("nb")!.hasAttribute("open")), true, "no-collapse-on-blur: the view stays open when focus leaves");
   check("search: no-collapse-on-blur keeps the view open when focus leaves");
 
+  // The avatar is a button: without avatar-label it has no name, and that is
+  // said once, not papered over with an invented one.
+  const warned = await page.evaluate(async () => {
+    const seen: string[] = [];
+    const original = console.warn;
+    console.warn = (...args: unknown[]) => { seen.push(String(args[0])); };
+    const avatar = '<img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">';
+    for (const label of [null, "Account"]) {
+      const host = document.createElement("m-search");
+      host.setAttribute("avatar", avatar);
+      if (label) host.setAttribute("avatar-label", label);
+      document.body.append(host);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      host.remove();
+    }
+    console.warn = original;
+    return seen.filter((text) => text.includes("avatar-label"));
+  });
+  assert.equal(warned.length, 1, "one warning, for the avatar without avatar-label");
+  check("search: an avatar without avatar-label warns that its button has no name");
+
   // ------------------------------------------------------------ restore
   // Going back restores the query the user typed over the value attribute
   const [js, css] = await Promise.all([
