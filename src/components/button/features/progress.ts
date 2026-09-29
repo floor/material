@@ -1,5 +1,5 @@
 // src/components/button/features/progress.ts
-import type { ProgressConfig, ProgressComponent } from "../../progress/types";
+import type { ProgressConfig, ProgressComponent, ProgressEvents } from "../../progress/types";
 import { addClass, removeClass } from "../../../core/dom";
 import { ButtonConfig, IconAPI } from "../types";
 
@@ -73,7 +73,7 @@ export const withProgress =
     }
 
     // Extract event handlers if present
-    let progressEventHandlers: Record<string, Function> = {};
+    let progressEventHandlers: Partial<ProgressEvents> = {};
 
     // Determine progress configuration
     const progressConfig: ProgressConfig =
@@ -82,7 +82,7 @@ export const withProgress =
         : (() => {
             // Event handlers may ride along with the progress config
             const { on, ...restConfig } = config.progress as ProgressConfig & {
-              on?: Record<string, Function>;
+              on?: Partial<ProgressEvents>;
             };
             if (on) {
               progressEventHandlers = on;
@@ -117,9 +117,10 @@ export const withProgress =
           progress.element.style.display = "none";
 
           // Attach event handlers if any were provided
-          Object.entries(progressEventHandlers).forEach(([event, handler]) => {
-            p.on(event, handler);
-          });
+          for (const event of Object.keys(progressEventHandlers) as (keyof ProgressEvents)[]) {
+            const handler = progressEventHandlers[event];
+            if (handler) p.on(event, handler);
+          }
 
           // Store progress reference
           component.progress = progress;

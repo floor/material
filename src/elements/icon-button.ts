@@ -5,7 +5,10 @@
  *
  * With `toggle`, the `selected` attribute is the default state and the
  * `selected` property the live one: the attribute moves the state until the
- * user or script changes it. A click dispatches `toggle` from the host.
+ * user or script changes it. A click dispatches `change` with `{ selected }`
+ * from the host, as `<m-switch>` and `<m-checkbox>` do; `toggle`, which
+ * clashed with the native ToggleEvent, is dispatched as well for one release
+ * (deprecated, FLO-295).
  * `type="submit"` and `type="reset"` act on the host's form.
  *
  * @module elements
@@ -50,22 +53,25 @@ const iconButtonSpec = {
   methods: ["select", "deselect", "toggleSelected"] as const,
   model: "selected" as const,
   events: {
-    // The factory dispatches `toggle` on its own element, not through its
-    // emitter: `setup` forwards it. Listed here for its type and the adapters.
+    // The factory's emitter `change` (FLO-295).
+    change: {
+      detail: (payload) => ({ selected: (payload as { selected: boolean }).selected }),
+    },
+    // Deprecated: dispatched by `setup` beside `change`, for one release.
     toggle: {
       detail: (payload) => ({ selected: (payload as { selected: boolean }).selected }),
     },
   },
   form: buttonForm<IconButtonComponent>(),
   setup: (host, component) => {
-    const onToggle = (event: Event): void => {
-      const { selected } = (event as CustomEvent<{ selected: boolean }>).detail;
+    // The deprecated `toggle`, beside the `change` the element dispatches.
+    const onChange = ({ selected }: { selected: boolean }): void => {
       host.dispatchEvent(new CustomEvent("toggle", { detail: { selected }, bubbles: true, composed: true }));
     };
-    component.element.addEventListener("toggle", onToggle);
+    component.on("change", onChange);
     const cleanup = submitOnClick(host);
     return () => {
-      component.element.removeEventListener("toggle", onToggle);
+      component.off("change", onChange);
       cleanup();
     };
   },

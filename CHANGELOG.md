@@ -21,6 +21,22 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   prefix, and inside each element's CSS module. `bun run preupgrade:check` measures the layout
   shift of every element and of a React server render, which must stay under 0.01.
 
+### Changed
+
+- **Icon button: `change` with `{ selected }`, and `toggle` deprecated (FLO-295).** A toggle
+  icon button dispatched a DOM `toggle` on its element, which shares its name with the native
+  ToggleEvent, so TypeScript typed its listeners wrongly. It now emits `change` through its
+  emitter, as a switch or checkbox reports its state; `<m-icon-button>` dispatches `change`
+  with `{ selected }`, as `<m-switch>` and `<m-checkbox>` do, and the adapters get
+  `onChange` / `@change`. Migration: `<m-icon-button>` and `createIconButton`: `toggle` →
+  `change` (`{ selected }`); `toggle` still fires, deprecated, until the next minor.
+
+- **Progress: `on()` uses the emitter, and handlers get `{ value, max }` (FLO-295).** They
+  were DOM listeners on the element, handed a `CustomEvent` with the payload in `detail`,
+  unlike every other component. Migration: `progress.on('change', (e) => e.detail.value)`
+  becomes `progress.on('change', ({ value }) => value)`. `ProgressEvents` types the two
+  events, `change` and `complete`.
+
 ### Fixed
 
 - **Select's menu class and Progress's duplicate classes (FLO-295).** Found by md3.io's docs

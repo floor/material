@@ -1,7 +1,8 @@
 // src/components/progress/api.ts - Canvas-based API
 
 import { PREFIX } from "../../core";
-import { ProgressComponent, ProgressThickness, ProgressShape } from "./types";
+import { ProgressComponent, ProgressThickness, ProgressShape, ProgressEvents, ProgressEventPayload } from "./types";
+import type { EventCallback } from "../../core/state/emitter";
 import {
   PROGRESS_CLASSES,
   PROGRESS_EVENTS,
@@ -15,6 +16,10 @@ import { addClass, removeClass } from "../../core/dom";
  */
 interface CanvasComponent {
   element: HTMLElement;
+  // The component's emitter (withEvents), which `on()` now subscribes to.
+  on?: (event: string, handler: EventCallback) => unknown;
+  off?: (event: string, handler: EventCallback) => unknown;
+  emit?: (event: string, data?: unknown) => unknown;
   canvas: HTMLCanvasElement;
   getClass: (name: string) => string;
   label?: HTMLElement;
@@ -92,9 +97,11 @@ export const withAPI =
     // Get element references
     const { element, getClass, canvas } = comp;
 
-    // Create event emitter helper
-    const emitEvent = (name: string, detail: Record<string, unknown>): void => {
-      element.dispatchEvent(new CustomEvent(name, { detail }));
+    // The emitter, as every component's: handlers get `{ value, max }`. These
+    // were DOM CustomEvents on the element, so handlers got `event.detail`
+    // (FLO-295).
+    const emitEvent = (name: string, payload: ProgressEventPayload): void => {
+      comp.emit?.(name, payload);
     };
 
     // Update progress and redraw canvas
@@ -311,12 +318,12 @@ export const withAPI =
       },
 
       // Event handling
-      on(event: string, handler: Function): ProgressComponent {
-        element.addEventListener(event, handler as EventListener);
+      on<K extends keyof ProgressEvents>(event: K, handler: ProgressEvents[K]): ProgressComponent {
+        comp.on?.(event, handler as EventCallback);
         return api;
       },
-      off(event: string, handler: Function): ProgressComponent {
-        element.removeEventListener(event, handler as EventListener);
+      off<K extends keyof ProgressEvents>(event: K, handler: ProgressEvents[K]): ProgressComponent {
+        comp.off?.(event, handler as EventCallback);
         return api;
       },
 

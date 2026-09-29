@@ -63,8 +63,8 @@ import { createBaseConfig, getElementConfig, getApiConfig } from './config';
  * });
  *
  * // Listen for toggle events
- * favoriteButton.on('toggle', (e) => {
- *   console.log('Selected:', e.detail.selected);
+ * favoriteButton.on('change', ({ selected }) => {
+ *   console.log('Selected:', selected);
  * });
  *
  * // Create different sizes
