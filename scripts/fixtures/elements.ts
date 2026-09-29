@@ -20,6 +20,9 @@ import createNavigationRail from "../../dist/components/navigation-rail/index.js
 import createDrawer from "../../dist/components/drawer/index.js";
 import createTopAppBar from "../../dist/components/top-app-bar/index.js";
 import createBottomAppBar from "../../dist/components/bottom-app-bar/index.js";
+import createList from "../../dist/components/list/index.js";
+import createCard from "../../dist/components/card/index.js";
+import createCarousel from "../../dist/components/carousel/index.js";
 
 elements.defineAll();
 const factories = {
@@ -30,6 +33,7 @@ const factories = {
   createTextfield,
   createRadios,
   createNavigationRail, createDrawer, createTopAppBar, createBottomAppBar,
+  createList, createCard, createCarousel,
 };
 Object.assign(window, { mtrl: { ...elements, ...factories }, ready: true });
 

@@ -2874,6 +2874,555 @@ try {
     check("bottom app bar: renders as the factory does with the global stylesheet");
   }
 
+  // ---------------------------------------------------------------- list
+  await fresh(
+    page,
+    `<m-list id="l" aria-label="Fruits" value="b">
+       <m-list-item value="a" supporting-text="Red" leading-icon='${ICON}'>Apple</m-list-item>
+       <m-list-item value="b" overline="Yellow">Banana</m-list-item>
+       <m-list-item value="c" trailing-text="100+" disabled>Cherry</m-list-item>
+     </m-list>
+     <m-list id="m" selection="multiple" aria-label="Multi">
+       <m-list-item value="x" selected>Ex</m-list-item><m-list-item value="y">Why</m-list-item><m-list-item value="z" selected>Zed</m-list-item>
+     </m-list>
+     <m-list id="n" selection="none" aria-label="Plain">
+       <m-list-item>One</m-list-item><m-list-item kind="divider"></m-list-item>
+       <m-list-item kind="subheader">Section</m-list-item><m-list-item>Two</m-list-item>
+     </m-list>
+     <section id="factory"></section>`
+  );
+  {
+    type List = HTMLElement & { value: string | null; values: string[]; component: unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const fruits = page.getByRole("list", { name: "Fruits" });
+    assert.equal(await fruits.count(), 1);
+    assert.equal(await fruits.getByRole("listitem").count(), 3);
+    assert.equal(await fruits.getByRole("button", { name: "Banana", pressed: true }).count(), 1);
+    assert.equal(await fruits.getByRole("button", { name: "Apple", pressed: false }).count(), 1);
+    assert.equal(await fruits.getByRole("button", { name: "Cherry" }).isDisabled(), true);
+    const anatomy = await page.evaluate(() => {
+      const root = (document.getElementById("l") as HTMLElement).shadowRoot as ShadowRoot;
+      const text = (selector: string): string | undefined => root.querySelector(selector)?.textContent ?? undefined;
+      return {
+        supporting: text('[class*="list__supporting"]'),
+        overline: text('[class*="list__overline"]'),
+        trailing: text('[class*="list__trailing--text"]'),
+        icon: !!root.querySelector('[class*="list__leading--icon"] svg'),
+      };
+    });
+    assert.deepEqual(anatomy, { supporting: "Red", overline: "Yellow", trailing: "100+", icon: true });
+    check("list: a list named by aria-label; children declare rows with their anatomy, value selects one");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      for (const type of ["activate", "change"]) {
+        document.getElementById("l")?.addEventListener(type, (e) => {
+          (w.events as unknown[]).push({ type, detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+        });
+      }
+    });
+    await fruits.getByRole("button", { name: "Apple" }).click();
+    let state = await page.evaluate(() => {
+      const l = document.getElementById("l") as List;
+      return { events: (window as unknown as Win).events, value: l.value, values: l.values, attribute: l.getAttribute("value") };
+    });
+    assert.deepEqual(state, {
+      events: [
+        { type: "activate", detail: { value: "a" }, target: "l" },
+        { type: "change", detail: { value: "a", values: ["a"] }, target: "l" },
+      ],
+      value: "a", values: ["a"], attribute: "b",
+    });
+    check("list: a click dispatches activate, then change with the moved selection; the attribute stays");
+
+    await page.keyboard.press("ArrowDown");
+    const focused = await page.evaluate(() => (document.getElementById("l")?.shadowRoot?.activeElement as HTMLElement | null)?.getAttribute("aria-labelledby"));
+    assert.ok(focused);
+    await page.evaluate(() => ((window as unknown as Win).events = []));
+    await page.keyboard.press("Space");
+    state = await page.evaluate(() => {
+      const l = document.getElementById("l") as List;
+      return { events: (window as unknown as Win).events, value: l.value, values: l.values, attribute: l.getAttribute("value") };
+    });
+    assert.deepEqual((state.events as unknown[]).at(-1), { type: "change", detail: { value: "b", values: ["b"] }, target: "l" });
+    assert.equal(await fruits.getByRole("button", { name: "Banana", pressed: true }).count(), 1);
+    check("list: an arrow key moves focus to the next row and Space selects it");
+
+    await page.evaluate(() => ((window as unknown as Win).events = []));
+    await fruits.getByRole("button", { name: "Cherry" }).click({ force: true });
+    assert.deepEqual(await page.evaluate(() => [(window as unknown as Win).events, (document.getElementById("l") as List).value]), [[], "b"]);
+    check("list: a disabled row dispatches nothing");
+
+    const silent = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      const l = document.getElementById("l") as List;
+      l.value = "a";
+      const single = l.values;
+      l.values = ["b", "a"];
+      const first = l.value;
+      l.value = null;
+      return { events: w.events, single, first, cleared: [l.value, l.values] };
+    });
+    assert.deepEqual(silent, { events: [], single: ["a"], first: "b", cleared: [null, []] });
+    check("list: setting value or values fires no event; a single list keeps the first value");
+
+    const disabled = await page.evaluate(async () => {
+      const l = document.getElementById("l") as List;
+      const before = l.component;
+      const read = (): boolean[] => [...(l.shadowRoot?.querySelectorAll("button") ?? [])].map((b) => b.disabled);
+      l.setAttribute("disabled", "");
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const on = read();
+      l.removeAttribute("disabled");
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return { on, off: read(), same: l.component === before };
+    });
+    assert.deepEqual(disabled, { on: [true, true, true], off: [false, false, true], same: true });
+    check("list: disabled disables every row in place, and its removal keeps the rows' own");
+
+    const multi = page.getByRole("list", { name: "Multi" });
+    assert.deepEqual(await page.evaluate(() => (document.getElementById("m") as List).values), ["x", "z"]);
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      document.getElementById("m")?.addEventListener("change", (e) => (w.events as unknown[]).push((e as CustomEvent).detail));
+    });
+    await multi.getByRole("button", { name: "Why" }).click();
+    await multi.getByRole("button", { name: "Ex" }).click();
+    const picked = await page.evaluate(() => ({ events: (window as unknown as Win).events, value: (document.getElementById("m") as List).value }));
+    assert.deepEqual(picked, {
+      events: [{ value: "x", values: ["x", "y", "z"] }, { value: "y", values: ["y", "z"] }],
+      value: "y",
+    });
+    check("list: selection=multiple toggles rows; items' selected are the default, values come in row order");
+
+    const plain = page.getByRole("list", { name: "Plain" });
+    assert.equal(await plain.getByRole("button").count(), 0);
+    assert.equal(await plain.getByRole("separator").count(), 1);
+    assert.equal(await plain.getByRole("listitem").count(), 2);
+    assert.equal(await plain.getByText("Section", { exact: true }).count(), 1);
+    check("list: selection=none renders rows that are not interactive, with a divider and a subheader");
+
+    const updated = await page.evaluate(async () => {
+      const l = document.getElementById("l") as List;
+      l.value = "b";
+      const before = l.component;
+      const item = document.createElement("m-list-item") as HTMLElement & { value: string; supportingText: string };
+      item.value = "d";
+      item.supportingText = "Brown";
+      item.textContent = "Date";
+      l.append(item);
+      l.querySelector('[value="a"]')?.remove();
+      const banana = l.querySelector('[value="b"]') as HTMLElement;
+      banana.textContent = "Blueberry";
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const buttons = [...(l.shadowRoot?.querySelectorAll('[role="listitem"]') ?? [])].map((row) => row.querySelector('[class*="list__headline"]')?.textContent);
+      return { same: l.component === before, buttons, value: l.value, supporting: item.getAttribute("supporting-text") };
+    });
+    assert.deepEqual(updated, { same: true, buttons: ["Blueberry", "Cherry", "Date"], value: "b", supporting: "Brown" });
+    assert.equal(await fruits.getByRole("button", { name: "Blueberry", pressed: true }).count(), 1);
+    check("list: items added, removed and changed update in place and keep the selection");
+
+    const removed = await page.evaluate(async () => {
+      const l = document.getElementById("l") as List;
+      l.querySelector('[value="b"]')?.remove();
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return l.value;
+    });
+    assert.equal(removed, null);
+    check("list: removing the selected item clears it from the selection");
+
+    await settle();
+    const renamed = await page.evaluate(() => {
+      const l = document.getElementById("l") as List;
+      const before = l.component;
+      l.setAttribute("aria-label", "Produce");
+      return l.component === before;
+    });
+    assert.equal(renamed, true);
+    assert.equal(await page.getByRole("list", { name: "Produce" }).count(), 1);
+    check("list: aria-label updates in place");
+
+    // Same look as the factory in light DOM with the full stylesheet.
+    const parity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createList({
+        ariaLabel: "Factory",
+        items: [{ id: "x", headline: "Ex" }, { id: "y", headline: "Why", supportingText: "Two" }, { id: "z", headline: "Zed" }],
+        multiSelect: true,
+        initialSelection: ["x", "z"],
+      });
+      document.getElementById("factory")?.append(factory.element);
+      const element = (document.getElementById("m") as HTMLElement & { values: string[] });
+      element.values = ["x", "z"];
+      element.querySelector('[value="y"]')?.setAttribute("supporting-text", "Two");
+      return new Promise<{ factory: string[][]; element: string[][] }>((resolve) =>
+        requestAnimationFrame(() => {
+          const look = (root: ParentNode): string[][] =>
+            [...root.querySelectorAll('[role="listitem"]')].map((row) => {
+              const style = getComputedStyle(row);
+              const headline = getComputedStyle(row.querySelector('[class*="list__headline"]') as HTMLElement);
+              return [String(row.getBoundingClientRect().height), style.backgroundColor, style.paddingLeft, headline.color, headline.fontSize, headline.lineHeight];
+            });
+          resolve({ factory: look(factory.element), element: look(element.shadowRoot as ShadowRoot) });
+        })
+      );
+    });
+    assert.equal(parity.element.length, 3);
+    assert.deepEqual(parity.element, parity.factory);
+    check("list: rows match the factory's size and colours, selected and not");
+  }
+
+  // ---------------------------------------------------------------- list defaults
+  {
+    type List = HTMLElement & { value: string | null; values: string[]; component: unknown };
+    const markup = `<m-list id="x" aria-label="Dirty"><m-list-item value="a">Alpha</m-list-item>
+      <m-list-item value="b">Beta</m-list-item><m-list-item value="c">Gamma</m-list-item></m-list>`;
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const live = (): Promise<string | null> => page.evaluate(() => (document.getElementById("x") as List).value);
+    const attribute = (value: string): Promise<string | null> =>
+      page.evaluate((v) => {
+        const x = document.getElementById("x") as List;
+        x.setAttribute("value", v);
+        return x.value;
+      }, value);
+    const selectItem = async (value: string): Promise<string | null> => {
+      await page.evaluate((v) => {
+        const x = document.getElementById("x") as HTMLElement;
+        for (const item of x.querySelectorAll("m-list-item")) item.toggleAttribute("selected", item.getAttribute("value") === v);
+      }, value);
+      await settle();
+      return live();
+    };
+
+    await fresh(page, markup);
+    assert.equal(await attribute("b"), "b");
+    assert.equal(await selectItem("c"), "b", "the value attribute wins over an item's selected in a single list");
+    await page.evaluate(() => document.getElementById("x")?.removeAttribute("value"));
+    await settle();
+    assert.equal(await selectItem("a"), "a", "a clean list follows its items' selected");
+    check("list: before any interaction, the value attribute and the items' selected move the selection");
+
+    await page.getByRole("list", { name: "Dirty" }).getByRole("button", { name: "Gamma" }).click();
+    assert.equal(await live(), "c");
+    assert.equal(await attribute("b"), "c");
+    assert.equal(await selectItem("b"), "c");
+    check("list: after a user interaction, neither the value attribute nor an item's selected moves it");
+
+    await fresh(page, markup);
+    await page.evaluate(() => ((document.getElementById("x") as List).values = ["b"]));
+    assert.equal(await attribute("c"), "b");
+    assert.equal(await selectItem("a"), "b");
+    check("list: after a values set, the defaults do not move it");
+
+    const recreated = await page.evaluate(async () => {
+      const x = document.getElementById("x") as List;
+      const before = x.component;
+      x.setAttribute("selection", "multiple");
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return { rebuilt: x.component !== before, values: x.values };
+    });
+    assert.deepEqual(recreated, { rebuilt: true, values: ["b"] });
+    check("list: selection recreates the list and keeps a dirty selection");
+  }
+
+  // ---------------------------------------------------------------- card
+  await fresh(
+    page,
+    `<section id="a"><m-card id="c" variant="outlined" headline="Fallback">
+       <span slot="headline">Trip to Lisbon</span><span slot="subhead">Three days</span>
+       <p>Walks and trams.</p><button slot="actions">Book</button>
+     </m-card>
+     <m-card id="k" clickable headline="Open me">Body</m-card></section>
+     <section id="factory"></section>`
+  );
+  {
+    type Card = HTMLElement & { component: unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    const regions = (id: string): Promise<Record<string, string | number>> =>
+      page.evaluate((cardId) => {
+        const root = (document.getElementById(cardId) as HTMLElement).shadowRoot as ShadowRoot;
+        const card = root.firstElementChild as HTMLElement;
+        const assigned = (name: string): number =>
+          (root.querySelector(name ? `slot[name="${name}"]` : "slot:not([name])") as HTMLSlotElement | null)?.assignedElements().length ?? -1;
+        return {
+          regions: [...card.children].map((child) => child.className.replace(/^.*card__(\w[\w-]*).*$/, "$1")).join(" "),
+          headline: assigned("headline"), subhead: assigned("subhead"), content: assigned(""), actions: assigned("actions"),
+          outlined: card.className.includes("card--outlined") ? 1 : 0,
+        };
+      }, id);
+    assert.deepEqual(await regions("c"), { regions: "header content actions", headline: 1, subhead: 1, content: 1, actions: 1, outlined: 1 });
+    assert.equal(await page.getByRole("region", { name: "Trip to Lisbon" }).count(), 1);
+    assert.equal(await page.locator("#c").getByRole("group").count(), 1, "the actions row is a group");
+    assert.equal(await page.getByRole("button", { name: "Book" }).count(), 1);
+    check("card: children fill the header, content and actions slots; the headline names the card");
+
+    const clickable = page.getByRole("button", { name: "Open me" });
+    assert.equal(await clickable.count(), 1);
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      document.getElementById("k")?.addEventListener("click", (e) => (w.events as unknown[]).push((e.target as Element).id));
+    });
+    await clickable.click();
+    await clickable.focus();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Space");
+    assert.deepEqual(await page.evaluate(() => (window as unknown as Win).events), ["k", "k", "k"]);
+    check("card: clickable is a button named by its headline; a click, Enter and Space each click the host once");
+
+    const disabled = await page.evaluate(() => {
+      const k = document.getElementById("k") as Card;
+      k.setAttribute("disabled", "");
+      const card = k.shadowRoot?.firstElementChild as HTMLElement;
+      return { aria: card.getAttribute("aria-disabled"), tabindex: card.getAttribute("tabindex"), opacity: getComputedStyle(card).opacity };
+    });
+    assert.deepEqual(disabled, { aria: "true", tabindex: null, opacity: "0.38" });
+    await page.evaluate(() => ((window as unknown as Win).events = []));
+    await page.locator("#k").click({ force: true });
+    assert.deepEqual(await page.evaluate(() => (window as unknown as Win).events), []);
+    await page.evaluate(() => document.getElementById("k")?.removeAttribute("disabled"));
+    assert.equal(await page.evaluate(() => document.getElementById("k")?.shadowRoot?.firstElementChild?.getAttribute("tabindex")), "0");
+    check("card: disabled dims the card, takes it out of the tab order and stops clicks");
+
+    const changed = await page.evaluate(async () => {
+      const c = document.getElementById("c") as Card;
+      const before = c.component;
+      (c.querySelector('[slot="headline"]') as HTMLElement).textContent = "Trip to Porto";
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return c.component === before;
+    });
+    assert.equal(changed, true);
+    assert.equal(await page.getByRole("region", { name: "Trip to Porto" }).count(), 1);
+    check("card: a change inside a region is the slot's, with no recreation");
+
+    const regrown = await page.evaluate(async () => {
+      const c = document.getElementById("c") as Card;
+      const before = c.component;
+      c.querySelector('[slot="actions"]')?.remove();
+      const media = document.createElement("div");
+      media.slot = "media";
+      media.textContent = "Photo";
+      c.prepend(media);
+      const avatar = document.createElement("span");
+      avatar.slot = "avatar";
+      avatar.textContent = "AL";
+      c.append(avatar);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return c.component !== before;
+    });
+    assert.equal(regrown, true);
+    assert.deepEqual(await regions("c"), { regions: "media header content", headline: 1, subhead: 1, content: 1, actions: -1, outlined: 1 });
+    assert.equal(await page.evaluate(() => !!document.getElementById("c")?.shadowRoot?.querySelector('[class*="card__header-avatar"] slot[name="avatar"]')), true);
+    check("card: a region added or emptied recreates the card with the regions it now has");
+
+    await page.evaluate(() => document.getElementById("c")?.setAttribute("aria-label", "Holiday"));
+    assert.equal(await page.getByRole("region", { name: "Holiday" }).count(), 1);
+    await page.evaluate(() => document.getElementById("c")?.removeAttribute("aria-label"));
+    assert.equal(await page.getByRole("region", { name: "Trip to Porto" }).count(), 1);
+    check("card: aria-label replaces the headline's name in place, and its removal gives it back");
+
+    await page.evaluate(() => document.getElementById("k")?.setAttribute("headline", "Open this"));
+    await settle();
+    assert.equal(await page.getByRole("button", { name: "Open this" }).count(), 1);
+    check("card: the headline attribute is the slot's fallback text");
+
+    // Same look as the factory in light DOM with the full stylesheet.
+    const parity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createCard: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createCard({ variant: "outlined", header: { title: "Trip to Porto", subtitle: "Three days" }, content: { text: "Walks and trams." } });
+      document.getElementById("factory")?.append(factory.element);
+      const element = document.getElementById("c") as HTMLElement;
+      element.querySelector('[slot="media"]')?.remove();
+      element.querySelector('[slot="avatar"]')?.remove();
+      return new Promise<{ factory: string[]; element: string[] }>((resolve) =>
+        requestAnimationFrame(() => {
+          const look = (card: HTMLElement): string[] => {
+            const style = getComputedStyle(card);
+            const title = getComputedStyle(card.querySelector('[class*="card__header-title"]') as HTMLElement);
+            const content = getComputedStyle(card.querySelector('[class*="card__content"]') as HTMLElement);
+            return [
+              String(card.getBoundingClientRect().width), style.backgroundColor, style.borderTopColor, style.borderRadius,
+              title.color, title.fontSize, content.paddingLeft, content.paddingTop,
+            ];
+          };
+          resolve({ factory: look(factory.element), element: look(element.shadowRoot?.firstElementChild as HTMLElement) });
+        })
+      );
+    });
+    assert.deepEqual(parity.element, parity.factory);
+    check("card: matches the factory's size, colours, shape and padding");
+  }
+
+  // ---------------------------------------------------------------- carousel
+  // The carousel fills its container's height, as the factory's does: the page sizes it.
+  await page.addStyleTag({ content: ".tall{height:240px}.tall>m-carousel{height:100%}" });
+  const slide = (value: string, label: string): string =>
+    `<m-carousel-item value="${value}" src="/photo-${value}" alt="Photo ${label}" description="About ${label}">${label}</m-carousel-item>`;
+  await fresh(
+    page,
+    `<section id="a" class="tall"><m-carousel id="r" aria-label="Photos" index="1" item-width="200">
+       ${[["a", "Alpha"], ["b", "Beta"], ["c", "Gamma"], ["d", "Delta"], ["e", "Epsilon"]].map(([v, l]) => slide(v, l)).join("")}
+     </m-carousel></section><section id="factory" class="tall"></section>`
+  );
+  {
+    type Carousel = HTMLElement & { index: number; component: unknown };
+    const settle = (): Promise<unknown> =>
+      page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))));
+    await settle();
+    const photos = page.getByRole("region", { name: "Photos" });
+    assert.equal(await photos.count(), 1);
+    assert.equal(await photos.getAttribute("aria-roledescription"), "carousel");
+    assert.equal(await photos.getByRole("group").count(), 5);
+    assert.equal(await photos.getByRole("group", { name: "2 of 5" }).getByText("Beta", { exact: true }).count(), 1);
+    assert.equal(await photos.getByRole("img", { name: "Photo Beta" }).count(), 1);
+    assert.equal(await page.evaluate(() => (document.getElementById("r") as Carousel).index), 1);
+    check("carousel: a region named by aria-label; children declare the items, index sets the current one");
+
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      document.getElementById("r")?.addEventListener("change", (e) => {
+        (w.events as unknown[]).push({ detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+      });
+    });
+    await photos.getByRole("group", { name: "2 of 5" }).focus();
+    await page.keyboard.press("ArrowRight");
+    let state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
+    assert.deepEqual(state, { events: [{ detail: { index: 2 }, target: "r" }], index: 2 });
+    check("carousel: an arrow key moves to the next item and dispatches change");
+
+    await page.evaluate(() => ((window as unknown as Win).events = []));
+    await photos.getByRole("group", { name: "4 of 5" }).click();
+    state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
+    assert.deepEqual(state, { events: [{ detail: { index: 3 }, target: "r" }], index: 3 });
+    check("carousel: a click on an item makes it current and dispatches change");
+
+    state = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      const r = document.getElementById("r") as Carousel;
+      r.index = 1;
+      return { events: w.events, index: r.index };
+    });
+    assert.deepEqual(state, { events: [], index: 1 });
+    check("carousel: setting index fires no event");
+
+    const updated = await page.evaluate(async () => {
+      const r = document.getElementById("r") as Carousel;
+      const before = r.component;
+      const item = document.createElement("m-carousel-item") as HTMLElement & { value: string; description: string };
+      item.value = "f";
+      item.description = "About Zeta";
+      item.textContent = "Zeta";
+      r.append(item);
+      r.querySelector('[value="b"]')?.remove();
+      (r.querySelector('[value="c"]') as HTMLElement).setAttribute("label", "Gamma ray");
+      r.prepend(r.querySelector('[value="e"]') as HTMLElement);
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      const items = [...(r.shadowRoot?.querySelectorAll('[role="group"]') ?? [])] as HTMLElement[];
+      return {
+        same: r.component === before,
+        titles: items.map((el) => el.querySelector('[class*="carousel__title"]')?.textContent),
+        labels: items.map((el) => el.getAttribute("aria-label")),
+      };
+    });
+    assert.deepEqual(updated, {
+      same: true,
+      titles: ["Epsilon", "Alpha", "Gamma ray", "Delta", "Zeta"],
+      labels: ["1 of 5", "2 of 5", "3 of 5", "4 of 5", "5 of 5"],
+    });
+    check("carousel: items added, removed, moved and changed update in place");
+
+    const renamed = await page.evaluate(() => {
+      const r = document.getElementById("r") as Carousel;
+      const before = r.component;
+      r.setAttribute("aria-label", "Pictures");
+      return r.component === before;
+    });
+    assert.equal(renamed, true);
+    assert.equal(await page.getByRole("region", { name: "Pictures" }).count(), 1);
+    check("carousel: aria-label updates in place");
+
+    const relaid = await page.evaluate(async () => {
+      const r = document.getElementById("r") as Carousel;
+      const before = r.component;
+      r.setAttribute("variant", "hero");
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      return { rebuilt: r.component !== before, hero: r.shadowRoot?.firstElementChild?.className.includes("carousel--hero"), index: r.index };
+    });
+    assert.deepEqual(relaid, { rebuilt: true, hero: true, index: 1 });
+    check("carousel: variant recreates the carousel and keeps a dirty index");
+
+    // Same layout as the factory in light DOM with the full stylesheet.
+    await fresh(
+      page,
+      `<section id="a" class="tall"><m-carousel id="r" aria-label="Photos" item-width="200">
+         ${[["a", "Alpha"], ["b", "Beta"], ["c", "Gamma"], ["d", "Delta"], ["e", "Epsilon"]].map(([v, l]) => slide(v, l)).join("")}
+       </m-carousel></section><section id="factory" class="tall"></section>`
+    );
+    await settle();
+    const parity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createCarousel: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createCarousel({
+        ariaLabel: "Factory",
+        itemWidth: 200,
+        slides: ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"].map((title, i) => ({
+          image: `/photo-${"abcde"[i]}`, alt: `Photo ${title}`, title, description: `About ${title}`,
+        })),
+      });
+      document.getElementById("factory")?.append(factory.element);
+      return new Promise<{ factory: string[][]; element: string[][] }>((resolve) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            const look = (root: ParentNode): string[][] =>
+              [...root.querySelectorAll('[role="group"]')].map((item) => {
+                const style = getComputedStyle(item);
+                const title = getComputedStyle(item.querySelector('[class*="carousel__title"]') as HTMLElement);
+                return [style.width, style.clipPath, style.transform, title.color, title.fontSize];
+              });
+            resolve({ factory: look(factory.element), element: look(document.getElementById("r")?.shadowRoot as ShadowRoot) });
+          })
+        )
+      );
+    });
+    assert.equal(parity.element.length, 5);
+    assert.deepEqual(parity.element, parity.factory);
+    check("carousel: items match the factory's sizes, masks, positions and colours");
+  }
+
+  // ---------------------------------------------------------------- carousel defaults
+  {
+    type Carousel = HTMLElement & { index: number };
+    const markup = `<section class="tall"><m-carousel id="x" aria-label="Dirty" item-width="200">
+      ${[["a", "Alpha"], ["b", "Beta"], ["c", "Gamma"], ["d", "Delta"]].map(([v, l]) => slide(v, l)).join("")}</m-carousel></section>`;
+    const live = (): Promise<number> => page.evaluate(() => (document.getElementById("x") as Carousel).index);
+    const attribute = (value: number): Promise<number> =>
+      page.evaluate((v) => {
+        const x = document.getElementById("x") as Carousel;
+        x.setAttribute("index", String(v));
+        return x.index;
+      }, value);
+
+    await fresh(page, markup);
+    assert.equal(await live(), 0);
+    assert.equal(await attribute(2), 2);
+    check("carousel: before any interaction, the index attribute moves the current item");
+
+    await page.getByRole("group", { name: "3 of 4" }).focus();
+    await page.keyboard.press("ArrowLeft");
+    assert.equal(await live(), 1);
+    assert.equal(await attribute(3), 1);
+    check("carousel: after a user interaction, the index attribute does not move it");
+
+    await fresh(page, markup);
+    await page.evaluate(() => ((document.getElementById("x") as Carousel).index = 1));
+    assert.equal(await attribute(3), 1);
+    check("carousel: after a property set, the index attribute does not move it");
+  }
+
   // ---------------------------------------------------------------- model attributes are defaults
   // The native rule (dirty checkedness and value flags): the model's attribute
   // moves the live state until the user or script changes it; form.reset()

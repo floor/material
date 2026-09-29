@@ -2,7 +2,8 @@
 // browser, with React 18 and with React 19. Built against dist/react.
 import * as React from "react";
 import {
-  Button, Checkbox, NavigationRail, NavigationRailItem, Progress, Radio, Radios, Slider, Switch, Tab, Tabs, Textfield,
+  Button, Checkbox, List, ListItem, NavigationRail, NavigationRailItem, Progress, Radio, Radios, Slider, Switch, Tab, Tabs,
+  Textfield,
 } from "../../dist/react/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 import { Chip, Chips } from "../../dist/react/index.js";
@@ -36,6 +37,7 @@ export const App = (): React.ReactElement => {
   const [order, setOrder] = React.useState(["a", "b"]);
   const [show, setShow] = React.useState(true);
   const [progress, setProgress] = React.useState(30);
+  const [fruit, setFruit] = React.useState<string | null>("b");
   const switchRef = React.useRef<SwitchElement | null>(null);
   const api = React.useRef<Api | null>(null);
 
@@ -98,12 +100,21 @@ export const App = (): React.ReactElement => {
       h(NavigationRailItem, { value: "starred", icon: ICON }, "Starred")
     ),
     h("output", { id: "destination" }, destination),
+    h(
       Chips,
       { id: "ck", ariaLabel: "Diet", value: diet, onChange: (e) => setDiet(e.detail.value) },
       h(Chip, { value: "veg" }, "Vegetarian"),
       h(Chip, { value: "gf" }, "Gluten free")
     ),
     h("output", { id: "diet" }, String(diet)),
+    h(
+      List,
+      { id: "li", value: fruit, ariaLabel: "Fruits", onChange: (e) => setFruit(e.detail.value) },
+      h(ListItem, { value: "a" }, "Apple"),
+      h(ListItem, { value: "b" }, "Banana"),
+      h(ListItem, { value: "c" }, "Cherry")
+    ),
+    h("output", { id: "fruit" }, fruit),
     ...order.map((key) => h(Switch, { key, id: `o${key}` }, `Order ${key}`)),
     show ? h(Switch, { id: "gone" }, "Gone") : null,
     // Mounted in the browser after the element is defined: React 19 then

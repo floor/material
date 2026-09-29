@@ -195,6 +195,13 @@ const run = async (version: 18 | 19): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("destination")?.textContent === "sent");
     assert.equal(await rail.getByRole("button", { name: "Sent", exact: true }).getAttribute("aria-current"), "page");
     check("navigation rail: controlled value and onChange");
+    // ------------------------------------------------------------- list
+    const fruits = page.getByRole("list", { name: "Fruits" });
+    assert.equal(await fruits.getByRole("button", { name: "Banana", pressed: true }).count(), 1);
+    await fruits.getByRole("button", { name: "Cherry" }).click();
+    await page.waitForFunction(() => document.getElementById("fruit")?.textContent === "c");
+    assert.equal(await fruits.getByRole("button", { name: "Cherry", pressed: true }).count(), 1);
+    check("list: a click on an item updates the controlled value through onChange");
 
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);

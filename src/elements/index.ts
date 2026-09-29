@@ -31,6 +31,9 @@ import { topAppBarElement, defineTopAppBar } from "./top-app-bar";
 import { bottomAppBarElement, defineBottomAppBar } from "./bottom-app-bar";
 import { buttonGroupElement, buttonGroupItemDeclaration, defineButtonGroup } from "./button-group";
 import { chipsElement, chipDeclaration, defineChips } from "./chips";
+import { listElement, listItemDeclaration, defineList } from "./list";
+import { cardElement, defineCard } from "./card";
+import { carouselElement, carouselItemDeclaration, defineCarousel } from "./carousel";
 
 export { defineElement, DEFAULT_PREFIX, SHADOW_BASE_STYLES } from "./define";
 export type {
@@ -85,6 +88,12 @@ export { buttonGroupElement, buttonGroupItemDeclaration, defineButtonGroup } fro
 export type { ButtonGroupSpec, ButtonGroupElement, ButtonGroupItemAttributes, ButtonGroupValue } from "./button-group";
 export { chipsElement, chipDeclaration, defineChips } from "./chips";
 export type { ChipsSpec, ChipsElement, ChipAttributes, ChipsValue } from "./chips";
+export { listElement, listItemDeclaration, defineList } from "./list";
+export type { ListSpec, ListElement, ListItemAttributes } from "./list";
+export { cardElement, defineCard } from "./card";
+export type { CardSpec, CardElement } from "./card";
+export { carouselElement, carouselItemDeclaration, defineCarousel } from "./carousel";
+export type { CarouselSpec, CarouselElement, CarouselItemAttributes } from "./carousel";
 
 /**
  * Every element, by name. Framework adapters are generated from this list and
@@ -111,6 +120,9 @@ export const elements = {
   bottomAppBar: bottomAppBarElement,
   buttonGroup: buttonGroupElement,
   chips: chipsElement,
+  list: listElement,
+  card: cardElement,
+  carousel: carouselElement,
 } as const;
 
 /** Declaration children, which render nothing and are read by their parent. */
@@ -121,6 +133,8 @@ export const declarations = {
   drawerItem: drawerItemDeclaration,
   buttonGroupItem: buttonGroupItemDeclaration,
   chip: chipDeclaration,
+  listItem: listItemDeclaration,
+  carouselItem: carouselItemDeclaration,
 } as const;
 
 /** Registers every element. */
@@ -145,4 +159,7 @@ export const defineAll = (options?: DefineOptions): void => {
   defineBottomAppBar(options);
   defineButtonGroup(options);
   defineChips(options);
+  defineList(options);
+  defineCard(options);
+  defineCarousel(options);
 };

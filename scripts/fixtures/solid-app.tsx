@@ -3,7 +3,8 @@
 // compiles it. Built against dist/solid.
 import { createSignal, For, onMount, Show } from "solid-js";
 import {
-  Button, Checkbox, NavigationRail, NavigationRailItem, Progress, Radio, Radios, Slider, Switch, Tab, Tabs, Textfield,
+  Button, Checkbox, List, ListItem, NavigationRail, NavigationRailItem, Progress, Radio, Radios, Slider, Switch, Tab, Tabs,
+  Textfield,
 } from "../../dist/solid/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 import { Chip, Chips } from "../../dist/solid/index.js";
@@ -25,6 +26,7 @@ export const App = () => {
   const [order, setOrder] = createSignal(["a", "b"]);
   const [show, setShow] = createSignal(true);
   const [progress, setProgress] = createSignal(30);
+  const [fruit, setFruit] = createSignal<string | null>("b");
   let switchRef: SwitchElement | undefined;
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
 
@@ -76,6 +78,12 @@ export const App = () => {
         <Chip value="gf">Gluten free</Chip>
       </Chips>
       <output id="diet">{String(diet())}</output>
+      <List id="li" ariaLabel="Fruits" value={fruit()} onChange={(e) => setFruit(e.detail.value)}>
+        <ListItem value="a">Apple</ListItem>
+        <ListItem value="b">Banana</ListItem>
+        <ListItem value="c">Cherry</ListItem>
+      </List>
+      <output id="fruit">{String(fruit())}</output>
       <For each={order()}>{(key) => <Switch id={`o${key}`}>Order {key}</Switch>}</For>
       <Show when={show()}><Switch id="gone">Gone</Switch></Show>
       {/* Mounted in the browser after the element is defined: Solid writes a
