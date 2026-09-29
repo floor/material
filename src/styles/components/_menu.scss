@@ -40,6 +40,15 @@ $component: "#{$prefix}-menu";
         transform v.motion("duration-medium1") v.motion("easing-emphasized"),
         opacity v.motion("duration-medium1") v.motion("easing-emphasized");
 
+    // A top-layer menu is a popover (`layer: "top"`). The browser's popover
+    // defaults centre it in the viewport inside a border; the menu places
+    // itself, so they are cleared.
+    &[popover] {
+        inset: auto;
+        margin: 0;
+        border: 0;
+    }
+
     // Visible state
     &--visible {
         opacity: 1;

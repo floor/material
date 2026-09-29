@@ -260,6 +260,19 @@ export interface MenuConfig {
   container?: HTMLElement | null;
 
   /**
+   * `"top"` renders the menu in place, next to its opener, and shows it in the
+   * browser's top layer as a `popover="manual"` element: above every z-index,
+   * outside any clipping ancestor, and still inside the opener's shadow root,
+   * so it keeps that root's styles. `container` is then not used. The menu
+   * positions itself in viewport coordinates and keeps its own dismissal.
+   * Submenus open in the top layer too.
+   *
+   * Where the browser has no popover support, the menu behaves as without it.
+   * Unset, the menu is appended to `container` or `document.body`.
+   */
+  layer?: "top";
+
+  /**
    * When true, the opener is used only for positioning.
    * No click, blur, or keyboard handlers are attached to the opener element.
    * The consumer is responsible for calling open() / close() manually.

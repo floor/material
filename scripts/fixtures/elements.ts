@@ -54,3 +54,8 @@ import createSnackbar from "../../dist/components/snackbar/index.js";
 Object.assign((window as unknown as { mtrl: object }).mtrl, {
   createMenu, createSelect, createDialog, createBottomSheet, createSideSheet, createSearch, createSnackbar,
 });
+
+// The top-layer menu checks adopt the menu's CSS into a plain shadow root
+// the way the elements do.
+import { registerStyles, applyStyles } from "../../dist/elements/styles.js";
+Object.assign((window as unknown as { mtrl: object }).mtrl, { registerStyles, applyStyles });

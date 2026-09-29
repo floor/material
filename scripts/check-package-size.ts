@@ -162,9 +162,9 @@ try {
     // (dist/styles.css at gzip level 9, 45,306 to 45,363); the fixture read 49,323.
     // The outlined text field's notched outline (#234): +202, the fixture read 50,865 to
     // 51,067. The time picker's DOM dial (FLO-279): measured 51,497 with both in. Its
-    // hour and minute radios (FLO-283): measured 51,628. Its disabled dial numbers and
-    // AM/PM (FLO-281), with the M3 variants (FLO-280): measured 51,664.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 51700 },
+    // hour and minute radios (FLO-283): measured 51,628. The menu's top-layer rule
+    // (#251), with main at 312ca0e and the time picker tokens: measured 51,667.
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 51770 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);

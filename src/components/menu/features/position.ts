@@ -28,20 +28,28 @@ export const createPositioner = (
   ): void => {
     if (!menuElement || !openerElement) return;
 
+    // In the top layer the menu is fixed to the viewport: its coordinates are
+    // the opener's client rect, with no scroll and no container offset
+    const topLayer = config.layer === "top";
+    const position = topLayer ? "fixed" : "absolute";
+
     // Check if menu is inside a container (not document.body)
-    const hasContainer = config.container && config.container !== document.body;
+    const hasContainer =
+      !topLayer && config.container && config.container !== document.body;
 
     // Ensure menu is positioned absolutely for proper scroll behavior
-    menuElement.style.position = "absolute";
+    menuElement.style.position = position;
 
     // Get current scroll position - critical for absolute positioning that tracks opener
     // When inside a container, we position relative to the container, not the viewport
-    const scrollX = hasContainer
-      ? 0
-      : window.pageXOffset || document.documentElement.scrollLeft;
-    const scrollY = hasContainer
-      ? 0
-      : window.pageYOffset || document.documentElement.scrollTop;
+    const scrollX =
+      hasContainer || topLayer
+        ? 0
+        : window.pageXOffset || document.documentElement.scrollLeft;
+    const scrollY =
+      hasContainer || topLayer
+        ? 0
+        : window.pageYOffset || document.documentElement.scrollTop;
 
     // Get opener measurements first (needed for width calculation)
     const openerRect = openerElement.getBoundingClientRect();
@@ -52,7 +60,7 @@ export const createPositioner = (
     // Make the temp menu visible but not displayed for measurement
     tempMenu.style.visibility = "hidden";
     tempMenu.style.display = "block";
-    tempMenu.style.position = "absolute";
+    tempMenu.style.position = position;
     tempMenu.style.top = "0";
     tempMenu.style.left = "0";
     tempMenu.style.transform = "none";
@@ -70,8 +78,11 @@ export const createPositioner = (
       tempMenu.style.width = `${openerRect.width}px`;
     }
 
-    // Add it to the DOM temporarily (use container if available for accurate measurement)
-    const measureContainer = config.container || document.body;
+    // Add it to the DOM temporarily (use container if available for accurate measurement).
+    // A top-layer menu is measured where it is, in its own tree, whose styles
+    // may be a shadow root's.
+    const measureContainer =
+      (topLayer && menuElement.parentNode) || config.container || document.body;
     measureContainer.appendChild(tempMenu);
 
     // Get measurements
