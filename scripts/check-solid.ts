@@ -88,6 +88,8 @@ const run = async (): Promise<void> => {
   assert.match(tag("dg"), /^<m-dialog /);
   assert.doesNotMatch(tag("dg"), /\sopen/);
   assert.match(tag("dt"), /value="2026-09-10"/);
+  assert.match(html, /<m-search [^>]*value="ap"[^>]*>.*?<m-search-suggestion [^>]*value="apple"[^>]*>(<!---->)?Apple<.*?<m-search-suggestion [^>]*value="apricot"[^>]*>(<!---->)?Apricot</s);
+  assert.doesNotMatch(html, /<m-search-suggestion [^>]*value="banana"/);
   check("renders on a server without a DOM, attributes in the markup");
 
   const client = await bundle("scripts/fixtures/solid-client.tsx", "browser");
@@ -244,6 +246,19 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("due")?.textContent === "2026-09-14");
     assert.equal(await page.locator("#dt input").first().inputValue(), "09/14/2026");
     check("datepicker: choosing a date and confirming updates the controlled value");
+
+    // ------------------------------------------------------------- search
+    const query = page.getByRole("combobox", { name: "Query", exact: true });
+    assert.equal(await query.inputValue(), "ap");
+    await query.click();
+    await page.keyboard.type("r");
+    await page.waitForFunction(() => document.getElementById("query")?.textContent === "apr");
+    // The app filters its suggestions by the query: the element redraws them in place
+    await page.waitForFunction(() => document.getElementById("sq")?.shadowRoot?.querySelectorAll('[role="option"]').length === 1);
+    await page.getByRole("option", { name: "Apricot", exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("query")?.textContent === "apricot");
+    assert.equal(await query.inputValue(), "apricot");
+    check("search: typing updates the controlled value, the suggestions follow it, and choosing one updates it");
 
     // ------------------------------------------------------------- tabs
     assert.equal(await page.getByRole("tab", { name: "Trips", exact: true, selected: true }).count(), 1);

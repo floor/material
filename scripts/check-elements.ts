@@ -6163,6 +6163,9 @@ try {
   }
   // ---------------------------------------------------------------- date and time pickers
   await checkPickers({ page, browser, js, fresh, check });
+  // ---------------------------------------------------------------- <m-search>
+  const { checkSearch } = await import("./check-elements-search");
+  await checkSearch({ browser, page, origin: `http://127.0.0.1:${server.port}`, check, fresh });
 
   // ---------------------------------------------------------------- theme
   await fresh(page, `<m-switch id="s" checked>Theme</m-switch><section id="factory"></section>`);
