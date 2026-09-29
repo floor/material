@@ -52,6 +52,10 @@ export const createBaseConfig = (
     "time-picker"
   ) as ResolvedTimePickerConfig;
 
+/** Whether an event started inside the picker's dialog. */
+const inDialog = (event: Event, prefix: string): boolean =>
+  event.target instanceof Element && event.target.closest(`.${prefix}-time-picker__dialog`) !== null;
+
 /**
  * Generates element configuration for the TimePicker container
  * @param {TimePickerConfig} config - TimePicker configuration
@@ -65,9 +69,11 @@ export const getContainerConfig = (config: ResolvedTimePickerConfig) => {
       config.class,
       config.isOpen ? `${config.prefix}-time-picker--open` : "",
     ],
+    // The root's own events, not the dialog's, which now sits inside the root
+    // (FLO-288) and has its own actions.
     forwardEvents: {
-      click: true,
-      keydown: true,
+      click: (_component, event) => !inDialog(event, config.prefix),
+      keydown: (_component, event) => !inDialog(event, config.prefix),
     },
     interactive: true,
   });
