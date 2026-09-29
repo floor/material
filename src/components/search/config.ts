@@ -9,11 +9,13 @@ import {
   SearchSuggestion,
   SearchState,
   SearchViewMode,
+  SearchVariant,
 } from "./types";
 import type { EventCallback } from "../../core/state/emitter";
 import {
   SEARCH_STATES,
   SEARCH_VIEW_MODES,
+  SEARCH_VARIANTS,
   SEARCH_DEFAULTS,
   SEARCH_MEASUREMENTS,
 } from "./constants";
@@ -26,6 +28,7 @@ export const defaultConfig: SearchConfig = {
   // State
   initialState: SEARCH_STATES.BAR,
   viewMode: SEARCH_VIEW_MODES.DOCKED,
+  variant: SEARCH_VARIANTS.CONTAINED,
   disabled: SEARCH_DEFAULTS.DISABLED,
 
   // Content
@@ -97,6 +100,8 @@ interface InternalComponent {
     isExpanded?: () => boolean;
     setViewMode?: (mode: SearchViewMode) => void;
     getViewMode?: () => SearchViewMode;
+    setVariant?: (variant: SearchVariant) => void;
+    getVariant?: () => SearchVariant;
   };
   disabled?: {
     enable?: () => void;
@@ -146,6 +151,8 @@ export const getApiConfig = (comp: InternalComponent) => ({
     setViewMode: (m: SearchViewMode) => comp.states?.setViewMode?.(m),
     getViewMode: () =>
       comp.states?.getViewMode?.() ?? ("docked" as SearchViewMode),
+    setVariant: (variant: SearchVariant) => comp.states?.setVariant?.(variant),
+    getVariant: () => comp.states?.getVariant?.() ?? ("contained" as SearchVariant),
   },
 
   // Disabled state

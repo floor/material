@@ -62,6 +62,11 @@ export const withStructure =
         ? SEARCH_CLASSES.VIEW_FULLSCREEN
         : SEARCH_CLASSES.VIEW_DOCKED,
     ),
+    getClass(
+      config.variant === "divided"
+        ? SEARCH_CLASSES.VARIANT_DIVIDED
+        : SEARCH_CLASSES.VARIANT_CONTAINED,
+    ),
   ];
 
   if (config.fullWidth) {
