@@ -102,8 +102,8 @@ $component: '#{base.$prefix}-radios';
     height: 48px;
     color: t.color('on-surface');
 
-    // Typography for label
-    @include m.typography('body-medium');
+    // Body Large, as the checkbox and switch labels: a list item's headline.
+    @include m.typography('body-large');
 
     // The text already comes first in the DOM (radio.ts); reversing the row put it
     // back after the control.
@@ -192,6 +192,5 @@ $component: '#{base.$prefix}-radios';
   // margin-left, 0px in right-to-left layouts). FLO-266.
   &__text {
     margin-inline-start: 8px;
-    line-height: 1.2;
   }
 }

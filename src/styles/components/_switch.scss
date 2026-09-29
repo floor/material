@@ -43,9 +43,9 @@ $component: '#{base.$prefix}-switch';
   }
 
   // Label
+  // Body Large, as the checkbox and radio labels: a list item's headline.
   &__label {
-    @include m.typography('title-medium');
-    font-size: 18px;
+    @include m.typography('body-large');
     color: t.color('on-surface');
   }
 

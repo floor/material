@@ -213,8 +213,27 @@ async function checkRadios(page: Page): Promise<number> {
   return checks;
 }
 
+/** The three selection controls label their options in the same type: Body Large, a list item's headline. */
+async function checkLabelType(page: Page): Promise<number> {
+  await page.evaluate(() => {
+    const state = window as unknown as ControlsWindow;
+    const host = document.createElement("div");
+    state.controlsHost = host;
+    document.body.append(host);
+    const { createSwitch, createCheckbox, createRadios } = state.inputs;
+    host.append(createSwitch({ label: "Wi-Fi" }).element, createCheckbox({ label: "Remember me" }).element, createRadios({ name: "type", options: [{ value: "a", label: "Option" }] }).element);
+  });
+  const type = (selector: string) => page.locator(selector).evaluate((el) => { const c = getComputedStyle(el); return `${c.fontSize}/${c.lineHeight} ${c.fontWeight} ${c.letterSpacing}`; });
+  const bodyLarge = "16px/24px 400 0.5px";
+  assert.equal(await type(".mtrl-switch__label"), bodyLarge, "switch label: Body Large");
+  assert.equal(await type(".mtrl-checkbox__label"), bodyLarge, "checkbox label: Body Large");
+  assert.equal(await type(".mtrl-radios__text"), bodyLarge, "radio label: Body Large");
+  await page.evaluate(() => (window as unknown as ControlsWindow).controlsHost.remove());
+  return 3;
+}
+
 export async function checkControls(page: Page): Promise<void> {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  const checks = (await checkSwitch(page)) + (await checkCheckbox(page)) + (await checkRadios(page));
-  console.log(`Passed ${checks} selection-control checks: the switch handle and state layer in both directions, its icons, label side, focus layer, handle colour and ring; the checkbox box, state layers, focus ring, keys, error and disabled indeterminate; the radio ring, dot, state layers, keyboard focus and label gap.`);
+  const checks = (await checkSwitch(page)) + (await checkCheckbox(page)) + (await checkRadios(page)) + (await checkLabelType(page));
+  console.log(`Passed ${checks} selection-control checks: the switch handle and state layer in both directions, its icons, label side, focus layer, handle colour and ring; the checkbox box, state layers, focus ring, keys, error and disabled indeterminate; the radio ring, dot, state layers, keyboard focus and label gap; and one label type, Body Large, for all three.`);
 }
