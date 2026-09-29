@@ -1,6 +1,14 @@
-# Runs on every push and pull request. Without it a version tag publishes
-# whatever is on that commit having run nothing: `prepublishOnly` builds, so a
-# broken build fails the release, but the tests were never run in CI at all.
+# Runs on every pull request, nightly on main, and on demand. Without it a version
+# tag publishes whatever is on that commit having run nothing: `prepublishOnly`
+# builds, so a broken build fails the release, but the tests were never run in CI.
+#
+# The work is split into parallel jobs, so a run takes as long as its slowest job
+# rather than the sum of every step. `check` waits for all of them and is the one
+# status the main ruleset requires, so the jobs can change without touching it.
+#
+# No run on pushes to main: the ruleset requires a pull request that is up to date
+# with main, so a merge commit's tree is the tree its pull request already tested.
+# The nightly run on main is the safety net.
 #
 # Benchmarks are excluded by default (test/benchmarks/bench.ts): they compare
 # elapsed time to fixed thresholds and fail on a busy runner, which would make
@@ -8,38 +16,87 @@
 name: CI
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+# A newer push to the same pull request cancels the run it replaces.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  check:
+  # Types, the strictness ratchets, lint and test-file naming, run side by side.
+  static:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.4"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
-      - name: Types
-        run: bun run ts:check
-      - name: Strict null checks (ratchet)
-        run: bun run strict:check
-      - name: No implicit any (ratchet)
-        run: bun run implicit:check
-      - name: Lint
-        run: bun run lint
-      - name: Test file naming
-        run: bun run test:naming
-      - name: Test types
-        run: bun run test:types
+      - name: Types, ratchets, lint, test naming and test types (in parallel)
+        run: |
+          pids=()
+          for script in ts:check strict:check implicit:check lint test:naming test:types; do
+            (bun run "$script" > "/tmp/$script.log" 2>&1; echo $? > "/tmp/$script.status") &
+            pids+=($!)
+          done
+          wait "${pids[@]}"
+          failed=0
+          for script in ts:check strict:check implicit:check lint test:naming test:types; do
+            status=$(cat "/tmp/$script.status")
+            echo "::group::$script (exit $status)"
+            cat "/tmp/$script.log"
+            echo "::endgroup::"
+            [ "$status" = 0 ] || { echo "::error::$script failed"; failed=1; }
+          done
+          exit $failed
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
       - name: Tests
         run: bun test
+
+  # The build, and the checks that read the built package. The browser jobs reuse
+  # its dist/ instead of building again.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
       - name: Build
         run: bun run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 1
       - name: Build and consumer tooling types
         run: bun run tooling:check
       - uses: actions/setup-node@v4
@@ -49,35 +106,59 @@ jobs:
         run: bun run classes:check
       - name: Packed imports and size budgets
         run: bun run size:check
+      - name: Per-component gzip budgets
+        run: bun run size
+
+  # The browser checks, in three groups that run side by side, on the build's dist/.
+  browser:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: elements
+            checks: elements:check
+          - group: adapters
+            checks: react:check vue:check svelte:check solid:check
+          - group: components
+            checks: consumer:check tabs:check slider:check drawer:check navigation-rail:check core:check
+    name: browser (${{ matrix.group }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install Chromium
         run: node node_modules/playwright/cli.js install --with-deps chromium
-      - name: Vite and browser regression checks
-        run: bun run consumer:check
-      - name: Tabs layout checks
-        run: bun run tabs:check
-      - name: Slider rendering and interaction checks
-        run: bun run slider:check
-      - name: Drawer rendering and accessibility checks
-        run: bun run drawer:check
-      - name: Navigation rail rendering and interaction checks
-        run: bun run navigation-rail:check
-      - name: Shared core rendering and lifecycle checks
-        run: bun run core:check
-      - name: Web component elements in a real browser
-        run: bun run elements:check
-      - name: React adapter on React 18 and 19, server rendering and hydration
-        run: bun run react:check
-      - name: Vue adapter, server rendering and hydration
-        run: bun run vue:check
-      - name: Svelte adapter, server rendering and hydration
-        run: bun run svelte:check
-      - name: Solid adapter, server rendering and hydration
-        run: bun run solid:check
+      - name: Checks (${{ matrix.checks }})
+        run: |
+          for script in ${{ matrix.checks }}; do
+            echo "::group::$script"
+            bun run "$script" || { echo "::endgroup::"; echo "::error::$script failed"; exit 1; }
+            echo "::endgroup::"
+          done
       - name: Browser comparison artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: browser-comparisons
+          name: browser-comparisons-${{ matrix.group }}
           path: |
             analysis/browser
             analysis/slider-dom
@@ -86,3 +167,15 @@ jobs:
             analysis/core
           retention-days: 7
           if-no-files-found: ignore
+
+  # The status the main ruleset requires: green only when every job above is.
+  check:
+    if: always()
+    needs: [static, tests, build, browser]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job passed
+        run: |
+          echo 'static=${{ needs.static.result }} tests=${{ needs.tests.result }} build=${{ needs.build.result }} browser=${{ needs.browser.result }}'
+          [ '${{ needs.static.result }}' = success ] && [ '${{ needs.tests.result }}' = success ] \
+            && [ '${{ needs.build.result }}' = success ] && [ '${{ needs.browser.result }}' = success ]
