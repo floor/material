@@ -124,7 +124,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   carousel: kb(10.3),
   checkbox: kb(5.5),
   chips: kb(9.1), // FLO-256..261 chips conformance; #221 pointer focus
-  datepicker: kb(11.8), // FLO-238 conformance; FLO-274 swiping; FLO-275 year list; FLO-276 full screen
+  datepicker: kb(12.1), // FLO-238 conformance; FLO-274 swiping; FLO-275 year list; FLO-276 full screen; read-only, required, one change shape (FLO-289, FLO-295): 12,332
   dialog: kb(12.7), // layer: "top", as the sheets: 12,047 to 12,870
   divider: kb(3.7),
   drawer: kb(8.1), // the modal drawer's layer: "top": 7,622 to 8,109
@@ -156,7 +156,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // split button passing the layer, and the opener's focus test across shadow roots, to 112,845; the
   // tooltip and snackbar top layer to 113,481; the modal surfaces' top layer to 113,761 (each measured
   // alone on dba5ba9); the time picker limits and steps (FLO-281): 113,297 on main; all of wave 2 together on 91e4d77: 115,162.
-  all: kb(113.8), // search in the top layer (FLO-285): 115,628; its combobox and variants (FLO-286, FLO-287): 115,909; search's trailing items and reopening (FLO-291): 116,488
+  all: kb(114.1), // search in the top layer (FLO-285): 115,628; its combobox and variants (FLO-286, FLO-287): 115,909; search's trailing items and reopening (FLO-291): 116,488; the date picker's field states and one change shape (FLO-289, FLO-295): 116,800
   // the time picker draft (FLO-288) and search widths (FLO-290): 116,200 on c3e3e18
 };
 

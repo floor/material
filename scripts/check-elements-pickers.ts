@@ -278,8 +278,8 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
       return open;
     };
     const attempts: boolean[] = [];
-    await dateTrigger().click();
-    attempts.push(await opened());
+    // The factory's read-only state disables the trigger: it cannot change the date.
+    attempts.push(!(await dateTrigger().isDisabled()));
     await page.locator("#wrap #x input").first().click();
     attempts.push(await opened());
     await page.keyboard.press("ArrowDown");
@@ -294,7 +294,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     assert.deepEqual({ attempts, ...blocked, value: after.value }, {
       attempts: [false, false, false], open: false, reflected: false, value: "2026-09-10",
     });
-    check("datepicker: readonly keeps the calendar closed, from the trigger, the field, show() and the attribute");
+    check("datepicker: readonly disables the trigger and keeps the calendar closed, from the field, show() and the attribute");
   }
 
   // Docked: beside the field, not modal, each date committed.
@@ -336,6 +336,29 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
       log: [["open", null], ["change", { value: "2026-09-14/2026-09-16" }], ["close", null]],
     });
     check("datepicker: a range is a start/end interval, in the value, the form and change");
+  }
+
+  // Range: a lone date is a one-day range, as the factory holds it (FLO-295).
+  await stage(`<form id="f"><m-datepicker id="x" name="x" variant="modal" selection-mode="range" label="Day"
+    value="2026-09-10" supporting-text="Check-in and out"></m-datepicker></form>`);
+  {
+    const lone = await page.evaluate(() => {
+      const root = document.getElementById("wrap")?.shadowRoot as ShadowRoot;
+      const host = root.getElementById("x") as HTMLElement & { value: string };
+      const form = root.getElementById("f") as HTMLFormElement;
+      const help = (): string | null | undefined => host.shadowRoot?.querySelector('[id$="-help"]')?.textContent;
+      const initial = [host.value, new FormData(form).get("x"), help()];
+      host.value = "2026-09-20";
+      const set = [host.value, new FormData(form).get("x")];
+      host.removeAttribute("supporting-text");
+      return { initial, set, format: help() };
+    });
+    assert.deepEqual(lone, {
+      initial: ["2026-09-10/2026-09-10", "2026-09-10/2026-09-10", "Check-in and out"],
+      set: ["2026-09-20/2026-09-20", "2026-09-20/2026-09-20"],
+      format: "MM/DD/YYYY",
+    });
+    check("datepicker: in range mode a lone date is a one-day range; supporting-text is the help line");
   }
 
   // Parity with the factory in light DOM: the field, then the open surface.
