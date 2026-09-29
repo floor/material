@@ -3,6 +3,7 @@
 // dist/vue.
 import { defineComponent, h, ref, onMounted, type Ref } from "vue";
 import { MButton, MCheckbox, MProgress, MRadio, MRadios, MSlider, MSwitch, MTab, MTabs, MTextfield, type Exposed } from "../../dist/vue/index.js";
+import { MList, MListItem } from "../../dist/vue/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 
 type Log = Array<{ id: string; detail: unknown }>;
@@ -29,6 +30,7 @@ export const App = defineComponent(() => {
   const order = ref(["a", "b"]);
   const show = ref(true);
   const progress = ref(30);
+  const fruit = ref<string | null>("b");
   const switchRef = ref<Exposed<SwitchElement> | null>(null);
   const api: Api = { log: [], submits: 0, model, extra, order, show, progress, switchRef };
   onMounted(() => {
@@ -78,6 +80,12 @@ export const App = defineComponent(() => {
         h(MRadio, { value: "l" }, () => "Large"),
       ]),
       h("output", { id: "size" }, String(size.value)),
+      h(MList, { id: "li", ariaLabel: "Fruits", modelValue: fruit.value, "onUpdate:modelValue": (v: string) => (fruit.value = v) }, () => [
+        h(MListItem, { value: "a" }, () => "Apple"),
+        h(MListItem, { value: "b" }, () => "Banana"),
+        h(MListItem, { value: "c" }, () => "Cherry"),
+      ]),
+      h("output", { id: "fruit" }, String(fruit.value)),
       ...order.value.map((key) => h(MSwitch, { key, id: `o${key}` }, () => `Order ${key}`)),
       show.value ? h(MSwitch, { id: "gone" }, () => "Gone") : null,
       // Mounted in the browser after the element is defined: Vue writes a key

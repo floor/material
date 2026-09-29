@@ -10,6 +10,24 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Added
+
+- **Elements: `<m-list>` with `<m-list-item>`**, and `List` and `ListItem` in the React,
+  Vue, Svelte and Solid adapters. Each item declares a row (its text or `headline`,
+  `overline`, `supporting-text`, a leading icon, avatar or image, a trailing icon or text,
+  `value`, `disabled`, `selected`), or a divider or subheader with `kind`. `selection` is
+  `single`, `multiple` or `none`; `value` is the live selection and the model, `values` all
+  of it, and a row dispatches `activate` and then `change`. Items update in place.
+- **Elements: `<m-card>`**, and `Card` in the adapters. A container whose regions are
+  slots: `media`, the header's `avatar`, `headline`, `subhead` and `header-action`, the
+  default slot for supporting content, and `actions`. `variant`, `clickable` (a button
+  named by its headline), `full-width`, `disabled` and `aria-label`.
+- **Elements: `<m-carousel>` with `<m-carousel-item>`**, and `Carousel` and `CarouselItem`
+  in the adapters. Items declare `src`, `alt`, a label, `description`, `button-text`,
+  `button-url` and `value`; the carousel takes the layout `variant` and the item sizing
+  attributes, with the current `index` as the model, `change` as it moves, and `next`,
+  `prev` and `goTo`. Items update in place.
+
 ## [0.10.0-next.2] - 2026-09-29
 
 The second prerelease of 0.10.0, on the npm `next` tag (`npm install mtrl@next`); `latest`

@@ -16,6 +16,9 @@ import createCheckbox from "../../dist/components/checkbox/index.js";
 import createSlider from "../../dist/components/slider/index.js";
 import createTextfield from "../../dist/components/textfield/index.js";
 import createRadios from "../../dist/components/radios/index.js";
+import createList from "../../dist/components/list/index.js";
+import createCard from "../../dist/components/card/index.js";
+import createCarousel from "../../dist/components/carousel/index.js";
 
 elements.defineAll();
 const factories = {
@@ -25,5 +28,6 @@ const factories = {
   createSlider,
   createTextfield,
   createRadios,
+  createList, createCard, createCarousel,
 };
 Object.assign(window, { mtrl: { ...elements, ...factories }, ready: true });

@@ -3,6 +3,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { Button, Checkbox, Progress, Radio, Radios, Slider, Switch, Tab, Tabs, Textfield } from "../../dist/svelte/index.js";
+  import { List, ListItem } from "../../dist/svelte/index.js";
 
   type Log = Array<{ id: string; detail: unknown }>;
   const log: Log = [];
@@ -17,6 +18,7 @@
   let order = $state(["a", "b"]);
   let show = $state(true);
   let progress = $state(30);
+  let fruit = $state<string | null>("b");
 
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
 
@@ -60,6 +62,12 @@
     <Radio value="l">Large</Radio>
   </Radios>
   <output id="size">{String(size)}</output>
+  <List id="li" ariaLabel="Fruits" bind:value={fruit}>
+    <ListItem value="a">Apple</ListItem>
+    <ListItem value="b">Banana</ListItem>
+    <ListItem value="c">Cherry</ListItem>
+  </List>
+  <output id="fruit">{String(fruit)}</output>
   {#each order as key (key)}<Switch id={`o${key}`}>Order {key}</Switch>{/each}
   {#if show}<Switch id="gone">Gone</Switch>{/if}
   <!-- Mounted in the browser after the element is defined: Svelte writes a

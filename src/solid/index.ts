@@ -21,6 +21,9 @@ import "mtrl/elements/css/checkbox";
 import "mtrl/elements/css/slider";
 import "mtrl/elements/css/textfield";
 import "mtrl/elements/css/radios";
+import "mtrl/elements/css/list";
+import "mtrl/elements/css/card";
+import "mtrl/elements/css/carousel";
 import {
   buttonElement,
   defineButton,
@@ -50,8 +53,16 @@ import {
   defineTextfield,
   radiosElement,
   defineRadios,
+  listElement,
+  defineList,
+  cardElement,
+  defineCard,
+  carouselElement,
+  defineCarousel,
   tabDeclaration,
   radioDeclaration,
+  listItemDeclaration,
+  carouselItemDeclaration,
 } from "../elements";
 import type {
   ButtonSpec,
@@ -82,8 +93,16 @@ import type {
   TextfieldElement,
   RadiosSpec,
   RadiosElement,
+  ListSpec,
+  ListElement,
+  CardSpec,
+  CardElement,
+  CarouselSpec,
+  CarouselElement,
   TabAttributes,
   RadioAttributes,
+  ListItemAttributes,
+  CarouselItemAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
 
@@ -104,5 +123,10 @@ export const Checkbox: MComponent<CheckboxSpec, CheckboxElement> = createCompone
 export const Slider: MComponent<SliderSpec, SliderElement> = createComponent(sliderElement.spec, defineSlider, "Slider");
 export const Textfield: MComponent<TextfieldSpec, TextfieldElement> = createComponent(textfieldElement.spec, defineTextfield, "Textfield");
 export const Radios: MComponent<RadiosSpec, RadiosElement> = createComponent(radiosElement.spec, defineRadios, "Radios");
+export const List: MComponent<ListSpec, ListElement> = createComponent(listElement.spec, defineList, "List");
+export const Card: MComponent<CardSpec, CardElement> = createComponent(cardElement.spec, defineCard, "Card");
+export const Carousel: MComponent<CarouselSpec, CarouselElement> = createComponent(carouselElement.spec, defineCarousel, "Carousel");
 export const Tab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "Tab");
 export const Radio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "Radio");
+export const ListItem: MDeclaration<ListItemAttributes> = createDeclaration(listItemDeclaration, "ListItem");
+export const CarouselItem: MDeclaration<CarouselItemAttributes> = createDeclaration(carouselItemDeclaration, "CarouselItem");
