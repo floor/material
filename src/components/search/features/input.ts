@@ -324,8 +324,11 @@ export const withInput =
       if (config.collapseOnBlur !== false && component.states?.collapse) {
         const delay = config.collapseDelay ?? 150;
         setTimeout(() => {
-          // Only collapse if still blurred (not re-focused)
-          if (activeElementOf(input) !== input) {
+          // Only once focus has left the search: moving to its own back or
+          // clear button, or a suggestion, closed the view under the person
+          // using it, so the keyboard could never reach them. FLO-285.
+          const root = component.structure?.surface ?? input;
+          if (!root.contains(activeElementOf(input))) {
             component.states.collapse();
           }
         }, delay);

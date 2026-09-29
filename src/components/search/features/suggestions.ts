@@ -190,10 +190,9 @@ export const withSuggestions =
         selectSuggestion(index);
       });
 
-      // Mouse enter to highlight
-      item.addEventListener("mouseenter", () => {
-        setHighlightedIndex(index);
-      });
+      // Hover is only a look (:hover). It set the keyboard highlight, which Tab
+      // and Enter act on, so a list opening under a still pointer had a
+      // suggestion chosen by the next Tab. FLO-285.
 
       suggestionsList.appendChild(item);
     });

@@ -36,6 +36,29 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
 // Root Element
 // ============================================================================
 
+// The surface is a <dialog>: the browser's dialog box is reset, and closed it
+// still shows, as the bar.
+.#{$component} .#{$component}__surface {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    width: auto;
+    height: auto;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    overflow: visible;
+}
+
+// The root keeps the bar's place in the page. While the view is open, the bar
+// and its results show in the top layer as one surface, placed over it
+// (FLO-285): a docked view no longer pushes the page down, and a full-screen
+// search no longer covers the page while it is a bar.
 .#{$component} {
     position: relative;
     display: flex;
@@ -44,7 +67,6 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     min-width: $bar-min-width;
     max-width: $bar-max-width;
     background-color: transparent;
-    z-index: 1;
 
     // ========================================================================
     // State Modifiers
@@ -64,8 +86,10 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
         }
     }
 
-    // View state (expanded)
+    // View state (expanded): the bar's height stays in the page.
     &--view {
+        height: $bar-height;
+
         .#{$component}__container {
             border-radius: v.shape("extra-large") v.shape("extra-large") 0 0;
         }
@@ -74,40 +98,60 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
         .#{$component}__content {
             display: block;
         }
+
+        // Out of the page: in the top layer where there is one, fixed above the
+        // page where there is not.
+        .#{$component}__surface {
+            position: fixed;
+            z-index: 1000;
+        }
     }
 
     // ========================================================================
     // View Mode Modifiers
     // ========================================================================
 
-    // Docked mode (inline)
-    &--docked {
-        &.#{$component}--view {
-            .#{$component}__container {
-                height: $view-docked-header-height;
-            }
+    // Docked: under the bar, its width, over a scrim.
+    &--docked.#{$component}--view {
+        .#{$component}__surface {
+            inset: var(--#{$component}-top) auto auto var(--#{$component}-left);
+            width: var(--#{$component}-width);
+            height: auto;
 
-            .#{$component}__content {
-                min-height: $view-docked-min-height;
-                max-height: calc(66.67vh - #{$view-docked-header-height});
-                border-radius: 0 0 v.shape("extra-large") v.shape("extra-large");
+            &::backdrop {
+                background: t.alpha("scrim", 0.32);
             }
+        }
+
+        .#{$component}__container {
+            height: $view-docked-header-height;
+        }
+
+        .#{$component}__content {
+            min-height: $view-docked-min-height;
+            max-height: calc(66.67vh - #{$view-docked-header-height});
+            border-radius: 0 0 v.shape("extra-large") v.shape("extra-large");
         }
     }
 
-    // Fullscreen mode (overlay)
+    // Full screen: the viewport, only while the view is open.
     &--fullscreen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        min-width: 100%;
-        max-width: 100%;
-        z-index: 1000;
-        background-color: t.color("surface");
-
         &.#{$component}--view {
+            .#{$component}__surface {
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                max-width: none;
+                max-height: none;
+                display: flex;
+                flex-direction: column;
+                background-color: t.color("surface-container-high");
+
+                &::backdrop {
+                    background: transparent;
+                }
+            }
+
             .#{$component}__container {
                 height: $view-fullscreen-header-height;
                 border-radius: 0;
@@ -125,10 +169,6 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     // Interactive State Modifiers
     // ========================================================================
 
-    &--focused {
-        // Focus state styling if needed
-    }
-
     &--disabled {
         pointer-events: none;
 
@@ -137,15 +177,12 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
         }
     }
 
-    &--populated {
-        // Populated state styling if needed
-    }
-
     &--full-width {
         min-width: 0;
         max-width: none;
     }
 }
+
 
 // ============================================================================
 // Container (Header/Bar area)
@@ -504,26 +541,23 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
         min-width: 0;
         max-width: 100%;
 
-        &--docked {
-            // On small screens, docked behaves more like fullscreen
-            &.#{$component}--view {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 1000;
-                background-color: t.color("surface");
+        // Compact windows: docked opens full screen, M3's default there.
+        &--docked.#{$component}--view {
+            .#{$component}__surface {
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                background-color: t.color("surface-container-high");
+            }
 
-                .#{$component}__container {
-                    border-radius: 0;
-                }
+            .#{$component}__container {
+                border-radius: 0;
+            }
 
-                .#{$component}__content {
-                    flex: 1;
-                    max-height: none;
-                    border-radius: 0;
-                }
+            .#{$component}__content {
+                flex: 1;
+                max-height: none;
+                border-radius: 0;
             }
         }
     }

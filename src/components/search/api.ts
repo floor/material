@@ -217,6 +217,8 @@ export const withAPI =
       // === Lifecycle ===
 
       destroy() {
+        // An open view leaves the top layer and drops its window listeners.
+        options.state.collapse();
         if (options.lifecycle?.destroy) {
           options.lifecycle.destroy();
         }
