@@ -25,6 +25,8 @@ import "mtrl/elements/css/navigation-rail";
 import "mtrl/elements/css/drawer";
 import "mtrl/elements/css/top-app-bar";
 import "mtrl/elements/css/bottom-app-bar";
+import "mtrl/elements/css/button-group";
+import "mtrl/elements/css/chips";
 import {
   buttonElement,
   defineButton,
@@ -62,10 +64,16 @@ import {
   defineTopAppBar,
   bottomAppBarElement,
   defineBottomAppBar,
+  buttonGroupElement,
+  defineButtonGroup,
+  chipsElement,
+  defineChips,
   tabDeclaration,
   radioDeclaration,
   navigationRailItemDeclaration,
   drawerItemDeclaration,
+  buttonGroupItemDeclaration,
+  chipDeclaration,
 } from "../elements";
 import type {
   ButtonSpec,
@@ -104,10 +112,16 @@ import type {
   TopAppBarElement,
   BottomAppBarSpec,
   BottomAppBarElement,
+  ButtonGroupSpec,
+  ButtonGroupElement,
+  ChipsSpec,
+  ChipsElement,
   TabAttributes,
   RadioAttributes,
   NavigationRailItemAttributes,
   DrawerItemAttributes,
+  ButtonGroupItemAttributes,
+  ChipAttributes,
 } from "../elements";
 import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
 
@@ -132,7 +146,11 @@ export const MNavigationRail: MComponent<NavigationRailSpec, NavigationRailEleme
 export const MDrawer: MComponent<DrawerSpec, DrawerElement> = createComponent(drawerElement.spec, defineDrawer, "MDrawer");
 export const MTopAppBar: MComponent<TopAppBarSpec, TopAppBarElement> = createComponent(topAppBarElement.spec, defineTopAppBar, "MTopAppBar");
 export const MBottomAppBar: MComponent<BottomAppBarSpec, BottomAppBarElement> = createComponent(bottomAppBarElement.spec, defineBottomAppBar, "MBottomAppBar");
+export const MButtonGroup: MComponent<ButtonGroupSpec, ButtonGroupElement> = createComponent(buttonGroupElement.spec, defineButtonGroup, "MButtonGroup");
+export const MChips: MComponent<ChipsSpec, ChipsElement> = createComponent(chipsElement.spec, defineChips, "MChips");
 export const MTab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "MTab");
 export const MRadio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "MRadio");
 export const MNavigationRailItem: MDeclaration<NavigationRailItemAttributes> = createDeclaration(navigationRailItemDeclaration, "MNavigationRailItem");
 export const MDrawerItem: MDeclaration<DrawerItemAttributes> = createDeclaration(drawerItemDeclaration, "MDrawerItem");
+export const MButtonGroupItem: MDeclaration<ButtonGroupItemAttributes> = createDeclaration(buttonGroupItemDeclaration, "MButtonGroupItem");
+export const MChip: MDeclaration<ChipAttributes> = createDeclaration(chipDeclaration, "MChip");

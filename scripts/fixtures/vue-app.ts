@@ -7,6 +7,7 @@ import {
   type Exposed,
 } from "../../dist/vue/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
+import { MChip, MChips } from "../../dist/vue/index.js";
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 
@@ -29,6 +30,7 @@ export const App = defineComponent(() => {
   const level = ref(50);
   const text = ref("");
   const size = ref<string | null>("m");
+  const diet = ref<string | string[] | null>(["veg"]);
   const tab = ref<string | null>("t2");
   const destination = ref<string | null>("inbox");
   const extra = ref(false);
@@ -94,6 +96,11 @@ export const App = defineComponent(() => {
         ]
       ),
       h("output", { id: "destination" }, String(destination.value)),
+      h(MChips, { id: "ck", ariaLabel: "Diet", modelValue: diet.value, "onUpdate:modelValue": (v: string | string[]) => (diet.value = v) }, () => [
+        h(MChip, { value: "veg" }, () => "Vegetarian"),
+        h(MChip, { value: "gf" }, () => "Gluten free"),
+      ]),
+      h("output", { id: "diet" }, String(diet.value)),
       ...order.value.map((key) => h(MSwitch, { key, id: `o${key}` }, () => `Order ${key}`)),
       show.value ? h(MSwitch, { id: "gone" }, () => "Gone") : null,
       // Mounted in the browser after the element is defined: Vue writes a key

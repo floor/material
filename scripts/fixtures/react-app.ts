@@ -5,6 +5,7 @@ import {
   Button, Checkbox, NavigationRail, NavigationRailItem, Progress, Radio, Radios, Slider, Switch, Tab, Tabs, Textfield,
 } from "../../dist/react/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
+import { Chip, Chips } from "../../dist/react/index.js";
 
 const h = React.createElement;
 const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
@@ -28,6 +29,7 @@ export const App = (): React.ReactElement => {
   const [level, setLevel] = React.useState(50);
   const [text, setText] = React.useState("");
   const [size, setSize] = React.useState<string | null>("m");
+  const [diet, setDiet] = React.useState<string | string[] | null>(["veg"]);
   const [tab, setTab] = React.useState<string | null>("t2");
   const [destination, setDestination] = React.useState<string | null>("inbox");
   const [extra, setExtra] = React.useState(false);
@@ -96,6 +98,12 @@ export const App = (): React.ReactElement => {
       h(NavigationRailItem, { value: "starred", icon: ICON }, "Starred")
     ),
     h("output", { id: "destination" }, destination),
+      Chips,
+      { id: "ck", ariaLabel: "Diet", value: diet, onChange: (e) => setDiet(e.detail.value) },
+      h(Chip, { value: "veg" }, "Vegetarian"),
+      h(Chip, { value: "gf" }, "Gluten free")
+    ),
+    h("output", { id: "diet" }, String(diet)),
     ...order.map((key) => h(Switch, { key, id: `o${key}` }, `Order ${key}`)),
     show ? h(Switch, { id: "gone" }, "Gone") : null,
     // Mounted in the browser after the element is defined: React 19 then

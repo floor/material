@@ -29,6 +29,8 @@ import { navigationRailElement, navigationRailItemDeclaration, defineNavigationR
 import { drawerElement, drawerItemDeclaration, defineDrawer } from "./drawer";
 import { topAppBarElement, defineTopAppBar } from "./top-app-bar";
 import { bottomAppBarElement, defineBottomAppBar } from "./bottom-app-bar";
+import { buttonGroupElement, buttonGroupItemDeclaration, defineButtonGroup } from "./button-group";
+import { chipsElement, chipDeclaration, defineChips } from "./chips";
 
 export { defineElement, DEFAULT_PREFIX, SHADOW_BASE_STYLES } from "./define";
 export type {
@@ -79,6 +81,10 @@ export { topAppBarElement, defineTopAppBar } from "./top-app-bar";
 export type { TopAppBarSpec, TopAppBarElement } from "./top-app-bar";
 export { bottomAppBarElement, defineBottomAppBar } from "./bottom-app-bar";
 export type { BottomAppBarSpec, BottomAppBarElement } from "./bottom-app-bar";
+export { buttonGroupElement, buttonGroupItemDeclaration, defineButtonGroup } from "./button-group";
+export type { ButtonGroupSpec, ButtonGroupElement, ButtonGroupItemAttributes, ButtonGroupValue } from "./button-group";
+export { chipsElement, chipDeclaration, defineChips } from "./chips";
+export type { ChipsSpec, ChipsElement, ChipAttributes, ChipsValue } from "./chips";
 
 /**
  * Every element, by name. Framework adapters are generated from this list and
@@ -103,6 +109,8 @@ export const elements = {
   drawer: drawerElement,
   topAppBar: topAppBarElement,
   bottomAppBar: bottomAppBarElement,
+  buttonGroup: buttonGroupElement,
+  chips: chipsElement,
 } as const;
 
 /** Declaration children, which render nothing and are read by their parent. */
@@ -111,6 +119,8 @@ export const declarations = {
   radio: radioDeclaration,
   navigationRailItem: navigationRailItemDeclaration,
   drawerItem: drawerItemDeclaration,
+  buttonGroupItem: buttonGroupItemDeclaration,
+  chip: chipDeclaration,
 } as const;
 
 /** Registers every element. */
@@ -133,4 +143,6 @@ export const defineAll = (options?: DefineOptions): void => {
   defineDrawer(options);
   defineTopAppBar(options);
   defineBottomAppBar(options);
+  defineButtonGroup(options);
+  defineChips(options);
 };

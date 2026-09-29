@@ -6,6 +6,7 @@ import {
   Button, Checkbox, NavigationRail, NavigationRailItem, Progress, Radio, Radios, Slider, Switch, Tab, Tabs, Textfield,
 } from "../../dist/solid/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
+import { Chip, Chips } from "../../dist/solid/index.js";
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 
@@ -17,6 +18,7 @@ export const App = () => {
   const [level, setLevel] = createSignal(50);
   const [text, setText] = createSignal("");
   const [size, setSize] = createSignal<string | null>("m");
+  const [diet, setDiet] = createSignal<string | string[] | null>(["veg"]);
   const [tab, setTab] = createSignal<string | null>("t2");
   const [destination, setDestination] = createSignal<string | null>("inbox");
   const [extra, setExtra] = createSignal(false);
@@ -69,6 +71,11 @@ export const App = () => {
         <NavigationRailItem value="starred" icon={ICON}>Starred</NavigationRailItem>
       </NavigationRail>
       <output id="destination">{String(destination())}</output>
+      <Chips id="ck" ariaLabel="Diet" value={diet()} onChange={(e) => setDiet(e.detail.value)}>
+        <Chip value="veg">Vegetarian</Chip>
+        <Chip value="gf">Gluten free</Chip>
+      </Chips>
+      <output id="diet">{String(diet())}</output>
       <For each={order()}>{(key) => <Switch id={`o${key}`}>Order {key}</Switch>}</For>
       <Show when={show()}><Switch id="gone">Gone</Switch></Show>
       {/* Mounted in the browser after the element is defined: Solid writes a

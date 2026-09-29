@@ -63,6 +63,7 @@ const run = async (): Promise<void> => {
   assert.match(html, /<m-switch disabled supporting-text="Unavailable" id="d">/);
   assert.match(html, /<m-tabs value="t2" id="t">/);
   assert.match(html, /<m-radios [^>]*value="m"[^>]*>.*<m-radio value="s">Small<\/m-radio>/s);
+  assert.match(html, /<m-chips [^>]*value="veg"[^>]*>.*<m-chip value="veg">Vegetarian<\/m-chip>/s);
   assert.match(html, /<m-button variant="filled" type="submit" id="b" class="save" data-test="1">Save<\/m-button>/);
   check("renders on a server without a DOM, attributes in the markup");
 
@@ -179,6 +180,13 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("size")?.textContent === "l");
     assert.equal(await sizes.getByRole("radio", { name: "Large", exact: true, checked: true }).count(), 1);
     check("radios: v-model");
+    // ------------------------------------------------------------- chips
+    const diet = page.getByRole("grid", { name: "Diet" });
+    assert.equal(await diet.getByRole("gridcell", { name: "Vegetarian", exact: true, selected: true }).count(), 1);
+    await diet.getByRole("gridcell", { name: "Gluten free", exact: true }).click();
+    await page.waitForFunction(() => document.getElementById("diet")?.textContent === "veg,gf");
+    assert.equal(await diet.getByRole("gridcell", { name: "Gluten free", exact: true, selected: true }).count(), 1);
+    check("chips: v-model");
 
     // ------------------------------------------------------------- navigation rail
     const rail = page.getByRole("navigation", { name: "Main" });
