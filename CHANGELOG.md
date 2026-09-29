@@ -208,6 +208,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `secondary` focus ring; the bar has an 8% hover layer. Suggestions are 56dp one-line list
   items, and the option the arrows reach looks focused. The divider is `outline`. The
   suggestions listbox stays in the DOM, hidden, while the search is a bar.
+- **Elements: `<m-drawer>` keeps its default `value` when items are completed after
+  upgrade.** An item without a label is left out until it has one; a clean drawer now takes
+  its `value` attribute again when the items are reconciled, as the rail does (#247).
+- **Elements: `<m-list>` `activate` and `<m-button-group>` `action` leave the model clean.**
+  They report a press, and `change` carries the selection; they marked the element dirty, so
+  its `value` attribute stopped moving it. `<m-chips>` `remove` still does: removing a
+  selected chip changes the selection, and no `change` comes with it.
 - **Bottom sheet: `peekHeight` sets the partial height.** The option was declared, with a
   documented default of 56, and did nothing: the partial sheet was always its content up to
   half the screen. Set, it is now the partial state's height in pixels; unset, the partial

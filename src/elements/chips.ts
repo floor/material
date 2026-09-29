@@ -237,6 +237,8 @@ const chipsSpec = {
     change: {
       detail: (payload) => ({ value: changes.get(payload as object) ?? null }),
     },
+    // Not a state event: removing a selected chip changes the selection, and
+    // no `change` comes with it, so a user removal marks the set dirty.
     remove: {
       detail: (payload) => ({ value: (payload as ChipComponent).getValue() }),
     },

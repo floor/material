@@ -69,11 +69,12 @@ const withoutActive = (items: DrawerItemConfig[]): string =>
 
 /**
  * Applies the declared items in place, keeping the selection: the factory
- * renders its items again. A focused item keeps focus when it is still there.
+ * renders its items again. A clean drawer takes its `value` attribute again,
+ * whose item may only now have a label. A focused item keeps focus when it is
+ * still there.
  */
 const updateDrawer = (host: ElementHost<DrawerComponent>, component: DrawerComponent): boolean => {
-  const active = component.getActive();
-  const items = declaredItems(host, active);
+  const items = declaredItems(host, host.dirty ? component.getActive() : host.getAttribute("value"));
   if (withoutActive(items) === withoutActive(component.getItems())) return true;
   // The factory renders new buttons without restoring focus.
   const focused = (host.shadowRoot?.activeElement as HTMLElement | null)?.dataset.id;
