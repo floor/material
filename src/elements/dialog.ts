@@ -16,13 +16,22 @@
  * it. `show()` and `close()` are its methods. `open` and `close` are
  * dispatched as it opens and closes (not when the attribute is what changed),
  * and `cancel` when Escape asks it to close, which `preventDefault()` refuses.
- * `fullscreen` is the full-screen dialog, with its close button.
+ * `size` is the factory's (`small`, `medium`, `large`, `fullwidth`,
+ * `fullscreen`), and `fullscreen` the full-screen dialog whatever `size`
+ * says; a full-screen dialog has the close button, which `close-button`
+ * gives any size. `subtitle` is the text below the headline, `divider`
+ * draws the dividers above and below the content, and `footer-alignment`
+ * places the actions (`right`, `left`, `center`, `space-between`).
+ * `no-close-on-scrim-click` and `no-close-on-escape` keep it open on a click
+ * on the backdrop and on Escape (the factory's `closeOnOverlayClick` and
+ * `closeOnEscape`); `cancel` is still dispatched on Escape.
  *
  * @module elements
  */
 
 import createDialog from "../components/dialog";
 import type { DialogComponent, DialogConfig } from "../components/dialog/types";
+import { createDivider } from "../components/divider";
 import { PREFIX } from "../core/config";
 import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
@@ -34,7 +43,25 @@ export interface DialogElementComponent extends DialogComponent {
 interface DialogElementConfig extends DialogConfig {
   headline?: string;
   fullscreen?: boolean;
+  noCloseOnScrimClick?: boolean;
+  noCloseOnEscape?: boolean;
 }
+
+const FOOTER_ALIGNMENTS = ["left", "center", "space-between"];
+
+/** Places the actions, as the factory's `setFooterAlignment` does on its own footer. */
+const setFooterAlignment = (footer: HTMLElement, alignment: unknown): void => {
+  for (const name of FOOTER_ALIGNMENTS) {
+    footer.classList.toggle(`${PREFIX}-dialog__footer--${name}`, name === alignment);
+  }
+};
+
+/** Sets the text below the headline; an empty one is taken out. */
+const setSubtitle = (component: DialogComponent, value: unknown): void => {
+  component.setSubtitle(value === null || value === undefined ? "" : String(value));
+  const subtitle = component.element.querySelector<HTMLElement>(`.${PREFIX}-dialog__header-subtitle`);
+  if (subtitle && !subtitle.textContent) subtitle.remove();
+};
 
 const slot = (name?: string, fallback?: string): HTMLSlotElement => {
   const element = document.createElement("slot");
@@ -50,12 +77,14 @@ const slot = (name?: string, fallback?: string): HTMLSlotElement => {
  * own, holding the `actions` slot.
  */
 const create = (config: DialogElementConfig): DialogElementComponent => {
-  const { headline, fullscreen, ...rest } = config;
+  const { headline, fullscreen, noCloseOnScrimClick, noCloseOnEscape, footerAlignment, ...rest } = config;
   const dialog = createDialog({
     ...rest,
     title: " ",
     content: " ",
     ...(fullscreen ? { size: "fullscreen" } : {}),
+    closeOnOverlayClick: !noCloseOnScrimClick,
+    closeOnEscape: !noCloseOnEscape,
     // Opened by the element once it is in the shadow root: moving a modal
     // <dialog> takes it out of the top layer
     open: false,
@@ -66,6 +95,13 @@ const create = (config: DialogElementConfig): DialogElementComponent => {
   const footer = document.createElement("div");
   footer.className = `${PREFIX}-dialog__footer`;
   footer.append(slot("actions"));
+  setFooterAlignment(footer, footerAlignment);
+  // The factory draws the divider above its own footer only
+  if (config.divider) {
+    dialog.element.append(
+      createDivider({ variant: "full-width", class: `${PREFIX}-dialog__divider ${PREFIX}-dialog__footer-divider` }).element
+    );
+  }
   dialog.element.append(footer);
   return Object.assign(dialog, { show: () => dialog.open() });
 };
@@ -86,7 +122,10 @@ const syncRegions = (host: HTMLElement, component: DialogElementComponent): void
   const actions = footer?.querySelector<HTMLSlotElement>("slot");
   const named = !!headline && (headline.assignedNodes().some(hasContent) || (headline.textContent ?? "") !== "");
   if (title) title.style.display = named ? "" : "none";
-  if (footer) footer.style.display = actions?.assignedElements().length ? "" : "none";
+  const shown = actions?.assignedElements().length ? "" : "none";
+  if (footer) footer.style.display = shown;
+  const divider = element.querySelector<HTMLElement>(`.${PREFIX}-dialog__footer-divider`);
+  if (divider) divider.style.display = shown;
   const label = host.getAttribute("aria-label");
   if (label !== null) {
     element.setAttribute("aria-label", label);
@@ -120,13 +159,27 @@ const dialogSpec = {
         syncRegions(host, c);
       },
     },
+    subtitle: { type: "string", config: "subtitle", update: (c, v) => setSubtitle(c, v) },
+    size: { type: "string", config: "size" },
     fullscreen: { type: "boolean", config: "fullscreen" },
+    "close-button": { type: "boolean", config: "closeButton" },
+    divider: { type: "boolean", config: "divider" },
+    "footer-alignment": {
+      type: "string",
+      config: "footerAlignment",
+      update: (c, v) => {
+        const footer = c.element.querySelector<HTMLElement>(`.${PREFIX}-dialog__footer`);
+        if (footer) setFooterAlignment(footer, v);
+      },
+    },
+    "no-close-on-scrim-click": { type: "boolean", config: "noCloseOnScrimClick" },
+    "no-close-on-escape": { type: "boolean", config: "noCloseOnEscape" },
     "aria-label": { type: "string", update: (c, _v, host) => syncRegions(host, c) },
   },
   methods: ["show", "close"] as const,
   events: {
-    open: { detail: () => null },
-    close: { detail: () => null },
+    open: { detail: () => null, state: true },
+    close: { detail: () => null, state: true },
     // Dispatched by `setup` before Escape closes the dialog. Listed here for
     // its type and the adapters.
     cancel: { detail: () => null },

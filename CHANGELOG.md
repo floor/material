@@ -12,6 +12,34 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Elements: state events that leave the model clean.** An event spec with `state: true`
+  reports a change beside the model (`open`, `expanded`): dispatching it does not mark the
+  element dirty, so the model's attribute still moves it. The open and close events of
+  `<m-dialog>`, the sheets, `<m-menu>`, `<m-snackbar>` and `<m-drawer>` are state events;
+  `<m-drawer>`'s marked its `value` dirty before.
+- **Elements: `<m-navigation-rail>` `expand` and `collapse` events (#257).** Dispatched when the
+  user or a method changes `expanded`, after the attribute reflects it, and not when the
+  attribute is what changed. They leave the rail clean, so frameworks can keep `expanded` as
+  state and drive a modal rail from it.
+- **Elements: `<m-dialog>` `size`, `close-button`, `subtitle`, `divider`, `footer-alignment`,
+  `no-close-on-scrim-click` and `no-close-on-escape` (#257).** The factory's `size`,
+  `closeButton`, `subtitle`, `divider`, `footerAlignment`, `closeOnOverlayClick: false` and
+  `closeOnEscape: false`; `cancel` is still dispatched on Escape.
+- **Elements: `<m-bottom-sheet>` `expanded`, with `expand` and `collapse` events (#257).**
+  `expanded` reflects the full height as `open` reflects showing; set while closed, the sheet
+  opens expanded. The events come from the user and the methods, closing from the full height
+  included, and leave the element clean.
+- **Elements: `<m-side-sheet>` `width` (#257).** The factory's `width`, in pixels.
+- **Elements: `no-close-on-scrim-click` and `no-close-on-escape` on the sheets and
+  `<m-drawer modal>` (#257).** The sheets' `closeOnScrimClick: false` and `closeOnEscape:
+  false`; on the drawer, whose factory has one `dismissible` for both, each is refused on its
+  own, in place.
+- **Elements: `<m-menu>` `color`, `no-close-on-select`, and `<m-menu-item gap>` (#257).** The
+  factory's `color` (`vibrant` for the vertical menu), `closeOnSelect: false`, and its gap
+  items, which split the vertical menu into groups; `<m-split-button>` reads gap items too.
+- **Elements: `<m-tooltip>` `no-show-on-hover` and `no-show-on-focus` (#257).** The factory's
+  `showOnHover: false` and `showOnFocus: false`.
+
 - **Tooltip: `layer: "top"`.** With the option the tooltip renders after its target instead
   of on `document.body` (or stays where its owner put it), in the target's tree, a shadow
   root's included, and is shown in the top layer as a `popover="manual"` element, placed in
@@ -180,6 +208,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `secondary` focus ring; the bar has an 8% hover layer. Suggestions are 56dp one-line list
   items, and the option the arrows reach looks focused. The divider is `outline`. The
   suggestions listbox stays in the DOM, hidden, while the search is a bar.
+- **Bottom sheet: `peekHeight` sets the partial height.** The option was declared, with a
+  documented default of 56, and did nothing: the partial sheet was always its content up to
+  half the screen. Set, it is now the partial state's height in pixels; unset, the partial
+  state is unchanged. `<m-bottom-sheet>` takes it as `peek-height`.
+- **Elements: `<m-navigation-rail>` keeps its default `value` when items are completed after
+  upgrade (#247).** An item without an icon is left out until it has one, as frameworks set
+  attributes after creating the child; a clean rail now takes its `value` attribute again when
+  the items are reconciled, so the default destination is selected once its item is complete.
 - **Time picker: `minTime`, `maxTime`, `minuteStep` and `secondStep` are applied
   (FLO-281).** They were accepted and documented, and did nothing. Dial numbers and AM/PM
   that cannot be reached are disabled (at 38%), a pointer between labels picks the nearest

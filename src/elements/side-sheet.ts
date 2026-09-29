@@ -4,13 +4,15 @@
  * slots: `headline` (the `headline` attribute is its fallback text), which
  * names the sheet, and the default slot, the content. The header's close
  * button is the factory's; `no-close-button` drops it. `position` is `start`
- * or `end` (the default), logical as on the factory.
+ * or `end` (the default), logical as on the factory, and `width` its width
+ * in pixels (256 by default, up to 400).
  *
  * Standard by default, docked beside the page. `modal` makes it the modal
  * sheet in the factory's top layer (`layer: "top"`): a native `<dialog>` in
  * the element's shadow root, shown with `showModal()`, above every z-index,
  * the page outside inert, the scrim its `::backdrop`; Escape and a click on
- * the backdrop close it.
+ * the backdrop close it, unless `no-close-on-scrim-click` or
+ * `no-close-on-escape` says otherwise.
  *
  * `open` shows it and reflects its state, as on `<dialog open>`. `show()` and
  * `close()` are its methods, and `open` and `close` are dispatched as it
@@ -39,10 +41,12 @@ interface SideSheetElementConfig extends SideSheetConfig {
   headline?: string;
   modal?: boolean;
   noCloseButton?: boolean;
+  noCloseOnScrimClick?: boolean;
+  noCloseOnEscape?: boolean;
 }
 
 const create = (config: SideSheetElementConfig): SideSheetElementComponent => {
-  const { headline, modal, noCloseButton, ...rest } = config;
+  const { headline, modal, noCloseButton, noCloseOnScrimClick, noCloseOnEscape, ...rest } = config;
   const content = document.createElement("slot");
   const sheet = createSideSheet({
     ...rest,
@@ -50,6 +54,8 @@ const create = (config: SideSheetElementConfig): SideSheetElementComponent => {
     title: " ",
     content,
     closeButton: !noCloseButton,
+    closeOnScrimClick: !noCloseOnScrimClick,
+    closeOnEscape: !noCloseOnEscape,
     variant: modal ? "modal" : "standard",
     layer: modal ? "top" : undefined,
   });
@@ -74,13 +80,16 @@ const sideSheetSpec = {
       },
     },
     position: { type: "string", config: "position" },
+    width: { type: "number", config: "width" },
     "no-close-button": { type: "boolean", config: "noCloseButton" },
+    "no-close-on-scrim-click": { type: "boolean", config: "noCloseOnScrimClick" },
+    "no-close-on-escape": { type: "boolean", config: "noCloseOnEscape" },
     "aria-label": { type: "string", update: (c, _v, host) => syncSheet(host, c, PARTS) },
   },
   methods: ["show", "close"] as const,
   events: {
-    open: { detail: () => null },
-    close: { detail: () => null },
+    open: { detail: () => null, state: true },
+    close: { detail: () => null, state: true },
   },
   setup: (host, component) =>
     sheetSetup(host, component, PARTS, (handler) => {

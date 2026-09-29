@@ -128,9 +128,10 @@ $component: "#{base.$prefix}-bottom-sheet";
     &--partial {
         .#{$component}__container {
             // the peek height, showing what the sheet holds without covering
-            // the page (BottomSheetDefaults.SheetPeekHeight and its content)
+            // the page: the factory's peekHeight, or its content up to half
+            // the screen
             transform: translateY(0);
-            max-height: 50%;
+            max-height: var(--#{$component}-peek-height, 50%);
             transition: m.spring(transform, default-spatial);
         }
 
