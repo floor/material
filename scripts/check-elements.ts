@@ -409,6 +409,247 @@ try {
     check("tabs: <m-tab> values set before the elements are defined are kept");
   }
 
+  // ---------------------------------------------------------------- progress
+  await fresh(
+    page,
+    `<section><m-progress id="p" value="30" aria-label="Uploading photo"></m-progress></section>
+     <section><m-progress id="pc" variant="circular" indeterminate aria-label="Syncing"></m-progress></section>
+     <section id="factory"></section>`
+  );
+  {
+    const inner = (id: string): Promise<Record<string, string | null>> =>
+      page.evaluate((id) => {
+        const root = (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
+        return { now: root.getAttribute("aria-valuenow"), max: root.getAttribute("aria-valuemax") };
+      }, id);
+    assert.equal(await page.getByRole("progressbar", { name: "Uploading photo" }).count(), 1);
+    assert.equal(await page.getByRole("progressbar", { name: "Syncing" }).count(), 1);
+    assert.deepEqual(await inner("p"), { now: "30", max: "100" });
+    assert.deepEqual(await inner("pc"), { now: null, max: "100" });
+    check("progress: a progressbar named by aria-label, with the value attributes the factory sets");
+
+    await page.evaluate(() => document.getElementById("p")?.setAttribute("value", "60"));
+    assert.equal((await inner("p")).now, "60");
+    assert.equal(await page.evaluate(() => (document.getElementById("p") as HTMLElement & { value: number }).value), 60);
+    check("progress: a value attribute change updates aria-valuenow and the live value");
+
+    const live = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      w.events = [];
+      const p = document.getElementById("p") as HTMLElement & { value: number; indeterminate: boolean };
+      for (const name of ["change", "complete"]) p.addEventListener(name, (e) => (w.events as unknown[]).push(e.type));
+      const root = p.shadowRoot?.firstElementChild as HTMLElement;
+      p.value = 80;
+      const now = root.getAttribute("aria-valuenow");
+      p.indeterminate = true;
+      const indeterminate = root.getAttribute("aria-valuenow");
+      p.indeterminate = false;
+      return { now, indeterminate, back: root.getAttribute("aria-valuenow"), value: p.value, events: w.events };
+    });
+    assert.deepEqual(live, { now: "80", indeterminate: null, back: "80", value: 80, events: [] });
+    check("progress: setting value and indeterminate updates it and fires no event");
+
+    await page.evaluate(() => document.getElementById("p")?.setAttribute("aria-label", "Downloading"));
+    assert.equal(await page.getByRole("progressbar", { name: "Downloading" }).count(), 1);
+    assert.equal((await inner("p")).now, "80");
+    check("progress: an aria-label change renames it and keeps the live value");
+
+    const parity = await page.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createProgress: (c: object) => { element: HTMLElement } } };
+      const linear = w.mtrl.createProgress({ value: 80 });
+      const circular = w.mtrl.createProgress({ variant: "circular", indeterminate: true });
+      document.getElementById("factory")?.append(linear.element, circular.element);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const measure = (root: HTMLElement): Record<string, string | number> => {
+        // Not `display`: the circular root is a flex item of the host, so it computes as `flex`.
+        const r = root.getBoundingClientRect();
+        const c = (root.querySelector("canvas") as HTMLCanvasElement).getBoundingClientRect();
+        return { w: r.width, h: r.height, color: getComputedStyle(root).color, canvasW: c.width, canvasH: c.height };
+      };
+      const shadow = (id: string): HTMLElement =>
+        (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
+      return {
+        factory: [measure(linear.element), measure(circular.element)],
+        element: [measure(shadow("p")), measure(shadow("pc"))],
+      };
+    });
+    assert.deepEqual(parity.element, parity.factory);
+    check("progress: linear and circular render as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- loading indicator
+  await fresh(
+    page,
+    `<m-loading-indicator id="li" aria-label="Loading results"></m-loading-indicator>
+     <m-loading-indicator id="lc" contained size="64"></m-loading-indicator><section id="factory"></section>`
+  );
+  {
+    assert.equal(await page.getByRole("progressbar", { name: "Loading results" }).count(), 1);
+    assert.equal(await page.getByRole("progressbar", { name: "Loading", exact: true }).count(), 1, "the factory's default name");
+    check("loading indicator: a progressbar named by aria-label");
+
+    const updated = await page.evaluate(() => {
+      const li = document.getElementById("li") as HTMLElement & { component: unknown };
+      const before = li.component;
+      const root = li.shadowRoot?.firstElementChild as HTMLElement;
+      li.setAttribute("size", "96");
+      li.setAttribute("value", "0.5");
+      const determinate = root.getAttribute("aria-valuenow");
+      li.removeAttribute("value");
+      li.setAttribute("aria-label", "Loading more");
+      return {
+        size: root.getBoundingClientRect().width,
+        determinate,
+        indeterminate: root.getAttribute("aria-valuenow"),
+        same: li.component === before,
+      };
+    });
+    assert.deepEqual(updated, { size: 96, determinate: "50", indeterminate: null, same: true });
+    assert.equal(await page.getByRole("progressbar", { name: "Loading more" }).count(), 1);
+    check("loading indicator: size, value and aria-label changes update it in place");
+
+    const live = await page.evaluate(() => {
+      const li = document.getElementById("li") as HTMLElement & {
+        value: number | null; stop: () => unknown; component: { isRunning: () => boolean };
+      };
+      li.value = 0.25;
+      const now = li.shadowRoot?.firstElementChild?.getAttribute("aria-valuenow");
+      li.stop();
+      return { now, running: li.component.isRunning() };
+    });
+    assert.deepEqual(live, { now: "25", running: false });
+    check("loading indicator: the value property and the stop method reach the component");
+
+    const parity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createLoadingIndicator: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createLoadingIndicator({ contained: true, size: 64 });
+      document.getElementById("factory")?.append(factory.element);
+      const host = document.getElementById("lc") as HTMLElement;
+      const measure = (el: HTMLElement): Record<string, string | number> => {
+        const r = el.getBoundingClientRect();
+        const s = getComputedStyle(el);
+        return { w: r.width, h: r.height, bg: s.backgroundColor, color: s.color, radius: s.borderRadius };
+      };
+      return {
+        factory: measure(factory.element),
+        element: measure(host.shadowRoot?.firstElementChild as HTMLElement),
+        host: host.getBoundingClientRect().height,
+      };
+    });
+    assert.deepEqual(parity.element, parity.factory);
+    assert.equal(parity.host, 64, "the host is exactly the indicator's size");
+    check("loading indicator: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- badge
+  await fresh(
+    page,
+    `<m-badge id="b1" max="99">120</m-badge> <m-badge id="b2" label="New" color="primary"></m-badge>
+     <m-badge id="b3" variant="small"></m-badge><section id="factory"></section>`
+  );
+  {
+    const shown = (): Promise<Record<string, string | null>> =>
+      page.evaluate(() => {
+        const text = (id: string): string | null =>
+          (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild?.textContent ?? null;
+        return { b1: text("b1"), b2: text("b2") };
+      });
+    assert.equal(await page.getByRole("status").count(), 2);
+    assert.deepEqual(await shown(), { b1: "99+", b2: "New" });
+    assert.equal(
+      await page.evaluate(() => document.getElementById("b3")?.shadowRoot?.firstElementChild?.getAttribute("aria-hidden")),
+      "true"
+    );
+    check("badge: text or label attribute is the label, max caps it; large is a status, small is hidden");
+
+    const updated = await page.evaluate(async () => {
+      const b1 = document.getElementById("b1") as HTMLElement & { component: unknown };
+      const before = b1.component;
+      b1.textContent = "5";
+      document.getElementById("b2")?.setAttribute("label", "Hot");
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return { same: b1.component === before };
+    });
+    assert.deepEqual(updated, { same: true });
+    assert.deepEqual(await shown(), { b1: "5", b2: "Hot" });
+    check("badge: text and label attribute changes update the label in place");
+
+    const live = await page.evaluate(async () => {
+      const b2 = document.getElementById("b2") as HTMLElement & { visible: boolean };
+      const root = b2.shadowRoot?.firstElementChild as HTMLElement;
+      b2.visible = false;
+      const hidden = getComputedStyle(root).display;
+      // An unrelated change leaves the visibility alone.
+      b2.setAttribute("color", "tertiary");
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const kept = b2.visible;
+      b2.visible = true;
+      return { hidden, kept, visible: b2.visible, display: getComputedStyle(root).display };
+    });
+    assert.deepEqual(live, { hidden: "none", kept: false, visible: true, display: "flex" });
+    check("badge: the visible property hides and shows it; other changes keep it");
+
+    const parity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createBadge: (c: object) => { element: HTMLElement } } };
+      const factory = w.mtrl.createBadge({ label: "Hot", color: "tertiary" });
+      document.getElementById("factory")?.append(factory.element);
+      const measure = (el: HTMLElement): Record<string, string | number> => {
+        const r = el.getBoundingClientRect();
+        const s = getComputedStyle(el);
+        return { w: r.width, h: r.height, bg: s.backgroundColor, color: s.color, radius: s.borderRadius, font: s.font };
+      };
+      const element = (document.getElementById("b2") as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
+      return { factory: measure(factory.element), element: measure(element) };
+    });
+    assert.deepEqual(parity.element, parity.factory);
+    check("badge: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- divider
+  await fresh(
+    page,
+    `<section><m-divider id="d1"></m-divider></section><section><m-divider id="d2" variant="inset"></m-divider></section>
+     <section><m-divider id="d3"></m-divider></section><m-divider id="dv" orientation="vertical"></m-divider>
+     <section id="factory"></section>`
+  );
+  {
+    assert.equal(await page.getByRole("separator").count(), 4);
+    assert.equal(
+      await page.evaluate(() => document.getElementById("dv")?.shadowRoot?.firstElementChild?.getAttribute("aria-orientation")),
+      "vertical"
+    );
+    check("divider: a separator, vertical when oriented so");
+
+    const updated = await page.evaluate(() => {
+      const d3 = document.getElementById("d3") as HTMLElement & { component: unknown; thickness: number };
+      const before = d3.component;
+      const root = d3.shadowRoot?.firstElementChild as HTMLElement;
+      d3.setAttribute("variant", "middle-inset");
+      const margins = [getComputedStyle(root).marginLeft, getComputedStyle(root).marginRight];
+      d3.thickness = 2;
+      return { margins, height: root.getBoundingClientRect().height, same: d3.component === before };
+    });
+    assert.deepEqual(updated, { margins: ["16px", "16px"], height: 2, same: true });
+    check("divider: variant and thickness changes update it in place");
+
+    const parity = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createDivider: (c: object) => { element: HTMLElement } } };
+      const full = w.mtrl.createDivider({});
+      const inset = w.mtrl.createDivider({ variant: "inset" });
+      document.getElementById("factory")?.append(full.element, inset.element);
+      const measure = (el: HTMLElement): Record<string, string | number> => {
+        const r = el.getBoundingClientRect();
+        const s = getComputedStyle(el);
+        return { w: r.width, h: r.height, bg: s.backgroundColor, margin: s.margin };
+      };
+      const shadow = (id: string): HTMLElement =>
+        (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
+      return { factory: [measure(full.element), measure(inset.element)], element: [measure(shadow("d1")), measure(shadow("d2"))] };
+    });
+    assert.deepEqual(parity.element, parity.factory);
+    check("divider: full-width and inset render as the factory does with the global stylesheet");
+  }
+
   // ---------------------------------------------------------------- lifecycle
   await fresh(page, `<section id="a"><m-switch id="s" checked>Moved</m-switch></section><section id="b"></section>`);
   {

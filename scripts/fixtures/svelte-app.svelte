@@ -2,7 +2,7 @@
      browser. Built against dist/svelte. -->
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Button, Switch, Tab, Tabs } from "../../dist/svelte/index.js";
+  import { Button, Progress, Switch, Tab, Tabs } from "../../dist/svelte/index.js";
 
   type Log = Array<{ id: string; detail: unknown }>;
   const log: Log = [];
@@ -12,6 +12,7 @@
   let extra = $state(false);
   let order = $state(["a", "b"]);
   let show = $state(true);
+  let progress = $state(30);
 
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
 
@@ -23,6 +24,7 @@
       setExtra: (v: boolean) => (extra = v),
       setOrder: (v: string[]) => (order = v),
       setShow: (v: boolean) => (show = v),
+      setProgress: (v: number) => (progress = v),
     };
   });
 </script>
@@ -41,6 +43,7 @@
   </Tabs>
   <output id="tab">{String(tab)}</output>
   <output id="bound">{String(bound)}</output>
+  <Progress id="pg" value={progress} ariaLabel="Uploading" />
   {#each order as key (key)}<Switch id={`o${key}`}>Order {key}</Switch>{/each}
   {#if show}<Switch id="gone">Gone</Switch>{/if}
   <!-- Mounted in the browser after the element is defined: Svelte writes a

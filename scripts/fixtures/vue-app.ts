@@ -2,7 +2,7 @@
 // browser. Render functions, so no template compiler is needed. Built against
 // dist/vue.
 import { defineComponent, h, ref, onMounted, type Ref } from "vue";
-import { MButton, MSwitch, MTab, MTabs, type Exposed } from "../../dist/vue/index.js";
+import { MButton, MProgress, MSwitch, MTab, MTabs, type Exposed } from "../../dist/vue/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 
 type Log = Array<{ id: string; detail: unknown }>;
@@ -13,6 +13,7 @@ export interface Api {
   extra: Ref<boolean>;
   order: Ref<string[]>;
   show: Ref<boolean>;
+  progress: Ref<number>;
   switchRef: Ref<Exposed<SwitchElement> | null>;
 }
 
@@ -23,8 +24,9 @@ export const App = defineComponent(() => {
   const extra = ref(false);
   const order = ref(["a", "b"]);
   const show = ref(true);
+  const progress = ref(30);
   const switchRef = ref<Exposed<SwitchElement> | null>(null);
-  const api: Api = { log: [], submits: 0, model, extra, order, show, switchRef };
+  const api: Api = { log: [], submits: 0, model, extra, order, show, progress, switchRef };
   onMounted(() => {
     (window as unknown as { api: Api }).api = api;
   });
@@ -59,6 +61,7 @@ export const App = defineComponent(() => {
       h("output", { id: "tab" }, String(tab.value)),
       h("output", { id: "model" }, String(model.value)),
       h("output", { id: "named" }, String(named.value)),
+      h(MProgress, { id: "pg", value: progress.value, ariaLabel: "Uploading" }),
       ...order.value.map((key) => h(MSwitch, { key, id: `o${key}` }, () => `Order ${key}`)),
       show.value ? h(MSwitch, { id: "gone" }, () => "Gone") : null,
       // Mounted in the browser after the element is defined: Vue writes a key

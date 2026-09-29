@@ -1,7 +1,7 @@
 // The app scripts/check-react.ts renders on the server and hydrates in the
 // browser, with React 18 and with React 19. Built against dist/react.
 import * as React from "react";
-import { Button, Switch, Tab, Tabs } from "../../dist/react/index.js";
+import { Button, Progress, Switch, Tab, Tabs } from "../../dist/react/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 
 const h = React.createElement;
@@ -15,6 +15,7 @@ type Api = {
   setExtra: (v: boolean) => void;
   setOrder: (v: string[]) => void;
   setShow: (v: boolean) => void;
+  setProgress: (v: number) => void;
   switchRef: React.RefObject<SwitchElement | null>;
 };
 
@@ -24,12 +25,13 @@ export const App = (): React.ReactElement => {
   const [extra, setExtra] = React.useState(false);
   const [order, setOrder] = React.useState(["a", "b"]);
   const [show, setShow] = React.useState(true);
+  const [progress, setProgress] = React.useState(30);
   const switchRef = React.useRef<SwitchElement | null>(null);
   const api = React.useRef<Api | null>(null);
 
   React.useEffect(() => {
     const w = window as unknown as { api?: Api };
-    api.current = w.api ?? { log: [], submits: 0, setExtra, setOrder, setShow, switchRef };
+    api.current = w.api ?? { log: [], submits: 0, setExtra, setOrder, setShow, setProgress, switchRef };
     w.api = api.current;
   }, []);
   const log = (id: string) => (event: CustomEvent<unknown>): void => {
@@ -63,6 +65,7 @@ export const App = (): React.ReactElement => {
     ),
     h("output", { id: "tab" }, tab),
     h("output", { id: "controlled" }, String(controlled)),
+    h(Progress, { id: "pg", value: progress, ariaLabel: "Uploading" }),
     ...order.map((key) => h(Switch, { key, id: `o${key}` }, `Order ${key}`)),
     show ? h(Switch, { id: "gone" }, "Gone") : null,
     // Mounted in the browser after the element is defined: React 19 then

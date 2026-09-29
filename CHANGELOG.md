@@ -20,6 +20,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   around the focused one, within `minDate` and `maxDate`, and extends it by a year as it
   nears either end without moving what is shown. Selections are drafts until Save, as in
   the modal (FLO-276).
+- **Elements: `<m-progress>`, `<m-loading-indicator>`, `<m-badge>` and `<m-divider>`**, and
+  `Progress`, `LoadingIndicator`, `Badge` and `Divider` in the React, Vue, Svelte and Solid
+  adapters. Progress takes `value` and `indeterminate` as live properties, the loading
+  indicator `size`, `contained` and `value`, both named by `aria-label`; the badge is
+  standalone, labelled by its text or `label` and capped by `max`, with a live `visible`;
+  the divider takes `orientation`, `variant`, insets, `thickness` and `color`.
 
 ### Changed
 

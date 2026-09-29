@@ -2,7 +2,7 @@
 // browser. Solid JSX, compiled by babel-preset-solid as a Solid app's build
 // compiles it. Built against dist/solid.
 import { createSignal, For, onMount, Show } from "solid-js";
-import { Button, Switch, Tab, Tabs } from "../../dist/solid/index.js";
+import { Button, Progress, Switch, Tab, Tabs } from "../../dist/solid/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 
 export const App = () => {
@@ -13,6 +13,7 @@ export const App = () => {
   const [extra, setExtra] = createSignal(false);
   const [order, setOrder] = createSignal(["a", "b"]);
   const [show, setShow] = createSignal(true);
+  const [progress, setProgress] = createSignal(30);
   let switchRef: SwitchElement | undefined;
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
 
@@ -20,7 +21,7 @@ export const App = () => {
     (window as unknown as { api: unknown }).api = {
       log,
       get submits() { return submits; },
-      setControlled, setExtra, setOrder, setShow,
+      setControlled, setExtra, setOrder, setShow, setProgress,
       element: () => switchRef,
     };
   });
@@ -40,6 +41,7 @@ export const App = () => {
       </Tabs>
       <output id="tab">{String(tab())}</output>
       <output id="controlled">{String(controlled())}</output>
+      <Progress id="pg" value={progress()} ariaLabel="Uploading" />
       <For each={order()}>{(key) => <Switch id={`o${key}`}>Order {key}</Switch>}</For>
       <Show when={show()}><Switch id="gone">Gone</Switch></Show>
       {/* Mounted in the browser after the element is defined: Solid writes a
