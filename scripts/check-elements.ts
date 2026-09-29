@@ -6167,6 +6167,36 @@ try {
   const { checkSearch } = await import("./check-elements-search");
   await checkSearch({ browser, page, origin: `http://127.0.0.1:${server.port}`, check, fresh });
 
+  // ---------------------------------------------------------------- pickers and search: open and close are state
+  // Opening and closing without a choice leaves the element clean: its value
+  // attribute still moves it (state events, #257).
+  await fresh(
+    page,
+    `<m-datepicker id="sd" variant="modal" label="Due" value="2026-09-10"></m-datepicker>
+     <m-timepicker id="st" value="09:30"></m-timepicker>
+     <m-search id="ss" aria-label="Query" value="ap"></m-search>`
+  );
+  {
+    const moved = await page.evaluate(async () => {
+      type Host = HTMLElement & { value: string; show: () => void; close: () => void };
+      const frame = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => r()));
+      const cases: Array<[string, string]> = [["sd", "2026-09-20"], ["st", "10:45"], ["ss", "apr"]];
+      const result: Record<string, string> = {};
+      for (const [id, next] of cases) {
+        const host = document.getElementById(id) as Host;
+        host.show();
+        await frame();
+        host.close();
+        await frame();
+        host.setAttribute("value", next);
+        result[id] = host.value;
+      }
+      return result;
+    });
+    assert.deepEqual(moved, { sd: "2026-09-20", st: "10:45", ss: "apr" });
+    check("date picker, time picker and search: opening and closing leave the value attribute in charge");
+  }
+
   // ---------------------------------------------------------------- theme
   await fresh(page, `<m-switch id="s" checked>Theme</m-switch><section id="factory"></section>`);
   {

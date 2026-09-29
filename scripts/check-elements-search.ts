@@ -358,16 +358,16 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
   // The bar and the open view against the factory's, in light DOM
   const read = (id: string | null): Promise<Record<string, unknown>> =>
     page.evaluate((id) => {
-      const w = window as unknown as { mtrl: { createSearch: (c: object) => Record<string, unknown> & { element: HTMLElement } }; __factory?: { element: HTMLElement } };
-      if (!id && !w.__factory) {
-        w.__factory = w.mtrl.createSearch({
+      const w = window as unknown as { mtrl: { createSearch: (c: object) => Record<string, unknown> & { element: HTMLElement } }; __searchFactory?: { element: HTMLElement } };
+      if (!id && !w.__searchFactory) {
+        w.__searchFactory = w.mtrl.createSearch({
           placeholder: "Fruit", value: "pear",
           trailingItems: [{ id: "trailing-icon", type: "icon", content: '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4h16v16H4z"/></svg>', ariaLabel: "Voice" }],
           suggestions: [{ text: "Damson", value: "damson" }],
         });
-        (document.getElementById("qfactory") as HTMLElement).append(w.__factory.element);
+        (document.getElementById("qfactory") as HTMLElement).append(w.__searchFactory.element);
       }
-      const root = id ? ((document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement) : (w.__factory as { element: HTMLElement }).element;
+      const root = id ? ((document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement) : (w.__searchFactory as { element: HTMLElement }).element;
       const box = (selector: string): Record<string, unknown> => {
         const node = root.querySelector(selector) as HTMLElement;
         const r = node.getBoundingClientRect();
@@ -398,10 +398,10 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
   const elementView = await read("q");
   await page.evaluate(() => void (document.getElementById("q") as SearchHost).close());
   await settle();
-  await page.evaluate(() => void ((window as unknown as { __factory: { expand: () => unknown } }).__factory.expand()));
+  await page.evaluate(() => void ((window as unknown as { __searchFactory: { expand: () => unknown } }).__searchFactory.expand()));
   await settle();
   const factoryView = await read(null);
-  await page.evaluate(() => void ((window as unknown as { __factory: { collapse: () => unknown; destroy: () => void } }).__factory.collapse()));
+  await page.evaluate(() => void ((window as unknown as { __searchFactory: { collapse: () => unknown; destroy: () => void } }).__searchFactory.collapse()));
   await settle();
   assert.deepEqual(elementView, factoryView, "the open view");
   check("search: the bar and the open view render as the factory's in light DOM");

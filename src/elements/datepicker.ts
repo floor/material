@@ -176,8 +176,8 @@ const datepickerSpec = {
         return { value: toValue(value, rangeEndDate) };
       },
     },
-    open: { detail: () => null },
-    close: { detail: () => null },
+    open: { detail: () => null, state: true },
+    close: { detail: () => null, state: true },
   },
   form: {
     value: (c) => toValue(c.getValue()),

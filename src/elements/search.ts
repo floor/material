@@ -227,10 +227,9 @@ const searchSpec = {
     input: { detail: (payload) => ({ value: (payload as SearchEvent).value }) },
     change: { detail: (payload) => ({ value: (payload as SearchEvent).value }) },
     select: { detail: (payload) => ({ value: (payload as SearchEvent).value }) },
-    // TODO: `state: true` on `open` and `close` once EventSpec has it: they
-    // do not change the value, and should not make the model dirty.
-    open: { detail: () => null },
-    close: { detail: () => null },
+    // State: they do not change the value, and leave the model clean.
+    open: { detail: () => null, state: true },
+    close: { detail: () => null, state: true },
     // Dispatched by `setup` on a click of the trailing icon or the avatar.
     // Listed here for its type and the adapters.
     action: { detail: (payload) => payload as { value: string } },

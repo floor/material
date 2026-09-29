@@ -200,8 +200,8 @@ const timepickerSpec = {
     change: { detail: (payload) => ({ value: payload as string }) },
     // The draft, live, as the dial and the fields move.
     input: { detail: (payload) => ({ value: payload as string }) },
-    open: { detail: () => null },
-    close: { detail: () => null },
+    open: { detail: () => null, state: true },
+    close: { detail: () => null, state: true },
   },
   form: {
     value: (c) => c.getValue(),
