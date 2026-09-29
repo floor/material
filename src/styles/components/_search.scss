@@ -62,8 +62,8 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     display: flex;
     flex-direction: column;
     width: 100%;
-    min-width: $bar-min-width;
-    max-width: $bar-max-width;
+    min-width: var(--#{$component}-min-width, #{$bar-min-width});
+    max-width: var(--#{$component}-max-width, #{$bar-max-width});
     background-color: transparent;
 
     // ========================================================================

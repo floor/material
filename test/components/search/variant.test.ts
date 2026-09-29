@@ -32,5 +32,12 @@ test("setVariant switches in place and chains", () => {
 
 test("the variant is not the element's inline style", () => {
   const search = mount(createSearch({ variant: "divided" }));
-  expect(search.element.getAttribute("style")).toBeNull();
+  expect(search.element.getAttribute("style") ?? "").not.toContain("divided");
+});
+
+// FLO-290: minWidth and maxWidth were accepted and never applied.
+test("minWidth and maxWidth reach the root, for the stylesheet", () => {
+  const search = mount(createSearch({ minWidth: 240, maxWidth: 480 }));
+  expect(search.element.style.getPropertyValue("--mtrl-search-min-width")).toBe("240px");
+  expect(search.element.style.getPropertyValue("--mtrl-search-max-width")).toBe("480px");
 });
