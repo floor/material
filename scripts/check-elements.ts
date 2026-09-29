@@ -5734,47 +5734,52 @@ try {
     assert.deepEqual({ drawerClosed, drawerValue }, { drawerClosed: [{ type: "close" }], drawerValue: "b" }, "drawer clean");
     check("drawer: closing dispatches close and leaves the drawer clean: the value attribute still moves it");
 
-    const drawerOpen = (): Promise<boolean> =>
-      page.evaluate(() => !!(document.getElementById("gd")?.shadowRoot?.querySelector("dialog") as HTMLDialogElement).open);
-    await page.evaluate(() => {
-      const host = document.getElementById("gd") as HTMLElement;
-      host.setAttribute("no-close-on-escape", "");
-      host.setAttribute("no-close-on-scrim-click", "");
-      host.setAttribute("open", "");
-    });
-    await wait(400);
     /** Keeps the current component, to tell an in-place change from a recreation. */
     const keep = (id: string): Promise<void> =>
       page.evaluate((id) => void ((window as unknown as Win).__kept = (document.getElementById(id) as GapHost).component), id);
     const isKept = (id: string): Promise<boolean> =>
       page.evaluate((id) => (document.getElementById(id) as GapHost).component === (window as unknown as Win).__kept, id);
-    await keep("gd");
-    await page.keyboard.press("Escape");
-    await wait(300);
-    const afterEscape = await drawerOpen();
-    await page.mouse.click(870, 650);
-    await wait(300);
-    const afterClick = await drawerOpen();
-    await page.evaluate(() => document.getElementById("gd")?.removeAttribute("no-close-on-scrim-click"));
-    await page.mouse.click(870, 650);
-    await wait(300);
-    const scrimCloses = !(await drawerOpen());
-    await page.evaluate(() => {
-      const host = document.getElementById("gd") as HTMLElement;
-      host.removeAttribute("no-close-on-escape");
-      host.setAttribute("open", "");
-    });
-    await wait(400);
-    await page.keyboard.press("Escape");
-    await wait(300);
-    const escapeCloses = !(await drawerOpen());
-    const same = await isKept("gd");
+
+    // Each attribute refuses its own way of closing and leaves the other; set
+    // on the open drawer, in place. Refused, Escape does not reach the
+    // factory's cancel listener, as with <m-dialog>'s refused cancel.
+    const drawerOpen = (): Promise<boolean> =>
+      page.evaluate(() => !!(document.getElementById("gd")?.shadowRoot?.querySelector("dialog") as HTMLDialogElement).open);
+    const reopen = async (): Promise<void> => {
+      await page.evaluate(() => document.getElementById("gd")?.setAttribute("open", ""));
+      await wait(400);
+    };
+    const dismissals: Record<string, { escape: boolean; scrim: boolean; same: boolean }> = {};
+    for (const refused of [["no-close-on-scrim-click"], ["no-close-on-escape"], ["no-close-on-scrim-click", "no-close-on-escape"]]) {
+      await fresh(
+        page,
+        `<m-drawer id="gd" modal open aria-label="Gaps drawer"><m-drawer-item value="a">Inbox</m-drawer-item></m-drawer>`
+      );
+      await wait(400);
+      await keep("gd");
+      await page.evaluate((refused) => {
+        const host = document.getElementById("gd") as HTMLElement;
+        for (const name of refused) host.setAttribute(name, "");
+      }, refused);
+      await page.keyboard.press("Escape");
+      await wait(300);
+      const escape = !(await drawerOpen());
+      await reopen();
+      await page.mouse.click(870, 650);
+      await wait(300);
+      const scrim = !(await drawerOpen());
+      dismissals[refused.join(" ")] = { escape, scrim, same: await isKept("gd") };
+    }
     assert.deepEqual(
-      { afterEscape, afterClick, scrimCloses, escapeCloses, same },
-      { afterEscape: true, afterClick: true, scrimCloses: true, escapeCloses: true, same: true },
+      dismissals,
+      {
+        "no-close-on-scrim-click": { escape: true, scrim: false, same: true },
+        "no-close-on-escape": { escape: false, scrim: true, same: true },
+        "no-close-on-scrim-click no-close-on-escape": { escape: false, scrim: false, same: true },
+      },
       "drawer no-close-on-*"
     );
-    check("drawer: no-close-on-escape and no-close-on-scrim-click each keep the modal drawer open, in place");
+    check("drawer: no-close-on-scrim-click alone, no-close-on-escape alone and both refuse only their own closing, in place");
 
     // ------------------------------------------------ dialog
     await fresh(
