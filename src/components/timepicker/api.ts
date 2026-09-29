@@ -16,6 +16,7 @@ import type { TimePickerEvents } from './types';
 import type { EventCallback } from '../../core/state/emitter';
 import type { ElementComponent } from '../../core/compose/component';
 import { setFormValue } from '../../core/dom/form-value';
+import { deepActiveElement } from '../../core/dom/focus';
 
 interface ApiOptions {
   events: {
@@ -111,7 +112,8 @@ export const createTimePickerAPI = (
     open() {
       if (isOpen) return this;
       
-      const active = document.activeElement;
+      // Whatever really had focus, through any shadow roots (FLO-284).
+      const active = deepActiveElement();
       returnFocus = active instanceof HTMLElement && active !== document.body ? active : null;
       // The top layer, scrim and inert page are the browser's; environments
       // without dialog methods still get the open state.
@@ -187,6 +189,8 @@ export const createTimePickerAPI = (
           throw new Error('Invalid time format. Use HH:MM or HH:MM:SS (24-hour format).');
         }
         
+        const before = getValue();
+
         // Update time value
         timeValue.hours = hours;
         timeValue.minutes = minutes;
@@ -196,13 +200,9 @@ export const createTimePickerAPI = (
         // Re-render time picker
         render();
         
-        // Emit change event
-        options.events.emit(EVENTS.CHANGE, this.getValue());
-        
-        // Call onChange callback if provided
-        if (config.onChange) {
-          config.onChange(this.getValue());
-        }
+        // Notify once, and only for a new value: the event and onChange
+        // together, as every other change does. FLO-281.
+        if (getValue() !== before) notifyChange();
       } catch (error) {
         console.error('Error setting time value:', error);
       }
@@ -255,11 +255,10 @@ export const createTimePickerAPI = (
         timeValue.period = timeValue.hours >= 12 ? TIME_PERIOD.PM : TIME_PERIOD.AM;
       }
       
-      // Re-render time picker
+      // Re-render time picker. The value is 24-hour whatever the display, so a
+      // format change is not a change of value, and emits nothing: it emitted
+      // `change` without calling onChange. FLO-281.
       render();
-      
-      // Emit change event
-      options.events.emit(EVENTS.CHANGE, this.getValue());
       
       return this;
     },

@@ -241,6 +241,13 @@ $component: '#{base.$prefix}-time-picker';
       &:active {
         background-color: t.alpha('on-surface-variant', v.state('pressed-state-layer-opacity'));
       }
+
+      // No time in this half of the day is inside minTime/maxTime (FLO-281).
+      &[aria-disabled="true"] {
+        opacity: 0.38;
+        cursor: default;
+        pointer-events: none;
+      }
     }
 
     &-pm {
@@ -326,6 +333,10 @@ $component: '#{base.$prefix}-time-picker';
 
     // md.comp.focus-ring on the focused number.
     &:focus-visible { outline: 3px solid t.color('secondary'); outline-offset: 2px; }
+
+    // Outside minTime/maxTime or off the step (FLO-281): M3's disabled content,
+    // at 38%.
+    &[aria-disabled="true"] { opacity: 0.38; cursor: default; }
   }
 
   &__dial-track {

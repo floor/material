@@ -55,11 +55,11 @@ The `createTimePicker` function accepts a configuration object with the followin
 | `title` | `string` | `undefined` | Title text for the time picker |
 | `showSeconds` | `boolean` | `false` | Whether to show seconds selector |
 | `class` | `string` | `undefined` | Additional CSS classes to add to the time picker |
-| `closeOnSelect` | `boolean` | `true` | Whether to close the picker when time is selected |
-| `minTime` | `string` | `undefined` | Minimum selectable time in 24-hour format (HH:MM) |
-| `maxTime` | `string` | `undefined` | Maximum selectable time in 24-hour format (HH:MM) |
-| `minuteStep` | `number` | `1` | Step interval for minute selection |
-| `secondStep` | `number` | `1` | Step interval for second selection |
+| `closeOnSelect` | `boolean` | `true` | Deprecated, no effect: the picker is confirmed with OK |
+| `minTime` | `string` | `undefined` | Earliest selectable time, 24-hour (HH:MM or HH:MM:SS). Dial numbers and AM/PM that cannot reach it are disabled; a picked or typed time before it moves up to it |
+| `maxTime` | `string` | `undefined` | Latest selectable time, as `minTime` at the other end |
+| `minuteStep` | `number` | `1` | Minutes off the step are disabled on the dial; a pointer picks the nearest step, and a typed minute rounds to it when committed |
+| `secondStep` | `number` | `1` | As `minuteStep`, for seconds |
 | `cancelText` | `string` | `'Cancel'` | Custom text for cancel button |
 | `confirmText` | `string` | `'OK'` | Custom text for confirm button |
 | `isOpen` | `boolean` | `false` | Whether the time picker is initially visible |
@@ -160,43 +160,26 @@ const timePicker = createTimePicker({
 });
 ```
 
-### Time Range Selection
+### Office Hours, in Quarter Hours
 
 ```javascript
 import { createTimePicker } from 'mtrl';
 
-// Start time picker
-const startTimePicker = createTimePicker({
-  title: 'Select start time',
-  value: '09:00',
-  minTime: '08:00',
-  maxTime: '16:00',
+// Only 09:00 to 17:30 can be picked, on the quarter hour: earlier and later
+// hours, and minutes off the quarter, are disabled on the dial.
+const meetingPicker = createTimePicker({
+  title: 'Meeting time',
+  value: '10:00',
+  minTime: '09:00',
+  maxTime: '17:30',
+  minuteStep: 15,
   onConfirm: (time) => {
-    startTimeInput.value = time;
-    
-    // Update end time constraints
-    const [hours, minutes] = time.split(':');
-    const startDate = new Date();
-    startDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
-    
-    // Add minimum 30 minutes to start time
-    const minEndDate = new Date(startDate);
-    minEndDate.setMinutes(minEndDate.getMinutes() + 30);
-    
-    endTimePicker.minTime = `${minEndDate.getHours()}:${minEndDate.getMinutes()}`;
-  }
-});
-
-// End time picker
-const endTimePicker = createTimePicker({
-  title: 'Select end time',
-  value: '17:00',
-  minTime: '09:30', // Initial minimum (30 min after default start)
-  onConfirm: (time) => {
-    endTimeInput.value = time;
+    meetingInput.value = time;
   }
 });
 ```
+
+The limits are set when the picker is created; `setValue` is not held to them.
 
 ## Accessibility
 

@@ -8,7 +8,7 @@ import {
   TIME_PERIOD,
 } from "./types";
 import { TIMEPICKER_ICONS } from "./constants";
-import { padZero, convertTo12Hour } from "./utils";
+import { padZero, convertTo12Hour, limitsOf, reachable, constrainTime, secondsOfTime } from "./utils";
 import { createDial, nameFor, type DialSelector } from "./dial";
 
 /** An hour, minute or second box: a radio in dial mode, a number input in input mode. */
@@ -199,6 +199,7 @@ export const renderTimePicker = (
     prefix: config.prefix,
     format: config.format,
     onSelect: (value, final, pointer) => selectFromDial(value, final, pointer),
+    allowed: (unit, value) => allowed(unit, value),
   });
   dialContainer.appendChild(dial.element);
 
@@ -264,6 +265,66 @@ export const renderTimePicker = (
     dial.update(timeValue, activeSelector);
   };
 
+  // minTime, maxTime, minuteStep and secondStep, which were accepted and never
+  // applied (FLO-281). A dial number or AM/PM that cannot be reached is disabled,
+  // a pick lands on the step, and a time outside the limits moves to the nearest
+  // one inside.
+  const limits = limitsOf(config.minTime, config.maxTime);
+  const minuteStep = Math.max(1, Math.floor(config.minuteStep) || 1);
+  const secondStep = Math.max(1, Math.floor(config.secondStep) || 1);
+  const HALF_DAY = 12 * 3600;
+  const roundToStep = (value: number, step: number): number => Math.min(Math.round(value / step) * step, 59 - (59 % step));
+  const to24 = (hour: number): number =>
+    config.format === TIME_FORMAT.MILITARY ? hour : (hour % 12) + (timeValue.period === TIME_PERIOD.PM ? 12 : 0);
+  const periodAllowed = (period: TIME_PERIOD): boolean =>
+    period === TIME_PERIOD.AM ? reachable(limits, 0, HALF_DAY - 1) : reachable(limits, HALF_DAY, 2 * HALF_DAY - 1);
+  /** Whether a dial value can be picked, given the rest of the time. */
+  function allowed(unit: DialSelector, value: number): boolean {
+    if (unit === "hour") {
+      const start = to24(value) * 3600;
+      return reachable(limits, start, start + 3599);
+    }
+    const hour = timeValue.hours * 3600;
+    if (unit === "minute") return value % minuteStep === 0 && reachable(limits, hour + value * 60, hour + value * 60 + 59);
+    return value % secondStep === 0 && reachable(limits, hour + timeValue.minutes * 60 + value);
+  }
+
+  /** Shows the time everywhere: the fields, AM/PM and the dial. */
+  const refresh = (): void => {
+    show(hoursInput, config.format === TIME_FORMAT.MILITARY ? timeValue.hours : timeValue.hours % 12 || 12);
+    show(minutesInput, timeValue.minutes);
+    show(secondsInput, timeValue.seconds ?? 0);
+    markPeriod();
+    dial.update(timeValue, activeSelector);
+  };
+
+  /** Moves the time inside the limits, then shows it. */
+  const settle = (): void => {
+    Object.assign(timeValue, constrainTime(timeValue, limits, minuteStep, secondStep));
+    refresh();
+  };
+
+  /** Notifies once, and only when the time differs from `before`. */
+  const notify = (before: TimeValue): void => {
+    if (secondsOfTime(before) !== secondsOfTime(timeValue)) onTimeChange?.("hours", timeValue.hours);
+  };
+
+  /** AM and PM: which is selected, and which cannot be reached. */
+  function markPeriod(): void {
+    for (const period of [TIME_PERIOD.AM, TIME_PERIOD.PM]) {
+      const element = container.querySelector<HTMLElement>(`.${config.prefix}-time-picker__period-${period.toLowerCase()}`);
+      if (!element) continue;
+      const selected = timeValue.period === period;
+      element.classList.toggle(`${config.prefix}-time-picker__period--selected`, selected);
+      element.setAttribute("aria-checked", String(selected));
+      // Out of the tab order: a radiogroup is one stop, and the selected
+      // option is the one Tab reaches.
+      element.setAttribute("tabindex", selected ? "0" : "-1");
+      if (periodAllowed(period)) element.removeAttribute("aria-disabled");
+      else element.setAttribute("aria-disabled", "true");
+    }
+  }
+
   // The dial shows the time at once; it no longer waits for a canvas to size.
   dial.update(timeValue, activeSelector);
 
@@ -276,12 +337,16 @@ export const renderTimePicker = (
     const target = e.target as HTMLInputElement;
     const type = target.getAttribute("data-type");
     const value = target.value;
-
-    // Skip processing if the field is empty (user might be in the middle of typing)
-    if (value === "") return;
-
+    // Typing is not held to the limits and steps until it is committed (change,
+    // or Enter): a first digit is rarely a valid time on its own.
+    const commit = e.type !== "input";
     const numValue = parseInt(value, 10);
-    if (isNaN(numValue)) return;
+
+    // An empty field may be mid-typing; committed empty, it shows the time again.
+    if (isNaN(numValue)) {
+      if (commit) refresh();
+      return;
+    }
 
     const previousValue = { ...timeValue };
 
@@ -311,10 +376,6 @@ export const renderTimePicker = (
 
       // Set this field as active for the dial
       setActive("hour");
-
-      if (timeValue.hours !== previousValue.hours && onTimeChange) {
-        onTimeChange("hours", newHours);
-      }
     } else if (type === "minute") {
       let newMinutes = numValue;
 
@@ -322,14 +383,10 @@ export const renderTimePicker = (
       if (numValue < 0) newMinutes = 0;
       if (numValue > 59) newMinutes = 59;
 
-      timeValue.minutes = newMinutes;
+      timeValue.minutes = commit ? roundToStep(newMinutes, minuteStep) : newMinutes;
 
       // Set this field as active for the dial
       setActive("minute");
-
-      if (timeValue.minutes !== previousValue.minutes && onTimeChange) {
-        onTimeChange("minutes", newMinutes);
-      }
     } else if (type === "second") {
       let newSeconds = numValue;
 
@@ -337,15 +394,14 @@ export const renderTimePicker = (
       if (numValue < 0) newSeconds = 0;
       if (numValue > 59) newSeconds = 59;
 
-      timeValue.seconds = newSeconds;
+      timeValue.seconds = commit ? roundToStep(newSeconds, secondStep) : newSeconds;
 
       // Set this field as active for the dial
       setActive("second");
-
-      if (timeValue.seconds !== previousValue.seconds && onTimeChange) {
-        onTimeChange("seconds", newSeconds);
-      }
     }
+
+    if (commit) settle();
+    notify(previousValue);
   };
 
   // Native input keeps the form current while typing. Also accept change
@@ -357,12 +413,6 @@ export const renderTimePicker = (
     input.addEventListener("change", handleInputChange);
     input.addEventListener("keyup", event => {
       if (event.key === "Enter") handleInputChange(event);
-    });
-    input.addEventListener("change", () => {
-      const value = input === hoursInput
-        ? (config.format === TIME_FORMAT.MILITARY ? timeValue.hours : timeValue.hours % 12 || 12)
-        : input === minutesInput ? timeValue.minutes : timeValue.seconds || 0;
-      show(input, value);
     });
   }
 
@@ -398,65 +448,13 @@ export const renderTimePicker = (
 
   // Handle period selection (AM/PM)
   const handlePeriodChange = (period: TIME_PERIOD) => {
-    if (timeValue.period !== period) {
-      const oldPeriod = timeValue.period;
-      timeValue.period = period;
-
-      // Adjust hours when switching between AM/PM
-      if (oldPeriod === TIME_PERIOD.AM && period === TIME_PERIOD.PM) {
-        if (timeValue.hours < 12) {
-          timeValue.hours += 12;
-        }
-      } else if (oldPeriod === TIME_PERIOD.PM && period === TIME_PERIOD.AM) {
-        if (timeValue.hours >= 12) {
-          timeValue.hours -= 12;
-        }
-      }
-
-      // Update display for 12-hour format
-      if (config.format === TIME_FORMAT.AMPM) {
-        const displayHours =
-          timeValue.hours === 0
-            ? 12
-            : timeValue.hours > 12
-            ? timeValue.hours - 12
-            : timeValue.hours;
-        show(hoursInput, displayHours);
-      }
-
-      // Update period selectors
-      container
-        .querySelectorAll(
-          `.${config.prefix}-time-picker__period-am, .${config.prefix}-time-picker__period-pm`
-        )
-        .forEach((el) => {
-          el.classList.remove(`${config.prefix}-time-picker__period--selected`);
-          el.setAttribute("aria-checked", "false");
-          // Out of the tab order: a radiogroup is one stop, and the selected
-          // option is the one Tab reaches.
-          el.setAttribute("tabindex", "-1");
-        });
-
-      const selectedPeriod = container.querySelector(
-        `.${config.prefix}-time-picker__period-${period.toLowerCase()}`
-      );
-      if (selectedPeriod) {
-        selectedPeriod.classList.add(
-          `${config.prefix}-time-picker__period--selected`
-        );
-        selectedPeriod.setAttribute("aria-checked", "true");
-        selectedPeriod.setAttribute("tabindex", "0");
-      }
-
-      // Update dial if visible
-      if (dialContainer.style.display === "block") {
-        dial.update(timeValue, activeSelector);
-      }
-
-      if (onTimeChange) {
-        onTimeChange("hours", timeValue.hours);
-      }
-    }
+    if (timeValue.period === period || !periodAllowed(period)) return;
+    const previousValue = { ...timeValue };
+    timeValue.period = period;
+    // The same hour on the other half of the day.
+    timeValue.hours = (timeValue.hours % 12) + (period === TIME_PERIOD.PM ? 12 : 0);
+    settle();
+    notify(previousValue);
   };
 
   // Add event listeners for period selectors
@@ -502,6 +500,9 @@ export const renderTimePicker = (
           key === "ArrowDown"
         ) {
           event.preventDefault();
+          // A period outside minTime and maxTime is skipped: with two, the
+          // selection stays. FLO-281.
+          if (!periodAllowed(other)) return;
           handlePeriodChange(other);
           // The selection carries focus with it, which is what makes the group
           // a single tab stop rather than a trap.
@@ -526,59 +527,29 @@ export const renderTimePicker = (
   function selectFromDial(value: number, final: boolean, pointer: boolean): void {
     if (!final && !started) started = { ...timeValue };
     const previousValue = started ?? { ...timeValue };
-    if (activeSelector === "hour") {
-      let newHours = value;
-
-      // Adjust for 12-hour format
-      if (config.format === TIME_FORMAT.AMPM) {
-        if (timeValue.period === TIME_PERIOD.PM && value !== 12) {
-          newHours += 12;
-        } else if (
-          timeValue.period === TIME_PERIOD.AM &&
-          value === 12
-        ) {
-          newHours = 0;
-        }
+    // A pointer lands between labels; it picks the nearest step.
+    if (activeSelector !== "hour") value = roundToStep(value, activeSelector === "minute" ? minuteStep : secondStep);
+    const picked = allowed(activeSelector, value);
+    if (picked) {
+      if (activeSelector === "hour") {
+        timeValue.hours = to24(value);
+        timeValue.period = timeValue.hours >= 12 ? TIME_PERIOD.PM : TIME_PERIOD.AM;
+      } else if (activeSelector === "minute") {
+        timeValue.minutes = value;
+      } else if (secondsInput) {
+        timeValue.seconds = value;
       }
-
-      timeValue.hours = newHours;
-      timeValue.period = newHours >= 12 ? TIME_PERIOD.PM : TIME_PERIOD.AM;
-
-      // Update input display
-      if (config.format === TIME_FORMAT.AMPM) {
-        const displayHours =
-          newHours === 0 ? 12 : newHours > 12 ? newHours - 12 : newHours;
-        show(hoursInput, displayHours);
-      } else {
-        show(hoursInput, newHours);
-      }
-
-      if (timeValue.hours !== previousValue.hours && final && onTimeChange) {
-        onTimeChange("hours", newHours);
-      }
-    } else if (activeSelector === "minute") {
-      timeValue.minutes = value;
-      show(minutesInput, value);
-
-      if (timeValue.minutes !== previousValue.minutes && final && onTimeChange) {
-        onTimeChange("minutes", value);
-      }
-    } else if (activeSelector === "second" && secondsInput) {
-      timeValue.seconds = value;
-      show(secondsInput, value);
-
-      if (timeValue.seconds !== previousValue.seconds && final && onTimeChange) {
-        onTimeChange("seconds", value);
-      }
+      settle();
     }
-
-    dial.update(timeValue, activeSelector);
     if (!final) return;
     started = null;
-    if (pointer && activeSelector === "hour") {
+    notify(previousValue);
+    if (picked && pointer && activeSelector === "hour") {
       setTimeout(() => { if (dial.element.isConnected && activeSelector === "hour") minutesInput.click(); }, 200);
     }
   }
+
+  markPeriod();
 
   // Dial mode: the boxes are a radiogroup. A click or Enter or Space checks one
   // and turns the dial to it; the arrows move the check and the focus, as in a

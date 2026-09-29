@@ -64,6 +64,9 @@ export const TIMEPICKER_EVENTS = {
 /**
  * Visual constants for the clock dial
  * @category Components
+ * @deprecated Unused, and not the dial's geometry: the DOM dial (FLO-279) is
+ * sized in CSS, a 256dp face with numbers on 101dp and 69dp rings and a 48dp
+ * handle. Kept for compatibility (FLO-281).
  */
 export const TIMEPICKER_DIAL = {
   /** Diameter of the clock dial in pixels */
@@ -100,6 +103,8 @@ export const TIMEPICKER_VALUES = {
 /**
  * Z-index values for different parts of the time picker
  * @category Components
+ * @deprecated Unused: the picker is a native modal `<dialog>` in the top layer
+ * (FLO-278), which needs no z-index. Kept for compatibility (FLO-281).
  */
 export const TIMEPICKER_Z_INDEX = {
   /** Z-index for the modal backdrop */
@@ -115,7 +120,7 @@ export const TIMEPICKER_Z_INDEX = {
 export const TIMEPICKER_SELECTORS = {
   /** Main container selector */
   CONTAINER: '.mtrl-time-picker',
-  /** Modal backdrop selector */
+  /** @deprecated Matches nothing: the backdrop is the dialog's `::backdrop` (FLO-278). */
   MODAL: '.mtrl-time-picker__modal',
   /** Dialog container selector */
   DIALOG: '.mtrl-time-picker__dialog',
@@ -125,14 +130,14 @@ export const TIMEPICKER_SELECTORS = {
   CONTENT: '.mtrl-time-picker__content',
   /** Clock dial container selector */
   DIAL: '.mtrl-time-picker__dial',
-  /** Clock dial canvas selector */
+  /** @deprecated Matches nothing: the dial is DOM, not a canvas (FLO-279). */
   DIAL_CANVAS: '.mtrl-time-picker__dial-canvas',
   /** Clock dial face selector */
   DIAL_FACE: '.mtrl-time-picker__dial-face',
-  /** Clock hand selector */
+  /** @deprecated Matches nothing: the hand is `__dial-track` and `__dial-handle` (FLO-279). */
   DIAL_HAND: '.mtrl-time-picker__dial-hand',
-  /** Clock center dot selector */
-  DIAL_CENTER: '.mtrl-time-picker__dial-center',
+  /** Clock centre dot selector */
+  DIAL_CENTER: '.mtrl-time-picker__dial-centre',
   /** Clock numbers container selector */
   DIAL_NUMBERS: '.mtrl-time-picker__dial-numbers',
   /** Individual number element selector */
@@ -202,7 +207,7 @@ export const TIMEPICKER_DEFAULTS = {
   ORIENTATION: TIMEPICKER_ORIENTATIONS.VERTICAL,
   /** Whether to show seconds selector */
   SHOW_SECONDS: false,
-  /** Whether to close picker when time is selected */
+  /** @deprecated `closeOnSelect` has no effect (FLO-281). */
   CLOSE_ON_SELECT: true,
   /** Step interval for minute selection */
   MINUTE_STEP: 1,
@@ -223,6 +228,9 @@ export const TIMEPICKER_DEFAULTS = {
 /**
  * CSS class names used by the time picker component
  * @category Components
+ * @deprecated Unused by the picker, and without the prefix: use
+ * `TIMEPICKER_SELECTORS`. Two values that named nothing now match the DOM
+ * (`DIAL_CENTER`, `PERIOD_ACTIVE`). Kept for compatibility (FLO-281).
  */
 export const TIMEPICKER_CLASSES = {
   /** Root element class */
@@ -257,8 +265,8 @@ export const TIMEPICKER_CLASSES = {
   DIAL_FACE: 'time-picker__dial-face',
   /** Dial hand class */
   DIAL_HAND: 'time-picker__dial-hand',
-  /** Dial center dot class */
-  DIAL_CENTER: 'time-picker__dial-center',
+  /** Dial centre dot class */
+  DIAL_CENTER: 'time-picker__dial-centre',
   /** Dial numbers container class */
   DIAL_NUMBERS: 'time-picker__dial-numbers',
   /** Individual dial number class */
@@ -281,8 +289,8 @@ export const TIMEPICKER_CLASSES = {
   PERIOD_AM: 'time-picker__period-am',
   /** PM button class */
   PERIOD_PM: 'time-picker__period-pm',
-  /** Active period button class */
-  PERIOD_ACTIVE: 'time-picker__period--active',
+  /** Selected period button class */
+  PERIOD_ACTIVE: 'time-picker__period--selected',
   /** Actions container class */
   ACTIONS: 'time-picker__actions',
   /** Toggle type button class */

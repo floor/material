@@ -347,14 +347,17 @@ describe("typed event payloads (FLO-114)", () => {
     try {
       expect(picker.on("change", changed)).toBe(picker);
       picker.setValue("14:45");
+      // A format change is not a change of value, and the same value again is
+      // not a change either (FLO-281).
       picker.setFormat(TIME_FORMAT.MILITARY);
+      picker.setValue("14:45");
       const minutes = picker.dialogElement.querySelector<HTMLInputElement>(TIMEPICKER_SELECTORS.MINUTES_INPUT)!;
       minutes.value = "20";
       minutes.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
-      expect(changed.mock.calls).toEqual([["14:45"], ["14:45"], ["14:20"]]);
+      expect(changed.mock.calls).toEqual([["14:45"], ["14:20"]]);
       expect(picker.off("change", changed)).toBe(picker);
       picker.setValue("16:00");
-      expect(changed).toHaveBeenCalledTimes(3);
+      expect(changed).toHaveBeenCalledTimes(2);
     } finally { picker.destroy(); }
   });
 
