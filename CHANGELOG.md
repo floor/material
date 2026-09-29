@@ -227,6 +227,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   button when it has `onClick`, and otherwise an image out of the tab order (it was a
   focusable div with no role); suggestions take `supportingText`, as a 72dp two-line item;
   the icon buttons inherit the font inside a shadow root.
+  `<m-search>` drops its two workarounds (the Enter filter, and `clear` mapped to `input`),
+  its avatar is a button, and it takes `min-width` / `max-width` (pixels or a CSS length, in
+  place), `no-clear-button`, `no-expand-on-focus` and `no-collapse-on-blur` (#263).
 - **Search: `minWidth` and `maxWidth` apply (FLO-290).** They were documented and given
   defaults, and nothing read them: the stylesheet's 360dp and 720dp applied whatever was
   passed. They now set `--mtrl-search-min-width` and `--mtrl-search-max-width` on the root.

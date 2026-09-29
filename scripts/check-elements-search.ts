@@ -452,6 +452,42 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
   await settle();
   check("search: full screen opens :modal over an inert page; Escape closes it once, focus back on the combobox; view-mode switches in place");
 
+  // ------------------------------------------------------------ #263 attributes
+  await fresh(
+    page,
+    `<div style="width: 900px"><m-search id="wa" min-width="200" max-width="30rem" aria-label="Widths"></m-search></div>
+     <m-search id="nc" value="pear" no-clear-button aria-label="No clear"></m-search>
+     <m-search id="nf" no-expand-on-focus aria-label="No expand"></m-search>
+     <m-search id="nb" no-collapse-on-blur aria-label="No collapse"></m-search>
+     <button id="elsewhere">Elsewhere</button>`
+  );
+  const inner = (id: string, selector: string) => page.evaluate(([id, selector]) => document.getElementById(id)!.shadowRoot!.querySelector<HTMLElement>(selector), [id, selector] as const);
+  const barWidth = () => page.evaluate(() => Math.round(document.getElementById("wa")!.shadowRoot!.querySelector<HTMLElement>(".mtrl-search")!.getBoundingClientRect().width));
+  assert.equal(await barWidth(), 480, "max-width takes a CSS length: 30rem");
+  await page.evaluate(() => document.getElementById("wa")!.setAttribute("max-width", "300"));
+  assert.equal(await barWidth(), 300, "a number is pixels, changed in place");
+  await page.evaluate(() => document.getElementById("wa")!.removeAttribute("max-width"));
+  assert.equal(await barWidth(), 720, "removed, the M3 720dp");
+  check("search: min-width and max-width take pixels or a CSS length, in place");
+
+  assert.equal(await inner("nc", ".mtrl-search__clear-button"), null, "no-clear-button: no clear button");
+  await page.evaluate(() => document.getElementById("nc")!.removeAttribute("no-clear-button"));
+  await settle();
+  assert.notEqual(await inner("nc", ".mtrl-search__clear-button"), null, "removed, the clear button is back");
+  check("search: no-clear-button leaves out the clear button");
+
+  await page.getByRole("combobox", { name: "No expand", exact: true }).focus();
+  await settle();
+  assert.equal(await page.evaluate(() => document.getElementById("nf")!.hasAttribute("open")), false, "no-expand-on-focus: focus does not open the view");
+  check("search: no-expand-on-focus keeps the view closed on focus");
+
+  await page.getByRole("combobox", { name: "No collapse", exact: true }).focus();
+  await settle();
+  await page.evaluate(() => document.getElementById("elsewhere")!.focus());
+  await settle();
+  assert.equal(await page.evaluate(() => document.getElementById("nb")!.hasAttribute("open")), true, "no-collapse-on-blur: the view stays open when focus leaves");
+  check("search: no-collapse-on-blur keeps the view open when focus leaves");
+
   // ------------------------------------------------------------ restore
   // Going back restores the query the user typed over the value attribute
   const [js, css] = await Promise.all([

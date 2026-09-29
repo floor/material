@@ -53,10 +53,16 @@ test("a click in the focused input, or typing, reopens a closed view", async () 
   p.search.collapse();
   p.type("b");
   expect(p.search.isExpanded()).toBe(true);
+  // A script setting the value without focus is not typing.
+  p.input.blur();
+  p.search.collapse();
+  p.type("c");
+  expect(p.search.isExpanded()).toBe(false);
 });
 
 test("emptying the query emits input, then clear: the clear button and Escape", async () => {
   const p = await setup();
+  p.input.focus();
   p.type("apple");
   p.log.length = 0;
   p.search.element.querySelector<HTMLButtonElement>(".mtrl-search__clear-button")!.click();
