@@ -84,6 +84,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   layouts the time still reads left to right and AM/PM moves to the other side. Dark
   colours come from the theme: the `prefers-color-scheme` overrides and the surface-tint
   overlay are gone, and so is the phone-width shrink of the fields.
+- **Date picker: focus inside a shadow root (FLO-284).** It read `document.activeElement`,
+  which stops at the shadow host, so inside a web component Tab no longer wrapped in the
+  modal, a swipe or the growing full-screen list lost the focused day, and closing could
+  return focus to the host rather than the control that opened it. It now reads focus from
+  its own root, and the opener through open shadow roots.
 
 ## [0.10.0-next.2] - 2026-09-29
 
