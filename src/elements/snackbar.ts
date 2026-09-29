@@ -68,9 +68,9 @@ const snackbarSpec = {
   },
   methods: ["show", "hide"] as const,
   events: {
-    open: { detail: () => null },
+    open: { detail: () => null, state: true },
     action: { detail: () => null },
-    close: { detail: (event) => ({ reason: (event as SnackbarEvent).reason }) },
+    close: { detail: (event) => ({ reason: (event as SnackbarEvent).reason }), state: true },
   },
   config: (host) => (host.hasAttribute("message") ? {} : { message: messageOf(host) }),
   setup: (host, component) => {

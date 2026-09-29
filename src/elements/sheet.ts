@@ -80,20 +80,22 @@ export const setSheetOpen = (component: SheetComponent, open: boolean): void => 
  * Keeps the headline in step with its slot and `open` with the sheet, and
  * opens a sheet whose markup says `open`: once it is in the shadow root, as
  * moving a modal `<dialog>` would take it out of the top layer. `listen`
- * subscribes to the sheet's open and close and returns the unsubscribe.
+ * subscribes to the sheet's open and close and returns the unsubscribe;
+ * `open` opens the sheet, when that takes more than `open()`.
  */
 export const sheetSetup = (
   host: HTMLElement,
   component: SheetComponent,
   parts: SheetParts,
-  listen: (handler: () => void) => () => void
+  listen: (handler: () => void) => () => void,
+  open: () => void = () => void component.open()
 ): (() => void) => {
   const sync = (): void => syncSheet(host, component, parts);
   const slot = component.element.querySelector('slot[name="headline"]');
   slot?.addEventListener("slotchange", sync);
   sync();
   const unlisten = listen(() => void host.toggleAttribute("open", component.isOpen()));
-  if (host.hasAttribute("open")) component.open();
+  if (host.hasAttribute("open")) open();
   return () => {
     slot?.removeEventListener("slotchange", sync);
     unlisten();

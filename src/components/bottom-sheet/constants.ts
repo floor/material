@@ -29,8 +29,6 @@ export const BOTTOM_SHEET_STATES = {
  */
 export const BOTTOM_SHEET_DEFAULTS = {
   VARIANT: BOTTOM_SHEET_VARIANTS.MODAL,
-  /** BottomSheetDefaults.SheetPeekHeight */
-  PEEK_HEIGHT: 56,
   /** BottomSheetDefaults.SheetMaxWidth; wider viewports centre the sheet */
   MAX_WIDTH: 640,
   /** A drag handle is part of the anatomy, so it is on unless asked otherwise */

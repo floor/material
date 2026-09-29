@@ -10,8 +10,12 @@ import type { SwitchElement } from "../../dist/elements/index.js";
 import { MChip, MChips } from "../../dist/vue/index.js";
 import { MSelect, MSelectOption } from "../../dist/vue/index.js";
 import { MDialog } from "../../dist/vue/index.js";
+import { MDatepicker } from "../../dist/vue/index.js";
+import { MSearch, MSearchSuggestion } from "../../dist/vue/index.js";
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
+// The suggestions a search offers, filtered by the query as the user types.
+const FRUITS = ["Apple", "Apricot", "Banana"];
 
 type Log = Array<{ id: string; detail: unknown }>;
 export interface Api {
@@ -23,6 +27,7 @@ export interface Api {
   show: Ref<boolean>;
   progress: Ref<number>;
   setDialog: (v: boolean) => void;
+  setRail: (v: boolean) => void;
   switchRef: Ref<Exposed<SwitchElement> | null>;
 }
 
@@ -43,10 +48,14 @@ export const App = defineComponent(() => {
   const fruit = ref<string | null>("b");
   const pet = ref<string | null>("cat");
   const dialog = ref(false);
+  const rail = ref(false);
+  const due = ref("2026-09-10");
+  const query = ref("ap");
   const switchRef = ref<Exposed<SwitchElement> | null>(null);
   const api: Api = {
     log: [], submits: 0, model, extra, order, show, progress, switchRef,
     setDialog: (v: boolean) => void (dialog.value = v),
+    setRail: (v: boolean) => void (rail.value = v),
   };
   onMounted(() => {
     (window as unknown as { api: Api }).api = api;
@@ -127,6 +136,29 @@ export const App = defineComponent(() => {
         "Your changes will be lost.",
       ]),
       h("output", { id: "dialog" }, String(dialog.value)),
+      // Controlled: expanded is state; Escape collapses the modal rail, and
+      // onCollapse puts the state in step
+      h(
+        MNavigationRail,
+        {
+          id: "mr", layout: "modal", ariaLabel: "Modal rail", expanded: rail.value,
+          onExpand: () => (rail.value = true), onCollapse: () => (rail.value = false),
+        },
+        () => [
+          h(MNavigationRailItem, { value: "inbox", icon: ICON }, () => "Inbox"),
+          h(MNavigationRailItem, { value: "sent", icon: ICON }, () => "Sent"),
+        ]
+      ),
+      h("output", { id: "rail" }, String(rail.value)),
+      h(MDatepicker, { id: "dt", variant: "modal", label: "Due", modelValue: due.value, "onUpdate:modelValue": (v: string) => (due.value = v) }),
+      h("output", { id: "due" }, due.value),
+      // v-model, its suggestions replaced as the query changes
+      h(MSearch, { id: "sq", ariaLabel: "Query", modelValue: query.value, "onUpdate:modelValue": (v: string) => (query.value = v) }, () =>
+        FRUITS.filter((f) => f.toLowerCase().includes(query.value.toLowerCase())).map((f) =>
+          h(MSearchSuggestion, { key: f, value: f.toLowerCase() }, () => f)
+        )
+      ),
+      h("output", { id: "query" }, query.value),
       ...order.value.map((key) => h(MSwitch, { key, id: `o${key}` }, () => `Order ${key}`)),
       show.value ? h(MSwitch, { id: "gone" }, () => "Gone") : null,
       // Mounted in the browser after the element is defined: Vue writes a key

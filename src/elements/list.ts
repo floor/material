@@ -226,7 +226,8 @@ const listSpec = {
   defaults: ["values"],
   // Dispatched by the element (see dispatchActivation): the factory emits neither.
   events: {
-    activate: { detail: (payload) => payload as { value: string } },
+    // A press on a row, beside the model: `change` carries the selection.
+    activate: { detail: (payload) => payload as { value: string }, state: true },
     change: { detail: (payload) => payload as { value: string | null; values: string[] } },
   },
   config: readList,

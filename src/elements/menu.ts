@@ -4,7 +4,8 @@
  *
  * Each `<m-menu-item>` declares one item: its text (or `label`), `value`,
  * `icon`, `shortcut`, `supporting-text` and `disabled`; `divider` makes it a
- * divider instead, and `<m-menu-item>` children inside it are its submenu.
+ * divider instead and `gap` a gap between groups (separate surfaces in the
+ * vertical menu), and `<m-menu-item>` children inside it are its submenu.
  * The menu reads them into the factory's items and updates in place when they
  * change; the children stay where the framework put them.
  *
@@ -21,7 +22,8 @@
  * the same. `open` and `close` are dispatched for every opening and closing,
  * whatever caused it, and `select` with the item's value when one is chosen.
  * There is no two-way binding: an app that keeps `open` in its state follows
- * the `close` event.
+ * the `close` event. `no-close-on-select` keeps the menu open when an item is
+ * chosen, and `color="vibrant"` is the vertical menu's vibrant colours.
  *
  * @module elements
  */
@@ -65,6 +67,10 @@ export const declaredMenuItems = (parent: Element, tag: string): MenuContent[] =
       items.push({ type: "divider" });
       continue;
     }
+    if (child.hasAttribute("gap")) {
+      items.push({ type: "gap" });
+      continue;
+    }
     const text = itemText(child, tag);
     const submenu = declaredMenuItems(child, tag);
     items.push({
@@ -84,6 +90,7 @@ export const declaredMenuItems = (parent: Element, tag: string): MenuContent[] =
 interface MenuElementConfig extends Partial<MenuConfig> {
   host: HTMLElement;
   anchor?: MenuAnchor;
+  noCloseOnSelect?: boolean;
 }
 
 /** The element each menu belongs to, and the stand-in opener used while it has no anchor. */
@@ -116,12 +123,12 @@ const findPending = (c: MenuComponent): void => {
 };
 
 const create = (config: MenuElementConfig): MenuElementComponent => {
-  const { host, anchor, ...rest } = config;
+  const { host, anchor, noCloseOnSelect, ...rest } = config;
   // The factory needs an opener: a detached stand-in until the anchor is found
   const standIn = document.createElement("span");
   // A property kept over a recreation may be null: the attribute then decides
   const opener = findAnchor(host, anchor) ?? findAnchor(host, host.getAttribute("anchor")) ?? standIn;
-  const menu = createMenu({ ...rest, items: rest.items ?? [], opener, layer: "top" });
+  const menu = createMenu({ ...rest, items: rest.items ?? [], opener, closeOnSelect: !noCloseOnSelect, layer: "top" });
   hosts.set(menu, host);
   standIns.set(menu, standIn);
   applied.set(menu, JSON.stringify(menu.getItems()));
@@ -180,6 +187,8 @@ const menuSpec = {
     },
     offset: { type: "number", config: "offset" },
     variant: { type: "string", config: "variant" },
+    color: { type: "string", config: "color" },
+    "no-close-on-select": { type: "boolean", config: "noCloseOnSelect" },
     dense: { type: "boolean", config: "dense" },
     "max-height": { type: "string", config: "maxHeight", update: (c, v) => void (c.element.style.maxHeight = v === null ? "" : String(v)) },
     // Names the surface; set again in setup, the factory takes no label
@@ -200,8 +209,8 @@ const menuSpec = {
   },
   methods: ["show", "hide", "toggle"] as const,
   events: {
-    open: { detail: () => ({}) },
-    close: { detail: () => ({}) },
+    open: { detail: () => ({}), state: true },
+    close: { detail: () => ({}), state: true },
     select: { detail: (payload) => ({ value: (payload as MenuSelectEvent).itemId }) },
   },
   config: (host): Config => ({ host, items: declaredMenuItems(host, `${host.localName}-item`) }),
@@ -245,6 +254,7 @@ export const menuItemDeclaration = {
     "supporting-text": { type: "string" },
     disabled: { type: "boolean" },
     divider: { type: "boolean" },
+    gap: { type: "boolean" },
   },
 } as const;
 export type MenuItemAttributes = ElementAttributes<typeof menuItemDeclaration>;
