@@ -13,9 +13,11 @@ type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 const picker = createTimePicker();
 export const names: Equals<keyof TimePickerEvents,
-  "change" | "confirm" | "open" | "close" | "cancel" | "click" | "keydown" | "tap" | "swipe"
+  "change" | "input" | "confirm" | "open" | "close" | "cancel" | "click" | "keydown" | "tap" | "swipe"
 > = true;
 export const changeIsString: Equals<Parameters<TimePickerEvents["change"]>, [string]> = true;
+// The draft, while the picker is open (FLO-288): the same string as change.
+export const inputIsString: Equals<Parameters<TimePickerEvents["input"]>, [string]> = true;
 export const confirmIsString: Equals<Parameters<TimePickerEvents["confirm"]>, [string]> = true;
 export const openHasNoPayload: Equals<Parameters<TimePickerEvents["open"]>, []> = true;
 export const closeHasNoPayload: Equals<Parameters<TimePickerEvents["close"]>, []> = true;

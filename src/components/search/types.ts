@@ -15,6 +15,15 @@ export type SearchState = "bar" | "view";
 export type SearchViewMode = "docked" | "fullscreen";
 
 /**
+ * Search variant, M3's style (FLO-287)
+ * - 'contained': M3 Expressive. The bar keeps its pill and filled container
+ *   when focused, and the results sit in their own container
+ * - 'divided': the baseline. The bar squares off and a divider separates the
+ *   results
+ */
+export type SearchVariant = "contained" | "divided";
+
+/**
  * Valid event types for search component per MD3 spec
  */
 export type SearchEventType =
@@ -87,6 +96,9 @@ export interface SearchConfig {
 
   /** View mode when expanded: 'docked' or 'fullscreen'. Default: 'docked' */
   viewMode?: SearchViewMode;
+
+  /** 'contained' (M3 Expressive) or 'divided' (baseline). Default: 'contained' */
+  variant?: SearchVariant;
 
   /** Whether the search component is disabled */
   disabled?: boolean;
@@ -214,6 +226,12 @@ export interface SearchComponent {
   /** Gets the current view mode */
   getViewMode: () => SearchViewMode;
 
+  /** Sets the variant ('contained' or 'divided') */
+  setVariant: (variant: SearchVariant) => SearchComponent;
+
+  /** Gets the current variant */
+  getVariant: () => SearchVariant;
+
   // === Input Controls ===
 
   /** Focuses the search input */
@@ -314,6 +332,8 @@ export interface SearchStructure {
   suggestionsContainer: HTMLElement | null;
   /** Suggestions list element */
   suggestionsList: HTMLElement | null;
+  /** The live region that announces the suggestion count (FLO-286) */
+  status: HTMLElement;
 }
 
 /**

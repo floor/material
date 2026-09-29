@@ -354,6 +354,9 @@ describe("typed event payloads (FLO-114)", () => {
       const minutes = picker.dialogElement.querySelector<HTMLInputElement>(TIMEPICKER_SELECTORS.MINUTES_INPUT)!;
       minutes.value = "20";
       minutes.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
+      // An edit is a draft; OK commits it with one change (FLO-288).
+      expect(changed.mock.calls).toEqual([["14:45"]]);
+      picker.dialogElement.querySelector<HTMLButtonElement>(TIMEPICKER_SELECTORS.CONFIRM_BUTTON)!.click();
       expect(changed.mock.calls).toEqual([["14:45"], ["14:20"]]);
       expect(picker.off("change", changed)).toBe(picker);
       picker.setValue("16:00");
@@ -496,9 +499,9 @@ describe("BEM element names (FLO-120)", () => {
       const minutes = find<HTMLInputElement>("minutes");
       minutes.value = "45";
       minutes.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
-      expect(picker.getTimeObject().minutes).toBe(45);
       find<HTMLButtonElement>("period-pm").click();
-      expect(picker.getTimeObject().period).toBe(TIME_PERIOD.PM);
+      // Drafts until OK (FLO-288).
+      expect(picker.getTimeObject().minutes).toBe(30);
       expect(find("period-pm").classList.contains(`${prefix}-time-picker__period--selected`)).toBe(true);
       picker.setTitle("Updated");
       expect(find("title").textContent).toBe("Updated");
@@ -512,6 +515,7 @@ describe("BEM element names (FLO-120)", () => {
       find<HTMLButtonElement>("confirm").click();
       expect(confirmed).toHaveBeenCalledTimes(1);
       expect(picker.isOpen).toBe(false);
+      expect([picker.getTimeObject().minutes, picker.getTimeObject().period]).toEqual([45, TIME_PERIOD.PM]);
     } finally { picker.destroy(); }
   });
 });

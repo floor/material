@@ -188,6 +188,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   is inert, Escape cancels). A clipping parent no longer hides the results. Moving focus to
   the view's own back or clear button no longer closes it, and hovering a suggestion no
   longer selects it for the next Tab.
+- **Search: accessibility and M3 tokens (FLO-286).** The input is a combobox that controls
+  the suggestions listbox (`role="combobox"`, `aria-expanded`, `aria-controls`,
+  `aria-autocomplete="list"`), and the arrows move `aria-activedescendant` through the
+  options; a polite status announces how many suggestions show. The icon buttons are 48dp
+  tap targets (they were 24dp) with 8% hover and 10% focus and pressed layers and the 3dp
+  `secondary` focus ring; the bar has an 8% hover layer. Suggestions are 56dp one-line list
+  items, and the option the arrows reach looks focused. The divider is `outline`. The
+  suggestions listbox stays in the DOM, hidden, while the search is a bar.
 - **Time picker: `minTime`, `maxTime`, `minuteStep` and `secondStep` are applied
   (FLO-281).** They were accepted and documented, and did nothing. Dial numbers and AM/PM
   that cannot be reached are disabled (at 38%), a pointer between labels picks the nearest
@@ -215,6 +223,26 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- **Search: the contained style by default, with `variant: 'divided'` for the baseline
+  (FLO-287).** M3 marks the divided style "not recommended, use contained" in M3 Expressive,
+  and it was the only one mtrl drew. Contained keeps the bar's pill and filled container
+  when focused and gives the results their own container: docked 2dp below the bar with
+  12dp corners, full screen on `surface-container-low` with the bar inset 12dp. `variant:
+  'divided'` (and `setVariant()`) keeps the look apps had. The results reveal on the
+  emphasized decelerate curve, not with reduced motion; the never-driven `--expanding` and
+  `--collapsing` classes are gone.
+- **Time picker: edits are a draft until OK (FLO-288).** Every move of the dial was the value,
+  with a `change` each time, and Cancel kept it; in M3, Cancel discards and OK commits, as
+  the date picker already did. While open, the dial, fields and AM/PM edit a draft,
+  reported by a new `input` event (and `onInput`). OK commits it with one `change` (if it
+  differs), then `confirm`, both while the picker is still open, then `close`; Cancel,
+  Escape and the backdrop put the committed value back and emit `cancel` before `close`.
+  `getValue()`, `getTimeObject()` and the form value are the committed time throughout;
+  `setValue` still commits directly. The dialog now stays in the component's element
+  (it was appended to `document.body`; `open()` adds an element the app never placed to
+  the page), so the root's `click` and `keydown` leave out the dialog's own, and Enter in
+  its fields does not submit a surrounding form. New `disabled`, `enable()`, `disable()`
+  and `isDisabled()`: a disabled picker does not open.
 - **Time picker: `change` fires once per new value (FLO-281).** `setFormat` no longer emits
   `change` (the value is 24-hour whatever the display, and it emitted without calling
   `onChange`), and `setValue` notifies only when the value differs, with the event and

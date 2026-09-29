@@ -104,6 +104,120 @@ export async function checkSearch(page: Page): Promise<void> {
   const back = await layout(page);
   assert.deepEqual([back.surface[3], back.after, back.popover], [56, bar.after, false], "Escape: back to a bar in the page");
 
+  await checkSearchTokens(page);
+  await checkSearchVariants(page);
   await page.evaluate(() => { (window as unknown as SearchWindow).search.destroy(); document.body.replaceChildren(); });
-  console.log("Passed packed search: the open view over the page in the top layer (docked under the bar with a scrim, full screen as a modal dialog), the bar's place kept, a clipping parent escaped, scrim and Escape dismissal (FLO-285).");
+  console.log("Passed packed search: the open view over the page in the top layer (docked under the bar with a scrim, full screen as a modal dialog), the bar's place kept, a clipping parent escaped, scrim and Escape dismissal (FLO-285); 48dp tap targets, the focus ring, state layers, combobox semantics with a live count, the outline divider and 56dp suggestions (FLO-286); the contained default and the divided variant, docked and full screen, and the results' reveal (FLO-287).");
+}
+
+/** FLO-286: tap targets, focus ring, state layers, combobox semantics, divider and list items. */
+async function checkSearchTokens(page: Page): Promise<void> {
+  const avatar = '<img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">';
+  const icon = '<svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/></svg>';
+  await mount(page, { placeholder: "Search messages", value: "an", suggestions: ["Apple", "Banana", "Cherry"], trailingItems: [{ id: "mic", type: "icon", content: icon, ariaLabel: "Voice search" }, { id: "me", type: "avatar", content: avatar }] });
+  await page.mouse.move(0, 0);
+  const geometry = await page.evaluate(() => {
+    const q = (s: string) => document.querySelector<HTMLElement>(s)!.getBoundingClientRect();
+    const bar = q(".mtrl-search__container"), lead = q(".mtrl-search__leading-icon"), glyph = q(".mtrl-search__leading-icon svg"), input = q(".mtrl-search__input");
+    const img = q(".mtrl-search__avatar img"), box = q(".mtrl-search__avatar");
+    return {
+      targets: [".mtrl-search__leading-icon", ".mtrl-search__clear-button", ".mtrl-search__trailing-icon", ".mtrl-search__avatar"].map(s => `${q(s).width}x${q(s).height}`),
+      iconCentre: glyph.left + glyph.width / 2 - bar.left,
+      textStart: input.left - bar.left,
+      lastCentre: bar.right - (box.left + box.width / 2),
+      avatar: img.width,
+      lead: lead.width,
+    };
+  });
+  assert.deepEqual(geometry.targets, ["48x48", "48x48", "48x48", "48x48"], "48dp tap targets for every icon and the avatar");
+  assert.deepEqual([geometry.iconCentre, geometry.textStart, geometry.lastCentre, geometry.avatar], [28, 56, 28, 30], "icons centred 28dp in, text at 56dp, a 30dp avatar");
+  const colour = (css: string) => page.evaluate((css) => { const i = document.createElement("i"); i.style.color = css; document.body.append(i); const c = getComputedStyle(i).color; i.remove(); const x = document.createElement("canvas").getContext("2d")!; x.fillStyle = c; x.fillRect(0, 0, 1, 1); return x.getImageData(0, 0, 1, 1).data.join(); }, css);
+  const painted = (selector: string, property = "backgroundColor") => page.locator(selector).evaluate((el, property) => { const c = (getComputedStyle(el) as unknown as Record<string, string>)[property]; const x = document.createElement("canvas").getContext("2d")!; x.fillStyle = c; x.fillRect(0, 0, 1, 1); return x.getImageData(0, 0, 1, 1).data.join(); }, property);
+  await page.locator(".mtrl-search__container").hover({ position: { x: 300, y: 28 } });
+  await page.waitForTimeout(300); // the layer eases in
+  assert.equal(await painted(".mtrl-search__container"), await colour("color-mix(in srgb, var(--mtrl-sys-color-on-surface) 8%, var(--mtrl-sys-color-surface-container-high))"), "the bar's hover layer: on-surface at 8%");
+  await page.mouse.move(0, 0);
+  // Keyboard focus on the leading icon: the 3dp secondary ring.
+  await page.evaluate(() => { const b = document.createElement("button"); b.id = "before-search"; document.body.prepend(b); b.focus(); });
+  await page.keyboard.press("Tab");
+  await page.waitForTimeout(300); // the ring's colour eases in
+  const ring = await page.locator(".mtrl-search__leading-icon").evaluate(el => { const c = getComputedStyle(el); return [c.outlineWidth, c.outlineStyle, c.outlineOffset]; });
+  assert.deepEqual(ring, ["3px", "solid", "2px"], "the icon buttons' focus ring: 3dp, 2dp out");
+  assert.equal(await painted(".mtrl-search__leading-icon", "outlineColor"), await colour("var(--mtrl-sys-color-secondary)"), "the focus ring is secondary");
+  // The combobox: expanded with the view, controlling the listbox, pointing at
+  // the option the arrows reach; the count announced.
+  const combobox = () => page.evaluate(() => {
+    const input = document.querySelector<HTMLInputElement>(".mtrl-search__input")!;
+    const list = document.getElementById(input.getAttribute("aria-controls") ?? "");
+    const active = document.getElementById(input.getAttribute("aria-activedescendant") ?? "");
+    return { role: input.getAttribute("role"), autocomplete: input.getAttribute("aria-autocomplete"), expanded: input.getAttribute("aria-expanded"), list: list?.getAttribute("role") ?? null, active: active?.textContent ?? null, status: document.querySelector('.mtrl-search [role="status"]')?.textContent ?? null };
+  });
+  assert.deepEqual(await combobox(), { role: "combobox", autocomplete: "list", expanded: "false", list: "listbox", active: null, status: "" }, "a combobox controlling the listbox, collapsed, announcing nothing");
+  await page.locator(".mtrl-search__input").focus();
+  await page.waitForFunction(() => document.querySelector(".mtrl-search--view"));
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  assert.deepEqual(await combobox(), { role: "combobox", autocomplete: "list", expanded: "true", list: "listbox", active: "Banana", status: "3 suggestions" }, "expanded, pointing at the option the arrows reach");
+  await page.waitForTimeout(300); // the layer eases in
+  assert.equal(await painted(".mtrl-search__suggestion-item--selected"), await colour("color-mix(in srgb, var(--mtrl-sys-color-on-surface) 10%, transparent)"), "the reached option looks focused: on-surface at 10%");
+  assert.equal(await page.locator(".mtrl-search__suggestion-item--selected").evaluate(el => getComputedStyle(el).outlineWidth), "3px", "with the focus ring");
+  const item = await page.locator(".mtrl-search__suggestion-item").first().evaluate(el => { const c = getComputedStyle(el); return [el.getBoundingClientRect().height, `${c.fontSize}/${c.lineHeight}`, c.paddingLeft]; });
+  assert.deepEqual(item, [56, "16px/24px", "16px"], "56dp one-line suggestions, Body Large, 16dp in");
+  assert.equal(await painted(".mtrl-search__divider"), await colour("var(--mtrl-sys-color-outline)"), "the divider is outline");
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(() => document.querySelector(".mtrl-search--bar"));
+  assert.deepEqual([(await combobox()).expanded, (await combobox()).active], ["false", null], "collapsed, the combobox points at nothing");
+}
+
+/** FLO-287: contained (the default) and divided, docked and full screen, and the reveal. */
+async function checkSearchVariants(page: Page): Promise<void> {
+  const open = async (config: Parameters<typeof createSearch>[0]) => {
+    await mount(page, { suggestions: ["Apple", "Banana"], ...config });
+    await page.locator(".mtrl-search__input").click();
+    await page.waitForFunction(() => document.querySelector(".mtrl-search--view"));
+    await page.waitForTimeout(350);
+  };
+  const shape = () => page.evaluate(() => {
+    const q = (s: string) => document.querySelector<HTMLElement>(s)!;
+    const px = (css: string) => { const i = document.createElement("i"); i.style.color = css; document.body.append(i); const c = getComputedStyle(i).color; i.remove(); return c; };
+    const role = (c: string) => ["surface-container-low", "surface-container-high", "outline"].find(r => px(`var(--mtrl-sys-color-${r})`) === c) ?? c;
+    const bar = q(".mtrl-search__container").getBoundingClientRect(), content = q(".mtrl-search__content").getBoundingClientRect();
+    return {
+      variant: q(".mtrl-search").classList.contains("mtrl-search--contained") ? "contained" : "divided",
+      barRadius: getComputedStyle(q(".mtrl-search__container")).borderTopLeftRadius + " " + getComputedStyle(q(".mtrl-search__container")).borderBottomLeftRadius,
+      bar: [Math.round(bar.left), Math.round(bar.top), Math.round(bar.height)],
+      gap: Math.round(content.top - bar.bottom),
+      contentRadius: getComputedStyle(q(".mtrl-search__content")).borderTopLeftRadius,
+      divider: getComputedStyle(q(".mtrl-search__divider")).display,
+      surface: role(getComputedStyle(q(".mtrl-search__surface")).backgroundColor),
+    };
+  });
+  // Contained, docked (the default): the bar keeps its pill; the results are
+  // their own container, 2dp below, with 12dp corners; no divider.
+  await open({});
+  const docked = await shape();
+  assert.deepEqual([docked.variant, docked.barRadius.split(" ")[0] === docked.barRadius.split(" ")[1], docked.gap, docked.contentRadius, docked.divider], ["contained", true, 2, "12px", "none"], "contained, docked: a pill bar, the results 2dp below with 12dp corners, no divider");
+  // Contained, full screen: surface-container-low, the pill bar inset 12dp.
+  await open({ viewMode: "fullscreen" });
+  const full = await shape();
+  assert.deepEqual([full.surface, full.bar, full.divider], ["surface-container-low", [12, 12, 56], "none"], "contained, full screen: surface-container-low with the bar inset 12dp");
+  // Divided: the bar squares off, a divider, docked 28dp corners below.
+  await open({ variant: "divided" });
+  const divided = await shape();
+  assert.deepEqual([divided.variant, divided.barRadius, divided.gap, divided.divider], ["divided", "28px 0px", 1, "block"], "divided, docked: the bar squares off above a divider");
+  await open({ variant: "divided", viewMode: "fullscreen" });
+  const dividedFull = await shape();
+  assert.deepEqual([dividedFull.surface, dividedFull.bar, dividedFull.barRadius], ["surface-container-high", [0, 0, 72], "0px 0px"], "divided, full screen: a 72dp header, no corners");
+  // setVariant switches in place.
+  await page.evaluate(() => (window as unknown as SearchWindow).search.setVariant("contained"));
+  assert.equal((await shape()).variant, "contained", "setVariant switches the variant");
+  // The results reveal on the emphasized decelerate curve, unless motion is reduced.
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await open({});
+  const reveal = await page.locator(".mtrl-search__content").evaluate(el => { const c = getComputedStyle(el); return [c.animationName, c.animationDuration, c.animationTimingFunction]; });
+  assert.deepEqual(reveal, ["mtrl-search-reveal", "0.3s", "cubic-bezier(0.05, 0.7, 0.1, 1)"], "the results reveal: 300ms, emphasized decelerate");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await open({});
+  assert.equal(await page.locator(".mtrl-search__content").evaluate(el => getComputedStyle(el).animationName), "none", "no reveal with reduced motion");
 }
