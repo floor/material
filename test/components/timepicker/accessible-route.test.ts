@@ -102,19 +102,32 @@ describe("the time fields are named for assistive technology", () => {
   });
 });
 
-describe("the dial does not present itself as an accessible control", () => {
-  // It is drawn into a canvas, so it cannot expose a button per number. Since
-  // the inputs carry the same value, the honest thing is to take the canvas
-  // out of the accessibility tree rather than leave a nameless element in it.
-  test("the canvas is hidden from assistive technology", () => {
+// FLO-279: the dial is a listbox of its numbers, reachable and operable by keyboard;
+// it was a canvas hidden from assistive technology.
+describe("the dial is an accessible control", () => {
+  test("a listbox named Hour, its numbers options named as times, one tab stop", () => {
     const c = picker();
-    expect(q(c, `.${PREFIX}-time-picker__dial-canvas`).getAttribute("aria-hidden")).toBe("true");
+    const face = q(c, `.${PREFIX}-time-picker__dial-face`);
+    expect(face.getAttribute("role")).toBe("listbox");
+    expect(face.getAttribute("aria-label")).toBe("Hour");
+    const options = Array.from(face.querySelectorAll("[role=option]"));
+    expect(options).toHaveLength(12);
+    expect(options[3].getAttribute("aria-label")).toBe("3 o'clock");
+    expect(face.querySelectorAll('[role=option][tabindex="0"]')).toHaveLength(1);
+    expect(face.querySelectorAll('[aria-selected="true"]')).toHaveLength(1);
   });
 
-  test("and it is not focusable, so Tab never lands on it", () => {
+  test("the arrows move between numbers and wrap; Enter selects", () => {
     const c = picker();
-    const canvas = q(c, `.${PREFIX}-time-picker__dial-canvas`);
-    expect(canvas.getAttribute("tabindex")).toBeNull();
+    const face = q(c, `.${PREFIX}-time-picker__dial-face`);
+    const stop = face.querySelector<HTMLElement>('[role=option][tabindex="0"]')!;
+    stop.focus();
+    stop.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    const moved = document.activeElement as HTMLElement;
+    expect(moved.getAttribute("role")).toBe("option");
+    expect(moved).not.toBe(stop);
+    moved.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(moved.getAttribute("aria-selected")).toBe("true");
   });
 });
 

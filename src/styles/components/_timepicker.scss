@@ -279,22 +279,101 @@ $component: '#{base.$prefix}-time-picker';
     width: 256px;
     height: 256px;
     
-    &-canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
+  }
+
+  // The DOM dial (FLO-279), m3.material.io's clock dial: a 256dp surface-container-
+  // highest face with Body Large numbers, a 2dp primary track, an 8dp centre dot and
+  // a 48dp primary handle; under the handle the numbers read on-primary. One
+  // animated angle and radius place the track, the handle and that clipped copy, so
+  // they move together on the default spatial spring. A drag moves them directly.
+  &__dial-face {
+    position: relative;
+    width: 256px;
+    height: 256px;
+    border-radius: 50%;
+    background-color: t.color('surface-container-highest');
+    color: t.color('on-surface');
+    touch-action: none;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: m.spring(--#{$component}-angle, default-spatial);
+    transition-property: --#{$component}-angle, --#{$component}-radius;
+
+    &--dragging { transition: none; }
+    &--swap .#{$component}__dial-numbers:not(.#{$component}__dial-numbers--selected) { animation: #{$component}-swap 175ms linear; }
+  }
+
+  &__dial-numbers {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+
+    &--selected {
+      color: t.color('on-primary');
+      pointer-events: none;
+      clip-path: circle(24px at calc(50% + sin(var(--#{$component}-angle)) * var(--#{$component}-radius)) calc(50% - cos(var(--#{$component}-angle)) * var(--#{$component}-radius)));
+    }
+  }
+
+  &__dial-number {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    box-sizing: border-box;
+    width: 48px;
+    height: 48px;
+    margin: -24px 0 0 -24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transform: translate(var(--#{$component}-x), var(--#{$component}-y));
+    @include m.typography('body-large');
+
+    &--inner { @include m.typography('body-medium'); }
+
+    // md.comp.focus-ring on the focused number.
+    &:focus-visible { outline: 3px solid t.color('secondary'); outline-offset: 2px; }
+  }
+
+  &__dial-track {
+    position: absolute;
+    left: calc(50% - 1px);
+    bottom: 50%;
+    width: 2px;
+    height: var(--#{$component}-radius);
+    background-color: t.color('primary');
+    transform-origin: 50% 100%;
+    transform: rotate(var(--#{$component}-angle));
+    pointer-events: none;
+  }
+
+  &__dial-centre {
+    position: absolute;
+    inset: calc(50% - 4px);
+    border-radius: 50%;
+    background-color: t.color('primary');
+    pointer-events: none;
+  }
+
+  &__dial-handle {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    left: calc(50% + sin(var(--#{$component}-angle)) * var(--#{$component}-radius) - 24px);
+    top: calc(50% - cos(var(--#{$component}-angle)) * var(--#{$component}-radius) - 24px);
+    border-radius: 50%;
+    background-color: t.color('primary');
+    pointer-events: none;
+
+    // Between two labels (a minute like 07) the handle shows a dot.
+    &--between::after {
+      content: '';
+      position: absolute;
+      inset: calc(50% - 2px);
       border-radius: 50%;
-      cursor: pointer;
-      touch-action: none; // Prevent scrolling when touching the canvas
-      -webkit-tap-highlight-color: transparent; // Remove highlight on tap (mobile)
-      
-      // Add transition for smooth animations
-      transition: transform 0.2s ease;
-      
-      &:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px t.color('primary');
-      }
+      background-color: t.color('on-primary');
     }
   }
   
@@ -454,6 +533,18 @@ $component: '#{base.$prefix}-time-picker';
   from { opacity: 0; transform: translateY(20px) scale(0.9); }
 }
 
+
+// The dial's angle and radius animate as values, so the hand, the handle and the
+// clipped labels move together on one spring (FLO-279).
+@property --#{$component}-angle { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+@property --#{$component}-radius { syntax: '<length>'; inherits: true; initial-value: 101px; }
+
+@keyframes #{$component}-swap {
+  from { opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .#{$component}__dialog[open] { animation: none; }
+  .#{$component}__dial-face { transition: none; }
+  .#{$component}__dial-face--swap .#{$component}__dial-numbers { animation: none; }
 }

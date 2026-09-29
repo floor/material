@@ -1,15 +1,9 @@
-import { beforeEach, describe, expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import createTimePicker from "../../../src/components/timepicker";
 import { TIME_FORMAT, TIME_PERIOD, TIME_PICKER_TYPE, type TimePickerConfig } from "../../../src/components/timepicker/types";
 import { callbacksFixture, wait } from "../callbacks.fixture";
 
 const mount = callbacksFixture();
-beforeEach(() => {
-  // JSDOM has no canvas rendering; interaction uses the real canvas element.
-  Object.defineProperty(document.createElement("canvas").constructor.prototype, "getContext", {
-    configurable: true, value: () => null,
-  });
-});
 
 const setup = (config: TimePickerConfig = {}) => {
   const changes: string[] = [];
@@ -155,11 +149,12 @@ describe("one time value for the API, callbacks and form (FLO-237)", () => {
 
   test("dial edits synchronize hours, minutes and seconds once", () => {
     const p = setup({ type: TIME_PICKER_TYPE.DIAL, value: "14:30:10", showSeconds: true });
-    const canvas = p.picker.dialogElement.querySelector("canvas")!;
-    // The dial is 256px; a click at three o'clock selects 3 hours / 15 minutes.
+    // The dial is a listbox (FLO-279): Enter on the number at three o'clock selects
+    // 3 hours, then 15 minutes and 15 seconds.
     for (const unit of ["hour", "minute", "second"]) {
       p.field(unit).click();
-      canvas.dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: 228, clientY: 128 }));
+      const three = p.picker.dialogElement.querySelectorAll<HTMLElement>("[role=option]")[3];
+      three.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
     }
     expect(p.changes).toEqual(["15:30:10", "15:15:10", "15:15:15"]);
     expect(p.callbacks).toEqual(p.changes);
