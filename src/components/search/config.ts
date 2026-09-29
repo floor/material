@@ -7,6 +7,7 @@ import {
 import {
   SearchConfig,
   SearchSuggestion,
+  SearchTrailingItem,
   SearchState,
   SearchViewMode,
   SearchVariant,
@@ -80,6 +81,12 @@ export const getElementConfig = (config: SearchConfig) =>
  * Internal component interface for API configuration
  */
 interface InternalComponent {
+  trailing?: {
+    set?: (items: SearchTrailingItem[]) => void;
+    add?: (item: SearchTrailingItem) => void;
+    remove?: (id: string) => void;
+  };
+  setLeadingIcon?: (html: string) => void;
   input?: {
     setValue?: (value: string, triggerEvent?: boolean) => void;
     getValue?: () => string;
@@ -160,6 +167,14 @@ export const getApiConfig = (comp: InternalComponent) => ({
     enable: () => comp.disabled?.enable?.(),
     disable: () => comp.disabled?.disable?.(),
     isDisabled: () => comp.disabled?.isDisabled?.() ?? false,
+  },
+
+  // The leading icon and trailing items (FLO-291)
+  content: {
+    setLeadingIcon: (html: string) => comp.setLeadingIcon?.(html),
+    setTrailingItems: (items: SearchTrailingItem[]) => comp.trailing?.set?.(items),
+    addTrailingItem: (item: SearchTrailingItem) => comp.trailing?.add?.(item),
+    removeTrailingItem: (id: string) => comp.trailing?.remove?.(id),
   },
 
   // Suggestions

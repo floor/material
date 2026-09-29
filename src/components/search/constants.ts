@@ -169,6 +169,7 @@ export const SEARCH_CLASSES = {
   SUGGESTION_ITEM_SELECTED: "search__suggestion-item--selected",
   SUGGESTION_ICON: "search__suggestion-icon",
   SUGGESTION_TEXT: "search__suggestion-text",
+  SUGGESTION_SUPPORTING: "search__suggestion-supporting",
   SUGGESTION_DIVIDER: "search__suggestion-divider",
   STATUS: "search__status",
 } as const;

@@ -211,7 +211,9 @@ export const withInput =
    * Clears the input value
    */
   const clear = (triggerEvent = true): void => {
-    setValue("", false);
+    // Emptying the query is an input, as in a native field, then a clear: a
+    // consumer filtering on input kept its results (FLO-291).
+    setValue("", triggerEvent);
 
     // Focus input after clearing
     const input = component.structure?.input;
@@ -294,11 +296,21 @@ export const withInput =
 
     if (!input) return;
 
-    // Input event - value changes
+    // Opens the view where focus alone cannot: the input already has focus
+    // after a suggestion was chosen (FLO-291).
+    // Only with focus: a script setting the value and dispatching `input` is
+    // not someone typing.
+    const reopen = (): void => {
+      if (config.expandOnFocus !== false && !component.states?.isExpanded() && activeElementOf(input) === input) component.states?.expand();
+    };
+
+    // Input event - value changes; typing reopens a closed view
     input.addEventListener("input", (e: Event) => {
       const target = e.target as HTMLInputElement;
       setValue(target.value, true);
+      reopen();
     });
+    input.addEventListener("click", reopen);
 
     // Focus event
     input.addEventListener("focus", (e: FocusEvent) => {
@@ -340,7 +352,10 @@ export const withInput =
       switch (e.key) {
         case "Enter":
           e.preventDefault();
-          submit();
+          // Enter on the suggestion the arrows reached selects it (the
+          // suggestions feature does); it submitted the typed text first.
+          // FLO-291.
+          if (!input.hasAttribute("aria-activedescendant")) submit();
           break;
 
         case "Escape":

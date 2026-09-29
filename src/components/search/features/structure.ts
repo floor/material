@@ -1,8 +1,9 @@
 // src/components/search/features/structure.ts
 
-import { SearchConfig, SearchStructure } from "../types";
+import { SearchConfig, SearchStructure, SearchTrailingItem } from "../types";
 import { SEARCH_CLASSES, SEARCH_ICONS, SEARCH_STATES } from "../constants";
 import { createElement } from "../../../core/dom/create";
+import { setHTML } from "../../../core/dom/html";
 import { PREFIX } from "../../../core/config";
 
 /**
@@ -201,37 +202,52 @@ export const withStructure =
     });
   }
 
-  // Create trailing items container (for icons and avatar)
-  let trailingContainer: HTMLElement | null = null;
+  // Trailing icon buttons and the avatar (FLO-291). onClick was never wired,
+  // and the avatar was a focusable div with no role or keyboard use: it is a
+  // button when it does something, and otherwise an image out of the tab
+  // order.
+  const trailingContainer = createElement({
+    tag: "div",
+    className: getClass("search__trailing"),
+    container,
+  });
 
-  if (config.trailingItems && config.trailingItems.length > 0) {
-    trailingContainer = createElement({
-      tag: "div",
-      className: getClass("search__trailing"),
-      container,
+  const createTrailingItem = (item: SearchTrailingItem): HTMLElement => {
+    const avatar = item.type === "avatar";
+    const button = !avatar || typeof item.onClick === "function";
+    const attributes: Record<string, string> = { "data-trailing-id": item.id };
+    if (button) attributes.type = "button";
+    if (button && isDisabled) attributes.tabindex = "-1";
+    if (item.ariaLabel) attributes["aria-label"] = item.ariaLabel;
+    if (!button) Object.assign(attributes, item.ariaLabel ? { role: "img" } : { "aria-hidden": "true" });
+    const element = createElement({
+      tag: button ? "button" : "div",
+      className: getClass(avatar ? SEARCH_CLASSES.AVATAR : SEARCH_CLASSES.TRAILING_ICON),
+      html: item.content,
+      attributes,
     });
+    if (item.onClick) element.addEventListener("click", item.onClick);
+    return element;
+  };
 
-    // Render each trailing item
-    config.trailingItems.forEach((item) => {
-      const itemClass =
-        item.type === "avatar"
-          ? getClass(SEARCH_CLASSES.AVATAR)
-          : getClass(SEARCH_CLASSES.TRAILING_ICON);
+  const trailing = {
+    set(items: SearchTrailingItem[]): void {
+      trailingContainer.replaceChildren(...items.map(createTrailingItem));
+    },
+    add(item: SearchTrailingItem): void {
+      trailingContainer.append(createTrailingItem(item));
+    },
+    remove(id: string): void {
+      Array.from(trailingContainer.children).find(element => (element as HTMLElement).dataset.trailingId === id)?.remove();
+    },
+  };
+  trailing.set(config.trailingItems ?? []);
 
-      createElement({
-        tag: item.type === "avatar" ? "div" : "button",
-        className: itemClass,
-        container: trailingContainer!,
-        html: item.content,
-        attributes: {
-          ...(item.type !== "avatar" && { type: "button" }),
-          tabindex: isDisabled ? "-1" : "0",
-          "aria-label": item.ariaLabel || "",
-          "data-trailing-id": item.id,
-        },
-      });
-    });
-  }
+  // The bar's leading icon; the open view shows the back arrow meanwhile.
+  const setLeadingIcon = (html: string): void => {
+    config.leadingIcon = html;
+    if (!component.element.classList.contains(getClass(SEARCH_CLASSES.STATE_VIEW))) setHTML(leadingIcon, html);
+  };
 
   // Create divider and content area (for view state or when suggestions are provided)
   let divider: HTMLElement | null = null;
@@ -301,5 +317,7 @@ export const withStructure =
   return {
     ...component,
     structure,
+    trailing,
+    setLeadingIcon,
   };
 };

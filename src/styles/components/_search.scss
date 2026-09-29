@@ -295,6 +295,8 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     padding: 0;
     border: none;
     border-radius: 50%;
+    // A shadow root does not get the page's font reset (FLO-291).
+    font: inherit;
     background-color: color-mix(in srgb, currentColor var(--#{$component}-layer), transparent);
     cursor: pointer;
     transition: background-color $transition-duration $transition-easing;
@@ -497,6 +499,23 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+// Two-line items: 72dp, the second line Body Medium on-surface-variant.
+.#{$component}__suggestion-item--two-line {
+    min-height: 72px;
+
+    .#{$component}__suggestion-text {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+.#{$component}__suggestion-supporting {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    @include m.typography("body-medium");
+    color: t.color("on-surface-variant");
 }
 
 .#{$component}__suggestion-divider {
