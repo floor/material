@@ -62,6 +62,8 @@ export interface SearchSuggestion {
   value?: string;
   /** Optional leading icon HTML */
   icon?: string;
+  /** A second line under the text: a two-line list item (FLO-291) */
+  supportingText?: string;
   /** Optional group identifier for dividers */
   group?: string;
 }

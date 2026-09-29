@@ -17,9 +17,8 @@
  * Events: `input` as the query changes (typing, and the clear button or
  * Escape emptying it), `change` when it is submitted (Enter), `select` when a
  * suggestion is chosen, `open` and `close` as the view opens and closes, and
- * `action` on a click of the trailing icon or the avatar. The factory emits
- * `submit` as well as its selection when Enter picks a highlighted
- * suggestion: that Enter is the selection only.
+ * `action` on a click of the trailing icon or the avatar. Enter on a
+ * highlighted suggestion is the selection only.
  *
  * The open view is the factory's: in the top layer, docked (a popover over a
  * scrim) or full screen (a modal dialog), inside the element's shadow root.
@@ -39,7 +38,7 @@ import type {
 } from "../components/search/types";
 import { PREFIX } from "../core/config";
 import {
-  createDeclarationClass, defineElement, DEFAULT_PREFIX, type Config, type DefineOptions, type ElementAttributes,
+  createDeclarationClass, defineElement, DEFAULT_PREFIX, type AttributeValue, type Config, type DefineOptions, type ElementAttributes,
   type ElementInstance, type ElementSpec,
 } from "./define";
 
@@ -60,6 +59,11 @@ export interface SearchElementComponent extends Omit<SearchComponent, "on" | "of
 
 interface SearchElementConfig extends SearchConfig {
   open?: boolean;
+  widthMin?: AttributeValue;
+  widthMax?: AttributeValue;
+  noClearButton?: boolean;
+  noExpandOnFocus?: boolean;
+  noCollapseOnBlur?: boolean;
   ariaLabel?: string;
   trailingIcon?: string;
   trailingLabel?: string;
@@ -69,8 +73,9 @@ interface SearchElementConfig extends SearchConfig {
 
 /** The factory's events each element event is made of. */
 const ALIASES: Record<string, readonly SearchEventType[]> = {
-  // Emptied by the clear button or Escape, the query changes without `input`.
-  input: ["input", "clear"],
+  // The factory emits `input` when the clear button or Escape empties the
+  // query as well (FLO-291).
+  input: ["input"],
   change: ["submit"],
   select: ["suggestionSelect"],
   open: ["expand"],
@@ -96,35 +101,43 @@ const declaredSuggestions = (host: HTMLElement): SearchSuggestion[] => {
 /** The suggestions last applied to each search. */
 const applied = new WeakMap<SearchElementComponent, string>();
 
+/**
+ * `min-width` / `max-width`: a number of pixels or a CSS length, on the custom
+ * property the factory's minWidth / maxWidth set (FLO-290). Removed, the
+ * stylesheet's M3 360 and 720dp apply.
+ */
+const setWidth = (c: SearchComponent, edge: "min" | "max", value: AttributeValue | undefined): void => {
+  const name = `--${PREFIX}-search-${edge}-width`;
+  if (value === null || value === undefined || value === "") c.element.style.removeProperty(name);
+  else c.element.style.setProperty(name, /^\d+(\.\d+)?$/.test(String(value)) ? `${value}px` : String(value));
+};
+
 const create = (config: SearchElementConfig): SearchElementComponent => {
-  const { open, ariaLabel, trailingIcon, trailingLabel, avatar, avatarLabel, ...rest } = config;
+  const { open, ariaLabel, trailingIcon, trailingLabel, avatar, avatarLabel, widthMin, widthMax, noClearButton, noExpandOnFocus, noCollapseOnBlur, ...rest } = config;
   const trailingItems: SearchTrailingItem[] = [];
   if (trailingIcon) trailingItems.push({ id: "trailing-icon", type: "icon", content: trailingIcon, ariaLabel: trailingLabel });
-  if (avatar) trailingItems.push({ id: "avatar", type: "avatar", content: avatar, ariaLabel: avatarLabel });
+  // The avatar is an action here (`action`), so a button: the factory draws an
+  // avatar with onClick as one, and one without as an image out of the tab
+  // order (FLO-291). The click itself is handled by `action` in setup.
+  if (avatar) trailingItems.push({ id: "avatar", type: "avatar", content: avatar, ariaLabel: avatarLabel, onClick: () => {} });
+  // A button needs a name, and none is invented for it.
+  if (avatar && !avatarLabel) console.warn("[mtrl] search: an avatar without avatar-label is a button with no accessible name.");
   const search = createSearch({
     ...rest,
+    // The `no-` attributes turn the factory's defaults off (#263).
+    showClearButton: !noClearButton,
+    expandOnFocus: !noExpandOnFocus,
+    collapseOnBlur: !noCollapseOnBlur,
     ...(open ? { initialState: "view" } : {}),
     ...(trailingItems.length ? { trailingItems } : {}),
   });
+  if (widthMin !== undefined) setWidth(search, "min", widthMin);
+  if (widthMax !== undefined) setWidth(search, "max", widthMax);
   const input = search.element.querySelector("input") as HTMLInputElement;
   // The factory takes no aria-label: the placeholder names the combobox.
   if (ariaLabel) input.setAttribute("aria-label", ariaLabel);
 
   const { on, off } = search;
-  // Enter on a highlighted suggestion submits the query before selecting it:
-  // `change` passes over that submit, which the highlight still marks.
-  const committed = new WeakMap<Handler, Handler>();
-  const handlerFor = (event: string, handler: Handler): Handler => {
-    if (event !== "change") return handler;
-    let wrapped = committed.get(handler);
-    if (!wrapped) {
-      wrapped = (e) => {
-        if (!input.hasAttribute("aria-activedescendant")) handler(e);
-      };
-      committed.set(handler, wrapped);
-    }
-    return wrapped;
-  };
   const component: SearchElementComponent = Object.assign(search, {
     input,
     show: () => {
@@ -136,11 +149,11 @@ const create = (config: SearchElementConfig): SearchElementComponent => {
       return component;
     },
     on: (event: string, handler: Handler) => {
-      for (const name of ALIASES[event] ?? [event]) on(name as SearchEventType, handlerFor(event, handler));
+      for (const name of ALIASES[event] ?? [event]) on(name as SearchEventType, handler);
       return component;
     },
     off: (event: string, handler: Handler) => {
-      for (const name of ALIASES[event] ?? [event]) off(name as SearchEventType, handlerFor(event, handler));
+      for (const name of ALIASES[event] ?? [event]) off(name as SearchEventType, handler);
       return component;
     },
   });
@@ -200,6 +213,12 @@ const searchSpec = {
       config: "viewMode",
       update: (c, v) => void c.setViewMode(v === "fullscreen" ? "fullscreen" : "docked"),
     },
+    // #263: the width range, in place; the `no-` switches recreate the search.
+    "min-width": { type: "string", config: "widthMin", update: (c, v) => setWidth(c, "min", v) },
+    "max-width": { type: "string", config: "widthMax", update: (c, v) => setWidth(c, "max", v) },
+    "no-clear-button": { type: "boolean", config: "noClearButton" },
+    "no-expand-on-focus": { type: "boolean", config: "noExpandOnFocus" },
+    "no-collapse-on-blur": { type: "boolean", config: "noCollapseOnBlur" },
     "full-width": {
       type: "boolean",
       config: "fullWidth",

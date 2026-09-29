@@ -15,7 +15,9 @@ test("search input, submit, clear and state events expose the finished search", 
   search.clear();
   search.expand();
   search.collapse();
-  expect(seen).toHaveLength(5);
+  // clear() empties the query with an input event, then clear (FLO-291).
+  expect(seen.slice(0, 4).map(event => event.value)).toEqual(["hello", "hello", "", ""]);
+  expect(seen).toHaveLength(6);
   for (const event of seen) expect(event.component === search).toBe(true);
   expect(seen[0].component.getValue()).toBe("");
   expect(seen[0].value).toBe("hello");
