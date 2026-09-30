@@ -25,10 +25,6 @@ $component: '#{base.$prefix}-bottom-app-bar';
   // Apply material elevation
   @include m.elevation(2);
   
-  // Apply border radius at the top
-  border-top-left-radius: t.shape('medium');
-  border-top-right-radius: t.shape('medium');
-  
   // Add transition for smooth animations
   transition: transform 0.3s ease-in-out;
   

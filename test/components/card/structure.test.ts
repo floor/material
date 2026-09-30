@@ -236,15 +236,16 @@ describe('card behaviour', () => {
     expect(clicks).toBe(2);
   });
 
-  test('elevation starts at level 1 for elevated cards and 0 otherwise, and rises on hover', () => {
+  // FLO-323: the card wrote --mtrl-card-elevation on creation, hover and drag,
+  // and no stylesheet read it. Elevation is the variant's class, which the
+  // stylesheet styles, with its hover and --dragging states.
+  test('elevation is the variant class; no unread elevation property is written', () => {
     const elevated = createCard({ clickable: true });
-    const level = () => elevated.element.style.getPropertyValue('--mtrl-card-elevation');
-    expect(level()).toBe('1');
+    const outlined = createCard({ variant: 'outlined' });
+    expect(elevated.element.classList.contains('mtrl-card--elevated')).toBe(true);
+    expect(outlined.element.classList.contains('mtrl-card--outlined')).toBe(true);
     elevated.element.dispatchEvent(new dom.window.MouseEvent('mouseenter'));
-    expect(level()).toBe('2');
-    elevated.element.dispatchEvent(new dom.window.MouseEvent('mouseleave'));
-    expect(level()).toBe('1');
-    expect(createCard({ variant: 'outlined' }).element.style.getPropertyValue('--mtrl-card-elevation')).toBe('0');
+    for (const card of [elevated, outlined]) expect(card.element.style.getPropertyValue('--mtrl-card-elevation')).toBe('');
   });
 
   test('focus toggles the focused modifier on an interactive card', () => {
