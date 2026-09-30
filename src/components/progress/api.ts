@@ -173,10 +173,14 @@ export const withAPI =
         return options.value.getValue();
       },
 
-      setValue(value: number, animate: boolean = true): ProgressComponent {
+      setValue(requested: number, animate: boolean = true): ProgressComponent {
         const prevValue = options.value.getValue();
         const max = options.value.getMax();
-        options.value.setValue(value);
+        options.value.setValue(requested);
+        // The state clamps to 0…max; aria, the label and change report that
+        // value, as the bar draws it. setValue(150) drew 100 and said 150
+        // everywhere else (FLO-324).
+        const value = options.value.getValue();
         if (prevValue !== value) {
           // Don't call updateProgress here as comp.setValue will handle the drawing
           // Only update ARIA and label here

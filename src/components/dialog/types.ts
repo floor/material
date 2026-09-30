@@ -377,6 +377,7 @@ export interface DialogFeatureComponent {
   config: DialogConfig & Record<string, unknown>;
   getClass: (name: string) => string;
   on: (event: string, handler: EventCallback) => unknown;
+  off: (event: string, handler: EventCallback) => unknown;
   emit: (event: string, data?: unknown) => unknown;
   _buttons?: DialogButtonRecord[];
 }
