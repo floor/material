@@ -1080,6 +1080,44 @@ try {
     assert.deepEqual(reset, { t: "new@b.c", p: "second" });
     check("textfield: form.reset() restores the value attribute");
 
+    // FLO-335: an autofill fills the input without an input event and starts
+    // the stylesheet's onAutoFillStart animation; the label then floats, as
+    // over a typed value. Simulated: the value set silently, the animation's
+    // animationstart dispatched, as Chromium's :autofill would. The float
+    // comes from the stylesheet (the value's :not(:placeholder-shown), and
+    // :has(:autofill)), not from the script's autofill check, which only
+    // reports it (unit-tested); this guards the behaviour, whatever drives it.
+    const autofill = await page.evaluate(async () => {
+      const make = (value: string): HTMLElement => {
+        const host = document.createElement("m-textfield");
+        host.setAttribute("label", "Autofill");
+        if (value) host.setAttribute("value", value);
+        document.body.append(host);
+        return host;
+      };
+      const frame = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => r()));
+      const empty = make("");
+      const filled = make("typed");
+      await frame();
+      const label = (host: HTMLElement): string => {
+        const el = host.shadowRoot?.querySelector('[class*="textfield__label"]') as HTMLElement;
+        const style = getComputedStyle(el);
+        return `${style.transform} ${style.top}`;
+      };
+      const resting = label(empty);
+      const input = empty.shadowRoot?.querySelector("input") as HTMLInputElement;
+      input.value = "ada@example.com";
+      input.dispatchEvent(new AnimationEvent("animationstart", { animationName: "onAutoFillStart" }));
+      // past the label's float transition
+      await new Promise((r) => setTimeout(r, 600));
+      const result = { floated: label(empty) !== resting, likeTyped: label(empty) === label(filled) };
+      empty.remove();
+      filled.remove();
+      return result;
+    });
+    assert.deepEqual(autofill, { floated: true, likeTyped: true });
+    check("textfield: an autofill floats the label, as a typed value does");
+
     const validity = await page.evaluate(() => {
       const t = document.getElementById("t") as HTMLElement & { value: string };
       const form = document.getElementById("f") as HTMLFormElement;
