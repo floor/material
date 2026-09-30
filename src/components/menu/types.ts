@@ -374,6 +374,9 @@ export interface MenuSelectEvent<TData = unknown> extends MenuEvent {
   /** ID of the selected menu item */
   itemId: string;
 
+  /** The item's id again, as the `value` of the `<m-menu>` element's `select` (FLO-320) */
+  value: string;
+
   /** Data associated with the menu item (if any) */
   itemData?: TData;
 }

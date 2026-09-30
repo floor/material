@@ -15,7 +15,11 @@ const setup = (config: TimePickerConfig = {}) => {
   const log: string[] = [];
   const picker = mount(createTimePicker({ value: "09:30", ...config }));
   for (const name of ["input", "change", "confirm", "cancel", "open", "close"] as const) {
-    picker.on(name, (value?: string) => log.push(`${name}${value ? `:${value}` : ""}${name === "confirm" || name === "cancel" ? `@${picker.isOpen ? "open" : "closed"}` : ""}`));
+    // change and input carry { value } (FLO-320); confirm, the string
+    picker.on(name, (payload?: string | { value: string }) => {
+      const value = typeof payload === "object" ? payload.value : payload;
+      log.push(`${name}${value ? `:${value}` : ""}${name === "confirm" || name === "cancel" ? `@${picker.isOpen ? "open" : "closed"}` : ""}`);
+    });
   }
   const dialog = picker.dialogElement;
   // Nine o'clock on the dial is 3 o'clock's opposite; pick 3 by keyboard.

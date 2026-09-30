@@ -146,8 +146,11 @@ describe('menu', () => {
 
   test('a disabled item cannot be chosen with the keyboard or the pointer', async () => {
     const chosen: string[] = [];
+    const values: string[] = [];
     const menu = createMenu({ opener, items });
     menu.on('select', (e: { item: { id: string } }) => chosen.push(e.item.id));
+    // The <m-menu> element's field (FLO-320)
+    menu.on('select', (e: { value: string }) => values.push(e.value));
     await opened(menu);
     const rendered = menuItems(menu);
 
@@ -157,6 +160,7 @@ describe('menu', () => {
 
     rendered[1]!.click();
     expect(chosen).toEqual(['copy']);
+    expect(values).toEqual(['copy']);
   });
 
   test('Escape closes it', async () => {

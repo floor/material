@@ -214,6 +214,12 @@ export interface SelectEvent<T = unknown> {
   item: T;
 
   /**
+   * The item's id as a string, the `value` of the `<m-list>` element's
+   * `activate` (FLO-320)
+   */
+  value: string;
+
+  /**
    * DOM element for the selected item
    */
   element: HTMLElement;

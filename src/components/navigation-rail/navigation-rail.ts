@@ -229,7 +229,8 @@ export default function createNavigationRail(config: NavigationRailConfig = {}):
         if (item.href && (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0))
             return;
         api.setActive(item.id);
-        const detail = { id: item.id, index, originalEvent: event };
+        // `value`: the id, as the <m-navigation-rail> element's `change` carries it. FLO-320.
+        const detail = { id: item.id, value: item.id, index, originalEvent: event };
         emitter.emit('select', detail);
         if (!destroyed)
             options.onSelect?.(detail);

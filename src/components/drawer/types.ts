@@ -55,6 +55,8 @@ export interface DrawerItemConfig {
 export interface DrawerSelectEvent {
   /** The selected item's id */
   id: string;
+  /** The id again, as the `value` of the `<m-drawer>` element's `change` (FLO-320) */
+  value: string;
   /** The selected item's label */
   label: string;
   /** The selected item's index within navigation items (excludes dividers/sections) */

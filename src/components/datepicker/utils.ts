@@ -287,3 +287,11 @@ export const addMonths = (date: Date, months: number): Date => {
 export const addYears = (date: Date, years: number): Date => {
   return addMonths(date, years * 12);
 };
+const isoDate = (date: Date | null | undefined): string => (date ? formatDate(date, "YYYY-MM-DD") : "");
+
+/**
+ * A value as ISO 8601 text, the `<m-datepicker>` element's value: a date
+ * (`2026-09-10`), a `start/end` interval, or "" (FLO-320).
+ */
+export const toIsoValue = (value: Date | [Date, Date] | null, end?: Date | null): string =>
+  Array.isArray(value) ? `${isoDate(value[0])}/${isoDate(value[1])}` : value && end ? `${isoDate(value)}/${isoDate(end)}` : isoDate(value);

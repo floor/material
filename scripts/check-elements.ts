@@ -110,6 +110,29 @@ const payloadParity = (page: Page, id: string, event: string, targets: Array<[st
     return read;
   }, { id, event, targets });
 
+/**
+ * The same proof for a pair of event names, or for an action that is not a
+ * click (FLO-320 part 2): `act` runs in the page with `host` in scope, the
+ * factory handler listens on `factory` (an expression of `host`), and reads
+ * `field`, the element's `value` unless it has another name.
+ */
+const eventParity = (
+  page: Page,
+  id: string,
+  options: { factoryEvent: string; elementEvent: string; act: string; factory?: string; field?: string },
+): Promise<{ factory: unknown[]; element: unknown[] }> =>
+  page.evaluate(async ({ id, factoryEvent, elementEvent, act, factory, field }) => {
+    type Listener = { on: (name: string, handler: (payload: Record<string, unknown>) => void) => unknown };
+    const host = document.getElementById(id) as HTMLElement & { component: unknown };
+    const read = { factory: [] as unknown[], element: [] as unknown[] };
+    const target = new Function("host", `return ${factory}`)(host) as Listener;
+    target.on(factoryEvent, (payload) => void read.factory.push(payload[field]));
+    host.addEventListener(elementEvent, (e) => void read.element.push((e as CustomEvent<{ value: unknown }>).detail.value));
+    await (new Function("host", `return (async () => { ${act} })()`)(host) as Promise<void>);
+    await new Promise((r) => setTimeout(r, 50));
+    return read;
+  }, { id, act: options.act, factoryEvent: options.factoryEvent, elementEvent: options.elementEvent, factory: options.factory ?? "host.component", field: options.field ?? "value" });
+
 const fresh = async (page: Page, html: string): Promise<void> => {
   await page.evaluate((markup) => {
     const host = document.getElementById("host") as HTMLElement;
@@ -6473,6 +6496,59 @@ try {
     });
     assert.deepEqual(moved, { sd: "2026-09-20", st: "10:45", ss: "apr" });
     check("date picker, time picker and search: opening and closing leave the value attribute in charge");
+  }
+
+  // ---------------------------------------------------------------- FLO-320: payload parity, part 2
+  await fresh(
+    page,
+    `<m-navigation-rail id="pr" aria-label="Rail" value="a">
+       <m-navigation-rail-item value="a" icon='${ICON}'>A</m-navigation-rail-item><m-navigation-rail-item value="b" icon='${ICON}'>B</m-navigation-rail-item>
+     </m-navigation-rail>
+     <m-drawer id="pd" aria-label="Drawer" value="a"><m-drawer-item value="a">A</m-drawer-item><m-drawer-item value="b">B</m-drawer-item></m-drawer>
+     <m-list id="pl" aria-label="List"><m-list-item value="a">A</m-list-item><m-list-item value="b">B</m-list-item></m-list>
+     <m-menu id="pm" aria-label="Menu"><m-menu-item value="a">A</m-menu-item><m-menu-item value="b">B</m-menu-item></m-menu>
+     <m-search id="ps" aria-label="Search"></m-search>
+     <m-datepicker id="pdp" label="Date" value="2026-09-10"></m-datepicker>
+     <m-timepicker id="ptp" value="09:30"></m-timepicker>`
+  );
+  {
+    const click = 'host.shadowRoot.querySelector(\'[data-id="b"]\').click();';
+    assert.deepEqual(await eventParity(page, "pr", { factoryEvent: "select", elementEvent: "change", act: click }), { factory: ["b"], element: ["b"] }, "navigation rail");
+    assert.deepEqual(await eventParity(page, "pd", { factoryEvent: "select", elementEvent: "change", act: click }), { factory: ["b"], element: ["b"] }, "drawer");
+    assert.deepEqual(await eventParity(page, "pl", { factoryEvent: "select", elementEvent: "activate", act: click }), { factory: ["b"], element: ["b"] }, "list");
+    assert.deepEqual(
+      await eventParity(page, "pm", {
+        factoryEvent: "select", elementEvent: "select",
+        act: 'host.component.open(); await new Promise((r) => setTimeout(r, 300)); host.shadowRoot.querySelector(\'[data-id="b"]\').click();',
+      }),
+      { factory: ["b"], element: ["b"] }, "menu",
+    );
+    assert.deepEqual(
+      await eventParity(page, "ps", {
+        factoryEvent: "submit", elementEvent: "change",
+        act: `const input = host.shadowRoot.querySelector("input");
+          input.value = "apple"; input.dispatchEvent(new Event("input", { bubbles: true }));
+          input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));`,
+      }),
+      { factory: ["apple"], element: ["apple"] }, "search",
+    );
+    // The factory's `value` stays a Date: its `iso` is the element's `value`,
+    // and the element's `date` is the factory's Date.
+    const date = 'host.component.setValue(new Date(2026, 8, 12));';
+    assert.deepEqual(await eventParity(page, "pdp", { factoryEvent: "change", elementEvent: "change", act: date, field: "iso" }), { factory: ["2026-09-12"], element: ["2026-09-12"] }, "date picker");
+    const dates = await page.evaluate(() => {
+      const host = document.getElementById("pdp") as HTMLElement & { component: { setValue: (d: Date) => void } };
+      const seen: string[] = [];
+      host.addEventListener("change", (e) => void seen.push(((e as CustomEvent<{ date: Date }>).detail.date).toDateString()));
+      host.component.setValue(new Date(2026, 8, 14));
+      return seen;
+    });
+    assert.deepEqual(dates, [new Date(2026, 8, 14).toDateString()], "date picker: the element's date");
+    assert.deepEqual(
+      await eventParity(page, "ptp", { factoryEvent: "change", elementEvent: "change", act: 'host.component.setValue("10:45");', factory: "host.component.picker" }),
+      { factory: ["10:45"], element: ["10:45"] }, "time picker",
+    );
+    check("rail, drawer, list, menu, search and both pickers: a handler reading value reads the same on the factory and the element (FLO-320)");
   }
 
   // ---------------------------------------------------------------- theme
