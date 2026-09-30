@@ -540,8 +540,11 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
 
     /**
      * Names the component's pieces as parts (see `partNames`); the element
-     * holding the slot also takes the slot attribute's name (`label`). Pieces
-     * the component adds or reclasses later are named as they change.
+     * holding the slot also takes the slot attribute's name (`label`). Nodes
+     * the component adds later are named as they arrive. The observer watches
+     * `childList` only, never `class`, so state-class toggles (hover, press,
+     * ripple, `--selected`) cost no callback; parts come from block and
+     * element classes, which no component swaps on a node it has inserted.
      */
     #exposeParts(root: ShadowRoot): void {
       const name = (node: Element): void => {
@@ -561,11 +564,10 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       for (const child of Array.from(root.children)) nameAll(child);
       this.#parts ??= new MutationObserver((records) => {
         for (const record of records) {
-          if (record.type === "attributes") name(record.target as Element);
-          else for (const node of Array.from(record.addedNodes)) if (node.nodeType === 1) nameAll(node as Element);
+          for (const node of Array.from(record.addedNodes)) if (node.nodeType === 1) nameAll(node as Element);
         }
       });
-      this.#parts.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+      this.#parts.observe(root, { childList: true, subtree: true });
     }
 
     #teardown(): void {
