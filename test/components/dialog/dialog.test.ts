@@ -338,3 +338,54 @@ describe('refusing a close', () => {
     expect(dialog.isOpen()).toBe(false);
   });
 });
+
+// FLO-324: confirm() resolved only through its two buttons, so closing the
+// dialog any other way left the promise hanging; its confirming button came
+// first; and the message went into innerHTML.
+describe('dialog confirm()', () => {
+  const footerButtons = (dialog: ReturnType<typeof createDialog>) =>
+    Array.from(dialog.element.querySelectorAll<HTMLButtonElement>('.mtrl-dialog__footer button'));
+
+  test('the confirming action comes last', async () => {
+    const dialog = createDialog({});
+    void dialog.confirm({ message: 'Delete?', confirmText: 'Delete', cancelText: 'Cancel' });
+    expect(footerButtons(dialog).map((button) => button.textContent?.trim())).toEqual(['Cancel', 'Delete']);
+    dialog.destroy();
+  });
+
+  test('the confirming button resolves true, the other false', async () => {
+    const yes = createDialog({});
+    const answer = yes.confirm({ message: 'Delete?', confirmText: 'Delete', cancelText: 'Cancel' });
+    footerButtons(yes)[1]!.click();
+    expect(await answer).toBe(true);
+    yes.destroy();
+    const no = createDialog({});
+    const declined = no.confirm({ message: 'Delete?', confirmText: 'Delete', cancelText: 'Cancel' });
+    footerButtons(no)[0]!.click();
+    expect(await declined).toBe(false);
+    no.destroy();
+  });
+
+  test('closing it any other way resolves false: close() and Escape', async () => {
+    const closed = createDialog({});
+    const byClose = closed.confirm({ message: 'Delete?' });
+    closed.close();
+    expect(await byClose).toBe(false);
+    closed.destroy();
+    const escaped = createDialog({});
+    const byEscape = escaped.confirm({ message: 'Delete?' });
+    await after(20);
+    document.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(await byEscape).toBe(false);
+    escaped.destroy();
+  });
+
+  test('the message is text, not markup', () => {
+    const dialog = createDialog({});
+    void dialog.confirm({ message: '<img src=x onerror="alert(1)"> & more' });
+    const content = dialog.element.querySelector('.mtrl-dialog__content')!;
+    expect(content.querySelector('img')).toBeNull();
+    expect(content.textContent).toBe('<img src=x onerror="alert(1)"> & more');
+    dialog.destroy();
+  });
+});

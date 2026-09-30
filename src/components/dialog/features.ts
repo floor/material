@@ -1161,30 +1161,43 @@ export const withConfirm =
           size = "small",
         } = options;
 
-        // Set dialog properties
+        // Set dialog properties. The message is text: escaped, so a message
+        // carrying user input can't inject markup.
         component.content.setTitle(title);
-        component.content.setContent(`<p>${message}</p>`);
+        const text = document.createElement("p");
+        text.textContent = message;
+        component.content.setContent(text.outerHTML);
         component.size.setSize(size);
 
         // Clear existing buttons
         component._buttons.forEach((button) => button.instance.destroy());
         component._buttons = [];
 
-        // Add confirm and cancel buttons
-        component.buttons.addButton({
-          text: confirmText,
-          variant: confirmVariant,
-          onClick: () => {
-            resolve(true);
-          },
-        });
+        // Settles once: a button's answer, or false when the dialog closes
+        // any other way (Escape, the scrim, close()). It never resolved then,
+        // and the promise hung (FLO-324).
+        let settled = false;
+        const settle = (answer: boolean): void => {
+          if (settled) return;
+          settled = true;
+          component.off("close", onClose);
+          resolve(answer);
+        };
+        const onClose = (): void => settle(false);
+        component.on("close", onClose);
 
+        // The dismissing action first, the confirming one last, as M3 orders
+        // a dialog's actions (FLO-324)
         component.buttons.addButton({
           text: cancelText,
           variant: cancelVariant,
-          onClick: () => {
-            resolve(false);
-          },
+          onClick: () => settle(false),
+        });
+
+        component.buttons.addButton({
+          text: confirmText,
+          variant: confirmVariant,
+          onClick: () => settle(true),
         });
 
         // Open the dialog
