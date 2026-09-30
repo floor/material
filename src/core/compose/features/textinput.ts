@@ -334,7 +334,9 @@ export const withTextInput =
       );
     }
 
-    component.element.appendChild(input);
+    // Into the component's field, where it has one (the text field's
+    // container, FLO-300), else the root
+    ((component as { field?: HTMLElement }).field ?? component.element).appendChild(input);
 
     // Cleanup
     if (hasLifecycle(component)) {

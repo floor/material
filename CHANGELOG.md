@@ -12,6 +12,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Text field: a character counter (FLO-300).** While the input has a `maxlength`, the
+  supporting text row ends with `count/max`, as Material Web shows it. It follows typing,
+  `setValue()` and a limit set or removed later (`<m-textfield maxlength>`), describes the input
+  for screen readers, and takes the error colour while the field is in error.
+- **Menu: `positionTarget` (FLO-300).** The element a menu is placed against, when it is not
+  its opener. The select passes its field, so the supporting text row never pushes the menu down.
+
 - **Pre-upgrade styles for server-rendered elements (FLO-293, SSR Phase A).** Until its script
   defines it, a server-rendered element no longer shows as unstyled text that then jumps: rules
   scoped to `:not(:defined)` give each of the 34 elements its upgraded box, set its label in the
@@ -30,6 +37,20 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   own workarounds, so a read-only element's trigger is disabled.
 
 ### Changed
+
+- **Text field: the field and its supporting text row (FLO-300). DOM change.** The root now
+  holds two children, as M3's anatomy has them: `__field`, the 56px container with the label,
+  input, outline, icons and affixes, and, when there is supporting text or a counter,
+  `__supporting`, a row in the flow under it with `__helper` at the start and `__counter` at the
+  end. The helper was absolute, 18px under the field, so it overlapped what followed and never
+  wrapped; now it pushes what follows down and wraps. A field without supporting text is still
+  56px, and `element`, `input`, `supportingTextElement` and the setters are unchanged; the new
+  `field` property is the container. Migration: selectors that assumed the old flat structure,
+  such as `.mtrl-textfield > .mtrl-textfield__input` or `> .mtrl-textfield__label`, now go
+  through the field (`.mtrl-textfield__field > …`); the filled indicator is
+  `.mtrl-textfield__field::before`. The select's never-effective viewport scrim
+  (`.mtrl-select--open::before`, which the old indicator squashed to a 2px strip) is removed;
+  a click outside closes the menu, as before.
 
 - **An unsized text field, select or date picker is 280px wide** (`TextFieldDefaults.MinWidth`),
   instead of as wide as its input's 20 average characters. Chrome measures that differently per

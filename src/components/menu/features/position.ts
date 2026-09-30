@@ -394,7 +394,7 @@ export const createPositioner = (
    */
   const positionMenu = (openerElement: HTMLElement): void => {
     if (!openerElement || !component.element) return;
-    positionElement(component.element, openerElement, config.position ?? "bottom-start", false);
+    positionElement(component.element, config.positionTarget ?? openerElement, config.position ?? "bottom-start", false);
   };
 
   /**

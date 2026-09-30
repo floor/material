@@ -55,6 +55,10 @@ export const cases: PreupgradeCase[] = [
   c("textfield", "default", `<m-textfield label="Name"></m-textfield>`),
   c("textfield", "variant=outlined", `<m-textfield variant="outlined" label="Name"></m-textfield>`),
   c("textfield", "supporting-text", `<m-textfield label="Name" supporting-text="As on your passport"></m-textfield>`),
+  // FLO-300: the supporting text row under the field, reserved before upgrade
+  c("textfield", "outlined supporting-text", `<m-textfield variant="outlined" label="Name" supporting-text="As on your passport"></m-textfield>`),
+  c("textfield", "maxlength (counter)", `<m-textfield label="Name" maxlength="20"></m-textfield>`),
+  c("textfield", "compact supporting-text", `<m-textfield density="compact" label="Name" supporting-text="Help"></m-textfield>`),
   c("textfield", "value", `<m-textfield label="Name" value="Ada"></m-textfield>`),
   c("textfield", "density=compact", `<m-textfield density="compact" label="Name"></m-textfield>`),
   c("textfield", "outlined compact value", `<m-textfield variant="outlined" density="compact" label="Name" value="Ada"></m-textfield>`),
@@ -80,6 +84,7 @@ export const cases: PreupgradeCase[] = [
   c("menu", "default", `<m-menu anchor="nowhere"><m-menu-item value="a">Copy</m-menu-item><m-menu-item value="b">Paste</m-menu-item></m-menu>`),
   c("select", "default", `<m-select label="Pet" value="cat"><m-select-option value="cat">Cat</m-select-option><m-select-option value="dog">Dog</m-select-option></m-select>`),
   c("select", "variant=outlined", `<m-select variant="outlined" label="Pet"><m-select-option value="cat">Cat</m-select-option></m-select>`),
+  c("select", "supporting-text", `<m-select label="Pet" supporting-text="Pick one"><m-select-option value="cat">Cat</m-select-option></m-select>`),
   c("split-button", "default", `<m-split-button>Send<m-menu-item value="later">Send later</m-menu-item></m-split-button>`),
   c("tooltip", "default", `<m-tooltip for="nowhere">Help text</m-tooltip>`),
   c("snackbar", "default", `<m-snackbar>Message sent</m-snackbar>`),

@@ -270,8 +270,9 @@ describe('textfield', () => {
   // The input carries `…-input--with-leading-icon`, which contains the slot
   // name as a substring, so a loose [class*=] match picks the input instead of
   // the slot. Match the slot's own class, which has no modifier in it.
-  const slotEl = (field: { element: HTMLElement }, selector: string) =>
-    ([...field.element.children] as HTMLElement[]).find(
+  // The slots live in the field, the container under the root (FLO-300).
+  const slotEl = (field: { field: HTMLElement }, selector: string) =>
+    ([...field.field.children] as HTMLElement[]).find(
       (el) => el.className.endsWith(selector) && !el.className.includes('--'),
     ) ?? null;
 
