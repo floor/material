@@ -10,6 +10,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Fixed
+
+- **The dialog, the time picker and the sheets no longer show their headline as a tooltip
+  (FLO-347).** Their `title` option is the headline, and it was also written as the element's
+  `title` attribute, so hovering anywhere in an open dialog showed the browser's native tooltip.
+  The headline still names each surface through `aria-labelledby`. The dialog's role is
+  unchanged: a basic dialog is an `alertdialog`, as the M3 site asks on the web, and a full-screen
+  one is a `dialog`; `role` overrides it.
+
 ## [0.10.0] - 2026-09-30
 
 mtrl 0.10.0 is on npm `latest` (`npm install mtrl`), after four prereleases on `next`. Every
