@@ -138,13 +138,13 @@ const button = createButton({
 
 Button progress and card actions load on demand; enable code splitting in your build to keep them out of the initial chunk.
 
-## Web components and frameworks (experimental)
+## Web components and frameworks
 
-From the 0.10.0 prereleases (`npm install mtrl@next`), every component also ships as a custom element, with thin adapters for React, Vue, Svelte and Solid. The API may still change before 1.0.
+Since 0.10.0, every component also ships as a custom element, with thin adapters for React, Vue, Svelte and Solid generated from the same specs.
 
 | Kind | Elements | Framework components (Vue: `M` prefix, e.g. `MDialog`) |
 |------|----------|--------------------------------------------------------|
-| Actions | `<m-button>`, `<m-icon-button>`, `<m-fab>`, `<m-extended-fab>`, `<m-split-button>`, `<m-button-group>` + `<m-button-group-item>` | `Button`, `IconButton`, `Fab`, `ExtendedFab`, `SplitButton`, `ButtonGroup`, `ButtonGroupItem` |
+| Actions | `<m-button>`, `<m-icon-button>`, `<m-fab>`, `<m-extended-fab>`, `<m-fab-menu>` + `<m-fab-menu-item>`, `<m-split-button>`, `<m-button-group>` + `<m-button-group-item>`, `<m-toolbar>` | `Button`, `IconButton`, `Fab`, `ExtendedFab`, `FabMenu`, `FabMenuItem`, `SplitButton`, `ButtonGroup`, `ButtonGroupItem`, `Toolbar` |
 | Form controls | `<m-checkbox>`, `<m-switch>`, `<m-radios>` + `<m-radio>`, `<m-slider>`, `<m-textfield>`, `<m-select>` + `<m-select-option>`, `<m-search>` + `<m-search-suggestion>`, `<m-datepicker>`, `<m-timepicker>` | `Checkbox`, `Switch`, `Radios`, `Radio`, `Slider`, `Textfield`, `Select`, `SelectOption`, `Search`, `SearchSuggestion`, `Datepicker`, `Timepicker` |
 | Selection | `<m-chips>` + `<m-chip>`, `<m-tabs>` + `<m-tab>`, `<m-list>` + `<m-list-item>` | `Chips`, `Chip`, `Tabs`, `Tab`, `List`, `ListItem` |
 | Navigation | `<m-navigation-rail>` + `<m-navigation-rail-item>`, `<m-drawer>` + `<m-drawer-item>`, `<m-top-app-bar>`, `<m-bottom-app-bar>` | `NavigationRail`, `NavigationRailItem`, `Drawer`, `DrawerItem`, `TopAppBar`, `BottomAppBar` |

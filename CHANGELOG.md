@@ -10,6 +10,46 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-09-30
+
+mtrl 0.10.0 is on npm `latest` (`npm install mtrl`), after four prereleases on `next`. Every
+component now ships three ways from one implementation: the factory (`createButton`), a custom
+element (`<m-button>`, from `mtrl/elements`) and React, Vue, Svelte and Solid components
+(`mtrl/react`, `mtrl/vue`, `mtrl/svelte`, `mtrl/solid`), generated from the element specs, which
+render on the server and hydrate. Overlays open in the browser's top layer. The M3 Expressive
+toolbar and FAB menu are new, colour roles follow M3's current baseline with eight generated
+scheme variants, and the typeface and corner shapes are themeable through tokens. The
+documentation and playgrounds moved to [md3.io](https://md3.io).
+
+This section lists what changed since 0.10.0-next.3; the prerelease sections below describe the
+rest. Everything since 0.9.8 is in this release.
+
+### Migrating from 0.9.x
+
+Most apps need nothing. Check these if you use them:
+
+- **Setters are silent.** `check()`, `setValue()`, `select()` and the like no longer emit
+  `change`, `input` or `select`; only the user's input does, as on the platform. Update your own
+  state where you call them. Exceptions: the carousel's navigation, the progress indicator's
+  `setValue()`, the split button's `expand()` / `collapse()`.
+- **Time picker events pass `{ value }`.** `(time) => …` becomes `({ value }) => …` for
+  `change`, `input`, `onChange` and `onInput`; `confirm` still passes the string.
+- **`--mtrl-sys-color-*-rgb` are gone.** `rgba(var(--mtrl-sys-color-X-rgb), N)` becomes
+  `color-mix(in srgb, var(--mtrl-sys-color-X) N%, transparent)`.
+- **Disabled non-form roots use `aria-disabled`.** Read `[aria-disabled="true"]` or the
+  `--disabled` class instead of `[disabled]` on progress, date picker and other `div` roots.
+- **Cards are `article`s.** A card that acts on activation sets `clickable`; `interactive` alone
+  is visual. Tests reading `[role="region"]`, `[role="heading"]` or the subtitle's `h4` read the
+  `article` role and the `__header-title` / `__header-subtitle` classes.
+- **Text field DOM.** The label, input and outline sit in `__field`, and supporting text in
+  `__supporting`: selectors like `.mtrl-textfield > .mtrl-textfield__input` go through
+  `.mtrl-textfield__field`.
+- **Deprecated, removed in 1.0:** the themes `material`, `winter`, `browngreen` and `legacy`
+  (use `baseline` or a generated variant), the chips set's array payload, tooltip `rich`, dialog
+  button `color`, card `withElevation`, `getThemeColor('…-rgb')`.
+
+Each item's full entry, with the reason, is below.
+
 ### Added
 
 - **FAB menu: M3 Expressive's FAB menu (FLO-306).** `createFabMenu` makes a FAB that opens 2 to 6
@@ -1501,7 +1541,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.0-next.3...HEAD
+[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/floor/mtrl/compare/v0.10.0-next.3...v0.10.0
 [0.10.0-next.3]: https://github.com/floor/mtrl/compare/v0.10.0-next.2...v0.10.0-next.3
 [0.10.0-next.2]: https://github.com/floor/mtrl/compare/v0.10.0-next.1...v0.10.0-next.2
 [0.10.0-next.1]: https://github.com/floor/mtrl/compare/v0.10.0-next.0...v0.10.0-next.1
