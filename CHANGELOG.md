@@ -18,8 +18,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   Each ships only as its own entry, `mtrl/themes/<name>`, so it costs nothing until imported;
   the full stylesheet's themes are unchanged.
 - **`schemeToTokens` (`mtrl/core/theme`, also `mtrl/core`) (FLO-308).** An M3 scheme's role
-  colours in, the theme's `--mtrl-sys-color-*` declarations out, light and dark, with `-rgb`
-  twins. The themes are generated with it (`scripts/generate-themes.ts`, from Google's
+  colours in, the theme's `--mtrl-sys-color-*` declarations out, light and dark, one per role
+  (no `-rgb` twins, FLO-311). The themes are generated with it (`scripts/generate-themes.ts`, from Google's
   material-color-utilities, a devDependency only) and md3.io's theme builder uses it too.
 
 - **Text field: a character counter (FLO-300).** While the input has a `maxlength`, the

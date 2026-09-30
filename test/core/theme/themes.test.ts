@@ -15,7 +15,7 @@ import { themeStyles, standaloneThemes } from "../../../scripts/style-manifest";
 
 const THEMES_DIR = "src/styles/themes";
 
-/** A theme file's colour roles, light and dark, `-rgb` twins left out */
+/** A theme file's colour roles, light and dark */
 const parse = (name: string): { light: Record<string, string>; dark: Record<string, string> } => {
   const scss = readFileSync(`${THEMES_DIR}/_${name}.scss`, "utf8");
   const split = scss.indexOf('&[data-theme-mode="dark"]');
@@ -90,11 +90,12 @@ describe("schemeToTokens", () => {
     ...overrides,
   });
 
-  test("maps every role to --mtrl-sys-color-*, with its -rgb twin", () => {
+  // FLO-311: the themes no longer carry -rgb twins; one token per role.
+  test("maps every role to --mtrl-sys-color-*, and emits no -rgb twin", () => {
     const tokens = schemeToTokens({ light: scheme({ primary: "#6750A4" }), dark: scheme() });
     expect(tokens.light["--mtrl-sys-color-primary"]).toBe("#6750a4");
-    expect(tokens.light["--mtrl-sys-color-primary-rgb"]).toBe("103, 80, 164");
-    expect(Object.keys(tokens.light)).toHaveLength(THEME_ROLES.length * 2);
+    expect(Object.keys(tokens.light)).toHaveLength(THEME_ROLES.length);
+    expect(Object.keys({ ...tokens.light, ...tokens.dark }).some((name) => name.endsWith("-rgb"))).toBe(false);
   });
 
   test("takes material-color-utilities' camelCase names too", () => {
@@ -102,15 +103,9 @@ describe("schemeToTokens", () => {
     expect(schemeToTokens({ light: camel, dark: camel }).dark["--mtrl-sys-color-surface-container-highest"]).toBe("#112233");
   });
 
-  test("a prefix, and no twins on request", () => {
-    const tokens = schemeToTokens({ light: scheme(), dark: scheme() }, { prefix: "x", rgb: false });
-    expect(Object.keys(tokens.light).every((name) => name.startsWith("--x-sys-color-") && !name.endsWith("-rgb"))).toBe(true);
-  });
-
-  test("light surface-rgb carries on-surface's channels, as baseline's does; dark its own", () => {
-    const tokens = schemeToTokens({ light: scheme(), dark: scheme() });
-    expect(tokens.light["--mtrl-sys-color-surface-rgb"]).toBe("1, 2, 3");
-    expect(tokens.dark["--mtrl-sys-color-surface-rgb"]).toBe("17, 34, 51");
+  test("a prefix", () => {
+    const tokens = schemeToTokens({ light: scheme(), dark: scheme() }, { prefix: "x" });
+    expect(Object.keys(tokens.light).every((name) => name.startsWith("--x-sys-color-"))).toBe(true);
   });
 
   test("a missing role or a colour that is not #rrggbb throws", () => {
@@ -122,7 +117,7 @@ describe("schemeToTokens", () => {
   test("the roles are baseline's", () => {
     const baseline = readFileSync(`${THEMES_DIR}/_baseline.scss`, "utf8");
     const light = baseline.slice(baseline.indexOf("@mixin baseline-light-variables"), baseline.indexOf("@mixin baseline-dark-variables"));
-    const roles = [...light.matchAll(/--#\{\$prefix\}-sys-color-([a-z-]+?):/g)].map(([, role]) => role).filter((role) => !role.endsWith("-rgb"));
+    const roles = [...light.matchAll(/--#\{\$prefix\}-sys-color-([a-z-]+?):/g)].map(([, role]) => role);
     expect([...roles].sort()).toEqual([...THEME_ROLES].sort());
   });
 });
