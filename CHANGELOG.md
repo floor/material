@@ -10,6 +10,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-10-01
+
+The first patch after 0.10.0: the FAB menu's open and close motion now follows Compose, its
+`select` carries `value` like every other component, the dialog, time picker and sheets no longer
+show their headline as a tooltip, and the published `package.json` is only what consumers use.
+
 ### Changed
 
 - **The FAB menu's `select` also carries `value`** (the item's id, as `id` does). It matches the
@@ -1568,7 +1574,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/floor/mtrl/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/floor/mtrl/compare/v0.10.0-next.3...v0.10.0
 [0.10.0-next.3]: https://github.com/floor/mtrl/compare/v0.10.0-next.2...v0.10.0-next.3
 [0.10.0-next.2]: https://github.com/floor/mtrl/compare/v0.10.0-next.1...v0.10.0-next.2
