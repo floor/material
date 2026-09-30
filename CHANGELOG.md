@@ -12,6 +12,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Size budgets for lazy chunks.** `scripts/size.ts` budgets what a component loads with
+  `import()` apart from its initial graph: the menu's submenu feature, and the FAB menu's menu.
+
 - **Toolbar: M3 Expressive's docked and floating toolbars (FLO-304).** `createToolbar` makes
   the docked toolbar (full width, 64dp, square corners, items spread or centred 32dp apart) or the
   floating one (a 64dp pill, 8dp padding, items 4dp apart, elevation level 1 unless

@@ -163,6 +163,14 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // the time picker draft (FLO-288) and search widths (FLO-290): 116,200 on c3e3e18
 };
 
+/**
+ * Budgets for what a component loads with import() when it needs it, apart
+ * from its initial graph: the deferred column. Same headroom rule.
+ */
+export const DEFERRED_BUDGET_BYTES: Partial<Record<ScenarioName, number>> = {
+  menu: kb(2.2), // the submenu feature, a chunk since FLO-310
+};
+
 export interface SizeGateInput {
   readonly buildFailures: readonly string[];
   readonly treeShakeFailures: readonly unknown[];
@@ -591,6 +599,14 @@ const main = async (): Promise<void> => {
     console.log(
       `  ${over ? "✗" : "✓"} ${result.name}: ${result.gzBytes} bytes gzipped (budget ${budget})`,
     );
+    const deferredBudget = DEFERRED_BUDGET_BYTES[scenario.name];
+    if (deferredBudget !== undefined) {
+      const deferredOver = result.deferredGzBytes > deferredBudget;
+      if (deferredOver) overBudget.push(`${result.name} (deferred)`);
+      console.log(
+        `  ${deferredOver ? "✗" : "✓"} ${result.name} deferred: ${result.deferredGzBytes} bytes gzipped (budget ${deferredBudget})`,
+      );
+    }
   }
 
   console.log("");
