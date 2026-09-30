@@ -175,7 +175,7 @@ bun run test:coverage                      # with a coverage report
 ```
 
 - Tests live in `test/`, mirroring `src/`, and end in `.test.ts`; `bun run test:naming` fails on a suite the runner would not collect.
-- A test file that needs the DOM imports `test/setup.ts`, which provides one shared JSDOM.
+- A test file that needs the DOM creates a JSDOM at its top, as most do, or imports `test/setup.ts` for the shared one.
 - Test the real component through its public API and its DOM: no mock copies of components. Add or update the tests in the same commit as the change, and check that they fail without it.
 - Behaviour that needs a real browser (focus, layout, the top layer, form association, motion) goes in the Chromium checks, which CI runs in three groups:
   - `bun run elements:check` for the elements;
