@@ -1,6 +1,7 @@
 import { SliderConfig, SliderColor } from "../types";
 import { SLIDER_SIZES, SLIDER_MEASUREMENTS, SliderSize } from "../constants";
 import { PREFIX } from "../../../core/config";
+import { cornerToken, type ShapeStep } from "../../../core/theme/shape";
 import { sliderSizeClass } from "../config";
 import { setHTML } from "../../../core/dom/html";
 import { getAxis, isRtl, lengthOf, type SliderAxis } from "./axis";
@@ -41,6 +42,9 @@ export const getHandleHeight = (size?: SliderSize): number => {
  * track less one corner radius at each end (Slider.kt drawTrack), so the first and
  * last values sit at the centres of the rounded ends. FLO-250.
  */
+/** The steps of the track's corner radii (Compose SliderTokens: small to extra-large). */
+const TRACK_STEPS: Record<number, ShapeStep> = { 8: "small", 12: "medium", 16: "large", 28: "extra-large" };
+
 export const getExternalTrackRadius = (size?: SliderSize): number => {
   const trackHeight = getTrackHeight(size);
   if (trackHeight <= SLIDER_SIZES.S) return 8;
@@ -314,7 +318,8 @@ export const withTracks =
     // Sizes are thicknesses: across the axis. A vertical slider's length is its CSS height.
     container.style[axis.cross] = `${Math.max(handleHeight, SLIDER_MEASUREMENTS.MIN_HEIGHT)}px`;
     track.style[axis.cross] = `${getTrackHeight(size)}px`;
-    track.style.borderRadius = `${getExternalTrackRadius(size)}px`;
+    // The track's corner step (small to extra-large), read through its token (FLO-331)
+    track.style.borderRadius = cornerToken(TRACK_STEPS[getExternalTrackRadius(size)]!, getExternalTrackRadius(size), PREFIX);
     for (const handle of [component.handle, component.secondHandle]) {
       if (handle) handle.style[axis.cross] = `${handleHeight}px`;
     }

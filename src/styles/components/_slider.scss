@@ -187,7 +187,7 @@ $component: '#{base.$prefix}-slider';
       height: 100%;
       // --#{base.$prefix}-slider-color: the same per-slider override the canvas honours
       background-color: var(--#{base.$prefix}-slider-color, #{t.color('primary')});
-      border-radius: 2px;
+      border-radius: v.shape('full'); // SliderTokens handle-shape
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
@@ -294,7 +294,7 @@ $component: '#{base.$prefix}-slider';
     justify-content: center;
     background-color: t.color('inverse-surface');
     color: t.color('inverse-on-surface');
-    border-radius: 22px;
+    border-radius: v.shape('full'); // the value indicator: a pill
     @include m.typography('label-large');
     white-space: nowrap;
     transform: translateX(-50%);

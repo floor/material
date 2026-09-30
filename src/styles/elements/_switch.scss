@@ -1,6 +1,7 @@
 // src/styles/elements/_switch.scss
 // <m-switch> before upgrade: the label, then the track (unchecked or checked),
 // with the supporting text under the label.
+@use '../abstract/variables' as v;
 @use '../abstract/mixins' as m;
 @use '../abstract/theme' as t;
 @use 'config' as c;
@@ -27,7 +28,7 @@
     width: 52px;
     height: 32px;
     border: 2px solid t.color('outline');
-    border-radius: 16px;
+    border-radius: v.shape('full');
     background: radial-gradient(circle at 14px 50%, t.color('outline') 8px, transparent 8.5px) t.color('surface-container-highest');
   }
 

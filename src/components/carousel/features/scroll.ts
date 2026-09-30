@@ -10,6 +10,7 @@
 import { CarouselConfig, CarouselVariant } from "../types";
 import { CAROUSEL_DEFAULTS, CAROUSEL_EVENTS, CAROUSEL_VARIANTS } from "../constants";
 import { resolveLayoutDefaults } from "../config";
+import { cornerToken } from "../../../core/theme/shape";
 import {
   KeylineRules,
   multiBrowseKeylines,
@@ -54,6 +55,11 @@ export const withScroll = (config: CarouselConfig) =>
       mediumLargeThreshold: CAROUSEL_DEFAULTS.MEDIUM_LARGE_THRESHOLD,
     };
     const cornerRadius = config.cornerRadius ?? CAROUSEL_DEFAULTS.CORNER_RADIUS;
+    // The default corner reads the extra-large token, so a theme's corners
+    // reach the items; a radius given in the config stays as given (FLO-331).
+    const corner = cornerRadius === CAROUSEL_DEFAULTS.CORNER_RADIUS
+      ? cornerToken("extra-large", cornerRadius, config.prefix)
+      : `${cornerRadius}px`;
     const reduceMotion =
       typeof window !== "undefined" && typeof window.matchMedia === "function"
         ? window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -177,7 +183,7 @@ export const withScroll = (config: CarouselConfig) =>
         el.style[vertical ? "height" : "width"] = `${strategy!.itemSize}px`;
         el.style[vertical ? "width" : "height"] = "";
       });
-      element.style.setProperty(`--${config.prefix}-carousel-corner`, `${cornerRadius}px`);
+      element.style.setProperty(`--${config.prefix}-carousel-corner`, corner);
     };
 
     // ── Placement ───────────────────────────────────────────────
@@ -212,8 +218,8 @@ export const withScroll = (config: CarouselConfig) =>
         el.style.visibility = "";
         el.style.transform = vertical ? `translate3d(0, ${start}px, 0)` : `translate3d(${start}px, 0, 0)`;
         el.style.clipPath = vertical
-          ? `inset(${inset}px 0 round ${cornerRadius}px)`
-          : `inset(0 ${inset}px round ${cornerRadius}px)`;
+          ? `inset(${inset}px 0 round ${corner})`
+          : `inset(0 ${inset}px round ${corner})`;
         el.style.setProperty(`--${config.prefix}-carousel-fade`, fade.toFixed(3));
       }
 

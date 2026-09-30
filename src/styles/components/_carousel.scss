@@ -93,7 +93,8 @@ $component: '#{base.$prefix}-carousel';
     left: 0;
     height: 100%;
     overflow: hidden;
-    border-radius: var(--#{base.$prefix}-carousel-corner, 28px);
+    // CarouselDefaults.shape: corner-extra-large
+    border-radius: var(--#{base.$prefix}-carousel-corner, #{v.shape('extra-large')});
     background-color: t.color('surface-container');
     will-change: transform, clip-path;
     user-select: none;

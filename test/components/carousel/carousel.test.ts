@@ -1,4 +1,5 @@
 // test/components/carousel/carousel.test.ts
+import { corner } from '../../utils/corner';
 import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { JSDOM } from 'jsdom';
 
@@ -92,6 +93,15 @@ describe('carousel', () => {
     expect(carousel.getCurrentSlide()).toBe(0);
   });
 
+  test('a corner radius given in the config stays as given (FLO-331)', () => {
+    const carousel = createCarousel({ slides, cornerRadius: 12 });
+    sized(carousel, 600);
+    carousel.addSlide({ image: 'd.jpg' });
+    expect(carousel.element.style.getPropertyValue('--mtrl-carousel-corner')).toBe('12px');
+    const items = carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item');
+    expect(items[0]!.style.clipPath).toContain('round 12px');
+  });
+
   test('with a container: one snap point per item, items sized to the large keyline, change events', () => {
     const carousel = createCarousel({ slides, initialSlide: 1 });
     const scroller = sized(carousel, 600);
@@ -105,8 +115,9 @@ describe('carousel', () => {
     expect((snaps[0] as HTMLElement).style.left).toBe('0px');
     const items = carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item');
     expect(parseFloat(items[0]!.style.width)).toBeGreaterThan(200);
-    expect(items[0]!.style.clipPath).toContain('round 28px');
-    expect(carousel.element.style.getPropertyValue('--mtrl-carousel-corner')).toBe('28px');
+    // The default corner reads the extra-large token (FLO-331)
+    expect(items[0]!.style.clipPath).toContain(`round ${corner(28)}`);
+    expect(carousel.element.style.getPropertyValue('--mtrl-carousel-corner')).toBe(corner(28));
     expect(carousel.getCurrentSlide()).toBe(1);
 
     const changes: number[] = [];

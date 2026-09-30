@@ -1,6 +1,7 @@
 // src/components/button-group/config.ts
 
 import { createComponentConfig } from '../../core/config/component';
+import { cornerToken } from '../../core/theme/shape';
 import {
   ButtonGroupConfig,
   ButtonGroupVariant,
@@ -123,8 +124,9 @@ export const getSizeStyles = (
     [`--${prefix}-button-group-height`]: `${height}px`,
     [`--${prefix}-button-group-icon`]: `${tokens.icon}px`,
     [`--${prefix}-button-group-gap`]: `${gap}px`,
-    [`--${prefix}-button-group-inner-corner`]: `${tokens.connectedCorner}px`,
-    [`--${prefix}-button-group-pressed-corner`]: `${BUTTON_GROUP_CONNECTED_PRESSED_CORNER}px`,
+    // Corners on the shape scale read its tokens, as the stylesheet does (FLO-331)
+    [`--${prefix}-button-group-inner-corner`]: cornerToken(tokens.connectedStep, tokens.connectedCorner, prefix),
+    [`--${prefix}-button-group-pressed-corner`]: cornerToken("extra-small", BUTTON_GROUP_CONNECTED_PRESSED_CORNER, prefix),
     [`--${prefix}-button-group-radius`]: `${height / 2}px`
   };
 };
