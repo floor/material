@@ -56,11 +56,30 @@ const byId = (card: { element: HTMLElement }, id: string | null) =>
 beforeEach(() => { document.body.innerHTML = ''; });
 
 describe('card role and ARIA', () => {
-  test('a static card is a region and an interactive one a focusable button', () => {
-    expect(createCard().element.getAttribute('role')).toBe('region');
+  // FLO-109: a card is an article, a clickable one a focusable button; an
+  // interactive one has the states only, not a control's role or tab stop
+  test('a card is an article, a clickable one a focusable button, an interactive one neither', () => {
+    expect(createCard().element.getAttribute('role')).toBe('article');
     const clickable = createCard({ clickable: true });
     expect(clickable.element.getAttribute('role')).toBe('button');
     expect(clickable.element.getAttribute('tabindex')).toBe('0');
+    const interactive = createCard({ interactive: true });
+    expect(interactive.element.getAttribute('role')).toBe('article');
+    expect(interactive.element.hasAttribute('tabindex')).toBe(false);
+    expect(interactive.element.classList.contains('mtrl-card--interactive')).toBe(true);
+  });
+
+  // FLO-109: the title is the heading, the subtitle its text, and a content
+  // block no landmark
+  test('the header title is a real h3, the subtitle a paragraph, and neither header nor content has a role', () => {
+    const header = createCardHeader({ title: 'Trip', subtitle: 'Three days' });
+    expect(header.hasAttribute('role')).toBe(false);
+    expect(header.hasAttribute('aria-level')).toBe(false);
+    expect(header.querySelector('.mtrl-card__header-title')?.localName).toBe('h3');
+    expect(header.querySelector('.mtrl-card__header-subtitle')?.localName).toBe('p');
+    expect(header.querySelector('h4')).toBeNull();
+    const content = createCardContent({ text: 'Body' });
+    expect(content.hasAttribute('role')).toBe(false);
   });
 
   test('aria config sets the role and aria attributes it names', () => {
@@ -248,8 +267,8 @@ describe('card behaviour', () => {
     for (const card of [elevated, outlined]) expect(card.element.style.getPropertyValue('--mtrl-card-elevation')).toBe('');
   });
 
-  test('focus toggles the focused modifier on an interactive card', () => {
-    const card = createCard({ interactive: true });
+  test('focus toggles the focused modifier on a clickable card', () => {
+    const card = createCard({ clickable: true });
     document.body.appendChild(card.element);
     card.focus();
     expect(card.element.classList.contains('mtrl-card--focused')).toBe(true);
