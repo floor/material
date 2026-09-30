@@ -3538,7 +3538,7 @@ try {
         };
       }, id);
     assert.deepEqual(await regions("c"), { regions: "header content actions", headline: 1, subhead: 1, content: 1, actions: 1, outlined: 1 });
-    assert.equal(await page.getByRole("region", { name: "Trip to Lisbon" }).count(), 1);
+    assert.equal(await page.getByRole("article", { name: "Trip to Lisbon" }).count(), 1);
     assert.equal(await page.locator("#c").getByRole("group").count(), 1, "the actions row is a group");
     assert.equal(await page.getByRole("button", { name: "Book" }).count(), 1);
     check("card: children fill the header, content and actions slots; the headline names the card");
@@ -3579,7 +3579,7 @@ try {
       return c.component === before;
     });
     assert.equal(changed, true);
-    assert.equal(await page.getByRole("region", { name: "Trip to Porto" }).count(), 1);
+    assert.equal(await page.getByRole("article", { name: "Trip to Porto" }).count(), 1);
     check("card: a change inside a region is the slot's, with no recreation");
 
     const regrown = await page.evaluate(async () => {
@@ -3603,9 +3603,9 @@ try {
     check("card: a region added or emptied recreates the card with the regions it now has");
 
     await page.evaluate(() => document.getElementById("c")?.setAttribute("aria-label", "Holiday"));
-    assert.equal(await page.getByRole("region", { name: "Holiday" }).count(), 1);
+    assert.equal(await page.getByRole("article", { name: "Holiday" }).count(), 1);
     await page.evaluate(() => document.getElementById("c")?.removeAttribute("aria-label"));
-    assert.equal(await page.getByRole("region", { name: "Trip to Porto" }).count(), 1);
+    assert.equal(await page.getByRole("article", { name: "Trip to Porto" }).count(), 1);
     check("card: aria-label replaces the headline's name in place, and its removal gives it back");
 
     await page.evaluate(() => document.getElementById("k")?.setAttribute("headline", "Open this"));

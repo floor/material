@@ -246,6 +246,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking, prerelease)
 
+- **Card semantics (FLO-109).** A card is an `article`, not a `region` landmark: one named region
+  per card flooded landmark navigation. A `clickable` card stays a `button` with a tab stop, and
+  Enter and Space activate it. `interactive` alone is now the hover and press states only: the
+  card was a focusable `button` that did nothing on Enter or Space, and now takes no button role
+  and no tab stop. The header drops `role="heading"`, so its title is the heading, its real `h3`;
+  the subtitle is a `p`, not an `h4`. A content block takes no role (each was an unnamed region).
+  Migration: a card that acts on activation sets `clickable`; a selector or test reading
+  `[role="region"]`, `[role="heading"]` or the subtitle's `h4` reads the card's `article` role and
+  the `__header-title` / `__header-subtitle` classes.
 - **`disable()` on a root that is not a form control writes `aria-disabled`, not `disabled`
   (FLO-119).** The shared disabled feature set a bare `disabled="true"` on a `div` root, which is
   not valid there and tells assistive technology nothing. It now sets `aria-disabled="true"`,

@@ -64,11 +64,18 @@ export interface ButtonConfig extends Omit<BaseButtonConfig, "variant"> {
 export interface CardSchema {
   /** Card variant type (elevated, filled, outlined) */
   variant?: CardVariant | string;
-  /** Whether the card is interactive */
+  /**
+   * The hover and press states and their elevation, for a card the app
+   * makes interactive itself. Not a control: no role of button and no tab
+   * stop; `clickable` is (FLO-109).
+   */
   interactive?: boolean;
   /** Whether the card should take full width */
   fullWidth?: boolean;
-  /** Whether the card is clickable (with ripple effect) */
+  /**
+   * A card that acts on activation: a button (role, tab stop, Enter and
+   * Space click it) with the ripple (FLO-109)
+   */
   clickable?: boolean;
   /** Whether the card is draggable */
   draggable?: boolean;
@@ -119,7 +126,7 @@ export interface CardAriaAttributes {
   labelledby?: string;
   /** ARIA describedby */
   describedby?: string;
-  /** ARIA role (default is 'region' for non-interactive, 'button' for interactive) */
+  /** ARIA role (default: 'button' for a clickable card, 'article' for any other) */
   role?: string;
   /** Additional ARIA attributes as key-value pairs */
   [key: string]: string | undefined;
