@@ -1,4 +1,6 @@
 // src/styles/themes/_baseline.scss
+// M3's baseline scheme, light and dark: the values of Compose's ColorLightTokens and
+// ColorDarkTokens (the published baseline, primary #6750A4), FLO-315.
 @use "../abstract/base" as *;
 @use "base-theme" as *;
 @use "../abstract/variables" as v;
@@ -29,17 +31,32 @@
     --#{$prefix}-sys-color-tertiary-container: #ffd8e4;
     --#{$prefix}-sys-color-on-tertiary-container: #31111d;
 
+    // Fixed accents: the same in light and dark (M3 fixed roles, FLO-315;
+    // Compose ColorLightTokens / ColorDarkTokens, tones 90, 80, 10 and 30)
+    --#{$prefix}-sys-color-primary-fixed: #eaddff;
+    --#{$prefix}-sys-color-primary-fixed-dim: #d0bcff;
+    --#{$prefix}-sys-color-on-primary-fixed: #21005d;
+    --#{$prefix}-sys-color-on-primary-fixed-variant: #4f378b;
+    --#{$prefix}-sys-color-secondary-fixed: #e8def8;
+    --#{$prefix}-sys-color-secondary-fixed-dim: #ccc2dc;
+    --#{$prefix}-sys-color-on-secondary-fixed: #1d192b;
+    --#{$prefix}-sys-color-on-secondary-fixed-variant: #4a4458;
+    --#{$prefix}-sys-color-tertiary-fixed: #ffd8e4;
+    --#{$prefix}-sys-color-tertiary-fixed-dim: #efb8c8;
+    --#{$prefix}-sys-color-on-tertiary-fixed: #31111d;
+    --#{$prefix}-sys-color-on-tertiary-fixed-variant: #633b48;
+
     // Neutral colors
-    --#{$prefix}-sys-color-surface: #fffbfe;
+    --#{$prefix}-sys-color-surface: #fef7ff;
     --#{$prefix}-sys-color-surface-dim: #ded8e1;
-    --#{$prefix}-sys-color-surface-bright: #fff8f7;
+    --#{$prefix}-sys-color-surface-bright: #fef7ff;
     --#{$prefix}-sys-color-surface-container-lowest: #ffffff;
     --#{$prefix}-sys-color-surface-container-low: #f7f2fa;
     --#{$prefix}-sys-color-surface-container: #f3edf7;
     --#{$prefix}-sys-color-surface-container-high: #ece6f0;
     --#{$prefix}-sys-color-surface-container-highest: #e6e0e9;
 
-    --#{$prefix}-sys-color-on-surface: #1c1b1f;
+    --#{$prefix}-sys-color-on-surface: #1d1b20;
     --#{$prefix}-sys-color-on-surface-variant: #49454f;
 
     // Additional colors
@@ -47,8 +64,8 @@
     --#{$prefix}-sys-color-outline-variant: #cac4d0;
     --#{$prefix}-sys-color-shadow: #000000;
     --#{$prefix}-sys-color-scrim: #000000;
-    --#{$prefix}-sys-color-inverse-surface: #313033;
-    --#{$prefix}-sys-color-inverse-on-surface: #f4eff4;
+    --#{$prefix}-sys-color-inverse-surface: #322f35;
+    --#{$prefix}-sys-color-inverse-on-surface: #f5eff7;
     --#{$prefix}-sys-color-inverse-primary: #d0bcff;
 
     // State layers, from $state in abstract/_variables.scss: the values every
@@ -80,26 +97,41 @@
     --#{$prefix}-sys-color-tertiary-container: #633b48;
     --#{$prefix}-sys-color-on-tertiary-container: #ffd8e4;
 
+    // Fixed accents: the same in light and dark (M3 fixed roles, FLO-315;
+    // Compose ColorLightTokens / ColorDarkTokens, tones 90, 80, 10 and 30)
+    --#{$prefix}-sys-color-primary-fixed: #eaddff;
+    --#{$prefix}-sys-color-primary-fixed-dim: #d0bcff;
+    --#{$prefix}-sys-color-on-primary-fixed: #21005d;
+    --#{$prefix}-sys-color-on-primary-fixed-variant: #4f378b;
+    --#{$prefix}-sys-color-secondary-fixed: #e8def8;
+    --#{$prefix}-sys-color-secondary-fixed-dim: #ccc2dc;
+    --#{$prefix}-sys-color-on-secondary-fixed: #1d192b;
+    --#{$prefix}-sys-color-on-secondary-fixed-variant: #4a4458;
+    --#{$prefix}-sys-color-tertiary-fixed: #ffd8e4;
+    --#{$prefix}-sys-color-tertiary-fixed-dim: #efb8c8;
+    --#{$prefix}-sys-color-on-tertiary-fixed: #31111d;
+    --#{$prefix}-sys-color-on-tertiary-fixed-variant: #633b48;
+
     // Neutral colors
-    --#{$prefix}-sys-color-surface: #1c1b1f;
+    --#{$prefix}-sys-color-surface: #141218;
     --#{$prefix}-sys-color-surface-dim: #141218;
-    --#{$prefix}-sys-color-surface-bright: #3b383d;
+    --#{$prefix}-sys-color-surface-bright: #3b383e;
     --#{$prefix}-sys-color-surface-container-lowest: #0f0d13;
     --#{$prefix}-sys-color-surface-container-low: #1d1b20;
     --#{$prefix}-sys-color-surface-container: #211f26;
     --#{$prefix}-sys-color-surface-container-high: #2b2930;
     --#{$prefix}-sys-color-surface-container-highest: #36343b;
 
-    --#{$prefix}-sys-color-on-surface: #e6e1e5;
+    --#{$prefix}-sys-color-on-surface: #e6e0e9;
     --#{$prefix}-sys-color-on-surface-variant: #cac4d0;
 
     // Additional colors
     --#{$prefix}-sys-color-outline: #938f99;
-    --#{$prefix}-sys-color-outline-variant: #444746;
+    --#{$prefix}-sys-color-outline-variant: #49454f;
     --#{$prefix}-sys-color-shadow: #000000;
     --#{$prefix}-sys-color-scrim: #000000;
-    --#{$prefix}-sys-color-inverse-surface: #e6e1e5;
-    --#{$prefix}-sys-color-inverse-on-surface: #313033;
+    --#{$prefix}-sys-color-inverse-surface: #e6e0e9;
+    --#{$prefix}-sys-color-inverse-on-surface: #322f35;
     --#{$prefix}-sys-color-inverse-primary: #6750a4;
 }
 

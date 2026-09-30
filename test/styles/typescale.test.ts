@@ -29,22 +29,25 @@ const value = (selector: string, property: string) =>
 beforeAll(() => { css = compileString("@use 'main';", { loadPaths: ['src/styles'] }).css.replace(/\/\*[\s\S]*?\*\//g, ''); });
 
 for (const [role, size, height, tracking, weight] of scale) {
-  test(`${role}: utility class and emitted system tokens agree with the baseline type scale`, () => {
+  // The class reads the token, and the token holds the scale (FLO-315): the
+  // class used to repeat the literal values and the Roboto family.
+  test(`${role}: the utility class reads the emitted system tokens, which hold the baseline type scale`, () => {
     for (const [property, expected] of [
       ['font-size', `${size}px`], ['line-height', `${height}px`],
       ['letter-spacing', tracking], ['font-weight', String(weight)],
     ]) {
-      expect(value(`.mtrl-${role}`, property)).toBe(expected);
+      expect(value(`.mtrl-${role}`, property)).toBe(`var(--mtrl-sys-typescale-${role}-${property})`);
       expect(value(':root', `--mtrl-sys-typescale-${role}-${property}`)).toBe(expected);
     }
-    expect(value(`.mtrl-${role}`, 'font-family')).toBe('"Roboto", sans-serif');
+    expect(value(`.mtrl-${role}`, 'font-family')).toBe(`var(--mtrl-sys-typescale-${role}-font)`);
     const face = /^(display|headline|title)-/.test(role) ? 'brand' : 'plain';
     expect(value(':root', `--mtrl-sys-typescale-${role}-font`)).toBe(`var(--mtrl-ref-typeface-${face})`);
   });
 }
 
+// h4 reads title-large's tokens now (test/styles/typescale-classes.test.ts).
 for (const selector of [
-  'h4', '.mtrl-card__header-title', '.mtrl-dialog--fullscreen .mtrl-dialog__header-title',
+  '.mtrl-card__header-title', '.mtrl-dialog--fullscreen .mtrl-dialog__header-title',
   '.mtrl-extended-fab--medium .mtrl-extended-fab__text', '.mtrl-side-sheet__title',
   '.mtrl-top-app-bar__headline',
   '.mtrl-top-app-bar--scrolled.mtrl-top-app-bar--medium.mtrl-top-app-bar--compressible .mtrl-top-app-bar__headline',

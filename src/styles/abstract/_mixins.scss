@@ -37,6 +37,19 @@ $icons: (
   font-weight: map.get($styles, 'font-weight');
 }
 
+/// A typescale role through its custom properties (FLO-315): the
+/// `--{prefix}-sys-typescale-{role}-*` tokens base/_tokens.scss emits from the
+/// same map, so setting `--{prefix}-ref-typeface-brand`/`-plain`, or a size
+/// token, reaches everything that uses it.
+@mixin typescale($role) {
+  $t: '--#{base.$prefix}-sys-typescale-#{$role}';
+  font-family: var(#{$t}-font);
+  font-size: var(#{$t}-font-size);
+  line-height: var(#{$t}-line-height);
+  letter-spacing: var(#{$t}-letter-spacing);
+  font-weight: var(#{$t}-font-weight);
+}
+
 // State Layers
 @mixin state-layer($color, $state: 'hover', $selector: false) {
   position: relative;

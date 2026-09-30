@@ -34,6 +34,7 @@ import {
   argbFromHex,
   hexFromArgb,
 } from "@material/material-color-utilities";
+import { readFileSync } from "node:fs";
 import { schemeToTokens, THEME_ROLES } from "../src/core/theme";
 
 /** M3's baseline seed, the source of `baseline` and of the eight variants */
@@ -168,9 +169,68 @@ ${declarations(tokens.dark, "        ")}
 `;
 };
 
+/**
+ * The hand-kept themes: their colours are set by hand and stay (the FLO-309
+ * audit found them M3-faithful). Only their fixed roles are generated, from
+ * the theme's own primary, secondary and tertiary (FLO-315).
+ */
+export const KEPT_THEMES = ["ocean", "forest", "spring", "sunset", "autumn"];
+
+const FIXED_START = "    // fixed roles: generated, do not edit";
+const FIXED_END = "    // end of fixed roles";
+
+/**
+ * M3's fixed roles from key colours: tones 90, 80, 10 and 30 of the palette
+ * each colour keys (as Compose's baseline has them: Primary90 #EADDFF, …).
+ * The same in light and dark.
+ */
+export const fixedRoles = (keys: { primary: string; secondary: string; tertiary: string }): Record<string, string> =>
+  Object.fromEntries((["primary", "secondary", "tertiary"] as const).flatMap((group) => {
+    const palette = TonalPalette.fromInt(argbFromHex(keys[group]));
+    return [
+      [`${group}-fixed`, hexFromArgb(palette.tone(90))],
+      [`${group}-fixed-dim`, hexFromArgb(palette.tone(80))],
+      [`on-${group}-fixed`, hexFromArgb(palette.tone(10))],
+      [`on-${group}-fixed-variant`, hexFromArgb(palette.tone(30))],
+    ];
+  }));
+
+/** A kept theme with its fixed-roles block written from its own key colours */
+export const renderKept = (source: string): string => {
+  const light = source.slice(0, source.indexOf('&[data-theme-mode="dark"]'));
+  const key = (role: string): string => {
+    const match = light.match(new RegExp(`--#\\{\\$prefix\\}-sys-color-${role}:\\s*(#[0-9a-fA-F]{6})`));
+    if (!match) throw new Error(`kept theme has no light ${role}`);
+    return match[1];
+  };
+  const block = [
+    FIXED_START,
+    "    // (tones 90, 80, 10, 30 of this theme's primary, secondary and tertiary;",
+    "    // the same in dark, so declared once, FLO-315)",
+    ...Object.entries(fixedRoles({ primary: key("primary"), secondary: key("secondary"), tertiary: key("tertiary") }))
+      .map(([role, hex]) => `    --#{$prefix}-sys-color-${role}: ${hex};`),
+    FIXED_END,
+  ].join("\n");
+  const start = source.indexOf(FIXED_START);
+  if (start >= 0) {
+    const end = source.indexOf(FIXED_END, start) + FIXED_END.length;
+    return source.slice(0, start) + block + source.slice(end);
+  }
+  // First time: after the light tertiary group
+  const anchor = source.match(/\n([ \t]*--#\{\$prefix\}-sys-color-on-tertiary-container:[^\n]*)\n/);
+  if (!anchor || anchor.index === undefined) throw new Error("kept theme has no light on-tertiary-container");
+  const at = anchor.index + anchor[0].length;
+  return `${source.slice(0, at)}\n${block}\n${source.slice(at)}`;
+};
+
 /** Every generated file, by path */
-export const renderThemes = (): Record<string, string> =>
-  Object.fromEntries(THEMES.map((spec) => [`src/styles/themes/_${spec.name}.scss`, renderTheme(spec)]));
+export const renderThemes = (): Record<string, string> => ({
+  ...Object.fromEntries(THEMES.map((spec) => [`src/styles/themes/_${spec.name}.scss`, renderTheme(spec)])),
+  ...Object.fromEntries(KEPT_THEMES.map((name) => {
+    const path = `src/styles/themes/_${name}.scss`;
+    return [path, renderKept(readFileSync(path, "utf8"))];
+  })),
+});
 
 if (import.meta.main) {
   for (const [path, content] of Object.entries(renderThemes())) {
