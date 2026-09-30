@@ -99,3 +99,7 @@ demo/
 # Local Claude Code settings
 .claude/*
 !.claude/CLAUDE.md
+
+# Local agent instructions and manifests
+AGENTS.md
+.agents/

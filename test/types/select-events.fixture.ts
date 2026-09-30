@@ -14,7 +14,7 @@
 // So the assertions here come in two halves: the public map, which guards
 // against drift, and the host, which is what this change actually altered.
 //
-// Compiled by `bun run tooling:check` via config/tsconfig.types.json.
+// Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type {
   BaseComponent,
   SelectComponent,

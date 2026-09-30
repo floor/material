@@ -4,7 +4,7 @@
 // generated dist/svelte/*.svelte.d.ts files apply these types. Nothing here
 // runs; the assertions are the test.
 //
-// Compiled by `bun run tooling:check` via config/tsconfig.types.json.
+// Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type { Bindable, SvelteProps } from "../../src/svelte/runtime";
 import type { SwitchSpec, TabsSpec, ButtonSpec, DialogSpec, CardSpec, ElementSlots } from "../../src/elements";
 import type { Snippet } from "svelte";

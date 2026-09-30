@@ -3,7 +3,7 @@
 // FLO-328: the `m-*` tags are in HTMLElementTagNameMap, so a query returns the
 // element's type. Nothing here runs; the assertions are the test.
 //
-// Compiled by `bun run tooling:check` via config/tsconfig.types.json.
+// Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type { declarations, elements, SwitchElement, TabAttributes, TextfieldElement } from "../../src/elements";
 
 /** true when A and B are the same type */

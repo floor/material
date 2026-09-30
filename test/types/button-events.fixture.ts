@@ -20,7 +20,7 @@
 // Typing the map is what surfaced all four. These assertions keep the map
 // honest so it can keep doing that.
 //
-// Compiled by `bun run tooling:check` via config/tsconfig.types.json.
+// Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type {
   ButtonComponent,
   ButtonEvents,

@@ -163,17 +163,26 @@ Builds fail on TypeScript or Sass errors. The published ESM is readable and incl
 1. Branch from `main`; one topic per pull request.
 2. Include the tests, the `CHANGELOG.md` entry under `[Unreleased]` and, for a new option or behaviour, the md3.io docs change.
 3. A change that breaks the public API or the rendered DOM goes under **Changed (breaking)** with a `Migration:` line.
-4. CI must pass: types and ratchets, lint, tests, build, size and adapter budgets, and the browser checks (components, elements, adapters). `main` accepts merge commits only, from up-to-date branches.
+4. CI must pass: types, lint, tests, build, size and adapter budgets, and the browser checks (components, elements, adapters). `main` accepts merge commits only, from up-to-date branches.
 5. Reference the issue the change closes.
 
 ## Testing
 
-Tests live in `test/` and run with `bun test`; [docs/testing.md](../docs/testing.md) covers the setup. In short:
+```bash
+bun test                                   # the unit suite
+bun test test/components/button.test.ts    # one file
+bun run test:coverage                      # with a coverage report
+```
 
-- Add or update tests in the same commit as the change, and check that they fail without it.
-- Test behaviour through the public API and the real DOM, not internals.
-- Test files end in `.test.ts`; `bun run test:naming` fails on a suite the runner would not collect.
-- Behaviour that needs a real browser (focus, layout, the top layer, form association) goes in the browser checks: `bun run elements:check` for the elements, the component checks for the factories.
+- Tests live in `test/`, mirroring `src/`, and end in `.test.ts`; `bun run test:naming` fails on a suite the runner would not collect.
+- A test file that needs the DOM imports `test/setup.ts`, which provides one shared JSDOM.
+- Test the real component through its public API and its DOM: no mock copies of components. Add or update the tests in the same commit as the change, and check that they fail without it.
+- Behaviour that needs a real browser (focus, layout, the top layer, form association, motion) goes in the Chromium checks, which CI runs in three groups:
+  - `bun run elements:check` for the elements;
+  - `react:check`, `vue:check`, `svelte:check` and `solid:check` for the adapters;
+  - `consumer:check`, `tokens:check` and the per-component checks (`tabs:check`, `slider:check`, `drawer:check`, …) for the factories and the packed build.
+
+  Install Chromium once with `node node_modules/playwright/cli.js install chromium`.
 
 ## Documentation
 

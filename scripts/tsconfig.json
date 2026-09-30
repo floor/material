@@ -11,7 +11,7 @@
     ]
   },
   "include": [
-    "../scripts/**/*.ts",
+    "./**/*.ts",
     "../test/build/style-manifest.test.ts",
     "../test/browser/fixture.ts"
   ],

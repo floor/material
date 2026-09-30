@@ -112,24 +112,15 @@
     "build": "bun run scripts/build.ts",
     "prepublishOnly": "bun run build",
     "lint": "bunx eslint src scripts --ext .ts,.tsx",
-    "lint:fix": "bunx eslint src --ext .ts,.tsx --fix",
+    "lint:fix": "bunx eslint src scripts --ext .ts,.tsx --fix",
     "test": "bun test",
     "test:naming": "bun run scripts/check-test-naming.ts",
     "test:types": "bun run scripts/check-test-types.ts",
-    "strict:check": "bun run scripts/check-strict-null.ts",
-    "implicit:check": "bun run scripts/check-no-implicit-any.ts",
     "bench": "MTRL_BENCH=1 bun test test/benchmarks/",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
-    "test:ui": "bun test --watch --ui",
-    "docs": "typedoc --options config/typedoc.json --skipErrorChecking",
-    "docs:serve": "bun run --bun serve docs",
-    "docs:fix-errors": "tsc --noEmit --allowJs --skipLibCheck",
+    "docs": "typedoc --skipErrorChecking",
     "ts:check": "tsc --noEmit --skipLibCheck",
-    "ts:next-error": "bun scripts/next-ts-error.ts",
-    "ts:fix": "bun scripts/fix-typescript.ts",
-    "ts:fix-file": "bun scripts/fix-typescript.ts",
-    "ts:fix-next": "bun scripts/fix-next-error.ts",
     "size": "bun run scripts/size.ts",
     "size:check": "bun run scripts/check-package-size.ts",
     "adapters:size": "bun run scripts/check-adapter-size.ts",
@@ -148,7 +139,7 @@
     "vue:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-vue.ts",
     "svelte:check": "bun run scripts/check-svelte.ts",
     "solid:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-solid.ts",
-    "tooling:check": "tsc --project config/tsconfig.tools.json --noEmit && tsc --project config/tsconfig.types.json --noEmit",
+    "tooling:check": "tsc --project scripts/tsconfig.json --noEmit && tsc --project test/types/tsconfig.json --noEmit",
     "themes:generate": "bun scripts/generate-themes.ts"
   },
   "repository": {
@@ -253,5 +244,51 @@
       "**/*.test.ts",
       "**/*.spec.ts"
     ]
+  },
+  "typedocOptions": {
+    "entryPoints": [
+      "./src/index.ts"
+    ],
+    "out": "docs/api",
+    "name": "mtrl Documentation",
+    "exclude": [
+      "**/node_modules/**",
+      "**/*.test.ts",
+      "**/*.spec.ts"
+    ],
+    "excludePrivate": false,
+    "excludeExternals": true,
+    "excludeInternal": true,
+    "includeVersion": true,
+    "hideGenerator": true,
+    "searchInComments": true,
+    "theme": "default",
+    "categoryOrder": [
+      "Core",
+      "Components",
+      "Utilities",
+      "*"
+    ],
+    "categorizeByGroup": true,
+    "readme": "README.md",
+    "sort": [
+      "static-first",
+      "alphabetical"
+    ],
+    "navigationLinks": {
+      "GitHub": "https://github.com/floor/mtrl"
+    },
+    "skipErrorChecking": true,
+    "disableSources": false,
+    "validation": {
+      "invalidLink": true,
+      "notDocumented": true
+    },
+    "visibilityFilters": {
+      "protected": true,
+      "private": false,
+      "inherited": true,
+      "external": false
+    }
   }
 }

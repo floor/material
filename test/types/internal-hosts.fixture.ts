@@ -22,7 +22,7 @@
 // SliderComponent.setColor -- already said SliderColor, so these narrowings
 // bring the internal declarations to what the public one always promised.
 //
-// Compiled by `bun run tooling:check` via config/tsconfig.types.json.
+// Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type { SliderColor, SliderComponent } from "../../src/components/slider/types";
 
 /** true when A and B are the same type */

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // Type-checks the test tree against the real shipped source.
 //
-// `config/tsconfig.test.json` existed for months and ran never. Two faults kept it
+// `test/tsconfig.json` (then tsconfig.test.json) existed for months and ran never. Two faults kept it
 // from reading a single test file: `noStrictGenericChecks` was removed from
 // TypeScript (a hard config error on 5.x), and a `typeRoots` override excluded
 // node_modules, so the bun type library was never found. Both are fixed; this
@@ -34,7 +34,7 @@ const EXCLUDED = new Set(DRIFTED);
 
 const raw = (() => {
   try {
-    execFileSync("bunx", ["tsc", "-p", "config/tsconfig.test.json", "--noEmit"], {
+    execFileSync("bunx", ["tsc", "-p", "test/tsconfig.json", "--noEmit"], {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
     });
