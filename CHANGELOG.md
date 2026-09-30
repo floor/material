@@ -74,6 +74,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **`--mtrl-sys-state-focus-state-layer-opacity` and `…-pressed-…` read 0.1, not 0.12
+  (FLO-311).** The baseline theme wrote the state opacities out by hand, with the Material 2
+  0.12 for focus and pressed, while every component compiles in M3's 0.1 from `$state`. Only
+  CSS that read the custom properties saw 0.12. The theme now emits them from `$state`, so the
+  two cannot drift again.
+
 - **Text field colours and states, per the M3 tokens (FLO-298).** The placeholder was always
   transparent; it shows in on-surface-variant while the field is focused or has no label. The
   outlined label rested at 50% opacity (under 4.5:1); it is on-surface-variant at full strength.

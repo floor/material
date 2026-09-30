@@ -1,6 +1,7 @@
 // src/styles/themes/_baseline.scss
 @use "../abstract/base" as *;
 @use "base-theme" as *;
+@use "../abstract/variables" as v;
 
 // Variables for light theme (default)
 @mixin baseline-light-variables {
@@ -50,11 +51,11 @@
     --#{$prefix}-sys-color-inverse-on-surface: #f4eff4;
     --#{$prefix}-sys-color-inverse-primary: #d0bcff;
 
-    // State layers
-    --#{$prefix}-sys-state-hover-state-layer-opacity: 0.08;
-    --#{$prefix}-sys-state-focus-state-layer-opacity: 0.12;
-    --#{$prefix}-sys-state-pressed-state-layer-opacity: 0.12;
-    --#{$prefix}-sys-state-dragged-state-layer-opacity: 0.16;
+    // State layers, from $state in abstract/_variables.scss: the values every
+    // component compiles in, so the custom properties cannot drift from them.
+    @each $key, $opacity in v.$state {
+        --#{$prefix}-sys-state-#{$key}: #{$opacity};
+    }
 }
 
 // Variables for dark theme

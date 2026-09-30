@@ -100,3 +100,37 @@ describe('state layer opacities follow M3', () => {
     expect(css).toMatch(/--pressed:\s*0\.1\b/);
   });
 });
+
+// The baseline theme published the state opacities as custom properties by hand,
+// with the Material 2 0.12 for focus and pressed, while every component compiled
+// in 0.1 from $state. Only CSS reading --mtrl-sys-state-* saw the drift. The
+// properties are now emitted from $state; this holds them equal.
+describe('the --mtrl-sys-state-* custom properties', () => {
+  const properties = (css: string): Record<string, string> =>
+    Object.fromEntries(
+      Array.from(css.matchAll(/--mtrl-sys-state-([a-z-]+):\s*([^;]+);/g), (m) => [m[1], m[2].trim()]),
+    );
+
+  test('the baseline theme emits exactly the $state map, in every block', () => {
+    const map = properties(
+      compileString(
+        `@use 'abstract/variables' as v;
+         .probe { @each $key, $value in v.$state { --mtrl-sys-state-#{$key}: #{$value}; } }`,
+        { loadPaths: ['src/styles'], style: 'expanded' },
+      ).css,
+    );
+    expect(map).toEqual({
+      'hover-state-layer-opacity': '0.08',
+      'focus-state-layer-opacity': '0.1',
+      'pressed-state-layer-opacity': '0.1',
+      'dragged-state-layer-opacity': '0.16',
+    });
+
+    const css = compileString(`@use 'themes/baseline';`, { loadPaths: ['src/styles'], style: 'expanded' }).css;
+    const blocks = Array.from(css.matchAll(/\{([^{}]*)\}/g), (m) => m[1]).filter((body) =>
+      body.includes('--mtrl-sys-state-'),
+    );
+    expect(blocks.length).toBeGreaterThan(0);
+    for (const body of blocks) expect(properties(body)).toEqual(map);
+  });
+});
