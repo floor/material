@@ -392,7 +392,7 @@ describe('drawer event contract', () => {
     expect(selected).not.toHaveBeenCalled();
     const click = new dom.window.MouseEvent('click', { bubbles: true });
     item(drawer, 'trash').dispatchEvent(click);
-    expect(selected.mock.calls).toEqual([[{ id: 'trash', label: 'Trash', index: 3, originalEvent: click }]]);
+    expect(selected.mock.calls).toEqual([[{ id: 'trash', value: 'trash', label: 'Trash', index: 3, originalEvent: click }]]);
     expect(selected.mock.calls[0][0].originalEvent).toBe(click);
     expect(drawer.getActive()).toBe('trash');
     item(drawer, 'spam').dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
@@ -413,7 +413,7 @@ describe('drawer event contract', () => {
     const keydown = new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
     target.dispatchEvent(keydown);
     expect(selected).toHaveBeenCalledTimes(1);
-    expect(selected.mock.calls[0][0]).toEqual({ id: 'sent', label: 'Sent', index: 1, originalEvent: clicks.mock.calls[0][0].event });
+    expect(selected.mock.calls[0][0]).toEqual({ id: 'sent', value: 'sent', label: 'Sent', index: 1, originalEvent: clicks.mock.calls[0][0].event });
     expect(clicks.mock.calls[0][0].event.type).toBe('click');
     expect(selected.mock.calls[0][0].originalEvent).toBe(clicks.mock.calls[0][0].originalEvent);
     expect(clicks.mock.calls[0][0].element).toBe(drawer.element);

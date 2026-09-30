@@ -31,9 +31,9 @@ picker.on("keydown", payload => payload.originalEvent.key);
 picker.on("tap", payload => payload.preventDefault());
 picker.on("swipe", payload => payload.direction);
 // FLO-295: one change shape, whoever commits the value.
-export const range: DatePickerChangePayload = { value: [new Date(), new Date()], rangeEndDate: new Date(), formattedValue: "range" };
-export const single: DatePickerChangePayload = { value: new Date(), rangeEndDate: null, formattedValue: "date" };
-export const cleared: DatePickerChangePayload = { value: null, rangeEndDate: null, formattedValue: "" };
+export const range: DatePickerChangePayload = { value: [new Date(), new Date()], rangeEndDate: new Date(), formattedValue: "range", iso: "2026-09-10/2026-09-15" };
+export const single: DatePickerChangePayload = { value: new Date(), rangeEndDate: null, formattedValue: "date", iso: "2026-09-10" };
+export const cleared: DatePickerChangePayload = { value: null, rangeEndDate: null, formattedValue: "", iso: "" };
 // The mode narrows the value.
 const ranged = createDatePicker({ selectionMode: "range" });
 export const rangeValue: Equals<ReturnType<typeof ranged.getValue>, [Date, Date] | null> = true;

@@ -375,6 +375,8 @@ const withController =
       {
         item,
         itemId: item.id,
+        // The <m-menu> element's field (FLO-320)
+        value: item.id,
         itemData: item.data,
       },
       e,

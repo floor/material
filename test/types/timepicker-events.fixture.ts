@@ -3,6 +3,7 @@ import createTimePicker, {
   TIMEPICKER_EVENTS,
   type TimePickerComponent,
   type TimePickerEvents,
+  type TimePickerValueEvent,
   type TimePickerTapPayload,
   type TimePickerSwipePayload,
 } from "../../src/components/timepicker";
@@ -15,9 +16,11 @@ const picker = createTimePicker();
 export const names: Equals<keyof TimePickerEvents,
   "change" | "input" | "confirm" | "open" | "close" | "cancel" | "click" | "keydown" | "tap" | "swipe"
 > = true;
-export const changeIsString: Equals<Parameters<TimePickerEvents["change"]>, [string]> = true;
-// The draft, while the picker is open (FLO-288): the same string as change.
-export const inputIsString: Equals<Parameters<TimePickerEvents["input"]>, [string]> = true;
+// One object, the <m-timepicker> element's shape (FLO-320)
+export const changeIsValue: Equals<Parameters<TimePickerEvents["change"]>, [event: TimePickerValueEvent]> = true;
+export const valueIsString: Equals<TimePickerValueEvent, { value: string }> = true;
+// The draft, while the picker is open (FLO-288): the same shape as change.
+export const inputIsValue: Equals<Parameters<TimePickerEvents["input"]>, [event: TimePickerValueEvent]> = true;
 export const confirmIsString: Equals<Parameters<TimePickerEvents["confirm"]>, [string]> = true;
 export const openHasNoPayload: Equals<Parameters<TimePickerEvents["open"]>, []> = true;
 export const closeHasNoPayload: Equals<Parameters<TimePickerEvents["close"]>, []> = true;
@@ -28,9 +31,9 @@ export const tapPayload: Equals<Parameters<TimePickerEvents["tap"]>[0], Normaliz
 export const publicTapAlias: Equals<TimePickerTapPayload, NormalizedEvent> = true;
 export const swipePayload: Equals<Parameters<TimePickerEvents["swipe"]>[0], TimePickerSwipePayload> = true;
 export const swipeShape: Equals<TimePickerSwipePayload, { direction: "left" | "right"; deltaX: number; deltaY: number }> = true;
-export const inferredChange: Equals<Parameters<Parameters<typeof picker.on<"change">>[1]>, [string]> = true;
+export const inferredChange: Equals<Parameters<Parameters<typeof picker.on<"change">>[1]>, [event: TimePickerValueEvent]> = true;
 
-const onChange = (value: string) => { value.toUpperCase(); };
+const onChange = ({ value }: TimePickerValueEvent) => { value.toUpperCase(); };
 export const chained: TimePickerComponent = picker.on(TIMEPICKER_EVENTS.CHANGE, onChange).off("change", onChange);
 picker.on(TIMEPICKER_EVENTS.CONFIRM, value => value.toUpperCase());
 picker.on(TIMEPICKER_EVENTS.OPEN, () => {}).off("close", () => {}).on("cancel", () => {});
@@ -39,7 +42,7 @@ picker.on("keydown", payload => payload.originalEvent.key);
 picker.on("tap", payload => payload.preventDefault());
 picker.on("swipe", payload => { const direction: "left" | "right" = payload.direction; void direction; });
 
-// @ts-expect-error the change value is a string, not a DOM event
+// @ts-expect-error the change payload is { value }, not a DOM event
 picker.on("change", (event: Event) => event.preventDefault());
 // @ts-expect-error off checks payloads too
 picker.off("confirm", (value: number) => value.toFixed());
@@ -63,3 +66,5 @@ picker.on("click", payload => payload.component.open());
 picker.on("keydown", payload => payload.event.clientX);
 // @ts-expect-error swipe payloads do not carry a DOM event
 picker.on("swipe", payload => payload.event);
+// @ts-expect-error the change payload is an object, not the string (FLO-320)
+picker.on("change", (time: string) => time.toUpperCase());

@@ -41,7 +41,18 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
       root.innerHTML = markup;
       const host = root.getElementById("x") as HTMLElement & { show: () => void };
       for (const type of ["change", "input", "open", "close"]) {
-        host.addEventListener(type, (event) => void w.__log.push([type, (event as CustomEvent).detail]));
+        host.addEventListener(type, (event) => {
+          // The date picker's `date` (FLO-320) is logged only when it is not
+          // the Date form of `value`, so a mismatch fails the expected log.
+          const detail = (event as CustomEvent).detail as { value?: string; date?: Date | Date[] | null } | null;
+          const local = (d: Date): string =>
+            `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          if (detail && "date" in detail) {
+            const { date, ...rest } = detail;
+            const text = Array.isArray(date) ? date.map(local).join("/") : date ? local(date) : "";
+            w.__log.push([type, text === rest.value ? rest : detail]);
+          } else w.__log.push([type, detail]);
+        });
       }
       root.getElementById("opener")?.addEventListener("click", () => host.show());
     }, markup);

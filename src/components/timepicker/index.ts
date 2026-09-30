@@ -23,6 +23,7 @@ export type {
   TimePickerComponent,
   TimeValue,
   TimePickerEvents,
+  TimePickerValueEvent,
   TimePickerTapPayload,
   TimePickerSwipePayload,
 } from './types';
