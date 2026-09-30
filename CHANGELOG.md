@@ -12,6 +12,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- **The FAB menu's `select` also carries `value`** (the item's id, as `id` does). It matches the
+  `value` in `<m-fab-menu>`'s `select` detail and the menu's own payload (FLO-320), so one handler
+  reads the same field from the factory and the element.
+
 - **The published `package.json` carries only what consumers use (FLO-350).** npm packs the
   repository's root manifest, which since 0.10.0 also held the repository's `eslintConfig` and
   `typedocOptions`, beside its `scripts`. The release now builds as its own step and drops those
