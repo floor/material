@@ -16,20 +16,20 @@ const setup = (config: TimePickerConfig = {}) => {
   const confirmCallbacks: string[] = [];
   const picker = mount(createTimePicker({
     value: "09:30", name: "appointment", type: TIME_PICKER_TYPE.INPUT, ...config,
-    onChange: value => callbacks.push(value),
-    onInput: value => inputCallbacks.push(value),
+    onChange: ({ value }) => callbacks.push(value),
+    onInput: ({ value }) => inputCallbacks.push(value),
     onConfirm: value => confirmCallbacks.push(value),
   }));
   const form = document.createElement("form");
   document.body.append(form);
   form.append(picker.element);
-  picker.on("change", value => {
+  picker.on("change", ({ value }) => {
     // Subscribers can read submission synchronously from inside the callback.
     expect(submitted()).toBe(value);
     changes.push(value);
   });
   picker.on("confirm", value => confirms.push(value));
-  picker.on("input", value => drafts.push(value));
+  picker.on("input", ({ value }) => drafts.push(value));
   const draft = () => drafts.at(-1) ?? picker.getValue();
   const submitted = () => new window.FormData(form).get("appointment");
   const field = (unit: string) => picker.dialogElement.querySelector<HTMLInputElement>(`[data-type="${unit}"]`)!;
@@ -64,14 +64,14 @@ describe("one time value for the API, callbacks and form (FLO-237)", () => {
   test("setValue and display format changes keep the same machine value", () => {
     const p = setup({ showSeconds: true });
     p.picker.setValue("14:45:07");
-    expect(p.callbacks).toEqual(["14:45:07"]);
     p.picker.setFormat(TIME_FORMAT.MILITARY);
     p.picker.setFormat(TIME_FORMAT.AMPM);
     p.picker.setValue("14:45:07");
-    // One notification, event and callback alike: display format changes and an
-    // unchanged setValue are not changes of value (FLO-281).
-    expect(p.changes).toEqual(["14:45:07"]);
-    expect(p.callbacks).toEqual(p.changes);
+    // No notification, event or callback: setValue is silent (FLO-328) and
+    // display format changes are not changes of value (FLO-281).
+    expect(p.changes).toEqual([]);
+    expect(p.callbacks).toEqual([]);
+    expect(p.picker.getValue()).toBe("14:45:07");
     expect(p.submitted()).toBe(p.picker.getValue());
     expect(p.field("hour").value).toBe("02");
     expect(p.period("pm").getAttribute("aria-checked")).toBe("true");

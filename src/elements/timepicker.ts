@@ -28,13 +28,16 @@
  * no setter: changing one recreates the picker, keeping the value. `disabled` is the factory's: it does not open. The
  * element reports `required` itself, as `valueMissing`.
  *
+ * Parts: `time-picker`, `dialog`, `title`, `selectors`, `hours`, `minutes`, `period`, `dial`,
+ * `dial-handle`, `actions`, `cancel`, `confirm`, among others.
+ *
  * @module elements
  */
 
 import createTimePicker from "../components/timepicker";
 import {
   TIME_FORMAT, TIME_PICKER_ORIENTATION, TIME_PICKER_TYPE,
-  type TimePickerComponent, type TimePickerConfig,
+  type TimePickerComponent, type TimePickerConfig, type TimePickerValueEvent,
 } from "../components/timepicker/types";
 import { createEmitter, type EventCallback } from "../core/state/emitter";
 import { defineElement, type DefineOptions, type ElementHost, type ElementInstance, type ElementSpec } from "./define";
@@ -83,12 +86,12 @@ const create = (config: TimepickerElementConfig): TimepickerElementComponent => 
   const picker = createTimePicker({ ...rest, ...steps(step), value: initial || undefined });
   const changes = createEmitter();
   let empty = !initial;
-  const onChange = (time: string): void => {
+  const onChange = (event: TimePickerValueEvent): void => {
     empty = false;
-    changes.emit("change", time);
+    changes.emit("change", event);
   };
   const onConfirm = (time: string): void => {
-    if (empty) onChange(time);
+    if (empty) onChange({ value: time });
   };
   picker.on("change", onChange);
   picker.on("confirm", onConfirm);
@@ -110,8 +113,8 @@ const create = (config: TimepickerElementConfig): TimepickerElementComponent => 
     isOpen: () => picker.isOpen,
     required: !!required,
     // `change` is the element's; the rest are the factory's own.
-    on: (event, handler) => void (event === "change" ? changes.on(event, handler) : picker.on(event as "input", handler as (v: string) => void)),
-    off: (event, handler) => void (event === "change" ? changes.off(event, handler) : picker.off(event as "input", handler as (v: string) => void)),
+    on: (event, handler) => void (event === "change" ? changes.on(event, handler) : picker.on(event as "input", handler as (e: TimePickerValueEvent) => void)),
+    off: (event, handler) => void (event === "change" ? changes.off(event, handler) : picker.off(event as "input", handler as (e: TimePickerValueEvent) => void)),
     destroy: () => {
       picker.off("change", onChange);
       picker.off("confirm", onConfirm);
@@ -199,9 +202,9 @@ const timepickerSpec = {
   model: "value" as const,
   methods: ["show", "close"] as const,
   events: {
-    change: { detail: (payload) => ({ value: payload as string }) },
+    change: { detail: (payload) => ({ value: (payload as TimePickerValueEvent).value }) },
     // The draft, live, as the dial and the fields move.
-    input: { detail: (payload) => ({ value: payload as string }) },
+    input: { detail: (payload) => ({ value: (payload as TimePickerValueEvent).value }) },
     open: { detail: () => null, state: true },
     close: { detail: () => null, state: true },
   },
@@ -243,3 +246,10 @@ export type TimepickerElement = ElementInstance<TimepickerSpec, TimepickerElemen
 
 /** Registers `<m-timepicker>` (or `<prefix-timepicker>`). */
 export const defineTimepicker = (options?: DefineOptions): string => timepickerElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-timepicker": TimepickerElement;
+  }
+}

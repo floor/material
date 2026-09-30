@@ -5,6 +5,8 @@
  * `type="submit"` and `type="reset"` act on the host's form, which a button
  * inside a shadow root cannot reach by itself (see `form-button`).
  *
+ * Parts: `button`, `icon`, `label` (also `text`), `ripple`.
+ *
  * @module elements
  */
 
@@ -43,3 +45,10 @@ export type ButtonElement = ElementInstance<ButtonSpec, ButtonComponent>;
 
 /** Registers `<m-button>` (or `<prefix-button>`). */
 export const defineButton = (options?: DefineOptions): string => buttonElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-button": ButtonElement;
+  }
+}

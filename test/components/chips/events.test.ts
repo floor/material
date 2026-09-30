@@ -67,12 +67,16 @@ describe("chips container events", () => {
     expect(events).toEqual([[["a"], "a"]]);
   });
 
-  test("programmatic selection and clearing emit null as the changed value", () => {
+  test("programmatic selection and clearing are silent; selectByValue(values, true) opts in with null as the changed value", () => {
     const events: [(string | null)[], string | null][] = [];
     const chips = mount({ multiSelect: false, chips: [{ value: "a", ripple: false }, { value: "b", ripple: false }] });
     chips.on("change", (...args) => events.push(args));
-    chips.selectByValue("a").selectByValue("a").selectByValue("b").clearSelection().clearSelection();
-    expect(events).toEqual([[["a"], null], [["b"], null], [[], null]]);
+    // A programmatic change emits no change, as on a native control (FLO-328).
+    chips.selectByValue("a").selectByValue("b").setValue("a").clearSelection();
+    expect(chips.getSelectedValues()).toEqual([]);
+    expect(events).toEqual([]);
+    chips.selectByValue("a", true).selectByValue("a", true);
+    expect(events).toEqual([[["a"], null]]);
   });
 
   test("change is one object with the element's value, and the positional call still works (FLO-320)", () => {
@@ -89,14 +93,14 @@ describe("chips container events", () => {
     multi.getChips()[0].element.click();
     multi.getChips()[1].element.click();
     multi.selectByValue(["a"]);
+    // clearSelection() and selectByValue() are silent (FLO-328): clicks only.
     expect(read).toEqual([
       { value: "b", selected: ["b"], changed: "b" },
-      { value: null, selected: [], changed: null },
       { value: ["a"], selected: ["a"], changed: "a" },
       // A chip without a value is in `selected` as null, and not in `value`
       { value: ["a"], selected: ["a", null], changed: null },
     ]);
-    expect(positional).toEqual([[["b"], "b"], [[], null], [["a"], "a"], [["a", null], null]]);
+    expect(positional).toEqual([[["b"], "b"], [["a"], "a"], [["a", null], null]]);
   });
 
   test("remove passes the live chip before destruction, by instance or index", () => {

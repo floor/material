@@ -7,6 +7,8 @@
  * hides the bar while the window scrolls down and shows it again on the way
  * up; `show()` and `hide()` do the same from script.
  *
+ * Parts: `bottom-app-bar`, `actions`, `fab-container`.
+ *
  * @module elements
  */
 
@@ -71,3 +73,10 @@ export type BottomAppBarElement = ElementInstance<BottomAppBarSpec, BottomAppBar
 
 /** Registers `<m-bottom-app-bar>` (or `<prefix-bottom-app-bar>`). */
 export const defineBottomAppBar = (options?: DefineOptions): string => bottomAppBarElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-bottom-app-bar": BottomAppBarElement;
+  }
+}

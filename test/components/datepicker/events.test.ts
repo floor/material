@@ -33,17 +33,17 @@ const start = new Date(2026, 8, 10);
 const end = new Date(2026, 8, 15);
 
 describe("datepicker event contract", () => {
-  test("setValue and clear emit the one change shape", () => {
+  test("setValue and clear are silent, as a native input set by script (FLO-328)", () => {
     const picker = mount({ selectionMode: "range" });
     const events: DatePickerChangePayload[] = [];
     picker.on("change", payload => events.push(payload));
-    expect(picker.setValue(start).setValue([end, start]).clear()).toBe(picker);
     // A lone date in range mode is a one-day range.
-    expect(events).toEqual([
-      { value: [start, start], rangeEndDate: start, formattedValue: "09/10/2026 - 09/10/2026" },
-      { value: [start, end], rangeEndDate: end, formattedValue: "09/10/2026 - 09/15/2026" },
-      { value: null, rangeEndDate: null, formattedValue: "" },
-    ]);
+    expect(picker.setValue(start).getValue()).toEqual([start, start]);
+    expect(picker.setValue([end, start]).getValue()).toEqual([start, end]);
+    expect(picker.getFormattedValue()).toBe("09/10/2026 - 09/15/2026");
+    expect(picker.clear()).toBe(picker);
+    expect(picker.getValue()).toBeNull();
+    expect(events).toEqual([]);
   });
 
   test("a range takes a { start, end } object and a config value", () => {
@@ -62,7 +62,7 @@ describe("datepicker event contract", () => {
     day(picker, end);
     expect(events).toEqual([]);
     day(picker, start);
-    expect(events).toEqual([{ value: [start, end], rangeEndDate: end, formattedValue: "09/10/2026 - 09/15/2026" }]);
+    expect(events).toEqual([{ value: [start, end], rangeEndDate: end, formattedValue: "09/10/2026 - 09/15/2026", iso: "2026-09-10/2026-09-15" }]);
     expect(picker.getValue()).toEqual([start, end]);
   });
 
@@ -73,7 +73,8 @@ describe("datepicker event contract", () => {
     const events: DatePickerChangePayload[] = [];
     picker.on("change", payload => events.push(payload));
     day(picker, start);
-    expect(events).toEqual([{ value: start, rangeEndDate: null, formattedValue: "09/10/2026" }]);
+    // `iso` is the <m-datepicker> element's value (FLO-320)
+    expect(events).toEqual([{ value: start, rangeEndDate: null, formattedValue: "09/10/2026", iso: "2026-09-10" }]);
   });
 
   test("API and trigger visibility events carry committed complete ranges", () => {

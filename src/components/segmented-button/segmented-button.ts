@@ -218,18 +218,11 @@ const createSegmentedButton = (config: SegmentedButtonConfig = {}): SegmentedBut
         // A value no segment carries clears the selection, the same as native
         // `<select>` setting selectedIndex = -1. This used to keep the
         // previous selection and say nothing. FLO-106.
+        // select() and deselect() are silent: a selection made from code
+        // emits no `change`, as on a native control; a click does (FLO-328).
         if (!segment) {
-          const oldValue = getSelectedValues();
           segments.forEach(s => s.setSelected(false));
           warnUnknownValue('segmented button', value);
-          const newValue = getSelectedValues();
-          if (oldValue.join(',') !== newValue.join(',')) {
-            emitter.emit('change', {
-              selected: getSelected(),
-              value: newValue,
-              oldValue
-            });
-          }
           return this;
         }
 
@@ -238,8 +231,6 @@ const createSegmentedButton = (config: SegmentedButtonConfig = {}): SegmentedBut
         // able to show a value that is currently disabled. The
         // `!segment.isDisabled()` guard that used to stand here refused.
         // FLO-106.
-        const oldValue = getSelectedValues();
-
         if (mode === SelectionMode.SINGLE) {
           // Deselect all other segments
           segments.forEach(s => s.setSelected(s === segment));
@@ -247,54 +238,16 @@ const createSegmentedButton = (config: SegmentedButtonConfig = {}): SegmentedBut
           // Just select this segment
           segment.setSelected(true);
         }
-
-        // Emit change event
-        const newValue = getSelectedValues();
-        if (oldValue.join(',') !== newValue.join(',')) {
-          emitter.emit('change', {
-            selected: getSelected(),
-            value: newValue,
-            oldValue
-          });
-        }
         return this;
       },
-      
+
       deselect(value) {
         const segment = findSegmentByValue(value);
         if (segment && !segment.isDisabled()) {
           // In single select mode, only deselect if there's another selected segment
-          if (mode === SelectionMode.SINGLE) {
-            const selectedSegments = getSelected();
-            // Only allow deselection if there's more than one selected or we're selecting a different segment
-            if (selectedSegments.length > 1 || !segment.isSelected()) {
-              const oldValue = getSelectedValues();
-              segment.setSelected(false);
-              
-              // Emit change event
-              const newValue = getSelectedValues();
-              if (oldValue.join(',') !== newValue.join(',')) {
-                emitter.emit('change', {
-                  selected: getSelected(),
-                  value: newValue,
-                  oldValue
-                });
-              }
-            }
-          } else {
-            // In multi-select, always allow deselection
-            const oldValue = getSelectedValues();
+          // (or the segment is not the selected one); multi-select always allows it.
+          if (mode !== SelectionMode.SINGLE || getSelected().length > 1 || !segment.isSelected()) {
             segment.setSelected(false);
-            
-            // Emit change event
-            const newValue = getSelectedValues();
-            if (oldValue.join(',') !== newValue.join(',')) {
-              emitter.emit('change', {
-                selected: getSelected(),
-                value: newValue,
-                oldValue
-              });
-            }
           }
         }
         return this;

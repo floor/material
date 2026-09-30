@@ -18,6 +18,8 @@
  * `close()` are its methods, and `open` and `close` are dispatched as it
  * opens and closes (not when the attribute is what changed).
  *
+ * Parts: `side-sheet`, `container`, `header`, `title`, `close`, `content`.
+ *
  * @module elements
  */
 
@@ -110,3 +112,10 @@ export type SideSheetElement = ElementInstance<SideSheetSpec, SideSheetElementCo
 
 /** Registers `<m-side-sheet>` (or `<prefix-side-sheet>`). */
 export const defineSideSheet = (options?: DefineOptions): string => sideSheetElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-side-sheet": SideSheetElement;
+  }
+}

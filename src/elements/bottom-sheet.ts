@@ -26,6 +26,8 @@
  * `no-close-on-scrim-click` and `no-close-on-escape` keep a modal sheet open
  * on a click on the scrim and on Escape.
  *
+ * Parts: `bottom-sheet`, `container`, `handle`, `header`, `title`, `content`.
+ *
  * @module elements
  */
 
@@ -166,3 +168,10 @@ export type BottomSheetElement = ElementInstance<BottomSheetSpec, BottomSheetEle
 
 /** Registers `<m-bottom-sheet>` (or `<prefix-bottom-sheet>`). */
 export const defineBottomSheet = (options?: DefineOptions): string => bottomSheetElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-bottom-sheet": BottomSheetElement;
+  }
+}

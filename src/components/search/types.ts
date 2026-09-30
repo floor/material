@@ -196,7 +196,7 @@ export interface SearchComponent {
 
   // === Value Management ===
 
-  /** Sets the search input value */
+  /** Sets the search input value. Silent unless `triggerEvent` is true (FLO-328). */
   setValue: (value: string, triggerEvent?: boolean) => SearchComponent;
 
   /** Gets the current search input value */
@@ -242,7 +242,7 @@ export interface SearchComponent {
   /** Blurs the search input */
   blur: () => SearchComponent;
 
-  /** Clears the search input */
+  /** Clears the search input. Silent: only the clear button emits `input` and `clear`. */
   clear: () => SearchComponent;
 
   /** Submits the current search value */

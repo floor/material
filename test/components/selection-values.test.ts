@@ -144,7 +144,7 @@ describe("a disabled option can be selected by code", () => {
 });
 
 describe("a value no option carries clears the selection", () => {
-  test("radios clears, warns once, and emits change once with the cleared value", () => {
+  test("radios clears, warns once, and emits no change, as a programmatic change is silent (FLO-328)", () => {
     const radios = createRadios({
       name: "size",
       options: [
@@ -163,11 +163,10 @@ describe("a value no option carries clears the selection", () => {
     expect(radios.getValue()).toBe("");
     expect([...radios.element.querySelectorAll<HTMLInputElement>("input")].some((i) => i.checked)).toBe(false);
     expect(mtrlWarnings()).toEqual(['[mtrl] radios: no option with value "nope"']);
-    expect(events).toHaveLength(1);
-    expect((events[0] as { value: string }).value).toBe("");
+    expect(events).toEqual([]);
   });
 
-  test("select clears, warns once, and emits change once with the cleared value", () => {
+  test("select clears, warns once, and emits no change, as a programmatic change is silent (FLO-328)", () => {
     const select = createSelect({
       label: "Size",
       options: [
@@ -185,11 +184,10 @@ describe("a value no option carries clears the selection", () => {
 
     expect(select.getValue()).toBeNull();
     expect(mtrlWarnings()).toEqual(['[mtrl] select: no option with value "nope"']);
-    expect(events).toHaveLength(1);
-    expect((events[0] as { value: string | null }).value).toBeNull();
+    expect(events).toEqual([]);
   });
 
-  test("tabs clears, warns once, and emits change once with the cleared value", () => {
+  test("tabs clears, warns once, and emits no change, as a programmatic change is silent (FLO-328)", () => {
     const tabs = createTabs({
       tabs: [
         { value: "one", text: "One" },
@@ -206,11 +204,10 @@ describe("a value no option carries clears the selection", () => {
 
     expect(tabs.getActiveTab()).toBeNull();
     expect(mtrlWarnings()).toEqual(['[mtrl] tabs: no option with value "nope"']);
-    expect(events).toHaveLength(1);
-    expect((events[0] as { value: string | null }).value).toBeNull();
+    expect(events).toEqual([]);
   });
 
-  test("segmented button clears, warns once, and emits change once with the cleared value", () => {
+  test("segmented button clears, warns once, and emits no change, as a programmatic change is silent (FLO-328)", () => {
     const group = createSegmentedButton({
       segments: [
         { value: "x", text: "X" },
@@ -226,8 +223,7 @@ describe("a value no option carries clears the selection", () => {
 
     expect(group.getValue()).toEqual([]);
     expect(mtrlWarnings()).toEqual(['[mtrl] segmented button: no option with value "nope"']);
-    expect(events).toHaveLength(1);
-    expect((events[0] as { value: string[] }).value).toEqual([]);
+    expect(events).toEqual([]);
   });
 });
 

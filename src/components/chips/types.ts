@@ -314,7 +314,7 @@ export interface ChipsComponent {
   /**
    * Selects chips by their values
    * @param values - Value or array of values to select
-   * @param triggerEvent - Whether to trigger change event (default: true)
+   * @param triggerEvent - Emits `change` when true; silent by default (FLO-328)
    * @returns The chips instance for chaining
    */
   selectByValue: (
@@ -323,7 +323,7 @@ export interface ChipsComponent {
   ) => ChipsComponent;
 
   /**
-   * Clears all selections
+   * Clears all selections. Silent: only the user's change emits `change`
    * @returns The chips instance for chaining
    */
   clearSelection: () => ChipsComponent;

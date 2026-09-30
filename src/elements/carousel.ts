@@ -16,6 +16,8 @@
  * The carousel fills the host's height, as the factory fills its
  * container's: give `<m-carousel>` a height.
  *
+ * Parts: `carousel`, `scroller`, `track`, `item`, `content`, `title`, `snap`.
+ *
  * @module elements
  */
 
@@ -174,3 +176,11 @@ export const defineCarousel = (options?: DefineOptions): string => {
   if (!customElements.get(itemTag)) customElements.define(itemTag, createDeclarationClass(carouselItemDeclaration.attributes));
   return carouselElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-carousel": CarouselElement;
+    "m-carousel-item": HTMLElement & CarouselItemAttributes;
+  }
+}

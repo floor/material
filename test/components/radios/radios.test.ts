@@ -124,15 +124,15 @@ describe('radios', () => {
     radios.destroy();
   });
 
-  test('programmatic clearing reports null option and undefined originalEvent', () => {
+  test('programmatic selection and clearing are silent (FLO-328)', () => {
     const radios = mount();
-    const payloads: Array<{ value: string; option: { value: string; label: string } | null; originalEvent: Event | undefined }> = [];
+    const payloads: unknown[] = [];
     radios.on('change', payload => payloads.push(payload));
     radios.setValue('s');
     expect(payloads).toEqual([]);
     radios.setValue('missing');
-    expect(payloads).toEqual([{ value: '', option: null, originalEvent: undefined }]);
-    expect(Object.hasOwn(payloads[0], 'originalEvent')).toBe(true);
+    expect(radios.getValue()).toBe('');
+    expect(payloads).toEqual([]);
     radios.destroy();
   });
 

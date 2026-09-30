@@ -105,13 +105,13 @@ describe('slider value', () => {
     expect(slider.getValue()).toBe(0);
   });
 
-  test('setValue reports change unless told not to', async () => {
+  test('setValue is silent unless told to report change (FLO-328)', async () => {
     const slider = await mount({ value: 10 });
     const seen: number[] = [];
     slider.on('change', (e) => seen.push(e.value));
-    slider.setValue(40, false);
+    slider.setValue(40);
     expect(seen).toEqual([]);
-    slider.setValue(50);
+    slider.setValue(50, true);
     expect(seen).toEqual([50]);
   });
 
@@ -177,7 +177,7 @@ describe('range slider', () => {
     expect(second.getAttribute('aria-valuenow')).toBe('80');
   });
 
-  test('setSecondValue updates the second handle and reports both values', async () => {
+  test('setSecondValue updates the second handle silently, and reports both values when asked (FLO-328)', async () => {
     const slider = await mount({ range: true, value: 20, secondValue: 80, valueFormatter: (v) => `$${v}` });
     const [, second] = handles(slider);
     const seen: [number, number | null][] = [];
@@ -187,7 +187,9 @@ describe('range slider', () => {
     expect(slider.getSecondValue()).toBe(70);
     expect(second.getAttribute('aria-valuenow')).toBe('70');
     expect(second.getAttribute('aria-valuetext')).toBe('$70');
-    expect(seen).toEqual([[20, 70]]);
+    expect(seen).toEqual([]);
+    slider.setSecondValue(60, true);
+    expect(seen).toEqual([[20, 60]]);
   });
 
   test('the keyboard moves the second handle and its ARIA value', async () => {
@@ -345,9 +347,9 @@ describe('slider events and destroy', () => {
     const slider = await mount({ on: { change: (e) => seen.push(e.value) } });
     const handler = (e: { value: number }) => seen.push(-e.value);
     slider.on('change', handler);
-    slider.setValue(10);
+    slider.setValue(10, true);
     slider.off('change', handler);
-    slider.setValue(20);
+    slider.setValue(20, true);
     expect(seen).toEqual([10, -10, 20]);
   });
 

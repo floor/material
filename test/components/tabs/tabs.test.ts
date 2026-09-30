@@ -96,7 +96,7 @@ describe('tabs', () => {
     expect(change.mock.calls[0][0].value).toBe('flights');
   });
 
-  test('setActiveTab selects by value or by tab, and emits change', () => {
+  test('setActiveTab selects by value or by tab, silently (FLO-328)', () => {
     const tabs = mount();
     const changes = mock((_event: unknown) => {});
     tabs.on('change', changes);
@@ -104,7 +104,7 @@ describe('tabs', () => {
     expect(tabs.getActiveTab()?.getValue()).toBe('flights');
     tabs.setActiveTab(byValue(tabs, 'trips'));
     expect(selected(tabs)).toEqual(['false', 'true', 'false']);
-    expect(changes).toHaveBeenCalledTimes(2);
+    expect(changes).not.toHaveBeenCalled();
   });
 
   // FLO-106 changed half of what this test used to assert. `disabled` blocks
@@ -123,7 +123,7 @@ describe('tabs', () => {
 
     tabs.setActiveTab('explore');
     expect(tabs.getActiveTab()?.getValue()).toBe('explore');
-    expect(changes).toHaveBeenCalledTimes(1);
+    expect(changes).not.toHaveBeenCalled(); // silent from code (FLO-328)
     // Still disabled to the user afterwards.
     expect((byValue(tabs, 'explore').element as HTMLButtonElement).disabled).toBe(true);
   });

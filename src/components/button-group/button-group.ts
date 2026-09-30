@@ -220,7 +220,11 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       emitter.emit('change', changeEvent);
     };
 
-    /** Applies a selection change; returns false when nothing changed. */
+    /**
+     * Applies a selection change; returns false when nothing changed. Emits
+     * `change` for a click, which passes the button; select(), deselect() and
+     * toggle() pass none and are silent, as a native control set by script (FLO-328).
+     */
     const setSelected = (value: string, selected: boolean, button?: ButtonComponent, originalEvent?: Event): boolean => {
       if (selection === 'none') return false;
       const target = buttons.find(b => valueOf(b) === value);
@@ -239,7 +243,7 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       if (selected) selectedValues.add(value);
       else selectedValues.delete(value);
       applySelectedState(target, selected);
-      emitChange(button ?? target, originalEvent);
+      if (button) emitChange(button, originalEvent);
       return true;
     };
 

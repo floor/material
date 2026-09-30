@@ -29,6 +29,9 @@
  * `leading-icon`, `trailing-icon`, `avatar` and their labels have no setter
  * on the search: changing one recreates it, keeping the value.
  *
+ * Parts: `search`, `surface`, `container`, `leading-icon`, `input`, `clear-button`, `trailing`,
+ * `divider`, `content`, `suggestions`, `status`, among others.
+ *
  * @module elements
  */
 
@@ -319,3 +322,11 @@ export const defineSearch = (options?: DefineOptions): string => {
   }
   return searchElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-search": SearchElement;
+    "m-search-suggestion": HTMLElement & SearchSuggestionAttributes;
+  }
+}

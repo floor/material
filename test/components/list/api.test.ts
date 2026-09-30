@@ -200,7 +200,8 @@ describe('list public API', () => {
     const seen: string[] = [];
     let prevented = false;
     const handler = (event: SelectEvent<Person>): void => {
-      seen.push(`${event.item.id}:${first.getAllItems().length}`);
+      // `value`: the <m-list> element's field, the id as a string (FLO-320)
+      seen.push(`${event.item.id}:${first.getAllItems().length}:${event.value}`);
       if (event.item.id === 'alan') {
         event.preventDefault();
         prevented = event.defaultPrevented;
@@ -210,17 +211,17 @@ describe('list public API', () => {
     await wait();
 
     itemEl(first, 'ada').click();
-    expect(seen).toEqual(['ada:3']);
+    expect(seen).toEqual(['ada:3:ada']);
     expect(first.isItemSelected('ada')).toBe(true);
 
     itemEl(first, 'alan').click();
-    expect(seen).toEqual(['ada:3', 'alan:3']);
+    expect(seen).toEqual(['ada:3:ada', 'alan:3:alan']);
     expect(prevented).toBe(true);
     expect(first.isItemSelected('alan')).toBe(false);
 
     first.off('select', handler);
     itemEl(first, 'grace').click();
-    expect(seen).toEqual(['ada:3', 'alan:3']);
+    expect(seen).toEqual(['ada:3:ada', 'alan:3:alan']);
     expect(first.isItemSelected('grace')).toBe(true);
     expect(second.getAllItems()).toHaveLength(3);
     expect(second.isItemSelected('ada')).toBe(false);

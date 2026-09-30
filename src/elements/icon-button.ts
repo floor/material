@@ -11,6 +11,8 @@
  * (deprecated, FLO-295).
  * `type="submit"` and `type="reset"` act on the host's form.
  *
+ * Parts: `icon-button`, `icon`, `ripple`.
+ *
  * @module elements
  */
 
@@ -84,3 +86,10 @@ export type IconButtonElement = ElementInstance<IconButtonSpec, IconButtonCompon
 
 /** Registers `<m-icon-button>` (or `<prefix-icon-button>`). */
 export const defineIconButton = (options?: DefineOptions): string => iconButtonElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-icon-button": IconButtonElement;
+  }
+}

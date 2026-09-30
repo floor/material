@@ -24,6 +24,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - **Svelte: `bind:this` reads the element (FLO-325).** A component's `element` is its `<m-*>`
   element, as Vue's template ref exposes it.
 
+- **Elements: `::part` on every element (FLO-328).** Each piece of a component is a CSS part named
+  after its BEM class without the prefix: the block by its name (`mtrl-button` is
+  `::part(button)`), an element by its element name (`mtrl-switch__track` is `::part(track)`);
+  modifiers name none. The piece holding the slot also takes the slot attribute's name, so
+  `m-button::part(label)` styles the button's label. Each element's module doc lists its parts.
+- **Elements: `HTMLElementTagNameMap` entries for every `m-*` tag (FLO-328).**
+  `document.querySelector("m-switch")` returns a `SwitchElement`, and `createElement` likewise; a
+  declaration child (`m-tab`, `m-radio`, …) is `HTMLElement` with its attributes. The default `m-`
+  prefix only.
+
 - **`inertOutside(element)` (`mtrl/core/dom`) (FLO-324).** Makes everything but one element inert,
   across shadow roots, as `showModal()` does for a top-layer dialog, and returns the undo, which
   clears exactly what it set. The modal sheets use it outside the top layer.
@@ -89,7 +99,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   a single-select group, an array for a multi-select one. The split button's `select` has `value`,
   the chosen item's `id`. The chips set's `change` is one object with `value` (in the `value`
   property's shape), `selected` (the selected chips' values) and `changed` (the toggled chip's
-  value, null for a method). The existing fields stay.
+  value, null for a method). The existing fields stay. Part 2: the navigation rail's and the drawer's `select` add `value` (the item's
+  id), the menu's `select` too (the item's id, beside `itemId`), and the list's `select` the row's
+  id as a string. The date picker's `change` adds `iso`, the value as ISO 8601 text, the
+  `<m-datepicker>` element's `value`; the factory's `value` stays a `Date`. The element's `change`
+  adds `date`, the factory's `Date` form, as a native input's `valueAsDate`. Search already
+  carried the same `value`.
 
 - **Tooltip colours per M3 (FLO-324).** The plain tooltip is `inverse-surface` /
   `inverse-on-surface`, opaque and without elevation (`PlainTooltipTokens`); the `plain` variant
@@ -191,6 +206,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking, prerelease)
 
+- **Time picker `change` and `input` pass `{ value }` (FLO-320).** They passed the time as a
+  string; they now pass one object, the same shape as every other component's and the
+  `<m-timepicker>` element's (`TimePickerValueEvent`), and so do `onChange` and `onInput`.
+  Migration: `(time) => …` becomes `({ value }) => …`. `confirm` still passes the string.
+
 - **The `--mtrl-sys-color-*-rgb` custom properties are gone (FLO-311).** Every theme declared
   each colour role twice, as `#6750a4` and as `103, 80, 164`, for `rgba(var(--…-rgb), a)`. No
   mtrl style reads the twins any more (`alpha()` builds on `color-mix` of the role), so the
@@ -198,6 +218,37 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   and the internal Sass `rgb($key)` helper in `src/styles/abstract/_theme.scss`, which returned
   `var(--…-rgb)`, is removed with them. Migration: `rgba(var(--mtrl-sys-color-X-rgb), N)`
   becomes `color-mix(in srgb, var(--mtrl-sys-color-X) N%, transparent)` (N as a percentage).
+
+- **Setters and selection methods no longer emit `change`, `input` or `select` (FLO-328).** As on
+  the platform, a change made by script is silent: only the user's click, key, drag or entry
+  emits. A switch's `check()` emitted `change` while a text field's `setValue()` did not; they
+  now agree. The methods whose behaviour changed:
+  - checkbox and switch: `check()`, `uncheck()`, `toggle()`, `setValue()` (the shared
+    `withCheckable` manager's `check`, `uncheck` and `toggle` with them);
+  - radios: `setValue()` with a value no option carries (it still clears and warns);
+  - select: `setValue()` with a value no option carries (it still clears and warns);
+  - tabs: `setActiveTab()`, by tab or by value, known or not;
+  - segmented button: `select()` and `deselect()`;
+  - button group: `select()`, `deselect()` and `toggle()`;
+  - chips: `setValue()`, `selectByValue()` (now silent by default; `selectByValue(values, true)`
+    still emits, and the flag, which was dropped on the way to the controller, now reaches it)
+    and `clearSelection()`;
+  - slider: `setValue()` and `setSecondValue()` (silent by default; pass `true` to emit);
+  - search: `setValue()` no longer emits `input` by default (pass `true` to emit), and `clear()`
+    emits neither `input` nor `clear` (the clear button still emits both);
+  - date picker: `setValue()` and `clear()` (clearing the field by hand still emits);
+  - time picker: `setValue()`, which no longer calls `onChange` either.
+
+  The custom elements already set their properties silently; their methods (`toggle()`,
+  `check()` and `uncheck()` on `<m-switch>` and `<m-checkbox>`) are now silent too, and their form
+  value and default-attribute tracking follow them without the event. Code that listened for
+  `change` after calling one of these methods updates its own state instead, as it would after
+  setting a native input's `checked` or `value`. Unchanged on purpose: the carousel's `goTo()`,
+  `next()` and `prev()` emit `change` (the index follows the scroll position, and a scroll by
+  script fires `scroll` natively too); the progress indicator's `setValue()` emits `change` (it
+  has no user input, so the event is its value's only notification); the split button's
+  `expand()` and `collapse()` emit (an expanded state, as `<details>` fires `toggle` when its
+  `open` is set by script).
 
 ### Fixed
 
@@ -207,6 +258,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   name (`headline`) and rendered none; each named snippet now renders into its slot. Svelte
   attachments (`{@attach}`) reach the element: they are symbol-keyed props, which the spread
   skipped.
+
+- **Elements: a slot's `label` is a real property (FLO-328).** `button.label = "Save"` created a
+  plain JavaScript property and changed nothing (Solid, which always sets properties, hit it).
+  On `<m-button>`, `<m-extended-fab>`, `<m-switch>` and `<m-checkbox>` the property now reads the
+  `label` attribute, else the element's text, as `label` on a native `<option>`; setting it
+  writes the attribute, which updates the text, also on an element created without one.
 
 - **Baseline declares the status colours (FLO-329).** The default theme had no `success`,
   `warning` or `info` role, nor their `on-` pairs, which every generated theme has, so

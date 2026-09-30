@@ -13,6 +13,8 @@
  * scrolling element to follow instead of the window; any other scroller can
  * drive the bar through `setScrollState(scrolled)`.
  *
+ * Parts: `top-app-bar`, `leading`, `headline`, `trailing`.
+ *
  * @module elements
  */
 
@@ -140,3 +142,10 @@ export type TopAppBarElement = ElementInstance<TopAppBarSpec, TopAppBar>;
 
 /** Registers `<m-top-app-bar>` (or `<prefix-top-app-bar>`). */
 export const defineTopAppBar = (options?: DefineOptions): string => topAppBarElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-top-app-bar": TopAppBarElement;
+  }
+}

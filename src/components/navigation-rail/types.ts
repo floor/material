@@ -14,6 +14,8 @@ export interface NavigationRailItemConfig {
 }
 export interface NavigationRailSelectEvent {
     id: string;
+    /** The id again, as the `value` of the `<m-navigation-rail>` element's `change` (FLO-320) */
+    value: string;
     index: number;
     originalEvent: MouseEvent;
 }

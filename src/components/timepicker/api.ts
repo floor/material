@@ -61,14 +61,14 @@ export const createTimePickerAPI = (
   const notifyChange = () => {
     const value = getValue();
     setFormValue(formValue, value);
-    options.events.emit(EVENTS.CHANGE, value);
-    config.onChange?.(value);
+    options.events.emit(EVENTS.CHANGE, { value });
+    config.onChange?.({ value });
   };
   // The draft changed: `input` and onInput, as a native input's.
   const notifyInput = () => {
     const value = format(timeValue);
-    options.events.emit(EVENTS.INPUT, value);
-    config.onInput?.(value);
+    options.events.emit(EVENTS.INPUT, { value });
+    config.onInput?.({ value });
   };
   const render = () => {
     renderTimePicker(dialogElement, timeValue, config, notifyInput);
@@ -232,8 +232,6 @@ export const createTimePickerAPI = (
         ) {
           throw new Error('Invalid time format. Use HH:MM or HH:MM:SS (24-hour format).');
         }
-        
-        const before = getValue();
 
         // Update time value: committed, and the draft with it
         timeValue.hours = hours;
@@ -243,12 +241,10 @@ export const createTimePickerAPI = (
         
         committed = { ...timeValue };
 
-        // Re-render time picker
+        // Re-render time picker, which writes the form value. Silently: a
+        // value set by script emits neither `change` nor onChange, as a
+        // native input's; OK does (FLO-328).
         render();
-        
-        // Notify once, and only for a new value: the event and onChange
-        // together, as every other change does. FLO-281.
-        if (getValue() !== before) notifyChange();
       } catch (error) {
         console.error('Error setting time value:', error);
       }

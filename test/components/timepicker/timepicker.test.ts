@@ -29,7 +29,7 @@ g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date
 g.cancelAnimationFrame = () => {};
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
-import createTimePicker, { type TimePickerEvents, TIMEPICKER_SELECTORS } from "../../../src/components/timepicker";
+import createTimePicker, { type TimePickerEvents, type TimePickerValueEvent, TIMEPICKER_SELECTORS } from "../../../src/components/timepicker";
 import {
   TIME_FORMAT,
   TIME_PERIOD,
@@ -278,14 +278,15 @@ describe("events", () => {
     expect(closed).toHaveBeenCalled();
   });
 
-  test("setValue reports a change", () => {
+  test("setValue is silent, as a native input set by script (FLO-328)", () => {
     const picker = mount();
     const changed = mock(() => {});
     picker.on("change", changed);
 
     picker.setValue("09:30");
 
-    expect(changed).toHaveBeenCalled();
+    expect(picker.getValue()).toBe("09:30");
+    expect(changed).not.toHaveBeenCalled();
   });
 
   test("off stops a handler hearing anything further", () => {
@@ -303,14 +304,19 @@ describe("events", () => {
     const onOpen = mock(() => {});
     const onChange = mock(() => {});
     const onClose = mock(() => {});
-    const picker = mount({ onOpen, onChange, onClose });
+    const picker = mount({ onOpen, onChange, onClose, type: TIME_PICKER_TYPE.INPUT, value: "09:30" });
 
     picker.open();
-    picker.setValue("09:30");
+    picker.setValue("10:00"); // silent (FLO-328): onChange hears the user's OK
+    expect(onChange).not.toHaveBeenCalled();
+    const minutes = picker.dialogElement.querySelector<HTMLInputElement>(TIMEPICKER_SELECTORS.MINUTES_INPUT)!;
+    minutes.value = "20";
+    minutes.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
+    picker.dialogElement.querySelector<HTMLButtonElement>(TIMEPICKER_SELECTORS.CONFIRM_BUTTON)!.click();
     picker.close();
 
     expect(onOpen).toHaveBeenCalled();
-    expect(onChange).toHaveBeenCalled();
+    expect(onChange).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalled();
   });
 });
@@ -341,9 +347,9 @@ describe("destroy", () => {
 
 
 describe("typed event payloads (FLO-114)", () => {
-  test("setValue, format changes and input edits emit machine values", () => {
+  test("setValue is silent; an input edit committed by OK emits a machine value", () => {
     const picker = mount({ type: TIME_PICKER_TYPE.INPUT, value: "09:30" });
-    const changed = mock((_value: string) => {});
+    const changed = mock((_event: TimePickerValueEvent) => {});
     try {
       expect(picker.on("change", changed)).toBe(picker);
       picker.setValue("14:45");
@@ -354,13 +360,15 @@ describe("typed event payloads (FLO-114)", () => {
       const minutes = picker.dialogElement.querySelector<HTMLInputElement>(TIMEPICKER_SELECTORS.MINUTES_INPUT)!;
       minutes.value = "20";
       minutes.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
-      // An edit is a draft; OK commits it with one change (FLO-288).
-      expect(changed.mock.calls).toEqual([["14:45"]]);
+      // setValue is silent (FLO-328); an edit is a draft, and OK commits it
+      // with one change (FLO-288), one object in the <m-timepicker>
+      // element's shape (FLO-320).
+      expect(changed.mock.calls).toEqual([]);
       picker.dialogElement.querySelector<HTMLButtonElement>(TIMEPICKER_SELECTORS.CONFIRM_BUTTON)!.click();
-      expect(changed.mock.calls).toEqual([["14:45"], ["14:20"]]);
+      expect(changed.mock.calls).toEqual([[{ value: "14:20" }]]);
       expect(picker.off("change", changed)).toBe(picker);
       picker.setValue("16:00");
-      expect(changed).toHaveBeenCalledTimes(2);
+      expect(changed).toHaveBeenCalledTimes(1);
     } finally { picker.destroy(); }
   });
 
@@ -469,7 +477,7 @@ describe("typed event payloads (FLO-114)", () => {
 
   test("destroy clears change and root event subscriptions", () => {
     const picker = mount({ type: TIME_PICKER_TYPE.INPUT, value: "09:30" });
-    const changed = mock((_value: string) => {});
+    const changed = mock((_event: TimePickerValueEvent) => {});
     const clicked = mock(() => {});
     picker.on("change", changed).on("click", clicked);
     const root = picker.element;
