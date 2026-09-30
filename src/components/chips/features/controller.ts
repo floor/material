@@ -4,6 +4,7 @@ import type { EventCallback } from "../../../core/state/emitter";
 import {
   ChipsConfig,
   ChipsEvents,
+  ChipsChangeEvent,
   ChipComponent,
   ChipConfig,
   ChipsEventListeners,
@@ -55,6 +56,13 @@ export const withController =
     }
   };
 
+  /** The `change` payload: the selected values, which old handlers read as an array, with the named fields. */
+  const changeEvent = (values: (string | null)[], changed: string | null): ChipsChangeEvent => {
+    const set = values.filter((value): value is string => value !== null);
+    const value = config.multiSelect ? set : (set[0] ?? null);
+    return Object.assign([...values], { value, selected: values, changed });
+  };
+
   const handleSelection = (selectedChip: ChipComponent) => {
     if (!config.multiSelect) {
       // Single selection mode - deselect all other chips
@@ -79,12 +87,13 @@ export const withController =
     const changedValue = selectedChip ? selectedChip.getValue() : null;
 
     // Call onChange callback if provided
+    const event = changeEvent(selectedValues, changedValue);
     if (typeof config.onChange === "function") {
-      config.onChange(selectedValues, changedValue);
+      config.onChange(event, changedValue);
     }
 
     // Dispatch change event to all registered handlers
-    dispatchEvent(CHIPS_EVENTS.CHANGE, selectedValues, changedValue);
+    dispatchEvent(CHIPS_EVENTS.CHANGE, event, changedValue);
   };
 
   // The set is an ARIA grid with one Tab stop (the m3.material.io chips' web roles,
@@ -361,7 +370,7 @@ export const withController =
     // Dispatch change event if any chip selection has changed AND if triggerEvent is true
     if (selectionChanged && triggerEvent) {
       const selectedValues = getSelectedValues();
-      dispatchEvent(CHIPS_EVENTS.CHANGE, selectedValues, null);
+      dispatchEvent(CHIPS_EVENTS.CHANGE, changeEvent(selectedValues, null), null);
     }
   };
 
@@ -379,7 +388,7 @@ export const withController =
 
     // Only dispatch if there were actually chips deselected AND triggerEvent is true
     if (hadSelectedChips && triggerEvent) {
-      dispatchEvent(CHIPS_EVENTS.CHANGE, [], null);
+      dispatchEvent(CHIPS_EVENTS.CHANGE, changeEvent([], null), null);
     }
   };
 

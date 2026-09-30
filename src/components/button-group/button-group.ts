@@ -212,6 +212,7 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       const changeEvent: ButtonGroupChangeEvent = {
         buttonGroup,
         values: selected.map(valueOf),
+        value: selection === 'multi' ? selected.map(valueOf) : (selected[0] ? valueOf(selected[0]) : null),
         selected,
         button,
         originalEvent

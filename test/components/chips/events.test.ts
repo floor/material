@@ -75,6 +75,30 @@ describe("chips container events", () => {
     expect(events).toEqual([[["a"], null], [["b"], null], [[], null]]);
   });
 
+  test("change is one object with the element's value, and the positional call still works (FLO-320)", () => {
+    const read: unknown[] = [];
+    const positional: unknown[] = [];
+    const single = mount({ multiSelect: false, chips: [{ value: "a", ripple: false }, { value: "b", ripple: false }] });
+    const multi = mount({ multiSelect: true, chips: [{ value: "a", ripple: false }, { ripple: false }] });
+    for (const chips of [single, multi]) {
+      chips.on("change", event => read.push({ value: event.value, selected: event.selected, changed: event.changed }));
+      chips.on("change", (selectedValues, changedValue) => positional.push([[...selectedValues], changedValue]));
+    }
+    single.getChips()[1].element.click();
+    single.clearSelection();
+    multi.getChips()[0].element.click();
+    multi.getChips()[1].element.click();
+    multi.selectByValue(["a"]);
+    expect(read).toEqual([
+      { value: "b", selected: ["b"], changed: "b" },
+      { value: null, selected: [], changed: null },
+      { value: ["a"], selected: ["a"], changed: "a" },
+      // A chip without a value is in `selected` as null, and not in `value`
+      { value: ["a"], selected: ["a", null], changed: null },
+    ]);
+    expect(positional).toEqual([[["b"], "b"], [[], null], [["a"], "a"], [["a", null], null]]);
+  });
+
   test("remove passes the live chip before destruction, by instance or index", () => {
     const chips = mount({ chips: [{ value: "a", ripple: false }, { value: "b", ripple: false }] });
     const original = chips.getChips();

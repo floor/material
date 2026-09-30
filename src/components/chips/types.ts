@@ -160,10 +160,7 @@ export interface ChipsConfig {
   /**
    * Callback function when chip selection changes
    */
-  onChange?: (
-    selectedValues: (string | null)[],
-    changedValue: string | null,
-  ) => void;
+  onChange?: (event: ChipsChangeEvent, changedValue: string | null) => void;
 
   /**
    * Component prefix for class names
@@ -235,10 +232,30 @@ export interface ChipsFeatureComponent {
  */
 export type ChipsEventListeners = Record<string, EventCallback[]>;
 
+/**
+ * The payload of the chips set's `change`.
+ *
+ * It is still the array of selected values, with the fields added, and the
+ * changed value still comes as a second argument, so a
+ * `(selectedValues, changedValue)` handler keeps working. Both are
+ * deprecated: read `selected` and `changed`. They go in the next prerelease.
+ */
+export interface ChipsChangeEvent extends Array<string | null> {
+  /** The selection in the `value` property's shape: a string or null for a single-select set, an array for a multi-select one. */
+  value: string | string[] | null;
+  /** The values of the selected chips, in chip order (a chip without a value gives null) */
+  selected: (string | null)[];
+  /** The value of the chip the user toggled; null for a change made by a method */
+  changed: string | null;
+}
+
 /** Events emitted by the chips container's controller. */
 export interface ChipsEvents {
-  /** Selection values and the changed chip value (null for programmatic changes). */
-  change: (selectedValues: (string | null)[], changedValue: string | null) => void;
+  /**
+   * The selection after the change. Read `event.value`, the same field the
+   * `<m-chips>` element's `change` carries.
+   */
+  change: (event: ChipsChangeEvent, changedValue: string | null) => void;
   /** The newly created chip, after it is inserted into the container. */
   add: (chip: ChipComponent) => void;
   /** The chip being removed, before it is destroyed. */

@@ -600,6 +600,22 @@ describe("Button group selection (Material 3 kinds)", () => {
     group.destroy();
   });
 
+  it("change carries value in the element's shape: a string or null when single, an array when multi (FLO-320)", () => {
+    const single = createButtonGroup({ selection: "single", buttons: items });
+    const multi = createButtonGroup({ selection: "multi", buttons: items });
+    const values: unknown[] = [];
+    single.on("change", (event) => values.push(event.value));
+    multi.on("change", (event) => values.push(event.value));
+    single.buttons[1].element.click();
+    single.deselect("taxi");
+    multi.buttons[1].element.click();
+    multi.buttons[0].element.click();
+    // "explore" starts selected
+    expect(values).toEqual(["taxi", null, ["explore", "taxi"], ["taxi"]]);
+    single.destroy();
+    multi.destroy();
+  });
+
   it("programmatic select emits change and honours single mode", () => {
     const group = createButtonGroup({ selection: "single", buttons: items });
     const changes: string[][] = [];

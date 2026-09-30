@@ -150,7 +150,8 @@ export const withAPI =
         emit(SPLIT_BUTTON_EVENTS.CHANGE);
       });
       menu.on?.("select", (event: { item?: MenuContent }) => {
-        emit(SPLIT_BUTTON_EVENTS.SELECT, { item: event?.item });
+        const item = event?.item;
+        emit(SPLIT_BUTTON_EVENTS.SELECT, { item, value: item && "id" in item ? (item.id ?? null) : null });
       });
     }
 

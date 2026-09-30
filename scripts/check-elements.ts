@@ -89,6 +89,27 @@ const check = (name: string): void => {
   console.log(`  ok ${name}`);
 };
 
+/**
+ * FLO-320: one handler reading `value` works on both flavours. Clicks the
+ * shadow-root targets of element `id` in turn (a selector and the index of the
+ * match) and returns what a factory handler (on the host's component) and a
+ * DOM listener each read.
+ */
+const payloadParity = (page: Page, id: string, event: string, targets: Array<[string, number]>): Promise<{ factory: unknown[]; element: unknown[] }> =>
+  page.evaluate(async ({ id, event, targets }) => {
+    type Host = HTMLElement & { component: { on: (name: string, handler: (payload: { value: unknown }) => void) => unknown } };
+    const host = document.getElementById(id) as Host;
+    const read = { factory: [] as unknown[], element: [] as unknown[] };
+    const value = (payload: { value: unknown }): void => void read.factory.push(payload.value);
+    host.component.on(event, value);
+    host.addEventListener(event, (e) => void read.element.push((e as CustomEvent<{ value: unknown }>).detail.value));
+    for (const [selector, index] of targets) {
+      (host.shadowRoot?.querySelectorAll(selector)[index] as HTMLElement).click();
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+    }
+    return read;
+  }, { id, event, targets });
+
 const fresh = async (page: Page, html: string): Promise<void> => {
   await page.evaluate((markup) => {
     const host = document.getElementById("host") as HTMLElement;
@@ -1929,6 +1950,21 @@ try {
     assert.equal(parity.element.length, 3);
     assert.deepEqual(parity.element, parity.factory);
     check("button group: renders as the factory does with the global stylesheet");
+
+    await fresh(
+      page,
+      `<m-button-group id="ps" selection="single" value="a" aria-label="Single">
+         <m-button-group-item value="a">A</m-button-group-item><m-button-group-item value="b">B</m-button-group-item>
+       </m-button-group>
+       <m-button-group id="pm" selection="multi" aria-label="Multi">
+         <m-button-group-item value="a">A</m-button-group-item><m-button-group-item value="b">B</m-button-group-item>
+       </m-button-group>`
+    );
+    const single = await payloadParity(page, "ps", "change", [["button", 1], ["button", 0]]);
+    assert.deepEqual(single, { factory: ["b", "a"], element: ["b", "a"] });
+    const multi = await payloadParity(page, "pm", "change", [["button", 1], ["button", 0], ["button", 1]]);
+    assert.deepEqual(multi, { factory: [["b"], ["a", "b"], ["a"]], element: [["b"], ["a", "b"], ["a"]] });
+    check("button group: a change handler reading value reads the same on the factory and the element (FLO-320)");
   }
 
   // ---------------------------------------------------------------- chips
@@ -2184,6 +2220,17 @@ try {
     });
     assert.deepEqual(dirty, { clean: ["p", "q"], byChip: ["p"], afterUser: ["p", "q"], afterChip: ["p", "q"], afterScript: ["q"] });
     check("chips: value and selected are defaults, until the user or a script changes the selection");
+
+    await fresh(
+      page,
+      `<m-chips id="cs" selection="single" aria-label="Single"><m-chip value="a" selected>A</m-chip><m-chip value="b">B</m-chip></m-chips>
+       <m-chips id="cm" aria-label="Multi"><m-chip value="a">A</m-chip><m-chip value="b">B</m-chip></m-chips>`
+    );
+    const chipsSingle = await payloadParity(page, "cs", "change", [['[data-value="b"]', 0], ['[data-value="a"]', 0]]);
+    assert.deepEqual(chipsSingle, { factory: ["b", "a"], element: ["b", "a"] });
+    const chipsMulti = await payloadParity(page, "cm", "change", [['[data-value="b"]', 0], ['[data-value="a"]', 0], ['[data-value="b"]', 0]]);
+    assert.deepEqual(chipsMulti, { factory: [["b"], ["a", "b"], ["a"]], element: [["b"], ["a", "b"], ["a"]] });
+    check("chips: a change handler reading value reads the same on the factory and the element (FLO-320)");
 
     await fresh(page, `<section id="factory"></section>`);
     const parity = await page.evaluate(async () => {
@@ -4854,9 +4901,16 @@ try {
     await settle();
     await page.getByRole("button", { name: "More options", exact: true }).click();
     await settle();
+    await page.evaluate(() => {
+      const w = window as unknown as Win & { __splitValues: unknown[] };
+      w.__splitValues = [];
+      const component = (document.getElementById("sb") as Host).component as { on: (n: string, h: (p: { value: unknown }) => void) => void };
+      component.on("select", (payload) => void w.__splitValues.push(payload.value));
+    });
     await clickIn("sb", '[data-id="draft"]');
     await settle();
     assert.deepEqual(await log(), [{ type: "select", detail: { value: "draft" } }], "no click event from the menu");
+    assert.deepEqual(await page.evaluate(() => (window as unknown as Win).__splitValues), ["draft"], "a factory select handler reads the same value (FLO-320)");
     assert.deepEqual(await splitState(), { open: false, closes: 4 });
     check("split button: a click outside closes it once; a click on an item selects once");
 
