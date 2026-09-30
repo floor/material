@@ -195,6 +195,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   now declares them light and dark, in `mtrl/styles/base` and `mtrl/themes/baseline`, with the
   generated themes' values (one `status-roles-*` mixin in `_base-theme.scss` for both).
 
+- **`surface-variant` is a theme role (FLO-329).** The disabled filled card's container reads
+  it (Compose's `FilledCardTokens.DisabledContainerColor`), and no theme declared it, so that
+  card lost its background. It is in `THEME_ROLES` now, so `schemeToTokens` requires it (as
+  `surfaceVariant` from material-color-utilities). The generated themes take
+  material-color-utilities' value. Baseline takes Compose's (`#E7E0EC` light, `#49454F`
+  dark), and each hand-kept theme takes tones 90 and 30 of its own neutral variant palette.
+
 - **Divider insets follow the writing direction (FLO-324).** They were physical margins, so in
   right-to-left the start inset landed on the end; they are logical margins now.
 
