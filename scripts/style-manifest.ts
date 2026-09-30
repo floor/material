@@ -35,6 +35,7 @@ export const componentStyles: Record<string, { source: string; dependencies: str
   "navigation-rail": { source: "components/navigation-rail", dependencies: [] },
   list: { source: "components/list", dependencies: [] },
   tooltip: { source: "components/tooltip", dependencies: [] },
+  toolbar: { source: "components/toolbar", dependencies: ["button", "icon-button"] },
 };
 
 // All shipped components have selective CSS entries.

@@ -12,6 +12,24 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Toolbar: M3 Expressive's docked and floating toolbars (FLO-304).** `createToolbar` makes
+  the docked toolbar (full width, 64dp, square corners, items spread or centred 32dp apart) or the
+  floating one (a 64dp pill, 8dp padding, items 4dp apart, elevation level 1 unless
+  `elevated: false`), horizontal or vertical, in `standard` (surface container) or `vibrant`
+  (primary container) colour. `placement` docks it at the bottom, or floats it 16dp from the
+  window edge (24dp when vertical). Items are icon button or button configs, or any element or
+  component, such as a text field. A paired `fab` sits beside the toolbar, outside its tab stop.
+  `overflow` adds a "more" button and hands it to a menu the caller builds
+  (`(opener) => createMenu({ opener, items })`), so the toolbar does not pull in the menu.
+  `scrollBehavior: 'exit'` moves it off screen, and out of the focus order, while the content
+  scrolls forward (40px threshold, window or `scrollTarget`). The element with the `toolbar` role
+  is one tab stop: the arrow keys along the layout, Home and End, disabled items skipped, the keys
+  left to a text field's caret.
+- **`createRoving` in `mtrl/core/dom`.** The roving tab index behind the toolbar: one tab stop over
+  a composite's targets, the arrow keys following the orientation and the reading direction,
+  Home and End, disabled targets skipped (`disabled` or `aria-disabled`), text inputs keeping
+  their keys.
+
 - **React and Solid: named slots as props (FLO-333).** A prop named after a slot the element
   declares takes nodes (`<Dialog actions={<Button>Discard</Button>}>`), rendered into a
   `<span slot="actions">` the component owns; `headerAction` is the `header-action` slot. A text

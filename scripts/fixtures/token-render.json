@@ -810,6 +810,122 @@
    true
   ]
  ],
+ "toolbar-docked": [
+  [
+   "0:div.mtrl-toolbar.mtrl-toolbar--docked",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "1:div.mtrl-toolbar__bar",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:button.mtrl-icon-button.mtrl-icon-button--round",
+   "20px 20px 20px 20px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:span.mtrl-icon.mtrl-icon-button__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "4:div.mtrl-ripple",
+   "20px 20px 20px 20px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "5:button.mtrl-icon-button.mtrl-icon-button--round",
+   "20px 20px 20px 20px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:span.mtrl-icon.mtrl-icon-button__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "7:div.mtrl-ripple",
+   "20px 20px 20px 20px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
+ "toolbar-floating-vibrant": [
+  [
+   "0:div.mtrl-toolbar.mtrl-toolbar--floating",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:div.mtrl-toolbar__bar",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "2:button.mtrl-icon-button.mtrl-icon-button--round",
+   "12px 12px 12px 12px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "3:span.mtrl-icon.mtrl-icon-button__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "4:div.mtrl-ripple",
+   "12px 12px 12px 12px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "5:button.mtrl-icon-button.mtrl-icon-button--round",
+   "20px 20px 20px 20px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:span.mtrl-icon.mtrl-icon-button__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "7:div.mtrl-ripple",
+   "20px 20px 20px 20px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
  "split-s": [
   [
    "0:div.mtrl-split-button.mtrl-split-button--filled",

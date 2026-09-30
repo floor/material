@@ -57,6 +57,7 @@ export { default as createTabs } from "./tabs";
 export { createTab } from "./tabs/tab";
 export { default as createTextfield } from "./textfield";
 export { default as createTimePicker } from "./timepicker";
+export { default as createToolbar } from "./toolbar";
 export { default as createTopAppBar } from "./top-app-bar";
 export { default as createTooltip } from "./tooltip";
 
@@ -255,6 +256,14 @@ export type { TextfieldConfig, TextfieldComponent } from "./textfield/types";
 
 // Timepicker
 export type { TimePickerConfig, TimePickerComponent } from "./timepicker/types";
+
+// Toolbar
+export type {
+  ToolbarConfig,
+  ToolbarComponent,
+  ToolbarEvents,
+  ToolbarItem,
+} from "./toolbar/types";
 
 // Top App Bar
 export type { TopAppBarConfig, TopAppBar } from "./top-app-bar/types";

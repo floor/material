@@ -68,6 +68,7 @@ export const COMPONENTS = [
   { name: "timepicker", imports: ["createTimePicker"] },
   { name: "top-app-bar", imports: ["createTopAppBar"] },
   { name: "tooltip", imports: ["createTooltip"] },
+  { name: "toolbar", imports: ["createToolbar"] },
 ] as const;
 
 export type ComponentName = (typeof COMPONENTS)[number]["name"];
@@ -84,6 +85,7 @@ export const KNOWN_DEPS: Partial<Record<ComponentName, readonly ComponentName[]>
   select: ["textfield", "menu"],
   tabs: ["button", "badge"],
   "split-button": ["button", "menu"],
+  toolbar: ["button", "icon-button"],
 };
 
 export const SCENARIO_DEFS = [
