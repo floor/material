@@ -35,6 +35,7 @@ export const App = () => {
   const [fruit, setFruit] = createSignal<string | null>("b");
   const [pet, setPet] = createSignal<string | null>("cat");
   const [dialog, setDialog] = createSignal(false);
+  const [dialogText, setDialogText] = createSignal("Your changes will be lost.");
   const [rail, setRail] = createSignal(false);
   const [due, setDue] = createSignal("2026-09-10");
   const [query, setQuery] = createSignal("ap");
@@ -45,7 +46,7 @@ export const App = () => {
     (window as unknown as { api: unknown }).api = {
       log,
       get submits() { return submits; },
-      setControlled, setExtra, setOrder, setShow, setProgress, setDialog, setRail,
+      setControlled, setExtra, setOrder, setShow, setProgress, setDialog, setRail, setDialogText,
       element: () => switchRef,
     };
   });
@@ -104,7 +105,7 @@ export const App = () => {
       {/* Named slots as props (FLO-333): JSX for the headline, a component in actions */}
       <Dialog id="dg" open={dialog()} onClose={() => setDialog(false)}
         headline={<strong>Discard draft?</strong>} actions={<Button id="dga">Discard</Button>}>
-        Your changes will be lost.
+        {dialogText()}
       </Dialog>
       <output id="dialog">{String(dialog())}</output>
       {/* Controlled: expanded is state; Escape collapses the modal rail, and onCollapse puts the state in step */}

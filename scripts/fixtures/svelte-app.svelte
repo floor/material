@@ -37,6 +37,9 @@
   let due = $state("2026-09-10");
   let query = $state("ap");
   let ref = $state<{ readonly element: HTMLElement | null } | undefined>();
+  // Callbacks that are not snippets: never called by rendering (FLO-334)
+  let renderCalls = 0;
+  const callbacks = { onFoo: () => void renderCalls++ };
 
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
 
@@ -52,6 +55,7 @@
       setDialog: (v: boolean) => (dialog = v),
       setRail: (v: boolean) => (rail = v),
       get ref() { return ref?.element ?? null; },
+      get renderCalls() { return renderCalls; },
     };
   });
 </script>
@@ -129,6 +133,8 @@
     {/each}
   </Search>
   <output id="query">{query}</output>
+  <!-- A camelCase handler and a spread callback are not snippets (FLO-334) -->
+  <Button id="cbk" onClick={() => void renderCalls++} {...callbacks}>Callbacks</Button>
   <!-- bind:this reads the element; an attachment reaches it (FLO-325) -->
   <Switch id="bt" bind:this={ref}>Ref</Switch>
   <Switch id="at" {@attach (node: HTMLElement) => { node.dataset.attached = "yes"; }}>Attached</Switch>
