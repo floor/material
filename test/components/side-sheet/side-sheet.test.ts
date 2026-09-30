@@ -175,6 +175,68 @@ describe('side sheet', () => {
   });
 });
 
+// FLO-324: a modal sheet outside the top layer made neither the page inert nor
+// kept Tab inside, as showModal() does for one in it.
+describe('side sheet: modal outside the top layer', () => {
+  const page = () => {
+    const before = document.createElement('button');
+    before.textContent = 'Before';
+    const main = document.createElement('main');
+    main.append(document.createElement('input'));
+    document.body.append(before, main);
+    return { before, main };
+  };
+
+  test('opening makes the rest of the page inert, closing restores exactly what it changed', () => {
+    const { before, main } = page();
+    const already = document.createElement('aside');
+    already.setAttribute('inert', '');
+    document.body.append(already);
+    const sheet = make({ variant: 'modal', content: '<button>Inside</button>' });
+    document.body.append(sheet.element);
+    sheet.open();
+    expect([before.hasAttribute('inert'), main.hasAttribute('inert'), sheet.element.hasAttribute('inert')]).toEqual([true, true, false]);
+    sheet.close();
+    expect([before.hasAttribute('inert'), main.hasAttribute('inert')]).toEqual([false, false]);
+    // an element that was inert before the sheet stays so
+    expect(already.hasAttribute('inert')).toBe(true);
+  });
+
+  test('Tab stays in the sheet while it is open', () => {
+    page();
+    const sheet = make({ variant: 'modal', content: '<button id="first">First</button><button id="last">Last</button>' });
+    document.body.append(sheet.element);
+    sheet.open();
+    const last = sheet.element.querySelector<HTMLButtonElement>('#last')!;
+    last.focus();
+    const tab = new dom.window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    last.dispatchEvent(tab);
+    expect(tab.defaultPrevented).toBe(true);
+    sheet.close();
+    const after = new dom.window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    last.dispatchEvent(after);
+    expect(after.defaultPrevented).toBe(false);
+  });
+
+  test('a standard sheet leaves the page alone', () => {
+    const { before } = page();
+    const sheet = make({ variant: 'standard' });
+    document.body.append(sheet.element);
+    sheet.open();
+    expect(before.hasAttribute('inert')).toBe(false);
+  });
+
+  test('destroy while open restores the page', () => {
+    const { before } = page();
+    const sheet = createSideSheet({ variant: 'modal' });
+    document.body.append(sheet.element);
+    sheet.open();
+    expect(before.hasAttribute('inert')).toBe(true);
+    sheet.destroy();
+    expect(before.hasAttribute('inert')).toBe(false);
+  });
+});
+
 // FLO-324: a standard sheet sits beside the page, so Escape pressed elsewhere
 // (closing a menu, say) no longer closes it; from inside it still does.
 describe('side sheet: Escape on a standard sheet', () => {

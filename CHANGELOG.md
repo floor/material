@@ -12,6 +12,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **`inertOutside(element)` (`mtrl/core/dom`) (FLO-324).** Makes everything but one element inert,
+  across shadow roots, as `showModal()` does for a top-layer dialog, and returns the undo, which
+  clears exactly what it set. The modal sheets use it outside the top layer.
+
 - **Card: typed `on` / `off` and `CardEvents` (FLO-323).** The card always emitted `click`
   (clickable), `mouseenter`, `mouseleave`, `keydown`, `focus`, `blur` (interactive), `dragstart`
   and `dragend` (draggable), but its type declared no `on`, so TypeScript couldn't listen to them.
@@ -181,6 +185,17 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - **Divider insets follow the writing direction (FLO-324).** They were physical margins, so in
   right-to-left the start inset landed on the end; they are logical margins now.
 
+- **A small badge is visible when created (FLO-324).** Its empty label, a dot's normal state,
+  counted as nothing to show, so `createBadge({ variant: 'small' })` started hidden;
+  `setLabel` already knew better.
+- **Progress: one disabled state (FLO-324).** Created disabled, the bar had `aria-disabled`;
+  `disable()` later set only the class, and `enable()` left a creation-time `aria-disabled`
+  behind. Both ways now set and clear the same state.
+- **Modal sheets outside the top layer are modal (FLO-324).** A bottom or side sheet with
+  `variant: 'modal'` and no `layer: 'top'` kept neither Tab inside nor the page inert. While
+  open, the page is inert and Tab wraps in the sheet; closing or destroying it restores the page.
+- **Dialog buttons: `size` applies (FLO-324).** It was accepted and dropped.
+
 - **Dialog: `confirm()` settles however the dialog closes, confirms last, and shows its message as
   text (FLO-324).** It resolved only through its two buttons, so closing the dialog with Escape,
   the scrim or `close()` left the promise pending forever; it now resolves `false` then. The
@@ -266,6 +281,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 - **Tooltip: `rich` (FLO-324).** It was never read. A rich tooltip is `variant: 'rich'`, and the
   content is always text. Removed in 1.0.
+
+- **Dialog buttons: `color` (FLO-324).** It never had an effect: the button has no colour option,
+  and M3's dialog actions are text buttons in the dialog's own colours. Removed in 1.0.
 
 - **Card: `withElevation` (FLO-323).** It only wrote the unread `--mtrl-card-elevation`; it is a
   no-op now, and the card no longer composes it. Removed in 1.0.
