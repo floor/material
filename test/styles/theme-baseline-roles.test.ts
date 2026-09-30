@@ -2,11 +2,12 @@
 // (nor their on- pairs), though every generated theme has them from
 // status-colors-light() and status-colors-dark(). The badge reads them, so
 // createBadge({ color: 'success' }) had no background under the default theme.
+// The test also found surface-variant, read by the filled card and declared by
+// no theme; it is a theme role now.
 // Every colour role a shipped stylesheet reads must be declared by baseline, in
 // each block that sets its colours: the :root default, the prefers-color-scheme
 // dark block, .dark-theme, and the selectable [data-theme=baseline] light and dark.
 import { describe, expect, test } from 'bun:test';
-import { readdirSync } from 'node:fs';
 import { compileString } from 'sass';
 import { baseStyles, componentStyles, utilityStyles } from '../../scripts/style-manifest';
 
@@ -27,14 +28,6 @@ for (const source of readers) {
   }
 }
 
-/**
- * Roles a stylesheet reads that no theme declares, so they are not baseline's gap
- * alone: the filled card's disabled container (Compose's DisabledContainerColor,
- * SurfaceVariant), a role M3 dropped from the schemes. A follow-up decides it; the
- * test below fails once the list is stale.
- */
-const UNDECLARED_EVERYWHERE = ['surface-variant'];
-
 /** Baseline's colour blocks, by selector, from the compiled base stylesheet (dist/styles/base.css) */
 const blocks = (css: string): Map<string, string> => {
   const found = new Map<string, string>();
@@ -53,18 +46,10 @@ const blocks = (css: string): Map<string, string> => {
 describe('baseline declares every colour role the stylesheets read', () => {
   test('the stylesheets were read, the status roles among them', () => {
     expect(reads.size).toBeGreaterThan(30);
-    for (const role of ['success', 'on-success', 'warning', 'on-warning', 'info', 'on-info']) expect(reads.has(role)).toBe(true);
+    // surface-variant: the filled card's disabled container (Compose's FilledCardTokens)
+    for (const role of ['success', 'on-success', 'warning', 'on-warning', 'info', 'on-info', 'surface-variant']) expect(reads.has(role)).toBe(true);
   });
 
-  test('the roles no theme declares are still read, and still declared by no theme', () => {
-    const themes = readdirSync('src/styles/themes')
-      .filter(file => /^_[a-z-]+\.scss$/.test(file) && !['_index.scss', '_base-theme.scss'].includes(file))
-      .map(file => compileString(`@use "themes/${file.slice(1, -5)}";`, options).css);
-    for (const role of UNDECLARED_EVERYWHERE) {
-      expect({ role, read: reads.has(role) }).toEqual({ role, read: true });
-      expect({ role, declared: themes.some(css => css.includes(`--mtrl-sys-color-${role}:`)) }).toEqual({ role, declared: false });
-    }
-  });
 
   for (const [name, css] of [
     ['base.css', compileString(baseStyles.map((source, i) => `@use "${source}" as entry${i};`).join('\n'), options).css],
@@ -83,8 +68,7 @@ describe('baseline declares every colour role the stylesheets read', () => {
 
     for (const [selector, body] of found) {
       test(`${name} ${selector}: declares every role read`, () => {
-        const missing = [...reads].filter(([role]) => !UNDECLARED_EVERYWHERE.includes(role))
-          .filter(([role]) => !body.includes(`--mtrl-sys-color-${role}:`))
+        const missing = [...reads].filter(([role]) => !body.includes(`--mtrl-sys-color-${role}:`))
           .map(([role, sources]) => `${role} (${[...sources].join(', ')})`);
         expect(missing).toEqual([]);
       });
