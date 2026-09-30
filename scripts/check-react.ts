@@ -52,6 +52,19 @@ type Win = Window & {
 const browser = await chromium.launch({ headless: true });
 let checks = 0;
 
+// Every module of mtrl/react is a client module, so a React Server Component
+// can import one (FLO-327 split the index into a module per component): its
+// first statement is the directive, only comments before it.
+const modules = [...new Bun.Glob("*.js").scanSync("dist/react")];
+assert(modules.length > 40, `dist/react has ${modules.length} modules: build first`);
+for (const module of modules) {
+  const code = await Bun.file(`dist/react/${module}`).text();
+  const first = code.replace(/^(?:\s*\/\/[^\n]*\n|\s*\/\*[\s\S]*?\*\/)*\s*/, "");
+  assert(first.startsWith('"use client";'), `dist/react/${module} does not start with "use client"`);
+}
+checks++;
+console.log(`  ok every dist/react module (${modules.length}) starts with "use client"`);
+
 const run = async (version: 18 | 19): Promise<void> => {
   const plugins = version === 18 ? [react18] : [];
   const check = (name: string): void => {
