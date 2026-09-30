@@ -24,6 +24,11 @@ beforeAll(() => {
 });
 
 describe('menu stylesheet', () => {
+  // FLO-273: in a scrolling menu the divider kept flex-shrink 1 and collapsed
+  test('the divider does not shrink in a menu that scrolls', () => {
+    expect(value('.mtrl-menu__divider', 'flex-shrink')).toBe('0');
+  });
+
   test('the container is surface-container at level 2 with a 4dp corner', () => {
     expect(value('.mtrl-menu', 'background-color')).toBe('var(--mtrl-sys-color-surface-container)');
     expect(value('.mtrl-menu', 'border-radius')).toBe(corner(4));

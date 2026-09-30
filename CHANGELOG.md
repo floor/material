@@ -289,6 +289,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Menu: the divider no longer collapses in a menu that scrolls (FLO-273).** The list is a flex
+  column, and the divider, the one item without a minimum size, shrank to 0 once the list was
+  taller than the menu: a long select showed the divider's margins but no line.
+
 - **Checkbox: the check icon without the HTML sink, and form sync without repeated validity
   (FLO-336).** Each checkbox parsed the icon's markup through `innerHTML`; it is now built once with
   DOM APIs and cloned, the same nodes, so no Trusted Types policy is involved. A web component set
