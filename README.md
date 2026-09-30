@@ -86,7 +86,11 @@ document.documentElement.dataset.theme = 'ocean';
 document.documentElement.dataset.themeMode = 'dark';
 ```
 
-Available themes: `baseline`, `ocean`, `desert`, `forest`, `sunset`, `spring`, `summer`, `autumn`, `winter`, `brownbeige`, `browngreen`, `sageivory`, `tealcaramel`, `material`, `legacy` and `highcontrast`. With selective styles, import the theme's entry, for example `mtrl/themes/ocean`.
+Available themes: `baseline`, `ocean`, `desert`, `forest`, `sunset`, `spring`, `summer`, `autumn`, `brownbeige`, `sageivory`, `tealcaramel` and `highcontrast`. With selective styles, import the theme's entry, for example `mtrl/themes/ocean`.
+
+M3's scheme variants, generated from the baseline seed, ship as their own entries only (not in the full stylesheet): `neutral`, `vibrant`, `expressive`, `fidelity`, `content`, `monochrome`, `rainbow` and `fruit-salad`, for example `mtrl/themes/vibrant`. `schemeToTokens` (`mtrl/core/theme`) turns any M3 scheme's role colours into these tokens.
+
+Deprecated, removed in 1.0: `material` (use `baseline`), `winter` (use `ocean`), `browngreen` (use `brownbeige`) and `legacy`.
 
 ### Custom properties
 

@@ -12,6 +12,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Eight M3 scheme-variant themes, generated (FLO-308).** `neutral`, `vibrant`, `expressive`,
+  `fidelity`, `content`, `monochrome`, `rainbow` and `fruit-salad`, M3's dynamic-scheme variants
+  from its baseline seed `#6750A4`, light and dark (Tonal Spot is `baseline`, within ΔE00 1.31).
+  Each ships only as its own entry, `mtrl/themes/<name>`, so it costs nothing until imported;
+  the full stylesheet's themes are unchanged.
+- **`schemeToTokens` (`mtrl/core/theme`, also `mtrl/core`) (FLO-308).** An M3 scheme's role
+  colours in, the theme's `--mtrl-sys-color-*` declarations out, light and dark, with `-rgb`
+  twins. The themes are generated with it (`scripts/generate-themes.ts`, from Google's
+  material-color-utilities, a devDependency only) and md3.io's theme builder uses it too.
+
 - **Text field: a character counter (FLO-300).** While the input has a `maxlength`, the
   supporting text row ends with `count/max`, as Material Web shows it. It follows typing,
   `setValue()` and a limit set or removed later (`<m-textfield maxlength>`), describes the input
@@ -39,6 +49,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   own workarounds, so a read-only element's trigger is disabled.
 
 ### Changed
+
+- **Themes regenerated from their seeds (FLO-308).** `desert`, `summer`, `brownbeige`,
+  `sageivory` and `tealcaramel` are now generated from their primary seeds with M3's tones, each
+  keeping its second colour as a custom secondary; their hand-set values failed contrast (desert
+  at 3.23:1, sageivory at 2.31:1). Every text pair now reaches 4.5:1. `highcontrast` is M3's
+  high-contrast scheme (contrastLevel 1.0), 7:1 or more on every pair, which its old values missed.
+  Their colours change. `autumn` drops its `quaternary-*` roles, which nothing used.
 
 - **Text field: the field and its supporting text row (FLO-300). DOM change.** The root now
   holds two children, as M3's anatomy has them: `__field`, the 56px container with the label,
@@ -130,7 +147,17 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Deprecated
 
+- **Themes `material`, `winter`, `browngreen` and `legacy` (FLO-308).** Still importable and in
+  the full stylesheet in 0.10, removed in 1.0. Use `baseline` for `material` (which never matched
+  it), `ocean` for `winter` and `brownbeige` for `browngreen`, their near-duplicates; `legacy` has
+  no replacement.
+
 - **Text field:** `TEXTFIELD_CLASSES.LABEL_FLOATING`, applied and styled nowhere (FLO-295).
+
+### Removed
+
+- **`_bluekhaki.scss` and `_greenbeige.scss` (FLO-308).** Two theme sources that were never
+  built, exported or referenced.
 
 ## [0.10.0-next.3] - 2026-09-29
 

@@ -21,7 +21,7 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
     const { default: createCard, createCardHeader, createCardContent, createCardMedia, createCardActions, withExpandable, withSwipeable } = state.cardParts;
     document.body.replaceChildren();
     document.body.style.cssText = "display:block;padding:24px;margin:0";
-    document.documentElement.setAttribute("data-theme", "material");
+    document.documentElement.setAttribute("data-theme", "baseline");
     document.documentElement.setAttribute("data-theme-mode", "light");
     state.cards = [];
     for (const variant of ["elevated", "filled", "outlined"] as const) {
