@@ -216,9 +216,60 @@ try {
     assert.equal(state.wifi, null);
     check("switch: setting the property fires no event and updates the form value");
 
+    // FLO-328: the methods are silent too; the model still follows them
+    // (form value, dirty) without the event, and reset returns to the default.
+    const methods = await page.evaluate(() => {
+      type Switch = HTMLElement & { checked: boolean; toggle(): void; check(): void; uncheck(): void };
+      const d = document.getElementById("d") as Switch;
+      const form = document.getElementById("f") as HTMLFormElement;
+      const events: string[] = [];
+      const listen = (e: Event): void => void events.push(e.type);
+      for (const type of ["change", "input"]) d.addEventListener(type, listen);
+      const state = (): [boolean, FormDataEntryValue | null] => [d.checked, new FormData(form).get("bt")];
+      d.uncheck();
+      const unchecked = state();
+      d.toggle();
+      const toggled = state();
+      d.uncheck();
+      // Dirty: the default no longer moves the live state.
+      d.removeAttribute("checked");
+      d.setAttribute("checked", "");
+      const dirty = state();
+      form.reset();
+      const reset = state();
+      for (const type of ["change", "input"]) d.removeEventListener(type, listen);
+      return { events, unchecked, toggled, dirty, reset };
+    });
+    assert.deepEqual(methods, {
+      events: [],
+      unchecked: [false, null],
+      toggled: [true, "on"],
+      dirty: [false, null],
+      reset: [true, "on"],
+    });
+    check("switch: toggle(), check() and uncheck() fire no event; the form value, dirty state and reset follow them");
+
     await page.click("#outer");
     assert.equal(await page.evaluate(() => (document.getElementById("s") as HTMLElement & { checked: boolean }).checked), true);
     check("switch: an outer <label for> toggles it");
+
+    // FLO-328: the slot's attribute is a real property.
+    const label = await page.evaluate(async () => {
+      type Labelled = HTMLElement & { label: string | null };
+      const slotted = document.getElementById("s") as Labelled;
+      const named = document.createElement("m-switch") as Labelled;
+      named.id = "named";
+      named.setAttribute("label", "Before");
+      document.getElementById("f")?.append(named);
+      const read = { slotted: slotted.label, named: named.label };
+      named.label = "Airplane mode";
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return { read, attribute: named.getAttribute("label"), own: Object.prototype.hasOwnProperty.call(named, "label") };
+    });
+    assert.deepEqual(label, { read: { slotted: "Wi-Fi", named: "Before" }, attribute: "Airplane mode", own: false });
+    assert.equal(await page.getByRole("switch", { name: "Airplane mode" }).count(), 1);
+    await page.evaluate(() => document.getElementById("named")?.remove());
+    check("switch: the label property reads the label and sets the attribute and the text");
 
     const reset = await page.evaluate(() => {
       (document.getElementById("f") as HTMLFormElement).reset();
@@ -329,6 +380,37 @@ try {
     await page.evaluate(() => document.getElementById("attr")?.setAttribute("label", "Renamed"));
     assert.equal(await page.getByRole("button", { name: "Renamed" }).count(), 1);
     check("button: a label attribute change updates the name");
+
+    // FLO-328: the slot's attribute is a real property, as `label` is on a native <option>.
+    const label = await page.evaluate(async () => {
+      type Labelled = HTMLElement & { label: string | null };
+      const attr = document.getElementById("attr") as Labelled;
+      const slotted = document.getElementById("plain") as Labelled;
+      const read = { attr: attr.label, slotted: slotted.label };
+      attr.label = "By property";
+      const late = document.createElement("m-button") as Labelled;
+      late.id = "late";
+      document.getElementById("f")?.append(late);
+      late.label = "Set late";
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return {
+        read,
+        own: Object.prototype.hasOwnProperty.call(attr, "label"),
+        attribute: attr.getAttribute("label"),
+        after: attr.label,
+        late: late.getAttribute("label"),
+      };
+    });
+    assert.deepEqual(label, {
+      read: { attr: "Renamed", slotted: "Cancel" },
+      own: false,
+      attribute: "By property",
+      after: "By property",
+      late: "Set late",
+    });
+    assert.equal(await page.getByRole("button", { name: "By property" }).count(), 1);
+    assert.equal(await page.getByRole("button", { name: "Set late" }).count(), 1);
+    check("button: the label property reads the label and sets the attribute and the text, also on an empty button");
 
     const parity = await page.evaluate(() => {
       const w = window as unknown as Win & { mtrl: { createButton: (c: object) => { element: HTMLElement } } };
@@ -6515,6 +6597,52 @@ try {
     check("date picker, time picker and search: opening and closing leave the value attribute in charge");
   }
 
+  // ---------------------------------------------------------------- parts
+  // FLO-328: every piece is a part named after its BEM class without the
+  // prefix; the element holding the slot is also the slot attribute's part.
+  await fresh(
+    page,
+    `<style>
+       m-button::part(label) { color: rgb(1, 2, 3); }
+       m-button::part(icon) { color: rgb(4, 5, 6); }
+       m-switch::part(track) { outline: 3px solid rgb(7, 8, 9); }
+       m-switch::part(helper) { color: rgb(10, 11, 12); }
+       m-tabs::part(indicator) { background-color: rgb(13, 14, 15); }
+     </style>
+     <m-button id="pb" icon="${ICON.replace(/"/g, "'")}">Styled</m-button>
+     <m-switch id="ps">Parts</m-switch>
+     <m-tabs id="pt" value="a"><m-tab value="a">A</m-tab><m-tab value="b">B</m-tab></m-tabs>`
+  );
+  {
+    const parts = await page.evaluate(async () => {
+      const shadow = (id: string): ShadowRoot => (document.getElementById(id) as HTMLElement).shadowRoot as ShadowRoot;
+      const style = (id: string, part: string): CSSStyleDeclaration =>
+        getComputedStyle(shadow(id).querySelector(`[part~="${part}"]`) as Element);
+      const names = (id: string): string[] =>
+        Array.from(shadow(id).querySelectorAll("[part]"), (node) => node.getAttribute("part") as string);
+      // A piece the component adds later is named too.
+      document.getElementById("ps")?.setAttribute("supporting-text", "Later");
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return {
+        button: names("pb"),
+        label: style("pb", "label").color,
+        icon: style("pb", "icon").color,
+        track: style("ps", "track").outlineColor,
+        helper: style("ps", "helper").color,
+        indicator: style("pt", "indicator").backgroundColor,
+        tabs: names("pt").filter((name) => name.includes("tab")),
+      };
+    });
+    assert.deepEqual(parts.button, ["button", "icon", "text label", "ripple"]);
+    assert.equal(parts.label, "rgb(1, 2, 3)");
+    assert.equal(parts.icon, "rgb(4, 5, 6)");
+    assert.equal(parts.track, "rgb(7, 8, 9)");
+    assert.equal(parts.helper, "rgb(10, 11, 12)");
+    assert.equal(parts.indicator, "rgb(13, 14, 15)");
+    assert.deepEqual(parts.tabs, ["tabs", "button tab", "button tab"]);
+    check("parts: page CSS styles m-button::part(label) and (icon), m-switch::part(track) and a helper added later, m-tabs::part(indicator)");
+  }
+
   // ---------------------------------------------------------------- FLO-320: payload parity, part 2
   await fresh(
     page,
@@ -6551,18 +6679,30 @@ try {
     );
     // The factory's `value` stays a Date: its `iso` is the element's `value`,
     // and the element's `date` is the factory's Date.
-    const date = 'host.component.setValue(new Date(2026, 8, 12));';
+    // Entered by hand: setValue is silent (FLO-328).
+    const enter = (text: string): string =>
+      `const input = host.shadowRoot.querySelector("input"); input.value = "${text}"; input.dispatchEvent(new Event("change", { bubbles: true }));`;
+    const date = enter("09/12/2026");
     assert.deepEqual(await eventParity(page, "pdp", { factoryEvent: "change", elementEvent: "change", act: date, field: "iso" }), { factory: ["2026-09-12"], element: ["2026-09-12"] }, "date picker");
     const dates = await page.evaluate(() => {
-      const host = document.getElementById("pdp") as HTMLElement & { component: { setValue: (d: Date) => void } };
+      const host = document.getElementById("pdp") as HTMLElement;
       const seen: string[] = [];
       host.addEventListener("change", (e) => void seen.push(((e as CustomEvent<{ date: Date }>).detail.date).toDateString()));
-      host.component.setValue(new Date(2026, 8, 14));
+      const input = host.shadowRoot?.querySelector("input") as HTMLInputElement;
+      input.value = "09/14/2026";
+      input.dispatchEvent(new Event("change", { bubbles: true }));
       return seen;
     });
     assert.deepEqual(dates, [new Date(2026, 8, 14).toDateString()], "date picker: the element's date");
     assert.deepEqual(
-      await eventParity(page, "ptp", { factoryEvent: "change", elementEvent: "change", act: 'host.component.setValue("10:45");', factory: "host.component.picker" }),
+      await eventParity(page, "ptp", {
+        factoryEvent: "change", elementEvent: "change", factory: "host.component.picker",
+        // Committed by OK: setValue is silent (FLO-328).
+        act: `const p = host.component.picker; p.setType("input"); p.open();
+          const set = (type, v) => { const f = p.dialogElement.querySelector('[data-type="' + type + '"]'); f.value = v; f.dispatchEvent(new Event("change", { bubbles: true })); };
+          set("hour", "10"); set("minute", "45");
+          p.dialogElement.querySelector('[class$="time-picker__confirm"]').click();`,
+      }),
       { factory: ["10:45"], element: ["10:45"] }, "time picker",
     );
     check("rail, drawer, list, menu, search and both pickers: a handler reading value reads the same on the factory and the element (FLO-320)");

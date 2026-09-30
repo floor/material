@@ -10,14 +10,15 @@ test("search input, submit, clear and state events expose the finished search", 
   const record = (event: SearchEvent): void => { seen.push(event); };
   const search = mount(createSearch({ expandOnFocus: false, collapseOnBlur: false, on: { input: record } }));
   for (const name of ["submit", "clear", "expand", "collapse"] as const) search.on(name, record);
-  search.setValue("hello");
+  search.setValue("hello", true);
   search.submit();
   search.clear();
   search.expand();
   search.collapse();
-  // clear() empties the query with an input event, then clear (FLO-291).
-  expect(seen.slice(0, 4).map(event => event.value)).toEqual(["hello", "hello", "", ""]);
-  expect(seen).toHaveLength(6);
+  // setValue emits input only when asked, and clear() from code is silent
+  // (FLO-328); the clear button emits input, then clear (FLO-291).
+  expect(seen.slice(0, 2).map(event => event.value)).toEqual(["hello", "hello"]);
+  expect(seen).toHaveLength(4);
   for (const event of seen) expect(event.component === search).toBe(true);
   expect(seen[0].component.getValue()).toBe("");
   expect(seen[0].value).toBe("hello");
@@ -53,15 +54,15 @@ test("search handlers can call the API; off keeps event and instance ownership",
   };
   first.on("input", handler).on("submit", handler);
   second.on("input", handler);
-  first.setValue("one");
+  first.setValue("one", true);
   expect(first.getPlaceholder()).toBe("one");
   first.off("input", handler);
-  first.setValue("removed");
+  first.setValue("removed", true);
   first.submit();
-  second.setValue("two");
+  second.setValue("two", true);
   expect(seen).toEqual([first, first, second]);
   expect(second.getPlaceholder()).toBe("two");
   first.destroy();
-  first.setValue("destroyed");
+  first.setValue("destroyed", true);
   expect(seen).toHaveLength(3);
 });

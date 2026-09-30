@@ -80,14 +80,15 @@ describe('search', () => {
     expect(onInput).toHaveBeenCalledTimes(1);
   });
 
-  test('setValue updates the input, and emits input unless told not to', async () => {
+  test('setValue updates the input silently, and emits input only when asked (FLO-328)', async () => {
     const search = await mount();
     const inputs = mock((_event: unknown) => {});
     search.on('input', inputs);
     search.setValue('world');
     expect(inputOf(search).value).toBe('world');
-    search.setValue('quiet', false);
-    expect(search.getValue()).toBe('quiet');
+    expect(inputs).not.toHaveBeenCalled();
+    search.setValue('loud', true);
+    expect(search.getValue()).toBe('loud');
     expect(inputs).toHaveBeenCalledTimes(1);
   });
 
@@ -101,15 +102,24 @@ describe('search', () => {
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
-  test('clear empties the value, drops the populated state and calls onClear', async () => {
+  test('clear() empties the value and drops the populated state silently; the clear button calls onClear', async () => {
     const onClear = mock(() => {});
     const search = await mount({ value: 'hello', onClear });
+    const inputs = mock((_event: unknown) => {});
+    search.on('input', inputs);
     expect(search.element.classList.contains('mtrl-search--populated')).toBe(true);
     search.clear();
     expect(search.getValue()).toBe('');
     expect(inputOf(search).value).toBe('');
     expect(search.element.classList.contains('mtrl-search--populated')).toBe(false);
+    // A programmatic clear is silent (FLO-328).
+    expect(onClear).not.toHaveBeenCalled();
+    expect(inputs).not.toHaveBeenCalled();
+    search.setValue('again');
+    search.element.querySelector<HTMLElement>('[aria-label="Clear search"]')!.click();
+    expect(search.getValue()).toBe('');
     expect(onClear).toHaveBeenCalledTimes(1);
+    expect(inputs).toHaveBeenCalledTimes(1);
   });
 
   test('a clear button is rendered unless showClearButton is false', async () => {

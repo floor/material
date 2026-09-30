@@ -36,6 +36,9 @@
  * `valueMissing`. `readonly` is the factory's: the value stays and the
  * calendar closed. `supporting-text` is the factory's supporting text.
  *
+ * Parts: `datepicker`, `label`, `anchor`, `input`, `trigger`, `help`, `error`, `calendar`,
+ * `header`, `navigation`, `prev`, `next`, `weekday`, `day`, among others.
+ *
  * @module elements
  */
 
@@ -186,3 +189,10 @@ export type DatepickerElement = ElementInstance<DatepickerSpec, DatepickerElemen
 
 /** Registers `<m-datepicker>` (or `<prefix-datepicker>`). */
 export const defineDatepicker = (options?: DefineOptions): string => datepickerElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-datepicker": DatepickerElement;
+  }
+}

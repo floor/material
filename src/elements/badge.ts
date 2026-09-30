@@ -9,6 +9,8 @@
  * text is read rather than slotted. The `visible` property is the live
  * visibility; an empty or zero label hides the badge, as in the factory.
  *
+ * Parts: `badge`.
+ *
  * @module elements
  */
 
@@ -57,3 +59,10 @@ export type BadgeElement = ElementInstance<BadgeSpec, BadgeComponent>;
 
 /** Registers `<m-badge>` (or `<prefix-badge>`). */
 export const defineBadge = (options?: DefineOptions): string => badgeElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-badge": BadgeElement;
+  }
+}

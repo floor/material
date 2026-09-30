@@ -120,7 +120,7 @@ export const getApiConfig = (
     getChips: () => comp.chips?.getChips?.() ?? [],
     getSelectedChips: () => comp.chips?.getSelectedChips?.() ?? [],
     getSelectedValues: () => comp.chips?.getSelectedValues?.() ?? [],
-    selectByValue: (values) => comp.chips?.selectByValue?.(values),
+    selectByValue: (values, triggerEvent) => comp.chips?.selectByValue?.(values, triggerEvent),
     clearSelection: () => comp.chips?.clearSelection?.(),
     scrollToChip: (chipOrIndex) => comp.chips?.scrollToChip?.(chipOrIndex),
   },

@@ -6,6 +6,8 @@
  * A horizontal divider fills its line; a vertical one stretches with its flex
  * or grid row.
  *
+ * Parts: `divider`.
+ *
  * @module elements
  */
 
@@ -43,3 +45,10 @@ export type DividerElement = ElementInstance<DividerSpec, DividerComponent>;
 
 /** Registers `<m-divider>` (or `<prefix-divider>`). */
 export const defineDivider = (options?: DefineOptions): string => dividerElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-divider": DividerElement;
+  }
+}

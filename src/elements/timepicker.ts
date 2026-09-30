@@ -28,6 +28,9 @@
  * no setter: changing one recreates the picker, keeping the value. `disabled` is the factory's: it does not open. The
  * element reports `required` itself, as `valueMissing`.
  *
+ * Parts: `time-picker`, `dialog`, `title`, `selectors`, `hours`, `minutes`, `period`, `dial`,
+ * `dial-handle`, `actions`, `cancel`, `confirm`, among others.
+ *
  * @module elements
  */
 
@@ -243,3 +246,10 @@ export type TimepickerElement = ElementInstance<TimepickerSpec, TimepickerElemen
 
 /** Registers `<m-timepicker>` (or `<prefix-timepicker>`). */
 export const defineTimepicker = (options?: DefineOptions): string => timepickerElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-timepicker": TimepickerElement;
+  }
+}

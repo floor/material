@@ -12,6 +12,10 @@
  * label element to update, and `type="multiline"` swaps the input for a
  * textarea.
  *
+ * Parts: `textfield`, `field`, `label`, `input`, `leading-icon`, `trailing-icon`, `prefix`,
+ * `suffix`, `supporting`, `helper`, `counter`, `outline`, `outline-leading`, `outline-notch`,
+ * `outline-trailing`.
+ *
  * @module elements
  */
 
@@ -144,3 +148,10 @@ export type TextfieldElement = ElementInstance<TextfieldSpec, TextfieldElementCo
 
 /** Registers `<m-textfield>` (or `<prefix-textfield>`). */
 export const defineTextfield = (options?: DefineOptions): string => textfieldElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-textfield": TextfieldElement;
+  }
+}

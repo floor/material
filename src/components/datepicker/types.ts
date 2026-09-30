@@ -378,7 +378,7 @@ export interface DatePickerComponent<V = DatePickerValue> {
   getValue: () => V;
   
   /**
-   * Sets the selected date(s)
+   * Sets the selected date(s). Silent: only the user's choice emits `change`
    * @param value - Date, string, or array of dates for range selection
    * @returns The datepicker component for chaining
    */
@@ -412,7 +412,7 @@ export interface DatePickerComponent<V = DatePickerValue> {
   getFormattedValue: () => string;
   
   /**
-   * Clears the selected date(s)
+   * Clears the selected date(s). Silent
    * @returns The datepicker component for chaining
    */
   clear: () => DatePickerComponent<V>;

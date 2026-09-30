@@ -121,7 +121,7 @@ describe('switch', () => {
     expect(mount().isChecked()).toBe(false);
   });
 
-  test('check, uncheck and toggle move the input and the class, and emit change', () => {
+  test('check, uncheck and toggle move the input and the class, silently (FLO-328)', () => {
     const s = mount();
     const changes = mock((_event: unknown) => {});
     s.on('change', changes);
@@ -136,7 +136,7 @@ describe('switch', () => {
 
     s.toggle();
     expect(s.isChecked()).toBe(true);
-    expect(changes).toHaveBeenCalledTimes(3);
+    expect(changes).not.toHaveBeenCalled();
   });
 
   test('check() on a checked switch changes nothing and emits nothing', () => {
@@ -178,21 +178,21 @@ describe('switch', () => {
     control.destroy();
   });
 
-  test('programmatic changes carry checked and HTML value without a native event', () => {
+  test('programmatic changes are silent, as setting a native checkbox (FLO-328)', () => {
     const control = mount({ value: 'accepted' });
     const payloads: Array<{ checked: boolean; value: string; nativeEvent?: Event }> = [];
     control.on('change', payload => payloads.push(payload));
+    const states: boolean[] = [];
     control.check();
-    control.check();
+    states.push(control.isChecked());
     control.uncheck();
+    states.push(control.isChecked());
     control.toggle();
+    states.push(control.isChecked());
     control.setValue(false);
-    expect(payloads).toEqual([
-      { checked: true, value: 'accepted' },
-      { checked: false, value: 'accepted' },
-      { checked: true, value: 'accepted' },
-      { checked: false, value: 'accepted' },
-    ]);
+    states.push(control.isChecked());
+    expect(states).toEqual([true, false, true, false]);
+    expect(payloads).toEqual([]);
     control.destroy();
   });
 

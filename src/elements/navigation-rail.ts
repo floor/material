@@ -23,6 +23,9 @@
  * inert and the scrim its `::backdrop`; collapsed, it is hidden. Escape and a
  * click on the backdrop collapse it.
  *
+ * Parts: `navigation-rail`, `header`, `toggle`, `items`, `item`, `content`, `indicator`, `icon`,
+ * `label`.
+ *
  * @module elements
  */
 
@@ -203,3 +206,11 @@ export const defineNavigationRail = (options?: DefineOptions): string => {
   }
   return navigationRailElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-navigation-rail": NavigationRailElement;
+    "m-navigation-rail-item": HTMLElement & NavigationRailItemAttributes;
+  }
+}
