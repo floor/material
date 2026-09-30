@@ -6,6 +6,9 @@
  * live one, as on a native checkbox: the attribute moves the state until the
  * user or script changes it. Children are the label.
  *
+ * Parts: `switch`, `container`, `content`, `label`, `helper`, `input`, `track`, `thumb`,
+ * `thumb-icon`.
+ *
  * @module elements
  */
 
@@ -66,3 +69,10 @@ export type SwitchElement = ElementInstance<SwitchSpec, SwitchComponent>;
 
 /** Registers `<m-switch>` (or `<prefix-switch>`). */
 export const defineSwitch = (options?: DefineOptions): string => switchElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-switch": SwitchElement;
+  }
+}

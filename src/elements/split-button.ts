@@ -17,6 +17,8 @@
  * to some, or back, recreates it. `variant`, `size`, `trailing-label` and
  * `group-label` have no setter and recreate it too.
  *
+ * Parts: `split-button`, `button`, `leading`, `trailing`, `text`, `icon`, `chevron`, `ripple`.
+ *
  * @module elements
  */
 
@@ -122,3 +124,10 @@ export const defineSplitButton = (options?: DefineOptions): string => {
   defineMenuItem(options);
   return splitButtonElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-split-button": SplitButtonElement;
+  }
+}

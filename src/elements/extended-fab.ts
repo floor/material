@@ -8,6 +8,8 @@
  * changing one recreates it. `type="submit"` and `type="reset"` act on the
  * host's form.
  *
+ * Parts: `extended-fab`, `icon`, `label` (also `text`), `ripple`.
+ *
  * @module elements
  */
 
@@ -58,3 +60,10 @@ export type ExtendedFabElement = ElementInstance<ExtendedFabSpec, ExtendedFabCom
 
 /** Registers `<m-extended-fab>` (or `<prefix-extended-fab>`). */
 export const defineExtendedFab = (options?: DefineOptions): string => extendedFabElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-extended-fab": ExtendedFabElement;
+  }
+}

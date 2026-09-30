@@ -638,25 +638,12 @@ export const withMenu =
           // A value no option carries clears the selection, the same as
           // native `<select>` setting selectedIndex = -1. This used to keep
           // the previous selection and say nothing, so a typo left the select
-          // showing a value the caller had not asked for. FLO-106.
+          // showing a value the caller had not asked for. FLO-106. Silently,
+          // as native `<select>`: a programmatic change emits no `change` (FLO-328).
           state.selectedOption = null;
           textfield.setValue("");
           menu.setSelected(null);
           warnUnknownValue("select", value);
-          if (component.emit) {
-            const changeEvent = {
-              select: getComponent(),
-              value: null,
-              text: "",
-              option: null,
-              originalEvent: undefined,
-              preventDefault: () => {
-                changeEvent.defaultPrevented = true;
-              },
-              defaultPrevented: false,
-            };
-            component.emit("change", changeEvent);
-          }
           return component;
         },
 

@@ -64,14 +64,14 @@ describe("one time value for the API, callbacks and form (FLO-237)", () => {
   test("setValue and display format changes keep the same machine value", () => {
     const p = setup({ showSeconds: true });
     p.picker.setValue("14:45:07");
-    expect(p.callbacks).toEqual(["14:45:07"]);
     p.picker.setFormat(TIME_FORMAT.MILITARY);
     p.picker.setFormat(TIME_FORMAT.AMPM);
     p.picker.setValue("14:45:07");
-    // One notification, event and callback alike: display format changes and an
-    // unchanged setValue are not changes of value (FLO-281).
-    expect(p.changes).toEqual(["14:45:07"]);
-    expect(p.callbacks).toEqual(p.changes);
+    // No notification, event or callback: setValue is silent (FLO-328) and
+    // display format changes are not changes of value (FLO-281).
+    expect(p.changes).toEqual([]);
+    expect(p.callbacks).toEqual([]);
+    expect(p.picker.getValue()).toBe("14:45:07");
     expect(p.submitted()).toBe(p.picker.getValue());
     expect(p.field("hour").value).toBe("02");
     expect(p.period("pm").getAttribute("aria-checked")).toBe("true");

@@ -9,12 +9,19 @@
  * script, as a native input's dirty value and checkedness flags. Factory
  * events are re-dispatched from the host under the same names.
  *
+ * Every piece of the component is a CSS part named after its BEM class
+ * without the prefix: the block by its name (`mtrl-button` is
+ * `::part(button)`), an element by its element name (`mtrl-switch__track` is
+ * `::part(track)`). The piece holding the slot also takes the slot
+ * attribute's name, so `m-button::part(label)` is the button's label.
+ *
  * Nothing here touches the DOM at import time: the element class is built on
  * first use, so every element module can be imported on a server.
  *
  * @module elements
  */
 
+import { PREFIX } from "../core/config";
 import { applyStyles, DEFAULT_PREFIX, hasStyles, registerStyles, usePreupgradePrefix } from "./styles";
 
 /** The part of a component the element relies on. */
@@ -233,6 +240,27 @@ const write = (host: HTMLElement, name: string, type: AttributeType, value: unkn
   else host.setAttribute(name, String(value));
 };
 
+const CLASS_PREFIX = `${PREFIX}-`;
+
+/**
+ * A node's part names: its BEM classes without the prefix, a block class by
+ * its block (`mtrl-button` is `button`, `mtrl-ripple` is `ripple`) and an
+ * element class by its element (`mtrl-button__icon` is `icon`,
+ * `mtrl-switch__track` is `track`). Modifiers (`--`) and unprefixed state
+ * classes name no part.
+ */
+const partNames = (node: Element): string[] => {
+  const names: string[] = [];
+  for (const name of Array.from(node.classList)) {
+    if (!name.startsWith(CLASS_PREFIX) || /--/.test(name)) continue;
+    const bem = name.slice(CLASS_PREFIX.length);
+    const at = bem.indexOf("__");
+    const part = at < 0 ? bem : bem.slice(at + 2);
+    if (!names.includes(part)) names.push(part);
+  }
+  return names;
+};
+
 const hasContent = (host: HTMLElement): boolean =>
   Array.from(host.childNodes).some(
     (node) => node.nodeType === 1 || (node.nodeType === 3 && (node.textContent ?? "").trim() !== "")
@@ -261,6 +289,7 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
     #dirty = false;
     #cleanup: Array<() => void> = [];
     #observer: MutationObserver | null = null;
+    #parts: MutationObserver | null = null;
     #slot: HTMLSlotElement | null = null;
 
     get dirty(): boolean {
@@ -298,8 +327,10 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
 
     attributeChangedCallback(name: string, previous: string | null, next: string | null): void {
       if (!this.component || previous === next) return;
-      if (spec.slot && name === spec.slot.attribute && this.#slot) {
-        this.#slot.textContent = next ?? "";
+      if (spec.slot && name === spec.slot.attribute) {
+        // The slot's fallback text; a component built without a slot is rebuilt to place one.
+        if (this.#slot) this.#slot.textContent = next ?? "";
+        else if (next) this.#rebuild(true);
         return;
       }
       const attribute = spec.attributes?.[name];
@@ -381,7 +412,11 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
 
     /** Reads a property as set before the element was upgraded, then routes it through the setter. */
     #upgradeProperties(): void {
-      const names = [...Object.keys(spec.attributes ?? {}).map(camel), ...Object.keys(spec.properties ?? {})];
+      const names = [
+        ...Object.keys(spec.attributes ?? {}).map(camel),
+        ...Object.keys(spec.properties ?? {}),
+        ...(spec.slot ? [camel(spec.slot.attribute)] : []),
+      ];
       const self = this as unknown as Record<string, unknown>;
       for (const name of names) {
         if (Object.prototype.hasOwnProperty.call(this, name)) {
@@ -429,6 +464,7 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       if (this.#slot && !component.element.contains(this.#slot)) this.#slot = null;
 
       root.append(component.element);
+      this.#exposeParts(root);
       const events = component as unknown as Subscribable;
 
       for (const [event, eventSpec] of Object.entries(spec.events ?? {})) {
@@ -502,9 +538,42 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       this.#syncForm();
     }
 
+    /**
+     * Names the component's pieces as parts (see `partNames`); the element
+     * holding the slot also takes the slot attribute's name (`label`). Nodes
+     * the component adds later are named as they arrive. The observer watches
+     * `childList` only, never `class`, so state-class toggles (hover, press,
+     * ripple, `--selected`) cost no callback; parts come from block and
+     * element classes, which no component swaps on a node it has inserted.
+     */
+    #exposeParts(root: ShadowRoot): void {
+      const name = (node: Element): void => {
+        const names = partNames(node);
+        if (spec.slot && this.#slot?.parentElement === node && !names.includes(spec.slot.attribute)) {
+          names.push(spec.slot.attribute);
+        }
+        const value = names.join(" ");
+        if ((node.getAttribute("part") ?? "") === value) return;
+        if (value) node.setAttribute("part", value);
+        else node.removeAttribute("part");
+      };
+      const nameAll = (node: Element): void => {
+        name(node);
+        for (const child of Array.from(node.querySelectorAll("*"))) name(child);
+      };
+      for (const child of Array.from(root.children)) nameAll(child);
+      this.#parts ??= new MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of Array.from(record.addedNodes)) if (node.nodeType === 1) nameAll(node as Element);
+        }
+      });
+      this.#parts.observe(root, { childList: true, subtree: true });
+    }
+
     #teardown(): void {
       this.#observer?.disconnect();
       this.#observer = null;
+      this.#parts?.disconnect();
       for (const cleanup of this.#cleanup.splice(0)) cleanup();
       if (this.component) {
         this.component.destroy();
@@ -554,6 +623,24 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
         write(this, name, attribute.type, value);
       },
     });
+  }
+  if (spec.slot) {
+    // The slot's attribute as a property, as `label` on a native <option>: it
+    // reads the attribute, else the element's text. Setting it writes the
+    // attribute, whose change updates the text.
+    const { attribute } = spec.slot;
+    const property = camel(attribute);
+    if (!(property in proto) && !spec.properties?.[property]) {
+      Object.defineProperty(proto, property, {
+        configurable: true,
+        get(this: HTMLElement) {
+          return this.getAttribute(attribute) ?? (this.textContent ?? "").trim();
+        },
+        set(this: HTMLElement, value: unknown) {
+          write(this, attribute, "string", value);
+        },
+      });
+    }
   }
   for (const name of Object.keys(spec.properties ?? {})) {
     Object.defineProperty(proto, name, {

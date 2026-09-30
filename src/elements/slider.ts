@@ -9,6 +9,9 @@
  * value moves and `change` when an interaction ends. `aria-label` names the
  * handles.
  *
+ * Parts: `slider`, `container`, `track`, `handle`, `value`, `visual`, `segment`, `ticks`, `dot`,
+ * `inset-icon`.
+ *
  * @module elements
  */
 
@@ -175,3 +178,10 @@ export type SliderElement = ElementInstance<SliderSpec, SliderComponent>;
 
 /** Registers `<m-slider>` (or `<prefix-slider>`). */
 export const defineSlider = (options?: DefineOptions): string => sliderElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-slider": SliderElement;
+  }
+}

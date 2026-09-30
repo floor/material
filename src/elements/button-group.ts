@@ -16,6 +16,8 @@
  * value; the factory calls it `click`, which the host already receives from
  * the browser.
  *
+ * Parts: `button-group`, `button`, `text`, `ripple`.
+ *
  * @module elements
  */
 
@@ -235,3 +237,11 @@ export const defineButtonGroup = (options?: DefineOptions): string => {
   if (!customElements.get(itemTag)) customElements.define(itemTag, createDeclarationClass(buttonGroupItemDeclaration.attributes));
   return buttonGroupElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-button-group": ButtonGroupElement;
+    "m-button-group-item": HTMLElement & ButtonGroupItemAttributes;
+  }
+}

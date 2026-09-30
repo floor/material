@@ -418,10 +418,10 @@ export const withController =
       /**
        * Sets slider value
        * @param value New value
-       * @param triggerEvent Whether to trigger change event
+       * @param triggerEvent Emits `change` when true; silent by default, as a native input (FLO-328)
        * @returns Slider controller for chaining
        */
-      setValue(value: number, triggerEvent = true) {
+      setValue(value: number, triggerEvent = false) {
         // A range slider's first value stops at its second, as Compose's
         // RangeSliderState coerces activeRangeStart. FLO-251.
         const ceiling = config.range && state.secondValue !== null ? state.secondValue : state.max;
@@ -450,10 +450,10 @@ export const withController =
       /**
        * Sets secondary slider value (for range slider)
        * @param value New secondary value
-       * @param triggerEvent Whether to trigger change event
+       * @param triggerEvent Emits `change` when true; silent by default, as a native input (FLO-328)
        * @returns Slider controller for chaining
        */
-      setSecondValue(value: number, triggerEvent = true) {
+      setSecondValue(value: number, triggerEvent = false) {
         if (!config.range) return this;
 
         // ...and the second at the first (activeRangeEnd).

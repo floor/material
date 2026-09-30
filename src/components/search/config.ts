@@ -92,7 +92,7 @@ interface InternalComponent {
     getValue?: () => string;
     setPlaceholder?: (text: string) => void;
     getPlaceholder?: () => string;
-    clear?: () => void;
+    clear?: (triggerEvent?: boolean) => void;
     submit?: () => void;
     focus?: () => void;
     blur?: () => void;
@@ -143,7 +143,7 @@ export const getApiConfig = (comp: InternalComponent) => ({
     getValue: () => comp.input?.getValue?.() ?? "",
     setPlaceholder: (p: string) => comp.input?.setPlaceholder?.(p),
     getPlaceholder: () => comp.input?.getPlaceholder?.() ?? "",
-    clear: () => comp.input?.clear?.(),
+    clear: (t?: boolean) => comp.input?.clear?.(t),
     submit: () => comp.input?.submit?.(),
     focus: () => comp.input?.focus?.(),
     blur: () => comp.input?.blur?.(),

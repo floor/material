@@ -25,6 +25,8 @@
  * the `close` event. `no-close-on-select` keeps the menu open when an item is
  * chosen, and `color="vibrant"` is the vertical menu's vibrant colours.
  *
+ * Parts: `menu`, `list`, `item`, `item-content`, `item-text`.
+ *
  * @module elements
  */
 
@@ -272,3 +274,11 @@ export const defineMenu = (options?: DefineOptions): string => {
   defineMenuItem(options);
   return menuElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-menu": MenuElement;
+    "m-menu-item": HTMLElement & MenuItemAttributes;
+  }
+}

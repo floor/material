@@ -100,7 +100,7 @@ describe('checkbox', () => {
     expect(checkbox.getValue()).toBe(true);
   });
 
-  test('check, uncheck and toggle move the input and the class, emitting change only on a change', () => {
+  test('check, uncheck and toggle move the input and the class, silently (FLO-328)', () => {
     const checkbox = mount();
     const changes = mock((_event: unknown) => {});
     checkbox.on('change', changes);
@@ -108,7 +108,7 @@ describe('checkbox', () => {
     checkbox.check();
     checkbox.check();
     expect(checkbox.element.classList.contains('mtrl-checkbox--checked')).toBe(true);
-    expect(changes).toHaveBeenCalledTimes(1);
+    expect(changes).not.toHaveBeenCalled();
 
     checkbox.uncheck();
     expect(checkbox.input.checked).toBe(false);
@@ -116,7 +116,7 @@ describe('checkbox', () => {
 
     checkbox.toggle();
     expect(checkbox.isChecked()).toBe(true);
-    expect(changes).toHaveBeenCalledTimes(3);
+    expect(changes).not.toHaveBeenCalled();
   });
 
   test('a user click toggles it and reports the new state', () => {
@@ -169,21 +169,21 @@ describe('checkbox', () => {
     checkbox.destroy();
   });
 
-  test('programmatic changes carry checked and HTML value without a native event', () => {
+  test('programmatic changes are silent, as setting a native checkbox (FLO-328)', () => {
     const checkbox = mount({ value: 'accepted' });
     const payloads: Array<{ checked: boolean; value: string; nativeEvent?: Event }> = [];
     checkbox.on('change', payload => payloads.push(payload));
+    const states: boolean[] = [];
     checkbox.check();
-    checkbox.check();
+    states.push(checkbox.isChecked());
     checkbox.uncheck();
+    states.push(checkbox.isChecked());
     checkbox.toggle();
+    states.push(checkbox.isChecked());
     checkbox.setValue(false);
-    expect(payloads).toEqual([
-      { checked: true, value: 'accepted' },
-      { checked: false, value: 'accepted' },
-      { checked: true, value: 'accepted' },
-      { checked: false, value: 'accepted' },
-    ]);
+    states.push(checkbox.isChecked());
+    expect(states).toEqual([true, false, true, false]);
+    expect(payloads).toEqual([]);
     checkbox.destroy();
   });
 
@@ -251,7 +251,7 @@ describe('checkbox', () => {
     expect(checkbox.isChecked()).toBe(true);
     expect(checkbox.input.indeterminate).toBe(false);
     expect(indeterminateClass(checkbox)).toBe(false);
-    expect(changes).toHaveBeenCalledTimes(1);
+    expect(changes).not.toHaveBeenCalled(); // silent (FLO-328)
   });
 
   test('uncheck() on an indeterminate checkbox clears mixed state', () => {
@@ -262,7 +262,7 @@ describe('checkbox', () => {
     expect(checkbox.isChecked()).toBe(false);
     expect(checkbox.input.indeterminate).toBe(false);
     expect(indeterminateClass(checkbox)).toBe(false);
-    expect(changes).toHaveBeenCalledTimes(1);
+    expect(changes).not.toHaveBeenCalled(); // silent (FLO-328)
   });
 
   test('setValue on an indeterminate checkbox clears mixed state', () => {
@@ -273,7 +273,7 @@ describe('checkbox', () => {
     expect(on.isChecked()).toBe(true);
     expect(on.input.indeterminate).toBe(false);
     expect(indeterminateClass(on)).toBe(false);
-    expect(onChanges).toHaveBeenCalledTimes(1);
+    expect(onChanges).not.toHaveBeenCalled();
 
     const off = mount({ checked: true, indeterminate: true });
     const offChanges = mock((_event: unknown) => {});
@@ -282,7 +282,7 @@ describe('checkbox', () => {
     expect(off.isChecked()).toBe(false);
     expect(off.input.indeterminate).toBe(false);
     expect(indeterminateClass(off)).toBe(false);
-    expect(offChanges).toHaveBeenCalledTimes(1);
+    expect(offChanges).not.toHaveBeenCalled();
   });
 
   test('toggle() on an indeterminate checkbox clears mixed state', () => {
@@ -293,7 +293,7 @@ describe('checkbox', () => {
     expect(checkbox.isChecked()).toBe(true);
     expect(checkbox.input.indeterminate).toBe(false);
     expect(indeterminateClass(checkbox)).toBe(false);
-    expect(changes).toHaveBeenCalledTimes(1);
+    expect(changes).not.toHaveBeenCalled(); // silent (FLO-328)
   });
 
   test('setIndeterminate after check() restores mixed state', () => {

@@ -16,6 +16,9 @@
  * Removing an input chip dispatches `remove`; the set drops the chip, and the
  * app removes its `<m-chip>`, which is not shown again meanwhile.
  *
+ * Parts: `chips`, `container`, `chip`, `action`, `leading-icon`, `checkmark`, `label`,
+ * `trailing-icon`, `ripple`.
+ *
  * @module elements
  */
 
@@ -96,8 +99,7 @@ const readChips = (host: HTMLElement): Config => {
 
 /**
  * Selects exactly the given values, chip by chip. The set's own `setValue`
- * clears the selection first, which replays every selected chip's motion, and
- * emits `change` although it is documented not to.
+ * clears the selection first, which replays every selected chip's motion.
  */
 const select = (c: ChipsComponent, value: unknown, multi: boolean): void => {
   const wanted = parse(value, multi);
@@ -291,3 +293,11 @@ export const defineChips = (options?: DefineOptions): string => {
   if (!customElements.get(chipTag)) customElements.define(chipTag, createDeclarationClass(chipDeclaration.attributes));
   return chipsElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-chips": ChipsElement;
+    "m-chip": HTMLElement & ChipAttributes;
+  }
+}

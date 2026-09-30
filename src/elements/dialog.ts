@@ -28,6 +28,8 @@
  * on the backdrop and on Escape (the factory's `closeOnOverlayClick` and
  * `closeOnEscape`); `cancel` is still dispatched on Escape.
  *
+ * Parts: `dialog`, `header`, `header-content`, `header-title`, `content`, `footer`.
+ *
  * @module elements
  */
 
@@ -222,3 +224,10 @@ export type DialogElement = ElementInstance<DialogSpec, DialogElementComponent>;
 
 /** Registers `<m-dialog>` (or `<prefix-dialog>`). */
 export const defineDialog = (options?: DefineOptions): string => dialogElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-dialog": DialogElement;
+  }
+}

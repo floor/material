@@ -19,6 +19,8 @@
  * The surface stays in the element's shadow root and opens in the top layer
  * (`layer: "top"`), above modal dialogs.
  *
+ * Parts: `snackbar`, `text`.
+ *
  * @module elements
  */
 
@@ -89,3 +91,10 @@ export type SnackbarElement = ElementInstance<SnackbarSpec, SnackbarComponent>;
 
 /** Registers `<m-snackbar>` (or `<prefix-snackbar>`). */
 export const defineSnackbar = (options?: DefineOptions): string => snackbarElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-snackbar": SnackbarElement;
+  }
+}

@@ -17,6 +17,8 @@
  * of it. A click or Enter on a row dispatches `activate` with its value, then
  * `change` when the selection moved.
  *
+ * Parts: `list`, `content`, `item`, `action`, `text`, `headline`, `supporting`.
+ *
  * @module elements
  */
 
@@ -272,3 +274,11 @@ export const defineList = (options?: DefineOptions): string => {
   if (!customElements.get(itemTag)) customElements.define(itemTag, createDeclarationClass(listItemDeclaration.attributes));
   return listElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-list": ListElement;
+    "m-list-item": HTMLElement & ListItemAttributes;
+  }
+}

@@ -458,7 +458,7 @@ export interface TabsComponent {
   getIndicator?: () => TabIndicator;
   
   /**
-   * Sets a tab as active
+   * Sets a tab as active. Silent: only a click or a key emits `change`
    * @param tabOrValue - Tab component or tab value
    * @returns Tabs component for chaining
    */

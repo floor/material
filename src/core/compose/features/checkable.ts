@@ -25,22 +25,19 @@ export interface InputComponent extends BaseComponent {
  */
 export interface CheckableManager {
   /**
-   * Sets the checked state to true
-   * Emits change event if state changes
+   * Sets the checked state to true. Silent: only the user's change emits `change`.
    * @returns CheckableManager instance for chaining
    */
   check: () => CheckableManager;
 
   /**
-   * Sets the checked state to false
-   * Emits change event if state changes
+   * Sets the checked state to false. Silent.
    * @returns CheckableManager instance for chaining
    */
   uncheck: () => CheckableManager;
 
   /**
-   * Toggles the current checked state
-   * Always emits change event
+   * Toggles the current checked state. Silent.
    * @returns CheckableManager instance for chaining
    */
   toggle: () => CheckableManager;
@@ -98,53 +95,36 @@ export const withCheckable =
       component.on?.("change", updateStateClasses);
     }
 
+    // A programmatic change is silent, as setting a native input's `checked`:
+    // only the user's change emits `change`.
     const checkable: CheckableManager = {
       /**
-       * Sets the checked state to true
-       * Emits change event if state changes
+       * Sets the checked state to true. Silent.
        * @returns CheckableManager instance for chaining
        */
       check() {
-        if (!component.input.checked) {
-          component.input.checked = true;
-          updateStateClasses();
-          component.emit?.("change", {
-            checked: true,
-            value: component.input.value,
-          });
-        }
+        component.input.checked = true;
+        updateStateClasses();
         return this;
       },
 
       /**
-       * Sets the checked state to false
-       * Emits change event if state changes
+       * Sets the checked state to false. Silent.
        * @returns CheckableManager instance for chaining
        */
       uncheck() {
-        if (component.input.checked) {
-          component.input.checked = false;
-          updateStateClasses();
-          component.emit?.("change", {
-            checked: false,
-            value: component.input.value,
-          });
-        }
+        component.input.checked = false;
+        updateStateClasses();
         return this;
       },
 
       /**
-       * Toggles the current checked state
-       * Always emits change event
+       * Toggles the current checked state. Silent.
        * @returns CheckableManager instance for chaining
        */
       toggle() {
         component.input.checked = !component.input.checked;
         updateStateClasses();
-        component.emit?.("change", {
-          checked: component.input.checked,
-          value: component.input.value,
-        });
         return this;
       },
 

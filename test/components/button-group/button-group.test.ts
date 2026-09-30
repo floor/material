@@ -607,7 +607,7 @@ describe("Button group selection (Material 3 kinds)", () => {
     single.on("change", (event) => values.push(event.value));
     multi.on("change", (event) => values.push(event.value));
     single.buttons[1].element.click();
-    single.deselect("taxi");
+    single.buttons[1].element.click(); // a second click clears a single group; deselect() is silent (FLO-328)
     multi.buttons[1].element.click();
     multi.buttons[0].element.click();
     // "explore" starts selected
@@ -616,14 +616,18 @@ describe("Button group selection (Material 3 kinds)", () => {
     multi.destroy();
   });
 
-  it("programmatic select emits change and honours single mode", () => {
+  it("programmatic select, deselect and toggle honour single mode, silently (FLO-328)", () => {
     const group = createButtonGroup({ selection: "single", buttons: items });
     const changes: string[][] = [];
     group.on("change", (event) => changes.push(event.values));
     group.select("islands");
     expect(group.getSelected()).toEqual(["islands"]);
-    group.select("islands"); // no change, no event
-    expect(changes).toEqual([["islands"]]);
+    group.select("islands");
+    group.toggle("explore");
+    expect(group.getSelected()).toEqual(["explore"]);
+    group.deselect("explore");
+    expect(group.getSelected()).toEqual([]);
+    expect(changes).toEqual([]);
     group.destroy();
   });
 

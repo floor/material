@@ -18,6 +18,8 @@
  * value. The field is read-only, which takes it out of constraint validation:
  * the element reports `required` itself, as `valueMissing`.
  *
+ * Parts: `select`, `textfield`, `field`, `label`, `input`, `trailing-icon`.
+ *
  * @module elements
  */
 
@@ -206,3 +208,11 @@ export const defineSelect = (options?: DefineOptions): string => {
   }
   return selectElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-select": SelectElement;
+    "m-select-option": HTMLElement & SelectOptionAttributes;
+  }
+}

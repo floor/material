@@ -229,14 +229,14 @@ export interface SegmentedButtonComponent {
   getValue: () => string[];
 
   /**
-   * Selects a segment by its value
+   * Selects a segment by its value. Silent: only a click emits `change`
    * @param value - The value of the segment to select
    * @returns The SegmentedButtonComponent for chaining
    */
   select: (value: string) => SegmentedButtonComponent;
 
   /**
-   * Deselects a segment by its value
+   * Deselects a segment by its value. Silent
    * @param value - The value of the segment to deselect
    * @returns The SegmentedButtonComponent for chaining
    */

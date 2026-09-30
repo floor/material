@@ -149,9 +149,6 @@ export const withAPI = ({ lifecycle }: ApiOptions) =>
         if (typeof tabOrValue === 'string') {
           component.tabs.forEach(tab => tab.deactivate());
           warnUnknownValue('tabs', tabOrValue);
-          if (component.emit) {
-            component.emit('change', { tab: null, value: null });
-          }
         }
         return this;
       }
@@ -165,16 +162,9 @@ export const withAPI = ({ lifecycle }: ApiOptions) =>
       // Deactivate all tabs first
       component.tabs.forEach(tab => tab.deactivate());
 
-      // Activate the target tab
+      // Activate the target tab. Silently: a selection made from code emits
+      // no `change`, as on a native control; a click or a key does (FLO-328).
       targetTab.activate();
-
-      // Emit change event
-      if (component.emit) {
-        component.emit('change', {
-          tab: targetTab,
-          value: targetTab.getValue()
-        });
-      }
 
       return this;
     },
