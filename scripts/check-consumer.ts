@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** Build first. Check a packed production Vite app and compare CSS in Chromium. */
 import assert from "node:assert/strict";
-import { mkdir, readFile, writeFile, copyFile, rm } from "node:fs/promises";
+import { mkdir, readFile, writeFile, copyFile, rm, symlink } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { build, preview, type Manifest } from "vite";
@@ -34,6 +34,26 @@ const scenarios = [
   { name: "snackbar", component: "snackbar" },
 ];
 try {
+  // The types-only JSX entries resolve from the installed package, through its
+  // exports (FLO-333): a .tsx per framework opts in and uses a bare tag.
+  await mkdir(join(directory, "node_modules/@types"), { recursive: true });
+  for (const name of ["react", "@types/react", "solid-js", "csstype"]) {
+    await symlink(resolve("node_modules", name), join(directory, "node_modules", name), "dir").catch(() => {});
+  }
+  for (const [framework, flags] of [
+    ["react", ["--jsx", "react-jsx"]],
+    ["solid", ["--jsx", "preserve", "--jsxImportSource", "solid-js"]],
+  ] as const) {
+    const file = join(directory, `jsx-${framework}.tsx`);
+    await writeFile(file, `import type {} from "mtrl/${framework}/jsx";\nexport const tag = <m-switch checked supporting-text="Help" />;\n`);
+    const tsc = Bun.spawnSync([
+      resolve("node_modules/.bin/tsc"), "--noEmit", "--strict", "--skipLibCheck", "--moduleResolution", "bundler",
+      "--module", "esnext", "--target", "es2022", "--lib", "es2022,dom", ...flags, file,
+    ], { cwd: directory, stdout: "pipe", stderr: "pipe" });
+    assert.equal(tsc.exitCode, 0, `mtrl/${framework}/jsx from the packed package:\n${tsc.stdout}${tsc.stderr}`);
+  }
+  console.log("JSX entries: mtrl/react/jsx and mtrl/solid/jsx type a bare tag from the packed package");
+
   // Library mode retains exports for measurement; an HTML fixture below tests
   // actual application mode, CSS extraction, network loading, and rendering.
   const sizes: Record<string, { initialGzip: number; totalGzip: number }> = {};
