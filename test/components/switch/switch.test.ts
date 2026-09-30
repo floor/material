@@ -310,3 +310,30 @@ describe('switch error, description, icons and events', () => {
     expect(seen).toEqual(['focus', 'blur']);
   });
 });
+
+// FLO-316: the switch shares the checkbox's key handler, which now activates
+// the input as a click does: input then change, once, and nothing when disabled.
+describe('switch keyboard activation', () => {
+  const press = (control: ReturnType<typeof mount>, key: string) => {
+    const events: string[] = [];
+    for (const type of ['input', 'change']) control.input.addEventListener(type, () => events.push(type));
+    control.input.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    return events;
+  };
+
+  test('Space and Enter toggle it, firing input then change once each', () => {
+    const control = mount();
+    expect(press(control, ' ')).toEqual(['input', 'change']);
+    expect(control.isChecked()).toBe(true);
+    expect(press(control, 'Enter')).toEqual(['input', 'change']);
+    expect(control.isChecked()).toBe(false);
+    control.destroy();
+  });
+
+  test('a disabled switch does not toggle', () => {
+    const control = mount({ disabled: true });
+    expect(press(control, ' ')).toEqual([]);
+    expect(control.isChecked()).toBe(false);
+    control.destroy();
+  });
+});

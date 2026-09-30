@@ -130,6 +130,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Checkbox and switch: Space (and Enter, with `enterToggles`) activate the control as a click
+  does (FLO-316).** The key handler set `checked` by hand, so on a checkbox in the mixed state it
+  left `indeterminate` true, keeping the dash and the mixed class, and it fired `change` with no
+  `input` before it. It now clicks the input: `indeterminate` clears, `checked` toggles, `input`
+  then `change` fire once, and a disabled control stays as it is.
+
 - **`--mtrl-sys-state-focus-state-layer-opacity` and `…-pressed-…` read 0.1, not 0.12
   (FLO-311).** The baseline theme wrote the state opacities out by hand, with the Material 2
   0.12 for focus and pressed, while every component compiles in M3's 0.1 from `$state`. Only
