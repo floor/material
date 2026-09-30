@@ -5,67 +5,40 @@
 @include create-theme("greenbeige") {
     // Key colors based on green and beige combination
     --#{$prefix}-sys-color-primary: #5d6e57; // Olive green as primary
-    --#{$prefix}-sys-color-primary-rgb: 93, 110, 87;
     --#{$prefix}-sys-color-on-primary: #ffffff;
-    --#{$prefix}-sys-color-on-primary-rgb: 255, 255, 255;
     --#{$prefix}-sys-color-primary-container: #d8e5d0;
-    --#{$prefix}-sys-color-primary-container-rgb: 216, 229, 208;
     --#{$prefix}-sys-color-on-primary-container: #1d2818;
-    --#{$prefix}-sys-color-on-primary-container-rgb: 29, 40, 24;
 
     --#{$prefix}-sys-color-secondary: #d9ccbb; // Beige as secondary
-    --#{$prefix}-sys-color-secondary-rgb: 217, 204, 187;
     --#{$prefix}-sys-color-on-secondary: #3a342b;
-    --#{$prefix}-sys-color-on-secondary-rgb: 58, 52, 43;
     --#{$prefix}-sys-color-secondary-container: #f5ede4;
-    --#{$prefix}-sys-color-secondary-container-rgb: 245, 237, 228;
     --#{$prefix}-sys-color-on-secondary-container: #3d3628;
-    --#{$prefix}-sys-color-on-secondary-container-rgb: 61, 54, 40;
 
     --#{$prefix}-sys-color-tertiary: #778670; // Muted green as tertiary
-    --#{$prefix}-sys-color-tertiary-rgb: 119, 134, 112;
     --#{$prefix}-sys-color-on-tertiary: #ffffff;
-    --#{$prefix}-sys-color-on-tertiary-rgb: 255, 255, 255;
     --#{$prefix}-sys-color-tertiary-container: #dbebd1;
-    --#{$prefix}-sys-color-tertiary-container-rgb: 219, 235, 209;
     --#{$prefix}-sys-color-on-tertiary-container: #283420;
-    --#{$prefix}-sys-color-on-tertiary-container-rgb: 40, 52, 32;
 
     // Neutral colors with natural earthy undertones
     --#{$prefix}-sys-color-surface: #fafbf7;
-    --#{$prefix}-sys-color-surface-rgb: 250, 251, 247;
     --#{$prefix}-sys-color-surface-dim: #e8eae4;
-    --#{$prefix}-sys-color-surface-dim-rgb: 232, 234, 228;
     --#{$prefix}-sys-color-surface-bright: #fafbf7;
-    --#{$prefix}-sys-color-surface-bright-rgb: 250, 251, 247;
     --#{$prefix}-sys-color-surface-container-lowest: #ffffff;
-    --#{$prefix}-sys-color-surface-container-lowest-rgb: 255, 255, 255;
     --#{$prefix}-sys-color-surface-container-low: #f4f5f1;
-    --#{$prefix}-sys-color-surface-container-low-rgb: 244, 245, 241;
     --#{$prefix}-sys-color-surface-container: #edefeb;
-    --#{$prefix}-sys-color-surface-container-rgb: 237, 239, 235;
     --#{$prefix}-sys-color-surface-container-high: #e7e9e5;
-    --#{$prefix}-sys-color-surface-container-high-rgb: 231, 233, 229;
     --#{$prefix}-sys-color-surface-container-highest: #e1e3df;
-    --#{$prefix}-sys-color-surface-container-highest-rgb: 225, 227, 223;
 
     --#{$prefix}-sys-color-on-surface: #1a1c18;
-    --#{$prefix}-sys-color-on-surface-rgb: 26, 28, 24;
     --#{$prefix}-sys-color-on-surface-variant: #434840;
-    --#{$prefix}-sys-color-on-surface-variant-rgb: 67, 72, 64;
-
-    // Workaround: Override surface-rgb for disabled button visibility
-    --#{$prefix}-sys-color-surface-rgb: 26, 28, 24;
 
     --#{$prefix}-sys-color-outline: #737873;
-    --#{$prefix}-sys-color-outline-rgb: 115, 120, 109;
     --#{$prefix}-sys-color-outline-variant: #c3c8bc;
     // Inverse roles (M3: inverse-surface N20, inverse-on-surface N95,
     // inverse-primary P80), from this theme's neutral and primary palettes. FLO-254.
     --#{$prefix}-sys-color-inverse-surface: #2e312f;
     --#{$prefix}-sys-color-inverse-on-surface: #eff1ed;
     --#{$prefix}-sys-color-inverse-primary: #b9ccb1;
-    --#{$prefix}-sys-color-outline-variant-rgb: 195, 200, 188;
 
     // Include status colors for light theme
     @include status-colors-light();
@@ -73,64 +46,40 @@
     &[data-theme-mode="dark"] {
         // Key colors for dark mode
         --#{$prefix}-sys-color-primary: #bcc9b5; // Lighter olive green
-        --#{$prefix}-sys-color-primary-rgb: 188, 201, 181;
         --#{$prefix}-sys-color-on-primary: #2d3d27;
-        --#{$prefix}-sys-color-on-primary-rgb: 45, 61, 39;
         --#{$prefix}-sys-color-primary-container: #44553c;
-        --#{$prefix}-sys-color-primary-container-rgb: 68, 85, 60;
         --#{$prefix}-sys-color-on-primary-container: #d8e5d0;
-        --#{$prefix}-sys-color-on-primary-container-rgb: 216, 229, 208;
 
         --#{$prefix}-sys-color-secondary: #eae0d1; // Lighter beige
-        --#{$prefix}-sys-color-secondary-rgb: 234, 224, 209;
         --#{$prefix}-sys-color-on-secondary: #45392d;
-        --#{$prefix}-sys-color-on-secondary-rgb: 69, 57, 45;
         --#{$prefix}-sys-color-secondary-container: #5d5043;
-        --#{$prefix}-sys-color-secondary-container-rgb: 93, 80, 67;
         --#{$prefix}-sys-color-on-secondary-container: #f5ede4;
-        --#{$prefix}-sys-color-on-secondary-container-rgb: 245, 237, 228;
 
         --#{$prefix}-sys-color-tertiary: #becfb5; // Lighter muted green
-        --#{$prefix}-sys-color-tertiary-rgb: 190, 207, 181;
         --#{$prefix}-sys-color-on-tertiary: #313f29;
-        --#{$prefix}-sys-color-on-tertiary-rgb: 49, 63, 41;
         --#{$prefix}-sys-color-tertiary-container: #485a3f;
-        --#{$prefix}-sys-color-tertiary-container-rgb: 72, 90, 63;
         --#{$prefix}-sys-color-on-tertiary-container: #dbebd1;
-        --#{$prefix}-sys-color-on-tertiary-container-rgb: 219, 235, 209;
 
         // Neutral colors for dark mode
         --#{$prefix}-sys-color-surface: #1a1c18;
-        --#{$prefix}-sys-color-surface-rgb: 26, 28, 24;
         --#{$prefix}-sys-color-surface-dim: #121410;
-        --#{$prefix}-sys-color-surface-dim-rgb: 18, 20, 16;
         --#{$prefix}-sys-color-surface-bright: #353832;
-        --#{$prefix}-sys-color-surface-bright-rgb: 53, 56, 50;
         --#{$prefix}-sys-color-surface-container-lowest: #0f110d;
-        --#{$prefix}-sys-color-surface-container-lowest-rgb: 15, 17, 13;
         --#{$prefix}-sys-color-surface-container-low: #1a1c18;
-        --#{$prefix}-sys-color-surface-container-low-rgb: 26, 28, 24;
         --#{$prefix}-sys-color-surface-container: #1e201c;
-        --#{$prefix}-sys-color-surface-container-rgb: 30, 32, 28;
         --#{$prefix}-sys-color-surface-container-high: #292b26;
-        --#{$prefix}-sys-color-surface-container-high-rgb: 41, 43, 38;
         --#{$prefix}-sys-color-surface-container-highest: #333530;
-        --#{$prefix}-sys-color-surface-container-highest-rgb: 51, 53, 48;
 
         --#{$prefix}-sys-color-on-surface: #e2e3de;
-        --#{$prefix}-sys-color-on-surface-rgb: 226, 227, 222;
         --#{$prefix}-sys-color-on-surface-variant: #c3c8bc;
-        --#{$prefix}-sys-color-on-surface-variant-rgb: 195, 200, 188;
 
         --#{$prefix}-sys-color-outline: #8d9287;
-        --#{$prefix}-sys-color-outline-rgb: 141, 146, 135;
         --#{$prefix}-sys-color-outline-variant: #434840;
         // Inverse roles (M3: inverse-surface N90 = on-surface, inverse-on-surface N20,
         // inverse-primary P40). FLO-254.
         --#{$prefix}-sys-color-inverse-surface: #e2e3de;
         --#{$prefix}-sys-color-inverse-on-surface: #2e312f;
         --#{$prefix}-sys-color-inverse-primary: #52634d;
-        --#{$prefix}-sys-color-outline-variant-rgb: 67, 72, 64;
 
         // Include status colors for dark theme
         @include status-colors-dark();

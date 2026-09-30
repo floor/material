@@ -39,7 +39,6 @@
     --#{$prefix}-sys-color-inverse-surface: #32302c;
     --#{$prefix}-sys-color-inverse-on-surface: #f5f0ea;
     --#{$prefix}-sys-color-inverse-primary: #acc7ff;
-    --#{$prefix}-sys-color-surface-rgb: 29, 27, 25;
 
     @include status-colors-light();
 
@@ -76,7 +75,6 @@
         --#{$prefix}-sys-color-inverse-surface: #e6e4ea;
         --#{$prefix}-sys-color-inverse-on-surface: #32302c;
         --#{$prefix}-sys-color-inverse-primary: #275caf;
-        --#{$prefix}-sys-color-surface-rgb: 38, 38, 49;
 
         @include status-colors-dark();
     }

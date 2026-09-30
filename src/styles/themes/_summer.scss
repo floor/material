@@ -46,9 +46,6 @@
     --#{$prefix}-sys-color-inverse-on-surface: #f8efe7;
     --#{$prefix}-sys-color-inverse-primary: #8bceff;
 
-    // Workaround: Override surface-rgb for disabled button visibility
-    --#{$prefix}-sys-color-surface-rgb: 31, 27, 22;
-
     // Include status colors for light theme
     @include status-colors-light();
 

@@ -31,4 +31,19 @@ describe("theme utils", () => {
   test("getThemeColor falls back when the variable is not defined", () => {
     expect(getThemeColor("sys-color-nope", { fallback: "#123456" })).toBe("#123456");
   });
+
+  test("getThemeColor reads a colour role and turns a hex into rgba with alpha", () => {
+    document.documentElement.style.setProperty("--mtrl-sys-color-primary", "#6750a4");
+    expect(getThemeColor("sys-color-primary")).toBe("#6750a4");
+    expect(getThemeColor("sys-color-primary", { alpha: 0.5 })).toBe("rgba(103, 80, 164, 0.5)");
+  });
+
+  // FLO-311: the themes no longer declare --mtrl-sys-color-*-rgb. The deprecated
+  // '-rgb' names still answer, derived from the colour role.
+  test("getThemeColor derives a deprecated -rgb twin from its colour role", () => {
+    document.documentElement.style.setProperty("--mtrl-sys-color-on-primary", "#fff");
+    expect(getThemeColor("sys-color-on-primary-rgb")).toBe("255, 255, 255");
+    expect(getThemeColor("sys-color-on-primary-rgb", { alpha: 0.1 })).toBe("rgba(255, 255, 255, 0.1)");
+    expect(getThemeColor("sys-color-nope-rgb", { fallback: "0, 0, 0" })).toBe("0, 0, 0");
+  });
 });

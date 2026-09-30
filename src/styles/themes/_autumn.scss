@@ -45,25 +45,17 @@
     --#{$prefix}-sys-color-inverse-on-surface: #ffede5;
     --#{$prefix}-sys-color-inverse-primary: #ebbcac;
 
-    // Workaround: Override surface-rgb for disabled button visibility
-    --#{$prefix}-sys-color-surface-rgb: 32, 26, 23;
     // Success colors
     --#{$prefix}-sys-color-success: #85cfa9;
-    --#{$prefix}-sys-color-success-rgb: 133, 207, 169;
     --#{$prefix}-sys-color-on-success: #00392d;
-    --#{$prefix}-sys-color-on-success-rgb: 0, 57, 45;
 
     // Warning colors
     --#{$prefix}-sys-color-warning: #ffb95c;
-    --#{$prefix}-sys-color-warning-rgb: 255, 185, 92;
     --#{$prefix}-sys-color-on-warning: #3f2200;
-    --#{$prefix}-sys-color-on-warning-rgb: 63, 34, 0;
 
     // Info colors
     --#{$prefix}-sys-color-info: #99cbff;
-    --#{$prefix}-sys-color-info-rgb: 153, 203, 255;
     --#{$prefix}-sys-color-on-info: #003060;
-    --#{$prefix}-sys-color-on-info-rgb: 0, 48, 96;
 
     // Include status colors for light theme
     @include status-colors-light();

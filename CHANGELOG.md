@@ -62,6 +62,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   becomes `progress.on('change', ({ value }) => value)`. `ProgressEvents` types the two
   events, `change` and `complete`.
 
+### Changed (breaking, prerelease)
+
+- **The `--mtrl-sys-color-*-rgb` custom properties are gone (FLO-311).** Every theme declared
+  each colour role twice, as `#6750a4` and as `103, 80, 164`, for `rgba(var(--…-rgb), a)`. No
+  mtrl style reads the twins any more (`alpha()` builds on `color-mix` of the role), so the
+  baseline, the status colours, the dark block and every theme in `mtrl/themes/*` drop them,
+  and the internal Sass `rgb($key)` helper in `src/styles/abstract/_theme.scss`, which returned
+  `var(--…-rgb)`, is removed with them. Migration: `rgba(var(--mtrl-sys-color-X-rgb), N)`
+  becomes `color-mix(in srgb, var(--mtrl-sys-color-X) N%, transparent)` (N as a percentage).
+
 ### Fixed
 
 - **Text field colours and states, per the M3 tokens (FLO-298).** The placeholder was always
@@ -108,6 +118,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 ### Deprecated
 
 - **Text field:** `TEXTFIELD_CLASSES.LABEL_FLOATING`, applied and styled nowhere (FLO-295).
+- **`getThemeColor('sys-color-X-rgb')`** (`mtrl/core/utils`): the `-rgb` twins are no longer
+  declared (FLO-311), so the call now derives the `'r, g, b'` triplet from `sys-color-X`. It
+  keeps working until the next major; read `getThemeColor('sys-color-X', { alpha })` instead.
 
 ## [0.10.0-next.3] - 2026-09-29
 
