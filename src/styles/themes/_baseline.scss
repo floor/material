@@ -15,6 +15,9 @@
     --#{$prefix}-sys-color-on-error: #FFFFFF;
     --#{$prefix}-sys-color-error-container: #F9DEDC;
     --#{$prefix}-sys-color-on-error-container: #410E0B;
+    // Success, warning and info, as every generated theme has them (FLO-329):
+    // the badge's status colours had no background under the default theme
+    @include status-roles-light;
     // Key colors
     --#{$prefix}-sys-color-primary: #6750a4;
     --#{$prefix}-sys-color-on-primary: #ffffff;
@@ -81,6 +84,7 @@
     --#{$prefix}-sys-color-on-error: #601410;
     --#{$prefix}-sys-color-error-container: #8C1D18;
     --#{$prefix}-sys-color-on-error-container: #F9DEDC;
+    @include status-roles-dark;
     // Key colors
     --#{$prefix}-sys-color-primary: #d0bcff;
     --#{$prefix}-sys-color-on-primary: #381e72;
