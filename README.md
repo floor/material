@@ -40,7 +40,7 @@ save.destroy();
 
 Every component is created by a `create*` function exported from `mtrl`, and renders with `mtrl-` prefixed classes.
 
-- **Actions:** `createButton`, `createButtonGroup`, `createSplitButton`, `createIconButton`, `createFab`, `createExtendedFab`
+- **Actions:** `createButton`, `createButtonGroup`, `createSplitButton`, `createIconButton`, `createFab`, `createExtendedFab`, `createFabMenu`, `createToolbar`
 - **Selection and input:** `createCheckbox`, `createChips` and `createChip`, `createRadios`, `createSwitch`, `createSlider`, `createSelect`, `createTextfield`, `createSearch`, `createDatePicker`, `createTimePicker`
 - **Navigation:** `createNavigationRail`, `createDrawer`, `createTabs` and `createTab`, `createTopAppBar`, `createBottomAppBar`, `createMenu`, `createNavigation`, `createNavigationSystem`
 - **Containment:** `createCard` with `createCardHeader`, `createCardContent`, `createCardMedia` and `createCardActions`, `createCarousel`, `createList`, `createDivider`, `createDialog`, `createBottomSheet`, `createSideSheet`
@@ -103,7 +103,7 @@ Components read the theme's colour roles, so overriding a role restyles every co
 }
 ```
 
-The type scale and shape scale are custom properties too (`--mtrl-sys-typescale-*`, `--mtrl-sys-shape-*`). Component hooks follow one convention, `--mtrl-<component>-<name>`:
+The type scale, the typefaces and the corner scale are custom properties too (`--mtrl-sys-typescale-*`, `--mtrl-ref-typeface-brand` and `--mtrl-ref-typeface-plain`, `--mtrl-sys-shape-corner-*`): setting a typeface or a corner step on `:root` restyles every component that uses it. Component hooks follow one convention, `--mtrl-<component>-<name>`:
 
 ```css
 .brand-slider {
@@ -249,6 +249,10 @@ configureHTML({ sanitize: (html) => policy.createHTML(html) });
 
 The policy sees every string, the library's own icons included; a `TrustedHTML` value passed as an icon or content skips it. With no policy set, markup is written as it is. Text options (`text`, a card's `text`) never go through `innerHTML`.
 
+## Upgrading from 0.9
+
+0.10.0 adds the elements and framework components; for factory users, most apps need nothing. The changes to check are listed in the [0.10.0 changelog's migration section](CHANGELOG.md#migrating-from-09x): setters no longer emit `change`, the time picker's events pass `{ value }`, the `--mtrl-sys-color-*-rgb` properties are gone, disabled non-form roots use `aria-disabled`, cards are `article`s, and the text field's DOM gained a `__field` wrapper.
+
 ## Upgrading from 0.7
 
 0.8.0 aligns the components with Material 3 expressive, and some of that changes the API or the styles:
@@ -264,7 +268,7 @@ The full list, with every renamed property, is in the [0.8.0 changelog](CHANGELO
 
 ## Browser support
 
-Current Chrome, Edge, Firefox and Safari. The spring motion uses CSS `linear()` easing (Safari 17.2 or later); older browsers render every component but skip those transitions.
+Current Chrome, Edge, Firefox and Safari. The spring motion uses CSS `linear()` easing (Safari 17.2 or later); older browsers render every component but skip those transitions. The elements use form-associated custom elements and the top layer (`popover` and `<dialog>`), both available in every current browser.
 
 ## Contributing
 

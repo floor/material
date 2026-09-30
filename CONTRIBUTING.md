@@ -56,7 +56,7 @@ bun run dev
 
 3. **Make your changes** - Follow the coding standards and guidelines below.
 
-4. **Test your changes** - Use the playground app to test your components in real-time.
+4. **Test your changes** - Tests go in the same commit as the code (see [Testing](#testing)), and md3.io shows the component live (see above).
 
 5. **Submit a pull request** - Include a detailed description of your changes and reference any related issues.
 
@@ -64,47 +64,37 @@ bun run dev
 
 ### Component Structure
 
-mtrl components follow a consistent pattern:
+A component is a factory composed from small features with `pipe`: each `with*` function adds one capability to the component object and returns it.
 
 ```typescript
-// src/components/mycomponent/index.ts
-export { createMyComponent } from './mycomponent';
-export type { MyComponentOptions } from './types';
+// src/components/divider/divider.ts
+import { createBase, withElement, pipe, withVariant } from "../../core/compose";
+import { DividerConfig, createBaseConfig } from "./config";
+import { withOrientation, withInset, withStyle } from "./features";
+import { DividerComponent } from "./types";
 
-// src/components/mycomponent/types.ts
-export interface MyComponentOptions {
-  text?: string;
-  onClick?: (event: MouseEvent) => void;
-  // other options...
-}
+export const createDivider = (config: DividerConfig = {}): DividerComponent => {
+  const processedConfig = createBaseConfig(config);
 
-// src/components/mycomponent/mycomponent.ts
-import { createElement } from '../../core/dom/create';
-import { createLifecycle } from '../../core/state/lifecycle';
-import type { MyComponentOptions } from './types';
-
-/**
- * Creates a new MyComponent instance
- * @param options - Configuration options for MyComponent
- * @returns The MyComponent instance
- */
-export const createMyComponent = (options: MyComponentOptions = {}) => {
-  // Create DOM elements
-  const element = createElement({...});
-  
-  // Setup state and features
-  const lifecycle = createLifecycle(element);
-  
-  // Return component API
-  return {
-    element,
-    // Other public methods...
-    destroy() {
-      lifecycle.destroy();
-    }
-  };
+  return pipe(
+    createBase,
+    withElement({ tag: "hr", componentName: "divider", className: config.class }),
+    withOrientation(processedConfig),
+    withVariant(processedConfig),
+    withInset(processedConfig),
+    withStyle(processedConfig)
+  )(processedConfig) as DividerComponent;
 };
 ```
+
+Read an existing component of the same kind before starting (`src/components/divider` is the smallest). A component touches these places:
+
+- `src/components/<name>/`: `index.ts`, `<name>.ts`, `config.ts`, `types.ts`, `constants.ts`, and `features/` when it has several; exported from `src/components/index.ts`.
+- `src/styles/components/_<name>.scss`, imported in `src/styles/main.scss` and declared in `scripts/style-manifest.ts` (the selective stylesheets). Colours, type, shape and motion come from the tokens (`t.color()`, `m.typography()`, `v.shape()`, `v.motion()`), never literals.
+- `src/elements/<name>.ts`: the custom element's spec (attributes, properties, events, slots). The React, Vue, Svelte and Solid adapters are generated from it with `bun run adapters:generate`; CI fails when they are stale.
+- `scripts/size.ts`: the component's size budget; `scripts/check-token-render.ts`: a case for `bun run tokens:check`.
+- `CHANGELOG.md`: an entry under `[Unreleased]`.
+- md3.io: a docs page and a playground (see below).
 
 ### Using md3.io for Development
 
@@ -137,9 +127,10 @@ This separation of the library code (mtrl) and the documentation site (md3.io) k
 ### CSS/SCSS Guidelines
 
 - Use BEM-style naming: `mtrl-component__element--modifier`
-- Keep specificity low
-- Use CSS variables for theming
-- Organize styles in the `src/components/*/styles.scss` file
+- Keep specificity low; each component's rules sit in its own `mtrl.<name>` cascade layer
+- Read the design tokens (`--mtrl-sys-*`) rather than literal values, so themes restyle every component
+- Component hooks are custom properties named `--mtrl-<component>-<name>`
+- Respect `prefers-reduced-motion` and forced colours (`m.reduced-motion`, `m.high-contrast`)
 
 ## Distribution checks
 
@@ -169,53 +160,26 @@ Builds fail on TypeScript or Sass errors. The published ESM is readable and incl
 
 ## Pull Request Process
 
-1. Ensure your code follows the style guidelines
-2. Update documentation as needed
-3. Include a clear description of the changes
-4. Reference any issues that are being addressed
-5. Wait for review and address any feedback
+1. Branch from `main`; one topic per pull request.
+2. Include the tests, the `CHANGELOG.md` entry under `[Unreleased]` and, for a new option or behaviour, the md3.io docs change.
+3. A change that breaks the public API or the rendered DOM goes under **Changed (breaking)** with a `Migration:` line.
+4. CI must pass: types and ratchets, lint, tests, build, size and adapter budgets, and the browser checks (components, elements, adapters). `main` accepts merge commits only, from up-to-date branches.
+5. Reference the issue the change closes.
 
 ## Testing
 
-Please add appropriate tests for your changes:
+Tests live in `test/` and run with `bun test`; [TESTING.md](TESTING.md) covers the setup. In short:
 
-```typescript
-// Example test structure
-describe('myComponent', () => {
-  it('should render correctly', () => {
-    // Test code
-  });
-  
-  it('should handle user interaction', () => {
-    // Test code
-  });
-});
-```
+- Add or update tests in the same commit as the change, and check that they fail without it.
+- Test behaviour through the public API and the real DOM, not internals.
+- Test files end in `.test.ts`; `bun run test:naming` fails on a suite the runner would not collect.
+- Behaviour that needs a real browser (focus, layout, the top layer, form association) goes in the browser checks: `bun run elements:check` for the elements, the component checks for the factories.
 
 ## Documentation
 
-Documentation is crucial for this project:
-
-- Add TypeDoc comments for all public API methods and types
-- Comment the file path at the top of each file
-- Update the component's README.md (if applicable)
-- Consider adding example code in the playground
-
-Example of proper TypeDoc:
-
-```typescript
-/**
- * Creates a button element with specified options
- * 
- * @param options - The button configuration options
- * @returns A button component instance
- * @example
- * ```ts
- * const button = createButton({ text: 'Click me', variant: 'primary' });
- * document.body.appendChild(button.element);
- * ```
- */
-```
+- TypeDoc comments on every public function and type, with an `@example`.
+- The file path as a comment on the first line of each file.
+- User documentation lives in md3.io's `docs/components/<name>.md`, where `bun run docs:check` type-checks and runs every example against your mtrl checkout. Add or update the page with the change.
 
 ## Community and Communication
 
@@ -236,12 +200,14 @@ Thank you for contributing to mtrl! Your efforts help make this library better f
 Releases are published by GitHub Actions with npm trusted publishing
 (`.github/workflows/release.yml`); no npm token is involved.
 
-1. On `main`, bump the version in `package.json` in its own commit:
-   `chore(release): x.y.z`. A pre-release is `x.y.z-next.N`.
-2. Tag that commit `vx.y.z` and push the tag:
+1. Open a release pull request that bumps `package.json` (`x.y.z`, or
+   `x.y.z-next.N` for a pre-release), turns `[Unreleased]` in `CHANGELOG.md`
+   into the version's section, and updates the README where the release
+   changes it. Merge it when CI passes.
+2. Tag the merge commit `vx.y.z` and push the tag:
 
    ```bash
-   git tag vx.y.z
+   git tag -a vx.y.z -m "vx.y.z" <merge commit>
    git push origin vx.y.z
    ```
 
