@@ -3,6 +3,7 @@
 import { BaseComponent, ElementComponent } from '../../../core/compose/component';
 
 import { setHTML } from "../../../core/dom/html";
+import { fieldOf } from './field';
 /**
  * Extended element component with input field
  */
@@ -95,7 +96,7 @@ export const withTrailingIcon = <T extends TrailingIconConfig & object>(config: 
       if (slot && slot.parentNode) return slot;
       const element = document.createElement('span');
       element.className = `${PREFIX}-${NAME}__trailing-icon`;
-      component.element.appendChild(element);
+      fieldOf(component).appendChild(element);
       component.element.classList.add(`${PREFIX}-${NAME}--with-trailing-icon`);
       if (component.input) {
         component.input.classList.add(`${PREFIX}-${NAME}__input--with-trailing-icon`);
