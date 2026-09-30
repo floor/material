@@ -299,6 +299,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Menu and select: a long list stays in the viewport (FLO-272).** A select with a few hundred
+  options ran past the bottom of the screen: a menu mounted in its field (the select's default)
+  skipped the viewport checks, and one flipped above its anchor kept its full height and was
+  clamped over it. A menu above or below its anchor is now capped to the room on that side, the
+  side with more room when the list fits on neither, and scrolls; in the page, in a container and
+  in the top layer alike. An open menu also follows its anchor when a panel around it scrolls,
+  not only the window; its own list scrolling does not move it.
+
 - **Menu: the divider no longer collapses in a menu that scrolls (FLO-273).** The list is a flex
   column, and the divider, the one item without a minimum size, shrank to 0 once the list was
   taller than the menu: a long select showed the divider's margins but no line.

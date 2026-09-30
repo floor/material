@@ -17,6 +17,10 @@ import { createSubmenuLoader, hasNestedItems, MenuSubmenuApi } from "./loader";
 import { onTopLayerClose, showInTopLayer } from "../../../core/dom/layer";
 
 import { setHTML } from "../../../core/dom/html";
+
+/** The scroll listener: on the capture phase, to hear panels scroll too; passive. */
+const SCROLL_LISTENER: AddEventListenerOptions = { capture: true, passive: true };
+
 /**
  * Adds controller functionality to the menu component
  * Manages state, rendering, positioning, and event handling
@@ -540,9 +544,7 @@ const withController =
         window.addEventListener("resize", handleWindowResize, {
           passive: true,
         });
-        window.addEventListener("scroll", handleWindowScroll, {
-          passive: true,
-        });
+        window.addEventListener("scroll", handleWindowScroll, SCROLL_LISTENER);
       }, 0);
     }, 20); // Short delay for browser to process
 
@@ -584,7 +586,7 @@ const withController =
       document.removeEventListener("click", handleDocumentClick);
       document.removeEventListener("keydown", handleDocumentKeydown);
       window.removeEventListener("resize", handleWindowResize);
-      window.removeEventListener("scroll", handleWindowScroll);
+      window.removeEventListener("scroll", handleWindowScroll, SCROLL_LISTENER);
 
       // Trigger event
       eventHelpers.triggerEvent(
@@ -723,9 +725,12 @@ const withController =
   };
 
   /**
-   * Handles window scroll
+   * Follows the opener as the page or any panel around it scrolls: element
+   * scroll events do not bubble, so the listener is on the capture phase
+   * (FLO-272). The menu's own list scrolling is not a reason to move it.
    */
-  const handleWindowScroll = (): void => {
+  const handleWindowScroll = (event?: Event): void => {
+    if (event?.composedPath().includes(component.element)) return;
     if (state.visible) {
       // Use requestAnimationFrame to optimize scroll performance
       tasks.requestAnimationFrame(() => {
@@ -773,7 +778,7 @@ const withController =
         document.addEventListener("keydown", handleDocumentKeydown);
       }
       window.addEventListener("resize", handleWindowResize);
-      window.addEventListener("scroll", handleWindowScroll);
+      window.addEventListener("scroll", handleWindowScroll, SCROLL_LISTENER);
     }
   };
 
@@ -833,7 +838,7 @@ const withController =
       document.removeEventListener("click", handleDocumentClick);
       document.removeEventListener("keydown", handleDocumentKeydown);
       window.removeEventListener("resize", handleWindowResize);
-      window.removeEventListener("scroll", handleWindowScroll);
+      window.removeEventListener("scroll", handleWindowScroll, SCROLL_LISTENER);
 
       // The submenu feature cleaned up after the controller when it was part
       // of the pipe; it still does. A load still in flight is dropped.

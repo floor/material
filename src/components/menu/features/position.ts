@@ -20,6 +20,11 @@ export const createPositioner = (
    * @param preferredPosition - The preferred position
    * @param isSubmenu - Whether this is a submenu (affects positioning logic)
    */
+  /** The space kept between a menu and the viewport's top and bottom edges */
+  const VIEWPORT_MARGIN = 48;
+  /** A menu never shrinks below this to fit, so a few rows always show */
+  const MIN_MENU_HEIGHT = 100;
+
   const positionElement = (
     menuElement: HTMLElement,
     openerElement: HTMLElement,
@@ -69,7 +74,9 @@ export const createPositioner = (
     // Measured at the height it will have: without its max height a long
     // list measured as tall as every row, never "fit" below the opener,
     // flipped above it and was clamped to the top of the viewport.
-    if (config.maxHeight) tempMenu.style.maxHeight = config.maxHeight;
+    // Not the height a previous placement fitted it to (FLO-272): a menu
+    // measured at that cap fits exactly and would lose it on the next pass.
+    tempMenu.style.maxHeight = config.maxHeight ?? "";
     tempMenu.classList.add(`${component.getClass("menu--visible")}`); // Add visible class for proper dimensions
 
     // Apply width to temp menu BEFORE measuring if config specifies 100% width
@@ -186,6 +193,29 @@ export const createPositioner = (
       }
     }
 
+    // The menu's height, capped to the room on its side of the anchor, so a
+    // long list scrolls inside the viewport wherever the menu is mounted: the
+    // body, a container or the top layer (FLO-272). For a main menu above or
+    // below its anchor; one beside it and submenus keep their own rules.
+    let height = menuRect.height;
+    let fitted: number | null = null;
+    if (!isSubmenu && /^(top|bottom)/.test(calculatedPosition)) {
+      const below = viewportHeight - openerRect.bottom - offset - VIEWPORT_MARGIN;
+      const above = openerRect.top - offset - VIEWPORT_MARGIN;
+      // Where the list fits on neither side, the side with more room
+      if (height > (calculatedPosition.startsWith("bottom") ? below : above)) {
+        calculatedPosition = calculatedPosition.replace(/^(top|bottom)/, below >= above ? "bottom" : "top");
+      }
+      const room = Math.max(calculatedPosition.startsWith("bottom") ? below : above, MIN_MENU_HEIGHT);
+      if (height > room) {
+        fitted = room;
+        height = room;
+      }
+    }
+    // The fitted height, else the configured one; none left over from a
+    // previous placement where it no longer applies
+    menuElement.style.maxHeight = fitted !== null ? `${fitted}px` : (config.maxHeight ?? "");
+
     // Reset any existing position classes
     const positionClasses = [
       "position-top",
@@ -237,16 +267,16 @@ export const createPositioner = (
 
     switch (calculatedPosition) {
       case "top-start":
-        top = openerRect.top + offsetY - menuRect.height - offset;
+        top = openerRect.top + offsetY - height - offset;
         left = openerRect.left + offsetX;
         break;
       case "top":
-        top = openerRect.top + offsetY - menuRect.height - offset;
+        top = openerRect.top + offsetY - height - offset;
         left =
           openerRect.left + offsetX + openerRect.width / 2 - menuRect.width / 2;
         break;
       case "top-end":
-        top = openerRect.top + offsetY - menuRect.height - offset;
+        top = openerRect.top + offsetY - height - offset;
         left = openerRect.right + offsetX - menuRect.width;
         break;
       case "right-start":
@@ -260,14 +290,14 @@ export const createPositioner = (
             openerRect.top +
             offsetY +
             openerRect.height / 2 -
-            menuRect.height / 2;
+            height / 2;
         } else {
           top += offsetY;
         }
         left = openerRect.right + offsetX + offset;
         break;
       case "right-end":
-        top = openerRect.bottom + offsetY - menuRect.height;
+        top = openerRect.bottom + offsetY - height;
         left = openerRect.right + offsetX + offset;
         break;
       case "bottom-start":
@@ -294,14 +324,14 @@ export const createPositioner = (
             openerRect.top +
             offsetY +
             openerRect.height / 2 -
-            menuRect.height / 2;
+            height / 2;
         } else {
           top += offsetY;
         }
         left = openerRect.left + offsetX - menuRect.width - offset;
         break;
       case "left-end":
-        top = openerRect.bottom + offsetY - menuRect.height;
+        top = openerRect.bottom + offsetY - height;
         left = openerRect.left + offsetX - menuRect.width - offset;
         break;
     }
@@ -318,11 +348,6 @@ export const createPositioner = (
         menuElement.style.width = `${openerRect.width}px`;
       }
 
-      // Apply maxHeight if configured
-      if (config.maxHeight) {
-        menuElement.style.maxHeight = config.maxHeight;
-      }
-
       return; // Exit early for container-based menus
     }
 
@@ -332,40 +357,14 @@ export const createPositioner = (
       top = minTopSpacing + scrollY;
     }
 
-    // Bottom edge spacing - ensure the menu doesn't go below the viewport - padding
-    const viewportBottomMargin = 48; // Minimum space from bottom of viewport
-    const bottomEdge = top - scrollY + menuRect.height;
-
-    if (bottomEdge > viewportHeight - viewportBottomMargin) {
-      // Option 1: We could adjust the top position
-      // top = scrollY + viewportHeight - viewportBottomMargin - menuRect.height;
-
-      // Option 2: Instead of moving the menu, adjust its height to fit (better UX)
-      const availableHeight =
-        viewportHeight - (top - scrollY) - viewportBottomMargin;
-
-      // Set a minimum height to prevent tiny menus
-      const minMenuHeight = Math.min(menuRect.height, 100);
-      const newMaxHeight = Math.max(availableHeight, minMenuHeight);
-
-      // Update maxHeight to fit within viewport
-      menuElement.style.maxHeight = `${newMaxHeight}px`;
-
-      // If user has explicitly set a maxHeight, respect it if smaller
-      if (config.maxHeight) {
-        const configMaxHeight = parseInt(config.maxHeight, 10);
-        if (
-          !isNaN(configMaxHeight) &&
-          configMaxHeight < parseInt(menuElement.style.maxHeight || "0", 10)
-        ) {
-          menuElement.style.maxHeight = config.maxHeight;
-        }
-      }
-    } else {
-      // If there's plenty of space, use the config's maxHeight (if provided)
-      if (config.maxHeight) {
-        menuElement.style.maxHeight = config.maxHeight;
-      }
+    // A side menu or a submenu running past the bottom shrinks to fit;
+    // a menu above or below its anchor was fitted before it was placed
+    const bottomEdge = top - scrollY + height;
+    if (fitted === null && bottomEdge > viewportHeight - VIEWPORT_MARGIN) {
+      const available = viewportHeight - (top - scrollY) - VIEWPORT_MARGIN;
+      const shrunk = Math.max(available, Math.min(height, MIN_MENU_HEIGHT));
+      const configured = config.maxHeight ? parseInt(config.maxHeight, 10) : NaN;
+      menuElement.style.maxHeight = `${Number.isNaN(configured) ? shrunk : Math.min(shrunk, configured)}px`;
     }
 
     // For 'width: 100%' configuration, match the opener width
