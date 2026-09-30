@@ -42,7 +42,8 @@ try {
       }
       return value;
     };
-    const { scripts, devDependencies, files, ...distribution } = pkg;
+    // The published manifest: no development-only fields (scripts, tool settings).
+    const { scripts, devDependencies, files, eslintConfig, typedocOptions, ...distribution } = pkg;
     await writeFile(`${staging}/package.json`, JSON.stringify({
       ...distribution,
       main: relocate(pkg.main), module: relocate(pkg.module), types: relocate(pkg.types),
