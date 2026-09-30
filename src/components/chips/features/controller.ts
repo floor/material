@@ -330,11 +330,11 @@ export const withController =
   /**
    * Selects chips by their values
    * @param {string|string[]} values - Value or array of values to select
-   * @param {boolean} triggerEvent - Whether to trigger change event (default: true)
+   * @param {boolean} triggerEvent - Emits change when true; silent by default, as a native control (FLO-328)
    */
   const selectByValue = (
     values: string | string[],
-    triggerEvent = true,
+    triggerEvent = false,
     exclusive = !config.multiSelect,
   ) => {
     const valueArray = Array.isArray(values) ? values : [values];
@@ -376,9 +376,9 @@ export const withController =
 
   /**
    * Clears all selections
-   * @param {boolean} triggerEvent - Whether to trigger change event (default: true)
+   * @param {boolean} triggerEvent - Emits change when true; silent by default, as a native control (FLO-328)
    */
-  const clearSelection = (triggerEvent = true) => {
+  const clearSelection = (triggerEvent = false) => {
     const selectedValues = getSelectedValues();
     const hadSelectedChips = selectedValues.length > 0;
 

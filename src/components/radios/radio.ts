@@ -215,13 +215,9 @@ export const withRadio =
         radio.input.checked = known && radio.config.value === value;
       });
 
-      // Clearing was already right here; it was silent. The shared rule is
-      // that an unknown value clears *and* says so, once, and reports the
-      // cleared value the same way a selection reports its own. FLO-106.
-      if (!known) {
-        warnUnknownValue('radios', value);
-        component.emit?.('change', { value: '', originalEvent: undefined, option: null });
-      }
+      // An unknown value clears and warns (FLO-106). Silently: a programmatic
+      // change emits no `change`, as on a native control (FLO-328).
+      if (!known) warnUnknownValue('radios', value);
 
       return component;
     },

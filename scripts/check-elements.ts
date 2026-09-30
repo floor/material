@@ -193,6 +193,39 @@ try {
     assert.equal(state.wifi, null);
     check("switch: setting the property fires no event and updates the form value");
 
+    // FLO-328: the methods are silent too; the model still follows them
+    // (form value, dirty) without the event, and reset returns to the default.
+    const methods = await page.evaluate(() => {
+      type Switch = HTMLElement & { checked: boolean; toggle(): void; check(): void; uncheck(): void };
+      const d = document.getElementById("d") as Switch;
+      const form = document.getElementById("f") as HTMLFormElement;
+      const events: string[] = [];
+      const listen = (e: Event): void => void events.push(e.type);
+      for (const type of ["change", "input"]) d.addEventListener(type, listen);
+      const state = (): [boolean, FormDataEntryValue | null] => [d.checked, new FormData(form).get("bt")];
+      d.uncheck();
+      const unchecked = state();
+      d.toggle();
+      const toggled = state();
+      d.uncheck();
+      // Dirty: the default no longer moves the live state.
+      d.removeAttribute("checked");
+      d.setAttribute("checked", "");
+      const dirty = state();
+      form.reset();
+      const reset = state();
+      for (const type of ["change", "input"]) d.removeEventListener(type, listen);
+      return { events, unchecked, toggled, dirty, reset };
+    });
+    assert.deepEqual(methods, {
+      events: [],
+      unchecked: [false, null],
+      toggled: [true, "on"],
+      dirty: [false, null],
+      reset: [true, "on"],
+    });
+    check("switch: toggle(), check() and uncheck() fire no event; the form value, dirty state and reset follow them");
+
     await page.click("#outer");
     assert.equal(await page.evaluate(() => (document.getElementById("s") as HTMLElement & { checked: boolean }).checked), true);
     check("switch: an outer <label for> toggles it");

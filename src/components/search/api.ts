@@ -21,7 +21,7 @@ interface ApiOptions {
     getValue: () => string;
     setPlaceholder: (text: string) => void;
     getPlaceholder: () => string;
-    clear: () => void;
+    clear: (triggerEvent?: boolean) => void;
     submit: () => void;
     focus: () => void;
     blur: () => void;
@@ -83,7 +83,7 @@ export const withAPI =
 
       // === Value Management ===
 
-      setValue(value: string, triggerEvent = true) {
+      setValue(value: string, triggerEvent = false) {
         options.value.setValue(value, triggerEvent);
         return this;
       },
@@ -152,7 +152,7 @@ export const withAPI =
       },
 
       clear() {
-        options.value.clear();
+        options.value.clear(false);
         return this;
       },
 

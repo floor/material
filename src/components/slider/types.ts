@@ -304,13 +304,13 @@ export interface SliderComponent {
   /** The root element of the slider */
   element: HTMLElement;
 
-  /** Sets slider value */
+  /** Sets slider value. Silent unless `triggerEvent` is true. */
   setValue: (value: number, triggerEvent?: boolean) => SliderComponent;
 
   /** Gets slider value */
   getValue: () => number;
 
-  /** Sets secondary slider value (for range slider) */
+  /** Sets secondary slider value (for range slider). Silent unless `triggerEvent` is true. */
   setSecondValue: (value: number, triggerEvent?: boolean) => SliderComponent;
 
   /** Gets secondary slider value */

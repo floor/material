@@ -204,6 +204,12 @@ const createDatePicker = <M extends string = "single">(
     committed = end && end < start ? end : start; committedEnd = end && end < start ? start : end;
     resetDraft(); setDisplayDate(committed); syncInput(); render(); if (emit) emitChange();
   };
+  // setValue() and clear() are silent, as a native input set by script; the
+  // user's entry and the calendar emit `change` (FLO-328).
+  const clearValue = (emit: boolean) => {
+    if (destroyed) return;
+    committed = null; committedEnd = null; resetDraft(); syncInput(); render(); if (emit) emitChange();
+  };
   const validateEntries = (): boolean => {
     const fields = Array.from(dialog.querySelectorAll<HTMLInputElement>('[data-entry]'));
     if (!fields.length) return !!state.selectedDate && state.isAllowed(state.selectedDate) && (state.selectionMode !== "range" || !!state.rangeEndDate && state.isAllowed(state.rangeEndDate));
@@ -226,7 +232,7 @@ const createDatePicker = <M extends string = "single">(
   const onEntry = () => { validateEntries(); };
   const onInputChange = () => {
     if (modal || destroyed || base.disabled.isDisabled()) return;
-    if (!input.value.trim()) { api.clear(); return; }
+    if (!input.value.trim()) { clearValue(true); return; }
     const pieces = state.selectionMode === "range" ? input.value.split(' - ') : [input.value];
     const dates = pieces.map(value => parseInputDate(value, state.dateFormat));
     if (dates.length !== (state.selectionMode === 'range' ? 2 : 1) || dates.some(date => !date || !state.isAllowed(date)) || dates[1] && dates[0] && dates[1] < dates[0]) {
@@ -402,11 +408,11 @@ const createDatePicker = <M extends string = "single">(
     disabled: { enable: () => setDisabled(false), disable: () => setDisabled(true), isDisabled: () => base.disabled.isDisabled() }, lifecycle: { destroy }, destroy,
     open() { open(); return api; }, close() { close(); return api; }, getValue,
     getFormattedValue: () => formatted(committed, committedEnd),
-    setValue(value) { assignValue(value, true); return api; },
+    setValue(value) { assignValue(value, false); return api; },
     setReadOnly(value) { setReadOnly(value); return api; }, isReadOnly: () => readOnly,
     setRequired(value) { input.required = value; if (!value) syncInput(); return api; }, checkValidity, reportValidity,
     setSupportingText(text) { help.textContent = text || state.dateFormat; return api; },
-    clear() { if (!destroyed) { committed = null; committedEnd = null; resetDraft(); syncInput(); render(); emitChange(); } return api; },
+    clear() { clearValue(false); return api; },
     enable() { setDisabled(false); return api; }, disable() { setDisabled(true); return api; },
     setMinDate(value) { const date = parseDate(value); if (date && !destroyed) { state.minDate = date; render(); if (state.inputMode) validateEntries(); } return api; },
     setMaxDate(value) { const date = parseDate(value); if (date && !destroyed) { state.maxDate = date; render(); if (state.inputMode) validateEntries(); } return api; },

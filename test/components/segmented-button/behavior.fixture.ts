@@ -66,14 +66,14 @@ test('single mode switches selection and keeps it on a second click', () => {
   expect(Object.keys(events[0]).sort()).toEqual(['oldValue', 'selected', 'value']);
 });
 
-test('single select and deselect retain the last selection and emit only changes', () => {
+test('single select and deselect retain the last selection, silently', () => {
   const group = make(); const events = changes(group);
   expect(group.select('month')).toBe(group);
   // `select('missing')` used to be a no-op and now clears the selection
   // (FLO-106); it is covered in test/components/selection-values.test.ts.
   group.select('month').deselect('month').deselect('day').deselect('missing');
-  expectSelection(group, ['month']); expect(events).toHaveLength(1);
-  expect(events[0]).toEqual({ selected: [group.segments[2]], value: ['month'], oldValue: ['day'] });
+  // A selection made from code emits no change (FLO-328).
+  expectSelection(group, ['month']); expect(events).toHaveLength(0);
 });
 
 test('multi mode starts empty and clicks independently toggle segments', () => {
@@ -85,15 +85,15 @@ test('multi mode starts empty and clicks independently toggle segments', () => {
   expect(events[2]).toEqual({ selected: [group.segments[2]], value: ['month'], oldValue: ['day', 'month'] });
 });
 
-test('multi select and deselect emit exact payloads only for changes', () => {
+test('multi select and deselect move the selection silently', () => {
   const group = make({ mode: SelectionMode.MULTI }); const events = changes(group);
   // `select('missing')` now clears rather than doing nothing (FLO-106).
   group.select('day').select('day').select('month');
+  expectSelection(group, ['day', 'month']);
   expect(group.deselect('day')).toBe(group);
   group.deselect('day').deselect('missing');
-  expectSelection(group, ['month']); expect(events).toHaveLength(3);
-  expect(events[0]).toEqual({ selected: [group.segments[0]], value: ['day'], oldValue: [] });
-  expect(events[2]).toEqual({ selected: [group.segments[2]], value: ['month'], oldValue: ['day', 'month'] });
+  // A selection made from code emits no change (FLO-328).
+  expectSelection(group, ['month']); expect(events).toHaveLength(0);
 });
 
 test('multi mode preserves initially selected segments', () => {
@@ -112,11 +112,11 @@ test('a disabled group blocks clicks but not programmatic selection', () => {
     expect(segment.isDisabled()).toBe(true); expect(segment.element.hasAttribute('disabled')).toBe(true);
   }
   click(group, 0); expect(events).toHaveLength(0); expectSelection(group, []);
-  group.select('week'); expectSelection(group, ['week']); expect(events).toHaveLength(1);
+  group.select('week'); expectSelection(group, ['week']); expect(events).toHaveLength(0); // silent (FLO-328)
   expect(group.enable()).toBe(group);
   expect(group.element.classList.contains('mtrl-segmented-button--disabled')).toBe(false);
   expect(group.segments.every(segment => !segment.isDisabled())).toBe(true);
-  click(group, 0); expectSelection(group, ['day', 'week']); expect(events).toHaveLength(2);
+  click(group, 0); expectSelection(group, ['day', 'week']); expect(events).toHaveLength(1);
 });
 
 test('group enable preserves configured individual disabled state', () => {
@@ -135,7 +135,7 @@ test('per-segment disable gates clicks but not programmatic selection', () => {
   click(group, 0); expectSelection(group, []); expect(events).toHaveLength(0);
 
   // The application can, since FLO-106.
-  group.select('day'); expectSelection(group, ['day']); expect(events).toHaveLength(1);
+  group.select('day'); expectSelection(group, ['day']); expect(events).toHaveLength(0); // silent (FLO-328)
 
   // `deselect` still refuses while the segment is disabled. That asymmetry is
   // outside the FLO-106 decision, which is about setting a value, and is
@@ -143,7 +143,7 @@ test('per-segment disable gates clicks but not programmatic selection', () => {
   group.deselect('day'); expectSelection(group, ['day']);
 
   expect(group.enableSegment('day')).toBe(group);
-  group.deselect('day'); expectSelection(group, []); expect(events).toHaveLength(2);
+  group.deselect('day'); expectSelection(group, []); expect(events).toHaveLength(0);
 });
 
 for (const density of [Density.DEFAULT, Density.COMFORTABLE, Density.COMPACT]) {

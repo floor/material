@@ -197,6 +197,37 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `var(--…-rgb)`, is removed with them. Migration: `rgba(var(--mtrl-sys-color-X-rgb), N)`
   becomes `color-mix(in srgb, var(--mtrl-sys-color-X) N%, transparent)` (N as a percentage).
 
+- **Setters and selection methods no longer emit `change`, `input` or `select` (FLO-328).** As on
+  the platform, a change made by script is silent: only the user's click, key, drag or entry
+  emits. A switch's `check()` emitted `change` while a text field's `setValue()` did not; they
+  now agree. The methods whose behaviour changed:
+  - checkbox and switch: `check()`, `uncheck()`, `toggle()`, `setValue()` (the shared
+    `withCheckable` manager's `check`, `uncheck` and `toggle` with them);
+  - radios: `setValue()` with a value no option carries (it still clears and warns);
+  - select: `setValue()` with a value no option carries (it still clears and warns);
+  - tabs: `setActiveTab()`, by tab or by value, known or not;
+  - segmented button: `select()` and `deselect()`;
+  - button group: `select()`, `deselect()` and `toggle()`;
+  - chips: `setValue()`, `selectByValue()` (now silent by default; `selectByValue(values, true)`
+    still emits, and the flag, which was dropped on the way to the controller, now reaches it)
+    and `clearSelection()`;
+  - slider: `setValue()` and `setSecondValue()` (silent by default; pass `true` to emit);
+  - search: `setValue()` no longer emits `input` by default (pass `true` to emit), and `clear()`
+    emits neither `input` nor `clear` (the clear button still emits both);
+  - date picker: `setValue()` and `clear()` (clearing the field by hand still emits);
+  - time picker: `setValue()`, which no longer calls `onChange` either.
+
+  The custom elements already set their properties silently; their methods (`toggle()`,
+  `check()` and `uncheck()` on `<m-switch>` and `<m-checkbox>`) are now silent too, and their form
+  value and default-attribute tracking follow them without the event. Code that listened for
+  `change` after calling one of these methods updates its own state instead, as it would after
+  setting a native input's `checked` or `value`. Unchanged on purpose: the carousel's `goTo()`,
+  `next()` and `prev()` emit `change` (the index follows the scroll position, and a scroll by
+  script fires `scroll` natively too); the progress indicator's `setValue()` emits `change` (it
+  has no user input, so the event is its value's only notification); the split button's
+  `expand()` and `collapse()` emit (an expanded state, as `<details>` fires `toggle` when its
+  `open` is set by script).
+
 ### Fixed
 
 - **Elements: a slot's `label` is a real property (FLO-328).** `button.label = "Save"` created a

@@ -76,7 +76,7 @@ export const withAPI =
       element: component.element,
 
       // Value management
-      setValue(value: number, triggerEvent: boolean = true) {
+      setValue(value: number, triggerEvent: boolean = false) {
         options.slider.setValue(value, triggerEvent);
         return this;
       },
@@ -85,7 +85,7 @@ export const withAPI =
         return options.slider.getValue();
       },
 
-      setSecondValue(value: number, triggerEvent: boolean = true) {
+      setSecondValue(value: number, triggerEvent: boolean = false) {
         options.slider.setSecondValue(value, triggerEvent);
         return this;
       },

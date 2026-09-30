@@ -75,10 +75,11 @@ describe("a draft until OK", () => {
     expect(p.dialog.querySelector<HTMLInputElement>('[data-type="hour"]')!.value).toBe("09");
   });
 
-  test("setValue commits directly, with one change", () => {
+  test("setValue commits directly, silently (FLO-328)", () => {
     const p = setup();
     p.picker.setValue("11:00");
-    expect(p.log).toEqual(["change:11:00"]);
+    expect(p.picker.getValue()).toBe("11:00");
+    expect(p.log).toEqual([]);
   });
 });
 

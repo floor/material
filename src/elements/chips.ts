@@ -99,8 +99,7 @@ const readChips = (host: HTMLElement): Config => {
 
 /**
  * Selects exactly the given values, chip by chip. The set's own `setValue`
- * clears the selection first, which replays every selected chip's motion, and
- * emits `change` although it is documented not to.
+ * clears the selection first, which replays every selected chip's motion.
  */
 const select = (c: ChipsComponent, value: unknown, multi: boolean): void => {
   const wanted = parse(value, multi);

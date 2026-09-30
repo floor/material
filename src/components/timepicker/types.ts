@@ -16,8 +16,8 @@ export interface TimePickerSwipePayload {
 export interface TimePickerEvents {
   /**
    * The committed 24-hour value (HH:MM, or HH:MM:SS with showSeconds), also
-   * submitted by the form: once when OK commits a different time, or on
-   * setValue. Moves on the dial or in the fields are `input` (FLO-288).
+   * submitted by the form: once when OK commits a different time. setValue is
+   * silent (FLO-328). Moves on the dial or in the fields are `input` (FLO-288).
    */
   change: (value: string) => void;
   /** The draft, as the dial, fields or AM/PM change it while the picker is open (FLO-288). */
@@ -230,7 +230,7 @@ export interface TimePickerConfig {
   keyboardIcon?: string;
 
   /**
-   * Callback when the committed time changes (on OK, or setValue); receives
+   * Callback when the user commits a new time (on OK; setValue is silent); receives
    * HH:MM or HH:MM:SS in 24-hour format
    */
   onChange?: (time: string) => void;
@@ -357,7 +357,7 @@ export interface TimePickerComponent {
   getTimeObject: () => TimeValue;
 
   /**
-   * Sets the time value
+   * Sets the time value. Silent: neither `change` nor onChange
    * @param time - Time string in 24-hour format (HH:MM or HH:MM:SS)
    * @returns The time picker component for chaining
    */
