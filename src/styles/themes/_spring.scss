@@ -19,6 +19,23 @@
     --#{$prefix}-sys-color-tertiary-container: #bbecee;
     --#{$prefix}-sys-color-on-tertiary-container: #002021;
 
+    // fixed roles: generated, do not edit
+    // (tones 90, 80, 10, 30 of this theme's primary, secondary and tertiary;
+    // the same in dark, so declared once, FLO-315)
+    --#{$prefix}-sys-color-primary-fixed: #9af7a3;
+    --#{$prefix}-sys-color-primary-fixed-dim: #7eda8a;
+    --#{$prefix}-sys-color-on-primary-fixed: #002108;
+    --#{$prefix}-sys-color-on-primary-fixed-variant: #00531e;
+    --#{$prefix}-sys-color-secondary-fixed: #d5e8d0;
+    --#{$prefix}-sys-color-secondary-fixed-dim: #b9ccb5;
+    --#{$prefix}-sys-color-on-secondary-fixed: #101f10;
+    --#{$prefix}-sys-color-on-secondary-fixed-variant: #3b4b39;
+    --#{$prefix}-sys-color-tertiary-fixed: #bbebec;
+    --#{$prefix}-sys-color-tertiary-fixed-dim: #a0cfd0;
+    --#{$prefix}-sys-color-on-tertiary-fixed: #002020;
+    --#{$prefix}-sys-color-on-tertiary-fixed-variant: #1e4e4f;
+    // end of fixed roles
+
     // Neutral colors
     --#{$prefix}-sys-color-surface: #f8fff3;
     --#{$prefix}-sys-color-surface-dim: #d9e8d3;

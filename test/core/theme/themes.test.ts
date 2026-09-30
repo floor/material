@@ -10,7 +10,7 @@ import { describe, test, expect } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { Hct, argbFromHex } from "@material/material-color-utilities";
 import { schemeToTokens, THEME_ROLES } from "../../../src/core/theme";
-import { BASELINE_SEED, THEMES, renderThemes, rolesOf, schemeFor } from "../../../scripts/generate-themes";
+import { BASELINE_SEED, KEPT_THEMES, THEMES, fixedRoles, renderThemes, rolesOf, schemeFor } from "../../../scripts/generate-themes";
 import { themeStyles, standaloneThemes } from "../../../scripts/style-manifest";
 
 const THEMES_DIR = "src/styles/themes";
@@ -187,6 +187,34 @@ describe("generated themes", () => {
       const got = Hct.fromInt(argbFromHex(parse(spec.name).light.secondary)).hue;
       const off = Math.min(Math.abs(wanted - got), 360 - Math.abs(wanted - got));
       expect({ theme: spec.name, near: off < 10 }).toEqual({ theme: spec.name, near: true });
+    }
+  });
+});
+
+describe("fixed roles (FLO-315)", () => {
+  const FIXED = THEME_ROLES.filter((role) => role.includes("-fixed"));
+
+  test("twelve, and every theme declares them", () => {
+    expect(FIXED).toHaveLength(12);
+    for (const name of [...THEMES.map((spec) => spec.name), ...KEPT_THEMES]) {
+      const light = parse(name).light;
+      expect({ name, missing: FIXED.filter((role) => !light[role]) }).toEqual({ name, missing: [] });
+    }
+  });
+
+  test("tones 90, 80, 10 and 30 of the key colours: from baseline's keys, Compose's baseline values", () => {
+    const source = readFileSync(`${THEMES_DIR}/_baseline.scss`, "utf8");
+    const light = Object.fromEntries([...source.slice(source.indexOf("@mixin baseline-light-variables"), source.indexOf("@mixin baseline-dark-variables"))
+      .matchAll(/--#\{\$prefix\}-sys-color-([a-z-]+?):\s*(#[0-9a-fA-F]{6})/g)].map(([, role, hex]) => [role, hex.toLowerCase()]));
+    const derived = fixedRoles({ primary: light.primary, secondary: light.secondary, tertiary: light.tertiary });
+    for (const role of FIXED) expect({ role, close: deltaE00(derived[role], light[role]) < 1 }).toEqual({ role, close: true });
+  });
+
+  test("a kept theme's fixed roles come from its own primary, secondary and tertiary", () => {
+    for (const name of KEPT_THEMES) {
+      const light = parse(name).light;
+      expect({ name, roles: Object.fromEntries(FIXED.map((role) => [role, light[role]])) })
+        .toEqual({ name, roles: fixedRoles({ primary: light.primary, secondary: light.secondary, tertiary: light.tertiary }) });
     }
   });
 });

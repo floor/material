@@ -12,6 +12,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **M3's fixed colour roles, in every theme (FLO-315).** `primary-fixed`, `primary-fixed-dim`,
+  `on-primary-fixed`, `on-primary-fixed-variant`, and the same four for `secondary` and
+  `tertiary`: the accents that stay the same in light and dark. Baseline takes Compose's
+  values; the generated themes Google's; the hand-kept themes (ocean, forest, spring, sunset,
+  autumn) tones 90, 80, 10 and 30 of their own primary, secondary and tertiary, written by the
+  theme generator. `THEME_ROLES` and `schemeToTokens` include them.
+
 - **Eight M3 scheme-variant themes, generated (FLO-308).** `neutral`, `vibrant`, `expressive`,
   `fidelity`, `content`, `monochrome`, `rainbow` and `fruit-salad`, M3's dynamic-scheme variants
   from its baseline seed `#6750A4`, light and dark (Tonal Spot is `baseline`, within ΔE00 1.31).
@@ -49,6 +56,20 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   own workarounds, so a read-only element's trigger is disabled.
 
 ### Changed
+
+- **Baseline on M3's current baseline values (FLO-315).** It mixed the 2021 `surface`
+  `#FFFBFE` with newer roles. Every role now is Compose's `ColorLightTokens` /
+  `ColorDarkTokens` value (primary `#6750A4`). Eleven change: light `surface` and
+  `surface-bright` `#FEF7FF` (ΔE00 2.95, 4.31), `on-surface` `#1D1B20` (1.04),
+  `inverse-surface` `#322F35` (2.46), `inverse-on-surface` `#F5EFF7` (1.52); dark `surface`
+  `#141218` (2.84), `outline-variant` `#49454F` (8.53, the one clearly visible), `on-surface`
+  and `inverse-surface` `#E6E0E9` (2.45), `inverse-on-surface` `#322F35` (2.46),
+  `surface-bright` `#3B383E` (0.60).
+- **Typescale classes and `h1`–`h6`, `p` read the typescale tokens (FLO-315).**
+  `.mtrl-display-large` … `.mtrl-label-small` are emitted from the typescale map and set
+  `font-family: var(--mtrl-sys-typescale-<role>-font)`, and the same for size, line height,
+  tracking and weight, instead of `"Roboto", sans-serif` and pixel values; the document rules
+  too. Setting `--mtrl-ref-typeface-brand` / `-plain`, or a size token, now reaches them.
 
 - **Button: one state layer in `currentColor` (FLO-311).** Each colour style and toggle state
   drew its own hover, focus and pressed layer in its content role; the button now has one
