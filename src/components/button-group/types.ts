@@ -51,6 +51,11 @@ export interface ButtonGroupChangeEvent {
   buttonGroup: ButtonGroupComponent;
   /** Values of the selected buttons, in button order */
   values: string[];
+  /**
+   * The selection in the `value` shape of the `<m-button-group>` element's
+   * `change`: an array for a multi-select group, a string or null otherwise.
+   */
+  value: string | string[] | null;
   selected: ButtonComponent[];
   /** The button whose click caused the change, if any */
   button?: ButtonComponent;

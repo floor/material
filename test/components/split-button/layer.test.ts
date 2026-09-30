@@ -156,10 +156,13 @@ describe("split button layer: top", () => {
   test("an item chosen is reported and closes it once", async () => {
     const { split, closes } = mount({ layer: "top" });
     const selected: unknown[] = [];
+    const values: unknown[] = [];
     split.on("select", (event) => selected.push(event.item && "id" in event.item ? event.item.id : null));
+    // The element's field, FLO-320
+    split.on("select", (event) => values.push(event.value));
     await opened(split);
     (split.menu?.element.querySelector('[data-id="pdf"]') as HTMLElement).click();
     await after(400);
-    expect({ selected, closes: closes.length }).toEqual({ selected: ["pdf"], closes: 1 });
+    expect({ selected, values, closes: closes.length }).toEqual({ selected: ["pdf"], values: ["pdf"], closes: 1 });
   });
 });

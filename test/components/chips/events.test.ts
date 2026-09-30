@@ -45,8 +45,8 @@ describe("chips container events", () => {
   });
 
   test("click change passes both arguments, including valueless chips, and calls onChange", () => {
-    const events: Parameters<ChipsEvents["change"]>[] = [];
-    const callbacks: Parameters<ChipsEvents["change"]>[] = [];
+    const events: [(string | null)[], string | null][] = [];
+    const callbacks: [(string | null)[], string | null][] = [];
     const chips = mount({ multiSelect: true, chips: [{ value: "a", ripple: false }, { ripple: false }],
       on: { change: (...args) => events.push(args) }, onChange: (...args) => callbacks.push(args) });
     const [a, blank] = chips.getChips();
@@ -58,7 +58,7 @@ describe("chips container events", () => {
   });
 
   test("keyboard selection emits the same positional change contract", () => {
-    const events: Parameters<ChipsEvents["change"]>[] = [];
+    const events: [(string | null)[], string | null][] = [];
     const chips = mount({ multiSelect: true, chips: [{ value: "a", ripple: false }] });
     chips.on("change", (...args) => events.push(args));
     chips.element.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight" }));
@@ -68,11 +68,35 @@ describe("chips container events", () => {
   });
 
   test("programmatic selection and clearing emit null as the changed value", () => {
-    const events: Parameters<ChipsEvents["change"]>[] = [];
+    const events: [(string | null)[], string | null][] = [];
     const chips = mount({ multiSelect: false, chips: [{ value: "a", ripple: false }, { value: "b", ripple: false }] });
     chips.on("change", (...args) => events.push(args));
     chips.selectByValue("a").selectByValue("a").selectByValue("b").clearSelection().clearSelection();
     expect(events).toEqual([[["a"], null], [["b"], null], [[], null]]);
+  });
+
+  test("change is one object with the element's value, and the positional call still works (FLO-320)", () => {
+    const read: unknown[] = [];
+    const positional: unknown[] = [];
+    const single = mount({ multiSelect: false, chips: [{ value: "a", ripple: false }, { value: "b", ripple: false }] });
+    const multi = mount({ multiSelect: true, chips: [{ value: "a", ripple: false }, { ripple: false }] });
+    for (const chips of [single, multi]) {
+      chips.on("change", event => read.push({ value: event.value, selected: event.selected, changed: event.changed }));
+      chips.on("change", (selectedValues, changedValue) => positional.push([[...selectedValues], changedValue]));
+    }
+    single.getChips()[1].element.click();
+    single.clearSelection();
+    multi.getChips()[0].element.click();
+    multi.getChips()[1].element.click();
+    multi.selectByValue(["a"]);
+    expect(read).toEqual([
+      { value: "b", selected: ["b"], changed: "b" },
+      { value: null, selected: [], changed: null },
+      { value: ["a"], selected: ["a"], changed: "a" },
+      // A chip without a value is in `selected` as null, and not in `value`
+      { value: ["a"], selected: ["a", null], changed: null },
+    ]);
+    expect(positional).toEqual([[["b"], "b"], [[], null], [["a"], "a"], [["a", null], null]]);
   });
 
   test("remove passes the live chip before destruction, by instance or index", () => {
