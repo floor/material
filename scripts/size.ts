@@ -116,8 +116,8 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "bottom-app-bar": kb(4.1),
   // layer: "top" (the top-layer helper, the Tab wrap for slotted content, cancel and
   // the backdrop): the bottom sheet 5,652 to 6,409, the side sheet 5,279 to 6,021
-  "bottom-sheet": kb(6.4),
-  "side-sheet": kb(6.0),
+  "bottom-sheet": kb(6.6), // a modal outside the top layer: inert page and Tab trap (FLO-324): 6,639
+  "side-sheet": kb(6.2), // a modal outside the top layer: inert page and Tab trap (FLO-324): 6,242
   button: kb(7.6),
   "button-group": kb(11.6),
   card: kb(7.0),

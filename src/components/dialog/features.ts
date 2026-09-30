@@ -376,11 +376,14 @@ const addButton = (
     closeDialog = true,
     autofocus = false,
     attributes = {},
+    size,
   } = buttonConfig;
 
+  // size reaches the button; it was accepted and dropped (FLO-324)
   const button = createButton({
     text,
     variant,
+    ...(size ? { size } : {}),
     ...attributes,
   });
 

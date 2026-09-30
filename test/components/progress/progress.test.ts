@@ -331,6 +331,25 @@ describe('the configured state is the state the API reports', () => {
   });
 });
 
+// FLO-324: created disabled, the bar had aria-disabled; disabled later it got
+// only the class, and enable() left a creation-time aria-disabled behind.
+describe('progress disabled state', () => {
+  test('disable() and enable() set and clear aria-disabled with the state', () => {
+    const progress = createProgress({ value: 20 });
+    progress.disable();
+    expect([progress.isDisabled(), progress.element.getAttribute('aria-disabled')]).toEqual([true, 'true']);
+    progress.enable();
+    expect([progress.isDisabled(), progress.element.hasAttribute('aria-disabled')]).toEqual([false, false]);
+  });
+
+  test('created disabled, enable() clears it all', () => {
+    const progress = createProgress({ value: 20, disabled: true });
+    expect([progress.isDisabled(), progress.element.getAttribute('aria-disabled')]).toEqual([true, 'true']);
+    progress.enable();
+    expect([progress.isDisabled(), progress.element.hasAttribute('aria-disabled')]).toEqual([false, false]);
+  });
+});
+
 // FLO-324: setValue(150) drew 100 but reported 150 in aria-valuenow, the
 // label and change. One clamped value is used everywhere, at creation too.
 describe('progress values past the range', () => {

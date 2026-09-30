@@ -24,7 +24,9 @@ export const withVisibility = () => <C extends BadgeFeatureHost>(component: C): 
   // always hidden an empty or zero label; creation did not, so
   // createBadge({ label: 0 }) was visible while setLabel(0) on the same badge
   // hid it. Same helper both sides now. FLO-108.
-  const nothingToShow = isEmptyBadgeLabel(
+  // A small badge is a dot and has no label: an empty one is its normal
+  // state, not "nothing to show", as setLabel already treats it (FLO-324)
+  const nothingToShow = component.config.variant !== "small" && isEmptyBadgeLabel(
     formatBadgeLabel(component.config.label ?? "", component.config.max)
   );
 

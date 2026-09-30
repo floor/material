@@ -304,3 +304,20 @@ describe('badge attachment', () => {
     expect(Array.from(parent.children)).toEqual([target]);
   });
 });
+
+// FLO-324: a small badge is a dot with no label; its empty label counted as
+// "nothing to show", so it was created invisible.
+describe('small badge at creation', () => {
+  test('a small badge is visible without a label', () => {
+    const badge = createBadge({ variant: 'small' });
+    expect(badge.element.classList.contains('mtrl-badge--invisible')).toBe(false);
+  });
+
+  test('a large badge with nothing to show still starts hidden', () => {
+    expect(createBadge({ variant: 'large', label: 0 }).element.classList.contains('mtrl-badge--invisible')).toBe(true);
+  });
+
+  test('visible: false still hides a small badge', () => {
+    expect(createBadge({ variant: 'small', visible: false }).element.classList.contains('mtrl-badge--invisible')).toBe(true);
+  });
+});

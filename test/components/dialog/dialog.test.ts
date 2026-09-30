@@ -339,6 +339,17 @@ describe('refusing a close', () => {
   });
 });
 
+// FLO-324: a dialog button's size was accepted and dropped.
+describe('dialog button options', () => {
+  test('size reaches the button', () => {
+    const dialog = createDialog({ buttons: [{ text: 'Later', size: 'small' }, { text: 'Now', size: 'large' }] });
+    const [later, now] = Array.from(dialog.element.querySelectorAll<HTMLButtonElement>('.mtrl-dialog__footer button'));
+    expect(later!.className).toContain('mtrl-button--small');
+    expect(now!.className).toContain('mtrl-button--large');
+    dialog.destroy();
+  });
+});
+
 // FLO-324: confirm() resolved only through its two buttons, so closing the
 // dialog any other way left the promise hanging; its confirming button came
 // first; and the message went into innerHTML.
