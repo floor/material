@@ -16,6 +16,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   supporting text row ends with `count/max`, as Material Web shows it. It follows typing,
   `setValue()` and a limit set or removed later (`<m-textfield maxlength>`), describes the input
   for screen readers, and takes the error colour while the field is in error.
+- **Text field: `field` (FLO-300).** The container under the root: the label, input, outline,
+  icons and affixes, above the supporting text row. Anchor popovers to it.
 - **Menu: `positionTarget` (FLO-300).** The element a menu is placed against, when it is not
   its opener. The select passes its field, so the supporting text row never pushes the menu down.
 
