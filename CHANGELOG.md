@@ -57,7 +57,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - **Menu: the submenu feature loads on demand (FLO-310).** It is a chunk of its own, no
   longer part of every menu: 1.0–1.3 KB gzip less on the initial load of an app with a menu
   (Vite, `createMenu` and `<m-menu>`), and `bun run size` measures the menu at 12.0 KB
-  instead of 12.7 KB. A menu with nested items starts loading the chunk when it is created,
+  instead of 12.8 KB. A menu with nested items starts loading the chunk when it is created,
   or when `setItems` gives it nested items; a menu without them never loads it. A click,
   hover or ArrowRight on a nested item before the chunk arrives is queued and run once it
   has. No API change: `MenuItem.submenu`, `hasSubmenu`, the submenu events and the options
