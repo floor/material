@@ -375,3 +375,25 @@ describe('keyboard activation of a mixed checkbox', () => {
     checkbox.destroy();
   });
 });
+
+// FLO-336: the check icon is built with DOM APIs, not parsed through the HTML
+// sink; its nodes are exactly those the old markup parsed to.
+describe('the check icon', () => {
+  test('is the same DOM the markup parsed to, whitespace included, and no shared node', () => {
+    const reference = document.createElement('span');
+    reference.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+      <path d="M9.55 14.6L6.35 11.4l-1.9 1.9L9.55 18.4l10.9-10.9-1.9-1.9z"/>
+    </svg>
+  `;
+    const first = mount().element.querySelector('.mtrl-checkbox__icon') as HTMLElement;
+    const second = mount().element.querySelector('.mtrl-checkbox__icon') as HTMLElement;
+    reference.className = first.className;
+    expect(first.isEqualNode(reference)).toBe(true);
+    expect(first.innerHTML).toBe(reference.innerHTML);
+    expect(first.querySelector('svg')?.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    // each checkbox has its own nodes
+    expect(first.querySelector('svg')).not.toBe(second.querySelector('svg'));
+    expect(second.isEqualNode(reference)).toBe(true);
+  });
+});

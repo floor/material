@@ -626,8 +626,17 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
       const value = form.value(this.component, this);
       if (form.state) internals.setFormValue(value, form.state(this.component));
       else internals.setFormValue(value);
+      // Not again while it stays valid: setting the validity was most of a
+      // property set's cost, and a toggled checkbox that is not required
+      // stays valid (FLO-336). The internals say whether they already are;
+      // an invalid one is set every time, as its message or flags may change.
       const control = form.control?.(this.component);
-      if (control) internals.setValidity(control.validity, control.validationMessage, control);
+      if (control) {
+        const validity = control.validity;
+        if (!(validity.valid && internals.validity.valid)) {
+          internals.setValidity(validity, control.validationMessage, control);
+        }
+      }
     }
   }
 
