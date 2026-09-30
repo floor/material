@@ -108,6 +108,8 @@ jobs:
         run: bun run size:check
       - name: Per-component gzip budgets
         run: bun run size
+      - name: One adapter component ships only its element
+        run: bun run adapters:size
 
   # The browser checks, in three groups that run side by side, on the build's dist/.
   browser:
