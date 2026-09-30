@@ -252,6 +252,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   Migration: a card that acts on activation sets `clickable`; a selector or test reading
   `[role="region"]`, `[role="heading"]` or the subtitle's `h4` reads the card's `article` role and
   the `__header-title` / `__header-subtitle` classes.
+- **`disable()` on a root that is not a form control writes `aria-disabled`, not `disabled`
+  (FLO-119).** The shared disabled feature set a bare `disabled="true"` on a `div` root, which is
+  not valid there and tells assistive technology nothing. It now sets `aria-disabled="true"`,
+  removed by `enable()`, and `isDisabled()` reads it. One rule for every component: a native
+  control (a button) keeps its own `disabled`, and a component with an inner input disables the
+  input, as before. The progress indicator, which also wrote `aria-disabled` itself (FLO-324), now
+  gets it from the same rule; the date picker's root takes `aria-disabled` instead of `disabled`.
+  Migration: a selector or a script reading `[disabled]` on these roots reads `[aria-disabled="true"]`
+  (or the component's `--disabled` class, which is unchanged).
 
 - **Time picker `change` and `input` pass `{ value }` (FLO-320).** They passed the time as a
   string; they now pass one object, the same shape as every other component's and the
