@@ -97,8 +97,11 @@ export interface FabMenuEvents {
   open: () => void;
   /** The menu closed */
   close: () => void;
-  /** An item was chosen; the menu closes */
-  select: (event: { id: string }) => void;
+  /**
+   * An item was chosen; the menu closes. `value` is the item's id again, as
+   * the `value` of `<m-fab-menu>`'s `select` (the FLO-320 payload rule)
+   */
+  select: (event: { id: string; value: string }) => void;
 }
 
 /**

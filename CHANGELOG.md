@@ -10,6 +10,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Changed
+
+- **The FAB menu's `select` also carries `value`** (the item's id, as `id` does). It matches the
+  `value` in `<m-fab-menu>`'s `select` detail and the menu's own payload (FLO-320), so one handler
+  reads the same field from the factory and the element.
+
 ## [0.10.0] - 2026-09-30
 
 mtrl 0.10.0 is on npm `latest` (`npm install mtrl`), after four prereleases on `next`. Every
