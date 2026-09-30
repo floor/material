@@ -133,7 +133,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   divider: kb(3.7),
   drawer: kb(8.1), // the modal drawer's layer: "top": 7,622 to 8,109
   fab: kb(5.6),
-  "fab-menu": kb(8.2), // FLO-306, with the FAB; the menu presentation's menu is a chunk (DEFERRED_BUDGET_BYTES): 8,304
+  "fab-menu": kb(8.3), // FLO-306, with the FAB; the menu presentation's menu is a chunk (DEFERRED_BUDGET_BYTES): 8,304; the width reveal and the clamped colour easing (FLO-348): 8,381
   "extended-fab": kb(6.1),
   "icon-button": kb(6.6),
   list: kb(6.5), // FLO-100 full list anatomy
@@ -162,7 +162,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // split button passing the layer, and the opener's focus test across shadow roots, to 112,845; the
   // tooltip and snackbar top layer to 113,481; the modal surfaces' top layer to 113,761 (each measured
   // alone on dba5ba9); the time picker limits and steps (FLO-281): 113,297 on main; all of wave 2 together on 91e4d77: 115,162.
-  all: kb(119.3), // search in the top layer (FLO-285): 115,628; its combobox and variants (FLO-286, FLO-287): 115,909; search's trailing items and reopening (FLO-291): 116,488; the date picker's field states and one change shape (FLO-289, FLO-295): 116,800; the text field's field, supporting text row and counter (FLO-300): 117,305; the toolbar (FLO-304): 117,350 to 119,455; <m-toolbar>'s slotted items and the colour hooks: 119,541; the FAB menu (FLO-306): 122,060
+  all: kb(119.5), // search in the top layer (FLO-285): 115,628; its combobox and variants (FLO-286, FLO-287): 115,909; search's trailing items and reopening (FLO-291): 116,488; the date picker's field states and one change shape (FLO-289, FLO-295): 116,800; the text field's field, supporting text row and counter (FLO-300): 117,305; the toolbar (FLO-304): 117,350 to 119,455; <m-toolbar>'s slotted items and the colour hooks: 119,541; the FAB menu (FLO-306): 122,060; the FAB menu motion (FLO-348): 122,085 to 122,178; merged with main at 5bc71da (FLO-349, FLO-350): 122,232
   // the time picker draft (FLO-288) and search widths (FLO-290): 116,200 on c3e3e18
 };
 

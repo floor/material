@@ -29,6 +29,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   The headline still names each surface through `aria-labelledby`. The dialog's role is
   unchanged: a basic dialog is an `alertdialog`, as the M3 site asks on the web, and a full-screen
   one is a `dialog`; `role` overrides it.
+- **The FAB menu's motion follows Compose (FLO-348).**
+  - The close button's corner now morphs from the FAB's 16, 20 or 28dp to 28dp. It was animated
+    towards the full-shape 9999px, so it went round in one frame, and on closing the spring's
+    undershoot squared it for about 120ms.
+  - The items reveal their width as pills, their content anchored to the end, with FastSpatial's
+    overshoot. They were clipped with a square leading edge.
+  - Colours move on the spring with its progress clamped, so they no longer pass their target.
 
 ## [0.10.0] - 2026-09-30
 

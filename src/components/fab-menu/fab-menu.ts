@@ -128,17 +128,22 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
     element.className = `${block}__item`;
     element.setAttribute("role", "menuitem");
     element.tabIndex = -1;
+    // The item is the pill, whose width reveals it; its content keeps its
+    // natural width, anchored to the end, as Compose's Row is (FLO-348)
+    const content = document.createElement("span");
+    content.className = `${block}__item-content`;
     if (item.icon) {
       const icon = document.createElement("span");
       icon.className = `${block}__item-icon`;
       icon.setAttribute("aria-hidden", "true");
       setHTML(icon, item.icon);
-      element.appendChild(icon);
+      content.appendChild(icon);
     }
     const label = document.createElement("span");
     label.className = `${block}__item-text`;
     label.textContent = item.text;
-    element.appendChild(label);
+    content.appendChild(label);
+    element.appendChild(content);
     list.appendChild(element);
     return { item, element };
   });
@@ -239,7 +244,16 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
     if (!event.composedPath().includes(root)) closeList(false);
   };
 
+  // Each item's width to reveal: its content's, measured as the list opens
+  // (the closed items are laid out at no width, their content overflowing).
+  const measure = () =>
+    entries.forEach(({ element }) => {
+      const content = element.firstElementChild as HTMLElement;
+      element.style.setProperty(`--${PREFIX}-fab-menu-item-width`, `${content.offsetWidth}px`);
+    });
+
   const openList = () => {
+    measure();
     stagger(true);
     // The items scroll behind the close button when the window is short.
     const top = root.getBoundingClientRect().top;
