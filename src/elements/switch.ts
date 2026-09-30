@@ -69,3 +69,10 @@ export type SwitchElement = ElementInstance<SwitchSpec, SwitchComponent>;
 
 /** Registers `<m-switch>` (or `<prefix-switch>`). */
 export const defineSwitch = (options?: DefineOptions): string => switchElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-switch": SwitchElement;
+  }
+}

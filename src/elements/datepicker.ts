@@ -189,3 +189,10 @@ export type DatepickerElement = ElementInstance<DatepickerSpec, DatepickerElemen
 
 /** Registers `<m-datepicker>` (or `<prefix-datepicker>`). */
 export const defineDatepicker = (options?: DefineOptions): string => datepickerElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-datepicker": DatepickerElement;
+  }
+}

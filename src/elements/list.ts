@@ -274,3 +274,11 @@ export const defineList = (options?: DefineOptions): string => {
   if (!customElements.get(itemTag)) customElements.define(itemTag, createDeclarationClass(listItemDeclaration.attributes));
   return listElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-list": ListElement;
+    "m-list-item": HTMLElement & ListItemAttributes;
+  }
+}

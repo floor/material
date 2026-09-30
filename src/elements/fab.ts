@@ -44,3 +44,10 @@ export type FabElement = ElementInstance<FabSpec, FabComponent>;
 
 /** Registers `<m-fab>` (or `<prefix-fab>`). */
 export const defineFab = (options?: DefineOptions): string => fabElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-fab": FabElement;
+  }
+}

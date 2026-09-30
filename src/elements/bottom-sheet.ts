@@ -167,3 +167,10 @@ export type BottomSheetElement = ElementInstance<BottomSheetSpec, BottomSheetEle
 
 /** Registers `<m-bottom-sheet>` (or `<prefix-bottom-sheet>`). */
 export const defineBottomSheet = (options?: DefineOptions): string => bottomSheetElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-bottom-sheet": BottomSheetElement;
+  }
+}

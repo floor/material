@@ -45,3 +45,10 @@ export type ButtonElement = ElementInstance<ButtonSpec, ButtonComponent>;
 
 /** Registers `<m-button>` (or `<prefix-button>`). */
 export const defineButton = (options?: DefineOptions): string => buttonElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-button": ButtonElement;
+  }
+}

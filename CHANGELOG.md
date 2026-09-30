@@ -17,6 +17,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `::part(button)`), an element by its element name (`mtrl-switch__track` is `::part(track)`);
   modifiers name none. The piece holding the slot also takes the slot attribute's name, so
   `m-button::part(label)` styles the button's label. Each element's module doc lists its parts.
+- **Elements: `HTMLElementTagNameMap` entries for every `m-*` tag (FLO-328).**
+  `document.querySelector("m-switch")` returns a `SwitchElement`, and `createElement` likewise; a
+  declaration child (`m-tab`, `m-radio`, …) is `HTMLElement` with its attributes. The default `m-`
+  prefix only.
 
 - **`inertOutside(element)` (`mtrl/core/dom`) (FLO-324).** Makes everything but one element inert,
   across shadow roots, as `showModal()` does for a top-layer dialog, and returns the undo, which

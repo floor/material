@@ -65,3 +65,10 @@ export type ProgressElement = ElementInstance<ProgressSpec, ProgressComponent>;
 
 /** Registers `<m-progress>` (or `<prefix-progress>`). */
 export const defineProgress = (options?: DefineOptions): string => progressElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-progress": ProgressElement;
+  }
+}

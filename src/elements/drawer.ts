@@ -208,3 +208,11 @@ export const defineDrawer = (options?: DefineOptions): string => {
   if (!customElements.get(itemTag)) customElements.define(itemTag, createDeclarationClass(drawerItemDeclaration.attributes));
   return drawerElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-drawer": DrawerElement;
+    "m-drawer-item": HTMLElement & DrawerItemAttributes;
+  }
+}

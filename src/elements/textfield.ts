@@ -148,3 +148,10 @@ export type TextfieldElement = ElementInstance<TextfieldSpec, TextfieldElementCo
 
 /** Registers `<m-textfield>` (or `<prefix-textfield>`). */
 export const defineTextfield = (options?: DefineOptions): string => textfieldElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-textfield": TextfieldElement;
+  }
+}

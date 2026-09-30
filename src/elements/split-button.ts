@@ -124,3 +124,10 @@ export const defineSplitButton = (options?: DefineOptions): string => {
   defineMenuItem(options);
   return splitButtonElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-split-button": SplitButtonElement;
+  }
+}

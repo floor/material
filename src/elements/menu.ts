@@ -274,3 +274,11 @@ export const defineMenu = (options?: DefineOptions): string => {
   defineMenuItem(options);
   return menuElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-menu": MenuElement;
+    "m-menu-item": HTMLElement & MenuItemAttributes;
+  }
+}

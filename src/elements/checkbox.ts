@@ -68,3 +68,10 @@ export type CheckboxElement = ElementInstance<CheckboxSpec, CheckboxComponent>;
 
 /** Registers `<m-checkbox>` (or `<prefix-checkbox>`). */
 export const defineCheckbox = (options?: DefineOptions): string => checkboxElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-checkbox": CheckboxElement;
+  }
+}

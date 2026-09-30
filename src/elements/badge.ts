@@ -59,3 +59,10 @@ export type BadgeElement = ElementInstance<BadgeSpec, BadgeComponent>;
 
 /** Registers `<m-badge>` (or `<prefix-badge>`). */
 export const defineBadge = (options?: DefineOptions): string => badgeElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-badge": BadgeElement;
+  }
+}

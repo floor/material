@@ -86,3 +86,10 @@ export type IconButtonElement = ElementInstance<IconButtonSpec, IconButtonCompon
 
 /** Registers `<m-icon-button>` (or `<prefix-icon-button>`). */
 export const defineIconButton = (options?: DefineOptions): string => iconButtonElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-icon-button": IconButtonElement;
+  }
+}

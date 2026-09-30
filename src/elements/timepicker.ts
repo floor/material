@@ -246,3 +246,10 @@ export type TimepickerElement = ElementInstance<TimepickerSpec, TimepickerElemen
 
 /** Registers `<m-timepicker>` (or `<prefix-timepicker>`). */
 export const defineTimepicker = (options?: DefineOptions): string => timepickerElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-timepicker": TimepickerElement;
+  }
+}

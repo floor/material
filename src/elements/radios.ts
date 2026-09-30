@@ -176,3 +176,11 @@ export const defineRadios = (options?: DefineOptions): string => {
   if (!customElements.get(radioTag)) customElements.define(radioTag, createDeclarationClass(radioDeclaration.attributes));
   return radiosElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-radios": RadiosElement;
+    "m-radio": HTMLElement & RadioAttributes;
+  }
+}

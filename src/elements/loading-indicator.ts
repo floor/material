@@ -44,3 +44,10 @@ export type LoadingIndicatorElement = ElementInstance<LoadingIndicatorSpec, Load
 
 /** Registers `<m-loading-indicator>` (or `<prefix-loading-indicator>`). */
 export const defineLoadingIndicator = (options?: DefineOptions): string => loadingIndicatorElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-loading-indicator": LoadingIndicatorElement;
+  }
+}

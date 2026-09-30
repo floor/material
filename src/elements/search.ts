@@ -322,3 +322,11 @@ export const defineSearch = (options?: DefineOptions): string => {
   }
   return searchElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-search": SearchElement;
+    "m-search-suggestion": HTMLElement & SearchSuggestionAttributes;
+  }
+}

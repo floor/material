@@ -141,3 +141,10 @@ export type TopAppBarElement = ElementInstance<TopAppBarSpec, TopAppBar>;
 
 /** Registers `<m-top-app-bar>` (or `<prefix-top-app-bar>`). */
 export const defineTopAppBar = (options?: DefineOptions): string => topAppBarElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-top-app-bar": TopAppBarElement;
+  }
+}

@@ -72,3 +72,10 @@ export type BottomAppBarElement = ElementInstance<BottomAppBarSpec, BottomAppBar
 
 /** Registers `<m-bottom-app-bar>` (or `<prefix-bottom-app-bar>`). */
 export const defineBottomAppBar = (options?: DefineOptions): string => bottomAppBarElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-bottom-app-bar": BottomAppBarElement;
+  }
+}

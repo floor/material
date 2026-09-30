@@ -166,3 +166,10 @@ export type CardElement = ElementInstance<CardSpec, CardComponent>;
 
 /** Registers `<m-card>` (or `<prefix-card>`). */
 export const defineCard = (options?: DefineOptions): string => cardElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-card": CardElement;
+  }
+}

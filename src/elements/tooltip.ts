@@ -182,3 +182,10 @@ export type TooltipElement = ElementInstance<TooltipSpec, TooltipComponent>;
 
 /** Registers `<m-tooltip>` (or `<prefix-tooltip>`). */
 export const defineTooltip = (options?: DefineOptions): string => tooltipElement.define(options);
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-tooltip": TooltipElement;
+  }
+}

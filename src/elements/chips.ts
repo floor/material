@@ -294,3 +294,11 @@ export const defineChips = (options?: DefineOptions): string => {
   if (!customElements.get(chipTag)) customElements.define(chipTag, createDeclarationClass(chipDeclaration.attributes));
   return chipsElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-chips": ChipsElement;
+    "m-chip": HTMLElement & ChipAttributes;
+  }
+}

@@ -206,3 +206,11 @@ export const defineNavigationRail = (options?: DefineOptions): string => {
   }
   return navigationRailElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-navigation-rail": NavigationRailElement;
+    "m-navigation-rail-item": HTMLElement & NavigationRailItemAttributes;
+  }
+}

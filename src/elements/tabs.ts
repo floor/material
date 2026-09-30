@@ -140,3 +140,11 @@ export const defineTabs = (options?: DefineOptions): string => {
   if (!customElements.get(tabTag)) customElements.define(tabTag, createDeclarationClass(tabDeclaration.attributes));
   return tabsElement.define(options);
 };
+
+declare global {
+  /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
+  interface HTMLElementTagNameMap {
+    "m-tabs": TabsElement;
+    "m-tab": HTMLElement & TabAttributes;
+  }
+}
