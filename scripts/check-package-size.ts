@@ -169,7 +169,11 @@ try {
     // ::backdrop, with `overlay` held for the exit, in four stylesheets gzip cannot share.
     // Search's surface, a <dialog> in the top layer (FLO-285): measured 52,194. Its
     // state layers and the contained variant (FLO-286, FLO-287): measured 52,328.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 53600 },
+    // FLO-311, measured each alone on e36838c: dropping the --*-rgb twin of every colour
+    // role in every theme, 52,398 to 49,528; one button state layer in currentColor, its
+    // opacity alone per state, in place of a layer per colour style and toggle state:
+    // 48,934. With main's FLO-308 themes merged and regenerated without twins: 48,794.
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 48900 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);

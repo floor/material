@@ -10,6 +10,7 @@ import { checkList } from "./check-list-browser";
 import { checkChips } from "./check-chips-browser";
 import { checkCard } from "./check-card-browser";
 import { checkRippleIsThePress } from "./check-ripple-browser";
+import { checkButtonStateLayers } from "./check-button-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
 import { checkTextfield, checkTextfieldTokens, checkTextfieldAnatomy } from "./check-textfield-browser";
@@ -88,6 +89,7 @@ try {
   assert.equal(await page.evaluate(() => [...(window as unknown as CoreWindow).documentListeners.values()].reduce((sum, set) => sum + set.size, 0)), 0);
   assert.equal(await page.locator(".mtrl-ripple-wave").count(), 0);
   await checkRippleIsThePress(page);
+  await checkButtonStateLayers(page, artifacts);
   await checkChips(page, artifacts);
   await checkList(page, artifacts);
   await checkInputBEM(page);
@@ -113,7 +115,7 @@ try {
   for (const name of ["base", "timepicker"]) await page.addStyleTag({ content: await readFile(join(fixture.installed, `dist/styles/${name}.css`), "utf8") });
   await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/themes/baseline.css"), "utf8") });
   await checkTimePicker(page, artifacts);
-  console.log("Passed packed ripple animation, reduced motion, the ripple as the press, no forced offsetHeight read, and 40 pressed teardown cycles.");
+  console.log("Passed packed ripple animation, reduced motion, the ripple as the press, the button state layer in currentColor, no forced offsetHeight read, and 40 pressed teardown cycles.");
 } finally {
   await browser?.close();
   await fixture.cleanup();

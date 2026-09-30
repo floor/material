@@ -4,7 +4,7 @@
  * Generates mtrl's seed themes from Google's material-color-utilities
  * (FLO-308). Every theme listed here is written to
  * `src/styles/themes/_<name>.scss` through the `create-theme` mixin, light and
- * dark, with exactly the baseline theme's colour roles and their `-rgb` twins.
+ * dark, with exactly the baseline theme's colour roles (no `-rgb` twins, FLO-311).
  * The role-to-token mapping is `schemeToTokens` (src/core/theme), the same
  * function md3.io's theme builder calls, so the two cannot drift.
  *

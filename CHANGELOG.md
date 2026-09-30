@@ -18,8 +18,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   Each ships only as its own entry, `mtrl/themes/<name>`, so it costs nothing until imported;
   the full stylesheet's themes are unchanged.
 - **`schemeToTokens` (`mtrl/core/theme`, also `mtrl/core`) (FLO-308).** An M3 scheme's role
-  colours in, the theme's `--mtrl-sys-color-*` declarations out, light and dark, with `-rgb`
-  twins. The themes are generated with it (`scripts/generate-themes.ts`, from Google's
+  colours in, the theme's `--mtrl-sys-color-*` declarations out, light and dark, one per role
+  (no `-rgb` twins, FLO-311). The themes are generated with it (`scripts/generate-themes.ts`, from Google's
   material-color-utilities, a devDependency only) and md3.io's theme builder uses it too.
 
 - **Text field: a character counter (FLO-300).** While the input has a `maxlength`, the
@@ -49,6 +49,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   own workarounds, so a read-only element's trigger is disabled.
 
 ### Changed
+
+- **Button: one state layer in `currentColor` (FLO-311).** Each colour style and toggle state
+  drew its own hover, focus and pressed layer in its content role; the button now has one
+  `::before` in `currentColor`, whose opacity alone changes (0.08, 0.10, 0.10). Every style
+  already painted the layer in its content colour, so nothing looks different; a page that sets
+  its own `color` on a button now gets a state layer in that colour too. `button.css` goes from
+  23,254 to 13,635 bytes (2,591 to 2,188 gzipped).
 
 - **Themes regenerated from their seeds (FLO-308).** `desert`, `summer`, `brownbeige`,
   `sageivory` and `tealcaramel` are now generated from their primary seeds with M3's tones, each
@@ -111,7 +118,23 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   becomes `progress.on('change', ({ value }) => value)`. `ProgressEvents` types the two
   events, `change` and `complete`.
 
+### Changed (breaking, prerelease)
+
+- **The `--mtrl-sys-color-*-rgb` custom properties are gone (FLO-311).** Every theme declared
+  each colour role twice, as `#6750a4` and as `103, 80, 164`, for `rgba(var(--…-rgb), a)`. No
+  mtrl style reads the twins any more (`alpha()` builds on `color-mix` of the role), so the
+  baseline, the status colours, the dark block and every theme in `mtrl/themes/*` drop them,
+  and the internal Sass `rgb($key)` helper in `src/styles/abstract/_theme.scss`, which returned
+  `var(--…-rgb)`, is removed with them. Migration: `rgba(var(--mtrl-sys-color-X-rgb), N)`
+  becomes `color-mix(in srgb, var(--mtrl-sys-color-X) N%, transparent)` (N as a percentage).
+
 ### Fixed
+
+- **`--mtrl-sys-state-focus-state-layer-opacity` and `…-pressed-…` read 0.1, not 0.12
+  (FLO-311).** The baseline theme wrote the state opacities out by hand, with the Material 2
+  0.12 for focus and pressed, while every component compiles in M3's 0.1 from `$state`. Only
+  CSS that read the custom properties saw 0.12. The theme now emits them from `$state`, so the
+  two cannot drift again.
 
 - **Text field colours and states, per the M3 tokens (FLO-298).** The placeholder was always
   transparent; it shows in on-surface-variant while the field is focused or has no label. The
@@ -162,6 +185,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   no replacement.
 
 - **Text field:** `TEXTFIELD_CLASSES.LABEL_FLOATING`, applied and styled nowhere (FLO-295).
+- **`getThemeColor('sys-color-X-rgb')`** (`mtrl/core/utils`): the `-rgb` twins are no longer
+  declared (FLO-311), so the call now derives the `'r, g, b'` triplet from `sys-color-X`. It
+  keeps working until the next major; read `getThemeColor('sys-color-X', { alpha })` instead.
 
 ### Removed
 

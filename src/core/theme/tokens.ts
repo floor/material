@@ -41,11 +41,6 @@ export type SchemeRoles = Record<string, string>;
 export interface SchemeToTokensOptions {
   /** The token prefix, as `--{prefix}-sys-color-*`. Default `mtrl`. */
   prefix?: string;
-  /**
-   * Also emit each role's `-rgb` twin (`r, g, b`), as the shipped themes do
-   * for now. Default true.
-   */
-  rgb?: boolean;
 }
 
 /** A theme's declarations: custom property to value, light and dark. */
@@ -58,12 +53,7 @@ const kebab = (name: string): string => name.replace(/[A-Z]/g, (c) => `-${c.toLo
 
 const HEX = /^#([0-9a-f]{6})$/i;
 
-const channels = (hex: string): string => {
-  const value = parseInt(hex.slice(1), 16);
-  return `${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}`;
-};
-
-const mode = (roles: SchemeRoles, name: "light" | "dark", prefix: string, rgb: boolean): Record<string, string> => {
+const mode = (roles: SchemeRoles, name: "light" | "dark", prefix: string): Record<string, string> => {
   const byRole = new Map<string, string>();
   for (const [key, value] of Object.entries(roles)) byRole.set(kebab(key), value);
   const tokens: Record<string, string> = {};
@@ -72,10 +62,6 @@ const mode = (roles: SchemeRoles, name: "light" | "dark", prefix: string, rgb: b
     if (hex === undefined) throw new Error(`schemeToTokens: ${name} scheme has no ${role}`);
     if (!HEX.test(hex)) throw new Error(`schemeToTokens: ${name} ${role} is not #rrggbb: ${hex}`);
     tokens[`--${prefix}-sys-color-${role}`] = hex.toLowerCase();
-    // Light surface-rgb carries on-surface's channels, as in baseline: a
-    // workaround disabled buttons once read. Dark carries its own.
-    const twin = role === "surface" && name === "light" ? byRole.get("on-surface") ?? hex : hex;
-    if (rgb) tokens[`--${prefix}-sys-color-${role}-rgb`] = channels(twin);
   }
   return tokens;
 };
@@ -93,6 +79,5 @@ export const schemeToTokens = (
   options: SchemeToTokensOptions = {},
 ): ThemeTokens => {
   const prefix = options.prefix ?? "mtrl";
-  const rgb = options.rgb ?? true;
-  return { light: mode(schemes.light, "light", prefix, rgb), dark: mode(schemes.dark, "dark", prefix, rgb) };
+  return { light: mode(schemes.light, "light", prefix), dark: mode(schemes.dark, "dark", prefix) };
 };

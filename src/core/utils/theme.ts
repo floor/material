@@ -58,18 +58,41 @@ export const onThemeChange = (callback: ThemeChangeCallback): (() => void) => {
   };
 };
 
+const HEX = /^#([\da-f]{6}|[\da-f]{3})$/i;
+const RGB_TRIPLET = /^\d+,\s*\d+,\s*\d+$/;
+
+/** '#6750a4' or '#fff' → '103, 80, 164'; anything else → null. */
+const hexToTriplet = (value: string): string | null => {
+  if (!HEX.test(value)) return null;
+  const hex = value.slice(1);
+  const full = hex.length === 3 ? hex.split('').map((c) => c + c).join('') : hex;
+  return [0, 2, 4].map((i) => parseInt(full.substring(i, i + 2), 16)).join(', ');
+};
+
+/** Reads --<prefix>-<name> from the active theme (<body>), then from :root. */
+const readVar = (name: string): string => {
+  const prefixed = `--${PREFIX}-${name}`;
+  const value = getComputedStyle(document.body).getPropertyValue(prefixed).trim();
+  return value || getComputedStyle(document.documentElement).getPropertyValue(prefixed).trim();
+};
+
 /**
  * Gets a theme color from CSS variables, with optional alpha/opacity support.
  * The prefix is automatically added to the variable name.
  * Colors are retrieved from the active theme (defined on body element) if available,
  * falling back to the default theme (defined on :root) if not found.
  *
- * @param {string} varName - The CSS variable name without prefix (e.g. 'sys-color-primary' or 'sys-color-primary-rgb')
+ * @param {string} varName - The CSS variable name without prefix (e.g. 'sys-color-primary')
  * @param {object} [options] - Options for color retrieval
- * @param {number} [options.alpha] - Alpha value (0-1) for rgba output (only works with --*-rgb variables)
+ * @param {number} [options.alpha] - Alpha value (0-1): a hex colour is returned as rgba()
  * @param {string} [options.fallback] - Fallback color if variable is not found
  * @param {ThemeChangeCallback} [options.onThemeChange] - Optional callback for theme changes
  * @returns {string} The color value (hex, rgb, or rgba)
+ *
+ * @deprecated for `-rgb` names only: the themes no longer declare the
+ * `--<prefix>-sys-color-*-rgb` twins (FLO-311). `getThemeColor('sys-color-X-rgb')`
+ * still returns the `'r, g, b'` triplet, derived from `sys-color-X`, and will be
+ * removed in the next major. Read `sys-color-X` (with `alpha` for rgba) instead.
  *
  * @example
  * // Basic usage
@@ -91,46 +114,27 @@ export function getThemeColor(
     onThemeChange?: ThemeChangeCallback 
   }
 ): string {
-  const prefixedVarName = `--${PREFIX}-${varName}`;
-  
   // Register theme change callback if provided
   if (options?.onThemeChange) {
     onThemeChange(options.onThemeChange);
   }
-  
-  // First try to get the color from the active theme (body element)
-  const bodyStyles = getComputedStyle(document.body);
-  let value = bodyStyles.getPropertyValue(prefixedVarName).trim();
-  
-  // If not found in active theme, fall back to default theme (:root)
-  if (!value) {
-    const rootStyles = getComputedStyle(document.documentElement);
-    value = rootStyles.getPropertyValue(prefixedVarName).trim();
+
+  let value = readVar(varName);
+
+  // Deprecated: a '-rgb' twin that the theme no longer declares is derived
+  // from its colour role, so existing callers keep their 'r, g, b' triplet.
+  if (!value && varName.endsWith('-rgb')) {
+    value = hexToTriplet(readVar(varName.slice(0, -4))) ?? '';
   }
-  
+
   // If still not found, use fallback or return empty
   if (!value && options?.fallback) return options.fallback;
   if (!value) return '';
 
-  // If alpha is requested and value is rgb (e.g. '103, 80, 164')
-  if (typeof options?.alpha === 'number' && /\d+,\s*\d+,\s*\d+/.test(value)) {
-    return `rgba(${value}, ${options.alpha})`;
-  }
-
-  // If value is a hex color and alpha is requested, convert to rgba
-  if (typeof options?.alpha === 'number' && /^#([\da-f]{6}|[\da-f]{3})$/i.test(value)) {
-    const hex = value.replace('#', '');
-    let r, g, b;
-    if (hex.length === 3) {
-      r = parseInt(hex[0] + hex[0], 16);
-      g = parseInt(hex[1] + hex[1], 16);
-      b = parseInt(hex[2] + hex[2], 16);
-    } else {
-      r = parseInt(hex.substring(0, 2), 16);
-      g = parseInt(hex.substring(2, 4), 16);
-      b = parseInt(hex.substring(4, 6), 16);
-    }
-    return `rgba(${r}, ${g}, ${b}, ${options.alpha})`;
+  if (typeof options?.alpha === 'number') {
+    // An rgb triplet (e.g. '103, 80, 164') or a hex colour becomes rgba()
+    const triplet = RGB_TRIPLET.test(value) ? value : hexToTriplet(value);
+    if (triplet) return `rgba(${triplet}, ${options.alpha})`;
   }
 
   return value;
