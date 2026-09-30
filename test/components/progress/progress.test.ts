@@ -196,11 +196,31 @@ describe('progress', () => {
     expect(track.at[1]).toBeLessThan(2 * Math.PI - indicator.at[1]);
   });
 
-  test('a circular indeterminate indicator has no track', () => {
+  // FLO-338: M3 shows the indeterminate indicator on a fixed track too; it
+  // turns with the arc and clears both of its ends, at every frame.
+  test('a circular indeterminate indicator keeps its track, clear of both ends of the arc, as it turns', () => {
     const progress = createProgress({ variant: 'circular', indeterminate: true });
-    flush(0);
-    const arcs = shapes(progress).filter((s) => s.kind === 'arc');
-    expect(arcs.length).toBe(1);
+    for (const time of [0, 350, 700, 1333, 2200, 4100]) {
+      flush(time);
+      const arcs = shapes(progress).filter((s) => s.kind === 'arc');
+      expect(arcs.length).toBe(2);
+      const [track, indicator] = arcs as [Shape, Shape];
+      expect(track.color).not.toBe(indicator.color);
+      const arcEnd = indicator.at[0] + indicator.at[1];
+      // the track starts a gap after the arc's end and stops a gap before its start
+      expect(track.at[0]).toBeGreaterThan(arcEnd);
+      expect(track.at[0] + track.at[1]).toBeLessThan(indicator.at[0] + 2 * Math.PI);
+      // the two gaps are the same
+      expect(track.at[0] - arcEnd).toBeCloseTo(indicator.at[0] + 2 * Math.PI - (track.at[0] + track.at[1]), 5);
+    }
+  });
+
+  test('a wavy indeterminate indicator waves its arc, never its track', () => {
+    const progress = createProgress({ variant: 'circular', indeterminate: true, shape: 'wavy' });
+    flush(500);
+    const drawn = shapes(progress);
+    expect(drawn.filter((s) => s.kind === 'arc').length).toBe(1); // the flat track
+    expect(drawn.filter((s) => s.kind === 'line').length).toBe(1); // the waved arc
   });
 
   test('values are clamped, reported and announced', () => {

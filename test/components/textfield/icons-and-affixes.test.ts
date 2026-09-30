@@ -136,3 +136,30 @@ describe("the setters return the field, so they chain", () => {
     expect(chained.suffixTextElement?.textContent).toBe("kg");
   });
 });
+
+describe("placement is batched (FLO-335)", () => {
+  test("fields created together are all measured before any is written", async () => {
+    const log: string[] = [];
+    const fields = [0, 1, 2].map((i) => {
+      const field = mount({ prefixText: "$", suffixText: "kg", variant: "outlined" });
+      const prefix = field.element.querySelector<HTMLElement>(".mtrl-textfield__prefix")!;
+      prefix.getBoundingClientRect = () => { log.push(`read ${i}`); return { width: 10 } as DOMRect; };
+      const style = field.input.style;
+      Object.defineProperty(style, "paddingLeft", { configurable: true, set: () => void log.push(`write ${i}`), get: () => "" });
+      return field;
+    });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(log).toEqual(["read 0", "read 1", "read 2", "write 0", "write 1", "write 2"]);
+    for (const field of fields) field.destroy();
+  });
+
+  test("a field destroyed before the batch runs is neither measured nor written", async () => {
+    const log: string[] = [];
+    const field = mount({ prefixText: "$" });
+    const prefix = field.element.querySelector<HTMLElement>(".mtrl-textfield__prefix")!;
+    prefix.getBoundingClientRect = () => { log.push("read"); return { width: 10 } as DOMRect; };
+    field.destroy();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(log).toEqual([]);
+  });
+});

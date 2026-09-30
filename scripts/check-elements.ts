@@ -1135,6 +1135,44 @@ try {
     assert.deepEqual(reset, { t: "new@b.c", p: "second" });
     check("textfield: form.reset() restores the value attribute");
 
+    // FLO-335: an autofill fills the input without an input event and starts
+    // the stylesheet's onAutoFillStart animation; the label then floats, as
+    // over a typed value. Simulated: the value set silently, the animation's
+    // animationstart dispatched, as Chromium's :autofill would. The float
+    // comes from the stylesheet (the value's :not(:placeholder-shown), and
+    // :has(:autofill)), not from the script's autofill check, which only
+    // reports it (unit-tested); this guards the behaviour, whatever drives it.
+    const autofill = await page.evaluate(async () => {
+      const make = (value: string): HTMLElement => {
+        const host = document.createElement("m-textfield");
+        host.setAttribute("label", "Autofill");
+        if (value) host.setAttribute("value", value);
+        document.body.append(host);
+        return host;
+      };
+      const frame = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => r()));
+      const empty = make("");
+      const filled = make("typed");
+      await frame();
+      const label = (host: HTMLElement): string => {
+        const el = host.shadowRoot?.querySelector('[class*="textfield__label"]') as HTMLElement;
+        const style = getComputedStyle(el);
+        return `${style.transform} ${style.top}`;
+      };
+      const resting = label(empty);
+      const input = empty.shadowRoot?.querySelector("input") as HTMLInputElement;
+      input.value = "ada@example.com";
+      input.dispatchEvent(new AnimationEvent("animationstart", { animationName: "onAutoFillStart" }));
+      // past the label's float transition
+      await new Promise((r) => setTimeout(r, 600));
+      const result = { floated: label(empty) !== resting, likeTyped: label(empty) === label(filled) };
+      empty.remove();
+      filled.remove();
+      return result;
+    });
+    assert.deepEqual(autofill, { floated: true, likeTyped: true });
+    check("textfield: an autofill floats the label, as a typed value does");
+
     const validity = await page.evaluate(() => {
       const t = document.getElementById("t") as HTMLElement & { value: string };
       const form = document.getElementById("f") as HTMLFormElement;
@@ -2495,6 +2533,45 @@ try {
     });
     assert.deepEqual(parity.element, parity.factory);
     check("progress: linear and circular render as the factory does with the global stylesheet");
+
+    // FLO-338: the indeterminate circular indicator keeps its track. Its
+    // colour is read from a determinate indicator at 0, all track; the
+    // indeterminate one, element and factory, must show pixels of it.
+    const track = await page.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createProgress: (c: object) => { element: HTMLElement } } };
+      const empty = w.mtrl.createProgress({ variant: "circular", value: 0 });
+      const spinning = w.mtrl.createProgress({ variant: "circular", indeterminate: true });
+      document.getElementById("factory")?.append(empty.element, spinning.element);
+      await new Promise((r) => setTimeout(r, 300));
+      const pixels = (canvas: HTMLCanvasElement): Uint8ClampedArray =>
+        (canvas.getContext("2d") as CanvasRenderingContext2D).getImageData(0, 0, canvas.width, canvas.height).data;
+      // The most frequent opaque colour of the empty ring is its track
+      const counts = new Map<string, number>();
+      const ring = pixels(empty.element.querySelector("canvas") as HTMLCanvasElement);
+      for (let i = 0; i < ring.length; i += 4) {
+        if (ring[i + 3]! < 250) continue;
+        const key = `${ring[i]},${ring[i + 1]},${ring[i + 2]}`;
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
+      const trackColor = [...counts].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
+      const count = (canvas: HTMLCanvasElement): number => {
+        const data = pixels(canvas);
+        let n = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i + 3]! >= 250 && `${data[i]},${data[i + 1]},${data[i + 2]}` === trackColor) n++;
+        }
+        return n;
+      };
+      const inShadow = (id: string): HTMLCanvasElement =>
+        (document.getElementById(id) as HTMLElement).shadowRoot?.querySelector("canvas") as HTMLCanvasElement;
+      const result = { trackColor, factory: count(spinning.element.querySelector("canvas") as HTMLCanvasElement), element: count(inShadow("pc")) };
+      empty.element.remove();
+      spinning.element.remove();
+      return result;
+    });
+    assert.notEqual(track.trackColor, "", "the empty ring has a track colour");
+    assert.ok(track.factory > 20 && track.element > 20, `track pixels in the indeterminate indicator: ${JSON.stringify(track)}`);
+    check("progress: the indeterminate circular indicator shows its track, factory and element");
   }
 
   // ---------------------------------------------------------------- loading indicator
