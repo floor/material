@@ -189,6 +189,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **The framework adapters tree-shake (FLO-327).** One component from `mtrl/react`, `mtrl/vue`,
+  `mtrl/solid` or `mtrl/svelte` shipped the whole library: the switch was 174.9 KB gzip against
+  11.7 KB for its element. Each adapter component is now its own module, importing only its
+  element and that element's CSS; the index only re-exports, and the calls are `/*#__PURE__*/`.
+  The switch is now 12.6 KB, and every component's adapter import is within 2 KB of its element's.
+  `bun run adapters:size` checks it in CI with Bun (every component) and Vite (the switch, and a
+  switch with a button).
+
 - **Divider insets follow the writing direction (FLO-324).** They were physical margins, so in
   right-to-left the start inset landed on the end; they are logical margins now.
 
