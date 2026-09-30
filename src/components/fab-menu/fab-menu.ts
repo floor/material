@@ -202,6 +202,9 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
             position: "top-end",
             offset: FAB_MENU_MENU_GAP,
             manualOpen: true,
+            // In the top layer, next to the FAB: above everything, and in the
+            // same tree, so <m-fab-menu>'s shadow root styles it
+            layer: "top",
           }) as unknown as FabMenuMenu
         );
         return menu;

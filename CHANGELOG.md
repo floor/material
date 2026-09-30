@@ -33,6 +33,17 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
     list the arrows wrap and Home and End go to the ends. Escape or Tab out closes the list on the
     FAB, and so does choosing an item. A press outside closes it.
   - **Events:** `select` with the item's `id`, plus `open` and `close`.
+- **`<m-fab-menu>` (FLO-306).** The FAB menu as an element and in every adapter.
+  - `<m-fab-menu-item value icon>Label</m-fab-menu-item>` children declare the actions.
+  - `icon` and `aria-label` go to the FAB. `color`, `size`, `presentation` and `placement` are the
+    factory's options.
+  - `open` is state, as on `<m-menu>`: it reflects whether the menu is open, and setting it opens
+    the menu.
+  - `show()`, `hide()` and `toggle()`, and the events `open`, `close` and `select` (with
+    `{ value }`).
+  - The menu presentation's baseline menu renders in the element's shadow root, next to the FAB,
+    in the top layer.
+  - Pre-upgrade styles give the undefined host the closed FAB's box and colour.
 - **Size budgets for lazy chunks.** `scripts/size.ts` budgets what a component loads with
   `import()` apart from its initial graph: the menu's submenu feature, and the FAB menu's menu.
 

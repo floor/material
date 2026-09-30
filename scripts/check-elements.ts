@@ -4805,6 +4805,130 @@ try {
     }
   }
 
+  // ---------------------------------------------------------------- FAB menu (FLO-306)
+  await fresh(
+    page,
+    `<div class="stage" style="padding-top:260px"><button id="fm-before">Before</button>
+     <m-fab-menu id="fm" presentation="list" icon='${ICON}' aria-label="Compose">
+       <m-fab-menu-item value="reply" icon='${ICON}'>Reply</m-fab-menu-item>
+       <m-fab-menu-item value="forward">Forward</m-fab-menu-item>
+       <m-fab-menu-item value="archive">Archive</m-fab-menu-item>
+     </m-fab-menu>
+     <m-fab-menu id="fm2" presentation="menu" icon='${ICON}' aria-label="New">
+       <m-fab-menu-item value="doc">Document</m-fab-menu-item>
+       <m-fab-menu-item value="sheet">Sheet</m-fab-menu-item>
+     </m-fab-menu></div><div class="stage" id="fmstage"></div>`
+  );
+  {
+    type Fm = HTMLElement & { show: () => void; hide: () => void };
+    const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
+    /** The focused element inside a FAB menu: the FAB, an item's text, or the host's id when outside. */
+    const focused = (): Promise<string | null> =>
+      page.evaluate(() => {
+        let active = document.activeElement;
+        while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+        if (active?.classList.contains("mtrl-fab-menu__fab")) return `fab:${active.getAttribute("aria-label")}`;
+        return active ? active.id || (active.textContent ?? "").trim() : null;
+      });
+
+    const button = page.getByRole("button", { name: "Compose" });
+    assert.equal(await button.getAttribute("aria-haspopup"), "menu");
+    assert.equal(await button.getAttribute("aria-expanded"), "false");
+    await button.click();
+    await wait(500);
+    const opened = await page.evaluate(() => {
+      const fm = document.getElementById("fm") as Fm;
+      const list = fm.shadowRoot?.querySelector("[role=menu]") as HTMLElement;
+      const item = list.querySelector("[role=menuitem]") as HTMLElement;
+      const probe = document.createElement("div");
+      probe.style.backgroundColor = "var(--mtrl-sys-color-primary-container)";
+      document.body.append(probe);
+      const container = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return {
+        open: fm.hasAttribute("open"),
+        visible: getComputedStyle(list).visibility,
+        items: list.querySelectorAll("[role=menuitem]").length,
+        colour: getComputedStyle(item).backgroundColor === container,
+      };
+    });
+    assert.deepEqual(opened, { open: true, visible: "visible", items: 3, colour: true });
+    assert.equal(await focused(), "fab:Compose", "focus stays on the close button");
+    assert.equal(await page.getByRole("menuitem", { name: "Reply" }).count(), 1);
+    check("FAB menu: the FAB opens a menu of menuitems; open reflects; focus stays on the close button");
+
+    await page.keyboard.press("ArrowDown");
+    assert.equal(await focused(), "Reply");
+    await page.keyboard.press("ArrowUp");
+    assert.equal(await focused(), "Archive", "the arrows wrap");
+    await page.keyboard.press("Escape");
+    assert.equal(await focused(), "fab:Compose");
+    assert.equal(await page.evaluate(() => document.getElementById("fm")!.hasAttribute("open")), false);
+    await page.keyboard.press("Enter");
+    await wait(100);
+    await page.keyboard.press("Tab");
+    assert.equal(await focused(), "Reply", "Tab goes into the open list");
+    await page.keyboard.press("Tab");
+    assert.equal(await focused(), "fab:Compose", "Tab out closes it on the FAB");
+    check("FAB menu: arrows and Tab into the list, wrapping; Escape and Tab out close it on the FAB");
+
+    const chosen = await page.evaluate(async () => {
+      const fm = document.getElementById("fm") as Fm;
+      const seen: unknown[] = [];
+      fm.addEventListener("select", (e) => seen.push((e as CustomEvent<{ value: string }>).detail.value));
+      fm.show();
+      await new Promise((r) => setTimeout(r, 100));
+      (fm.shadowRoot?.querySelectorAll("[role=menuitem]")[1] as HTMLElement).click();
+      return { seen, open: fm.hasAttribute("open") };
+    });
+    assert.deepEqual(chosen, { seen: ["forward"], open: false });
+    check("FAB menu: choosing an item dispatches select with its value and closes");
+
+    await page.getByRole("button", { name: "New" }).click();
+    await wait(400);
+    const menu = await page.evaluate(() => {
+      const fm = document.getElementById("fm2") as Fm;
+      const surface = fm.shadowRoot?.querySelector(".mtrl-menu") as HTMLElement | null;
+      const fab = fm.shadowRoot?.querySelector(".mtrl-fab-menu__fab") as HTMLElement;
+      if (!surface) return null;
+      const s = surface.getBoundingClientRect();
+      const f = fab.getBoundingClientRect();
+      return {
+        open: fm.hasAttribute("open"),
+        visible: getComputedStyle(surface).visibility,
+        styled: getComputedStyle(surface).backgroundColor !== "rgba(0, 0, 0, 0)",
+        gap: Math.round(f.top - s.bottom),
+        expanded: fab.getAttribute("aria-expanded"),
+      };
+    });
+    assert.deepEqual(menu, { open: true, visible: "visible", styled: true, gap: 4, expanded: "true" });
+    const picked = await page.evaluate(async () => {
+      const fm = document.getElementById("fm2") as Fm;
+      const seen: unknown[] = [];
+      fm.addEventListener("select", (e) => seen.push((e as CustomEvent<{ value: string }>).detail.value));
+      (fm.shadowRoot?.querySelectorAll(".mtrl-menu__item")[1] as HTMLElement).click();
+      await new Promise((r) => setTimeout(r, 400));
+      return { seen, open: fm.hasAttribute("open") };
+    });
+    assert.deepEqual(picked, { seen: ["sheet"], open: false });
+    check("FAB menu: presentation=menu loads the baseline menu into its shadow root, 4px above the FAB");
+
+    const parity = await page.evaluate((icon) => {
+      const w = window as unknown as Win & { mtrl: { createFabMenu: (c: object) => { element: HTMLElement; fab: HTMLElement } } };
+      const factory = w.mtrl.createFabMenu({ icon, ariaLabel: "Compose", presentation: "list", items: [{ id: "a", text: "A" }, { id: "b", text: "B" }] });
+      document.getElementById("fmstage")?.append(factory.element);
+      const fm = document.getElementById("fm") as Fm;
+      const measure = (fab: HTMLElement): Record<string, string | number> => {
+        const r = fab.getBoundingClientRect();
+        const style = getComputedStyle(fab);
+        return { width: r.width, height: r.height, bg: style.backgroundColor, radius: style.borderTopLeftRadius, shadow: style.boxShadow };
+      };
+      return { factory: measure(factory.fab), element: measure(fm.shadowRoot?.querySelector(".mtrl-fab-menu__fab") as HTMLElement) };
+    }, ICON);
+    assert.deepEqual(parity.element, parity.factory);
+    check("FAB menu: renders as the factory does with the global stylesheet");
+  }
+
   // ---------------------------------------------------------------- closed menu out of the tab order
   // <m-menu> keeps its closed menu in its shadow root; its first item was a
   // tab stop there, so Tab stopped inside a menu nobody could see.

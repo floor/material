@@ -47,6 +47,8 @@ export const cases: PreupgradeCase[] = [
   c("icon-button", "size=l width=narrow", `<m-icon-button size="l" width="narrow" icon="${ICON}" aria-label="Favourite"></m-icon-button>`),
   c("fab", "default", `<m-fab icon="${ICON}" aria-label="Add"></m-fab>`),
   c("fab", "size=large", `<m-fab size="large" icon="${ICON}" aria-label="Add"></m-fab>`),
+  c("fab-menu", "default", `<m-fab-menu icon="${ICON}" aria-label="Compose"><m-fab-menu-item value="r">Reply</m-fab-menu-item><m-fab-menu-item value="f">Forward</m-fab-menu-item></m-fab-menu>`),
+  c("fab-menu", "size=medium color=tertiary", `<m-fab-menu size="medium" color="tertiary" icon="${ICON}" aria-label="Compose"><m-fab-menu-item value="r">Reply</m-fab-menu-item><m-fab-menu-item value="f">Forward</m-fab-menu-item></m-fab-menu>`),
   c("extended-fab", "default", `<m-extended-fab icon="${ICON}">Compose</m-extended-fab>`),
   c("extended-fab", "size=large", `<m-extended-fab size="large" icon="${ICON}">Compose</m-extended-fab>`),
   c("checkbox", "default", `<m-checkbox>Agree</m-checkbox>`),
