@@ -38,6 +38,8 @@ export const withController =
 
   // Track current focused chip index for keyboard navigation
   let focusedChipIndex = -1;
+  // Whether the arrows, Home and End move between the chips (keyboard.disable())
+  let keyboardEnabled = true;
 
   /**
    * Dispatches custom events to registered handlers
@@ -126,10 +128,12 @@ export const withController =
    * @param {KeyboardEvent} event - Keyboard event
    */
   const handleKeyboardNavigation = (event: KeyboardEvent) => {
+    if (!keyboardEnabled) return;
     const list = targets();
     if (list.length === 0) return;
     const isVertical = !!(component.layout && component.layout.isVertical());
-    const rtl = component.element.closest("[dir]")?.getAttribute("dir")?.toLowerCase() === "rtl";
+    // :dir() follows the direction into a shadow root, which closest("[dir]") does not
+    const rtl = component.element.matches(":dir(rtl)");
     const back = isVertical ? "ArrowUp" : rtl ? "ArrowRight" : "ArrowLeft";
     const forward = isVertical ? "ArrowDown" : rtl ? "ArrowLeft" : "ArrowRight";
     const from = list.indexOf(event.target as HTMLElement);
@@ -396,6 +400,7 @@ export const withController =
    * Enables keyboard navigation between chips in the container
    */
   const enableKeyboardNavigation = () => {
+    keyboardEnabled = true;
     // Add keyboard event listener to the chips container
     component.chipInstances.forEach((chip: ChipComponent) => {
       chip.element.addEventListener("keydown", handleKeyboardNavigation);
@@ -406,6 +411,8 @@ export const withController =
    * Disables keyboard navigation
    */
   const disableKeyboardNavigation = () => {
+    // The set's own listener kept handling the keys after the chips' were removed
+    keyboardEnabled = false;
     component.chipInstances.forEach((chip: ChipComponent) => {
       chip.element.removeEventListener("keydown", handleKeyboardNavigation);
     });
