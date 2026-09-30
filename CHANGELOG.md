@@ -31,6 +31,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- **Button: one state layer in `currentColor` (FLO-311).** Each colour style and toggle state
+  drew its own hover, focus and pressed layer in its content role; the button now has one
+  `::before` in `currentColor`, whose opacity alone changes (0.08, 0.10, 0.10). Every style
+  already painted the layer in its content colour, so nothing looks different; a page that sets
+  its own `color` on a button now gets a state layer in that colour too. `button.css` goes from
+  23,254 to 13,635 bytes (2,591 to 2,188 gzipped).
+
 - **An unsized text field, select or date picker is 280px wide** (`TextFieldDefaults.MinWidth`),
   instead of as wide as its input's 20 average characters. Chrome measures that differently per
   platform for the same Roboto (167px on macOS, 220px on Linux), so the same page laid out

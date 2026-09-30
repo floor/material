@@ -156,14 +156,26 @@ describe('button stylesheet: colour styles', () => {
     expect(value('.mtrl-button--xl.mtrl-button--outlined', 'border-width')).toBe('3px');
   });
 
+  // FLO-311: one ::before in currentColor for every style; the states change only
+  // its opacity. Each style's content role, set as `color`, is the layer's colour.
   test('state layers use the content colour at the hover, focus and pressed opacity', () => {
-    const layer = (selector: string) => ({
-      color: value(selector, 'background-color'),
-      opacity: value(selector, 'opacity'),
-    });
-    expect(layer('.mtrl-button--filled:hover::before')).toEqual({ color: 'var(--mtrl-sys-color-on-primary)', opacity: '0.08' });
-    expect(layer('.mtrl-button--outlined:focus-visible::before').color).toBe('var(--mtrl-sys-color-on-surface-variant)');
-    expect(layer('.mtrl-button--text:active:not(:has(> .mtrl-ripple))::before, .mtrl-button--text.mtrl-button--active:not(:has(> .mtrl-ripple))::before').color).toBe('var(--mtrl-sys-color-primary)');
+    expect(value('.mtrl-button::before', 'background-color')).toBe('currentColor');
+    expect(value('.mtrl-button::before', 'opacity')).toBe('0');
+    expect(value('.mtrl-button:hover::before', 'opacity')).toBe('0.08');
+    expect(value('.mtrl-button:focus-visible::before', 'opacity')).toBe('0.1');
+    expect(value('.mtrl-button:active:not(:has(> .mtrl-ripple))::before, .mtrl-button--active:not(:has(> .mtrl-ripple))::before', 'opacity')).toBe('0.1');
+
+    expect(value('.mtrl-button--filled', 'color')).toBe('var(--mtrl-sys-color-on-primary)');
+    expect(value('.mtrl-button--elevated', 'color')).toBe('var(--mtrl-sys-color-primary)');
+    expect(value('.mtrl-button--tonal', 'color')).toBe('var(--mtrl-sys-color-on-secondary-container)');
+    expect(value('.mtrl-button--outlined', 'color')).toBe('var(--mtrl-sys-color-on-surface-variant)');
+    expect(value('.mtrl-button--text', 'color')).toBe('var(--mtrl-sys-color-primary)');
+
+    // No style or toggle state paints a layer colour of its own.
+    const layerColours = Array.from(css.matchAll(/([^{}]*::before)\s*\{([^}]*)\}/g))
+      .filter((m) => /background-color/.test(m[2]!))
+      .map((m) => m[1]!.trim());
+    expect(layerColours).toEqual(['.mtrl-button::before']);
   });
 
   test('text button padding', () => {

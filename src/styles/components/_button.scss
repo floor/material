@@ -44,7 +44,9 @@ $label-typescale: (
   'xl': 'headline-large'
 );
 
-// Colour of the icon, label and state layer per colour style
+// Colour of the icon and label per colour style. The state layer is drawn in
+// currentColor, so it takes the same role: M3 tints a button's state layer
+// with its content colour, for every style, selected or not.
 $content-color: (
   'filled': 'on-primary',
   'elevated': 'primary',
@@ -111,7 +113,11 @@ $content-color: (
     }
   }
 
-  // State layer
+  // State layer: one ::before in currentColor, the content role each colour
+  // style and toggle state sets as `color`. Hover, focus and pressed change
+  // only its opacity (m3.material.io state layers: 0.08, 0.10, 0.10). The
+  // ripple is the press (FLO-260): a button that carries one leaves its
+  // pressed layer to the wave, as m.state-layer does.
   &::before {
     content: '';
     position: absolute;
@@ -121,6 +127,19 @@ $content-color: (
     pointer-events: none;
     border-radius: inherit;
     transition: opacity v.motion('duration-short2') v.motion('easing-standard');
+  }
+
+  &:hover::before {
+    opacity: f.get-state-opacity('hover');
+  }
+
+  &:focus-visible::before {
+    opacity: f.get-state-opacity('focus');
+  }
+
+  &:active:not(:has(> .#{base.$prefix}-ripple))::before,
+  &--active:not(:has(> .#{base.$prefix}-ripple))::before {
+    opacity: f.get-state-opacity('pressed');
   }
 
   // Icon
@@ -247,19 +266,6 @@ $content-color: (
   @each $variant, $role in $content-color {
     &--#{$variant} {
       color: t.color($role);
-
-      &:hover {
-        @include m.state-layer(t.color($role), 'hover');
-      }
-
-      &:focus-visible {
-        @include m.state-layer(t.color($role), 'focus');
-      }
-
-      &:active,
-      &.#{$component}--active {
-        @include m.state-layer(t.color($role), 'pressed');
-      }
     }
   }
 
@@ -377,19 +383,6 @@ $content-color: (
     &.#{$component}--filled {
       background-color: t.color('surface-container');
       color: t.color('on-surface-variant');
-
-      &:hover {
-        @include m.state-layer(t.color('on-surface-variant'), 'hover');
-      }
-
-      &:focus-visible {
-        @include m.state-layer(t.color('on-surface-variant'), 'focus');
-      }
-
-      &:active,
-      &.#{$component}--active {
-        @include m.state-layer(t.color('on-surface-variant'), 'pressed');
-      }
     }
 
     &.#{$component}--selected {
@@ -407,19 +400,6 @@ $content-color: (
         &.#{$component}--#{$variant} {
           background-color: t.color($container);
           color: t.color($content);
-
-          &:hover {
-            @include m.state-layer(t.color($content), 'hover');
-          }
-
-          &:focus-visible {
-            @include m.state-layer(t.color($content), 'focus');
-          }
-
-          &:active,
-          &.#{$component}--active {
-            @include m.state-layer(t.color($content), 'pressed');
-          }
         }
       }
 
