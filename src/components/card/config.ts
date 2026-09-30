@@ -167,7 +167,11 @@ export const createBaseConfig = (config: CardSchema = {}): CardComponentConfig =
  */
 export const getElementConfig = (config: CardSchema) => {
   const isInteractive = config.interactive || config.clickable;
-  const defaultRole = isInteractive ? "button" : "region";
+  // A clickable card is a button. Any other card is an article: self-contained
+  // content its headline can name, which a region landmark per card is not
+  // (it floods landmark navigation). `interactive` alone is the hover and
+  // press states, not a control: no role of button, no tab stop (FLO-109).
+  const defaultRole = config.clickable ? "button" : "article";
 
   // Prepare ARIA attributes
   const ariaAttributes: Record<string, string> = {};
@@ -189,8 +193,8 @@ export const getElementConfig = (config: CardSchema) => {
     ariaAttributes["role"] = defaultRole;
   }
 
-  // Add tabindex for interactive cards if not specified
-  if (isInteractive && !ariaAttributes["tabindex"]) {
+  // A tab stop for a card that does something when activated
+  if (config.clickable && !ariaAttributes["tabindex"]) {
     ariaAttributes["tabindex"] = "0";
   }
 
