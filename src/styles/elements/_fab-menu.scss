@@ -1,0 +1,43 @@
+// src/styles/elements/_fab-menu.scss
+// <m-fab-menu> before upgrade: the closed FAB, at its size and on its colour
+// set's container. The item declarations render nothing.
+@use 'sass:list';
+@use 'sass:map';
+@use '../abstract/functions' as f;
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As components/_fab.scss and _fab-menu.scss: the FAB the menu opens from.
+$sizes: ('default': (56px, 'large'), 'medium': (80px, 'large-increased'), 'large': (96px, 'extra-large'));
+
+@mixin size($size) {
+  $values: map.get($sizes, $size);
+  width: list.nth($values, 1);
+  height: list.nth($values, 1);
+  border-radius: f.get-shape(list.nth($values, 2));
+}
+
+@include c.host('fab-menu') {
+  display: inline-block;
+  vertical-align: middle;
+  box-sizing: border-box;
+  overflow: hidden;
+  background-color: t.color('primary-container');
+  @include size('default');
+
+  @each $size in map.keys($sizes) {
+    &[size='#{$size}'] {
+      @include size($size);
+    }
+  }
+
+  @each $role in secondary, tertiary {
+    &[color='#{$role}'] {
+      background-color: t.color('#{$role}-container');
+    }
+  }
+}
+
+@include c.declarations('fab-menu') {
+  display: none;
+}

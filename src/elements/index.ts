@@ -35,6 +35,7 @@ import { listElement, listItemDeclaration, defineList } from "./list";
 import { cardElement, defineCard } from "./card";
 import { carouselElement, carouselItemDeclaration, defineCarousel } from "./carousel";
 import { menuElement, menuItemDeclaration, defineMenu } from "./menu";
+import { fabMenuElement, fabMenuItemDeclaration, defineFabMenu } from "./fab-menu";
 import { selectElement, selectOptionDeclaration, defineSelect } from "./select";
 import { splitButtonElement, defineSplitButton } from "./split-button";
 import { tooltipElement, defineTooltip } from "./tooltip";
@@ -108,6 +109,8 @@ export { carouselElement, carouselItemDeclaration, defineCarousel } from "./caro
 export type { CarouselSpec, CarouselElement, CarouselItemAttributes } from "./carousel";
 export { menuElement, menuItemDeclaration, defineMenu } from "./menu";
 export type { MenuSpec, MenuElement, MenuItemAttributes, MenuAnchor, MenuElementComponent } from "./menu";
+export { fabMenuElement, fabMenuItemDeclaration, defineFabMenu } from "./fab-menu";
+export type { FabMenuSpec, FabMenuElement, FabMenuItemAttributes, FabMenuElementComponent } from "./fab-menu";
 export { selectElement, selectOptionDeclaration, defineSelect } from "./select";
 export type { SelectSpec, SelectElement, SelectOptionAttributes } from "./select";
 export { splitButtonElement, defineSplitButton } from "./split-button";
@@ -160,6 +163,7 @@ export const elements = {
   card: cardElement,
   carousel: carouselElement,
   menu: menuElement,
+  fabMenu: fabMenuElement,
   select: selectElement,
   splitButton: splitButtonElement,
   tooltip: tooltipElement,
@@ -184,6 +188,7 @@ export const declarations = {
   listItem: listItemDeclaration,
   carouselItem: carouselItemDeclaration,
   menuItem: menuItemDeclaration,
+  fabMenuItem: fabMenuItemDeclaration,
   selectOption: selectOptionDeclaration,
   searchSuggestion: searchSuggestionDeclaration,
 } as const;
@@ -214,6 +219,7 @@ export const defineAll = (options?: DefineOptions): void => {
   defineCard(options);
   defineCarousel(options);
   defineMenu(options);
+  defineFabMenu(options);
   defineSelect(options);
   defineSplitButton(options);
   defineTooltip(options);

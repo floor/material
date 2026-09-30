@@ -40,6 +40,7 @@ declare module "solid-js" {
       "m-card": Tag<import("../elements/card").CardSpec, import("../elements/card").CardElement>;
       "m-carousel": Tag<import("../elements/carousel").CarouselSpec, import("../elements/carousel").CarouselElement>;
       "m-menu": Tag<import("../elements/menu").MenuSpec, import("../elements/menu").MenuElement>;
+      "m-fab-menu": Tag<import("../elements/fab-menu").FabMenuSpec, import("../elements/fab-menu").FabMenuElement>;
       "m-select": Tag<import("../elements/select").SelectSpec, import("../elements/select").SelectElement>;
       "m-split-button": Tag<import("../elements/split-button").SplitButtonSpec, import("../elements/split-button").SplitButtonElement>;
       "m-tooltip": Tag<import("../elements/tooltip").TooltipSpec, import("../elements/tooltip").TooltipElement>;
@@ -60,6 +61,7 @@ declare module "solid-js" {
       "m-list-item": Tag<typeof import("../elements/list").listItemDeclaration, HTMLElement>;
       "m-carousel-item": Tag<typeof import("../elements/carousel").carouselItemDeclaration, HTMLElement>;
       "m-menu-item": Tag<typeof import("../elements/menu").menuItemDeclaration, HTMLElement>;
+      "m-fab-menu-item": Tag<typeof import("../elements/fab-menu").fabMenuItemDeclaration, HTMLElement>;
       "m-select-option": Tag<typeof import("../elements/select").selectOptionDeclaration, HTMLElement>;
       "m-search-suggestion": Tag<typeof import("../elements/search").searchSuggestionDeclaration, HTMLElement>;
     }
@@ -84,12 +86,12 @@ declare module "solid-js" {
       "collapse": ElementEvents<import("../elements/extended-fab").ExtendedFabSpec>["collapse"] | ElementEvents<import("../elements/navigation-rail").NavigationRailSpec>["collapse"] | ElementEvents<import("../elements/bottom-sheet").BottomSheetSpec>["collapse"];
       "expand": ElementEvents<import("../elements/extended-fab").ExtendedFabSpec>["expand"] | ElementEvents<import("../elements/navigation-rail").NavigationRailSpec>["expand"] | ElementEvents<import("../elements/bottom-sheet").BottomSheetSpec>["expand"];
       "input": ElementEvents<import("../elements/slider").SliderSpec>["input"] | ElementEvents<import("../elements/textfield").TextfieldSpec>["input"] | ElementEvents<import("../elements/timepicker").TimepickerSpec>["input"] | ElementEvents<import("../elements/search").SearchSpec>["input"];
-      "open": ElementEvents<import("../elements/drawer").DrawerSpec>["open"] | ElementEvents<import("../elements/menu").MenuSpec>["open"] | ElementEvents<import("../elements/snackbar").SnackbarSpec>["open"] | ElementEvents<import("../elements/dialog").DialogSpec>["open"] | ElementEvents<import("../elements/bottom-sheet").BottomSheetSpec>["open"] | ElementEvents<import("../elements/side-sheet").SideSheetSpec>["open"] | ElementEvents<import("../elements/datepicker").DatepickerSpec>["open"] | ElementEvents<import("../elements/timepicker").TimepickerSpec>["open"] | ElementEvents<import("../elements/search").SearchSpec>["open"];
-      "close": ElementEvents<import("../elements/drawer").DrawerSpec>["close"] | ElementEvents<import("../elements/menu").MenuSpec>["close"] | ElementEvents<import("../elements/snackbar").SnackbarSpec>["close"] | ElementEvents<import("../elements/dialog").DialogSpec>["close"] | ElementEvents<import("../elements/bottom-sheet").BottomSheetSpec>["close"] | ElementEvents<import("../elements/side-sheet").SideSheetSpec>["close"] | ElementEvents<import("../elements/datepicker").DatepickerSpec>["close"] | ElementEvents<import("../elements/timepicker").TimepickerSpec>["close"] | ElementEvents<import("../elements/search").SearchSpec>["close"];
+      "open": ElementEvents<import("../elements/drawer").DrawerSpec>["open"] | ElementEvents<import("../elements/menu").MenuSpec>["open"] | ElementEvents<import("../elements/fab-menu").FabMenuSpec>["open"] | ElementEvents<import("../elements/snackbar").SnackbarSpec>["open"] | ElementEvents<import("../elements/dialog").DialogSpec>["open"] | ElementEvents<import("../elements/bottom-sheet").BottomSheetSpec>["open"] | ElementEvents<import("../elements/side-sheet").SideSheetSpec>["open"] | ElementEvents<import("../elements/datepicker").DatepickerSpec>["open"] | ElementEvents<import("../elements/timepicker").TimepickerSpec>["open"] | ElementEvents<import("../elements/search").SearchSpec>["open"];
+      "close": ElementEvents<import("../elements/drawer").DrawerSpec>["close"] | ElementEvents<import("../elements/menu").MenuSpec>["close"] | ElementEvents<import("../elements/fab-menu").FabMenuSpec>["close"] | ElementEvents<import("../elements/snackbar").SnackbarSpec>["close"] | ElementEvents<import("../elements/dialog").DialogSpec>["close"] | ElementEvents<import("../elements/bottom-sheet").BottomSheetSpec>["close"] | ElementEvents<import("../elements/side-sheet").SideSheetSpec>["close"] | ElementEvents<import("../elements/datepicker").DatepickerSpec>["close"] | ElementEvents<import("../elements/timepicker").TimepickerSpec>["close"] | ElementEvents<import("../elements/search").SearchSpec>["close"];
       "action": ElementEvents<import("../elements/button-group").ButtonGroupSpec>["action"] | ElementEvents<import("../elements/snackbar").SnackbarSpec>["action"] | ElementEvents<import("../elements/search").SearchSpec>["action"];
       "remove": ElementEvents<import("../elements/chips").ChipsSpec>["remove"];
       "activate": ElementEvents<import("../elements/list").ListSpec>["activate"];
-      "select": ElementEvents<import("../elements/menu").MenuSpec>["select"] | ElementEvents<import("../elements/split-button").SplitButtonSpec>["select"] | ElementEvents<import("../elements/search").SearchSpec>["select"];
+      "select": ElementEvents<import("../elements/menu").MenuSpec>["select"] | ElementEvents<import("../elements/fab-menu").FabMenuSpec>["select"] | ElementEvents<import("../elements/split-button").SplitButtonSpec>["select"] | ElementEvents<import("../elements/search").SearchSpec>["select"];
       "show": ElementEvents<import("../elements/toolbar").ToolbarSpec>["show"];
       "hide": ElementEvents<import("../elements/toolbar").ToolbarSpec>["hide"];
       "cancel": ElementEvents<import("../elements/dialog").DialogSpec>["cancel"];

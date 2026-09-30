@@ -56,6 +56,7 @@ declare module "react" {
       "m-card": Tag<import("../elements/card").CardSpec, import("../elements/card").CardElement>;
       "m-carousel": Tag<import("../elements/carousel").CarouselSpec, import("../elements/carousel").CarouselElement>;
       "m-menu": Tag<import("../elements/menu").MenuSpec, import("../elements/menu").MenuElement>;
+      "m-fab-menu": Tag<import("../elements/fab-menu").FabMenuSpec, import("../elements/fab-menu").FabMenuElement>;
       "m-select": Tag<import("../elements/select").SelectSpec, import("../elements/select").SelectElement>;
       "m-split-button": Tag<import("../elements/split-button").SplitButtonSpec, import("../elements/split-button").SplitButtonElement>;
       "m-tooltip": Tag<import("../elements/tooltip").TooltipSpec, import("../elements/tooltip").TooltipElement>;
@@ -76,6 +77,7 @@ declare module "react" {
       "m-list-item": Tag<typeof import("../elements/list").listItemDeclaration, HTMLElement>;
       "m-carousel-item": Tag<typeof import("../elements/carousel").carouselItemDeclaration, HTMLElement>;
       "m-menu-item": Tag<typeof import("../elements/menu").menuItemDeclaration, HTMLElement>;
+      "m-fab-menu-item": Tag<typeof import("../elements/fab-menu").fabMenuItemDeclaration, HTMLElement>;
       "m-select-option": Tag<typeof import("../elements/select").selectOptionDeclaration, HTMLElement>;
       "m-search-suggestion": Tag<typeof import("../elements/search").searchSuggestionDeclaration, HTMLElement>;
     }
