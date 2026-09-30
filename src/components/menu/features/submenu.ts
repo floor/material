@@ -181,9 +181,9 @@ const withSubmenu =
    * handler can reach the same data the main menu's does.
    */
   /**
-   * The item list to search. This feature is composed before the controller,
-   * so `component.menu` is not there yet at that point; the configured items
-   * are, and the live list is used once the controller has published it.
+   * The item list to search. The controller loads this feature on demand and
+   * hands it its own host, which carries no `component.menu`; the configured
+   * items are used then, and the live list whenever a host does publish it.
    */
   const currentItems = (): MenuContent[] =>
     component.menu?.getItems?.() ?? config.items ?? [];

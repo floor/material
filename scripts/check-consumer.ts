@@ -93,6 +93,24 @@ try {
   `);
   await writeFile(join(directory, "lazy.html"), '<!doctype html><html><body><script type="module" src="./lazy.ts"></script></body></html>');
   input.lazy = join(directory, "lazy.html");
+  // The menu's submenu feature is a lazy chunk too (FLO-310). `?nested` gives
+  // the menu nested items at creation; without it the items are flat, and
+  // window.nest() gives it nested ones through setItems.
+  await writeFile(join(directory, "menu.ts"), `
+    import { createMenu } from 'mtrl';
+    import 'mtrl/styles/base'; import 'mtrl/styles/menu';
+    const opener = document.createElement('button');
+    opener.textContent = 'Actions';
+    document.body.append(opener);
+    const flat = [{ id: 'copy', text: 'Copy' }, { id: 'paste', text: 'Paste' }];
+    const nested = [{ id: 'share', text: 'Share', hasSubmenu: true, submenu: [{ id: 'link', text: 'Copy link' }] }, ...flat];
+    const menu = createMenu({ opener, items: location.search === '?nested' ? nested : flat });
+    Object.assign(window, { nest: () => menu.setItems(nested) });
+    menu.open();
+    document.body.dataset.ready = 'true';
+  `);
+  await writeFile(join(directory, "menu.html"), '<!doctype html><html><body><script type="module" src="./menu.ts"></script></body></html>');
+  input.menu = join(directory, "menu.html");
   // Exercise deduplication even when the app explicitly imports a dependency.
   await writeFile(join(directory, "dedup.ts"), "import 'mtrl/styles/base'; import 'mtrl/styles/segmented-button'; import 'mtrl/styles/button'; document.body.dataset.ready = 'true';");
   await writeFile(join(directory, "dedup.html"), '<!doctype html><html><body><script type="module" src="./dedup.ts"></script></body></html>');
@@ -129,6 +147,10 @@ try {
   const lazyInitial = assets("lazy.html", "static");
   const lazyDeferred = [...assets("lazy.html", "dynamic")].filter(path => path.endsWith(".js") && !lazyInitial.has(path));
   assert(lazyDeferred.length, "Production Vite app lost its lazy chunk");
+  const submenuChunk = Object.entries(manifest).find(([key]) => key.endsWith("components/menu/features/submenu.js"))?.[1].file;
+  assert(submenuChunk, "Vite did not split the menu's submenu feature into a chunk");
+  assert(!assets("menu.html", "static").has(submenuChunk), "The submenu feature is in the menu's initial graph");
+  assert(assets("menu.html", "dynamic").has(submenuChunk), "The menu does not load the submenu chunk");
 
   server = await preview({ root: directory, configFile: false, envFile: false, logLevel: "error",
     build: { outDir }, preview: { host: "127.0.0.1", port: 0, open: false },
@@ -154,6 +176,35 @@ try {
   await lazyPage.locator('body[data-loaded="true"] canvas').waitFor();
   assert(lazyDeferred.some(file => requested.has(file)), "Lazy progress was not requested on click");
   await lazyPage.close();
+
+  // A menu without nested items never requests the submenu chunk, opened or
+  // not; setItems with nested items requests it. A menu created with nested
+  // items requests it at creation, with no interaction, and its submenu opens.
+  const submenuRequested = (page: Page): Promise<unknown> =>
+    page.waitForRequest(request => new URL(request.url()).pathname.slice(1) === submenuChunk, { timeout: 5000 });
+  const flatPage = await context.newPage();
+  const flatRequested = new Set<string>();
+  flatPage.on("request", request => flatRequested.add(new URL(request.url()).pathname.slice(1)));
+  await flatPage.goto(`${origin}/menu.html`);
+  await flatPage.locator('body[data-ready="true"]').waitFor();
+  await flatPage.getByRole("menuitem", { name: "Copy" }).waitFor();
+  await flatPage.waitForTimeout(300);
+  assert(!flatRequested.has(submenuChunk), "A menu without nested items requested the submenu chunk");
+  const afterSetItems = submenuRequested(flatPage);
+  await flatPage.evaluate(() => (window as unknown as { nest: () => void }).nest());
+  await afterSetItems;
+  await flatPage.close();
+  // A context of its own, so the chunk is not already in the cache
+  const nestedContext = await browser.newContext({ reducedMotion: "reduce" });
+  const nestedPage = await nestedContext.newPage();
+  nestedPage.on("pageerror", error => errors.push(error.message));
+  nestedPage.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
+  const atCreation = submenuRequested(nestedPage);
+  await nestedPage.goto(`${origin}/menu.html?nested`);
+  await atCreation;
+  await nestedPage.getByRole("menuitem", { name: "Share" }).click();
+  await nestedPage.getByRole("menuitem", { name: "Copy link" }).waitFor();
+  await nestedContext.close();
 
   const snapshot = async function snapshot(page: Page) {
     return page.evaluate(() => [...document.body.querySelectorAll("*")].filter(el => !["SCRIPT", "STYLE"].includes(el.tagName)).map(el => {
