@@ -289,6 +289,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Progress: the indeterminate circular indicator keeps its track (FLO-338).** It drew only the
+  moving arc. M3 shows indeterminate indicators moving along a fixed track, and the Expressive
+  `CircularWavyProgressIndicator` draws one; the track now runs around the rest of the circle,
+  clear of both ends of the arc by the determinate gap, turning with it and never waved, flat and
+  wavy alike.
 - **Text field: no computed-style read per field, and one layout pass for many (FLO-335).** Each
   field started a timer that read `getComputedStyle(input)` to guess an autofill from its
   background colour, a forced style recalculation per field. The stylesheet already runs an

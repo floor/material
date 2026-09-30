@@ -3,9 +3,13 @@
 // The circular indicator, after Compose ProgressIndicator.kt and
 // WavyProgressIndicator.kt: an arc from 12 o'clock clockwise, a track around
 // the rest with a gap at both ends of the arc, and, when indeterminate, an
-// arc that grows and shrinks as it turns. A circular indeterminate indicator
-// has no track (ProgressIndicatorDefaults.circularIndeterminateTrackColor is
-// transparent).
+// arc that grows and shrinks as it turns. The indeterminate indicator keeps
+// its track too, as m3.material.io shows it ("indeterminate progress
+// indicators move along a fixed track") and as the Expressive
+// CircularWavyProgressIndicator draws it (WavyProgressIndicatorDefaults
+// trackColor and CircularIndicatorTrackGapSize): around the rest of the
+// circle, turning with the arc, never waved (FLO-338). Pre-Expressive
+// Compose left it out (circularIndeterminateTrackColor transparent).
 
 import { CanvasContext } from "./canvas";
 import { ProgressColors } from "./colors";
@@ -115,7 +119,14 @@ export const drawCircularProgress = (
   if (indeterminate) {
     const { rotation, sweep } = circularIndeterminateFrame(frame.time);
     const start = (rotation * Math.PI) / 180;
-    drawArc(ctx, centerX, centerY, radius, start, sweep * TWO_PI, colors.indicator, strokeWidth, wave);
+    const arcSweep = sweep * TWO_PI;
+    const gap = Math.min(arcSweep, gapSweep);
+    // The track around the rest, clear of both ends of the moving arc, flat
+    const trackSweep = TWO_PI - arcSweep - gap * 2;
+    if (trackSweep > 0) {
+      drawArc(ctx, centerX, centerY, radius, start + arcSweep + gap, trackSweep, colors.track, strokeWidth);
+    }
+    drawArc(ctx, centerX, centerY, radius, start, arcSweep, colors.indicator, strokeWidth, wave);
     return;
   }
 
