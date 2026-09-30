@@ -27,7 +27,7 @@ describe('loading indicator stylesheet', () => {
     expect(value('.mtrl-loading-indicator', 'width')).toBe('var(--mtrl-loading-indicator-size)');
     expect(value('.mtrl-loading-indicator', 'height')).toBe('var(--mtrl-loading-indicator-size)');
     expect(value('.mtrl-loading-indicator', 'color')).toBe('var(--mtrl-sys-color-primary)');
-    expect(value('.mtrl-loading-indicator', 'border-radius')).toBe('9999px');
+    expect(value('.mtrl-loading-indicator', 'border-radius')).toBe('var(--mtrl-sys-shape-corner-full, 9999px)');
     expect(value('.mtrl-loading-indicator', 'background-color')).toBeUndefined();
   });
 

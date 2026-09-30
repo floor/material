@@ -42,7 +42,7 @@ describe('card stylesheet', () => {
 
   test('the corner is medium, as all three variants specify', () => {
     // ContainerShape is CornerMedium in every card token set
-    expect(value('.mtrl-card', 'border-radius')).toBe('12px');
+    expect(value('.mtrl-card', 'border-radius')).toBe('var(--mtrl-sys-shape-corner-medium, 12px)');
   });
 
   test('each variant takes its own container colour', () => {

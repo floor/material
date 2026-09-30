@@ -1,5 +1,6 @@
 import { beforeAll, expect, test } from 'bun:test';
 import { compileString } from 'sass';
+import { corner } from '../utils/corner';
 import { createBaseConfig } from '../../src/components/extended-fab/config';
 import { EXTENDED_FAB_SIZES } from '../../src/components/extended-fab/constants';
 
@@ -19,9 +20,10 @@ for (const [size, height, icon, padding, gap, radius, fontSize, lineHeight, weig
 ] as const) {
   test(`${size}: expressive dimensions and label type`, () => {
     const selector = `${root}--${size}`;
-    for (const [name, expected] of [['height', height], ['icon-size', icon], ['padding', padding], ['gap', gap], ['radius', radius]]) {
+    for (const [name, expected] of [['height', height], ['icon-size', icon], ['padding', padding], ['gap', gap]]) {
       expect(value(selector, `--mtrl-extended-fab-${name}`)).toBe(`${expected}px`);
     }
+    expect(value(selector, '--mtrl-extended-fab-radius')).toBe(corner(radius));
     expect(value(`${selector} ${root}__text`, 'font-size')).toBe(`${fontSize}px`);
     expect(value(`${selector} ${root}__text`, 'line-height')).toBe(`${lineHeight}px`);
     expect(value(`${selector} ${root}__text`, 'font-weight')).toBe(String(weight));
