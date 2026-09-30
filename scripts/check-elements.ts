@@ -2463,6 +2463,23 @@ try {
     });
     assert.deepEqual(parity.element, parity.factory);
     check("badge: renders as the factory does with the global stylesheet");
+
+    // FLO-329: baseline declared no status roles, so these had no background.
+    const status = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createBadge: (c: object) => { element: HTMLElement } } };
+      return Object.fromEntries(["success", "warning", "info"].map((color) => {
+        const badge = w.mtrl.createBadge({ label: "1", color });
+        document.getElementById("factory")?.append(badge.element);
+        const s = getComputedStyle(badge.element);
+        return [color, { bg: s.backgroundColor, color: s.color }];
+      }));
+    });
+    assert.deepEqual(status, {
+      success: { bg: "rgb(0, 123, 90)", color: "rgb(255, 255, 255)" },
+      warning: { bg: "rgb(221, 109, 6)", color: "rgb(255, 255, 255)" },
+      info: { bg: "rgb(0, 97, 164)", color: "rgb(255, 255, 255)" },
+    });
+    check("badge: the success, warning and info colours have their background under baseline");
   }
 
   // ---------------------------------------------------------------- divider
