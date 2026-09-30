@@ -47,6 +47,7 @@ type Win = Window & {
     setProgress: (v: number) => void;
     setDialog: (v: boolean) => void;
     setRail: (v: boolean) => void;
+    ref: HTMLElement | null;
   };
 };
 
@@ -300,6 +301,25 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => !document.getElementById("dg")?.shadowRoot?.querySelector("dialog")?.open);
     assert.equal(await modal(), false);
     check("dialog: open follows the state; Escape closes it and the close handler updates the state");
+
+    // A named snippet is the headline slot's content (FLO-325): the slot the
+    // element renders the headline into is assigned the snippet's text.
+    const headline = await page.evaluate(() => {
+      const slot = document.getElementById("dg")?.shadowRoot?.querySelector<HTMLSlotElement>('slot[name="headline"]');
+      return (slot?.assignedNodes({ flatten: true }) ?? []).map((node) => node.textContent).join("").trim();
+    });
+    assert.equal(headline, "Discard draft?", "the dialog headline");
+    const actions = await page.evaluate(() =>
+      (document.getElementById("dg")?.shadowRoot?.querySelector<HTMLSlotElement>('slot[name="actions"]')?.assignedElements() ?? [])
+        .map((node) => node.querySelector("[id]")?.id ?? node.id));
+    assert.deepEqual(actions, ["dga"], "the dialog actions");
+    check("dialog: headline and actions snippets reach their slots");
+
+    // bind:this gives the component, whose `element` is the element; an
+    // attachment runs on the element (FLO-325).
+    assert.equal(await page.evaluate(() => (window as unknown as Win).api.ref === document.getElementById("bt")), true, "bind:this");
+    assert.equal(await page.evaluate(() => document.getElementById("at")?.dataset.attached), "yes", "{@attach}");
+    check("bind:this reads the element, and {@attach} reaches it");
 
     // ------------------------------------------------------------- navigation rail: expanded
     // Controlled: state expands the modal rail in the top layer, Escape

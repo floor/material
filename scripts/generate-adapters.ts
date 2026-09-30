@@ -47,7 +47,7 @@ export type { SolidProps, DeclarationProps, EventProps, DefaultProps, FormProps,
     component: (name) => `M${pascal(name)}`,
     header: "Vue components for the elements. Each renders its `<m-*>` tag, registers\n * it on mount and loads its CSS. `v-model` binds the element's live state.",
     exports: `export { configure } from "./create";
-export type { VueProps, VueEmits, ModelProps, Exposed, MComponent, MDeclaration } from "./create";`,
+export type { VueProps, VueEmits, VueSlots, ModelProps, Exposed, MComponent, MDeclaration } from "./create";`,
   },
 ];
 

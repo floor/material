@@ -131,10 +131,12 @@ export const App = defineComponent(() => {
       ]),
       h("output", { id: "pet" }, String(pet.value)),
       // Controlled: Escape closes the dialog, and onClose puts the state in step
-      h(MDialog, { id: "dg", open: dialog.value, onClose: () => (dialog.value = false) }, () => [
-        h("span", { slot: "headline" }, "Discard draft?"),
-        "Your changes will be lost.",
-      ]),
+      // Named slots (FLO-325): a text headline, a component in actions
+      h(MDialog, { id: "dg", open: dialog.value, onClose: () => (dialog.value = false) }, {
+        default: () => "Your changes will be lost.",
+        headline: () => "Discard draft?",
+        actions: () => [h(MButton, { id: "dga" }, () => "Discard")],
+      }),
       h("output", { id: "dialog" }, String(dialog.value)),
       // Controlled: expanded is state; Escape collapses the modal rail, and
       // onCollapse puts the state in step

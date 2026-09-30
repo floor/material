@@ -39,13 +39,17 @@ ${styles.map((style) => `  import "mtrl/elements/css/${style}";\n`).join("")}  i
 ${bindable}    children,
     ...props
   }: { ${live.map((p) => `${p}?: unknown; `).join("")}children?: Snippet; [key: string]: unknown } = $props();
+  // \`bind:this\` on the component reads \`element\`, as Vue's template ref does (FLO-325).
+  let node = $state<HTMLElement | null>(null);
+  export { node as element };
 </script>
 
 <svelte:element
   this={runtime.tag}
+  bind:this={node}
   {...runtime.attributes(props, ${liveObject})}
   use:action={{ props, live: ${liveObject}, set: ${setters} }}
->{@render children?.()}</svelte:element>
+>{@render children?.()}{#each runtime.snippets(props) as [slot, snippet] (slot)}<span style="display: contents" {...{ slot }}>{@render snippet()}</span>{/each}</svelte:element>
 `;
 };
 
@@ -72,9 +76,9 @@ export async function emitSvelte(outdir: string): Promise<void> {
     const live = Object.keys(elements[name as keyof typeof elements].spec.properties ?? {});
     await writeFile(`${dir}/${P}.svelte`, component(name, live, module, styles));
     await writeFile(`${dir}/${P}.svelte.d.ts`, `import type { Component } from "svelte";
-import type { ${P}Spec } from "../elements/index.js";
+import type { ${P}Spec, ${P}Element } from "../elements/index.js";
 import type { Bindable, SvelteProps } from "./runtime.js";
-declare const ${P}: Component<SvelteProps<${P}Spec>, Record<string, never>, Bindable<${P}Spec>>;
+declare const ${P}: Component<SvelteProps<${P}Spec>, { readonly element: ${P}Element | null }, Bindable<${P}Spec>>;
 export default ${P};
 `);
     exports.push(`export { default as ${P} } from "./${P}.svelte";`);

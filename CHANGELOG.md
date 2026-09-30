@@ -12,6 +12,18 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Named slots in the specs and the adapters (FLO-325).** An element spec declares `slots`, the
+  named slots it reads (`slot="headline"`), and `describe()` lists them. Seven elements have them:
+  the bottom app bar (`fab`), card (`avatar`, `header-action`, `headline`, `subhead`, `media`,
+  `actions`), dialog (`headline`, `actions`), navigation rail (`header`), bottom and side sheet
+  (`headline`) and top app bar (`leading`, `trailing`). Svelte takes each as a named snippet
+  (`{#snippet actions()}`; `headerAction` for `header-action`), and a text prop of the same name
+  (`headline` on the dialog, card and sheets, `subhead` on the card) takes its text or a snippet.
+  Vue types them as the component's slots (`VueSlots`). check-elements proves every element renders
+  exactly the slots it declares.
+- **Svelte: `bind:this` reads the element (FLO-325).** A component's `element` is its `<m-*>`
+  element, as Vue's template ref exposes it.
+
 - **`inertOutside(element)` (`mtrl/core/dom`) (FLO-324).** Makes everything but one element inert,
   across shadow roots, as `showModal()` does for a top-layer dialog, and returns the undo, which
   clears exactly what it set. The modal sheets use it outside the top layer.
@@ -188,6 +200,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   becomes `color-mix(in srgb, var(--mtrl-sys-color-X) N%, transparent)` (N as a percentage).
 
 ### Fixed
+
+- **Adapters: named slots and snippets are no longer dropped (FLO-325).** Vue rendered only the
+  default slot, so `<template #actions>` disappeared; each named slot's nodes now carry
+  `slot="<name>"`, and text is wrapped to carry it. Svelte passed a snippet to the attribute of its
+  name (`headline`) and rendered none; each named snippet now renders into its slot. Svelte
+  attachments (`{@attach}`) reach the element: they are symbol-keyed props, which the spread
+  skipped.
 
 - **Baseline declares the status colours (FLO-329).** The default theme had no `success`,
   `warning` or `info` role, nor their `on-` pairs, which every generated theme has, so

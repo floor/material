@@ -36,6 +36,7 @@
   let rail = $state(false);
   let due = $state("2026-09-10");
   let query = $state("ap");
+  let ref = $state<{ readonly element: HTMLElement | null } | undefined>();
 
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
 
@@ -50,6 +51,7 @@
       setProgress: (v: number) => (progress = v),
       setDialog: (v: boolean) => (dialog = v),
       setRail: (v: boolean) => (rail = v),
+      get ref() { return ref?.element ?? null; },
     };
   });
 </script>
@@ -104,8 +106,11 @@
   </Select>
   <output id="pet">{String(pet)}</output>
   <!-- Controlled: Escape closes the dialog, and onclose puts the state in step -->
+  <!-- Named snippets are the named slots (FLO-325) -->
   <Dialog id="dg" open={dialog} onclose={() => (dialog = false)}>
-    <span slot="headline">Discard draft?</span>Your changes will be lost.
+    {#snippet headline()}Discard draft?{/snippet}
+    {#snippet actions()}<Button id="dga">Discard</Button>{/snippet}
+    Your changes will be lost.
   </Dialog>
   <output id="dialog">{String(dialog)}</output>
   <!-- Controlled: expanded is state; Escape collapses the modal rail, and oncollapse puts the state in step -->
@@ -124,6 +129,9 @@
     {/each}
   </Search>
   <output id="query">{query}</output>
+  <!-- bind:this reads the element; an attachment reaches it (FLO-325) -->
+  <Switch id="bt" bind:this={ref}>Ref</Switch>
+  <Switch id="at" {@attach (node: HTMLElement) => { node.dataset.attached = "yes"; }}>Attached</Switch>
   {#each order as key (key)}<Switch id={`o${key}`}>Order {key}</Switch>{/each}
   {#if show}<Switch id="gone">Gone</Switch>{/if}
   <!-- Mounted in the browser after the element is defined: Svelte writes a

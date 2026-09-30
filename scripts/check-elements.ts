@@ -6492,6 +6492,41 @@ try {
     check("date picker, time picker and search: opening and closing leave the value attribute in charge");
   }
 
+  // ---------------------------------------------------------------- named slots (FLO-325)
+  // Each element's `slots` are the named slots it reads, and no other: given
+  // a child per declared name, its shadow root has exactly those named
+  // <slot>s, and each child is assigned to one.
+  await fresh(page, `<section id="slots"></section>`);
+  {
+    const slots = await page.evaluate(async () => {
+      type Spec = { name: string; slots?: readonly string[] };
+      const registry = (window as unknown as { mtrl: { elements: Record<string, { spec: Spec }> } }).mtrl.elements;
+      const section = document.getElementById("slots") as HTMLElement;
+      const hosts = Object.values(registry).map(({ spec }) => {
+        const host = document.createElement(`m-${spec.name}`);
+        for (const name of spec.slots ?? []) {
+          const child = document.createElement("span");
+          child.slot = name;
+          child.textContent = name;
+          host.append(child);
+        }
+        section.append(host);
+        return { spec, host };
+      });
+      await new Promise((r) => setTimeout(r, 300));
+      return hosts.map(({ spec, host }) => ({
+        name: spec.name,
+        declared: [...(spec.slots ?? [])].sort(),
+        rendered: [...new Set([...(host.shadowRoot?.querySelectorAll<HTMLSlotElement>("slot[name]") ?? [])].map((slot) => slot.name))].sort(),
+        unassigned: [...host.children].filter((child) => !child.assignedSlot).map((child) => child.slot),
+      }));
+    });
+    const wrong = slots.filter(({ declared, rendered, unassigned }) => declared.join() !== rendered.join() || unassigned.length > 0);
+    assert.deepEqual(wrong, [], "an element reads a slot it does not declare, or declares one it does not read");
+    assert.ok(slots.filter(({ declared }) => declared.length > 0).length >= 7);
+    check(`named slots: every element's declared slots are the ones it renders and assigns (${slots.length} elements)`);
+  }
+
   // ---------------------------------------------------------------- theme
   await fresh(page, `<m-switch id="s" checked>Theme</m-switch><section id="factory"></section>`);
   {

@@ -49,7 +49,7 @@ import { searchElement, searchSuggestionDeclaration, defineSearch } from "./sear
 export { defineElement, DEFAULT_PREFIX, SHADOW_BASE_STYLES } from "./define";
 export type {
   DefineOptions, ElementSpec, ElementDefinition, ElementComponent, ElementHost, ElementInstance,
-  ElementAttributes, ElementProperties, ElementSlotText, ElementEvents, ElementMethods, ElementProps,
+  ElementAttributes, ElementProperties, ElementSlotText, ElementSlots, ElementSlotProp, ElementEvents, ElementMethods, ElementProps,
   AttributeSpec, AttributeType, PropertySpec, EventSpec, SlotSpec, FormSpec,
 } from "./define";
 export { registerStyles, hasStyles } from "./styles";

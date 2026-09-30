@@ -295,6 +295,17 @@ const run = async (): Promise<void> => {
     assert.equal(await modal(), false);
     check("dialog: open follows the state; Escape closes it and the close handler updates the state");
 
+    // Named slots reach the element's slots (FLO-325): text is wrapped to
+    // carry slot="headline", a component carries slot="actions" itself.
+    const slotted = await page.evaluate(() => {
+      const root = document.getElementById("dg")?.shadowRoot;
+      const read = (name: string): string[] =>
+        (root?.querySelector<HTMLSlotElement>(`slot[name="${name}"]`)?.assignedElements() ?? []).map((node) => node.id || node.textContent?.trim() || "");
+      return { headline: read("headline"), actions: read("actions") };
+    });
+    assert.deepEqual(slotted, { headline: ["Discard draft?"], actions: ["dga"] });
+    check("dialog: named slots reach the headline and actions slots");
+
     // ------------------------------------------------------------- navigation rail: expanded
     // Controlled: state expands the modal rail in the top layer, Escape
     // collapses it and the collapse handler puts the state in step; state

@@ -123,6 +123,13 @@ export interface ElementSpec<C extends ElementComponent> {
   defaults?: readonly string[];
   events?: Record<string, EventSpec>;
   slot?: SlotSpec;
+  /**
+   * The named slots the element reads: a child with `slot="<name>"` goes
+   * there. Declared `as const`, so the adapters type them (a Svelte snippet,
+   * a Vue slot) and describe() lists them. check-elements proves each is
+   * read and none other is (FLO-325).
+   */
+  slots?: readonly string[];
   form?: FormSpec<C>;
   /** Extra config read from the host, such as children. */
   config?: (host: HTMLElement) => Config;
@@ -202,6 +209,12 @@ export type ElementMethods<S, C> = S extends { methods: readonly (infer M)[] }
 export type ElementProps<S> = Omit<ElementAttributes<S>, keyof ElementProperties<S>> &
   ElementProperties<S> &
   ElementSlotText<S>;
+
+/** The names of the element's named slots, from its spec's `slots` (FLO-325). */
+export type ElementSlots<S> = S extends { slots: readonly (infer N extends string)[] } ? N : never;
+
+/** A named slot as a prop name (`header-action` → `headerAction`), for adapters whose slots are props. */
+export type ElementSlotProp<S> = Camel<ElementSlots<S>>;
 
 /** An element instance, as a ref or `document.querySelector` returns it. */
 export type ElementInstance<S, C extends ElementComponent> = ElementHost<C> & ElementProps<S> & ElementMethods<S, C>;

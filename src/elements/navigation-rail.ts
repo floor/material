@@ -111,6 +111,7 @@ const setAriaLabel = (component: NavigationRailComponent, value: unknown): void 
 
 const navigationRailSpec = {
   name: "navigation-rail",
+  slots: ["header"] as const,
   // `config` below supplies the host
   create: (config) => {
     const { layout, host, ...rest } = config as unknown as NavigationRailConfig & { host: HTMLElement };
