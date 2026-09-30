@@ -66,7 +66,8 @@ export const getElementConfig = (config: ProgressConfig) => {
 
   // Only add aria-valuenow if not indeterminate
   if (!isIndeterminate && config.value !== undefined) {
-    attributes["aria-valuenow"] = config.value.toString();
+    // The value the bar draws, clamped to 0…max (FLO-324)
+    attributes["aria-valuenow"] = Math.max(0, Math.min(config.max || 100, config.value)).toString();
   }
 
   // Only add disabled attribute if it's explicitly true

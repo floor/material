@@ -151,6 +151,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Dialog: `confirm()` settles however the dialog closes, confirms last, and shows its message as
+  text (FLO-324).** It resolved only through its two buttons, so closing the dialog with Escape,
+  the scrim or `close()` left the promise pending forever; it now resolves `false` then. The
+  confirming button came first; it now comes last, as M3 orders a dialog's actions. The message
+  went into `innerHTML`; it is text now, so a message carrying user input can't inject markup.
+- **Progress: a value past the range is clamped everywhere (FLO-324).** `setValue(150)` drew 100
+  but reported 150 in `aria-valuenow`, the label, `getValue()` and `change`; and a value past the
+  range at creation was stored as given. The value is clamped to 0…max once, and that value is
+  the one drawn, announced, labelled and emitted.
+
 - **Checkbox and switch: Space (and Enter, with `enterToggles`) activate the control as a click
   does (FLO-316).** The key handler set `checked` by hand, so on a checkbox in the mixed state it
   left `indeterminate` true, keeping the dash and the mixed class, and it fired `change` with no

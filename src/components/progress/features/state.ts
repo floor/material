@@ -87,10 +87,13 @@ export const withState =
     }
 
     // Initialize state values
+    // Clamped to 0…max from the start, as setValue clamps (FLO-324)
+    const max = config.max ?? 100;
+    const clamp = (value: number): number => Math.max(0, Math.min(max, value));
     const state: ProgressState = {
-      value: config.value ?? 0,
-      max: config.max ?? 100,
-      buffer: config.buffer ?? 0,
+      value: clamp(config.value ?? 0),
+      max,
+      buffer: clamp(config.buffer ?? 0),
       indeterminate: config.indeterminate === true,
       // Store thickness as is (string or number) to maintain the original value
       thickness: config.thickness ?? "thin",
