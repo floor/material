@@ -65,6 +65,7 @@ $component: "#{base.$prefix}-textfield";
         width: 100%;
         height: 56px;
         color: t.color("on-surface");
+        caret-color: t.color("primary");
         border: 0;
         appearance: none;
         outline: none;
@@ -76,8 +77,11 @@ $component: "#{base.$prefix}-textfield";
         // Transition to help detect autofill changes
         transition: background-color 0s ease-out 50000000s;
 
+        // InputPlaceholderColor, shown while the field is focused or has no
+        // label: under a resting label it would collide with it (FLO-298)
         &::placeholder {
-            color: transparent;
+            color: t.color("on-surface-variant");
+            opacity: 1;
         }
 
         // Autofill styles
@@ -94,6 +98,10 @@ $component: "#{base.$prefix}-textfield";
         }
     }
 
+    &:has(> .#{$component}__label):not(.#{$component}--focused) .#{$component}__input::placeholder {
+        color: transparent;
+    }
+
     // Prefix text
     &__prefix {
         @include m.typography("body-large");
@@ -101,7 +109,7 @@ $component: "#{base.$prefix}-textfield";
         left: 12px;
         top: 50%;
         transform: translateY(-50%);
-        color: t.color("on-surface");
+        color: t.color("on-surface-variant");
         pointer-events: none;
         z-index: 2; // Increased to ensure it stays above input
         white-space: nowrap; // Prevent text wrapping
@@ -119,7 +127,7 @@ $component: "#{base.$prefix}-textfield";
         right: 16px;
         top: 50%;
         transform: translateY(-50%);
-        color: t.color("on-surface");
+        color: t.color("on-surface-variant");
         pointer-events: none;
         z-index: 2; // Increased to ensure it stays above input
         white-space: nowrap; // Prevent text wrapping
@@ -132,7 +140,6 @@ $component: "#{base.$prefix}-textfield";
 
     // Leading icon
     &__leading-icon {
-        opacity: 0.85;
         position: absolute;
         left: 12px;
         top: 50%;
@@ -148,15 +155,15 @@ $component: "#{base.$prefix}-textfield";
         transition: top v.motion("duration-short4")
             v.motion("easing-emphasized"); // Add transition for top position
 
+        // LeadingIconSize / TrailingIconSize: 24dp, the whole box (FLO-298)
         svg {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
         }
     }
 
     // Trailing icon
     &__trailing-icon {
-        opacity: 0.85;
         position: absolute;
         right: 12px;
         top: 50%;
@@ -172,9 +179,10 @@ $component: "#{base.$prefix}-textfield";
         transition: top v.motion("duration-short4")
             v.motion("easing-emphasized"); // Add transition for top position
 
+        // LeadingIconSize / TrailingIconSize: 24dp, the whole box (FLO-298)
         svg {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
         }
     }
 
@@ -246,28 +254,32 @@ $component: "#{base.$prefix}-textfield";
     }
 
     // Error state
+    // Only the label, the trailing icon and the caret take the error colour:
+    // ErrorLeadingIconColor is on-surface-variant, and the affixes keep theirs
     &--error {
-        border-color: t.color("error");
-
-        .#{$component}__label {
+        .#{$component}__label,
+        .#{$component}__trailing-icon {
             color: t.color("error");
         }
 
-        .#{$component}__leading-icon,
-        .#{$component}__trailing-icon,
-        .#{$component}__prefix,
-        .#{$component}__suffix {
-            color: t.color("error");
+        .#{$component}__input {
+            caret-color: t.color("error");
         }
     }
 
     // Disabled state
+    // Disabled: the roles at 38%, not the element faded, which also faded
+    // the filled container's 4% (FLO-298). The fill is the filled variant's.
     &--disabled {
         .#{$component}__input {
-            opacity: 0.38;
-            border-color: t.color("on-surface");
-            background-color: t.alpha("on-surface", 0.04);
+            color: t.alpha("on-surface", 0.38);
+            -webkit-text-fill-color: t.alpha("on-surface", 0.38);
             pointer-events: none;
+        }
+
+        .#{$component}__helper {
+            color: t.color("on-surface");
+            opacity: 0.38;
         }
 
         .#{$component}__label {
@@ -286,16 +298,18 @@ $component: "#{base.$prefix}-textfield";
 
     // The label comes before the input, so no sibling selector reaches it:
     // the root reads the input's state instead (FLO-303).
-    &:has(.#{$component}__input:disabled) .#{$component}__label {
-        color: t.color("on-surface");
-        opacity: 0.38;
+    &:has(.#{$component}__input:disabled) {
+        .#{$component}__label,
+        .#{$component}__helper {
+            color: t.color("on-surface");
+            opacity: 0.38;
+        }
     }
 
     // Disabled state - legacy support for direct input disabled
     &__input:disabled {
-        opacity: 0.38;
-        border-color: t.color("on-surface");
-        background-color: t.alpha("on-surface", 0.04);
+        color: t.alpha("on-surface", 0.38);
+        -webkit-text-fill-color: t.alpha("on-surface", 0.38);
         pointer-events: none;
 
         & ~ .#{$component}__leading-icon,
@@ -462,7 +476,7 @@ $component: "#{base.$prefix}-textfield";
         .#{$component}__input {
             background-color: t.color("surface-container-highest");
             padding: 20px 16px 7px;
-            border-bottom: 1px solid t.color("outline");
+            border-bottom: 1px solid t.color("on-surface-variant");
             border-radius: f.get-shape("extra-small") f.get-shape("extra-small")
                 0 0;
             @include m.motion-transition(background-color, border-color);
@@ -523,26 +537,52 @@ $component: "#{base.$prefix}-textfield";
             }
         }
 
-        // Error state
+        // Hover: the on-surface state layer over the container, and the
+        // indicator in on-surface (HoverActiveIndicatorColor)
+        // (the layer in error too; there the indicator is on-error-container, below)
+        &:hover:not(.#{$component}--focused):not(.#{$component}--disabled):not(:has(.#{$component}__input:disabled)) .#{$component}__input {
+            background-image: linear-gradient(#{t.alpha("on-surface", 0.08)}, #{t.alpha("on-surface", 0.08)});
+        }
+
+        &:hover:not(.#{$component}--focused):not(.#{$component}--disabled):not(.#{$component}--error):not(:has(.#{$component}__input:disabled)) .#{$component}__input {
+            border-bottom-color: t.color("on-surface");
+        }
+
+        // Error: 1dp at rest, the 2dp bar only when focused
         &.#{$component}--error {
+            .#{$component}__input {
+                border-bottom-color: t.color("error");
+            }
+
             &::before {
-                opacity: 1;
                 background-color: t.color("error");
             }
 
             .#{$component}__label {
                 color: t.color("error");
             }
+
+            &:hover:not(.#{$component}--focused) {
+                .#{$component}__input {
+                    border-bottom-color: t.color("on-error-container");
+                }
+
+                .#{$component}__label,
+                .#{$component}__trailing-icon {
+                    color: t.color("on-error-container");
+                }
+            }
         }
 
-        // Disabled state
-        &.#{$component}--disabled {
+        // Disabled: the 4% container and the indicator at 38%
+        &.#{$component}--disabled .#{$component}__input,
+        & .#{$component}__input:disabled {
+            background-color: t.alpha("on-surface", 0.04);
             border-bottom-color: t.alpha("on-surface", 0.38);
-            pointer-events: none;
+        }
 
-            .#{$component}__input {
-                background-color: t.alpha("on-surface", 0.04);
-            }
+        &.#{$component}--disabled {
+            pointer-events: none;
         }
 
         // Prefix/suffix adjustments for filled variant
@@ -704,8 +744,8 @@ $component: "#{base.$prefix}-textfield";
             }
         }
 
+        // LabelColor at full strength: faded to 0.5 it failed 4.5:1 (FLO-298)
         .#{$component}__label {
-            opacity: 0.5;
             left: 16px;
             top: 50%;
         }
@@ -713,7 +753,6 @@ $component: "#{base.$prefix}-textfield";
         // Populated field (not empty) or focused field label position
         &:not(.#{$component}--empty) .#{$component}__label,
         &.#{$component}--focused .#{$component}__label {
-            opacity: 1;
             transform: translateY(-147%) scale(0.75);
             // The floated label starts 16dp in, inside the notch, whatever
             // the icon or prefix at rest
@@ -722,14 +761,19 @@ $component: "#{base.$prefix}-textfield";
 
         // Floated from the input's own state too, as the filled variant is
         &:has(.#{$component}__input:is(:not(:placeholder-shown), :autofill, :-webkit-autofill)) .#{$component}__label {
-            opacity: 1;
             transform: translateY(-147%) scale(0.75);
             left: 16px;
         }
 
         // Hover state
-        &:hover:not(.#{$component}--focused):not(.#{$component}--disabled) {
+        // Hover: the outline and the label in on-surface (HoverLabelColor,
+        // where the filled label stays on-surface-variant)
+        &:hover:not(.#{$component}--focused):not(.#{$component}--disabled):not(.#{$component}--error):not(:has(.#{$component}__input:disabled)) {
             --#{$component}-outline-color: #{t.color("on-surface")};
+
+            .#{$component}__label {
+                color: t.color("on-surface");
+            }
         }
 
         // Focus state
@@ -748,6 +792,11 @@ $component: "#{base.$prefix}-textfield";
 
             &:hover:not(.#{$component}--focused) {
                 --#{$component}-outline-color: #{t.color("on-error-container")};
+
+                .#{$component}__label,
+                .#{$component}__trailing-icon {
+                    color: t.color("on-error-container");
+                }
             }
 
             .#{$component}__label {

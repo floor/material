@@ -64,6 +64,19 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Text field colours and states, per the M3 tokens (FLO-298).** The placeholder was always
+  transparent; it shows in on-surface-variant while the field is focused or has no label. The
+  outlined label rested at 50% opacity (under 4.5:1); it is on-surface-variant at full strength.
+  The filled indicator is on-surface-variant, not outline; the filled field has a hover state (an
+  on-surface 8% layer and an on-surface indicator), and in error the indicator is 1dp at rest,
+  2dp only when focused, with on-error-container on hover, as the outlined label and trailing
+  icon now have too; the outlined label turns on-surface on hover. Only the label, the trailing
+  icon and the caret take the error colour, not the leading icon or the affixes; prefix and
+  suffix are on-surface-variant. The caret is primary (error in error). Icons are 24px at full
+  colour, not 20px at 85%. Disabled text is on-surface at 38% rather than the whole input faded,
+  so the filled container is the 4% it should be and the outlined field gets none; the
+  supporting text dims too.
+
 - **Text field: label rules that never matched, and supporting text and error state out of step
   (FLO-303).** The label comes before the input, so every `input ~ label` rule matched nothing:
   a value the script hadn't seen, or autofill, left the label resting over the text, and an input
