@@ -26,6 +26,9 @@ export type { HTMLPolicy, HTMLInput, TrustedHTMLLike } from "./html";
 
 export { activeElementOf, deepActiveElement } from "./focus";
 
+export { createRoving, isTextEditable } from "./roving";
+export type { Roving, RovingOptions } from "./roving";
+
 export {
   supportsTopLayer,
   showInTopLayer,

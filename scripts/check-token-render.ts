@@ -62,6 +62,13 @@ const CASES: Record<string, { make: string }> = {
   "button-group": {
     make: `m.createButtonGroup({ kind: "connected", selection: "single", buttons: [{ value: "a", text: "Left", selected: true }, { value: "b", text: "Mid" }, { value: "c", text: "Right" }] }).element`
   },
+  // FLO-304: the docked toolbar's square corners, the floating pill and its vibrant item colours
+  "toolbar-docked": {
+    make: `m.createToolbar({ items: [{ icon: ${JSON.stringify(ICON)}, ariaLabel: "a" }, { icon: ${JSON.stringify(ICON)}, ariaLabel: "b" }] }).element`
+  },
+  "toolbar-floating-vibrant": {
+    make: `m.createToolbar({ variant: "floating", color: "vibrant", items: [{ icon: ${JSON.stringify(ICON)}, ariaLabel: "a", toggle: true, selected: true }, { icon: ${JSON.stringify(ICON)}, ariaLabel: "b" }] }).element`
+  },
   "split-s": { make: `m.createSplitButton({ text: "Save", size: "s" }).element` },
   "split-l": { make: `m.createSplitButton({ text: "Save", size: "l" }).element` },
   search: { make: `m.createSearch({ placeholder: "Search" }).element` },

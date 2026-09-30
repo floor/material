@@ -1,0 +1,209 @@
+// src/styles/components/_toolbar.scss
+//
+// M3 Expressive toolbars (m3.material.io toolbars specs and guidelines;
+// Compose DockedToolbarTokens and FloatingToolbarTokens):
+// - docked: 64dp, full width, square corners, no shadow, 16dp at each end,
+//   items spread across the width or centred 32dp apart
+// - floating: 64dp pill, 8dp padding, items 4dp apart, elevation level 1,
+//   16dp from the window edge (24dp when vertical), a FAB 8dp away
+// - standard on surface container, vibrant on primary container
+@use '../../styles/abstract/base' as base;
+@use '../../styles/abstract/variables' as v;
+@use '../../styles/abstract/functions' as f;
+@use '../../styles/abstract/mixins' as m;
+@use '../../styles/abstract/theme' as t;
+
+$component: '#{base.$prefix}-toolbar';
+$icon-button: '#{base.$prefix}-icon-button';
+$button: '#{base.$prefix}-button';
+
+.#{$component} {
+  --#{$component}-container: #{t.color('surface-container')};
+  --#{$component}-content: #{t.color('on-surface-variant')};
+  // The window-edge margin of a placed floating toolbar
+  --#{$component}-margin: 16px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  transition: transform v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial-easing');
+
+  &__bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-height: 64px;
+    color: var(--#{$component}-content);
+
+    > * {
+      flex-shrink: 0;
+    }
+  }
+
+  &__fab {
+    display: flex;
+  }
+
+  // Docked: the whole width is the container, the FAB included
+  &--docked {
+    width: 100%;
+    min-height: 64px;
+    padding-inline: 16px;
+    background-color: var(--#{$component}-container);
+    border-radius: var(--#{$component}-shape, #{v.shape('none')});
+
+    .#{$component}__bar {
+      flex: 1;
+      justify-content: space-between;
+    }
+  }
+
+  &--center .#{$component}__bar {
+    justify-content: center;
+    gap: 32px;
+  }
+
+  // Floating: the bar is the pill; the FAB sits beside it
+  &--floating {
+    width: fit-content;
+    max-width: calc(100% - 2 * var(--#{$component}-margin));
+
+    .#{$component}__bar {
+      gap: 4px;
+      padding: 8px;
+      background-color: var(--#{$component}-container);
+      border-radius: var(--#{$component}-shape, #{v.shape('full')});
+    }
+  }
+
+  &--elevated .#{$component}__bar {
+    @include m.elevation(1);
+  }
+
+  &--vertical {
+    --#{$component}-margin: 24px;
+    flex-direction: column;
+    max-width: none;
+    max-height: calc(100% - 2 * var(--#{$component}-margin));
+
+    .#{$component}__bar {
+      flex-direction: column;
+      min-height: 0;
+      min-width: 64px;
+    }
+  }
+
+  // Vibrant: primary container, and the item colours of FloatingToolbarTokens
+  &--vibrant {
+    --#{$component}-container: #{t.color('primary-container')};
+    --#{$component}-content: #{t.color('on-primary-container')};
+
+    .#{$icon-button}.#{$icon-button}--standard,
+    .#{$button}.#{$button}--text {
+      color: t.color('on-primary-container');
+    }
+
+    // "Toggle tonal button: Surface container / On surface" (m3.material.io
+    // toolbars specs); Compose VibrantButtonSelected*. Filled keeps primary.
+    .#{$icon-button}--standard.#{$icon-button}--selected,
+    .#{$icon-button}--tonal.#{$icon-button}--selected {
+      background-color: t.color('surface-container');
+      color: t.color('on-surface');
+    }
+  }
+
+  // Placements, in a positioned container
+  &--bottom,
+  &--top,
+  &--start,
+  &--end {
+    position: absolute;
+    z-index: f.get-z-index('fixed');
+  }
+
+  &--bottom,
+  &--top {
+    inset-inline: 0;
+    margin-inline: auto;
+  }
+
+  &--bottom {
+    bottom: 0;
+  }
+
+  &--top {
+    top: 0;
+  }
+
+  &--start,
+  &--end {
+    inset-block: 0;
+    margin-block: auto;
+    height: fit-content;
+  }
+
+  &--start {
+    inset-inline-start: var(--#{$component}-margin);
+  }
+
+  &--end {
+    inset-inline-end: var(--#{$component}-margin);
+  }
+
+  &--floating.#{$component}--bottom {
+    bottom: var(--#{$component}-margin);
+  }
+
+  &--floating.#{$component}--top {
+    top: var(--#{$component}-margin);
+  }
+
+  // Off screen, past the edge it is placed at
+  &--hidden {
+    &.#{$component}--bottom {
+      transform: translateY(calc(100% + var(--#{$component}-margin)));
+    }
+
+    &.#{$component}--docked.#{$component}--bottom {
+      transform: translateY(100%);
+    }
+
+    &.#{$component}--top {
+      transform: translateY(calc(-100% - var(--#{$component}-margin)));
+    }
+
+    &.#{$component}--start {
+      transform: translateX(calc(-100% - var(--#{$component}-margin)));
+    }
+
+    &.#{$component}--end {
+      transform: translateX(calc(100% + var(--#{$component}-margin)));
+    }
+
+    &.#{$component}--start:dir(rtl) {
+      transform: translateX(calc(100% + var(--#{$component}-margin)));
+    }
+
+    &.#{$component}--end:dir(rtl) {
+      transform: translateX(calc(-100% - var(--#{$component}-margin)));
+    }
+
+    // In the flow there is no edge to leave by
+    &:not(.#{$component}--bottom, .#{$component}--top, .#{$component}--start, .#{$component}--end) {
+      visibility: hidden;
+    }
+  }
+
+  @include m.reduced-motion {
+    transition-duration: 0.01ms;
+  }
+
+  @include m.high-contrast {
+    &--docked,
+    &--floating .#{$component}__bar {
+      outline: 1px solid currentColor;
+    }
+  }
+}
