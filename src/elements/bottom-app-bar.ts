@@ -39,6 +39,7 @@ const readBar = (host: HTMLElement): Config =>
 
 const bottomAppBarSpec = {
   name: "bottom-app-bar",
+  slots: ["fab"] as const,
   create: (config) => create(config as BottomAppBarConfig),
   styles: ["bottom-app-bar"],
   hostStyles: ":host{display:block}",

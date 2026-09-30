@@ -149,6 +149,7 @@ const setOpen = (component: DialogElementComponent, open: boolean): void => {
 
 const dialogSpec = {
   name: "dialog",
+  slots: ["headline", "actions"] as const,
   create: (config) => create(config as DialogElementConfig),
   styles: ["dialog"],
   hostStyles: ":host{display:contents}",

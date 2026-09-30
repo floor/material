@@ -4,8 +4,9 @@
 // Nothing here runs; the assertions are the test.
 //
 // Compiled by `bun run tooling:check` via tsconfig.types.json.
-import type { MSwitch, MTabs, MTab, VueProps, VueEmits } from "../../src/vue";
-import type { SwitchSpec, TabsSpec, TabAttributes } from "../../src/elements";
+import type { MSwitch, MTabs, MTab, VueProps, VueEmits, VueSlots } from "../../src/vue";
+import type { SwitchSpec, TabsSpec, TabAttributes, DialogSpec } from "../../src/elements";
+import type { SlotsType, VNodeChild } from "vue";
 
 /** true when A and B are the same type */
 type Equals<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
@@ -36,3 +37,7 @@ export const wrong: SwitchInstanceProps = { checked: "yes" };
 type TabsInstanceProps = InstanceType<typeof MTabs>["$props"];
 assert<Equals<TabsInstanceProps["modelValue"], string | null | undefined>>();
 export const tab: typeof MTab = null as unknown as import("vue").FunctionalComponent<TabAttributes>;
+
+// Named slots (FLO-325): the default one and each slot the element declares.
+assert<Equals<VueSlots<DialogSpec>, SlotsType<{ default?: () => VNodeChild } & { headline?: () => VNodeChild; actions?: () => VNodeChild }>>>();
+assert<Equals<VueSlots<SwitchSpec>, SlotsType<{ default?: () => VNodeChild } & Record<never, never>>>>();

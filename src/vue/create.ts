@@ -20,10 +20,18 @@ import {
   onMounted,
   onUpdated,
   ref,
+  cloneVNode,
+  Comment,
+  Fragment,
+  Text,
   type DefineSetupFnComponent,
   type FunctionalComponent,
+  type Slots,
+  type SlotsType,
+  type VNode,
+  type VNodeChild,
 } from "vue";
-import type { DefineOptions, ElementEvents, ElementProperties, ElementProps } from "../elements";
+import type { DefineOptions, ElementEvents, ElementProperties, ElementProps, ElementSlots } from "../elements";
 import {
   describe,
   describeDeclaration,
@@ -71,7 +79,26 @@ export interface Exposed<E extends HTMLElement> {
  * A generated component; named so declarations stay short. `_E` is the
  * element its template ref exposes as `element` (see `Exposed`).
  */
-export type MComponent<S, _E extends HTMLElement> = DefineSetupFnComponent<VueProps<S>, VueEmits<S>>;
+export type MComponent<S, _E extends HTMLElement> = DefineSetupFnComponent<VueProps<S>, VueEmits<S>, VueSlots<S>>;
+
+/** Its slots: the default one, and each named slot the element reads (`<template #actions>`, FLO-325). */
+export type VueSlots<S> = SlotsType<{ default?: () => VNodeChild } & { [K in ElementSlots<S>]?: () => VNodeChild }>;
+
+/** A named slot's nodes, each carrying `slot="<name>"` for the element; text is wrapped to carry it. */
+const tag = (nodes: VNode[], slot: string): VNode[] =>
+  nodes.flatMap((node) => {
+    if (node.type === Fragment) return tag(node.children as VNode[], slot);
+    if (node.type === Comment) return [];
+    if (node.type === Text) return [h("span", { slot, style: "display: contents" }, node.children as string)];
+    return [cloneVNode(node, { slot })];
+  });
+
+/** The default slot's nodes, then every named slot's, tagged (FLO-325). */
+const slotted = (slots: Slots): VNode[] => [
+  ...(slots.default?.() ?? []),
+  ...Object.entries(slots).flatMap(([name, render]) =>
+    name === "default" || name.startsWith("_") || typeof render !== "function" ? [] : tag(render(), name)),
+];
 
 /** A generated declaration component. */
 export type MDeclaration<A> = FunctionalComponent<A>;
@@ -157,7 +184,7 @@ export const createComponent = <S, E extends HTMLElement>(
       onUpdated(sync);
       onBeforeUnmount(() => listeners.splice(0).forEach((remove) => remove()));
 
-      return () => h(`${getPrefix()}-${spec.name}`, host(), slots.default?.());
+      return () => h(`${getPrefix()}-${spec.name}`, host(), slotted(slots));
     },
     { name, props, emits }
   );

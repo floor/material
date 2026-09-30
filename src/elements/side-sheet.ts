@@ -67,6 +67,7 @@ const create = (config: SideSheetElementConfig): SideSheetElementComponent => {
 
 const sideSheetSpec = {
   name: "side-sheet",
+  slots: ["headline"] as const,
   create: (config) => create(config as SideSheetElementConfig),
   styles: ["side-sheet"],
   hostStyles: ":host{display:contents}",

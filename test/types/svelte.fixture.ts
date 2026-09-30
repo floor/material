@@ -6,7 +6,8 @@
 //
 // Compiled by `bun run tooling:check` via tsconfig.types.json.
 import type { Bindable, SvelteProps } from "../../src/svelte/runtime";
-import type { SwitchSpec, TabsSpec, ButtonSpec } from "../../src/elements";
+import type { SwitchSpec, TabsSpec, ButtonSpec, DialogSpec, CardSpec, ElementSlots } from "../../src/elements";
+import type { Snippet } from "svelte";
 
 /** true when A and B are the same type */
 type Equals<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
@@ -28,3 +29,14 @@ assert<Equals<SvelteProps<ButtonSpec>["class"], import("svelte/elements").ClassV
 
 // @ts-expect-error -- checked is a boolean
 export const wrong: SwitchProps = { checked: "yes" };
+
+// Named slots are snippet props (FLO-325): each slot the element declares; a
+// text prop of the same name takes its text or a snippet.
+assert<Equals<ElementSlots<DialogSpec>, "headline" | "actions">>();
+assert<Equals<SvelteProps<DialogSpec>["actions"], Snippet | undefined>>();
+assert<Equals<SvelteProps<DialogSpec>["headline"], string | Snippet | undefined>>();
+assert<Equals<SvelteProps<CardSpec>["headerAction"], Snippet | undefined>>();
+// A text prop without a slot of its name stays text.
+assert<Equals<SwitchProps["supportingText"], string | undefined>>();
+// @ts-expect-error -- the switch has no actions slot
+export const noSlot: SwitchProps = { actions: (() => {}) as unknown as Snippet };

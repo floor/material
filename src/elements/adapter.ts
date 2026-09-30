@@ -24,6 +24,7 @@ export interface ComponentSpec {
   properties?: Record<string, unknown>;
   events?: Record<string, unknown>;
   slot?: { attribute: string };
+  slots?: readonly string[];
   form?: unknown;
   model?: string;
 }
@@ -82,6 +83,8 @@ export interface Described {
   form: boolean;
   /** Live property name to the attribute it shadows (`checked` → the `checked` attribute). */
   shadowedBy: Map<string, AttributeProp>;
+  /** The named slots, as `slot="…"` names them (FLO-325). */
+  slots: readonly string[];
 }
 
 export const describe = (spec: ComponentSpec): Described => {
@@ -101,6 +104,7 @@ export const describe = (spec: ComponentSpec): Described => {
     model: spec.model,
     form: !!spec.form,
     shadowedBy,
+    slots: spec.slots ?? [],
   };
 };
 

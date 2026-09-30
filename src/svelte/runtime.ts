@@ -17,7 +17,7 @@
 import type { Snippet } from "svelte";
 import type { Action } from "svelte/action";
 import type { HTMLAttributes } from "svelte/elements";
-import type { DefineOptions, ElementEvents, ElementProperties, ElementProps } from "../elements";
+import type { DefineOptions, ElementEvents, ElementProperties, ElementProps, ElementSlotProp } from "../elements";
 import {
   describe,
   describeDeclaration,
@@ -35,12 +35,32 @@ import {
 
 export { configure } from "../elements/adapter";
 
+/**
+ * A named snippet: a function prop that is not a handler (`on…`) nor
+ * `children`. It renders into the slot of its name (FLO-325).
+ */
+const isSnippet = (key: string, value: unknown): boolean =>
+  typeof value === "function" && key !== "children" && !/^on[a-z]/.test(key);
+
+/** A snippet's name as a slot name: `headerAction` → `header-action`. */
+const kebab = (name: string): string => name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+
 /** `change` → `onchange`, as Svelte 5 names event props, typed with the element's event. */
 export type EventProps<S> = {
   [K in keyof ElementEvents<S> & string as `on${K}`]?: (event: ElementEvents<S>[K]) => void;
 };
 
-type OwnProps<S> = ElementProps<S> & DefaultProps<S> & FormProps<S> & EventProps<S>;
+type BaseProps<S> = ElementProps<S> & DefaultProps<S> & FormProps<S> & EventProps<S>;
+
+/**
+ * Each named slot as a snippet prop (`{#snippet actions()}`); a text prop of
+ * the same name (`headline`) takes its text or a snippet (FLO-325).
+ */
+type SnippetProps<S, P> = {
+  [K in ElementSlotProp<S>]?: (K extends keyof P ? Exclude<P[K], undefined> : never) | Snippet;
+};
+
+type OwnProps<S> = Omit<BaseProps<S>, ElementSlotProp<S>> & SnippetProps<S, BaseProps<S>>;
 
 /** Props of a generated component: the element's own, plus any HTML attribute for the host. */
 export type SvelteProps<S> = OwnProps<S> &
@@ -65,6 +85,8 @@ export interface Adapter {
   tag: string;
   /** What to spread on the element. */
   attributes: (props: Record<string, unknown>, live: Record<string, unknown>) => Record<string, unknown>;
+  /** The named snippets, each with the slot it renders into (`headerAction` → `header-action`). */
+  snippets: (props: Record<string, unknown>) => Array<[slot: string, snippet: Snippet]>;
   action: Action<HTMLElement, Binding>;
 }
 
@@ -83,6 +105,7 @@ export const adapter = (spec: ComponentSpec, define: (options?: DefineOptions) =
     for (const [key, value] of Object.entries(props)) {
       const attribute = attributes.get(key);
       if (eventProps.has(key)) continue; // the action listens
+      if (isSnippet(key, value)) continue; // rendered into its slot (FLO-325)
       if (attribute) {
         // Svelte writes a key the element has as a property; a shadowed
         // attribute (`checked`) shares its name with the live property, so
@@ -94,8 +117,16 @@ export const adapter = (spec: ComponentSpec, define: (options?: DefineOptions) =
       }
     }
     if (!isBrowser) for (const [name, value] of serverDefaults(described, (p) => live[p])) result[name] ??= value;
+    // Attachments (`{@attach}`) are symbol-keyed props: Svelte applies them
+    // from the spread, which `Object.entries` does not see (FLO-325).
+    for (const symbol of Object.getOwnPropertySymbols(props)) result[symbol as unknown as string] = props[symbol as unknown as string];
     return result;
   };
+
+  const snippets = (props: Record<string, unknown>): Array<[string, Snippet]> =>
+    Object.entries(props)
+      .filter(([key, value]) => isSnippet(key, value))
+      .map(([key, value]) => [kebab(key), value as Snippet]);
 
   const action: Action<HTMLElement, Binding> = (node, initial) => {
     let binding = initial;
@@ -134,7 +165,7 @@ export const adapter = (spec: ComponentSpec, define: (options?: DefineOptions) =
     };
   };
 
-  return { tag: `${getPrefix()}-${spec.name}`, attributes: hostAttributes, action };
+  return { tag: `${getPrefix()}-${spec.name}`, attributes: hostAttributes, snippets, action };
 };
 
 /** The runtime of the Svelte component for a declaration child; its parent registers the tag. */

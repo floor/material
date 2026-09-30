@@ -118,6 +118,7 @@ const setExpanded = (component: BottomSheetElementComponent, expanded: boolean):
 
 const bottomSheetSpec = {
   name: "bottom-sheet",
+  slots: ["headline"] as const,
   create: (config) => create(config as unknown as BottomSheetElementConfig),
   styles: ["bottom-sheet"],
   hostStyles: ":host{display:contents}",

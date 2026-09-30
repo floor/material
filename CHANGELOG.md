@@ -12,6 +12,17 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Named slots in the specs and the adapters (FLO-325).** An element spec declares `slots`, the
+  named slots it reads (`slot="headline"`), and `describe()` lists them. Seven elements have them:
+  the bottom app bar (`fab`), card (`avatar`, `header-action`, `headline`, `subhead`, `media`,
+  `actions`), dialog (`headline`, `actions`), navigation rail (`header`), bottom and side sheet
+  (`headline`) and top app bar (`leading`, `trailing`). Svelte takes each as a named snippet
+  (`{#snippet actions()}`; `headerAction` for `header-action`), and a text prop of the same name
+  (`headline` on the dialog, card and sheets, `subhead` on the card) takes its text or a snippet.
+  Vue types them as the component's slots (`VueSlots`). check-elements proves every element renders
+  exactly the slots it declares.
+- **Svelte: `bind:this` reads the element (FLO-325).** A component's `element` is its `<m-*>`
+  element, as Vue's template ref exposes it.
 - **The typeface and corner shapes are themeable (FLO-330).** Components read
   `--mtrl-ref-typeface-brand` and `--mtrl-ref-typeface-plain` for their font family, following
   M3: display, headline and title roles use the brand face, and body and label use the plain
@@ -254,6 +265,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `open` is set by script).
 
 ### Fixed
+
+- **Adapters: named slots and snippets are no longer dropped (FLO-325).** Vue rendered only the
+  default slot, so `<template #actions>` disappeared; each named slot's nodes now carry
+  `slot="<name>"`, and text is wrapped to carry it. Svelte passed a snippet to the attribute of its
+  name (`headline`) and rendered none; each named snippet now renders into its slot. Svelte
+  attachments (`{@attach}`) reach the element: they are symbol-keyed props, which the spread
+  skipped.
 
 - **Elements: a slot's `label` is a real property (FLO-328).** `button.label = "Save"` created a
   plain JavaScript property and changed nothing (Solid, which always sets properties, hit it).

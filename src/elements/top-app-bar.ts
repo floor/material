@@ -101,6 +101,7 @@ const followScrollTarget = (host: HTMLElement, component: TopAppBar): (() => voi
 
 const topAppBarSpec = {
   name: "top-app-bar",
+  slots: ["leading", "trailing"] as const,
   create: (config) => create(config as TopAppBarConfig),
   styles: ["top-app-bar"],
   hostStyles: ":host{display:block}",

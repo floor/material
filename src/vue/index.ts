@@ -8,7 +8,7 @@
  */
 
 export { configure } from "./create";
-export type { VueProps, VueEmits, ModelProps, Exposed, MComponent, MDeclaration } from "./create";
+export type { VueProps, VueEmits, VueSlots, ModelProps, Exposed, MComponent, MDeclaration } from "./create";
 
 export { MButton } from "./button";
 export { MSwitch } from "./switch";

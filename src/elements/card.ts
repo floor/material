@@ -138,6 +138,7 @@ const setAriaLabel = (component: CardComponent, label: string | null): void => {
 
 const cardSpec = {
   name: "card",
+  slots: ["avatar", "header-action", "headline", "subhead", "media", "actions"] as const,
   create: (config) => create(config as CardElementConfig),
   styles: ["card"],
   hostStyles: ":host{display:block}:host([disabled]){pointer-events:none}",
