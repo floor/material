@@ -330,3 +330,36 @@ describe('the configured state is the state the API reports', () => {
     expect(progress.element.querySelector('.mtrl-progress__label')?.textContent).toBe('3/9');
   });
 });
+
+// FLO-324: setValue(150) drew 100 but reported 150 in aria-valuenow, the
+// label and change. One clamped value is used everywhere, at creation too.
+describe('progress values past the range', () => {
+  test('setValue clamps once, and aria, the label, getValue and change all say the drawn value', () => {
+    const progress = createProgress({ value: 10, showLabel: true });
+    const changes: Array<{ value: number; max: number }> = [];
+    progress.on('change', (payload) => changes.push(payload));
+    progress.setValue(150);
+    expect(progress.getValue()).toBe(100);
+    expect(progress.element.getAttribute('aria-valuenow')).toBe('100');
+    expect(progress.element.querySelector('.mtrl-progress__label')?.textContent).toBe('100%');
+    expect(changes).toEqual([{ value: 100, max: 100 }]);
+    progress.setValue(-5);
+    expect(progress.getValue()).toBe(0);
+    expect(progress.element.getAttribute('aria-valuenow')).toBe('0');
+    expect(changes.at(-1)).toEqual({ value: 0, max: 100 });
+  });
+
+  test('setting the same clamped value again emits nothing', () => {
+    const progress = createProgress({ value: 100 });
+    const changes: unknown[] = [];
+    progress.on('change', (payload) => changes.push(payload));
+    progress.setValue(150);
+    expect(changes).toEqual([]);
+  });
+
+  test('a value past the range at creation is clamped', () => {
+    const progress = createProgress({ value: 150 });
+    expect(progress.getValue()).toBe(100);
+    expect(progress.element.getAttribute('aria-valuenow')).toBe('100');
+  });
+});
