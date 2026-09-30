@@ -21,6 +21,8 @@ export interface SplitButtonEvent {
   originalEvent: Event | null;
   /** The chosen item, on a `select` event */
   item?: MenuContent;
+  /** The chosen item's `id`, on a `select` event: the `value` of the `<m-split-button>` element's `select` */
+  value?: string | null;
 }
 
 /**

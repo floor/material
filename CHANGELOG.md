@@ -72,6 +72,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- **Event payloads carry the element's `value` (FLO-320).** A handler reading `value` now works
+  on the factory and on the element. The button group's `change` has `value`: a string or null for
+  a single-select group, an array for a multi-select one. The split button's `select` has `value`,
+  the chosen item's `id`. The chips set's `change` is one object with `value` (in the `value`
+  property's shape), `selected` (the selected chips' values) and `changed` (the toggled chip's
+  value, null for a method). The existing fields stay.
+
 - **Tooltip colours per M3 (FLO-324).** The plain tooltip is `inverse-surface` /
   `inverse-on-surface`, opaque and without elevation (`PlainTooltipTokens`); the `plain` variant
   had its own `surface-container-high` with an outline, and every tooltip showed at 90% opacity
@@ -286,6 +293,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   no longer carry unprefixed `progress progress--linear` copies of their classes.
 
 ### Deprecated
+
+- **Chips set `change`: the array and the second argument (FLO-320).** The payload is still the
+  array of selected values, and the changed value still comes second, so `(selectedValues,
+  changedValue)` handlers keep working. Read `selected` and `changed` instead: both go in the next
+  prerelease.
 
 - **Tooltip: `rich` (FLO-324).** It was never read. A rich tooltip is `variant: 'rich'`, and the
   content is always text. Removed in 1.0.
