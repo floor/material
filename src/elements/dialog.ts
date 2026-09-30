@@ -28,6 +28,8 @@
  * on the backdrop and on Escape (the factory's `closeOnOverlayClick` and
  * `closeOnEscape`); `cancel` is still dispatched on Escape.
  *
+ * Parts: `dialog`, `header`, `header-content`, `header-title`, `content`, `footer`.
+ *
  * @module elements
  */
 

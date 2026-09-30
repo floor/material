@@ -7,6 +7,8 @@
  * changing one recreates it. `type="submit"` and `type="reset"` act on the
  * host's form.
  *
+ * Parts: `fab`, `icon`, `ripple`.
+ *
  * @module elements
  */
 

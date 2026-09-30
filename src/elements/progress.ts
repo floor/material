@@ -7,6 +7,8 @@
  * properties of the same names are the live one. Progress is output, so the
  * element dispatches no events. `aria-label` names what is loading.
  *
+ * Parts: `progress`, `canvas`.
+ *
  * @module elements
  */
 

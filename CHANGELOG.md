@@ -12,6 +12,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Elements: `::part` on every element (FLO-328).** Each piece of a component is a CSS part named
+  after its BEM class without the prefix: the block by its name (`mtrl-button` is
+  `::part(button)`), an element by its element name (`mtrl-switch__track` is `::part(track)`);
+  modifiers name none. The piece holding the slot also takes the slot attribute's name, so
+  `m-button::part(label)` styles the button's label. Each element's module doc lists its parts.
+
 - **`inertOutside(element)` (`mtrl/core/dom`) (FLO-324).** Makes everything but one element inert,
   across shadow roots, as `showModal()` does for a top-layer dialog, and returns the undo, which
   clears exactly what it set. The modal sheets use it outside the top layer.

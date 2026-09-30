@@ -28,6 +28,9 @@
  * no setter: changing one recreates the picker, keeping the value. `disabled` is the factory's: it does not open. The
  * element reports `required` itself, as `valueMissing`.
  *
+ * Parts: `time-picker`, `dialog`, `title`, `selectors`, `hours`, `minutes`, `period`, `dial`,
+ * `dial-handle`, `actions`, `cancel`, `confirm`, among others.
+ *
  * @module elements
  */
 

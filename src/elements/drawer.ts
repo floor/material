@@ -21,6 +21,9 @@
  * are dispatched as it opens and closes (not when the attribute is what
  * changed).
  *
+ * Parts: `drawer`, `sheet`, `items`, `item`, `active-indicator`, `item-icon`, `item-label`,
+ * `ripple`.
+ *
  * @module elements
  */
 

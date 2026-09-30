@@ -18,6 +18,8 @@
  * `close()` are its methods, and `open` and `close` are dispatched as it
  * opens and closes (not when the attribute is what changed).
  *
+ * Parts: `side-sheet`, `container`, `header`, `title`, `close`, `content`.
+ *
  * @module elements
  */
 

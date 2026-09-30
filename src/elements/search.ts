@@ -29,6 +29,9 @@
  * `leading-icon`, `trailing-icon`, `avatar` and their labels have no setter
  * on the search: changing one recreates it, keeping the value.
  *
+ * Parts: `search`, `surface`, `container`, `leading-icon`, `input`, `clear-button`, `trailing`,
+ * `divider`, `content`, `suggestions`, `status`, among others.
+ *
  * @module elements
  */
 

@@ -16,6 +16,8 @@
  * value; the factory calls it `click`, which the host already receives from
  * the browser.
  *
+ * Parts: `button-group`, `button`, `text`, `ripple`.
+ *
  * @module elements
  */
 

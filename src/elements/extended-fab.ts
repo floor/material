@@ -8,6 +8,8 @@
  * changing one recreates it. `type="submit"` and `type="reset"` act on the
  * host's form.
  *
+ * Parts: `extended-fab`, `icon`, `label` (also `text`), `ripple`.
+ *
  * @module elements
  */
 

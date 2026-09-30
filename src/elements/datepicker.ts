@@ -36,6 +36,9 @@
  * `valueMissing`. `readonly` is the factory's: the value stays and the
  * calendar closed. `supporting-text` is the factory's supporting text.
  *
+ * Parts: `datepicker`, `label`, `anchor`, `input`, `trigger`, `help`, `error`, `calendar`,
+ * `header`, `navigation`, `prev`, `next`, `weekday`, `day`, among others.
+ *
  * @module elements
  */
 

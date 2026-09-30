@@ -17,6 +17,8 @@
  * of it. A click or Enter on a row dispatches `activate` with its value, then
  * `change` when the selection moved.
  *
+ * Parts: `list`, `content`, `item`, `action`, `text`, `headline`, `supporting`.
+ *
  * @module elements
  */
 

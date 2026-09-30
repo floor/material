@@ -21,6 +21,8 @@
  * `ariaDescribedByElements`; one in a tree above it, which can reference
  * neither, gets the text as its `aria-description`.
  *
+ * Parts: `tooltip`, `arrow`.
+ *
  * @module elements
  */
 

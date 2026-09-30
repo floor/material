@@ -11,6 +11,8 @@
  * (deprecated, FLO-295).
  * `type="submit"` and `type="reset"` act on the host's form.
  *
+ * Parts: `icon-button`, `icon`, `ripple`.
+ *
  * @module elements
  */
 

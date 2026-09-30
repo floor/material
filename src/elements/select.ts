@@ -18,6 +18,8 @@
  * value. The field is read-only, which takes it out of constraint validation:
  * the element reports `required` itself, as `valueMissing`.
  *
+ * Parts: `select`, `textfield`, `field`, `label`, `input`, `trailing-icon`.
+ *
  * @module elements
  */
 

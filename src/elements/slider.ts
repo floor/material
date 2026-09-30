@@ -9,6 +9,9 @@
  * value moves and `change` when an interaction ends. `aria-label` names the
  * handles.
  *
+ * Parts: `slider`, `container`, `track`, `handle`, `value`, `visual`, `segment`, `ticks`, `dot`,
+ * `inset-icon`.
+ *
  * @module elements
  */
 

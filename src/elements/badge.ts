@@ -9,6 +9,8 @@
  * text is read rather than slotted. The `visible` property is the live
  * visibility; an empty or zero label hides the badge, as in the factory.
  *
+ * Parts: `badge`.
+ *
  * @module elements
  */
 

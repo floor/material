@@ -7,6 +7,8 @@
  * hides the bar while the window scrolls down and shows it again on the way
  * up; `show()` and `hide()` do the same from script.
  *
+ * Parts: `bottom-app-bar`, `actions`, `fab-container`.
+ *
  * @module elements
  */
 

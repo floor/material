@@ -23,6 +23,9 @@
  * inert and the scrim its `::backdrop`; collapsed, it is hidden. Escape and a
  * click on the backdrop collapse it.
  *
+ * Parts: `navigation-rail`, `header`, `toggle`, `items`, `item`, `content`, `indicator`, `icon`,
+ * `label`.
+ *
  * @module elements
  */
 

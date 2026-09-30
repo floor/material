@@ -6,6 +6,8 @@
  * live one, as on a native checkbox: the attribute moves the state until the
  * user or script changes it. `indeterminate` is a property only, as natively. Children are the label.
  *
+ * Parts: `checkbox`, `input`, `icon`, `label`.
+ *
  * @module elements
  */
 

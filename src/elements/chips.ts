@@ -16,6 +16,9 @@
  * Removing an input chip dispatches `remove`; the set drops the chip, and the
  * app removes its `<m-chip>`, which is not shown again meanwhile.
  *
+ * Parts: `chips`, `container`, `chip`, `action`, `leading-icon`, `checkmark`, `label`,
+ * `trailing-icon`, `ripple`.
+ *
  * @module elements
  */
 

@@ -17,6 +17,8 @@
  * to some, or back, recreates it. `variant`, `size`, `trailing-label` and
  * `group-label` have no setter and recreate it too.
  *
+ * Parts: `split-button`, `button`, `leading`, `trailing`, `text`, `icon`, `chevron`, `ripple`.
+ *
  * @module elements
  */
 

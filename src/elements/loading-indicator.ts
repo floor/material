@@ -4,6 +4,8 @@
  * element. It animates from connection; a `value` from 0 to 1 makes it
  * determinate. `aria-label` names what is loading.
  *
+ * Parts: `loading-indicator`, `canvas`.
+ *
  * @module elements
  */
 

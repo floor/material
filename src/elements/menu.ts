@@ -25,6 +25,8 @@
  * the `close` event. `no-close-on-select` keeps the menu open when an item is
  * chosen, and `color="vibrant"` is the vertical menu's vibrant colours.
  *
+ * Parts: `menu`, `list`, `item`, `item-content`, `item-text`.
+ *
  * @module elements
  */
 

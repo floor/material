@@ -13,6 +13,8 @@
  * scrolling element to follow instead of the window; any other scroller can
  * drive the bar through `setScrollState(scrolled)`.
  *
+ * Parts: `top-app-bar`, `leading`, `headline`, `trailing`.
+ *
  * @module elements
  */
 

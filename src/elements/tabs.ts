@@ -9,6 +9,8 @@
  * until the user or script changes it; the `value` property is the live
  * selection.
  *
+ * Parts: `tabs`, `scroll`, `tab`, `button`, `icon`, `text`, `ripple`, `indicator`, `divider`.
+ *
  * @module elements
  */
 

@@ -19,6 +19,8 @@
  * The surface stays in the element's shadow root and opens in the top layer
  * (`layer: "top"`), above modal dialogs.
  *
+ * Parts: `snackbar`, `text`.
+ *
  * @module elements
  */
 

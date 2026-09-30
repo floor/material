@@ -16,6 +16,8 @@
  * The carousel fills the host's height, as the factory fills its
  * container's: give `<m-carousel>` a height.
  *
+ * Parts: `carousel`, `scroller`, `track`, `item`, `content`, `title`, `snap`.
+ *
  * @module elements
  */
 

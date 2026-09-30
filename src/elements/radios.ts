@@ -10,6 +10,8 @@
  * until the user or script changes it and which a form reset returns to; the
  * `value` property is the live one.
  *
+ * Parts: `radios`, `item`, `input`, `label`, `control`, `circle`, `text`, `ripple`.
+ *
  * @module elements
  */
 

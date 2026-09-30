@@ -12,6 +12,10 @@
  * label element to update, and `type="multiline"` swaps the input for a
  * textarea.
  *
+ * Parts: `textfield`, `field`, `label`, `input`, `leading-icon`, `trailing-icon`, `prefix`,
+ * `suffix`, `supporting`, `helper`, `counter`, `outline`, `outline-leading`, `outline-notch`,
+ * `outline-trailing`.
+ *
  * @module elements
  */
 

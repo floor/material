@@ -26,6 +26,8 @@
  * `no-close-on-scrim-click` and `no-close-on-escape` keep a modal sheet open
  * on a click on the scrim and on Escape.
  *
+ * Parts: `bottom-sheet`, `container`, `handle`, `header`, `title`, `content`.
+ *
  * @module elements
  */
 

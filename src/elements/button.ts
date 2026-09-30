@@ -5,6 +5,8 @@
  * `type="submit"` and `type="reset"` act on the host's form, which a button
  * inside a shadow root cannot reach by itself (see `form-button`).
  *
+ * Parts: `button`, `icon`, `label` (also `text`), `ripple`.
+ *
  * @module elements
  */
 

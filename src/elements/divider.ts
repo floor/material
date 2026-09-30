@@ -6,6 +6,8 @@
  * A horizontal divider fills its line; a vertical one stretches with its flex
  * or grid row.
  *
+ * Parts: `divider`.
+ *
  * @module elements
  */
 

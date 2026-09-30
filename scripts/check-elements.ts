@@ -6524,6 +6524,52 @@ try {
     check("date picker, time picker and search: opening and closing leave the value attribute in charge");
   }
 
+  // ---------------------------------------------------------------- parts
+  // FLO-328: every piece is a part named after its BEM class without the
+  // prefix; the element holding the slot is also the slot attribute's part.
+  await fresh(
+    page,
+    `<style>
+       m-button::part(label) { color: rgb(1, 2, 3); }
+       m-button::part(icon) { color: rgb(4, 5, 6); }
+       m-switch::part(track) { outline: 3px solid rgb(7, 8, 9); }
+       m-switch::part(helper) { color: rgb(10, 11, 12); }
+       m-tabs::part(indicator) { background-color: rgb(13, 14, 15); }
+     </style>
+     <m-button id="pb" icon="${ICON.replace(/"/g, "'")}">Styled</m-button>
+     <m-switch id="ps">Parts</m-switch>
+     <m-tabs id="pt" value="a"><m-tab value="a">A</m-tab><m-tab value="b">B</m-tab></m-tabs>`
+  );
+  {
+    const parts = await page.evaluate(async () => {
+      const shadow = (id: string): ShadowRoot => (document.getElementById(id) as HTMLElement).shadowRoot as ShadowRoot;
+      const style = (id: string, part: string): CSSStyleDeclaration =>
+        getComputedStyle(shadow(id).querySelector(`[part~="${part}"]`) as Element);
+      const names = (id: string): string[] =>
+        Array.from(shadow(id).querySelectorAll("[part]"), (node) => node.getAttribute("part") as string);
+      // A piece the component adds later is named too.
+      document.getElementById("ps")?.setAttribute("supporting-text", "Later");
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return {
+        button: names("pb"),
+        label: style("pb", "label").color,
+        icon: style("pb", "icon").color,
+        track: style("ps", "track").outlineColor,
+        helper: style("ps", "helper").color,
+        indicator: style("pt", "indicator").backgroundColor,
+        tabs: names("pt").filter((name) => name.includes("tab")),
+      };
+    });
+    assert.deepEqual(parts.button, ["button", "icon", "text label", "ripple"]);
+    assert.equal(parts.label, "rgb(1, 2, 3)");
+    assert.equal(parts.icon, "rgb(4, 5, 6)");
+    assert.equal(parts.track, "rgb(7, 8, 9)");
+    assert.equal(parts.helper, "rgb(10, 11, 12)");
+    assert.equal(parts.indicator, "rgb(13, 14, 15)");
+    assert.deepEqual(parts.tabs, ["tabs", "button tab", "button tab"]);
+    check("parts: page CSS styles m-button::part(label) and (icon), m-switch::part(track) and a helper added later, m-tabs::part(indicator)");
+  }
+
   // ---------------------------------------------------------------- theme
   await fresh(page, `<m-switch id="s" checked>Theme</m-switch><section id="factory"></section>`);
   {

@@ -15,6 +15,8 @@
  * slot's. `clickable` makes the card a button (Enter and Space click it) and
  * its activation is the native `click`.
  *
+ * Parts: `card`, `content`.
+ *
  * @module elements
  */
 

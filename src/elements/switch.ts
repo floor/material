@@ -6,6 +6,9 @@
  * live one, as on a native checkbox: the attribute moves the state until the
  * user or script changes it. Children are the label.
  *
+ * Parts: `switch`, `container`, `content`, `label`, `helper`, `input`, `track`, `thumb`,
+ * `thumb-icon`.
+ *
  * @module elements
  */
 
