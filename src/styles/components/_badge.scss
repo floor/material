@@ -48,7 +48,7 @@ $wrapper: '#{base.$prefix}-badge__wrapper';
     width: 6px;
     height: 6px;
     min-width: 6px;
-    border-radius: 3px; // 3dp corner radius
+    border-radius: v.shape('full'); // BadgeTokens shape: corner-full (a 6dp dot)
     font-size: 0;
     padding: 0;
   }
@@ -57,7 +57,7 @@ $wrapper: '#{base.$prefix}-badge__wrapper';
   &--large {
     height: 16px;
     min-width: 16px;
-    border-radius: 8px; // 8dp corner radius
+    border-radius: v.shape('full'); // BadgeTokens large-shape: corner-full
     padding: 0 4px;
     font-size: 11px;
     line-height: 16px;

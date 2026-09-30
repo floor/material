@@ -1,6 +1,7 @@
 // src/styles/elements/_search.scss
 // <m-search> before upgrade: the search bar, with the placeholder where the
 // query goes; the <m-search-suggestion> declarations are drawn on upgrade.
+@use '../abstract/variables' as v;
 @use '../abstract/mixins' as m;
 @use '../abstract/theme' as t;
 @use 'config' as c;
@@ -13,7 +14,7 @@
   box-sizing: border-box;
   height: 56px;
   padding: 0 56px 0 60px;
-  border-radius: 28px;
+  border-radius: v.shape('full');
   background-color: t.color('surface-container-high');
   color: t.color('on-surface-variant');
   white-space: nowrap;

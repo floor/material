@@ -137,7 +137,8 @@ try {
     // at each other in drag, keys and setters with the inner ARIA bounds, PageUp and
     // PageDown by a tenth of the steps, arrows that follow the track as drawn, and an
     // axis that can start on the right.
-    { name: "slider", code: "export { createSlider } from 'mtrl';", gzip: 12900 },
+    // Raised from 12,900 for FLO-331: the track's corner reads its shape token (12,983 measured).
+    { name: "slider", code: "export { createSlider } from 'mtrl';", gzip: 13090 },
     { name: "navigation-rail", code: "export { createNavigationRail } from 'mtrl';", gzip: 7000 },
     { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 6500 },
     { name: "textfield", code: "export { createTextfield } from 'mtrl';", gzip: 8600 },

@@ -5,6 +5,7 @@
 // m3.material.io/components/split-button/specs).
 import { describe, test, expect, beforeAll } from 'bun:test';
 import { compileString } from 'sass';
+import { corner as token } from '../utils/corner';
 
 let css = '';
 
@@ -55,7 +56,8 @@ describe('split button stylesheet', () => {
     // corners beside a full pill
     const inner: Record<string, string> = { xs: '4px', s: '4px', m: '8px', l: '12px', xl: '16px' };
     for (const [size, corner] of Object.entries(inner)) {
-      const fallback = `var(--mtrl-split-button-inner-shape, ${corner})`;
+      // Read through the shape scale's token (FLO-331)
+      const fallback = `var(--mtrl-split-button-inner-shape, ${token(parseInt(corner, 10))})`;
       expect(value(`.mtrl-split-button--${size} .mtrl-split-button__leading`, 'border-start-end-radius')).toBe(fallback);
       expect(value(`.mtrl-split-button--${size} .mtrl-split-button__trailing`, 'border-start-start-radius')).toBe(fallback);
     }
@@ -76,7 +78,7 @@ describe('split button stylesheet', () => {
     const resting: Record<string, number> = { xs: 4, s: 4, m: 8, l: 12, xl: 16 };
     for (const [size, corner] of Object.entries(active)) {
       const selector = `.mtrl-split-button--${size} .mtrl-split-button__leading:hover, .mtrl-split-button--${size} .mtrl-split-button__leading:focus-visible, .mtrl-split-button--${size} .mtrl-split-button__leading:active`;
-      expect(value(selector, 'border-start-end-radius')).toBe(`var(--mtrl-split-button-inner-shape-active, ${corner})`);
+      expect(value(selector, 'border-start-end-radius')).toBe(`var(--mtrl-split-button-inner-shape-active, ${token(parseInt(corner, 10))})`);
       // and it is always rounder than the resting corner
       expect(parseInt(corner, 10)).toBeGreaterThan(resting[size]!);
     }

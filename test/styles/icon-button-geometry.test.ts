@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, test } from 'bun:test';
 import { compileString } from 'sass';
+import { corner } from '../utils/corner';
 import {
   ICON_BUTTON_CONTAINER_SIZES, ICON_BUTTON_ICON_SIZES,
   ICON_BUTTON_WIDTH_VALUES, ICON_BUTTON_CORNER_RADIUS,
@@ -45,15 +46,15 @@ describe('icon button geometry tokens', () => {
           // Shapes change only radii, preserving the shared size and width rules.
           // Round is half the container height, a real radius so the press morph animates.
           const shapeSelector = `${root}--${shape}${suffix}`;
-          expect(value(shapeSelector, 'border-radius')).toBe(`var(--mtrl-button-shape, ${shape === 'round' ? `${row.container / 2}px` : `${row.square}px`})`);
+          expect(value(shapeSelector, 'border-radius')).toBe(`var(--mtrl-button-shape, ${shape === 'round' ? `${row.container / 2}px` : corner(row.square)})`);
           expect(value(shapeSelector, 'width')).toBeUndefined();
           expect(value(shapeSelector, 'height')).toBeUndefined();
         });
       }
       test(`${row.size} ${shape}: pressed and selected shape tokens remain unchanged`, () => {
-        expect(value(`${root}:active${root}--${shape}${suffix}`, 'border-radius')).toBe(`var(--mtrl-button-shape-pressed, ${row.pressed}px)`);
+        expect(value(`${root}:active${root}--${shape}${suffix}`, 'border-radius')).toBe(`var(--mtrl-button-shape-pressed, ${corner(row.pressed)})`);
         const selectedSelector = `${root}--selected${root}--${shape}:not(:active)${suffix}`;
-        expect(value(selectedSelector, 'border-radius')).toBe(`var(--mtrl-button-shape-selected, ${shape === 'round' ? `${row.square}px` : `${row.container / 2}px`})`);
+        expect(value(selectedSelector, 'border-radius')).toBe(`var(--mtrl-button-shape-selected, ${shape === 'round' ? corner(row.square) : `${row.container / 2}px`})`);
       });
     }
     test(`${row.size}: public constants match the token dimensions`, () => {

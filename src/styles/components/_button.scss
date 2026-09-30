@@ -458,12 +458,12 @@ $content-color: (
       border-radius: 50%;
 
       &.#{$component}--square {
-        border-radius: 12px !important;
+        border-radius: v.shape('medium') !important; // ButtonSmallTokens square: corner-medium
       }
     }
 
     &.#{$component}--square {
-      border-radius: 12px;
+      border-radius: v.shape('medium');
     }
 
     @each $size in $sizes {

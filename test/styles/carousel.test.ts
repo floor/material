@@ -3,6 +3,7 @@
 // The carousel stylesheet against the component's DOM and the M3 specs.
 import { describe, test, expect, beforeAll } from 'bun:test';
 import { compileString } from 'sass';
+import { corner } from '../utils/corner';
 
 let css = '';
 
@@ -39,7 +40,7 @@ describe('carousel stylesheet', () => {
   });
 
   test('items take the 28dp corner and a secondary focus ring', () => {
-    expect(value('.mtrl-carousel__item', 'border-radius')).toBe('var(--mtrl-carousel-corner, 28px)');
+    expect(value('.mtrl-carousel__item', 'border-radius')).toBe(`var(--mtrl-carousel-corner, ${corner(28)})`);
     expect(value('.mtrl-carousel__item:focus-visible', 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
   });
 

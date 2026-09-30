@@ -224,7 +224,8 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
 .#{$component}--contained.#{$component}--docked.#{$component}--view {
     .#{$component}__content {
         margin-top: 2px;
-        border-radius: 12px;
+        // On the scale; no token names the contained docked view's content corner
+        border-radius: v.shape('medium');
     }
 }
 

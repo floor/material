@@ -1,5 +1,6 @@
 // test/components/button-group/button-group.test.ts
 
+import { corner } from "../../utils/corner";
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { JSDOM } from "jsdom";
 
@@ -659,7 +660,9 @@ describe("Button group selection (Material 3 kinds)", () => {
     const group = createButtonGroup({ kind: "connected", size: "m", buttons: items.slice(0, 2) });
     expect(group.element.style.getPropertyValue("--mtrl-button-group-height")).toBe("56px");
     expect(group.element.style.getPropertyValue("--mtrl-button-group-gap")).toBe("2px");
-    expect(group.element.style.getPropertyValue("--mtrl-button-group-inner-corner")).toBe("8px");
+    // The corners read the shape scale's tokens (FLO-331)
+    expect(group.element.style.getPropertyValue("--mtrl-button-group-inner-corner")).toBe(corner(8));
+    expect(group.element.style.getPropertyValue("--mtrl-button-group-pressed-corner")).toBe(corner(4));
     const standard = createButtonGroup({ kind: "standard", size: "xs", buttons: items.slice(0, 2) });
     expect(standard.element.style.getPropertyValue("--mtrl-button-group-gap")).toBe("18px");
     group.destroy();

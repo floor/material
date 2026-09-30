@@ -28,7 +28,7 @@ for (const prefix of [PREFIX]) {
     const group = attach(createButtonGroup({ prefix, kind: 'connected', size: 'm', buttons: [{ text: 'Day' }] }));
     const names = ['height', 'icon', 'gap', 'inner-corner', 'pressed-corner', 'radius'].map(name => `--${prefix}-button-group-${name}`);
     expect(propertyNames(group.element).sort()).toEqual(names.sort());
-    expect(names.map(name => group.element.style.getPropertyValue(name))).toEqual(names.map(name => ({ height: '56px', icon: '24px', gap: '2px', 'inner-corner': '8px', 'pressed-corner': '4px', radius: '28px' })[name.slice(`--${prefix}-button-group-`.length)]));
+    expect(names.map(name => group.element.style.getPropertyValue(name))).toEqual(names.map(name => ({ height: '56px', icon: '24px', gap: '2px', 'inner-corner': `var(--${prefix}-sys-shape-corner-small, 8px)`, 'pressed-corner': `var(--${prefix}-sys-shape-corner-extra-small, 4px)`, radius: '28px' })[name.slice(`--${prefix}-button-group-`.length)]));
     group.setDensity('compact');
     expect(group.element.style.getPropertyValue(`--${prefix}-button-group-height`)).toBe('48px');
     expect(group.element.style.getPropertyValue(`--${prefix}-button-group-radius`)).toBe('24px');

@@ -122,7 +122,7 @@ $snap: 0s linear $midpoint;
     inset-inline-start: 20px;
     inline-size: 56px;
     block-size: 32px;
-    border-radius: 999px;
+    border-radius: v.shape('full'); // NavigationRailTokens active-indicator-shape
     overflow: hidden;
     pointer-events: none;
     transition:
@@ -246,7 +246,7 @@ $snap: 0s linear $midpoint;
     min-inline-size: 16px;
     min-block-size: 16px;
     padding-inline: 4px;
-    border-radius: 999px;
+    border-radius: v.shape('full'); // BadgeTokens large-shape
     background: t.color('error');
     color: t.color('on-error');
     @include m.typography('label-small');
@@ -279,8 +279,9 @@ $snap: 0s linear $midpoint;
     max-block-size: 100dvh;
     block-size: 100dvh;
     background: t.color('surface-container');
-    border-start-end-radius: 16px;
-    border-end-end-radius: 16px;
+    // The modal rail's container, corner-large at the end, as the drawer's
+    border-start-end-radius: v.shape('large');
+    border-end-end-radius: v.shape('large');
     transition: inline-size $fast-spatial;
     @include m.elevation(2);
     &:not([open]) { display: none; }

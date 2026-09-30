@@ -60,8 +60,11 @@ $shape: '--#{base.$prefix}-button-shape';
   --#{base.$prefix}-button-group-height: 40px;
   --#{base.$prefix}-button-group-icon: 20px;
   --#{base.$prefix}-button-group-gap: 12px;
-  --#{base.$prefix}-button-group-inner-corner: 8px;
-  --#{base.$prefix}-button-group-pressed-corner: 4px;
+  // Connected group corners (ButtonGroupDefaults): inner corner-small, pressed
+  // corner-extra-small. The outer radius is half the height, not corner-full:
+  // beside the small inner corners a 9999px corner would scale them down.
+  --#{base.$prefix}-button-group-inner-corner: #{v.shape('small')};
+  --#{base.$prefix}-button-group-pressed-corner: #{v.shape('extra-small')};
   --#{base.$prefix}-button-group-radius: 20px;
 
   &--vertical {

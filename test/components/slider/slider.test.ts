@@ -11,6 +11,7 @@
 // range slider kept its initial aria-valuenow however its value changed, and a
 // valueFormatter shaped the value bubble but never reached assistive technology
 // through aria-valuetext.
+import { corner } from '../../utils/corner';
 import { describe, test, expect, beforeEach } from 'bun:test';
 import { JSDOM } from 'jsdom';
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
@@ -531,7 +532,7 @@ describe('slider track geometry', () => {
     const heights = { XS: 44, S: 44, M: 52, L: 68, XL: 108 } as const;
     for (const size of ['XS', 'S', 'M', 'L', 'XL'] as const) {
       const slider = await sized({ value: 50, size });
-      expect(slider.element.querySelector<HTMLElement>('.mtrl-slider__track')!.style.borderRadius).toBe(`${radii[size]}px`);
+      expect(slider.element.querySelector<HTMLElement>('.mtrl-slider__track')!.style.borderRadius).toBe(corner(radii[size]));
       expect(slider.element.style.getPropertyValue('--mtrl-slider-handle-height')).toBe(`${heights[size]}px`);
     }
   });

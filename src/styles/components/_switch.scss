@@ -80,7 +80,7 @@ $component: '#{base.$prefix}-switch';
     min-width: 52px;
     height: 32px;
     box-sizing: border-box;
-    border-radius: 16px;
+    border-radius: v.shape('full'); // SwitchTokens track-shape
     background-color: t.color('surface-container-highest');
     border: 2px solid t.color('outline');
     transition: m.spring(background-color, fast-effects), m.spring(border-color, fast-effects);

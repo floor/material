@@ -55,8 +55,8 @@ $default-width: 360px;
         .#{$component}__sheet {
             left: 0;
             right: auto;
-            border-top-right-radius: 16px;
-            border-bottom-right-radius: 16px;
+            border-top-right-radius: v.shape('large'); // NavigationDrawerTokens container-shape: corner-large-end
+            border-bottom-right-radius: v.shape('large'); // NavigationDrawerTokens container-shape: corner-large-end
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
             transform: translateX(-100%);
@@ -68,8 +68,8 @@ $default-width: 360px;
                 right: 0;
                 border-top-right-radius: 0;
                 border-bottom-right-radius: 0;
-                border-top-left-radius: 16px;
-                border-bottom-left-radius: 16px;
+                border-top-left-radius: v.shape('large'); // NavigationDrawerTokens container-shape: corner-large-end
+                border-bottom-left-radius: v.shape('large'); // NavigationDrawerTokens container-shape: corner-large-end
                 transform: translateX(100%);
             }
         }
@@ -85,8 +85,8 @@ $default-width: 360px;
         .#{$component}__sheet {
             left: auto;
             right: 0;
-            border-top-left-radius: 16px;
-            border-bottom-left-radius: 16px;
+            border-top-left-radius: v.shape('large'); // NavigationDrawerTokens container-shape: corner-large-end
+            border-bottom-left-radius: v.shape('large'); // NavigationDrawerTokens container-shape: corner-large-end
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
             transform: translateX(100%);
@@ -98,8 +98,8 @@ $default-width: 360px;
                 right: auto;
                 border-top-left-radius: 0;
                 border-bottom-left-radius: 0;
-                border-top-right-radius: 16px;
-                border-bottom-right-radius: 16px;
+                border-top-right-radius: v.shape('large'); // NavigationDrawerTokens container-shape: corner-large-end
+                border-bottom-right-radius: v.shape('large'); // NavigationDrawerTokens container-shape: corner-large-end
                 transform: translateX(-100%);
             }
         }
@@ -315,7 +315,7 @@ $default-width: 360px;
         padding: 0 24px 0 16px;
         gap: 12px;
         border: none;
-        border-radius: 28px;
+        border-radius: v.shape('full'); // NavigationDrawerTokens active-indicator-shape
         background: none;
         cursor: pointer;
         color: t.color("on-surface-variant");
@@ -549,11 +549,11 @@ $default-width: 360px;
             padding: 0 16px 0 12px;
             width: calc(100% - 16px);
             gap: 8px;
-            border-radius: 18px;
+            border-radius: v.shape('full');
             @include m.typography("body-medium");
 
             .#{$component}__active-indicator {
-                border-radius: 18px;
+                border-radius: v.shape('full');
             }
         }
 

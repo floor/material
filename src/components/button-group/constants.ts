@@ -82,16 +82,16 @@ export const BUTTON_GROUP_SIZES = {
 
 /**
  * Material 3 button group tokens per size (dp): container height, button
- * icon size, standard between-space, connected inner corner
- * (m3.material.io button group specs; ButtonGroupSmallTokens.kt and
+ * icon size, standard between-space, connected inner corner and its shape
+ * scale step (FLO-331) (m3.material.io button group specs; ButtonGroupSmallTokens.kt and
  * ConnectedButtonGroupSmallTokens.kt for the s size)
  */
 export const BUTTON_GROUP_SIZE_TOKENS = {
-  xs: { height: 32, icon: 20, standardGap: 18, connectedCorner: 4 },
-  s: { height: 40, icon: 20, standardGap: 12, connectedCorner: 8 },
-  m: { height: 56, icon: 24, standardGap: 8, connectedCorner: 8 },
-  l: { height: 96, icon: 32, standardGap: 8, connectedCorner: 16 },
-  xl: { height: 136, icon: 40, standardGap: 8, connectedCorner: 20 }
+  xs: { height: 32, icon: 20, standardGap: 18, connectedCorner: 4, connectedStep: "extra-small" },
+  s: { height: 40, icon: 20, standardGap: 12, connectedCorner: 8, connectedStep: "small" },
+  m: { height: 56, icon: 24, standardGap: 8, connectedCorner: 8, connectedStep: "small" },
+  l: { height: 96, icon: 32, standardGap: 8, connectedCorner: 16, connectedStep: "large" },
+  xl: { height: 136, icon: 40, standardGap: 8, connectedCorner: 20, connectedStep: "large-increased" }
 } as const;
 
 /** Connected groups use 2dp between buttons at every size */

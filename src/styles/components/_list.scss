@@ -56,7 +56,7 @@ $component: "#{base.$prefix}-list";
       @include m.typography("title-medium");
     }
     &--image { width: 56px; height: 56px; overflow: hidden; }
-    &--video { width: 100px; height: 56px; overflow: hidden; border-radius: 8px; }
+    &--video { width: 100px; height: 56px; overflow: hidden; border-radius: v.shape('small'); }
     &--avatar, &--image, &--video {
       img, svg, video { width: 100%; height: 100%; object-fit: cover; }
     }
@@ -81,7 +81,8 @@ $component: "#{base.$prefix}-list";
   // Slotted controls are siblings of the row action and remain independently operable.
   &__item :is(button, input, select, textarea, a, [contenteditable="true"], [data-list-control]):not(.#{$component}__action) { position: relative; z-index: 1; }
   &__item--selected {
-    border-radius: 16px;
+    // The expressive selected row; on the scale, so the large step moves it
+    border-radius: v.shape('large');
     background: t.color("secondary-container");
     .#{$component}__headline, .#{$component}__overline, .#{$component}__supporting, .#{$component}__leading, .#{$component}__trailing { color: t.color("on-secondary-container"); }
     .#{$component}__action::before { background: t.color("on-secondary-container"); }

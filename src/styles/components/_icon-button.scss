@@ -32,8 +32,8 @@ $sizes: (
         // Round shape: exactly half the container height. See the base shape.
         round-radius: 16px,
         icon: 20px,
-        square-radius: 12px,
-        pressed-radius: 8px,
+        square-radius: v.shape('medium'),
+        pressed-radius: v.shape('small'),
         outline-width: 1px,
     ),
     "s": (
@@ -41,8 +41,8 @@ $sizes: (
         // Round shape: exactly half the container height. See the base shape.
         round-radius: 20px,
         icon: 24px,
-        square-radius: 12px,
-        pressed-radius: 8px,
+        square-radius: v.shape('medium'),
+        pressed-radius: v.shape('small'),
         outline-width: 1px,
     ),
     "m": (
@@ -50,8 +50,8 @@ $sizes: (
         // Round shape: exactly half the container height. See the base shape.
         round-radius: 28px,
         icon: 24px,
-        square-radius: 16px,
-        pressed-radius: 12px,
+        square-radius: v.shape('large'),
+        pressed-radius: v.shape('medium'),
         outline-width: 1px,
     ),
     "l": (
@@ -59,8 +59,8 @@ $sizes: (
         // Round shape: exactly half the container height. See the base shape.
         round-radius: 48px,
         icon: 32px,
-        square-radius: 28px,
-        pressed-radius: 16px,
+        square-radius: v.shape('extra-large'),
+        pressed-radius: v.shape('large'),
         outline-width: 2px,
     ),
     "xl": (
@@ -68,8 +68,8 @@ $sizes: (
         // Round shape: exactly half the container height. See the base shape.
         round-radius: 68px,
         icon: 40px,
-        square-radius: 28px,
-        pressed-radius: 16px,
+        square-radius: v.shape('extra-large'),
+        pressed-radius: v.shape('large'),
         outline-width: 3px,
     ),
 );
