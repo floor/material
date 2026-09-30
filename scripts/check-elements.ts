@@ -197,6 +197,24 @@ try {
     assert.equal(await page.evaluate(() => (document.getElementById("s") as HTMLElement & { checked: boolean }).checked), true);
     check("switch: an outer <label for> toggles it");
 
+    // FLO-328: the slot's attribute is a real property.
+    const label = await page.evaluate(async () => {
+      type Labelled = HTMLElement & { label: string | null };
+      const slotted = document.getElementById("s") as Labelled;
+      const named = document.createElement("m-switch") as Labelled;
+      named.id = "named";
+      named.setAttribute("label", "Before");
+      document.getElementById("f")?.append(named);
+      const read = { slotted: slotted.label, named: named.label };
+      named.label = "Airplane mode";
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return { read, attribute: named.getAttribute("label"), own: Object.prototype.hasOwnProperty.call(named, "label") };
+    });
+    assert.deepEqual(label, { read: { slotted: "Wi-Fi", named: "Before" }, attribute: "Airplane mode", own: false });
+    assert.equal(await page.getByRole("switch", { name: "Airplane mode" }).count(), 1);
+    await page.evaluate(() => document.getElementById("named")?.remove());
+    check("switch: the label property reads the label and sets the attribute and the text");
+
     const reset = await page.evaluate(() => {
       (document.getElementById("f") as HTMLFormElement).reset();
       const get = (id: string): boolean => (document.getElementById(id) as HTMLElement & { checked: boolean }).checked;
@@ -306,6 +324,37 @@ try {
     await page.evaluate(() => document.getElementById("attr")?.setAttribute("label", "Renamed"));
     assert.equal(await page.getByRole("button", { name: "Renamed" }).count(), 1);
     check("button: a label attribute change updates the name");
+
+    // FLO-328: the slot's attribute is a real property, as `label` is on a native <option>.
+    const label = await page.evaluate(async () => {
+      type Labelled = HTMLElement & { label: string | null };
+      const attr = document.getElementById("attr") as Labelled;
+      const slotted = document.getElementById("plain") as Labelled;
+      const read = { attr: attr.label, slotted: slotted.label };
+      attr.label = "By property";
+      const late = document.createElement("m-button") as Labelled;
+      late.id = "late";
+      document.getElementById("f")?.append(late);
+      late.label = "Set late";
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return {
+        read,
+        own: Object.prototype.hasOwnProperty.call(attr, "label"),
+        attribute: attr.getAttribute("label"),
+        after: attr.label,
+        late: late.getAttribute("label"),
+      };
+    });
+    assert.deepEqual(label, {
+      read: { attr: "Renamed", slotted: "Cancel" },
+      own: false,
+      attribute: "By property",
+      after: "By property",
+      late: "Set late",
+    });
+    assert.equal(await page.getByRole("button", { name: "By property" }).count(), 1);
+    assert.equal(await page.getByRole("button", { name: "Set late" }).count(), 1);
+    check("button: the label property reads the label and sets the attribute and the text, also on an empty button");
 
     const parity = await page.evaluate(() => {
       const w = window as unknown as Win & { mtrl: { createButton: (c: object) => { element: HTMLElement } } };

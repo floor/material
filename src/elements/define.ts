@@ -298,8 +298,10 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
 
     attributeChangedCallback(name: string, previous: string | null, next: string | null): void {
       if (!this.component || previous === next) return;
-      if (spec.slot && name === spec.slot.attribute && this.#slot) {
-        this.#slot.textContent = next ?? "";
+      if (spec.slot && name === spec.slot.attribute) {
+        // The slot's fallback text; a component built without a slot is rebuilt to place one.
+        if (this.#slot) this.#slot.textContent = next ?? "";
+        else if (next) this.#rebuild(true);
         return;
       }
       const attribute = spec.attributes?.[name];
@@ -381,7 +383,11 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
 
     /** Reads a property as set before the element was upgraded, then routes it through the setter. */
     #upgradeProperties(): void {
-      const names = [...Object.keys(spec.attributes ?? {}).map(camel), ...Object.keys(spec.properties ?? {})];
+      const names = [
+        ...Object.keys(spec.attributes ?? {}).map(camel),
+        ...Object.keys(spec.properties ?? {}),
+        ...(spec.slot ? [camel(spec.slot.attribute)] : []),
+      ];
       const self = this as unknown as Record<string, unknown>;
       for (const name of names) {
         if (Object.prototype.hasOwnProperty.call(this, name)) {
@@ -554,6 +560,24 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
         write(this, name, attribute.type, value);
       },
     });
+  }
+  if (spec.slot) {
+    // The slot's attribute as a property, as `label` on a native <option>: it
+    // reads the attribute, else the element's text. Setting it writes the
+    // attribute, whose change updates the text.
+    const { attribute } = spec.slot;
+    const property = camel(attribute);
+    if (!(property in proto) && !spec.properties?.[property]) {
+      Object.defineProperty(proto, property, {
+        configurable: true,
+        get(this: HTMLElement) {
+          return this.getAttribute(attribute) ?? (this.textContent ?? "").trim();
+        },
+        set(this: HTMLElement, value: unknown) {
+          write(this, attribute, "string", value);
+        },
+      });
+    }
   }
   for (const name of Object.keys(spec.properties ?? {})) {
     Object.defineProperty(proto, name, {

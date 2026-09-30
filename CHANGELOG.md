@@ -189,6 +189,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Elements: a slot's `label` is a real property (FLO-328).** `button.label = "Save"` created a
+  plain JavaScript property and changed nothing (Solid, which always sets properties, hit it).
+  On `<m-button>`, `<m-extended-fab>`, `<m-switch>` and `<m-checkbox>` the property now reads the
+  `label` attribute, else the element's text, as `label` on a native `<option>`; setting it
+  writes the attribute, which updates the text, also on an element created without one.
+
 - **Divider insets follow the writing direction (FLO-324).** They were physical margins, so in
   right-to-left the start inset landed on the end; they are logical margins now.
 
