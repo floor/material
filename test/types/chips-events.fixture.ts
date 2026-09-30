@@ -1,11 +1,14 @@
 // FLO-114: the container emits positional arguments through its own dispatcher.
-import { createChips, type ChipsComponent, type ChipsConfig, type ChipsEvents, type ChipComponent } from "../../src/components/chips";
+import { createChips, type ChipsComponent, type ChipsConfig, type ChipsEvents, type ChipsChangeEvent, type ChipComponent } from "../../src/components/chips";
 import { CHIPS_EVENTS } from "../../src/components/chips/constants";
 
 type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 export const names: Equals<keyof ChipsEvents, "change" | "add" | "remove"> = true;
-export const change: Equals<Parameters<ChipsEvents["change"]>, [selectedValues: (string | null)[], changedValue: string | null]> = true;
+export const change: Equals<Parameters<ChipsEvents["change"]>, [event: ChipsChangeEvent, changedValue: string | null]> = true;
+// FLO-320: the payload names the element's field; the array and the second argument stay, deprecated.
+export const fields: Equals<Pick<ChipsChangeEvent, "value" | "selected" | "changed">, { value: string | string[] | null; selected: (string | null)[]; changed: string | null }> = true;
+export const stillArray: ChipsChangeEvent extends (string | null)[] ? true : false = true;
 export const add: Equals<Parameters<ChipsEvents["add"]>, [chip: ChipComponent]> = true;
 export const remove: Equals<Parameters<ChipsEvents["remove"]>, [chip: ChipComponent]> = true;
 export const configEvents: Equals<ChipsConfig["on"], Partial<ChipsEvents> | undefined> = true;
@@ -40,6 +43,7 @@ chips.on("destroy", () => {});
 createChips({ on: { select: () => {} } });
 // @ts-expect-error config checks callback arguments
 createChips({ on: { change: (value: number) => value.toFixed() } });
+chips.on("change", event => { const value: string | string[] | null = event.value; void value; });
 // @ts-expect-error the selected values are an array
 chips.on("change", values => values.toUpperCase());
 // @ts-expect-error changed value is not a DOM event

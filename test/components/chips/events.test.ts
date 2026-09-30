@@ -45,8 +45,8 @@ describe("chips container events", () => {
   });
 
   test("click change passes both arguments, including valueless chips, and calls onChange", () => {
-    const events: Parameters<ChipsEvents["change"]>[] = [];
-    const callbacks: Parameters<ChipsEvents["change"]>[] = [];
+    const events: [(string | null)[], string | null][] = [];
+    const callbacks: [(string | null)[], string | null][] = [];
     const chips = mount({ multiSelect: true, chips: [{ value: "a", ripple: false }, { ripple: false }],
       on: { change: (...args) => events.push(args) }, onChange: (...args) => callbacks.push(args) });
     const [a, blank] = chips.getChips();
@@ -58,7 +58,7 @@ describe("chips container events", () => {
   });
 
   test("keyboard selection emits the same positional change contract", () => {
-    const events: Parameters<ChipsEvents["change"]>[] = [];
+    const events: [(string | null)[], string | null][] = [];
     const chips = mount({ multiSelect: true, chips: [{ value: "a", ripple: false }] });
     chips.on("change", (...args) => events.push(args));
     chips.element.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight" }));
@@ -68,7 +68,7 @@ describe("chips container events", () => {
   });
 
   test("programmatic selection and clearing emit null as the changed value", () => {
-    const events: Parameters<ChipsEvents["change"]>[] = [];
+    const events: [(string | null)[], string | null][] = [];
     const chips = mount({ multiSelect: false, chips: [{ value: "a", ripple: false }, { value: "b", ripple: false }] });
     chips.on("change", (...args) => events.push(args));
     chips.selectByValue("a").selectByValue("a").selectByValue("b").clearSelection().clearSelection();
