@@ -9,6 +9,8 @@ export { withSupportingText } from "./supporting-text";
 export { withPlacement } from "./placement";
 export { withDensity } from "./density";
 export { withError } from "./error";
+export { withField } from "./field";
+export { withCounter } from "./counter";
 
 // Export interfaces
 export type { LeadingIconComponent, LeadingIconConfig } from "./leading-icon";
@@ -23,3 +25,5 @@ export type {
   SupportingTextConfig,
 } from "./supporting-text";
 export type { PlacementComponent } from "./placement";
+export type { FieldComponent } from "./field";
+export type { CounterComponent } from "./counter";

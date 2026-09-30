@@ -86,8 +86,8 @@ export const withPlacement =
         outline.appendChild(segment);
         if (part === "notch") notch = segment;
       }
-      if (component.input && component.input.parentNode === component.element)
-        component.input.after(outline);
+      // Beside the input, in the field (FLO-300)
+      if (component.input) component.input.after(outline);
       else component.element.appendChild(outline);
     };
 

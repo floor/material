@@ -157,6 +157,12 @@ export interface TextfieldComponent {
   /** The root element of the textfield */
   element: HTMLElement;
 
+  /**
+   * The container: label, input, outline, icons and affixes, above the
+   * supporting text row. Anchor popovers to it (FLO-300).
+   */
+  field: HTMLElement;
+
   /** The input element */
   input: HTMLInputElement | HTMLTextAreaElement;
 

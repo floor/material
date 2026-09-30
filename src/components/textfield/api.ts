@@ -19,6 +19,7 @@ type ComponentWithDensity = BaseComponent & {
   schedulePositionUpdate?: () => void;
   setError?: (error: boolean, message?: string) => void;
   isError?: () => boolean;
+  field?: HTMLElement;
 };
 
 /**
@@ -30,6 +31,9 @@ export const withAPI =
   ({ disabled, lifecycle }: ApiOptions) =>
   (component: ComponentWithDensity): TextfieldComponent => ({
     element: component.element,
+    // The container under the root: what a menu or popover anchors to, so the
+    // supporting text row never pushes it down (FLO-300)
+    field: component.field ?? component.element,
     input: component.input as HTMLInputElement | HTMLTextAreaElement,
 
     // Value management
@@ -172,7 +176,7 @@ export const withAPI =
     // component, so its supportingTextElement is a copy from when it was
     // spread; the element in the field is the one to report (FLO-303).
     get supportingTextElement(): HTMLElement | null {
-      return component.element.querySelector<HTMLElement>(`:scope > .${component.getClass("textfield__helper")}`);
+      return component.element.querySelector<HTMLElement>(`.${component.getClass("textfield__helper")}`);
     },
     setSupportingText(text: string, isError?: boolean): TextfieldComponent {
       if (component.setSupportingText) {

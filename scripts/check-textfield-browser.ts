@@ -118,11 +118,11 @@ export async function checkTextfieldTokens(page: Page): Promise<void> {
     errorTrailing: style("error", ".mtrl-textfield__trailing-icon").color === role("error"),
     errorPrefix: style("error", ".mtrl-textfield__prefix").color === role("on-surface-variant"),
     errorCaret: style("error", "input").caretColor === role("error"),
-    errorIndicator: [style("error", "input").borderBottomColor === role("error"), getComputedStyle(probes.error.element, "::before").opacity],
+    errorIndicator: [style("error", "input").borderBottomColor === role("error"), getComputedStyle(q("error", ".mtrl-textfield__field"), "::before").opacity],
     icons: [style("error", ".mtrl-textfield__leading-icon").opacity, style("error", ".mtrl-textfield__leading-icon svg").width],
     disabledFill: [style("disabled", "input").opacity, style("disabled", "input").backgroundColor === role("on-surface", 0.04), style("disabled", "input").borderBottomColor === role("on-surface", 0.38)],
     disabledText: style("disabled", "input").color === role("on-surface", 0.38),
-    disabledHelper: style("disabled", ".mtrl-textfield__helper").opacity,
+    disabledHelper: style("disabled", ".mtrl-textfield__supporting").opacity,
     outlinedDisabledFill: style("outlinedDisabled", "input").backgroundColor,
   };`);
   assert.deepEqual(rest, {
@@ -155,4 +155,80 @@ export async function checkTextfieldTokens(page: Page): Promise<void> {
 
   await page.evaluate(() => Object.values((window as unknown as { probes: Record<string, Probe> }).probes).forEach(field => field.destroy()));
   console.log("Passed text field tokens: indicator, hover layer, caret, placeholder, outlined label, error roles, icons, disabled container and text.");
+}
+
+type AnatomyWindow = Window & {
+  inputs: { createTextfield: typeof createTextfield };
+  core: { createButton: (config: Record<string, unknown>) => { element: HTMLElement; destroy: () => void } };
+  createSelect: (config: Record<string, unknown>) => { element: HTMLElement; open: () => unknown; destroy: () => void };
+  anatomy: { destroy: () => void }[];
+};
+
+/**
+ * The field and its supporting text row (FLO-300): the field stays 56px and
+ * lines up with a button; only the row adds height, 4dp plus its lines; a
+ * long helper wraps and pushes what follows; a select's menu opens against
+ * the field, not under its helper.
+ */
+export async function checkTextfieldAnatomy(page: Page): Promise<void> {
+  const measured = await page.evaluate(async () => {
+    const w = window as unknown as AnatomyWindow;
+    const stage = document.createElement("div");
+    stage.style.cssText = "position:absolute;left:0;top:600px;width:600px";
+    document.body.append(stage);
+    const row = (...children: HTMLElement[]) => {
+      const line = document.createElement("div");
+      line.style.cssText = "display:flex;align-items:center;gap:8px;margin:0 0 24px";
+      line.append(...children);
+      stage.append(line);
+      return line;
+    };
+    const plain = w.inputs.createTextfield({ label: "Name" });
+    const button = w.core.createButton({ text: "Save", variant: "filled" });
+    row(plain.element, button.element);
+    const helped = w.inputs.createTextfield({ label: "Name", supportingText: "As on your passport", maxLength: 20 });
+    row(helped.element);
+    const wrapped = w.inputs.createTextfield({ label: "Name", supportingText: "A helper long enough that it has to wrap onto a second line under the field" });
+    wrapped.element.style.width = "280px";
+    stage.append(wrapped.element);
+    const after = document.createElement("p");
+    after.textContent = "After";
+    after.style.margin = "0";
+    stage.append(after);
+    const select = w.createSelect({ label: "Pet", supportingText: "Pick one", options: [{ id: "cat", text: "Cat" }, { id: "dog", text: "Dog" }] });
+    // Near the top, with room below, so the menu opens downwards.
+    const top = document.createElement("div");
+    top.style.cssText = "position:fixed;left:24px;top:24px";
+    top.append(select.element);
+    document.body.append(top);
+    w.anatomy = [plain, button, helped, wrapped, select];
+    const box = (el: Element) => el.getBoundingClientRect();
+    const centre = (el: Element) => box(el).top + box(el).height / 2;
+    const field = (el: HTMLElement) => el.querySelector(".mtrl-textfield__field") as HTMLElement;
+    select.open();
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    const menu = document.querySelector(".mtrl-select__menu") as HTMLElement;
+    return {
+      plainHeight: box(plain.element).height,
+      centred: Math.abs(centre(plain.element) - centre(button.element)) < 0.5,
+      helpedField: box(field(helped.element)).height,
+      helpedRow: box(helped.element).height - box(field(helped.element)).height,
+      counterAtEnd: Math.abs(box(helped.element.querySelector(".mtrl-textfield__counter")!).right - (box(helped.element).right - 16)) < 0.5,
+      wrappedRow: box(wrapped.element).height - 56,
+      afterBelow: box(after).top >= box(wrapped.element).bottom - 0.5,
+      menuGap: box(menu).top - box(field(select.element)).bottom,
+      menuBelowHelper: box(menu).top >= box(select.element).bottom - 0.5,
+    };
+  });
+  assert.equal(measured.plainHeight, 56, "a field without a helper is 56px");
+  assert.equal(measured.centred, true, "it lines up with a button in a row");
+  assert.equal(measured.helpedField, 56, "the helper row leaves the field at 56px");
+  assert.equal(measured.helpedRow, 20, "the row adds 4dp and its 16dp line");
+  assert.equal(measured.counterAtEnd, true, "the counter ends 16dp in from the field's end");
+  assert.equal(measured.wrappedRow, 36, "a helper that wraps adds its second line");
+  assert.equal(measured.afterBelow, true, "what follows sits below the wrapped helper");
+  assert.ok(Math.abs(measured.menuGap) < 1, `the select's menu opens against the field, gap ${measured.menuGap}px`);
+  assert.equal(measured.menuBelowHelper, false, "the menu does not drop below the helper row");
+  await page.evaluate(() => (window as unknown as AnatomyWindow).anatomy.forEach((part) => part.destroy()));
+  console.log("Passed text field anatomy: 56px field aligned with a button, the helper row adds only its lines and wraps, the counter at the end, the select's menu against the field.");
 }

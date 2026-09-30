@@ -55,17 +55,14 @@ $component: "#{base.$prefix}-select";
     &--open {
         z-index: f.get-z-index("menu");
 
-        // Transparent scrim covering the viewport to block pointer events
-        // on elements behind the open dropdown
-        &::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-        }
+        // No viewport scrim: the old `::before` one shared the root's
+        // pseudo-element with the filled indicator (height 2px), so it was a
+        // 2px strip and never blocked anything; a click outside closes the
+        // menu (FLO-300 moved the indicator to the field, which revived it).
 
         // These styles handle the focused state when the menu is open
         .#{base.$prefix}-textfield--filled {
-            &::before {
+            .#{base.$prefix}-textfield__field::before {
                 opacity: 1; // Show the active indicator
             }
 
@@ -205,10 +202,6 @@ $component: "#{base.$prefix}-select";
         }
     }
 
-    // Helper text positioning
-    .#{base.$prefix}-textfield__helper {
-        margin-top: 4px;
-    }
 }
 
 // `.mtrl-select__menu` marks the select's menu (FLO-295: the class was unprefixed,
