@@ -289,6 +289,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Menu: the divider no longer collapses in a menu that scrolls (FLO-273).** The list is a flex
+  column, and the divider, the one item without a minimum size, shrank to 0 once the list was
+  taller than the menu: a long select showed the divider's margins but no line.
+
 - **Progress: the indeterminate circular indicator keeps its track (FLO-338).** It drew only the
   moving arc. M3 shows indeterminate indicators moving along a fixed track, and the Expressive
   `CircularWavyProgressIndicator` draws one; the track now runs around the rest of the circle,
