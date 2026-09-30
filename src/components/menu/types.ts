@@ -555,9 +555,8 @@ export interface KeyboardMenuState {
 export interface KeyboardActions {
   closeMenu: (event: Event, restoreFocus?: boolean) => void;
   findItemById: (id: string) => MenuItem | null;
-  // Optional, and called through `?.`: the controller supplies these from
-  // `component.submenu`, which the host declares optional because features
-  // earlier in the pipe run before withSubmenu installs it.
+  // Optional, and called through `?.`: the controller supplies these from its
+  // submenu facade (features/loader.ts), and a caller need not have one.
   closeSubmenu?: (level: number) => void;
   handleSubmenuClick?: (
     item: MenuItem,

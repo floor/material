@@ -13,6 +13,7 @@ import {
 } from "../types";
 import { menuOpened, menuClosed } from "./registry";
 import { eventWithin } from "./layer";
+import { createSubmenuLoader, hasNestedItems, MenuSubmenuApi } from "./loader";
 import { onTopLayerClose, showInTopLayer } from "../../../core/dom/layer";
 
 import { setHTML } from "../../../core/dom/html";
@@ -26,13 +27,22 @@ import { setHTML } from "../../../core/dom/html";
 const withController =
   (config: MenuConfig, getComponent: () => MenuComponent) =>
   // Generic, so the accumulated pipeline type survives (see #109).
-  <C extends MenuFeatureHost>(component: C): C & { menu: MenuControllerApi } => {
+  <C extends MenuFeatureHost>(
+    component: C,
+  ): C & { menu: MenuControllerApi; submenu: MenuSubmenuApi } => {
   // There used to be a `if (!component.element)` guard here, warning and
   // returning the component untouched. withElement runs before this in the
   // only pipe that calls it, so it could not fire -- and it made the return
   // type a union of enhanced and not, which collapsed to C and erased this
   // feature from the pipeline type. The host type requires the element.
   const tasks = createMenuTasks();
+
+  // Nested menus are a lazy chunk (FLO-310): a menu without nested items never
+  // loads it, and one with them starts the load now, so it is normally there
+  // before the menu opens. Until then `submenu` queues what the user does.
+  const loader = createSubmenuLoader(config, component);
+  const submenu = loader.api;
+  if (hasNestedItems(config.items)) loader.load();
 
   // A top-layer menu renders next to its opener as a popover="manual"
   // element. Manual, not auto: the menu's own dismissal stays the one that
@@ -223,17 +233,13 @@ const withController =
       if (item.hasSubmenu && config.openSubmenuOnHover) {
         // Use submenu feature for hover handling
         itemElement.addEventListener("mouseenter", () => {
-          if (component.submenu) {
-            component.submenu.handleSubmenuHover(item, index, itemElement);
-          }
+          submenu.handleSubmenuHover(item, index, itemElement);
         });
 
         // handleSubmenuLeave takes no parameters -- the event was being
         // passed and silently discarded.
         itemElement.addEventListener("mouseleave", () => {
-          if (component.submenu) {
-            component.submenu.handleSubmenuLeave();
-          }
+          submenu.handleSubmenuLeave();
         });
       }
     }
@@ -331,6 +337,14 @@ const withController =
     return null;
   };
 
+  // What the keyboard handlers call for nested menus. The facade's methods
+  // are stable, so handlers set up before the feature arrives still reach it.
+  const submenuActions = {
+    closeSubmenu: submenu.closeSubmenu,
+    handleSubmenuClick: submenu.handleSubmenuClick,
+    handleNestedSubmenuClick: submenu.handleNestedSubmenuClick,
+  };
+
   /**
    * Handles click on a menu item
    */
@@ -345,9 +359,9 @@ const withController =
     // Don't process if disabled
     if (item.disabled) return;
 
-    if (item.hasSubmenu && component.submenu) {
+    if (item.hasSubmenu) {
       // Delegate to submenu feature
-      component.submenu.handleSubmenuClick(
+      submenu.handleSubmenuClick(
         item,
         index,
         e.currentTarget as HTMLElement,
@@ -551,9 +565,7 @@ const withController =
     component.emit("menu-closing", { event, restoreFocus });
 
     // Close any open submenu first using the submenu feature
-    if (component.submenu) {
-      component.submenu.closeAllSubmenus();
-    }
+    submenu.closeAllSubmenus();
 
     tasks.setTimeout(() => {
       // Update state
@@ -629,10 +641,9 @@ const withController =
     }
 
     // Don't close if clicked inside a submenu
-    if (component.submenu && component.submenu.hasOpenSubmenu()) {
-      const activeSubmenus = component.submenu.getActiveSubmenus();
-      for (const submenu of activeSubmenus) {
-        if (eventWithin(config, submenu.element, e)) {
+    if (submenu.hasOpenSubmenu()) {
+      for (const open of submenu.getActiveSubmenus()) {
+        if (eventWithin(config, open.element, e)) {
           return;
         }
       }
@@ -649,9 +660,8 @@ const withController =
     // Check if the event target is already inside the menu or submenu
     const isTargetInsideMenu = eventWithin(config, component.element, e);
     const isTargetInsideSubmenu =
-      component.submenu &&
-      component.submenu.hasOpenSubmenu() &&
-      component.submenu
+      submenu.hasOpenSubmenu() &&
+      submenu
         .getActiveSubmenus()
         .some((s) => eventWithin(config, s.element, e));
 
@@ -672,10 +682,8 @@ const withController =
         if (component.keyboard && component.keyboard.handleMenuKeydown) {
           component.keyboard.handleMenuKeydown(e, state, {
             closeMenu,
-            closeSubmenu: component.submenu?.closeSubmenu,
             findItemById,
-            handleSubmenuClick: component.submenu?.handleSubmenuClick,
-            handleNestedSubmenuClick: component.submenu?.handleNestedSubmenuClick,
+            ...submenuActions,
           });
         } else if (e.key === "Escape") {
           e.preventDefault();
@@ -686,10 +694,8 @@ const withController =
         if (component.keyboard && component.keyboard.handleMenuKeydown) {
           component.keyboard.handleMenuKeydown(e, state, {
             closeMenu,
-            closeSubmenu: component.submenu?.closeSubmenu,
             findItemById,
-            handleSubmenuClick: component.submenu?.handleSubmenuClick,
-            handleNestedSubmenuClick: component.submenu?.handleNestedSubmenuClick,
+            ...submenuActions,
           });
         }
       }
@@ -742,10 +748,8 @@ const withController =
     if (!listbox && component.keyboard && component.keyboard.setupKeyboardHandlers) {
       component.keyboard.setupKeyboardHandlers(component.element, state, {
         closeMenu,
-        closeSubmenu: component.submenu?.closeSubmenu,
         findItemById,
-        handleSubmenuClick: component.submenu?.handleSubmenuClick,
-        handleNestedSubmenuClick: component.submenu?.handleNestedSubmenuClick,
+        ...submenuActions,
       });
     }
 
@@ -829,6 +833,10 @@ const withController =
       window.removeEventListener("resize", handleWindowResize);
       window.removeEventListener("scroll", handleWindowScroll);
 
+      // The submenu feature cleaned up after the controller when it was part
+      // of the pipe; it still does. A load still in flight is dropped.
+      loader.destroy();
+
       originalDestroy.call(component.lifecycle);
     };
   }
@@ -836,6 +844,7 @@ const withController =
   // Return enhanced component
   return {
     ...component,
+    submenu,
     menu: {
       open: (event?: Event, interactionType?: "mouse" | "keyboard") => {
         // Left undefined so openMenu can read the event; defaulting here fed
@@ -858,6 +867,7 @@ const withController =
 
       setItems: (items: MenuContent[]) => {
         state.items = items;
+        if (hasNestedItems(items)) loader.load();
         renderMenuItems();
         return component;
       },
