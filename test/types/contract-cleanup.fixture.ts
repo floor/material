@@ -8,7 +8,7 @@
 // runtime surface to assert — a removed option is simply absent, and a closed
 // import cycle is simply not there — so both are pinned here instead.
 //
-// Compiled by `bun run tooling:check` via tsconfig.types.json.
+// Compiled by `bun run tooling:check` via config/tsconfig.types.json.
 import type { BaseComponentConfig } from "../../src/core/config/component";
 import type { ComponentConfigMap } from "../../src/core/config/global";
 import { setComponentDefaults } from "../../src/core/config/global";

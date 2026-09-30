@@ -15,7 +15,7 @@
 // components configure `forwardEvents`; without a shared payload each of
 // their event maps would spell the same three fields again.
 //
-// Compiled by `bun run tooling:check` via tsconfig.types.json.
+// Compiled by `bun run tooling:check` via config/tsconfig.types.json.
 import type { FabComponent, FabEvents } from "../../src/components/fab/types";
 import type { ForwardedEventPayload } from "../../src/core/dom/create";
 

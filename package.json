@@ -122,7 +122,7 @@
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
     "test:ui": "bun test --watch --ui",
-    "docs": "typedoc --skipErrorChecking",
+    "docs": "typedoc --options config/typedoc.json --skipErrorChecking",
     "docs:serve": "bun run --bun serve docs",
     "docs:fix-errors": "tsc --noEmit --allowJs --skipLibCheck",
     "ts:check": "tsc --noEmit --skipLibCheck",
@@ -148,7 +148,7 @@
     "vue:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-vue.ts",
     "svelte:check": "bun run scripts/check-svelte.ts",
     "solid:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-solid.ts",
-    "tooling:check": "tsc --project tsconfig.tools.json --noEmit && tsc --project tsconfig.types.json --noEmit",
+    "tooling:check": "tsc --project config/tsconfig.tools.json --noEmit && tsc --project config/tsconfig.types.json --noEmit",
     "themes:generate": "bun scripts/generate-themes.ts"
   },
   "repository": {
@@ -205,5 +205,53 @@
     "typescript": "^5.8.2",
     "vite": "^8.2.2",
     "vue": "^3.5"
+  },
+  "eslintConfig": {
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 2022,
+      "sourceType": "module"
+    },
+    "env": {
+      "node": true,
+      "browser": true,
+      "es2022": true
+    },
+    "rules": {
+      "@typescript-eslint/no-unsafe-function-type": "off",
+      "@typescript-eslint/ban-ts-comment": "warn",
+      "prefer-const": "error",
+      "no-var": "error",
+      "no-console": "off",
+      "no-case-declarations": "off",
+      "@typescript-eslint/no-unused-expressions": "off",
+      "@typescript-eslint/no-this-alias": "off",
+      "prefer-rest-params": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "ignoreRestSiblings": true,
+          "varsIgnorePattern": "^_",
+          "argsIgnorePattern": "^_"
+        }
+      ]
+    },
+    "ignorePatterns": [
+      "node_modules/",
+      "dist/",
+      "build/",
+      "*.js",
+      "test/**/*.ts",
+      "**/*.test.ts",
+      "**/*.spec.ts"
+    ]
   }
 }

@@ -1,7 +1,7 @@
-// typedoc.json
+// config/typedoc.json: paths are relative to this file
 {
-  "entryPoints": ["./src/index.ts"],
-  "out": "docs/api",
+  "entryPoints": ["../src/index.ts"],
+  "out": "../docs/api",
   "name": "mtrl Documentation",
   "exclude": ["**/node_modules/**", "**/*.test.ts", "**/*.spec.ts"],
   "excludePrivate": false,
@@ -13,7 +13,7 @@
   "theme": "default",
   "categoryOrder": ["Core", "Components", "Utilities", "*"],
   "categorizeByGroup": true,
-  "readme": "README.md",
+  "readme": "../README.md",
   "sort": ["static-first", "alphabetical"],
   "navigationLinks": {
     "GitHub": "https://github.com/floor/mtrl"

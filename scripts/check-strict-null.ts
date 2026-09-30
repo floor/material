@@ -14,7 +14,7 @@ const EXCLUDED = new Set(PENDING);
 
 const raw = (() => {
   try {
-    execFileSync("bunx", ["tsc", "-p", "tsconfig.strictnull.json"], {
+    execFileSync("bunx", ["tsc", "-p", "config/tsconfig.strictnull.json"], {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
     });

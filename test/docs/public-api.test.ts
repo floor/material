@@ -6,7 +6,7 @@ test("Tabs documentation exposes supported APIs and omits internal hooks (FLO-23
   // Use the real documentation configuration and converter, so an annotation
   // alone cannot pass while the documentation still advertises the member.
   const app = await Application.bootstrapWithPlugins({
-    options: fileURLToPath(new URL("../../typedoc.json", import.meta.url)),
+    options: fileURLToPath(new URL("../../config/typedoc.json", import.meta.url)),
     logLevel: LogLevel.Error,
   });
   const converted = await app.convert();

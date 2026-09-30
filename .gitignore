@@ -97,4 +97,5 @@ demo/
 .check-solid.js
 
 # Local Claude Code settings
-.claude/
+.claude/*
+!.claude/CLAUDE.md

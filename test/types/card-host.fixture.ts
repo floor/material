@@ -19,7 +19,7 @@
 // in src or test passes no name, and a bare call would have returned
 // "mtrl-undefined", so nothing depended on the wider declaration.
 //
-// Compiled by `bun run tooling:check` via tsconfig.types.json.
+// Compiled by `bun run tooling:check` via config/tsconfig.types.json.
 import type { BaseComponent } from "../../src/components/card/types";
 import type { ElementComponent } from "../../src/core/compose/component";
 
@@ -48,9 +48,9 @@ export const theNameIsNotOptional: Equals<
 // the host's. With the optional declaration it was not, and every stage after
 // the failing `pipe()` overload became `unknown`.
 //
-// tsconfig.types.json now inherits strict mode, so this assignment also
+// config/tsconfig.types.json now inherits strict mode, so this assignment also
 // checks the host's parameter variance. The structural assertions above and
-// below remain useful under tsconfig.test.json, which relaxes that flag.
+// below remain useful under config/tsconfig.test.json, which relaxes that flag.
 // `bun run ts:check` checks the real composition pipeline in strict mode.
 
 declare const built: ElementComponent;

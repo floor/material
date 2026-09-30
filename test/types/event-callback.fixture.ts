@@ -8,7 +8,7 @@
 // form handlers). An untyped channel now hands its handlers `unknown`, and a
 // factory can name its events with `withEvents<Events>()`.
 //
-// Compiled by `bun run tooling:check` via tsconfig.types.json.
+// Compiled by `bun run tooling:check` via config/tsconfig.types.json.
 import { createBase, pipe } from "../../src/core/compose";
 import { withEvents, type EventComponent } from "../../src/core/compose/features/events";
 import { createEmitter, type EventCallback } from "../../src/core/state/emitter";

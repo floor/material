@@ -1,6 +1,6 @@
 # AGENTS.md — working on mtrl
 
-For any coding agent. [CLAUDE.md](./CLAUDE.md) is the long form — architecture, coding
+For any coding agent. [CLAUDE.md](./.claude/CLAUDE.md) is the long form — architecture, coding
 standards, SCSS rules; this page is the short one, and where the two differ about *process*,
 this page describes how work happens under the agent manifest (`.agents/agents.yaml`).
 
