@@ -100,8 +100,10 @@ $component: "#{base.$prefix}-textfield";
             transition: background-color 5000s ease-in-out 0s; // Long transition to keep the background
         }
 
-        // Firefox autofill
+        // Firefox autofill; the animation reports it as on WebKit (FLO-335)
         &:autofill {
+            animation-name: onAutoFillStart;
+            animation-duration: 10ms;
             color: t.color("on-surface");
         }
     }

@@ -188,38 +188,29 @@ export const withTextInput =
       return isEmpty;
     };
 
-    // Enhanced autofill detection function
+    // Whether the browser has autofilled the input: its :autofill state (the
+    // prefixed name in older WebKit). No computed style is read, which in a
+    // shadow root forced a style recalculation per field (FLO-335).
+    const isAutofilled = (): boolean => {
+      try {
+        return input.matches(":autofill");
+      } catch {
+        try {
+          return input.matches(":-webkit-autofill");
+        } catch {
+          return false;
+        }
+      }
+    };
+
     const checkForAutofill = (shouldEmit: boolean = true): void => {
-      // Multiple detection methods for better browser compatibility
-
-      // Method 1: Check for non-empty value (most reliable)
-      // This catches cases where autofill happened before our listeners
-      const hasValue = input.value && input.value.length > 0;
-
-      // Method 2: Check webkit autofill pseudo-class
-      const hasWebkitAutofill = input.matches(":-webkit-autofill");
-
-      // Method 3: Check computed styles for autofill background colors
-      const computedStyle = window.getComputedStyle(input);
-      const bgColor = computedStyle.backgroundColor;
-      const isAutofillBackground =
-        bgColor === "rgb(250, 255, 189)" || // Chrome/Edge
-        bgColor === "rgb(232, 240, 254)" || // Firefox
-        bgColor === "rgb(250, 255, 0)" || // Safari
-        bgColor === "rgba(255, 255, 0, 0.1)"; // Some browsers
-
-      // If any detection method indicates autofill or value present
-      if (hasValue || hasWebkitAutofill || isAutofillBackground) {
+      const autofilled = isAutofilled();
+      if (input.value || autofilled) {
         component.element.classList.remove(
           `${component.getClass("textfield")}--empty`
         );
-
-        // Emit event if value was autofilled (not just has value) and shouldEmit is true
-        if (
-          shouldEmit &&
-          hasEmit(component) &&
-          (hasWebkitAutofill || isAutofillBackground)
-        ) {
+        // An input event only for an autofill, not for a value already there
+        if (shouldEmit && autofilled && hasEmit(component)) {
           component.emit("input", {
             value: input.value,
             isEmpty: false,
@@ -296,7 +287,7 @@ export const withTextInput =
         component.emit("change", {
           value: input.value,
           isEmpty,
-          isAutofilled: input.matches?.(":-webkit-autofill") || false,
+          isAutofilled: isAutofilled(),
         });
       }
     });
@@ -321,11 +312,9 @@ export const withTextInput =
     // Initial state setup
     updateInputState();
 
-    // Check for autofill immediately (handles pre-filled values)
-    // This catches autofill that happens before component initialization
-    const initialAutofillCheck = setTimeout(() => {
-      checkForAutofill(false);
-    }, 0);
+    // An autofill before this runs is reported by the stylesheet's
+    // onAutoFillStart animation, which starts when the autofilled input is
+    // first styled; a value already there set --empty above (FLO-335).
 
     // Add multiline class to the component if it's a textarea
     if (isMultiline) {
@@ -342,7 +331,6 @@ export const withTextInput =
     if (hasLifecycle(component)) {
       const originalDestroy = component.lifecycle.destroy;
       component.lifecycle.destroy = () => {
-        clearTimeout(initialAutofillCheck);
         // Clean up observer
         if (autofillObserver) {
           autofillObserver.disconnect();
