@@ -3,6 +3,7 @@
 import { BaseComponent, ElementComponent } from '../../../core/compose/component';
 
 import { setHTML } from "../../../core/dom/html";
+import { fieldOf } from './field';
 /**
  * Extended element component with input field
  */
@@ -95,7 +96,7 @@ export const withLeadingIcon = <T extends LeadingIconConfig & object>(config: T)
       if (iconElement && iconElement.parentNode) return iconElement;
       const element = document.createElement('span');
       element.className = `${PREFIX}-${NAME}__leading-icon`;
-      component.element.appendChild(element);
+      fieldOf(component).appendChild(element);
       component.element.classList.add(`${PREFIX}-${NAME}--with-leading-icon`);
       if (component.input) {
         component.input.classList.add(`${PREFIX}-${NAME}__input--with-leading-icon`);

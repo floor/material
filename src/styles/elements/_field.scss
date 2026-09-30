@@ -75,6 +75,35 @@
     }
   }
 
+  // The supporting text row (FLO-300): upgraded, the field gets a row under
+  // it, 4dp and a 16dp body-small line, when it has supporting text or a
+  // counter (a maxlength). The host reserves the row as a transparent bottom
+  // border, so the fill stays on the 56px field (clipped to the padding box)
+  // and the indicator is drawn as the padding box's last pixel line.
+  &[supporting-text]:not([supporting-text='']),
+  &[maxlength] {
+    $row: 20px;
+    height: calc(#{v.textfield('height')} + #{$row});
+    border-bottom: $row solid transparent;
+    background-clip: padding-box;
+    background-image: linear-gradient(to top, #{t.color('on-surface-variant')} v.textfield('border-width'), transparent v.textfield('border-width'));
+
+    // Outlined: the outline as an inset ring round the padding box, whose
+    // bottom corners keep their radius inside the reserved border
+    &[variant='outlined'] {
+      padding-top: calc(15.5px + #{v.textfield('border-width')});
+      padding-left: calc(#{v.textfield('padding-horizontal')} + #{v.textfield('border-width')});
+      border-width: 0 0 $row;
+      border-radius: v.textfield('border-radius') / v.textfield('border-radius') v.textfield('border-radius') calc(#{v.textfield('border-radius')} + #{$row}) calc(#{v.textfield('border-radius')} + #{$row});
+      background-image: none;
+      box-shadow: inset 0 0 0 v.textfield('border-width') t.color('outline');
+    }
+
+    &[density='compact'] {
+      height: calc(40px + #{$row});
+    }
+  }
+
   // Children are the element's own content only after upgrade.
   > * {
     display: none;

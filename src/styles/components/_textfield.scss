@@ -40,6 +40,14 @@ $component: "#{base.$prefix}-textfield";
     contain-intrinsic-inline-size: v.textfield('width');
     // align-self: flex-start; // Prevents growing to fill the container's height
     flex: 0 0 auto; // Don't grow or shrink; keep natural size
+    // The container: the label, input, outline, icons and affixes are placed
+    // against it, so the supporting text row under it never moves them (FLO-300)
+    &__field {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+
     // Label
     &__label {
         @include m.typography("body-large");
@@ -98,7 +106,7 @@ $component: "#{base.$prefix}-textfield";
         }
     }
 
-    &:has(> .#{$component}__label):not(.#{$component}--focused) .#{$component}__input::placeholder {
+    &:has(> .#{$component}__field > .#{$component}__label):not(.#{$component}--focused) .#{$component}__input::placeholder {
         color: transparent;
     }
 
@@ -277,7 +285,7 @@ $component: "#{base.$prefix}-textfield";
             pointer-events: none;
         }
 
-        .#{$component}__helper {
+        .#{$component}__supporting {
             color: t.color("on-surface");
             opacity: 0.38;
         }
@@ -300,7 +308,7 @@ $component: "#{base.$prefix}-textfield";
     // the root reads the input's state instead (FLO-303).
     &:has(.#{$component}__input:disabled) {
         .#{$component}__label,
-        .#{$component}__helper {
+        .#{$component}__supporting {
             color: t.color("on-surface");
             opacity: 0.38;
         }
@@ -321,18 +329,37 @@ $component: "#{base.$prefix}-textfield";
         }
     }
 
-    // Helper text / Supporting text
-    &__helper {
+    // The supporting text row, in the flow under the container: the helper at
+    // the start, the counter at the end, 4dp below the field and 16dp in from
+    // each side (TextFieldDefaults.supportingTextPadding). It was absolute,
+    // 18px under the field, so it overlapped what followed and never wrapped
+    // (FLO-300).
+    &__supporting {
         @include m.typography("body-small");
-        position: absolute;
-        bottom: -18px;
-        left: 16px;
-        margin-top: 4px;
+        display: flex;
+        gap: 16px;
+        padding: 4px 16px 0;
         color: t.color("on-surface-variant");
+    }
+
+    &__helper {
+        flex: 1 1 auto;
+        min-width: 0;
 
         &--error {
             color: t.color("error");
         }
+    }
+
+    &__counter {
+        flex: none;
+        margin-inline-start: auto;
+    }
+
+    // The counter is supporting text: in error it takes the error colour, as
+    // the helper does (Material Web)
+    &--error .#{$component}__counter {
+        color: t.color("error");
     }
 
     // Required indicator
@@ -488,7 +515,8 @@ $component: "#{base.$prefix}-textfield";
             }
         }
 
-        &::before {
+        // The 2dp focus indicator, at the container's bottom edge
+        .#{$component}__field::before {
             content: "";
             position: absolute;
             opacity: 0;
@@ -532,7 +560,7 @@ $component: "#{base.$prefix}-textfield";
                 color: t.color("primary");
             }
 
-            &::before {
+            .#{$component}__field::before {
                 opacity: 1;
             }
         }
@@ -554,7 +582,7 @@ $component: "#{base.$prefix}-textfield";
                 border-bottom-color: t.color("error");
             }
 
-            &::before {
+            .#{$component}__field::before {
                 background-color: t.color("error");
             }
 

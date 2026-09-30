@@ -168,6 +168,13 @@ export interface MenuConfig {
   opener: HTMLElement | string | { element: HTMLElement };
 
   /**
+   * The element the menu is placed against, when it is not the opener's: a
+   * select's field, so its supporting text row never pushes the menu down
+   * (FLO-300). The opener still opens, closes and gets focus back.
+   */
+  positionTarget?: HTMLElement;
+
+  /**
    * Array of menu items and dividers to display
    */
   items: MenuContent[];

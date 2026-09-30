@@ -1,6 +1,7 @@
 // src/components/textfield/features/prefix-text.ts
 
 import { BaseComponent, ElementComponent } from '../../../core/compose/component';
+import { fieldOf } from './field';
 
 /**
  * Extended element component with lifecycle
@@ -93,7 +94,7 @@ export const withPrefixText = <T extends PrefixTextConfig & object>(config: T) =
       if (slot && slot.parentNode) return slot;
       const element = document.createElement('span');
       element.className = `${PREFIX}-${NAME}__prefix`;
-      component.element.appendChild(element);
+      fieldOf(component).appendChild(element);
       component.element.classList.add(`${PREFIX}-${NAME}--with-prefix`);
       slot = element;
       return element;

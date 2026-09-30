@@ -416,6 +416,9 @@ export const withMenu =
 
     const menu = createMenu({
       opener: component.textfield,
+      // Placed against the field, not the root: the supporting text row sits
+      // under it (FLO-300)
+      positionTarget: component.textfield.field,
       items: menuItems,
       position: (config.placement || "bottom-start") as MenuPosition,
       width: "100%",

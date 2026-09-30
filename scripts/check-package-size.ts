@@ -140,7 +140,7 @@ try {
     { name: "slider", code: "export { createSlider } from 'mtrl';", gzip: 12900 },
     { name: "navigation-rail", code: "export { createNavigationRail } from 'mtrl';", gzip: 7000 },
     { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 6500 },
-    { name: "textfield", code: "export { createTextfield } from 'mtrl';", gzip: 8500 },
+    { name: "textfield", code: "export { createTextfield } from 'mtrl';", gzip: 8600 },
     { name: "form", code: "export { createButton, createTextfield, createCheckbox } from 'mtrl';", gzip: 22000 },
     { name: "all-js", code: "export * from 'mtrl';", gzip: 125000 },
     { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 6500 },
@@ -169,7 +169,7 @@ try {
     // ::backdrop, with `overlay` held for the exit, in four stylesheets gzip cannot share.
     // Search's surface, a <dialog> in the top layer (FLO-285): measured 52,194. Its
     // state layers and the contained variant (FLO-286, FLO-287): measured 52,328.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 52400 },
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 52600 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);

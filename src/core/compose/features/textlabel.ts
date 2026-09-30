@@ -95,19 +95,16 @@ export const withTextLabel =
       }
     }
 
+    // Into the component's field, where it has one (the text field's
+    // container, FLO-300), else the root
+    const host = (component as { field?: HTMLElement }).field ?? component.element;
     if (position === "start") {
       // Insert label as the first child
-      if (component.element.firstChild) {
-        component.element.insertBefore(
-          labelElement,
-          component.element.firstChild
-        );
-      } else {
-        component.element.appendChild(labelElement);
-      }
+      if (host.firstChild) host.insertBefore(labelElement, host.firstChild);
+      else host.appendChild(labelElement);
     } else {
       // Insert label at the end (default behavior)
-      component.element.appendChild(labelElement);
+      host.appendChild(labelElement);
     }
 
     if (position && component.componentName !== "slider") {

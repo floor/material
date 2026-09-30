@@ -15,18 +15,7 @@ interface LifecycleElementComponent extends ElementComponent {
   };
 }
 
-/** Adds one id to an ARIA id list, keeping the ids already there */
-const addIdRef = (element: Element, attribute: string, id: string): void => {
-  const ids = (element.getAttribute(attribute) || "").split(/\s+/).filter(Boolean);
-  if (!ids.includes(id)) element.setAttribute(attribute, [...ids, id].join(" "));
-};
-
-/** Removes one id from an ARIA id list, and the attribute once it is empty */
-const removeIdRef = (element: Element, attribute: string, id: string): void => {
-  const ids = (element.getAttribute(attribute) || "").split(/\s+/).filter((ref) => ref && ref !== id);
-  if (ids.length) element.setAttribute(attribute, ids.join(" "));
-  else element.removeAttribute(attribute);
-};
+import { addIdRef, removeIdRef, supportingRow } from "./field";
 
 /**
  * Configuration for supporting text feature
@@ -94,6 +83,10 @@ export const withSupportingText =
     const PREFIX = config.prefix || "mtrl";
     const COMPONENT = config.componentName || "textfield";
     let supportingElement: HTMLElement | null = null;
+    // The helper sits in the supporting text row under the field, before the
+    // counter when there is one (FLO-300)
+    const row = supportingRow(component.element, PREFIX, COMPONENT);
+    const show = (element: HTMLElement): void => void row.ensure().prepend(element);
     // One id for the supporting text, whichever element currently shows it,
     // so the input's description follows the text as it is replaced
     const supportingId = `${PREFIX}-${COMPONENT}-supporting-${Math.random().toString(36).slice(2, 9)}`;
@@ -127,7 +120,7 @@ export const withSupportingText =
         config.supportingText,
         config.error
       );
-      component.element.appendChild(supportingElement);
+      show(supportingElement);
       describe(supportingElement);
     }
 
@@ -137,6 +130,7 @@ export const withSupportingText =
       component.lifecycle.destroy = () => {
         if (supportingElement) {
           supportingElement.remove();
+          row.release();
         }
         originalDestroy.call(component.lifecycle);
       };
@@ -154,7 +148,8 @@ export const withSupportingText =
       setSupportingText(text: string, isError = false) {
         supportingElement?.remove();
         supportingElement = text ? createSupportingElement(text, isError) : null;
-        if (supportingElement) component.element.appendChild(supportingElement);
+        if (supportingElement) show(supportingElement);
+        else row.release();
         describe(supportingElement);
         return this;
       },
@@ -163,6 +158,7 @@ export const withSupportingText =
         if (supportingElement) {
           supportingElement.remove();
           supportingElement = null;
+          row.release();
           describe(null);
         }
         return this;
