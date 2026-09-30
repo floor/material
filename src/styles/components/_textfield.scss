@@ -86,28 +86,11 @@ $component: "#{base.$prefix}-textfield";
             animation-duration: 10ms;
             -webkit-text-fill-color: t.color("on-surface");
             transition: background-color 5000s ease-in-out 0s; // Long transition to keep the background
-
-            & ~ .#{$component}__label {
-                transform: translateY(-95%) scale(0.75);
-                background-color: t.color("surface");
-            }
         }
 
         // Firefox autofill
         &:autofill {
             color: t.color("on-surface");
-
-            & ~ .#{$component}__label {
-                transform: translateY(-95%) scale(0.75);
-                background-color: t.color("surface");
-            }
-        }
-
-        // Non-empty input should also float the label
-        &:not(:placeholder-shown) {
-            & ~ .#{$component}__label {
-                transform: translateY(-95%) scale(0.75);
-            }
         }
     }
 
@@ -301,6 +284,13 @@ $component: "#{base.$prefix}-textfield";
         }
     }
 
+    // The label comes before the input, so no sibling selector reaches it:
+    // the root reads the input's state instead (FLO-303).
+    &:has(.#{$component}__input:disabled) .#{$component}__label {
+        color: t.color("on-surface");
+        opacity: 0.38;
+    }
+
     // Disabled state - legacy support for direct input disabled
     &__input:disabled {
         opacity: 0.38;
@@ -308,7 +298,6 @@ $component: "#{base.$prefix}-textfield";
         background-color: t.alpha("on-surface", 0.04);
         pointer-events: none;
 
-        & ~ .#{$component}__label,
         & ~ .#{$component}__leading-icon,
         & ~ .#{$component}__trailing-icon,
         & ~ .#{$component}__prefix,
@@ -482,18 +471,6 @@ $component: "#{base.$prefix}-textfield";
             &:-webkit-autofill {
                 border-radius: f.get-shape("extra-small")
                     f.get-shape("extra-small") 0 0;
-
-                & ~ .#{$component}__label {
-                    transform: translateY(-95%) scale(0.75);
-                    color: t.color("on-surface-variant");
-                }
-            }
-
-            &:autofill {
-                & ~ .#{$component}__label {
-                    transform: translateY(-95%) scale(0.75);
-                    color: t.color("on-surface-variant");
-                }
             }
         }
 
@@ -517,8 +494,10 @@ $component: "#{base.$prefix}-textfield";
             // Don't specify left position here - let JS handle it
         }
 
-        // CSS-only fallback for when input has value (works without JS)
-        .#{$component}__input:not(:placeholder-shown) ~ .#{$component}__label {
+        // Floated from the input's own state too: a value, or autofill before
+        // the script has seen it. The label precedes the input, so the root
+        // reads it (FLO-303).
+        &:has(.#{$component}__input:is(:not(:placeholder-shown), :autofill, :-webkit-autofill)) .#{$component}__label {
             transform: translateY(-95%) scale(0.75);
         }
 
@@ -722,18 +701,6 @@ $component: "#{base.$prefix}-textfield";
             // Autofill styles for outlined variant
             &:-webkit-autofill {
                 border-radius: f.get-shape("extra-small");
-
-                & ~ .#{$component}__label {
-                    background-color: transparent;
-                    transform: translateY(-145%) scale(0.75);
-                }
-            }
-
-            &:autofill {
-                & ~ .#{$component}__label {
-                    background-color: transparent;
-                    transform: translateY(-145%) scale(0.75);
-                }
             }
         }
 
@@ -753,8 +720,9 @@ $component: "#{base.$prefix}-textfield";
             left: 16px;
         }
 
-        // CSS-only fallback for when input has value (works without JS)
-        .#{$component}__input:not(:placeholder-shown) ~ .#{$component}__label {
+        // Floated from the input's own state too, as the filled variant is
+        &:has(.#{$component}__input:is(:not(:placeholder-shown), :autofill, :-webkit-autofill)) .#{$component}__label {
+            opacity: 1;
             transform: translateY(-147%) scale(0.75);
             left: 16px;
         }
@@ -846,8 +814,7 @@ $component: "#{base.$prefix}-textfield";
 
             &:not(.#{$component}--empty) .#{$component}__label,
             &.#{$component}--focused .#{$component}__label,
-            .#{$component}__input:not(:placeholder-shown)
-                ~ .#{$component}__label {
+            &:has(.#{$component}__input:is(:not(:placeholder-shown), :autofill, :-webkit-autofill)) .#{$component}__label {
                 left: auto;
                 right: 16px;
             }

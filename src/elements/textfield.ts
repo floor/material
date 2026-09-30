@@ -77,11 +77,9 @@ const textfieldSpec = {
     "supporting-text": {
       type: "string",
       config: "supportingText",
-      update: (c, v) => {
-        // Both setters clear the error class along with the text: put it back.
-        if (v) c.setSupportingText(String(v), c.isError());
-        else c.removeSupportingText().setError(c.isError(), "");
-      },
+      // The field's error state is the factory's own (FLO-303): the text only
+      // takes the error colour while the field is in error.
+      update: (c, v) => void (v ? c.setSupportingText(String(v), c.isError()) : c.removeSupportingText()),
     },
     "prefix-text": {
       type: "string",

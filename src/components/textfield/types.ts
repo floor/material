@@ -281,6 +281,8 @@ export interface ApiOptions {
  */
 export interface BaseComponent {
   element: HTMLElement;
+  /** The prefixed class name, from createBase */
+  getClass: (name: string) => string;
   input?: HTMLInputElement | HTMLTextAreaElement;
   config?: {
     prefix?: string;
