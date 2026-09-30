@@ -73,6 +73,8 @@ export const cases: PreupgradeCase[] = [
   c("top-app-bar", "type=center", `<m-top-app-bar type="center">Title</m-top-app-bar>`),
   c("top-app-bar", "type=large", `<m-top-app-bar type="large">Title</m-top-app-bar>`),
   c("bottom-app-bar", "default", `<m-bottom-app-bar><m-icon-button icon="${ICON}" aria-label="Search"></m-icon-button></m-bottom-app-bar>`),
+  c("toolbar", "default", `<m-toolbar aria-label="Actions"><m-icon-button icon="${ICON}" aria-label="Archive"></m-icon-button><m-icon-button icon="${ICON}" aria-label="Delete"></m-icon-button><m-icon-button icon="${ICON}" aria-label="Label"></m-icon-button></m-toolbar>`),
+  c("toolbar", "variant=floating", `<m-toolbar variant="floating" aria-label="Formatting"><m-icon-button icon="${ICON}" aria-label="Bold"></m-icon-button><m-icon-button icon="${ICON}" aria-label="Italic"></m-icon-button></m-toolbar>`),
   c("button-group", "default", `<m-button-group aria-label="Actions"><m-button-group-item value="a">One</m-button-group-item><m-button-group-item value="b">Two</m-button-group-item><m-button-group-item value="c">Three</m-button-group-item></m-button-group>`),
   c("chips", "default", `<m-chips aria-label="Diet"><m-chip value="veg">Vegetarian</m-chip><m-chip value="gf">Gluten free</m-chip></m-chips>`),
   c("chips", "wrapping", `<m-chips aria-label="Diet"><m-chip value="veg">Vegetarian</m-chip><m-chip value="gf">Gluten free</m-chip><m-chip value="df">Dairy free</m-chip><m-chip value="nf">Nut free</m-chip><m-chip value="h">Halal</m-chip></m-chips>`),

@@ -414,13 +414,17 @@ $widths: (
     // ---------------------------------------------------------------------------
     // Variant: Standard (default)
     // ---------------------------------------------------------------------------
+    // The standard colour and the selected toggle's colours read custom
+    // properties a container sets, which reach into an element's shadow root:
+    // the vibrant toolbar's items (FloatingToolbarTokens Vibrant*).
     &--standard {
         background-color: transparent;
-        color: t.color("on-surface-variant");
+        color: var(--#{base.$prefix}-icon-button-standard-color, #{t.color("on-surface-variant")});
 
         // Toggle selected state
         &.#{$component}--selected {
-            color: t.color("primary");
+            background-color: var(--#{base.$prefix}-icon-button-selected-container, transparent);
+            color: var(--#{base.$prefix}-icon-button-selected-color, #{t.color("primary")});
         }
     }
 
@@ -447,8 +451,8 @@ $widths: (
 
         // Plain and unselected toggles share the tonal container colours.
         &.#{$component}--selected {
-            background-color: t.color("secondary");
-            color: t.color("on-secondary");
+            background-color: var(--#{base.$prefix}-icon-button-selected-container, #{t.color("secondary")});
+            color: var(--#{base.$prefix}-icon-button-selected-color, #{t.color("on-secondary")});
         }
     }
 

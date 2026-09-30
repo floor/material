@@ -100,12 +100,23 @@ const createToolbar = (config: ToolbarConfig = {}): ToolbarComponent => {
   const roving = createRoving({
     container: bar,
     vertical: () => vertical,
+    // A slot stands for what is assigned to it: the element's items.
     targets: () =>
       Array.from(bar.children as HTMLCollectionOf<HTMLElement>)
+        .flatMap((child) =>
+          child.localName === "slot"
+            ? ((child as HTMLSlotElement).assignedElements({ flatten: true }) as HTMLElement[])
+            : [child]
+        )
         .map(targetOf)
         .filter((target): target is HTMLElement => target !== null),
   });
-  resources.add(() => roving.destroy());
+  const onSlotChange = () => roving.sync();
+  bar.addEventListener("slotchange", onSlotChange);
+  resources.add(() => {
+    roving.destroy();
+    bar.removeEventListener("slotchange", onSlotChange);
+  });
 
   let overflowButton: HTMLElement | null = null;
 

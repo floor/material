@@ -3258,6 +3258,146 @@ try {
     check("bottom app bar: renders as the factory does with the global stylesheet");
   }
 
+  // ---------------------------------------------------------------- toolbar (FLO-304)
+  await fresh(
+    page,
+    `<div class="stage"><button id="before">Before</button>
+     <m-toolbar id="tb" variant="floating" color="vibrant" aria-label="Formatting">
+       <m-icon-button aria-label="Bold" icon='${ICON}' toggle selected></m-icon-button>
+       <m-icon-button aria-label="Italic" icon='${ICON}'></m-icon-button>
+       <m-icon-button aria-label="Strike" icon='${ICON}' disabled></m-icon-button>
+       <m-icon-button aria-label="Underline" icon='${ICON}'></m-icon-button>
+       <m-fab slot="fab" aria-label="Compose" icon='${ICON}'></m-fab>
+       <m-menu slot="overflow"><m-menu-item value="a">Align</m-menu-item></m-menu>
+     </m-toolbar><button id="after">After</button></div><div class="stage" id="fstage"></div>`
+  );
+  {
+    type Tb = HTMLElement & { component: { overflowButton: HTMLElement | null } | null; hide: () => unknown; show: () => unknown };
+    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    assert.equal(await page.getByRole("toolbar", { name: "Formatting" }).count(), 1);
+    // Where focus is: an item's host, the FAB's, or the overflow button inside the toolbar.
+    const focused = (): Promise<string | null> =>
+      page.evaluate(() => {
+        const active = document.activeElement as HTMLElement | null;
+        if (active?.id === "tb") return `overflow:${active.shadowRoot?.activeElement?.getAttribute("aria-label")}`;
+        return active?.getAttribute("aria-label") ?? active?.id ?? null;
+      });
+    await settle();
+
+    await page.focus("#before");
+    await page.keyboard.press("Tab");
+    assert.equal(await focused(), "Bold");
+    await page.keyboard.press("ArrowRight");
+    assert.equal(await focused(), "Italic");
+    await page.keyboard.press("ArrowRight");
+    assert.equal(await focused(), "Underline", "the disabled item is skipped");
+    await page.keyboard.press("End");
+    assert.equal(await focused(), "overflow:More options");
+    await page.keyboard.press("Home");
+    assert.equal(await focused(), "Bold");
+    await page.keyboard.press("ArrowRight");
+    check("toolbar: one tab stop over <m-icon-button> hosts; arrows, Home and End; disabled skipped");
+
+    await page.keyboard.press("Tab");
+    assert.equal(await focused(), "Compose", "Tab leaves the toolbar for the FAB");
+    await page.keyboard.press("Tab");
+    assert.equal(await focused(), "after");
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Shift+Tab");
+    assert.equal(await focused(), "Italic", "Shift+Tab comes back to the item focused last");
+    await page.focus("#tb m-fab");
+    await page.keyboard.press("ArrowLeft");
+    assert.equal(await focused(), "Compose", "the FAB is outside the toolbar's arrows");
+    check("toolbar: the FAB is its own tab stop; the toolbar keeps the one focused last");
+
+    const overflow = await page.evaluate(async () => {
+      const tb = document.getElementById("tb") as Tb;
+      const menu = tb.querySelector("m-menu") as HTMLElement & { anchor: unknown };
+      const button = tb.component?.overflowButton ?? null;
+      const anchored = !!button && menu.anchor === button;
+      button?.click();
+      await new Promise((r) => setTimeout(r, 100));
+      // The menu marks its anchor itself ("true", which ARIA reads as "menu")
+      const popup = button?.getAttribute("aria-haspopup");
+      return { anchored, popup: popup === "true" || popup === "menu", open: menu.hasAttribute("open") };
+    });
+    assert.deepEqual(overflow, { anchored: true, popup: true, open: true });
+    await page.keyboard.press("Escape");
+    check("toolbar: slot=overflow's <m-menu> is anchored to the overflow button and opens from it");
+
+    const colours = await page.evaluate(() => {
+      const tb = document.getElementById("tb") as Tb;
+      const inner = (label: string): HTMLElement =>
+        (tb.querySelector(`[aria-label="${label}"]`) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
+      const bar = tb.shadowRoot?.querySelector(".mtrl-toolbar__bar") as HTMLElement;
+      const role = (name: string): string => {
+        const probe = document.createElement("div");
+        probe.style.color = `var(--mtrl-sys-color-${name})`;
+        document.body.append(probe);
+        const value = getComputedStyle(probe).color;
+        probe.remove();
+        return value;
+      };
+      return {
+        container: getComputedStyle(bar).backgroundColor === role("primary-container"),
+        standard: getComputedStyle(inner("Italic")).color === role("on-primary-container"),
+        selected: getComputedStyle(inner("Bold")).color === role("on-surface"),
+        selectedContainer: getComputedStyle(inner("Bold")).backgroundColor === role("surface-container"),
+      };
+    });
+    assert.deepEqual(colours, { container: true, standard: true, selected: true, selectedContainer: true });
+    check("toolbar: vibrant colours reach the <m-icon-button> shadow roots");
+
+    const visibility = await page.evaluate(async () => {
+      const tb = document.getElementById("tb") as Tb;
+      const seen: string[] = [];
+      tb.addEventListener("hide", () => seen.push("hide"));
+      tb.addEventListener("show", () => seen.push("show"));
+      tb.hide();
+      const root = tb.shadowRoot?.firstElementChild as HTMLElement;
+      const inert = root.hasAttribute("inert");
+      tb.show();
+      tb.setAttribute("flat", "");
+      const flat = !root.className.includes("--elevated");
+      tb.removeAttribute("flat");
+      return { seen, inert, flat, elevated: root.className.includes("--elevated") };
+    });
+    assert.deepEqual(visibility, { seen: ["hide", "show"], inert: true, flat: true, elevated: true });
+    check("toolbar: hide() and show() dispatch hide and show; flat removes the elevation in place");
+
+    const parity = await page.evaluate((icon) => {
+      const w = window as unknown as Win & {
+        mtrl: {
+          createToolbar: (c: object) => { element: HTMLElement; bar: HTMLElement };
+          createFab: (c: object) => { element: HTMLElement };
+        };
+      };
+      const factory = w.mtrl.createToolbar({
+        variant: "floating",
+        color: "vibrant",
+        items: ["Bold", "Italic", "Strike", "Underline"].map((ariaLabel) => ({ icon, ariaLabel })),
+        fab: w.mtrl.createFab({ icon, ariaLabel: "Compose" }),
+        overflow: () => null,
+      });
+      document.getElementById("fstage")?.append(factory.element);
+      const tb = document.getElementById("tb") as Tb;
+      return new Promise<{ factory: Record<string, string | number>; element: Record<string, string | number> }>((resolve) =>
+        requestAnimationFrame(() => {
+          const measure = (root: HTMLElement): Record<string, string | number> => {
+            const bar = root.querySelector(".mtrl-toolbar__bar") as HTMLElement;
+            const r = root.getBoundingClientRect();
+            const b = bar.getBoundingClientRect();
+            const style = getComputedStyle(bar);
+            return { width: r.width, height: r.height, barWidth: b.width, bg: style.backgroundColor, radius: style.borderTopLeftRadius, shadow: style.boxShadow, padding: style.padding, gap: style.gap };
+          };
+          resolve({ factory: measure(factory.element), element: measure(tb.shadowRoot?.firstElementChild as HTMLElement) });
+        })
+      );
+    }, ICON);
+    assert.deepEqual(parity.element, parity.factory);
+    check("toolbar: renders as the factory does with the global stylesheet");
+  }
+
   // ---------------------------------------------------------------- list
   await fresh(
     page,
@@ -4663,6 +4803,26 @@ try {
 
       await page.evaluate(() => (window as unknown as TopWin).__tl.menu.destroy());
     }
+  }
+
+  // ---------------------------------------------------------------- closed menu out of the tab order
+  // <m-menu> keeps its closed menu in its shadow root; its first item was a
+  // tab stop there, so Tab stopped inside a menu nobody could see.
+  await fresh(
+    page,
+    `<div class="stage"><button id="m-before">Before</button><m-menu><m-menu-item value="a">Align</m-menu-item></m-menu><button id="m-after">After</button></div>`
+  );
+  {
+    await page.evaluate(() => new Promise((r) => setTimeout(r, 100)));
+    await page.focus("#m-before");
+    await page.keyboard.press("Tab");
+    assert.equal(await page.evaluate(() => document.activeElement?.id), "m-after");
+    const hidden = await page.evaluate(() => {
+      const surface = document.querySelector("m-menu")?.shadowRoot?.querySelector(".mtrl-menu") as HTMLElement;
+      return getComputedStyle(surface).visibility;
+    });
+    assert.equal(hidden, "hidden");
+    check("menu: a closed <m-menu> is not a tab stop, and is hidden from assistive technology");
   }
 
   // ---------------------------------------------------------------- menus: menu, select, split button

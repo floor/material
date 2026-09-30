@@ -225,6 +225,50 @@ describe("toolbar keyboard", () => {
   });
 });
 
+describe("toolbar with a slot", () => {
+  // As <m-toolbar> builds it: the default slot is the only item, and the
+  // toolbar walks what is assigned to it (each item's host).
+  const slotted = (...labels: string[]) => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const root = host.attachShadow({ mode: "open" });
+    const t = createToolbar({ items: [document.createElement("slot")] });
+    toolbar = t;
+    root.appendChild(t.element);
+    const add = (label: string) => {
+      const item = document.createElement("m-item");
+      item.setAttribute("aria-label", label);
+      host.appendChild(item);
+      return item;
+    };
+    return { host, t, items: labels.map(add), add };
+  };
+  const slotChange = (t: ToolbarComponent) => t.bar.querySelector("slot")!.dispatchEvent(new dom.window.Event("slotchange", { bubbles: true }));
+
+  test("the assigned hosts are the targets, the first takes the tab stop", () => {
+    const { t, items } = slotted("A", "B");
+    slotChange(t);
+    expect(items.map((item) => item.tabIndex)).toEqual([0, -1]);
+  });
+
+  test("an item slotted later joins the targets on slotchange", () => {
+    const { t, items, add } = slotted("A");
+    const b = add("B");
+    slotChange(t);
+    expect(items[0].tabIndex).toBe(0);
+    expect(b.tabIndex).toBe(-1);
+  });
+
+  test("a disabled host is skipped", () => {
+    const { t, items } = slotted("A", "B", "C");
+    items[1].setAttribute("disabled", "");
+    slotChange(t);
+    // A slotted item's key event reaches the bar through the slot.
+    items[0].dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
+    expect(items.map((item) => item.tabIndex)).toEqual([-1, -1, 0]);
+  });
+});
+
 describe("toolbar FAB", () => {
   const fab = () => {
     const el = document.createElement("button");

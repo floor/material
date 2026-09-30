@@ -149,7 +149,7 @@ describe('button stylesheet: colour styles', () => {
     expect(value('.mtrl-button--tonal', 'background-color')).toBe('var(--mtrl-sys-color-secondary-container)');
     expect(value('.mtrl-button--outlined', 'color')).toBe('var(--mtrl-sys-color-on-surface-variant)');
     expect(value('.mtrl-button--outlined', 'border')).toBe('1px solid var(--mtrl-sys-color-outline-variant)');
-    expect(value('.mtrl-button--text', 'color')).toBe('var(--mtrl-sys-color-primary)');
+    expect(value('.mtrl-button--text', 'color')).toBe('var(--mtrl-button-text-color, var(--mtrl-sys-color-primary))');
   });
 
   test('outline width grows with the size', () => {
@@ -171,7 +171,7 @@ describe('button stylesheet: colour styles', () => {
     expect(value('.mtrl-button--elevated', 'color')).toBe('var(--mtrl-sys-color-primary)');
     expect(value('.mtrl-button--tonal', 'color')).toBe('var(--mtrl-sys-color-on-secondary-container)');
     expect(value('.mtrl-button--outlined', 'color')).toBe('var(--mtrl-sys-color-on-surface-variant)');
-    expect(value('.mtrl-button--text', 'color')).toBe('var(--mtrl-sys-color-primary)');
+    expect(value('.mtrl-button--text', 'color')).toBe('var(--mtrl-button-text-color, var(--mtrl-sys-color-primary))');
 
     // No style or toggle state paints a layer colour of its own.
     const layerColours = Array.from(css.matchAll(/([^{}]*::before)\s*\{([^}]*)\}/g))

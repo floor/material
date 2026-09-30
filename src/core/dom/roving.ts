@@ -15,9 +15,12 @@ export const isTextEditable = (element: EventTarget | null | undefined): boolean
   return node.localName === "input" && !NON_TEXT_INPUTS.has(((node as HTMLInputElement).type || "text").toLowerCase());
 };
 
-/** Whether a focus target is disabled, natively or as `aria-disabled` (FLO-119). */
+/**
+ * Whether a focus target is disabled: natively, as `aria-disabled` (FLO-119),
+ * or, for a web component's host, by its `disabled` attribute.
+ */
 const isDisabled = (element: HTMLElement): boolean =>
-  element.matches(":disabled") || element.getAttribute("aria-disabled") === "true";
+  element.matches(":disabled") || element.hasAttribute("disabled") || element.getAttribute("aria-disabled") === "true";
 
 export interface RovingOptions {
   /** The composite: it receives the key and focus listeners. */
@@ -47,6 +50,9 @@ export interface Roving {
  */
 export const createRoving = ({ container, targets, vertical = () => false }: RovingOptions): Roving => {
   let current: HTMLElement | null = null;
+  // Whether focus chose the current target: until it has, the tab stop is the
+  // first target, whatever order the targets arrived in.
+  let chosen = false;
 
   const enabled = () => targets().filter((target) => !isDisabled(target));
   // The target an event came from: the target itself, or one holding it.
@@ -55,7 +61,7 @@ export const createRoving = ({ container, targets, vertical = () => false }: Rov
 
   const sync = () => {
     const list = enabled();
-    if (!current || !list.includes(current)) current = list[0] ?? null;
+    if (!chosen || !current || !list.includes(current)) current = list[0] ?? null;
     for (const target of targets()) target.tabIndex = target === current ? 0 : -1;
   };
 
@@ -78,6 +84,7 @@ export const createRoving = ({ container, targets, vertical = () => false }: Rov
     else return;
     event.preventDefault();
     current = list[next]!;
+    chosen = true;
     sync();
     current.focus();
   };
@@ -85,9 +92,12 @@ export const createRoving = ({ container, targets, vertical = () => false }: Rov
   // Focus reached by a click or by script moves the tab stop too.
   const onFocusin = (event: FocusEvent) => {
     const target = owner(enabled(), event.target);
-    if (target && target !== current) {
-      current = target;
-      sync();
+    if (target) {
+      chosen = true;
+      if (target !== current) {
+        current = target;
+        sync();
+      }
     }
   };
 

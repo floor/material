@@ -38,6 +38,7 @@ export { Menu } from "./menu";
 export { Select } from "./select";
 export { SplitButton } from "./split-button";
 export { Tooltip } from "./tooltip";
+export { Toolbar } from "./toolbar";
 export { Snackbar } from "./snackbar";
 export { Dialog } from "./dialog";
 export { BottomSheet } from "./bottom-sheet";

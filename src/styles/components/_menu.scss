@@ -34,11 +34,16 @@ $component: "#{$prefix}-menu";
     // from, on the same duration and curve
     transform: scaleY(0);
     pointer-events: none;
+    // Closed, the menu is out of the tab order and the accessibility tree: an
+    // <m-menu> keeps its closed menu in its shadow root, where its first item
+    // was a tab stop. A transition keeps it visible while it moves either way.
+    visibility: hidden;
 
     // Material Design 3 standard animation curve for menus
     transition:
         transform v.motion("duration-medium1") v.motion("easing-emphasized"),
-        opacity v.motion("duration-medium1") v.motion("easing-emphasized");
+        opacity v.motion("duration-medium1") v.motion("easing-emphasized"),
+        visibility v.motion("duration-medium1");
 
     // A top-layer menu is a popover (`layer: "top"`). The browser's popover
     // defaults centre it in the viewport inside a border; the menu places
@@ -54,6 +59,7 @@ $component: "#{$prefix}-menu";
         opacity: 1;
         transform: scaleY(1);
         pointer-events: auto;
+        visibility: visible;
     }
 
     // Position variations with appropriate transform origins
@@ -298,7 +304,7 @@ $component: "#{$prefix}-menu";
 
     // Reduced motion preference support
     @include m.reduced-motion {
-        transition: opacity v.motion("duration-short2") linear;
+        transition: opacity v.motion("duration-short2") linear, visibility v.motion("duration-short2");
 
         &,
         &--visible {
@@ -565,6 +571,7 @@ $component: "#{$prefix}-menu";
         transition:
             transform v.motion("duration-medium1") v.motion("easing-emphasized"),
             opacity v.motion("duration-medium1") v.motion("easing-emphasized"),
+            visibility v.motion("duration-medium1"),
             border-radius v.motion("spring-fast-spatial-duration")
                 v.motion("spring-fast-spatial-easing");
 
