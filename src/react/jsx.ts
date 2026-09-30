@@ -8,11 +8,25 @@
  * @module react/jsx
  */
 import type * as React from "react";
-import type { ElementMarkup } from "../elements";
+import type { ElementEvents, ElementMarkup } from "../elements";
 
-/** A tag's props: its attributes as markup writes them, and any HTML attribute. */
-type Tag<S, E extends HTMLElement> = Omit<React.DetailedHTMLProps<React.HTMLAttributes<E>, E>, keyof ElementMarkup<S>> &
-  ElementMarkup<S>;
+/**
+ * The element's events as React 19 listens to them on a custom element: an
+ * `on<event>` prop in lower case gets the element's own event
+ * (`onchange={(e) => e.detail.checked}`). `onChange` stays React's synthetic
+ * event, which has no `detail`; React 18 sets no event props on a custom element.
+ */
+type Events<S> = {
+  [K in keyof ElementEvents<S> & string as `on${Lowercase<K>}`]?: (event: ElementEvents<S>[K]) => void;
+};
+
+/** A tag's props: its attributes as markup writes them, its events, and any HTML attribute. */
+type Tag<S, E extends HTMLElement> = Omit<
+  React.DetailedHTMLProps<React.HTMLAttributes<E>, E>,
+  keyof ElementMarkup<S> | keyof Events<S>
+> &
+  ElementMarkup<S> &
+  Events<S>;
 
 declare module "react" {
   // eslint-disable-next-line @typescript-eslint/no-namespace -- JSX is a namespace; this merges into it

@@ -186,7 +186,7 @@ export type ElementAttributes<S> = {
  */
 export type ElementMarkup<S> = {
   [K in keyof Get<S, "attributes"> & string]?: Get<S, "attributes">[K] extends { type: infer T } ? ValueOf<T> : never;
-};
+} & ElementSlotText<S>;
 
 /** Live-state properties, typed by their getter. */
 export type ElementProperties<S> = {

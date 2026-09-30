@@ -6,3 +6,5 @@ export const typed = <m-switch checked supporting-text="Help" class="x" prop:che
 export const declaration = <m-tabs value="t1"><m-tab value="t1">One</m-tab></m-tabs>;
 // @ts-expect-error -- checked is a boolean
 export const wrong = <m-switch checked="yes" />;
+// The slot attribute is markup too (FLO-334)
+export const label = <m-button label="Save" />;

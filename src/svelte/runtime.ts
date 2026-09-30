@@ -19,6 +19,7 @@ import type { Action } from "svelte/action";
 import type { HTMLAttributes } from "svelte/elements";
 import type { DefineOptions, ElementEvents, ElementProperties, ElementProps, ElementSlotProp } from "../elements";
 import {
+  camel,
   describe,
   describeDeclaration,
   getPrefix,
@@ -34,16 +35,6 @@ import {
 } from "../elements/adapter";
 
 export { configure } from "../elements/adapter";
-
-/**
- * A named snippet: a function prop that is not a handler (`on…`) nor
- * `children`. It renders into the slot of its name (FLO-325).
- */
-const isSnippet = (key: string, value: unknown): boolean =>
-  typeof value === "function" && key !== "children" && !/^on[a-z]/.test(key);
-
-/** A snippet's name as a slot name: `headerAction` → `header-action`. */
-const kebab = (name: string): string => name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
 /** `change` → `onchange`, as Svelte 5 names event props, typed with the element's event. */
 export type EventProps<S> = {
@@ -99,6 +90,11 @@ export const adapter = (spec: ComponentSpec, define: (options?: DefineOptions) =
   const described = describe(spec);
   const { attributes, properties, events, form } = described;
   const eventProps = new Set(events.map((event) => `on${event}`));
+  // A named snippet is a function prop named after a slot the element
+  // declares (`headerAction` for `header-action`); any other function, a
+  // handler or a spread callback, is not rendered (FLO-334).
+  const slots = new Map(described.slots.map((slot) => [camel(slot), slot]));
+  const isSnippet = (key: string, value: unknown): boolean => typeof value === "function" && slots.has(key);
 
   const hostAttributes = (props: Record<string, unknown>, live: Record<string, unknown>): Record<string, unknown> => {
     const result: Record<string, unknown> = {};
@@ -126,7 +122,7 @@ export const adapter = (spec: ComponentSpec, define: (options?: DefineOptions) =
   const snippets = (props: Record<string, unknown>): Array<[string, Snippet]> =>
     Object.entries(props)
       .filter(([key, value]) => isSnippet(key, value))
-      .map(([key, value]) => [kebab(key), value as Snippet]);
+      .map(([key, value]) => [slots.get(key) as string, value as Snippet]);
 
   const action: Action<HTMLElement, Binding> = (node, initial) => {
     let binding = initial;
