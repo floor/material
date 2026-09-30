@@ -321,3 +321,57 @@ describe('checkbox', () => {
     expect(document.body.contains(checkbox.element)).toBe(false);
   });
 });
+
+// FLO-316: Space (and Enter, with enterToggles) on a mixed box set `checked`
+// by hand and left `indeterminate` true, so the dash and the mixed class
+// stayed. The key now activates the input as a click does.
+describe('keyboard activation of a mixed checkbox', () => {
+  const press = (checkbox: ReturnType<typeof mount>, key: string) => {
+    const events: string[] = [];
+    for (const type of ['input', 'change']) checkbox.input.addEventListener(type, () => events.push(type));
+    const changes: boolean[] = [];
+    checkbox.on('change', ({ checked }) => changes.push(checked));
+    checkbox.input.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    return { events, changes };
+  };
+  const mixed = (checkbox: ReturnType<typeof mount>) =>
+    [checkbox.input.indeterminate, checkbox.element.classList.contains('mtrl-checkbox--indeterminate')];
+
+  test('Space checks it, clears the mixed state and class, and fires input then change once', () => {
+    const checkbox = mount({ indeterminate: true });
+    expect(mixed(checkbox)).toEqual([true, true]);
+    const { events, changes } = press(checkbox, ' ');
+    expect(checkbox.isChecked()).toBe(true);
+    expect(mixed(checkbox)).toEqual([false, false]);
+    expect(events).toEqual(['input', 'change']);
+    expect(changes).toEqual([true]);
+    checkbox.destroy();
+  });
+
+  test('Enter does the same when enterToggles is on', () => {
+    const checkbox = mount({ indeterminate: true, enterToggles: true });
+    const { events, changes } = press(checkbox, 'Enter');
+    expect(checkbox.isChecked()).toBe(true);
+    expect(mixed(checkbox)).toEqual([false, false]);
+    expect(events).toEqual(['input', 'change']);
+    expect(changes).toEqual([true]);
+    checkbox.destroy();
+  });
+
+  test('a checked mixed box unchecks, as a click does', () => {
+    const checkbox = mount({ checked: true, indeterminate: true });
+    press(checkbox, ' ');
+    expect(checkbox.isChecked()).toBe(false);
+    expect(mixed(checkbox)).toEqual([false, false]);
+    checkbox.destroy();
+  });
+
+  test('a disabled mixed box stays as it is', () => {
+    const checkbox = mount({ indeterminate: true, disabled: true });
+    const { events, changes } = press(checkbox, ' ');
+    expect(checkbox.isChecked()).toBe(false);
+    expect(mixed(checkbox)).toEqual([true, true]);
+    expect([events, changes]).toEqual([[], []]);
+    checkbox.destroy();
+  });
+});

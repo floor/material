@@ -535,6 +535,32 @@ try {
     assert.deepEqual(cleared, { indeterminate: false, checked: true });
     check("checkbox: indeterminate is a live property, cleared by a click");
 
+    // FLO-316: Space on a mixed box activates it as a click does
+    await page.evaluate(() => {
+      const w = window as unknown as Win;
+      const c = document.getElementById("c") as HTMLElement & { indeterminate: boolean; checked: boolean };
+      c.checked = false;
+      c.indeterminate = true;
+      w.events = [];
+    });
+    await box.focus();
+    await page.keyboard.press("Space");
+    const keyed = await page.evaluate(() => {
+      const w = window as unknown as Win;
+      const c = document.getElementById("c") as HTMLElement & { indeterminate: boolean; checked: boolean };
+      return {
+        checked: c.checked,
+        indeterminate: c.indeterminate,
+        mixedClass: !!c.shadowRoot?.querySelector('[class*="checkbox--indeterminate"]'),
+        events: w.events,
+      };
+    });
+    assert.deepEqual(keyed, {
+      checked: true, indeterminate: false, mixedClass: false,
+      events: [{ detail: { checked: true, value: "yes" }, target: "c" }],
+    });
+    check("checkbox: Space on a mixed box checks it, clears the mixed state and class, and dispatches one change");
+
     await page.evaluate(() => ((document.getElementById("c") as HTMLElement & { checked: boolean }).checked = false));
     await page.click("#outer");
     assert.equal(await page.evaluate(() => (document.getElementById("c") as HTMLElement & { checked: boolean }).checked), true);

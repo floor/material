@@ -177,10 +177,11 @@ export const withInput =
     input.addEventListener("keydown", (event) => {
       if (event.key === " " || (event.key === "Enter" && config.enterToggles !== false)) {
         event.preventDefault();
-        if (!input.disabled) {
-          input.checked = !input.checked;
-          input.dispatchEvent(new Event("change", { bubbles: true }));
-        }
+        // Native activation, as a click: it clears `indeterminate`, toggles
+        // `checked` and fires input then change, and does nothing while
+        // disabled. Flipping `checked` by hand left a mixed box mixed, with
+        // its dash and class, and fired no input event (FLO-316).
+        input.click();
       }
     });
 
