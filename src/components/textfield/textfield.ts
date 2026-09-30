@@ -19,6 +19,8 @@ import {
   withPlacement,
   withDensity,
   withError,
+  withField,
+  withCounter,
 } from "./features";
 import { TextfieldConfig, TextfieldComponent } from "./types";
 import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
@@ -68,6 +70,7 @@ const createTextfield = (config: TextfieldConfig = {}): TextfieldComponent => {
       withElement(getElementConfig(baseConfig)), // Create DOM element
       withLifecycle(), // Features register cleanup on the shared lifecycle
       withVariant(baseConfig), // Apply variant styling (filled/outlined)
+      withField(baseConfig), // The container the features below draw into (FLO-300)
       withTextInput(baseConfig), // Add input element
       withDensity(baseConfig), // Apply density level, to the input too: it has to exist first (FLO-303)
       withTextLabel(baseConfig), // Add text label
@@ -77,6 +80,9 @@ const createTextfield = (config: TextfieldConfig = {}): TextfieldComponent => {
       withSuffixText(baseConfig), // Add suffix text (if specified)
       withSupportingText(baseConfig), // Add supporting/helper text (if specified)
       withError(baseConfig), // Add error state management
+      // After withError: it reads the live supportingTextElement of the feature
+      // before it, which a spread in between would copy into a snapshot
+      withCounter(baseConfig), // The character counter, while the input has a maxlength (FLO-300)
       withDisabled(baseConfig), // Add disabled state management
       withPlacement(), // Add dynamic positioning for elements
       (comp) => withAPI(getApiConfig(comp))(comp) // Add public API

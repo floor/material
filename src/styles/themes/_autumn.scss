@@ -19,11 +19,6 @@
     --#{$prefix}-sys-color-tertiary-container: #cfe9be;
     --#{$prefix}-sys-color-on-tertiary-container: #0a2008;
 
-    --#{$prefix}-sys-color-quaternary: #8b6500; // Golden yellow like autumn leaves
-    --#{$prefix}-sys-color-on-quaternary: #ffffff;
-    --#{$prefix}-sys-color-quaternary-container: #ffdf8a;
-    --#{$prefix}-sys-color-on-quaternary-container: #2c1f00;
-
     // Neutral colors with warm, earthy undertones
     --#{$prefix}-sys-color-surface: #fffbf7;
     --#{$prefix}-sys-color-surface-dim: #ead7ce;
@@ -76,11 +71,6 @@
         --#{$prefix}-sys-color-on-tertiary: #213515;
         --#{$prefix}-sys-color-tertiary-container: #384f2b;
         --#{$prefix}-sys-color-on-tertiary-container: #cfe9be;
-
-        --#{$prefix}-sys-color-quaternary: #ffc147;
-        --#{$prefix}-sys-color-on-quaternary: #463300;
-        --#{$prefix}-sys-color-quaternary-container: #644900;
-        --#{$prefix}-sys-color-on-quaternary-container: #ffdf8a;
 
         // Include status colors for dark theme
         @include status-colors-dark();

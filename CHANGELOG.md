@@ -12,6 +12,25 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Eight M3 scheme-variant themes, generated (FLO-308).** `neutral`, `vibrant`, `expressive`,
+  `fidelity`, `content`, `monochrome`, `rainbow` and `fruit-salad`, M3's dynamic-scheme variants
+  from its baseline seed `#6750A4`, light and dark (Tonal Spot is `baseline`, within ΔE00 1.31).
+  Each ships only as its own entry, `mtrl/themes/<name>`, so it costs nothing until imported;
+  the full stylesheet's themes are unchanged.
+- **`schemeToTokens` (`mtrl/core/theme`, also `mtrl/core`) (FLO-308).** An M3 scheme's role
+  colours in, the theme's `--mtrl-sys-color-*` declarations out, light and dark, with `-rgb`
+  twins. The themes are generated with it (`scripts/generate-themes.ts`, from Google's
+  material-color-utilities, a devDependency only) and md3.io's theme builder uses it too.
+
+- **Text field: a character counter (FLO-300).** While the input has a `maxlength`, the
+  supporting text row ends with `count/max`, as Material Web shows it. It follows typing,
+  `setValue()` and a limit set or removed later (`<m-textfield maxlength>`), describes the input
+  for screen readers, and takes the error colour while the field is in error.
+- **Text field: `field` (FLO-300).** The container under the root: the label, input, outline,
+  icons and affixes, above the supporting text row. Anchor popovers to it.
+- **Menu: `positionTarget` (FLO-300).** The element a menu is placed against, when it is not
+  its opener. The select passes its field, so the supporting text row never pushes the menu down.
+
 - **Pre-upgrade styles for server-rendered elements (FLO-293, SSR Phase A).** Until its script
   defines it, a server-rendered element no longer shows as unstyled text that then jumps: rules
   scoped to `:not(:defined)` give each of the 34 elements its upgraded box, set its label in the
@@ -37,6 +56,27 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   already painted the layer in its content colour, so nothing looks different; a page that sets
   its own `color` on a button now gets a state layer in that colour too. `button.css` goes from
   23,254 to 13,635 bytes (2,591 to 2,188 gzipped).
+
+- **Themes regenerated from their seeds (FLO-308).** `desert`, `summer`, `brownbeige`,
+  `sageivory` and `tealcaramel` are now generated from their primary seeds with M3's tones, each
+  keeping its second colour as a custom secondary; their hand-set values failed contrast (desert
+  at 3.23:1, sageivory at 2.31:1). Every text pair now reaches 4.5:1. `highcontrast` is M3's
+  high-contrast scheme (contrastLevel 1.0), 7:1 or more on every pair, which its old values missed.
+  Their colours change. `autumn` drops its `quaternary-*` roles, which nothing used.
+
+- **Text field: the field and its supporting text row (FLO-300). DOM change.** The root now
+  holds two children, as M3's anatomy has them: `__field`, the 56px container with the label,
+  input, outline, icons and affixes, and, when there is supporting text or a counter,
+  `__supporting`, a row in the flow under it with `__helper` at the start and `__counter` at the
+  end. The helper was absolute, 18px under the field, so it overlapped what followed and never
+  wrapped; now it pushes what follows down and wraps. A field without supporting text is still
+  56px, and `element`, `input`, `supportingTextElement` and the setters are unchanged; the new
+  `field` property is the container. Migration: selectors that assumed the old flat structure,
+  such as `.mtrl-textfield > .mtrl-textfield__input` or `> .mtrl-textfield__label`, now go
+  through the field (`.mtrl-textfield__field > …`); the filled indicator is
+  `.mtrl-textfield__field::before`. The select's never-effective viewport scrim
+  (`.mtrl-select--open::before`, which the old indicator squashed to a 2px strip) is removed;
+  a click outside closes the menu, as before.
 
 - **An unsized text field, select or date picker is 280px wide** (`TextFieldDefaults.MinWidth`),
   instead of as wide as its input's 20 average characters. Chrome measures that differently per
@@ -130,10 +170,20 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Deprecated
 
+- **Themes `material`, `winter`, `browngreen` and `legacy` (FLO-308).** Still importable and in
+  the full stylesheet in 0.10, removed in 1.0. Use `baseline` for `material` (which never matched
+  it), `ocean` for `winter` and `brownbeige` for `browngreen`, their near-duplicates; `legacy` has
+  no replacement.
+
 - **Text field:** `TEXTFIELD_CLASSES.LABEL_FLOATING`, applied and styled nowhere (FLO-295).
 - **`getThemeColor('sys-color-X-rgb')`** (`mtrl/core/utils`): the `-rgb` twins are no longer
   declared (FLO-311), so the call now derives the `'r, g, b'` triplet from `sys-color-X`. It
   keeps working until the next major; read `getThemeColor('sys-color-X', { alpha })` instead.
+
+### Removed
+
+- **`_bluekhaki.scss` and `_greenbeige.scss` (FLO-308).** Two theme sources that were never
+  built, exported or referenced.
 
 ## [0.10.0-next.3] - 2026-09-29
 

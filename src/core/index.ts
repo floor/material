@@ -18,6 +18,10 @@ export * from "./compose";
 // 2. DOM manipulation utilities
 export * from "./dom";
 
+// Colour roles to theme tokens (FLO-308)
+export { schemeToTokens, THEME_ROLES } from "./theme";
+export type { ThemeRole, SchemeRoles, SchemeToTokensOptions, ThemeTokens } from "./theme";
+
 // 3. State management
 // Explicit re-exports to avoid ambiguity
 export { createEmitter } from "./state/emitter";

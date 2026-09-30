@@ -1,4 +1,5 @@
 // src/styles/themes/_material.scss
+// Deprecated in 0.10, removed in 1.0 (FLO-308): use `baseline`, M3's own baseline (this one doesn't match it).
 @use "../abstract/base" as *;
 @use "base-theme" as *;
 

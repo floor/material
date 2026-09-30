@@ -10,7 +10,7 @@ export async function checkList(page: Page, artifacts: string): Promise<void> {
   await page.evaluate(() => {
     const state = window as unknown as ListWindow;
     document.body.style.cssText = "display:block;padding:24px;margin:0";
-    document.documentElement.setAttribute("data-theme", "material");
+    document.documentElement.setAttribute("data-theme", "baseline");
     document.documentElement.setAttribute("data-theme-mode", "light");
     state.listChanges = 0; state.controlClicks = 0;
     const icon = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h16v16H4z"/></svg>';

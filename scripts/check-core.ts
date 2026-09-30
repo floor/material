@@ -13,7 +13,7 @@ import { checkRippleIsThePress } from "./check-ripple-browser";
 import { checkButtonStateLayers } from "./check-button-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
-import { checkTextfield, checkTextfieldTokens } from "./check-textfield-browser";
+import { checkTextfield, checkTextfieldTokens, checkTextfieldAnatomy } from "./check-textfield-browser";
 import { checkControls } from "./check-controls-browser";
 import { checkSearch } from "./check-search-browser";
 import { createPackageFixture } from "./package-fixture";
@@ -33,6 +33,7 @@ try {
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createCheckbox, createSwitch, createTextfield, createRadios } from 'mtrl'; window.inputs = { createCheckbox, createSwitch, createTextfield, createRadios };`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createTimePicker } from 'mtrl'; window.createTimePicker = createTimePicker;`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createSearch } from 'mtrl'; window.createSearch = createSearch;`);
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { createSelect } from 'mtrl'; window.createSelect = createSelect;`);
   const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "iife", minify: true });
   assert(bundle.success, String(bundle.logs));
   browser = await chromium.launch({ headless: true });
@@ -94,6 +95,7 @@ try {
   await checkInputBEM(page);
   await checkTextfield(page);
   await checkTextfieldTokens(page);
+  await checkTextfieldAnatomy(page);
   await checkControls(page);
   await checkSearch(page);
   await checkTimePicker(page, artifacts);
@@ -101,17 +103,17 @@ try {
   // Datepicker must also work with only base + its selective stylesheet.
   await page.locator("style").evaluateAll(elements => elements.forEach(element => element.remove()));
   for (const name of ["base", "datepicker"]) await page.addStyleTag({ content: await readFile(join(fixture.installed, `dist/styles/${name}.css`), "utf8") });
-  await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/themes/material.css"), "utf8") });
+  await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/themes/baseline.css"), "utf8") });
   await checkDatePicker(page, artifacts);
   // Card's selective stylesheet must agree with the same packed DOM as well.
   await page.locator("style").evaluateAll(elements => elements.forEach(element => element.remove()));
   for (const name of ["base", "card"]) await page.addStyleTag({ content: await readFile(join(fixture.installed, `dist/styles/${name}.css`), "utf8") });
-  await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/themes/material.css"), "utf8") });
+  await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/themes/baseline.css"), "utf8") });
   await checkCard(page, artifacts);
   // The selective Time Picker stylesheet must style the same public markup.
   await page.locator("style").evaluateAll(elements => elements.forEach(element => element.remove()));
   for (const name of ["base", "timepicker"]) await page.addStyleTag({ content: await readFile(join(fixture.installed, `dist/styles/${name}.css`), "utf8") });
-  await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/themes/material.css"), "utf8") });
+  await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/themes/baseline.css"), "utf8") });
   await checkTimePicker(page, artifacts);
   console.log("Passed packed ripple animation, reduced motion, the ripple as the press, the button state layer in currentColor, no forced offsetHeight read, and 40 pressed teardown cycles.");
 } finally {

@@ -4,7 +4,7 @@ import { relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as sass from "sass";
 import {
-  componentStyles, fullOnlyStyles, themeStyles, baseStyles, utilityStyles,
+  componentStyles, fullOnlyStyles, themeStyles, standaloneThemes, baseStyles, utilityStyles,
   resolveStyleDependencies,
 } from "./style-manifest";
 
@@ -82,7 +82,7 @@ export async function buildStyles(outdir: string, banner: string) {
   for (const [name, entry] of Object.entries(componentStyles)) {
     await emit(`styles/${name}`, [entry.source], entry.dependencies);
   }
-  for (const name of themeStyles) await emit(`themes/${name}`, [`themes/${name}`]);
+  for (const name of [...themeStyles, ...standaloneThemes]) await emit(`themes/${name}`, [`themes/${name}`]);
   await emitElementStyles(outdir, options, banner);
 }
 

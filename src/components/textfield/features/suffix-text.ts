@@ -1,6 +1,7 @@
 // src/components/textfield/features/suffix-text.ts
 
 import { BaseComponent, ElementComponent } from '../../../core/compose/component';
+import { fieldOf } from './field';
 
 /**
  * Extended element component with lifecycle
@@ -93,7 +94,7 @@ export const withSuffixText = <T extends SuffixTextConfig & object>(config: T) =
       if (slot && slot.parentNode) return slot;
       const element = document.createElement('span');
       element.className = `${PREFIX}-${NAME}__suffix`;
-      component.element.appendChild(element);
+      fieldOf(component).appendChild(element);
       component.element.classList.add(`${PREFIX}-${NAME}--with-suffix`);
       slot = element;
       return element;
