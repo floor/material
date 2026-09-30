@@ -1,7 +1,7 @@
 // test/types/pipe.fixture.ts
 //
 // Type-level checks for pipe and compose, compiled by `bun run tooling:check`
-// with the library's own compiler options (tsconfig.types.json). Nothing here
+// with the library's own compiler options (test/types/tsconfig.json). Nothing here
 // runs. The rest overload for runtime-built arrays must not accept a pipe
 // that the fixed-arity overloads reject: each @ts-expect-error below fails
 // the check if its line compiles.

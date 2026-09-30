@@ -26,7 +26,7 @@
 //     guard the ternary was reaching for did not work. They are optional now,
 //     and called through `?.`.
 //
-// Compiled by `bun run tooling:check` via tsconfig.types.json.
+// Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type {
   KeyboardActions,
   KeyboardMenuState,

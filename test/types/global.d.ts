@@ -129,4 +129,4 @@ declare global {
 // in this tree type-checked against nothing, while a 2-argument `test`
 // signature rejected the valid 3-argument form that bun accepts and two
 // segmented-button suites use. They hid real errors and invented false ones at
-// once. The real types come from `"types": ["bun"]` in tsconfig.test.json.
+// once. The real types come from `"types": ["bun"]` in test/tsconfig.json.

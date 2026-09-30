@@ -30,7 +30,7 @@
 // strictFunctionTypes on and fails if any of them widens again. That check is
 // the detector; this file is the part of it that can be read.
 //
-// Compiled by `bun run tooling:check` via tsconfig.types.json.
+// Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import { getApiConfig } from "../../src/components/search/config";
 import type { EventCallback } from "../../src/core/state/emitter";
 import type { SearchViewMode } from "../../src/components/search/types";

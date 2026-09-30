@@ -12,7 +12,7 @@
 // `component.addClass("x")` handed back a bare element component and the rest
 // of the component's own API was gone from the type.
 //
-// Compiled by `bun run tooling:check` via tsconfig.types.json.
+// Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import { createBase, withElement, pipe } from "../../src/core/compose";
 import { withEvents } from "../../src/core/compose/features/events";
 import { withTextInput } from "../../src/core/compose/features/textinput";

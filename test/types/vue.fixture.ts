@@ -3,7 +3,7 @@
 // The Vue components' props and events are derived from the element specs.
 // Nothing here runs; the assertions are the test.
 //
-// Compiled by `bun run tooling:check` via tsconfig.types.json.
+// Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type { MSwitch, MTabs, MTab, VueProps, VueEmits, VueSlots } from "../../src/vue";
 import type { SwitchSpec, TabsSpec, TabAttributes, DialogSpec } from "../../src/elements";
 import type { SlotsType, VNodeChild } from "vue";

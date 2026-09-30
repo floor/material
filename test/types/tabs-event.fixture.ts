@@ -21,7 +21,7 @@
 // vacuous passes against anything, so each wrong shape is named and required
 // to be wrong.
 //
-// Compiled by `bun run tooling:check` via tsconfig.types.json.
+// Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type { TabsComponent } from "../../src/components/tabs/types";
 
 /** true when A and B are the same type */
@@ -35,8 +35,8 @@ type Accepts<A, B> = B extends A ? true : false;
  * Whether the compiling config has strictNullChecks on.
  *
  * This file is compiled twice with different answers. `tooling:check` uses
- * tsconfig.types.json, which inherits the real config and has it on.
- * `test:types` uses tsconfig.test.json, which sets `strictNullChecks: false`
+ * test/types/tsconfig.json, which inherits the real config and has it on.
+ * `test:types` uses test/tsconfig.json, which sets `strictNullChecks: false`
  * -- and there `null` is assignable to everything, so `Event | null` collapses
  * to `Event` and the two cannot be told apart. The assertion that depends on
  * that distinction is gated on this rather than deleted, so the strict gate

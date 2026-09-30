@@ -3,7 +3,7 @@
 // The Solid components' props are derived from the element specs. Nothing
 // here runs; the assertions are the test.
 //
-// Compiled by `bun run tooling:check` via tsconfig.types.json.
+// Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type { ComponentProps } from "solid-js";
 import type { Switch, Tabs, Tab, Button, Dialog } from "../../src/solid";
 import type { SwitchElement } from "../../src/elements";

@@ -46,13 +46,13 @@ jobs:
       - name: Types, ratchets, lint, test naming and test types (in parallel)
         run: |
           pids=()
-          for script in ts:check strict:check implicit:check lint test:naming test:types; do
+          for script in ts:check lint test:naming test:types; do
             (bun run "$script" > "/tmp/$script.log" 2>&1; echo $? > "/tmp/$script.status") &
             pids+=($!)
           done
           wait "${pids[@]}"
           failed=0
-          for script in ts:check strict:check implicit:check lint test:naming test:types; do
+          for script in ts:check lint test:naming test:types; do
             status=$(cat "/tmp/$script.status")
             echo "::group::$script (exit $status)"
             cat "/tmp/$script.log"

@@ -16,7 +16,7 @@
 // while the map replaces a single union-and-one-payload signature with one
 // that can tell its four events apart.
 //
-// Compiled by `bun run tooling:check` via tsconfig.types.json.
+// Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type {
   SnackbarComponent,
   SnackbarEvent,

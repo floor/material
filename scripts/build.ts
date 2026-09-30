@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 import { copyFile, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
-import { buildModules } from "./scripts/build-modules";
-import { buildStyles } from "./scripts/build-styles";
-import { emitSvelte } from "./scripts/svelte-package";
+import { buildModules } from "./build-modules";
+import { buildStyles } from "./build-styles";
+import { emitSvelte } from "./svelte-package";
 
 const outdir = "./dist";
 const pkg = await Bun.file("package.json").json();
@@ -19,7 +19,7 @@ try {
     await emitSvelte(staging);
     console.log("Building CommonJS compatibility bundle...");
     const cjs = await Bun.build({
-      entrypoints: ["./index.ts"],
+      entrypoints: ["./src/index.ts"],
       outdir: staging,
       format: "cjs",
       target: "browser",
@@ -42,7 +42,8 @@ try {
       }
       return value;
     };
-    const { scripts, devDependencies, files, ...distribution } = pkg;
+    // The published manifest: no development-only fields (scripts, tool settings).
+    const { scripts, devDependencies, files, eslintConfig, typedocOptions, ...distribution } = pkg;
     await writeFile(`${staging}/package.json`, JSON.stringify({
       ...distribution,
       main: relocate(pkg.main), module: relocate(pkg.module), types: relocate(pkg.types),

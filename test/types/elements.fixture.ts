@@ -5,7 +5,7 @@
 // test. If a derivation widens to `unknown` or `string`, the adapters lose
 // their types without any error, so each derived shape is pinned here.
 //
-// Compiled by `bun run tooling:check` via tsconfig.types.json.
+// Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type {
   ButtonElement, ElementEvents, ElementProps, SwitchElement, SwitchSpec, TabAttributes, TabsSpec,
   TextfieldElement, TextfieldSpec,

@@ -2,7 +2,7 @@
 // child, from the registry in src/elements/index.ts, plus the entry point and
 // the types. Svelte components must be .svelte files the app compiles, so the
 // build writes them next to the compiled runtime (dist/svelte/runtime.js)
-// rather than committing generated sources. Called by build.ts.
+// rather than committing generated sources. Called by scripts/build.ts.
 //
 // Naming is by convention, as in scripts/generate-adapters.ts: element
 // `switch` has `switchElement`, `defineSwitch` and `SwitchSpec`; declaration

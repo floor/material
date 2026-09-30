@@ -95,3 +95,10 @@ demo/
 .check-vue.js
 .check-svelte.js
 .check-solid.js
+
+# Local Claude Code settings
+.claude/
+
+# Local agent instructions and manifests
+AGENTS.md
+.agents/

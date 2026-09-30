@@ -302,7 +302,7 @@ Current Chrome, Edge, Firefox and Safari. The spring motion uses CSS `linear()` 
 
 ## Contributing
 
-Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers the development setup, conventions and the distribution checks; [TESTING.md](TESTING.md) covers the test suite.
+Contributions are welcome. [CONTRIBUTING.md](.github/CONTRIBUTING.md) covers the development setup, conventions and the distribution checks.
 
 ## License
 

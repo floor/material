@@ -4,7 +4,7 @@
 // here runs; the assertions are the test. A derivation that widens lets any
 // prop through without an error, so each shape is pinned here.
 //
-// Compiled by `bun run tooling:check` via tsconfig.types.json.
+// Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type { ComponentProps as ReactProps } from "react";
 import type { Button, Dialog, Switch, Tab, Tabs, Textfield } from "../../src/react";
 import type { SwitchElement } from "../../src/elements";

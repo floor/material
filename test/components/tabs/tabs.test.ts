@@ -110,8 +110,8 @@ describe('tabs', () => {
   // FLO-106 changed half of what this test used to assert. `disabled` blocks
   // the user, not the application, so a click still refuses and setActiveTab
   // no longer does -- a form restored from saved data has to be able to show a
-  // value that is currently disabled. The rule is shared with radios, select
-  // and segmented button, and lives in docs/maintenance/selection-values.md.
+  // value that is currently disabled. Radios, select and segmented button
+  // follow the same rule.
   test('a disabled tab refuses a click but is selected by setActiveTab', () => {
     const tabs = mount();
     const changes = mock((_event: unknown) => {});
