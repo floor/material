@@ -60,7 +60,9 @@ export const getElementConfig = (config: DialogConfig) => {
     attributes['aria-modal'] = 'true';
   }
 
-  return createElementConfig(config, {
+  // `title` is the headline: passed on, it became the native tooltip over
+  // the whole surface (FLO-347). The headline names it through aria-labelledby.
+  return createElementConfig({ ...config, title: undefined }, {
     // In the top layer the dialog is a native <dialog>, shown with showModal()
     tag: config.layer === 'top' ? 'dialog' : 'div',
     attributes,
