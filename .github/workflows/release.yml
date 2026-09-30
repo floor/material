@@ -43,7 +43,14 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      # prepublishOnly runs the build (bun run build) before npm packs
+      - run: bun run build
+
+      # npm publishes from the repository root, so the manifest it packs is the root
+      # package.json: drop what only the repository uses. prepublishOnly goes with the
+      # scripts, which is why the build runs as its own step above.
+      - name: The published manifest
+        run: npm pkg delete scripts eslintConfig typedocOptions
+
       - name: Publish
         run: |
           version="$(node -p "require('./package.json').version")"

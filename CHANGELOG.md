@@ -10,8 +10,25 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Changed
+
+- **The FAB menu's `select` also carries `value`** (the item's id, as `id` does). It matches the
+  `value` in `<m-fab-menu>`'s `select` detail and the menu's own payload (FLO-320), so one handler
+  reads the same field from the factory and the element.
+
+- **The published `package.json` carries only what consumers use (FLO-350).** npm packs the
+  repository's root manifest, which since 0.10.0 also held the repository's `eslintConfig` and
+  `typedocOptions`, beside its `scripts`. The release now builds as its own step and drops those
+  three fields before publishing. Nothing a consumer reads changes.
+
 ### Fixed
 
+- **The dialog, the time picker and the sheets no longer show their headline as a tooltip
+  (FLO-347).** Their `title` option is the headline, and it was also written as the element's
+  `title` attribute, so hovering anywhere in an open dialog showed the browser's native tooltip.
+  The headline still names each surface through `aria-labelledby`. The dialog's role is
+  unchanged: a basic dialog is an `alertdialog`, as the M3 site asks on the web, and a full-screen
+  one is a `dialog`; `role` overrides it.
 - **The FAB menu's motion follows Compose (FLO-348).**
   - The close button's corner now morphs from the FAB's 16, 20 or 28dp to 28dp. It was animated
     towards the full-shape 9999px, so it went round in one frame, and on closing the spring's

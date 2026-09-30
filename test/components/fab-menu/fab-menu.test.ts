@@ -212,14 +212,15 @@ describe("fab menu list: opening and focus", () => {
 
   test("choosing an item selects it, closes, and returns focus to the FAB", () => {
     const m = make();
-    const chosen: string[] = [];
+    const chosen: { id: string; value: string }[] = [];
     const seen: string[] = [];
-    m.on("select", ({ id }) => chosen.push(id));
+    // `value` repeats the id, as <m-fab-menu>'s select does (FLO-320)
+    m.on("select", (event) => chosen.push(event));
     m.on("close", () => seen.push("close"));
     m.open();
     items(m)[1].focus();
     items(m)[1].click();
-    expect(chosen).toEqual(["forward"]);
+    expect(chosen).toEqual([{ id: "forward", value: "forward" }]);
     expect(seen).toEqual(["close"]);
     expect(document.activeElement).toBe(m.fab);
   });
@@ -361,14 +362,14 @@ describe("fab menu presentation", () => {
 
   test("the menu's select and close reach the FAB menu", async () => {
     const app = fakeMenu();
-    const chosen: string[] = [];
+    const chosen: { id: string; value: string }[] = [];
     const m = make({ presentation: "menu", menu: () => app });
-    m.on("select", ({ id }) => chosen.push(id));
+    m.on("select", (event) => chosen.push(event));
     m.open();
     await Promise.resolve();
     app.emit("select", { itemId: "reply" });
     app.close();
-    expect(chosen).toEqual(["reply"]);
+    expect(chosen).toEqual([{ id: "reply", value: "reply" }]);
     expect(m.isOpen()).toBe(false);
     expect(m.fab.getAttribute("aria-expanded")).toBe("false");
   });

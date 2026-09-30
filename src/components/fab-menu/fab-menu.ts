@@ -184,7 +184,7 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
   let loading: Promise<FabMenuMenu | null> | null = null;
   const wire = (created: FabMenuMenu): FabMenuMenu => {
     created.on("select", (event) => {
-      if (event.itemId !== undefined) component.emit(FAB_MENU_EVENTS.SELECT, { id: event.itemId });
+      if (event.itemId !== undefined) component.emit(FAB_MENU_EVENTS.SELECT, { id: event.itemId, value: event.itemId });
     });
     created.on("close", () => setOpened(false));
     if (created.element.id) button.setAttribute("aria-controls", created.element.id);
@@ -337,7 +337,7 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
   list.addEventListener("click", (event) => {
     const entry = entries.find(({ element }) => element.contains(event.target as Node));
     if (!entry) return;
-    component.emit(FAB_MENU_EVENTS.SELECT, { id: entry.item.id });
+    component.emit(FAB_MENU_EVENTS.SELECT, { id: entry.item.id, value: entry.item.id });
     closeList(true);
   });
 

@@ -84,7 +84,7 @@ const fabMenuSpec = {
   events: {
     open: { detail: () => ({}), state: true },
     close: { detail: () => ({}), state: true },
-    select: { detail: (payload) => ({ value: (payload as { id: string }).id }) },
+    select: { detail: (payload) => ({ value: (payload as { value: string }).value }) },
   },
   config: (host): Config => ({ host, items: declaredItems(host, `${host.localName}-item`) }),
   setup: (host, c) => {
