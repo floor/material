@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, test } from "bun:test";
+import { afterEach, beforeEach, expect, spyOn, test } from "bun:test";
 import { JSDOM } from "jsdom";
 import createMenu from "../../../src/components/menu";
 import { currentlyOpenMenu, menuClosed } from "../../../src/components/menu/features/registry";
@@ -10,6 +10,17 @@ let listeners: Map<EventTarget, Map<string, Set<EventListenerOrEventListenerObje
 let menus: ReturnType<typeof createMenu>[];
 let opener: HTMLButtonElement;
 let tick: () => void;
+
+// The submenu feature is a lazy chunk (FLO-310): a menu with nested items
+// starts loading it at creation. Tests that interact with a submenu right
+// after construction wait for that load first -- it is a dynamic import,
+// which the fake timers here never run. Taken before beforeEach replaces
+// setTimeout.
+const realTimeout = globalThis.setTimeout;
+const submenuLoaded = async (): Promise<void> => {
+  await import("../../../src/components/menu/features/submenu");
+  await new Promise((resolve) => realTimeout(resolve, 0));
+};
 
 beforeEach(() => {
   // Other component tests can leave a menu registered in their own document.
@@ -74,11 +85,16 @@ afterEach(() => {
   restore.reverse().forEach((fn) => fn());
   dom.window.close();
 });
-const make = (visible = false) => {
-  const menu = createMenu({ opener, visible, items: [
-    { id: "a", text: "Alpha", hasSubmenu: true, submenu: [{ id: "b", text: "Beta" }] },
-    { id: "c", text: "Charlie" },
-  ] });
+const NESTED = [
+  { id: "a", text: "Alpha", hasSubmenu: true, submenu: [{ id: "b", text: "Beta" }] },
+  { id: "c", text: "Charlie" },
+];
+const FLAT = [
+  { id: "a", text: "Alpha" },
+  { id: "c", text: "Charlie" },
+];
+const make = (visible = false, items = NESTED) => {
+  const menu = createMenu({ opener, visible, items });
   menus.push(menu);
   return menu;
 };
@@ -133,9 +149,10 @@ test("destroy cancels opener ArrowUp and blur work", () => {
   menu.destroy();
   released();
 });
-test("destroy removes opening and fading submenu elements and their handlers", () => {
+test("destroy removes opening and fading submenu elements and their handlers", async () => {
   for (const close of [false, true]) {
     const menu = make();
+    await submenuLoaded();
     tick();
     menu.open();
     tick(); tick();
@@ -152,9 +169,10 @@ test("destroy removes opening and fading submenu elements and their handlers", (
   }
 });
 
-test("destroy cancels hover intent, Tab blur, and queued focus restoration", () => {
+test("destroy cancels hover intent, Tab blur, and queued focus restoration", async () => {
   for (const action of ["hover", "tab-blur", "restore-focus"]) {
     const menu = make();
+    await submenuLoaded();
     tick();
     menu.open();
     tick(); tick(); tick();
@@ -171,4 +189,137 @@ test("destroy cancels hover intent, Tab blur, and queued focus restoration", () 
     menu.destroy();
     released();
   }
+});
+
+// ---------------------------------------------------------------- the lazy submenu (FLO-310)
+// Everything before an `await` here runs in one turn, so an interaction in it
+// happens before the submenu feature's dynamic import can resolve.
+
+/** Opens a menu, settled, and returns its first item (Alpha). */
+const openedFirstItem = (menu: ReturnType<typeof createMenu>): HTMLElement => {
+  tick();
+  menu.open();
+  tick(); tick(); tick();
+  return menu.element.querySelector(".mtrl-menu__item") as HTMLElement;
+};
+const submenuElement = () => document.querySelector(".mtrl-menu--submenu");
+const openSubmenuOf = (item: HTMLElement, how: "click" | "ArrowRight"): void => {
+  if (how === "click") {
+    item.click();
+    return;
+  }
+  item.focus();
+  item.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+};
+
+test("a click or ArrowRight before the submenu loads is queued, then run on the item acted on", async () => {
+  for (const how of ["click", "ArrowRight"] as const) {
+    const menu = make();
+    const item = openedFirstItem(menu);
+    openSubmenuOf(item, how);
+    // Still loading: nothing has opened, and nothing was dropped
+    expect(submenuElement()).toBeNull();
+    await submenuLoaded();
+    expect(submenuElement()?.getAttribute("data-parent-item")).toBe("a");
+    expect(item.getAttribute("aria-expanded")).toBe("true");
+    menu.destroy();
+    released();
+  }
+});
+
+test("a hover before the submenu loads starts its hover intent once it has loaded", async () => {
+  const menu = make();
+  const item = openedFirstItem(menu);
+  const idle = pending.size;
+  item.dispatchEvent(new MouseEvent("mouseenter"));
+  expect(pending.size).toBe(idle);
+  await submenuLoaded();
+  // The hover intent's timer: JSDOM has no :hover, so it opens nothing here.
+  // The browser checks open a submenu by hover.
+  expect(pending.size).toBe(idle + 1);
+  menu.destroy();
+  released();
+});
+
+test("destroy before the submenu loads drops the queued interaction: nothing runs, nothing throws", async () => {
+  const errors = spyOn(console, "error");
+  try {
+    const menu = make();
+    const item = openedFirstItem(menu);
+    item.click();
+    item.dispatchEvent(new MouseEvent("mouseenter"));
+    menu.destroy();
+    await submenuLoaded();
+    expect(submenuElement()).toBeNull();
+    expect(item.getAttribute("aria-expanded")).toBe("false");
+    expect(errors).not.toHaveBeenCalled();
+    released();
+  } finally {
+    errors.mockRestore();
+  }
+});
+
+test("closing the menu before the submenu loads drops the queued interaction", async () => {
+  const menu = make();
+  const item = openedFirstItem(menu);
+  item.click();
+  menu.close();
+  await submenuLoaded();
+  expect(submenuElement()).toBeNull();
+  expect(item.getAttribute("aria-expanded")).toBe("false");
+  menu.destroy();
+  released();
+});
+
+test("a menu with nested items loads the submenu at creation, before any interaction", async () => {
+  const menu = make();
+  await submenuLoaded();
+  // Loaded already: the click opens the submenu in the same turn
+  openSubmenuOf(openedFirstItem(menu), "click");
+  expect(submenuElement()?.getAttribute("data-parent-item")).toBe("a");
+  menu.destroy();
+  released();
+});
+
+test("a menu without nested items never loads the submenu; setItems with nested items does", async () => {
+  const menu = make(false, FLAT);
+  const flatItem = openedFirstItem(menu);
+  flatItem.click();
+  tick(); tick(); tick();
+  await submenuLoaded();
+
+  // Had the flat menu loaded the feature, this click would open the submenu
+  // in the same turn. It is queued instead: the load starts at setItems.
+  menu.setItems(NESTED);
+  const item = openedFirstItem(menu);
+  openSubmenuOf(item, "click");
+  expect(submenuElement()).toBeNull();
+  await submenuLoaded();
+  expect(submenuElement()?.getAttribute("data-parent-item")).toBe("a");
+  menu.destroy();
+  released();
+});
+
+test("setItems with nested items loads the submenu before any interaction", async () => {
+  const menu = make(false, FLAT);
+  tick();
+  menu.setItems(NESTED);
+  await submenuLoaded();
+  openSubmenuOf(openedFirstItem(menu), "ArrowRight");
+  expect(submenuElement()?.getAttribute("data-parent-item")).toBe("a");
+  menu.destroy();
+  released();
+});
+
+test("an item that setItems replaced while the submenu loaded is not opened", async () => {
+  const menu = make();
+  const item = openedFirstItem(menu);
+  item.click();
+  // Re-rendered: the element the user acted on has left the menu
+  menu.setItems(NESTED);
+  await submenuLoaded();
+  expect(item.isConnected).toBe(false);
+  expect(submenuElement()).toBeNull();
+  menu.destroy();
+  released();
 });

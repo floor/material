@@ -4039,7 +4039,7 @@ try {
   {
     type TopMenu = {
       element: HTMLElement;
-      open: () => unknown;
+      open: (event?: Event) => unknown;
       close: () => unknown;
       isOpen: () => boolean;
       destroy: () => void;
@@ -4257,6 +4257,39 @@ try {
       assert.deepEqual({ ...(await state()), both }, { open: false, closes: 7, connected: false, focus: "tl-opener", both: 0 }, `${where}: a submenu item`);
       check(`menu top layer ${where}: a submenu opens above it, Escape closes it then the menu, and its item closes both once`);
 
+      // By key and by hover. The submenu is a feature the menu loads on
+      // demand (FLO-310); each way in must reach it. Opened by key, Share
+      // has focus: ArrowRight opens its submenu on the first item, ArrowLeft
+      // closes it and goes back to Share. Resting the pointer on Share opens it.
+      const focusedItem = (): Promise<string | null> =>
+        page.evaluate(() => {
+          let active = document.activeElement;
+          while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+          return active?.getAttribute("data-id") ?? null;
+        });
+      const submenus = (): Promise<number> =>
+        page.evaluate(() => (window as unknown as TopWin).__tl.root.querySelectorAll('[class*="menu--submenu"]').length);
+      await page.evaluate(() => void (window as unknown as TopWin).__tl.menu.open(new KeyboardEvent("keydown")));
+      await wait(450);
+      assert.equal(await focusedItem(), "share", `${where}: opened by key, Share has focus`);
+      await page.keyboard.press("ArrowRight");
+      await wait(450);
+      assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 1, focus: "link" }, `${where}: ArrowRight`);
+      await page.keyboard.press("ArrowLeft");
+      await wait(300);
+      assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 0, focus: "share" }, `${where}: ArrowLeft`);
+      await page.keyboard.press("Escape");
+      await wait(450);
+      assert.equal((await state()).open, false, `${where}: Escape closes the menu`);
+      await openMenu();
+      const hovered = await center('[data-id="share"]');
+      await page.mouse.move(hovered.x, hovered.y);
+      // The hover intent, then the transition
+      await wait(550);
+      assert.equal(await submenus(), 1, `${where}: a hover on Share opens its submenu`);
+      await page.mouse.move(0, 0);
+      check(`menu top layer ${where}: ArrowRight opens the submenu on its first item, ArrowLeft returns to Share, a hover opens it`);
+
       await page.evaluate(() => (window as unknown as TopWin).__tl.menu.destroy());
     }
   }
@@ -4409,6 +4442,38 @@ try {
       { type: "open", detail: {} }, { type: "select", detail: { value: "link" } }, { type: "close", detail: {} },
     ]);
     check("menu: nested items open a submenu in the top layer; its item selects and closes once");
+
+    // By key and by hover, as the factory: the submenu is loaded on demand
+    // (FLO-310), and each way in must reach it
+    const openSubmenus = (): Promise<number> =>
+      page.evaluate(() =>
+        ((document.getElementById("mm") as HTMLElement).shadowRoot as ShadowRoot).querySelectorAll('[class*="menu--submenu"]').length);
+    await page.focus("#mb");
+    await page.keyboard.press("Enter");
+    await settle();
+    for (const key of ["ArrowDown", "ArrowDown"]) await page.keyboard.press(key);
+    assert.equal(await focused(), "Share", "Copy, Cut (disabled, focusable), then Share");
+    await page.keyboard.press("ArrowRight");
+    await settle();
+    assert.deepEqual({ submenus: await openSubmenus(), focus: await focused() }, { submenus: 1, focus: "Copy link" }, "ArrowRight");
+    await page.keyboard.press("ArrowLeft");
+    await wait(300);
+    assert.deepEqual({ submenus: await openSubmenus(), focus: await focused() }, { submenus: 0, focus: "Share" }, "ArrowLeft");
+    await page.keyboard.press("Escape");
+    await settle();
+    await page.click("#mb");
+    await settle();
+    const share = await center("mm", '[data-id="share"]');
+    await page.mouse.move(share.x, share.y);
+    // The hover intent, then the transition
+    await wait(550);
+    assert.equal(await openSubmenus(), 1, "a hover on Share opens its submenu");
+    await page.keyboard.press("Escape");
+    await settle();
+    await page.mouse.move(0, 0);
+    assert.deepEqual((await log()).map((e) => e.type), ["open", "close", "open", "close"]);
+    assert.deepEqual(await menuState(), { open: false, attribute: false });
+    check("menu: ArrowRight opens the submenu on its first item, ArrowLeft returns to Share, a hover opens it");
 
     await page.evaluate(() => (document.getElementById("mm") as Host & { show: () => void }).show());
     await settle();

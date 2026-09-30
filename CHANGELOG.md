@@ -78,6 +78,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   (`.mtrl-select--open::before`, which the old indicator squashed to a 2px strip) is removed;
   a click outside closes the menu, as before.
 
+- **Menu: the submenu feature loads on demand (FLO-310).** It is a chunk of its own, no
+  longer part of every menu: 1.0–1.3 KB gzip less on the initial load of an app with a menu
+  (Vite, `createMenu` and `<m-menu>`), and `bun run size` measures the menu at 12.0 KB
+  instead of 12.8 KB. A menu with nested items starts loading the chunk when it is created,
+  or when `setItems` gives it nested items; a menu without them never loads it. A click,
+  hover or ArrowRight on a nested item before the chunk arrives is queued and run once it
+  has. No API change: `MenuItem.submenu`, `hasSubmenu`, the submenu events and the options
+  are as they were.
+
 - **An unsized text field, select or date picker is 280px wide** (`TextFieldDefaults.MinWidth`),
   instead of as wide as its input's 20 average characters. Chrome measures that differently per
   platform for the same Roboto (167px on macOS, 220px on Linux), so the same page laid out

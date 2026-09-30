@@ -8,7 +8,6 @@ import {
   withOpener,
   withPosition,
   withKeyboard,
-  withSubmenu,
 } from "./features";
 import { withAPI } from "./api";
 import { MenuConfig, MenuComponent } from "./types";
@@ -54,7 +53,8 @@ const createMenu = (config: MenuConfig): MenuComponent => {
       withLifecycle(), // Features register their cleanup on this lifecycle
       withPosition(baseConfig), // Position management
       withKeyboard(), // Keyboard navigation
-      withSubmenu(baseConfig), // Submenu management
+      // Submenus are not a pipe stage: withController loads that feature on
+      // demand, only for a menu with nested items (FLO-310)
       withController(baseConfig, (): MenuComponent => menu), // Menu controller
       withOpener(baseConfig), // Opener management
       (comp) => withAPI(getApiConfig(comp))(comp), // Public API
