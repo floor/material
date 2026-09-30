@@ -4,8 +4,8 @@
 mtrl is a lightweight TypeScript component library implementing Material Design 3 with pure functional composition. It delivers the complete MD3 specification through carefully crafted, composable building blocks with zero dependencies, embodying the "less is more" philosophy without sacrificing functionality or design fidelity.
 
 ## Environment & Architecture
-- Part of workspace alongside mtrl-addons and mtrl-app packages
-- mtrl-app serves as the information hub with documentation and showcases
+- Part of workspace alongside mtrl-addons and md3.io
+- md3.io (https://md3.io) is the documentation site, with playgrounds and examples
 - Core foundation for mtrl-addons extension library
 - Zero external dependencies - pure TypeScript/JavaScript library
 
@@ -21,7 +21,7 @@ mtrl is a lightweight TypeScript component library implementing Material Design 
 1. Check if functionality already exists in core (mtrl/src/core)
 2. Check mtrl styles system (mtrl/src/styles) before creating new styles
 3. Create tests first (mtrl/test/) - test-driven development
-4. Use mtrl-app/docs for all documentation (no .md files in this package)
+4. Component documentation lives in md3.io/docs/components; its examples are checked by `bun run docs:check` there
 
 ## Code Standards
 ### TypeScript & Structure
@@ -68,12 +68,7 @@ mtrl is a lightweight TypeScript component library implementing Material Design 
 - Test all public APIs and component interactions
 
 ## Showcase & Documentation
-- Create showcases in mtrl-app/client/content only and follow the hierarchy
-- Always use mtrl components via layout system (mtrl-app/docs/layout/usages.md)
-- Prefer array-based layout schema
-- Format schema following the formatting convention (mtrl-app/docs/core/layout/array-schema.md)
-- Avoid manual DOM element creation in showcases
-- Never inline CSS in showcases
+- Playgrounds, examples and component docs live in md3.io (see CONTRIBUTING.md to run it locally)
 - Focus on demonstrating component capabilities and Material Design compliance
 
 ## Build & Deployment

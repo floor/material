@@ -29,29 +29,19 @@ By contributing to mtrl, you'll help create a lean alternative to heavier framew
    bun install
    ```
 
-### Testing Your Components with mtrl-app
+### Testing Your Components with md3.io
 
-mtrl uses a separate repository called mtrl-app (https://mtrl.app) for showcasing and testing components. There are two ways to test your components:
+mtrl's documentation site, [md3.io](https://md3.io), is a separate repository ([floor/md3.io](https://github.com/floor/md3.io)) with a playground for every component. To see your changes there, clone it beside your mtrl checkout; it depends on `file:../mtrl`:
 
-1. **Build and link locally**:
-   ```bash
-   # In the mtrl repository
-   bun run build
-   
-   # Clone the mtrl-app repository 
-   git clone https://github.com/YOUR-USERNAME/mtrl-app.git
-   cd mtrl-app
-   
-   # Install dependencies and link to your local mtrl build
-   bun install
-   bun link ../path/to/your/mtrl
-   
-   # Start the showcase server
-   bun run dev
-   ```
+```bash
+# Next to the mtrl repository
+git clone https://github.com/floor/md3.io.git
+cd md3.io
+bun install
 
-2. **Use the official showcase site**:
-   Visit https://mtrl.app to see official examples and documentation.
+# Serves http://localhost:4300 and rebuilds mtrl, then the site, when mtrl/src changes
+bun run dev
+```
 
 ## Contribution Workflow
 
@@ -116,17 +106,15 @@ export const createMyComponent = (options: MyComponentOptions = {}) => {
 };
 ```
 
-### Using mtrl-app for Development
+### Using md3.io for Development
 
-The mtrl-app showcase application is the best way to develop and test your components:
+md3.io is the best place to develop and test your components (see "Testing Your Components with md3.io" above to run it):
 
-1. Clone the mtrl-app repository alongside your mtrl clone.
-2. Create a new view file in `src/client/content/components/` for your component.
-3. Add the route in `src/client/core/navigation.ts` of the mtrl-app repository.
-4. Implement different variants and states for testing.
-5. Run the showcase server with `bun run dev` in the mtrl-app directory.
+1. Its playgrounds are configured in `src/shared/components.ts` of the md3.io repository.
+2. Component documentation lives in its `docs/components/`, and `bun run docs:check` checks every example against your mtrl checkout.
+3. `bun run dev` rebuilds mtrl and the site whenever `mtrl/src` changes.
 
-This separation of the library code (mtrl) and the showcase app (mtrl-app) keeps the main library clean while providing a rich development environment.
+This separation of the library code (mtrl) and the documentation site (md3.io) keeps the main library clean while providing a rich development environment.
 
 ### TypeScript Standards
 

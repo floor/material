@@ -22,7 +22,7 @@ mtrl is part of a multi-package ecosystem:
 mtrl ecosystem/
 ├── mtrl/              # Core Material Design 3 components (this package)
 ├── mtrl-addons/       # Extended components and advanced features
-└── mtrl-app/          # Documentation hub and interactive showcase
+└── md3.io/            # Documentation site (https://md3.io) and playgrounds
 ```
 
 **Package Relationships:**
@@ -34,10 +34,10 @@ mtrl (Foundation)
     │   ├── Provides advanced features (virtual scrolling, collections)
     │   └── Performance optimizations
     │
-    └── mtrl-app (Documentation)
+    └── md3.io (Documentation, https://md3.io)
         ├── Uses mtrl components for demonstrations
-        ├── Documents mtrl and mtrl-addons
-        └── Interactive showcases and examples
+        ├── Documents mtrl components and guides
+        └── Playgrounds and examples in every framework
 ```
 
 **Development Environment Recommendation:**
@@ -46,7 +46,7 @@ Clone related packages as siblings for easier cross-package development:
 ~/Code/
 ├── mtrl/              # This package
 ├── mtrl-addons/       # Extended components
-└── mtrl-app/          # Documentation and showcase
+└── md3.io/            # Documentation site and playgrounds
 ```
 
 ### Package Structure
@@ -482,32 +482,11 @@ export const mockButton = {
 - No .md files for components
 - No inline documentation beyond JSDoc
 
-**✅ DO create documentation in mtrl-app:**
-- `mtrl-app/client/content/components/` - Component showcases
-- `mtrl-app/docs/` - Architecture and usage guides
-- Interactive demonstrations with live code examples
+**✅ DO document in md3.io** (https://md3.io, repository floor/md3.io):
+- `md3.io/docs/components/` - Component documentation and guides, checked by `bun run docs:check`
+- `md3.io/src/shared/` - Playground configuration and examples
 
-### Creating Showcases
-
-**Always use layout system:**
-```typescript
-// In mtrl-app, not in mtrl
-import { createButton } from 'mtrl/components/button'
-
-const buttonShowcase = [
-  [Button, { variant: 'filled', text: 'Filled Button' }],
-  [Button, { variant: 'outlined', text: 'Outlined Button' }],
-  [Button, { variant: 'text', text: 'Text Button' }]
-]
-```
-
-**Showcase Guidelines:**
-- Use array-based layout schema
-- Follow formatting conventions
-- Demonstrate all variants and states
-- Show accessibility features
-- Provide code examples
-- Never inline CSS
+See CONTRIBUTING.md to run md3.io locally against this checkout.
 
 ## Build System
 
@@ -853,15 +832,14 @@ const createStatefulComponent = (config: Config): HTMLElement => {
 
 **Documentation:** `mtrl-addons/.cursorrules`
 
-### mtrl-app
+### md3.io
 
-**Purpose:** Documentation hub and interactive showcase
-- Component demonstrations
-- Usage examples
-- API documentation
-- Interactive playground
+**Purpose:** Documentation site (https://md3.io)
+- Component playgrounds
+- Examples in every framework
+- Component documentation and guides
 
-**Documentation:** `mtrl-app/.cursorrules`
+**Repository:** floor/md3.io
 
 ## Key Files Reference
 
@@ -940,7 +918,7 @@ under `.agents/` and are not versioned; the manifest is.
 1. Follow all coding standards and guidelines
 2. Write comprehensive tests
 3. Ensure Material Design 3 compliance
-4. Document in mtrl-app (not here)
+4. Document in md3.io (not here)
 5. Run type checking before committing
 6. Ask for permission before git operations
 7. Follow conventional commit format

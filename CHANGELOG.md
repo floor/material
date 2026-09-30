@@ -119,6 +119,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- **The documentation site is md3.io.** The package's `homepage`, the README and the contributing
+  guide point to [md3.io](https://md3.io), which replaces mtrl.app; mtrl.app redirects there.
+
 - **Corners follow the shape tokens in 16 more components (FLO-331).** After FLO-330's scale, the
   literal radii read `--mtrl-sys-shape-corner-*` too: badge and switch (`full`), plain tooltip
   (`extra-small`), list selected row and video, navigation rail indicator, badge and modal
