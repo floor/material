@@ -49,7 +49,9 @@ export const createBaseConfig = (
  * The root element: a fixed layer holding the scrim and the sheet itself.
  */
 export const getElementConfig = (config: BottomSheetConfig) =>
-  createElementConfig(config, {
+  // `title` is the headline: passed on, it became the native tooltip over
+  // the whole surface (FLO-347). The headline names it through aria-labelledby.
+  createElementConfig({ ...config, title: undefined }, {
     // In the top layer the root is a native <dialog>, shown with showModal()
     tag: config.layer === "top" ? "dialog" : "div",
     className: [config.class].filter(Boolean),
