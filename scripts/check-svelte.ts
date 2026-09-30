@@ -48,6 +48,7 @@ type Win = Window & {
     setDialog: (v: boolean) => void;
     setRail: (v: boolean) => void;
     ref: HTMLElement | null;
+    renderCalls: number;
   };
 };
 
@@ -320,6 +321,15 @@ const run = async (): Promise<void> => {
     assert.equal(await page.evaluate(() => (window as unknown as Win).api.ref === document.getElementById("bt")), true, "bind:this");
     assert.equal(await page.evaluate(() => document.getElementById("at")?.dataset.attached), "yes", "{@attach}");
     check("bind:this reads the element, and {@attach} reaches it");
+
+    // Only a prop named after a declared slot is a snippet: a camelCase
+    // handler and a spread callback are never called by rendering, and render
+    // no slot wrapper (FLO-334).
+    assert.deepEqual(await page.evaluate(() => ({
+      calls: (window as unknown as Win).api.renderCalls,
+      wrappers: document.getElementById("cbk")?.querySelectorAll("[slot]").length,
+    })), { calls: 0, wrappers: 0 });
+    check("callback props that are not slots are not rendered as snippets");
 
     // ------------------------------------------------------------- navigation rail: expanded
     // Controlled: state expands the modal rail in the top layer, Escape

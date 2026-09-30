@@ -48,6 +48,7 @@ type Win = Window & {
     setShow: (v: boolean) => void;
     setProgress: (v: number) => void;
     setDialog: (v: boolean) => void;
+    setDialogText: (v: string) => void;
     setRail: (v: boolean) => void;
     element: () => (HTMLElement & { toggle: () => void; checked: boolean }) | undefined;
   };
@@ -328,6 +329,22 @@ const run = async (): Promise<void> => {
     });
     assert.deepEqual(slotted, { headline: ["Discard draft?"], actions: ["dga"], attribute: null });
     check("dialog: headline and actions props reach their slots");
+
+    // A change of the default slot's children keeps the named slots' wrappers
+    // and their nodes (FLO-334): they are rebuilt only when their prop changes.
+    const kept = await page.evaluate(async () => {
+      const host = document.getElementById("dg") as HTMLElement;
+      const before = { wrapper: host.querySelector('[slot="actions"]'), button: document.getElementById("dga") };
+      (window as unknown as Win).api.setDialogText("Your draft will be deleted.");
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      return {
+        text: host.textContent?.includes("Your draft will be deleted.") ?? false,
+        wrapper: host.querySelector('[slot="actions"]') === before.wrapper,
+        button: document.getElementById("dga") === before.button,
+      };
+    });
+    assert.deepEqual(kept, { text: true, wrapper: true, button: true });
+    check("dialog: new default children keep the named slots' wrappers and nodes");
 
     // ------------------------------------------------------------- navigation rail: expanded
     // Controlled: state expands the modal rail in the top layer, Escape

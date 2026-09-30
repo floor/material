@@ -289,6 +289,18 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Svelte: callbacks are not snippets (FLO-334).** Any function prop but `children` and a
+  lower-case `on…` was rendered as a named snippet, so `onClick`, `onChange` or a callback in a
+  spread object was called during render. Only a prop named after a slot the element declares is
+  a snippet now, as in React and Solid.
+- **`mtrl/react/jsx` and `mtrl/solid/jsx`: the slot attribute, and React's events (FLO-334).**
+  `<m-button label="Save">` type-checks: the slot attribute (`label`) is markup too. On a bare tag
+  React 19 gives an `on<event>` prop in lower case the element's own event, so
+  `onchange={(e) => e.detail.checked}` is typed; `onChange` stays React's synthetic event, which
+  has no `detail`. React 18 sets no event props on a custom element.
+- **Solid: named slots keep their wrappers (FLO-334).** New default-slot children rebuilt every
+  named slot's wrapper; each is rebuilt only when its own prop changes now.
+
 - **Adapters: named slots and snippets are no longer dropped (FLO-325).** Vue rendered only the
   default slot, so `<template #actions>` disappeared; each named slot's nodes now carry
   `slot="<name>"`, and text is wrapped to carry it. Svelte passed a snippet to the attribute of its

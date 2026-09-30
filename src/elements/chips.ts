@@ -23,7 +23,7 @@
  */
 
 import createChips from "../components/chips/chips";
-import type { ChipComponent, ChipConfig, ChipType, ChipsComponent, ChipsConfig } from "../components/chips/types";
+import type { ChipComponent, ChipConfig, ChipType, ChipsChangeEvent, ChipsComponent, ChipsConfig } from "../components/chips/types";
 import {
   createDeclarationClass, defineElement, DEFAULT_PREFIX, type Config, type DefineOptions, type ElementAttributes,
   type ElementHost, type ElementInstance, type ElementSpec,
@@ -112,13 +112,6 @@ const select = (c: ChipsComponent, value: unknown, multi: boolean): void => {
 const isMultiSet = (c: ChipsComponent): boolean => c.element.getAttribute("aria-multiselectable") !== "false";
 
 /**
- * The model of each `change`, by the values array the set emits: the set
- * reports its selected values whatever its mode, and the element's `change`
- * carries the `value` property's shape, which depends on it.
- */
-const changes = new WeakMap<object, ChipsValue>();
-
-/**
  * Names the one-action cells. The factory hides such a cell's button, which
  * holds the label, from the accessibility tree and removes the cell's
  * aria-label, so the cell has no accessible name (the input chips' buttons
@@ -133,8 +126,6 @@ const nameCells = (c: ChipsComponent): void => {
 const create = (config: ChipsConfig): ChipsComponent => {
   const chips = createChips(config);
   nameCells(chips);
-  // Subscribed before the element's own handler, which reads what this stores.
-  chips.on("change", (values: (string | null)[]) => void changes.set(values, chips.getValue()));
   return chips;
 };
 
@@ -237,7 +228,8 @@ const chipsSpec = {
   model: "value" as const,
   events: {
     change: {
-      detail: (payload) => ({ value: changes.get(payload as object) ?? null }),
+      // The set's change carries the `value` property's shape (FLO-320).
+      detail: (payload) => ({ value: (payload as ChipsChangeEvent).value }),
     },
     // Not a state event: removing a selected chip changes the selection, and
     // no `change` comes with it, so a user removal marks the set dirty.

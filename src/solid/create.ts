@@ -131,14 +131,18 @@ export const createComponent = <S, E extends HTMLElement>(
     if (form) Object.defineProperty(host, "name", { enumerable: true, get: () => props.name });
     // The default slot's children, then a `<span slot="…">` per named slot
     // given nodes (text for a same-named attribute stays the attribute).
+    // Each wrapper is its own memo, rebuilt only when its slot's prop
+    // changes, not when the default slot's children do (FLO-334).
+    const wrappers = slots.map(([key, slot]) =>
+      createMemo(() => {
+        const value = slotted.get(key)?.();
+        if (value == null || value === false || (attributes.has(key) && typeof value === "string")) return null;
+        return Dynamic({ component: "span", slot, style: "display: contents", children: value } as never);
+      }));
     Object.defineProperty(host, "children", {
       enumerable: true,
       get: () => {
-        const named = slots.flatMap(([key, slot]) => {
-          const value = slotted.get(key)?.();
-          if (value == null || value === false || (attributes.has(key) && typeof value === "string")) return [];
-          return [Dynamic({ component: "span", slot, style: "display: contents", children: value } as never)];
-        });
+        const named = wrappers.map((wrapper) => wrapper()).filter((wrapper) => wrapper !== null);
         return named.length ? [props.children, ...named] : props.children;
       },
     });
