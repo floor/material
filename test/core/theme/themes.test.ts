@@ -84,7 +84,7 @@ const deltaE00 = (x: string, y: string): number => {
 };
 
 describe("schemeToTokens", () => {
-  const scheme = (overrides: Record<string, string> = {}) => ({
+  const scheme = (overrides: Record<string, string> = {}): Record<string, string> => ({
     ...Object.fromEntries(THEME_ROLES.map((role) => [role, "#112233"])),
     "on-surface": "#010203",
     ...overrides,
