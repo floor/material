@@ -1,6 +1,5 @@
 // src/components/checkbox/api.ts
 import type { BaseComponent, CheckboxComponent, CheckboxEvents, ApiOptions } from "./types";
-import type { EventCallback } from "../../core/state/emitter";
 
 /**
  * Enhances checkbox component with API methods
@@ -94,12 +93,12 @@ export const withAPI =
 
     // Event handling
     on<K extends keyof CheckboxEvents>(event: K, handler: CheckboxEvents[K]): CheckboxComponent {
-      component.on?.(event, handler as EventCallback);
+      component.on?.(event, handler);
       return this;
     },
 
     off<K extends keyof CheckboxEvents>(event: K, handler: CheckboxEvents[K]): CheckboxComponent {
-      component.off?.(event, handler as EventCallback);
+      component.off?.(event, handler);
       return this;
     },
 

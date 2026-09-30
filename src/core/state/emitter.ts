@@ -4,9 +4,13 @@
  */
 
 /**
- * Type definition for event callback functions
+ * An event handler. A handler that declares its payload type is accepted as
+ * one, and a handler that doesn't gets `unknown` to narrow. It was
+ * `(...args: never[]) => void`, which inferred every such payload as `never`
+ * (FLO-295). The method-signature form keeps parameter bivariance, which is
+ * what lets a typed handler through.
  */
-export type EventCallback = (...args: never[]) => void;
+export type EventCallback = { handler(...args: unknown[]): void }["handler"];
 
 /**
  * Interface for the event emitter
@@ -87,8 +91,7 @@ export const createEmitter = (): Emitter => {
       // part-way and leaked DOM.
       callbacks.forEach(cb => {
         try {
-          // Callbacks declare their own argument types; emit forwards whatever it receives
-          (cb as (...args: unknown[]) => void)(...args);
+          cb(...args);
         } catch (error) {
           console.error(`A listener for "${event}" threw:`, error);
         }

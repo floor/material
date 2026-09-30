@@ -1,5 +1,7 @@
 // src/core/state/events.ts
 
+import type { EventCallback } from "./emitter";
+
 /**
  * Event manager interface for handling component events
  */
@@ -10,7 +12,7 @@ export interface EventManagerState {
    * @param handler - Event handler
    * @returns EventManagerState instance for chaining
    */
-  on: (event: string, handler: (...args: never[]) => void) => EventManagerState;
+  on: (event: string, handler: EventCallback) => EventManagerState;
   
   /**
    * Removes an event listener
@@ -18,7 +20,7 @@ export interface EventManagerState {
    * @param handler - Event handler
    * @returns EventManagerState instance for chaining
    */
-  off: (event: string, handler: (...args: never[]) => void) => EventManagerState;
+  off: (event: string, handler: EventCallback) => EventManagerState;
   
   /**
    * Removes all event listeners and cleans up
@@ -29,7 +31,7 @@ export interface EventManagerState {
    * Gets all active handlers
    * @returns Map of event names to handlers
    */
-  getHandlers: () => Map<(...args: never[]) => void, string>;
+  getHandlers: () => Map<EventCallback, string>;
 }
 
 /**
@@ -40,7 +42,7 @@ export interface EventManagerState {
  * @returns Event manager interface
  */
 export const createEventManager = (element: HTMLElement): EventManagerState => {
-  const handlers = new Map<string, Set<(...args: never[]) => void>>();
+  const handlers = new Map<string, Set<EventCallback>>();
 
   return {
     /**
@@ -49,7 +51,7 @@ export const createEventManager = (element: HTMLElement): EventManagerState => {
      * @param handler - Event handler
      * @returns EventManagerState instance for chaining
      */
-    on(event: string, handler: (...args: never[]) => void): EventManagerState {
+    on(event: string, handler: EventCallback): EventManagerState {
       element.addEventListener(event, handler as EventListener);
       let callbacks = handlers.get(event);
       if (!callbacks) handlers.set(event, callbacks = new Set());
@@ -63,7 +65,7 @@ export const createEventManager = (element: HTMLElement): EventManagerState => {
      * @param handler - Event handler
      * @returns EventManagerState instance for chaining
      */
-    off(event: string, handler: (...args: never[]) => void): EventManagerState {
+    off(event: string, handler: EventCallback): EventManagerState {
       element.removeEventListener(event, handler as EventListener);
       const callbacks = handlers.get(event);
       callbacks?.delete(handler);
@@ -85,9 +87,9 @@ export const createEventManager = (element: HTMLElement): EventManagerState => {
      * Gets all active handlers
      * @returns Map of handlers to event names
      */
-    getHandlers(): Map<(...args: never[]) => void, string> {
+    getHandlers(): Map<EventCallback, string> {
       // Preserve the legacy snapshot shape; cleanup tracks each event separately.
-      const snapshot = new Map<(...args: never[]) => void, string>();
+      const snapshot = new Map<EventCallback, string>();
       handlers.forEach((callbacks, event) => callbacks.forEach(handler => snapshot.set(handler, event)));
       return snapshot;
     }

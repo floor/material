@@ -300,12 +300,12 @@ export const withAPI =
       },
 
       on<K extends keyof IconButtonEvents>(event: K, handler: IconButtonEvents[K]) {
-        component.on(event, handler as EventCallback);
+        component.on(event, handler);
         return iconButtonComponent;
       },
 
       off<K extends keyof IconButtonEvents>(event: K, handler: IconButtonEvents[K]) {
-        component.off(event, handler as EventCallback);
+        component.off(event, handler);
         return iconButtonComponent;
       },
 

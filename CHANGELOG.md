@@ -64,6 +64,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Event handlers typed `never` (FLO-295).** `EventCallback`, the handler type of every
+  `on()` that doesn't name its events, was `(...args: never[]) => void`, so a handler's
+  inferred parameter was `never` and no payload could be read without a cast. It now gets
+  `unknown`, to narrow; a handler that declares its payload type is accepted as before.
+  `withEvents<Events>()` and `EventComponent<Events>` take an optional event map, so a factory
+  built on them (mtrl-addons' form and color picker, for one) gets `on` and `off` that check
+  each event's name and payload. Without a map nothing changes.
+
 - **Types the runtime already took (FLO-295).** `DrawerConfig` has `ariaLabel`, which the drawer
   always read; a segmented button's `mode` takes `'single'` / `'multi'` as well as the enum, as
   its `density` already did.

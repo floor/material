@@ -1,6 +1,7 @@
 // src/components/side-sheet/api.ts
 
 import { SideSheetComponent, SideSheetEventHandlers } from "./types";
+import type { EventCallback } from "../../core/state/emitter";
 
 interface ApiOptions {
   state: {
@@ -20,8 +21,8 @@ interface ApiOptions {
 interface BaseComponent {
   element: HTMLElement;
   getClass: (name: string) => string;
-  on: (event: string, handler: (...args: never[]) => void) => unknown;
-  off: (event: string, handler: (...args: never[]) => void) => unknown;
+  on: (event: string, handler: EventCallback) => unknown;
+  off: (event: string, handler: EventCallback) => unknown;
 }
 
 /**
@@ -59,11 +60,11 @@ export const withAPI =
       },
 
       on(event, handler) {
-        component.on(event as string, handler as (...args: never[]) => void);
+        component.on(event as string, handler);
         return this;
       },
       off(event, handler) {
-        component.off(event as string, handler as (...args: never[]) => void);
+        component.off(event as string, handler);
         return this;
       },
 
@@ -79,13 +80,13 @@ export const withAPI =
 
 /** Registers the handlers given at creation */
 export const applyEventHandlers = (
-  component: { on: (event: string, handler: (...args: never[]) => void) => unknown },
+  component: { on: (event: string, handler: EventCallback) => unknown },
   handlers?: SideSheetEventHandlers
 ): void => {
   if (!handlers) return;
   for (const [event, handler] of Object.entries(handlers)) {
     if (typeof handler === "function") {
-      component.on(event, handler as (...args: never[]) => void);
+      component.on(event, handler);
     }
   }
 };

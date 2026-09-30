@@ -150,12 +150,12 @@ export const withAPI = ({ disabled, lifecycle, className }: ApiOptions) =>
     
     // Event methods
     on<K extends keyof FabEvents>(event: K, handler: FabEvents[K]) {
-      component.on(event, handler as EventCallback);
+      component.on(event, handler);
       return this;
     },
     
     off<K extends keyof FabEvents>(event: K, handler: FabEvents[K]) {
-      component.off(event, handler as EventCallback);
+      component.off(event, handler);
       return this;
     },
     
