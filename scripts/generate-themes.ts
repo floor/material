@@ -195,8 +195,41 @@ export const fixedRoles = (keys: { primary: string; secondary: string; tertiary:
     ];
   }));
 
-/** A kept theme with its fixed-roles block written from its own key colours */
+const SURFACE_VARIANT = "generated: neutral variant tone";
+
+/**
+ * M3's surface-variant for a kept theme: tones 90 (light) and 30 (dark) of its
+ * neutral variant palette, keyed from its own light on-surface-variant (tone 30
+ * of that palette), as Compose's baseline has it (NeutralVariant90, NeutralVariant30).
+ */
+export const surfaceVariant = (onSurfaceVariant: string): { light: string; dark: string } => {
+  const palette = TonalPalette.fromInt(argbFromHex(onSurfaceVariant));
+  return { light: hexFromArgb(palette.tone(90)), dark: hexFromArgb(palette.tone(30)) };
+};
+
+/** Writes surface-variant after the on-surface-variant line of one mode's block */
+const withSurfaceVariant = (block: string, hex: string, tone: number): string => {
+  const line = `--#{$prefix}-sys-color-surface-variant: ${hex}; // ${SURFACE_VARIANT} ${tone}`;
+  const existing = block.match(/([ \t]*)--#\{\$prefix\}-sys-color-surface-variant:[^\n]*/);
+  if (existing) return block.replace(existing[0], `${existing[1]}${line}`);
+  const anchor = block.match(/\n([ \t]*)(--#\{\$prefix\}-sys-color-on-surface-variant:[^\n]*)\n/);
+  if (!anchor || anchor.index === undefined) throw new Error("kept theme has no on-surface-variant");
+  const at = anchor.index + anchor[0].length;
+  return `${block.slice(0, at)}${anchor[1]}${line}\n${block.slice(at)}`;
+};
+
+/** A kept theme with its generated roles written from its own colours: the fixed roles and surface-variant */
 export const renderKept = (source: string): string => {
+  const withFixed = renderFixed(source);
+  const split = withFixed.indexOf('&[data-theme-mode="dark"]');
+  const onSurfaceVariant = withFixed.slice(0, split).match(/--#\{\$prefix\}-sys-color-on-surface-variant:\s*(#[0-9a-fA-F]{6})/);
+  if (!onSurfaceVariant) throw new Error("kept theme has no light on-surface-variant");
+  const tones = surfaceVariant(onSurfaceVariant[1]);
+  return withSurfaceVariant(withFixed.slice(0, split), tones.light, 90) + withSurfaceVariant(withFixed.slice(split), tones.dark, 30);
+};
+
+/** A kept theme with its fixed-roles block written from its own key colours */
+const renderFixed = (source: string): string => {
   const light = source.slice(0, source.indexOf('&[data-theme-mode="dark"]'));
   const key = (role: string): string => {
     const match = light.match(new RegExp(`--#\\{\\$prefix\\}-sys-color-${role}:\\s*(#[0-9a-fA-F]{6})`));

@@ -10,7 +10,7 @@ import { describe, test, expect } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { Hct, argbFromHex } from "@material/material-color-utilities";
 import { schemeToTokens, THEME_ROLES } from "../../../src/core/theme";
-import { BASELINE_SEED, KEPT_THEMES, THEMES, fixedRoles, renderThemes, rolesOf, schemeFor } from "../../../scripts/generate-themes";
+import { BASELINE_SEED, KEPT_THEMES, THEMES, fixedRoles, renderThemes, rolesOf, schemeFor, surfaceVariant } from "../../../scripts/generate-themes";
 import { themeStyles, standaloneThemes } from "../../../scripts/style-manifest";
 
 const THEMES_DIR = "src/styles/themes";
@@ -215,6 +215,34 @@ describe("fixed roles (FLO-315)", () => {
       const light = parse(name).light;
       expect({ name, roles: Object.fromEntries(FIXED.map((role) => [role, light[role]])) })
         .toEqual({ name, roles: fixedRoles({ primary: light.primary, secondary: light.secondary, tertiary: light.tertiary }) });
+    }
+  });
+});
+
+describe("surface-variant", () => {
+  test("every theme declares it, light and dark", () => {
+    for (const name of [...THEMES.map((spec) => spec.name), ...KEPT_THEMES]) {
+      const file = parse(name);
+      expect({ name, light: !!file.light["surface-variant"], dark: !!file.dark["surface-variant"] }).toEqual({ name, light: true, dark: true });
+    }
+  });
+
+  test("baseline has Compose's values, within ΔE00 1 of material-color-utilities' Tonal Spot", () => {
+    const source = readFileSync(`${THEMES_DIR}/_baseline.scss`, "utf8");
+    const value = (from: string, to: string) => source.slice(source.indexOf(from), source.indexOf(to)).match(/sys-color-surface-variant:\s*(#[0-9a-fA-F]{6})/)?.[1];
+    const light = value("@mixin baseline-light-variables", "@mixin baseline-dark-variables");
+    const dark = value("@mixin baseline-dark-variables", ":root {");
+    expect({ light, dark }).toEqual({ light: "#e7e0ec", dark: "#49454f" });
+    const tonalSpot = { name: "tonal-spot", description: "", seed: BASELINE_SEED, variant: "tonal-spot" as const };
+    expect(deltaE00(light!, rolesOf(schemeFor(tonalSpot, false))["surface-variant"])).toBeLessThan(1);
+    expect(deltaE00(dark!, rolesOf(schemeFor(tonalSpot, true))["surface-variant"])).toBeLessThan(1);
+  });
+
+  test("a kept theme's comes from its own neutral variant palette, tones 90 and 30", () => {
+    for (const name of KEPT_THEMES) {
+      const file = parse(name);
+      expect({ name, light: file.light["surface-variant"], dark: file.dark["surface-variant"] })
+        .toEqual({ name, ...surfaceVariant(file.light["on-surface-variant"]) });
     }
   });
 });

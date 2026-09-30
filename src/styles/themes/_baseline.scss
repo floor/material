@@ -53,6 +53,9 @@
     --#{$prefix}-sys-color-surface: #fef7ff;
     --#{$prefix}-sys-color-surface-dim: #ded8e1;
     --#{$prefix}-sys-color-surface-bright: #fef7ff;
+    // Compose ColorLightTokens.SurfaceVariant = NeutralVariant90; the filled
+    // card's disabled container reads it (FilledCardTokens, FLO-329)
+    --#{$prefix}-sys-color-surface-variant: #e7e0ec;
     --#{$prefix}-sys-color-surface-container-lowest: #ffffff;
     --#{$prefix}-sys-color-surface-container-low: #f7f2fa;
     --#{$prefix}-sys-color-surface-container: #f3edf7;
@@ -120,6 +123,8 @@
     --#{$prefix}-sys-color-surface: #141218;
     --#{$prefix}-sys-color-surface-dim: #141218;
     --#{$prefix}-sys-color-surface-bright: #3b383e;
+    // Compose ColorDarkTokens.SurfaceVariant = NeutralVariant30
+    --#{$prefix}-sys-color-surface-variant: #49454f;
     --#{$prefix}-sys-color-surface-container-lowest: #0f0d13;
     --#{$prefix}-sys-color-surface-container-low: #1d1b20;
     --#{$prefix}-sys-color-surface-container: #211f26;
