@@ -25,8 +25,13 @@ import { build as viteBuild, type Plugin, type Rolldown } from "vite";
 import { createPackageFixture } from "./package-fixture";
 import { elementModules } from "./element-modules";
 
-/** The adapter's own runtime (create.ts or runtime.js) and wrapper, gzip bytes, on top of the element. */
-const ADAPTER_MARGIN = 2048;
+/**
+ * The adapter's own runtime (create.ts or runtime.js) and wrapper, gzip bytes,
+ * on top of the element. Raised from 2048 for FLO-325's named snippets and
+ * `bind:this` in the Svelte runtime: the Svelte select measured +2193, the
+ * outlier (select is ~800 B over the others in every adapter, to look into).
+ */
+const ADAPTER_MARGIN = 2304;
 
 const pascal = (name: string): string => name.replace(/^[a-z]/, (c) => c.toUpperCase());
 const FRAMEWORKS = [
