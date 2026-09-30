@@ -1,0 +1,1265 @@
+{
+ "badge-small": [
+  [
+   "0:span.mtrl-badge.mtrl-badge--small",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ]
+ ],
+ "badge-large": [
+  [
+   "0:span.mtrl-badge.mtrl-badge--large",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ]
+ ],
+ "badge-large-wide": [
+  [
+   "0:span.mtrl-badge.mtrl-badge--large",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ]
+ ],
+ "tooltip": [
+  [
+   "0:div.mtrl-tooltip.mtrl-tooltip--bottom",
+   "4px 4px 4px 4px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "1:div.mtrl-tooltip__arrow",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
+ "switch-off": [
+  [
+   "0:div.mtrl-switch.mtrl-switch--label-start",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:div.mtrl-switch__container",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-switch__content",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:label.mtrl-switch__label.mtrl-switch__label--start",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "4:input.mtrl-switch__input",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "5:span.mtrl-switch__track",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "6:span.mtrl-switch__thumb",
+   "50% 50% 50% 50%",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "7:span.mtrl-switch__thumb-icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
+ "switch-on": [
+  [
+   "0:div.mtrl-switch.mtrl-switch--label-start",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:div.mtrl-switch__container",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-switch__content",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:label.mtrl-switch__label.mtrl-switch__label--start",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "4:input.mtrl-switch__input",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "5:span.mtrl-switch__track",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "6:span.mtrl-switch__thumb",
+   "50% 50% 50% 50%",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "7:span.mtrl-switch__thumb-icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
+ "list-selected": [
+  [
+   "0:div.mtrl-list",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:div.mtrl-list__content",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-list__item--one-line.mtrl-list__item",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:button.mtrl-list__action",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "4:div.mtrl-list__text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "5:div.mtrl-list__headline",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:div.mtrl-list__item--one-line.mtrl-list__item",
+   "16px 16px 16px 16px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "7:button.mtrl-list__action",
+   "16px 16px 16px 16px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "8:div.mtrl-list__text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "9:div.mtrl-list__headline",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
+ "list-video": [
+  [
+   "0:div.mtrl-list",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:div.mtrl-list__content",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-list__item--one-line.mtrl-list__item",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:button.mtrl-list__action",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "4:div.mtrl-list__leading.mtrl-list__leading--video",
+   "8px 8px 8px 8px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "5:div",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:div.mtrl-list__text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "7:div.mtrl-list__headline",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
+ "rail": [
+  [
+   "0:nav.mtrl-navigation-rail",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:div.mtrl-navigation-rail__header",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:button.mtrl-navigation-rail__toggle",
+   "50% 50% 50% 50%",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:div.mtrl-navigation-rail__items",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "4:button.mtrl-navigation-rail__item.mtrl-navigation-rail__item--badged",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "5:span.mtrl-navigation-rail__content",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:span.mtrl-navigation-rail__indicator",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "7:span.mtrl-navigation-rail__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "8:span.mtrl-navigation-rail__label",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "9:span.mtrl-navigation-rail__badge",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "10:button.mtrl-navigation-rail__item",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "11:span.mtrl-navigation-rail__content",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "12:span.mtrl-navigation-rail__indicator",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "13:span.mtrl-navigation-rail__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "14:span.mtrl-navigation-rail__label",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
+ "drawer": [
+  [
+   "0:aside.mtrl-drawer.mtrl-drawer--standard",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:div.mtrl-drawer__sheet",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-drawer__items",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:button.mtrl-drawer__item.mtrl-drawer__item--active",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "4:span.mtrl-drawer__active-indicator",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "5:span.mtrl-drawer__item-label",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:div.mtrl-ripple",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "7:button.mtrl-drawer__item",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "8:span.mtrl-drawer__active-indicator",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "9:span.mtrl-drawer__item-label",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "10:div.mtrl-ripple",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ]
+ ],
+ "slider": [
+  [
+   "0:div.mtrl-slider",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:div.mtrl-slider__container",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-slider__handle",
+   "16px 16px 16px 16px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:div.mtrl-slider__value",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "4:div.mtrl-slider__visual",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "5:div.mtrl-slider__track",
+   "8px 8px 8px 8px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "6:div.mtrl-slider__segment",
+   "2px 2px 2px 2px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "7:div.mtrl-slider__segment.mtrl-slider__segment--active",
+   "2px 2px 2px 2px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "8:div.mtrl-slider__segment",
+   "2px 2px 2px 2px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "9:div.mtrl-slider__ticks",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "10:div.mtrl-slider__ticks.mtrl-slider__ticks--active",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "11:div.mtrl-slider__dot.mtrl-slider__dot--start",
+   "50% 50% 50% 50%",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "12:div.mtrl-slider__dot",
+   "50% 50% 50% 50%",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "13:div.mtrl-slider__inset-icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
+ "carousel": [
+  [
+   "0:div",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:div.mtrl-carousel.mtrl-carousel--multi-browse",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-carousel__scroller",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:div.mtrl-carousel__track",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "4:div.mtrl-carousel__item",
+   "28px 28px 28px 28px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "5:div",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:div.mtrl-carousel__item",
+   "28px 28px 28px 28px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "7:div",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "8:div.mtrl-carousel__snap",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "9:div.mtrl-carousel__snap",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
+ "icon-xs-square": [
+  [
+   "0:button.mtrl-icon-button.mtrl-icon-button--xs",
+   "12px 12px 12px 12px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "1:span.mtrl-icon.mtrl-icon-button__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-ripple",
+   "12px 12px 12px 12px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ]
+ ],
+ "icon-m-square": [
+  [
+   "0:button.mtrl-icon-button.mtrl-icon-button--m",
+   "16px 16px 16px 16px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "1:span.mtrl-icon.mtrl-icon-button__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-ripple",
+   "16px 16px 16px 16px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ]
+ ],
+ "icon-xl-square": [
+  [
+   "0:button.mtrl-icon-button.mtrl-icon-button--xl",
+   "28px 28px 28px 28px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "1:span.mtrl-icon.mtrl-icon-button__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-ripple",
+   "28px 28px 28px 28px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ]
+ ],
+ "icon-m-square-pressed": [
+  [
+   "0:button.mtrl-icon-button.mtrl-icon-button--m",
+   "16px 16px 16px 16px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "1:span.mtrl-icon.mtrl-icon-button__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-ripple",
+   "16px 16px 16px 16px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ]
+ ],
+ "button-group": [
+  [
+   "0:div.mtrl-button-group.mtrl-button-group--horizontal",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:button.mtrl-button.mtrl-button-group__button",
+   "20px 20px 20px 20px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:span.mtrl-button__text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:div.mtrl-ripple",
+   "20px 20px 20px 20px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "4:button.mtrl-button.mtrl-button-group__button",
+   "8px 8px 8px 8px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "5:span.mtrl-button__text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:div.mtrl-ripple",
+   "8px 8px 8px 8px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "7:button.mtrl-button.mtrl-button-group__button",
+   "8px 20px 20px 8px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "8:span.mtrl-button__text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "9:div.mtrl-ripple",
+   "8px 20px 20px 8px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ]
+ ],
+ "split-s": [
+  [
+   "0:div.mtrl-split-button.mtrl-split-button--filled",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:button.mtrl-button.mtrl-split-button__leading",
+   "20px 4px 4px 20px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "2:span.mtrl-button__text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:div.mtrl-ripple",
+   "20px 4px 4px 20px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "4:button.mtrl-button.mtrl-split-button__trailing",
+   "4px 20px 20px 4px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "5:span.mtrl-icon.mtrl-button__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:div.mtrl-ripple",
+   "4px 20px 20px 4px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ]
+ ],
+ "split-l": [
+  [
+   "0:div.mtrl-split-button.mtrl-split-button--filled",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:button.mtrl-button.mtrl-split-button__leading",
+   "48px 12px 12px 48px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "2:span.mtrl-button__text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:div.mtrl-ripple",
+   "48px 12px 12px 48px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "4:button.mtrl-button.mtrl-split-button__trailing",
+   "12px 48px 48px 12px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "5:span.mtrl-icon.mtrl-button__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:div.mtrl-ripple",
+   "12px 48px 48px 12px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ]
+ ],
+ "search": [
+  [
+   "0:div.mtrl-search.mtrl-search--bar",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:dialog.mtrl-search__surface",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-search__container",
+   "100px 100px 100px 100px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:button.mtrl-search__leading-icon",
+   "50% 50% 50% 50%",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "4:div.mtrl-search__input-wrapper",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "5:input.mtrl-search__input",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:button.mtrl-search__clear-button.mtrl-search__clear-button--hidden",
+   "50% 50% 50% 50%",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "7:div.mtrl-search__trailing",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "8:div.mtrl-search__divider",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "9:div.mtrl-search__content",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "10:div.mtrl-search__suggestions",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "11:ul.mtrl-search__suggestion-list",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "12:div.mtrl-search__status",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
+ "search-docked-view": [
+  [
+   "0:div.mtrl-search.mtrl-search--docked",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:dialog.mtrl-search__surface",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-search__container",
+   "100px 100px 100px 100px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:button.mtrl-search__leading-icon",
+   "50% 50% 50% 50%",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "4:div.mtrl-search__input-wrapper",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "5:input.mtrl-search__input",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:button.mtrl-search__clear-button.mtrl-search__clear-button--hidden",
+   "50% 50% 50% 50%",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "7:div.mtrl-search__trailing",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "8:div.mtrl-search__divider",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "9:div.mtrl-search__content",
+   "12px 12px 12px 12px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "10:div.mtrl-search__suggestions",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "11:ul.mtrl-search__suggestion-list",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "12:li.mtrl-search__suggestion-item",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "13:span.mtrl-search__suggestion-icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "14:span.mtrl-search__suggestion-text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "15:li.mtrl-search__suggestion-item",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "16:span.mtrl-search__suggestion-icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "17:span.mtrl-search__suggestion-text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "18:div.mtrl-search__status",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
+ "button": [
+  [
+   "0:button.mtrl-button.mtrl-button--filled",
+   "20px 20px 20px 20px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:span.mtrl-button__text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-ripple",
+   "20px 20px 20px 20px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
+ "button-square": [
+  [
+   "0:button.mtrl-button.mtrl-button--filled",
+   "12px 12px 12px 12px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "1:span.mtrl-button__text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-ripple",
+   "12px 12px 12px 12px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ]
+ ],
+ "card": [
+  [
+   "0:div.mtrl-card.mtrl-card--filled",
+   "12px 12px 12px 12px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ]
+ ],
+ "dialog": [
+  [
+   "0:div.mtrl-dialog.mtrl-dialog--visible",
+   "28px 28px 28px 28px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "1:div.mtrl-dialog__header",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:div.mtrl-dialog__header-content",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:h2.mtrl-dialog__header-title",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "4:div.mtrl-dialog__content",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
+ "textfield": [
+  [
+   "0:div.mtrl-textfield.mtrl-textfield--filled",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:div.mtrl-textfield__field",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:label.mtrl-textfield__label.mtrl-textfield__label--start",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:input.mtrl-textfield__input",
+   "4px 4px 0px 0px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ]
+ ]
+}
