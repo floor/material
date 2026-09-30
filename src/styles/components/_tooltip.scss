@@ -27,7 +27,7 @@ $arrow-size: 8px;
   transform: scale(0.9);
   transform-origin: center;
   box-sizing: border-box;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  // M3's plain tooltip has no elevation (PlainTooltipTokens), FLO-324
   
   // Typography
   @include m.typography('body-small');
@@ -50,8 +50,9 @@ $arrow-size: 8px;
   }
 
   // States
+  // Opaque: the plain tooltip is inverse-surface itself, not a tint of it
   &--visible {
-    opacity: 0.9;
+    opacity: 1;
     transform: scale(1);
     // A shown tooltip can be hovered, so a pointer can rest on its content
     // (WCAG 1.4.13); hidden, it still lets clicks through
@@ -65,18 +66,25 @@ $arrow-size: 8px;
     // Default styles already applied in base
   }
   
-  // Rich variant (for rich content)
+  // Rich (RichTooltipTokens): surface-container, on-surface-variant text,
+  // CornerMedium, elevation 2, Body Medium, 320dp wide at most
   &--rich {
-    text-align: left;
-    padding: 8px 12px;
+    max-width: 320px;
+    padding: 12px 16px;
+    border-radius: v.shape('medium');
+    background-color: t.color('surface-container');
+    color: t.color('on-surface-variant');
+    text-align: start;
+    @include m.typography('body-medium');
+    @include m.elevation(2);
   }
-  
-  // Plain variant (flat, no shadow)
+
+  // Plain is M3's plain tooltip, which the base already is (PlainTooltipTokens:
+  // inverse-surface, inverse-on-surface). It had its own surface-container-high
+  // with an outline, which no M3 source has (FLO-324).
   &--plain {
-    background-color: t.color('surface-container-high');
-    color: t.color('on-surface');
-    box-shadow: none;
-    border: 1px solid t.color('outline');
+    background-color: t.color('inverse-surface');
+    color: t.color('inverse-on-surface');
   }
   
   // Arrow styles

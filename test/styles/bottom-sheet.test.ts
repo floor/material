@@ -45,11 +45,16 @@ describe('bottom sheet stylesheet', () => {
     expect(value('.mtrl-bottom-sheet', 'align-items')).toBe('flex-end');
   });
 
-  test('the drag handle is 32 by 4dp in on-surface-variant', () => {
-    // DockedDragHandleWidth / DockedDragHandleHeight / DockedDragHandleColor
-    expect(value('.mtrl-bottom-sheet__handle', 'width')).toBe('32px');
-    expect(value('.mtrl-bottom-sheet__handle', 'height')).toBe('4px');
-    expect(value('.mtrl-bottom-sheet__handle', 'background-color')).toBe('var(--mtrl-sys-color-on-surface-variant)');
+  // FLO-324: the handle is a 48dp button (Compose: 22dp vertical padding round
+  // the bar, and the minimum interactive size) drawing the bar
+  test('the drag handle is a 48dp button drawing the 32 by 4dp bar in on-surface-variant', () => {
+    expect(value('.mtrl-bottom-sheet__handle', 'width')).toBe('48px');
+    expect(value('.mtrl-bottom-sheet__handle', 'height')).toBe('48px');
+    // DockedDragHandleWidth / DockedDragHandleHeight / DockedDragHandleColor: 48 - 2×8 by 48 - 2×22
+    expect(value('.mtrl-bottom-sheet__handle::before', 'inset')).toBe('22px 8px');
+    expect(value('.mtrl-bottom-sheet__handle::before', 'background-color')).toBe('var(--mtrl-sys-color-on-surface-variant)');
+    // SheetBottomTokens.FocusIndicatorColor
+    expect(value('.mtrl-bottom-sheet__handle:focus-visible', 'outline')).toBe('3px solid var(--mtrl-sys-color-secondary)');
     // the sheet handles the gesture, so the browser must not pan instead
     expect(value('.mtrl-bottom-sheet__handle', 'touch-action')).toBe('none');
   });

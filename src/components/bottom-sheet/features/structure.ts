@@ -54,10 +54,12 @@ export const withStructure =
     // be a gesture with nothing to suggest it
     let handle: HTMLElement | null = null;
     if (config.dragHandle) {
-      handle = document.createElement("div");
-      handle.className = getClass(BOTTOM_SHEET_CLASSES.HANDLE);
-      // decorative: the sheet is operable by button and key without it
-      handle.setAttribute("aria-hidden", "true");
+      // A button, as Compose's drag handle is clickable (FLO-324): reachable by
+      // keyboard and named for what it does; the drag feature wires it
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = getClass(BOTTOM_SHEET_CLASSES.HANDLE);
+      handle = button;
       container.appendChild(handle);
     }
 

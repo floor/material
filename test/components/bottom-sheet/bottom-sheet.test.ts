@@ -223,3 +223,70 @@ describe('bottom sheet', () => {
     expect(sheet.isOpen()).toBe(true);
   });
 });
+
+// FLO-324: the drag handle was aria-hidden and unreachable by keyboard.
+// Compose's is clickable: partially open it expands, expanded it dismisses.
+describe('bottom sheet drag handle as a button', () => {
+  const handleOf = (sheet: ReturnType<typeof make>) => sheet.element.querySelector<HTMLButtonElement>('.mtrl-bottom-sheet__handle')!;
+
+  test('it is a button, reachable and named for what it does', () => {
+    const sheet = make({ variant: 'modal' });
+    document.body.append(sheet.element);
+    const handle = handleOf(sheet);
+    expect([handle.tagName, handle.type, handle.hasAttribute('aria-hidden')]).toEqual(['BUTTON', 'button', false]);
+    sheet.open();
+    expect(handle.getAttribute('aria-label')).toBe('Expand sheet');
+  });
+
+  test('activating it expands a partial sheet, then closes an expanded one', () => {
+    const sheet = make({ variant: 'modal' });
+    document.body.append(sheet.element);
+    sheet.open();
+    handleOf(sheet).click();
+    expect(sheet.getState()).toBe('expanded');
+    expect(handleOf(sheet).getAttribute('aria-label')).toBe('Close sheet');
+    handleOf(sheet).click();
+    expect(sheet.isOpen()).toBe(false);
+  });
+
+  test('the click that ends a drag is not also a press', () => {
+    const sheet = make({ variant: 'modal' });
+    document.body.append(sheet.element);
+    sheet.open();
+    const handle = handleOf(sheet);
+    // a drag (upwards, here a flick, so it expands); the drag settles the sheet
+    handle.dispatchEvent(new dom.window.MouseEvent('pointerdown', { clientY: 100, bubbles: true }));
+    handle.dispatchEvent(new dom.window.MouseEvent('pointermove', { clientY: 90, bubbles: true }));
+    handle.dispatchEvent(new dom.window.MouseEvent('pointerup', { clientY: 90, bubbles: true }));
+    const settled = sheet.getState();
+    expect(settled).toBe('expanded');
+    // the click the browser fires after the drag changes nothing
+    handle.click();
+    expect(sheet.getState()).toBe(settled);
+    // the next real press works again
+    handle.click();
+    expect(sheet.isOpen()).toBe(false);
+  });
+});
+
+// FLO-324: a standard sheet sits beside the page, so Escape pressed elsewhere
+// (closing a menu, say) no longer closes it; from inside it still does.
+describe('bottom sheet: Escape on a standard sheet', () => {
+  test('Escape elsewhere leaves it open; Escape from inside closes it', () => {
+    const sheet = make({ variant: 'standard', content: '<button>Inside</button>' });
+    document.body.append(sheet.element);
+    sheet.open();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(sheet.isOpen()).toBe(true);
+    sheet.element.querySelector('button')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(sheet.isOpen()).toBe(false);
+  });
+
+  test('a modal sheet still closes on Escape from anywhere', () => {
+    const sheet = make({ variant: 'modal' });
+    document.body.append(sheet.element);
+    sheet.open();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(sheet.isOpen()).toBe(false);
+  });
+});

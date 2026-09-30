@@ -174,3 +174,25 @@ describe('side sheet', () => {
     ).not.toThrow();
   });
 });
+
+// FLO-324: a standard sheet sits beside the page, so Escape pressed elsewhere
+// (closing a menu, say) no longer closes it; from inside it still does.
+describe('side sheet: Escape on a standard sheet', () => {
+  test('Escape elsewhere leaves it open; Escape from inside closes it', () => {
+    const sheet = make({ variant: 'standard', content: '<button>Inside</button>' });
+    document.body.append(sheet.element);
+    sheet.open();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(sheet.isOpen()).toBe(true);
+    sheet.element.querySelector('button')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(sheet.isOpen()).toBe(false);
+  });
+
+  test('a modal sheet still closes on Escape from anywhere', () => {
+    const sheet = make({ variant: 'modal' });
+    document.body.append(sheet.element);
+    sheet.open();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(sheet.isOpen()).toBe(false);
+  });
+});

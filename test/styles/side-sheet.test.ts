@@ -32,13 +32,19 @@ describe('side sheet stylesheet', () => {
     expect(value('.mtrl-side-sheet--standard .mtrl-side-sheet__container', 'box-shadow')).toBeUndefined();
   });
 
-  test('only the corners facing the page round, at CornerLarge', () => {
+  // FLO-324: only the modal sheet rounds, on the edge facing the page; the
+  // standard one is square (MDC Sheet.Side.Docked.Container.Shape = Corner.None)
+  test('a modal sheet rounds only the corners facing the page, at CornerLarge; a standard one none', () => {
     // docked to the trailing edge: the leading corners round
-    expect(value('.mtrl-side-sheet--end .mtrl-side-sheet__container', 'border-start-start-radius')).toBe('16px');
-    expect(value('.mtrl-side-sheet--end .mtrl-side-sheet__container', 'border-end-start-radius')).toBe('16px');
+    expect(value('.mtrl-side-sheet--modal.mtrl-side-sheet--end .mtrl-side-sheet__container', 'border-start-start-radius')).toBe('16px');
+    expect(value('.mtrl-side-sheet--modal.mtrl-side-sheet--end .mtrl-side-sheet__container', 'border-end-start-radius')).toBe('16px');
     // and the mirror image when docked to the leading edge
-    expect(value('.mtrl-side-sheet--start .mtrl-side-sheet__container', 'border-start-end-radius')).toBe('16px');
-    expect(value('.mtrl-side-sheet--start .mtrl-side-sheet__container', 'border-end-end-radius')).toBe('16px');
+    expect(value('.mtrl-side-sheet--modal.mtrl-side-sheet--start .mtrl-side-sheet__container', 'border-start-end-radius')).toBe('16px');
+    expect(value('.mtrl-side-sheet--modal.mtrl-side-sheet--start .mtrl-side-sheet__container', 'border-end-end-radius')).toBe('16px');
+    // no rule gives the standard sheet, or any sheet by its edge alone, a radius
+    for (const selector of ['.mtrl-side-sheet--end .mtrl-side-sheet__container', '.mtrl-side-sheet--start .mtrl-side-sheet__container']) {
+      for (const corner of ['start-start', 'end-start', 'start-end', 'end-end']) expect(value(selector, `border-${corner}-radius`)).toBeUndefined();
+    }
   });
 
   test('positions are logical, so they follow the writing direction', () => {

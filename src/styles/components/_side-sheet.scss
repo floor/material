@@ -146,12 +146,19 @@ $component: "#{base.$prefix}-side-sheet";
             @include m.elevation(1);
         }
 
+        // Only the modal sheet rounds, on its inner edge: CornerLarge where it
+        // faces the page. The standard one is square (MDC
+        // Sheet.Side.Docked.Container.Shape = Corner.None), FLO-324.
         &.#{$component}--end .#{$component}__container {
             box-shadow: f.get-elevation(1), m.$sheet-overshoot-guard 0 0 0 t.color("surface-container-low");
+            border-start-start-radius: v.shape("large");
+            border-end-start-radius: v.shape("large");
         }
 
         &.#{$component}--start .#{$component}__container {
             box-shadow: f.get-elevation(1), (-1 * m.$sheet-overshoot-guard) 0 0 0 t.color("surface-container-low");
+            border-start-end-radius: v.shape("large");
+            border-end-end-radius: v.shape("large");
         }
     }
 
@@ -162,8 +169,6 @@ $component: "#{base.$prefix}-side-sheet";
         justify-content: flex-end;
 
         .#{$component}__container {
-            border-start-start-radius: v.shape("large");
-            border-end-start-radius: v.shape("large");
             transform: translateX(100%);
         }
     }
@@ -172,8 +177,6 @@ $component: "#{base.$prefix}-side-sheet";
         justify-content: flex-start;
 
         .#{$component}__container {
-            border-start-end-radius: v.shape("large");
-            border-end-end-radius: v.shape("large");
             transform: translateX(-100%);
         }
     }

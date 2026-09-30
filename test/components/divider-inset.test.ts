@@ -22,12 +22,12 @@ describe('divider insets', () => {
   test('a full-width divider still spans its container', () => {
     const divider = createDivider();
     expect(divider.element.style.width).toBe('100%');
-    expect(divider.element.style.marginLeft).toBe('');
+    expect(divider.element.style.marginInlineStart).toBe('');
   });
 
   test('an inset divider does not also claim the full width', () => {
     const divider = createDivider({ variant: 'inset' });
-    expect(divider.element.style.marginLeft).toBe('16px');
+    expect(divider.element.style.marginInlineStart).toBe('16px');
     // The bug: width stayed 100% alongside a 16px margin, overflowing the parent.
     expect(divider.element.style.width).not.toBe('100%');
     expect(divider.element.style.width).toBe('auto');
@@ -35,21 +35,21 @@ describe('divider insets', () => {
 
   test('a middle-inset divider is inset on both sides and still fits', () => {
     const divider = createDivider({ variant: 'middle-inset' });
-    expect(divider.element.style.marginLeft).toBe('16px');
-    expect(divider.element.style.marginRight).toBe('16px');
+    expect(divider.element.style.marginInlineStart).toBe('16px');
+    expect(divider.element.style.marginInlineEnd).toBe('16px');
     expect(divider.element.style.width).toBe('auto');
   });
 
   test('explicit insets are honoured, and still fit', () => {
     const divider = createDivider({ variant: 'inset', insetStart: 24, insetEnd: 8 });
-    expect(divider.element.style.marginLeft).toBe('24px');
-    expect(divider.element.style.marginRight).toBe('8px');
+    expect(divider.element.style.marginInlineStart).toBe('24px');
+    expect(divider.element.style.marginInlineEnd).toBe('8px');
     expect(divider.element.style.width).toBe('auto');
   });
 
   test('a vertical inset divider does not also claim the full height', () => {
     const divider = createDivider({ orientation: 'vertical', variant: 'inset' });
-    expect(divider.element.style.marginTop).toBe('16px');
+    expect(divider.element.style.marginBlockStart).toBe('16px');
     expect(divider.element.style.height).not.toBe('100%');
     expect(divider.element.style.height).toBe('auto');
   });
