@@ -2,7 +2,7 @@
 
 Material Design 3 components for the web, written in TypeScript with zero dependencies.
 
-mtrl implements the M3 expressive update: component sizes, shapes, colours and spring motion follow the Material 3 tokens. Each component is a plain function that returns a DOM element and a small API, so mtrl works with any framework or none. The documentation site, [mtrl.app](https://mtrl.app), shows every component with live examples.
+mtrl implements the M3 expressive update: component sizes, shapes, colours and spring motion follow the Material 3 tokens. Each component is a plain function that returns a DOM element and a small API, so mtrl works with any framework or none. The documentation site, [md3.io](https://md3.io), shows every component with live examples.
 
 ## Quick start
 

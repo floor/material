@@ -112,8 +112,8 @@ sources:
 # ── Related projects ───────────────────────────────────────────────
 
 relatedProjects:
-  - repo: "mtrl-app"
-    role: "documentation hub and showcase"
+  - repo: "md3.io"
+    role: "documentation site and playgrounds (https://md3.io)"
     visibility: "public"
   - repo: "mtrl-addons"
     role: "extensions"

@@ -25,7 +25,7 @@ This project uses **CLAUDE.md** as the primary development guide and documentati
   - Git commit/push rules
 
 - **[mtrl-addons](../mtrl-addons/.cursorrules)** - Extended components package
-- **[mtrl-app](../mtrl-app/.cursorrules)** - Documentation and showcase
+- **[md3.io](https://md3.io)** - Documentation site and playgrounds ([floor/md3.io](https://github.com/floor/md3.io))
 
 ---
 
