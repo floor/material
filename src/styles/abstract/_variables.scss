@@ -1,6 +1,23 @@
 // src/styles/abstract/_variables.scss
 @use 'sass:map';
+@use 'sass:math';
+@use 'sass:string';
 @use 'base' as *;
+
+// The fast spatial spring (Compose FastSpatial: damping 0.6, stiffness 800),
+// sampled at 25 even steps. Both of its easings below come from these points,
+// so they cannot drift apart.
+$spring-fast-spatial-points: (0.0, 0.102, 0.323, 0.57, 0.784, 0.942, 1.039, 1.085, 1.094, 1.082, 1.06, 1.037, 1.018, 1.004, 0.995, 0.992, 0.991, 0.992, 0.995, 0.997, 0.999, 1.0, 1.001, 1.001, 1);
+
+/// A linear() easing through `$points`; with `$clamp`, each point at most 1.
+@function spring-linear($points, $clamp: false) {
+  $text: '';
+  @each $point in $points {
+    $value: if($clamp, math.min($point, 1), $point);
+    $text: if($text == '', '#{$value}', '#{$text}, #{$value}');
+  }
+  @return string.unquote('linear(#{$text})');
+}
 
 // Core design tokens
 $state: (
@@ -65,7 +82,11 @@ $motion: (
   'spring-default-spatial-duration': 450ms,
   'spring-default-spatial-easing': linear(0.0, 0.055, 0.18, 0.332, 0.483, 0.619, 0.733, 0.823, 0.891, 0.94, 0.973, 0.994, 1.007, 1.013, 1.015, 1.015, 1.013, 1.011, 1.009, 1.006, 1.005, 1.003, 1.002, 1.001, 1),
   'spring-fast-spatial-duration': 425ms,
-  'spring-fast-spatial-easing': linear(0.0, 0.102, 0.323, 0.57, 0.784, 0.942, 1.039, 1.085, 1.094, 1.082, 1.06, 1.037, 1.018, 1.004, 0.995, 0.992, 0.991, 0.992, 0.995, 0.997, 0.999, 1.0, 1.001, 1.001, 1),
+  'spring-fast-spatial-easing': spring-linear($spring-fast-spatial-points),
+  // The same spring with its progress clamped to 1, for colours: Compose's
+  // Color.lerp clamps the fraction, so an overshooting spring never takes a
+  // colour past its target (FLO-348)
+  'spring-fast-spatial-clamped-easing': spring-linear($spring-fast-spatial-points, $clamp: true),
   'spring-slow-spatial-duration': 625ms,
   'spring-slow-spatial-easing': linear(0.0, 0.056, 0.182, 0.335, 0.488, 0.624, 0.738, 0.827, 0.895, 0.943, 0.975, 0.996, 1.007, 1.013, 1.015, 1.015, 1.013, 1.011, 1.008, 1.006, 1.004, 1.003, 1.002, 1.001, 1),
   'spring-default-effects-duration': 250ms,

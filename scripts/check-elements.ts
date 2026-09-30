@@ -4927,6 +4927,66 @@ try {
     }, ICON);
     assert.deepEqual(parity.element, parity.factory);
     check("FAB menu: renders as the factory does with the global stylesheet");
+
+    // FLO-348: the motion, frame by frame. The transitions are paused and seeked,
+    // so every frame is read exactly, whatever the machine's speed.
+    const motion = await page.evaluate(async () => {
+      const fm = document.getElementById("fm") as Fm;
+      const root = fm.shadowRoot?.querySelector(".mtrl-fab-menu") as HTMLElement;
+      const fab = root.querySelector(".mtrl-fab-menu__fab") as HTMLElement;
+      const items = [...root.querySelectorAll<HTMLElement>(".mtrl-fab-menu__item")];
+      const rgb = (value: string) => (value.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number);
+      const frame = async (): Promise<unknown[]> => {
+        await new Promise((r) => requestAnimationFrame(() => r(null)));
+        const animations = root.getAnimations({ subtree: true });
+        const out: unknown[] = [];
+        for (let t = 0; t <= 700; t += 20) {
+          for (const a of animations) { a.pause(); a.currentTime = t; }
+          const style = getComputedStyle(fab);
+          out.push({
+            radius: parseFloat(style.borderTopLeftRadius),
+            bg: rgb(style.backgroundColor),
+            items: items.map((item) => {
+              const box = item.getBoundingClientRect();
+              const content = (item.firstElementChild as HTMLElement).getBoundingClientRect();
+              return { width: box.width, height: box.height, radius: parseFloat(getComputedStyle(item).borderTopLeftRadius), endGap: Math.round(box.right - content.right) };
+            }),
+          });
+        }
+        for (const a of animations) a.finish();
+        return out;
+      };
+      const closedBg = rgb(getComputedStyle(fab).backgroundColor);
+      fm.show();
+      const opening = await frame();
+      const openBg = rgb(getComputedStyle(fab).backgroundColor);
+      fm.hide();
+      const closing = await frame();
+      return { opening, closing, closedBg, openBg };
+    });
+    type Frame = { radius: number; bg: number[]; items: { width: number; height: number; radius: number; endGap: number }[] };
+    const frames = [...(motion.opening as Frame[]), ...(motion.closing as Frame[])];
+    const radii = frames.map((f) => f.radius);
+    // 16 → 28dp and back, with the spring's overshoot: never round-by-9999, never square
+    assert.ok(Math.min(...radii) >= 14 && Math.max(...radii) <= 30, `close button radius ${Math.min(...radii)}..${Math.max(...radii)}`);
+    // Colours stay between their endpoints (the clamped spring)
+    for (const channel of [0, 1, 2]) {
+      const low = Math.min(motion.closedBg[channel]!, motion.openBg[channel]!) - 1;
+      const high = Math.max(motion.closedBg[channel]!, motion.openBg[channel]!) + 1;
+      for (const f of frames) assert.ok(f.bg[channel]! >= low && f.bg[channel]! <= high, `colour channel ${channel}: ${f.bg[channel]} outside ${low}..${high}`);
+    }
+    // Mid-reveal, an item is a pill (radius at least half its height) with its content anchored to the end
+    const midway = (motion.opening as Frame[]).flatMap((f) => f.items).filter((item) => item.width > 20 && item.width < 100);
+    assert.ok(midway.length > 0, "no item caught mid-reveal");
+    for (const item of midway) {
+      assert.ok(item.radius >= item.height / 2, `item radius ${item.radius} at width ${item.width}`);
+      assert.equal(item.endGap, 0);
+    }
+    // The width overshoots past the content, as Compose's FastSpatial spring does
+    const finals = (motion.opening as Frame[]).at(-1)!.items.map((item) => item.width);
+    const peaks = finals.map((_, index) => Math.max(...(motion.opening as Frame[]).map((f) => f.items[index]!.width)));
+    assert.ok(peaks.every((peak, index) => peak > finals[index]! * 1.05), `width peaks ${peaks} against ${finals}`);
+    check("FAB menu: the close corner lerps to 28px, colours stay in range, items reveal as end-anchored pills with overshoot");
   }
 
   // ---------------------------------------------------------------- closed menu out of the tab order

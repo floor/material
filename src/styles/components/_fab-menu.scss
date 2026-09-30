@@ -16,6 +16,9 @@
 $component: '#{base.$prefix}-fab-menu';
 $fab: '#{base.$prefix}-fab';
 $spatial: v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial-easing');
+// Colours move on the same spring with its progress clamped, as Compose's
+// Color.lerp clamps it: an overshoot never takes a colour past its target
+$spatial-colour: v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial-clamped-easing');
 $effects: v.motion('spring-fast-effects-duration') v.motion('spring-fast-effects-easing');
 // Where spring-fast-spatial crosses half its progress: the icon swaps there
 // (the Compose sample swaps it at checkedProgress 0.5)
@@ -80,8 +83,8 @@ $swap: 48ms;
       width $spatial,
       height $spatial,
       border-radius $spatial,
-      background-color $spatial,
-      color $spatial,
+      background-color $spatial-colour,
+      color $spatial-colour,
       box-shadow $spatial;
 
     > * {
@@ -111,7 +114,11 @@ $swap: 48ms;
   &--list.#{$component}--open .#{$component}__fab {
     width: 56px;
     height: 56px;
-    border-radius: v.shape('full');
+    // Half the close button, not the full-shape token: the corner lerps from
+    // the FAB's 16/20/28dp to 28dp (Compose FabFinalCornerRadius). Towards
+    // 9999px it went round in one frame, and the spring's undershoot on
+    // closing took it below 0, a square corner (FLO-348).
+    border-radius: 28px;
     background-color: var(--#{$component}-close);
     color: var(--#{$component}-on-close);
 
@@ -149,19 +156,19 @@ $swap: 48ms;
     transition-delay: 0s;
   }
 
-  // An item: a pill, 56dp high, 24dp at each end, a 24dp icon 8dp from its
-  // title-medium label. It reveals its width from the end on FastSpatial and
-  // fades in on FastEffects, after its stagger delay.
+  // An item: a pill, 56dp high, revealed by its width from 0 to its
+  // content's, measured as the list opens (Compose animates the Row's width
+  // inside a CornerFull surface). The width moves on FastSpatial, overshoot
+  // included, and the item fades in on FastEffects, after its stagger delay.
   &__item {
     position: relative;
     display: inline-flex;
     flex-shrink: 0;
-    align-items: center;
-    gap: 8px;
+    justify-content: flex-end;
     box-sizing: border-box;
-    min-width: 56px;
+    width: 0;
     height: 56px;
-    padding: 0 24px;
+    padding: 0;
     border: none;
     border-radius: v.shape('full');
     background-color: var(--#{$component}-item);
@@ -171,15 +178,10 @@ $swap: 48ms;
     cursor: pointer;
     overflow: hidden;
     opacity: 0;
-    clip-path: inset(0 0 0 100%);
     transition:
       opacity $effects,
-      clip-path $spatial;
+      width $spatial;
     transition-delay: var(--#{$component}-delay, 0ms);
-
-    &:dir(rtl) {
-      clip-path: inset(0 100% 0 0);
-    }
 
     &:hover {
       @include m.state-layer(currentColor, 'hover');
@@ -196,9 +198,23 @@ $swap: 48ms;
     }
   }
 
+  // The content keeps its natural width, anchored to the end: while the item
+  // is narrower, the start of the label is clipped, as in Compose
+  &__item-content {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-sizing: border-box;
+    min-width: 56px;
+    height: 100%;
+    padding: 0 24px;
+  }
+
   &--open .#{$component}__item {
     opacity: 1;
-    clip-path: inset(0);
+    width: var(--#{$component}-item-width, auto);
   }
 
   &__item-icon {
@@ -219,9 +235,7 @@ $swap: 48ms;
       transition: background-color $effects, color $effects;
     }
 
-    &__item,
-    &__item:dir(rtl) {
-      clip-path: none;
+    &__item {
       transition: opacity $effects;
     }
   }

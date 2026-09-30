@@ -20,6 +20,12 @@ const value = (selector: string, property: string): string | undefined =>
     .filter((v): v is string => v !== undefined)
     .pop();
 
+/** A property of the first rule for a selector: the base rule, before any media query. */
+const base = (selector: string, property: string): string | undefined =>
+  rules(selector)
+    .map((block) => block.match(new RegExp(`(?:^|;|\\n)\\s*${property}\\s*:\\s*([^;]+);`))?.[1].trim())
+    .find((v): v is string => v !== undefined);
+
 const reduced = (): string => css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'));
 
 beforeAll(() => {
@@ -31,7 +37,10 @@ describe('fab menu stylesheet', () => {
     const open = '.mtrl-fab-menu--list.mtrl-fab-menu--open .mtrl-fab-menu__fab';
     expect(value(open, 'width')).toBe('56px');
     expect(value(open, 'height')).toBe('56px');
-    expect(value(open, 'border-radius')).toBe(corner(9999));
+    // Half the close button: the corner lerps to 28dp (FLO-348). Towards the
+    // full-shape 9999px it went round at once and, on closing, the spring's
+    // undershoot took it below 0, a square corner.
+    expect(value(open, 'border-radius')).toBe('28px');
     expect(value(open, 'background-color')).toBe('var(--mtrl-fab-menu-close)');
     expect(value(open, 'color')).toBe('var(--mtrl-fab-menu-on-close)');
     expect(value('.mtrl-fab-menu__close', 'width')).toBe('20px');
@@ -56,10 +65,11 @@ describe('fab menu stylesheet', () => {
 
   test('an item: a 56dp pill, 24dp at each end, 24dp icon 8dp from a title-medium label', () => {
     const item = '.mtrl-fab-menu__item';
+    const content = '.mtrl-fab-menu__item-content';
     expect(value(item, 'height')).toBe('56px');
-    expect(value(item, 'min-width')).toBe('56px');
-    expect(value(item, 'padding')).toBe('0 24px');
-    expect(value(item, 'gap')).toBe('8px');
+    expect(value(content, 'min-width')).toBe('56px');
+    expect(value(content, 'padding')).toBe('0 24px');
+    expect(value(content, 'gap')).toBe('8px');
     expect(value(item, 'border-radius')).toBe(corner(9999));
     expect(value(item, 'font-size')).toBe('16px');
     expect(value(item, 'font-weight')).toBe('500');
@@ -78,20 +88,38 @@ describe('fab menu stylesheet', () => {
   });
 
   test('items reveal their width on FastSpatial and fade on FastEffects, after their delay', () => {
-    const transition = value('.mtrl-fab-menu__item', 'transition') ?? '';
+    const transition = base('.mtrl-fab-menu__item', 'transition') ?? '';
     expect(transition).toContain('opacity 175ms');
-    expect(transition).toContain('clip-path 425ms');
+    expect(transition).toContain('width 425ms');
     expect(value('.mtrl-fab-menu__item', 'transition-delay')).toBe('var(--mtrl-fab-menu-delay, 0ms)');
-    expect(value('.mtrl-fab-menu__item', 'clip-path')).toBe('inset(0 0 0 100%)');
-    expect(value('.mtrl-fab-menu--open .mtrl-fab-menu__item', 'clip-path')).toBe('inset(0)');
+    // A pill at every width, its content end-anchored and clipped at the start (FLO-348)
+    expect(value('.mtrl-fab-menu__item', 'width')).toBe('0');
+    expect(value('.mtrl-fab-menu__item', 'overflow')).toBe('hidden');
+    expect(value('.mtrl-fab-menu__item', 'justify-content')).toBe('flex-end');
+    expect(value('.mtrl-fab-menu__item-content', 'flex-shrink')).toBe('0');
+    expect(value('.mtrl-fab-menu--open .mtrl-fab-menu__item', 'width')).toBe('var(--mtrl-fab-menu-item-width, auto)');
+    expect(css).not.toContain('clip-path');
   });
 
   test('reduced motion: no stagger, no movement, a fade only', () => {
     const block = reduced();
     // The shorthand resets the delay: no stagger
-    expect(block).toMatch(/\.mtrl-fab-menu__item[^{]*\{[^}]*clip-path: none;[^}]*transition: opacity 175ms[^;]*;/);
+    expect(block).toMatch(/\.mtrl-fab-menu__item\s*\{[^}]*transition: opacity 175ms[^;]*;/);
     expect(block).not.toMatch(/\.mtrl-fab-menu__item[^{]*\{[^}]*transition-delay/);
     expect(block).toMatch(/\.mtrl-fab\.mtrl-fab-menu__fab\s*\{[^}]*transition: background-color 175ms[^;]*, color 175ms[^;]*;/);
+  });
+
+  test('colours move on the clamped spring: never past their target', () => {
+    const transition = base('.mtrl-fab.mtrl-fab-menu__fab', 'transition') ?? '';
+    const easing = (property: string) => transition.split(/,\s*(?=[a-z-]+ \d)/).find((part) => part.startsWith(`${property} `)) ?? '';
+    for (const property of ['background-color', 'color']) {
+      const points = [...easing(property).matchAll(/linear\(([^)]*)\)/g)][0]?.[1].split(',').map(Number) ?? [];
+      expect(points.length).toBe(25);
+      expect(Math.max(...points)).toBeLessThanOrEqual(1);
+    }
+    // Size and corner keep the spring's overshoot, as Compose's Dp lerp does
+    const width = [...easing('width').matchAll(/linear\(([^)]*)\)/g)][0]?.[1].split(',').map(Number) ?? [];
+    expect(Math.max(...width)).toBeCloseTo(1.094, 3);
   });
 
   test('the menu presentation shows no list', () => {

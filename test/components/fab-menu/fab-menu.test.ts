@@ -274,6 +274,19 @@ describe("fab menu stagger", () => {
     expect(m.list.style.getPropertyValue("--mtrl-fab-menu-exit")).toBe(`${81 + 425}ms`);
   });
 
+  test("opening measures each item's width to reveal, from its content (FLO-348)", () => {
+    const m = make();
+    const widths = [120, 161, 135];
+    items(m).forEach((item, index) => {
+      const content = item.querySelector(".mtrl-fab-menu__item-content") as HTMLElement;
+      expect(content.parentElement).toBe(item);
+      expect(content.querySelector(".mtrl-fab-menu__item-text")).not.toBeNull();
+      Object.defineProperty(content, "offsetWidth", { value: widths[index], configurable: true });
+    });
+    m.open();
+    expect(items(m).map((el) => el.style.getPropertyValue("--mtrl-fab-menu-item-width"))).toEqual(["120px", "161px", "135px"]);
+  });
+
   test("under reduced motion there is no stagger", () => {
     setMedia((query) => query.includes("prefers-reduced-motion"));
     const m = make();
@@ -375,7 +388,8 @@ describe("fab menu presentation", () => {
   test("without a menu of its own, the baseline menu is loaded and opens top-end", async () => {
     const m = make({ presentation: "menu" });
     m.open(new dom.window.MouseEvent("click", { detail: 1 }));
-    for (let i = 0; i < 20 && !m.isOpen(); i++) await new Promise((r) => setTimeout(r, 10));
+    // The chunk's first import can take a while in a busy run: wait up to 2s
+    for (let i = 0; i < 200 && !m.isOpen(); i++) await new Promise((r) => setTimeout(r, 10));
     expect(m.isOpen()).toBe(true);
     const surface = document.querySelector(".mtrl-menu") as HTMLElement;
     expect(surface).not.toBeNull();
