@@ -12,6 +12,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Switch: `setError()` and `isError()` (FLO-318).** The switch's error state (its class and
+  `aria-invalid`) now has one owner, as the text field's does.
+
 - **M3's fixed colour roles, in every theme (FLO-315).** `primary-fixed`, `primary-fixed-dim`,
   `on-primary-fixed`, `on-primary-fixed-variant`, and the same four for `secondary` and
   `tertiary`: the accents that stay the same in light and dark. Baseline takes Compose's
@@ -160,6 +163,18 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   but reported 150 in `aria-valuenow`, the label, `getValue()` and `change`; and a value past the
   range at creation was stored as given. The value is clamped to 0…max once, and that value is
   the one drawn, announced, labelled and emitted.
+
+- **`<m-switch>`: `error` updates, and supporting text no longer ends the error (FLO-318).** The
+  `error` attribute had no update, so setting or removing it after creation did nothing; and
+  `setSupportingText()` / `removeSupportingText()` set the error state themselves, so changing
+  the text ended an error the switch was still in. `setError()` owns it now;
+  `setSupportingText(text, true)` colours the text only, and a helper on screen follows the
+  switch's error state.
+- **Extended FAB: `collapse` and `expand` reach `on()`, `<m-extended-fab>` and the adapters
+  (FLO-319).** They were only DOM events on the inner element, without `composed`, so they never
+  left the element's shadow root and the emitter never had them. They now also go through the
+  emitter (`ExtendedFabEvents` types them), the element re-dispatches them from the host, and
+  the adapters get `onCollapse` / `onExpand`.
 
 - **Checkbox and switch: Space (and Enter, with `enterToggles`) activate the control as a click
   does (FLO-316).** The key handler set `checked` by hand, so on a checkbox in the mixed state it

@@ -101,6 +101,16 @@ export const withAPI =
       return this;
     },
 
+    // The error state, owned here alone (FLO-318)
+    setError(error: boolean): SwitchComponent {
+      component.setError?.(error);
+      return this;
+    },
+
+    isError(): boolean {
+      return component.isError?.() ?? false;
+    },
+
     // Event handling
     on<K extends keyof SwitchEvents>(event: K, handler: SwitchEvents[K]): SwitchComponent {
       component.on?.(event, handler);

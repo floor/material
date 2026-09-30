@@ -203,6 +203,38 @@ try {
     assert.equal(disabled, true);
     check("switch: the disabled attribute disables the inner input");
 
+    // FLO-318: error updates through setError; supporting text never ends it
+    const errors = await page.evaluate(() => {
+      const s = document.getElementById("s") as HTMLElement & { component: { isError: () => boolean } };
+      s.removeAttribute("disabled");
+      const state = () => {
+        const input = s.shadowRoot?.querySelector("input") as HTMLInputElement;
+        const root = s.shadowRoot?.querySelector('[class*="mtrl-switch"]') as HTMLElement;
+        return [s.component.isError(), root.className.includes("switch--error"), input.getAttribute("aria-invalid")];
+      };
+      const out: unknown[] = [state()];
+      s.setAttribute("error", "");
+      out.push(state());
+      s.setAttribute("supporting-text", "Offline");
+      out.push(state());
+      s.setAttribute("supporting-text", "Still offline");
+      out.push(state());
+      s.removeAttribute("supporting-text");
+      out.push(state());
+      s.removeAttribute("error");
+      out.push(state());
+      return out;
+    });
+    assert.deepEqual(errors, [
+      [false, false, null],
+      [true, true, "true"],
+      [true, true, "true"],
+      [true, true, "true"],
+      [true, true, "true"],
+      [false, false, null],
+    ]);
+    check("switch: the error attribute sets and clears the error; changing or removing supporting-text keeps it");
+
     // Same look as the factory in light DOM with the full stylesheet.
     const parity = await page.evaluate(() => {
       const w = window as unknown as Win & { mtrl: { createSwitch: (c: object) => { element: HTMLElement } } };
@@ -456,6 +488,18 @@ try {
     });
     assert.equal(clicks, 1);
     check("extended fab: a click reaches the host once, not re-dispatched");
+
+    // FLO-319: collapse and expand leave the shadow root, from the host, once each
+    const toggles = await page.evaluate(() => {
+      const eb = document.getElementById("eb") as HTMLElement & { collapse: () => void; expand: () => void };
+      const seen: string[] = [];
+      for (const type of ["collapse", "expand"]) eb.addEventListener(type, (e) => seen.push(`${type}:${(e.target as Element).id}`));
+      eb.collapse();
+      eb.expand();
+      return seen;
+    });
+    assert.deepEqual(toggles, ["collapse:eb", "expand:eb"]);
+    check("extended fab: collapse and expand are dispatched from the host, once each");
 
     const parity = await page.evaluate(() => {
       const w = window as unknown as Win & { mtrl: { createExtendedFab: (c: object) => { element: HTMLElement } } };
