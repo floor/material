@@ -227,7 +227,7 @@ const button = createButton({
 });
 ```
 
-Button progress and card actions load on demand; enable code splitting in your build to keep them out of the initial chunk.
+Some parts load on demand: a button's progress indicator, a card's action buttons, a menu's submenus and the FAB menu's desktop menu. Enable code splitting in your build to keep them out of the initial chunk.
 
 ## Building your own components
 
@@ -235,17 +235,8 @@ Components are composed from small features with `pipe`. The same building block
 
 ```typescript
 import { pipe, createBase, withEvents, withElement } from 'mtrl/core/compose';
-import type { ElementComponent } from 'mtrl/core/compose';
 
-interface NoteConfig {
-  text?: string;
-}
-
-interface NoteComponent extends ElementComponent {
-  setText: (text: string) => NoteComponent;
-}
-
-const createNote = (config: NoteConfig): NoteComponent =>
+const createNote = (config: { text?: string } = {}) =>
   pipe(
     createBase,
     withEvents(),
@@ -254,10 +245,16 @@ const createNote = (config: NoteConfig): NoteComponent =>
       ...component,
       setText(text: string) {
         component.element.textContent = text;
-        return this;
       },
     })
   )(config);
+
+// The component's type is what the pipe builds
+type NoteComponent = ReturnType<typeof createNote>;
+
+const note: NoteComponent = createNote();
+note.setText('Saved');
+document.body.append(note.element);
 ```
 
 The element gets the `mtrl-note` class, `withEvents` adds `on`, `off` and `emit`, and `destroy()` removes the element. Add `withLifecycle()` from `mtrl/core/compose/features` when features need to register cleanup.
