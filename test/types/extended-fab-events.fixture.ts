@@ -14,7 +14,7 @@ const fab = createExtendedFab({ text: "Create" });
 
 export const exactlyTheForwardedEvents: Equals<
   keyof ExtendedFabEvents,
-  "click" | "focus" | "blur"
+  "click" | "focus" | "blur" | "collapse" | "expand"
 > = true;
 
 export const clickPayload: Equals<
@@ -52,11 +52,11 @@ fab.off("click", (event: MouseEvent) => event.preventDefault());
 // @ts-expect-error focus does not forward a keyboard event
 fab.on("focus", (_payload: ForwardedEventPayload<KeyboardEvent, HTMLButtonElement>) => {});
 
-// Collapse/expand are DOM events, not forwarded emitter events.
-// @ts-expect-error listen through element.addEventListener instead
+// Collapse and expand reach the emitter too (FLO-319).
 fab.on("collapse", () => {});
-// @ts-expect-error listen through element.addEventListener instead
 fab.on("expand", () => {});
+// @ts-expect-error collapse carries no payload
+fab.on("collapse", (payload: { collapsed: boolean }) => payload.collapsed);
 // @ts-expect-error lifecycle events belong to the lifecycle API
 fab.on("mount", () => {});
 

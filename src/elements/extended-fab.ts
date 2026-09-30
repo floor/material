@@ -38,6 +38,11 @@ const extendedFabSpec = {
     "aria-label": { type: "string", config: "ariaLabel" },
   },
   methods: ["lower", "raise", "collapse", "expand"] as const,
+  // Re-dispatched from the host, so pages and the adapters see them (FLO-319)
+  events: {
+    collapse: { detail: () => null },
+    expand: { detail: () => null },
+  },
   slot: {
     attribute: "label" as const,
     config: "text",

@@ -23,11 +23,12 @@ const switchSpec = {
     required: { type: "boolean", config: "required" },
     value: { type: "string", config: "value", update: (c, v) => void c.setValueAttribute(String(v ?? "")) },
     icon: { type: "string", config: "icon" },
-    error: { type: "boolean", config: "error" },
+    // The error state has one owner, setError; the text only takes its colour (FLO-318)
+    error: { type: "boolean", config: "error", update: (c, v) => void c.setError(!!v) },
     "supporting-text": {
       type: "string",
       config: "supportingText",
-      update: (c, v) => void (v ? c.setSupportingText(String(v)) : c.removeSupportingText()),
+      update: (c, v) => void (v ? c.setSupportingText(String(v), c.isError()) : c.removeSupportingText()),
     },
   },
   properties: {

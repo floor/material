@@ -3,7 +3,7 @@
 import * as React from "react";
 import {
   Button, Checkbox, List, ListItem, NavigationRail, NavigationRailItem, Progress, Radio, Radios, Slider, Switch, Tab, Tabs,
-  Textfield,
+  Textfield, ExtendedFab,
 } from "../../dist/react/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 import { Chip, Chips } from "../../dist/react/index.js";
@@ -49,6 +49,7 @@ export const App = (): React.ReactElement => {
   const [pet, setPet] = React.useState<string | null>("cat");
   const [dialog, setDialog] = React.useState(false);
   const [rail, setRail] = React.useState(false);
+  const [fab, setFab] = React.useState("expanded");
   const [due, setDue] = React.useState("2026-09-10");
   const [query, setQuery] = React.useState("ap");
   const switchRef = React.useRef<SwitchElement | null>(null);
@@ -155,6 +156,9 @@ export const App = (): React.ReactElement => {
       h(NavigationRailItem, { value: "sent", icon: ICON }, "Sent")
     ),
     h("output", { id: "rail" }, String(rail)),
+    // FLO-319: collapse and expand reach the adapter's handlers
+    h(ExtendedFab, { id: "xf", icon: ICON, onCollapse: () => setFab("collapsed"), onExpand: () => setFab("expanded") }, "Compose"),
+    h("output", { id: "fab" }, fab),
     h(Datepicker, { id: "dt", variant: "modal", label: "Due", value: due, onChange: (e) => setDue(e.detail.value) }),
     h("output", { id: "due" }, due),
     // Controlled, its suggestions replaced as the query changes

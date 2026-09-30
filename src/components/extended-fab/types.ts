@@ -428,6 +428,10 @@ export interface ExtendedFabEvents {
   focus: (payload: ForwardedEventPayload<FocusEvent, HTMLButtonElement>) => void;
   /** The button lost focus. */
   blur: (payload: ForwardedEventPayload<FocusEvent, HTMLButtonElement>) => void;
+  /** `collapse()` ran, by call or on scroll (FLO-319) */
+  collapse: () => void;
+  /** `expand()` ran, by call or on scroll (FLO-319) */
+  expand: () => void;
 }
 
 /**
@@ -749,8 +753,8 @@ export interface ExtendedFabComponent {
    *   console.log('Extended FAB clicked');
    * });
    *
-   * // Collapse is dispatched on the DOM element, not the component emitter
-   * fab.element.addEventListener('collapse', () => {
+   * // Collapse and expand reach both the emitter and the DOM element
+   * fab.on('collapse', () => {
    *   console.log('Extended FAB collapsed');
    * });
    * ```

@@ -58,6 +58,9 @@ interface ComponentWithElements
   
   /** Unsubscribes from an event; the API returns the component itself */
   off: (event: string, handler: EventCallback) => unknown;
+
+  /** Emits an event to the component's subscribers */
+  emit?: (event: string, data?: unknown) => unknown;
   
   /** Adds CSS classes; the API returns the component itself */
   addClass: (...classes: string[]) => unknown;
@@ -183,6 +186,9 @@ export const withAPI = ({ disabled, lifecycle, text, className }: ApiOptions) =>
         cancelable: true 
       });
       component.element.dispatchEvent(event);
+      // And through the emitter, which `on()` and <m-extended-fab> listen to:
+      // the DOM event alone never left the element's shadow root (FLO-319)
+      component.emit?.('collapse');
       
       return this;
     },
@@ -196,6 +202,7 @@ export const withAPI = ({ disabled, lifecycle, text, className }: ApiOptions) =>
         cancelable: true 
       });
       component.element.dispatchEvent(event);
+      component.emit?.('expand');
       
       return this;
     },
