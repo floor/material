@@ -90,8 +90,12 @@ describe('menu stylesheet', () => {
     expect(value('.mtrl-menu', 'transform')).toBe('scaleY(0)');
     expect(value('.mtrl-menu--visible', 'transform')).toBe('scaleY(1)');
     // one transition for both directions
-    expect(value('.mtrl-menu', 'transition')).toBe('transform 250ms cubic-bezier(0.3, 0, 0, 1), opacity 250ms cubic-bezier(0.3, 0, 0, 1)');
+    expect(value('.mtrl-menu', 'transition')).toBe('transform 250ms cubic-bezier(0.3, 0, 0, 1), opacity 250ms cubic-bezier(0.3, 0, 0, 1), visibility 250ms');
     expect(value('.mtrl-menu--visible', 'transition')).toBeUndefined();
+    // Closed, out of the tab order and the accessibility tree; the transition
+    // keeps it visible while it moves (FLO-304)
+    expect(value('.mtrl-menu', 'visibility')).toBe('hidden');
+    expect(value('.mtrl-menu--visible', 'visibility')).toBe('visible');
     expect(css).not.toContain('!important');
     expect(css).toMatch(/prefers-reduced-motion: reduce\)\s*\{[\s\S]{0,300}?transform: none;/);
   });

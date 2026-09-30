@@ -4665,6 +4665,26 @@ try {
     }
   }
 
+  // ---------------------------------------------------------------- closed menu out of the tab order
+  // <m-menu> keeps its closed menu in its shadow root; its first item was a
+  // tab stop there, so Tab stopped inside a menu nobody could see.
+  await fresh(
+    page,
+    `<div class="stage"><button id="m-before">Before</button><m-menu><m-menu-item value="a">Align</m-menu-item></m-menu><button id="m-after">After</button></div>`
+  );
+  {
+    await page.evaluate(() => new Promise((r) => setTimeout(r, 100)));
+    await page.focus("#m-before");
+    await page.keyboard.press("Tab");
+    assert.equal(await page.evaluate(() => document.activeElement?.id), "m-after");
+    const hidden = await page.evaluate(() => {
+      const surface = document.querySelector("m-menu")?.shadowRoot?.querySelector(".mtrl-menu") as HTMLElement;
+      return getComputedStyle(surface).visibility;
+    });
+    assert.equal(hidden, "hidden");
+    check("menu: a closed <m-menu> is not a tab stop, and is hidden from assistive technology");
+  }
+
   // ---------------------------------------------------------------- menus: menu, select, split button
   // The menu family's elements open their surface in the top layer, inside
   // their own shadow root: styled by the adopted CSS, above a z-index 9999

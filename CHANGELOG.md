@@ -329,6 +329,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **A closed `<m-menu>` is out of the tab order (FLO-304).** The element keeps its closed menu in
+  its shadow root, where the first item kept `tabindex="0"`: Tab stopped inside a menu nobody
+  could see. A closed menu is now `visibility: hidden`, which also takes it out of the
+  accessibility tree. A transition keeps it visible while it opens and closes.
 - **Menu and select: a long list stays in the viewport (FLO-272).** A select with a few hundred
   options ran past the bottom of the screen: a menu mounted in its field (the select's default)
   skipped the viewport checks, and one flipped above its anchor kept its full height and was
