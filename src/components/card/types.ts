@@ -1,5 +1,6 @@
 // src/components/card/types.ts
 import type { ButtonConfig as BaseButtonConfig } from "../button/types";
+import type { ForwardedEventPayload } from "../../core/dom";
 
 /**
  * Card variant types following Material Design 3 guidelines.
@@ -300,6 +301,22 @@ export interface CardComponentConfig extends CardSchema {
 }
 
 /**
+ * The card's events (FLO-323). A clickable card forwards `click`; an
+ * interactive one `mouseenter`, `mouseleave`, `keydown`, `focus` and `blur`;
+ * a draggable one emits `dragstart` and `dragend`.
+ */
+export interface CardEvents {
+  click: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
+  mouseenter: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
+  mouseleave: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
+  keydown: (payload: ForwardedEventPayload<KeyboardEvent, HTMLElement>) => void;
+  focus: (payload: ForwardedEventPayload<FocusEvent, HTMLElement>) => void;
+  blur: (payload: ForwardedEventPayload<FocusEvent, HTMLElement>) => void;
+  dragstart: (payload: { event: DragEvent }) => void;
+  dragend: (payload: { event: DragEvent }) => void;
+}
+
+/**
  * Card component interface with methods.
  * This is the public API of the card component that users interact with.
  * 
@@ -308,6 +325,12 @@ export interface CardComponentConfig extends CardSchema {
  * @category Components
  */
 export interface CardComponent extends BaseComponent {
+  /** Subscribes to one of the card's events (FLO-323) */
+  on: <K extends keyof CardEvents>(event: K, handler: CardEvents[K]) => CardComponent;
+
+  /** Removes a handler added with `on` */
+  off: <K extends keyof CardEvents>(event: K, handler: CardEvents[K]) => CardComponent;
+
   /**
    * Adds content to the card.
    * This method appends content to the card component.

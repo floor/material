@@ -1,5 +1,6 @@
 // src/components/card/api.ts
-import { BaseComponent, CardComponent, ApiOptions } from './types';
+import { BaseComponent, CardComponent, ApiOptions, CardEvents } from './types';
+import type { EventCallback } from '../../core/state/emitter';
 
 /**
  * Enhances a card component with API methods.
@@ -17,12 +18,27 @@ import { BaseComponent, CardComponent, ApiOptions } from './types';
  */
 type ComponentWithElements = Omit<BaseComponent, 'config' | 'addClass'> & {
   addClass: (...classes: string[]) => unknown;
+  /** From withEvents in the card's pipe */
+  on: (event: string, handler: EventCallback) => unknown;
+  off: (event: string, handler: EventCallback) => unknown;
 };
 
 export const withAPI = ({ lifecycle, config }: ApiOptions) => (component: ComponentWithElements): CardComponent => ({
   ...component,
   element: component.element,
   config,
+
+  // The events the card emits, typed (FLO-323): withEvents gave the card
+  // on/off, which the public type never declared
+  on<K extends keyof CardEvents>(event: K, handler: CardEvents[K]): CardComponent {
+    component.on(event, handler);
+    return this;
+  },
+
+  off<K extends keyof CardEvents>(event: K, handler: CardEvents[K]): CardComponent {
+    component.off(event, handler);
+    return this;
+  },
 
   /**
    * Adds content to the card.

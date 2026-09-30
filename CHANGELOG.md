@@ -12,6 +12,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Card: typed `on` / `off` and `CardEvents` (FLO-323).** The card always emitted `click`
+  (clickable), `mouseenter`, `mouseleave`, `keydown`, `focus`, `blur` (interactive), `dragstart`
+  and `dragend` (draggable), but its type declared no `on`, so TypeScript couldn't listen to them.
+- **Time picker: `format`, `type` and `orientation` take their string values (FLO-323).**
+  `format: '24h'`, `type: 'input'`, `orientation: 'horizontal'` and the setters' string forms
+  type-check, as every other component's options do; the enums still work, and the getters
+  still return them (`TimeFormat`, `TimePickerType`, `TimePickerOrientation`).
+
 - **Switch: `setError()` and `isError()` (FLO-318).** The switch's error state (its class and
   `aria-invalid`) now has one owner, as the text field's does.
 
@@ -164,6 +172,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   range at creation was stored as given. The value is clamped to 0…max once, and that value is
   the one drawn, announced, labelled and emitted.
 
+- **Dead declarations removed (FLO-323).** The card wrote a `--mtrl-card-elevation` property on
+  hover, drag and creation that no stylesheet read; elevation comes from the card's classes, so
+  the writes and the unread default are gone. The bottom app bar's corners referenced an
+  undefined `--mtrl-sys-shape-medium` (they rendered square, which is M3's); the declarations
+  are gone.
+
 - **`<m-switch>`: `error` updates, and supporting text no longer ends the error (FLO-318).** The
   `error` attribute had no update, so setting or removing it after creation did nothing; and
   `setSupportingText()` / `removeSupportingText()` set the error state themselves, so changing
@@ -230,6 +244,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   no longer carry unprefixed `progress progress--linear` copies of their classes.
 
 ### Deprecated
+
+- **Card: `withElevation` (FLO-323).** It only wrote the unread `--mtrl-card-elevation`; it is a
+  no-op now, and the card no longer composes it. Removed in 1.0.
 
 - **Themes `material`, `winter`, `browngreen` and `legacy` (FLO-308).** Still importable and in
   the full stylesheet in 0.10, removed in 1.0. Use `baseline` for `material` (which never matched

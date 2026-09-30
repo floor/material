@@ -1,6 +1,6 @@
 // src/components/timepicker/dial.ts
 
-import { TIME_FORMAT, TimeValue } from "./types";
+import { TIME_FORMAT, TimeValue, type TimeFormat } from "./types";
 import { activeElementOf } from "../../core/dom/focus";
 
 /** Which part of the time the dial is setting. */
@@ -8,7 +8,7 @@ export type DialSelector = "hour" | "minute" | "second";
 
 export interface DialOptions {
   prefix: string;
-  format: TIME_FORMAT;
+  format: TimeFormat;
   /**
    * A value picked on the dial. `final` is false while a pointer drags and true
    * when it is released or a key selects; `pointer` says which it was.
@@ -40,7 +40,7 @@ interface DialItem {
   radius: number;
 }
 
-const itemsFor = (selector: DialSelector, format: TIME_FORMAT): DialItem[] => {
+const itemsFor = (selector: DialSelector, format: TimeFormat): DialItem[] => {
   if (selector !== "hour") {
     return Array.from({ length: 12 }, (_, i) => ({ value: i * 5, text: String(i * 5).padStart(2, "0"), angle: i * 30, radius: OUTER }));
   }
@@ -53,13 +53,13 @@ const itemsFor = (selector: DialSelector, format: TIME_FORMAT): DialItem[] => {
 };
 
 /** The value a time shows on the dial, in the dial's own terms. */
-const dialValue = (time: TimeValue, selector: DialSelector, format: TIME_FORMAT): number =>
+const dialValue = (time: TimeValue, selector: DialSelector, format: TimeFormat): number =>
   selector === "minute" ? time.minutes
   : selector === "second" ? time.seconds ?? 0
   : format === TIME_FORMAT.MILITARY ? time.hours : time.hours % 12 || 12;
 
 /** How a value on the dial is named: "9 o'clock", "20 hours", "15 minutes". */
-export const nameFor = (selector: DialSelector, format: TIME_FORMAT, value: number): string =>
+export const nameFor = (selector: DialSelector, format: TimeFormat, value: number): string =>
   selector === "minute" ? `${value} minutes`
   : selector === "second" ? `${value} seconds`
   : format === TIME_FORMAT.MILITARY ? `${value} hours` : `${value} o'clock`;

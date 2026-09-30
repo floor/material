@@ -256,25 +256,6 @@ export const withInteractiveBehavior = <C extends ElementComponent & EventCompon
 
   // Implement MD3 elevation changes for interactive cards
   if (isInteractive) {
-    // Mouse interactions
-    comp.element.addEventListener("mouseenter", () => {
-      if (config.variant === CARD_VARIANTS.ELEVATED) {
-        comp.element.style.setProperty(
-          `--${config.prefix}-card-elevation`,
-          String(CARD_ELEVATION_LEVELS.LEVEL2)
-        );
-      }
-    });
-
-    comp.element.addEventListener("mouseleave", () => {
-      if (config.variant === CARD_VARIANTS.ELEVATED) {
-        comp.element.style.setProperty(
-          `--${config.prefix}-card-elevation`,
-          String(CARD_ELEVATION_LEVELS.LEVEL1)
-        );
-      }
-    });
-
     // Keyboard interactions for accessibility
     comp.element.addEventListener("keydown", (e: KeyboardEvent) => {
       // Activate on Enter or Space
@@ -298,11 +279,10 @@ export const withInteractiveBehavior = <C extends ElementComponent & EventCompon
   if (config.draggable) {
     comp.element.setAttribute("draggable", "true");
 
+    // Elevation follows the classes in the stylesheet (hover, --dragging);
+    // the --card-elevation property these handlers wrote was read by nothing
+    // (FLO-323)
     comp.element.addEventListener("dragstart", (e: DragEvent) => {
-      comp.element.style.setProperty(
-        `--${config.prefix}-card-elevation`,
-        String(CARD_ELEVATION_LEVELS.LEVEL4)
-      );
       comp.element.classList.add(`${comp.getClass("card")}--dragging`);
       comp.emit?.("dragstart", { event: e });
 
@@ -317,10 +297,6 @@ export const withInteractiveBehavior = <C extends ElementComponent & EventCompon
     });
 
     comp.element.addEventListener("dragend", (e: DragEvent) => {
-      comp.element.style.setProperty(
-        `--${config.prefix}-card-elevation`,
-        String(CARD_ELEVATION_LEVELS.LEVEL1)
-      );
       comp.element.classList.remove(`${comp.getClass("card")}--dragging`);
       comp.emit?.("dragend", { event: e });
     });

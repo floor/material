@@ -67,6 +67,13 @@ export enum TIME_FORMAT {
   MILITARY = '24h'
 }
 
+/** A time format as the enum or its string value, `'12h'` or `'24h'` (FLO-323) */
+export type TimeFormat = TIME_FORMAT | `${TIME_FORMAT}`;
+/** A time picker type as the enum or its string value, `'dial'` or `'input'` */
+export type TimePickerType = TIME_PICKER_TYPE | `${TIME_PICKER_TYPE}`;
+/** An orientation as the enum or its string value, `'vertical'` or `'horizontal'` */
+export type TimePickerOrientation = TIME_PICKER_ORIENTATION | `${TIME_PICKER_ORIENTATION}`;
+
 /**
  * Period of day for 12-hour format
  * @enum {string}
@@ -101,19 +108,20 @@ export interface TimePickerConfig {
    * Type of time picker to display
    * @default TIME_PICKER_TYPE.DIAL
    */
-  type?: TIME_PICKER_TYPE;
+  // The enum or its string value, as the other components take theirs (FLO-323)
+  type?: TimePickerType;
 
   /**
    * Time format to use (12h or 24h)
    * @default TIME_FORMAT.AMPM
    */
-  format?: TIME_FORMAT;
+  format?: TimeFormat;
 
   /**
    * Layout orientation for the time picker
    * @default TIME_PICKER_ORIENTATION.VERTICAL
    */
-  orientation?: TIME_PICKER_ORIENTATION;
+  orientation?: TimePickerOrientation;
 
   /**
    * Title text for the time picker
@@ -360,7 +368,7 @@ export interface TimePickerComponent {
    * @param type - Time picker type
    * @returns The time picker component for chaining
    */
-  setType: (type: TIME_PICKER_TYPE) => TimePickerComponent;
+  setType: (type: TimePickerType) => TimePickerComponent;
 
   /**
    * Gets the current time picker type
@@ -373,7 +381,7 @@ export interface TimePickerComponent {
    * @param format - Time format
    * @returns The time picker component for chaining
    */
-  setFormat: (format: TIME_FORMAT) => TimePickerComponent;
+  setFormat: (format: TimeFormat) => TimePickerComponent;
 
   /**
    * Gets the current time format
@@ -386,7 +394,7 @@ export interface TimePickerComponent {
    * @param orientation - Time picker orientation
    * @returns The time picker component for chaining
    */
-  setOrientation: (orientation: TIME_PICKER_ORIENTATION) => TimePickerComponent;
+  setOrientation: (orientation: TimePickerOrientation) => TimePickerComponent;
 
   /**
    * Gets the current time picker orientation

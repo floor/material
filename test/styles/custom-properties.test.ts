@@ -31,7 +31,7 @@ for (const prefix of ['mtrl', 'custom']) {
     expect(css).toContain(`outline: 2px solid var(--${prefix}-sys-color-primary)`);
     expect(names).not.toContain(`--${prefix}-primary-color`);
     expect(names.filter(name => !name.startsWith(`--${prefix}-`))).toEqual([]);
-    for (const name of ['button-group-height', 'drawer-width', 'card-elevation', 'extended-fab-height', 'segmented-button-height', 'chip-checkmark-color', 'list-item-offset', 'carousel-corner', 'slider-color']) {
+    for (const name of ['button-group-height', 'drawer-width', 'extended-fab-height', 'segmented-button-height', 'chip-checkmark-color', 'list-item-offset', 'carousel-corner', 'slider-color']) {
       expect(names).toContain(`--${prefix}-${name}`);
     }
   });
