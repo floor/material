@@ -289,6 +289,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Text field: no computed-style read per field, and one layout pass for many (FLO-335).** Each
+  field started a timer that read `getComputedStyle(input)` to guess an autofill from its
+  background colour, a forced style recalculation per field. The stylesheet already runs an
+  `onAutoFillStart` animation on `:-webkit-autofill`, which the input listens for; it now runs on
+  `:autofill` too, and the check reads the `:autofill` state, not styles, so the timer is gone.
+  The label still floats on autofill (the stylesheet's `:has(:autofill)`). The placement of the
+  outlined notch and of prefix and suffix is batched: fields scheduled together are all measured,
+  then all written, instead of one forced layout each.
+
 - **Svelte: callbacks are not snippets (FLO-334).** Any function prop but `children` and a
   lower-case `on…` was rendered as a named snippet, so `onClick`, `onChange` or a callback in a
   spread object was called during render. Only a prop named after a slot the element declares is
