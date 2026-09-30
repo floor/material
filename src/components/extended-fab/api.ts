@@ -202,12 +202,12 @@ export const withAPI = ({ disabled, lifecycle, text, className }: ApiOptions) =>
     
     // Event methods
     on<K extends keyof ExtendedFabEvents>(event: K, handler: ExtendedFabEvents[K]) {
-      component.on(event, handler as EventCallback);
+      component.on(event, handler);
       return this;
     },
     
     off<K extends keyof ExtendedFabEvents>(event: K, handler: ExtendedFabEvents[K]) {
-      component.off(event, handler as EventCallback);
+      component.off(event, handler);
       return this;
     },
     
