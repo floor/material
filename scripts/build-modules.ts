@@ -55,7 +55,10 @@ export function buildModules(outdir: string) {
     for (const edit of edits.sort((a, b) => b.start - a.start)) {
       text = text.slice(0, edit.start) + edit.value + text.slice(edit.end);
     }
-    if (filename.endsWith(".js")) {
+    // The printer drops every comment, `/*#__PURE__*/` too, and bundlers need
+    // it to drop an unused adapter component (FLO-327): a module carrying one
+    // keeps the compiler's output, which is only the generated header there.
+    if (filename.endsWith(".js") && !text.includes("#__PURE__")) {
       // Avoid shipping API prose twice while keeping ESM readable for debugging.
       text = ts.createPrinter({ removeComments: true }).printFile(
         ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true),
