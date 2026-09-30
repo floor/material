@@ -10,6 +10,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Fixed
+
+- **Keyboard fixes in tabs and chips**, found while moving them onto `createRoving` (FLO-343, not
+  merged):
+  - The arrows skip a tab marked `aria-disabled`, as they skip a disabled one.
+  - In a right-to-left page, the arrows follow the reading direction inside `<m-chips>`: the
+    chips read the direction with `:dir(rtl)`, which crosses the shadow root, where
+    `closest("[dir]")` did not.
+  - `keyboard.disable()` on a chip set stops the arrows. The set's own listener kept handling them.
+
 ## [0.10.1] - 2026-10-01
 
 The first patch after 0.10.0: the FAB menu's open and close motion now follows Compose, its

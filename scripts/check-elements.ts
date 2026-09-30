@@ -4989,6 +4989,36 @@ try {
     check("FAB menu: the close corner lerps to 28px, colours stay in range, items reveal as end-anchored pills with overshoot");
   }
 
+  // ---------------------------------------------------------------- chips right to left (FLO-343 follow-up)
+  // <m-chips> renders its chips in a shadow root: a `dir="rtl"` above the host
+  // reverses Left and Right there too, which closest("[dir]") did not see.
+  await fresh(
+    page,
+    `<div class="stage" dir="rtl"><m-chips id="rtl-chips" aria-label="Filters">
+       <m-chip value="a">Alpha</m-chip><m-chip value="b">Beta</m-chip><m-chip value="c">Gamma</m-chip>
+     </m-chips></div>`
+  );
+  {
+    const deep = (): Promise<string> =>
+      page.evaluate(() => {
+        let active: Element | null = document.activeElement;
+        while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+        return (active?.textContent ?? "").trim();
+      });
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+    await page.keyboard.press("Tab");
+    await page.evaluate(() => {
+      const host = document.getElementById("rtl-chips") as HTMLElement;
+      (host.shadowRoot?.querySelector('[tabindex="0"]') as HTMLElement | null)?.focus();
+    });
+    assert.match(await deep(), /Alpha/);
+    await page.keyboard.press("ArrowLeft");
+    assert.match(await deep(), /Beta/, "right to left, ArrowLeft moves to the next chip");
+    await page.keyboard.press("ArrowRight");
+    assert.match(await deep(), /Alpha/);
+    check("chips: in a right-to-left page, the arrows follow the reading direction inside <m-chips>");
+  }
+
   // ---------------------------------------------------------------- closed menu out of the tab order
   // <m-menu> keeps its closed menu in its shadow root; its first item was a
   // tab stop there, so Tab stopped inside a menu nobody could see.

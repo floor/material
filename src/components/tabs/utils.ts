@@ -141,6 +141,10 @@ export function updateTabPanels(component: TabsHost): void {
   }
 }
 
+/** A tab the arrows reach: not disabled natively, nor by aria-disabled (FLO-119). */
+const isEnabledTab = (tab: TabComponent): boolean =>
+  !(tab.element as HTMLButtonElement).disabled && tab.element.getAttribute("aria-disabled") !== "true";
+
 /**
  * Gives the tablist a single tab stop: the active tab, or the first enabled
  * one when none is active. Every other tab takes tabindex -1 and is reached
@@ -150,7 +154,7 @@ export function updateTabPanels(component: TabsHost): void {
 export function syncTabStops(component: TabsHost): void {
   if (typeof component.getTabs !== "function") return;
   const tabs = component.getTabs();
-  const enabled = tabs.filter((tab) => !(tab.element as HTMLButtonElement).disabled);
+  const enabled = tabs.filter(isEnabledTab);
   const active = getActiveTab(component);
   const stop = active && enabled.includes(active) ? active : enabled[0];
   tabs.forEach((tab) => tab.element.setAttribute("tabindex", tab === stop ? "0" : "-1"));
@@ -192,7 +196,7 @@ export function setupKeyboardNavigation(
     // Disabled tabs are skipped rather than focused
     const tabs = component
       .getTabs()
-      .filter((tab) => !(tab.element as HTMLButtonElement).disabled);
+      .filter(isEnabledTab);
     const currentIndex = tabs.findIndex((tab) => tab.element === tabElement);
     if (currentIndex === -1) return;
 

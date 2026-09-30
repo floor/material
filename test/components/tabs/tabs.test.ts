@@ -351,6 +351,16 @@ describe('tabs keyboard', () => {
     expect(tabs.getActiveTab()?.getValue()).toBe('flights');
   });
 
+  // Found by the FLO-343 migration: a tab marked aria-disabled was focused
+  test('an aria-disabled tab is skipped like a disabled one', () => {
+    const tabs = mount({ tabs: FOUR() });
+    byValue(tabs, 'trips').element.setAttribute('aria-disabled', 'true');
+    const flights = byValue(tabs, 'flights').element;
+    flights.focus();
+    key(flights, 'ArrowRight');
+    expect(document.activeElement).toBe(byValue(tabs, 'hotels').element);
+  });
+
   test('in a right-to-left page, ArrowLeft moves to the next tab', () => {
     const tabs = mount({ tabs: FOUR() });
     tabs.element.style.direction = 'rtl';
