@@ -48,6 +48,7 @@
 
     --#{$prefix}-sys-color-on-surface: #191c1e;
     --#{$prefix}-sys-color-on-surface-variant: #41484d;
+    --#{$prefix}-sys-color-surface-variant: #dde3e9; // generated: neutral variant tone 90
 
     --#{$prefix}-sys-color-outline: #71787d;
     --#{$prefix}-sys-color-outline-variant: #c1c8cd;
@@ -89,6 +90,7 @@
 
         --#{$prefix}-sys-color-on-surface: #e1e3e4;
         --#{$prefix}-sys-color-on-surface-variant: #c1c8cd;
+        --#{$prefix}-sys-color-surface-variant: #41484d; // generated: neutral variant tone 30
 
         --#{$prefix}-sys-color-outline: #8b9297;
         --#{$prefix}-sys-color-outline-variant: #41484d;

@@ -24,7 +24,7 @@ export const THEME_ROLES = [
   "primary-fixed", "primary-fixed-dim", "on-primary-fixed", "on-primary-fixed-variant",
   "secondary-fixed", "secondary-fixed-dim", "on-secondary-fixed", "on-secondary-fixed-variant",
   "tertiary-fixed", "tertiary-fixed-dim", "on-tertiary-fixed", "on-tertiary-fixed-variant",
-  "surface", "surface-dim", "surface-bright",
+  "surface", "surface-dim", "surface-bright", "surface-variant",
   "surface-container-lowest", "surface-container-low", "surface-container",
   "surface-container-high", "surface-container-highest",
   "on-surface", "on-surface-variant",

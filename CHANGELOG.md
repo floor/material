@@ -195,6 +195,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   now declares them light and dark, in `mtrl/styles/base` and `mtrl/themes/baseline`, with the
   generated themes' values (one `status-roles-*` mixin in `_base-theme.scss` for both).
 
+- **`surface-variant` is a theme role (FLO-329).** The disabled filled card's container reads
+  it (Compose's `FilledCardTokens.DisabledContainerColor`), and no theme declared it, so that
+  card lost its background. It is in `THEME_ROLES` now, so `schemeToTokens` requires it (as
+  `surfaceVariant` from material-color-utilities). The generated themes take
+  material-color-utilities' value. Baseline takes Compose's (`#E7E0EC` light, `#49454F`
+  dark), and each hand-kept theme takes tones 90 and 30 of its own neutral variant palette.
+
 - **The framework adapters tree-shake (FLO-327).** One component from `mtrl/react`, `mtrl/vue`,
   `mtrl/solid` or `mtrl/svelte` shipped the whole library: the switch was 174.9 KB gzip against
   11.7 KB for its element. Each adapter component is now its own module, importing only its
