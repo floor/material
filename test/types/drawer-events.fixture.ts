@@ -11,7 +11,7 @@ export const names: Equals<keyof DrawerEvents, "open" | "close" | "select" | "cl
 export const openHasNoPayload: Equals<Parameters<DrawerEvents["open"]>, []> = true;
 export const closeHasNoPayload: Equals<Parameters<DrawerEvents["close"]>, []> = true;
 export const selection: Equals<Parameters<DrawerEvents["select"]>[0], DrawerSelectEvent> = true;
-export const selectionShape: Equals<DrawerSelectEvent, { id: string; label: string; index: number; originalEvent: Event }> = true;
+export const selectionShape: Equals<DrawerSelectEvent, { id: string; value: string; label: string; index: number; originalEvent: Event }> = true;
 export const click: Equals<Parameters<DrawerEvents["click"]>[0], ForwardedEventPayload<MouseEvent, HTMLElement>> = true;
 export const keydown: Equals<Parameters<DrawerEvents["keydown"]>[0], ForwardedEventPayload<KeyboardEvent, HTMLElement>> = true;
 export const inferredSelection: Equals<Parameters<Parameters<typeof drawer.on<"select">>[1]>[0], DrawerSelectEvent> = true;

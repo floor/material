@@ -16,20 +16,20 @@ const setup = (config: TimePickerConfig = {}) => {
   const confirmCallbacks: string[] = [];
   const picker = mount(createTimePicker({
     value: "09:30", name: "appointment", type: TIME_PICKER_TYPE.INPUT, ...config,
-    onChange: value => callbacks.push(value),
-    onInput: value => inputCallbacks.push(value),
+    onChange: ({ value }) => callbacks.push(value),
+    onInput: ({ value }) => inputCallbacks.push(value),
     onConfirm: value => confirmCallbacks.push(value),
   }));
   const form = document.createElement("form");
   document.body.append(form);
   form.append(picker.element);
-  picker.on("change", value => {
+  picker.on("change", ({ value }) => {
     // Subscribers can read submission synchronously from inside the callback.
     expect(submitted()).toBe(value);
     changes.push(value);
   });
   picker.on("confirm", value => confirms.push(value));
-  picker.on("input", value => drafts.push(value));
+  picker.on("input", ({ value }) => drafts.push(value));
   const draft = () => drafts.at(-1) ?? picker.getValue();
   const submitted = () => new window.FormData(form).get("appointment");
   const field = (unit: string) => picker.dialogElement.querySelector<HTMLInputElement>(`[data-type="${unit}"]`)!;

@@ -87,7 +87,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   a single-select group, an array for a multi-select one. The split button's `select` has `value`,
   the chosen item's `id`. The chips set's `change` is one object with `value` (in the `value`
   property's shape), `selected` (the selected chips' values) and `changed` (the toggled chip's
-  value, null for a method). The existing fields stay.
+  value, null for a method). The existing fields stay. Part 2: the navigation rail's and the drawer's `select` add `value` (the item's
+  id), the menu's `select` too (the item's id, beside `itemId`), and the list's `select` the row's
+  id as a string. The date picker's `change` adds `iso`, the value as ISO 8601 text, the
+  `<m-datepicker>` element's `value`; the factory's `value` stays a `Date`. The element's `change`
+  adds `date`, the factory's `Date` form, as a native input's `valueAsDate`. Search already
+  carried the same `value`.
 
 - **Tooltip colours per M3 (FLO-324).** The plain tooltip is `inverse-surface` /
   `inverse-on-surface`, opaque and without elevation (`PlainTooltipTokens`); the `plain` variant
@@ -188,6 +193,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   events, `change` and `complete`.
 
 ### Changed (breaking, prerelease)
+
+- **Time picker `change` and `input` pass `{ value }` (FLO-320).** They passed the time as a
+  string; they now pass one object, the same shape as every other component's and the
+  `<m-timepicker>` element's (`TimePickerValueEvent`), and so do `onChange` and `onInput`.
+  Migration: `(time) => …` becomes `({ value }) => …`. `confirm` still passes the string.
 
 - **The `--mtrl-sys-color-*-rgb` custom properties are gone (FLO-311).** Every theme declared
   each colour role twice, as `#6750a4` and as `103, 80, 164`, for `rgba(var(--…-rgb), a)`. No

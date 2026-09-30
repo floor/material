@@ -44,7 +44,7 @@
 
 import createDatePicker from "../components/datepicker";
 import type { DatePickerComponent, DatePickerConfig, DatePickerValue } from "../components/datepicker/types";
-import { formatDate } from "../components/datepicker/utils";
+import { toIsoValue } from "../components/datepicker/utils";
 import { defineElement, type DefineOptions, type ElementHost, type ElementInstance, type ElementSpec } from "./define";
 
 /** The date picker, with what the element adds to it. */
@@ -53,11 +53,8 @@ export interface DatepickerElementComponent extends DatePickerComponent {
   show: () => void;
 }
 
-const iso = (date: Date | null | undefined): string => (date ? formatDate(date, "YYYY-MM-DD") : "");
-
 /** The element's value: a date, a `start/end` interval, or "". */
-const toValue = (value: DatePickerValue, end?: Date | null): string =>
-  Array.isArray(value) ? `${iso(value[0])}/${iso(value[1])}` : value && end ? `${iso(value)}/${iso(end)}` : iso(value);
+const toValue = toIsoValue;
 
 const hosts = new WeakMap<DatepickerElementComponent, ElementHost<DatepickerElementComponent>>();
 
@@ -150,7 +147,10 @@ const datepickerSpec = {
     change: {
       detail: (payload) => {
         const { value, rangeEndDate } = payload as { value: DatePickerValue; rangeEndDate?: Date | null };
-        return { value: toValue(value, rangeEndDate) };
+        // `date`: the Date form of `value`, as a native input's valueAsDate
+        // (FLO-320): the pair for a range, however the factory reported it.
+        const date = Array.isArray(value) ? value : value && rangeEndDate ? [value, rangeEndDate] : (value ?? null);
+        return { value: toValue(value, rangeEndDate), date };
       },
     },
     open: { detail: () => null, state: true },

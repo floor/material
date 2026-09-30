@@ -23,6 +23,11 @@ export interface DatePickerChangePayload<V = DatePickerValue> {
   value: V;
   rangeEndDate: Date | null;
   formattedValue: string;
+  /**
+   * The value as ISO 8601 text, the `value` of the `<m-datepicker>` element's
+   * `change`: a date (`2026-09-10`), a `start/end` interval, or "" (FLO-320)
+   */
+  iso: string;
 }
 
 /** Visibility events carry the committed value, including complete ranges. */

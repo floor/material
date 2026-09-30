@@ -62,7 +62,7 @@ describe("datepicker event contract", () => {
     day(picker, end);
     expect(events).toEqual([]);
     day(picker, start);
-    expect(events).toEqual([{ value: [start, end], rangeEndDate: end, formattedValue: "09/10/2026 - 09/15/2026" }]);
+    expect(events).toEqual([{ value: [start, end], rangeEndDate: end, formattedValue: "09/10/2026 - 09/15/2026", iso: "2026-09-10/2026-09-15" }]);
     expect(picker.getValue()).toEqual([start, end]);
   });
 
@@ -73,7 +73,8 @@ describe("datepicker event contract", () => {
     const events: DatePickerChangePayload[] = [];
     picker.on("change", payload => events.push(payload));
     day(picker, start);
-    expect(events).toEqual([{ value: start, rangeEndDate: null, formattedValue: "09/10/2026" }]);
+    // `iso` is the <m-datepicker> element's value (FLO-320)
+    expect(events).toEqual([{ value: start, rangeEndDate: null, formattedValue: "09/10/2026", iso: "2026-09-10" }]);
   });
 
   test("API and trigger visibility events carry committed complete ranges", () => {

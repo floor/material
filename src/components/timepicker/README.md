@@ -66,7 +66,7 @@ The `createTimePicker` function accepts a configuration object with the followin
 | `container` | `string \| HTMLElement` | `document.body` | CSS selector or element to append the time picker to |
 | `clockIcon` | `string` | Default SVG | Custom icon for the clock button |
 | `keyboardIcon` | `string` | Default SVG | Custom icon for the keyboard button |
-| `onChange` | `function` | `undefined` | Callback when time is changed |
+| `onChange` | `({ value }) => void` | `undefined` | Callback when the committed time changes |
 | `onOpen` | `function` | `undefined` | Callback when time picker is opened |
 | `onClose` | `function` | `undefined` | Callback when time picker is closed |
 | `onConfirm` | `function` | `undefined` | Callback when time is confirmed |
@@ -122,8 +122,9 @@ timePicker.setTitle('Choose departure time');
 
 ```javascript
 // Listen for time changes
-timePicker.on('change', (time) => {
-  console.log('Time changed:', time);
+// `change` and `input` pass { value }, as the <m-timepicker> element's do
+timePicker.on('change', ({ value }) => {
+  console.log('Time changed:', value);
 });
 
 // Listen for time picker opening

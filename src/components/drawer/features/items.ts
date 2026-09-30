@@ -190,6 +190,7 @@ export const withItems =
 
             const selectEvent: DrawerSelectEvent = {
               id: item.id,
+              value: item.id,
               label: item.label || "",
               index: parseInt(itemEl.dataset.navIndex || "0", 10),
               originalEvent: e,
