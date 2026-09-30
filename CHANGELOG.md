@@ -16,6 +16,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `value` in `<m-fab-menu>`'s `select` detail and the menu's own payload (FLO-320), so one handler
   reads the same field from the factory and the element.
 
+- **The published `package.json` carries only what consumers use (FLO-350).** npm packs the
+  repository's root manifest, which since 0.10.0 also held the repository's `eslintConfig` and
+  `typedocOptions`, beside its `scripts`. The release now builds as its own step and drops those
+  three fields before publishing. Nothing a consumer reads changes.
+
 ### Fixed
 
 - **The dialog, the time picker and the sheets no longer show their headline as a tooltip
