@@ -12,6 +12,21 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **The typeface and corner shapes are themeable (FLO-330).** Components read
+  `--mtrl-ref-typeface-brand` and `--mtrl-ref-typeface-plain` for their font family, following
+  M3: display, headline and title roles use the brand face, and body and label use the plain
+  one. They read `--mtrl-sys-shape-corner-*` for their corners. Each reference falls back to the
+  compiled value, so nothing changes until an app or a theme sets a token:
+  `:root { --mtrl-ref-typeface-plain: Inter, sans-serif; --mtrl-sys-shape-corner-medium: 4px; }`.
+  - **Corners that follow a token:** those written through the shape scale, including the
+    button's square and pressed shapes, and the card, chip and text field corners.
+  - **Not yet:** the round button, which is half its height rather than a token so the press
+    morph animates, and literal radii in 16 components: split button, badge, navigation rail,
+    segmented button, dialog, tabs, list, menu, chips, slider, search, tooltip, drawer, switch,
+    carousel and the icon button's sizes. Those are a follow-up. State-layer opacities stay
+    compiled.
+  - The full stylesheet grows by about 1% (494 bytes gzipped).
+
 - **`inertOutside(element)` (`mtrl/core/dom`) (FLO-324).** Makes everything but one element inert,
   across shadow roots, as `showModal()` does for a top-layer dialog, and returns the undo, which
   clears exactly what it set. The modal sheets use it outside the top layer.
