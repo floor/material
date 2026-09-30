@@ -18,7 +18,6 @@ import {
   processInlineConfig,
   applyInlineConfiguration
 } from './config';
-import { withElevation } from './features';
 
 /**
  * Creates a new Card component following Material Design 3 principles.
@@ -99,7 +98,6 @@ const createCard = (config: CardSchema = {}): CardComponent => {
       baseConfig.clickable ? withRipple(baseConfig) : <C extends ElementComponent>(c: C): C => c,
       withLifecycle(),
       withInteractiveBehavior,
-      withElevation,
       comp => withAPI({ ...getApiConfig(comp), config: baseConfig })(comp)
     )(baseConfig);
     

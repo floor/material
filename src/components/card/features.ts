@@ -21,7 +21,6 @@ import {
   ExpandableFeature,
   SwipeableFeature,
 } from "./types";
-import { CARD_ELEVATION_LEVELS } from "./config";
 
 interface LoadingConfig {
   initialState?: boolean;
@@ -139,46 +138,15 @@ export const withLoading =
   };
 
 /**
- * Higher-order function to add elevation to a card based on its variant.
+ * Did nothing visible: it wrote a `--{prefix}-card-elevation` custom property
+ * that no stylesheet reads. A card's elevation comes from its variant and
+ * state classes in the stylesheet.
  *
- * Sets the initial elevation CSS variable according to Material Design 3 guidelines:
- * - Elevated variant: 1dp elevation
- * - Filled and outlined variants: 0dp elevation
- *
- * These elevation values affect shadows and surface appearance of the card
- * to create appropriate visual hierarchy.
- *
- * @param {BaseComponent} component - Card component
- * @returns {BaseComponent} Card component with elevation applied
+ * @deprecated Since 0.10 (FLO-323): a no-op, removed in 1.0. Drop it from
+ * the composition.
  * @category Components
- * @example
- * ```typescript
- * // Apply elevation in the composition chain
- * const card = pipe(
- *   createBase,
- *   withElement(config),
- *   withElevation
- * )(baseConfig);
- * ```
  */
-export const withElevation = <C extends ElementComponent>(component: C): C => {
-  const config = component.config;
-
-  // Set initial elevation based on variant
-  if (config.variant === "elevated") {
-    component.element.style.setProperty(
-      `--${config.prefix}-card-elevation`,
-      String(CARD_ELEVATION_LEVELS.LEVEL1),
-    );
-  } else {
-    component.element.style.setProperty(
-      `--${config.prefix}-card-elevation`,
-      String(CARD_ELEVATION_LEVELS.LEVEL0),
-    );
-  }
-
-  return component;
-};
+export const withElevation = <C extends ElementComponent>(component: C): C => component;
 
 /**
  * Higher-order function to add expandable behavior to a card.

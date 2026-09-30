@@ -34,15 +34,14 @@ for (const prefix of [PREFIX]) {
     expect(group.element.style.getPropertyValue(`--${prefix}-button-group-radius`)).toBe('24px');
   });
 
-  test(`${prefix}: card initial, hover and drag elevation writes agree`, () => {
+  // FLO-323: the card's --card-elevation writes were read by no stylesheet
+  // and are gone; elevation is its classes.
+  test(`${prefix}: the card writes no custom property, at creation, hover or drag`, () => {
     const card = attach(createCard({ prefix, variant: 'elevated', interactive: true, draggable: true }));
-    const property = `--${prefix}-card-elevation`;
-    expect(propertyNames(card.element)).toEqual([property]);
-    expect(card.element.style.getPropertyValue(property)).toBe('1');
-    for (const [event, level] of [['mouseenter', '2'], ['mouseleave', '1'], ['dragstart', '4'], ['dragend', '1']]) {
+    expect(propertyNames(card.element)).toEqual([]);
+    for (const event of ['mouseenter', 'mouseleave', 'dragstart', 'dragend']) {
       card.element.dispatchEvent(new Event(event));
-      expect(propertyNames(card.element)).toEqual([property]);
-      expect(card.element.style.getPropertyValue(property)).toBe(level);
+      expect(propertyNames(card.element)).toEqual([]);
     }
   });
 

@@ -79,6 +79,7 @@ export type {
   CardMediaConfig,
   CardAriaAttributes,
   CardComponent,
+  CardEvents,
   LoadingFeature,
   ExpandableFeature,
   SwipeableFeature,

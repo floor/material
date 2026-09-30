@@ -12,7 +12,7 @@ import {
 import { TIMEPICKER_EVENTS as EVENTS } from './constants';
 import { formatFormValue } from './utils';
 import { renderTimePicker } from './render';
-import type { TimePickerEvents } from './types';
+import type { TimePickerEvents, TimeFormat, TimePickerType, TimePickerOrientation } from './types';
 import type { EventCallback } from '../../core/state/emitter';
 import type { ElementComponent } from '../../core/compose/component';
 import { setFormValue } from '../../core/dom/form-value';
@@ -256,7 +256,7 @@ export const createTimePickerAPI = (
       return this;
     },
     
-    setType(type: TIME_PICKER_TYPE) {
+    setType(type: TimePickerType) {
       if (config.type === type) return this;
       
       // Update config
@@ -276,10 +276,11 @@ export const createTimePickerAPI = (
     },
     
     getType() {
-      return config.type;
+      // A string value is the enum's own: the same string at runtime
+      return config.type as TIME_PICKER_TYPE;
     },
     
-    setFormat(format: TIME_FORMAT) {
+    setFormat(format: TimeFormat) {
       if (config.format === format) return this;
       
       // Update config
@@ -310,10 +311,10 @@ export const createTimePickerAPI = (
     },
     
     getFormat() {
-      return config.format;
+      return config.format as TIME_FORMAT;
     },
     
-    setOrientation(orientation: TIME_PICKER_ORIENTATION) {
+    setOrientation(orientation: TimePickerOrientation) {
       if (config.orientation === orientation) return this;
       
       // Update config
@@ -333,7 +334,7 @@ export const createTimePickerAPI = (
     },
     
     getOrientation() {
-      return config.orientation;
+      return config.orientation as TIME_PICKER_ORIENTATION;
     },
     
     setTitle(title: string) {

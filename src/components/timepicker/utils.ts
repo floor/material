@@ -1,6 +1,6 @@
 // src/components/timepicker/utils.ts
 
-import { TimeValue, TIME_PERIOD, TIME_FORMAT } from "./types";
+import { TimeValue, TIME_PERIOD, type TimeFormat } from "./types";
 
 /**
  * Pads a number with leading zeros to ensure two-digit format
@@ -20,7 +20,7 @@ export const padZero = (num: number): string => {
 export const parseTime = (
   timeString: string,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _format: TIME_FORMAT
+  _format: TimeFormat
 ): TimeValue => {
   // Note: format parameter is kept for API compatibility but not used in parsing
   try {
