@@ -11,11 +11,14 @@
  * modules), and two components ship only those two. Every component with Bun;
  * the switch and the pair with Vite (Rolldown) too.
  *
- * Measured with brotli (quality 11, what a CDN serves), not gzip: gzip only
- * matches within 32 KB, so the same adapter code cost ~900 B more beside a
- * large element (select, 140 KB minified) than a small one, while brotli's
- * window sees the element code it compresses against. The adapter's cost is
- * then flat, 0.8 to 1.3 KB, for every component (FLO-332).
+ * Measured with brotli (quality 11, what a CDN serves), not gzip: a gate on
+ * deltas between bundles of very different sizes must not depend on gzip's
+ * 32 KB window (FLO-332). Minified, the React adapter adds +2712 B to select
+ * and +2709 B to switch; gzip measured them +1866 and +959, because in
+ * select's 140 KB bundle the adapter runtime sits beyond 32 KB from the
+ * element code it compresses against. Brotli measures +878 and +872. The
+ * adapter's cost is flat, 0.8 to 1.3 KB for every component; the largest is
+ * the Svelte switch + button pair, +1467.
  *
  * Build first:
  *   bun run build && bun run adapters:size
@@ -31,8 +34,11 @@ import { build as viteBuild, type Plugin, type Rolldown } from "vite";
 import { createPackageFixture } from "./package-fixture";
 import { elementModules } from "./element-modules";
 
-/** The adapter's own runtime (create.ts or runtime.js) and wrapper, brotli bytes, on top of the element. */
-const ADAPTER_MARGIN = 2048;
+/**
+ * The adapter's own runtime (create.ts or runtime.js) and wrapper, brotli
+ * bytes, on top of the element: the largest measured, +1467, and headroom.
+ */
+const ADAPTER_MARGIN = 1700;
 
 const pascal = (name: string): string => name.replace(/^[a-z]/, (c) => c.toUpperCase());
 const FRAMEWORKS = [
