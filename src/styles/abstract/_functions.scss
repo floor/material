@@ -2,6 +2,7 @@
 @use 'sass:map';
 @use 'sass:math';
 @use 'sass:color';
+@use 'sass:string';
 @use 'variables' as v;
 
 // Get nested map value
@@ -67,9 +68,20 @@
   @return get-token('typescale', $scale);
 }
 
+/// The face a typescale role wears: the brand one for display, headline and
+/// title, the plain one for body and label.
+@function typeface($role) {
+  @each $group in ('display-', 'headline-', 'title-') {
+    @if string.index($role, $group) == 1 {
+      @return 'brand';
+    }
+  }
+  @return 'plain';
+}
+
 // Shape
 @function get-shape($size) {
-  @return get-token('shape', $size);
+  @return v.shape($size);
 }
 
 // Z-index

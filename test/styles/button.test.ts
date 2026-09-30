@@ -80,13 +80,15 @@ describe('button stylesheet: shapes', () => {
   const shape = (v: string) => `var(--mtrl-button-shape, ${v})`;
   const pressedShape = (v: string) => `var(--mtrl-button-shape-pressed, ${v})`;
   const selectedShape = (v: string) => `var(--mtrl-button-shape-selected, ${v})`;
+  // Square and pressed are corner tokens (FLO-330); round is half the height
+  const corner = (size: string, v: string) => `var(--mtrl-sys-shape-corner-${size}, ${v})`;
 
   test('square container shape per size', () => {
-    expect(value('.mtrl-button--xs.mtrl-button--square', 'border-radius')).toBe(shape('12px'));
-    expect(value('.mtrl-button--s.mtrl-button--square', 'border-radius')).toBe(shape('12px'));
-    expect(value('.mtrl-button--m.mtrl-button--square', 'border-radius')).toBe(shape('16px'));
-    expect(value('.mtrl-button--l.mtrl-button--square', 'border-radius')).toBe(shape('28px'));
-    expect(value('.mtrl-button--xl.mtrl-button--square', 'border-radius')).toBe(shape('28px'));
+    expect(value('.mtrl-button--xs.mtrl-button--square', 'border-radius')).toBe(shape(corner('medium', '12px')));
+    expect(value('.mtrl-button--s.mtrl-button--square', 'border-radius')).toBe(shape(corner('medium', '12px')));
+    expect(value('.mtrl-button--m.mtrl-button--square', 'border-radius')).toBe(shape(corner('large', '16px')));
+    expect(value('.mtrl-button--l.mtrl-button--square', 'border-radius')).toBe(shape(corner('extra-large', '28px')));
+    expect(value('.mtrl-button--xl.mtrl-button--square', 'border-radius')).toBe(shape(corner('extra-large', '28px')));
   });
 
   test('round container shape per size is half the height, not a large number', () => {
@@ -125,11 +127,11 @@ describe('button stylesheet: shapes', () => {
   test('pressed container shape per size', () => {
     const pressed = (size: string) =>
       value(`.mtrl-button--${size}:active, .mtrl-button--${size}.mtrl-button--active`, 'border-radius');
-    expect(pressed('xs')).toBe(pressedShape('8px'));
-    expect(pressed('s')).toBe(pressedShape('8px'));
-    expect(pressed('m')).toBe(pressedShape('12px'));
-    expect(pressed('l')).toBe(pressedShape('16px'));
-    expect(pressed('xl')).toBe(pressedShape('16px'));
+    expect(pressed('xs')).toBe(pressedShape(corner('small', '8px')));
+    expect(pressed('s')).toBe(pressedShape(corner('small', '8px')));
+    expect(pressed('m')).toBe(pressedShape(corner('medium', '12px')));
+    expect(pressed('l')).toBe(pressedShape(corner('large', '16px')));
+    expect(pressed('xl')).toBe(pressedShape(corner('large', '16px')));
   });
 
   test('the pressed shape is declared after the square shape', () => {
@@ -242,9 +244,9 @@ describe('button stylesheet: toggle buttons (ToggleButtonDefaults)', () => {
   });
 
   test('selected swaps the resting shape', () => {
-    expect(value('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--s', 'border-radius')).toBe('var(--mtrl-button-shape-selected, 12px)');
-    expect(value('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--m', 'border-radius')).toBe('var(--mtrl-button-shape-selected, 16px)');
-    expect(value('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--xl', 'border-radius')).toBe('var(--mtrl-button-shape-selected, 28px)');
+    expect(value('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--s', 'border-radius')).toBe('var(--mtrl-button-shape-selected, var(--mtrl-sys-shape-corner-medium, 12px))');
+    expect(value('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--m', 'border-radius')).toBe('var(--mtrl-button-shape-selected, var(--mtrl-sys-shape-corner-large, 16px))');
+    expect(value('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--xl', 'border-radius')).toBe('var(--mtrl-button-shape-selected, var(--mtrl-sys-shape-corner-extra-large, 28px))');
     // A square toggle rounds off; the radius is per size, asserted above
     expect(value('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--square.mtrl-button--s', 'border-radius')).toBe('var(--mtrl-button-shape-selected, 20px)');
     expect(css.indexOf('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--square')).toBeGreaterThan(
@@ -253,7 +255,7 @@ describe('button stylesheet: toggle buttons (ToggleButtonDefaults)', () => {
   });
 
   test('selected buttons still take the pressed shape', () => {
-    expect(value('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--s:active, .mtrl-button--toggle.mtrl-button--selected.mtrl-button--s.mtrl-button--active', 'border-radius')).toBe('var(--mtrl-button-shape-pressed, 8px)');
+    expect(value('.mtrl-button--toggle.mtrl-button--selected.mtrl-button--s:active, .mtrl-button--toggle.mtrl-button--selected.mtrl-button--s.mtrl-button--active', 'border-radius')).toBe('var(--mtrl-button-shape-pressed, var(--mtrl-sys-shape-corner-small, 8px))');
   });
 
   test('disabled toggle buttons keep the disabled roles', () => {

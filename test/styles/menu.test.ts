@@ -4,6 +4,7 @@
 // baseline measurements on m3.material.io/components/menus/specs.
 import { describe, test, expect, beforeAll } from 'bun:test';
 import { compileString } from 'sass';
+import { corner } from '../utils/corner';
 
 let css = '';
 
@@ -25,7 +26,7 @@ beforeAll(() => {
 describe('menu stylesheet', () => {
   test('the container is surface-container at level 2 with a 4dp corner', () => {
     expect(value('.mtrl-menu', 'background-color')).toBe('var(--mtrl-sys-color-surface-container)');
-    expect(value('.mtrl-menu', 'border-radius')).toBe('4px');
+    expect(value('.mtrl-menu', 'border-radius')).toBe(corner(4));
     expect(value('.mtrl-menu', 'box-shadow')).toBe('0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15)');
     expect(value('.mtrl-menu', 'min-width')).toBe('112px');
     expect(value('.mtrl-menu', 'max-width')).toBe('280px');
@@ -92,7 +93,7 @@ describe('menu stylesheet', () => {
 
   describe('the expressive vertical menu', () => {
     test('a 16dp container on surface-container-low, items 2dp apart', () => {
-      expect(value('.mtrl-menu--vertical', 'border-radius')).toBe('16px');
+      expect(value('.mtrl-menu--vertical', 'border-radius')).toBe(corner(16));
       // GroupPadding: the vertical menu has no container spacing token, so its
       // inset is the group's. Only the horizontal variant gets 8dp.
       expect(value('.mtrl-menu--vertical', 'padding')).toBe('4px');
@@ -113,13 +114,13 @@ describe('menu stylesheet', () => {
       expect(value('.mtrl-menu--vertical .mtrl-menu__item', 'font-size')).toBe('16px');
       expect(value('.mtrl-menu--vertical .mtrl-menu__item', 'padding')).toBe('8px 16px');
       // 4dp at rest, 12dp once it is touched
-      expect(value('.mtrl-menu--vertical .mtrl-menu__item', 'border-radius')).toBe('4px');
+      expect(value('.mtrl-menu--vertical .mtrl-menu__item', 'border-radius')).toBe(corner(4));
       const active = '.mtrl-menu--vertical .mtrl-menu__item:hover, .mtrl-menu--vertical .mtrl-menu__item:focus-visible, .mtrl-menu--vertical .mtrl-menu__item--active, .mtrl-menu--vertical .mtrl-menu__item:active';
-      expect(value(active, 'border-radius')).toBe('12px');
-      expect(value('.mtrl-menu--vertical .mtrl-menu__item--selected', 'border-radius')).toBe('12px');
+      expect(value(active, 'border-radius')).toBe(corner(12));
+      expect(value('.mtrl-menu--vertical .mtrl-menu__item--selected', 'border-radius')).toBe(corner(12));
       // and the ends of the column round outwards
-      expect(value('.mtrl-menu--vertical .mtrl-menu__item:first-child', 'border-start-start-radius')).toBe('12px');
-      expect(value('.mtrl-menu--vertical .mtrl-menu__item:last-child', 'border-end-end-radius')).toBe('12px');
+      expect(value('.mtrl-menu--vertical .mtrl-menu__item:first-child', 'border-start-start-radius')).toBe(corner(12));
+      expect(value('.mtrl-menu--vertical .mtrl-menu__item:last-child', 'border-end-end-radius')).toBe(corner(12));
     });
 
     test('a selected item takes the tertiary roles; icons are 20dp', () => {
@@ -147,11 +148,11 @@ describe('menu stylesheet', () => {
       // SegmentedMenuTokens: GroupShape is CornerSmall and ContainerShape is
       // CornerLarge, so a cut through the menu is tighter than its outline
       const group = '.mtrl-menu--vertical:has(.mtrl-menu__group) .mtrl-menu__group';
-      expect(value(group, 'border-radius')).toBe('8px');
-      expect(value(`${group}:first-child`, 'border-start-start-radius')).toBe('16px');
-      expect(value(`${group}:first-child`, 'border-start-end-radius')).toBe('16px');
-      expect(value(`${group}:last-child`, 'border-end-start-radius')).toBe('16px');
-      expect(value(`${group}:last-child`, 'border-end-end-radius')).toBe('16px');
+      expect(value(group, 'border-radius')).toBe(corner(8));
+      expect(value(`${group}:first-child`, 'border-start-start-radius')).toBe(corner(16));
+      expect(value(`${group}:first-child`, 'border-start-end-radius')).toBe(corner(16));
+      expect(value(`${group}:last-child`, 'border-end-start-radius')).toBe(corner(16));
+      expect(value(`${group}:last-child`, 'border-end-end-radius')).toBe(corner(16));
     });
 
     test('the separator is 2dp, and a group hugs its items at 4dp', () => {
@@ -177,7 +178,7 @@ describe('menu stylesheet', () => {
 
     test('the container morphs to show which menu is active', () => {
       expect(value('.mtrl-menu--vertical.mtrl-menu--active', 'border-radius')).toBe('24px');
-      expect(value('.mtrl-menu--vertical.mtrl-menu--inactive', 'border-radius')).toBe('8px');
+      expect(value('.mtrl-menu--vertical.mtrl-menu--inactive', 'border-radius')).toBe(corner(8));
     });
   });
 });

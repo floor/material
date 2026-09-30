@@ -367,8 +367,10 @@ $spacing-scale: (
   @return map.get($typescale, $scale);
 }
 
+// A corner as its token, the compiled value as the fallback (FLO-330): an app or
+// theme sets --{prefix}-sys-shape-corner-<size> (base/_tokens.scss declares them)
 @function shape($size) {
-  @return map.get($shape, $size);
+  @return var(--#{$prefix}-sys-shape-corner-#{$size}, #{map.get($shape, $size)});
 }
 
 @function z-index($layer) {
@@ -379,15 +381,29 @@ $spacing-scale: (
   @return map.get($breakpoints, $size);
 }
 
+// The button shapes that are corner tokens: square and pressed. Round is half
+// the container height, not a token (see shape-round-* in $button).
+$button-shape-tokens: (
+  'shape-square-xs': 'medium', 'shape-square-s': 'medium', 'shape-square-m': 'large',
+  'shape-square-l': 'extra-large', 'shape-square-xl': 'extra-large',
+  'shape-pressed-xs': 'small', 'shape-pressed-s': 'small', 'shape-pressed-m': 'medium',
+  'shape-pressed-l': 'large', 'shape-pressed-xl': 'large'
+);
+
 @function button($prop) {
+  @if map.has-key($button-shape-tokens, $prop) {
+    @return shape(map.get($button-shape-tokens, $prop));
+  }
   @return map.get($button, $prop);
 }
 
 @function card($key) {
+  @if $key == 'border-radius' { @return shape('medium'); }
   @return map.get($card, $key);
 }
 
 @function chip($key, $fallback: null) {
+  @if $key == 'border-radius' { @return shape('small'); }
   @if map.has-key($chip-config, $key) {
     @return map.get($chip-config, $key);
   }
@@ -411,5 +427,6 @@ $textfield: (
 
 // Add textfield function
 @function textfield($key) {
+  @if $key == 'border-radius' { @return shape('extra-small'); }
   @return map.get($textfield, $key);
 }
