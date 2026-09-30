@@ -15,7 +15,7 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
   await page.evaluate(() => {
     const state = window as unknown as ChipWindow;
     const { createAssistChip, createFilterChip, createInputChip, createSuggestionChip } = state.core;
-    document.documentElement.setAttribute("data-theme", "material");
+    document.documentElement.setAttribute("data-theme", "baseline");
     document.documentElement.setAttribute("data-theme-mode", "light");
     state.chipChanges = 0; state.chipRemovals = 0;
     document.body.style.cssText = "display:flex; flex-wrap:wrap; align-content:flex-start; gap:24px; padding:32px";

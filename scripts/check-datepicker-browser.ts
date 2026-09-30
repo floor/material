@@ -9,7 +9,7 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
   await page.setViewportSize({ width: 800, height: 850 });
   await page.evaluate(() => {
     const state = window as unknown as PickerWindow;
-    document.documentElement.setAttribute('data-theme', 'material'); document.documentElement.setAttribute('data-theme-mode', 'light');
+    document.documentElement.setAttribute('data-theme', 'baseline'); document.documentElement.setAttribute('data-theme-mode', 'light');
     document.body.replaceChildren(); document.body.style.cssText = 'padding:24px;margin:0';
     const outside = document.createElement('button'); outside.id = 'outside-date'; outside.textContent = 'Outside'; document.body.append(outside);
     state.dateChanges = []; state.dateCloses = 0;

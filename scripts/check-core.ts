@@ -99,17 +99,17 @@ try {
   // Datepicker must also work with only base + its selective stylesheet.
   await page.locator("style").evaluateAll(elements => elements.forEach(element => element.remove()));
   for (const name of ["base", "datepicker"]) await page.addStyleTag({ content: await readFile(join(fixture.installed, `dist/styles/${name}.css`), "utf8") });
-  await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/themes/material.css"), "utf8") });
+  await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/themes/baseline.css"), "utf8") });
   await checkDatePicker(page, artifacts);
   // Card's selective stylesheet must agree with the same packed DOM as well.
   await page.locator("style").evaluateAll(elements => elements.forEach(element => element.remove()));
   for (const name of ["base", "card"]) await page.addStyleTag({ content: await readFile(join(fixture.installed, `dist/styles/${name}.css`), "utf8") });
-  await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/themes/material.css"), "utf8") });
+  await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/themes/baseline.css"), "utf8") });
   await checkCard(page, artifacts);
   // The selective Time Picker stylesheet must style the same public markup.
   await page.locator("style").evaluateAll(elements => elements.forEach(element => element.remove()));
   for (const name of ["base", "timepicker"]) await page.addStyleTag({ content: await readFile(join(fixture.installed, `dist/styles/${name}.css`), "utf8") });
-  await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/themes/material.css"), "utf8") });
+  await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/themes/baseline.css"), "utf8") });
   await checkTimePicker(page, artifacts);
   console.log("Passed packed ripple animation, reduced motion, the ripple as the press, no forced offsetHeight read, and 40 pressed teardown cycles.");
 } finally {

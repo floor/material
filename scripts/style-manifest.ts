@@ -40,10 +40,22 @@ export const componentStyles: Record<string, { source: string; dependencies: str
 // All shipped components have selective CSS entries.
 export const fullOnlyStyles: string[] = [];
 
+// Themes in the full stylesheet, each also shipped as `mtrl/themes/<name>`.
+// material, winter, browngreen and legacy are deprecated (FLO-308) and stay
+// here until 1.0.
 export const themeStyles = [
   "baseline", "ocean", "desert", "forest", "sunset", "spring", "summer",
   "autumn", "winter", "brownbeige", "browngreen", "sageivory", "tealcaramel",
   "legacy", "material", "highcontrast",
+];
+
+// Themes shipped only as `mtrl/themes/<name>`, outside the full stylesheet, so
+// an app pays for one only by importing it: the M3 scheme variants generated
+// by scripts/generate-themes.ts (FLO-308). Every theme file is in exactly one
+// of the two lists (test/core/theme).
+export const standaloneThemes = [
+  "neutral", "vibrant", "expressive", "fidelity", "content", "monochrome",
+  "rainbow", "fruit-salad",
 ];
 
 export const baseStyles = [
