@@ -3,6 +3,7 @@
 import { SearchStructure, SearchSuggestion } from "../types";
 import { SEARCH_CLASSES, SEARCH_KEYS, SEARCH_ICONS } from "../constants";
 import { createElement } from "../../../core/dom/create";
+import type { EventCallback } from "../../../core/state/emitter";
 
 /**
  * Adds suggestion list features to the search component
@@ -34,7 +35,7 @@ interface SuggestionsHost {
     collapse: () => void;
     isExpanded: () => boolean;
   };
-  on?: (event: string, handler: (...args: never[]) => void) => unknown;
+  on?: (event: string, handler: EventCallback) => unknown;
 }
 
 export const withSuggestions =

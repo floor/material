@@ -319,11 +319,11 @@ export const withAPI =
 
       // Event handling
       on<K extends keyof ProgressEvents>(event: K, handler: ProgressEvents[K]): ProgressComponent {
-        comp.on?.(event, handler as EventCallback);
+        comp.on?.(event, handler);
         return api;
       },
       off<K extends keyof ProgressEvents>(event: K, handler: ProgressEvents[K]): ProgressComponent {
-        comp.off?.(event, handler as EventCallback);
+        comp.off?.(event, handler);
         return api;
       },
 

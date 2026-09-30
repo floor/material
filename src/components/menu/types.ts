@@ -641,9 +641,9 @@ export interface MenuFeatureHost {
   // Required: withEvents() is the first step of the menu pipe, before
   // withElement, so both are installed by the time any feature runs.
   emit: (event: string, data?: unknown) => unknown;
-  on: (event: string, handler: (...args: never[]) => void) => unknown;
+  on: (event: string, handler: EventCallback) => unknown;
   // Paired with `on`: withEvents installs both, and getApiConfig forwards both.
-  off: (event: string, handler: (...args: never[]) => void) => unknown;
+  off: (event: string, handler: EventCallback) => unknown;
   menu?: MenuControllerApi;
   opener?: MenuOpenerApi;
   // These twelve were `(...args: unknown[]) => unknown`. That is wider than

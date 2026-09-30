@@ -90,12 +90,12 @@ export const withAPI =
       },
 
       on<K extends keyof RadiosEvents>(event: K, handler: RadiosEvents[K]) {
-        component.on(event, handler as EventCallback);
+        component.on(event, handler);
         return this;
       },
 
       off<K extends keyof RadiosEvents>(event: K, handler: RadiosEvents[K]) {
-        component.off(event, handler as EventCallback);
+        component.off(event, handler);
         return this;
       },
 
