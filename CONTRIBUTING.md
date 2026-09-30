@@ -168,7 +168,7 @@ Builds fail on TypeScript or Sass errors. The published ESM is readable and incl
 
 ## Testing
 
-Tests live in `test/` and run with `bun test`; [TESTING.md](TESTING.md) covers the setup. In short:
+Tests live in `test/` and run with `bun test`; [docs/testing.md](docs/testing.md) covers the setup. In short:
 
 - Add or update tests in the same commit as the change, and check that they fail without it.
 - Test behaviour through the public API and the real DOM, not internals.

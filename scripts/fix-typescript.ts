@@ -304,7 +304,7 @@ async function main() {
   console.log('2. Fix one file at a time with:');
   console.log('   bun run fix-typescript-improved.ts src/path/to/file.ts');
   console.log('3. When enough errors are fixed or disabled, build the library:');
-  console.log('   bun run build.ts');
+  console.log('   bun run scripts/build.ts');
 }
 
 // Run the main function
