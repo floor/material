@@ -5082,6 +5082,110 @@ try {
     assert.deepEqual(selectParity.element, selectParity.factory);
     check("select: the closed field renders as the factory's in light DOM");
 
+    // FLO-272: a long list stays in the viewport, scrolling, on the side of
+    // the field with room: near the bottom it opens above, near the top
+    // below; the factory's in-field menu and the element's top-layer one.
+    const long = await page.evaluate(async () => {
+      type Opener = { open: () => unknown; close: () => unknown };
+      const w = window as unknown as Win & { mtrl: { createSelect: (c: object) => Opener & { element: HTMLElement } } };
+      const options = Array.from({ length: 250 }, (_, i) => ({ id: `o${i}`, text: `Option ${i}` }));
+      const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+      const measure = (menu: HTMLElement, field: HTMLElement): Record<string, unknown> => {
+        const m = menu.getBoundingClientRect();
+        const f = field.getBoundingClientRect();
+        const scrolls = [menu, ...menu.querySelectorAll<HTMLElement>("*")].some((n) => n.scrollHeight > n.clientHeight + 1 && getComputedStyle(n).overflowY !== "visible");
+        return {
+          inViewport: m.top >= 0 && m.bottom <= innerHeight && m.height > 0,
+          scrolls,
+          side: m.bottom <= f.top + 1 ? "above" : m.top >= f.bottom - 1 ? "below" : "overlap",
+        };
+      };
+      const run = async (kind: "factory" | "element", where: "top" | "bottom"): Promise<Record<string, unknown>> => {
+        const box = document.createElement("div");
+        box.style.cssText = `position: fixed; left: 20px; ${where}: 8px; width: 280px; z-index: 1`;
+        document.body.append(box);
+        let opener: Opener, field: HTMLElement, menu: () => HTMLElement;
+        if (kind === "factory") {
+          const select = w.mtrl.createSelect({ label: "Country", options });
+          box.append(select.element);
+          opener = select;
+          field = select.element;
+          menu = () => select.element.querySelector('[class~="mtrl-menu"]') as HTMLElement;
+        } else {
+          const el = document.createElement("m-select") as HTMLElement & { component: Opener };
+          el.setAttribute("label", "Country");
+          el.innerHTML = options.map((o) => `<m-select-option value="${o.id}">${o.text}</m-select-option>`).join("");
+          box.append(el);
+          await wait(50);
+          opener = el.component;
+          field = el;
+          menu = () => el.shadowRoot?.querySelector('[class~="mtrl-menu"]') as HTMLElement;
+        }
+        opener.open();
+        await wait(400);
+        const result = measure(menu(), field);
+        opener.close();
+        await wait(300);
+        box.remove();
+        return result;
+      };
+      return {
+        factoryBottom: await run("factory", "bottom"),
+        factoryTop: await run("factory", "top"),
+        elementBottom: await run("element", "bottom"),
+        elementTop: await run("element", "top"),
+      };
+    });
+    assert.deepEqual(long, {
+      factoryBottom: { inViewport: true, scrolls: true, side: "above" },
+      factoryTop: { inViewport: true, scrolls: true, side: "below" },
+      elementBottom: { inViewport: true, scrolls: true, side: "above" },
+      elementTop: { inViewport: true, scrolls: true, side: "below" },
+    });
+    check("select: a long list stays in the viewport and scrolls, above the field near the bottom and below it near the top");
+
+    // FLO-272: an open menu follows its field when a panel around it
+    // scrolls, not only the window; the menu's own list scrolling does not move it.
+    const follows = await page.evaluate(async () => {
+      type Opener = { open: () => unknown; close: () => unknown; element: HTMLElement };
+      const w = window as unknown as Win & { mtrl: { createSelect: (c: object) => Opener } };
+      const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+      const panel = document.createElement("div");
+      panel.style.cssText = "position: fixed; left: 20px; top: 60px; width: 320px; height: 300px; overflow: auto; z-index: 1";
+      panel.innerHTML = '<div style="height: 40px"></div>';
+      const select = w.mtrl.createSelect({
+        label: "Country",
+        menu: { container: document.body },
+        options: Array.from({ length: 40 }, (_, i) => ({ id: `o${i}`, text: `Option ${i}` })),
+      });
+      panel.append(select.element);
+      const spacer = document.createElement("div");
+      spacer.style.height = "800px";
+      panel.append(spacer);
+      document.body.append(panel);
+      select.open();
+      await wait(400);
+      const menu = document.body.querySelector(':scope > [class~="mtrl-menu"]') as HTMLElement;
+      const gap = (): number => Math.round(menu.getBoundingClientRect().top - select.element.getBoundingClientRect().bottom);
+      const before = gap();
+      const fieldBefore = select.element.getBoundingClientRect().top;
+      panel.scrollTop = 30;
+      await wait(100);
+      const afterPanel = gap();
+      const fieldMoved = Math.round(fieldBefore - select.element.getBoundingClientRect().top);
+      const list = [menu, ...menu.querySelectorAll<HTMLElement>("*")].find((n) => n.scrollHeight > n.clientHeight + 1) ?? menu;
+      const top = menu.getBoundingClientRect().top;
+      list.scrollTop = 60;
+      await wait(100);
+      const afterList = Math.round(menu.getBoundingClientRect().top - top);
+      select.close();
+      await wait(300);
+      panel.remove();
+      return { fieldMoved, followed: afterPanel === before, listScrollMoved: afterList };
+    });
+    assert.deepEqual(follows, { fieldMoved: 30, followed: true, listScrollMoved: 0 });
+    check("select: an open menu follows its field as a panel around it scrolls, and not its own list");
+
     // Going back restores the chosen option over the value attribute
     {
       const restorePage = await browser.newPage();
