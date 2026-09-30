@@ -293,6 +293,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   column, and the divider, the one item without a minimum size, shrank to 0 once the list was
   taller than the menu: a long select showed the divider's margins but no line.
 
+- **Checkbox: the check icon without the HTML sink, and form sync without repeated validity
+  (FLO-336).** Each checkbox parsed the icon's markup through `innerHTML`; it is now built once with
+  DOM APIs and cloned, the same nodes, so no Trusted Types policy is involved. A web component set
+  its validity on its internals on every property set; it now skips it while the control stays
+  valid, and the form value and validity still read exactly right straight after a set.
 - **Progress: the indeterminate circular indicator keeps its track (FLO-338).** It drew only the
   moving arc. M3 shows indeterminate indicators moving along a fixed track, and the Expressive
   `CircularWavyProgressIndicator` draws one; the track now runs around the rest of the circle,

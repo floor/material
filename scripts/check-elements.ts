@@ -789,6 +789,61 @@ try {
     });
     assert.deepEqual(parity.element, parity.factory);
     check("checkbox: renders as the factory does with the global stylesheet");
+
+    // FLO-336: the check icon, built with DOM APIs, is the DOM its old markup
+    // parsed to, in the browser too (the svg's xmlns in the XMLNS namespace).
+    const icon = await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: { createCheckbox: (c: object) => { element: HTMLElement } } };
+      const built = w.mtrl.createCheckbox({ label: "Icon" }).element.querySelector('[class*="checkbox__icon"]') as HTMLElement;
+      const reference = document.createElement("span");
+      reference.className = built.className;
+      reference.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+      <path d="M9.55 14.6L6.35 11.4l-1.9 1.9L9.55 18.4l10.9-10.9-1.9-1.9z"/>
+    </svg>
+  `;
+      return built.isEqualNode(reference);
+    });
+    assert.equal(icon, true);
+    check("checkbox: the check icon is the DOM its markup parsed to");
+
+    // FLO-336: the form state stays exact and synchronous, while a checkbox
+    // that stays valid does not set its validity again on every set.
+    const sync = await page.evaluate(() => {
+      const form = document.createElement("form");
+      form.innerHTML = '<m-checkbox name="plain">Plain</m-checkbox><m-checkbox name="needed" required>Needed</m-checkbox>';
+      document.body.append(form);
+      const [plain, needed] = Array.from(form.children) as Array<HTMLElement & { checked: boolean }>;
+      const proto = ElementInternals.prototype;
+      const original = proto.setValidity;
+      let calls = 0;
+      proto.setValidity = function (this: ElementInternals, ...args: Parameters<ElementInternals["setValidity"]>) {
+        calls++;
+        return original.apply(this, args);
+      };
+      const reads: Array<[boolean, boolean, string | null, string | null]> = [];
+      try {
+        for (let i = 0; i < 20; i++) plain.checked = i % 2 === 0;
+        const plainCalls = calls;
+        for (const value of [true, false, true]) {
+          needed.checked = value;
+          // read at once, in the same task
+          const data = new FormData(form);
+          reads.push([!needed.matches(":invalid"), form.checkValidity(), data.get("needed") as string | null, data.get("plain") as string | null]);
+        }
+        return { plainCalls, reads };
+      } finally {
+        proto.setValidity = original;
+        form.remove();
+      }
+    });
+    assert.ok(sync.plainCalls <= 1, `a valid checkbox set its validity ${sync.plainCalls} times in 20 sets`);
+    assert.deepEqual(sync.reads, [
+      [true, true, "on", null],
+      [false, false, null, null],
+      [true, true, "on", null],
+    ]);
+    check("checkbox: a set leaves validity and FormData exact at once, and a valid one skips setting it again");
   }
 
   // ---------------------------------------------------------------- slider

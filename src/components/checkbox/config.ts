@@ -5,7 +5,6 @@ import {
 } from "../../core/config/component";
 import { CheckboxConfig, BaseComponent, ApiComponent, ApiOptions } from "./types";
 
-import { setHTML } from "../../core/dom/html";
 /**
  * Default configuration for the Checkbox component
  */
@@ -36,6 +35,33 @@ export const getElementConfig = (config: CheckboxConfig) =>
     interactive: true,
   });
 
+const SVG = "http://www.w3.org/2000/svg";
+let checkIcon: DocumentFragment | null = null;
+
+/**
+ * The check icon's nodes, built once with DOM APIs and cloned for each
+ * checkbox: parsing the same markup through the HTML sink for every
+ * instance was measurable, and a cached string would skip a Trusted Types
+ * policy, where DOM APIs involve none (FLO-336). The nodes are those the
+ * markup parsed to, its whitespace included.
+ */
+const createCheckIcon = (): DocumentFragment => {
+  if (!checkIcon) {
+    checkIcon = document.createDocumentFragment();
+    const svg = document.createElementNS(SVG, "svg");
+    // As the HTML parser sets it: in the XMLNS namespace
+    svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", SVG);
+    for (const [name, value] of [["viewBox", "0 0 24 24"], ["width", "20"], ["height", "20"], ["fill", "currentColor"]]) {
+      svg.setAttribute(name, value);
+    }
+    const path = document.createElementNS(SVG, "path");
+    path.setAttribute("d", "M9.55 14.6L6.35 11.4l-1.9 1.9L9.55 18.4l10.9-10.9-1.9-1.9z");
+    svg.append("\n      ", path, "\n    ");
+    checkIcon.append("\n    ", svg, "\n  ");
+  }
+  return checkIcon.cloneNode(true) as DocumentFragment;
+};
+
 /**
  * Adds check icon to checkbox
  * @param {CheckboxConfig} config - Component configuration
@@ -45,11 +71,7 @@ export const withCheckIcon =
   <C extends BaseComponent>(component: C): C => {
     const icon = document.createElement("span");
     icon.className = `${config.prefix}-checkbox__icon`;
-    setHTML(icon, `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-      <path d="M9.55 14.6L6.35 11.4l-1.9 1.9L9.55 18.4l10.9-10.9-1.9-1.9z"/>
-    </svg>
-  `);
+    icon.appendChild(createCheckIcon());
 
     component.element.appendChild(icon);
     return component;
