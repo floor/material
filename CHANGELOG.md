@@ -119,6 +119,18 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- **Corners follow the shape tokens in 16 more components (FLO-331).** After FLO-330's scale, the
+  literal radii read `--mtrl-sys-shape-corner-*` too: badge and switch (`full`), plain tooltip
+  (`extra-small`), list selected row and video, navigation rail indicator, badge and modal
+  container, drawer container and indicators, slider handle, track and value indicator, carousel
+  (`extra-large`), the icon button's square and pressed shapes, the button's square icon shape,
+  the connected button group's inner and pressed corners, the split button's inner corners and
+  the contained search view; and the pre-upgrade switch and search. Radii set from script follow
+  as well (button group, slider track, carousel). Nothing set, they render as before. Values off
+  the scale stay literal, each with its reason: the round shapes that morph on press (half their
+  height), outer corners beside smaller inner ones, the tab indicator's 3dp, the segmented menu's
+  24dp, the slider's 2dp inside corners, scrollbars. The full stylesheet grows by 120 bytes gzipped.
+
 - **Event payloads carry the element's `value` (FLO-320).** A handler reading `value` now works
   on the factory and on the element. The button group's `change` has `value`: a string or null for
   a single-select group, an array for a multi-select one. The split button's `select` has `value`,
