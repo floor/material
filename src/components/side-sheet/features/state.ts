@@ -99,6 +99,9 @@ export const withState =
 
     const handleKeydown = (event: KeyboardEvent): void => {
       if (event.key !== "Escape" || !open || !config.closeOnEscape) return;
+      // A standard sheet sits beside the page, not over it: Escape pressed
+      // elsewhere is not meant for it (FLO-324)
+      if (!isModal && !event.composedPath().includes(element)) return;
       event.preventDefault();
       hide();
     };

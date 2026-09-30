@@ -36,6 +36,7 @@ const applyLayout = (component: ElementComponent & BaseComponent, config: Divide
 
   const style = element.style;
   style.marginLeft = style.marginRight = style.marginTop = style.marginBottom = '';
+  style.marginInlineStart = style.marginInlineEnd = style.marginBlockStart = style.marginBlockEnd = '';
 
   const cross = horizontal ? 'height' : 'width';
   const main = horizontal ? 'width' : 'height';
@@ -47,8 +48,9 @@ const applyLayout = (component: ElementComponent & BaseComponent, config: Divide
     const insetEnd = config.insetEnd !== undefined
       ? config.insetEnd
       : (variant === 'middle-inset' ? DEFAULT_INSET : 0);
-    style[horizontal ? 'marginLeft' : 'marginTop'] = `${insetStart}px`;
-    style[horizontal ? 'marginRight' : 'marginBottom'] = `${insetEnd}px`;
+    // Logical: the start inset is on the right in right-to-left (FLO-324)
+    style[horizontal ? 'marginInlineStart' : 'marginBlockStart'] = `${insetStart}px`;
+    style[horizontal ? 'marginInlineEnd' : 'marginBlockEnd'] = `${insetEnd}px`;
     // 100% plus margins overflows the parent, so let the box shrink to what
     // the insets leave.
     style[main] = 'auto';

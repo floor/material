@@ -85,6 +85,9 @@ export const withState =
       if (event.key !== "Escape") return;
       if (state === BOTTOM_SHEET_STATES.HIDDEN) return;
       if (!config.closeOnEscape) return;
+      // A standard sheet sits beside the page, not over it: Escape pressed
+      // elsewhere (closing a menu, say) is not meant for it (FLO-324)
+      if (!isModal && !event.composedPath().includes(element)) return;
       event.preventDefault();
       close();
     };

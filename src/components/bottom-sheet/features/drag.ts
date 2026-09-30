@@ -10,10 +10,13 @@ import {
 interface DragComponent {
   getClass: (name: string) => string;
   emit: (event: string, data?: unknown) => unknown;
+  on?: (event: string, handler: () => void) => unknown;
+  off?: (event: string, handler: () => void) => unknown;
   structure: { container: HTMLElement; handle: HTMLElement | null };
   state: {
     getState: () => BottomSheetState;
     setState: (next: BottomSheetState) => void;
+    open: (to?: BottomSheetState) => void;
     close: () => void;
   };
 }
@@ -39,6 +42,27 @@ export const withDrag =
     let startTime = 0;
     let offset = 0;
     let dragging = false;
+    /** The pointer moved the sheet, so the click that follows is not a press */
+    let dragged = false;
+
+    // Activating the handle does what Compose's does (FLO-324): a partially
+    // open sheet expands, an expanded one closes, a hidden one opens. Its name
+    // says which, for the state it is in.
+    const label = (): void => {
+      handle.setAttribute("aria-label", state.getState() === BOTTOM_SHEET_STATES.EXPANDED ? "Close sheet" : "Expand sheet");
+    };
+    const onClick = (): void => {
+      if (dragged) {
+        dragged = false;
+        return;
+      }
+      const current = state.getState();
+      if (current === BOTTOM_SHEET_STATES.EXPANDED) state.close();
+      else if (current === BOTTOM_SHEET_STATES.PARTIAL) state.setState(BOTTOM_SHEET_STATES.EXPANDED);
+      else state.open();
+    };
+    label();
+    component.on?.(BOTTOM_SHEET_EVENTS.STATE_CHANGE, label);
 
     /** Where a drag ends up, given how far and how fast it went */
     const settle = (distance: number, velocity: number): BottomSheetState => {
@@ -83,6 +107,7 @@ export const withDrag =
 
       structure.container.style.transition = "";
       structure.container.style.transform = "";
+      dragged = Math.abs(offset) > 4;
 
       const previous = state.getState();
       const next = settle(offset, velocity);
@@ -97,6 +122,7 @@ export const withDrag =
     handle.addEventListener("pointermove", onPointerMove);
     handle.addEventListener("pointerup", onPointerUp);
     handle.addEventListener("pointercancel", onPointerUp);
+    handle.addEventListener("click", onClick);
 
     return {
       ...component,
@@ -106,6 +132,8 @@ export const withDrag =
           handle.removeEventListener("pointermove", onPointerMove);
           handle.removeEventListener("pointerup", onPointerUp);
           handle.removeEventListener("pointercancel", onPointerUp);
+          handle.removeEventListener("click", onClick);
+          component.off?.(BOTTOM_SHEET_EVENTS.STATE_CHANGE, label);
         },
       },
     };

@@ -86,19 +86,39 @@ $component: "#{base.$prefix}-bottom-sheet";
         }
     }
 
-    // The 32x4dp bar (DockedDragHandleWidth / DockedDragHandleHeight)
+    // A 48dp button (Compose: 22dp vertical padding round the 4dp bar, and the
+    // minimum interactive size) drawing the 32x4dp bar
+    // (DockedDragHandleWidth / DockedDragHandleHeight), FLO-324
     &__handle {
         flex: 0 0 auto;
-        width: 32px;
-        height: 4px;
-        margin: 16px auto;
-        border-radius: v.shape("extra-large"); // BottomSheetDefaults.DragHandle shape
-        background-color: t.color("on-surface-variant"); // DockedDragHandleColor
+        position: relative;
+        align-self: center;
+        width: 48px;
+        height: 48px;
+        margin: 0 auto;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: none;
         cursor: grab;
         touch-action: none; // the sheet handles the gesture, not the browser
 
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 22px 8px;
+            border-radius: v.shape("extra-large"); // BottomSheetDefaults.DragHandle shape
+            background-color: t.color("on-surface-variant"); // DockedDragHandleColor
+        }
+
         &:active {
             cursor: grabbing;
+        }
+
+        // SheetBottomTokens.FocusIndicatorColor
+        &:focus-visible {
+            outline: 3px solid t.color("secondary");
+            outline-offset: -3px;
         }
     }
 

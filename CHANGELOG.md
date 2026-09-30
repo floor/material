@@ -72,6 +72,22 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- **Tooltip colours per M3 (FLO-324).** The plain tooltip is `inverse-surface` /
+  `inverse-on-surface`, opaque and without elevation (`PlainTooltipTokens`); the `plain` variant
+  had its own `surface-container-high` with an outline, and every tooltip showed at 90% opacity
+  with a shadow. The rich variant is `surface-container` with `on-surface-variant` text, medium
+  corners, elevation 2, Body Medium and 320px wide at most (`RichTooltipTokens`); it was only a
+  padding.
+- **Bottom sheet: the drag handle is a button (FLO-324).** As Compose's, it is reachable by
+  keyboard and activates: a partially open sheet expands, an expanded one closes. Its name says
+  which ("Expand sheet" / "Close sheet"). It is 48dp tall, the bar in its middle, where it was
+  36px of margin and bar.
+- **Standard sheets close on Escape only from inside (FLO-324).** A standard bottom or side sheet
+  sits beside the page, so Escape pressed elsewhere (closing a menu, say) no longer closes it;
+  modal sheets are unchanged.
+- **Side sheet: the standard sheet is square (FLO-324).** Only the modal sheet rounds, on the
+  edge facing the page (MDC: docked `Corner.None`, modal `CornerLarge` inner edge).
+
 - **Baseline on M3's current baseline values (FLO-315).** It mixed the 2021 `surface`
   `#FFFBFE` with newer roles. Every role now is Compose's `ColorLightTokens` /
   `ColorDarkTokens` value (primary `#6750A4`). Eleven change: light `surface` and
@@ -166,6 +182,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Divider insets follow the writing direction (FLO-324).** They were physical margins, so in
+  right-to-left the start inset landed on the end; they are logical margins now.
+
 - **A small badge is visible when created (FLO-324).** Its empty label, a dot's normal state,
   counted as nothing to show, so `createBadge({ variant: 'small' })` started hidden;
   `setLabel` already knew better.
@@ -259,6 +278,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   no longer carry unprefixed `progress progress--linear` copies of their classes.
 
 ### Deprecated
+
+- **Tooltip: `rich` (FLO-324).** It was never read. A rich tooltip is `variant: 'rich'`, and the
+  content is always text. Removed in 1.0.
 
 - **Dialog buttons: `color` (FLO-324).** It never had an effect: the button has no colour option,
   and M3's dialog actions are text buttons in the dialog's own colours. Removed in 1.0.

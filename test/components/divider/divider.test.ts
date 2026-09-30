@@ -61,8 +61,8 @@ describe('divider creation', () => {
   test('middle-inset defaults to 16px on both sides', () => {
     const divider = createDivider({ variant: 'middle-inset' });
     expect(divider.getVariant()).toBe('middle-inset');
-    expect(divider.element.style.marginLeft).toBe('16px');
-    expect(divider.element.style.marginRight).toBe('16px');
+    expect(divider.element.style.marginInlineStart).toBe('16px');
+    expect(divider.element.style.marginInlineEnd).toBe('16px');
   });
 });
 
@@ -87,9 +87,9 @@ describe('divider orientation', () => {
   test('an inset moves to the new axis', () => {
     const divider = createDivider({ variant: 'inset', insetStart: 24 });
     divider.setOrientation('vertical');
-    expect(divider.element.style.marginLeft).toBe('');
-    expect(divider.element.style.marginTop).toBe('24px');
-    expect(divider.element.style.marginBottom).toBe('0px');
+    expect(divider.element.style.marginInlineStart).toBe('');
+    expect(divider.element.style.marginBlockStart).toBe('24px');
+    expect(divider.element.style.marginBlockEnd).toBe('0px');
     expect(divider.element.style.height).toBe('auto');
   });
 });
@@ -100,8 +100,8 @@ describe('divider variants and insets', () => {
     divider.setVariant('inset');
     expect(divider.getVariant()).toBe('inset');
     expect(modifiers(divider)).toEqual(['mtrl-divider--horizontal', 'mtrl-divider--inset']);
-    expect(divider.element.style.marginLeft).toBe('16px');
-    expect(divider.element.style.marginRight).toBe('0px');
+    expect(divider.element.style.marginInlineStart).toBe('16px');
+    expect(divider.element.style.marginInlineEnd).toBe('0px');
     expect(divider.element.style.width).toBe('auto');
   });
 
@@ -110,33 +110,33 @@ describe('divider variants and insets', () => {
     divider.setVariant('inset').setVariant('full-width');
     expect(divider.getVariant()).toBe('full-width');
     expect(modifiers(divider)).toEqual(['mtrl-divider--full-width', 'mtrl-divider--horizontal']);
-    expect(divider.element.style.marginLeft).toBe('');
-    expect(divider.element.style.marginRight).toBe('');
+    expect(divider.element.style.marginInlineStart).toBe('');
+    expect(divider.element.style.marginInlineEnd).toBe('');
     expect(divider.element.style.width).toBe('100%');
   });
 
   test('setInset changes the margins of an inset divider', () => {
     const divider = createDivider({ variant: 'middle-inset' });
     divider.setInset(8, 4);
-    expect(divider.element.style.marginLeft).toBe('8px');
-    expect(divider.element.style.marginRight).toBe('4px');
+    expect(divider.element.style.marginInlineStart).toBe('8px');
+    expect(divider.element.style.marginInlineEnd).toBe('4px');
     divider.setInset(undefined, 12);
-    expect(divider.element.style.marginLeft).toBe('8px');
-    expect(divider.element.style.marginRight).toBe('12px');
+    expect(divider.element.style.marginInlineStart).toBe('8px');
+    expect(divider.element.style.marginInlineEnd).toBe('12px');
   });
 
   test('setInset works after setVariant made the divider inset', () => {
     const divider = createDivider();
     divider.setVariant('inset').setInset(8, 4);
-    expect(divider.element.style.marginLeft).toBe('8px');
-    expect(divider.element.style.marginRight).toBe('4px');
+    expect(divider.element.style.marginInlineStart).toBe('8px');
+    expect(divider.element.style.marginInlineEnd).toBe('4px');
   });
 
   test('custom insets survive a change of orientation', () => {
     const divider = createDivider({ variant: 'inset' });
     divider.setInset(10, 6).setOrientation('vertical');
-    expect(divider.element.style.marginTop).toBe('10px');
-    expect(divider.element.style.marginBottom).toBe('6px');
+    expect(divider.element.style.marginBlockStart).toBe('10px');
+    expect(divider.element.style.marginBlockEnd).toBe('6px');
   });
 });
 
@@ -159,5 +159,17 @@ describe('divider thickness and color', () => {
     const divider = createDivider();
     divider.setColor('rgb(0, 128, 0)');
     expect(divider.element.style.backgroundColor).toBe('rgb(0, 128, 0)');
+  });
+});
+
+// FLO-324: the insets were physical margins, so in right-to-left the start
+// inset landed on the wrong side. They are logical now.
+describe('divider insets are logical', () => {
+  test('no physical margin is written, in either orientation', () => {
+    for (const orientation of ['horizontal', 'vertical'] as const) {
+      const divider = createDivider({ variant: 'middle-inset', orientation, insetStart: 8, insetEnd: 4 });
+      const style = divider.element.style;
+      expect([style.marginLeft, style.marginRight, style.marginTop, style.marginBottom]).toEqual(['', '', '', '']);
+    }
   });
 });
