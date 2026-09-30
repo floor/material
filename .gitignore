@@ -97,8 +97,7 @@ demo/
 .check-solid.js
 
 # Local Claude Code settings
-.claude/*
-!.claude/CLAUDE.md
+.claude/
 
 # Local agent instructions and manifests
 AGENTS.md
