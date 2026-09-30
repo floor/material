@@ -48,3 +48,9 @@ chips.on("change", event => { const value: string | string[] | null = event.valu
 chips.on("change", values => values.toUpperCase());
 // @ts-expect-error changed value is not a DOM event
 chips.on("change", (_values, changed) => changed?.preventDefault());
+// FLO-352: the keyboard API the set has at runtime is typed
+export const keyboard: Equals<ChipsComponent["keyboard"], { enable: () => void; disable: () => void }> = true;
+chips.keyboard.disable();
+chips.keyboard.enable();
+// @ts-expect-error the keyboard API takes no arguments
+chips.keyboard.disable(true);

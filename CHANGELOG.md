@@ -10,6 +10,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Added
+
+- **`chips.keyboard` is typed (FLO-352).** A chip set had `keyboard.enable()` and
+  `keyboard.disable()` at runtime without them in `ChipsComponent`, so TypeScript needed a cast to
+  turn the arrow keys off.
+
 ### Fixed
 
 - **Keyboard fixes in tabs and chips**, found while moving them onto `createRoving` (FLO-343, not

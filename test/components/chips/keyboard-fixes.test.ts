@@ -38,7 +38,7 @@ const chipsIn = (parent: Node) => {
 
 test("keyboard.disable() stops the arrows, and enable brings them back", () => {
   const chips = chipsIn(document.body);
-  const keyboard = (chips as unknown as { keyboard: { enable(): void; disable(): void } }).keyboard;
+  const { keyboard } = chips;
   const [a, b] = chips.getChips();
   keyboard.disable();
   a!.element.focus();
