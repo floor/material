@@ -48,6 +48,7 @@ export const COMPONENTS = [
   { name: "divider", imports: ["createDivider"] },
   { name: "drawer", imports: ["createDrawer"] },
   { name: "fab", imports: ["createFab"] },
+  { name: "fab-menu", imports: ["createFabMenu"] },
   { name: "extended-fab", imports: ["createExtendedFab"] },
   { name: "icon-button", imports: ["createIconButton"] },
   { name: "list", imports: ["createList"] },
@@ -86,6 +87,7 @@ export const KNOWN_DEPS: Partial<Record<ComponentName, readonly ComponentName[]>
   tabs: ["button", "badge"],
   "split-button": ["button", "menu"],
   toolbar: ["button", "icon-button"],
+  "fab-menu": ["fab"],
 };
 
 export const SCENARIO_DEFS = [

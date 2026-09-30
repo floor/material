@@ -28,6 +28,7 @@ export { default as createDialog } from "./dialog";
 export { createDivider } from "./divider";
 export { default as createDrawer } from "./drawer";
 export { default as createFab } from "./fab";
+export { default as createFabMenu } from "./fab-menu";
 export { default as createExtendedFab } from "./extended-fab";
 export { default as createIconButton } from "./icon-button";
 export { default as createList } from "./list";
@@ -256,6 +257,9 @@ export type { TextfieldConfig, TextfieldComponent } from "./textfield/types";
 
 // Timepicker
 export type { TimePickerConfig, TimePickerComponent } from "./timepicker/types";
+
+// FAB menu
+export type { FabMenuConfig, FabMenuComponent, FabMenuEvents, FabMenuItem } from "./fab-menu/types";
 
 // Toolbar
 export type {

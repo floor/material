@@ -12,6 +12,27 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **FAB menu: M3 Expressive's FAB menu (FLO-306).** `createFabMenu` makes a FAB that opens 2 to 6
+  related actions, in two presentations, as m3.material.io lays them out:
+  - **List (compact windows).** The FAB turns into a 56dp round close button, pinned to its top
+    trailing corner. Pill items (56dp high, a 24dp icon and a title-medium label) rise above it,
+    8dp away and 4dp apart. They stagger in from the one nearest the FAB, with delays taken from
+    Compose's SlowEffects spring; under reduced motion they fade in without a stagger.
+  - **Menu (the site's rule on the web).** The FAB opens the baseline menu, 4dp away. The menu is
+    loaded with `import()` when first needed, and preloaded in a wide window or when the FAB is
+    first pointed at or focused. `menu` lets an app bring its own.
+  - **Choosing:** `presentation: 'auto'` (the default) takes the list below 600px and the menu from
+    600px, and never switches while open.
+  - **Options:** `color` is `primary`, `secondary` or `tertiary` (the FAB on the role's container,
+    the close button on the role, the items on its container). `size` is `default`, `medium` or
+    `large`. `placement: 'bottom-end' | 'bottom-start'` sits 16dp from the window edges, 24dp in
+    large windows.
+  - **Accessibility:** the FAB is a menu button (`aria-haspopup`, `aria-expanded`, `aria-controls`)
+    named after the menu, and the items are `menuitem`s of a `menu`. Opening the list keeps focus
+    on the close button. ArrowDown or Tab goes to the top item and ArrowUp to the nearest; in the
+    list the arrows wrap and Home and End go to the ends. Escape or Tab out closes the list on the
+    FAB, and so does choosing an item. A press outside closes it.
+  - **Events:** `select` with the item's `id`, plus `open` and `close`.
 - **Size budgets for lazy chunks.** `scripts/size.ts` budgets what a component loads with
   `import()` apart from its initial graph: the menu's submenu feature, and the FAB menu's menu.
 

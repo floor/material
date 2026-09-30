@@ -62,6 +62,10 @@ const CASES: Record<string, { make: string }> = {
   "button-group": {
     make: `m.createButtonGroup({ kind: "connected", selection: "single", buttons: [{ value: "a", text: "Left", selected: true }, { value: "b", text: "Mid" }, { value: "c", text: "Right" }] }).element`
   },
+  // FLO-306: the FAB menu open as a list, the close button and the pill items
+  "fab-menu-list": {
+    make: `(() => { const f = m.createFabMenu({ icon: ${JSON.stringify(ICON)}, ariaLabel: "Compose", presentation: "list", items: [{ id: "a", text: "Reply", icon: ${JSON.stringify(ICON)} }, { id: "b", text: "Forward" }] }); f.open(); return f.element; })()`
+  },
   // FLO-304: the docked toolbar's square corners, the floating pill and its vibrant item colours
   "toolbar-docked": {
     make: `m.createToolbar({ items: [{ icon: ${JSON.stringify(ICON)}, ariaLabel: "a" }, { icon: ${JSON.stringify(ICON)}, ariaLabel: "b" }] }).element`

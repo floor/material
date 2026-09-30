@@ -810,6 +810,85 @@
    true
   ]
  ],
+ "fab-menu-list": [
+  [
+   "0:div.mtrl-fab-menu.mtrl-fab-menu--primary",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:button.mtrl-fab.mtrl-fab-menu__fab",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "2:span.mtrl-icon.mtrl-fab__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:div.mtrl-ripple",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "4:span.mtrl-fab-menu__close",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "5:div.mtrl-fab-menu__list",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:button.mtrl-fab-menu__item",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "7:span.mtrl-fab-menu__item-icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "8:span.mtrl-fab-menu__item-text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "9:button.mtrl-fab-menu__item",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "10:span.mtrl-fab-menu__item-text",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
  "toolbar-docked": [
   [
    "0:div.mtrl-toolbar.mtrl-toolbar--docked",
