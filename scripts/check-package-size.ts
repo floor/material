@@ -173,7 +173,9 @@ try {
     // role in every theme, 52,398 to 49,528; one button state layer in currentColor, its
     // opacity alone per state, in place of a layer per colour style and toggle state:
     // 48,934. With main's FLO-308 themes merged and regenerated without twins: 48,794.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 50200 },
+    // The typeface and corner tokens (FLO-330): every font-family and token corner is
+    // var(--token, <compiled>), measured 50,184 to 50,678 (+494) at 64c1e86.
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 50850 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);

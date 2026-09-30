@@ -26,7 +26,7 @@ describe('dialog stylesheet', () => {
   test('the container is surface-container-high at level 3 with a 28dp corner', () => {
     expect(value('.mtrl-dialog', 'background-color')).toBe('var(--mtrl-sys-color-surface-container-high)');
     expect(value('.mtrl-dialog', 'color')).toBe('var(--mtrl-sys-color-on-surface)');
-    expect(value('.mtrl-dialog', 'border-radius')).toBe('28px');
+    expect(value('.mtrl-dialog', 'border-radius')).toBe('var(--mtrl-sys-shape-corner-extra-large, 28px)');
     expect(value('.mtrl-dialog', 'box-shadow')).toBe('0px 1px 3px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15)');
     expect(value('.mtrl-dialog', 'min-width')).toBe('280px');
     expect(value('.mtrl-dialog', 'max-width')).toBe('560px');

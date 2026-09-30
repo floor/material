@@ -27,7 +27,7 @@ describe('snackbar stylesheet', () => {
     expect(value('.mtrl-snackbar', 'background-color')).toBe('var(--mtrl-sys-color-inverse-surface)');
     expect(value('.mtrl-snackbar', 'color')).toBe('var(--mtrl-sys-color-inverse-on-surface)');
     expect(value('.mtrl-snackbar', 'box-shadow')).toBe('0px 1px 3px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15)');
-    expect(value('.mtrl-snackbar', 'border-radius')).toBe('4px');
+    expect(value('.mtrl-snackbar', 'border-radius')).toBe('var(--mtrl-sys-shape-corner-extra-small, 4px)');
     expect(value('.mtrl-snackbar', 'min-height')).toBe('48px');
     expect(value('.mtrl-snackbar', 'max-width')).toBe('600px');
     expect(value('.mtrl-snackbar', 'padding')).toBe('0 16px');

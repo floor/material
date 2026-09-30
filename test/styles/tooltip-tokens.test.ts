@@ -38,7 +38,7 @@ describe('tooltip tokens', () => {
   test('rich: surface-container, on-surface-variant, CornerMedium, elevation 2, Body Medium, 320dp', () => {
     expect(value('.mtrl-tooltip--rich', 'background-color')).toBe('var(--mtrl-sys-color-surface-container)');
     expect(value('.mtrl-tooltip--rich', 'color')).toBe('var(--mtrl-sys-color-on-surface-variant)');
-    expect(value('.mtrl-tooltip--rich', 'border-radius')).toBe('12px');
+    expect(value('.mtrl-tooltip--rich', 'border-radius')).toBe('var(--mtrl-sys-shape-corner-medium, 12px)');
     expect(value('.mtrl-tooltip--rich', 'max-width')).toBe('320px');
     expect(value('.mtrl-tooltip--rich', 'font-size')).toBe('14px');
     expect(value('.mtrl-tooltip--rich', 'box-shadow')).toBeDefined();

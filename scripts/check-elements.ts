@@ -6728,6 +6728,66 @@ try {
     check("theme: a theme on the document reaches the shadow root");
   }
 
+  // FLO-330: the typeface and the corners are tokens, the compiled values their
+  // fallback. Unset, a button and a card render as before; set on the document,
+  // the tokens reach an element's shadow root and a factory alike.
+  await fresh(
+    page,
+    `<m-button id="tb">Save</m-button> <m-button id="tq" shape="square">Square</m-button><section id="factory"></section>`
+  );
+  {
+    const read = (): Promise<Record<string, string>> =>
+      page.evaluate(() => {
+        const w = window as unknown as Win & { mtrl: Record<string, (c: object) => { element: HTMLElement }> };
+        const factory = document.getElementById("factory") as HTMLElement;
+        if (!factory.firstElementChild) {
+          factory.append(w.mtrl.createButton({ text: "Save" }).element);
+          factory.append(w.mtrl.createButton({ text: "Square", shape: "square" }).element);
+          factory.append(w.mtrl.createCard({ variant: "filled" }).element);
+        }
+        const [button, square, card] = Array.from(factory.children) as HTMLElement[];
+        const inner = (id: string): HTMLElement =>
+          (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
+        const style = (el: HTMLElement): CSSStyleDeclaration => getComputedStyle(el);
+        return {
+          elementFont: style(inner("tb")).fontFamily,
+          factoryFont: style(button!).fontFamily,
+          elementSquare: style(inner("tq")).borderTopLeftRadius,
+          factorySquare: style(square!).borderTopLeftRadius,
+          card: style(card!).borderTopLeftRadius,
+        };
+      });
+    const unset = await read();
+    assert.deepEqual(unset, {
+      elementFont: "Roboto, sans-serif",
+      factoryFont: "Roboto, sans-serif",
+      elementSquare: "12px",
+      factorySquare: "12px",
+      card: "12px",
+    });
+    check("tokens: unset, the typeface and corners are the compiled values");
+
+    await page.evaluate(() => {
+      document.documentElement.style.setProperty("--mtrl-ref-typeface-plain", "Georgia");
+      document.documentElement.style.setProperty("--mtrl-sys-shape-corner-medium", "3px");
+    });
+    // the square button eases its corner; wait past the transition
+    await page.waitForTimeout(600);
+    const set = await read();
+    await page.evaluate(() => {
+      document.documentElement.style.removeProperty("--mtrl-ref-typeface-plain");
+      document.documentElement.style.removeProperty("--mtrl-sys-shape-corner-medium");
+    });
+    assert.deepEqual(set, {
+      elementFont: "Georgia",
+      factoryFont: "Georgia",
+      elementSquare: "3px",
+      factorySquare: "3px",
+      card: "3px",
+    });
+    check("tokens: --mtrl-ref-typeface-plain and --mtrl-sys-shape-corner-medium reach <m-button> and the factories");
+  }
+
   assert.deepEqual(errors, [], "no page errors");
   check("no page errors");
 } finally {

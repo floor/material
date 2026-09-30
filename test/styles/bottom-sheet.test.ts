@@ -33,8 +33,8 @@ describe('bottom sheet stylesheet', () => {
 
   test('only the top corners round, at extra-large', () => {
     // CornerExtraLargeTop: the bottom edge meets the screen
-    expect(value('.mtrl-bottom-sheet__container', 'border-start-start-radius')).toBe('28px');
-    expect(value('.mtrl-bottom-sheet__container', 'border-start-end-radius')).toBe('28px');
+    expect(value('.mtrl-bottom-sheet__container', 'border-start-start-radius')).toBe('var(--mtrl-sys-shape-corner-extra-large, 28px)');
+    expect(value('.mtrl-bottom-sheet__container', 'border-start-end-radius')).toBe('var(--mtrl-sys-shape-corner-extra-large, 28px)');
     expect(value('.mtrl-bottom-sheet__container', 'border-radius')).toBeUndefined();
   });
 

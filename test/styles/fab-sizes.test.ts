@@ -1,5 +1,6 @@
 import { beforeAll, expect, test } from 'bun:test';
 import { compileString } from 'sass';
+import { corner } from '../utils/corner';
 import { FAB_SIZES, FAB_ICON_SIZES } from '../../src/components/fab/constants';
 import { createBaseConfig, getElementConfig } from '../../src/components/fab/config';
 
@@ -18,7 +19,7 @@ for (const [size, container, icon, radius] of [
     const root = size === 'default' ? '.mtrl-fab' : `.mtrl-fab--${size}`;
     expect(value(root, 'width')).toBe(`${container}px`);
     expect(value(root, 'height')).toBe(`${container}px`);
-    expect(value(root, 'border-radius')).toBe(`${radius}px`);
+    expect(value(root, 'border-radius')).toBe(corner(radius));
     const iconRoot = size === 'default' ? '.mtrl-fab__icon' : `${root} .mtrl-fab__icon`;
     for (const selector of [iconRoot, `${iconRoot} svg`]) {
       expect(value(selector, 'width')).toBe(`${icon}px`);

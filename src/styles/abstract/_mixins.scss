@@ -30,7 +30,9 @@ $icons: (
 // Typography
 @mixin typography($scale) {
   $styles: f.get-typography($scale);
-  font-family: map.get($styles, 'font-family');
+  // The role's face as its reference token, the compiled family as the fallback
+  // (FLO-330): an app or theme sets --{prefix}-ref-typeface-brand or -plain
+  font-family: var(--#{base.$prefix}-ref-typeface-#{f.typeface($scale)}, #{map.get($styles, 'font-family')});
   font-size: map.get($styles, 'font-size');
   line-height: map.get($styles, 'line-height');
   letter-spacing: map.get($styles, 'letter-spacing');
