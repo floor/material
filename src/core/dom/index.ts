@@ -31,5 +31,6 @@ export {
   showInTopLayer,
   hideFromTopLayer,
   onTopLayerClose,
+  inertOutside,
 } from "./layer";
 export type { TopLayerKind, TopLayerOptions } from "./layer";

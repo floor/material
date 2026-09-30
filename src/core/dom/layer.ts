@@ -118,3 +118,33 @@ export const onTopLayerClose = (
     element.removeEventListener("close", listener);
   };
 };
+
+/**
+ * A modal outside the top layer (FLO-324): makes everything but `keep` inert,
+ * as showModal() does for a top-layer dialog. The siblings of `keep` and of
+ * each of its ancestors, up to the body, crossing shadow roots, get `inert`;
+ * elements already inert are left alone. Returns the undo, which removes
+ * `inert` from exactly the elements it set it on.
+ */
+export const inertOutside = (keep: Element): (() => void) => {
+  const made: Element[] = [];
+  let node: Element = keep;
+  for (;;) {
+    const parent = node.parentNode;
+    if (!parent) break;
+    for (const sibling of Array.from(parent.children)) {
+      if (sibling === node || sibling.hasAttribute("inert") || /^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(sibling.tagName)) continue;
+      sibling.setAttribute("inert", "");
+      made.push(sibling);
+    }
+    if (parent === document.body || parent === document.documentElement) break;
+    // Out of a shadow root, on to its host
+    const next = parent instanceof ShadowRoot ? parent.host : parent.parentElement ? (parent as Element) : null;
+    if (!next) break;
+    node = next;
+  }
+  return () => {
+    for (const element of made) element.removeAttribute("inert");
+    made.length = 0;
+  };
+};

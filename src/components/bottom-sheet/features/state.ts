@@ -10,6 +10,7 @@ import {
 import { deepActiveElement, wrapTab } from "../../../core/dom/focus";
 import {
   hideFromTopLayer,
+  inertOutside,
   onTopLayerClose,
   showInTopLayer,
 } from "../../../core/dom/layer";
@@ -44,6 +45,23 @@ export const withState =
       config.initialState ?? BOTTOM_SHEET_STATES.HIDDEN;
     /** What had focus before a modal sheet took it */
     let previouslyFocused: HTMLElement | null = null;
+    /** Undoes the inert page of a modal sheet outside the top layer */
+    let restorePage: (() => void) | null = null;
+
+    // A modal sheet outside the top layer does what showModal() does for one
+    // inside it: the page goes inert and Tab stays in the sheet. It did
+    // neither (FLO-324).
+    const trap = (on: boolean): void => {
+      if (!isModal || top) return;
+      if (on && !restorePage) {
+        restorePage = inertOutside(element);
+        element.addEventListener("keydown", handleTab);
+      } else if (!on && restorePage) {
+        restorePage();
+        restorePage = null;
+        element.removeEventListener("keydown", handleTab);
+      }
+    };
 
     const applyState = (next: BottomSheetState): void => {
       for (const name of Object.values(BOTTOM_SHEET_STATES)) {
@@ -108,6 +126,7 @@ export const withState =
       setState(to);
 
       if (wasHidden) {
+        trap(true);
         if (isModal) structure.container.focus();
         component.emit(BOTTOM_SHEET_EVENTS.OPEN);
       }
@@ -116,6 +135,7 @@ export const withState =
     function close(): void {
       if (state === BOTTOM_SHEET_STATES.HIDDEN) return;
       setState(BOTTOM_SHEET_STATES.HIDDEN);
+      trap(false);
       // out of the top layer first: the page is inert until then. The
       // stylesheet keeps it in the top layer while it slides out.
       if (top) hideFromTopLayer(element);
@@ -163,6 +183,7 @@ export const withState =
           element.removeEventListener("cancel", handleCancel);
           element.removeEventListener("click", handleBackdropClick);
           element.removeEventListener("keydown", handleTab);
+          trap(false);
           stopCloses?.();
           if (top) hideFromTopLayer(element);
         },

@@ -104,6 +104,16 @@ export const withAPI =
       comp.emit?.(name, payload);
     };
 
+    // One disabled state, however it is set (FLO-324): created disabled, the
+    // bar had aria-disabled; disabled later it got only the class, and
+    // enable() left a creation-time aria-disabled behind
+    const setDisabled = (disabled: boolean): void => {
+      if (disabled) options.disabled.disable();
+      else options.disabled.enable();
+      if (disabled) element.setAttribute("aria-disabled", "true");
+      else element.removeAttribute("aria-disabled");
+    };
+
     // Update progress and redraw canvas
     const updateProgress = (value: number, max: number): void => {
       // Update ARIA attribute
@@ -289,11 +299,11 @@ export const withAPI =
 
       // State management
       enable(): ProgressComponent {
-        options.disabled.enable();
+        setDisabled(false);
         return api;
       },
       disable(): ProgressComponent {
-        options.disabled.disable();
+        setDisabled(true);
         return api;
       },
       isDisabled: options.disabled.isDisabled,
@@ -348,10 +358,10 @@ export const withAPI =
       // Required property objects
       disabled: {
         enable(): void {
-          options.disabled.enable();
+          setDisabled(false);
         },
         disable(): void {
-          options.disabled.disable();
+          setDisabled(true);
         },
         isDisabled: options.disabled.isDisabled,
       },
