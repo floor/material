@@ -7,6 +7,10 @@ interface ComponentWithInput extends ElementComponent {
   input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | HTMLButtonElement;
 }
 
+/** An element with a native `disabled`: a button, an input, a select, a textarea, a fieldset. */
+const isFormControl = (element: HTMLElement): element is HTMLElement & { disabled: boolean } =>
+  'disabled' in element;
+
 // Type guard to check if component has a disableable input
 function hasDisableableInput(component: object): component is ComponentWithInput {
   return 'input' in component && 
@@ -78,14 +82,11 @@ export const withDisabled = <T extends DisabledConfig & object>(config: T) =>
         if (hasDisableableInput(component)) {
           component.input.disabled = false;
           component.input.removeAttribute('disabled');
-        } else {
-          // If component doesn't have an input, try to disable the main element
-          // This only works if the element is a button, input, etc.
-          const interactiveElement = component.element as HTMLButtonElement;
-          if ('disabled' in interactiveElement) {
-            interactiveElement.disabled = false;
-          }
+        } else if (isFormControl(component.element)) {
+          component.element.disabled = false;
           component.element.removeAttribute('disabled');
+        } else {
+          component.element.removeAttribute('aria-disabled');
         }
         
         return this;
@@ -97,13 +98,14 @@ export const withDisabled = <T extends DisabledConfig & object>(config: T) =>
         if (hasDisableableInput(component)) {
           component.input.disabled = true;
           component.input.setAttribute('disabled', 'true');
-        } else {
-          // If component doesn't have an input, try to disable the main element
-          const interactiveElement = component.element as HTMLButtonElement;
-          if ('disabled' in interactiveElement) {
-            interactiveElement.disabled = true;
-          }
+        } else if (isFormControl(component.element)) {
+          component.element.disabled = true;
           component.element.setAttribute('disabled', 'true');
+        } else {
+          // A root that is not a form control has no `disabled`: the bare
+          // attribute is not valid there and tells assistive technology
+          // nothing. aria-disabled does (FLO-119).
+          component.element.setAttribute('aria-disabled', 'true');
         }
         
         return this;
@@ -123,19 +125,14 @@ export const withDisabled = <T extends DisabledConfig & object>(config: T) =>
           return component.input.disabled;
         }
         
-        // Check if element itself is disabled
-        const interactiveElement = component.element as HTMLButtonElement;
-        if ('disabled' in interactiveElement) {
-          return interactiveElement.disabled;
+        if (isFormControl(component.element)) {
+          return component.element.disabled;
         }
 
-        // A root that is not a form element carries no `disabled` property, so
-        // the attribute `disable()` writes is the only record of the state.
-        // Without this, `disable()` writes state `isDisabled()` cannot read —
-        // and `toggle()`, which branches on it, disables and never enables
-        // again. Reaches any div-rooted component that publishes the manager;
-        // `progress` hands `isDisabled` straight to consumers.
-        return component.element.hasAttribute('disabled');
+        // A root that is not a form control carries no `disabled` property, so
+        // the aria-disabled `disable()` writes is the record of the state:
+        // `toggle()` branches on it (FLO-119).
+        return component.element.getAttribute('aria-disabled') === 'true';
       }
     };
 

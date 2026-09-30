@@ -66,6 +66,7 @@ describe('withDisabled', () => {
     enhanced.disabled.enable();
     
     expect(enhanced.element.classList.contains(`${PREFIX}-button--disabled`)).toBe(false);
+    expect(enhanced.element.hasAttribute('aria-disabled')).toBe(false);
     expect(enhanced.element.hasAttribute('disabled')).toBe(false);
   });
   
@@ -79,8 +80,30 @@ describe('withDisabled', () => {
     enhanced.disabled.disable();
     
     expect(enhanced.element.classList.contains(`${PREFIX}-button--disabled`)).toBe(true);
-    expect(enhanced.element.hasAttribute('disabled')).toBe(true);
-    expect(enhanced.element.getAttribute('disabled')).toBe('true');
+    // A div root has no `disabled`: aria-disabled, and no bare attribute (FLO-119)
+    expect(enhanced.element.getAttribute('aria-disabled')).toBe('true');
+    expect(enhanced.element.hasAttribute('disabled')).toBe(false);
+  });
+
+  test('a native form control root keeps its own disabled, and no aria-disabled (FLO-119)', () => {
+    const button = { ...component, element: document.createElement('button') };
+    const enhanced = withDisabled({ componentName: 'button' })(button);
+    enhanced.disabled.disable();
+    expect((enhanced.element as HTMLButtonElement).disabled).toBe(true);
+    expect(enhanced.element.hasAttribute('aria-disabled')).toBe(false);
+    expect(enhanced.disabled.isDisabled()).toBe(true);
+    enhanced.disabled.enable();
+    expect((enhanced.element as HTMLButtonElement).disabled).toBe(false);
+    expect(enhanced.disabled.isDisabled()).toBe(false);
+  });
+
+  test('on a div root, isDisabled and toggle follow aria-disabled (FLO-119)', () => {
+    const enhanced = withDisabled({ componentName: 'button' })(component);
+    enhanced.disabled.toggle();
+    expect(enhanced.disabled.isDisabled()).toBe(true);
+    enhanced.disabled.toggle();
+    expect(enhanced.disabled.isDisabled()).toBe(false);
+    expect(enhanced.element.hasAttribute('aria-disabled')).toBe(false);
   });
   
   test('toggle method should toggle disabled state', () => {

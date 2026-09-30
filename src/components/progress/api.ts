@@ -104,14 +104,12 @@ export const withAPI =
       comp.emit?.(name, payload);
     };
 
-    // One disabled state, however it is set (FLO-324): created disabled, the
-    // bar had aria-disabled; disabled later it got only the class, and
-    // enable() left a creation-time aria-disabled behind
+    // One disabled state, however it is set (FLO-324): the manager writes
+    // aria-disabled on the bar, as on any root that is not a form control
+    // (FLO-119)
     const setDisabled = (disabled: boolean): void => {
       if (disabled) options.disabled.disable();
       else options.disabled.enable();
-      if (disabled) element.setAttribute("aria-disabled", "true");
-      else element.removeAttribute("aria-disabled");
     };
 
     // Update progress and redraw canvas
