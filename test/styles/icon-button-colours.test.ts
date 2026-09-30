@@ -12,6 +12,8 @@ const value = (selector: string, property: string) =>
     .filter(([, name]) => name === property)
     .map(([, , result]) => result.trim()).pop();
 const colour = (token: string) => `var(--mtrl-sys-color-${token})`;
+// A colour a container can override through a custom property, with the M3 role as its fallback
+const hook = (name: string, fallback: string) => `var(--mtrl-icon-button-${name}, ${fallback})`;
 const alpha = (opacity: number) => `color-mix(in srgb, ${colour('on-surface')} ${opacity}%, transparent)`;
 
 beforeAll(() => {
@@ -27,7 +29,7 @@ describe('icon button colour tokens', () => {
   ]) {
     test(`${variant}: plain palette is also the toggle fallback`, () => {
       expect(value(`${root}--${variant}`, 'background-color')).toBe(container === 'transparent' ? container : colour(container));
-      expect(value(`${root}--${variant}`, 'color')).toBe(colour(icon));
+      expect(value(`${root}--${variant}`, 'color')).toBe(variant === 'standard' ? hook('standard-color', colour(icon)) : colour(icon));
     });
     for (const disabled of [':disabled', `${root}--disabled`]) {
       test(`${variant}: ${disabled} overrides selected and unselected colours`, () => {
@@ -55,8 +57,8 @@ describe('icon button colour tokens', () => {
   });
 
   test('tonal selected toggle uses secondary; unselected inherits the plain palette', () => {
-    expect(value(`${root}--tonal${root}--selected`, 'background-color')).toBe(colour('secondary'));
-    expect(value(`${root}--tonal${root}--selected`, 'color')).toBe(colour('on-secondary'));
+    expect(value(`${root}--tonal${root}--selected`, 'background-color')).toBe(hook('selected-container', colour('secondary')));
+    expect(value(`${root}--tonal${root}--selected`, 'color')).toBe(hook('selected-color', colour('on-secondary')));
     expect(css).not.toContain(`${root}--tonal${root}--toggle:not(`);
   });
 
@@ -68,7 +70,8 @@ describe('icon button colour tokens', () => {
   });
 
   test('standard selected stays primary even on hover', () => {
-    expect(value(`${root}--standard${root}--selected`, 'color')).toBe(colour('primary'));
+    expect(value(`${root}--standard${root}--selected`, 'color')).toBe(hook('selected-color', colour('primary')));
+    expect(value(`${root}--standard${root}--selected`, 'background-color')).toBe(hook('selected-container', 'transparent'));
     expect(value(`${root}--standard:hover`, 'color')).toBeUndefined();
   });
 

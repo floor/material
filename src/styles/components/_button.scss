@@ -265,7 +265,13 @@ $content-color: (
   // ---------------------------------------------------------------------------
   @each $variant, $role in $content-color {
     &--#{$variant} {
-      color: t.color($role);
+      @if $variant == 'text' {
+        // A container can recolour its text buttons, into the element's shadow
+        // root: the vibrant toolbar's "standard button" is on-primary-container.
+        color: var(--#{base.$prefix}-button-text-color, #{t.color($role)});
+      } @else {
+        color: t.color($role);
+      }
     }
   }
 

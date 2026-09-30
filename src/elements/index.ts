@@ -38,6 +38,7 @@ import { menuElement, menuItemDeclaration, defineMenu } from "./menu";
 import { selectElement, selectOptionDeclaration, defineSelect } from "./select";
 import { splitButtonElement, defineSplitButton } from "./split-button";
 import { tooltipElement, defineTooltip } from "./tooltip";
+import { toolbarElement, defineToolbar } from "./toolbar";
 import { snackbarElement, defineSnackbar } from "./snackbar";
 import { dialogElement, defineDialog } from "./dialog";
 import { bottomSheetElement, defineBottomSheet } from "./bottom-sheet";
@@ -113,6 +114,8 @@ export { splitButtonElement, defineSplitButton } from "./split-button";
 export type { SplitButtonSpec, SplitButtonElement } from "./split-button";
 export { tooltipElement, defineTooltip } from "./tooltip";
 export type { TooltipSpec, TooltipElement } from "./tooltip";
+export { toolbarElement, defineToolbar } from "./toolbar";
+export type { ToolbarSpec, ToolbarElement } from "./toolbar";
 export { snackbarElement, defineSnackbar } from "./snackbar";
 export type { SnackbarSpec, SnackbarElement } from "./snackbar";
 export { dialogElement, defineDialog } from "./dialog";
@@ -160,6 +163,7 @@ export const elements = {
   select: selectElement,
   splitButton: splitButtonElement,
   tooltip: tooltipElement,
+  toolbar: toolbarElement,
   snackbar: snackbarElement,
   dialog: dialogElement,
   bottomSheet: bottomSheetElement,
@@ -213,6 +217,7 @@ export const defineAll = (options?: DefineOptions): void => {
   defineSelect(options);
   defineSplitButton(options);
   defineTooltip(options);
+  defineToolbar(options);
   defineSnackbar(options);
   defineDialog(options);
   defineBottomSheet(options);

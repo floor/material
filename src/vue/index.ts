@@ -37,6 +37,7 @@ export { MMenu } from "./menu";
 export { MSelect } from "./select";
 export { MSplitButton } from "./split-button";
 export { MTooltip } from "./tooltip";
+export { MToolbar } from "./toolbar";
 export { MSnackbar } from "./snackbar";
 export { MDialog } from "./dialog";
 export { MBottomSheet } from "./bottom-sheet";

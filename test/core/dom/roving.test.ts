@@ -116,6 +116,26 @@ describe("createRoving", () => {
     expect(stops()).toEqual(["b"]);
   });
 
+  test("before any focus, the first target keeps the tab stop as targets arrive", () => {
+    container.insertAdjacentHTML("afterbegin", '<button id="z"></button>');
+    roving.sync();
+    expect(stops()).toEqual(["z"]);
+  });
+
+  test("once focused, a target keeps the tab stop as targets arrive", () => {
+    buttons()[1].focus();
+    container.insertAdjacentHTML("afterbegin", '<button id="z"></button>');
+    roving.sync();
+    expect(stops()).toEqual(["b"]);
+  });
+
+  test("a host's disabled attribute counts as disabled", () => {
+    container.insertAdjacentHTML("afterbegin", '<m-host id="h" disabled></m-host>');
+    roving.destroy();
+    roving = createRoving({ container, targets: () => Array.from(container.querySelectorAll<HTMLElement>("m-host, button")) });
+    expect(stops()).toEqual(["a"]);
+  });
+
   test("destroy removes the listeners", () => {
     buttons()[0].focus();
     roving.destroy();

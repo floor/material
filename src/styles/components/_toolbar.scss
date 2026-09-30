@@ -14,8 +14,6 @@
 @use '../../styles/abstract/theme' as t;
 
 $component: '#{base.$prefix}-toolbar';
-$icon-button: '#{base.$prefix}-icon-button';
-$button: '#{base.$prefix}-button';
 
 .#{$component} {
   --#{$component}-container: #{t.color('surface-container')};
@@ -48,6 +46,8 @@ $button: '#{base.$prefix}-button';
 
   // Docked: the whole width is the container, the FAB included
   &--docked {
+    // Docked, the toolbar meets the window edges
+    --#{$component}-margin: 0px;
     width: 100%;
     min-height: 64px;
     padding-inline: 16px;
@@ -68,7 +68,6 @@ $button: '#{base.$prefix}-button';
   // Floating: the bar is the pill; the FAB sits beside it
   &--floating {
     width: fit-content;
-    max-width: calc(100% - 2 * var(--#{$component}-margin));
 
     .#{$component}__bar {
       gap: 4px;
@@ -85,8 +84,6 @@ $button: '#{base.$prefix}-button';
   &--vertical {
     --#{$component}-margin: 24px;
     flex-direction: column;
-    max-width: none;
-    max-height: calc(100% - 2 * var(--#{$component}-margin));
 
     .#{$component}__bar {
       flex-direction: column;
@@ -95,23 +92,17 @@ $button: '#{base.$prefix}-button';
     }
   }
 
-  // Vibrant: primary container, and the item colours of FloatingToolbarTokens
+  // Vibrant: primary container, and the item colours of FloatingToolbarTokens,
+  // set as the items' custom properties so they reach into the elements'
+  // shadow roots. "Toggle tonal button: Surface container / On surface"
+  // (m3.material.io toolbars specs); filled buttons keep primary.
   &--vibrant {
     --#{$component}-container: #{t.color('primary-container')};
     --#{$component}-content: #{t.color('on-primary-container')};
-
-    .#{$icon-button}.#{$icon-button}--standard,
-    .#{$button}.#{$button}--text {
-      color: t.color('on-primary-container');
-    }
-
-    // "Toggle tonal button: Surface container / On surface" (m3.material.io
-    // toolbars specs); Compose VibrantButtonSelected*. Filled keeps primary.
-    .#{$icon-button}--standard.#{$icon-button}--selected,
-    .#{$icon-button}--tonal.#{$icon-button}--selected {
-      background-color: t.color('surface-container');
-      color: t.color('on-surface');
-    }
+    --#{base.$prefix}-icon-button-standard-color: #{t.color('on-primary-container')};
+    --#{base.$prefix}-button-text-color: #{t.color('on-primary-container')};
+    --#{base.$prefix}-icon-button-selected-container: #{t.color('surface-container')};
+    --#{base.$prefix}-icon-button-selected-color: #{t.color('on-surface')};
   }
 
   // Placements, in a positioned container
@@ -123,10 +114,12 @@ $button: '#{base.$prefix}-button';
     z-index: f.get-z-index('fixed');
   }
 
+  // Placed, a floating toolbar keeps its margin from the window edges
   &--bottom,
   &--top {
     inset-inline: 0;
     margin-inline: auto;
+    max-width: calc(100% - 2 * var(--#{$component}-margin));
   }
 
   &--bottom {
@@ -142,6 +135,7 @@ $button: '#{base.$prefix}-button';
     inset-block: 0;
     margin-block: auto;
     height: fit-content;
+    max-height: calc(100% - 2 * var(--#{$component}-margin));
   }
 
   &--start {

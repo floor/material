@@ -1,0 +1,47 @@
+// src/styles/elements/_toolbar.scss
+// <m-toolbar> before upgrade: the docked bar or the floating pill, with the
+// items in a row (a column when vertical) and the FAB after them.
+@use '../abstract/variables' as v;
+@use '../abstract/mixins' as m;
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As components/_toolbar.scss: 64px, docked padded 16px at each end with the
+// items spread, floating padded 8px with the items 4px apart.
+@include c.host('toolbar') {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: 64px;
+  padding-inline: 16px;
+  background-color: t.color('surface-container');
+
+  &[arrangement='center'] {
+    justify-content: center;
+    gap: 32px;
+  }
+
+  &[variant='floating'] {
+    width: fit-content;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px;
+    border-radius: v.shape('full');
+
+    &:not([flat]) {
+      @include m.elevation(1);
+    }
+
+    &[orientation='vertical'] {
+      flex-direction: column;
+      min-height: 0;
+      min-width: 64px;
+    }
+  }
+
+  &[color='vibrant'] {
+    background-color: t.color('primary-container');
+  }
+}

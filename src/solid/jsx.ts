@@ -43,6 +43,7 @@ declare module "solid-js" {
       "m-select": Tag<import("../elements/select").SelectSpec, import("../elements/select").SelectElement>;
       "m-split-button": Tag<import("../elements/split-button").SplitButtonSpec, import("../elements/split-button").SplitButtonElement>;
       "m-tooltip": Tag<import("../elements/tooltip").TooltipSpec, import("../elements/tooltip").TooltipElement>;
+      "m-toolbar": Tag<import("../elements/toolbar").ToolbarSpec, import("../elements/toolbar").ToolbarElement>;
       "m-snackbar": Tag<import("../elements/snackbar").SnackbarSpec, import("../elements/snackbar").SnackbarElement>;
       "m-dialog": Tag<import("../elements/dialog").DialogSpec, import("../elements/dialog").DialogElement>;
       "m-bottom-sheet": Tag<import("../elements/bottom-sheet").BottomSheetSpec, import("../elements/bottom-sheet").BottomSheetElement>;
@@ -89,6 +90,8 @@ declare module "solid-js" {
       "remove": ElementEvents<import("../elements/chips").ChipsSpec>["remove"];
       "activate": ElementEvents<import("../elements/list").ListSpec>["activate"];
       "select": ElementEvents<import("../elements/menu").MenuSpec>["select"] | ElementEvents<import("../elements/split-button").SplitButtonSpec>["select"] | ElementEvents<import("../elements/search").SearchSpec>["select"];
+      "show": ElementEvents<import("../elements/toolbar").ToolbarSpec>["show"];
+      "hide": ElementEvents<import("../elements/toolbar").ToolbarSpec>["hide"];
       "cancel": ElementEvents<import("../elements/dialog").DialogSpec>["cancel"];
     }
   }
