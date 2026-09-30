@@ -133,6 +133,12 @@ export interface SwitchComponent {
   /** Removes supporting text */
   removeSupportingText: () => SwitchComponent;
 
+  /** Puts the switch in or out of the error state: its class and aria-invalid (FLO-318) */
+  setError: (error: boolean) => SwitchComponent;
+
+  /** Whether the switch is in the error state */
+  isError: () => boolean;
+
   /** Subscribes to checked-state changes; native input events use input.addEventListener. */
   on: <K extends keyof SwitchEvents>(event: K, handler: SwitchEvents[K]) => SwitchComponent;
 
@@ -198,6 +204,8 @@ export interface BaseComponent {
   supportingTextElement?: HTMLElement | null;
   setSupportingText?: (text: string, isError?: boolean) => void;
   removeSupportingText?: () => void;
+  setError?: (error: boolean) => void;
+  isError?: () => boolean;
 }
 
 /**

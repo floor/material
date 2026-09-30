@@ -313,6 +313,13 @@ const run = async (version: 18 | 19): Promise<void> => {
     assert.equal(await railModal(), false);
     check("navigation rail: expanded follows the state; Escape collapses it and the collapse handler updates the state");
 
+    // ------------------------------------------------------------- extended fab (FLO-319)
+    await page.evaluate(() => (document.getElementById("xf") as HTMLElement & { collapse: () => void }).collapse());
+    await page.waitForFunction(() => document.getElementById("fab")?.textContent === "collapsed");
+    await page.evaluate(() => (document.getElementById("xf") as HTMLElement & { expand: () => void }).expand());
+    await page.waitForFunction(() => document.getElementById("fab")?.textContent === "expanded");
+    check("extended fab: onCollapse and onExpand follow collapse() and expand()");
+
     // ------------------------------------------------------------- lifecycle
     const reordered = await page.evaluate(async () => {
       const w = window as unknown as Win;
