@@ -289,6 +289,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Progress: the indeterminate circular indicator keeps its track (FLO-338).** It drew only the
+  moving arc. M3 shows indeterminate indicators moving along a fixed track, and the Expressive
+  `CircularWavyProgressIndicator` draws one; the track now runs around the rest of the circle,
+  clear of both ends of the arc by the determinate gap, turning with it and never waved, flat and
+  wavy alike.
+
 - **Svelte: callbacks are not snippets (FLO-334).** Any function prop but `children` and a
   lower-case `on…` was rendered as a named snippet, so `onClick`, `onChange` or a callback in a
   spread object was called during render. Only a prop named after a slot the element declares is
