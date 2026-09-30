@@ -20,7 +20,7 @@ export async function checkInputBEM(page: Page): Promise<void> {
     state.inputControls = [checkbox, control, field];
     document.body.append(checkbox.element, control.element, field.element);
     field.element.style.width = "240px";
-    document.documentElement.setAttribute("data-theme", "material");
+    document.documentElement.setAttribute("data-theme", "baseline");
     document.documentElement.setAttribute("data-theme-mode", "light");
     control.setSupportingText("Updated");
   });

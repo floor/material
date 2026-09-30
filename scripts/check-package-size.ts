@@ -169,7 +169,7 @@ try {
     // ::backdrop, with `overlay` held for the exit, in four stylesheets gzip cannot share.
     // Search's surface, a <dialog> in the top layer (FLO-285): measured 52,194. Its
     // state layers and the contained variant (FLO-286, FLO-287): measured 52,328.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 52600 },
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 53600 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);

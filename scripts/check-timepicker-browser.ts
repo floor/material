@@ -20,7 +20,7 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   await page.evaluate(() => {
     const state = window as unknown as TimePickerWindow;
     document.body.replaceChildren();
-    document.documentElement.setAttribute("data-theme", "material");
+    document.documentElement.setAttribute("data-theme", "baseline");
     document.documentElement.setAttribute("data-theme-mode", "light");
     state.confirmedTime = undefined;
     state.timePicker = state.createTimePicker({ title: "Appointment", value: "09:30", name: "appointment", type: "input" as never });
