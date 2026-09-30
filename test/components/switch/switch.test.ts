@@ -247,15 +247,16 @@ describe('switch', () => {
     const s = mount({ label: 'Wi-Fi' });
     expect(s.supportingTextElement).toBeNull();
 
+    // The flag colours the text; the switch's error state is setError's (FLO-318)
     s.setSupportingText('Required', true);
     const helper = s.element.querySelector('.mtrl-switch__helper');
     expect(helper?.textContent).toBe('Required');
     expect(helper?.classList.contains('mtrl-switch__helper--error')).toBe(true);
-    expect(s.element.classList.contains('mtrl-switch--error')).toBe(true);
+    expect(s.element.classList.contains('mtrl-switch--error')).toBe(false);
     expect(s.supportingTextElement).toBe(helper as HTMLElement);
 
     s.setSupportingText('Fine', false);
-    expect(s.element.classList.contains('mtrl-switch--error')).toBe(false);
+    expect(helper?.classList.contains('mtrl-switch__helper--error')).toBe(false);
 
     s.removeSupportingText();
     expect(s.element.querySelector('.mtrl-switch__helper')).toBeNull();
@@ -286,10 +287,13 @@ describe('switch error, description, icons and events', () => {
     const s = mount({ label: 'Sync', supportingText: 'Uses mobile data' });
     const helper = s.element.querySelector('.mtrl-switch__helper')!;
     expect(s.input.getAttribute('aria-describedby')).toBe(helper.id);
-    s.setSupportingText('Offline', true);
+    s.setError(true).setSupportingText('Offline', true);
     expect(s.input.getAttribute('aria-invalid')).toBe('true');
     s.removeSupportingText();
     expect(s.input.hasAttribute('aria-describedby')).toBe(false);
+    // Removing the text leaves the error to setError (FLO-318)
+    expect(s.input.getAttribute('aria-invalid')).toBe('true');
+    s.setError(false);
     expect(s.input.hasAttribute('aria-invalid')).toBe(false);
   });
 
@@ -335,5 +339,41 @@ describe('switch keyboard activation', () => {
     expect(press(control, ' ')).toEqual([]);
     expect(control.isChecked()).toBe(false);
     control.destroy();
+  });
+});
+
+// FLO-318: the error state has one owner. It updated from config only, and
+// replacing or removing the supporting text ended it.
+describe('switch error state', () => {
+  const invalid = (s: ReturnType<typeof mount>) => [
+    s.isError(), s.element.classList.contains('mtrl-switch--error'), s.input.getAttribute('aria-invalid'),
+  ];
+
+  test('setError puts it in and out of error, and returns the switch', () => {
+    const s = mount({ label: 'Sync' });
+    expect(invalid(s)).toEqual([false, false, null]);
+    expect(s.setError(true)).toBe(s);
+    expect(invalid(s)).toEqual([true, true, 'true']);
+    s.setError(false);
+    expect(invalid(s)).toEqual([false, false, null]);
+  });
+
+  test('changing or removing the supporting text keeps the error', () => {
+    const s = mount({ label: 'Sync', error: true, supportingText: 'Offline' });
+    s.setSupportingText('Still offline', true);
+    expect(invalid(s)).toEqual([true, true, 'true']);
+    s.setSupportingText('Other text');
+    expect(invalid(s)).toEqual([true, true, 'true']);
+    s.removeSupportingText();
+    expect(invalid(s)).toEqual([true, true, 'true']);
+  });
+
+  test('a helper on screen takes the error colour with the switch', () => {
+    const s = mount({ label: 'Sync', supportingText: 'Uses mobile data' });
+    const helper = () => s.element.querySelector('.mtrl-switch__helper')!;
+    s.setError(true);
+    expect(helper().classList.contains('mtrl-switch__helper--error')).toBe(true);
+    s.setError(false);
+    expect(helper().classList.contains('mtrl-switch__helper--error')).toBe(false);
   });
 });

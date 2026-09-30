@@ -58,6 +58,12 @@ export interface SupportingTextComponent extends BaseComponent {
    * @returns Component instance for chaining
    */
   removeSupportingText: () => SupportingTextComponent;
+
+  /** Puts the switch in or out of the error state (FLO-318) */
+  setError: (error: boolean) => SupportingTextComponent;
+
+  /** Whether the switch is in the error state */
+  isError: () => boolean;
 }
 
 /**
@@ -165,8 +171,15 @@ export const withSupportingText =
     // The error state shows on the track and reaches assistive tech through
     // aria-invalid, with or without supporting text; `error` alone was ignored.
     // The supporting text describes the input. FLO-267.
+    // The error state has one owner, setError (FLO-318, as the text field's
+    // since FLO-303): replacing or removing the supporting text used to end it.
+    let errorState = !!config.error;
     const setError = (isError: boolean): void => {
+      errorState = isError;
       component.element.classList.toggle(`${PREFIX}-${COMPONENT}--error`, isError);
+      // A helper on screen takes the error colour with the switch
+      component.element.querySelector(`.${PREFIX}-${COMPONENT}__helper`)
+        ?.classList.toggle(`${PREFIX}-${COMPONENT}__helper--error`, isError);
       if (isError) input?.setAttribute("aria-invalid", "true");
       else input?.removeAttribute("aria-invalid");
     };
@@ -235,12 +248,11 @@ export const withSupportingText =
 
         supportingElement.textContent = text;
 
-        // Handle error state
+        // The text's own colour; the switch's error state is setError's
         supportingElement.classList.toggle(
           `${PREFIX}-${COMPONENT}__helper--error`,
           isError
         );
-        setError(isError);
 
         return this;
       },
@@ -253,10 +265,16 @@ export const withSupportingText =
           this.supportingTextElement.remove();
           this.supportingTextElement = null;
           describe(null);
-          setError(false);
         }
         return this;
       },
+
+      setError(error: boolean) {
+        setError(error);
+        return this;
+      },
+
+      isError: () => errorState,
     };
   };
 
