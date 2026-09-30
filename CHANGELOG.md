@@ -12,6 +12,17 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **React and Solid: named slots as props (FLO-333).** A prop named after a slot the element
+  declares takes nodes (`<Dialog actions={<Button>Discard</Button>}>`), rendered into a
+  `<span slot="actions">` the component owns; `headerAction` is the `header-action` slot. A text
+  prop of a slot's name (`headline` on the dialog, card and sheets, `subhead` on the card) takes
+  its text, as the attribute, or nodes, into the slot. Typed per element, as in Svelte and Vue.
+- **`mtrl/react/jsx` and `mtrl/solid/jsx`: the bare `m-*` tags in JSX (FLO-333).** Types only,
+  opt in once with `import type {} from "mtrl/react/jsx";` (or `mtrl/solid/jsx`): `<m-switch
+  checked>` then type-checks, with each tag's attributes as markup writes them
+  (`supporting-text`). Solid's entry also types `prop:` (the elements' live properties) and `on:`
+  (their events). A separate entry, so an app without React or Solid is not affected.
+
 - **Named slots in the specs and the adapters (FLO-325).** An element spec declares `slots`, the
   named slots it reads (`slot="headline"`), and `describe()` lists them. Seven elements have them:
   the bottom app bar (`fab`), card (`avatar`, `header-action`, `headline`, `subhead`, `media`,

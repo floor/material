@@ -67,6 +67,12 @@
       "types": "./dist/elements/preupgrade.d.ts",
       "import": "./dist/elements/preupgrade.js"
     },
+    "./react/jsx": {
+      "types": "./dist/react/jsx.d.ts"
+    },
+    "./solid/jsx": {
+      "types": "./dist/solid/jsx.d.ts"
+    },
     "./react": {
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.js"

@@ -180,6 +180,14 @@ export type ElementAttributes<S> = {
     : never;
 };
 
+/**
+ * Attributes as markup writes them (`supporting-text`), for a bare `m-*` tag
+ * in JSX (`mtrl/react/jsx`, `mtrl/solid/jsx`, FLO-333).
+ */
+export type ElementMarkup<S> = {
+  [K in keyof Get<S, "attributes"> & string]?: Get<S, "attributes">[K] extends { type: infer T } ? ValueOf<T> : never;
+};
+
 /** Live-state properties, typed by their getter. */
 export type ElementProperties<S> = {
   [K in keyof Get<S, "properties"> & string]?: Get<S, "properties">[K] extends { get: (c: never) => infer R }

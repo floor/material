@@ -20,6 +20,9 @@
     "node_modules",
     // Imports the built package, so it only resolves after a build.
     // tsconfig.tools.json type-checks it in CI once dist/ exists.
-    "test/browser/fixture.ts"
+    "test/browser/fixture.ts",
+    // Each compiles on its own, with its framework's JSX settings, in
+    // test/build/jsx-types.test.ts: an augmentation applies to a whole program.
+    "test/types/jsx"
   ]
 }
