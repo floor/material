@@ -1,0 +1,228 @@
+// src/styles/components/_fab-menu.scss
+//
+// M3 Expressive's FAB menu (m3.material.io FAB menu specs and guidelines;
+// Compose FloatingActionButtonMenu.kt and FabMenuBaselineTokens):
+// - list: the FAB turns into a 56dp round close button, pinned to its top
+//   trailing corner, on the colour set's role; the items rise above it, 8dp
+//   away and 4dp apart, pill-shaped, 56dp high, end-aligned, on the role's
+//   container, nearest the FAB first
+// - menu: the FAB stays; the baseline menu opens from it
+@use '../../styles/abstract/base' as base;
+@use '../../styles/abstract/variables' as v;
+@use '../../styles/abstract/functions' as f;
+@use '../../styles/abstract/mixins' as m;
+@use '../../styles/abstract/theme' as t;
+
+$component: '#{base.$prefix}-fab-menu';
+$fab: '#{base.$prefix}-fab';
+$spatial: v.motion('spring-fast-spatial-duration') v.motion('spring-fast-spatial-easing');
+$effects: v.motion('spring-fast-effects-duration') v.motion('spring-fast-effects-easing');
+// Where spring-fast-spatial crosses half its progress: the icon swaps there
+// (the Compose sample swaps it at checkedProgress 0.5)
+$swap: 48ms;
+
+.#{$component} {
+  position: relative;
+  display: inline-block;
+  width: 56px;
+  height: 56px;
+  vertical-align: middle;
+
+  &--medium {
+    width: 80px;
+    height: 80px;
+  }
+
+  &--large {
+    width: 96px;
+    height: 96px;
+  }
+
+  @each $role in primary, secondary, tertiary {
+    &--#{$role} {
+      --#{$component}-close: #{t.color($role)};
+      --#{$component}-on-close: #{t.color('on-#{$role}')};
+      --#{$component}-item: #{t.color('#{$role}-container')};
+      --#{$component}-on-item: #{t.color('on-#{$role}-container')};
+    }
+  }
+
+  // Placed: 16dp from the window edges, 24dp in large windows
+  &--bottom-end,
+  &--bottom-start {
+    --#{$component}-margin: 16px;
+    position: absolute;
+    bottom: var(--#{$component}-margin);
+    z-index: f.get-z-index('fixed');
+
+    @media (min-width: 1200px) {
+      --#{$component}-margin: 24px;
+    }
+  }
+
+  &--bottom-end {
+    inset-inline-end: var(--#{$component}-margin);
+  }
+
+  &--bottom-start {
+    inset-inline-start: var(--#{$component}-margin);
+  }
+
+  // The FAB, pinned to the top trailing corner it shrinks towards. Doubled
+  // with the FAB's own class, whose position: relative it overrides.
+  @at-root .#{$fab}.#{$component}__fab {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    display: grid;
+    place-items: center;
+    transition:
+      width $spatial,
+      height $spatial,
+      border-radius $spatial,
+      background-color $spatial,
+      color $spatial,
+      box-shadow $spatial;
+
+    > * {
+      grid-area: 1 / 1;
+    }
+
+    .#{$fab}__icon,
+    .#{$component}__close {
+      transition: visibility 0s linear $swap;
+    }
+  }
+
+  &__close {
+    display: inline-flex;
+    width: 20px;
+    height: 20px;
+    visibility: hidden;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+  }
+
+  // Open as a list: the close button
+  &--list.#{$component}--open .#{$component}__fab {
+    width: 56px;
+    height: 56px;
+    border-radius: v.shape('full');
+    background-color: var(--#{$component}-close);
+    color: var(--#{$component}-on-close);
+
+    .#{$fab}__icon {
+      visibility: hidden;
+    }
+
+    .#{$component}__close {
+      visibility: visible;
+    }
+  }
+
+  // The list: above the close button, end-aligned, scrolling behind it when
+  // the window is short
+  &__list {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    inset-inline-end: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    overflow-y: auto;
+    visibility: hidden;
+    // Hidden once the last item has left
+    transition: visibility 0s linear var(--#{$component}-exit, 0ms);
+  }
+
+  &--menu .#{$component}__list {
+    display: none;
+  }
+
+  &--open .#{$component}__list {
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  // An item: a pill, 56dp high, 24dp at each end, a 24dp icon 8dp from its
+  // title-medium label. It reveals its width from the end on FastSpatial and
+  // fades in on FastEffects, after its stagger delay.
+  &__item {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    min-width: 56px;
+    height: 56px;
+    padding: 0 24px;
+    border: none;
+    border-radius: v.shape('full');
+    background-color: var(--#{$component}-item);
+    color: var(--#{$component}-on-item);
+    @include m.typography('title-medium');
+    white-space: nowrap;
+    cursor: pointer;
+    overflow: hidden;
+    opacity: 0;
+    clip-path: inset(0 0 0 100%);
+    transition:
+      opacity $effects,
+      clip-path $spatial;
+    transition-delay: var(--#{$component}-delay, 0ms);
+
+    &:dir(rtl) {
+      clip-path: inset(0 100% 0 0);
+    }
+
+    &:hover {
+      @include m.state-layer(currentColor, 'hover');
+    }
+
+    &:focus-visible {
+      @include m.state-layer(currentColor, 'focus');
+      outline: 2px solid t.color('secondary');
+      outline-offset: 2px;
+    }
+
+    &:active {
+      @include m.state-layer(currentColor, 'pressed');
+    }
+  }
+
+  &--open .#{$component}__item {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+
+  &__item-icon {
+    display: inline-flex;
+    width: 24px;
+    height: 24px;
+
+    svg {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+    }
+  }
+
+  // Reduced motion: no stagger and no movement, a fade only
+  @include m.reduced-motion {
+    @at-root .#{$fab}.#{$component}__fab {
+      transition: background-color $effects, color $effects;
+    }
+
+    &__item,
+    &__item:dir(rtl) {
+      clip-path: none;
+      transition: opacity $effects;
+    }
+  }
+}

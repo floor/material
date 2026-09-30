@@ -48,6 +48,7 @@ export const COMPONENTS = [
   { name: "divider", imports: ["createDivider"] },
   { name: "drawer", imports: ["createDrawer"] },
   { name: "fab", imports: ["createFab"] },
+  { name: "fab-menu", imports: ["createFabMenu"] },
   { name: "extended-fab", imports: ["createExtendedFab"] },
   { name: "icon-button", imports: ["createIconButton"] },
   { name: "list", imports: ["createList"] },
@@ -86,6 +87,7 @@ export const KNOWN_DEPS: Partial<Record<ComponentName, readonly ComponentName[]>
   tabs: ["button", "badge"],
   "split-button": ["button", "menu"],
   toolbar: ["button", "icon-button"],
+  "fab-menu": ["fab"],
 };
 
 export const SCENARIO_DEFS = [
@@ -131,6 +133,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   divider: kb(3.7),
   drawer: kb(8.1), // the modal drawer's layer: "top": 7,622 to 8,109
   fab: kb(5.6),
+  "fab-menu": kb(8.2), // FLO-306, with the FAB; the menu presentation's menu is a chunk (DEFERRED_BUDGET_BYTES): 8,304
   "extended-fab": kb(6.1),
   "icon-button": kb(6.6),
   list: kb(6.5), // FLO-100 full list anatomy
@@ -159,8 +162,17 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // split button passing the layer, and the opener's focus test across shadow roots, to 112,845; the
   // tooltip and snackbar top layer to 113,481; the modal surfaces' top layer to 113,761 (each measured
   // alone on dba5ba9); the time picker limits and steps (FLO-281): 113,297 on main; all of wave 2 together on 91e4d77: 115,162.
-  all: kb(116.8), // search in the top layer (FLO-285): 115,628; its combobox and variants (FLO-286, FLO-287): 115,909; search's trailing items and reopening (FLO-291): 116,488; the date picker's field states and one change shape (FLO-289, FLO-295): 116,800; the text field's field, supporting text row and counter (FLO-300): 117,305; the toolbar (FLO-304): 117,350 to 119,455; <m-toolbar>'s slotted items and the colour hooks: 119,541
+  all: kb(119.3), // search in the top layer (FLO-285): 115,628; its combobox and variants (FLO-286, FLO-287): 115,909; search's trailing items and reopening (FLO-291): 116,488; the date picker's field states and one change shape (FLO-289, FLO-295): 116,800; the text field's field, supporting text row and counter (FLO-300): 117,305; the toolbar (FLO-304): 117,350 to 119,455; <m-toolbar>'s slotted items and the colour hooks: 119,541; the FAB menu (FLO-306): 122,060
   // the time picker draft (FLO-288) and search widths (FLO-290): 116,200 on c3e3e18
+};
+
+/**
+ * Budgets for what a component loads with import() when it needs it, apart
+ * from its initial graph: the deferred column. Same headroom rule.
+ */
+export const DEFERRED_BUDGET_BYTES: Partial<Record<ScenarioName, number>> = {
+  menu: kb(2.2), // the submenu feature, a chunk since FLO-310
+  "fab-menu": kb(10.4), // the baseline menu of the menu presentation (FLO-306)
 };
 
 export interface SizeGateInput {
@@ -591,6 +603,14 @@ const main = async (): Promise<void> => {
     console.log(
       `  ${over ? "✗" : "✓"} ${result.name}: ${result.gzBytes} bytes gzipped (budget ${budget})`,
     );
+    const deferredBudget = DEFERRED_BUDGET_BYTES[scenario.name];
+    if (deferredBudget !== undefined) {
+      const deferredOver = result.deferredGzBytes > deferredBudget;
+      if (deferredOver) overBudget.push(`${result.name} (deferred)`);
+      console.log(
+        `  ${deferredOver ? "✗" : "✓"} ${result.name} deferred: ${result.deferredGzBytes} bytes gzipped (budget ${deferredBudget})`,
+      );
+    }
   }
 
   console.log("");

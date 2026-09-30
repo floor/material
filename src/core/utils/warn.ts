@@ -36,3 +36,15 @@ export const warnUnknownValue = (component: string, value: unknown): void => {
   if (!isDevelopment()) return;
   console.warn(`[mtrl] ${component}: no option with value "${String(value)}"`);
 };
+
+/**
+ * Warns about a use the spec advises against, which still works.
+ *
+ * @param component - the component name, as it appears to a consumer
+ * @param message - what the spec advises
+ * @internal
+ */
+export const warnDev = (component: string, message: string): void => {
+  if (!isDevelopment()) return;
+  console.warn(`[mtrl] ${component}: ${message}`);
+};

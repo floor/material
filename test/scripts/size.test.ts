@@ -8,6 +8,7 @@
 import { describe, test, expect } from 'bun:test';
 import {
   BUDGET_BYTES,
+  DEFERRED_BUDGET_BYTES,
   COMPONENTS,
   KNOWN_DEPS,
   SCENARIO_DEFS,
@@ -16,6 +17,14 @@ import {
 } from '../../scripts/size';
 
 describe('size gate', () => {
+  test('each deferred budget is for a measured scenario, and positive', () => {
+    const names = new Set<string>(SCENARIO_DEFS.map((scenario) => scenario.name));
+    for (const [name, bytes] of Object.entries(DEFERRED_BUDGET_BYTES)) {
+      expect(names.has(name)).toBe(true);
+      expect(bytes).toBeGreaterThan(0);
+    }
+  });
+
   test('budgets every measured scenario', () => {
     expect(SCENARIO_DEFS.length).toBe(COMPONENTS.length + 2);
     for (const scenario of SCENARIO_DEFS) {
