@@ -12,6 +12,15 @@ export interface TimePickerSwipePayload {
   deltaY: number;
 }
 
+/**
+ * The payload of `change` and `input`: the 24-hour value, the same shape as
+ * the `<m-timepicker>` element's events (FLO-320).
+ */
+export interface TimePickerValueEvent {
+  /** HH:MM, or HH:MM:SS with showSeconds */
+  value: string;
+}
+
 /** Events emitted by the picker API and its interactive root. */
 export interface TimePickerEvents {
   /**
@@ -19,9 +28,9 @@ export interface TimePickerEvents {
    * submitted by the form: once when OK commits a different time, or on
    * setValue. Moves on the dial or in the fields are `input` (FLO-288).
    */
-  change: (value: string) => void;
+  change: (event: TimePickerValueEvent) => void;
   /** The draft, as the dial, fields or AM/PM change it while the picker is open (FLO-288). */
-  input: (value: string) => void;
+  input: (event: TimePickerValueEvent) => void;
   /** The confirmed 24-hour value, matching getValue() and the submitted form value. */
   confirm: (value: string) => void;
   open: () => void;
@@ -233,12 +242,12 @@ export interface TimePickerConfig {
    * Callback when the committed time changes (on OK, or setValue); receives
    * HH:MM or HH:MM:SS in 24-hour format
    */
-  onChange?: (time: string) => void;
+  onChange?: (event: TimePickerValueEvent) => void;
 
   /**
    * Callback as the draft changes while the picker is open (FLO-288)
    */
-  onInput?: (time: string) => void;
+  onInput?: (event: TimePickerValueEvent) => void;
 
   /**
    * Callback when time picker is opened

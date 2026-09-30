@@ -9,7 +9,7 @@ import { PREFIX } from "../../core/config";
 import { createBaseConfig, getContainerConfig } from "./config";
 import { withAPI } from "./api";
 import { renderCalendar } from "./render";
-import { addDays, addMonths, formatDate, isSameDay, parseDate, parseInputDate } from "./utils";
+import { addDays, addMonths, formatDate, isSameDay, parseDate, parseInputDate, toIsoValue } from "./utils";
 import type { DatePickerComponent, DatePickerConfig, DatePickerInput, DatePickerState, DatePickerValue, DatePickerValueOf, DatePickerView } from "./types";
 
 const isRangeObject = (value: DatePickerInput): value is { start: Date | string; end: Date | string } =>
@@ -156,7 +156,11 @@ const createDatePicker = <M extends string = "single">(
   // One shape, whatever committed it: a range's value is the pair, and
   // rangeEndDate its end, kept for compatibility. The docked calendar sent the
   // start as the value and the end apart; the dialog's Save, the pair. FLO-295.
-  const emitChange = () => base.emit("change", { value: getValue(), rangeEndDate: committedEnd && new Date(committedEnd), formattedValue: formatted(committed, committedEnd) });
+  // `iso`: the value as the <m-datepicker> element's `value` carries it. FLO-320.
+  const emitChange = () => {
+    const rangeEndDate = committedEnd && new Date(committedEnd);
+    base.emit("change", { value: getValue(), rangeEndDate, formattedValue: formatted(committed, committedEnd), iso: toIsoValue(getValue(), rangeEndDate) });
+  };
   const commitDraft = () => {
     committed = state.selectedDate && new Date(state.selectedDate); committedEnd = state.rangeEndDate && new Date(state.rangeEndDate); syncInput();
     emitChange();

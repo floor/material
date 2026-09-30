@@ -61,14 +61,14 @@ export const createTimePickerAPI = (
   const notifyChange = () => {
     const value = getValue();
     setFormValue(formValue, value);
-    options.events.emit(EVENTS.CHANGE, value);
-    config.onChange?.(value);
+    options.events.emit(EVENTS.CHANGE, { value });
+    config.onChange?.({ value });
   };
   // The draft changed: `input` and onInput, as a native input's.
   const notifyInput = () => {
     const value = format(timeValue);
-    options.events.emit(EVENTS.INPUT, value);
-    config.onInput?.(value);
+    options.events.emit(EVENTS.INPUT, { value });
+    config.onInput?.({ value });
   };
   const render = () => {
     renderTimePicker(dialogElement, timeValue, config, notifyInput);

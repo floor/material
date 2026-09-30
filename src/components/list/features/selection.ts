@@ -38,7 +38,8 @@ export const withSelection = (config: ListConfig<ListItem>) =>
     const control = event.target.closest('button, input, select, textarea, a, [contenteditable="true"], [data-list-control]');
     if (control && control !== row.action) return;
     const payload = {
-      item: row.item, element: row.element, originalEvent: event,
+      // `value`: the row's id, as the <m-list> element's `activate` carries it. FLO-320.
+      item: row.item, value: row.id, element: row.element, originalEvent: event,
       component: component.eventTarget?.current ?? component,
       defaultPrevented: false,
       preventDefault() { this.defaultPrevented = true; },
