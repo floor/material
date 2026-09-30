@@ -5,7 +5,7 @@
 //
 // Compiled by `bun run tooling:check` via tsconfig.types.json.
 import type { ComponentProps } from "solid-js";
-import type { Switch, Tabs, Tab, Button } from "../../src/solid";
+import type { Switch, Tabs, Tab, Button, Dialog } from "../../src/solid";
 import type { SwitchElement } from "../../src/elements";
 
 /** true when A and B are the same type */
@@ -28,3 +28,11 @@ assert<Equals<ComponentProps<typeof Button>["class"], string | undefined>>();
 
 // @ts-expect-error -- checked is a boolean
 export const wrong: SwitchProps = { checked: "yes" };
+
+// Named slots are props taking JSX (FLO-333); a text prop of a slot's name
+// takes text or JSX.
+type DialogProps = ComponentProps<typeof Dialog>;
+assert<Equals<DialogProps["actions"], import("solid-js").JSX.Element | undefined>>();
+assert<Equals<DialogProps["headline"], import("solid-js").JSX.Element | undefined>>();
+// @ts-expect-error -- the switch has no actions slot
+export const noSlot: ComponentProps<typeof Switch> = { actions: null };

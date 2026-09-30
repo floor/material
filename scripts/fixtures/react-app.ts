@@ -139,8 +139,12 @@ export const App = (): React.ReactElement => {
     // Controlled: Escape closes the dialog, and onClose puts the state in step
     h(
       Dialog,
-      { id: "dg", open: dialog, onClose: () => setDialog(false) },
-      h("span", { slot: "headline" }, "Discard draft?"),
+      // Named slots as props (FLO-333): nodes for the headline, a component in actions
+      {
+        id: "dg", open: dialog, onClose: () => setDialog(false),
+        headline: h("strong", null, "Discard draft?"),
+        actions: h(Button, { id: "dga" }, "Discard"),
+      },
       "Your changes will be lost."
     ),
     h("output", { id: "dialog" }, String(dialog)),

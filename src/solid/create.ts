@@ -15,10 +15,11 @@
  * @module solid
  */
 
-import { createEffect, mergeProps, onCleanup, onMount, splitProps, type Component, type JSX } from "solid-js";
+import { createEffect, createMemo, mergeProps, onCleanup, onMount, splitProps, type Component, type JSX } from "solid-js";
 import { Dynamic, isServer } from "solid-js/web";
-import type { AttributeType, DefineOptions, ElementEvents, ElementProps } from "../elements";
+import type { AttributeType, DefineOptions, ElementEvents, ElementProps, ElementSlotProp } from "../elements";
 import {
+  camel,
   describe,
   describeDeclaration,
   getPrefix,
@@ -41,7 +42,16 @@ export type EventProps<S> = {
   [K in keyof ElementEvents<S> & string as `on${Pascal<K>}`]?: (event: ElementEvents<S>[K]) => void;
 };
 
-type OwnProps<S> = ElementProps<S> & DefaultProps<S> & FormProps<S> & EventProps<S>;
+type BaseProps<S> = ElementProps<S> & DefaultProps<S> & FormProps<S> & EventProps<S>;
+
+/**
+ * Each named slot as a prop taking JSX (`actions={<Button />}`), rendered
+ * into a `<span slot="…">` the adapter owns; a text prop of the same name
+ * (`headline`) takes its text or JSX (FLO-333).
+ */
+type SlotProps<S> = { [K in ElementSlotProp<S>]?: JSX.Element };
+
+type OwnProps<S> = Omit<BaseProps<S>, ElementSlotProp<S>> & SlotProps<S>;
 
 /** Props of a generated component: the element's own, plus any HTML attribute for the host. */
 export type SolidProps<S, E extends HTMLElement> = OwnProps<S> &
@@ -85,11 +95,16 @@ export const createComponent = <S, E extends HTMLElement>(
   const described = describe(spec);
   const { attributes, properties, events, form } = described;
   const eventProps = events.map((event) => `on${pascal(event)}`);
-  const own = [...attributes.keys(), ...properties, ...eventProps, ...(form ? ["name"] : []), "ref"];
+  const slots = described.slots.map((slot) => [camel(slot), slot] as const);
+  const slotKeys = new Set(slots.map(([key]) => key));
+  const own = [...new Set([...attributes.keys(), ...properties, ...eventProps, ...slotKeys, ...(form ? ["name"] : []), "ref", "children"])];
 
   const component = (props: Props): JSX.Element => {
     const [, others] = splitProps(props, own);
     let element: E | undefined;
+    // Each slot prop read once: reading JSX creates its nodes, and the
+    // attribute and the children both look at it (hydration keys must match).
+    const slotted = new Map(slots.map(([key]) => [key, createMemo(() => props[key])]));
 
     // Every host attribute is a getter, so Solid keeps it reactive.
     const host: Props = {};
@@ -101,7 +116,9 @@ export const createComponent = <S, E extends HTMLElement>(
       Object.defineProperty(host, attribute.name, {
         enumerable: true,
         get: () => {
-          const value = props[key];
+          const value = slotted.get(key)?.() ?? props[key];
+          // Nodes for the same-named slot are not the attribute's text.
+          if (slotKeys.has(key) && value != null && typeof value !== "string") return undefined;
           if (value === undefined && attribute.shadowed) {
             // On the server a live value is the markup's default, so the page
             // renders in that state before it hydrates.
@@ -112,6 +129,19 @@ export const createComponent = <S, E extends HTMLElement>(
       });
     }
     if (form) Object.defineProperty(host, "name", { enumerable: true, get: () => props.name });
+    // The default slot's children, then a `<span slot="…">` per named slot
+    // given nodes (text for a same-named attribute stays the attribute).
+    Object.defineProperty(host, "children", {
+      enumerable: true,
+      get: () => {
+        const named = slots.flatMap(([key, slot]) => {
+          const value = slotted.get(key)?.();
+          if (value == null || value === false || (attributes.has(key) && typeof value === "string")) return [];
+          return [Dynamic({ component: "span", slot, style: "display: contents", children: value } as never)];
+        });
+        return named.length ? [props.children, ...named] : props.children;
+      },
+    });
 
     const ref = (node: E): void => {
       element = node;

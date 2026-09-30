@@ -303,6 +303,18 @@ const run = async (version: 18 | 19): Promise<void> => {
     assert.equal(await modal(), false);
     check("dialog: open follows the state; Escape closes it and the close handler updates the state");
 
+    // Named slots as props reach the element's slots (FLO-333), each in a
+    // wrapper carrying slot="…"; the headline's nodes are not its attribute.
+    const slotted = await page.evaluate(() => {
+      const host = document.getElementById("dg");
+      const read = (name: string): string[] =>
+        (host?.shadowRoot?.querySelector<HTMLSlotElement>(`slot[name="${name}"]`)?.assignedElements() ?? [])
+          .map((node) => node.querySelector("[id]")?.id ?? node.textContent?.trim() ?? "");
+      return { headline: read("headline"), actions: read("actions"), attribute: host?.getAttribute("headline") ?? null };
+    });
+    assert.deepEqual(slotted, { headline: ["Discard draft?"], actions: ["dga"], attribute: null });
+    check("dialog: headline and actions props reach their slots");
+
     // ------------------------------------------------------------- navigation rail: expanded
     // Controlled: state expands the modal rail in the top layer, Escape
     // collapses it and the collapse handler puts the state in step; state

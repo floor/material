@@ -101,8 +101,10 @@ export const App = () => {
       </Select>
       <output id="pet">{String(pet())}</output>
       {/* Controlled: Escape closes the dialog, and onClose puts the state in step */}
-      <Dialog id="dg" open={dialog()} onClose={() => setDialog(false)}>
-        <span slot="headline">Discard draft?</span>Your changes will be lost.
+      {/* Named slots as props (FLO-333): JSX for the headline, a component in actions */}
+      <Dialog id="dg" open={dialog()} onClose={() => setDialog(false)}
+        headline={<strong>Discard draft?</strong>} actions={<Button id="dga">Discard</Button>}>
+        Your changes will be lost.
       </Dialog>
       <output id="dialog">{String(dialog())}</output>
       {/* Controlled: expanded is state; Escape collapses the modal rail, and onCollapse puts the state in step */}

@@ -6,7 +6,7 @@
 //
 // Compiled by `bun run tooling:check` via tsconfig.types.json.
 import type { ComponentProps as ReactProps } from "react";
-import type { Button, Switch, Tab, Tabs, Textfield } from "../../src/react";
+import type { Button, Dialog, Switch, Tab, Tabs, Textfield } from "../../src/react";
 import type { SwitchElement } from "../../src/elements";
 
 /** true when A and B are the same type */
@@ -46,3 +46,11 @@ assert<Equals<TextfieldProps["onInput"], ((event: CustomEvent<{ value: string }>
 
 // @ts-expect-error -- a switch's checked is a boolean
 export const wrong: SwitchProps = { checked: "yes" };
+
+// Named slots are props taking nodes (FLO-333); a text prop of a slot's name
+// takes text or nodes.
+type DialogProps = ReactProps<typeof Dialog>;
+assert<Equals<DialogProps["actions"], import("react").ReactNode>>();
+assert<Equals<DialogProps["headline"], import("react").ReactNode>>();
+// @ts-expect-error -- the switch has no actions slot
+export const noSlot: ReactProps<typeof Switch> = { actions: null };

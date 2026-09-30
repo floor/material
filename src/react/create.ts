@@ -18,8 +18,9 @@
  */
 
 import * as React from "react";
-import type { DefineOptions, ElementEvents, ElementProps } from "../elements";
+import type { DefineOptions, ElementEvents, ElementProps, ElementSlotProp } from "../elements";
 import {
+  camel,
   describe,
   describeDeclaration,
   getPrefix,
@@ -44,7 +45,16 @@ export type EventProps<S> = {
   [K in keyof ElementEvents<S> & string as `on${Pascal<K>}`]?: (event: ElementEvents<S>[K]) => void;
 };
 
-type OwnProps<S> = ElementProps<S> & DefaultProps<S> & EventProps<S>;
+type BaseProps<S> = ElementProps<S> & DefaultProps<S> & EventProps<S>;
+
+/**
+ * Each named slot as a prop taking nodes (`actions={<Button />}`), rendered
+ * into a `<span slot="…">` the adapter owns; a text prop of the same name
+ * (`headline`) takes its text or nodes (FLO-333).
+ */
+type SlotProps<S> = { [K in ElementSlotProp<S>]?: React.ReactNode };
+
+type OwnProps<S> = Omit<BaseProps<S>, ElementSlotProp<S>> & SlotProps<S>;
 
 /** Props of a generated component: the element's own, plus any HTML attribute for the host. */
 export type ComponentProps<S> = OwnProps<S> &
@@ -77,15 +87,25 @@ export const createComponent = <S, E extends HTMLElement>(
   const properties = new Set(described.properties);
   const attributes = described.attributes;
   const events = new Map(described.events.map((event) => [`on${pascal(event)}`, event]));
+  const slots = new Map(described.slots.map((slot) => [camel(slot), slot]));
 
   const Component = React.forwardRef<E, ComponentProps<S>>((props, forwardedRef) => {
     const element = React.useRef<E | null>(null);
     const host: Record<string, unknown> = {};
     const live: Record<string, unknown> = {};
     const handlers: Record<string, (event: Event) => void> = {};
+    const named: React.ReactNode[] = [];
     for (const [key, value] of Object.entries(props as Record<string, unknown>)) {
       const event = events.get(key);
       const attribute = attributes.get(key);
+      const slot = slots.get(key);
+      // A named slot's nodes, unless it is text for the same-named attribute.
+      if (slot !== undefined && !(attribute && typeof value === "string")) {
+        if (value != null && value !== false) {
+          named.push(React.createElement("span", { key: slot, slot, style: { display: "contents" } }, value as React.ReactNode));
+        }
+        continue;
+      }
       if (event) {
         if (typeof value === "function") handlers[event] = value as (event: Event) => void;
       } else if (properties.has(key)) {
@@ -158,8 +178,9 @@ export const createComponent = <S, E extends HTMLElement>(
       [forwardedRef]
     );
 
-    // `children` passed to the host through `host` like any other prop.
-    return React.createElement(`${getPrefix()}-${spec.name}`, { ...host, ref });
+    // `children` to the default slot, then each named slot's wrapper.
+    const { children, ...attributesAndProps } = host;
+    return React.createElement(`${getPrefix()}-${spec.name}`, { ...attributesAndProps, ref }, children as React.ReactNode, ...named);
   });
   Component.displayName = displayName;
   return Component as MComponent<S, E>;
