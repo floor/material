@@ -113,10 +113,10 @@ export const withSupportingText =
       element.id = supportingId;
       element.textContent = text;
 
-      if (isError) {
-        element.classList.add(`${PREFIX}-${COMPONENT}__helper--error`);
-        component.element.classList.add(`${PREFIX}-${COMPONENT}--error`);
-      }
+      // The helper's own colour only: the field's error state (the root
+      // --error class, aria-invalid) belongs to withError, so replacing the
+      // text can't end an error the field is still in (FLO-303).
+      if (isError) element.classList.add(`${PREFIX}-${COMPONENT}__helper--error`);
 
       return element;
     };
@@ -144,27 +144,18 @@ export const withSupportingText =
 
     return {
       ...component,
-      supportingTextElement: supportingElement,
+      // A live read of the element on screen. It was a value, updated through
+      // `this`, so a feature holding an earlier copy of the component (the
+      // error feature) read the element the field was created with (FLO-303).
+      get supportingTextElement(): HTMLElement | null {
+        return supportingElement;
+      },
 
       setSupportingText(text: string, isError = false) {
-        // Remove existing element if present
-        if (supportingElement) {
-          supportingElement.remove();
-          component.element.classList.remove(`${PREFIX}-${COMPONENT}--error`);
-        }
-
-        // Create new element if text is provided
-        if (text) {
-          supportingElement = createSupportingElement(text, isError);
-          component.element.appendChild(supportingElement);
-          this.supportingTextElement = supportingElement;
-        } else {
-          supportingElement = null;
-          this.supportingTextElement = null;
-          component.element.classList.remove(`${PREFIX}-${COMPONENT}--error`);
-        }
+        supportingElement?.remove();
+        supportingElement = text ? createSupportingElement(text, isError) : null;
+        if (supportingElement) component.element.appendChild(supportingElement);
         describe(supportingElement);
-
         return this;
       },
 
@@ -172,8 +163,6 @@ export const withSupportingText =
         if (supportingElement) {
           supportingElement.remove();
           supportingElement = null;
-          this.supportingTextElement = null;
-          component.element.classList.remove(`${PREFIX}-${COMPONENT}--error`);
           describe(null);
         }
         return this;

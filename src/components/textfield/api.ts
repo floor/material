@@ -168,7 +168,12 @@ export const withAPI =
     },
 
     // Supporting text management (if present)
-    supportingTextElement: component.supportingTextElement || null,
+    // A live read, as for the icons: the features before this one spread the
+    // component, so its supportingTextElement is a copy from when it was
+    // spread; the element in the field is the one to report (FLO-303).
+    get supportingTextElement(): HTMLElement | null {
+      return component.element.querySelector<HTMLElement>(`:scope > .${component.getClass("textfield__helper")}`);
+    },
     setSupportingText(text: string, isError?: boolean): TextfieldComponent {
       if (component.setSupportingText) {
         component.setSupportingText(text, isError);

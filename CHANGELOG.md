@@ -64,6 +64,17 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Text field: label rules that never matched, and supporting text and error state out of step
+  (FLO-303).** The label comes before the input, so every `input ~ label` rule matched nothing:
+  a value the script hadn't seen, or autofill, left the label resting over the text, and an input
+  disabled directly kept a full-strength label. They key off the field with `:has()` now; the
+  wrong autofill colours and backgrounds they carried are gone. `supportingTextElement` is the
+  element on screen, not the one the field was created with; ending an error restores helper
+  text set through the API; and replacing or removing the supporting text no longer ends the
+  field's error state, which `setError()` alone owns (`setSupportingText(text, true)` colours
+  the text only). `density` reaches the input. `<m-textfield>` drops its workaround for the
+  error class.
+
 - **Event handlers typed `never` (FLO-295).** `EventCallback`, the handler type of every
   `on()` that doesn't name its events, was `(...args: never[]) => void`, so a handler's
   inferred parameter was `never` and no payload could be read without a cast. It now gets

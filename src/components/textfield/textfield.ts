@@ -68,8 +68,8 @@ const createTextfield = (config: TextfieldConfig = {}): TextfieldComponent => {
       withElement(getElementConfig(baseConfig)), // Create DOM element
       withLifecycle(), // Features register cleanup on the shared lifecycle
       withVariant(baseConfig), // Apply variant styling (filled/outlined)
-      withDensity(baseConfig), // Apply density level
       withTextInput(baseConfig), // Add input element
+      withDensity(baseConfig), // Apply density level, to the input too: it has to exist first (FLO-303)
       withTextLabel(baseConfig), // Add text label
       withLeadingIcon(baseConfig), // Add leading icon (if specified)
       withTrailingIcon(baseConfig), // Add trailing icon (if specified)

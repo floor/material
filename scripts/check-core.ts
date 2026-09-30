@@ -12,6 +12,7 @@ import { checkCard } from "./check-card-browser";
 import { checkRippleIsThePress } from "./check-ripple-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
+import { checkTextfield } from "./check-textfield-browser";
 import { checkControls } from "./check-controls-browser";
 import { checkSearch } from "./check-search-browser";
 import { createPackageFixture } from "./package-fixture";
@@ -89,6 +90,7 @@ try {
   await checkChips(page, artifacts);
   await checkList(page, artifacts);
   await checkInputBEM(page);
+  await checkTextfield(page);
   await checkControls(page);
   await checkSearch(page);
   await checkTimePicker(page, artifacts);
