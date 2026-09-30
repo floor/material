@@ -124,7 +124,7 @@ jobs:
           - group: adapters
             checks: react:check vue:check svelte:check solid:check
           - group: components
-            checks: consumer:check tabs:check slider:check drawer:check navigation-rail:check core:check preupgrade:check
+            checks: consumer:check tabs:check slider:check drawer:check navigation-rail:check core:check preupgrade:check tokens:check
     name: browser (${{ matrix.group }})
     steps:
       - uses: actions/checkout@v4
