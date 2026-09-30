@@ -1,14 +1,69 @@
 # mtrl
 
-Material Design 3 components for the web, written in TypeScript with zero dependencies.
+Material Design 3 components for the web: as plain JavaScript, as web components, and as React, Vue, Svelte and Solid components. Written in TypeScript, with zero dependencies.
 
-mtrl implements the M3 expressive update: component sizes, shapes, colours and spring motion follow the Material 3 tokens. Each component is a plain function that returns a DOM element and a small API, so mtrl works with any framework or none. The documentation site, [md3.io](https://md3.io), shows every component with live examples.
+mtrl implements the M3 Expressive update: component sizes, shapes, colours and spring motion follow the Material 3 tokens. One implementation serves every way of using it, so a button looks and behaves the same in each. The documentation site, [md3.io](https://md3.io), has a live playground and examples in every framework for each component.
 
-## Quick start
+## Install
 
 ```bash
 npm install mtrl
 ```
+
+React, Vue, Svelte and Solid are optional peer dependencies: mtrl uses the one your app has and installs none of them.
+
+## Use it your way
+
+| Way | Import from | Good for |
+|-----|-------------|----------|
+| Web components | `mtrl/elements` | Plain HTML, server templates, Angular, any framework |
+| React | `mtrl/react` | React 18 and 19, Next.js |
+| Vue | `mtrl/vue` | Vue 3, Nuxt |
+| Svelte | `mtrl/svelte` | Svelte 5, SvelteKit |
+| Solid | `mtrl/solid` | SolidJS, SolidStart |
+| Vanilla factories | `mtrl` | The smallest bundles and full control |
+
+Every app imports the base stylesheet once: the theme, the tokens and the ripple.
+
+```typescript
+import 'mtrl/styles/base';
+```
+
+**Web components**: register them once, then write HTML.
+
+```html
+<script type="module">
+  import 'mtrl/styles/base';
+  import 'mtrl/elements/css';
+  import { defineAll } from 'mtrl/elements';
+  defineAll();
+</script>
+
+<form>
+  <m-textfield name="email" type="email" label="Email" required></m-textfield>
+  <m-switch name="news" checked>Newsletter</m-switch>
+  <m-button type="submit">Sign up</m-button>
+</form>
+```
+
+**React** (Vue, Svelte and Solid work the same way, see [below](#react-vue-svelte-and-solid)):
+
+```tsx
+import 'mtrl/styles/base';
+import { Button, Switch, Textfield } from 'mtrl/react';
+
+export function Signup() {
+  return (
+    <form>
+      <Textfield name="email" type="email" label="Email" required />
+      <Switch name="news" defaultChecked>Newsletter</Switch>
+      <Button type="submit">Sign up</Button>
+    </form>
+  );
+}
+```
+
+**Vanilla**: each component is a function that returns a DOM element and a small API.
 
 ```typescript
 import 'mtrl/styles';
@@ -22,10 +77,7 @@ name.on('input', ({ value }: { value: string }) => {
   if (value.trim()) save.disabled.enable();
   else save.disabled.disable();
 });
-
-save.on('click', () => {
-  console.log('Saved', name.getValue());
-});
+save.on('click', () => console.log('Saved', name.getValue()));
 
 document.body.append(name.element, save.element);
 
@@ -34,24 +86,25 @@ name.destroy();
 save.destroy();
 ```
 
-`mtrl/styles` loads every component and theme. For a smaller bundle, import only what you use (see [Styles](#styles)).
+The factories are the fastest way to render hundreds of components at once, such as a long editable table; the elements style a shadow root each. `mtrl/styles` loads every component's styles; for a smaller bundle, import only what you use (see [Styles](#styles)).
 
 ## Components
 
-Every component is created by a `create*` function exported from `mtrl`, and renders with `mtrl-` prefixed classes.
+Every component comes three ways: a factory (`createButton`), an element (`<m-button>`) and a framework component (`Button`; `MButton` in Vue).
 
-- **Actions:** `createButton`, `createButtonGroup`, `createSplitButton`, `createIconButton`, `createFab`, `createExtendedFab`, `createFabMenu`, `createToolbar`
-- **Selection and input:** `createCheckbox`, `createChips` and `createChip`, `createRadios`, `createSwitch`, `createSlider`, `createSelect`, `createTextfield`, `createSearch`, `createDatePicker`, `createTimePicker`
-- **Navigation:** `createNavigationRail`, `createDrawer`, `createTabs` and `createTab`, `createTopAppBar`, `createBottomAppBar`, `createMenu`, `createNavigation`, `createNavigationSystem`
-- **Containment:** `createCard` with `createCardHeader`, `createCardContent`, `createCardMedia` and `createCardActions`, `createCarousel`, `createList`, `createDivider`, `createDialog`, `createBottomSheet`, `createSideSheet`
-- **Communication:** `createSnackbar`, `createTooltip`, `createBadge`, `createProgress`, `createLoadingIndicator`
-- **Deprecated:** `createSegmentedButton` and `createSegment`, replaced by `createButtonGroup` with `kind: 'connected'`
+| Group | Components |
+|-------|------------|
+| Actions | Button, Icon button, Button group, Split button, FAB, Extended FAB, FAB menu, Toolbar |
+| Selection and input | Checkbox, Switch, Radio buttons, Chips, Slider, Text field, Select, Search, Date picker, Time picker |
+| Navigation | Navigation rail, Drawer, Tabs, Menu, Top app bar, Bottom app bar |
+| Containment | Card, Carousel, List, Divider, Dialog, Bottom sheet, Side sheet |
+| Communication | Badge, Progress, Loading indicator, Snackbar, Tooltip |
 
-Virtual scrolling and data-driven lists live in [mtrl-addons](https://github.com/floor/mtrl-addons).
+The factories are exported from `mtrl`: `createButton`, `createIconButton`, `createButtonGroup`, `createSplitButton`, `createFab`, `createExtendedFab`, `createFabMenu`, `createToolbar`, `createCheckbox`, `createSwitch`, `createRadios`, `createChips` (with `createAssistChip`, `createFilterChip`, `createInputChip` and `createSuggestionChip`), `createSlider`, `createTextfield`, `createSelect`, `createSearch`, `createDatePicker`, `createTimePicker`, `createNavigationRail`, `createDrawer`, `createTabs` and `createTab`, `createMenu`, `createTopAppBar`, `createBottomAppBar`, `createCard` (with `createCardHeader`, `createCardContent`, `createCardMedia` and `createCardActions`), `createCarousel`, `createList`, `createDivider`, `createDialog`, `createBottomSheet`, `createSideSheet`, `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar` and `createTooltip`. Deprecated: `createSegmentedButton` and `createSegment`, replaced by `createButtonGroup` with `kind: 'connected'`.
 
 ## Styles
 
-Import the full stylesheet once:
+The web components and the framework components carry their own styles in their shadow roots; they need only the base stylesheet, `mtrl/styles/base`, for the theme and its tokens. The factories render in the page, so they use the page's stylesheets. Import the full stylesheet once:
 
 ```typescript
 import 'mtrl/styles';
@@ -69,7 +122,7 @@ import 'mtrl/themes/ocean';
 import 'mtrl/styles/utilities';
 ```
 
-The base includes the baseline theme in light and dark, the tokens, a reset, typography and the ripple. Each selective entry imports what it depends on (the select brings the text field and the menu), so use a CSS-capable bundler to resolve and deduplicate them. Choose either the full stylesheet or selective imports, not both. The date picker has no selective entry yet; it is in the full stylesheet.
+The base includes the baseline theme in light and dark, the tokens, a reset, typography and the ripple. Each selective entry imports what it depends on (the select brings the text field and the menu), so use a CSS-capable bundler to resolve and deduplicate them. Choose either the full stylesheet or selective imports, not both.
 
 Library styles sit in ordered `mtrl` cascade layers, so unlayered application CSS overrides them without specificity battles.
 
@@ -112,6 +165,44 @@ The type scale, the typefaces and the corner scale are custom properties too (`-
 }
 ```
 
+## Web components
+
+Overlays open in the browser's top layer (`showModal()` or `popover`) from inside their own shadow root, so they keep their styles, trap focus and make the page inert where M3 says so. Form controls are form-associated: `name`, the form value, reset, validation, `<label for>` and back-navigation restore work as on native controls.
+
+Declaration children describe a component's items, as native `<select>` and `<option>` do:
+
+```html
+<m-tabs value="songs">
+  <m-tab value="songs">Songs</m-tab>
+  <m-tab value="albums">Albums</m-tab>
+</m-tabs>
+```
+
+The page still loads mtrl's base styles and a theme (see [Styles](#styles)); the elements render in shadow DOM and pick up the theme's tokens. Attributes are defaults and properties the live state, as on native controls: a `checked` or `value` attribute sets the state until the user or a script changes it, and `form.reset()` goes back to it. Form controls take part in forms (their host's `name`), reset, validation and back-navigation restore.
+
+A server-rendered page sends each element as its tag and light DOM; the element takes its real look once its script defines it. So that nothing moves meanwhile, put the pre-upgrade stylesheet in `<head>`: it gives every element not defined yet the box it will have (and its label the final type style), hides what it declares (`<m-tab>`, `<m-menu-item>`, …) and overlays. Its rules match only `:not(:defined)`, in the `mtrl.preupgrade` cascade layer.
+
+```html
+<link rel="stylesheet" href="/node_modules/mtrl/dist/elements/preupgrade.css">
+```
+
+With another tag prefix, `preupgradeStyles('x')` from `mtrl/elements/preupgrade` returns the same stylesheet for `<x-*>`, to inline on the server. The CSS modules (`mtrl/elements/css`) also apply these rules until the elements are defined, for the default prefix and the one given to `configure()` or `define()`.
+
+## React, Vue, Svelte and Solid
+
+The framework components render the elements, so everything above holds: forms, the top layer, the styling. `mtrl/react`, `mtrl/vue`, `mtrl/svelte` and `mtrl/solid` load the elements' CSS and register each element the first time it mounts.
+
+| Framework | Import | Two-way binding |
+|-----------|--------|-----------------|
+| React 18 and 19 | `import { Switch } from 'mtrl/react'` | `checked` + `onChange`, or `defaultChecked` |
+| Vue 3 | `import { MSwitch } from 'mtrl/vue'` | `v-model` |
+| Svelte 5 | `import { Switch } from 'mtrl/svelte'` | `bind:checked` |
+| Solid | `import { Switch } from 'mtrl/solid'` | `checked` + `onChange` |
+
+Each framework is an optional peer dependency; mtrl installs none of them. All adapters render on the server and hydrate. Angular apps use the elements directly, with `CUSTOM_ELEMENTS_SCHEMA`.
+
+Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, controlled and uncontrolled state, named slots, refs and server rendering.
+
 ## Imports and tree-shaking
 
 mtrl publishes ESM with type declarations, so bundlers drop unused exports and split dynamic imports. CommonJS remains available through `require('mtrl')`.
@@ -136,65 +227,7 @@ const button = createButton({
 });
 ```
 
-Button progress and card actions load on demand; enable code splitting in your build to keep them out of the initial chunk.
-
-## Web components and frameworks
-
-Since 0.10.0, every component also ships as a custom element, with thin adapters for React, Vue, Svelte and Solid generated from the same specs.
-
-| Kind | Elements | Framework components (Vue: `M` prefix, e.g. `MDialog`) |
-|------|----------|--------------------------------------------------------|
-| Actions | `<m-button>`, `<m-icon-button>`, `<m-fab>`, `<m-extended-fab>`, `<m-fab-menu>` + `<m-fab-menu-item>`, `<m-split-button>`, `<m-button-group>` + `<m-button-group-item>`, `<m-toolbar>` | `Button`, `IconButton`, `Fab`, `ExtendedFab`, `FabMenu`, `FabMenuItem`, `SplitButton`, `ButtonGroup`, `ButtonGroupItem`, `Toolbar` |
-| Form controls | `<m-checkbox>`, `<m-switch>`, `<m-radios>` + `<m-radio>`, `<m-slider>`, `<m-textfield>`, `<m-select>` + `<m-select-option>`, `<m-search>` + `<m-search-suggestion>`, `<m-datepicker>`, `<m-timepicker>` | `Checkbox`, `Switch`, `Radios`, `Radio`, `Slider`, `Textfield`, `Select`, `SelectOption`, `Search`, `SearchSuggestion`, `Datepicker`, `Timepicker` |
-| Selection | `<m-chips>` + `<m-chip>`, `<m-tabs>` + `<m-tab>`, `<m-list>` + `<m-list-item>` | `Chips`, `Chip`, `Tabs`, `Tab`, `List`, `ListItem` |
-| Navigation | `<m-navigation-rail>` + `<m-navigation-rail-item>`, `<m-drawer>` + `<m-drawer-item>`, `<m-top-app-bar>`, `<m-bottom-app-bar>` | `NavigationRail`, `NavigationRailItem`, `Drawer`, `DrawerItem`, `TopAppBar`, `BottomAppBar` |
-| Overlays (top layer) | `<m-menu>` + `<m-menu-item>`, `<m-dialog>`, `<m-bottom-sheet>`, `<m-side-sheet>`, `<m-tooltip>`, `<m-snackbar>` | `Menu`, `MenuItem`, `Dialog`, `BottomSheet`, `SideSheet`, `Tooltip`, `Snackbar` |
-| Containment | `<m-card>`, `<m-carousel>` + `<m-carousel-item>` | `Card`, `Carousel`, `CarouselItem` |
-| Indicators | `<m-progress>`, `<m-loading-indicator>`, `<m-badge>`, `<m-divider>` | `Progress`, `LoadingIndicator`, `Badge`, `Divider` |
-
-Overlays open in the browser's top layer (`showModal()` or `popover`) from inside their own shadow root, so they keep their styles, trap focus and make the page inert where M3 says so. Form controls are form-associated: `name`, the form value, reset, validation, `<label for>` and back-navigation restore work as on native controls.
-
-```html
-<script type="module">
-  import 'mtrl/elements/css';            // the elements' styles
-  import { defineAll } from 'mtrl/elements';
-  defineAll();                           // registers every element (<m-button>, <m-switch>, …)
-</script>
-
-<form>
-  <m-textfield name="email" type="email" label="Email" required></m-textfield>
-  <m-radios name="plan" value="free" aria-label="Plan">
-    <m-radio value="free">Free</m-radio>
-    <m-radio value="pro">Pro</m-radio>
-  </m-radios>
-  <m-switch name="news" checked>Newsletter</m-switch>
-  <m-button type="submit">Sign up</m-button>
-</form>
-
-<m-tabs value="songs">
-  <m-tab value="songs">Songs</m-tab>
-  <m-tab value="albums">Albums</m-tab>
-</m-tabs>
-```
-
-The page still loads mtrl's base styles and a theme (see [Styles](#styles)); the elements render in shadow DOM and pick up the theme's tokens. Attributes are defaults and properties the live state, as on native controls: a `checked` or `value` attribute sets the state until the user or a script changes it, and `form.reset()` goes back to it. Form controls take part in forms (their host's `name`), reset, validation and back-navigation restore.
-
-| Framework | Import | Two-way binding |
-|-----------|--------|-----------------|
-| React 18 and 19 | `import { Switch } from 'mtrl/react'` | `checked` + `onChange`, or `defaultChecked` |
-| Vue 3 | `import { MSwitch } from 'mtrl/vue'` | `v-model` |
-| Svelte 5 | `import { Switch } from 'mtrl/svelte'` | `bind:checked` |
-| Solid | `import { Switch } from 'mtrl/solid'` | `checked` + `onChange` |
-
-Each framework is an optional peer dependency; mtrl installs none of them. All adapters render on the server and hydrate. Angular apps use the elements directly, with `CUSTOM_ELEMENTS_SCHEMA`.
-
-A server-rendered page sends each element as its tag and light DOM; the element takes its real look once its script defines it. So that nothing moves meanwhile, put the pre-upgrade stylesheet in `<head>`: it gives every element not defined yet the box it will have (and its label the final type style), hides what it declares (`<m-tab>`, `<m-menu-item>`, …) and overlays. Its rules match only `:not(:defined)`, in the `mtrl.preupgrade` cascade layer.
-
-```html
-<link rel="stylesheet" href="/node_modules/mtrl/dist/elements/preupgrade.css">
-```
-
-With another tag prefix, `preupgradeStyles('x')` from `mtrl/elements/preupgrade` returns the same stylesheet for `<x-*>`, to inline on the server. The CSS modules (`mtrl/elements/css`) also apply these rules until the elements are defined, for the default prefix and the one given to `configure()` or `define()`.
+Some parts load on demand: a button's progress indicator, a card's action buttons, a menu's submenus and the FAB menu's desktop menu. Enable code splitting in your build to keep them out of the initial chunk.
 
 ## Building your own components
 
@@ -202,17 +235,8 @@ Components are composed from small features with `pipe`. The same building block
 
 ```typescript
 import { pipe, createBase, withEvents, withElement } from 'mtrl/core/compose';
-import type { ElementComponent } from 'mtrl/core/compose';
 
-interface NoteConfig {
-  text?: string;
-}
-
-interface NoteComponent extends ElementComponent {
-  setText: (text: string) => NoteComponent;
-}
-
-const createNote = (config: NoteConfig): NoteComponent =>
+const createNote = (config: { text?: string } = {}) =>
   pipe(
     createBase,
     withEvents(),
@@ -221,10 +245,16 @@ const createNote = (config: NoteConfig): NoteComponent =>
       ...component,
       setText(text: string) {
         component.element.textContent = text;
-        return this;
       },
     })
   )(config);
+
+// The component's type is what the pipe builds
+type NoteComponent = ReturnType<typeof createNote>;
+
+const note: NoteComponent = createNote();
+note.setText('Saved');
+document.body.append(note.element);
 ```
 
 The element gets the `mtrl-note` class, `withEvents` adds `on`, `off` and `emit`, and `destroy()` removes the element. Add `withLifecycle()` from `mtrl/core/compose/features` when features need to register cleanup.
