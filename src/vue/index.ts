@@ -7,249 +7,51 @@
  * @module vue
  */
 
-import "mtrl/elements/css/progress";
-import "mtrl/elements/css/button";
-import "mtrl/elements/css/switch";
-import "mtrl/elements/css/badge";
-import "mtrl/elements/css/tabs";
-import "mtrl/elements/css/loading-indicator";
-import "mtrl/elements/css/divider";
-import "mtrl/elements/css/icon-button";
-import "mtrl/elements/css/fab";
-import "mtrl/elements/css/extended-fab";
-import "mtrl/elements/css/checkbox";
-import "mtrl/elements/css/slider";
-import "mtrl/elements/css/textfield";
-import "mtrl/elements/css/radios";
-import "mtrl/elements/css/navigation-rail";
-import "mtrl/elements/css/drawer";
-import "mtrl/elements/css/top-app-bar";
-import "mtrl/elements/css/bottom-app-bar";
-import "mtrl/elements/css/button-group";
-import "mtrl/elements/css/chips";
-import "mtrl/elements/css/list";
-import "mtrl/elements/css/card";
-import "mtrl/elements/css/carousel";
-import "mtrl/elements/css/menu";
-import "mtrl/elements/css/select";
-import "mtrl/elements/css/split-button";
-import "mtrl/elements/css/tooltip";
-import "mtrl/elements/css/snackbar";
-import "mtrl/elements/css/dialog";
-import "mtrl/elements/css/bottom-sheet";
-import "mtrl/elements/css/side-sheet";
-import "mtrl/elements/css/datepicker";
-import "mtrl/elements/css/timepicker";
-import "mtrl/elements/css/search";
-import {
-  buttonElement,
-  defineButton,
-  switchElement,
-  defineSwitch,
-  tabsElement,
-  defineTabs,
-  progressElement,
-  defineProgress,
-  loadingIndicatorElement,
-  defineLoadingIndicator,
-  badgeElement,
-  defineBadge,
-  dividerElement,
-  defineDivider,
-  iconButtonElement,
-  defineIconButton,
-  fabElement,
-  defineFab,
-  extendedFabElement,
-  defineExtendedFab,
-  checkboxElement,
-  defineCheckbox,
-  sliderElement,
-  defineSlider,
-  textfieldElement,
-  defineTextfield,
-  radiosElement,
-  defineRadios,
-  navigationRailElement,
-  defineNavigationRail,
-  drawerElement,
-  defineDrawer,
-  topAppBarElement,
-  defineTopAppBar,
-  bottomAppBarElement,
-  defineBottomAppBar,
-  buttonGroupElement,
-  defineButtonGroup,
-  chipsElement,
-  defineChips,
-  listElement,
-  defineList,
-  cardElement,
-  defineCard,
-  carouselElement,
-  defineCarousel,
-  menuElement,
-  defineMenu,
-  selectElement,
-  defineSelect,
-  splitButtonElement,
-  defineSplitButton,
-  tooltipElement,
-  defineTooltip,
-  snackbarElement,
-  defineSnackbar,
-  dialogElement,
-  defineDialog,
-  bottomSheetElement,
-  defineBottomSheet,
-  sideSheetElement,
-  defineSideSheet,
-  datepickerElement,
-  defineDatepicker,
-  timepickerElement,
-  defineTimepicker,
-  searchElement,
-  defineSearch,
-  tabDeclaration,
-  radioDeclaration,
-  navigationRailItemDeclaration,
-  drawerItemDeclaration,
-  buttonGroupItemDeclaration,
-  chipDeclaration,
-  listItemDeclaration,
-  carouselItemDeclaration,
-  menuItemDeclaration,
-  selectOptionDeclaration,
-  searchSuggestionDeclaration,
-} from "../elements";
-import type {
-  ButtonSpec,
-  ButtonElement,
-  SwitchSpec,
-  SwitchElement,
-  TabsSpec,
-  TabsElement,
-  ProgressSpec,
-  ProgressElement,
-  LoadingIndicatorSpec,
-  LoadingIndicatorElement,
-  BadgeSpec,
-  BadgeElement,
-  DividerSpec,
-  DividerElement,
-  IconButtonSpec,
-  IconButtonElement,
-  FabSpec,
-  FabElement,
-  ExtendedFabSpec,
-  ExtendedFabElement,
-  CheckboxSpec,
-  CheckboxElement,
-  SliderSpec,
-  SliderElement,
-  TextfieldSpec,
-  TextfieldElement,
-  RadiosSpec,
-  RadiosElement,
-  NavigationRailSpec,
-  NavigationRailElement,
-  DrawerSpec,
-  DrawerElement,
-  TopAppBarSpec,
-  TopAppBarElement,
-  BottomAppBarSpec,
-  BottomAppBarElement,
-  ButtonGroupSpec,
-  ButtonGroupElement,
-  ChipsSpec,
-  ChipsElement,
-  ListSpec,
-  ListElement,
-  CardSpec,
-  CardElement,
-  CarouselSpec,
-  CarouselElement,
-  MenuSpec,
-  MenuElement,
-  SelectSpec,
-  SelectElement,
-  SplitButtonSpec,
-  SplitButtonElement,
-  TooltipSpec,
-  TooltipElement,
-  SnackbarSpec,
-  SnackbarElement,
-  DialogSpec,
-  DialogElement,
-  BottomSheetSpec,
-  BottomSheetElement,
-  SideSheetSpec,
-  SideSheetElement,
-  DatepickerSpec,
-  DatepickerElement,
-  TimepickerSpec,
-  TimepickerElement,
-  SearchSpec,
-  SearchElement,
-  TabAttributes,
-  RadioAttributes,
-  NavigationRailItemAttributes,
-  DrawerItemAttributes,
-  ButtonGroupItemAttributes,
-  ChipAttributes,
-  ListItemAttributes,
-  CarouselItemAttributes,
-  MenuItemAttributes,
-  SelectOptionAttributes,
-  SearchSuggestionAttributes,
-} from "../elements";
-import { createComponent, createDeclaration, type MComponent, type MDeclaration } from "./create";
-
 export { configure } from "./create";
 export type { VueProps, VueEmits, ModelProps, Exposed, MComponent, MDeclaration } from "./create";
 
-export const MButton: MComponent<ButtonSpec, ButtonElement> = createComponent(buttonElement.spec, defineButton, "MButton");
-export const MSwitch: MComponent<SwitchSpec, SwitchElement> = createComponent(switchElement.spec, defineSwitch, "MSwitch");
-export const MTabs: MComponent<TabsSpec, TabsElement> = createComponent(tabsElement.spec, defineTabs, "MTabs");
-export const MProgress: MComponent<ProgressSpec, ProgressElement> = createComponent(progressElement.spec, defineProgress, "MProgress");
-export const MLoadingIndicator: MComponent<LoadingIndicatorSpec, LoadingIndicatorElement> = createComponent(loadingIndicatorElement.spec, defineLoadingIndicator, "MLoadingIndicator");
-export const MBadge: MComponent<BadgeSpec, BadgeElement> = createComponent(badgeElement.spec, defineBadge, "MBadge");
-export const MDivider: MComponent<DividerSpec, DividerElement> = createComponent(dividerElement.spec, defineDivider, "MDivider");
-export const MIconButton: MComponent<IconButtonSpec, IconButtonElement> = createComponent(iconButtonElement.spec, defineIconButton, "MIconButton");
-export const MFab: MComponent<FabSpec, FabElement> = createComponent(fabElement.spec, defineFab, "MFab");
-export const MExtendedFab: MComponent<ExtendedFabSpec, ExtendedFabElement> = createComponent(extendedFabElement.spec, defineExtendedFab, "MExtendedFab");
-export const MCheckbox: MComponent<CheckboxSpec, CheckboxElement> = createComponent(checkboxElement.spec, defineCheckbox, "MCheckbox");
-export const MSlider: MComponent<SliderSpec, SliderElement> = createComponent(sliderElement.spec, defineSlider, "MSlider");
-export const MTextfield: MComponent<TextfieldSpec, TextfieldElement> = createComponent(textfieldElement.spec, defineTextfield, "MTextfield");
-export const MRadios: MComponent<RadiosSpec, RadiosElement> = createComponent(radiosElement.spec, defineRadios, "MRadios");
-export const MNavigationRail: MComponent<NavigationRailSpec, NavigationRailElement> = createComponent(navigationRailElement.spec, defineNavigationRail, "MNavigationRail");
-export const MDrawer: MComponent<DrawerSpec, DrawerElement> = createComponent(drawerElement.spec, defineDrawer, "MDrawer");
-export const MTopAppBar: MComponent<TopAppBarSpec, TopAppBarElement> = createComponent(topAppBarElement.spec, defineTopAppBar, "MTopAppBar");
-export const MBottomAppBar: MComponent<BottomAppBarSpec, BottomAppBarElement> = createComponent(bottomAppBarElement.spec, defineBottomAppBar, "MBottomAppBar");
-export const MButtonGroup: MComponent<ButtonGroupSpec, ButtonGroupElement> = createComponent(buttonGroupElement.spec, defineButtonGroup, "MButtonGroup");
-export const MChips: MComponent<ChipsSpec, ChipsElement> = createComponent(chipsElement.spec, defineChips, "MChips");
-export const MList: MComponent<ListSpec, ListElement> = createComponent(listElement.spec, defineList, "MList");
-export const MCard: MComponent<CardSpec, CardElement> = createComponent(cardElement.spec, defineCard, "MCard");
-export const MCarousel: MComponent<CarouselSpec, CarouselElement> = createComponent(carouselElement.spec, defineCarousel, "MCarousel");
-export const MMenu: MComponent<MenuSpec, MenuElement> = createComponent(menuElement.spec, defineMenu, "MMenu");
-export const MSelect: MComponent<SelectSpec, SelectElement> = createComponent(selectElement.spec, defineSelect, "MSelect");
-export const MSplitButton: MComponent<SplitButtonSpec, SplitButtonElement> = createComponent(splitButtonElement.spec, defineSplitButton, "MSplitButton");
-export const MTooltip: MComponent<TooltipSpec, TooltipElement> = createComponent(tooltipElement.spec, defineTooltip, "MTooltip");
-export const MSnackbar: MComponent<SnackbarSpec, SnackbarElement> = createComponent(snackbarElement.spec, defineSnackbar, "MSnackbar");
-export const MDialog: MComponent<DialogSpec, DialogElement> = createComponent(dialogElement.spec, defineDialog, "MDialog");
-export const MBottomSheet: MComponent<BottomSheetSpec, BottomSheetElement> = createComponent(bottomSheetElement.spec, defineBottomSheet, "MBottomSheet");
-export const MSideSheet: MComponent<SideSheetSpec, SideSheetElement> = createComponent(sideSheetElement.spec, defineSideSheet, "MSideSheet");
-export const MDatepicker: MComponent<DatepickerSpec, DatepickerElement> = createComponent(datepickerElement.spec, defineDatepicker, "MDatepicker");
-export const MTimepicker: MComponent<TimepickerSpec, TimepickerElement> = createComponent(timepickerElement.spec, defineTimepicker, "MTimepicker");
-export const MSearch: MComponent<SearchSpec, SearchElement> = createComponent(searchElement.spec, defineSearch, "MSearch");
-export const MTab: MDeclaration<TabAttributes> = createDeclaration(tabDeclaration, "MTab");
-export const MRadio: MDeclaration<RadioAttributes> = createDeclaration(radioDeclaration, "MRadio");
-export const MNavigationRailItem: MDeclaration<NavigationRailItemAttributes> = createDeclaration(navigationRailItemDeclaration, "MNavigationRailItem");
-export const MDrawerItem: MDeclaration<DrawerItemAttributes> = createDeclaration(drawerItemDeclaration, "MDrawerItem");
-export const MButtonGroupItem: MDeclaration<ButtonGroupItemAttributes> = createDeclaration(buttonGroupItemDeclaration, "MButtonGroupItem");
-export const MChip: MDeclaration<ChipAttributes> = createDeclaration(chipDeclaration, "MChip");
-export const MListItem: MDeclaration<ListItemAttributes> = createDeclaration(listItemDeclaration, "MListItem");
-export const MCarouselItem: MDeclaration<CarouselItemAttributes> = createDeclaration(carouselItemDeclaration, "MCarouselItem");
-export const MMenuItem: MDeclaration<MenuItemAttributes> = createDeclaration(menuItemDeclaration, "MMenuItem");
-export const MSelectOption: MDeclaration<SelectOptionAttributes> = createDeclaration(selectOptionDeclaration, "MSelectOption");
-export const MSearchSuggestion: MDeclaration<SearchSuggestionAttributes> = createDeclaration(searchSuggestionDeclaration, "MSearchSuggestion");
+export { MButton } from "./button";
+export { MSwitch } from "./switch";
+export { MTabs } from "./tabs";
+export { MProgress } from "./progress";
+export { MLoadingIndicator } from "./loading-indicator";
+export { MBadge } from "./badge";
+export { MDivider } from "./divider";
+export { MIconButton } from "./icon-button";
+export { MFab } from "./fab";
+export { MExtendedFab } from "./extended-fab";
+export { MCheckbox } from "./checkbox";
+export { MSlider } from "./slider";
+export { MTextfield } from "./textfield";
+export { MRadios } from "./radios";
+export { MNavigationRail } from "./navigation-rail";
+export { MDrawer } from "./drawer";
+export { MTopAppBar } from "./top-app-bar";
+export { MBottomAppBar } from "./bottom-app-bar";
+export { MButtonGroup } from "./button-group";
+export { MChips } from "./chips";
+export { MList } from "./list";
+export { MCard } from "./card";
+export { MCarousel } from "./carousel";
+export { MMenu } from "./menu";
+export { MSelect } from "./select";
+export { MSplitButton } from "./split-button";
+export { MTooltip } from "./tooltip";
+export { MSnackbar } from "./snackbar";
+export { MDialog } from "./dialog";
+export { MBottomSheet } from "./bottom-sheet";
+export { MSideSheet } from "./side-sheet";
+export { MDatepicker } from "./datepicker";
+export { MTimepicker } from "./timepicker";
+export { MSearch } from "./search";
+export { MTab } from "./tab";
+export { MRadio } from "./radio";
+export { MNavigationRailItem } from "./navigation-rail-item";
+export { MDrawerItem } from "./drawer-item";
+export { MButtonGroupItem } from "./button-group-item";
+export { MChip } from "./chip";
+export { MListItem } from "./list-item";
+export { MCarouselItem } from "./carousel-item";
+export { MMenuItem } from "./menu-item";
+export { MSelectOption } from "./select-option";
+export { MSearchSuggestion } from "./search-suggestion";
