@@ -50,9 +50,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
           if (detail && "date" in detail) {
             const { date, ...rest } = detail;
             const text = Array.isArray(date) ? date.map(local).join("/") : date ? local(date) : "";
-            // A single date with a range end: the value is start/end, the date the start.
-            const matches = text === rest.value || (!!text && rest.value?.startsWith(`${text}/`));
-            w.__log.push([type, matches ? rest : detail]);
+            w.__log.push([type, text === rest.value ? rest : detail]);
           } else w.__log.push([type, detail]);
         });
       }
