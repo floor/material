@@ -201,6 +201,8 @@ The framework components render the elements, so everything above holds: forms, 
 
 Each framework is an optional peer dependency; mtrl installs none of them. All adapters render on the server and hydrate. Angular apps use the elements directly, with `CUSTOM_ELEMENTS_SCHEMA`.
 
+A component owns the `on…` props of its element's events (`onChange`, `onInput`, `onSelect`, …) and its `default…` props, typed with the element's own payloads. Any other HTML attribute passes to the host; to spread a whole set of HTML attributes into a component, omit the props it owns (`Omit<React.HTMLAttributes<HTMLElement>, "onChange">`).
+
 Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, controlled and uncontrolled state, named slots, refs and server rendering.
 
 ## Imports and tree-shaking

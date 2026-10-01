@@ -188,7 +188,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     if (disabled || resources.destroyed) return;
     if (selectable && !options.managedSelection) {
       api.toggleSelected();
-      base.emit("change", { selected, chip: api });
+      base.emit("change", { selected, chip: api, value: api.getValue() });
       options.onChange?.(selected, api);
       options.onSelect?.(api);
     }

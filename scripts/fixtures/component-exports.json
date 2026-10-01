@@ -97,6 +97,11 @@
   ],
   "button": [
     {
+      "name": "ButtonChangePayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "ButtonComponent",
       "kind": "type",
       "status": "public"
@@ -914,6 +919,11 @@
     },
     {
       "name": "IconAPI",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "IconButtonChangePayload",
       "kind": "type",
       "status": "public"
     },
