@@ -1,6 +1,6 @@
 // test/components/carousel/carousel.test.ts
 import { corner } from '../../utils/corner';
-import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach, mock, spyOn } from 'bun:test';
 import { JSDOM } from 'jsdom';
 
 let dom: JSDOM;
@@ -247,5 +247,159 @@ describe('carousel event contract', () => {
     root.dispatchEvent(new dom.window.FocusEvent('blur'));
     carousel.next();
     expect(notify).not.toHaveBeenCalled();
+  });
+});
+
+
+// FLO-395: each negative case includes a positive wheel control, so the
+// original implementation cannot pass simply by ignoring every wheel event.
+describe('carousel opt-in wheel', () => {
+  const setupWheel = (config: Parameters<typeof createCarousel>[0] = {}) => {
+    const carousel = createCarousel({ slides, ...config });
+    const scroller = sized(carousel, 600);
+    carousel.addSlide({ title: 'Last' });
+    const scroll = mock((options: ScrollToOptions) => {
+      if (options.left !== undefined) scroller.scrollLeft = options.left;
+      if (options.top !== undefined) scroller.scrollTop = options.top;
+    });
+    Object.defineProperty(scroller, 'scrollTo', { value: scroll, configurable: true });
+    const wheel = (options: WheelEventInit = {}) => {
+      const event = new dom.window.WheelEvent('wheel', { deltaY: 40, bubbles: true, cancelable: true, ...options });
+      scroller.dispatchEvent(event);
+      return event;
+    };
+    return { carousel, scroller, scroll, wheel };
+  };
+
+  test('wheel is off by default and can be enabled in place', () => {
+    const { carousel, scroller, scroll, wheel } = setupWheel();
+    try {
+      expect(wheel().defaultPrevented).toBe(false);
+      expect(scroll).not.toHaveBeenCalled();
+      expect(scroller.scrollLeft).toBe(0);
+      expect(carousel.setWheel(true)).toBe(carousel);
+      expect(wheel().defaultPrevented).toBe(true);
+      expect(scroller.scrollLeft).toBe(40);
+    } finally { carousel.destroy(); }
+  });
+
+  for (const variant of ['multi-browse', 'uncontained'] as const) {
+    test(`${variant} wheel normalizes pixels, lines and pages, then restores snapping`, async () => {
+      const { carousel, scroller, scroll, wheel } = setupWheel({ wheel: true, variant });
+      scroller.style.lineHeight = '20px';
+      try {
+        expect(wheel().defaultPrevented).toBe(true);
+        expect(scroller.scrollLeft).toBe(40);
+        wheel({ deltaY: 2, deltaMode: 1 });
+        expect(scroller.scrollLeft).toBe(80);
+        wheel({ deltaY: 1, deltaMode: 2 });
+        expect(scroller.scrollLeft).toBe(680);
+        expect(scroll).toHaveBeenLastCalledWith({ left: 680, behavior: 'auto' });
+        expect(carousel.element.dataset.settling).toBe('true');
+        await new Promise(resolve => setTimeout(resolve, 200));
+        expect(carousel.element.dataset.settling).toBeUndefined();
+        wheel({ deltaY: -40 });
+        expect(scroller.scrollLeft).toBe(640);
+      } finally { carousel.destroy(); }
+    });
+  }
+
+  for (const variant of ['hero', 'hero-center'] as const) {
+    test(`${variant} moves one slide per burst and rearms after quiet`, async () => {
+      const { carousel, wheel, scroll } = setupWheel({ wheel: true, variant });
+      try {
+        expect(wheel().defaultPrevented).toBe(true);
+        wheel(); wheel();
+        expect(carousel.getCurrentSlide()).toBe(1);
+        expect(scroll).toHaveBeenCalledTimes(1);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        wheel({ deltaY: -40 });
+        expect(carousel.getCurrentSlide()).toBe(0);
+        expect(scroll).toHaveBeenCalledTimes(2);
+      } finally { carousel.destroy(); }
+    });
+  }
+
+  test('last slide passes wheel down through and start passes wheel up through', () => {
+    const { carousel, wheel, scroll } = setupWheel({ wheel: true, variant: 'hero' });
+    try {
+      expect(wheel({ deltaY: -40 }).defaultPrevented).toBe(false);
+      // A distinct gesture after the edge event.
+      carousel.setWheel(true);
+      expect(wheel().defaultPrevented).toBe(true);
+      carousel.goTo(4);
+      scroll.mockClear();
+      expect(wheel().defaultPrevented).toBe(false);
+      expect(scroll).not.toHaveBeenCalled();
+    } finally { carousel.destroy(); }
+  });
+
+  test('horizontal/equal deltas and ctrl zoom are ignored while enabled', () => {
+    const { carousel, wheel, scroll } = setupWheel({ wheel: true });
+    try {
+      for (const options of [{ deltaX: 50 }, { deltaX: -40 }, { ctrlKey: true }]) {
+        expect(wheel(options).defaultPrevented).toBe(false);
+      }
+      expect(scroll).not.toHaveBeenCalled();
+      expect(wheel().defaultPrevented).toBe(true);
+      expect(scroll).toHaveBeenCalledTimes(1);
+    } finally { carousel.destroy(); }
+  });
+
+  test('turning wheel off removes only the opt-in listener; destroy removes it too', () => {
+    const { carousel, scroller, scroll, wheel } = setupWheel();
+    const add = spyOn(scroller, 'addEventListener');
+    const remove = spyOn(scroller, 'removeEventListener');
+    try {
+      carousel.setWheel(true);
+      const registration = add.mock.calls.find(([type]) => type === 'wheel')!;
+      expect(registration[2]).toEqual({ passive: false });
+      expect(wheel().defaultPrevented).toBe(true);
+      carousel.setWheel(false);
+      expect(remove).toHaveBeenCalledWith('wheel', registration[1]);
+      scroll.mockClear();
+      expect(wheel().defaultPrevented).toBe(false);
+      expect(scroll).not.toHaveBeenCalled();
+      // The existing passive listener still releases a programmatic target.
+      carousel.goTo(0);
+      wheel();
+      scroller.scrollLeft = 10000;
+      scroller.dispatchEvent(new dom.window.Event('scroll'));
+      expect(carousel.getCurrentSlide()).toBe(4);
+      carousel.setWheel(true);
+      remove.mockClear();
+      carousel.destroy();
+      expect(remove).toHaveBeenCalledWith('wheel', registration[1]);
+      scroll.mockClear();
+      expect(wheel({ deltaY: -40 }).defaultPrevented).toBe(false);
+      expect(scroll).not.toHaveBeenCalled();
+    } finally { add.mockRestore(); remove.mockRestore(); carousel.destroy(); }
+  });
+
+  test('dragging ignores wheel input and release restores it', () => {
+    const { carousel, scroller, scroll, wheel } = setupWheel({ wheel: true });
+    scroller.setPointerCapture = () => {};
+    scroller.hasPointerCapture = () => false;
+    const down = new dom.window.MouseEvent('pointerdown', { button: 0 });
+    Object.defineProperty(down, 'pointerType', { value: 'mouse' });
+    try {
+      scroller.dispatchEvent(down);
+      expect(wheel().defaultPrevented).toBe(false);
+      expect(scroll).not.toHaveBeenCalled();
+      scroller.dispatchEvent(new dom.window.MouseEvent('pointerup'));
+      expect(wheel().defaultPrevented).toBe(true);
+    } finally { carousel.destroy(); }
+  });
+
+  test('reduced motion uses auto navigation; vertical full-screen keeps native wheel', () => {
+    Object.defineProperty(dom.window, 'matchMedia', { value: () => ({ matches: true }), configurable: true });
+    const hero = setupWheel({ wheel: true, variant: 'hero' });
+    const vertical = setupWheel({ wheel: true, variant: 'full-screen' });
+    try {
+      expect(hero.wheel().defaultPrevented).toBe(true);
+      expect(hero.scroll).toHaveBeenLastCalledWith({ left: expect.any(Number), behavior: 'auto' });
+      expect(vertical.wheel().defaultPrevented).toBe(false);
+      expect(vertical.scroll).not.toHaveBeenCalled();
+    } finally { hero.carousel.destroy(); vertical.carousel.destroy(); }
   });
 });

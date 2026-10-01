@@ -32,6 +32,8 @@ import type { SlidesComponent } from "./slides";
 const FLING_VELOCITY = 0.4;
 /** Pointer travel below this is a click, not a drag */
 const DRAG_THRESHOLD = 4;
+/** 160 ms without wheel input separates notches/flicks from their event tails. */
+const WHEEL_QUIET = 160;
 
 interface ScrollComponent {
   getCurrentSlide: () => number;
@@ -39,6 +41,7 @@ interface ScrollComponent {
   next: () => void;
   prev: () => void;
   goTo: (index: number) => void;
+  setWheel: (on: boolean) => void;
   lifecycle: { destroy: () => void };
 }
 
@@ -368,10 +371,47 @@ export const withScroll = (config: CarouselConfig) =>
       }
     };
 
+    // ── Opt-in mouse wheel ──────────────────────────────────────
+
+    let lastWheel = -Infinity;
+    const discreteWheel = variant === CAROUSEL_VARIANTS.HERO || variant === CAROUSEL_VARIANTS.HERO_CENTER;
+    const handleWheel = (e: WheelEvent): void => {
+      if (e.ctrlKey || dragging || Math.abs(e.deltaX) >= Math.abs(e.deltaY) || !strategy) return;
+      const position = scrollPosition();
+      const end = snapPositions[count - 1] ?? 0;
+      const continuing = e.timeStamp - lastWheel < WHEEL_QUIET;
+      lastWheel = e.timeStamp;
+      // Use the physical range: a smooth navigation may still be travelling.
+      if (e.deltaY < 0 ? position <= 1 : position >= end - 1) return;
+      e.preventDefault();
+      if (discreteWheel) {
+        if (!continuing) (e.deltaY > 0 ? next : prev)();
+        // The passive wheel listener still clears native navigation's pending
+        // target; retain this gesture's target while its smooth scroll settles.
+        else expect(currentIndex);
+      } else {
+        // Lines use the computed line height (16px if it is "normal"); pages
+        // use the horizontal viewport. Disable snapping until the burst ends.
+        const unit = e.deltaMode === 1
+          ? parseFloat(window.getComputedStyle(scroller).lineHeight) || 16
+          : e.deltaMode === 2 ? containerSize : 1;
+        restoreSnap();
+        element.dataset.settling = "true";
+        setScrollPosition(Math.max(0, Math.min(end, position + e.deltaY * unit)), false);
+        settleTimer = window.setTimeout(restoreSnap, WHEEL_QUIET);
+      }
+    };
+    const setWheel = (on: boolean): void => {
+      scroller.removeEventListener("wheel", handleWheel);
+      lastWheel = -Infinity;
+      if (on && !vertical) scroller.addEventListener("wheel", handleWheel, { passive: false });
+    };
+
     // ── Wiring ──────────────────────────────────────────────────
 
     scroller.addEventListener("scroll", layout, { passive: true });
     scroller.addEventListener("wheel", clearPending, { passive: true });
+    setWheel(!!config.wheel);
     scroller.addEventListener("touchstart", clearPending, { passive: true });
     scroller.addEventListener("keydown", handleKeyDown);
     scroller.addEventListener("focusin", handleFocusIn);
@@ -395,8 +435,10 @@ export const withScroll = (config: CarouselConfig) =>
     enhanced.next = next;
     enhanced.prev = prev;
     enhanced.goTo = goTo;
+    enhanced.setWheel = setWheel;
     enhanced.lifecycle = {
       destroy: () => {
+        setWheel(false);
         restoreSnap();
         resizeObserver?.disconnect();
         reduceMotion?.removeEventListener?.("change", rebuild);

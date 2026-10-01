@@ -12,6 +12,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Carousel: opt-in mouse wheel scrolling (FLO-395).** Set `wheel: true`, call
+  `setWheel(true)`, or add `<m-carousel wheel>` (also toggleable after creation).
+  Horizontal multi-browse and uncontained layouts scroll by the wheel delta;
+  hero layouts advance once per burst, separated by 160 ms of quiet. Edges let
+  the page scroll, horizontal trackpad gestures and zoom stay native, and reduced
+  motion disables smooth navigation. Full-screen carousels keep native vertical scrolling.
+
 - **Every release gets its GitHub Release.** The release workflow published to npm only, so
   GitHub showed 0.9.8 as the latest release. Once npm has the version, it now creates the
   release for the tag from the version's CHANGELOG section, with links to npm, md3.io and this
