@@ -36,6 +36,50 @@ export async function checkThemeContrast(page: Page): Promise<void> {
     assert.equal(actual, rolesOf(schemeFor({ ...baseline, contrast: 1 }, dark)).primary,
       `default baseline follows ${mode} and prefers-contrast more`);
   }
+  // Without data-theme, baseline follows only the OS and .dark-theme.
+  // A stale or mismatched mode attribute must not mix palettes at higher contrast.
+  const rootFailures: string[] = [];
+  let rootCases = 0;
+  for (const colorScheme of ['light', 'dark'] as const) {
+    for (const darkClass of [false, true]) {
+      const snapshot = async (mode: string | null, level: string | null) => page.evaluate(({ mode, level, darkClass }) => {
+        const root = document.documentElement;
+        delete root.dataset.theme;
+        root.classList.toggle('dark-theme', darkClass);
+        if (mode === null) delete root.dataset.themeMode;
+        else root.dataset.themeMode = mode;
+        if (level === null) delete root.dataset.themeContrast;
+        else root.dataset.themeContrast = level;
+        const style = getComputedStyle(root);
+        return Object.fromEntries([...style].filter(key => key.startsWith('--mtrl-sys-color-'))
+          .map(key => [key.slice('--mtrl-sys-color-'.length), style.getPropertyValue(key).trim()]));
+      }, { mode, level, darkClass });
+      await page.emulateMedia({ contrast: 'no-preference', colorScheme });
+      const standard = await snapshot(null, 'standard');
+      for (const mode of [null, 'light', 'dark'] as const) {
+        for (const preference of ['no-preference', 'more'] as const) {
+          await page.emulateMedia({ contrast: preference, colorScheme });
+          for (const level of ['standard', 'medium', 'high', null] as const) {
+            const contrast = level === 'high' || (level === null && preference === 'more') ? 1 : level === 'medium' ? 0.5 : null;
+            const expected = contrast === null ? standard : {
+              ...standard, ...rolesOf(schemeFor({ ...baseline, contrast }, darkClass || colorScheme === 'dark')),
+            };
+            const actual = await snapshot(mode, level);
+            const mismatches = [...THEME_ROLES, 'success', 'on-success', 'warning', 'on-warning', 'info', 'on-info']
+              .filter(role => actual[role]?.toLowerCase() !== expected[role]?.toLowerCase());
+            if (mismatches.length) {
+              rootFailures.push(`OS ${colorScheme}, mode ${mode}, dark class ${darkClass}, ${level}, prefers ${preference}: ` +
+                mismatches.map(role => `${role} ${actual[role]} != ${expected[role]}`).join(', '));
+            }
+            rootCases++;
+          }
+        }
+      }
+    }
+  }
+  await page.evaluate(() => document.documentElement.classList.remove('dark-theme'));
+  assert.deepEqual(rootFailures, [], `Unthemed baseline: ${rootFailures.length}/${rootCases} states mixed palettes`);
+  console.log(`Unthemed baseline: ${rootCases} states follow the OS and .dark-theme, ignoring data-theme-mode`);
   // Exercise every role: sparse light deltas must never bleed into dark, and
   // custom-property preference switches must reset across theme boundaries.
   const extras = await page.addStyleTag({ content: standaloneThemes.map(name =>

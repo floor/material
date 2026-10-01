@@ -13,10 +13,18 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 ### Added
 
 - **Contrast on every theme (FLO-406).** `data-theme-contrast="standard"`, `"medium"`
-  and `"high"` select M3 contrast levels in light and dark. With no contrast attribute,
-  `prefers-contrast: more` selects high; explicit `standard` opts out. Hand-authored
-  standard colors and success, warning and info roles stay unchanged. The `highcontrast`
-  theme is a theme in its own right and supports all three contrast settings.
+  and `"high"` select M3 contrast levels in light and dark. Put the attribute on the
+  same element as `data-theme`, including each nested theme. With no contrast attribute,
+  `prefers-contrast: more` selects high on every themed element independently; explicit
+  `standard` opts out on that element. In 1.0, a nested theme does not inherit an ancestor's
+  contrast setting or opt-out. The unthemed root follows the OS color scheme and
+  `.dark-theme` at every contrast level, ignoring `data-theme-mode`.
+  Hand-authored medium and high palettes use each theme's documented seed, falling back
+  to its light primary, and preserve the light secondary and tertiary hues and chroma.
+  M3 supplies the contrast tones; neutral palettes come from the seed. Generated headers
+  name all three inputs, and browser checks share the generator's input selection.
+  Hand-authored standard colors and success, warning and info roles stay unchanged.
+  The `highcontrast` theme is a theme in its own right and supports all three contrast settings.
 
 - **Carousel: opt-in mouse wheel scrolling (FLO-395).** Set `wheel: true`, call
   `setWheel(true)`, or add `<m-carousel wheel>` (also toggleable after creation).
@@ -87,12 +95,6 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   now pinned (`bun run component-exports:check`).
 
 ### Fixed
-
-- **Hand-made themes retain their palette at higher contrast (FLO-406).** Medium
-  and high contrast use each theme's documented seed, falling back to its light
-  primary, and preserve the light secondary and tertiary hues and chroma. M3 still
-  supplies the contrast tones; neutral palettes come from the seed. Generated headers
-  name all three inputs, and browser checks share the generator's input selection.
 
 - **Custom root classes survive configuration (FLO-403).** Top and bottom app bars,
   button groups, segmented buttons, tabs and individual tabs, toolbars, FAB menus,

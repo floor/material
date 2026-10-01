@@ -29,24 +29,26 @@
   // Light must not leak into dark when its unchanged roles are omitted.
   &:not([data-theme-mode="dark"]) {
     @if $name == "baseline" {
-      &[data-theme], &:not(.dark-theme)[data-theme-mode="light"] {
+      &[data-theme] {
         @include contrast-values($tokens, light);
-      }
-      @media not (prefers-color-scheme: dark) {
-        &:root:not([data-theme]):not(.dark-theme):not([data-theme-mode="light"]) {
-          @include contrast-values($tokens, light);
-        }
       }
     } @else {
       @include contrast-values($tokens, light);
     }
   }
   @if $name == "baseline" {
-    &[data-theme-mode="dark"], &:root:not([data-theme]).dark-theme {
+    // Match baseline's standard palette: the unthemed root ignores the mode
+    // attribute, following only the OS scheme and the manual dark class.
+    @media not (prefers-color-scheme: dark) {
+      &:root:not([data-theme]):not(.dark-theme) {
+        @include contrast-values($tokens, light);
+      }
+    }
+    &[data-theme][data-theme-mode="dark"], &:root:not([data-theme]).dark-theme {
       @include contrast-values($tokens, dark);
     }
     @media (prefers-color-scheme: dark) {
-      &:root:not([data-theme]):not(.dark-theme):not([data-theme-mode]) {
+      &:root:not([data-theme]):not(.dark-theme) {
         @include contrast-values($tokens, dark);
       }
     }
