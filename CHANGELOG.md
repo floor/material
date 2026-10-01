@@ -12,6 +12,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Every release gets its GitHub Release.** The release workflow published to npm only, so
+  GitHub showed 0.9.8 as the latest release. Once npm has the version, it now creates the
+  release for the tag from the version's CHANGELOG section, with links to npm, md3.io and this
+  file; a pre-release (`-next.N`) is marked one and never becomes Latest. 0.10.0 to 0.10.4 were
+  created by hand.
 - **Text field: a required field's label ends in an asterisk (FLO-301).** M3's text field
   guidelines mark a required field with an asterisk after its label; it is in the label's colour,
   as Material Web draws it, and hidden from screen readers, which the input's native `required`
