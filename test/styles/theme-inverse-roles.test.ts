@@ -6,6 +6,7 @@
 import { describe, expect, test } from 'bun:test';
 import { readdirSync } from 'node:fs';
 import { compileString } from 'sass';
+import { colorBlocks, resolvedColorBody } from './theme-css';
 
 const themes = readdirSync('src/styles/themes')
   .filter(file => /^_[a-z]+\.scss$/.test(file) && !['_index.scss', '_base-theme.scss'].includes(file))
@@ -27,7 +28,7 @@ describe('theme inverse roles', () => {
   for (const theme of themes) {
     test(`${theme}: every colour block defines the inverse roles, at text contrast`, () => {
       const css = compileString(`@use 'themes/${theme}';`, { loadPaths: ['src/styles'] }).css;
-      const blocks = Array.from(css.matchAll(/\{([^{}]*)\}/g)).map(([, body]) => body!)
+      const blocks = colorBlocks(css).map(({ selector, body }) => resolvedColorBody(css, theme, selector, body))
         .filter(body => body.includes('--mtrl-sys-color-primary:'));
       expect(blocks.length).toBeGreaterThan(1);
       for (const body of blocks) {

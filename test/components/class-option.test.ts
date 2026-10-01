@@ -11,6 +11,7 @@ import { createTab } from "../../src/components/tabs/tab";
 import createToolbar from "../../src/components/toolbar";
 import createFabMenu from "../../src/components/fab-menu";
 import createSelect from "../../src/components/select";
+import createSearch from "../../src/components/search";
 
 const dom = new JSDOM("<!doctype html><html><body></body></html>", {
   url: "http://localhost/",
@@ -52,6 +53,23 @@ for (const [name, create] of factories) {
     for (const classes of ["probe", "a b"]) {
       test(`puts '${classes}' on the root element`, () => {
         const component = create(classes);
+        try {
+          for (const className of classes.split(" ")) {
+            expect(component.element.classList.contains(className)).toBe(true);
+          }
+        } finally {
+          component.destroy();
+        }
+      });
+    }
+  });
+}
+
+for (const variant of ["contained", "divided"] as const) {
+  describe(`search ${variant} class option`, () => {
+    for (const classes of ["probe", "a b"]) {
+      test(`puts '${classes}' on the root element`, () => {
+        const component = createSearch({ variant, class: classes });
         try {
           for (const className of classes.split(" ")) {
             expect(component.element.classList.contains(className)).toBe(true);
