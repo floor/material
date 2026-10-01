@@ -21,6 +21,7 @@
  * @module elements
  */
 
+import { MOUNT, DISPOSE } from "./lifecycle";
 import { PREFIX } from "../core/config";
 import { applyStyles, DEFAULT_PREFIX, hasStyles, registerStyles, usePreupgradePrefix } from "./styles";
 
@@ -166,6 +167,9 @@ export const SHADOW_BASE_STYLES = ["ripple"] as const;
 export const BASE_HOST_STYLES =
   ":host{display:inline-block}:host([hidden]){display:none}*,*::before,*::after{box-sizing:border-box}";
 
+/** Internal shared host CSS, in browser cascade order. */
+export const hostStyleText = (spec: { hostStyles?: string }): string => BASE_HOST_STYLES + (spec.hostStyles ?? "");
+
 // ---------------------------------------------------------------------------
 // Types derived from a spec, for the elements and the framework adapters.
 
@@ -288,7 +292,7 @@ const hasContent = (host: HTMLElement): boolean =>
   );
 
 /** The element class for a spec. Called on first use, never at import. */
-const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): CustomElementConstructor => {
+export const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): CustomElementConstructor => {
   // The live properties an attribute is the default of, and those attributes.
   const backed = [...(spec.model ? [spec.model] : []), ...(spec.defaults ?? [])];
   const backing = new Set(backed.map(kebab));
@@ -332,6 +336,15 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
           });
         }
       }
+    }
+
+    [MOUNT](): void {
+      this.connectedCallback();
+      this.#exposeParts(this.shadowRoot as ShadowRoot);
+    }
+
+    [DISPOSE](): void {
+      this.#teardown();
     }
 
     connectedCallback(): void {
@@ -592,16 +605,26 @@ const createElementClass = <C extends ElementComponent>(spec: ElementSpec<C>): C
     }
 
     #teardown(): void {
-      this.#observer?.disconnect();
+      const component = this.component;
+      const observer = this.#observer;
+      const parts = this.#parts;
       this.#observer = null;
-      this.#parts?.disconnect();
-      for (const cleanup of this.#cleanup.splice(0)) cleanup();
-      if (this.component) {
-        this.component.destroy();
-        this.component.element.remove();
+      this.#parts = null;
+      let failure: unknown;
+      let failed = false;
+      const attempt = (cleanup: () => void): void => {
+        try { cleanup(); } catch (error) { if (!failed) failure = error; failed = true; }
+      };
+      attempt(() => observer?.disconnect());
+      attempt(() => parts?.disconnect());
+      for (const cleanup of this.#cleanup.splice(0)) attempt(cleanup);
+      if (component) {
+        attempt(() => component.destroy());
+        attempt(() => component.element.remove());
       }
       this.component = null;
       this.#slot = null;
+      if (failed) throw failure;
     }
 
     /**
@@ -765,7 +788,7 @@ export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>):
       // and registering again would drop the shared host stylesheet.
       if (!prepared) {
         prepared = true;
-        registerStyles({ [`host:${spec.name}`]: BASE_HOST_STYLES + (spec.hostStyles ?? "") });
+        registerStyles({ [`host:${spec.name}`]: hostStyleText(spec) });
         const missing = [...SHADOW_BASE_STYLES, ...spec.styles].filter((name) => !hasStyles(name));
         if (missing.length) {
           console.warn(`<${tag}> has no CSS for ${missing.join(", ")}: import "mtrl/elements/css/${spec.name}" first.`);

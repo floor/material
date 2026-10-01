@@ -47,10 +47,19 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   the internals off the root the bundle would have been a partial API. `require('mtrl')` no longer
   resolves (`ERR_PACKAGE_PATH_NOT_EXPORTED`): use `import`, or `await import('mtrl')` from CommonJS.
 
+### Added
+
+- Internal detached element lifecycle, style registry seams, and a synchronous server DOM
+  scope with inert scheduling and complete resource teardown (FLO-363, part A). The public
+  SSR renderer follows separately.
+
 ### Fixed
 
 - Element CSS file and export checks run after the CI build, so unit tests pass without `dist/` (FLO-365).
 - Elements construct on a server DOM (linkedom) without browser-only APIs (FLO-362).
+- Element teardown finishes cleanup after an individual cleanup throws (FLO-363).
+- Text field and select placement cancel and reset their shared measurement timer when the
+  last pending field is destroyed, allowing the next lifecycle to schedule again (FLO-363).
 
 ## [0.10.4] - 2026-10-01
 
