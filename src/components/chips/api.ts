@@ -264,6 +264,13 @@ export const withAPI =
         return this;
       },
 
+      // The controller's keyboard switch, typed (FLO-352): the spread above
+      // carried it untyped
+      keyboard: {
+        enable: () => options.keyboard?.enableKeyboardNavigation?.(),
+        disable: () => options.keyboard?.disableKeyboardNavigation?.(),
+      },
+
       // Event management
       on(event, handler) {
         if (options.events && typeof options.events.on === "function") {

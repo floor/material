@@ -382,6 +382,17 @@ export interface ChipsComponent {
   enableKeyboardNavigation: () => ChipsComponent;
 
   /**
+   * Turns keyboard navigation between the chips on and off: while disabled,
+   * the arrows, Home and End no longer move focus in the set (FLO-352)
+   */
+  keyboard: {
+    /** Moves focus with the arrows, Home and End again */
+    enable: () => void;
+    /** Stops moving focus with the arrows, Home and End */
+    disable: () => void;
+  };
+
+  /**
    * Destroys the chips container and all contained chips
    */
   destroy: () => void;
