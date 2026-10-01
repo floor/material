@@ -259,6 +259,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- SSR bridges for React, Svelte, Solid and Vue render ordinary host attributes (`popover`, `inputmode`, `enterkeyhint`, `itemprop`, `nonce`, `is`, and the rest of the host's HTML attributes) instead of rejecting the request. The framework still emits those attributes on the host. The shared renderer skips names outside its allowlist, including event-handler names and `srcdoc`, so they never enter the shadow markup. Calling `renderElement` directly still rejects an unknown host attribute (FLO-418).
 - Vue SSR finishes when a host's child uses `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`. The shadow bridge serializes those children once (FLO-373).
 - Vue SSR renders a host whose `v-html` contains an unclosed `<template>`, instead of throwing, and `mtrl/ssr/vue` imports the server renderer from `vue/server-renderer` (FLO-373).
 - Prefilled multiline text fields render in SSR, including inside another custom element (FLO-416).
