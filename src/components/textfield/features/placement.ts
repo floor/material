@@ -1,3 +1,4 @@
+// src/components/textfield/features/placement.ts
 import {
   BaseComponent,
   ElementComponent,
@@ -236,6 +237,10 @@ export const withPlacement =
         if (destroyed) return;
         destroyed = true;
         pending.delete(measure);
+        if (!pending.size && flushing !== null) {
+          clearTimeout(flushing);
+          flushing = null;
+        }
         window.removeEventListener("resize", updateElementPositions);
 
         // Disconnect class observer
