@@ -84,9 +84,12 @@ const run = async (): Promise<void> => {
   assert.match(html, /<m-switch id="u" name="u" checked="">/);
   assert.match(html, /<m-switch id="d" disabled="" supporting-text="Unavailable">/);
   assert.match(html, /<m-tabs id="t" value="t2">/);
-  assert.match(html, /<m-radios [^>]*value="m"[^>]*>(<!---->)?<m-radio value="s">/);
-  assert.match(html, /<m-chips [^>]*value="veg"[^>]*>(<!---->)?<m-chip value="veg">/);
-  assert.match(html, /<m-select [^>]*value="cat"[^>]*>(<!---->)?<m-select-option value="cat">/);
+  // `{#if shadow}` leaves an empty branch marker before children when no
+  // renderer is registered (FLO-375). Comments are not elements.
+  const between = String.raw`(?:\s|<!--[\s\S]*?-->)*`;
+  assert.match(html, new RegExp(String.raw`<m-radios [^>]*value="m"[^>]*>${between}<m-radio value="s">`));
+  assert.match(html, new RegExp(String.raw`<m-chips [^>]*value="veg"[^>]*>${between}<m-chip value="veg">`));
+  assert.match(html, new RegExp(String.raw`<m-select [^>]*value="cat"[^>]*>${between}<m-select-option value="cat">`));
   assert.match(html, /<m-datepicker [^>]*value="2026-09-10"/);
   assert.match(html, /<m-search [^>]*value="ap"[^>]*>.*?<m-search-suggestion [^>]*value="apple"[^>]*>(<!---->)?Apple<.*?<m-search-suggestion [^>]*value="apricot"[^>]*>(<!---->)?Apricot</s);
   assert.doesNotMatch(html, /<m-search-suggestion [^>]*value="banana"/);

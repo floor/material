@@ -16,9 +16,9 @@
  * 32 KB window (FLO-332). Minified, the React adapter adds +2712 B to select
  * and +2709 B to switch; gzip measured them +1866 and +959, because in
  * select's 140 KB bundle the adapter runtime sits beyond 32 KB from the
- * element code it compresses against. Brotli measures +878 and +872. The
- * adapter's cost is flat, 0.8 to 1.3 KB for every component; the largest is
- * the Svelte switch + button pair, +1467.
+ * element code it compresses against. Brotli measures +878 and +872. React,
+ * Vue and Solid stay under 1.1 KB. Svelte's declarative-shadow branch is
+ * larger; the largest measured is the Svelte switch + button pair, +1631.
  *
  * Build first:
  *   bun run build && bun run adapters:size
@@ -36,7 +36,7 @@ import { elementModules } from "./element-modules";
 
 /**
  * The adapter's own runtime (create.ts or runtime.js) and wrapper, brotli
- * bytes, on top of the element: the largest measured, +1467, and headroom.
+ * bytes, on top of the element: the largest measured, +1631, and headroom.
  */
 const ADAPTER_MARGIN = 1700;
 

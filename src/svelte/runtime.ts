@@ -11,6 +11,14 @@
  * events are `on<event>` callback props, as Svelte 5 names them. The element
  * registers when the action first runs, never at import.
  *
+ * Each component can also emit a declarative shadow root on the server
+ * (FLO-375). `shadowMarkup` reads the renderer `mtrl/ssr/svelte` installs on
+ * `Symbol.for("mtrl.ssr")` — the same bridge as React — and returns the
+ * `<template shadowrootmode>` string there, or `""` in the browser, when no
+ * renderer is registered, and when the element opts out of SSR. The client
+ * renders nothing where the parser already consumed the template. Nothing
+ * here imports the server renderer.
+ *
  * @module svelte
  */
 
@@ -180,4 +188,33 @@ export const declaration = (
       return result;
     },
   };
+};
+
+/**
+ * Installed only by `mtrl/ssr/svelte` on `Symbol.for("mtrl.ssr")`. Returns the
+ * `<template shadowrootmode>` for one host, or `""` when the host opts out.
+ */
+export type SvelteShadowRenderer = (
+  tag: string,
+  attributes: Record<string, unknown>,
+  children: Snippet | undefined,
+  slots: Array<[slot: string, snippet: Snippet]>,
+  prefix: string,
+) => string;
+
+/**
+ * The declarative shadow template for a host, or `""` in the browser, when
+ * `mtrl/ssr/svelte` was not imported, and when the element opts out of SSR.
+ * Generated components emit it with `{#if shadow}{@html shadow}{/if}`.
+ */
+export const shadowMarkup = (
+  runtime: Adapter,
+  props: Record<string, unknown>,
+  children: Snippet | undefined,
+  live: Record<string, unknown>,
+): string => {
+  if (isBrowser) return "";
+  const render = (globalThis as unknown as Record<symbol, { svelte?: SvelteShadowRenderer } | undefined>)[Symbol.for("mtrl.ssr")]?.svelte;
+  if (!render) return "";
+  return render(runtime.tag, runtime.attributes(props, live), children, runtime.snippets(props), getPrefix());
 };
