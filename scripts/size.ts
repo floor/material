@@ -157,7 +157,9 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   snackbar: kb(12.1),
   switch: kb(6.1), // #214 conformance; #218 node labels
   tabs: kb(13.0),
-  textfield: kb(8.2), // the field, the supporting text row and the counter (FLO-300): 8,290
+  // the field, the supporting text row and the counter (FLO-300): 8,290. The required
+  // asterisk, the live error and the trailing icon button (FLO-301): 8,314 to 8,926 against 7cd57a6.
+  textfield: kb(8.8),
   timepicker: kb(10.5), // the draft, input event, dialog in the component's tree and disabled (FLO-288): 10,639
   "top-app-bar": kb(4.4),
   toolbar: kb(11.2), // FLO-304, with its icon buttons and buttons; the overflow menu is injected: 11,302; slotted items for <m-toolbar>: 11,374
@@ -169,7 +171,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // split button passing the layer, and the opener's focus test across shadow roots, to 112,845; the
   // tooltip and snackbar top layer to 113,481; the modal surfaces' top layer to 113,761 (each measured
   // alone on dba5ba9); the time picker limits and steps (FLO-281): 113,297 on main; all of wave 2 together on 91e4d77: 115,162.
-  all: kb(119.9), // search in the top layer (FLO-285): 115,628; its combobox and variants (FLO-286, FLO-287): 115,909; search's trailing items and reopening (FLO-291): 116,488; the date picker's field states and one change shape (FLO-289, FLO-295): 116,800; the text field's field, supporting text row and counter (FLO-300): 117,305; the toolbar (FLO-304): 117,350 to 119,455; <m-toolbar>'s slotted items and the colour hooks: 119,541; the FAB menu (FLO-306): 122,060; the FAB menu motion (FLO-348): 122,085 to 122,178; merged with main at 5bc71da (FLO-349, FLO-350): 122,232; the Material shapes (FLO-346): 122,267 to 122,619
+  all: kb(120.5), // search in the top layer (FLO-285): 115,628; its combobox and variants (FLO-286, FLO-287): 115,909; search's trailing items and reopening (FLO-291): 116,488; the date picker's field states and one change shape (FLO-289, FLO-295): 116,800; the text field's field, supporting text row and counter (FLO-300): 117,305; the toolbar (FLO-304): 117,350 to 119,455; <m-toolbar>'s slotted items and the colour hooks: 119,541; the FAB menu (FLO-306): 122,060; the FAB menu motion (FLO-348): 122,085 to 122,178; merged with main at 5bc71da (FLO-349, FLO-350): 122,232; the Material shapes (FLO-346): 122,267 to 122,619; the text field's asterisk, live error and trailing button (FLO-301): 122,623 to 123,218 against 7cd57a6
   // the time picker draft (FLO-288) and search widths (FLO-290): 116,200 on c3e3e18
 };
 

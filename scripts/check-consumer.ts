@@ -57,8 +57,10 @@ try {
   // Library mode retains exports for measurement; an HTML fixture below tests
   // actual application mode, CSS extraction, network loading, and rendering.
   const sizes: Record<string, { initialGzip: number; totalGzip: number }> = {};
+  // textfield 9,000 to 9,600 for FLO-301 (the asterisk, the live error, the trailing button):
+  // 8,953 to 9,520 against 7cd57a6.
   for (const [name, symbol, budget] of [
-    ["addClass", "addClass", 1000], ["textfield", "createTextfield", 9000], ["button", "createButton", 10000],
+    ["addClass", "addClass", 1000], ["textfield", "createTextfield", 9600], ["button", "createButton", 10000],
   ] as const) {
     const entry = join(directory, `${name}.ts`);
     await writeFile(entry, `export { ${symbol} } from 'mtrl';`);
