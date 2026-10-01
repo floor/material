@@ -159,7 +159,8 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   tabs: kb(13.3), // the indicator anchors to the active label instead of measuring it (FLO-369): 13,467
   // the field, the supporting text row and the counter (FLO-300): 8,290. The required
   // asterisk, the live error and the trailing icon button (FLO-301): 8,314 to 8,926 against 7cd57a6.
-  textfield: kb(8.8),
+  // main's placement on demand (FLO-378) met next's placement timer reset (FLO-363): next 8,948 to 9,021 on the forward merge.
+  textfield: kb(8.9),
   timepicker: kb(10.5), // the draft, input event, dialog in the component's tree and disabled (FLO-288): 10,639
   "top-app-bar": kb(4.4),
   toolbar: kb(11.2), // FLO-304, with its icon buttons and buttons; the overflow menu is injected: 11,302; slotted items for <m-toolbar>: 11,374

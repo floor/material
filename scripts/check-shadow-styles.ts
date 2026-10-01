@@ -1,6 +1,15 @@
 #!/usr/bin/env bun
 // scripts/check-shadow-styles.ts
-// Investigation only: report missing component sheets without modifying specs.
+//
+// Every component class drawn in an element's shadow root has its sheet adopted
+// there (FLO-386). A shadow root adopts only the host's, the ripple's and the
+// spec's `styles`, so a factory that renders another component inside it (the
+// dialog's buttons and dividers) needs that component's sheet in its spec, or
+// the part renders unstyled. All 36 elements across the preupgrade cases and
+// the configurations below; any class whose sheet is missing fails, whether or
+// not it changes a computed style today. The diff a missing sheet would make
+// is written to analysis/shadow-styles-chromium.json. From Codex's probe
+// (FLO-363 part B review).
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
@@ -53,7 +62,8 @@ try {
     Object.keys(row.changes).forEach(property => properties.add(property));
     missing.set(key, properties);
   }
-  console.log(`${seen.size} elements, ${fixtures.length} fixtures, ${report.reduce((n, fixture) => n + fixture.rows.length, 0)} cross-component class probes`);
-  for (const [key, properties] of missing) console.log(`${key}\t${properties.size} computed properties changed`);
-  console.log(`${missing.size} missing-sheet class findings; analysis/shadow-styles-chromium.json`);
+  const probes = report.reduce((n, fixture) => n + fixture.rows.length, 0);
+  const findings = [...missing].map(([key, properties]) => `${key.replaceAll("\t", " ")}: ${properties.size} computed properties differ`);
+  assert.deepEqual(findings, [], `classes drawn without their sheet (add it to the element's spec.styles):\n${findings.join("\n")}`);
+  console.log(`Passed shadow styles: ${seen.size} elements, ${fixtures.length} fixtures, ${probes} cross-component classes, each with its sheet adopted.`);
 } finally { await browser.close(); server.stop(true); }
