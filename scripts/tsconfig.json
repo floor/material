@@ -5,6 +5,7 @@
     "rootDir": "..",
     "moduleResolution": "bundler",
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "declaration": false,
     "types": [
       "bun"

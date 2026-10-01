@@ -1,0 +1,762 @@
+[
+  {
+    "element": "fab-menu",
+    "issue": "FLO-370",
+    "phase": "immediate",
+    "property": "host/shadow/0/@class",
+    "server": "mtrl-fab-menu mtrl-fab-menu--primary mtrl-fab-menu--default mtrl-fab-menu--list",
+    "browser": "mtrl-fab-menu mtrl-fab-menu--primary mtrl-fab-menu--default mtrl-fab-menu--menu"
+  },
+  {
+    "element": "fab-menu",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/@class",
+    "server": "mtrl-fab-menu mtrl-fab-menu--primary mtrl-fab-menu--default mtrl-fab-menu--list",
+    "browser": "mtrl-fab-menu mtrl-fab-menu--primary mtrl-fab-menu--default mtrl-fab-menu--menu"
+  },
+  {
+    "element": "fab-menu",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/@aria-controls",
+    "server": "@id1",
+    "browser": "@detached0"
+  },
+  {
+    "element": "fab-menu",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/@aria-haspopup",
+    "server": "menu",
+    "browser": "true"
+  },
+  {
+    "element": "toolbar",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/0/@tabindex",
+    "server": null,
+    "browser": "0"
+  },
+  {
+    "element": "toolbar",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/1/@tabindex",
+    "server": null,
+    "browser": "-1"
+  },
+  {
+    "element": "toolbar",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/2/@tabindex",
+    "server": null,
+    "browser": "-1"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/style:--mtrl-carousel-corner",
+    "server": null,
+    "browser": "var(--mtrl-sys-shape-corner-extra-large, 28px)"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/style:width",
+    "server": null,
+    "browser": "856px"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/0/style:--mtrl-carousel-fade",
+    "server": null,
+    "browser": "0.981"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/0/style:clip-path",
+    "server": null,
+    "browser": "inset(0 2.666666666666657px round var(--mtrl-sys-shape-corner-extra-large, 28px))"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/0/style:transform",
+    "server": null,
+    "browser": "translate3d(13.3333px, 0px, 0px)"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/0/style:width",
+    "server": null,
+    "browser": "280px"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/1/style:--mtrl-carousel-fade",
+    "server": null,
+    "browser": "0.981"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/1/style:clip-path",
+    "server": null,
+    "browser": "inset(0 2.666666666666657px round var(--mtrl-sys-shape-corner-extra-large, 28px))"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/1/style:transform",
+    "server": null,
+    "browser": "translate3d(296px, 0px, 0px)"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/1/style:width",
+    "server": null,
+    "browser": "280px"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/2/style:--mtrl-carousel-fade",
+    "server": null,
+    "browser": "0.094"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/2/style:clip-path",
+    "server": null,
+    "browser": "inset(0 124.66666666666667px round var(--mtrl-sys-shape-corner-extra-large, 28px))"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/2/style:transform",
+    "server": null,
+    "browser": "translate3d(456.667px, 0px, 0px)"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/2/style:width",
+    "server": null,
+    "browser": "280px"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/3/tag",
+    "server": null,
+    "browser": "div"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/3/@class",
+    "server": null,
+    "browser": "mtrl-carousel__snap"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/3/@part",
+    "server": null,
+    "browser": "snap"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/3/style:left",
+    "server": null,
+    "browser": "0px"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/4/tag",
+    "server": null,
+    "browser": "div"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/4/@class",
+    "server": null,
+    "browser": "mtrl-carousel__snap"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/4/@part",
+    "server": null,
+    "browser": "snap"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/4/style:left",
+    "server": null,
+    "browser": "0px"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/5/tag",
+    "server": null,
+    "browser": "div"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/5/@class",
+    "server": null,
+    "browser": "mtrl-carousel__snap"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/5/@part",
+    "server": null,
+    "browser": "snap"
+  },
+  {
+    "element": "carousel",
+    "issue": "FLO-370",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/5/style:left",
+    "server": null,
+    "browser": "256px"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/tag",
+    "server": null,
+    "browser": "ul"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/@class",
+    "server": null,
+    "browser": "mtrl-menu__list"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/@part",
+    "server": null,
+    "browser": "list"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/@role",
+    "server": null,
+    "browser": "menu"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/tag",
+    "server": null,
+    "browser": "li"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/@aria-disabled",
+    "server": null,
+    "browser": "false"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/@aria-selected",
+    "server": null,
+    "browser": "false"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/@class",
+    "server": null,
+    "browser": "mtrl-menu__item"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/@data-id",
+    "server": null,
+    "browser": "a"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/@data-index",
+    "server": null,
+    "browser": "0"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/@part",
+    "server": null,
+    "browser": "item"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/@role",
+    "server": null,
+    "browser": "menuitem"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/@tabindex",
+    "server": null,
+    "browser": "0"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/0/tag",
+    "server": null,
+    "browser": "span"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/0/@class",
+    "server": null,
+    "browser": "mtrl-menu__item-content"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/0/@part",
+    "server": null,
+    "browser": "item-content"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/0/0/tag",
+    "server": null,
+    "browser": "span"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/0/0/@class",
+    "server": null,
+    "browser": "mtrl-menu__item-text"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/0/0/@part",
+    "server": null,
+    "browser": "item-text"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/0/0/0/0/text",
+    "server": null,
+    "browser": "Copy"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/tag",
+    "server": null,
+    "browser": "li"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/@aria-disabled",
+    "server": null,
+    "browser": "false"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/@aria-selected",
+    "server": null,
+    "browser": "false"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/@class",
+    "server": null,
+    "browser": "mtrl-menu__item"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/@data-id",
+    "server": null,
+    "browser": "b"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/@data-index",
+    "server": null,
+    "browser": "1"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/@part",
+    "server": null,
+    "browser": "item"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/@role",
+    "server": null,
+    "browser": "menuitem"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/@tabindex",
+    "server": null,
+    "browser": "-1"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/0/tag",
+    "server": null,
+    "browser": "span"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/0/@class",
+    "server": null,
+    "browser": "mtrl-menu__item-content"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/0/@part",
+    "server": null,
+    "browser": "item-content"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/0/0/tag",
+    "server": null,
+    "browser": "span"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/0/0/@class",
+    "server": null,
+    "browser": "mtrl-menu__item-text"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/0/0/@part",
+    "server": null,
+    "browser": "item-text"
+  },
+  {
+    "element": "menu",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/0/0/0/text",
+    "server": null,
+    "browser": "Paste"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/tag",
+    "server": null,
+    "browser": "li"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/@aria-selected",
+    "server": null,
+    "browser": "false"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/@class",
+    "server": null,
+    "browser": "mtrl-search__suggestion-item"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/@data-index",
+    "server": null,
+    "browser": "0"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/@data-value",
+    "server": null,
+    "browser": "apple"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/@id",
+    "server": null,
+    "browser": "@id1"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/@part",
+    "server": null,
+    "browser": "suggestion-item"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/@role",
+    "server": null,
+    "browser": "option"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/@tabindex",
+    "server": null,
+    "browser": "-1"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/0/tag",
+    "server": null,
+    "browser": "span"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/0/@class",
+    "server": null,
+    "browser": "mtrl-search__suggestion-icon"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/0/@part",
+    "server": null,
+    "browser": "suggestion-icon"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/0/0/tag",
+    "server": null,
+    "browser": "svg"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/0/0/@height",
+    "server": null,
+    "browser": "24"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/0/0/@viewBox",
+    "server": null,
+    "browser": "0 0 24 24"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/0/0/@width",
+    "server": null,
+    "browser": "24"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/0/0/@xmlns",
+    "server": null,
+    "browser": "http://www.w3.org/2000/svg"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/0/0/0/tag",
+    "server": null,
+    "browser": "path"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/0/0/0/@d",
+    "server": null,
+    "browser": "M0 0h24v24H0z"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/0/0/0/@fill",
+    "server": null,
+    "browser": "none"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/0/0/1/tag",
+    "server": null,
+    "browser": "path"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/0/0/1/@d",
+    "server": null,
+    "browser": "M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/1/tag",
+    "server": null,
+    "browser": "span"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/1/@class",
+    "server": null,
+    "browser": "mtrl-search__suggestion-text"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/1/@part",
+    "server": null,
+    "browser": "suggestion-text"
+  },
+  {
+    "element": "search",
+    "issue": "FLO-367",
+    "phase": "settled",
+    "property": "host/shadow/0/0/2/0/0/0/1/0/text",
+    "server": null,
+    "browser": "Apple"
+  }
+]

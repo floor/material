@@ -86,6 +86,9 @@ const closedSelector = (selector: string): string => {
 
 const fidelity = (patches: Descriptors, document: Document): void => {
   const html = dom.HTMLElement.prototype;
+  // ES2020 emission assigns subclass static fields. linkedom's getter-only
+  // base field otherwise rejects observedAttributes before a host is created.
+  patches.value(dom.HTMLElement, "observedAttributes", []);
   const reflect = (prototype: object, property: string, attribute: string, boolean = false): void => {
     patches.define(prototype, property, {
       get(this: Element) {

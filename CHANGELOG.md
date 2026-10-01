@@ -49,6 +49,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Synchronous declarative shadow DOM rendering (FLO-363, part B).** The server-only
+  `src/ssr` entry exports `renderElement` with inline CSS by default, optional stylesheet
+  links, nested elements, and the shared HTML policy. It rejects asynchronous FAB-menu
+  and submenu configurations before mounting. The identity HTML policy is not a sanitizer;
+  configure a synchronous sanitizer for untrusted markup. Package exports follow in FLO-364.
+  Chromium security and per-node parity checks cover all 36 element defaults.
+
 - Internal detached element lifecycle, style registry seams, and a synchronous server DOM
   scope with inert scheduling and complete resource teardown (FLO-363, part A). The public
   SSR renderer follows separately.
@@ -71,9 +78,21 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- SSR parity now requires exact Chromium matches for progress, sliders, tabs and loading
+  indicators after FLO-368/FLO-369; their 22 resolved exceptions are removed (FLO-363).
+
 - Element CSS file and export checks run after the CI build, so unit tests pass without `dist/` (FLO-365).
 - **Progress indicators size their canvas when they are created (FLO-368).** A linear canvas is as tall as its track (4dp, 8dp thick, 10dp wavy at the default thickness) and fills its container; a circular one is its token size (40dp, 48dp wavy, or the configured size from 24dp to 240dp). The size comes from those tokens, not from measuring the element, so the canvas no longer reserves the default 300×150 until it upgrades.
 - **Sliders, tabs and loading indicators take their first position from configuration (FLO-369).** A slider's track, stops and inset icon are a percentage of the value, so they no longer wait on a measurement that is 0 before layout. A tab's indicator anchors to the active label, or to the tab itself when it is secondary. A loading indicator's canvas is its token size (48dp, or the configured size) when it is created.
+- SSR security reparsing runs in the Chromium CI job while unit tests remain browser-free;
+  SSR parity and benchmark tooling load the source renderer and source CSS registry (FLO-363).
+
+- SSR defines only encountered host tags per call, including nested authored and factory-generated elements, instead of recreating all 36 classes (FLO-363).
+
+- Source SSR reads the element CSS registry without resolving built package exports; source tests register real Sass output without mocking the CSS import (FLO-363).
+
+- SSR stylesheet links now match the browser and inline stylesheet order exactly, without adding build-manifest dependencies (FLO-363).
+
 - Elements construct on a server DOM (linkedom) without browser-only APIs (FLO-362).
 - Element teardown finishes cleanup after an individual cleanup throws (FLO-363).
 - Text field and select placement cancel and reset their shared measurement timer when the
