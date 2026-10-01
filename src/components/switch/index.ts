@@ -19,5 +19,11 @@ export type {
 } from './types'
 
 // Export features
-export { withSupportingText } from './features';
-export type { SupportingTextComponent } from './features'
+export {
+  /** @deprecated Internal, no replacement: removed from mtrl/components/switch in 1.0.0 (FLO-381). */
+  withSupportingText,
+} from './features';
+export type {
+  /** @deprecated Internal, no replacement: removed from mtrl/components/switch in 1.0.0 (FLO-381). */
+  SupportingTextComponent,
+} from './features';
