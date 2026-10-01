@@ -141,7 +141,10 @@ const carouselSpec = {
   methods: ["next", "prev", "goTo"] as const,
   events: {
     change: {
-      detail: (payload) => ({ index: (payload as CarouselChangePayload).index }),
+      detail: (payload) => {
+        const { value, index } = payload as CarouselChangePayload;
+        return { value, index };
+      },
     },
   },
   config: readCarousel,

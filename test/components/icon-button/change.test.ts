@@ -11,13 +11,13 @@ import { callbacksFixture } from "../callbacks.fixture";
 
 const mount = callbacksFixture();
 
-test("a click emits change with { selected }, each way", () => {
-  const button = mount(createIconButton({ toggle: true, icon: "<svg></svg>", ariaLabel: "Favorite" }));
+test("a click emits change with { selected, value }, each way; value is getValue()'s (FLO-380)", () => {
+  const button = mount(createIconButton({ toggle: true, icon: "<svg></svg>", ariaLabel: "Favorite", value: "fav" }));
   const seen: unknown[] = [];
-  button.on("change", payload => seen.push(payload));
+  button.on("change", payload => seen.push([payload, button.getValue()]));
   button.element.click();
   button.element.click();
-  expect(seen).toEqual([{ selected: true }, { selected: false }]);
+  expect(seen).toEqual([[{ selected: true, value: "fav" }, "fav"], [{ selected: false, value: "fav" }, "fav"]]);
 });
 
 test("the deprecated DOM toggle is still dispatched, once per click", () => {
@@ -25,7 +25,7 @@ test("the deprecated DOM toggle is still dispatched, once per click", () => {
   const details: unknown[] = [];
   button.element.addEventListener("toggle", event => details.push((event as CustomEvent).detail));
   button.element.click();
-  expect(details).toEqual([{ selected: true }]);
+  expect(details).toEqual([{ selected: true, value: "" }]);
 });
 
 test("off() stops change; a plain icon button emits none", () => {

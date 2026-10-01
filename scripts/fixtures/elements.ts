@@ -75,7 +75,8 @@ import createTimePicker from "../../dist/components/timepicker/index.js";
 Object.assign((window as unknown as { mtrl: object }).mtrl, { createDatePicker, createTimePicker });
 
 // Global component defaults, for the check that an element's nested parts
-// carry their stylesheet (FLO-386: <m-dialog>'s buttons from the defaults).
+// carry their stylesheet (FLO-386: <m-dialog>'s buttons from the defaults), and
+// for the <m-button> change bridge (FLO-380), which fires for a toggle button.
 import { setComponentDefaults, clearGlobalDefaults } from "../../dist/core/config/global.js";
 Object.assign((window as unknown as { mtrl: object }).mtrl, { setComponentDefaults, clearGlobalDefaults });
 
