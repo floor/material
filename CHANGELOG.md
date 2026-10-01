@@ -88,6 +88,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Hand-made themes retain their palette at higher contrast (FLO-406).** Medium
+  and high contrast use each theme's documented seed, falling back to its light
+  primary, and preserve the light secondary and tertiary hues and chroma. M3 still
+  supplies the contrast tones; neutral palettes come from the seed. Generated headers
+  name all three inputs, and browser checks share the generator's input selection.
+
 - **Progress and loading indicators draw the theme of the section they're in, not only the
   page's (FLO-389).** The progress canvas read its colours from `<body>` and `:root`, so in a
   themed section, a card or a dark panel it drew the page's colours: light ones in a dark section.

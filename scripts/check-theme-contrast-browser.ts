@@ -5,10 +5,11 @@ import type { Page } from 'playwright';
 import { readFileSync } from 'node:fs';
 import { themeStyles, standaloneThemes } from './style-manifest';
 import { THEME_ROLES } from '../src/core/theme';
-import { BASELINE_SEED, THEMES, rolesOf, schemeFor } from './generate-themes';
+import { THEMES, handThemeSpec, rolesOf, schemeFor } from './generate-themes';
 
 export async function checkThemeContrast(page: Page): Promise<void> {
   const desert = THEMES.find(theme => theme.name === 'desert')!;
+  const baseline = handThemeSpec('baseline', readFileSync('src/styles/themes/_baseline.scss', 'utf8'));
   for (const mode of ['light', 'dark'] as const) {
     const dark = mode === 'dark';
     const expected = (contrast: number) => rolesOf(schemeFor({ ...desert, contrast }, dark)).primary;
@@ -32,7 +33,7 @@ export async function checkThemeContrast(page: Page): Promise<void> {
       delete root.dataset.theme; delete root.dataset.themeMode; delete root.dataset.themeContrast;
       return getComputedStyle(root).getPropertyValue('--mtrl-sys-color-primary').trim();
     });
-    assert.equal(actual, rolesOf(schemeFor({ name: 'baseline', description: '', seed: BASELINE_SEED, variant: 'tonal-spot', contrast: 1 }, dark)).primary,
+    assert.equal(actual, rolesOf(schemeFor({ ...baseline, contrast: 1 }, dark)).primary,
       `default baseline follows ${mode} and prefers-contrast more`);
   }
   // Exercise every role: sparse light deltas must never bleed into dark, and
@@ -40,11 +41,8 @@ export async function checkThemeContrast(page: Page): Promise<void> {
   const extras = await page.addStyleTag({ content: standaloneThemes.map(name =>
     readFileSync(`dist/themes/${name}.css`, 'utf8')).join('\n') });
   for (const name of [...themeStyles, ...standaloneThemes]) {
-    const spec = THEMES.find(theme => theme.name === name) ?? {
-      name, description: '', variant: 'tonal-spot' as const,
-      seed: readFileSync(`src/styles/themes/_${name}.scss`, 'utf8')
-        .match(/light primary seed (#[a-f\d]{6})/i)![1],
-    };
+    const spec = THEMES.find(theme => theme.name === name) ??
+      handThemeSpec(name, readFileSync(`src/styles/themes/_${name}.scss`, 'utf8'));
     for (const mode of ['light', 'dark'] as const) {
       const snapshot = async (level: string | null, nested = false) => page.evaluate(({ name, mode, level, nested }) => {
         const root = document.documentElement;

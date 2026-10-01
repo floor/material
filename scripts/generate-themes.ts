@@ -58,6 +58,8 @@ export interface ThemeSpec {
    * become the secondary palette, so the pairing survives with M3's tones
    */
   secondary?: string;
+  /** A custom tertiary colour: preserve its hue and chroma with M3's tones. */
+  tertiary?: string;
   /**
    * Shipped only as `mtrl/themes/<name>`, not in the full stylesheet: an app
    * pays for it only by importing it
@@ -110,7 +112,7 @@ const camel = (role: string): string => role.replace(/-([a-z])/g, (_, c: string)
 export const schemeFor = (spec: ThemeSpec, isDark: boolean): DynamicScheme => {
   const source = Hct.fromInt(argbFromHex(spec.seed));
   const contrast = spec.contrast ?? 0;
-  if (!spec.secondary) return new SCHEMES[spec.variant](source, isDark, contrast);
+  if (!spec.secondary && !spec.tertiary) return new SCHEMES[spec.variant](source, isDark, contrast);
   const base = new SCHEMES[spec.variant](source, isDark, contrast);
   return new DynamicScheme({
     sourceColorHct: source,
@@ -118,8 +120,8 @@ export const schemeFor = (spec: ThemeSpec, isDark: boolean): DynamicScheme => {
     contrastLevel: contrast,
     isDark,
     primaryPalette: base.primaryPalette,
-    secondaryPalette: TonalPalette.fromInt(argbFromHex(spec.secondary)),
-    tertiaryPalette: base.tertiaryPalette,
+    secondaryPalette: spec.secondary ? TonalPalette.fromInt(argbFromHex(spec.secondary)) : base.secondaryPalette,
+    tertiaryPalette: spec.tertiary ? TonalPalette.fromInt(argbFromHex(spec.tertiary)) : base.tertiaryPalette,
     neutralPalette: base.neutralPalette,
     neutralVariantPalette: base.neutralVariantPalette,
     errorPalette: base.errorPalette,
@@ -203,6 +205,7 @@ export const renderTheme = (spec: ThemeSpec): string => {
     `seed ${spec.seed}`,
     `variant ${TITLE[spec.variant]}`,
     ...(spec.secondary ? [`secondary ${spec.secondary}`] : []),
+    ...(spec.tertiary ? [`tertiary ${spec.tertiary}`] : []),
     ...(spec.contrast ? [`contrastLevel ${spec.contrast.toFixed(1)}`] : []),
   ].join(", ");
   return `// src/styles/themes/_${spec.name}.scss
@@ -320,16 +323,28 @@ export const HAND_THEMES = readdirSync("src/styles/themes")
   .map((file) => file.slice(1, -5))
   .filter((name) => !THEMES.some((spec) => spec.name === name));
 
+/** Shared contrast inputs for generation and browser checks of a hand-made theme. */
+export const handThemeSpec = (name: string, source: string, standard = standardTokens(name, source)): ThemeSpec => {
+  const key = (role: string): string => {
+    const color = standard.light[`--#{$prefix}-sys-color-${role}`];
+    if (!color) throw new Error(`${name}: hand-made theme has no clear light ${role}`);
+    return color;
+  };
+  const comments = source.split(CONTRAST_START)[0].match(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g)?.join("\n") ?? "";
+  const seed = comments.match(/\bseed color\s+(#[a-f\d]{6})\b/i)?.[1] ?? key("primary");
+  return { name, description: "", seed, secondary: key("secondary"), tertiary: key("tertiary"), variant: "tonal-spot" };
+};
+
 /** Keep the entire standard source intact; replace only generated contrast blocks. */
 export const renderHandContrast = (name: string, source: string): string => {
   const original = source.split(CONTRAST_START)[0].trimEnd() + "\n";
   const standard = KEPT_THEMES.includes(name) ? renderKept(original) : original;
-  const primary = standard.match(/--#\{\$prefix\}-sys-color-primary:\s*(#[0-9a-fA-F]{6})/)?.[1];
-  if (!primary) throw new Error(`${name}: hand-made theme has no clear light primary`);
-  const header = `${CONTRAST_HEADER}Tonal Spot from light primary seed ${primary}.`;
+  const tokens = standardTokens(name, standard);
+  const spec = handThemeSpec(name, standard, tokens);
+  const header = `${CONTRAST_HEADER}Tonal Spot from seed ${spec.seed}, secondary from ${spec.secondary}, tertiary from ${spec.tertiary}.`;
   const withoutHeader = standard.split("\n").filter((line) => !line.startsWith(CONTRAST_HEADER));
   withoutHeader.splice(1, 0, header);
-  return withoutHeader.join("\n") + "\n" + renderContrast({ name, seed: primary, variant: "tonal-spot", description: "" }, standardTokens(name, standard));
+  return withoutHeader.join("\n") + "\n" + renderContrast(spec, tokens);
 };
 
 /** Every generated file, by path */
