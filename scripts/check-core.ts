@@ -14,7 +14,7 @@ import { checkButtonStateLayers } from "./check-button-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
 import { checkMenuOpeners } from "./check-menu-opener-browser";
-import { checkTextfield, checkTextfieldTokens, checkTextfieldAnatomy, checkTextfieldPlaceholder, checkTextfieldA11y } from "./check-textfield-browser";
+import { checkTextfield, checkTextfieldTokens, checkTextfieldAnatomy, checkTextfieldPlaceholder, checkTextfieldA11y, checkTextfieldLatePlacement } from "./check-textfield-browser";
 import { checkControls } from "./check-controls-browser";
 import { checkSearch } from "./check-search-browser";
 import { createPackageFixture } from "./package-fixture";
@@ -100,6 +100,7 @@ try {
   await checkTextfieldAnatomy(page);
   await checkTextfieldPlaceholder(page);
   await checkTextfieldA11y(page);
+  await checkTextfieldLatePlacement(page);
   await checkMenuOpeners(page);
   await checkControls(page);
   await checkSearch(page);
