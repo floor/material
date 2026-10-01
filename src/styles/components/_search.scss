@@ -14,6 +14,10 @@ $component: "#{base.$prefix}-search";
 // ============================================================================
 
 $bar-height: 56px;
+// SearchBarTokens.ContainerShape is CornerFull. Half the height, so the
+// radius animates to the view's corners; min() keeps a theme's full corner
+// in charge when it is smaller (FLO-345).
+$bar-shape: min(var(--#{base.$prefix}-sys-shape-corner-full, 9999px), calc(#{$bar-height} / 2));
 $bar-min-width: 360px;
 $bar-max-width: 720px;
 
@@ -73,7 +77,7 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     // Bar state (collapsed) - default
     &--bar {
         .#{$component}__container {
-            border-radius: v.shape("pill");
+            border-radius: $bar-shape;
             height: $bar-height;
         }
 
@@ -201,7 +205,7 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
 
     .#{$component}__container {
         height: $bar-height;
-        border-radius: v.shape("pill");
+        border-radius: $bar-shape;
     }
 
     .#{$component}__content {
@@ -213,7 +217,7 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
 
 .#{$component}--contained.#{$component}--view {
     .#{$component}__container {
-        border-radius: v.shape("pill");
+        border-radius: $bar-shape;
     }
 
     .#{$component}__divider {

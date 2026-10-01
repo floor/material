@@ -93,7 +93,8 @@ const CASES: Record<string, { make: string }> = {
 const PROBE = `:root {
   --mtrl-sys-shape-corner-none: 1px; --mtrl-sys-shape-corner-extra-small: 1px; --mtrl-sys-shape-corner-small: 1px;
   --mtrl-sys-shape-corner-medium: 1px; --mtrl-sys-shape-corner-large: 1px; --mtrl-sys-shape-corner-large-increased: 1px;
-  --mtrl-sys-shape-corner-extra-large: 1px; --mtrl-sys-shape-corner-full: 1px;
+  --mtrl-sys-shape-corner-extra-large: 1px; --mtrl-sys-shape-corner-extra-large-increased: 1px;
+  --mtrl-sys-shape-corner-extra-extra-large: 1px; --mtrl-sys-shape-corner-full: 1px;
   --mtrl-ref-typeface-brand: ProbeBrand; --mtrl-ref-typeface-plain: ProbePlain;
 }`;
 

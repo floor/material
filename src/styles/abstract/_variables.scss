@@ -216,6 +216,9 @@ $typescale: (
 
 $shape: (
   'none': 0,
+  // Deprecated: extra-tiny, tiny and pill are not on M3's scale and are
+  // removed in 1.0.0. Use a literal radius for extra-tiny and tiny; for pill,
+  // use full or half the component's height (FLO-345).
   'extra-tiny': 1px,
   'tiny': 2px,
   'extra-small': 4px,
@@ -226,6 +229,10 @@ $shape: (
   // button's inner corners when hovered or pressed
   'large-increased': 20px,
   'extra-large': 28px,
+  // Compose ShapeTokens.CornerValueExtraLargeIncreased and
+  // CornerValueExtraExtraLarge (FLO-345)
+  'extra-large-increased': 32px,
+  'extra-extra-large': 48px,
   'full': 9999px,
   'pill': 100px
 ) !default;

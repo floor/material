@@ -10,6 +10,32 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Added
+
+- **M3's two largest corner steps (FLO-345).** `extra-large-increased` (32px) and
+  `extra-extra-large` (48px), from Compose's `ShapeTokens`, join the shape scale:
+  `v.shape('extra-large-increased')` in Sass, `--mtrl-sys-shape-corner-extra-large-increased` and
+  `--mtrl-sys-shape-corner-extra-extra-large` on `:root`, and both in the `ShapeStep` type.
+
+### Fixed
+
+- **The search bar's corners follow the theme (FLO-345).** The bar was rounded with the mtrl-only
+  `pill` step (100px), so a theme's `--mtrl-sys-shape-corner-full` never reached it, and opening
+  the view held the corners still before they snapped square. The bar is now M3's full corner
+  as half its height, `min(var(--mtrl-sys-shape-corner-full, 9999px), 28px)`, and the corners
+  ease from the first frame.
+- **The checkbox's 2px corner is a literal (FLO-345),** as `CheckboxTokens.ContainerShape` defines
+  it outside the shape scale, instead of the mtrl-only `tiny` step.
+
+### Deprecated
+
+- **The shape steps `extra-tiny`, `tiny` and `pill` (FLO-345)** are not on M3's scale and are
+  removed in 1.0.0, with their `--mtrl-sys-shape-corner-*` properties. Write `extra-tiny` and
+  `tiny` as a literal radius; replace `pill` with `full`, or with half the component's height when
+  its corners animate.
+- **The `$mtrl-sys-shape` map in `abstract/theme` (FLO-345)** is unused and removed in 1.0.0. Use
+  `v.shape()`.
+
 ## [0.10.2] - 2026-10-01
 
 The full Material 3 Expressive shape library: all 35 of Compose's shapes in `mtrl/core/shapes`,
