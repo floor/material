@@ -77,13 +77,16 @@ try {
   // Raised to 900,000 for the element CSS as .css files (FLO-365), which SSR's <link>
   // styles need: 876,697 on next to 886,448 with them, Node 22 / npm 10, keeping the
   // headroom it had.
-  assert(pack.size < 900_000, "npm tarball exceeds 900,000 bytes");
+  // Raised for the bundled server-only SSR entry (FLO-364): 888,897 to 1,002,195,
+  // measured with Node 22.23.3 / npm 10.9.9, preserving the previous headroom.
+  assert(pack.size < 1_015_000, "npm tarball exceeds 1,015,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
   // ESM 23%, CSS 18%, SCSS sources 11%, the CommonJS bundle 8%, which 1.0.0 drops (FLO-358).
   // Lowered to 5,600,000 for that: 5,660,400 to 5,249,221, keeping the headroom it had.
-  assert(pack.unpackedSize < 5_600_000, "Unpacked package exceeds 5,600,000 bytes");
+  // FLO-364: 5,567,538 to 5,875,963 with SSR, same packer, preserving headroom.
+  assert(pack.unpackedSize < 5_910_000, "Unpacked package exceeds 5,910,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
   const smoke = join(temporary, "smoke.mjs");
