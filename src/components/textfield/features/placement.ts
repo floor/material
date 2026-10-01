@@ -74,10 +74,21 @@ export const withPlacement =
     const COMPONENT = component.config.componentName || "textfield";
 
     let destroyed = false;
+    // The observers and the resize listener are installed on the first request
+    // for placement, not at construction: a field with nothing to place does not
+    // observe itself (FLO-378). Every setter that can give it something to place
+    // (variant, label, icons, prefix, suffix, required, density) asks.
+    let listening = false;
+    const ensureListening = (): void => {
+      if (listening || destroyed) return;
+      listening = true;
+      setupEventListeners();
+    };
     // This field's pass in the shared batch; the Set runs it once however
     // often it is scheduled before the flush
     const schedulePositionUpdate = () => {
       if (destroyed) return;
+      ensureListening();
       schedule(measure);
     };
 
@@ -182,6 +193,7 @@ export const withPlacement =
 
     /** Places the elements now: this field's read, then its write. */
     const updateElementPositions = () => {
+      ensureListening();
       measure()();
       return component;
     };
@@ -225,10 +237,18 @@ export const withPlacement =
       }
     };
 
-    // Perform initial setup: observers now, the first placement in the
-    // next batch with the other fields created in this task
-    setupEventListeners();
-    schedulePositionUpdate();
+    // A filled field with no prefix, suffix or leading icon has nothing to
+    // place: measure() would write nothing, the label sits where the stylesheet
+    // puts it. Its observers and first measure wait for a request (FLO-378).
+    // A filled field with only a leading icon is a no-op too, but stays on the
+    // measuring side. The rest: the first placement in the next batch with the
+    // other fields created in this task.
+    const has = (modifier: string): boolean => component.element.classList.contains(`${PREFIX}-${COMPONENT}--${modifier}`);
+    const needsPlacement =
+      has("outlined") ||
+      has("with-leading-icon") ||
+      component.element.querySelector(`.${PREFIX}-${COMPONENT}__prefix, .${PREFIX}-${COMPONENT}__suffix`) !== null;
+    if (needsPlacement) schedulePositionUpdate();
 
     // Add lifecycle integration
     if ("lifecycle" in component && component.lifecycle?.destroy) {

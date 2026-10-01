@@ -1,7 +1,7 @@
 // scripts/fixtures/shadow-styles.ts
 import { defineAll, elements } from "../../dist/elements/index.js";
 import "../../dist/elements/css/index.js";
-import { styleText } from "../../dist/elements/styles.js";
+import { applyStyles } from "../../dist/elements/styles.js";
 import { setComponentDefaults, clearGlobalDefaults } from "../../dist/core/config/global.js";
 import { PREFIX } from "../../dist/core/config.js";
 import { setHTML } from "../../dist/core/dom/html.js";
@@ -16,10 +16,13 @@ const ownerOf = (name: string): string | undefined => {
   return owners.find(owner => owner === block) ?? aliases[block];
 };
 const sheetText = (sheet: CSSStyleSheet) => Array.from(sheet.cssRules, rule => rule.cssText).join("\n");
-const sheets = new Map(owners.map(name => {
-  const sheet = new CSSStyleSheet(); sheet.replaceSync(styleText(name) ?? "");
-  return [name, sheet] as const;
-}));
+// A registered component sheet, as a shadow root adopts it
+const sheetOf = (name: string): CSSStyleSheet => {
+  const root = document.createElement("div").attachShadow({ mode: "open" });
+  applyStyles(root, [name]);
+  return root.adoptedStyleSheets[0] ?? new CSSStyleSheet();
+};
+const sheets = new Map(owners.map(name => [name, sheetOf(name)] as const));
 const staticStyles = new CSSStyleSheet();
 staticStyles.replaceSync("*{transition:none!important;animation:none!important}");
 const computed = (node: Element) => {
