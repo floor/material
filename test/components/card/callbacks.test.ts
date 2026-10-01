@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import createCard from "../../../src/components/card";
 import { withSwipeable } from "../../../src/components/card/features";
-import type { CardComponent } from "../../../src/components/card/types";
+import type { CardComponent, SwipeableFeature } from "../../../src/components/card/types";
 import { callbacksFixture } from "../callbacks.fixture";
 
 const mount = callbacksFixture();
@@ -9,8 +9,8 @@ const mount = callbacksFixture();
 for (const direction of ["left", "right"] as const) {
   for (const input of ["button", "touch"] as const) {
     test(`card ${direction} swipe via ${input} exposes the enhanced card including reset`, () => {
-      const calls: CardComponent[] = [];
-      const handler = (card: CardComponent): void => { calls.push(card); card.swipeable?.reset(); };
+      const calls: unknown[] = [];
+      const handler = (card: CardComponent & { swipeable: SwipeableFeature }): void => { calls.push(card); card.swipeable.reset(); };
       const base = mount(createCard());
       const card = withSwipeable({ onSwipeLeft: handler, onSwipeRight: handler })(base);
       if (input === "button") {

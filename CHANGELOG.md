@@ -88,7 +88,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `createTabIndicator`, `updateTabPanels`, `setupKeyboardNavigation` and their config and
   component types; switch's `withSupportingText` and `SupportingTextComponent`; datepicker's
   `DEFAULT_DATE_FORMAT`. `ChipConfig` loses `managedSelection` and `cell`, which only the chip
-  set sets. The manifest's `./components/*` and `./components/*/constants` patterns become one
+  set sets. `CardComponent`'s `loading`, `expandable` and `swipeable` members are removed;
+  `createCard` never set them. The manifest's `./components/*` and `./components/*/constants` patterns become one
   entry per component (and per component with constants), so the folders inside a component no
   longer resolve. Each component's export list is pinned (`bun run component-exports:check`).
   Migration: these subpaths now throw `ERR_PACKAGE_PATH_NOT_EXPORTED`. They held internals, with
