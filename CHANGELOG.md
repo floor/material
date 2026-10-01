@@ -145,6 +145,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - `mtrl/ssr/react`: an opt-in, server-only entry. Imported in the server bootstrap, it makes the React adapters emit styled declarative shadow roots during SSR (React 18 and 19), with no server code in the client bundle. Without it, React output is unchanged (FLO-372).
 - `mtrl/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Svelte output gains only the empty branch marker (FLO-375).
 - `ssr:check` (CI): server-rendered elements are checked in Chromium, Firefox and WebKit, for a styled first paint without JavaScript, pixel stability and no layout movement on upgrade, and the security reparse; markup parity stays in Chromium (FLO-371).
+- `ssr:check` no longer depends on whether the browser has applied `:hover` at the page origin
+  when it captures. The fixture sat there, under a new page's resting pointer, and CI captured a
+  button group hovered before the upgrade and not after. The stage now starts 32px down, and both
+  passes assert that no control of the fixture is under the pointer.
 - Element CSS also ships as `.css` files (`mtrl/elements/css/<name>.css`, `hosts/<element>.css`), for server-rendered `<link>` styles (FLO-365).
 - **Synchronous declarative shadow DOM rendering (FLO-363, part B).** The server-only
   `src/ssr` entry exports `renderElement` with inline CSS by default, optional stylesheet
