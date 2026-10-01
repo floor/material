@@ -35,13 +35,13 @@ declare const button: ButtonComponent;
 
 // --- the keys -------------------------------------------------------------
 
-// Exactly the three events the element forwards. `mount` and `unmount` are
+// The native forwarding and toggle selection events. `mount` and `unmount` are
 // deliberately absent: the lifecycle feature keeps its own emitter and
 // exposes them as `lifecycle.onMount` / `onUnmount`, so they never arrive
 // through `on`.
 export const theEventsAreExactlyThese: Equals<
   keyof ButtonEvents,
-  "click" | "focus" | "blur"
+  "click" | "focus" | "blur" | "change"
 > = true;
 
 // --- the payload ----------------------------------------------------------
@@ -83,9 +83,9 @@ export const focusCarriesAFocusEvent: Equals<
 // @ts-expect-error "chick" is not an event a button reports
 button.on("chick", () => {});
 
-// An event that exists on other components but not this one.
-// @ts-expect-error a button has no "change" event
-button.on("change", () => {});
+button.on("change", ({ selected }) => { const value: boolean = selected; void value; });
+// @ts-expect-error the unchanged toggle payload does not yet carry a value
+button.on("change", payload => payload.value);
 
 // The mistake the four call sites made, now caught at the call.
 // @ts-expect-error the handler receives the payload, not the DOM event

@@ -74,6 +74,8 @@ export interface CarouselComponent {
   prev: () => CarouselComponent;
   goTo: (index: number) => CarouselComponent;
   getCurrentSlide: () => number;
+  /** Reads the current model value without changing selection. */
+  getValue: () => number;
   getVariant: () => CarouselVariant;
 
   addSlide: (slide: CarouselSlide, index?: number) => CarouselComponent;

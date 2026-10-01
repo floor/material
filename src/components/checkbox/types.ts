@@ -1,4 +1,5 @@
 // src/components/checkbox/types.ts
+import type { TouchEvents } from "../../core/utils/mobile";
 import type { EventCallback } from "../../core/state/emitter";
 
 /**
@@ -134,7 +135,7 @@ export interface CheckboxChangePayload {
 }
 
 /** Events emitted by the checkbox API. DOM clicks/focus are not forwarded. */
-export interface CheckboxEvents {
+export interface CheckboxEvents extends TouchEvents {
   change: (payload: CheckboxChangePayload) => void;
 }
 

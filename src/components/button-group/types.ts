@@ -353,6 +353,8 @@ export interface ButtonGroupComponent {
   disableButton: (index: number) => ButtonGroupComponent;
   /** Selection (groups with selection "single" or "multi") */
   getSelected: () => string[];
+  /** Reads the current model value without changing selection. */
+  getValue: () => string | string[] | null;
   isSelected: (value: string) => boolean;
   select: (value: string) => ButtonGroupComponent;
   deselect: (value: string) => ButtonGroupComponent;

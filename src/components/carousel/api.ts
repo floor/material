@@ -37,6 +37,7 @@ export const withAPI = () => (component: ApiComponent): CarouselComponent => {
       return api;
     },
     getCurrentSlide: () => component.getCurrentSlide(),
+    getValue: () => component.getCurrentSlide(),
     getVariant: () => component.getVariant(),
 
     addSlide(slide: CarouselSlide, index?: number) {

@@ -1,4 +1,5 @@
 // src/components/card/types.ts
+import type { TouchEvents } from "../../core/utils/mobile";
 import type { ButtonConfig as BaseButtonConfig } from "../button/types";
 import type { ForwardedEventPayload } from "../../core/dom";
 
@@ -312,7 +313,9 @@ export interface CardComponentConfig extends CardSchema {
  * interactive one `mouseenter`, `mouseleave`, `keydown`, `focus` and `blur`;
  * a draggable one emits `dragstart` and `dragend`.
  */
-export interface CardEvents {
+export interface CardEvents extends TouchEvents {
+  /** Presentation state after expanding or collapsing. */
+  expandedChanged: (payload: { expanded: boolean }) => void;
   click: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
   mouseenter: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
   mouseleave: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;

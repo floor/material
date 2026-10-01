@@ -245,6 +245,8 @@ export interface DrawerComponent {
    * @returns Active item id or null
    */
   getActive: () => string | null;
+  /** Reads the current model value without changing selection. */
+  getValue: () => string | null;
 
   /**
    * Sets the headline text

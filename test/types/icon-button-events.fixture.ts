@@ -15,7 +15,7 @@ const button = createIconButton({ ariaLabel: "Favorite" });
 // The forwarded native events, and a toggle button's `change` (FLO-295).
 export const exactlyTheEvents: Equals<
   keyof IconButtonEvents,
-  "click" | "focus" | "blur" | "change"
+  "click" | "focus" | "blur" | "change" | "tap" | "swipe"
 > = true;
 
 export const changePayload: Equals<
@@ -67,3 +67,8 @@ button.off("toggle", () => {});
 button.on("mount", () => {});
 
 button.element.addEventListener("toggle", () => {});
+
+// FLO-380: gestures are not model notifications and retain normalized metadata.
+import type { NormalizedEvent, SwipePayload } from "../../src/core/utils/mobile";
+export const tapShape: Equals<Parameters<IconButtonEvents["tap"]>[0], NormalizedEvent> = true;
+export const swipeShape: Equals<Parameters<IconButtonEvents["swipe"]>[0], SwipePayload> = true;

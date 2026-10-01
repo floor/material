@@ -14,7 +14,7 @@ const fab = createExtendedFab({ text: "Create" });
 
 export const exactlyTheForwardedEvents: Equals<
   keyof ExtendedFabEvents,
-  "click" | "focus" | "blur" | "collapse" | "expand"
+  "click" | "focus" | "blur" | "collapse" | "expand" | "tap" | "swipe"
 > = true;
 
 export const clickPayload: Equals<
@@ -62,3 +62,8 @@ fab.on("mount", () => {});
 
 fab.element.addEventListener("collapse", () => {});
 fab.element.addEventListener("expand", () => {});
+
+// FLO-380: gestures are not model notifications and retain normalized metadata.
+import type { NormalizedEvent, SwipePayload } from "../../src/core/utils/mobile";
+export const tapShape: Equals<Parameters<ExtendedFabEvents["tap"]>[0], NormalizedEvent> = true;
+export const swipeShape: Equals<Parameters<ExtendedFabEvents["swipe"]>[0], SwipePayload> = true;

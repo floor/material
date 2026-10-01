@@ -1,4 +1,5 @@
 // src/components/fab/types.ts
+import type { TouchEvents } from "../../core/utils/mobile";
 import type { IconManager } from "../../core/compose/features/icon";
 import type { ForwardedEventPayload } from "../../core/dom/create";
 
@@ -373,7 +374,7 @@ export interface FabConfig {
  * compile error rather than a listener that never fires, and the handler's
  * payload is typed rather than `Function`'s implicit `any`. FLO-114.
  */
-export interface FabEvents {
+export interface FabEvents extends TouchEvents {
   /** The FAB was clicked. Not forwarded while the FAB is disabled. */
   click: (payload: ForwardedEventPayload<MouseEvent, HTMLButtonElement>) => void;
   /** The FAB took focus. */

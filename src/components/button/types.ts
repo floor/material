@@ -233,11 +233,13 @@ export interface ButtonEventPayload<E extends Event = Event> {
  * compile error rather than a listener that never fires, and a handler's
  * payload is typed rather than `any`. FLO-114.
  *
- * Only these three exist. `mount` and `unmount` are *not* here: the lifecycle
+ * Native forwarding and toggle selection are reported here. `mount` and `unmount` are *not* here: the lifecycle
  * feature keeps its own emitter and exposes them as `lifecycle.onMount` and
  * `lifecycle.onUnmount`, so they never reach `component.on`.
  */
 export interface ButtonEvents {
+  /** Selection notification from a toggle button. */
+  change: (payload: { selected: boolean }) => void;
   /** The button was clicked. Not forwarded while the button is disabled. */
   click: (payload: ButtonEventPayload<MouseEvent>) => void;
   /** The button took focus. */

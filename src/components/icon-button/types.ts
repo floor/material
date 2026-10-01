@@ -1,4 +1,5 @@
 // src/components/icon-button/types.ts
+import type { TouchEvents } from "../../core/utils/mobile";
 
 import type { ForwardedEventPayload } from "../../core/dom";
 import { BaseComponentConfig } from '../../core/config/component';
@@ -235,7 +236,7 @@ export interface ToggleManager {
  * The icon button's events: native ones forwarded through its emitter, and a
  * toggle button's `change`.
  */
-export interface IconButtonEvents {
+export interface IconButtonEvents extends TouchEvents {
   /**
    * A toggle button's selected state changed on a click (FLO-295). The DOM
    * `toggle` event on `element` is deprecated and goes in the next release.

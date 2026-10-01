@@ -19,6 +19,19 @@ export interface NormalizedEvent {
   type: string;
 }
 
+/** Horizontal gesture emitted by an interactive root. */
+export interface SwipePayload {
+  direction: "left" | "right";
+  deltaX: number;
+  deltaY: number;
+}
+
+/** Touch gestures emitted by touch-enabled interactive roots. */
+export interface TouchEvents {
+  tap: (payload: NormalizedEvent) => void;
+  swipe: (payload: SwipePayload) => void;
+}
+
 /**
  * Detects if the current device is likely a mobile device
  * Uses a combination of user agent and screen size checks for reliability

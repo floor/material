@@ -51,3 +51,5 @@ carousel.on("blur", payload => payload.event.clientX);
 carousel.on("change", payload => payload.target);
 // @ts-expect-error the index is numeric
 export const invalidIndex: CarouselChangePayload = { index: "1" };
+
+export const modelGetter: Equals<ReturnType<CarouselComponent["getValue"]>, number> = true;

@@ -450,6 +450,8 @@ export interface TabsComponent {
    * @returns Active tab or null if none
    */
   getActiveTab: () => TabComponent | null;
+  /** Reads the current model value without changing selection. */
+  getValue: () => string | null;
   
   /**
    * Gets the indicator component

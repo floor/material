@@ -1,4 +1,5 @@
 // src/components/list/types.ts
+import type { ForwardedEventPayload } from "../../core/dom";
 
 /**
  * Configuration for the List component
@@ -433,8 +434,6 @@ export interface ListComponent<T = unknown> {
 export interface ListEvents<T = unknown> {
   select: (event: SelectEvent<T>) => void;
   load: (event: LoadEvent<T>) => void;
-  scroll: (event: {
-    originalEvent: Event;
-    component: ListComponent<T>;
-  }) => void;
+  scroll: (event: ForwardedEventPayload<Event, HTMLElement>) => void;
+  keydown: (event: ForwardedEventPayload<KeyboardEvent, HTMLElement>) => void;
 }

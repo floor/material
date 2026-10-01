@@ -16,6 +16,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   including in server-rendered shadow DOM (FLO-367). Migration: DOM inspection no longer needs
   a timer before reading initial items or suggestions. Menu positioning still waits for
   attachment; opening, focus, lazy submenus and suggestion updates keep their existing behavior.
+- **List event types match native forwarding (FLO-380).** `scroll` carries
+  `{ event, element, originalEvent }`; its nonexistent `component` field is removed.
+  Migration: use `element` for the event root, or retain your list reference.
 
 - **The shape scale is M3's and nothing else (FLO-345).** The mtrl-only steps `extra-tiny` (1px),
   `tiny` (2px) and `pill` (100px) are removed from `$shape`, with their
@@ -55,6 +58,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `setTrailingIcon(html, label)`), which makes it a button and emits `trailing`.
 
 ### Added
+
+- Read-only `getValue()` aliases on carousel, tabs, drawer, navigation rail and
+  button group (FLO-380); existing accessors remain. Button toggle `change`, card
+  `expandedChanged`, list `keydown`, and interactive touch events now have their
+  actual payload types, including both slider touch delivery shapes.
 
 - Per-element SSR opt-out (FLO-370): specs accept `ssr: false` or a synchronous host
   predicate. Carousel, FAB menu and toolbar emit their host and light DOM without a

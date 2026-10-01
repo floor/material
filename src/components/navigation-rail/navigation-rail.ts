@@ -310,6 +310,7 @@ export default function createNavigationRail(config: NavigationRailConfig = {}):
     const api: NavigationRailComponent = {
         element: root, getClass, lifecycle: component.lifecycle, destroy,
         expand: () => setExpanded(true), collapse: () => setExpanded(false), toggle: () => setExpanded(!expanded), isExpanded: () => expanded,
+        getValue: () => api.getActive(),
         getActive: () => items.find(item => item.active)?.id || null,
         setActive(id) {
             if (destroyed || (id !== null && !items.some(item => item.id === id && !item.disabled)))
