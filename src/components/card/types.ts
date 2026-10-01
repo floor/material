@@ -313,6 +313,8 @@ export interface CardComponentConfig extends CardSchema {
  * a draggable one emits `dragstart` and `dragend`.
  */
 export interface CardEvents {
+  /** Presentation state after expanding or collapsing. */
+  expandedChanged: (payload: { expanded: boolean }) => void;
   click: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
   mouseenter: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
   mouseleave: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;

@@ -67,13 +67,13 @@ export interface SwitchConfig {
   [key: string]: unknown;
 }
 
-/** A checked-state change from the native input or a programmatic setter. */
+/** A checked-state change from native input activation. Public setters are silent. */
 export interface SwitchChangePayload {
   /** The new checked state. */
   checked: boolean;
   /** The input's HTML value attribute, not the boolean checked state. */
   value: string;
-  /** Present for input-driven changes; absent for check/uncheck/toggle/setValue. */
+  /** The original native change event, when supplied by the emitter. */
   nativeEvent?: Event;
 }
 
@@ -151,6 +151,9 @@ export interface SwitchComponent {
   /** Disables the switch */
   disable: () => SwitchComponent;
 
+  /** Whether the switch is disabled (FLO-384) */
+  isDisabled: () => boolean;
+
   /** Destroys the switch component and cleans up resources */
   destroy: () => void;
 }
@@ -162,6 +165,7 @@ export interface ApiOptions {
   disabled: {
     enable: () => void;
     disable: () => void;
+    isDisabled: () => boolean;
   };
   lifecycle: {
     destroy: () => void;
@@ -191,6 +195,7 @@ export interface BaseComponent {
   disabled?: {
     enable: () => void;
     disable: () => void;
+    isDisabled: () => boolean;
   };
   lifecycle?: {
     destroy: () => void;
