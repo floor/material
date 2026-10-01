@@ -12,6 +12,20 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Contrast on every theme (FLO-406).** `data-theme-contrast="standard"`, `"medium"`
+  and `"high"` select M3 contrast levels in light and dark. Put the attribute on the
+  same element as `data-theme`, including each nested theme. With no contrast attribute,
+  `prefers-contrast: more` selects high on every themed element independently; explicit
+  `standard` opts out on that element. In 1.0, a nested theme does not inherit an ancestor's
+  contrast setting or opt-out. The unthemed root follows the OS color scheme and
+  `.dark-theme` at every contrast level, ignoring `data-theme-mode`.
+  Hand-authored medium and high palettes use each theme's documented seed, falling back
+  to its light primary, and preserve the light secondary and tertiary hues and chroma.
+  M3 supplies the contrast tones; neutral palettes come from the seed. Generated headers
+  name all three inputs, and browser checks share the generator's input selection.
+  Hand-authored standard colors and success, warning and info roles stay unchanged.
+  The `highcontrast` theme is a theme in its own right and supports all three contrast settings.
+
 - **Carousel: opt-in mouse wheel scrolling (FLO-395).** Set `wheel: true`, call
   `setWheel(true)`, or add `<m-carousel wheel>` (also toggleable after creation).
   Horizontal layouts accumulate wheel momentum and preserve glide velocity to the snap
@@ -52,6 +66,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   icons, affixes, required, density). Mounting 1,000 filled fields takes 16% less script time
   (49.9 to 41.8 ms; 192 to 165 ms at 4× CPU), with 1,000 fewer listeners. Nothing renders
   differently.
+- **CI runs the same checks in less time.** The browser checks run in four groups instead of
+  three, the package checks no longer hold the browser groups back, and Playwright's browser and
+  its system packages come from a cache that every pull request can read (a slow Ubuntu mirror
+  made one install step take 26 minutes). `test/build/ci-commands.test.ts` lists the commands CI
+  runs and fails when one is dropped.
 
 ### Deprecated
 
@@ -86,6 +105,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   283ms stall split its 30-event wheel gesture in two, and the carousel correctly went one slide
   further than the recording expected. A recording with a frame over 50ms is now taken again
   (three in a row fail); the assertions are unchanged (FLO-395).
+- **Status text meets 4.5:1 (FLO-407).** Success, warning and info are one fixed
+  pair per mode, shared by every theme. White on the light warning (`#DD6D06`)
+  was 3.35:1. Each colour keeps its hue and chroma at the tones M3 uses for a
+  role and its on-role (light tone 40 on 100, dark tone 80 on 20). Ratios, old
+  then new: light success 5.28 → 6.45, warning 3.35 → 6.48, info 6.47 unchanged;
+  dark success 7.08 → 7.76, warning 8.57 → 7.76, info 7.75 → 7.69.
 - **Custom root classes survive configuration (FLO-403).** Top and bottom app bars,
   button groups, segmented buttons, tabs and individual tabs, toolbars, FAB menus,
   and selects now apply the `class` option to their root element, including

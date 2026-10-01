@@ -17,7 +17,7 @@ const THEMES_DIR = "src/styles/themes";
 
 /** A theme file's colour roles, light and dark */
 const parse = (name: string): { light: Record<string, string>; dark: Record<string, string> } => {
-  const scss = readFileSync(`${THEMES_DIR}/_${name}.scss`, "utf8");
+  const scss = readFileSync(`${THEMES_DIR}/_${name}.scss`, "utf8").split("// contrast roles:")[0];
   const split = scss.indexOf('&[data-theme-mode="dark"]');
   const read = (text: string) => Object.fromEntries(
     [...text.matchAll(/--#\{\$prefix\}-sys-color-([a-z-]+?):\s*(#[0-9a-fA-F]{6})/g)].map(([, role, hex]) => [role, hex.toLowerCase()]),
