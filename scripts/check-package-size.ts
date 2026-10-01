@@ -54,7 +54,8 @@ try {
           assert(!/(?:^|\/)ssr(?:\/|$|\.)/.test(target), `Client imports SSR in ${file.path}: ${name}`);
         } else {
           const peer = (file.path === "dist/ssr/react.js" && ["react", "react-dom/server"].includes(name))
-            || (file.path === "dist/ssr/svelte.js" && ["svelte", "svelte/server"].includes(name));
+            || (file.path === "dist/ssr/svelte.js" && ["svelte", "svelte/server"].includes(name))
+            || (file.path === "dist/ssr/vue.js" && ["vue", "@vue/server-renderer"].includes(name));
           assert(name.startsWith(".") || name.startsWith("node:") || peer, `Unbundled SSR dependency in ${file.path}: ${name}`);
         }
       }

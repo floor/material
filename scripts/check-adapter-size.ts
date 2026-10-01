@@ -16,9 +16,10 @@
  * 32 KB window (FLO-332). Minified, the React adapter adds +2712 B to select
  * and +2709 B to switch; gzip measured them +1866 and +959, because in
  * select's 140 KB bundle the adapter runtime sits beyond 32 KB from the
- * element code it compresses against. Brotli measures +878 and +872. React,
- * Vue and Solid stay under 1.1 KB. Svelte's declarative-shadow branch is
- * larger; the largest measured is the Svelte switch + button pair, +1631.
+ * element code it compresses against. Brotli measures +878 and +872. React
+ * and Solid stay under 1.1 KB. Vue's declarative-shadow hook is a little
+ * larger; the largest measured is the datepicker, +1190. Svelte's branch is
+ * larger still; the largest measured is the Svelte switch + button pair, +1631.
  *
  * Build first:
  *   bun run build && bun run adapters:size
