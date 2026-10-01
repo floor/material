@@ -20,7 +20,7 @@ assert<Equals<SwitchProps["defaultChecked"], boolean | undefined>>();
 assert<Equals<SwitchProps["supportingText"], string | undefined>>();
 assert<Equals<SwitchProps["label"], string | undefined>>();
 // Events are typed on* callbacks with the element's detail.
-assert<Equals<SwitchProps["onChange"], ((event: CustomEvent<{ checked: boolean; value: string }>) => void) | undefined>>();
+assert<Equals<SwitchProps["onChange"], ((event: CustomEvent<{ checked: boolean; value: boolean; valueAttribute: string; nativeEvent: Event | undefined }>) => void) | undefined>>();
 // The ref is the element, with its forwarded methods.
 assert<Equals<NonNullable<SwitchProps["ref"]> extends React.Ref<infer E> ? E : never, SwitchElement>>();
 

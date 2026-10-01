@@ -18,18 +18,21 @@ export const callbackPayload: Equals<
   SwitchChangePayload
 > = true;
 export const checkedIsBoolean: Equals<SwitchChangePayload["checked"], boolean> = true;
-export const valueIsTheHTMLValue: Equals<SwitchChangePayload["value"], string> = true;
+export const valueMatchesGetter: Equals<SwitchChangePayload["value"], ReturnType<SwitchComponent["getValue"]>> = true;
+export const tokenIsString: Equals<SwitchChangePayload["valueAttribute"], string> = true;
 export const nativeEventIsOptional: {} extends Pick<SwitchChangePayload, "nativeEvent"> ? true : false = true;
 export const nativeEventIsAnEvent: Equals<NonNullable<SwitchChangePayload["nativeEvent"]>, Event> = true;
 
-export const programmaticPayload: SwitchChangePayload = { checked: true, value: "yes" };
+export const payloadWithoutNativeMetadata: SwitchChangePayload = { checked: true, value: true, valueAttribute: "yes" };
 export const inputPayload: SwitchChangePayload = {
-  checked: false, value: "yes", nativeEvent: new Event("change"),
+  checked: false, value: false, valueAttribute: "yes", nativeEvent: new Event("change"),
 };
 
-const onChange: SwitchEvents["change"] = ({ checked, value, nativeEvent }) => {
+const onChange: SwitchEvents["change"] = ({ checked, value, valueAttribute, nativeEvent }) => {
   const state: boolean = checked;
-  const htmlValue: string = value;
+  const model: boolean = value;
+  const htmlValue: string = valueAttribute;
+  void model;
   nativeEvent?.preventDefault();
   void state;
   void htmlValue;
@@ -56,9 +59,14 @@ control.on("mount", () => {});
 // @ts-expect-error the payload has no DOM target field
 control.on("change", payload => payload.target.checked);
 // @ts-expect-error nativeEvent is an Event, not an arbitrary object
-export const invalidNativeEvent: SwitchChangePayload = { checked: true, value: "yes", nativeEvent: {} };
+export const invalidNativeEvent: SwitchChangePayload = { checked: true, value: true, valueAttribute: "yes", nativeEvent: {} };
 
 // FLO-380: gestures are not model notifications and retain normalized metadata.
 import type { NormalizedEvent, SwipePayload } from "../../src/core/utils/mobile";
 export const tapShape: Equals<Parameters<SwitchEvents["tap"]>[0], NormalizedEvent> = true;
 export const swipeShape: Equals<Parameters<SwitchEvents["swipe"]>[0], SwipePayload> = true;
+
+// @ts-expect-error pre-1.0 string model values are rejected
+export const oldValue: SwitchChangePayload = { checked: true, value: "yes", valueAttribute: "yes" };
+// @ts-expect-error the HTML token is a required, separate field
+export const missingToken: SwitchChangePayload = { checked: true, value: true };

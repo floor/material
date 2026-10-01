@@ -124,13 +124,15 @@ export interface CheckboxConfig {
   componentName?: string;
 }
 
-/** A checked-state change from the native input or a programmatic setter. */
+/** A checked-state change from native input activation. Public setters are silent. */
 export interface CheckboxChangePayload {
   /** The new checked state. */
   checked: boolean;
-  /** The input's HTML value attribute, not the boolean checked state. */
-  value: string;
-  /** Present for input-driven changes; absent for check/uncheck/toggle/setValue. */
+  /** The checked model value, matching getValue() at dispatch. */
+  value: boolean;
+  /** The input's HTML value attribute, used for native form submission. */
+  valueAttribute: string;
+  /** The original native change event, when supplied by the emitter. */
   nativeEvent?: Event;
 }
 

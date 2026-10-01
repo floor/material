@@ -13,7 +13,7 @@
  */
 
 import createSwitch from "../components/switch";
-import type { SwitchComponent, SwitchConfig } from "../components/switch/types";
+import type { SwitchComponent, SwitchConfig, SwitchChangePayload } from "../components/switch/types";
 import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
 const switchSpec = {
@@ -42,8 +42,8 @@ const switchSpec = {
   events: {
     change: {
       detail: (payload) => {
-        const { checked, value } = payload as { checked: boolean; value: string };
-        return { checked, value };
+        const { checked, value, valueAttribute, nativeEvent } = payload as SwitchChangePayload;
+        return { checked, value, valueAttribute, nativeEvent };
       },
     },
   },

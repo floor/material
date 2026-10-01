@@ -16,6 +16,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   including in server-rendered shadow DOM (FLO-367). Migration: DOM inspection no longer needs
   a timer before reading initial items or suggestions. Menu positioning still waits for
   attachment; opening, focus, lazy submenus and suggestion updates keep their existing behavior.
+- **Checkbox and switch `change.value` is boolean (FLO-380).** Factory payloads
+  and custom-element details now carry `{ checked, value, valueAttribute, nativeEvent }`;
+  `value` matches the checked model, and `valueAttribute` holds the HTML string token.
+  Native forms still submit that token only while checked; setters remain silent and
+  element/framework bindings remain `checked`-based. Standalone `withInput` keeps strings.
+  Migration: read checked state from `value` (or `checked`), and replace reads of the
+  old string `value` with `valueAttribute`, including `event.detail` in adapters.
+
 - **List event types match native forwarding (FLO-380).** `scroll` carries
   `{ event, element, originalEvent }`; its nonexistent `component` field is removed.
   Migration: use `element` for the event root, or retain your list reference.

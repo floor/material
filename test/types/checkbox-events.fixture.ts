@@ -15,18 +15,21 @@ export const callbackPayload: Equals<
   CheckboxChangePayload
 > = true;
 export const checkedIsBoolean: Equals<CheckboxChangePayload["checked"], boolean> = true;
-export const valueIsTheHTMLValue: Equals<CheckboxChangePayload["value"], string> = true;
+export const valueMatchesGetter: Equals<CheckboxChangePayload["value"], ReturnType<CheckboxComponent["getValue"]>> = true;
+export const tokenIsString: Equals<CheckboxChangePayload["valueAttribute"], string> = true;
 export const nativeEventIsOptional: {} extends Pick<CheckboxChangePayload, "nativeEvent"> ? true : false = true;
 export const nativeEventIsAnEvent: Equals<NonNullable<CheckboxChangePayload["nativeEvent"]>, Event> = true;
 
-export const programmaticPayload: CheckboxChangePayload = { checked: true, value: "yes" };
+export const payloadWithoutNativeMetadata: CheckboxChangePayload = { checked: true, value: true, valueAttribute: "yes" };
 export const inputPayload: CheckboxChangePayload = {
-  checked: false, value: "yes", nativeEvent: new Event("change"),
+  checked: false, value: false, valueAttribute: "yes", nativeEvent: new Event("change"),
 };
 
-const onChange: CheckboxEvents["change"] = ({ checked, value, nativeEvent }) => {
+const onChange: CheckboxEvents["change"] = ({ checked, value, valueAttribute, nativeEvent }) => {
   const state: boolean = checked;
-  const htmlValue: string = value;
+  const model: boolean = value;
+  const htmlValue: string = valueAttribute;
+  void model;
   nativeEvent?.preventDefault();
   void state;
   void htmlValue;
@@ -53,9 +56,14 @@ checkbox.on("mount", () => {});
 // @ts-expect-error the old documentation's target field does not exist
 checkbox.on("change", payload => payload.target.checked);
 // @ts-expect-error nativeEvent is an Event, not an arbitrary object
-export const invalidNativeEvent: CheckboxChangePayload = { checked: true, value: "yes", nativeEvent: {} };
+export const invalidNativeEvent: CheckboxChangePayload = { checked: true, value: true, valueAttribute: "yes", nativeEvent: {} };
 
 // FLO-380: gestures are not model notifications and retain normalized metadata.
 import type { NormalizedEvent, SwipePayload } from "../../src/core/utils/mobile";
 export const tapShape: Equals<Parameters<CheckboxEvents["tap"]>[0], NormalizedEvent> = true;
 export const swipeShape: Equals<Parameters<CheckboxEvents["swipe"]>[0], SwipePayload> = true;
+
+// @ts-expect-error pre-1.0 string model values are rejected
+export const oldValue: CheckboxChangePayload = { checked: true, value: "yes", valueAttribute: "yes" };
+// @ts-expect-error the HTML token is a required, separate field
+export const missingToken: CheckboxChangePayload = { checked: true, value: true };

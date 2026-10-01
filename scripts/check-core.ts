@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 /** Exercise the packed shared ripple and component teardown in Chromium. */
+import { checkCheckableValues } from "./check-checkable-values";
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -43,6 +44,7 @@ try {
   await page.setContent('<!doctype html><html><body></body></html>');
   await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/styles.css"), "utf8") });
   await page.addScriptTag({ content: await bundle.outputs[0].text() });
+  await checkCheckableValues(page, "factory");
   await page.evaluate(() => {
     const state = window as unknown as CoreWindow;
     state.documentListeners = new Map(); state.offsetReads = 0;

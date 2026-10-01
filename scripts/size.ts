@@ -130,7 +130,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "button-group": kb(11.7), // FLO-119 aria-disabled in the shared disabled feature: 11,898
   card: kb(7.0),
   carousel: kb(10.3),
-  checkbox: kb(5.5),
+  checkbox: kb(5.52), // FLO-380: boolean change value plus the HTML valueAttribute token.
   chips: kb(9.2), // FLO-256..261 chips conformance; #221 pointer focus; keyboard.disable() and :dir(rtl) (FLO-343 follow-up): 9,305 to 9,319
   datepicker: kb(12.2), // FLO-238 conformance; FLO-274 swiping; FLO-275 year list; FLO-276 full screen; read-only, required, one change shape (FLO-289, FLO-295): 12,332; FLO-119 aria-disabled: 12,412
   dialog: kb(12.7), // layer: "top", as the sheets: 12,047 to 12,870

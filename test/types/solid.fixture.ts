@@ -16,7 +16,7 @@ type SwitchProps = ComponentProps<typeof Switch>;
 assert<Equals<SwitchProps["checked"], boolean | undefined>>();
 assert<Equals<SwitchProps["defaultChecked"], boolean | undefined>>();
 assert<Equals<SwitchProps["name"], string | undefined>>();
-assert<Equals<SwitchProps["onChange"], ((event: CustomEvent<{ checked: boolean; value: string }>) => void) | undefined>>();
+assert<Equals<SwitchProps["onChange"], ((event: CustomEvent<{ checked: boolean; value: boolean; valueAttribute: string; nativeEvent: Event | undefined }>) => void) | undefined>>();
 assert<Equals<SwitchProps["ref"], SwitchElement | ((element: SwitchElement) => void) | undefined>>();
 
 type TabsProps = ComponentProps<typeof Tabs>;

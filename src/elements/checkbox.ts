@@ -12,7 +12,7 @@
  */
 
 import createCheckbox from "../components/checkbox";
-import type { CheckboxComponent, CheckboxConfig } from "../components/checkbox/types";
+import type { CheckboxComponent, CheckboxConfig, CheckboxChangePayload } from "../components/checkbox/types";
 import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
 const checkboxSpec = {
@@ -41,8 +41,8 @@ const checkboxSpec = {
   events: {
     change: {
       detail: (payload) => {
-        const { checked, value } = payload as { checked: boolean; value: string };
-        return { checked, value };
+        const { checked, value, valueAttribute, nativeEvent } = payload as CheckboxChangePayload;
+        return { checked, value, valueAttribute, nativeEvent };
       },
     },
   },
