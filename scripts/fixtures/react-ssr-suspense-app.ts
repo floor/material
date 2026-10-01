@@ -6,19 +6,23 @@ import { Button, Card } from "mtrl/react";
 const h = React.createElement;
 export const SUSPENSE_TEXT = "loaded 5";
 
-type Recorded = Promise<string> & { status?: "pending" | "fulfilled"; value?: string };
+type Recorded = Promise<string> & { status?: "pending" | "fulfilled" | "rejected"; value?: string; reason?: unknown };
 
-/** React 19 reads with use(). React 18 throws the promise until it has resolved. */
+/** React 19 reads with use(). React 18 throws the promise until it has settled. */
 export const readPromise = (promise: Promise<string>): string => {
   const use = (React as { use?: (value: Promise<string>) => string }).use;
   if (typeof use === "function") return use(promise);
   const recorded = promise as Recorded;
   if (recorded.status === "fulfilled") return recorded.value ?? "";
+  if (recorded.status === "rejected") throw recorded.reason;
   if (recorded.status !== "pending") {
     recorded.status = "pending";
     promise.then((value) => {
       recorded.status = "fulfilled";
       recorded.value = value;
+    }, (reason) => {
+      recorded.status = "rejected";
+      recorded.reason = reason;
     });
   }
   throw promise;
@@ -49,6 +53,31 @@ export const suspenseShape = (name: string, promise: Promise<string>): React.Rea
 };
 
 export const SUSPENSE_SHAPES = ["A", "A2", "B", "C", "E", "F"] as const;
+
+/** Renders inside a host so a check can count static passes. */
+export const renderCounts = { sibling: 0 };
+
+export const CountedSibling = (): React.ReactElement => {
+  renderCounts.sibling += 1;
+  return h("u", null, "sibling");
+};
+
+const pendingFallback = h("em", null, "pending");
+
+/** A host whose child rejects. `boundary` wraps it in the page's Suspense. */
+export const rejectionTree = (promise: Promise<string>, boundary: boolean): React.ReactNode => {
+  const host = h(Button, { id: boundary ? "rej" : "rej-shell" }, h(Late, { promise }));
+  return boundary ? h(React.Suspense, { fallback: pendingFallback }, host) : host;
+};
+
+/** Suspense above a host that has a counted sibling and a suspending child. */
+export const countedSuspendedButton = (promise: Promise<string>): React.ReactNode =>
+  h(React.Suspense, { fallback: pendingFallback }, h(Button, { id: "count" }, h(CountedSibling), h(Late, { promise })));
+
+export const rejectingPromise = (): Promise<string> =>
+  new Promise((_, reject) => { setTimeout(() => reject(new Error("backend down")), 20); });
+
+export const neverPromise = (): Promise<string> => new Promise(() => {});
 
 /** Resolved on the client, still pending for a moment on the server. */
 export const hydrationPromise = (): Promise<string> =>

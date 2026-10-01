@@ -8,38 +8,119 @@ const bridge = (globalThis as unknown as Record<symbol, {
   shadow: (tag: string, markup: string, prefix: string) => string;
   react?: (tag: string, props: Record<string, unknown>, children: React.ReactNode, prefix: string) => string | undefined;
 }>)[Symbol.for("mtrl.ssr")];
-let serializingChildren = false;
-let suspended = false;
 
-/** Shown by the static pass when a child suspends. The flag is the only result that matters. */
-const StaticFallback = (): null => {
-  suspended = true;
-  return null;
+/**
+ * Waits before each retry of a suspending child. The first retry is the next
+ * task, so a child that resolves in a few milliseconds is snapshotted at once.
+ * The wait then doubles, and further retries keep the last step. A slow child
+ * is rendered a few times a second instead of hundreds.
+ */
+const RETRY_DELAYS_MS = [0, 2, 4, 8, 16, 32, 64, 128, 250];
+
+/**
+ * One more suspension than this ends the request. Forty attempts is about
+ * eight seconds at the delays above: a child that resolves in a second is
+ * snapshotted well before the cap, and a child that never resolves becomes an
+ * error the page can report.
+ */
+const MAX_SUSPENDS = 40;
+
+const SUSPEND_GAVE_UP = "A suspending child did not resolve during server rendering.";
+
+let serializingChildren = false;
+
+interface Attempt { count: number; nodes: object[] }
+
+/** One counter per host. The child element is stable across the host's retries; a ref is not. */
+const attempts = new WeakMap<object, Attempt>();
+
+const isSynchronousSuspend = (error: unknown): boolean =>
+  error instanceof Error && error.message.includes("suspended while responding to synchronous input");
+
+/** Elements the attempt counter can hang from. Slot wrappers are recreated on every host render, so the counter hangs from the child inside them. */
+const childNodes = (children: React.ReactNode): object[] => {
+  const nodes: object[] = [];
+  const visit = (node: React.ReactNode): void => {
+    if (Array.isArray(node)) {
+      for (const child of node) visit(child);
+      return;
+    }
+    if (node === null || typeof node !== "object") return;
+    if (React.isValidElement(node) && node.type === "span") {
+      const props = node.props as { slot?: unknown; children?: React.ReactNode };
+      if (props.slot != null) {
+        visit(props.children);
+        return;
+      }
+    }
+    nodes.push(node);
+  };
+  const top = React.isValidElement(children) && children.type === React.Fragment
+    ? (children.props as { children?: React.ReactNode }).children
+    : children;
+  visit(top);
+  return nodes;
 };
 
+const nextAttempt = (children: React.ReactNode): number => {
+  const nodes = childNodes(children);
+  if (nodes.length === 0) return MAX_SUSPENDS + 1;
+  let state: Attempt | undefined;
+  for (const node of nodes) {
+    state = attempts.get(node);
+    if (state) break;
+  }
+  if (!state) state = { count: 0, nodes };
+  state.count += 1;
+  state.nodes = nodes;
+  for (const node of nodes) attempts.set(node, state);
+  return state.count;
+};
+
+const clearAttempt = (children: React.ReactNode): void => {
+  const nodes = childNodes(children);
+  let state: Attempt | undefined;
+  for (const node of nodes) {
+    state = attempts.get(node);
+    if (state) break;
+  }
+  if (!state) return;
+  for (const node of state.nodes) attempts.delete(node);
+  for (const node of nodes) attempts.delete(node);
+};
+
+const retryDelay = (attempt: number): number =>
+  RETRY_DELAYS_MS[Math.min(attempt - 1, RETRY_DELAYS_MS.length - 1)] ?? RETRY_DELAYS_MS[RETRY_DELAYS_MS.length - 1] ?? 250;
+
 bridge.react = (tag, props, children, prefix) => {
-  // Pass declaration HTML to the renderer. Nested React components emit their
-  // own roots when React renders the outer tree; feeding those templates back
-  // into the renderer would declare a shadow root twice.
+  // Nested hosts emit their own roots when React renders the outer tree.
+  // A template from this pass would declare a shadow root twice.
   if (serializingChildren) return undefined;
   let markup: string;
-  suspended = false;
   serializingChildren = true;
   try {
-    // renderToStaticMarkup has no boundary of its own: a suspending child
-    // throws "suspended while responding to synchronous input" out of the
-    // host, and the page's boundary client-renders. A boundary here renders
-    // the fallback instead of throwing.
-    markup = renderToStaticMarkup(React.createElement(
-      tag, props, React.createElement(React.Suspense, { fallback: React.createElement(StaticFallback) }, children),
-    ));
+    // No Suspense wrapper here. renderToStaticMarkup renders an error and a
+    // suspension as the same fallback, so a wrapper cannot tell them apart.
+    // A suspension throws "suspended while responding to synchronous input".
+    // Any other throw is the child's error. A boundary already inside the
+    // children still renders its own fallback, and this pass does not throw.
+    markup = renderToStaticMarkup(React.createElement(tag, props, children));
+  } catch (error) {
+    if (!isSynchronousSuspend(error)) {
+      // Returning lets the host finish. The page then renders this child and
+      // reports its error, as it does without the bridge.
+      clearAttempt(children);
+      return undefined;
+    }
+    const attempt = nextAttempt(children);
+    if (attempt > MAX_SUSPENDS) {
+      clearAttempt(children);
+      throw new Error(SUSPEND_GAVE_UP);
+    }
+    const delay = retryDelay(attempt);
+    throw new Promise<void>((resolve) => { setTimeout(resolve, delay); });
   } finally { serializingChildren = false; }
-  // That fallback is an empty light DOM, and the host is not rendered again
-  // when the content arrives, so the template would keep the empty snapshot:
-  // no label slot, no tabs, no list items. Suspending retries the host. A
-  // boundary already inside the children still wins, and this pass then sees
-  // that boundary's fallback rather than the resolved children.
-  if (suspended) throw new Promise<void>((resolve) => { setTimeout(resolve, 0); });
+  clearAttempt(children);
   // Let React serialize host props (style objects, tabIndex, boolean/data/aria
   // attributes). The server bridge parses them in its own DOM realm.
   // An opted-out host has no shadow content and must not get an empty template.

@@ -43,7 +43,7 @@ try {
     assert.doesNotMatch(client, /linkedom|DOMParser|SSR element nesting/);
     const suspenseServer = `${process.cwd()}/analysis/react-ssr/suspense-server-${version}.js`;
     await Bun.write(suspenseServer, await bundle("scripts/fixtures/react-ssr-suspense-server.ts", "bun"));
-    const { renderShapes, renderHydration } = await import(suspenseServer);
+    const { renderShapes, renderHydration, renderRejection, renderAborted, renderCeiling, renderGiveUp } = await import(suspenseServer);
     const shapes: Array<[string, { html: string; errors: string[] }]> = await renderShapes();
     for (const [name, result] of shapes) {
       const suspendError = result.errors.some((error) => error.includes("suspended while responding to synchronous input"));
@@ -59,6 +59,30 @@ try {
       assert.match(result.html, /<slot/, `React ${version} ${name} projects resolved children`);
     }
     console.log(`React ${version}: suspending children streamed (${shapes.map(([name]) => name).join(", ")})`);
+    for (const boundary of [true, false]) {
+      const rejected = await renderRejection(boundary);
+      const where = boundary ? "Suspense" : "no Suspense";
+      assert.ok(rejected.errors.some((error) => error.includes("backend down")), `React ${version} rejecting child (${where}) onError ${JSON.stringify(rejected.errors)}`);
+      assert.equal(rejected.errors.some((error) => error.includes("suspended while responding to synchronous input")), false, `React ${version} rejecting child (${where}) static suspend ${JSON.stringify(rejected.errors)}`);
+      if (boundary) assert.match(rejected.html, /<!--\$!-->/, `React ${version} rejecting child client-rendered`);
+      console.log(`React ${version}: rejecting child (${where}) completed in ${rejected.ms.toFixed(0)} ms; onError ${JSON.stringify(rejected.errors)}`);
+    }
+    const aborted = await renderAborted();
+    assert.ok(aborted.ms >= 250 && aborted.ms < 800, `React ${version} abort ended at ${aborted.ms.toFixed(0)} ms`);
+    assert.ok(aborted.errors.some((error) => /abort/i.test(error)), `React ${version} abort onError ${JSON.stringify(aborted.errors)}`);
+    assert.ok(aborted.during <= 16, `React ${version} abort retried ${aborted.during} times before the abort`);
+    assert.equal(aborted.after, 0, `React ${version} retried ${aborted.after} times after abort`);
+    console.log(`React ${version}: never-resolving child aborted at ${aborted.ms.toFixed(0)} ms; retries before=${aborted.during}, after=${aborted.after}`);
+    const ceiling = await renderCeiling();
+    assert.equal(ceiling.errors.some((error) => error.includes("suspended while responding to synchronous input") || error.includes("did not resolve during server rendering")), false, `React ${version} ceiling errors ${JSON.stringify(ceiling.errors)}`);
+    assert.match(ceiling.html, /loaded 5/, `React ${version} ceiling content`);
+    assert.match(ceiling.html, /<slot/, `React ${version} ceiling slot`);
+    assert.ok(ceiling.sibling <= 40, `React ${version} ceiling sibling renders ${ceiling.sibling}`);
+    console.log(`React ${version}: 1s child snapshotted in ${ceiling.ms.toFixed(0)} ms with ${ceiling.sibling} sibling renders`);
+    const gaveUp = await renderGiveUp();
+    assert.ok(gaveUp.errors.some((error) => error.includes("did not resolve during server rendering")), `React ${version} cap onError ${JSON.stringify(gaveUp.errors)}`);
+    assert.ok(gaveUp.sibling > 20 && gaveUp.sibling < 50, `React ${version} cap sibling renders ${gaveUp.sibling}`);
+    console.log(`React ${version}: never-resolving child hit the retry cap in ${gaveUp.ms.toFixed(0)} ms after ${gaveUp.sibling} sibling renders`);
     const suspenseHtml: string = await renderHydration();
     const suspenseClient = await bundle("scripts/fixtures/react-ssr-suspense-client.ts", "browser");
     assert.doesNotMatch(suspenseClient, /linkedom|DOMParser|SSR element nesting/);
