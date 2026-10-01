@@ -1,4 +1,5 @@
 // src/components/fab-menu/fab-menu.ts
+import { processClassNames } from "../../core/config/component";
 
 import { pipe } from "../../core/compose/pipe";
 import { createBase, withElement } from "../../core/compose/component";
@@ -85,7 +86,7 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
         `${block}--${color}`,
         `${block}--${size}`,
         placement !== "none" ? `${block}--${placement}` : "",
-        settings.class ?? "",
+        processClassNames(settings.className || ""),
       ].filter(Boolean),
     }),
     withLifecycle()

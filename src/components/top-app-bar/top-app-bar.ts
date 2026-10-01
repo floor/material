@@ -4,6 +4,7 @@
  * @description Top app bar implementation
  */
 
+import { processClassNames, type BaseComponentConfig } from "../../core/config/component";
 import {
   createBase,
   withElement,
@@ -121,7 +122,7 @@ export const createTopAppBar = (config: TopAppBarConfig = {}): TopAppBar => {
 
   // Determine initial classes based on type
   const getInitialClasses = () => {
-    const classes = [componentConfig.class];
+    const classes = [processClassNames((componentConfig as BaseComponentConfig).className || "")];
 
     // Add type class if not the default 'small' type
     if (componentConfig.type !== "small") {
