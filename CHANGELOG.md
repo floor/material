@@ -43,6 +43,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   the internals off the root the bundle would have been a partial API. `require('mtrl')` no longer
   resolves (`ERR_PACKAGE_PATH_NOT_EXPORTED`): use `import`, or `await import('mtrl')` from CommonJS.
 
+### Fixed
+
+- Elements construct on a server DOM (linkedom) without browser-only APIs (FLO-362).
+
+## [0.10.4] - 2026-10-01
+
+Preparing for 1.0.0: the internal helpers re-exported from the package root are deprecated there,
+each with its subpath, so apps can move their imports before 1.0.0 removes them. The date
+picker's range band now runs to the container edge where a range wraps a week, as in M3.
+
 ### Deprecated
 
 - **137 internal names on the package root (FLO-351).** Every root export is public API, and the
@@ -67,7 +77,6 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
-- Elements construct on a server DOM (linkedom) without browser-only APIs (FLO-362).
 - **Date picker: the range band runs to the container edge where it wraps a week.** As in
   m3.material.io's range picker, the row a range leaves runs the band out to the end edge and the
   row it continues on starts it from the start edge; it stopped at the day grid, 12dp short on
@@ -1724,7 +1733,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.3...HEAD
+[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.4...HEAD
+[0.10.4]: https://github.com/floor/mtrl/compare/v0.10.3...v0.10.4
 [0.10.3]: https://github.com/floor/mtrl/compare/v0.10.2...v0.10.3
 [0.10.2]: https://github.com/floor/mtrl/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/floor/mtrl/compare/v0.10.0...v0.10.1
