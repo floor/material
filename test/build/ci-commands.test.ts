@@ -15,12 +15,14 @@ const COMMANDS = [
   "adapters:size",
   // the browser checks
   "elements:check", "shadow-styles:check",
-  "react:check", "react-ssr:check", "vue:check", "svelte:check", "svelte-ssr:check", "solid:check",
+  "react:check", "react-ssr:check", "vue:check", "svelte:check", "svelte-ssr:check", "solid-ssr:check", "solid:check",
+  // A second Solid SSR run after installing the supported peer floor.
+  "solid-ssr:check",
   "consumer:check", "tabs:check", "slider:check", "drawer:check", "navigation-bar:check", "navigation-rail:check",
   "core:check", "preupgrade:check", "tokens:check", "ssr:check",
 ];
 
-interface Step { run?: string; if?: string; "continue-on-error"?: unknown }
+interface Step { name?: string; run?: string; if?: string; "continue-on-error"?: unknown }
 interface Job {
   needs?: string | string[];
   if?: string;
@@ -51,11 +53,29 @@ const commandsOf = (job: Job, step: Step): string[] => {
   return [...found];
 };
 
+// This version-specific run is intentionally scoped to one matrix group. Keep
+// the exception narrow: the test below pins its condition, install and ordering.
+const floorStep = workflow.jobs.browser.steps.find(step => step.name === "Solid SSR at the peer floor (1.8.0)");
 const ran = Object.values(workflow.jobs).flatMap(job => job.steps.flatMap(step => commandsOf(job, step)));
 
 describe("CI (.github/workflows/ci.yml)", () => {
-  test("runs every command of the list, each once", () => {
+  test("runs every command of the list with its expected count", () => {
     expect([...ran].sort()).toEqual([...COMMANDS].sort());
+  });
+
+  test("runs Solid SSR at the peer floor after the adapters' current-version checks", () => {
+    const browser = workflow.jobs.browser;
+    expect(browser.strategy?.matrix?.include?.filter(entry => entry.group === "adapters")).toHaveLength(1);
+    const adapters = browser.strategy?.matrix?.include?.find(entry => entry.group === "adapters");
+    expect(adapters?.checks.split(/\s+/)).toContain("solid-ssr:check");
+    expect(floorStep).toBeDefined();
+    expect(floorStep?.if).toBe("matrix.group == 'adapters'");
+    expect(floorStep?.run?.trim()).toBe(
+      "bun add --no-save --ignore-scripts solid-js@1.8.0\nbun run solid-ssr:check",
+    );
+    const current = browser.steps.findIndex(step => step.run?.includes("for script in ${{ matrix.checks }}; do"));
+    expect(current).toBeGreaterThanOrEqual(0);
+    expect(browser.steps.indexOf(floorStep!)).toBeGreaterThan(current);
   });
 
   test("runs only scripts that package.json defines", () => {
@@ -73,7 +93,7 @@ describe("CI (.github/workflows/ci.yml)", () => {
       if (job["continue-on-error"] !== undefined) loose.push(`${name}: continue-on-error`);
       for (const step of steps) {
         const command = commandsOf(job, step).join(" ");
-        if (step.if !== undefined) loose.push(`${name} (${command}): if`);
+        if (step.if !== undefined && step !== floorStep) loose.push(`${name} (${command}): if`);
         if (step["continue-on-error"] !== undefined) loose.push(`${name} (${command}): continue-on-error`);
       }
     }

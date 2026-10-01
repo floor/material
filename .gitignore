@@ -96,6 +96,7 @@ demo/
 .check-svelte.js
 .check-svelte-ssr.js
 .check-solid.js
+.check-solid-ssr.js
 
 # Local Claude Code settings
 .claude/
