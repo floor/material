@@ -10,6 +10,25 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Added
+
+- **Text field: a required field's label ends in an asterisk (FLO-301).** M3's text field
+  guidelines mark a required field with an asterisk after its label; it is in the label's colour,
+  as Material Web draws it, and hidden from screen readers, which the input's native `required`
+  already tells. `setRequired()` and `isRequired()` move it with the input, and `<m-textfield>`'s
+  `required` attribute does too. `noAsterisk: true` leaves it off, for a form that marks its
+  optional fields instead.
+- **Text field: an interactive trailing icon is a button (FLO-301).** `trailingIconLabel` (or
+  `setTrailingIcon(html, label)`) renders the trailing icon as a `<button>` with that accessible
+  name, as Compose's trailing slot holds an `IconButton`: a 40dp state layer, a 48dp target, a
+  keyboard focus ring, in the tab order after the input and disabled with the field. Activating
+  it emits `trailing` with `{ value, event }` and calls `onTrailingClick`. Without a label the icon
+  stays the decorative span it was. (`<m-textfield>` and the framework adapters follow in a later
+  release.)
+- **Text field: errors are announced when they appear (FLO-301).** The supporting text is a polite
+  live region, so an error set with `setError(true, message)` is read without the field being
+  refocused. Its element now stays and its text changes in place.
+
 ### Deprecated
 
 - **137 internal names on the package root (FLO-351).** Every root export is public API, and the
@@ -34,6 +53,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
+  label names the field.
 - **Date picker: the range band runs to the container edge where it wraps a week.** As in
   m3.material.io's range picker, the row a range leaves runs the band out to the end edge and the
   row it continues on starts it from the start edge; it stopped at the day grid, 12dp short on

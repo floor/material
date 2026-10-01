@@ -21,6 +21,7 @@ import {
   withError,
   withField,
   withCounter,
+  withRequired,
 } from "./features";
 import { TextfieldConfig, TextfieldComponent } from "./types";
 import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
@@ -74,6 +75,7 @@ const createTextfield = (config: TextfieldConfig = {}): TextfieldComponent => {
       withTextInput(baseConfig), // Add input element
       withDensity(baseConfig), // Apply density level, to the input too: it has to exist first (FLO-303)
       withTextLabel(baseConfig), // Add text label
+      withRequired(baseConfig), // The required asterisk on the label (FLO-301)
       withLeadingIcon(baseConfig), // Add leading icon (if specified)
       withTrailingIcon(baseConfig), // Add trailing icon (if specified)
       withPrefixText(baseConfig), // Add prefix text (if specified)

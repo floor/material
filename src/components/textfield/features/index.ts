@@ -11,13 +11,16 @@ export { withDensity } from "./density";
 export { withError } from "./error";
 export { withField } from "./field";
 export { withCounter } from "./counter";
+export { withRequired } from "./required";
 
 // Export interfaces
 export type { LeadingIconComponent, LeadingIconConfig } from "./leading-icon";
 export type {
   TrailingIconComponent,
   TrailingIconConfig,
+  TextfieldTrailingPayload,
 } from "./trailing-icon";
+export type { RequiredConfig, RequiredFeature } from "./required";
 export type { PrefixTextComponent, PrefixTextConfig } from "./prefix-text";
 export type { SuffixTextComponent, SuffixTextConfig } from "./suffix-text";
 export type {
