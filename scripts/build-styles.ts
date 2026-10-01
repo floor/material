@@ -94,6 +94,12 @@ export async function buildStyles(outdir: string, banner: string) {
  * The shadow base (`ripple`) is what the global base stylesheet gives a
  * component in light DOM and a shadow root does not inherit.
  *
+ * For SSR, link in the browser's cascade order (`applyStyles` in
+ * src/elements/define.ts adopts host, then ripple, then the spec's styles):
+ * `hosts/<element>.css`, then `ripple.css`, then the dependencies in
+ * `resolveStyleDependencies` order, then `<component>.css`. The resolver visits
+ * dependencies before their component, matching the generated JS imports.
+ *
  * Each element's module also registers its pre-upgrade rules
  * (src/styles/elements), which apply to the page until the element is
  * defined. The same rules for every element are `elements/preupgrade.css`,
@@ -103,8 +109,11 @@ export async function buildStyles(outdir: string, banner: string) {
 async function emitElementStyles(outdir: string, options: sass.StringOptions<"sync">, banner: string) {
   const dir = `${outdir}/elements/css`;
   await mkdir(dir, { recursive: true });
+  await mkdir(`${dir}/hosts`, { recursive: true });
   const { elements } = await import("../src/elements");
   const { preupgradeSheet } = await import("../src/elements/styles");
+  const definition = await import("../src/elements/define");
+  const { hostStyleText } = definition;
   const preupgrade = await preupgradeStyles(Object.values(elements).map(element => element.spec.name), options);
   const write = async (name: string, source: string, imports: string[]) => {
     const css = sass.compileString(`@use "${source}";`, options).css;
@@ -114,6 +123,7 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
       `\nimport { registerStyles${rules ? ", registerPreupgrade" : ""} } from "../styles.js";` +
       `\nregisterStyles({ ${JSON.stringify(name)}: ${JSON.stringify(css)} });\n` +
       (rules ? `registerPreupgrade({ ${JSON.stringify(name)}: ${JSON.stringify(rules)} });\n` : ""));
+    await writeFile(`${dir}/${name}.css`, css);
     await writeFile(`${dir}/${name}.d.ts`, "export {};\n");
   };
   await write("ripple", "utilities/ripple", []);
@@ -124,6 +134,11 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   for (const name of names) await write(name, componentStyles[name].source, ["ripple", ...componentStyles[name].dependencies]);
   await writeFile(`${dir}/index.js`, names.map(name => `import "./${name}.js";`).join("\n") + "\n");
   await writeFile(`${dir}/index.d.ts`, "export {};\n");
+
+  for (const element of Object.values(elements)) {
+    const hostCss = hostStyleText(element.spec);
+    await writeFile(`${dir}/hosts/${element.spec.name}.css`, hostCss);
+  }
 
   const all = [...preupgrade.values()].join("");
   await writeFile(`${outdir}/elements/preupgrade.css`, `${banner}\n${preupgradeSheet(all)}\n`);

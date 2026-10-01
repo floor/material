@@ -57,6 +57,8 @@
       "types": "./dist/elements/css/index.d.ts",
       "import": "./dist/elements/css/index.js"
     },
+    "./elements/css/hosts/*.css": "./dist/elements/css/hosts/*.css",
+    "./elements/css/*.css": "./dist/elements/css/*.css",
     "./elements/css/*": {
       "types": "./dist/elements/css/*.d.ts",
       "import": "./dist/elements/css/*.js"
@@ -137,6 +139,7 @@
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "core:check": "bun run scripts/check-core.ts",
     "elements:check": "bun run scripts/check-elements.ts",
+    "elements-css:check": "bun run scripts/check-elements-css.ts",
     "preupgrade:check": "bun run scripts/check-preupgrade.ts",
     "adapters:generate": "bun run scripts/generate-adapters.ts",
     "react:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react.ts",

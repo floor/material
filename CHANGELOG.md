@@ -10,6 +10,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Added
+
+- Element CSS also ships as `.css` files (`mtrl/elements/css/<name>.css`, `hosts/<element>.css`), for server-rendered `<link>` styles (FLO-365).
+
 ### Changed (breaking)
 
 - **The shape scale is M3's and nothing else (FLO-345).** The mtrl-only steps `extra-tiny` (1px),
@@ -67,6 +71,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- Element CSS file and export checks run after the CI build, so unit tests pass without `dist/` (FLO-365).
 - Elements construct on a server DOM (linkedom) without browser-only APIs (FLO-362).
 - Element teardown finishes cleanup after an individual cleanup throws (FLO-363).
 - Text field and select placement cancel and reset their shared measurement timer when the
