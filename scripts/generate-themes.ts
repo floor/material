@@ -34,7 +34,8 @@ import {
   argbFromHex,
   hexFromArgb,
 } from "@material/material-color-utilities";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { compileString, Logger } from "sass";
 import { schemeToTokens, THEME_ROLES } from "../src/core/theme";
 
 /** M3's baseline seed, the source of `baseline` and of the eight variants */
@@ -50,13 +51,15 @@ export interface ThemeSpec {
   description: string;
   seed: string;
   variant: VariantName;
-  /** M3 contrast level: 0 standard, 1 high */
+  /** M3 contrast level: 0 standard, 0.5 medium, 1 high */
   contrast?: number;
   /**
    * A custom secondary colour, for a two-colour theme: its hue and chroma
    * become the secondary palette, so the pairing survives with M3's tones
    */
   secondary?: string;
+  /** A custom tertiary colour: preserve its hue and chroma with M3's tones. */
+  tertiary?: string;
   /**
    * Shipped only as `mtrl/themes/<name>`, not in the full stylesheet: an app
    * pays for it only by importing it
@@ -109,7 +112,7 @@ const camel = (role: string): string => role.replace(/-([a-z])/g, (_, c: string)
 export const schemeFor = (spec: ThemeSpec, isDark: boolean): DynamicScheme => {
   const source = Hct.fromInt(argbFromHex(spec.seed));
   const contrast = spec.contrast ?? 0;
-  if (!spec.secondary) return new SCHEMES[spec.variant](source, isDark, contrast);
+  if (!spec.secondary && !spec.tertiary) return new SCHEMES[spec.variant](source, isDark, contrast);
   const base = new SCHEMES[spec.variant](source, isDark, contrast);
   return new DynamicScheme({
     sourceColorHct: source,
@@ -117,8 +120,8 @@ export const schemeFor = (spec: ThemeSpec, isDark: boolean): DynamicScheme => {
     contrastLevel: contrast,
     isDark,
     primaryPalette: base.primaryPalette,
-    secondaryPalette: TonalPalette.fromInt(argbFromHex(spec.secondary)),
-    tertiaryPalette: base.tertiaryPalette,
+    secondaryPalette: spec.secondary ? TonalPalette.fromInt(argbFromHex(spec.secondary)) : base.secondaryPalette,
+    tertiaryPalette: spec.tertiary ? TonalPalette.fromInt(argbFromHex(spec.tertiary)) : base.tertiaryPalette,
     neutralPalette: base.neutralPalette,
     neutralVariantPalette: base.neutralVariantPalette,
     errorPalette: base.errorPalette,
@@ -136,7 +139,63 @@ export const rolesOf = (scheme: DynamicScheme): Record<string, string> =>
 const declarations = (tokens: Record<string, string>, indent: string): string =>
   Object.entries(tokens).map(([name, value]) => `${indent}${name}: ${value};`).join("\n");
 
-/** One theme's SCSS */
+const CONTRAST_START = "// contrast roles: generated, do not edit";
+const CONTRAST_HEADER = "// Medium/high contrast: ";
+
+type ModeTokens = { light: Record<string, string>; dark: Record<string, string> };
+
+/** Read the actual kept standard, including mixins and light values reused in dark. */
+export const standardTokens = (name: string, source: string): ModeTokens => {
+  const css = compileString(source.split(CONTRAST_START)[0], {
+    loadPaths: ["src/styles/themes"], logger: Logger.silent,
+  }).css;
+  const blocks = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+  const read = (selector: string) => Object.fromEntries(
+    [...(blocks.find(([, sel]) => sel.trim() === selector)?.[2] ?? "")
+      .matchAll(/--mtrl-sys-color-([a-z-]+):\s*(#[a-f\d]{3,6})\b/gi)]
+      .map(([, role, value]) => [`--#{$prefix}-sys-color-${role}`,
+        (value.length === 4 ? "#" + [...value.slice(1)].map(c => c + c).join("") : value).toLowerCase()]),
+  );
+  const light = read(name === "baseline" ? ":root" : `[data-theme=${name}]`);
+  const inherited = name === "baseline" ? { light: {}, dark: {} }
+    : standardTokens("baseline", readFileSync("src/styles/themes/_baseline.scss", "utf8"));
+  return {
+    light: { ...inherited.light, ...light },
+    dark: { ...inherited.dark, ...light, ...read(name === "baseline" ? ".dark-theme" : `[data-theme=${name}][data-theme-mode=dark]`) },
+  };
+};
+
+/** Only differences from this mode's standard; equal medium/high values share a rule. */
+export const renderContrast = (spec: ThemeSpec, standard: ModeTokens = schemeToTokens({
+  light: rolesOf(schemeFor(spec, false)), dark: rolesOf(schemeFor(spec, true)),
+}, { prefix: "#{$prefix}" })): string => {
+  const levels = [0.5, 1].map(contrast => schemeToTokens({
+    light: rolesOf(schemeFor({ ...spec, contrast }, false)),
+    dark: rolesOf(schemeFor({ ...spec, contrast }, true)),
+  }, { prefix: "#{$prefix}" }));
+  const maps = levels.map(tokens => Object.fromEntries((["light", "dark"] as const).map(mode => [mode,
+    Object.fromEntries(Object.entries(tokens[mode]).filter(([token, value]) => {
+      if (!standard[mode][token]) throw new Error(`${spec.name} ${mode}: missing standard ${token}`);
+      return value !== standard[mode][token];
+    })),
+  ])) as ModeTokens);
+  const modeMap = (tokens: Record<string, string>) => Object.entries(tokens)
+    .map(([token, value]) => `            ${token.replace("--#{$prefix}-sys-color-", "")}: ${value},`).join("\n");
+  return CONTRAST_START + `
+@include create-theme-contrast("${spec.name}", (
+${maps.map((tokens, index) => `    ${index === 0 ? "medium" : "high"}: (
+        light: (
+${modeMap(tokens.light)}
+        ),
+        dark: (
+${modeMap(tokens.dark)}
+        ),
+    ),`).join("\n")}
+));
+`;
+};
+
+/** One generated theme's standard, medium and high SCSS. */
 export const renderTheme = (spec: ThemeSpec): string => {
   const tokens = schemeToTokens(
     { light: rolesOf(schemeFor(spec, false)), dark: rolesOf(schemeFor(spec, true)) },
@@ -146,6 +205,7 @@ export const renderTheme = (spec: ThemeSpec): string => {
     `seed ${spec.seed}`,
     `variant ${TITLE[spec.variant]}`,
     ...(spec.secondary ? [`secondary ${spec.secondary}`] : []),
+    ...(spec.tertiary ? [`tertiary ${spec.tertiary}`] : []),
     ...(spec.contrast ? [`contrastLevel ${spec.contrast.toFixed(1)}`] : []),
   ].join(", ");
   return `// src/styles/themes/_${spec.name}.scss
@@ -166,7 +226,8 @@ ${declarations(tokens.light, "    ")}
 ${declarations(tokens.dark, "        ")}
     }
 }
-`;
+
+${renderContrast(spec, tokens)}`;
 };
 
 /**
@@ -256,12 +317,42 @@ const renderFixed = (source: string): string => {
   return `${source.slice(0, at)}\n${block}\n${source.slice(at)}`;
 };
 
+/** All hand-authored themes, including the still-shipped deprecated themes. */
+export const HAND_THEMES = readdirSync("src/styles/themes")
+  .filter((file) => /^_[a-z-]+\.scss$/.test(file) && !["_index.scss", "_base-theme.scss"].includes(file))
+  .map((file) => file.slice(1, -5))
+  .filter((name) => !THEMES.some((spec) => spec.name === name));
+
+/** Shared contrast inputs for generation and browser checks of a hand-made theme. */
+export const handThemeSpec = (name: string, source: string, standard = standardTokens(name, source)): ThemeSpec => {
+  const key = (role: string): string => {
+    const color = standard.light[`--#{$prefix}-sys-color-${role}`];
+    if (!color) throw new Error(`${name}: hand-made theme has no clear light ${role}`);
+    return color;
+  };
+  const comments = source.split(CONTRAST_START)[0].match(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g)?.join("\n") ?? "";
+  const seed = comments.match(/\bseed color\s+(#[a-f\d]{6})\b/i)?.[1] ?? key("primary");
+  return { name, description: "", seed, secondary: key("secondary"), tertiary: key("tertiary"), variant: "tonal-spot" };
+};
+
+/** Keep the entire standard source intact; replace only generated contrast blocks. */
+export const renderHandContrast = (name: string, source: string): string => {
+  const original = source.split(CONTRAST_START)[0].trimEnd() + "\n";
+  const standard = KEPT_THEMES.includes(name) ? renderKept(original) : original;
+  const tokens = standardTokens(name, standard);
+  const spec = handThemeSpec(name, standard, tokens);
+  const header = `${CONTRAST_HEADER}Tonal Spot from seed ${spec.seed}, secondary from ${spec.secondary}, tertiary from ${spec.tertiary}.`;
+  const withoutHeader = standard.split("\n").filter((line) => !line.startsWith(CONTRAST_HEADER));
+  withoutHeader.splice(1, 0, header);
+  return withoutHeader.join("\n") + "\n" + renderContrast(spec, tokens);
+};
+
 /** Every generated file, by path */
 export const renderThemes = (): Record<string, string> => ({
   ...Object.fromEntries(THEMES.map((spec) => [`src/styles/themes/_${spec.name}.scss`, renderTheme(spec)])),
-  ...Object.fromEntries(KEPT_THEMES.map((name) => {
+  ...Object.fromEntries(HAND_THEMES.map((name) => {
     const path = `src/styles/themes/_${name}.scss`;
-    return [path, renderKept(readFileSync(path, "utf8"))];
+    return [path, renderHandContrast(name, readFileSync(path, "utf8"))];
   })),
 });
 
