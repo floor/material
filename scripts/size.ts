@@ -156,7 +156,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // follows modals opening and closing: 11,533 to 12,320
   snackbar: kb(12.1),
   switch: kb(6.1), // #214 conformance; #218 node labels
-  tabs: kb(13.1), // FLO-403: preserve root classes on tabs and each tab (13,304 to 13,340 B)
+  tabs: kb(13.1),
   // the field, the supporting text row and the counter (FLO-300): 8,290. The required
   // asterisk, the live error and the trailing icon button (FLO-301): 8,314 to 8,926 against 7cd57a6.
   textfield: kb(8.8),
