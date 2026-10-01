@@ -12,6 +12,20 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **Tab and panel ids are derived from the value with a safe encoding (FLO-430).** A value of
+  `[A-Za-z0-9_-]` only keeps its ids, `tab-<group>-<value>` and `tabpanel-<group>-<value>`. Any
+  other value gets `tabx-<group>-<encoded>` and
+  `tabpanelx-<group>-<encoded>`: `_` becomes `__` and every other character `_<hex code
+  point>_`, so the ids hold no whitespace (an id reference such as `aria-controls` is a
+  space-separated list) and two values never share one. The tab element carries its value as
+  `data-value`, and the conventional panel is found from it rather than parsed out of the id.
+  `tabIdFor(groupId, value)` and `tabPanelIdFor(groupId, value)` are exported from
+  `mtrl/components/tabs`. Migration: values whose ids worked before change too, not only those
+  with a space, a newline or a quote: `a.b` → `tabx-g-a_2e_b`, `/home` → `tabx-g-_2f_home`,
+  `user:1` → `tabx-g-user_3a_1`, `café` → `tabx-g-caf_e9_`. A page that writes its own panels
+  with the conventional id, or labels them with the tab's id, for any value with a character
+  outside `[A-Za-z0-9_-]` must build those ids with `tabPanelIdFor` / `tabIdFor`; a hand-written
+  `tabpanel-g-a.b` is otherwise never linked.
 - **The deprecated themes `material`, `winter`, `browngreen` and `legacy` are removed
   (FLO-428).** 0.10 deprecated them (FLO-308); their files, `mtrl/themes/<name>` entries and
   their rules in the full stylesheet are gone. A leftover `data-theme="winter"` (or any of the
@@ -281,6 +295,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 ### Fixed
 
 - SSR bridges for React, Svelte, Solid and Vue render ordinary host attributes (`popover`, `inputmode`, `enterkeyhint`, `itemprop`, `nonce`, `is`, and the rest of the host's HTML attributes) instead of rejecting the request. The framework still emits those attributes on the host. The shared renderer skips names outside its allowlist, including event-handler names and `srcdoc`, so they never enter the shadow markup. Calling `renderElement` directly still rejects an unknown host attribute (FLO-418).
+- The menu keyboard step of `elements:check` no longer ends one item short when a runner pauses
+  (FLO-423). It waited a fixed 450ms after opening the menu with a key, then sent the arrows; it
+  now waits for the first item to take focus, which is what the arrows depend on.
 - The search check in `core:check` no longer times out when a frame arrives late (FLO-420). It
   pressed the scrim before the view's opening had put focus back on the input, and that focus
   re-opened the view. The check now waits for the opening's frame, and reads the scrim press at

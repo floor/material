@@ -156,7 +156,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // follows modals opening and closing: 11,533 to 12,320
   snackbar: kb(12.1),
   switch: kb(6.1), // #214 conformance; #218 node labels
-  tabs: kb(13.3), // the indicator anchors to the active label instead of measuring it (FLO-369): 13,467
+  tabs: kb(13.5), // the indicator anchors to the active label instead of measuring it (FLO-369): 13,467; derived ids and the data-value panel lookup (FLO-430): 13,542 to 13,685
   // the field, the supporting text row and the counter (FLO-300): 8,290. The required
   // asterisk, the live error and the trailing icon button (FLO-301): 8,314 to 8,926 against 7cd57a6.
   // main's placement on demand (FLO-378) met next's placement timer reset (FLO-363): next 8,948 to 9,021 on the forward merge.
