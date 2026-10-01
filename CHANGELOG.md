@@ -172,6 +172,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - `mtrl/ssr`: `renderElement` renders elements as declarative shadow DOM on a server (Node, Bun); server-only, with no runtime dependencies (FLO-363, FLO-364).
 - `mtrl/ssr/react`: an opt-in, server-only entry. Imported in the server bootstrap, it makes the React adapters emit styled declarative shadow roots during SSR (React 18 and 19), with no server code in the client bundle. Without it, React output is unchanged (FLO-372).
 - `mtrl/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Svelte output gains only the empty branch marker (FLO-375).
+- `mtrl/ssr/vue`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Vue component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Vue output is unchanged (FLO-373).
 - `mtrl/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Solid output is unchanged (FLO-374).
 - `ssr:check` (CI): server-rendered elements are checked in Chromium, Firefox and WebKit, for a styled first paint without JavaScript, pixel stability and no layout movement on upgrade, and the security reparse; markup parity stays in Chromium (FLO-371).
 - `ssr:check` and `svelte-ssr:check` cover two more cases (FLO-412): a toolbar's server-rendered
@@ -281,6 +282,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- Vue SSR finishes when a host's child uses `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`. The shadow bridge serializes those children once (FLO-373).
+- Vue SSR renders a host whose `v-html` contains an unclosed `<template>`, instead of throwing, and `mtrl/ssr/vue` imports the server renderer from `vue/server-renderer` (FLO-373).
 - Prefilled multiline text fields render in SSR, including inside another custom element (FLO-416).
 - Solid async and streaming SSR finish when a component inside a host creates a resource
   under an outer `Suspense`. The shadow bridge reuses the page's serialized children,
