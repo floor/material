@@ -84,8 +84,8 @@ try {
   // measured with Node 22.23.3 / npm 10.9.9, preserving the previous headroom.
   // The navigation bar (FLO-305): 1,003,847 to 1,013,492 against 51455a6, Node 22 / npm 10.
   // FLO-406 on main: medium/high contrast for all 24 themes, 1,007,632 -> 1,063,670 there.
-  // On next, with the forward merge: 1,005,228 -> 1,062,353 against
-  // 659dfff7, Node 22.23.3 / npm 10.9.9; the budget keeps next's headroom.
+  // On next, with the forward merge: 1,006,369 -> 1,063,466 against
+  // 294100fe, Node 22.23.3 / npm 10.9.9; the budget keeps next's headroom.
   assert(pack.size < 1_082_000, "npm tarball exceeds 1,082,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
@@ -96,8 +96,8 @@ try {
   // The navigation bar (FLO-305): its component, element, adapters and CSS, 5,880,623 to
   // 5,956,491 against 51455a6, same packer; the budget keeps about the headroom it had.
   // FLO-406 on main: the generated SCSS plus standalone, base and full CSS copies,
-  // 5,716,236 -> 6,272,030 there. On next, with the forward merge: 5,927,635 ->
-  // 6,479,855 against 659dfff7, same packer; the budget keeps next's headroom.
+  // 5,716,236 -> 6,272,030 there. On next, with the forward merge: 5,931,197 ->
+  // 6,483,417 against 294100fe, same packer; the budget keeps next's headroom.
   assert(pack.unpackedSize < 6_542_000, "Unpacked package exceeds 6,542,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
@@ -281,7 +281,7 @@ try {
     // container so its ticks can use cqw/cqh (FLO-369): measured 53,386.
     // The navigation bar's stylesheet (FLO-305): 53,389 to 54,659 against 51455a6.
     // FLO-406 contrast CSS on main: 53,072 -> 65,291 there. On next, with the forward
-    // merge: 53,593 -> 65,790 against 659dfff7, Node 22 / npm 10.
+    // merge: 53,593 -> 65,790 against 294100fe, Node 22 / npm 10.
     { name: "full-css", code: "import 'mtrl/styles';", gzip: 67000 },
   ];
   for (const fixture of fixtures) {
