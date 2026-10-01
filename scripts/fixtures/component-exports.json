@@ -1418,48 +1418,6 @@
       "status": "public"
     }
   ],
-  "segmented-button": [
-    {
-      "name": "createSegmentedButton",
-      "kind": "value",
-      "status": "public"
-    },
-    {
-      "name": "default",
-      "kind": "value",
-      "status": "public"
-    },
-    {
-      "name": "Density",
-      "kind": "value",
-      "status": "public"
-    },
-    {
-      "name": "Segment",
-      "kind": "type",
-      "status": "public"
-    },
-    {
-      "name": "SegmentConfig",
-      "kind": "type",
-      "status": "public"
-    },
-    {
-      "name": "SegmentedButtonComponent",
-      "kind": "type",
-      "status": "public"
-    },
-    {
-      "name": "SegmentedButtonConfig",
-      "kind": "type",
-      "status": "public"
-    },
-    {
-      "name": "SelectionMode",
-      "kind": "value",
-      "status": "public"
-    }
-  ],
   "select": [
     {
       "name": "default",
