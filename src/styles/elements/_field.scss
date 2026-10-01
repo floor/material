@@ -6,6 +6,10 @@
 @use '../abstract/mixins' as m;
 @use '../abstract/theme' as t;
 
+// 4dp under the field plus one body-small line (16dp). The multiline field
+// adds the same row (elements/_textfield.scss).
+$supporting-row: 20px;
+
 /**
  * The field: a text field, or a select (`$trailing`: the space its trailing
  * icon takes beside the text).
@@ -82,7 +86,7 @@
   // and the indicator is drawn as the padding box's last pixel line.
   &[supporting-text]:not([supporting-text='']),
   &[maxlength] {
-    $row: 20px;
+    $row: $supporting-row;
     height: calc(#{v.textfield('height')} + #{$row});
     border-bottom: $row solid transparent;
     background-clip: padding-box;
