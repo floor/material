@@ -125,6 +125,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 - **ArrowLeft and Escape work in a submenu whose parent item's id holds a quote or a backslash
   (FLO-429).** They threw, or did nothing, because the id was put into a CSS selector.
+- CI's `static` job prints the output of a failing check again. Under the job's shell a failing
+  check ended before its status was recorded, and the step stopped with "exit code 1" and nothing
+  else, so the failure could not be read from CI.
 - The checkbox and switch change payload docs said setters emit `change`; they are silent, as
   they have been since FLO-328 (FLO-384).
 - **Menu item ids containing selector syntax keep submenu keyboard navigation working (FLO-429).**
