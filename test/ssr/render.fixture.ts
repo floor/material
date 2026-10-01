@@ -45,6 +45,17 @@ test("attributes, slot fallbacks, prefix, setup and nested roots", () => {
   expect(html).toContain('mtrl-card');
   expect(html.match(/aria-label="Tools"/g)).toHaveLength(2);
 });
+test("a prefilled multiline text field renders alone", () => {
+  const field = renderElement("m-textfield", { label: "Name", type: "multiline", value: "Ada" });
+  expect(field).toContain('<textarea');
+  expect(field).toContain('Ada</textarea>');
+  expect(field).toContain('mtrl-textfield--multiline');
+});
+test("a prefilled multiline text field renders inside a card", () => {
+  const card = renderElement("m-card", {}, '<m-textfield label="Name" type="multiline" value="Ada"></m-textfield>');
+  expect(card.match(/shadowrootmode="open"/g)).toHaveLength(2);
+  expect(card).toContain('Ada</textarea>');
+});
 test("declarations and ordinary templates stay inert", () => {
   const html = renderElement("m-tabs", {}, '<m-tab value="a">A</m-tab><template><m-button>Inert</m-button></template>');
   expect(html.match(/shadowrootmode/g)).toHaveLength(1);
