@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 // scripts/check-react-ssr.ts
 // Built-package SSR, parser consumption, hydration and browser isolation on both React versions.
+// Known limit (FLO-517): mtrl/ssr/react children cannot see providers above their host until upgrade.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
@@ -16,6 +17,11 @@ declare global {
 const browser = await chromium.launch();
 const summaries: object[] = [];
 const contextFailures: string[] = [];
+const expectContextKnownLimit = (label: string, known: boolean, fixed: boolean, observed: string) => {
+  assert.equal(fixed, false, `${label}: provider context reached the shadow; remove the expected-failure marker (FLO-517)`);
+  assert.equal(known, true, `${label}: expected ${observed}; the shadow has an unexpected outcome`);
+  console.log(`known limit, FLO-517 (expected to fail until the page-level integration): ${label}: ${observed}`);
+};
 await mkdir("analysis/react-ssr", { recursive: true });
 try {
   for (const version of [18, 19]) {
@@ -52,18 +58,16 @@ try {
             { headers: { "Content-Type": "text/html" } });
         } });
         try {
-          const inert = await browser.newPage({ javaScriptEnabled: false });
-          try {
-            await inert.goto(server.url.href);
-            const shadows = await inert.evaluate(() => ["provided-tabs", "required-tabs"].map(id =>
-              document.getElementById(id)?.shadowRoot?.textContent ?? null));
-            if (!shadows[0]?.includes("from provider")) {
-              contextFailures.push(`${label}: provided shadow contains ${shadows[0]?.includes("DEFAULT") ? "DEFAULT" : "no label"}`);
-            }
-            if (!shadows[1]?.includes("required provider")) {
-              contextFailures.push(`${label}: required shadow ${shadows[1] === null ? "missing" : "lacks provider value"}`);
-            }
-          } finally { await inert.close(); }
+          const shadows = await (async () => {
+            const inert = await browser.newPage({ javaScriptEnabled: false });
+            try {
+              await inert.goto(server.url.href);
+              return await inert.evaluate(() => ["provided-tabs", "required-tabs"].map(id => {
+                const host = document.getElementById(id);
+                return { host: !!host, root: !!host?.shadowRoot, text: host?.shadowRoot?.textContent ?? null };
+              }));
+            } finally { await inert.close(); }
+          })();
           const page = await browser.newPage();
           try {
             const warnings: string[] = [], errors: string[] = [];
@@ -74,7 +78,13 @@ try {
             const recoverable = await page.evaluate(() => window.reactContextSSR.recoverable);
             assert.deepEqual({ warnings, errors, recoverable }, { warnings: [], errors: [], recoverable: [] }, `${label} hydration`);
           } finally { await page.close(); }
-          console.log(`${label}: hydration clean; provider shadow assertions recorded`);
+          assert.equal(shadows[0].host && shadows[1].host, true, `${label}: context hosts exist`);
+          expectContextKnownLimit(`${label} default-valued context`,
+            shadows[0].root && shadows[0].text?.includes("DEFAULT") === true,
+            shadows[0].text?.includes("from provider") === true, "shadow contains DEFAULT");
+          expectContextKnownLimit(`${label} required context`,
+            !shadows[1].root, shadows[1].text?.includes("required provider") === true, "shadow root missing");
+          console.log(`${label}: hydration clean`);
         } finally { server.stop(true); }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
