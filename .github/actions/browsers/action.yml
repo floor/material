@@ -3,9 +3,10 @@
 # `playwright install --with-deps` runs apt-get on every job, even when the
 # browsers themselves are cached, and a slow Ubuntu mirror then decides how long
 # CI takes: 26 minutes for one step on 2026-10-01, at 59 kB/s. So the packages
-# apt downloads are cached as well, and installed from the files. The package set
-# is the one `--with-deps` chose; nothing is left out, and `install-deps --dry-run`
-# checks that on every cached install.
+# apt downloads are cached as well, and installed from the files with dpkg, which
+# has no mirror to reach for. The package set is the one `--with-deps` chose;
+# nothing is left out, and `install-deps --dry-run` checks that on every cached
+# install.
 #
 # Both caches miss on a new runner image or a new Playwright version. The job
 # then runs `install --with-deps` exactly as before and saves what it fetched.
@@ -57,13 +58,15 @@ runs:
         playwright="node node_modules/playwright/cli.js"
 
         if [ "$CACHED" = true ] && ls "$packages"/*.deb > /dev/null 2>&1; then
-          # apt installs the files in dependency order and needs the mirror only
-          # for a package that is not among them, which the cache key rules out.
+          # dpkg, not `apt-get install <files>`: given a file whose version is also
+          # in its package lists, apt downloads that package from the mirror again.
+          # The files are everything apt fetched for this image, so they install
+          # as one set: apt itself unpacked them all before configuring any.
           # Playwright's own dry run then confirms that none of the packages it
           # asks for is still to install.
-          if sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$packages"/*.deb \
+          if sudo DEBIAN_FRONTEND=noninteractive dpkg -i "$packages"/*.deb \
             && $playwright install-deps --dry-run $BROWSERS; then
-            echo "System packages: $(ls "$packages"/*.deb | wc -l) installed from the cache"
+            echo "System packages: $(ls "$packages"/*.deb | wc -l) installed with dpkg from the cache, none from the mirror"
             $playwright install $BROWSERS
             exit 0
           fi
