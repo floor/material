@@ -126,7 +126,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "bottom-sheet": kb(6.7), // a modal outside the top layer: inert page and Tab trap (FLO-324): 6,639; the handle as a button (FLO-324): 6,773
   "side-sheet": kb(6.2), // a modal outside the top layer: inert page and Tab trap (FLO-324): 6,242
   button: kb(7.6),
-  "button-group": kb(11.7), // FLO-119 aria-disabled in the shared disabled feature: 11,898
+  "button-group": kb(11.85), // FLO-382 select(unknown) clears with a dev warning: 11,912 → 12,094
   card: kb(7.0),
   carousel: kb(11.2), // opt-in wheel scrolling with momentum (FLO-395): 10.3 to 10.9 KB against 2ef11f0
   checkbox: kb(5.52), // FLO-380: boolean change value plus the HTML valueAttribute token.
