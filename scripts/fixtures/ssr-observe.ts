@@ -2,10 +2,14 @@
 
 // Firefox/WebKit do not all expose LayoutShift. Track the host, its rendered
 // root and following siblings every frame as well as the native API when present.
-const boxes = () => {
+// A host that opted out of SSR has no root until it upgrades, so its root appearing
+// is not movement: what must stay put there is its server-rendered light children
+// (`children`) and their roots.
+const rendered = (host: Element) => Array.from(host.shadowRoot?.children ?? []).find(node => node.localName !== "style");
+const boxes = (rooted: boolean, children: string) => {
   const host = document.querySelector("#stage > :first-child")!;
-  const root = Array.from(host.shadowRoot?.children ?? []).find(node => node.localName !== "style");
-  return [host, root, document.getElementById("following")!].map(node => {
+  const light = children ? Array.from(host.querySelectorAll(children)) : [];
+  return [host, rooted ? rendered(host) : undefined, document.getElementById("following")!, ...light, ...light.map(rendered)].map(node => {
     const r = node?.checkVisibility({ opacityProperty: true, visibilityProperty: true }) ? node.getBoundingClientRect() : undefined;
     return r ? [r.x, r.y, r.width, r.height] : [0, 0, 0, 0];
   });
@@ -19,10 +23,11 @@ if (state.nativeSupported) new PerformanceObserver(list => {
 }).observe({ type: "layout-shift" });
 const api = {
   state,
-  async observe(upgrade: () => Promise<unknown>) {
-    const before = boxes();
+  async observe(upgrade: () => Promise<unknown>, children = "") {
+    const rooted = !!document.querySelector("#stage > :first-child")!.shadowRoot;
+    const before = boxes(rooted, children);
     const sample = () => {
-      const after = boxes();
+      const after = boxes(rooted, children);
       state.maxGeometryDelta = Math.max(state.maxGeometryDelta, ...before.flatMap((box, i) => box.map((value, j) => Math.abs(value - after[i][j]))));
       state.frames++;
     };
