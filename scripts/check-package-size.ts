@@ -35,12 +35,15 @@ try {
   // overlay elements of wave 2; 830,286 measured after wave 1 (#245). Raised to
   // 1,010,000 for the 35 public Material shapes (FLO-346): 994,762 to 1,000,150,
   // measured with CI's Node 22 / npm 10.
-  assert(pack.size < 1_010_000, "npm tarball exceeds 1,010,000 bytes");
+  // Lowered to 885,000 when 1.0.0 dropped the CommonJS bundle (FLO-358): 997,366 to 872,414
+  // against 073eeeb, Node 22 / npm 10, keeping the headroom it had.
+  assert(pack.size < 885_000, "npm tarball exceeds 885,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
   // ESM 23%, CSS 18%, SCSS sources 11%, the CommonJS bundle 8%, which 1.0.0 drops (FLO-358).
-  assert(pack.unpackedSize < 6_000_000, "Unpacked package exceeds 6,000,000 bytes");
+  // Lowered to 5,600,000 for that: 5,660,400 to 5,249,221, keeping the headroom it had.
+  assert(pack.unpackedSize < 5_600_000, "Unpacked package exceeds 5,600,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
   const smoke = join(temporary, "smoke.mjs");
