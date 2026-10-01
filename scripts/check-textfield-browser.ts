@@ -375,3 +375,83 @@ export async function checkTextfieldA11y(page: Page): Promise<void> {
   await page.evaluate(() => document.querySelectorAll(".mtrl-textfield").forEach((el) => el.closest("div")?.remove()));
   console.log("Passed text field accessibility: trailing icon button (40dp layer, 48dp target, tab order, keyboard focus ring), decorative icons unfocusable, the notch round the asterisk.");
 }
+
+/**
+ * Placement set up late equals placement set up at creation (FLO-378). A plain
+ * filled field installs no observers and measures nothing until a setter gives
+ * it something to place; each of those setters must leave the field exactly as
+ * a field created with that config: notch, input padding, label place and
+ * scale, at rest and floated, and again after the window resizes.
+ */
+export async function checkTextfieldLatePlacement(page: Page): Promise<void> {
+  const icon = '<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="8"/></svg>';
+  const cases: Array<[string, Record<string, unknown>, string]> = [
+    ["outlined", { variant: "outlined" }, "setVariant"],
+    ["prefix", { prefixText: "$" }, "setPrefixText"],
+    ["suffix", { suffixText: "USD" }, "setSuffixText"],
+    ["leading icon", { leadingIcon: icon }, "setLeadingIcon"],
+    ["outlined prefix", { variant: "outlined", prefixText: "$" }, "setPrefixText"],
+    ["outlined compact", { variant: "outlined", density: "compact" }, "setDensity"],
+  ];
+  const read = async () => page.evaluate(async ({ cases, icon }) => {
+    const { createTextfield } = (window as unknown as FieldWindow).inputs;
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 350));
+    const host = document.createElement("div");
+    host.id = "late";
+    host.style.cssText = "padding: 24px; width: 320px";
+    document.body.append(host);
+    const shape = (field: { element: HTMLElement }) => {
+      const input = field.element.querySelector("input") as HTMLInputElement;
+      const label = field.element.querySelector("label") as HTMLElement;
+      const notch = field.element.querySelector<HTMLElement>(".mtrl-textfield__outline-notch");
+      const s = getComputedStyle(input);
+      return {
+        padding: [s.paddingLeft, s.paddingRight],
+        label: [getComputedStyle(label).left, getComputedStyle(label).transform],
+        notch: notch ? [Math.round(notch.getBoundingClientRect().width), field.element.querySelector(".mtrl-textfield__outline--notched") !== null] : null,
+      };
+    };
+    const rows: Record<string, unknown> = {};
+    for (const [name, config, setter] of cases) {
+      const early = createTextfield({ label: "Amount", ...config } as never);
+      // Late: the same field built plain (outlined when only the setter under test is late), then changed
+      const base = setter === "setVariant" ? {} : Object.fromEntries(Object.entries(config).filter(([key]) => key === "variant"));
+      const late = createTextfield({ label: "Amount", ...base } as never);
+      host.append(early.element, late.element);
+      await settle();
+      const call: Record<string, () => void> = {
+        setVariant: () => late.setVariant("outlined"),
+        setPrefixText: () => late.setPrefixText("$"),
+        setSuffixText: () => late.setSuffixText("USD"),
+        setLeadingIcon: () => late.setLeadingIcon(icon),
+        setDensity: () => late.setDensity("compact"),
+      };
+      call[setter]!();
+      await settle();
+      const rest = { early: shape(early), late: shape(late) };
+      early.setValue("12");
+      late.setValue("12");
+      await settle();
+      rows[name] = { rest, floated: { early: shape(early), late: shape(late) } };
+    }
+    return rows;
+  }, { cases, icon });
+
+  const compare = (rows: Record<string, { rest: { early: unknown; late: unknown }; floated: { early: unknown; late: unknown } }>, when: string) => {
+    for (const [name, row] of Object.entries(rows)) {
+      assert.deepEqual(row.rest.late, row.rest.early, `${name} (${when}), at rest: set late, the field is placed as one created with it`);
+      assert.deepEqual(row.floated.late, row.floated.early, `${name} (${when}), floated`);
+    }
+  };
+  const rows = await read() as never;
+  compare(rows, "as created");
+  // The window resizes: a late field's listener is there too
+  await page.evaluate(() => document.getElementById("late")?.remove());
+  const before = page.viewportSize();
+  await page.setViewportSize({ width: 420, height: before?.height ?? 300 });
+  const resized = await read() as never;
+  compare(resized, "after a resize");
+  await page.evaluate(() => document.getElementById("late")?.remove());
+  if (before) await page.setViewportSize(before);
+  console.log(`Passed text field late placement: ${cases.length} setters on a plain field place it as a field created with them, at rest and floated, and after a resize.`);
+}

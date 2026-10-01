@@ -6557,6 +6557,44 @@ try {
     assert.deepEqual({ named, refused, closed, labelled }, { named: 1, refused: true, closed: true, labelled: 1 });
     check("dialog element: the headline attribute or aria-label names it; a refused cancel keeps it open");
 
+    // FLO-386: <m-dialog>'s action buttons (here from the global defaults) and
+    // its dividers are mtrl buttons and dividers drawn in its shadow root. Their
+    // sheets used to be missing there, so the buttons rendered unstyled: 70
+    // computed properties apart from the same button in the page.
+    const nested = await page.evaluate(async () => {
+      const w = window as unknown as { mtrl: Record<string, (...args: unknown[]) => { element: HTMLElement; destroy?: () => void }> & {
+        setComponentDefaults: (name: string, config: object) => void; clearGlobalDefaults: () => void;
+      } };
+      w.mtrl.setComponentDefaults("dialog", { buttons: [{ text: "Save", variant: "text" }] });
+      const host = document.getElementById("host") as HTMLElement;
+      host.innerHTML = '<m-dialog id="nested" open divider headline="Title">Content</m-dialog>';
+      await new Promise((r) => setTimeout(r, 400));
+      const root = (document.getElementById("nested") as HTMLElement).shadowRoot as ShadowRoot;
+      const props = ["border-radius", "height", "padding-left", "padding-right", "font-size", "font-weight", "color", "background-color", "cursor", "display"];
+      const read = (el: Element) => Object.fromEntries(props.map((p) => [p, getComputedStyle(el).getPropertyValue(p)]));
+      const inDialog = root.querySelector(".mtrl-button") as HTMLElement;
+      const divider = root.querySelector(".mtrl-divider") as HTMLElement;
+      // The same parts in the page, under the global stylesheet
+      const button = w.mtrl.createButton({ text: "Save", variant: "text" });
+      const line = w.mtrl.createDivider();
+      const page = document.createElement("div");
+      page.append(button.element, line.element);
+      document.body.append(page);
+      const dividerProps = ["height", "background-color", "border-top-width", "border-top-style"];
+      const readLine = (el: Element) => Object.fromEntries(dividerProps.map((p) => [p, getComputedStyle(el).getPropertyValue(p)]));
+      const result = {
+        button: { inDialog: read(inDialog), inPage: read(button.element) },
+        divider: { inDialog: readLine(divider), inPage: readLine(line.element) },
+      };
+      page.remove();
+      w.mtrl.clearGlobalDefaults();
+      host.innerHTML = "";
+      return result;
+    });
+    assert.deepEqual(nested.button.inDialog, nested.button.inPage, "the dialog's button is styled as a button in the page");
+    assert.deepEqual(nested.divider.inDialog, nested.divider.inPage, "the dialog's divider is styled as a divider in the page");
+    check("dialog element: its buttons and dividers carry their own sheets in its shadow root (FLO-386)");
+
     // A snackbar shown while a modal is open goes into the topmost <dialog>, in a
     // display:contents wrapper: its action is a Tab stop, its fixed box is placed
     // against the viewport, the slots keep their regions, and closes still come once.

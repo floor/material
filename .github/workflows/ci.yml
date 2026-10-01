@@ -124,7 +124,7 @@ jobs:
       matrix:
         include:
           - group: elements
-            checks: elements:check
+            checks: elements:check shadow-styles:check
           - group: adapters
             checks: react:check react-ssr:check vue:check svelte:check solid:check
           - group: components

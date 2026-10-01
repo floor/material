@@ -312,6 +312,9 @@ export const withAPI =
         if (component.density?.set) {
           component.density.set(density);
         }
+        // The density feature runs before placement exists, so its own call to
+        // re-place never reached it; ask here, as the other setters do (FLO-378)
+        component.schedulePositionUpdate?.();
         return this;
       },
 

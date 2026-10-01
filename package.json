@@ -158,6 +158,7 @@
     "ssr-parity:check": "bun run scripts/check-ssr-parity.ts",
     "elements:check": "bun run scripts/check-elements.ts",
     "elements-css:check": "bun run scripts/check-elements-css.ts",
+    "shadow-styles:check": "bun run scripts/check-shadow-styles.ts",
     "preupgrade:check": "bun run scripts/check-preupgrade.ts",
     "adapters:generate": "bun run scripts/generate-adapters.ts",
     "react:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react.ts",
