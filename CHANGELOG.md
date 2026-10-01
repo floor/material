@@ -249,6 +249,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- Prefilled multiline text fields render in SSR, including inside another custom element (FLO-416).
 - Solid async and streaming SSR finish when a component inside a host creates a resource
   under an outer `Suspense`. The shadow bridge reuses the page's serialized children,
   preserving its resource ownership and hydration keys without rendering children twice
