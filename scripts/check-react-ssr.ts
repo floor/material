@@ -8,12 +8,14 @@ import type { BunPlugin } from "bun";
 declare global {
   interface Window {
     reactSSR: { ready: boolean; recoverable: string[] };
+    reactContextSSR: { ready: boolean; recoverable: string[] };
     reactSuspense?: { ready: boolean; recoverable: string[] };
     __ssrRoots?: { late: ShadowRoot | null; sync: ShadowRoot | null };
   }
 }
 const browser = await chromium.launch();
 const summaries: object[] = [];
+const contextFailures: string[] = [];
 await mkdir("analysis/react-ssr", { recursive: true });
 try {
   for (const version of [18, 19]) {
@@ -21,18 +23,64 @@ try {
       build.onResolve({ filter: /^react(-dom)?(\/.*)?$/ }, args => ({ path: Bun.resolveSync(
         args.path.replace(/^react-dom(?=\/|$)/, "react-dom-18").replace(/^react(?=\/|$)/, "react-18"), process.cwd()) }));
     } }] : [];
-    const bundle = async (entry: string, target: "browser" | "bun") => {
+    const bundle = async (entry: string, target: "browser" | "bun", environment: "development" | "production" = "development") => {
       const loaded: string[] = [];
       const result = await Bun.build({ entrypoints: [entry], target, plugins: [...plugins, {
         name: "ssr-isolation", setup(build) { build.onLoad({ filter: /.*/ }, args => {
           loaded.push(args.path);
           return undefined;
         }); },
-      }], define: { "process.env.NODE_ENV": '"development"' } });
+      }], define: { "process.env.NODE_ENV": JSON.stringify(environment) } });
       assert(result.success, String(result.logs));
       if (target === "browser") assert(!loaded.some(path => /\/(?:ssr|linkedom)\//.test(path)), "Client loaded server code");
       return result.outputs[0].text();
     };
+    // These cases exercise children under providers above the host. A second
+    // React root cannot see either provider, even though the page render can.
+    for (const environment of ["development", "production"] as const) {
+      const label = `React ${version} ${environment} context`;
+      try {
+        const contextServer = `${process.cwd()}/analysis/react-ssr/context-server-${version}-${environment}.js`;
+        await Bun.write(contextServer, await bundle("scripts/fixtures/react-ssr-context-server.ts", "bun", environment));
+        const { render: renderContext } = await import(contextServer);
+        const contextHtml: string = renderContext();
+        const contextClient = await bundle("scripts/fixtures/react-ssr-context-client.ts", "browser", environment);
+        assert.doesNotMatch(contextClient, /linkedom|DOMParser|SSR element nesting/, `${label} client isolation`);
+        const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
+          if (new URL(request.url).pathname === "/client.js") return new Response(contextClient, { headers: { "Content-Type": "text/javascript" } });
+          return new Response(`<!doctype html><div id="root">${contextHtml}</div><script type="module" src="/client.js"></script>`,
+            { headers: { "Content-Type": "text/html" } });
+        } });
+        try {
+          const inert = await browser.newPage({ javaScriptEnabled: false });
+          try {
+            await inert.goto(server.url.href);
+            const shadows = await inert.evaluate(() => ["provided-tabs", "required-tabs"].map(id =>
+              document.getElementById(id)?.shadowRoot?.textContent ?? null));
+            if (!shadows[0]?.includes("from provider")) {
+              contextFailures.push(`${label}: provided shadow contains ${shadows[0]?.includes("DEFAULT") ? "DEFAULT" : "no label"}`);
+            }
+            if (!shadows[1]?.includes("required provider")) {
+              contextFailures.push(`${label}: required shadow ${shadows[1] === null ? "missing" : "lacks provider value"}`);
+            }
+          } finally { await inert.close(); }
+          const page = await browser.newPage();
+          try {
+            const warnings: string[] = [], errors: string[] = [];
+            page.on("console", message => { if (["warning", "error"].includes(message.type())) warnings.push(message.text()); });
+            page.on("pageerror", error => errors.push(error.message));
+            await page.goto(server.url.href);
+            await page.waitForFunction(() => window.reactContextSSR?.ready);
+            const recoverable = await page.evaluate(() => window.reactContextSSR.recoverable);
+            assert.deepEqual({ warnings, errors, recoverable }, { warnings: [], errors: [], recoverable: [] }, `${label} hydration`);
+          } finally { await page.close(); }
+          console.log(`${label}: hydration clean; provider shadow assertions recorded`);
+        } finally { server.stop(true); }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        contextFailures.push(`${label}: ${message.split("\n")[0]}`);
+      }
+    }
     const path = `${process.cwd()}/analysis/react-ssr/server-${version}.js`;
     await Bun.write(path, await bundle("scripts/fixtures/react-ssr-server.ts", "bun"));
     const { render } = await import(path);
@@ -156,4 +204,5 @@ try {
     } finally { server.stop(true); }
   }
   await Bun.write("analysis/react-ssr/summary.json", JSON.stringify(summaries, null, 2));
+  assert.deepEqual(contextFailures, [], `React context regressions: ${contextFailures.join("; ")}`);
 } finally { await browser.close(); }
