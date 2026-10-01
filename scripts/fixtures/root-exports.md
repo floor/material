@@ -6,6 +6,9 @@ In 0.10.4 these 137 names are deprecated on the package root, and in 1.0.0 they
 leave it. Each is the same export at the path given: change the import, nothing else.
 The component factories, `configureHTML`, the theme helpers and the global defaults stay.
 
+**The subpaths are ESM-only, and so is 1.0.0.** CommonJS (`require('mtrl')`) reaches only the
+root: on 0.10.x keep the root import there, and move to ESM `import` with these paths for 1.0.0.
+
 ```ts
 // Before
 import { pipe, createBase, withEvents } from 'mtrl';

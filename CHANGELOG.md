@@ -26,6 +26,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   import { pipe, createBase, withEvents } from 'mtrl/core/compose';
   ```
 
+  **The subpaths are ESM-only, and 1.0.0 is ESM-only.** CommonJS (`require('mtrl')`) reaches only
+  the root, so on 0.10.x a CommonJS app keeps its root imports and moves to ESM for 1.0.0.
+
   No runtime change: the root's runtime exports and the bundles are the same. The root's export
   list is now pinned (`bun run root-exports:check`).
 
