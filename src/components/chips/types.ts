@@ -46,20 +46,23 @@ export interface ChipConfig {
   prefix?: string;
   componentName?: string;
   ripple?: boolean;
-  /**
-   * @internal Selection belongs to the chips container.
-   * @deprecated Not for apps: moves out of ChipConfig in 1.0.0 (FLO-381).
-   */
+}
+
+/**
+ * @internal What the chip set passes a chip on top of its config; not part of
+ * ChipConfig, so apps cannot set it (FLO-381).
+ */
+export interface ChipOptions extends ChipConfig {
+  /** Selection belongs to the chips container. */
   managedSelection?: boolean;
   /**
-   * @internal The chip is a cell of a chip set's grid (FLO-261): the root is a
+   * The chip is a cell of a chip set's grid (FLO-261): the root is a
    * `gridcell`, and a one-action chip's cell is its focus target.
-   * @deprecated Not for apps: moves out of ChipConfig in 1.0.0 (FLO-381).
    */
   cell?: boolean;
 }
 
-type NamedChipConfig = Omit<ChipConfig, "type" | "text" | "selected" | "avatar" | "onRemove" | "removeLabel" | "managedSelection" | "cell" | "onChange" | "onSelect" | "onTrailingClick" | "trailingLabel" | "trailingMenu"> & { label: string };
+type NamedChipConfig = Omit<ChipConfig, "type" | "text" | "selected" | "avatar" | "onRemove" | "removeLabel" | "onChange" | "onSelect" | "onTrailingClick" | "trailingLabel" | "trailingMenu"> & { label: string };
 export type AssistChipConfig = NamedChipConfig;
 export type SuggestionChipConfig = Omit<NamedChipConfig, "trailingIcon">;
 export type FilterChipConfig = NamedChipConfig & Pick<ChipConfig, "selected" | "onChange" | "onSelect" | "onTrailingClick" | "trailingLabel" | "trailingMenu">;

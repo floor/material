@@ -1,5 +1,6 @@
 import { createComponentConfig, createElementConfig } from "../../core/config/component";
-import { DEFAULT_DATE_FORMAT, type DatePickerConfig } from "./types";
+import type { DatePickerConfig } from "./types";
+import { DEFAULT_DATE_FORMAT } from "./constants";
 
 export const defaultConfig: DatePickerConfig = {
   variant: "docked", initialView: "day", selectionMode: "single",

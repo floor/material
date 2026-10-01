@@ -1,4 +1,8 @@
-/** Check the packed Card builders and enhancers against their shipped CSS. */
+/**
+ * Check the packed Card builders against their shipped CSS. The loading,
+ * expandable and swipeable enhancers are internal since 1.0.0 (FLO-381), so the
+ * packed package has no way to them; their unit tests cover them from source.
+ */
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import type { Page } from "playwright";
@@ -7,7 +11,6 @@ import type * as Card from "../src/components/card";
 type CardWindow = Window & {
   cardParts: typeof Card;
   cards: ReturnType<typeof Card.default>[];
-  loadingCard: ReturnType<ReturnType<typeof Card.withLoading>>;
 };
 
 export async function checkCard(page: Page, artifacts: string): Promise<void> {
@@ -18,7 +21,7 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
   }));
   await page.evaluate(() => {
     const state = window as unknown as CardWindow;
-    const { default: createCard, createCardHeader, createCardContent, createCardMedia, createCardActions, withExpandable, withSwipeable } = state.cardParts;
+    const { default: createCard, createCardHeader, createCardContent, createCardMedia, createCardActions } = state.cardParts;
     document.body.replaceChildren();
     document.body.style.cssText = "display:block;padding:24px;margin:0";
     document.documentElement.setAttribute("data-theme", "baseline");
@@ -35,9 +38,6 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
       card.setActions(createCardActions());
       const action = document.createElement("button"); action.textContent = "Share";
       card.setActions(createCardActions({ actions: [action], align: "end" }));
-      const extra = document.createElement("div"); extra.id = `extra-${variant}`; extra.textContent = "More details";
-      withExpandable({ expandableContent: extra })(card);
-      withSwipeable({ onSwipeLeft: () => {}, onSwipeRight: () => {} })(card);
       state.cards.push(card);
       document.body.append(card.element);
     }
@@ -57,16 +57,11 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
       actions: style(".mtrl-card__actions").display,
       alignment: style(".mtrl-card__actions").justifyContent,
       image: style(".mtrl-card__media-img").objectFit,
-      expand: style(".mtrl-card__expand-button").display,
-      swipe: style(".mtrl-card__swipe-left-action").position,
     };
   });
-  assert.deepEqual(styles, { header: "flex", title: "22px", subtitle: "14px", avatar: "40px", padding: "16px", actions: "flex", alignment: "flex-end", image: "contain", expand: "flex", swipe: "absolute" });
+  assert.deepEqual(styles, { header: "flex", title: "22px", subtitle: "14px", avatar: "40px", padding: "16px", actions: "flex", alignment: "flex-end", image: "contain" });
   const media = await root.locator(".mtrl-card__media").boundingBox();
   assert(media && Math.abs(media.width / media.height - 16 / 9) < 0.01);
-  await root.locator(".mtrl-card__expand-button").click();
-  assert.equal(await root.locator(".mtrl-card__expandable-content").isVisible(), true);
-  assert.equal(await root.locator(".mtrl-card__expand-button").getAttribute("aria-expanded"), "true");
   const light = await root.evaluate(element => getComputedStyle(element).backgroundColor);
   await page.screenshot({ path: join(artifacts, "card-light.png"), animations: "disabled" });
   await page.evaluate(() => document.documentElement.setAttribute("data-theme-mode", "dark"));
@@ -75,17 +70,9 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
   await page.screenshot({ path: join(artifacts, "card-dark.png"), animations: "disabled" });
   await page.evaluate(() => {
     const state = window as unknown as CardWindow;
-    state.loadingCard = state.cardParts.withLoading({ initialState: true })(state.cards[0]);
-  });
-  assert.equal(await root.locator(".mtrl-card__loading-overlay").evaluate(element => getComputedStyle(element).position), "absolute");
-  assert.equal(await root.locator(".mtrl-card__loading-spinner").evaluate(element => getComputedStyle(element).width), "40px");
-  await page.evaluate(() => {
-    const state = window as unknown as CardWindow;
-    state.loadingCard.loading.setLoading(false);
     state.cards[0].setActions(state.cardParts.createCardActions({ fullBleed: true, vertical: true }));
     state.cards[0].addContent(state.cardParts.createCardContent({ text: "No padding", padding: false }));
   });
-  assert.equal(await root.locator(".mtrl-card__loading-overlay").count(), 0);
   assert.equal(await root.locator(".mtrl-card__actions").evaluate(element => getComputedStyle(element).padding), "0px");
   assert.equal(await root.locator(".mtrl-card__actions").evaluate(element => getComputedStyle(element).flexDirection), "column");
   assert.equal(await root.locator(".mtrl-card__content--no-padding").evaluate(element => getComputedStyle(element).padding), "0px");
@@ -93,5 +80,5 @@ export async function checkCard(page: Page, artifacts: string): Promise<void> {
   await page.evaluate(() => (window as unknown as CardWindow).cards.forEach(card => card.destroy()));
   assert.equal(await page.locator(".mtrl-card").count(), 0);
   await page.unroute("https://mtrl.test/card.svg");
-  console.log("Passed packed Card: BEM builders, replacement selectors, media geometry, themes, actions, expansion, loading and swipe styles.");
+  console.log("Passed packed Card: BEM builders, replacement selectors, media geometry, themes and actions.");
 }
