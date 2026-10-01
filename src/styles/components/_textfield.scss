@@ -108,8 +108,21 @@ $component: "#{base.$prefix}-textfield";
         }
     }
 
+    // The disabled input's -webkit-text-fill-color is inherited by its
+    // placeholder and paints over color, so both are cleared (FLO-354)
     &:has(> .#{$component}__field > .#{$component}__label):not(.#{$component}--focused) .#{$component}__input::placeholder {
         color: transparent;
+        -webkit-text-fill-color: transparent;
+    }
+
+    // While the label rests in the input area it is all that area shows: the
+    // prefix and suffix appear as it floats, like the placeholder (FLO-355).
+    // Resting is the float rules' complement: empty to the script and to the
+    // input itself, and not focused.
+    &--empty:has(> .#{$component}__field > .#{$component}__label):not(.#{$component}--focused):not(:has(.#{$component}__input:is(:not(:placeholder-shown), :autofill, :-webkit-autofill))) {
+        :is(.#{$component}__prefix, .#{$component}__suffix) {
+            opacity: 0;
+        }
     }
 
     // Prefix text
@@ -126,8 +139,10 @@ $component: "#{base.$prefix}-textfield";
         max-width: 40%; // Prevent extreme overflow
         overflow: hidden;
         text-overflow: ellipsis;
-        transition: top v.motion("duration-short4")
-            v.motion("easing-emphasized"); // Add transition for top position
+        // top for the filled float; opacity as the label floats (FLO-355)
+        transition:
+            top v.motion("duration-short4") v.motion("easing-emphasized"),
+            opacity v.motion("duration-short4") v.motion("easing-emphasized");
     }
 
     // Suffix text
@@ -144,8 +159,9 @@ $component: "#{base.$prefix}-textfield";
         max-width: 40%; // Prevent extreme overflow
         overflow: hidden;
         text-overflow: ellipsis;
-        transition: top v.motion("duration-short4")
-            v.motion("easing-emphasized"); // Add transition for top position
+        transition:
+            top v.motion("duration-short4") v.motion("easing-emphasized"),
+            opacity v.motion("duration-short4") v.motion("easing-emphasized");
     }
 
     // Leading icon
