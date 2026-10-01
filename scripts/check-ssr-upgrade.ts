@@ -89,6 +89,20 @@ try {
       style.sheet!.disabled = false;
       return { root: true, rules, styled };
     });
+    if (["carousel", "fab-menu", "toolbar"].includes(fixture.element)) {
+      assert.deepEqual(firstPaint, { root: false, rules: 0, styled: false }, `${engine}/${fixture.element}: opted-out host must have no declarative root`);
+      assert(await inert.evaluate(markup => {
+        const expected = document.createElement("template");
+        expected.innerHTML = markup;
+        return document.querySelector("#stage > :first-child")!.isEqualNode(expected.content.firstElementChild);
+      }, fixture.html), `${engine}/${fixture.element}: fallback must contain only the authored host and light DOM`);
+      await inert.screenshot({ path: `${directory}/${fixture.element}-before.png`, animations: "disabled" });
+      await inert.close();
+      equal++;
+      report.push({ element: fixture.element, firstPaint, fallback: true });
+      console.log(`${engine}/${fixture.element}: host/light DOM only, no declarative root`);
+      continue;
+    }
     assert(firstPaint.root && firstPaint.rules > 0 && firstPaint.styled, `${engine}/${fixture.element}: unstyled no-JS root ${JSON.stringify(firstPaint)}`);
     const anchors = await inert.evaluate(() => CSS.supports("anchor-name", "none"));
     const allowance = allowed.find(e => e.element === fixture.element && e.engines.includes(engine) && (!e.withoutAnchors || !anchors));

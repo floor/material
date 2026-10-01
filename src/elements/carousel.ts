@@ -108,6 +108,8 @@ const updateCarousel = (host: HTMLElement, component: CarouselComponent): boolea
 
 const carouselSpec = {
   name: "carousel",
+  // Its geometry depends on measured layout.
+  ssr: false,
   create: (config) => create(config as CarouselElementConfig),
   styles: ["carousel"],
   hostStyles: ":host{display:block}",

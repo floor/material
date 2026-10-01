@@ -15,3 +15,9 @@ test("client entries cannot reach SSR", async () => {
     expect(map.sources.some((source: string) => /\/ssr\//.test(source)), entry).toBe(false);
   }
 });
+
+test("SSR opt-out in an isolated realm", async () => {
+  const child = Bun.spawn([process.execPath, "test", fileURLToPath(new URL("./opt-out.fixture.ts", import.meta.url))], { stdout: "pipe", stderr: "pipe" });
+  const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
+  expect(code, stdout + stderr).toBe(0);
+}, 30000);

@@ -22,6 +22,7 @@ await run("parity", "chromium");
 for (const engine of ["chromium", "firefox", "webkit"]) {
   await run("security", engine);
   await run("upgrade", engine);
+  await run("fallback", engine);
 }
 const seconds = (performance.now() - started) / 1000;
 const previous = timings.filter(t => ["parity/chromium", "security/chromium"].includes(t.check)).reduce((sum, t) => sum + t.seconds, 0);
