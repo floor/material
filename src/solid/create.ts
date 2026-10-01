@@ -12,6 +12,11 @@
  *
  * Written without JSX, so it compiles with the rest of the library.
  *
+ * When `mtrl/ssr/solid` is loaded, a server render prepends the declarative
+ * shadow template. The client renders nothing in its place: the HTML parser
+ * has already moved that template into the shadow root. Without the import
+ * the markup is unchanged (FLO-374).
+ *
  * @module solid
  */
 
@@ -33,6 +38,7 @@ import {
   type FormProps,
   type Pascal,
 } from "../elements/adapter";
+import { shadow } from "./shadow";
 
 export { configure } from "../elements/adapter";
 export type { DefaultProps, FormProps } from "../elements/adapter";
@@ -139,11 +145,50 @@ export const createComponent = <S, E extends HTMLElement>(
         if (value == null || value === false || (attributes.has(key) && typeof value === "string")) return null;
         return Dynamic({ component: "span", slot, style: "display: contents", children: value } as never);
       }));
+    // Attributes the shadow renderer reads. Slot nodes stay out: a component
+    // in a slot is not the attribute's text, and reading the memo here would
+    // reuse the page's nodes inside the discarded string.
+    const shadowAttributes = (): Record<string, unknown> => {
+      const snapshot: Record<string, unknown> = {};
+      const take = (source: object): void => {
+        for (const key of Object.keys(source)) {
+          if (key === "children" || key === "ref" || key === "component") continue;
+          const value = (source as Props)[key];
+          if (typeof value === "function" || value === undefined) continue;
+          snapshot[key] = value;
+        }
+      };
+      take(host);
+      take(others);
+      return snapshot;
+    };
+    // Light DOM for the shadow string only. Props are read directly, not
+    // through the memos above, so the page keeps the nodes those memos built.
+    const shadowLight = (): JSX.Element => {
+      const named: JSX.Element[] = [];
+      for (const [key, slot] of slots) {
+        const value = props[key];
+        if (value == null || value === false || (attributes.has(key) && typeof value === "string")) continue;
+        named.push(Dynamic({ component: "span", slot, style: "display: contents", children: value } as never));
+      }
+      const body = props.children as JSX.Element;
+      return named.length ? [body, ...named] : body;
+    };
+    const tag = `${getPrefix()}-${spec.name}`;
+    // Unregistered, `shadow` returns "" without calling `shadowLight`, so the
+    // page renders once and matches the client. Registered, the template is a
+    // raw string: it takes no hydration key, and the parser consumes it.
+    const template = isServer ? shadow(tag, shadowAttributes(), shadowLight) : "";
     Object.defineProperty(host, "children", {
       enumerable: true,
       get: () => {
         const named = wrappers.map((wrapper) => wrapper()).filter((wrapper) => wrapper !== null);
-        return named.length ? [props.children, ...named] : props.children;
+        const body = named.length ? [props.children, ...named] : props.children;
+        if (!template) return body;
+        // A string child is escaped. Solid leaves an SSR fragment's `t` raw,
+        // which is what the declarative template needs.
+        const fragment = { t: template };
+        return Array.isArray(body) ? [fragment, ...body] : [fragment, body];
       },
     });
 
