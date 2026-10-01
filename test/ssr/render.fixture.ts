@@ -2,11 +2,10 @@
 import { expect, test } from "bun:test";
 import "./css.fixture";
 import { parseHTML } from "linkedom";
-import { resolveStyleDependencies } from "../../scripts/style-manifest";
 import { cases } from "../../scripts/fixtures/preupgrade-cases";
 import { elements, toolbarElement, buttonElement } from "../../src/elements";
 import { registerStyles, styleText } from "../../src/elements/styles";
-import { hostStyleText } from "../../src/elements/define";
+import { SHADOW_BASE_STYLES, hostStyleText } from "../../src/elements/define";
 import { setComponentDefaults, clearGlobalDefaults } from "../../src/core/config/global";
 import { configureHTML } from "../../src/core/dom/html";
 const { renderElement } = await import("../../src/ssr");
@@ -57,7 +56,7 @@ test("host and child snapshots precede setup mutations", () => {
   try { expect(renderElement("m-toolbar", {}, '<m-button>Save</m-button>')).not.toContain('data-mutated'); }
   finally { toolbarElement.spec.setup = original; }
 });
-test("styles use registry overrides and browser order; links follow spec dependency order", () => {
+test("styles use registry overrides and browser order", () => {
   const old = styleText("button")!;
   registerStyles({ button: ".override{}" });
   try {
@@ -141,11 +140,14 @@ test("global defaults cannot enable untracked imports", () => {
   } finally { clearGlobalDefaults(); }
 });
 
-test("every link sequence follows the build manifest dependencies", () => {
+test("all 36 link and inline sequences match browser adoption names", () => {
   for (const { spec } of Object.values(elements)) {
+    const names = [...SHADOW_BASE_STYLES, ...spec.styles];
     const html = renderElement(`m-${spec.name}`, {}, "", { styles: "link", cssBase: "/css" });
     const urls = [...html.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
-    expect(urls, spec.name).toEqual([`hosts/${spec.name}`, "ripple", ...resolveStyleDependencies([...spec.styles])].map(name => `/css/${name}.css`));
+    expect(urls, spec.name).toEqual([`hosts/${spec.name}`, ...names].map(name => `/css/${name}.css`));
+    const inline = renderElement(`m-${spec.name}`);
+    expect(inline, spec.name).toContain(`<style>${[styleText(`host:${spec.name}`) ?? hostStyleText(spec), ...names.map(styleText)].join("\n")}</style>`);
   }
 });
 test("missing registered styles fail clearly", () => {

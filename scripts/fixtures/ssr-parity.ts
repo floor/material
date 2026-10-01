@@ -1,6 +1,7 @@
 // scripts/fixtures/ssr-parity.ts
-import { defineAll } from "../../dist/elements/index.js";
+import { defineAll, elements, SHADOW_BASE_STYLES } from "../../dist/elements/index.js";
 import "../../dist/elements/css/index.js";
+import { styleText } from "../../dist/elements/styles.js";
 import { setHTML } from "../../dist/core/dom/html.js";
 
 export type Snapshot = Record<string, string>;
@@ -86,6 +87,16 @@ export const snapshot = (host: Element, authoredIds: string[]): Snapshot => {
 
 const api = {
   snapshot,
+  styleOrder(host: Element) {
+    const spec = Object.values(elements).find(entry => `m-${entry.spec.name}` === host.localName)!.spec;
+    const names = [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...spec.styles];
+    const normalize = (text: string) => {
+      const sheet = new CSSStyleSheet(); sheet.replaceSync(text);
+      return Array.from(sheet.cssRules, rule => rule.cssText).join("\n");
+    };
+    const adopted = host.shadowRoot!.adoptedStyleSheets.map(sheet => Array.from(sheet.cssRules, rule => rule.cssText).join("\n"));
+    return { names, sources: names.map(name => normalize(styleText(name)!)), adopted };
+  },
   mount(html: string): Element {
     defineAll();
     const container = document.createElement("main");

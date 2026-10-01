@@ -62,6 +62,12 @@ try {
     await page.waitForFunction(() => !!window.ssrParity);
     const immediate = await page.evaluate(({ markup, ids }) => window.ssrParity.snapshot(window.ssrParity.mount(markup), ids), { markup: fixture.html, ids: authoredIds });
     assert.deepEqual(compare(upgrade, immediate), [], `${fixture.element}: upgrade differs from fresh construction`);
+    const order = await page.evaluate(() => window.ssrParity.styleOrder(document.querySelector("main")!.firstElementChild!));
+    const linked = renderElement(`m-${fixture.element}`, {}, "", { styles: "link", cssBase: "/css" });
+    const urls = [...linked.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
+    assert.deepEqual(urls, order.names.map(name => `/css/${name.replace("host:", "hosts/")}.css`), `${fixture.element}: link adoption order`);
+    assert.deepEqual(order.sources, order.adopted, `${fixture.element}: inline source/adoption order`);
+    assert.equal(ssr["host/shadow/css"], order.adopted.join("\n"), `${fixture.element}: inline/adopted CSS`);
     await page.evaluate(async () => { for (let frame = 0; frame < 3; frame++) await new Promise(requestAnimationFrame); });
     await page.waitForTimeout(400);
     const settled = await page.evaluate(ids => window.ssrParity.snapshot(document.querySelector("main")!.firstElementChild!, ids), authoredIds);
