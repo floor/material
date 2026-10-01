@@ -123,6 +123,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **ArrowLeft and Escape work in a submenu whose parent item's id holds a quote or a backslash
+  (FLO-429).** They threw, or did nothing, because the id was put into a CSS selector.
 - CI's `static` job prints the output of a failing check again. Under the job's shell a failing
   check ended before its status was recorded, and the step stopped with "exit code 1" and nothing
   else, so the failure could not be read from CI.
