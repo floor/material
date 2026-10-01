@@ -33,6 +33,7 @@ export const componentStyles: Record<string, { source: string; dependencies: str
   timepicker: { source: "components/timepicker", dependencies: [] },
   search: { source: "components/search", dependencies: [] },
   snackbar: { source: "components/snackbar", dependencies: ["button", "icon-button"] },
+  "navigation-bar": { source: "components/navigation-bar", dependencies: [] },
   "navigation-rail": { source: "components/navigation-rail", dependencies: [] },
   list: { source: "components/list", dependencies: [] },
   tooltip: { source: "components/tooltip", dependencies: [] },

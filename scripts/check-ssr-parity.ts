@@ -19,7 +19,7 @@ const allowed = exceptions as Exception[];
 const engine = process.argv.find(arg => arg.startsWith("--engine="))?.split("=")[1] ?? "chromium";
 assert.equal(engine, "chromium", "Structural parity is Chromium-only; use ssr:check for three-engine upgrade/paint coverage");
 const fixtures = cases.filter(c => c.variant === "default");
-assert.equal(fixtures.length, 36);
+assert.equal(fixtures.length, 37); // 36 elements, and the navigation bar (FLO-305)
 assert.deepEqual(fixtures.map(c => c.element).sort(), Object.values(elements).map(e => e.spec.name).sort());
 const bundle = await Bun.build({ entrypoints: ["scripts/fixtures/ssr-parity.ts"], target: "browser" });
 assert(bundle.success, String(bundle.logs));

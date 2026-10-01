@@ -71,7 +71,20 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   button group (FLO-380); existing accessors remain. Button toggle `change`, card
   `expandedChanged`, list `keydown`, and interactive touch events now have their
   actual payload types, including both slider touch delivery shapes.
-
+- **The navigation bar (FLO-305).** `createNavigationBar` and `<m-navigation-bar>` (with
+  `<m-navigation-bar-item>`), and the React, Vue, Svelte and Solid components: M3 Expressive's bar
+  for compact and medium windows, three to five destinations, from Compose's `ShortNavigationBar`.
+  - **Geometry and colour:** 64dp on surface container; a 56×32 indicator on secondary container,
+    the active icon on it, the active label in secondary.
+  - **`itemLayout`:** `'auto'` puts the icon above the label, and beside it in a 40dp pill with the
+    items centred once the bar itself is 600px wide (a container query, so a bar in a narrow pane
+    stays vertical). `'vertical'` and `'horizontal'` fix it.
+  - **Destinations:** links (`href`) or buttons, badges (a count or the dot) folded into the
+    accessible name, `aria-current="page"` on the active one, in a named `nav` landmark. Every
+    destination is a tab stop and the arrow keys move along the bar, as in the navigation rail,
+    whose destination code the bar now shares.
+  - **`hideOnScroll`:** off by default; it slides the bar away while the page scrolls down,
+    without the slide under reduced motion, and focus inside always brings it back.
 - Per-element SSR opt-out (FLO-370): specs accept `ssr: false` or a synchronous host
   predicate. Carousel, FAB menu and toolbar emit their host and light DOM without a
   declarative root; menu and split-button do the same for nested submenus. Async

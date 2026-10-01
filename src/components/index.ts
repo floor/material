@@ -33,6 +33,8 @@ export { default as createExtendedFab } from "./extended-fab";
 export { default as createIconButton } from "./icon-button";
 export { default as createList } from "./list";
 export { default as createMenu } from "./menu";
+export { default as createNavigationBar } from "./navigation-bar";
+export type { NavigationBarConfig, NavigationBarComponent, NavigationBarItemConfig, NavigationBarItemLayout, NavigationBarSelectEvent, NavigationBarEvents } from "./navigation-bar/types";
 export { default as createNavigationRail } from "./navigation-rail";
 export type { NavigationRailConfig, NavigationRailComponent, NavigationRailItemConfig, NavigationRailSelectEvent, NavigationRailEvents } from "./navigation-rail/types";
 

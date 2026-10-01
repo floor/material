@@ -1,0 +1,242 @@
+@use '../abstract/base' as base;
+@use '../abstract/theme' as t;
+@use '../abstract/mixins' as m;
+@use '../abstract/variables' as v;
+
+// M3 Expressive navigation bar (FLO-305): Compose ShortNavigationBar with
+// NavigationBarTokens, NavigationBarVerticalItemTokens and
+// NavigationBarHorizontalItemTokens (v0_11_0); MDC-Android BottomNavigation as a
+// cross-check. 64dp tall, surface container, no elevation (ShortNavigationBar
+// applies none). The bar sits in the flow: place it with `position: sticky` or
+// `fixed` at the bottom of the layout. Its items lay out against the bar's own
+// width (a container query), not the window's.
+$component: '#{base.$prefix}-navigation-bar';
+$effects: v.motion('spring-default-effects-duration') v.motion('spring-default-effects-easing');
+$spatial: v.motion('spring-default-spatial-duration') v.motion('spring-default-spatial-easing');
+
+// Icon above the label (NavigationBarVerticalItemTokens): a 56x32 indicator,
+// 6dp above it and below the label (ContainerBetweenSpace), 4dp between the
+// indicator and the label: 6 + 32 + 4 + 16 + 6 = 64. Items share the width
+// equally (ShortNavigationBarArrangement.EqualWeight).
+@mixin vertical {
+  .#{$component}__items { padding-inline: 0; }
+  .#{$component}__content {
+    flex-direction: column;
+    block-size: 64px;
+    padding-block: 6px;
+    padding-inline: 0;
+    margin-block: 0;
+  }
+  .#{$component}__indicator {
+    inset-block-start: 6px;
+    inset-inline-start: 50%;
+    inline-size: 56px;
+    block-size: 32px;
+    margin-inline-start: -28px;
+  }
+  // The icon is centred in the indicator: 4dp below its top edge
+  .#{$component}__icon { margin-block-start: 4px; }
+  // 4dp under the indicator, which ends 4dp under the icon
+  .#{$component}__label { margin-block-start: 8px; }
+  .#{$component}__item--active .#{$component}__label { color: t.color('secondary'); }
+  // BadgedBox: a large badge's start at the icon's end less 12dp, its bottom 14dp
+  // below the icon's top; the dot 6dp in from the icon's end, at its top
+  .#{$component}__badge {
+    inset-inline-start: 50%;
+    inset-block-start: 8px;
+    &--dot { inset-inline-start: calc(50% + 6px); inset-block-start: 10px; }
+  }
+}
+
+// Icon beside the label (NavigationBarHorizontalItemTokens), M3 Expressive's
+// medium-width bar: a 40dp indicator around the icon, 4dp and the label, with
+// 16dp at each end; the items centred (ShortNavigationBarArrangement.Centered:
+// ((100 - 10 * (n + 3)) / 2)% of the bar on each side, none past six items).
+@mixin horizontal {
+  .#{$component}__items {
+    padding-inline: max(0%, calc((100% - 10% * (var(--#{base.$prefix}-navigation-bar-count, 3) + 3)) / 2));
+  }
+  .#{$component}__content {
+    flex-direction: row;
+    gap: 4px;
+    block-size: 40px;
+    padding-block: 0;
+    padding-inline: 16px;
+    margin-block: 12px;
+  }
+  .#{$component}__indicator {
+    inset: 0;
+    inline-size: auto;
+    block-size: auto;
+    margin: 0;
+  }
+  .#{$component}__icon,
+  .#{$component}__label { margin: 0; }
+  // The horizontal item's active label takes the icon's colour (Compose, pending its own token)
+  .#{$component}__item--active .#{$component}__label { color: t.color('on-secondary-container'); }
+  .#{$component}__badge {
+    inset-inline-start: 28px;
+    inset-block-start: 6px;
+    &--dot { inset-inline-start: 34px; inset-block-start: 8px; }
+  }
+}
+
+.#{$component} {
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  container: #{$component} / inline-size;
+  // The system's bottom inset goes inside the container (Compose windowInsets)
+  padding-block-end: env(safe-area-inset-bottom, 0px);
+  background: t.color('surface-container');
+  color: t.color('on-surface-variant');
+  transition: transform $spatial;
+
+  &--hidden { transform: translateY(100%); }
+
+  &__items {
+    display: flex;
+    box-sizing: border-box;
+    inline-size: 100%;
+  }
+
+  // Each destination spans its share of the bar: the hit target; the indicator
+  // pill is what's drawn.
+  &__item {
+    flex: 1 1 0;
+    min-inline-size: 0;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    isolation: isolate;
+    box-sizing: border-box;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+
+    &[aria-disabled='true'] { opacity: 0.38; cursor: default; }
+    &:focus-visible { outline: none; }
+  }
+
+  &__content {
+    position: relative;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    max-inline-size: 100%;
+  }
+
+  // The indicator pill: the fill, the state layer and the ripple, clipped
+  &__indicator {
+    position: absolute;
+    z-index: -1;
+    border-radius: v.shape('full'); // ActiveIndicatorShape: CornerFull
+    overflow: hidden;
+    pointer-events: none;
+
+    // Fill: scales in from the centre when the item becomes active
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: t.color('secondary-container');
+      opacity: 0;
+      transform: scaleX(0.4);
+      transition: transform $spatial, opacity $effects;
+    }
+    // State layer, as the rail's
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: t.color('on-secondary-container');
+      opacity: 0;
+      transition: opacity $effects;
+    }
+  }
+  &__item--active &__indicator::before { opacity: 1; transform: scaleX(1); }
+  &__item:hover &__indicator::after { opacity: v.state('hover-state-layer-opacity'); }
+  &__item:focus-visible &__indicator::after { opacity: v.state('focus-state-layer-opacity'); }
+  &__item:active &__indicator::after { opacity: v.state('pressed-state-layer-opacity'); }
+  &__item[aria-disabled='true'] &__indicator::after { opacity: 0; }
+  // The focus ring goes round the pill, not the full-width hit target
+  &__item:focus-visible &__indicator { outline: 3px solid t.color('secondary'); outline-offset: 2px; }
+
+  &__ripple {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    background: t.color('on-secondary-container');
+    animation: #{$component}-ripple v.motion('spring-default-spatial-duration') ease-out forwards;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    inline-size: 24px; // IconSize
+    block-size: 24px;
+    color: t.color('on-surface-variant');
+    transition: color $effects;
+    svg { inline-size: 24px; block-size: 24px; fill: currentColor; }
+  }
+  &__item--active &__icon { color: t.color('on-secondary-container'); }
+
+  &__label {
+    max-inline-size: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: t.color('on-surface-variant');
+    @include m.typography('label-medium'); // LabelTextFont
+    transition: color $effects;
+  }
+
+  // Badge (BadgeTokens): placed by the layout mixins against the icon
+  &__badge {
+    position: absolute;
+    box-sizing: border-box;
+    min-inline-size: 16px;
+    min-block-size: 16px;
+    padding-inline: 4px;
+    border-radius: v.shape('full');
+    background: t.color('error');
+    color: t.color('on-error');
+    text-align: center;
+    @include m.typography('label-small');
+    &--dot {
+      inline-size: 6px;
+      block-size: 6px;
+      min-inline-size: 0;
+      min-block-size: 0;
+      padding: 0;
+    }
+  }
+
+  &--vertical,
+  &--auto { @include vertical; }
+  &--horizontal { @include horizontal; }
+
+  @include m.reduced-motion { &, & *, & *::before, & *::after { transition: none; animation: none; } }
+  @include m.high-contrast {
+    border-block-start: 1px solid CanvasText;
+    &__item--active .#{$component}__indicator { outline: 2px solid Highlight; outline-offset: -2px; }
+  }
+}
+
+// 'auto': horizontal items once the bar itself is 600px wide (MDC's medium threshold)
+@container #{$component} (min-width: 600px) {
+  .#{$component}--auto { @include horizontal; }
+}
+
+@keyframes #{$component}-ripple {
+  from { transform: scale(0); opacity: v.state('pressed-state-layer-opacity'); }
+  to { transform: scale(1); opacity: 0; }
+}

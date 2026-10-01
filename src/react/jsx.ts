@@ -46,6 +46,7 @@ declare module "react" {
       "m-slider": Tag<import("../elements/slider").SliderSpec, import("../elements/slider").SliderElement>;
       "m-textfield": Tag<import("../elements/textfield").TextfieldSpec, import("../elements/textfield").TextfieldElement>;
       "m-radios": Tag<import("../elements/radios").RadiosSpec, import("../elements/radios").RadiosElement>;
+      "m-navigation-bar": Tag<import("../elements/navigation-bar").NavigationBarSpec, import("../elements/navigation-bar").NavigationBarElement>;
       "m-navigation-rail": Tag<import("../elements/navigation-rail").NavigationRailSpec, import("../elements/navigation-rail").NavigationRailElement>;
       "m-drawer": Tag<import("../elements/drawer").DrawerSpec, import("../elements/drawer").DrawerElement>;
       "m-top-app-bar": Tag<import("../elements/top-app-bar").TopAppBarSpec, import("../elements/top-app-bar").TopAppBarElement>;
@@ -70,6 +71,7 @@ declare module "react" {
       "m-search": Tag<import("../elements/search").SearchSpec, import("../elements/search").SearchElement>;
       "m-tab": Tag<typeof import("../elements/tabs").tabDeclaration, HTMLElement>;
       "m-radio": Tag<typeof import("../elements/radios").radioDeclaration, HTMLElement>;
+      "m-navigation-bar-item": Tag<typeof import("../elements/navigation-bar").navigationBarItemDeclaration, HTMLElement>;
       "m-navigation-rail-item": Tag<typeof import("../elements/navigation-rail").navigationRailItemDeclaration, HTMLElement>;
       "m-drawer-item": Tag<typeof import("../elements/drawer").drawerItemDeclaration, HTMLElement>;
       "m-button-group-item": Tag<typeof import("../elements/button-group").buttonGroupItemDeclaration, HTMLElement>;

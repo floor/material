@@ -288,6 +288,134 @@
    true
   ]
  ],
+ "bar": [
+  [
+   "0:nav.mtrl-navigation-bar.mtrl-navigation-bar--vertical",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "1:div.mtrl-navigation-bar__items",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "2:button.mtrl-navigation-bar__item.mtrl-navigation-bar__item--badged",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "3:span.mtrl-navigation-bar__content",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "4:span.mtrl-navigation-bar__indicator",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "5:span.mtrl-navigation-bar__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "6:span.mtrl-navigation-bar__label",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "7:span.mtrl-navigation-bar__badge",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "8:button.mtrl-navigation-bar__item",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "9:span.mtrl-navigation-bar__content",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "10:span.mtrl-navigation-bar__indicator",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "11:span.mtrl-navigation-bar__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "12:span.mtrl-navigation-bar__label",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "13:button.mtrl-navigation-bar__item",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "14:span.mtrl-navigation-bar__content",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "15:span.mtrl-navigation-bar__indicator",
+   "9999px 9999px 9999px 9999px",
+   "Roboto, sans-serif",
+   true,
+   true
+  ],
+  [
+   "16:span.mtrl-navigation-bar__icon",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ],
+  [
+   "17:span.mtrl-navigation-bar__label",
+   "0px 0px 0px 0px",
+   "Roboto, sans-serif",
+   false,
+   true
+  ]
+ ],
  "rail": [
   [
    "0:nav.mtrl-navigation-rail",

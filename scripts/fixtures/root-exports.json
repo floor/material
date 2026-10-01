@@ -325,6 +325,11 @@
     "status": "public"
   },
   {
+    "name": "createNavigationBar",
+    "kind": "value",
+    "status": "public"
+  },
+  {
     "name": "createNavigationRail",
     "kind": "value",
     "status": "public"
@@ -611,6 +616,36 @@
   },
   {
     "name": "MenuItem",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationBarComponent",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationBarConfig",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationBarEvents",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationBarItemConfig",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationBarItemLayout",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "NavigationBarSelectEvent",
     "kind": "type",
     "status": "public"
   },

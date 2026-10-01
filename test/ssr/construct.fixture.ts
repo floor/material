@@ -31,8 +31,8 @@ test("the server DOM has no browser-only APIs", () => {
   expect(view.HTMLElement.prototype.attachInternals).toBeUndefined();
 });
 
-test("default fixtures cover all 36 registered elements", () => {
-  expect(Object.keys(elements)).toHaveLength(36);
+test("default fixtures cover all 37 registered elements", () => {
+  expect(Object.keys(elements)).toHaveLength(37);
   expect(cases.filter(({ variant }) => variant === "default").map(({ element }) => element).sort())
     .toEqual(Object.values(elements).map(({ spec }) => spec.name).sort());
 });
