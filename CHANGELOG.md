@@ -230,6 +230,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- CI's Solid and Vue SSR runs on the lowest supported peer version are ordinary commands,
+  `solid-ssr:floor` and `vue-ssr:floor` (FLO-426). Each reads the floor from `peerDependencies`,
+  installs it without saving, runs the check and restores the installed version, so nothing after
+  it runs on the floor version unnoticed.
 - **A plain filled text field sets no placement up (FLO-378).** Every text field installed a
   class observer, a resize observer and a window `resize` listener, and scheduled a first
   measure, even a filled field with no prefix, suffix or leading icon, which has nothing to
