@@ -166,8 +166,10 @@ try {
     { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 6500 },
     // The outlined text field's notched outline (#234) adds 202, 7,863 to 8,065: three
     // segments with their corners each way round, and the outline colour and width per
-    // state, in place of an input border and a focus overlay.
-    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 8200 },
+    // state, in place of an input border and a focus overlay. The resting label shown
+    // alone (FLO-354, FLO-355): the placeholder's fill cleared and the affixes hidden
+    // while it rests, 8,183 to 8,245 (+62) against 09d665b, Node 22 / npm 10.
+    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 8300 },
     { name: "slider-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/slider';", gzip: 6500 },
     // The .43 rail-motion baseline is 47,117 bytes; core ripple adds about 20 bytes.
     // The tooltip stylesheet adds 486 (measured): it was authored but registered in no
