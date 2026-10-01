@@ -187,8 +187,13 @@ export interface TabsConfig {
   /**
    * Id for this tab group, used to build each tab's element id as
    * `tab-<groupId>-<value>` and to find panels as
-   * `tabpanel-<groupId>-<value>`. Allocated automatically when omitted; pin
-   * it when a page needs ids that survive a re-render. FLO-229.
+   * `tabpanel-<groupId>-<value>`; a value with characters outside
+   * `[A-Za-z0-9_-]` gets a derived id instead (`tabIdFor`, `tabPanelIdFor`,
+   * FLO-430). The group id itself is not encoded: keep a pinned one to
+   * `[A-Za-z0-9_]` (generated ones are), or `tabIdFor("a-b", "c")` and
+   * `tabIdFor("a", "b-c")` coincide and a space makes an unsafe id. Allocated
+   * automatically when omitted; pin it when a page needs ids that survive a
+   * re-render. FLO-229.
    */
   groupId?: string;
 

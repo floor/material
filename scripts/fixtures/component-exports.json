@@ -2965,8 +2965,18 @@
       "status": "public"
     },
     {
+      "name": "tabIdFor",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "TabIndicator",
       "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "tabPanelIdFor",
+      "kind": "value",
       "status": "public"
     },
     {

@@ -12,6 +12,20 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **Tab and panel ids are derived from the value with a safe encoding (FLO-430).** A value of
+  `[A-Za-z0-9_-]` only keeps its ids, `tab-<group>-<value>` and `tabpanel-<group>-<value>`. Any
+  other value gets `tabx-<group>-<encoded>` and
+  `tabpanelx-<group>-<encoded>`: `_` becomes `__` and every other character `_<hex code
+  point>_`, so the ids hold no whitespace (an id reference such as `aria-controls` is a
+  space-separated list) and two values never share one. The tab element carries its value as
+  `data-value`, and the conventional panel is found from it rather than parsed out of the id.
+  `tabIdFor(groupId, value)` and `tabPanelIdFor(groupId, value)` are exported from
+  `mtrl/components/tabs`. Migration: values whose ids worked before change too, not only those
+  with a space, a newline or a quote: `a.b` → `tabx-g-a_2e_b`, `/home` → `tabx-g-_2f_home`,
+  `user:1` → `tabx-g-user_3a_1`, `café` → `tabx-g-caf_e9_`. A page that writes its own panels
+  with the conventional id, or labels them with the tab's id, for any value with a character
+  outside `[A-Za-z0-9_-]` must build those ids with `tabPanelIdFor` / `tabIdFor`; a hand-written
+  `tabpanel-g-a.b` is otherwise never linked.
 - **The deprecated themes `material`, `winter`, `browngreen` and `legacy` are removed
   (FLO-428).** 0.10 deprecated them (FLO-308); their files, `mtrl/themes/<name>` entries and
   their rules in the full stylesheet are gone. A leftover `data-theme="winter"` (or any of the
@@ -302,6 +316,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- The search check in `core:check` no longer times out when a frame arrives late (FLO-420). It
+  pressed the scrim before the view's opening had put focus back on the input, and that focus
+  re-opened the view. The check now waits for the opening's frame, and reads the scrim press at
+  once, which it could not tell from the input's blur before.
 - Vue SSR finishes when a host's child uses `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`. The shadow bridge serializes those children once (FLO-373).
 - Vue SSR renders a host whose `v-html` contains an unclosed `<template>`, instead of throwing, and `mtrl/ssr/vue` imports the server renderer from `vue/server-renderer` (FLO-373).
 - Prefilled multiline text fields render in SSR, including inside another custom element (FLO-416).
