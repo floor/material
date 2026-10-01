@@ -21,7 +21,7 @@
  * @module elements
  */
 
-import { registerLifecycle } from "./lifecycle";
+import { MOUNT, DISPOSE } from "./lifecycle";
 import { PREFIX } from "../core/config";
 import { applyStyles, DEFAULT_PREFIX, hasStyles, registerStyles, usePreupgradePrefix } from "./styles";
 
@@ -324,10 +324,6 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
     constructor() {
       super();
       this.attachShadow({ mode: "open", delegatesFocus: true });
-      registerLifecycle(this, () => {
-        this.connectedCallback();
-        this.#exposeParts(this.shadowRoot as ShadowRoot);
-      }, () => this.#teardown());
       this.internals = spec.form && typeof this.attachInternals === "function" ? this.attachInternals() : null;
       if (backed.length) {
         // Every event the host dispatches, from the factory or a spec's setup,
@@ -340,6 +336,15 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
           });
         }
       }
+    }
+
+    [MOUNT](): void {
+      this.connectedCallback();
+      this.#exposeParts(this.shadowRoot as ShadowRoot);
+    }
+
+    [DISPOSE](): void {
+      this.#teardown();
     }
 
     connectedCallback(): void {

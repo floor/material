@@ -1,17 +1,21 @@
 // src/elements/lifecycle.ts
 // Internal only: detached server hosts reuse the browser's complete lifecycle.
-const lifecycles = new WeakMap<HTMLElement, { mount(): void; dispose(): void }>();
+export const MOUNT = Symbol();
+export const DISPOSE = Symbol();
 
-export const registerLifecycle = (host: HTMLElement, mount: () => void, dispose: () => void): void => {
-  lifecycles.set(host, { mount, dispose });
+type LifecycleHost = HTMLElement & {
+  [MOUNT]?: () => void;
+  [DISPOSE]?: () => void;
 };
 
 export const mountElement = (host: HTMLElement): void => {
-  const lifecycle = lifecycles.get(host);
-  if (!lifecycle) throw new TypeError("Not a renderable mtrl element");
-  lifecycle.mount();
+  const element = host as LifecycleHost;
+  if (typeof element[MOUNT] !== "function") throw new TypeError("Not a renderable mtrl element");
+  element[MOUNT]();
 };
 
 export const disposeElement = (host: HTMLElement): void => {
-  lifecycles.get(host)?.dispose();
+  const element = host as LifecycleHost;
+  if (typeof element[DISPOSE] !== "function") throw new TypeError("Not a renderable mtrl element");
+  element[DISPOSE]();
 };
