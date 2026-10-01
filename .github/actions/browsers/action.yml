@@ -1,0 +1,83 @@
+# Playwright's browsers and the system packages they need, from the cache.
+#
+# `playwright install --with-deps` runs apt-get on every job, even when the
+# browsers themselves are cached, and a slow Ubuntu mirror then decides how long
+# CI takes: 26 minutes for one step on 2026-10-01, at 59 kB/s. So the packages
+# apt downloads are cached as well, and installed from the files. The package set
+# is the one `--with-deps` chose; nothing is left out, and `install-deps --dry-run`
+# checks that on every cached install.
+#
+# Both caches miss on a new runner image or a new Playwright version. The job
+# then runs `install --with-deps` exactly as before and saves what it fetched.
+#
+# Needs node_modules (for Playwright's CLI) and Node on the PATH.
+name: Playwright browsers
+description: Install Playwright browsers and their system packages, cached.
+
+inputs:
+  browsers:
+    description: Playwright browser names, separated by spaces.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Cache keys
+      id: keys
+      shell: bash
+      env:
+        BROWSERS: ${{ inputs.browsers }}
+      run: |
+        version=$(node -p "require('./node_modules/playwright/package.json').version")
+        set="$version-${BROWSERS// /-}"
+        echo "browsers=playwright-${{ runner.os }}-$set" >> "$GITHUB_OUTPUT"
+        # The packages depend on what the image already holds, so on its version too.
+        echo "packages=playwright-packages-${ImageOS:-unknown}-${ImageVersion:-unknown}-$set" >> "$GITHUB_OUTPUT"
+
+    - name: Browser cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ steps.keys.outputs.browsers }}
+
+    - name: System package cache
+      id: packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/playwright-packages
+        key: ${{ steps.keys.outputs.packages }}
+
+    - name: Install ${{ inputs.browsers }}
+      shell: bash
+      env:
+        BROWSERS: ${{ inputs.browsers }}
+        CACHED: ${{ steps.packages.outputs.cache-hit }}
+      run: |
+        packages="$HOME/.cache/playwright-packages"
+        playwright="node node_modules/playwright/cli.js"
+
+        if [ "$CACHED" = true ] && ls "$packages"/*.deb > /dev/null 2>&1; then
+          # apt installs the files in dependency order and needs the mirror only
+          # for a package that is not among them, which the cache key rules out.
+          # Playwright's own dry run then confirms that none of the packages it
+          # asks for is still to install.
+          if sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$packages"/*.deb \
+            && $playwright install-deps --dry-run $BROWSERS; then
+            echo "System packages: $(ls "$packages"/*.deb | wc -l) installed from the cache"
+            $playwright install $BROWSERS
+            exit 0
+          fi
+          echo "::warning::The cached system packages did not install; falling back to the mirror"
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f || true
+        fi
+
+        # No usable cache: install as before, and keep what apt downloads.
+        echo 'APT::Keep-Downloaded-Packages "true";' | sudo tee /etc/apt/apt.conf.d/99-keep-downloaded-packages > /dev/null
+        sudo apt-get clean
+        $playwright install --with-deps $BROWSERS
+        rm -rf "$packages"
+        mkdir -p "$packages"
+        cp /var/cache/apt/archives/*.deb "$packages"/ 2> /dev/null || true
+        count=$(ls "$packages" | wc -l)
+        echo "System packages: $count downloaded from the mirror"
+        [ "$count" -gt 0 ] || echo "::warning::apt kept no downloaded packages, so the next run downloads them again"
