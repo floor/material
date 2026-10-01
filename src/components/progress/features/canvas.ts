@@ -144,7 +144,7 @@ export const withCanvas =
     const isIndeterminate = (): boolean =>
       (component.state?.indeterminate as boolean) ?? config.indeterminate ?? false;
 
-    const colors = createColors(() => draw(animationTime));
+    const colors = createColors(component.element, () => draw(animationTime));
 
     /** Sizes the canvas to the element and the device's pixel ratio */
     const measure = (): void => {
