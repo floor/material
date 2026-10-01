@@ -79,8 +79,10 @@ describe('every theme contrast level', () => {
       // The brief preserves standard and status colors. Keep the strict bound
       // visible as an expected failure for precisely these existing exceptions;
       // a fix makes test.failing fail too, requiring this list to be revisited.
+      // The status colours of FLO-407 (#369) pass at standard and medium; only
+      // light high (7:1) still falls short for them.
       const preservedFailure = (fg: string) =>
-        (mode === 'light' && (fg === 'on-warning' || (level === 'high' && ['on-success', 'on-info'].includes(fg)))) ||
+        (mode === 'light' && level === 'high' && ['on-warning', 'on-success', 'on-info'].includes(fg)) ||
         (name === 'legacy' && level === 'standard' && (fg === 'on-tertiary' || (mode === 'light' && fg === 'on-secondary')));
       test(`${name} ${level} ${mode}: generated block and text pairs reach ${minimum}:1`, () => {
         if (level !== 'standard' && !(name === 'highcontrast' && level === 'high')) expect(contrastBlocks.length).toBeGreaterThanOrEqual(2);
