@@ -46,6 +46,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Progress and loading indicators draw the theme of the section they're in, not only the
+  page's (FLO-389).** The progress canvas read its colours from `<body>` and `:root`, so in a
+  themed section, a card or a dark panel it drew the page's colours: light ones in a dark section.
+  It now reads them on its own element, where the section's theme (or a shadow host's) inherits.
+  A `data-theme` or `data-theme-mode` change on any element, not only `<html>` and `<body>`,
+  redraws both indicators. `getThemeColor` takes an `element` option to read the theme where that
+  element sits.
 - **`<m-dialog>`'s buttons and dividers are styled (FLO-386).** A shadow root adopts only the sheets
   its element names, and the dialog named only its own: its action buttons (from `buttons` or the
   global defaults) rendered without the button stylesheet, 70 computed properties apart from the
