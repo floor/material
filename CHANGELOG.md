@@ -101,6 +101,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- The carousel wheel check in `core:check` no longer fails when a CI runner stalls a frame. A
+  283ms stall split its 30-event wheel gesture in two, and the carousel correctly went one slide
+  further than the recording expected. A recording with a frame over 50ms is now taken again
+  (three in a row fail); the assertions are unchanged (FLO-395).
 - **Status text meets 4.5:1 (FLO-407).** Success, warning and info are one fixed
   pair per mode, shared by every theme. White on the light warning (`#DD6D06`)
   was 3.35:1. Each colour keeps its hue and chroma at the tones M3 uses for a
