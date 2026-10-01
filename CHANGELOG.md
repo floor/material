@@ -22,6 +22,22 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   - A theme setting `--mtrl-sys-shape-corner-pill` can drop it; nothing reads it.
 - **`$mtrl-sys-shape` is removed from `abstract/theme` (FLO-345).** Nothing read it. Use
   `v.shape(<step>)`.
+- **The package root exports the components and the app-level helpers only (FLO-351).** The 137
+  internal names 0.10.4 deprecated on the root are gone from it: the composition core (`pipe`,
+  `createBase`, the `with*` features), the DOM, timing and store helpers, and the progress
+  indicator's canvas code. The root keeps the component factories and their types,
+  `configureHTML`, `schemeToTokens` and `THEME_ROLES`, and the global defaults. Each removed name
+  is the same export at its subpath; the
+  [migration table](https://github.com/floor/mtrl/blob/main/scripts/fixtures/root-exports.md)
+  gives every one:
+
+  ```ts
+  import { pipe, createBase, withEvents } from 'mtrl';             // 0.10
+  import { pipe, createBase, withEvents } from 'mtrl/core/compose'; // 1.0
+  ```
+
+  The subpaths are ESM-only, as 1.0.0 is. The root's export list is pinned
+  (`bun run root-exports:check`), so a name cannot join it unnoticed.
 
 ### Deprecated
 

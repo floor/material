@@ -6,7 +6,8 @@
  * type checker, values and types, and records for each whether it is public or
  * deprecated, and for a deprecated one the subpath that exports the same symbol.
  * The record is scripts/fixtures/root-exports.json; the migration table users
- * read is generated beside it as root-exports.md.
+ * read is generated beside it as root-exports.md while names are deprecated,
+ * and frozen and verified once 1.0.0 has removed them.
  *
  *   bun run root-exports:check    fails with the names added, removed or changed
  *   bun run root-exports:update   rewrites the fixture and the table
@@ -41,7 +42,8 @@ const deprecation = (symbol: ts.Symbol): string | undefined => {
   return undefined;
 };
 
-export function readRootExports(): RootExport[] {
+/** The root, `mtrl/core` and each core subpath, read with the type checker */
+function loadModules() {
   const entries = [join(ROOT, "src/index.ts"), join(ROOT, "src/core/index.ts"), ...SUBPATHS.map((s) => join(ROOT, `src/core/${s}/index.ts`))];
   const program = ts.createProgram(entries, {
     strict: true, skipLibCheck: true, noEmit: true,
@@ -54,8 +56,15 @@ export function readRootExports(): RootExport[] {
     if (!source) throw new Error(`${file} is not in the program`);
     return checker.getExportsOfModule(checker.getSymbolAtLocation(source)!);
   };
-  // The same symbol, not merely the same name: two subpaths may export different functions under one name;
-  // under the same exported name.
+  /** `mtrl/core` or `mtrl/core/<subpath>` to its source entry */
+  const fileOf = (path: string) => join(ROOT, path === "mtrl/core" ? "src/core/index.ts" : `src/core/${path.slice("mtrl/core/".length)}/index.ts`);
+  return { entries, resolve, exportsOf, fileOf };
+}
+
+export function readRootExports(): RootExport[] {
+  const { entries, resolve, exportsOf } = loadModules();
+  // The same symbol under the same exported name, not merely the same name: two
+  // subpaths may export different functions under one name.
   const reach = new Map<ts.Symbol, Map<string, string>>();
   for (const subpath of SUBPATHS) {
     for (const symbol of exportsOf(join(ROOT, `src/core/${subpath}/index.ts`))) {
@@ -96,6 +105,35 @@ export async function readPinned(): Promise<RootExport[]> {
   return Bun.file(FIXTURE).json();
 }
 
+/** The names a migration table lists, each with the path it gives */
+export function readMigrationTable(text: string): { name: string; path: string }[] {
+  const rows: { name: string; path: string }[] = [];
+  let path = "";
+  for (const line of text.split("\n")) {
+    const heading = line.match(/^## `([^`]+)`$/);
+    if (heading) path = heading[1]!;
+    const row = line.match(/^\| `([^`]+)` \|/);
+    if (row && path) rows.push({ name: row[1]!, path });
+  }
+  return rows;
+}
+
+/**
+ * Once the names have left the root (1.0.0), the table is frozen as 0.10.4
+ * published it: each name it lists must be gone from the root and exported,
+ * under the same name, by the path it gives. What is wrong, or empty.
+ */
+export function verifyMigrationTable(rows: { name: string; path: string }[], now: RootExport[]): string[] {
+  const { exportsOf, fileOf } = loadModules();
+  const root = new Set(now.map((e) => e.name));
+  const byPath = new Map<string, Set<string>>();
+  const named = (path: string) => byPath.get(path) ?? byPath.set(path, new Set(exportsOf(fileOf(path)).map((s) => s.name))).get(path)!;
+  return rows.flatMap(({ name, path }) => [
+    ...(root.has(name) ? [`${name} is still on the root`] : []),
+    ...(named(path).has(name) ? [] : [`${name} is not exported by ${path}`]),
+  ]);
+}
+
 /** The migration table: each name leaving the root, and where to import it from */
 export function migrationTable(entries: RootExport[]): string {
   const moved = entries.filter((e) => e.status === "deprecated");
@@ -133,15 +171,18 @@ export function migrationTable(entries: RootExport[]): string {
 
 if (import.meta.main) {
   const now = readRootExports();
+  // While names are deprecated the table is generated from them; once they are gone it is frozen and verified
+  const leaving = now.some((e) => e.status === "deprecated");
   if (process.argv.includes("--update")) {
     await Bun.write(FIXTURE, `${JSON.stringify(now, null, 2)}\n`);
-    await Bun.write(TABLE, migrationTable(now));
+    if (leaving) await Bun.write(TABLE, migrationTable(now));
     const moved = now.filter((e) => e.status === "deprecated").length;
-    console.log(`Wrote ${now.length} root exports (${now.length - moved} public, ${moved} deprecated) and the migration table.`);
+    console.log(`Wrote ${now.length} root exports (${now.length - moved} public, ${moved} deprecated)${leaving ? " and the migration table" : ""}.`);
   } else {
     const changes = diffRootExports(await readPinned(), now);
-    const table = migrationTable(now);
-    if ((await Bun.file(TABLE).text()) !== table) changes.push("the migration table is stale");
+    const text = await Bun.file(TABLE).text();
+    if (leaving && text !== migrationTable(now)) changes.push("the migration table is stale");
+    if (!leaving) changes.push(...verifyMigrationTable(readMigrationTable(text), now));
     if (changes.length) {
       console.error(`The root exports differ from scripts/fixtures/root-exports.json:\n  ${changes.join("\n  ")}\n` +
         "If the change is intended, run `bun run root-exports:update` and review the diff.");

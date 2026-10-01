@@ -18,14 +18,19 @@
 // It is a floor, not a ceiling. Exporting more is fine; dropping one of these
 // is a breaking change for a consumer we can see, and should be a decision
 // rather than an accident.
+//
+// 1.0.0 made one (FLO-351): the composition core left the root for
+// mtrl/core/compose, and EventCallback for mtrl/core/state. mtrl-addons moves
+// with its own 1.0 (floor/mtrl-addons#5), so the pins follow it there.
 
 import { describe, test, expect } from "bun:test";
 
 import * as mtrl from "../../src";
+import * as compose from "../../src/core/compose";
+import type * as state from "../../src/core/state";
 
-/** Every identifier mtrl-addons imports from "mtrl". */
+/** Every identifier mtrl-addons imports from "mtrl": its component factories. */
 const VALUES = [
-  "createBase",
   "createButton",
   "createCard",
   "createCheckbox",
@@ -36,6 +41,11 @@ const VALUES = [
   "createSwitch",
   "createTabs",
   "createTextfield",
+] as const;
+
+/** What it imports from mtrl/core/compose. */
+const COMPOSE = [
+  "createBase",
   "hasEmit",
   "hasLifecycle",
   "pipe",
@@ -50,15 +60,20 @@ const VALUES = [
 // time instead — this file fails to type-check if any of them stops being
 // exported.
 type _Types = [
-  mtrl.BaseComponent,
-  mtrl.ElementComponent,
-  mtrl.EventCallback,
+  compose.BaseComponent,
+  compose.ElementComponent,
+  state.EventCallback,
 ];
 
 describe("the exports mtrl-addons depends on", () => {
   for (const name of VALUES) {
     test(`${name} is exported and callable`, () => {
       expect(typeof (mtrl as Record<string, unknown>)[name]).toBe("function");
+    });
+  }
+  for (const name of COMPOSE) {
+    test(`${name} is exported by mtrl/core/compose and callable`, () => {
+      expect(typeof (compose as Record<string, unknown>)[name]).toBe("function");
     });
   }
 });

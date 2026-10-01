@@ -17,7 +17,8 @@
 
 import { describe, test, expect } from "bun:test";
 
-import { createComponentConfig, createElementConfig, PREFIX } from "../../src";
+// From mtrl/core since 1.0.0 removed them from the root (FLO-351)
+import { createComponentConfig, createElementConfig, PREFIX } from "../../src/core";
 
 describe("the package exports the live createComponentConfig", () => {
   test("it is exported at all", () => {
