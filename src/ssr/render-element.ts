@@ -85,6 +85,17 @@ export function renderElement(
   children = "",
   options: RenderOptions = {},
 ): string {
+  return render(tag, attributes, children, options).html;
+}
+
+/** Internal adapter entry: returns just the root shadow, before serializing light DOM. */
+function renderShadow(tag: string, markup: string, prefix: string): string {
+  const host = new DOMParser().parseFromString(markup, "text/html").querySelector(tag) as unknown as Element;
+  const attributes = Object.fromEntries(Array.from(host.attributes, a => [a.name, a.value]));
+  return render(tag, attributes, host.innerHTML, { prefix }, true).shadow;
+}
+
+function render(tag: string, attributes: RenderAttributes, children: string, options: RenderOptions, shadowOnly = false): { html: string; shadow: string } {
   const prefix = validateOptions(options);
   // Global defaults also reach factories created inside another component.
   // These paths start native promises/imports, outside the inert scheduler.
@@ -152,6 +163,7 @@ export function renderElement(
         for (const child of Array.from(element.children)) audit(child, depth);
       };
       audit(host, 0);
+      let rootShadow = "";
       const expand = (element: HTMLElement, depth: number): string | undefined => {
         const entry = resolve(element.localName);
         if (!entry) return undefined;
@@ -163,11 +175,13 @@ export function renderElement(
         const shadow = Array.from(element.shadowRoot!.childNodes)
           .filter(node => !isFallbackStyle(node))
           .map(node => serializeNode(node, expand, depth + 1)).join("");
-        const content = light.map(node => serializeNode(node, expand, depth + 1)).join("");
+        if (depth === 0) rootShadow = styles + shadow;
+        const content = shadowOnly && depth === 0 ? "" : light.map(node => serializeNode(node, expand, depth + 1)).join("");
         return `<${element.localName}${attributesText(authored)}><template shadowrootmode="open" shadowrootdelegatesfocus="">` +
           `${styles}${shadow}</template>${content}</${element.localName}>`;
       };
-      return expand(host, 0)!;
+      const html = expand(host, 0)!;
+      return { html, shadow: rootShadow };
     });
   } catch (cause) {
     const Failure = cause instanceof RangeError ? RangeError : cause instanceof TypeError ? TypeError : Error;
@@ -176,3 +190,6 @@ export function renderElement(
     throw error;
   }
 }
+
+// Internal cross-bundle bridge, installed only when the server entry is loaded.
+Object.assign(globalThis, { [Symbol.for("mtrl.ssr")]: { shadow: renderShadow } });

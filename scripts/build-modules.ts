@@ -34,6 +34,10 @@ export function buildModules(outdir: string) {
       if (filename.endsWith("/ssr/render-element.d.ts")) {
         ts.sys.writeFile(join(outdir, "ssr/index.d.ts"), text);
       }
+      if (filename.endsWith("/ssr/react.js")) {
+        ts.sys.writeFile(filename, text.replace('"./index"', '"./index.js"'));
+      }
+      if (filename.endsWith("/ssr/react.d.ts")) ts.sys.writeFile(filename, text);
       return;
     }
     // Node and browsers require explicit extensions and directory index paths.

@@ -1,15 +1,17 @@
 #!/usr/bin/env bun
 // scripts/check-ssr-security.ts
-// Reparse source SSR output in Chromium; kept out of the browser-free bun suites.
+// Reparse source SSR output in each browser engine; kept out of the browser-free bun suites.
 import assert from "node:assert/strict";
-import { chromium } from "playwright";
+import { chromium, firefox, webkit } from "playwright";
 import "./fixtures/ssr-css";
 import { configureHTML } from "../src/core/dom/html";
 import { withServerScope } from "../src/ssr/server-dom";
 import { serializeNode } from "../src/ssr/serialize";
 import { renderElement } from "../src/ssr/index.ts";
 
-const browser = await chromium.launch();
+const engine = process.argv.find(arg => arg.startsWith("--engine="))?.split("=")[1] ?? "chromium";
+assert(engine === "chromium" || engine === "firefox" || engine === "webkit", `Unknown engine: ${engine}`);
+const browser = await ({ chromium, firefox, webkit })[engine].launch();
 try {
   const page = await browser.newPage();
   const load = async (html: string) => page.setContent(`<!doctype html><body>${html}</body>`);
@@ -29,7 +31,7 @@ try {
     });
     assert.deepEqual(state, { title: hostile, text: hostile, injected: 0, count: 1 });
   });
-  await check("stylesheet URLs survive Chromium parsing", async () => {
+  await check("stylesheet URLs survive browser parsing", async () => {
     await load(renderElement("m-button", {}, "", { styles: "link", cssBase: "https://example.invalid/a&b" }));
     assert.deepEqual(await page.evaluate(() => Array.from(document.querySelector("m-button")!.shadowRoot!.querySelectorAll("link"), n => n.getAttribute("href"))), ["hosts/button", "ripple", "progress", "button"].map(p => `https://example.invalid/a&b/${p}.css`));
   });
@@ -49,7 +51,7 @@ try {
       inert: document.querySelector<HTMLTemplateElement>("m-card > template")!.content.querySelector("m-button")!.shadowRoot === null,
     })), { value: text, title: text, pre: text, injected: 0, viewBox: "0 0 24 24", gradient: true, inert: true });
   });
-  await check("vetted comments, raw text and nested templates survive Chromium parsing", async () => {
+  await check("vetted comments, raw text and nested templates survive browser parsing", async () => {
     await load(renderElement("m-card", {}, '<!-- safe --><style>.x{content:"a&b"}</style><script type="application/json">{"x":"a&b"}</script><template><template><b>inert</b></template></template>'));
     assert.deepEqual(await page.evaluate(() => document.querySelector("m-card > style")!.textContent), '.x{content:"a&b"}');
     assert.deepEqual(await page.evaluate(() => document.querySelector("m-card > script")!.textContent), '{"x":"a&b"}');
@@ -90,5 +92,5 @@ try {
     assert.equal(state.unique, true);
     assert(state.references > 0);
   });
-  console.log("SSR security: 7 Chromium checks passed");
+  console.log(`SSR security ${engine}: 7 equal, 0 exceptions, 0 failures`);
 } finally { await browser.close(); }
