@@ -15,7 +15,3 @@ export type {
   DatePickerView,
   DatePickerSelectionMode,
 } from "./types";
-export {
-  /** @deprecated Internal, no replacement: removed from mtrl/components/datepicker in 1.0.0 (FLO-381). */
-  DEFAULT_DATE_FORMAT,
-} from "./types";

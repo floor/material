@@ -81,6 +81,24 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   condition are gone; `main` is the ESM entry. Every subpath was already import-only, and with
   the internals off the root the bundle would have been a partial API. `require('mtrl')` no longer
   resolves (`ERR_PACKAGE_PATH_NOT_EXPORTED`): use `import`, or `await import('mtrl')` from CommonJS.
+- **Component subpaths export the component only, and are listed one by one (FLO-381).** The
+  internals 0.10.5 deprecated on `mtrl/components/<name>` are gone, with no replacement: card's
+  `withAPI`, `withLoading`, `withExpandable`, `withSwipeable`, `withElevation` and the
+  `*Feature` types; tabs' `with*` features, `addScrollIndicators`, `createTabsState`,
+  `createTabIndicator`, `updateTabPanels`, `setupKeyboardNavigation` and their config and
+  component types; switch's `withSupportingText` and `SupportingTextComponent`; datepicker's
+  `DEFAULT_DATE_FORMAT`. `ChipConfig` loses `managedSelection` and `cell`, which only the chip
+  set sets. The manifest's `./components/*` and `./components/*/constants` patterns become one
+  entry per component (and per component with constants), so the folders inside a component no
+  longer resolve. Each component's export list is pinned (`bun run component-exports:check`).
+  Migration: these subpaths now throw `ERR_PACKAGE_PATH_NOT_EXPORTED`. They held internals, with
+  no replacement; a single chip is `createAssistChip` and the other factories in
+  `mtrl/components/chips`, and `CHIP_CLASSES`/`CHIP_STATES` are internal class and state names:
+  `mtrl/components/bottom-sheet/features`, `carousel/features`, `chips/chip`,
+  `chips/chip/constants`, `chips/features`, `drawer/features`, `list/features`, `menu/features`,
+  `progress/features`, `search/features`, `side-sheet/features`, `slider/features`,
+  `textfield/features`. Every `mtrl/components/<name>` and `mtrl/components/<name>/constants`
+  that existed in 0.10 still resolves.
 
 - **Text field: a trailing icon without `trailingIconLabel` is decorative (FLO-301).** It is
   hidden from screen readers (`aria-hidden`) and no longer shows a pointer cursor. An app that

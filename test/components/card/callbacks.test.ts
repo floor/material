@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
-import createCard, { withSwipeable } from "../../../src/components/card";
+import createCard from "../../../src/components/card";
+import { withSwipeable } from "../../../src/components/card/features";
 import type { CardComponent } from "../../../src/components/card/types";
 import { callbacksFixture } from "../callbacks.fixture";
 

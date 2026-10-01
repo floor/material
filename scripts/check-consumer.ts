@@ -53,6 +53,30 @@ try {
   }
   console.log("JSX entries: mtrl/react/jsx and mtrl/solid/jsx type a bare tag from the packed package");
 
+  // The component subpaths are an explicit list since 1.0.0 (FLO-381): each one
+  // resolves from the packed package, and the folders inside a component, which
+  // the old `./components/*` pattern matched across slashes, do not.
+  const componentSubpaths = Object.keys((await Bun.file("package.json").json()).exports)
+    .filter(key => key.startsWith("./components/")).map(key => `mtrl${key.slice(1)}`);
+  const nestedSubpaths = [
+    "bottom-sheet/features", "carousel/features", "chips/chip", "chips/chip/constants", "chips/features",
+    "drawer/features", "list/features", "menu/features", "progress/features", "search/features",
+    "side-sheet/features", "slider/features", "textfield/features",
+  ].map(path => `mtrl/components/${path}`);
+  const probe = join(directory, "resolve-components.mjs");
+  await writeFile(probe, `const out = {};
+for (const specifier of ${JSON.stringify([...componentSubpaths, ...nestedSubpaths])}) {
+  try { import.meta.resolve(specifier); out[specifier] = "ok"; } catch (error) { out[specifier] = error.code; }
+}
+console.log(JSON.stringify(out));
+`);
+  const resolved: Record<string, string> = JSON.parse(Bun.spawnSync(["node", probe], { cwd: directory }).stdout.toString());
+  assert.deepEqual(componentSubpaths.filter(specifier => resolved[specifier] !== "ok"), [],
+    "allowlisted component subpaths that do not resolve from the packed package");
+  assert.deepEqual(nestedSubpaths.filter(specifier => resolved[specifier] !== "ERR_PACKAGE_PATH_NOT_EXPORTED"), [],
+    "folders inside a component that still resolve (or fail for another reason)");
+  console.log(`Component subpaths: ${componentSubpaths.length} resolve from the packed package, ${nestedSubpaths.length} nested ones do not`);
+
   // Library mode retains exports for measurement; an HTML fixture below tests
   // actual application mode, CSS extraction, network loading, and rendering.
   const sizes: Record<string, { initialGzip: number; totalGzip: number }> = {};
