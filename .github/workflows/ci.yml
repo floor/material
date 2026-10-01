@@ -152,7 +152,7 @@ jobs:
             checks: elements:check shadow-styles:check
           - group: adapters
             browsers: chromium
-            checks: react:check react-ssr:check vue:check svelte:check svelte-ssr:check solid:check
+            checks: react:check react-ssr:check vue:check svelte:check svelte-ssr:check solid-ssr:check solid:check
           - group: components
             browsers: chromium
             checks: consumer:check tabs:check slider:check drawer:check navigation-bar:check navigation-rail:check core:check
@@ -190,6 +190,11 @@ jobs:
             bun run "$script" || { echo "::endgroup::"; echo "::error::$script failed"; exit 1; }
             echo "::endgroup::"
           done
+      - name: Solid SSR at the peer floor (1.8.0)
+        if: matrix.group == 'adapters'
+        run: |
+          bun add --no-save --ignore-scripts solid-js@1.8.0
+          bun run solid-ssr:check
       - name: Browser comparison artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -205,6 +210,8 @@ jobs:
             analysis/ssr-upgrade
             analysis/react-ssr/summary.json
             analysis/svelte-ssr/summary.json
+            analysis/solid-ssr/summary.json
+            analysis/solid-ssr/async-*.json
           retention-days: 7
           if-no-files-found: ignore
 
