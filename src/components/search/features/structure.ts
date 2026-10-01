@@ -5,6 +5,7 @@ import { SEARCH_CLASSES, SEARCH_ICONS, SEARCH_STATES } from "../constants";
 import { createElement } from "../../../core/dom/create";
 import { setHTML } from "../../../core/dom/html";
 import { PREFIX } from "../../../core/config";
+import { processClassNames, type BaseComponentConfig } from "../../../core/config/component";
 
 /**
  * Creates the search component DOM structure following MD3 specifications
@@ -69,6 +70,7 @@ export const withStructure =
         ? SEARCH_CLASSES.VARIANT_DIVIDED
         : SEARCH_CLASSES.VARIANT_CONTAINED,
     ),
+    processClassNames((config as BaseComponentConfig).className || ""),
   ];
 
   if (config.fullWidth) {
