@@ -34,6 +34,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   live region, so an error set with `setError(true, message)` is read without the field being
   refocused. Its element now stays and its text changes in place.
 
+### Changed
+
+- **A plain filled text field sets no placement up (FLO-378).** Every text field installed a
+  class observer, a resize observer and a window `resize` listener, and scheduled a first
+  measure, even a filled field with no prefix, suffix or leading icon, which has nothing to
+  place. They now wait for the first setter that gives it something to place (variant, label,
+  icons, affixes, required, density). Mounting 1,000 filled fields takes 16% less script time
+  (49.9 to 41.8 ms; 192 to 165 ms at 4× CPU), with 1,000 fewer listeners. Nothing renders
+  differently.
+
 ### Fixed
 
 - **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
