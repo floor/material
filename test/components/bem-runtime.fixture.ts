@@ -88,7 +88,7 @@ test("menu opener hook is BEM and is removed when the menu closes", async () => 
 });
 
 test("button active constant selects an active menu opener", async () => {
-  const opener = document.createElement("button"); document.body.append(opener);
+  const opener = document.createElement("button"); opener.className = "mtrl-button"; document.body.append(opener);
   const menu = createMenu({ opener, items: [{ id: "copy", text: "Copy" }] });
   cleanup.push(() => menu.destroy());
   menu.open();
@@ -97,6 +97,17 @@ test("button active constant selects an active menu opener", async () => {
   menu.close();
   await closed;
   expect(opener.classList.contains(`mtrl-${BUTTON_CLASSES.ACTIVE}`)).toBe(false);
+});
+
+// FLO-386: a <button> that is not an mtrl button (a FAB, an icon button) is not
+// given the button's pressed class, which would reshape it
+test("a <button> opener that is not an mtrl button gets the menu's own opener class", () => {
+  const opener = document.createElement("button"); opener.className = "mtrl-fab"; document.body.append(opener);
+  const menu = createMenu({ opener, items: [{ id: "copy", text: "Copy" }] });
+  cleanup.push(() => menu.destroy());
+  menu.open();
+  expect(opener.classList.contains(`mtrl-${BUTTON_CLASSES.ACTIVE}`)).toBe(false);
+  expect(opener.classList.contains("mtrl-menu__opener--active")).toBe(true);
 });
 
 test("segmented buttons retain their independent button block and expose a BEM group hook", () => {

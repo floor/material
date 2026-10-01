@@ -138,6 +138,7 @@
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "core:check": "bun run scripts/check-core.ts",
     "elements:check": "bun run scripts/check-elements.ts",
+    "shadow-styles:check": "bun run scripts/check-shadow-styles.ts",
     "preupgrade:check": "bun run scripts/check-preupgrade.ts",
     "adapters:generate": "bun run scripts/generate-adapters.ts",
     "react:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react.ts",
