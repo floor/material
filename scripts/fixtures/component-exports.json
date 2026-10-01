@@ -3247,25 +3247,55 @@
     {
       "name": "TextfieldDensity",
       "kind": "type",
+      "status": "deprecated",
+      "note": "Use TextFieldDensity: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TextFieldDensity",
+      "kind": "type",
       "status": "public"
     },
     {
       "name": "TextfieldEvents",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Use TextFieldEvents: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TextFieldEvents",
       "kind": "type",
       "status": "public"
     },
     {
       "name": "TextfieldFocusPayload",
       "kind": "type",
+      "status": "deprecated",
+      "note": "Use TextFieldFocusPayload: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TextFieldFocusPayload",
+      "kind": "type",
       "status": "public"
     },
     {
       "name": "TextfieldTrailingPayload",
       "kind": "type",
+      "status": "deprecated",
+      "note": "Use TextFieldTrailingPayload: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TextFieldTrailingPayload",
+      "kind": "type",
       "status": "public"
     },
     {
       "name": "TextfieldValuePayload",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Use TextFieldValuePayload: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TextFieldValuePayload",
       "kind": "type",
       "status": "public"
     }
