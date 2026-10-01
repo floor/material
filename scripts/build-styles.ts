@@ -113,8 +113,7 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   const { elements } = await import("../src/elements");
   const { preupgradeSheet } = await import("../src/elements/styles");
   const definition = await import("../src/elements/define");
-  // Once FLO-363A lands, replace the next line with: const { hostStyleText } = definition;
-  const hostStyleText = (spec: { hostStyles?: string }): string => definition.BASE_HOST_STYLES + (spec.hostStyles ?? "");
+  const { hostStyleText } = definition;
   const preupgrade = await preupgradeStyles(Object.values(elements).map(element => element.spec.name), options);
   const write = async (name: string, source: string, imports: string[]) => {
     const css = sass.compileString(`@use "${source}";`, options).css;

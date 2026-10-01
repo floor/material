@@ -6,7 +6,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { elements } from "../src/elements";
-import { BASE_HOST_STYLES } from "../src/elements/define";
+import { hostStyleText } from "../src/elements/define";
 import { resolveStyleDependencies } from "./style-manifest";
 
 const dir = "dist/elements/css";
@@ -42,7 +42,7 @@ for (const { spec } of Object.values(elements)) {
   const file = join(dir, "hosts", `${spec.name}.css`);
   assert.equal(
     await readFile(file, "utf8"),
-    BASE_HOST_STYLES + (spec.hostStyles ?? ""),
+    hostStyleText(spec),
     `${spec.name} host CSS differs from the browser's registered string`,
   );
   assert.equal(
