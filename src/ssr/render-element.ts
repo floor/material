@@ -103,9 +103,9 @@ export function renderElement(
 /** Internal adapter entry: returns just the root shadow, before serializing light DOM. */
 function renderShadow(tag: string, markup: string, prefix: string, renderedChildren = false): string {
   const host = new DOMParser().parseFromString(markup, "text/html").querySelector(tag) as unknown as Element;
-  // Solid reuses the page's rendered children, including nested adapters'
-  // templates. Remove those only from this detached copy before the regular
-  // renderer audits it. Public renderElement still rejects authored roots.
+  // Solid and Vue reuse the page's rendered children, including nested
+  // adapters' templates. Remove those only from this detached copy before the
+  // regular renderer audits it. Public renderElement still rejects authored roots.
   if (renderedChildren) {
     for (const template of Array.from(host.querySelectorAll("template[shadowrootmode]"))) template.remove();
   }
