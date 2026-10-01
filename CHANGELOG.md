@@ -23,6 +23,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - **`$mtrl-sys-shape` is removed from `abstract/theme` (FLO-345).** Nothing read it. Use
   `v.shape(<step>)`.
 
+## [0.10.3] - 2026-10-01
+
+Text field fixes: a disabled, empty field no longer shows its placeholder over the label, and
+prefix and suffix text wait for the label to float. The corner scale gains M3's two largest steps,
+the search bar's corners follow the theme, and the three shape steps outside M3's scale are
+deprecated ahead of 1.0.0.
+
 ### Added
 
 - **M3's two largest corner steps (FLO-345).** `extra-large-increased` (32px) and
@@ -1664,7 +1671,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.2...HEAD
+[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.3...HEAD
+[0.10.3]: https://github.com/floor/mtrl/compare/v0.10.2...v0.10.3
 [0.10.2]: https://github.com/floor/mtrl/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/floor/mtrl/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/floor/mtrl/compare/v0.10.0-next.3...v0.10.0
