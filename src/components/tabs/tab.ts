@@ -186,6 +186,10 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
         return this;
       },
 
+      isDisabled() {
+        return button.isDisabled();
+      },
+
       setText(content) {
         button.setText(content);
         this.updateLayoutStyle();

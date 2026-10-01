@@ -59,6 +59,12 @@
   {
     "name": "BottomAppBar",
     "kind": "type",
+    "status": "renamed",
+    "to": "BottomAppBarComponent"
+  },
+  {
+    "name": "BottomAppBarComponent",
+    "kind": "type",
     "status": "public"
   },
   {
@@ -164,9 +170,15 @@
     "path": "mtrl/core/canvas"
   },
   {
-    "name": "CardSchema",
+    "name": "CardConfig",
     "kind": "type",
     "status": "public"
+  },
+  {
+    "name": "CardSchema",
+    "kind": "type",
+    "status": "renamed",
+    "to": "CardConfig"
   },
   {
     "name": "CarouselComponent",
@@ -623,6 +635,12 @@
   },
   {
     "name": "createTextfield",
+    "kind": "value",
+    "status": "renamed",
+    "to": "createTextField"
+  },
+  {
+    "name": "createTextField",
     "kind": "value",
     "status": "public"
   },
@@ -1443,10 +1461,22 @@
   {
     "name": "TextfieldComponent",
     "kind": "type",
+    "status": "renamed",
+    "to": "TextFieldComponent"
+  },
+  {
+    "name": "TextFieldComponent",
+    "kind": "type",
     "status": "public"
   },
   {
     "name": "TextfieldConfig",
+    "kind": "type",
+    "status": "renamed",
+    "to": "TextFieldConfig"
+  },
+  {
+    "name": "TextFieldConfig",
     "kind": "type",
     "status": "public"
   },
@@ -1549,6 +1579,12 @@
   },
   {
     "name": "TopAppBar",
+    "kind": "type",
+    "status": "renamed",
+    "to": "TopAppBarComponent"
+  },
+  {
+    "name": "TopAppBarComponent",
     "kind": "type",
     "status": "public"
   },

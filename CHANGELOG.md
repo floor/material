@@ -12,6 +12,23 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Canonical names (FLO-383):** `createTextField`, `TextFieldConfig` and `TextFieldComponent` (M3
+  writes "text field" as two words), `CardConfig`, `TopAppBarComponent` and
+  `BottomAppBarComponent`, from `mtrl` and from each component's subpath. They are the same
+  factory and types as the old names. `createTopAppBar` now returns the one public `TopAppBar`
+  declaration (`top-app-bar.ts` had a second); assignability is unchanged.
+- **API gaps from the 1.0 audit (FLO-384).**
+  - `isDisabled()` on every component that can be disabled and lacked it: button, icon button,
+    FAB, extended FAB, checkbox, switch, text field, select, radios, button group and a tab.
+  - Exported beside their factories: `ButtonEvents` (`mtrl/components/button`), `MenuEvents`,
+    `SelectEvents`, the button group's `ButtonGroupKind`, `ButtonGroupSelection` and
+    `ButtonGroupChangeEvent`, and `createTab` from `mtrl/components/tabs`.
+  - Event maps that now declare what is already emitted: a toggle button's `change`
+    (`{ selected }`), the card's `expandedChanged` and the list's `keydown`. The list's
+    `scroll` is typed as the forwarded payload; its `component` field, never sent, is optional
+    and deprecated (1.0 removes it).
+  - The `mtrl/components/<name>/constants` subpaths' exports are pinned beside the indexes
+    (`bun run component-exports:check`).
 - **Contrast on every theme (FLO-406).** `data-theme-contrast="standard"`, `"medium"`
   and `"high"` select M3 contrast levels in light and dark. Put the attribute on the
   same element as `data-theme`, including each nested theme. With no contrast attribute,
@@ -74,6 +91,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Deprecated
 
+- **The old names, renamed (FLO-383):** `createTextfield` → `createTextField`, `TextfieldConfig` →
+  `TextFieldConfig`, `TextfieldComponent` → `TextFieldComponent`, `CardSchema` → `CardConfig`,
+  `TopAppBar` → `TopAppBarComponent`, `BottomAppBar` → `BottomAppBarComponent`. Each is flagged
+  where it is imported and removed in 1.0. Tags, CSS classes, folders and events keep their
+  names.
 - **Component internals on their subpaths (FLO-381).** `mtrl/components/<name>` is public API, and
   some indexes re-exported implementation details. These are deprecated there and removed in
   1.0.0, with no replacement (they are internal):
@@ -104,6 +126,17 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - The menu keyboard step of `elements:check` no longer ends one item short when a runner pauses
   (FLO-423). It waited a fixed 450ms after opening the menu with a key, then sent the arrows; it
   now waits for the first item to take focus, which is what the arrows depend on.
+- The search check in `core:check` no longer times out when a frame arrives late (FLO-420). It
+  pressed the scrim before the view's opening had put focus back on the input, and that focus
+  re-opened the view. The check now waits for the opening's frame, and reads the scrim press at
+  once, which it could not tell from the input's blur before.
+- **ArrowLeft and Escape work in a submenu whose parent item's id holds a quote or a backslash
+  (FLO-429).** They threw, or did nothing, because the id was put into a CSS selector.
+- CI's `static` job prints the output of a failing check again. Under the job's shell a failing
+  check ended before its status was recorded, and the step stopped with "exit code 1" and nothing
+  else, so the failure could not be read from CI.
+- The checkbox and switch change payload docs said setters emit `change`; they are silent, as
+  they have been since FLO-328 (FLO-384).
 - **Menu item ids containing selector syntax keep submenu keyboard navigation working (FLO-429).**
   Parent lookup compares `data-id`, `data-owner`, and `data-level` as strings.
 
