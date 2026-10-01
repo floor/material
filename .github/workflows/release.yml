@@ -59,3 +59,36 @@ jobs:
             *) tag=latest ;;
           esac
           npm publish --provenance --access public --tag "$tag"
+
+  # The GitHub Release for the tag, once npm has the version: its CHANGELOG.md
+  # section and a footer (scripts/release-notes.ts). A pre-release is marked one
+  # and never becomes Latest. Run again on the same tag, it finds the release and
+  # stops. Only this job writes to the repository, with the workflow's own token.
+  github-release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4"
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$GITHUB_REF_NAME"
+          version="${tag#v}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "The release $tag exists; nothing to do."
+            exit 0
+          fi
+          bun scripts/release-notes.ts "$version" > "$RUNNER_TEMP/notes.md"
+          case "$version" in
+            *-*) flags="--prerelease --latest=false" ;;
+            *) flags="--latest" ;;
+          esac
+          gh release create "$tag" --title "mtrl $version" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag $flags

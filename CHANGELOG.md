@@ -10,11 +10,6 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
-### Added
-
-- `mtrl/ssr`: `renderElement` renders elements as declarative shadow DOM on a server (Node, Bun); server-only, with no runtime dependencies (FLO-363, FLO-364).
-- Element CSS also ships as `.css` files (`mtrl/elements/css/<name>.css`, `hosts/<element>.css`), for server-rendered `<link>` styles (FLO-365).
-
 ### Changed (breaking)
 
 - **The shape scale is M3's and nothing else (FLO-345).** The mtrl-only steps `extra-tiny` (1px),
@@ -50,6 +45,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- `mtrl/ssr`: `renderElement` renders elements as declarative shadow DOM on a server (Node, Bun); server-only, with no runtime dependencies (FLO-363, FLO-364).
+- Element CSS also ships as `.css` files (`mtrl/elements/css/<name>.css`, `hosts/<element>.css`), for server-rendered `<link>` styles (FLO-365).
 - **Synchronous declarative shadow DOM rendering (FLO-363, part B).** The server-only
   `src/ssr` entry exports `renderElement` with inline CSS by default, optional stylesheet
   links, nested elements, and the shared HTML policy. It rejects asynchronous FAB-menu
@@ -76,6 +73,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - **Text field: errors are announced when they appear (FLO-301).** The supporting text is a polite
   live region, so an error set with `setError(true, message)` is read without the field being
   refocused. Its element now stays and its text changes in place.
+- **Every release gets its GitHub Release.** The release workflow published to npm only, so
+  GitHub showed 0.9.8 as the latest release. Once npm has the version, it now creates the
+  release for the tag from the version's CHANGELOG section, with links to npm, md3.io and this
+  file; a pre-release (`-next.N`) is marked one and never becomes Latest. 0.10.0 to 0.10.4 were
+  created by hand.
 
 ### Fixed
 
