@@ -12,6 +12,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **The deprecated themes `material`, `winter`, `browngreen` and `legacy` are removed
+  (FLO-428).** 0.10 deprecated them (FLO-308); their files, `mtrl/themes/<name>` entries and
+  their rules in the full stylesheet are gone, so `data-theme="winter"` and the rest fall back
+  to the unthemed baseline. Migration: `material` → `baseline`, `winter` → `ocean`,
+  `browngreen` → `brownbeige`; `legacy` has no replacement (pick any theme, or keep its
+  colours as custom properties of your own).
 - **Segmented buttons are removed (FLO-382).** `createSegmentedButton` and `createSegment`
   (deprecated since 0.10), their types, `mtrl/components/segmented-button`,
   `mtrl/styles/segmented-button` and the `--mtrl-segmented-button-*` properties are gone. M3

@@ -153,8 +153,6 @@ The default baseline also supports this setting without `data-theme`. On that un
 
 M3's scheme variants, generated from the baseline seed, ship as their own entries only (not in the full stylesheet): `neutral`, `vibrant`, `expressive`, `fidelity`, `content`, `monochrome`, `rainbow` and `fruit-salad`, for example `mtrl/themes/vibrant`. `schemeToTokens` (`mtrl/core/theme`) turns any M3 scheme's role colours into these tokens.
 
-Deprecated, removed in 1.0: `material` (use `baseline`), `winter` (use `ocean`), `browngreen` (use `brownbeige`) and `legacy`.
-
 ### Custom properties
 
 Components read the theme's colour roles, so overriding a role restyles every component that uses it:
