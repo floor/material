@@ -1,5 +1,8 @@
 // src/components/textfield/types.ts
 import type { EventCallback } from "../../core/state/emitter";
+import type { TextfieldTrailingPayload } from "./features/trailing-icon";
+
+export type { TextfieldTrailingPayload };
 
 /**
  * Available Textfield variants
@@ -84,8 +87,14 @@ export interface TextfieldConfig {
   /** Placeholder text */
   placeholder?: string;
 
-  /** Whether input is required */
+  /** Whether input is required; the label gets an asterisk (FLO-301) */
   required?: boolean;
+
+  /**
+   * No asterisk on a required field: M3 lets a form whose fields are mostly
+   * required mark its optional ones instead (FLO-301)
+   */
+  noAsterisk?: boolean;
 
   /** Whether textfield is disabled */
   disabled?: boolean;
@@ -107,6 +116,17 @@ export interface TextfieldConfig {
 
   /** Trailing icon HTML content */
   trailingIcon?: string;
+
+  /**
+   * Makes the trailing icon a button with this accessible name (clear, show
+   * password, …), emitting `trailing` when activated. Without it the icon is
+   * decorative. M3 draws an interactive trailing icon as an icon button, as
+   * Compose's trailing slot holds an `IconButton` (FLO-301).
+   */
+  trailingIconLabel?: string;
+
+  /** Called when the trailing icon button is activated, after `trailing` is emitted */
+  onTrailingClick?: (event: TextfieldTrailingPayload) => void;
 
   /** Supporting text content */
   supportingText?: string;
@@ -144,6 +164,8 @@ export interface TextfieldFocusPayload {
 
 /** Events emitted by the text input feature. setValue() is silent. */
 export interface TextfieldEvents {
+  /** The trailing icon button was activated (`trailingIconLabel`; FLO-301) */
+  trailing: (payload: TextfieldTrailingPayload) => void;
   input: (payload: TextfieldValuePayload) => void;
   change: (payload: TextfieldValuePayload) => void;
   focus: (payload: TextfieldFocusPayload) => void;
@@ -206,10 +228,20 @@ export interface TextfieldComponent {
   trailingIcon: HTMLElement | null;
 
   /** Sets the trailing icon HTML content */
-  setTrailingIcon: (html: string) => TextfieldComponent;
+  /**
+   * Sets the trailing icon. `label` makes it a button with that accessible name,
+   * an empty one makes it decorative; left out, the icon keeps what it is.
+   */
+  setTrailingIcon: (html: string, label?: string) => TextfieldComponent;
 
   /** Removes the trailing icon */
   removeTrailingIcon: () => TextfieldComponent;
+
+  /** Makes the field required or optional, the label's asterisk with it (FLO-301) */
+  setRequired: (required: boolean) => TextfieldComponent;
+
+  /** Whether the field is required */
+  isRequired: () => boolean;
 
   /** Supporting text element (if present) */
   supportingTextElement: HTMLElement | null;
@@ -307,7 +339,7 @@ export interface BaseComponent {
   setLeadingIcon?: (html: string) => void;
   removeLeadingIcon?: () => void;
   trailingIcon?: HTMLElement | null;
-  setTrailingIcon?: (html: string) => void;
+  setTrailingIcon?: (html: string, label?: string) => void;
   removeTrailingIcon?: () => void;
   supportingTextElement?: HTMLElement | null;
   setSupportingText?: (text: string, isError?: boolean) => void;

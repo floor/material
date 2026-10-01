@@ -9,9 +9,18 @@ import { fieldOf } from './field';
  */
 interface InputElementComponent extends ElementComponent {
   input?: HTMLInputElement | HTMLTextAreaElement;
+  emit?: (event: string, data?: unknown) => void;
   lifecycle?: {
     destroy: () => void;
   };
+}
+
+/** What an interactive trailing icon's `trailing` event carries (FLO-301) */
+export interface TextfieldTrailingPayload {
+  /** The field's value when the icon was activated */
+  value: string;
+  /** The click (Enter and Space reach a button as one) */
+  event: MouseEvent;
 }
 
 /**
@@ -22,7 +31,22 @@ export interface TrailingIconConfig {
    * Trailing icon HTML content
    */
   trailingIcon?: string;
-  
+
+  /**
+   * Makes the trailing icon a button with this accessible name: clear, show
+   * password, open a menu (FLO-301). M3 draws an interactive trailing icon as an
+   * icon button, as Compose's trailing slot holds an `IconButton`: a 40dp state
+   * layer and a 48dp target. Activating it emits `trailing`. Without a label the
+   * icon is decorative.
+   */
+  trailingIconLabel?: string;
+
+  /** Called when the trailing icon button is activated, after `trailing` is emitted */
+  onTrailingClick?: (event: TextfieldTrailingPayload) => void;
+
+  /** Whether the field starts disabled; the trailing button is disabled with it */
+  disabled?: boolean;
+
   /**
    * CSS class prefix
    */
@@ -55,9 +79,11 @@ export interface TrailingIconFeature {
   /**
    * Sets trailing icon content
    * @param html - HTML content for the icon
+   * @param label - The button's accessible name, making the icon a button; an empty
+   *   string makes it decorative again; left out, the icon keeps what it is
    * @returns Component instance for chaining
    */
-  setTrailingIcon: (html: string) => TrailingIconComponent;
+  setTrailingIcon: (html: string, label?: string) => TrailingIconComponent;
   
   /**
    * Removes trailing icon
@@ -91,12 +117,46 @@ export const withTrailingIcon = <T extends TrailingIconConfig & object>(config: 
     // with this slot, so `setTrailingIcon()` on a plain field did nothing at all
     // and said nothing about it.
     let slot: HTMLElement | null = null;
+    // The button's accessible name; empty, the icon is decorative (FLO-301)
+    let label = config.trailingIconLabel ?? '';
+
+    const activate = (event: MouseEvent): void => {
+      if (component.input?.disabled) return;
+      const detail: TextfieldTrailingPayload = { value: component.input?.value ?? '', event };
+      component.emit?.('trailing', detail);
+      config.onTrailingClick?.(detail);
+    };
+
+    const create = (): HTMLElement => {
+      const className = `${PREFIX}-${NAME}__trailing-icon`;
+      if (!label) {
+        const element = document.createElement('span');
+        element.className = className;
+        return element;
+      }
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `${className} ${className}--button`;
+      button.setAttribute('aria-label', label);
+      button.disabled = Boolean(component.input?.disabled ?? config.disabled);
+      button.addEventListener('click', activate);
+      return button;
+    };
 
     const ensureSlot = (): HTMLElement => {
-      if (slot && slot.parentNode) return slot;
-      const element = document.createElement('span');
-      element.className = `${PREFIX}-${NAME}__trailing-icon`;
-      fieldOf(component).appendChild(element);
+      const wanted = label ? 'BUTTON' : 'SPAN';
+      if (slot && slot.parentNode && slot.tagName === wanted) {
+        if (label) slot.setAttribute('aria-label', label);
+        return slot;
+      }
+      const element = create();
+      // A change of kind keeps the icon and the slot's place
+      if (slot?.parentNode) {
+        element.append(...Array.from(slot.childNodes));
+        slot.replaceWith(element);
+      } else {
+        fieldOf(component).appendChild(element);
+      }
       component.element.classList.add(`${PREFIX}-${NAME}--with-trailing-icon`);
       if (component.input) {
         component.input.classList.add(`${PREFIX}-${NAME}__input--with-trailing-icon`);
@@ -144,7 +204,8 @@ export const withTrailingIcon = <T extends TrailingIconConfig & object>(config: 
       // Whatever the creation option produced, if it produced anything.
       trailingIcon: slot,
 
-      setTrailingIcon(html: string) {
+      setTrailingIcon(html: string, nextLabel?: string) {
+        if (nextLabel !== undefined) label = nextLabel;
         this.trailingIcon = ensureSlot();
         write(this.trailingIcon, html);
         return this;
