@@ -145,7 +145,8 @@ try {
     { name: "form", code: "export { createButton, createTextfield, createCheckbox } from 'mtrl';", gzip: 22000 },
     // The toolbar (FLO-304): 123,080 to 125,176, measured against b1dbf77.
     // The FAB menu (FLO-306): 125,245 to 127,714, measured against 1bd8343.
-    { name: "all-js", code: "export * from 'mtrl';", gzip: 128000 },
+    // The Material shapes' geometry in the loading indicator (FLO-346): 127,894 to 128,195, measured against 5b314c5.
+    { name: "all-js", code: "export * from 'mtrl';", gzip: 128300 },
     { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 6500 },
     // The outlined text field's notched outline (#234) adds 202, 7,863 to 8,065: three
     // segments with their corners each way round, and the outline colour and width per
