@@ -37,18 +37,18 @@ try {
   // measured with CI's Node 22 / npm 10.
   // FLO-406: medium/high contrast for all 24 themes, including the system fallback.
   // Node 22.23.3 / npm 10.9.9: 1,007,632 -> 1,067,061 compressed bytes.
-  // FLO-406 addenda: sparse roles and one shared high palette (activation uses var()).
-  // Node 22.23.3 / npm 10.9.9: 1,067,061 -> 1,076,871 compressed bytes.
-  // Fewer declarations/raw bytes do not imply smaller gzip: indirection adds names.
-  assert(pack.size < 1_085_000, "npm tarball exceeds 1,085,000 bytes");
+  // FLO-406 addenda: sparse roles and a shared high palette: 1,076,871 bytes.
+  // Direct high values in explicit and system rules: 1,063,670 bytes, measured
+  // with Node 22.23.3 / npm 10.9.9. Repeated values compress better than references.
+  assert(pack.size < 1_070_000, "npm tarball exceeds 1,070,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
   // ESM 23%, CSS 18%, SCSS sources 11%, the CommonJS bundle 8% (a 1.0.0 decision).
   // FLO-406: the generated SCSS plus standalone, base and full CSS copies:
   // 5,716,236 -> 6,571,092 unpacked bytes under the same Node 22 / npm 10 packer.
-  // FLO-406 addenda: 6,571,092 -> 6,430,336 unpacked bytes; lower this budget.
-  assert(pack.unpackedSize < 6_500_000, "Unpacked package exceeds 6,500,000 bytes");
+  // FLO-406 addenda: 6,571,092 -> 6,430,336 -> 6,272,030 unpacked bytes.
+  assert(pack.unpackedSize < 6_300_000, "Unpacked package exceeds 6,300,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
   const smoke = join(temporary, "smoke.mjs");
@@ -165,8 +165,8 @@ try {
     { name: "slider", code: "export { createSlider } from 'mtrl';", gzip: 13090 },
     { name: "navigation-rail", code: "export { createNavigationRail } from 'mtrl';", gzip: 7000 },
     // FLO-406 contrast CSS: 5,266 -> 7,189 gzip bytes, Node 22.23.3 / npm 10.9.9.
-    // FLO-406 addenda: shared palette indirection, 7,189 -> 8,156 gzip bytes (same packer).
-    { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 8300 },
+    // FLO-406 direct high values: 8,156 -> 7,631 gzip bytes (same packer).
+    { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 7800 },
     // FLO-301 (the required asterisk, the live error, the trailing icon button): 8,456 to
     // 9,058 against 7cd57a6, Node 22 / npm 10.
     { name: "textfield", code: "export { createTextfield } from 'mtrl';", gzip: 9200 },
@@ -177,8 +177,8 @@ try {
     // The text field's asterisk, live error and trailing button (FLO-301): 128,187 to 128,802, against 7cd57a6.
     { name: "all-js", code: "export * from 'mtrl';", gzip: 128900 },
     // FLO-406 contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
-    // FLO-406 addenda: shared palette indirection, 7,107 -> 8,069 gzip bytes (same packer).
-    { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 8200 },
+    // FLO-406 direct high values: 8,069 -> 7,542 gzip bytes (same packer).
+    { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 7700 },
     // The outlined text field's notched outline (#234) adds 202, 7,863 to 8,065: three
     // segments with their corners each way round, and the outline colour and width per
     // state, in place of an input border and a focus overlay. The resting label shown
@@ -186,11 +186,11 @@ try {
     // while it rests, 8,183 to 8,245 (+62) against 09d665b, Node 22 / npm 10.
     // The text field's trailing icon button and asterisk (FLO-301): 8,245 to 8,426 against 7cd57a6.
     // FLO-406 contrast CSS: 8,426 -> 10,377 gzip bytes, Node 22.23.3 / npm 10.9.9.
-    // FLO-406 addenda: shared palette indirection, 10,377 -> 11,342 gzip bytes (same packer).
-    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 11500 },
+    // FLO-406 direct high values: 11,342 -> 10,811 gzip bytes (same packer).
+    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 11000 },
     // FLO-406 contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
-    // FLO-406 addenda: shared palette indirection, 6,661 -> 7,639 gzip bytes (same packer).
-    { name: "slider-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/slider';", gzip: 7800 },
+    // FLO-406 direct high values: 7,639 -> 7,111 gzip bytes (same packer).
+    { name: "slider-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/slider';", gzip: 7300 },
     // The .43 rail-motion baseline is 47,117 bytes; core ripple adds about 20 bytes.
     // The tooltip stylesheet adds 486 (measured): it was authored but registered in no
     // bundle, so every budget before this one was set with its CSS missing, not excluded.
@@ -222,8 +222,8 @@ try {
     // The date picker's range bleed: 52,705 to 52,916, measured against d741e93.
     // The text field's trailing icon button and asterisk (FLO-301): 52,916 to 53,072 against 7cd57a6.
     // FLO-406 contrast CSS: 53,072 -> 64,228 gzip bytes, Node 22.23.3 / npm 10.9.9.
-    // FLO-406 addenda: shared palette indirection, 64,228 -> 69,743 gzip bytes (same packer).
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 70000 },
+    // FLO-406 direct high values: 69,743 -> 65,291 gzip bytes (same packer).
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 66000 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);
