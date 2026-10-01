@@ -1,6 +1,5 @@
 // src/styles/themes/_base-theme.scss
 @use 'sass:map';
-@use 'sass:list';
 @use '../abstract/base' as *;
 
 // Base theme definition with common properties and structure
@@ -10,10 +9,9 @@
   }
 }
 
-// Media queries cannot condition one member of a selector list. Store each high
-// value once; explicit high and prefers-contrast activation rules reference it.
-// Unlike value switches, this leaves standard/inherited tokens untouched when
-// the system preference is off. Equal medium/high values reuse the same palette.
+// Media queries cannot condition one member of a selector list. Emit high
+// values in both explicit and system activation rules so standard/inherited
+// tokens stay untouched when the system preference is off.
 @function contrast-scope($name) {
   @if $name == "baseline" {
     @return ':is([data-theme="baseline"], :root:not([data-theme]))';
@@ -21,50 +19,40 @@
   @return '[data-theme="#{$name}"]';
 }
 
-// Share equal high colors across roles and modes, too. The SCSS maps retain
-// role names; private numbered palette entries keep the CSS smaller.
-@function contrast-key($palette, $value) {
-  @return '--#{$prefix}-contrast-#{list.index($palette, $value)}';
-}
-
-@mixin contrast-values($tokens, $palette, $mode) {
+@mixin contrast-values($tokens, $mode) {
   @each $role, $value in map.get($tokens, $mode) {
-    @if list.index($palette, $value) {
-      --#{$prefix}-sys-color-#{$role}: var(#{contrast-key($palette, $value)});
-    } @else {
-      --#{$prefix}-sys-color-#{$role}: #{$value};
-    }
+    --#{$prefix}-sys-color-#{$role}: #{$value};
   }
 }
 
-@mixin contrast-modes($name, $tokens, $palette) {
+@mixin contrast-modes($name, $tokens) {
   // Light must not leak into dark when its unchanged roles are omitted.
   &:not([data-theme-mode="dark"]) {
     @if $name == "baseline" {
       &[data-theme], &:not(.dark-theme)[data-theme-mode="light"] {
-        @include contrast-values($tokens, $palette, light);
+        @include contrast-values($tokens, light);
       }
       @media not (prefers-color-scheme: dark) {
         &:root:not([data-theme]):not(.dark-theme):not([data-theme-mode="light"]) {
-          @include contrast-values($tokens, $palette, light);
+          @include contrast-values($tokens, light);
         }
       }
     } @else {
-      @include contrast-values($tokens, $palette, light);
+      @include contrast-values($tokens, light);
     }
   }
   @if $name == "baseline" {
     &[data-theme-mode="dark"], &:root:not([data-theme]).dark-theme {
-      @include contrast-values($tokens, $palette, dark);
+      @include contrast-values($tokens, dark);
     }
     @media (prefers-color-scheme: dark) {
       &:root:not([data-theme]):not(.dark-theme):not([data-theme-mode]) {
-        @include contrast-values($tokens, $palette, dark);
+        @include contrast-values($tokens, dark);
       }
     }
   } @else {
     &[data-theme-mode="dark"] {
-      @include contrast-values($tokens, $palette, dark);
+      @include contrast-values($tokens, dark);
     }
   }
 }
@@ -72,19 +60,6 @@
 @mixin create-theme-contrast($name, $levels) {
   $scope: contrast-scope($name);
   $high: map.get($levels, high);
-  $colors: ();
-  @each $mode, $tokens in $high {
-    @each $role, $value in $tokens {
-      $colors: map.set($colors, $value, true);
-    }
-  }
-  $palette: map.keys($colors);
-  // Medium also needs the palette for its values that equal high.
-  #{$scope}:is([data-theme-contrast="medium"], [data-theme-contrast="high"], :not([data-theme-contrast])) {
-    @each $value in $palette {
-      #{contrast-key($palette, $value)}: #{$value};
-    }
-  }
   $shared: (light: (), dark: ());
   $distinct: $levels;
   @each $mode, $tokens in map.get($levels, medium) {
@@ -98,16 +73,16 @@
     }
   }
   #{$scope}:is([data-theme-contrast="medium"], [data-theme-contrast="high"]) {
-    @include contrast-modes($name, $shared, $palette);
+    @include contrast-modes($name, $shared);
   }
   @each $level, $tokens in $distinct {
     #{$scope}[data-theme-contrast="#{$level}"] {
-      @include contrast-modes($name, $tokens, $palette);
+      @include contrast-modes($name, $tokens);
     }
   }
   @media (prefers-contrast: more) {
     #{$scope}:not([data-theme-contrast]) {
-      @include contrast-modes($name, $high, $palette);
+      @include contrast-modes($name, $high);
     }
   }
 }

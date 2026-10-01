@@ -8,8 +8,6 @@ export const isDark = (selector: string) => selector.replace(/:not\([^)]*\)/g, '
   (selector.includes('(prefers-color-scheme: dark)') && !selector.includes('not (prefers-color-scheme: dark)')) || selector === '.dark-theme';
 export const colorBlocks = (css: string) => {
   const result: { selector: string; body: string; roles: Record<string, string> }[] = [];
-  const palette = Object.fromEntries([...css.matchAll(/(--mtrl-contrast-[a-z0-9-]+):\s*(#[a-f\d]{3,6})\b/gi)]
-    .map(([, token, hex]) => [token!, hex!]));
   const visit = (text: string, media = '') => {
     let start = 0;
     while (start < text.length) {
@@ -22,7 +20,7 @@ export const colorBlocks = (css: string) => {
         end++;
       }
       const selector = text.slice(start, open).trim();
-      const body = text.slice(open + 1, end - 1).replace(/var\((--mtrl-contrast-[a-z0-9-]+)\)/g, (match, token: string) => palette[token] ?? match);
+      const body = text.slice(open + 1, end - 1);
       if (selector.startsWith('@')) visit(body, `${media} ${selector}`);
       else result.push({ selector: `${media} ${selector}`.trim(), body, roles: colorRoles(body) });
       start = end;

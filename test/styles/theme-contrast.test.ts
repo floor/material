@@ -44,7 +44,7 @@ describe('every theme contrast level', () => {
   for (const name of names) {
     const compiled = css(name);
     const source = colorBlocks(compiled);
-    test(`${name}: contrast emits only differing roles and one high palette`, () => {
+    test(`${name}: contrast emits only differing roles and direct high values`, () => {
       const contrast = source.filter(block => block.selector.includes('data-theme-contrast'));
       expect(new Set(contrast.map(block => block.selector)).size).toBe(contrast.length);
       for (const mode of modes) {
@@ -61,17 +61,14 @@ describe('every theme contrast level', () => {
           const roles = selected.flatMap(block => Object.keys(block.roles));
           expect(new Set(roles).size).toBe(roles.length);
         }
+        const explicit = Object.assign({}, ...contrast.filter(block => !block.selector.includes('@media') &&
+          block.selector.includes('[data-theme-contrast=high]') && isDark(block.selector) === (mode === 'dark')).map(block => block.roles));
+        const automatic = Object.assign({}, ...contrast.filter(block => block.selector.includes('(prefers-contrast: more)') &&
+          block.selector.includes(':not([data-theme-contrast])') && isDark(block.selector) === (mode === 'dark')).map(block => block.roles));
+        expect(automatic).toEqual(explicit);
       }
-      const palette = [...compiled.matchAll(/(--mtrl-contrast-\d+):\s*#[a-f\d]+/gi)].map(match => match[1]);
-      expect(new Set(palette).size).toBe(palette.length);
-      if (name === 'highcontrast') expect(palette).toHaveLength(0);
-      else expect(palette.length).toBeGreaterThan(0);
-      // High activation contains references only, never a second color payload.
-      for (const [, selector, body] of compiled.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-        if (selector!.includes('[data-theme-contrast=high]') || selector!.includes(':not([data-theme-contrast])')) {
-          expect(body).not.toMatch(/--mtrl-sys-color-[a-z-]+:\s*#/i);
-        }
-      }
+      expect(compiled).not.toMatch(/--mtrl-contrast-[a-z\d-]+/i);
+      for (const block of contrast) expect(block.body).not.toMatch(/var\(/);
     });
     for (const level of levels) for (const mode of modes) {
       const base = { ...standardRoles(baseline, 'baseline', mode === 'dark'), ...standardRoles(compiled, name, mode === 'dark') };
