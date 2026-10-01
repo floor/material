@@ -64,6 +64,13 @@ export const CountedSibling = (): React.ReactElement => {
 
 const pendingFallback = h("em", null, "pending");
 
+/** A child whose message copies React's production suspend text. The bridge must not treat it as a suspend. */
+const Mislabelled = (): React.ReactNode => {
+  throw new Error("Minified React error #426; visit https://react.dev/errors/426 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.");
+};
+
+export const mislabelledTree = (): React.ReactNode => h(Button, { id: "mislabelled" }, h(Mislabelled));
+
 /** A host whose child rejects. `boundary` wraps it in the page's Suspense. */
 export const rejectionTree = (promise: Promise<string>, boundary: boolean): React.ReactNode => {
   const host = h(Button, { id: boundary ? "rej" : "rej-shell" }, h(Late, { promise }));

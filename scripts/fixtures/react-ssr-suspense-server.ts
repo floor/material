@@ -7,7 +7,7 @@ import * as ReactDOMServer from "react-dom/server";
 import { Writable } from "node:stream";
 import {
   SuspenseHydration, hydrationPromise, suspenseShape, SUSPENSE_SHAPES, SUSPENSE_TEXT,
-  countedSuspendedButton, neverPromise, rejectionTree, rejectingPromise, renderCounts,
+  countedSuspendedButton, mislabelledTree, neverPromise, rejectionTree, rejectingPromise, renderCounts,
 } from "./react-ssr-suspense-app";
 
 export interface StreamResult { html: string; errors: string[]; ms: number }
@@ -126,6 +126,9 @@ const settled = async (node: React.ReactNode, options: StreamOptions): Promise<S
 /** A child that rejects, with the page's Suspense boundary or as a shell error. */
 export const renderRejection = (boundary: boolean): Promise<StreamResult> =>
   settled(rejectionTree(rejectingPromise(), boundary), { timeout: 3000 });
+
+/** A child error that copies the production suspend wording. It must surface at once, not after the retry cap. */
+export const renderMislabelled = (): Promise<StreamResult> => settled(mislabelledTree(), { timeout: 3000 });
 
 /** A child that never resolves, aborted at 300ms. `after` is sibling renders in the following 500ms. */
 export const renderAborted = async (): Promise<StreamResult & { during: number; after: number }> => {
