@@ -430,13 +430,39 @@ try {
     });
     assert.deepEqual(parity.element, parity.factory);
     check("button: renders as the factory does with the global stylesheet");
+
+    // FLO-380: a toggle button's change crosses to the host with the button's value,
+    // the getter's value read inside the listener. The element has no toggle
+    // attribute yet, so the toggle comes from scoped global defaults.
+    const toggled = await page.evaluate(() => {
+      type Host = HTMLElement & { component: { getValue: () => string } };
+      const w = window as unknown as Win & { mtrl: { setComponentDefaults: (name: string, config: object) => void } };
+      w.mtrl.setComponentDefaults("button", { toggle: true });
+      try {
+        const host = document.createElement("m-button") as Host;
+        host.setAttribute("value", "bold");
+        host.textContent = "Bold";
+        document.getElementById("factory")?.append(host);
+        const seen: unknown[] = [];
+        host.addEventListener("change", (e) => seen.push([(e as CustomEvent).detail, host.component.getValue()]));
+        const inner = host.shadowRoot?.querySelector("button") as HTMLElement;
+        inner.click();
+        inner.click();
+        host.remove();
+        return seen;
+      } finally {
+        w.mtrl.setComponentDefaults("button", {});
+      }
+    });
+    assert.deepEqual(toggled, [[{ selected: true, value: "bold" }, "bold"], [{ selected: false, value: "bold" }, "bold"]]);
+    check("button: a toggle button's change reaches the host with { selected, value }, value as getValue() reads it (FLO-380)");
   }
 
   // ---------------------------------------------------------------- icon button
   await fresh(
     page,
     `<form id="f" onsubmit="event.preventDefault(); window.submits = (window.submits || 0) + 1">
-       <m-icon-button id="ib" aria-label="Favorite" toggle icon='${ICON}'></m-icon-button>
+       <m-icon-button id="ib" aria-label="Favorite" toggle value="fav" icon='${ICON}'></m-icon-button>
        <m-icon-button id="is" type="submit" aria-label="Send" icon='${ICON}'></m-icon-button>
        <m-icon-button id="ip" variant="filled" aria-label="Plain" icon='${ICON}'></m-icon-button>
        <m-icon-button id="iq" variant="filled" aria-label="Untouched" icon='${ICON}'></m-icon-button>
@@ -463,9 +489,10 @@ try {
       const ib = document.getElementById("ib") as HTMLElement & { selected: boolean };
       return { events: w.events, clicks: w.clicks, selected: ib.selected };
     });
-    assert.deepEqual(state, { events: [{ change: { selected: true } }, { toggle: { selected: true } }], clicks: 1, selected: true });
+    // FLO-380: both carry the button's value beside selected.
+    assert.deepEqual(state, { events: [{ change: { selected: true, value: "fav" } }, { toggle: { selected: true, value: "fav" } }], clicks: 1, selected: true });
     assert.equal(await page.getByRole("button", { name: "Favorite", pressed: true }).count(), 1);
-    check("icon button: a click dispatches one change from the host with { selected }, and the deprecated toggle; click stays native");
+    check("icon button: a click dispatches one change from the host with { selected, value }, and the deprecated toggle; click stays native");
 
     state = await page.evaluate(() => {
       const w = window as unknown as Win;
@@ -2904,8 +2931,8 @@ try {
       }));
     });
     assert.deepEqual(status, {
-      success: { bg: "rgb(0, 123, 90)", color: "rgb(255, 255, 255)" },
-      warning: { bg: "rgb(221, 109, 6)", color: "rgb(255, 255, 255)" },
+      success: { bg: "rgb(0, 108, 78)", color: "rgb(255, 255, 255)" },
+      warning: { bg: "rgb(151, 72, 0)", color: "rgb(255, 255, 255)" },
       info: { bg: "rgb(0, 97, 164)", color: "rgb(255, 255, 255)" },
     });
     check("badge: the success, warning and info colours have their background under baseline");
@@ -4007,13 +4034,14 @@ try {
     await photos.getByRole("group", { name: "2 of 5" }).focus();
     await page.keyboard.press("ArrowRight");
     let state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
-    assert.deepEqual(state, { events: [{ detail: { index: 2 }, target: "r" }], index: 2 });
+    // FLO-380: value is the model (the index), beside index.
+    assert.deepEqual(state, { events: [{ detail: { value: 2, index: 2 }, target: "r" }], index: 2 });
     check("carousel: an arrow key moves to the next item and dispatches change");
 
     await page.evaluate(() => ((window as unknown as Win).events = []));
     await photos.getByRole("group", { name: "4 of 5" }).click();
     state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
-    assert.deepEqual(state, { events: [{ detail: { index: 3 }, target: "r" }], index: 3 });
+    assert.deepEqual(state, { events: [{ detail: { value: 3, index: 3 }, target: "r" }], index: 3 });
     check("carousel: a click on an item makes it current and dispatches change");
 
     state = await page.evaluate(() => {

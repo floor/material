@@ -174,13 +174,13 @@ describe('carousel', () => {
 
 // FLO-114: the real emitter behind the public event map.
 describe('carousel event contract', () => {
-  test('navigation emits only index changes, clamps boundaries and supports off', () => {
+  test('navigation emits only index changes (value and index, FLO-380), clamps boundaries and supports off', () => {
     const carousel = createCarousel({ slides });
     const changed = mock((_payload: CarouselChangePayload) => {});
     try {
       expect(carousel.on('change', changed)).toBe(carousel);
       carousel.goTo(0).next().goTo(1).goTo(99).next().prev().goTo(-5).prev();
-      expect(changed.mock.calls).toEqual([[{ index: 1 }], [{ index: 3 }], [{ index: 2 }], [{ index: 0 }]]);
+      expect(changed.mock.calls).toEqual([1, 3, 2, 0].map(index => [{ value: index, index }]));
       expect(carousel.off('change', changed)).toBe(carousel);
       carousel.next();
       expect(changed).toHaveBeenCalledTimes(4);
@@ -204,7 +204,7 @@ describe('carousel event contract', () => {
         else scroller.scrollLeft = parseFloat(last.style.left);
         scroller.dispatchEvent(new dom.window.Event('scroll'));
         scroller.dispatchEvent(new dom.window.Event('scroll'));
-        expect(changed.mock.calls).toEqual([[{ index: 4 }]]);
+        expect(changed.mock.calls).toEqual([[{ value: 4, index: 4 }]]);
         expect(carousel.getCurrentSlide()).toBe(4);
       } finally { carousel.destroy(); }
     });

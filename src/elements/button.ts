@@ -5,13 +5,17 @@
  * `type="submit"` and `type="reset"` act on the host's form, which a button
  * inside a shadow root cannot reach by itself (see `form-button`).
  *
+ * A toggle button (for now from the button's global defaults: the element has
+ * no toggle attribute) dispatches `change` with `{ selected, value }` from the
+ * host on each click (FLO-380).
+ *
  * Parts: `button`, `icon`, `label` (also `text`), `ripple`.
  *
  * @module elements
  */
 
 import createButton from "../components/button";
-import type { ButtonComponent, ButtonConfig } from "../components/button/types";
+import type { ButtonChangePayload, ButtonComponent, ButtonConfig } from "../components/button/types";
 import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 import { buttonForm, submitOnClick, typeAttribute } from "./form-button";
 
@@ -33,6 +37,16 @@ const buttonSpec = {
   slot: {
     attribute: "label" as const,
     config: "text",
+  },
+  events: {
+    // A toggle button's `change`, with the button's value (FLO-380). The element
+    // has no toggle attribute yet, so it fires for a toggle from the defaults.
+    change: {
+      detail: (payload) => {
+        const { selected, value } = payload as ButtonChangePayload;
+        return { selected, value };
+      },
+    },
   },
   form: buttonForm<ButtonComponent>(),
   setup: submitOnClick,

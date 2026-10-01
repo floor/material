@@ -1,5 +1,5 @@
 // FLO-114: the container emits positional arguments through its own dispatcher.
-import { createChips, type ChipsComponent, type ChipsConfig, type ChipsEvents, type ChipsChangeEvent, type ChipComponent } from "../../src/components/chips";
+import { createChips, type ChipsComponent, type ChipsConfig, type ChipsEvents, type ChipsChangeEvent, type ChipComponent, type ChipChangePayload, type ChipEvents } from "../../src/components/chips";
 import { CHIPS_EVENTS } from "../../src/components/chips/constants";
 
 type Equals<A, B> =
@@ -54,3 +54,8 @@ chips.keyboard.disable();
 chips.keyboard.enable();
 // @ts-expect-error the keyboard API takes no arguments
 chips.keyboard.disable(true);
+
+// FLO-380: a single chip's change carries its value, in getValue()'s type.
+export const chipChange: Equals<Parameters<ChipEvents["change"]>[0], ChipChangePayload> = true;
+export const chipChangeShape: Equals<ChipChangePayload, { selected: boolean; chip: ChipComponent; value: string | null }> = true;
+export const chipChangeValue: Equals<ChipChangePayload["value"], ReturnType<ChipComponent["getValue"]>> = true;
