@@ -49,6 +49,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Synchronous declarative shadow DOM rendering (FLO-363, part B).** The server-only
+  `src/ssr` entry exports `renderElement` with inline CSS by default, optional stylesheet
+  links, nested elements, and the shared HTML policy. It rejects asynchronous FAB-menu
+  and submenu configurations before mounting. The identity HTML policy is not a sanitizer;
+  configure a synchronous sanitizer for untrusted markup. Package exports follow in FLO-364.
+  Chromium security and per-node parity checks cover all 36 element defaults.
+
 - Internal detached element lifecycle, style registry seams, and a synchronous server DOM
   scope with inert scheduling and complete resource teardown (FLO-363, part A). The public
   SSR renderer follows separately.

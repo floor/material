@@ -1,0 +1,87 @@
+#!/usr/bin/env bun
+// scripts/check-ssr-parity.ts
+// Build first. Engine is deliberately a parameter for FLO-371.
+import assert from "node:assert/strict";
+import { mkdir } from "node:fs/promises";
+import { chromium, firefox, webkit } from "playwright";
+import { parseHTML } from "linkedom";
+import { renderElement } from "../dist/ssr/index.js";
+import { elements } from "../dist/elements/index.js";
+import { cases } from "./fixtures/preupgrade-cases";
+import exceptions from "./fixtures/ssr-parity-exceptions.json";
+import type { ParityAPI, Snapshot } from "./fixtures/ssr-parity";
+
+declare global { interface Window { ssrParity: ParityAPI } }
+type Difference = { property: string; server: string | null; browser: string | null };
+type Exception = Difference & { element: string; phase: string; issue: string };
+const allowed = exceptions as Exception[];
+const engine = process.argv.find(arg => arg.startsWith("--engine="))?.split("=")[1] ?? "chromium";
+assert(engine === "chromium" || engine === "firefox" || engine === "webkit", `Unknown engine: ${engine}`);
+const fixtures = cases.filter(c => c.variant === "default");
+assert.equal(fixtures.length, 36);
+assert.deepEqual(fixtures.map(c => c.element).sort(), Object.values(elements).map(e => e.spec.name).sort());
+const bundle = await Bun.build({ entrypoints: ["scripts/fixtures/ssr-parity.ts"], target: "browser" });
+assert(bundle.success, String(bundle.logs));
+const js = await bundle.outputs[0].text();
+let html = "";
+const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
+  const path = new URL(request.url).pathname;
+  if (path === "/fixture.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
+  if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
+  return new Response(`<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"><style>body{width:600px;margin:0}</style></head><body>${html}</body></html>`, { headers: { "Content-Type": "text/html" } });
+} });
+const browser = await ({ chromium, firefox, webkit })[engine].launch();
+const report: Array<{ element: string; equal: number; exceptions: number; failures: Array<Difference & { phase: string }> }> = [];
+const observed = new Set<number>();
+const compare = (a: Snapshot, b: Snapshot): Difference[] => [...new Set([...Object.keys(a), ...Object.keys(b)])]
+  .filter(key => a[key] !== b[key]).map(property => ({ property, server: a[property] ?? null, browser: b[property] ?? null }));
+try {
+  for (const fixture of fixtures) {
+    const source = parseHTML(`<html><body>${fixture.html}</body></html>`).document.body.firstElementChild!;
+    const attrs = Object.fromEntries(Array.from(source.attributes, a => [a.name, a.value]));
+    const authoredIds = [source, ...Array.from(source.querySelectorAll("[id]"))].map(n => n.id).filter(Boolean);
+    html = renderElement(`m-${fixture.element}`, attrs, source.innerHTML);
+    const page = await browser.newPage({ viewport: { width: 1024, height: 768 }, reducedMotion: "reduce" });
+    const errors: string[] = [];
+    page.on("pageerror", error => errors.push(error.message));
+    page.on("console", msg => { if (msg.type() === "error") errors.push(msg.text()); });
+    await page.goto(server.url.href);
+    // Parser-created shadow root before any library script is loaded.
+    assert(await page.evaluate(() => !!document.body.firstElementChild?.shadowRoot), `${fixture.element}: no declarative root`);
+    await page.addScriptTag({ url: `${server.url}fixture.js`, type: "module" });
+    await page.waitForFunction(() => !!window.ssrParity);
+    const ssr = await page.evaluate(ids => window.ssrParity.snapshot(document.body.firstElementChild!, ids), authoredIds);
+    const upgrade = await page.evaluate(ids => {
+      window.ssrParity.upgrade();
+      return window.ssrParity.snapshot(document.body.firstElementChild!, ids);
+    }, authoredIds);
+    assert.equal(Object.keys(upgrade).filter(k => k.endsWith("/shadow/css")).length, Object.keys(ssr).filter(k => k.endsWith("/shadow/css")).length, "Upgrade lost roots");
+    html = "";
+    await page.goto(server.url.href);
+    await page.addScriptTag({ url: `${server.url}fixture.js`, type: "module" });
+    await page.waitForFunction(() => !!window.ssrParity);
+    const immediate = await page.evaluate(({ markup, ids }) => window.ssrParity.snapshot(window.ssrParity.mount(markup), ids), { markup: fixture.html, ids: authoredIds });
+    assert.deepEqual(compare(upgrade, immediate), [], `${fixture.element}: upgrade differs from fresh construction`);
+    await page.evaluate(async () => { for (let frame = 0; frame < 3; frame++) await new Promise(requestAnimationFrame); });
+    await page.waitForTimeout(400);
+    const settled = await page.evaluate(ids => window.ssrParity.snapshot(document.querySelector("main")!.firstElementChild!, ids), authoredIds);
+    const row = { element: fixture.element, equal: 0, exceptions: 0, failures: [] as Array<Difference & { phase: string }> };
+    for (const [phase, actual] of [["immediate", immediate], ["settled", settled]] as const) {
+      const differences = compare(ssr, actual);
+      row.equal += new Set([...Object.keys(ssr), ...Object.keys(actual)]).size - differences.length;
+      for (const diff of differences) {
+        const match = allowed.findIndex(e => e.element === fixture.element && e.phase === phase && e.property === diff.property && e.server === diff.server && e.browser === diff.browser);
+        if (match >= 0) { observed.add(match); row.exceptions++; }
+        else row.failures.push({ phase, ...diff });
+      }
+    }
+    assert.deepEqual(errors, [], `${fixture.element}: browser errors`);
+    report.push(row);
+    console.log(`${fixture.element}: ${row.equal} equal, ${row.exceptions} exceptions, ${row.failures.length} failures`);
+    await page.close();
+  }
+  await mkdir("analysis", { recursive: true });
+  await Bun.write(`analysis/ssr-parity-${engine}.json`, JSON.stringify(report, null, 2));
+  assert.equal(allowed.length - observed.size, 0, "Resolved exceptions must be removed");
+  assert.equal(report.reduce((n, row) => n + row.failures.length, 0), 0, `Unexpected differences: analysis/ssr-parity-${engine}.json`);
+} finally { await browser.close(); server.stop(true); }
