@@ -71,9 +71,8 @@ export function findRegisteredPanel(tab: HTMLElement): HTMLElement | null {
   const tabId = tab.id;
   if (!tabId || typeof document === "undefined") return null;
 
-  const labelled = document.querySelector<HTMLElement>(
-    `[role="tabpanel"][aria-labelledby="${tabId}"]`
-  );
+  const labelled = Array.from(document.querySelectorAll<HTMLElement>('[role="tabpanel"]'))
+    .find((panel) => panel.getAttribute("aria-labelledby") === tabId);
   if (labelled) return labelled;
 
   // `tab-<groupId>-<value>` -> `tabpanel-<groupId>-<value>`
