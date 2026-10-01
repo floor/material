@@ -139,7 +139,10 @@ try {
     await page.addScriptTag({ content: observeJS });
     await page.waitForFunction(() => !!window.ssrUpgrade);
     await page.evaluate(({ url, mutation, children }) => window.ssrUpgrade.observe(async () => {
-      // Parser-created roots, to compare with the upgraded children's.
+      // The children's roots before the upgrade. A constructor's attachShadow returns a
+      // declarative root as the same object, emptied, so comparing them afterwards shows
+      // that each host survived and upgraded, not that its root was never rebuilt: the
+      // pixel and geometry comparison is what would show a rebuild.
       const parsed = children ? Array.from(document.querySelectorAll(`#stage > :first-child ${children}`), child => child.shadowRoot) : [];
       Object.assign(window, { ssrParsedRoots: parsed });
       await import(url);
@@ -155,7 +158,7 @@ try {
       const parsed = (window as unknown as { ssrParsedRoots: (ShadowRoot | null)[] }).ssrParsedRoots;
       return Array.from(document.querySelectorAll<HTMLElement & { component?: unknown }>(`#stage > :first-child ${selector}`),
         (child, i) => !!child.component && !!parsed[i] && child.shadowRoot === parsed[i]);
-    }, children), roots.map(() => true), `${fixture.element}: every ${children} must upgrade in its parser-created root`);
+    }, children), roots.map(() => true), `${fixture.element}: every ${children} must upgrade in place`);
     const state = await page.evaluate(() => window.ssrUpgrade.state);
     const tabs = fixture.element === "tabs" ? await page.evaluate(() => {
       const indicator = document.querySelector("m-tabs")!.shadowRoot!.querySelector<HTMLElement>('[part="indicator"]')!;
