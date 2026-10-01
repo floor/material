@@ -12,6 +12,23 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **Chip-set `add` and `remove` report the live selection (FLO-380).** Factory
+  callbacks receive one object instead of a bare chip:
+
+  | Event | 0.10 payload | 1.0 payload |
+  |---|---|---|
+  | `add` | `chip` | `{ value: string \| string[] \| null, chip }` |
+  | `remove` | `chip` before removal | `{ value: string \| string[] \| null, chip, chipValue: string \| null }` after removal |
+  | `<m-chips>` `remove` detail | `{ value: removedId }` | `{ value: remainingSelection, chipValue: removedId }` |
+
+  `value` matches `getValue()` inside the callback, including for selected chips.
+  The element continues to emit one `remove` and no separate `change` for user
+  removal; declaration edits remain silent. Migration: read the chip from
+  `event.chip` in factory handlers and the removed identifier from
+  `event.chipValue` (or `event.detail.chipValue` on the element). Read the
+  remaining selection from `event.value` or `event.detail.value`. The exported
+  `ChipsAddEvent` and `ChipsRemoveEvent` types describe the new factory payloads.
+
 - **Segmented buttons are removed (FLO-382).** `createSegmentedButton` and `createSegment`
   (deprecated since 0.10), their types, `mtrl/components/segmented-button`,
   `mtrl/styles/segmented-button` and the `--mtrl-segmented-button-*` properties are gone. M3

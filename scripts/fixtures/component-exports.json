@@ -437,6 +437,11 @@
       "status": "public"
     },
     {
+      "name": "ChipsAddEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "ChipsChangeEvent",
       "kind": "type",
       "status": "public"
@@ -453,6 +458,11 @@
     },
     {
       "name": "ChipsEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ChipsRemoveEvent",
       "kind": "type",
       "status": "public"
     },

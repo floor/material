@@ -2309,7 +2309,7 @@ try {
      <m-chips id="so" selection="single" aria-label="Sort">
        <m-chip value="new" selected>Newest</m-chip><m-chip value="old">Oldest</m-chip>
      </m-chips>
-     <m-chips id="to" aria-label="Recipients">
+     <m-chips id="to" aria-label="Recipients" value="ada,bob">
        <m-chip variant="input" value="ada">Ada</m-chip><m-chip variant="input" value="bob">Bob</m-chip>
      </m-chips>
      <section id="factory"></section>`
@@ -2332,7 +2332,10 @@ try {
       for (const id of ["ch", "so", "to"]) {
         for (const type of ["change", "remove"]) {
           document.getElementById(id)?.addEventListener(type, (e) => {
-            (w.events as unknown[]).push({ type, detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+            const target = e.target as Chips;
+            (w.events as unknown[]).push(type === "remove"
+              ? { type, detail: (e as CustomEvent).detail, target: target.id, currentValue: target.value }
+              : { type, detail: (e as CustomEvent).detail, target: target.id });
           });
         }
       }
@@ -2408,7 +2411,7 @@ try {
 
     const recipients = page.getByRole("grid", { name: "Recipients" });
     await recipients.getByRole("button", { name: "Remove Bob" }).click();
-    assert.deepEqual(await events(), [{ type: "remove", detail: { value: "bob" }, target: "to" }]);
+    assert.deepEqual(await events(), [{ type: "remove", detail: { value: ["ada"], chipValue: "bob" }, target: "to", currentValue: ["ada"] }]);
     await page.evaluate(() => {
       const ada = document.querySelector('#to [value="ada"]') as HTMLElement;
       ada.textContent = "Ada L.";
@@ -2418,7 +2421,7 @@ try {
     assert.deepEqual(lingering, ["Ada L."], "a removed chip stays removed while its <m-chip> is there");
     await recipients.getByRole("button", { name: "Remove Ada L." }).focus();
     await page.keyboard.press("Delete");
-    assert.deepEqual(await events(), [{ type: "remove", detail: { value: "ada" }, target: "to" }]);
+    assert.deepEqual(await events(), [{ type: "remove", detail: { value: [], chipValue: "ada" }, target: "to", currentValue: [] }]);
     const readded = await page.evaluate(async () => {
       const to = document.getElementById("to") as HTMLElement;
       to.replaceChildren();
