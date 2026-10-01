@@ -38,7 +38,8 @@ export default function createNavigationBar(config: NavigationBarConfig = {}): N
     let destroyed = false;
     let hidden = false;
 
-    root.classList.add(cls(`--${options.itemLayout === 'vertical' || options.itemLayout === 'horizontal' ? options.itemLayout : 'auto'}`));
+    // The item layout's modifier, written as cls() literals as the rail's
+    root.classList.add(options.itemLayout === 'vertical' ? cls('--vertical') : options.itemLayout === 'horizontal' ? cls('--horizontal') : cls('--auto'));
     const nodes = new Map<string, HTMLElement>();
     const destinations = document.createElement('div');
     destinations.className = cls('__items');
