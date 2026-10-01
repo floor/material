@@ -201,7 +201,6 @@ $component: "#{base.$prefix}-textfield";
         height: 24px;
         color: t.color("on-surface-variant");
         z-index: 1;
-        cursor: pointer;
         transition: top v.motion("duration-short4")
             v.motion("easing-emphasized"); // Add transition for top position
 

@@ -43,6 +43,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   the internals off the root the bundle would have been a partial API. `require('mtrl')` no longer
   resolves (`ERR_PACKAGE_PATH_NOT_EXPORTED`): use `import`, or `await import('mtrl')` from CommonJS.
 
+- **Text field: a trailing icon without `trailingIconLabel` is decorative (FLO-301).** It is
+  hidden from screen readers (`aria-hidden`) and no longer shows a pointer cursor. An app that
+  built a clear or show-password control from that span with its own click listener lost it for
+  screen-reader users. Migration: an interactive trailing icon needs `trailingIconLabel` (or
+  `setTrailingIcon(html, label)`), which makes it a button and emits `trailing`.
+
 ### Added
 
 - Per-element SSR opt-out (FLO-370): specs accept `ssr: false` or a synchronous host

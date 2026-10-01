@@ -132,6 +132,9 @@ export const withTrailingIcon = <T extends TrailingIconConfig & object>(config: 
       if (!label) {
         const element = document.createElement('span');
         element.className = className;
+        // Decorative without a label: hidden from screen readers, as the leading
+        // icon is. An icon that acts takes trailingIconLabel and is a button (FLO-301)
+        element.setAttribute('aria-hidden', 'true');
         return element;
       }
       const button = document.createElement('button');
