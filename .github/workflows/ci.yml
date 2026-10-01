@@ -195,6 +195,11 @@ jobs:
         run: |
           bun add --no-save --ignore-scripts solid-js@1.8.0
           bun run solid-ssr:check
+      - name: Vue SSR at the peer floor (3.3.0)
+        if: matrix.group == 'adapters'
+        run: |
+          bun add --no-save --ignore-scripts vue@3.3.0 @vue/server-renderer@3.3.0
+          bun run vue-ssr:check
       - name: Browser comparison artifacts
         if: always()
         uses: actions/upload-artifact@v4

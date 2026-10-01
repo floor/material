@@ -18,6 +18,8 @@ const COMMANDS = [
   "react:check", "react-ssr:check", "vue:check", "svelte:check", "svelte-ssr:check", "vue-ssr:check", "solid-ssr:check", "solid:check",
   // A second Solid SSR run after installing the supported peer floor.
   "solid-ssr:check",
+  // A second Vue SSR run after installing the supported peer floor.
+  "vue-ssr:check",
   "consumer:check", "tabs:check", "slider:check", "drawer:check", "navigation-bar:check", "navigation-rail:check",
   "core:check", "preupgrade:check", "tokens:check", "ssr:check",
 ];
@@ -53,9 +55,11 @@ const commandsOf = (job: Job, step: Step): string[] => {
   return [...found];
 };
 
-// This version-specific run is intentionally scoped to one matrix group. Keep
-// the exception narrow: the test below pins its condition, install and ordering.
-const floorStep = workflow.jobs.browser.steps.find(step => step.name === "Solid SSR at the peer floor (1.8.0)");
+// These version-specific runs are intentionally scoped to one matrix group. Keep
+// the exception narrow: the tests below pin each condition, install and ordering.
+const solidFloor = workflow.jobs.browser.steps.find(step => step.name === "Solid SSR at the peer floor (1.8.0)");
+const vueFloor = workflow.jobs.browser.steps.find(step => step.name === "Vue SSR at the peer floor (3.3.0)");
+const floorSteps = new Set([solidFloor, vueFloor]);
 const ran = Object.values(workflow.jobs).flatMap(job => job.steps.flatMap(step => commandsOf(job, step)));
 
 describe("CI (.github/workflows/ci.yml)", () => {
@@ -68,14 +72,29 @@ describe("CI (.github/workflows/ci.yml)", () => {
     expect(browser.strategy?.matrix?.include?.filter(entry => entry.group === "adapters")).toHaveLength(1);
     const adapters = browser.strategy?.matrix?.include?.find(entry => entry.group === "adapters");
     expect(adapters?.checks.split(/\s+/)).toContain("solid-ssr:check");
-    expect(floorStep).toBeDefined();
-    expect(floorStep?.if).toBe("matrix.group == 'adapters'");
-    expect(floorStep?.run?.trim()).toBe(
+    expect(solidFloor).toBeDefined();
+    expect(solidFloor?.if).toBe("matrix.group == 'adapters'");
+    expect(solidFloor?.run?.trim()).toBe(
       "bun add --no-save --ignore-scripts solid-js@1.8.0\nbun run solid-ssr:check",
     );
     const current = browser.steps.findIndex(step => step.run?.includes("for script in ${{ matrix.checks }}; do"));
     expect(current).toBeGreaterThanOrEqual(0);
-    expect(browser.steps.indexOf(floorStep!)).toBeGreaterThan(current);
+    expect(browser.steps.indexOf(solidFloor!)).toBeGreaterThan(current);
+  });
+
+  test("runs Vue SSR at the peer floor after the adapters' current-version checks", () => {
+    const browser = workflow.jobs.browser;
+    expect(browser.strategy?.matrix?.include?.filter(entry => entry.group === "adapters")).toHaveLength(1);
+    const adapters = browser.strategy?.matrix?.include?.find(entry => entry.group === "adapters");
+    expect(adapters?.checks.split(/\s+/)).toContain("vue-ssr:check");
+    expect(vueFloor).toBeDefined();
+    expect(vueFloor?.if).toBe("matrix.group == 'adapters'");
+    expect(vueFloor?.run?.trim()).toBe(
+      "bun add --no-save --ignore-scripts vue@3.3.0 @vue/server-renderer@3.3.0\nbun run vue-ssr:check",
+    );
+    const current = browser.steps.findIndex(step => step.run?.includes("for script in ${{ matrix.checks }}; do"));
+    expect(current).toBeGreaterThanOrEqual(0);
+    expect(browser.steps.indexOf(vueFloor!)).toBeGreaterThan(current);
   });
 
   test("runs only scripts that package.json defines", () => {
@@ -93,7 +112,7 @@ describe("CI (.github/workflows/ci.yml)", () => {
       if (job["continue-on-error"] !== undefined) loose.push(`${name}: continue-on-error`);
       for (const step of steps) {
         const command = commandsOf(job, step).join(" ");
-        if (step.if !== undefined && step !== floorStep) loose.push(`${name} (${command}): if`);
+        if (step.if !== undefined && !floorSteps.has(step)) loose.push(`${name} (${command}): if`);
         if (step["continue-on-error"] !== undefined) loose.push(`${name} (${command}): continue-on-error`);
       }
     }
