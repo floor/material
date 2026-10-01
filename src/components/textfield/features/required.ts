@@ -71,12 +71,10 @@ export const withRequired =
         render();
         return label;
       };
+      // The asterisk is always the label's last child
       label.getText = () => {
-        const element = label.getElement();
-        return Array.from(element.childNodes)
-          .filter((node) => !(node instanceof HTMLElement && node.classList.contains(`${PREFIX}-${NAME}__required`)))
-          .map((node) => node.textContent ?? "")
-          .join("");
+        const text = label.getElement().textContent ?? "";
+        return asterisk() ? text.slice(0, -1) : text;
       };
     }
 

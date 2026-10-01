@@ -1174,19 +1174,29 @@ $component: "#{base.$prefix}-textfield";
     // The mixin makes its host relative; the icon stays placed in the field
     position: absolute;
 
-    &:hover:not(:disabled) {
-        @include m.state-layer(t.color("on-surface-variant"), "hover");
+    // One state layer whose opacity the states set, as the icon button draws it
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background-color: currentColor;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    &:hover:not(:disabled)::before {
+        opacity: 0.08;
     }
 
     &:focus-visible {
         outline: 2px solid t.color("secondary");
         outline-offset: 2px;
-
-        @include m.state-layer(t.color("on-surface-variant"), "focus");
     }
 
-    &:active:not(:disabled) {
-        @include m.state-layer(t.color("on-surface-variant"), "pressed");
+    &:focus-visible::before,
+    &:active:not(:disabled)::before {
+        opacity: 0.1;
     }
 
     &:disabled {

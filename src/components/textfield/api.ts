@@ -37,8 +37,9 @@ export const withAPI =
   (component: ComponentWithDensity): TextfieldComponent => {
     // A trailing icon button is disabled with the field (FLO-301)
     const setTrailingDisabled = (off: boolean): void => {
+      // By tag, not instanceof: no global HTMLButtonElement is assumed (a server DOM)
       const icon = component.trailingIcon;
-      if (icon instanceof HTMLButtonElement) icon.disabled = off;
+      if (icon?.tagName === "BUTTON") (icon as HTMLButtonElement).disabled = off;
     };
     return {
       element: component.element,

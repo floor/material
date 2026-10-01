@@ -179,7 +179,7 @@ export const withSupportingText =
         const element = supportingElement;
         pendingFrame = requestAnimationFrame(() => {
           pendingFrame = 0;
-          element.textContent = element.textContent;
+          element.replaceChildren(document.createTextNode(element.textContent ?? ""));
         });
         return this;
       },
