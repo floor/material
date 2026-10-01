@@ -15,6 +15,8 @@ export type {
   ChipsComponent,
   ChipsEvents,
   ChipsChangeEvent,
+  ChipsAddEvent,
+  ChipsRemoveEvent,
 } from "./types";
 
 // NOTE: Constants are exported from './constants' directly

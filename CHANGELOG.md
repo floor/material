@@ -12,6 +12,23 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **Chip-set `add` and `remove` report the live selection (FLO-380).** Factory
+  callbacks receive one object instead of a bare chip:
+
+  | Event | 0.10 payload | 1.0 payload |
+  |---|---|---|
+  | `add` | `chip` | `{ value: string \| string[] \| null, chip }` |
+  | `remove` | `chip` before removal | `{ value: string \| string[] \| null, chip, chipValue: string \| null }` after removal |
+  | `<m-chips>` `remove` detail | `{ value: removedId }` | `{ value: remainingSelection, chipValue: removedId }` |
+
+  `value` matches `getValue()` inside the callback, including for selected chips.
+  The element continues to emit one `remove` and no separate `change` for user
+  removal; declaration edits remain silent. Migration: read the chip from
+  `event.chip` in factory handlers and the removed identifier from
+  `event.chipValue` (or `event.detail.chipValue` on the element). Read the
+  remaining selection from `event.value` or `event.detail.value`. The exported
+  `ChipsAddEvent` and `ChipsRemoveEvent` types describe the new factory payloads.
+
 - **Tab and panel ids are derived from the value with a safe encoding (FLO-430).** A value of
   `[A-Za-z0-9_-]` only keeps its ids, `tab-<group>-<value>` and `tabpanel-<group>-<value>`. Any
   other value gets `tabx-<group>-<encoded>` and
@@ -269,6 +286,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- CI's Solid and Vue SSR runs on the lowest supported peer version are ordinary commands,
+  `solid-ssr:floor` and `vue-ssr:floor` (FLO-426). Each reads the floor from `peerDependencies`,
+  installs it without saving, runs the check and restores the installed version, so nothing after
+  it runs on the floor version unnoticed.
 - **A plain filled text field sets no placement up (FLO-378).** Every text field installed a
   class observer, a resize observer and a window `resize` listener, and scheduled a first
   measure, even a filled field with no prefix, suffix or leading icon, which has nothing to
@@ -316,6 +337,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- The menu keyboard step of `elements:check` no longer ends one item short when a runner pauses
+  (FLO-423). It waited a fixed 450ms after opening the menu with a key, then sent the arrows; it
+  now waits for the first item to take focus, which is what the arrows depend on.
 - The search check in `core:check` no longer times out when a frame arrives late (FLO-420). It
   pressed the scrim before the view's opening had put focus back on the input, and that focus
   re-opened the view. The check now waits for the opening's frame, and reads the scrim press at
