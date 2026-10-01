@@ -87,6 +87,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Status text meets 4.5:1 (FLO-407).** Success, warning and info are one fixed
+  pair per mode, shared by every theme. White on the light warning (`#DD6D06`)
+  was 3.35:1. Each colour keeps its hue and chroma at the tones M3 uses for a
+  role and its on-role (light tone 40 on 100, dark tone 80 on 20). Ratios, old
+  then new: light success 5.28 → 6.45, warning 3.35 → 6.48, info 6.47 unchanged;
+  dark success 7.08 → 7.76, warning 8.57 → 7.76, info 7.75 → 7.69.
 - **Custom root classes survive configuration (FLO-403).** Top and bottom app bars,
   button groups, segmented buttons, tabs and individual tabs, toolbars, FAB menus,
   and selects now apply the `class` option to their root element, including

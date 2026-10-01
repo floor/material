@@ -2853,8 +2853,8 @@ try {
       }));
     });
     assert.deepEqual(status, {
-      success: { bg: "rgb(0, 123, 90)", color: "rgb(255, 255, 255)" },
-      warning: { bg: "rgb(221, 109, 6)", color: "rgb(255, 255, 255)" },
+      success: { bg: "rgb(0, 108, 78)", color: "rgb(255, 255, 255)" },
+      warning: { bg: "rgb(151, 72, 0)", color: "rgb(255, 255, 255)" },
       info: { bg: "rgb(0, 97, 164)", color: "rgb(255, 255, 255)" },
     });
     check("badge: the success, warning and info colours have their background under baseline");
