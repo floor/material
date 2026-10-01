@@ -128,7 +128,7 @@ jobs:
           - group: adapters
             checks: react:check react-ssr:check vue:check svelte:check solid:check
           - group: components
-            checks: consumer:check tabs:check slider:check drawer:check navigation-rail:check core:check preupgrade:check tokens:check ssr-security:check ssr-parity:check
+            checks: consumer:check tabs:check slider:check drawer:check navigation-rail:check core:check preupgrade:check tokens:check ssr:check
     name: browser (${{ matrix.group }})
     steps:
       - uses: actions/checkout@v4
@@ -153,6 +153,9 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install Chromium
         run: node node_modules/playwright/cli.js install --with-deps chromium
+      - name: Install Firefox and WebKit for SSR
+        if: matrix.group == 'components'
+        run: node node_modules/playwright/cli.js install --with-deps firefox webkit
       - name: Checks (${{ matrix.checks }})
         run: |
           for script in ${{ matrix.checks }}; do
@@ -171,6 +174,9 @@ jobs:
             analysis/drawer
             analysis/navigation-rail
             analysis/core
+            analysis/ssr-parity-chromium.json
+            analysis/ssr-upgrade
+            analysis/react-ssr/summary.json
           retention-days: 7
           if-no-files-found: ignore
 

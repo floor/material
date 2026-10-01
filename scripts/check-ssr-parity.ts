@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 // scripts/check-ssr-parity.ts
-// Build first. Engine is deliberately a parameter for FLO-371.
+// Build first. Structural parity and its owned exceptions stay in Chromium.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
-import { chromium, firefox, webkit } from "playwright";
+import { chromium } from "playwright";
 import { parseHTML } from "linkedom";
 import "./fixtures/ssr-css";
 import { renderElement } from "../src/ssr/index.ts";
@@ -17,7 +17,7 @@ type Difference = { property: string; server: string | null; browser: string | n
 type Exception = Difference & { element: string; phase: string; issue: string };
 const allowed = exceptions as Exception[];
 const engine = process.argv.find(arg => arg.startsWith("--engine="))?.split("=")[1] ?? "chromium";
-assert(engine === "chromium" || engine === "firefox" || engine === "webkit", `Unknown engine: ${engine}`);
+assert.equal(engine, "chromium", "Structural parity is Chromium-only; use ssr:check for three-engine upgrade/paint coverage");
 const fixtures = cases.filter(c => c.variant === "default");
 assert.equal(fixtures.length, 36);
 assert.deepEqual(fixtures.map(c => c.element).sort(), Object.values(elements).map(e => e.spec.name).sort());
@@ -31,7 +31,7 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
   return new Response(`<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"><style>body{width:600px;margin:0}</style></head><body>${html}</body></html>`, { headers: { "Content-Type": "text/html" } });
 } });
-const browser = await ({ chromium, firefox, webkit })[engine].launch();
+const browser = await chromium.launch();
 const report: Array<{ element: string; equal: number; exceptions: number; failures: Array<Difference & { phase: string }> }> = [];
 const observed = new Set<number>();
 const compare = (a: Snapshot, b: Snapshot): Difference[] => [...new Set([...Object.keys(a), ...Object.keys(b)])]
@@ -89,6 +89,7 @@ try {
   }
   await mkdir("analysis", { recursive: true });
   await Bun.write(`analysis/ssr-parity-${engine}.json`, JSON.stringify(report, null, 2));
+  console.log(`SSR parity chromium: ${report.reduce((n, row) => n + row.equal, 0)} equal, ${report.reduce((n, row) => n + row.exceptions, 0)} exceptions, ${report.reduce((n, row) => n + row.failures.length, 0)} failures`);
   assert.equal(allowed.length - observed.size, 0, "Resolved exceptions must be removed");
   assert.equal(report.reduce((n, row) => n + row.failures.length, 0), 0, `Unexpected differences: analysis/ssr-parity-${engine}.json`);
 } finally { await browser.close(); server.stop(true); }

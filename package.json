@@ -165,7 +165,8 @@
     "solid:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-solid.ts",
     "tooling:check": "tsc --project scripts/tsconfig.json --noEmit && tsc --project test/types/tsconfig.json --noEmit",
     "themes:generate": "bun scripts/generate-themes.ts",
-    "react-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react-ssr.ts"
+    "react-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react-ssr.ts",
+    "ssr:check": "bun run scripts/check-ssr.ts"
   },
   "repository": {
     "type": "git",
