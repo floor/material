@@ -14,6 +14,14 @@
 export const DEFAULT_PREFIX = "m";
 
 const sources = new Map<string, string>();
+const fallbackStyles = new WeakSet<Node>();
+
+/** Internal registry access; preserves application registrations and overrides. */
+export const styleText = (name: string): string | undefined => sources.get(name);
+
+/** Identifies only fallback nodes inserted by applyStyles, never authored styles. */
+export const isFallbackStyle = (node: Node): boolean => fallbackStyles.has(node);
+
 const sheets = new Map<string, CSSStyleSheet>();
 
 /**
@@ -118,6 +126,7 @@ export const applyStyles = (root: ShadowRoot, names: readonly string[]): void =>
   for (const name of known) {
     const style = document.createElement("style");
     style.textContent = sources.get(name) as string;
+    fallbackStyles.add(style);
     root.append(style);
   }
 };
