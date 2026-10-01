@@ -1,6 +1,6 @@
 // src/components/button-group/config.ts
 
-import { createComponentConfig } from '../../core/config/component';
+import { createComponentConfig, processClassNames, type BaseComponentConfig } from '../../core/config/component';
 import { cornerToken } from '../../core/theme/shape';
 import {
   ButtonGroupConfig,
@@ -81,7 +81,7 @@ export const getContainerConfig = (config: ButtonGroupConfig) => {
       'data-labels': labels
     },
     className: [
-      config.class,
+      processClassNames((config as BaseComponentConfig).className || ""),
       labels === 'selected' ? `${config.prefix}-button-group--labels-selected` : null,
       config.disabled ? `${config.prefix}-button-group--disabled` : null,
       `${config.prefix}-button-group--${orientation}`,
