@@ -144,9 +144,10 @@ export const renderCeiling = async (): Promise<StreamResult & { sibling: number 
   return { ...result, sibling: renderCounts.sibling };
 };
 
-/** A child that never resolves and is not aborted. The retry cap must end the stream. */
+/** A child that resolves after the retry cap. The page streams its content and that host has no shadow root. */
 export const renderGiveUp = async (): Promise<StreamResult & { sibling: number }> => {
   renderCounts.sibling = 0;
-  const result = await settled(countedSuspendedButton(neverPromise()), { timeout: 12000 });
+  const promise = new Promise<string>((resolve) => { setTimeout(() => resolve(SUSPENSE_TEXT), 9500); });
+  const result = await settled(countedSuspendedButton(promise), { timeout: 15000 });
   return { ...result, sibling: renderCounts.sibling };
 };

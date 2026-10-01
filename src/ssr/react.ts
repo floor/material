@@ -18,14 +18,11 @@ const bridge = (globalThis as unknown as Record<symbol, {
 const RETRY_DELAYS_MS = [0, 2, 4, 8, 16, 32, 64, 128, 250];
 
 /**
- * One more suspension than this ends the request. Forty attempts is about
- * eight seconds at the delays above: a child that resolves in a second is
- * snapshotted well before the cap, and a child that never resolves becomes an
- * error the page can report.
+ * Suspensions past this are left to the page. Forty attempts is about eight
+ * seconds at the delays above. The host is then rendered with no shadow root,
+ * and the page keeps streaming for as long as it would without the bridge.
  */
 const MAX_SUSPENDS = 40;
-
-const SUSPEND_GAVE_UP = "A suspending child did not resolve during server rendering.";
 
 let serializingChildren = false;
 
@@ -34,8 +31,20 @@ interface Attempt { count: number; nodes: object[] }
 /** One counter per host. The child element is stable across the host's retries; a ref is not. */
 const attempts = new WeakMap<object, Attempt>();
 
-const isSynchronousSuspend = (error: unknown): boolean =>
-  error instanceof Error && error.message.includes("suspended while responding to synchronous input");
+/**
+ * renderToStaticMarkup reports a synchronous suspend only as an Error message.
+ * The thenable the child threw does not escape, and the error carries no code
+ * or digest. Development builds, and React 18 in production, keep the sentence.
+ * React 19's browser production build (what Bun loads for react-dom/server)
+ * minifies it to #426. A Suspense fallback is also what a thrown error renders
+ * here, and an error boundary is not consulted, so the message is the signal.
+ */
+const isSynchronousSuspend = (error: unknown): boolean => {
+  if (!(error instanceof Error)) return false;
+  const message = error.message;
+  return message.includes("suspended while responding to synchronous input")
+    || /Minified React error #426\b/.test(message);
+};
 
 /** Elements the attempt counter can hang from. Slot wrappers are recreated on every host render, so the counter hangs from the child inside them. */
 const childNodes = (children: React.ReactNode): object[] => {
@@ -101,9 +110,10 @@ bridge.react = (tag, props, children, prefix) => {
   try {
     // No Suspense wrapper here. renderToStaticMarkup renders an error and a
     // suspension as the same fallback, so a wrapper cannot tell them apart.
-    // A suspension throws "suspended while responding to synchronous input".
-    // Any other throw is the child's error. A boundary already inside the
-    // children still renders its own fallback, and this pass does not throw.
+    // A suspension throws React's synchronous-input error, minified as #426
+    // in React 19 production. Any other throw is the child's error. A boundary
+    // already inside the children still renders its own fallback, and this
+    // pass does not throw.
     markup = renderToStaticMarkup(React.createElement(tag, props, children));
   } catch (error) {
     if (!isSynchronousSuspend(error)) {
@@ -114,8 +124,10 @@ bridge.react = (tag, props, children, prefix) => {
     }
     const attempt = nextAttempt(children);
     if (attempt > MAX_SUSPENDS) {
+      // Same as the child's own error: no template, and the page render
+      // reaches the child. A slow response is not a failed request.
       clearAttempt(children);
-      throw new Error(SUSPEND_GAVE_UP);
+      return undefined;
     }
     const delay = retryDelay(attempt);
     throw new Promise<void>((resolve) => { setTimeout(resolve, delay); });
