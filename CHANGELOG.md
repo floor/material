@@ -294,6 +294,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- The menu keyboard step of `elements:check` no longer ends one item short when a runner pauses
+  (FLO-423). It waited a fixed 450ms after opening the menu with a key, then sent the arrows; it
+  now waits for the first item to take focus, which is what the arrows depend on.
 - The search check in `core:check` no longer times out when a frame arrives late (FLO-420). It
   pressed the scrim before the view's opening had put focus back on the input, and that focus
   re-opened the view. The check now waits for the opening's frame, and reads the scrim press at
