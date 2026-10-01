@@ -526,6 +526,49 @@ describe('tabs panel linking', () => {
     return el;
   };
 
+  for (const value of ['a"b', 'a\\b', 'a]b', 'a b', 'a\nb']) {
+    test(`a tab value ${JSON.stringify(value)} creates, selects, and finds its labelled panel`, () => {
+      const labelled = document.createElement('div');
+      labelled.id = `custom-panel-${JSON.stringify(value)}`;
+      labelled.setAttribute('role', 'tabpanel');
+      labelled.setAttribute('aria-labelledby', `tab-${GROUP}-${value}`);
+      document.body.append(labelled);
+
+      const tabs = mountGrouped({ tabs: [
+        { text: 'Other', value: 'other', state: 'active' },
+        { text: 'Special', value },
+      ] });
+      const special = byValue(tabs, value);
+      expect(special.element.id).toBe(`tab-${GROUP}-${value}`);
+      expect(document.getElementById(special.element.id)).toBe(special.element);
+      expect(special.element.getAttribute('aria-controls')).toBe(labelled.id);
+
+      tabs.setActiveTab(value);
+      expect(tabs.getActiveTab()).toBe(special);
+      expect(special.element.getAttribute('aria-selected')).toBe('true');
+      expect(labelled.hasAttribute('hidden')).toBe(false);
+      expect(document.getElementById(special.element.getAttribute('aria-controls')!)).toBe(labelled);
+
+      tabs.setActiveTab('other');
+      expect(labelled.hasAttribute('hidden')).toBe(true);
+    });
+  }
+
+  test('a quoted value also finds a panel by its conventional id after setValue', () => {
+    const value = 'a"b';
+    const tabs = mountGrouped({ tabs: [{ text: 'Special', value: 'initial' }] });
+    const special = tabs.getTabs()[0];
+    const conventional = document.createElement('div');
+    conventional.id = `tabpanel-${GROUP}-${value}`;
+    conventional.setAttribute('role', 'tabpanel');
+    document.body.append(conventional);
+
+    special.setValue(value);
+    expect(special.element.id).toBe(`tab-${GROUP}-${value}`);
+    expect(special.element.getAttribute('aria-controls')).toBe(conventional.id);
+    expect(document.getElementById(conventional.id)).toBe(conventional);
+  });
+
   test('a tab with no panel carries no aria-controls', () => {
     const tabs = mountGrouped();
     for (const tab of tabs.getTabs()) {
