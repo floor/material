@@ -1,0 +1,43 @@
+[
+  {
+    "element": "progress",
+    "engines": ["chromium", "firefox", "webkit"],
+    "selector": "canvas",
+    "reason": "Canvas bitmap opt-out: the server has no drawing context. FLO-368 preserves the styled canvas box; upgrade paints its pixels. Layout must remain unchanged."
+  },
+  {
+    "element": "loading-indicator",
+    "engines": ["chromium", "firefox", "webkit"],
+    "selector": "canvas",
+    "reason": "Canvas bitmap opt-out: the server has no drawing context. FLO-369 preserves the styled canvas box; upgrade paints its pixels. Layout must remain unchanged."
+  },
+  {
+    "element": "carousel",
+    "engines": ["chromium", "firefox", "webkit"],
+    "selector": "[part=carousel]",
+    "reason": "FLO-370: client measurement sets item widths, transforms, clipping and corner shape. Pixel differences are confined to the carousel; its box and following content must not shift."
+  },
+  {
+    "element": "chips",
+    "engines": ["chromium"],
+    "selector": "[part=chips]",
+    "maxPixels": 200,
+    "maxDelta": 1,
+    "reason": "FLO-371: inline SSR CSS versus adopted CSS rounds a few chip-border antialiasing channels by one level in Chromium (33 pixels locally). No geometry or larger color differences are allowed."
+  },
+  {
+    "element": "select",
+    "engines": ["webkit"],
+    "selector": "[part~=trailing-icon] svg",
+    "maxPixels": 50,
+    "maxDelta": 50,
+    "reason": "FLO-371: WebKit rasterizes the parsed SVG dropdown arrow differently from the reconstructed SVG (30 pixels, maximum channel delta 47 locally). Only that SVG region is excepted."
+  },
+  {
+    "element": "tabs",
+    "engines": ["chromium", "firefox", "webkit"],
+    "selector": "[part=indicator]",
+    "withoutAnchors": true,
+    "reason": "FLO-369: an engine without CSS anchors measures the indicator on upgrade. Only the indicator pixels may differ; its measured width must be nonzero and host layout must stay unchanged."
+  }
+]

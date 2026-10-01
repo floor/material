@@ -24,7 +24,7 @@ try {
   assert.deepEqual(Object.keys(manifest.exports["./ssr"]), ["types", "browser", "node", "default"]);
   const files = pack.files.filter((file: { path: string }) => file.path.startsWith("dist/ssr/"));
   assert.deepEqual(files.map((file: { path: string }) => file.path).sort(), [
-    "dist/ssr/browser.js", "dist/ssr/index.d.ts", "dist/ssr/index.js",
+    "dist/ssr/browser.js", "dist/ssr/index.d.ts", "dist/ssr/index.js", "dist/ssr/react.d.ts", "dist/ssr/react.js",
   ]);
   console.log("Packed SSR files:");
   console.table(files);
@@ -81,9 +81,10 @@ try {
   // Both browser and node conditions are active here: browser must win.
   await run(["node", "--conditions=browser", browserSmoke], directory);
 
-  for (const [name, code] of [
-    ["side-effect", 'import "mtrl/ssr"; console.log("browser import is safe");'],
-    ["call", 'import { renderElement } from "mtrl/ssr"; export { renderElement };'],
+  for (const [name, code, specifier] of [
+    ["side-effect", 'import "mtrl/ssr"; console.log("browser import is safe");', "mtrl/ssr"],
+    ["react-side-effect", 'import "mtrl/ssr/react"; console.log("browser import is safe");', "mtrl/ssr/react"],
+    ["call", 'import { renderElement } from "mtrl/ssr"; export { renderElement };', "mtrl/ssr"],
   ]) {
     const entry = join(directory, `${name}.js`);
     await writeFile(entry, code);
@@ -95,7 +96,7 @@ try {
         name: "assert-ssr-boundary",
         enforce: "pre",
         async resolveId(id, importer) {
-          if (id !== "mtrl/ssr") return;
+          if (id !== specifier) return;
           const resolution = await this.resolve(id, importer, { skipSelf: true });
           assert(resolution);
           resolved = resolution.id;
@@ -123,7 +124,7 @@ try {
       const stub = await import(path + `?check=${Date.now()}`);
       assert.throws(() => stub.renderElement("m-button"), { message: "mtrl/ssr is server-only" });
     }
-    console.log(`Vite ${name}: mtrl/ssr -> ${resolved}; ${Buffer.byteLength(output)} bytes, no linkedom`);
+    console.log(`Vite ${name}: ${specifier} -> ${resolved}; ${Buffer.byteLength(output)} bytes, no linkedom`);
   }
   console.log("ssr-consumer: packed Node/Bun rendering, declarations and browser isolation passed");
 } finally {

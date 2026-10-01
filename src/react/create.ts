@@ -18,6 +18,7 @@
  */
 
 import * as React from "react";
+import { shadow } from "./shadow";
 import type { DefineOptions, ElementEvents, ElementProps, ElementSlotProp } from "../elements";
 import {
   camel,
@@ -180,7 +181,10 @@ export const createComponent = <S, E extends HTMLElement>(
 
     // `children` to the default slot, then each named slot's wrapper.
     const { children, ...attributesAndProps } = host;
-    return React.createElement(`${getPrefix()}-${spec.name}`, { ...attributesAndProps, ref }, children as React.ReactNode, ...named);
+    const tag = `${getPrefix()}-${spec.name}`;
+    return React.createElement(tag, { ...attributesAndProps, ref },
+      shadow(tag, attributesAndProps, React.createElement(React.Fragment, null, children as React.ReactNode, ...named)),
+      children as React.ReactNode, ...named);
   });
   Component.displayName = displayName;
   return Component as MComponent<S, E>;

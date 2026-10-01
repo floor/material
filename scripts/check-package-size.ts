@@ -53,7 +53,7 @@ try {
         if (!server) {
           assert(!/(?:^|\/)ssr(?:\/|$|\.)/.test(target), `Client imports SSR in ${file.path}: ${name}`);
         } else {
-          assert(name.startsWith(".") || name.startsWith("node:"), `Unbundled SSR dependency in ${file.path}: ${name}`);
+          assert(name.startsWith(".") || name.startsWith("node:") || (file.path === "dist/ssr/react.js" && ["react", "react-dom/server"].includes(name)), `Unbundled SSR dependency in ${file.path}: ${name}`);
         }
       }
       ts.forEachChild(node, visit);
