@@ -380,10 +380,11 @@ $component: "#{base.$prefix}-textfield";
         color: t.color("error");
     }
 
-    // Required indicator
+    // The required asterisk (FLO-301): part of the label, in its colour and
+    // straight after its text, as Material Web appends it. It was the error
+    // colour with a 4px gap, a style no element carried until now.
     &__required {
-        color: t.color("error");
-        margin-left: 4px;
+        color: inherit;
     }
 
     // Accessibility
@@ -409,11 +410,6 @@ $component: "#{base.$prefix}-textfield";
             left: auto;
             right: 16px;
             transform-origin: right top;
-        }
-
-        &__required {
-            margin-left: 0;
-            margin-right: 4px;
         }
 
         &__prefix {
@@ -1153,5 +1149,62 @@ $component: "#{base.$prefix}-textfield";
                 }
             }
         }
+    }
+}
+
+// ============================================================================
+// An interactive trailing icon (FLO-301)
+// ============================================================================
+// With `trailingIconLabel` the trailing icon is a button: M3 draws an
+// interactive trailing icon as an icon button, as Compose's trailing slot holds
+// an IconButton, so a 40dp round state layer centred on the 24dp icon and a 48dp
+// target. Last in the file, and two classes, so the variant and density rules
+// that place the decorative icon keep its centre but not its size.
+.#{$component}__trailing-icon.#{$component}__trailing-icon--button {
+    right: 4px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+    @include m.touch-target(48px);
+    // The mixin makes its host relative; the icon stays placed in the field
+    position: absolute;
+
+    // One state layer whose opacity the states set, as the icon button draws it
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background-color: currentColor;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    &:hover:not(:disabled)::before {
+        opacity: 0.08;
+    }
+
+    &:focus-visible {
+        outline: 2px solid t.color("secondary");
+        outline-offset: 2px;
+    }
+
+    &:focus-visible::before,
+    &:active:not(:disabled)::before {
+        opacity: 0.1;
+    }
+
+    &:disabled {
+        cursor: default;
+    }
+
+    @include m.rtl {
+        right: auto;
+        left: 4px;
     }
 }

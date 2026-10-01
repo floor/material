@@ -4,6 +4,7 @@ import createTextfield, {
   type TextfieldEvents,
   type TextfieldValuePayload,
   type TextfieldFocusPayload,
+  type TextfieldTrailingPayload,
 } from "../../src/components/textfield";
 import { TEXTFIELD_EVENTS } from "../../src/components/textfield/constants";
 
@@ -11,7 +12,10 @@ type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 
 const field = createTextfield();
-export const eventNames: Equals<keyof TextfieldEvents, "input" | "change" | "focus" | "blur"> = true;
+export const eventNames: Equals<keyof TextfieldEvents, "input" | "change" | "focus" | "blur" | "trailing"> = true;
+// FLO-301: the trailing icon button carries the value, as the house's events do, and the click
+export const trailingShape: Equals<TextfieldTrailingPayload, { value: string; event: MouseEvent }> = true;
+export const trailingPayload: Equals<Parameters<Parameters<typeof field.on<"trailing">>[1]>[0], TextfieldTrailingPayload> = true;
 export const valueShape: Equals<TextfieldValuePayload, { value: string; isEmpty: boolean; isAutofilled: boolean }> = true;
 export const focusShape: Equals<TextfieldFocusPayload, { isEmpty: boolean }> = true;
 export const inputPayload: Equals<Parameters<Parameters<typeof field.on<"input">>[1]>[0], TextfieldValuePayload> = true;

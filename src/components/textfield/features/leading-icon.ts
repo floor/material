@@ -96,6 +96,9 @@ export const withLeadingIcon = <T extends LeadingIconConfig & object>(config: T)
       if (iconElement && iconElement.parentNode) return iconElement;
       const element = document.createElement('span');
       element.className = `${PREFIX}-${NAME}__leading-icon`;
+      // Decorative: the label names the field, and M3's leading icon takes no
+      // action, so a screen reader skips it (FLO-301)
+      element.setAttribute('aria-hidden', 'true');
       fieldOf(component).appendChild(element);
       component.element.classList.add(`${PREFIX}-${NAME}--with-leading-icon`);
       if (component.input) {

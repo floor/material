@@ -52,6 +52,22 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - Internal detached element lifecycle, style registry seams, and a synchronous server DOM
   scope with inert scheduling and complete resource teardown (FLO-363, part A). The public
   SSR renderer follows separately.
+- **Text field: a required field's label ends in an asterisk (FLO-301).** M3's text field
+  guidelines mark a required field with an asterisk after its label; it is in the label's colour,
+  as Material Web draws it, and hidden from screen readers, which the input's native `required`
+  already tells. `setRequired()` and `isRequired()` move it with the input, and `<m-textfield>`'s
+  `required` attribute does too. `noAsterisk: true` leaves it off, for a form that marks its
+  optional fields instead.
+- **Text field: an interactive trailing icon is a button (FLO-301).** `trailingIconLabel` (or
+  `setTrailingIcon(html, label)`) renders the trailing icon as a `<button>` with that accessible
+  name, as Compose's trailing slot holds an `IconButton`: a 40dp state layer, a 48dp target, a
+  keyboard focus ring, in the tab order after the input and disabled with the field. Activating
+  it emits `trailing` with `{ value, event }` and calls `onTrailingClick`. Without a label the icon
+  stays the decorative span it was. (`<m-textfield>` and the framework adapters follow in a later
+  release.)
+- **Text field: errors are announced when they appear (FLO-301).** The supporting text is a polite
+  live region, so an error set with `setError(true, message)` is read without the field being
+  refocused. Its element now stays and its text changes in place.
 
 ### Fixed
 
@@ -60,6 +76,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - Element teardown finishes cleanup after an individual cleanup throws (FLO-363).
 - Text field and select placement cancel and reset their shared measurement timer when the
   last pending field is destroyed, allowing the next lifecycle to schedule again (FLO-363).
+- **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
+  label names the field.
 
 ## [0.10.4] - 2026-10-01
 

@@ -107,7 +107,8 @@ const textfieldSpec = {
     },
     maxlength: { type: "number", config: "maxLength", update: inputAttribute("maxlength") },
     pattern: { type: "string", config: "pattern", update: inputAttribute("pattern") },
-    required: { type: "boolean", config: "required", update: inputAttribute("required") },
+    // The input's required and the label's asterisk together (FLO-301)
+    required: { type: "boolean", config: "required", update: (c, v) => void c.setRequired(!!v) },
     readonly: { type: "boolean", config: "readonly", update: inputAttribute("readonly") },
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
     error: { type: "boolean", config: "error", update: (c, v) => void c.setError(!!v) },

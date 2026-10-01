@@ -297,3 +297,81 @@ export async function checkTextfieldPlaceholder(page: Page): Promise<void> {
   assert.ok(cases.some((row) => row.overlaps), "no case rested its label over the text");
   console.log("Passed text field resting label: 24 cases, filled and outlined, icon, disabled, value, focus — no placeholder, prefix or suffix beside the resting label; affixes once it floats.");
 }
+
+/**
+ * The accessibility the text field draws (FLO-301), measured in the browser:
+ * an interactive trailing icon is an icon button with a 48dp target and a 40dp
+ * round state layer, after the input in the tab order, with a focus ring only
+ * from the keyboard; decorative icons take no focus; and a required outlined
+ * field's notch opens wide enough for the label and its asterisk.
+ */
+export async function checkTextfieldA11y(page: Page): Promise<void> {
+  const icon = '<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="8"/></svg>';
+  const measured = await page.evaluate(async (icon) => {
+    const { createTextfield } = (window as unknown as FieldWindow).inputs;
+    const host = document.createElement("div");
+    host.style.cssText = "padding: 24px; width: 320px";
+    document.body.append(host);
+    const make = (config: Record<string, unknown>) => {
+      const field = createTextfield({ label: "Email", ...config } as never);
+      host.append(field.element);
+      return field;
+    };
+    const interactive = make({ variant: "outlined", trailingIcon: icon, trailingIconLabel: "Clear" });
+    const decorative = make({ variant: "filled", leadingIcon: icon, trailingIcon: icon });
+    const required = make({ variant: "outlined", required: true, value: "a@b.c" });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    const button = interactive.trailingIcon as HTMLButtonElement;
+    const box = button.getBoundingClientRect();
+    const target = getComputedStyle(button, "::after");
+    const iconBox = button.querySelector("svg")!.getBoundingClientRect();
+    const field = interactive.field.getBoundingClientRect();
+
+    const notch = required.element.querySelector<HTMLElement>(".mtrl-textfield__outline-notch")!;
+    const label = required.element.querySelector("label")!;
+    const asterisk = required.element.querySelector<HTMLElement>(".mtrl-textfield__required")!;
+
+    const result = {
+      tag: button.tagName,
+      size: [Math.round(box.width), Math.round(box.height)],
+      target: [parseFloat(target.width), parseFloat(target.height)],
+      radius: getComputedStyle(button).borderRadius,
+      // The icon keeps the decorative icon's centre: 16dp from the field's end
+      iconFromEnd: Math.round(field.right - (iconBox.left + iconBox.width / 2)),
+      decorativeFocusable: [decorative.leadingIcon, decorative.trailingIcon].map((el) => (el as HTMLElement).tabIndex >= 0),
+      notchCoversLabel: notch.getBoundingClientRect().width >= label.getBoundingClientRect().width,
+      asteriskInLabel: label.contains(asterisk) && getComputedStyle(asterisk).color === getComputedStyle(label).color,
+    };
+    return result;
+  }, icon);
+
+  assert.equal(measured.tag, "BUTTON");
+  assert.deepEqual(measured.size, [40, 40], "the state layer is 40dp round the icon");
+  assert.deepEqual(measured.target, [48, 48], "the target is 48dp");
+  assert.equal(measured.radius, "50%");
+  assert.equal(measured.iconFromEnd, 24, "the icon's centre stays 24dp from the field's end (12dp gap + 12dp half icon)");
+  assert.deepEqual(measured.decorativeFocusable, [false, false], "decorative icons take no focus");
+  assert.equal(measured.notchCoversLabel, true, "the notch opens round the label and its asterisk");
+  assert.equal(measured.asteriskInLabel, true, "the asterisk is in the label, in its colour");
+
+  // Tab: the input, then the button; a focus ring from the keyboard only
+  const input = page.locator(".mtrl-textfield--outlined input").first();
+  await input.focus();
+  await page.keyboard.press("Tab");
+  const keyboard = await page.evaluate(() => {
+    const active = document.activeElement as HTMLElement;
+    return { isButton: active.matches(".mtrl-textfield__trailing-icon--button"), outline: getComputedStyle(active).outlineStyle };
+  });
+  assert.deepEqual(keyboard, { isButton: true, outline: "solid" }, "Tab reaches the trailing button, with a focus ring");
+  const clicked = await page.evaluate(() => {
+    const button = document.querySelector<HTMLButtonElement>(".mtrl-textfield__trailing-icon--button")!;
+    button.blur();
+    button.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    button.focus({ focusVisible: false } as FocusOptions);
+    return getComputedStyle(button).outlineStyle;
+  });
+  assert.equal(clicked, "none", "no focus ring from a pointer");
+  await page.evaluate(() => document.querySelectorAll(".mtrl-textfield").forEach((el) => el.closest("div")?.remove()));
+  console.log("Passed text field accessibility: trailing icon button (40dp layer, 48dp target, tab order, keyboard focus ring), decorative icons unfocusable, the notch round the asterisk.");
+}

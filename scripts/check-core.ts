@@ -13,7 +13,7 @@ import { checkRippleIsThePress } from "./check-ripple-browser";
 import { checkButtonStateLayers } from "./check-button-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
-import { checkTextfield, checkTextfieldTokens, checkTextfieldAnatomy, checkTextfieldPlaceholder } from "./check-textfield-browser";
+import { checkTextfield, checkTextfieldTokens, checkTextfieldAnatomy, checkTextfieldPlaceholder, checkTextfieldA11y } from "./check-textfield-browser";
 import { checkControls } from "./check-controls-browser";
 import { checkSearch } from "./check-search-browser";
 import { createPackageFixture } from "./package-fixture";
@@ -97,6 +97,7 @@ try {
   await checkTextfieldTokens(page);
   await checkTextfieldAnatomy(page);
   await checkTextfieldPlaceholder(page);
+  await checkTextfieldA11y(page);
   await checkControls(page);
   await checkSearch(page);
   await checkTimePicker(page, artifacts);

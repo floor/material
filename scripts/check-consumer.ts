@@ -57,9 +57,11 @@ try {
   // Library mode retains exports for measurement; an HTML fixture below tests
   // actual application mode, CSS extraction, network loading, and rendering.
   const sizes: Record<string, { initialGzip: number; totalGzip: number }> = {};
+  // textfield 9,000 to 9,600 for FLO-301 (the asterisk, the live error, the trailing button):
+  // 8,953 to 9,520 against 7cd57a6.
   // addClass from its subpath since 1.0.0 removed it from the root (FLO-351)
   for (const [name, symbol, budget, from] of [
-    ["addClass", "addClass", 1000, "mtrl/core/dom"], ["textfield", "createTextfield", 9000, "mtrl"], ["button", "createButton", 10000, "mtrl"],
+    ["addClass", "addClass", 1000, "mtrl/core/dom"], ["textfield", "createTextfield", 9600, "mtrl"], ["button", "createButton", 10000, "mtrl"],
   ] as const) {
     const entry = join(directory, `${name}.ts`);
     await writeFile(entry, `export { ${symbol} } from '${from}';`);

@@ -60,6 +60,8 @@ export const TEXTFIELD_EVENTS = {
   FOCUS: "focus",
   /** Fired when textfield loses focus */
   BLUR: "blur",
+  /** Fired when the trailing icon button is activated (`trailingIconLabel`; FLO-301) */
+  TRAILING: "trailing",
   /** Legacy name, not emitted; listen for keydown on the input and check key === "Enter" */
   ENTER: "enter",
   /** Native input event only; not emitted through on() */
