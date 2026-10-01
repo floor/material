@@ -46,6 +46,7 @@ export const getApiConfig = (comp: ApiComponent): ApiOptions => ({
   disabled: {
     enable: comp.disabled.enable,
     disable: comp.disabled.disable,
+    isDisabled: comp.disabled.isDisabled,
   },
   lifecycle: {
     destroy: comp.lifecycle.destroy,

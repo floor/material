@@ -192,6 +192,18 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - Internal detached element lifecycle, style registry seams, and a synchronous server DOM
   scope with inert scheduling and complete resource teardown (FLO-363, part A). The public
   SSR renderer follows separately.
+- **API gaps from the 1.0 audit (FLO-384).**
+  - `isDisabled()` on every component that can be disabled and lacked it: button, icon button,
+    FAB, extended FAB, checkbox, switch, text field, select, radios, button group and a tab.
+  - Exported beside their factories: `ButtonEvents` (`mtrl/components/button`), `MenuEvents`,
+    `SelectEvents`, the button group's `ButtonGroupKind`, `ButtonGroupSelection` and
+    `ButtonGroupChangeEvent`, and `createTab` from `mtrl/components/tabs`.
+  - Event maps that now declare what is already emitted: a toggle button's `change`
+    (`{ selected }`), the card's `expandedChanged` and the list's `keydown`. The list's
+    `scroll` is typed as the forwarded payload; its `component` field, never sent, is optional
+    and deprecated (1.0 removes it).
+  - The `mtrl/components/<name>/constants` subpaths' exports are pinned beside the indexes
+    (`bun run component-exports:check`).
 - **Contrast on every theme (FLO-406).** `data-theme-contrast="standard"`, `"medium"`
   and `"high"` select M3 contrast levels in light and dark. Put the attribute on the
   same element as `data-theme`, including each nested theme. With no contrast attribute,
@@ -311,6 +323,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   last pending field is destroyed, allowing the next lifecycle to schedule again (FLO-363).
 - **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
   label names the field.
+- The checkbox and switch change payload docs said setters emit `change`; they are silent, as
+  they have been since FLO-328 (FLO-384).
 - **Menu item ids containing selector syntax keep submenu keyboard navigation working (FLO-429).**
   Parent lookup compares `data-id`, `data-owner`, and `data-level` as strings.
 - **Search keeps custom root classes (FLO-421).** Both contained and divided

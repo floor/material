@@ -126,11 +126,12 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "bottom-sheet": kb(6.7), // a modal outside the top layer: inert page and Tab trap (FLO-324): 6,639; the handle as a button (FLO-324): 6,773
   "side-sheet": kb(6.2), // a modal outside the top layer: inert page and Tab trap (FLO-324): 6,242
   button: kb(7.6),
-  "button-group": kb(11.9), // FLO-382 select(unknown) clears with a dev warning: 11,912 → 12,094
+  "button-group": kb(12.0), // FLO-382 select(unknown) clears with a dev warning: 11,912 → 12,094
   // main's root class option (FLO-403) on the forward merge: next 12,107 to 12,148.
+  // main's isDisabled() (FLO-384) on the forward merge: next e8adc013 12,170 to 12,202.
   card: kb(7.0),
   carousel: kb(11.2), // opt-in wheel scrolling with momentum (FLO-395): 10.3 to 10.9 KB against 2ef11f0
-  checkbox: kb(5.52), // FLO-380: boolean change value plus the HTML valueAttribute token.
+  checkbox: kb(5.6), // FLO-380: boolean change value plus the HTML valueAttribute token; main's isDisabled() (FLO-384) on the forward merge: next 5,644 to 5,658.
   chips: kb(9.2), // FLO-256..261 chips conformance; #221 pointer focus; keyboard.disable() and :dir(rtl) (FLO-343 follow-up): 9,305 to 9,319
   datepicker: kb(12.2), // FLO-238 conformance; FLO-274 swiping; FLO-275 year list; FLO-276 full screen; read-only, required, one change shape (FLO-289, FLO-295): 12,332; FLO-119 aria-disabled: 12,412
   dialog: kb(12.75), // layer: "top", as the sheets: 12,047 to 12,870; the navigation bar's cascade layer name in every sheet (FLO-305): 12,999 to 13,005

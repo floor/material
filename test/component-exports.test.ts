@@ -46,6 +46,13 @@ describe("the component subpaths' exports (FLO-381)", () => {
     expect(constants.DEFAULT_DATE_FORMAT).toBe("MM/DD/YYYY");
   });
 
+  test("every /constants subpath is pinned beside its index (FLO-384)", () => {
+    const constants = Object.keys(now).filter((key) => key.endsWith("/constants"));
+    expect(constants.length).toBeGreaterThan(30);
+    for (const key of constants) expect(Object.keys(now)).toContain(key.slice(0, -"/constants".length));
+    expect(now["button/constants"]?.map((e) => e.name)).toContain("BUTTON_VARIANTS");
+  });
+
   test("the types public members are typed with, and the documented tabs helper, stay public", () => {
     const status = (component: string, name: string) => now[component]?.find((e) => e.name === name)?.status;
     expect([
