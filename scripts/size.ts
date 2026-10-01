@@ -127,7 +127,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "bottom-sheet": kb(6.7), // a modal outside the top layer: inert page and Tab trap (FLO-324): 6,639; the handle as a button (FLO-324): 6,773
   "side-sheet": kb(6.2), // a modal outside the top layer: inert page and Tab trap (FLO-324): 6,242
   button: kb(7.6),
-  "button-group": kb(11.7), // FLO-119 aria-disabled in the shared disabled feature: 11,898
+  "button-group": kb(11.8), // FLO-119 aria-disabled in the shared disabled feature: 11,898; isDisabled() on the group, its buttons and icon buttons (FLO-384): 11,917 to 12,020
   card: kb(7.0),
   carousel: kb(11.2), // opt-in wheel scrolling with momentum (FLO-395): 10.3 to 10.9 KB against 2ef11f0
   checkbox: kb(5.5),
@@ -149,7 +149,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "split-button": kb(17.9), // the menu's top layer: 17,644 to 18,122; the menu's positionTarget (FLO-300): 18,228
   radios: kb(5.1),
   search: kb(10.3), // the open view in the top layer (FLO-285): 9,759; combobox, contained and divided (FLO-286, FLO-287): 10,114; minWidth and maxWidth (FLO-290): 10,161; trailing items, avatar, supporting text, reopening (FLO-291): 10,477
-  select: kb(20.3), // the menu's top layer: 19,600 to 20,115; the field, the supporting text row and the counter (FLO-300): 20,608
+  select: kb(20.35), // the menu's top layer: 19,600 to 20,115; the field, the supporting text row and the counter (FLO-300): 20,608; isDisabled() on the select and its text field (FLO-384): 20,784 to 20,803
   "segmented-button": kb(9.3),
   slider: kb(12.7), // FLO-249..255 slider conformance; FLO-331 the track corner token (12,918 measured)
   // layer: "top", the core/dom top-layer helper and the modal-dialog placement, which

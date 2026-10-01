@@ -178,7 +178,9 @@ try {
     // The carousel's opt-in wheel scrolling with momentum (FLO-395): 128,896 to 129,565 against
     // 2ef11f0, Node 22 / npm 10.
     // FLO-406/main merge with FLO-403: 129,634 B measured under Node 22.23.3 / npm 10.9.9.
-    { name: "all-js", code: "export * from 'mtrl';", gzip: 129_700 },
+    // isDisabled() on eleven components and the type exports (FLO-384): 129,650 to 129,773
+    // against 3f9ca0c7, Node 22.23.3 / npm 10.9.9; the budget keeps the headroom it had.
+    { name: "all-js", code: "export * from 'mtrl';", gzip: 129850 },
     // FLO-406 contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 8,069 -> 7,542 gzip bytes (same packer).
     { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 7700 },
