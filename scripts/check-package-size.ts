@@ -177,7 +177,8 @@ try {
     // The text field's asterisk, live error and trailing button (FLO-301): 128,187 to 128,802, against 7cd57a6.
     // The carousel's opt-in wheel scrolling with momentum (FLO-395): 128,896 to 129,565 against
     // 2ef11f0, Node 22 / npm 10.
-    { name: "all-js", code: "export * from 'mtrl';", gzip: 129700 },
+    // FLO-406/main merge with FLO-403: 129,634 B measured under Node 22.23.3 / npm 10.9.9.
+    { name: "all-js", code: "export * from 'mtrl';", gzip: 129634 },
     // FLO-406 contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 8,069 -> 7,542 gzip bytes (same packer).
     { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 7700 },
