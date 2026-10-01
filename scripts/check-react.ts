@@ -98,6 +98,8 @@ const run = async (version: 18 | 19): Promise<void> => {
   check("renders on a server without a DOM, attributes in the markup");
 
   const client = await bundle("scripts/fixtures/react-client.ts", "browser", plugins);
+  assert.doesNotMatch(client, /dist\/ssr|src\/ssr|linkedom|shadowrootdelegatesfocus|SSR element nesting/);
+  check("client bundle contains no SSR implementation or linkedom");
   const http = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,

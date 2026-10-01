@@ -106,6 +106,8 @@ jobs:
           node-version: 22
       - name: Component classes match the stylesheets
         run: bun run classes:check
+      - name: Packed SSR on Node and Bun, and browser isolation
+        run: bun run ssr-consumer:check
       - name: Packed imports and size budgets
         run: bun run size:check
       - name: Per-component gzip budgets

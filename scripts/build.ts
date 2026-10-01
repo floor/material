@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { copyFile, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
-import { buildModules } from "./build-modules";
+import { buildModules, buildSSR } from "./build-modules";
 import { buildStyles } from "./build-styles";
 import { emitSvelte } from "./svelte-package";
 
@@ -19,6 +19,8 @@ try {
     await emitSvelte(staging);
     console.log("Building full and optional stylesheets...");
     await buildStyles(staging, banner);
+    console.log("Bundling the server-only SSR entry...");
+    await buildSSR(staging);
 
     // Keep the nested manifest in sync, including CSS side effects and exports.
     const relocate = (value: unknown): unknown => {

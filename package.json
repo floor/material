@@ -71,6 +71,12 @@
       "types": "./dist/elements/preupgrade.d.ts",
       "import": "./dist/elements/preupgrade.js"
     },
+    "./ssr": {
+      "types": "./dist/ssr/index.d.ts",
+      "browser": "./dist/ssr/browser.js",
+      "node": "./dist/ssr/index.js",
+      "default": "./dist/ssr/index.js"
+    },
     "./react/jsx": {
       "types": "./dist/react/jsx.d.ts"
     },
@@ -133,6 +139,7 @@
     "root-exports:update": "bun run scripts/root-exports.ts --update",
     "classes:check": "bun run scripts/check-class-names.ts",
     "consumer:check": "bun run scripts/check-consumer.ts",
+    "ssr-consumer:check": "bun run scripts/check-ssr-consumer.ts",
     "tabs:check": "bun run scripts/check-tabs.ts",
     "slider:check": "bun run scripts/check-slider.ts",
     "drawer:check": "bun run scripts/check-drawer.ts",
