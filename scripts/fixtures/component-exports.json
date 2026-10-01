@@ -499,6 +499,11 @@
   ],
   "datepicker": [
     {
+      "name": "CalendarAPI",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "DatePickerChangePayload",
       "kind": "type",
       "status": "public"
@@ -1678,6 +1683,11 @@
       "status": "public"
     },
     {
+      "name": "ResponsiveConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "setupResponsiveBehavior",
       "kind": "value",
       "status": "public"
@@ -1719,6 +1729,11 @@
     },
     {
       "name": "TabConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TabIndicator",
       "kind": "type",
       "status": "public"
     },

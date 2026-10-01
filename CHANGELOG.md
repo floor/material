@@ -86,20 +86,26 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `withAPI`, `withLoading`, `withExpandable`, `withSwipeable`, `withElevation` and the
   `*Feature` types; tabs' `with*` features, `addScrollIndicators`, `createTabsState`,
   `createTabIndicator`, `updateTabPanels`, `setupKeyboardNavigation` and their config and
-  component types; switch's `withSupportingText` and `SupportingTextComponent`; datepicker's
-  `DEFAULT_DATE_FORMAT`. `ChipConfig` loses `managedSelection` and `cell`, which only the chip
-  set sets. `CardComponent`'s `loading`, `expandable` and `swipeable` members are removed;
-  `createCard` never set them. The manifest's `./components/*` and `./components/*/constants` patterns become one
-  entry per component (and per component with constants), so the folders inside a component no
-  longer resolve. Each component's export list is pinned (`bun run component-exports:check`).
+  component types; switch's `withSupportingText` and `SupportingTextComponent`. Datepicker's
+  `DEFAULT_DATE_FORMAT` leaves the component's index but stays public in its constants:
+  `import { DEFAULT_DATE_FORMAT } from 'mtrl/components/datepicker/constants'`. `ChipConfig`
+  loses `managedSelection` and `cell`, which only the chip set sets. `CardComponent`'s `loading`,
+  `expandable` and `swipeable` members are removed; `createCard` never set them. Tabs'
+  `ResponsiveConfig` and `TabIndicator` and datepicker's `CalendarAPI`, which public members are
+  typed with, are now exported. The manifest's `./components/*` and `./components/*/constants`
+  patterns become one entry per component (and per component with constants), so the folders
+  inside a component no longer resolve. Each component's export list is pinned
+  (`bun run component-exports:check`).
   Migration: these subpaths now throw `ERR_PACKAGE_PATH_NOT_EXPORTED`. They held internals, with
   no replacement; a single chip is `createAssistChip` and the other factories in
   `mtrl/components/chips`, and `CHIP_CLASSES`/`CHIP_STATES` are internal class and state names:
   `mtrl/components/bottom-sheet/features`, `carousel/features`, `chips/chip`,
   `chips/chip/constants`, `chips/features`, `drawer/features`, `list/features`, `menu/features`,
-  `progress/features`, `search/features`, `side-sheet/features`, `slider/features`,
-  `textfield/features`. Every `mtrl/components/<name>` and `mtrl/components/<name>/constants`
-  that existed in 0.10 still resolves.
+  `progress/features`, `search/features` (the low-level `withInput`), `side-sheet/features`,
+  `slider/features`, `textfield/features`. Every other `mtrl/components/<name>` and
+  `mtrl/components/<name>/constants` that existed in 0.10 still resolves, except
+  `segmented-button` and `segmented-button/constants`, removed with segmented buttons (FLO-382,
+  above).
 
 - **Text field: a trailing icon without `trailingIconLabel` is decorative (FLO-301).** It is
   hidden from screen readers (`aria-hidden`) and no longer shows a pointer cursor. An app that

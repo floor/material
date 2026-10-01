@@ -64,18 +64,26 @@ try {
     "side-sheet/features", "slider/features", "textfield/features",
   ].map(path => `mtrl/components/${path}`);
   const probe = join(directory, "resolve-components.mjs");
-  await writeFile(probe, `const out = {};
+  // import.meta.resolve maps a specifier through exports without opening the
+  // file, so the probe also checks that the module and its declarations exist.
+  await writeFile(probe, `import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+const out = {};
 for (const specifier of ${JSON.stringify([...componentSubpaths, ...nestedSubpaths])}) {
-  try { import.meta.resolve(specifier); out[specifier] = "ok"; } catch (error) { out[specifier] = error.code; }
+  try {
+    const file = fileURLToPath(import.meta.resolve(specifier));
+    out[specifier] = !existsSync(file) ? "missing " + file
+      : !existsSync(file.replace(/\\.js$/, ".d.ts")) ? "missing declarations" : "ok";
+  } catch (error) { out[specifier] = error.code; }
 }
 console.log(JSON.stringify(out));
 `);
   const resolved: Record<string, string> = JSON.parse(Bun.spawnSync(["node", probe], { cwd: directory }).stdout.toString());
   assert.deepEqual(componentSubpaths.filter(specifier => resolved[specifier] !== "ok"), [],
-    "allowlisted component subpaths that do not resolve from the packed package");
+    "allowlisted component subpaths that do not resolve to a file (and its .d.ts) in the packed package");
   assert.deepEqual(nestedSubpaths.filter(specifier => resolved[specifier] !== "ERR_PACKAGE_PATH_NOT_EXPORTED"), [],
     "folders inside a component that still resolve (or fail for another reason)");
-  console.log(`Component subpaths: ${componentSubpaths.length} resolve from the packed package, ${nestedSubpaths.length} nested ones do not`);
+  console.log(`Component subpaths: ${componentSubpaths.length} resolve to files in the packed package, ${nestedSubpaths.length} nested ones do not`);
 
   // Library mode retains exports for measurement; an HTML fixture below tests
   // actual application mode, CSS extraction, network loading, and rendering.

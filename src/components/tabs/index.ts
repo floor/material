@@ -28,6 +28,9 @@ export type {
 // Public and documented (md3.io tabs); a responsive option on createTabs
 // replaces it in 1.1 (FLO-381)
 export { setupResponsiveBehavior };
+export type { ResponsiveConfig } from "./responsive";
+// Public: TabsComponent.getIndicator returns it (FLO-381)
+export type { TabIndicator } from "./indicator";
 
 // Default export
 export default createTabs;

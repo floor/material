@@ -41,12 +41,18 @@ describe("the component subpaths' exports (FLO-381)", () => {
     expect(present).toEqual([]);
   });
 
+  test("DEFAULT_DATE_FORMAT leaves the datepicker index but stays public in its constants", async () => {
+    const constants = await import("../src/components/datepicker/constants");
+    expect(constants.DEFAULT_DATE_FORMAT).toBe("MM/DD/YYYY");
+  });
+
   test("the types public members are typed with, and the documented tabs helper, stay public", () => {
     const status = (component: string, name: string) => now[component]?.find((e) => e.name === name)?.status;
     expect([
       status("carousel", "SlidesAPI"), status("icon-button", "IconAPI"), status("icon-button", "ToggleManager"),
       status("tabs", "IndicatorConfig"), status("tabs", "setupResponsiveBehavior"),
-    ]).toEqual(["public", "public", "public", "public", "public"]);
+      status("tabs", "ResponsiveConfig"), status("tabs", "TabIndicator"), status("datepicker", "CalendarAPI"),
+    ]).toEqual(["public", "public", "public", "public", "public", "public", "public", "public"]);
   });
 
   test("a chip's set-only options are not on the public ChipConfig", async () => {
