@@ -274,8 +274,12 @@ export const withAPI =
         if (component.input && component.element) {
           const hasValue =
             component.input.value && component.input.value.length > 0;
-          const isAutofilled =
-            component.input.matches?.(":-webkit-autofill") || false;
+          let isAutofilled = false;
+          try {
+            isAutofilled = component.input.matches?.(":-webkit-autofill") || false;
+          } catch {
+            // A selector engine without this vendor pseudo-class cannot report autofill.
+          }
 
           // Update empty state based on value or autofill
           if (hasValue || isAutofilled) {

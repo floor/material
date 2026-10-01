@@ -226,6 +226,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- Prefilled multiline text fields render in SSR, including inside another custom element (FLO-416).
+
 - Element upgrade removes leftover direct declarative shadow templates, including when definitions precede parsing; those templates no longer count as label content (FLO-366).
 
 - SSR parity now requires exact Chromium matches for progress, sliders, tabs and loading
