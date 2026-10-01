@@ -129,6 +129,8 @@
     "adapters:size": "bun run scripts/check-adapter-size.ts",
     "tokens:check": "bun run scripts/check-token-render.ts",
     "root-exports:check": "bun run scripts/root-exports.ts",
+    "component-exports:check": "bun run scripts/component-exports.ts",
+    "component-exports:update": "bun run scripts/component-exports.ts --update",
     "root-exports:update": "bun run scripts/root-exports.ts --update",
     "classes:check": "bun run scripts/check-class-names.ts",
     "consumer:check": "bun run scripts/check-consumer.ts",
