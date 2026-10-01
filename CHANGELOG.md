@@ -108,6 +108,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - Internal detached element lifecycle, style registry seams, and a synchronous server DOM
   scope with inert scheduling and complete resource teardown (FLO-363, part A). The public
   SSR renderer follows separately.
+
+- **Carousel: opt-in mouse wheel scrolling (FLO-395).** Set `wheel: true`, call
+  `setWheel(true)`, or add `<m-carousel wheel>` (also toggleable after creation).
+  Horizontal layouts accumulate wheel momentum and preserve glide velocity to the snap
+  point at or beyond that distance, at least one item per notch. Targets advance
+  through whole items; 120 ms of quiet or a reversal starts a new gesture. Edges let
+  the page scroll, horizontal trackpad gestures and zoom stay native, and reduced
+  motion jumps straight to the target. Pointer, touch and keyboard input interrupt the
+  glide; CSS snap resumes at rest. Full-screen carousels keep native vertical scrolling.
 - **Text field: a required field's label ends in an asterisk (FLO-301).** M3's text field
   guidelines mark a required field with an asterisk after its label; it is in the label's colour,
   as Material Web draws it, and hidden from screen readers, which the input's native `required`
