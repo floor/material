@@ -35,6 +35,7 @@ import {
   hexFromArgb,
 } from "@material/material-color-utilities";
 import { readFileSync, readdirSync } from "node:fs";
+import { compileString, Logger } from "sass";
 import { schemeToTokens, THEME_ROLES } from "../src/core/theme";
 
 /** M3's baseline seed, the source of `baseline` and of the eight variants */
@@ -139,24 +140,58 @@ const declarations = (tokens: Record<string, string>, indent: string): string =>
 const CONTRAST_START = "// contrast roles: generated, do not edit";
 const CONTRAST_HEADER = "// Medium/high contrast: ";
 
-/** Contrast roles use the same mapper as standard, including the scheme's error. */
-export const renderContrast = (spec: ThemeSpec): string => CONTRAST_START + "\n" +
-  ([["medium", 0.5], ["high", 1]] as const).map(([level, contrast]) => {
-    const tokens = schemeToTokens({
-      light: rolesOf(schemeFor({ ...spec, contrast }, false)),
-      dark: rolesOf(schemeFor({ ...spec, contrast }, true)),
-    }, { prefix: "#{$prefix}" });
-    return `@include create-theme-contrast("${spec.name}", "${level}") using ($dark) {
-    @if $dark {
-        @include status-roles-dark();
-${declarations(tokens.dark, "        ")}
-    } @else {
-        @include status-roles-light();
-${declarations(tokens.light, "        ")}
-    }
-}
+type ModeTokens = { light: Record<string, string>; dark: Record<string, string> };
+
+/** Read the actual kept standard, including mixins and light values reused in dark. */
+export const standardTokens = (name: string, source: string): ModeTokens => {
+  const css = compileString(source.split(CONTRAST_START)[0], {
+    loadPaths: ["src/styles/themes"], logger: Logger.silent,
+  }).css;
+  const blocks = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+  const read = (selector: string) => Object.fromEntries(
+    [...(blocks.find(([, sel]) => sel.trim() === selector)?.[2] ?? "")
+      .matchAll(/--mtrl-sys-color-([a-z-]+):\s*(#[a-f\d]{3,6})\b/gi)]
+      .map(([, role, value]) => [`--#{$prefix}-sys-color-${role}`,
+        (value.length === 4 ? "#" + [...value.slice(1)].map(c => c + c).join("") : value).toLowerCase()]),
+  );
+  const light = read(name === "baseline" ? ":root" : `[data-theme=${name}]`);
+  const inherited = name === "baseline" ? { light: {}, dark: {} }
+    : standardTokens("baseline", readFileSync("src/styles/themes/_baseline.scss", "utf8"));
+  return {
+    light: { ...inherited.light, ...light },
+    dark: { ...inherited.dark, ...light, ...read(name === "baseline" ? ".dark-theme" : `[data-theme=${name}][data-theme-mode=dark]`) },
+  };
+};
+
+/** Only differences from this mode's standard; equal medium/high values share a rule. */
+export const renderContrast = (spec: ThemeSpec, standard: ModeTokens = schemeToTokens({
+  light: rolesOf(schemeFor(spec, false)), dark: rolesOf(schemeFor(spec, true)),
+}, { prefix: "#{$prefix}" })): string => {
+  const levels = [0.5, 1].map(contrast => schemeToTokens({
+    light: rolesOf(schemeFor({ ...spec, contrast }, false)),
+    dark: rolesOf(schemeFor({ ...spec, contrast }, true)),
+  }, { prefix: "#{$prefix}" }));
+  const maps = levels.map(tokens => Object.fromEntries((["light", "dark"] as const).map(mode => [mode,
+    Object.fromEntries(Object.entries(tokens[mode]).filter(([token, value]) => {
+      if (!standard[mode][token]) throw new Error(`${spec.name} ${mode}: missing standard ${token}`);
+      return value !== standard[mode][token];
+    })),
+  ])) as ModeTokens);
+  const modeMap = (tokens: Record<string, string>) => Object.entries(tokens)
+    .map(([token, value]) => `            ${token.replace("--#{$prefix}-sys-color-", "")}: ${value},`).join("\n");
+  return CONTRAST_START + `
+@include create-theme-contrast("${spec.name}", (
+${maps.map((tokens, index) => `    ${index === 0 ? "medium" : "high"}: (
+        light: (
+${modeMap(tokens.light)}
+        ),
+        dark: (
+${modeMap(tokens.dark)}
+        ),
+    ),`).join("\n")}
+));
 `;
-  }).join("\n");
+};
 
 /** One generated theme's standard, medium and high SCSS. */
 export const renderTheme = (spec: ThemeSpec): string => {
@@ -189,7 +224,7 @@ ${declarations(tokens.dark, "        ")}
     }
 }
 
-${renderContrast(spec)}`;
+${renderContrast(spec, tokens)}`;
 };
 
 /**
@@ -294,7 +329,7 @@ export const renderHandContrast = (name: string, source: string): string => {
   const header = `${CONTRAST_HEADER}Tonal Spot from light primary seed ${primary}.`;
   const withoutHeader = standard.split("\n").filter((line) => !line.startsWith(CONTRAST_HEADER));
   withoutHeader.splice(1, 0, header);
-  return withoutHeader.join("\n") + "\n" + renderContrast({ name, seed: primary, variant: "tonal-spot", description: "" });
+  return withoutHeader.join("\n") + "\n" + renderContrast({ name, seed: primary, variant: "tonal-spot", description: "" }, standardTokens(name, standard));
 };
 
 /** Every generated file, by path */

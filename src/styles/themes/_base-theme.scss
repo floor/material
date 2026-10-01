@@ -1,4 +1,6 @@
 // src/styles/themes/_base-theme.scss
+@use 'sass:map';
+@use 'sass:list';
 @use '../abstract/base' as *;
 
 // Base theme definition with common properties and structure
@@ -8,43 +10,104 @@
   }
 }
 
-// Contrast follows the same element's theme and mode. Absence alone opts into
-// the system preference: even an explicit "standard" excludes this fallback.
-@mixin contrast-modes($name) {
-  @content(false);
-  &[data-theme-mode="dark"] {
-    @content(true);
-  }
+// Media queries cannot condition one member of a selector list. Store each high
+// value once; explicit high and prefers-contrast activation rules reference it.
+// Unlike value switches, this leaves standard/inherited tokens untouched when
+// the system preference is off. Equal medium/high values reuse the same palette.
+@function contrast-scope($name) {
   @if $name == "baseline" {
-    // The unselected root is baseline and also follows the system dark mode.
-    &:root:not([data-theme]).dark-theme {
-      @content(true);
-    }
-    @media (prefers-color-scheme: dark) {
-      &:root:not([data-theme]):not([data-theme-mode="light"]) {
-        @content(true);
-      }
+    @return ':is([data-theme="baseline"], :root:not([data-theme]))';
+  }
+  @return '[data-theme="#{$name}"]';
+}
+
+// Share equal high colors across roles and modes, too. The SCSS maps retain
+// role names; private numbered palette entries keep the CSS smaller.
+@function contrast-key($palette, $value) {
+  @return '--#{$prefix}-contrast-#{list.index($palette, $value)}';
+}
+
+@mixin contrast-values($tokens, $palette, $mode) {
+  @each $role, $value in map.get($tokens, $mode) {
+    @if list.index($palette, $value) {
+      --#{$prefix}-sys-color-#{$role}: var(#{contrast-key($palette, $value)});
+    } @else {
+      --#{$prefix}-sys-color-#{$role}: #{$value};
     }
   }
 }
 
-@mixin create-theme-contrast($name, $level) {
-  $scope: '[data-theme="#{$name}"]';
-  @if $name == "baseline" {
-    $scope: ':is([data-theme="baseline"], :root:not([data-theme]))';
-  }
-  #{$scope}[data-theme-contrast="#{$level}"] {
-    @include contrast-modes($name) using ($dark) {
-      @content($dark);
-    }
-  }
-  @if $level == "high" {
-    @media (prefers-contrast: more) {
-      #{$scope}:not([data-theme-contrast]) {
-        @include contrast-modes($name) using ($dark) {
-          @content($dark);
+@mixin contrast-modes($name, $tokens, $palette) {
+  // Light must not leak into dark when its unchanged roles are omitted.
+  &:not([data-theme-mode="dark"]) {
+    @if $name == "baseline" {
+      &[data-theme], &:not(.dark-theme)[data-theme-mode="light"] {
+        @include contrast-values($tokens, $palette, light);
+      }
+      @media not (prefers-color-scheme: dark) {
+        &:root:not([data-theme]):not(.dark-theme):not([data-theme-mode="light"]) {
+          @include contrast-values($tokens, $palette, light);
         }
       }
+    } @else {
+      @include contrast-values($tokens, $palette, light);
+    }
+  }
+  @if $name == "baseline" {
+    &[data-theme-mode="dark"], &:root:not([data-theme]).dark-theme {
+      @include contrast-values($tokens, $palette, dark);
+    }
+    @media (prefers-color-scheme: dark) {
+      &:root:not([data-theme]):not(.dark-theme):not([data-theme-mode]) {
+        @include contrast-values($tokens, $palette, dark);
+      }
+    }
+  } @else {
+    &[data-theme-mode="dark"] {
+      @include contrast-values($tokens, $palette, dark);
+    }
+  }
+}
+
+@mixin create-theme-contrast($name, $levels) {
+  $scope: contrast-scope($name);
+  $high: map.get($levels, high);
+  $colors: ();
+  @each $mode, $tokens in $high {
+    @each $role, $value in $tokens {
+      $colors: map.set($colors, $value, true);
+    }
+  }
+  $palette: map.keys($colors);
+  // Medium also needs the palette for its values that equal high.
+  #{$scope}:is([data-theme-contrast="medium"], [data-theme-contrast="high"], :not([data-theme-contrast])) {
+    @each $value in $palette {
+      #{contrast-key($palette, $value)}: #{$value};
+    }
+  }
+  $shared: (light: (), dark: ());
+  $distinct: $levels;
+  @each $mode, $tokens in map.get($levels, medium) {
+    @each $role, $value in $tokens {
+      @if $value == map.get($high, $mode, $role) {
+        $shared: map.set($shared, $mode, $role, $value);
+        @each $level in (medium, high) {
+          $distinct: map.set($distinct, $level, $mode, map.remove(map.get($distinct, $level, $mode), $role));
+        }
+      }
+    }
+  }
+  #{$scope}:is([data-theme-contrast="medium"], [data-theme-contrast="high"]) {
+    @include contrast-modes($name, $shared, $palette);
+  }
+  @each $level, $tokens in $distinct {
+    #{$scope}[data-theme-contrast="#{$level}"] {
+      @include contrast-modes($name, $tokens, $palette);
+    }
+  }
+  @media (prefers-contrast: more) {
+    #{$scope}:not([data-theme-contrast]) {
+      @include contrast-modes($name, $high, $palette);
     }
   }
 }

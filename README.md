@@ -147,7 +147,7 @@ Every theme supports `data-theme-contrast="standard"`, `"medium"` and `"high"` o
 <html data-theme="desert" data-theme-mode="dark" data-theme-contrast="high">
 ```
 
-Without `data-theme-contrast`, `prefers-contrast: more` selects high contrast. An explicit `standard` opts out; `medium` overrides the preference too. The default baseline also supports this setting without `data-theme`. Medium and high use M3 contrast levels 0.5 and 1.0; hand-authored themes derive them with Tonal Spot from their light primary, while their standard colors stay unchanged. Success, warning and info keep their existing status colors. The `highcontrast` theme remains available; `data-theme-contrast="high"` on any theme supersedes it.
+Without `data-theme-contrast`, `prefers-contrast: more` selects high contrast. An explicit `standard` opts out; `medium` overrides the preference too. The default baseline also supports this setting without `data-theme`. Medium and high use M3 contrast levels 0.5 and 1.0; hand-authored themes derive them with Tonal Spot from their light primary, while their standard colors stay unchanged. Success, warning and info keep their existing status colors. The `highcontrast` theme is a theme in its own right and supports all three contrast settings.
 
 M3's scheme variants, generated from the baseline seed, ship as their own entries only (not in the full stylesheet): `neutral`, `vibrant`, `expressive`, `fidelity`, `content`, `monochrome`, `rainbow` and `fruit-salad`, for example `mtrl/themes/vibrant`. `schemeToTokens` (`mtrl/core/theme`) turns any M3 scheme's role colours into these tokens.
 
