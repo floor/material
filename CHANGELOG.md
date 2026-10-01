@@ -249,6 +249,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   last pending field is destroyed, allowing the next lifecycle to schedule again (FLO-363).
 - **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
   label names the field.
+- **Custom root classes survive configuration (FLO-403).** Top and bottom app bars,
+  button groups, segmented buttons, tabs and individual tabs, toolbars, FAB menus,
+  and selects now apply the `class` option to their root element, including
+  space-separated classes. They read the normalized `className` field or forward
+  it to their underlying control.
+
 - **Progress and loading indicators draw the theme of the section they're in, not only the
   page's (FLO-389).** The progress canvas read its colours from `<body>` and `:root`, so in a
   themed section, a card or a dark panel it drew the page's colours: light ones in a dark section.
