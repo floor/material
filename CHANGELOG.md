@@ -12,6 +12,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **The deprecated themes `material`, `winter`, `browngreen` and `legacy` are removed
+  (FLO-428).** 0.10 deprecated them (FLO-308); their files, `mtrl/themes/<name>` entries and
+  their rules in the full stylesheet are gone. A leftover `data-theme="winter"` (or any of the
+  four) gets the light baseline colours, and `data-theme-mode="dark"` and `data-theme-contrast`
+  on that element are ignored: an app with its own dark toggle shows the light baseline until
+  it renames the theme. Migration: `material` → `baseline`, `winter` → `ocean`,
+  `browngreen` → `brownbeige`; `legacy` has no replacement (pick any theme, or keep its
+  colours as custom properties of your own).
 - **Segmented buttons are removed (FLO-382).** `createSegmentedButton` and `createSegment`
   (deprecated since 0.10), their types, `mtrl/components/segmented-button`,
   `mtrl/styles/segmented-button` and the `--mtrl-segmented-button-*` properties are gone. M3
@@ -307,6 +315,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   last pending field is destroyed, allowing the next lifecycle to schedule again (FLO-363).
 - **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
   label names the field.
+- **Menu item ids containing selector syntax keep submenu keyboard navigation working (FLO-429).**
+  Parent lookup compares `data-id`, `data-owner`, and `data-level` as strings.
+- **Search keeps custom root classes (FLO-421).** Both contained and divided
+  search variants apply the `class` option, including space-separated classes.
+- **Tabs with quotes or backslashes in their value no longer fail to link panels (FLO-417).**
+  Panel lookup compares `aria-labelledby` directly with the tab id, so values
+  that are CSS selector syntax are handled as data.
+
 - The carousel wheel check in `core:check` no longer fails when a CI runner stalls a frame. A
   283ms stall split its 30-event wheel gesture in two, and the carousel correctly went one slide
   further than the recording expected. A recording with a frame over 50ms is now taken again
