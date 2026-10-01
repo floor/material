@@ -82,6 +82,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Tabs with quotes or backslashes in their value no longer fail to link panels (FLO-417).**
+  Panel lookup compares `aria-labelledby` directly with the tab id, so values
+  that are CSS selector syntax are handled as data.
+
 - **Status text meets 4.5:1 (FLO-407).** Success, warning and info are one fixed
   pair per mode, shared by every theme. White on the light warning (`#DD6D06`)
   was 3.35:1. Each colour keeps its hue and chroma at the tones M3 uses for a
