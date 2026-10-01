@@ -280,6 +280,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- The search check in `core:check` no longer times out when a frame arrives late (FLO-420). It
+  pressed the scrim before the view's opening had put focus back on the input, and that focus
+  re-opened the view. The check now waits for the opening's frame, and reads the scrim press at
+  once, which it could not tell from the input's blur before.
 - Vue SSR finishes when a host's child uses `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`. The shadow bridge serializes those children once (FLO-373).
 - Vue SSR renders a host whose `v-html` contains an unclosed `<template>`, instead of throwing, and `mtrl/ssr/vue` imports the server renderer from `vue/server-renderer` (FLO-373).
 - Prefilled multiline text fields render in SSR, including inside another custom element (FLO-416).
