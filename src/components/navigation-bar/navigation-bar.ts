@@ -139,6 +139,7 @@ export default function createNavigationBar(config: NavigationBarConfig = {}): N
     const api: NavigationBarComponent = {
         element: root, getClass, lifecycle: component.lifecycle, destroy,
         getActive: () => items.find((item) => item.active)?.id || null,
+        getValue: () => api.getActive(),
         setActive(id) {
             if (destroyed || (id !== null && !items.some((item) => item.id === id && !item.disabled))) return api;
             items = items.map((item) => ({ ...item, active: item.id === id }));

@@ -64,7 +64,7 @@ test('a click selects once and emits select with value; setActive is silent; a d
     bar.on('select', event => seen.push(['event', event.value, event.id]));
     item(bar, 'search').click();
     expect(seen).toEqual([['event', 'search', 'search'], ['option', 'search', 1]]);
-    expect(bar.getActive()).toBe('search');
+    expect([bar.getActive(), bar.getValue()]).toEqual(['search', 'search']);
     expect(item(bar, 'search').getAttribute('aria-current')).toBe('page');
     bar.setActive('home');
     expect([seen.length, bar.getActive()]).toEqual([2, 'home']);
