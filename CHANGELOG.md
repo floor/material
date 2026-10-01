@@ -123,6 +123,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- The search check in `core:check` no longer times out when a frame arrives late (FLO-420). It
+  pressed the scrim before the view's opening had put focus back on the input, and that focus
+  re-opened the view. The check now waits for the opening's frame, and reads the scrim press at
+  once, which it could not tell from the input's blur before.
 - **ArrowLeft and Escape work in a submenu whose parent item's id holds a quote or a backslash
   (FLO-429).** They threw, or did nothing, because the id was put into a CSS selector.
 - CI's `static` job prints the output of a failing check again. Under the job's shell a failing
