@@ -286,9 +286,16 @@ const partNames = (node: Element): string[] => {
   return names;
 };
 
+const isDeclarativeTemplate = (node: Node): boolean =>
+  node.nodeType === 1 && (node as Element).localName === "template" && (node as Element).hasAttribute("shadowrootmode");
+
+const removeDeclarativeTemplates = (host: HTMLElement): void => {
+  for (const child of Array.from(host.children)) if (isDeclarativeTemplate(child)) child.remove();
+};
+
 const hasContent = (host: HTMLElement): boolean =>
   Array.from(host.childNodes).some(
-    (node) => node.nodeType === 1 || (node.nodeType === 3 && (node.textContent ?? "").trim() !== "")
+    (node) => (node.nodeType === 1 && !isDeclarativeTemplate(node)) || (node.nodeType === 3 && (node.textContent ?? "").trim() !== "")
   );
 
 /** The element class for a spec. Called on first use, never at import. */
@@ -348,6 +355,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
     }
 
     connectedCallback(): void {
+      removeDeclarativeTemplates(this);
       this.#upgradeProperties();
       if (!this.component) this.#build();
     }
@@ -542,9 +550,12 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       const cleanup = spec.setup?.(this, component);
       if (cleanup) this.#cleanup.push(cleanup);
 
-      if ((spec.slot && !this.#slot) || spec.observeChildren) {
+      {
+        // A definition in <head> runs before the parser reaches the template.
+        // Watch even elements with no slot, or with a slot already populated.
         // Content arriving later than creation needs a container the factory builds.
         this.#observer = new MutationObserver(() => {
+          removeDeclarativeTemplates(this);
           const observe = spec.observeChildren;
           // Declarations changing is not the user: what the update makes the
           // factory emit (a removed chip's `remove`) is not re-dispatched.
@@ -559,7 +570,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
             this.#syncForm(); // an in-place update can change the form value (a removed selection)
             return;
           }
-          if (observe || (!this.#slot && hasContent(this))) this.#rebuild(true);
+          if (observe || (spec.slot && !this.#slot && hasContent(this))) this.#rebuild(true);
         });
         this.#observer.observe(this, {
           childList: true,
@@ -732,6 +743,7 @@ export const createDeclarationClass = (
     // A property set before the element was defined is an own property that hides
     // the accessor: move it onto the attribute, as the elements do on upgrade.
     connectedCallback(): void {
+      removeDeclarativeTemplates(this);
       const self = this as unknown as Record<string, unknown>;
       for (const name of names) {
         if (Object.prototype.hasOwnProperty.call(this, name)) {

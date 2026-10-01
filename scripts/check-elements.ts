@@ -11,6 +11,7 @@
 
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
+import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
 
 // Runs against the build: `bun run build` first, as CI does.
@@ -143,6 +144,7 @@ const fresh = async (page: Page, html: string): Promise<void> => {
 };
 
 try {
+  await checkDeclarativeUpgrade(browser);
   const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));

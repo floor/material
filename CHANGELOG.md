@@ -83,6 +83,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- Element upgrade removes leftover direct declarative shadow templates, including when definitions precede parsing; those templates no longer count as label content (FLO-366).
+
 - SSR parity now requires exact Chromium matches for progress, sliders, tabs and loading
   indicators after FLO-368/FLO-369; their 22 resolved exceptions are removed (FLO-363).
 
