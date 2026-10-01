@@ -113,6 +113,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- CI's `static` job prints the output of a failing check again. Under the job's shell a failing
+  check ended before its status was recorded, and the step stopped with "exit code 1" and nothing
+  else, so the failure could not be read from CI.
 - The checkbox and switch change payload docs said setters emit `change`; they are silent, as
   they have been since FLO-328 (FLO-384).
 - **Menu item ids containing selector syntax keep submenu keyboard navigation working (FLO-429).**
