@@ -14,8 +14,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 - **Carousel: opt-in mouse wheel scrolling (FLO-395).** Set `wheel: true`, call
   `setWheel(true)`, or add `<m-carousel wheel>` (also toggleable after creation).
-  Horizontal multi-browse and uncontained layouts scroll by the wheel delta;
-  hero layouts advance once per burst, separated by 160 ms of quiet. Edges let
+  Horizontal layouts accumulate wheel momentum and glide natively to the snap
+  point at or beyond that distance, at least one item per notch. Targets advance
+  through whole items; 120 ms of quiet or a reversal starts a new gesture. Edges let
   the page scroll, horizontal trackpad gestures and zoom stay native, and reduced
   motion disables smooth navigation. Full-screen carousels keep native vertical scrolling.
 

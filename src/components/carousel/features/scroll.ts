@@ -32,8 +32,8 @@ import type { SlidesComponent } from "./slides";
 const FLING_VELOCITY = 0.4;
 /** Pointer travel below this is a click, not a drag */
 const DRAG_THRESHOLD = 4;
-/** 160 ms without wheel input separates notches/flicks from their event tails. */
-const WHEEL_QUIET = 160;
+/** 120 ms of quiet separates gestures while retaining a continuous momentum tail. */
+const WHEEL_QUIET = 120;
 
 interface ScrollComponent {
   getCurrentSlide: () => number;
@@ -73,6 +73,7 @@ export const withScroll = (config: CarouselConfig) =>
     const snapClass = `${prefix}__snap`;
     element.classList.toggle(`${prefix}--snap`, snap);
 
+    let lastWheel = -Infinity;
     let strategy: Strategy | null = null;
     let count = 0;
     let containerSize = 0;
@@ -238,6 +239,7 @@ export const withScroll = (config: CarouselConfig) =>
     };
 
     const rebuild = (): void => {
+      lastWheel = -Infinity;
       build();
       if (strategy) {
         expect(currentIndex);
@@ -314,6 +316,7 @@ export const withScroll = (config: CarouselConfig) =>
       clearPending();
       if (e.pointerType !== "mouse" || e.button !== 0 || !strategy) return;
       dragging = true;
+      lastWheel = -Infinity;
       dragged = false;
       dragStart = vertical ? e.clientY : e.clientX;
       dragLast = dragStart;
@@ -373,32 +376,48 @@ export const withScroll = (config: CarouselConfig) =>
 
     // ── Opt-in mouse wheel ──────────────────────────────────────
 
-    let lastWheel = -Infinity;
-    const discreteWheel = variant === CAROUSEL_VARIANTS.HERO || variant === CAROUSEL_VARIANTS.HERO_CENTER;
+    let wheelDirection = 0;
+    let wheelStart = 0;
+    let wheelDelta = 0;
+    let wheelTarget = 0;
     const handleWheel = (e: WheelEvent): void => {
       if (e.ctrlKey || dragging || Math.abs(e.deltaX) >= Math.abs(e.deltaY) || !strategy) return;
       const position = scrollPosition();
       const end = snapPositions[count - 1] ?? 0;
-      const continuing = e.timeStamp - lastWheel < WHEEL_QUIET;
-      lastWheel = e.timeStamp;
+      const direction = Math.sign(e.deltaY);
       // Use the physical range: a smooth navigation may still be travelling.
-      if (e.deltaY < 0 ? position <= 1 : position >= end - 1) return;
+      if (direction < 0 ? position <= 1 : position >= end - 1) return;
       e.preventDefault();
-      if (discreteWheel) {
-        if (!continuing) (e.deltaY > 0 ? next : prev)();
-        // The passive wheel listener still clears native navigation's pending
-        // target; retain this gesture's target while its smooth scroll settles.
-        else expect(currentIndex);
+      if (e.timeStamp - lastWheel >= WHEEL_QUIET || direction !== wheelDirection) {
+        wheelStart = position;
+        wheelDelta = 0;
+        wheelTarget = position;
+      }
+      lastWheel = e.timeStamp;
+      wheelDirection = direction;
+      // Lines use computed line height (16px for "normal"); pages use the viewport.
+      const unit = e.deltaMode === 1
+        ? parseFloat(window.getComputedStyle(scroller).lineHeight) || 16
+        : e.deltaMode === 2 ? containerSize : 1;
+      wheelDelta += e.deltaY * unit;
+      const destination = Math.max(0, Math.min(end, wheelStart + wheelDelta));
+      let index = direction > 0 ? count - 1 : 0;
+      for (let i = direction > 0 ? 0 : count - 1; i >= 0 && i < count; i += direction) {
+        if (direction * (snapPositions[i]! - destination) >= 0 &&
+            direction * (snapPositions[i]! - wheelStart) > 0) {
+          index = i;
+          break;
+        }
+      }
+      const target = snapPositions[index]!;
+      // Keep CSS snap enabled and let the browser own all motion. Reissuing an
+      // unchanged target would restart its smooth scroll on every momentum event.
+      if (direction * (target - wheelTarget) > 0) {
+        wheelTarget = target;
+        goTo(index);
       } else {
-        // Lines use the computed line height (16px if it is "normal"); pages
-        // use the horizontal viewport. Disable snapping until the burst ends.
-        const unit = e.deltaMode === 1
-          ? parseFloat(window.getComputedStyle(scroller).lineHeight) || 16
-          : e.deltaMode === 2 ? containerSize : 1;
-        restoreSnap();
-        element.dataset.settling = "true";
-        setScrollPosition(Math.max(0, Math.min(end, position + e.deltaY * unit)), false);
-        settleTimer = window.setTimeout(restoreSnap, WHEEL_QUIET);
+        // The existing passive listener clears pending before this handler runs.
+        expect(currentIndex);
       }
     };
     const setWheel = (on: boolean): void => {

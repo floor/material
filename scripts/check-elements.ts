@@ -4075,6 +4075,7 @@ try {
       return event.defaultPrevented;
     });
     assert.equal(await wheel(), true, "wheel attribute enables scrolling at creation");
+    await page.waitForTimeout(700);
     assert((await scroller.evaluate(el => el.scrollLeft)) > 0);
     assert.equal(await host.evaluate(el => {
       const host = el as HTMLElement & { component: unknown };
@@ -4093,6 +4094,7 @@ try {
       return host.component === before;
     }), true, "adding wheel keeps the component");
     assert.equal(await wheel(), true, "adding wheel enables interception again");
+    await page.waitForTimeout(700);
     assert((await scroller.evaluate(el => el.scrollLeft)) > position);
     check("carousel: wheel attribute scrolls horizontally and toggles in place");
   }

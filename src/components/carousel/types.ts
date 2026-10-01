@@ -56,7 +56,9 @@ export interface CarouselConfig {
   snap?: boolean;
   /**
    * Scroll horizontal carousels with a vertical mouse wheel; false by default.
-   * Hero layouts advance once per gesture. At either edge the page scrolls.
+   * Normalized deltas accumulate per gesture and glide to directional snap points.
+   * One notch advances at least one item; momentum can pass several whole items.
+   * At either edge the page scrolls.
    * Horizontal trackpad gestures, zoom and vertical layouts stay native.
    */
   wheel?: boolean;

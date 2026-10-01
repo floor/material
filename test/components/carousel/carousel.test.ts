@@ -263,59 +263,89 @@ describe('carousel opt-in wheel', () => {
       if (options.top !== undefined) scroller.scrollTop = options.top;
     });
     Object.defineProperty(scroller, 'scrollTo', { value: scroll, configurable: true });
-    const wheel = (options: WheelEventInit = {}) => {
+    let time = 1000;
+    const wheel = (options: WheelEventInit = {}, elapsed = 16) => {
+      time += elapsed;
       const event = new dom.window.WheelEvent('wheel', { deltaY: 40, bubbles: true, cancelable: true, ...options });
+      Object.defineProperty(event, 'timeStamp', { value: time });
       scroller.dispatchEvent(event);
       return event;
     };
-    return { carousel, scroller, scroll, wheel };
+    const snaps = Array.from(carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__snap'), el => parseFloat(el.style.left));
+    return { carousel, scroller, scroll, wheel, snaps };
   };
 
   test('wheel is off by default and can be enabled in place', () => {
-    const { carousel, scroller, scroll, wheel } = setupWheel();
+    const { carousel, scroller, scroll, wheel, snaps } = setupWheel();
     try {
       expect(wheel().defaultPrevented).toBe(false);
       expect(scroll).not.toHaveBeenCalled();
       expect(scroller.scrollLeft).toBe(0);
       expect(carousel.setWheel(true)).toBe(carousel);
       expect(wheel().defaultPrevented).toBe(true);
-      expect(scroller.scrollLeft).toBe(40);
+      expect(scroller.scrollLeft).toBe(snaps[1]);
     } finally { carousel.destroy(); }
   });
 
-  for (const variant of ['multi-browse', 'uncontained'] as const) {
-    test(`${variant} wheel normalizes pixels, lines and pages, then restores snapping`, async () => {
-      const { carousel, scroller, scroll, wheel } = setupWheel({ wheel: true, variant });
+  for (const variant of ['multi-browse', 'uncontained', 'hero', 'hero-center'] as const) {
+    test(`${variant} accumulates normalized momentum and advances only to directional snap points`, () => {
+      const { carousel, scroller, scroll, wheel, snaps } = setupWheel({
+        wheel: true, variant, slides: Array.from({ length: 16 }, (_, i) => ({ title: String(i) })),
+      });
       scroller.style.lineHeight = '20px';
+      // Model an in-flight browser scroll: issuing a target does not teleport there.
+      scroll.mockImplementation(() => {});
       try {
-        expect(wheel().defaultPrevented).toBe(true);
-        expect(scroller.scrollLeft).toBe(40);
+        expect(wheel({ deltaY: 100 }).defaultPrevented).toBe(true);
+        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[1], behavior: 'smooth' });
         wheel({ deltaY: 2, deltaMode: 1 });
-        expect(scroller.scrollLeft).toBe(80);
-        wheel({ deltaY: 1, deltaMode: 2 });
-        expect(scroller.scrollLeft).toBe(680);
-        expect(scroll).toHaveBeenLastCalledWith({ left: 680, behavior: 'auto' });
-        expect(carousel.element.dataset.settling).toBe('true');
-        await new Promise(resolve => setTimeout(resolve, 200));
+        expect(scroll).toHaveBeenCalledTimes(1);
+        wheel({ deltaY: 2, deltaMode: 2 });
+        const target = snaps.find(position => position >= 1340)!;
+        expect(scroll).toHaveBeenLastCalledWith({ left: target, behavior: 'smooth' });
         expect(carousel.element.dataset.settling).toBeUndefined();
-        wheel({ deltaY: -40 });
-        expect(scroller.scrollLeft).toBe(640);
+        wheel({ deltaY: 1 });
+        expect(scroll).toHaveBeenCalledTimes(2);
+        // Reverse immediately from the physical position, not the old forward target.
+        scroller.scrollLeft = snaps[2]!;
+        wheel({ deltaY: -100 });
+        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[1], behavior: 'smooth' });
+        wheel({ deltaY: -2, deltaMode: 2 });
+        expect(scroll).toHaveBeenLastCalledWith({ left: 0, behavior: 'smooth' });
+        // Quiet starts a fresh gesture even while the previous glide is unfinished.
+        scroller.scrollLeft = snaps[4]!;
+        wheel({ deltaY: -100 }, 121);
+        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[3], behavior: 'smooth' });
       } finally { carousel.destroy(); }
     });
-  }
 
-  for (const variant of ['hero', 'hero-center'] as const) {
-    test(`${variant} moves one slide per burst and rearms after quiet`, async () => {
-      const { carousel, wheel, scroll } = setupWheel({ wheel: true, variant });
+    test(`${variant} one notch advances one item and a 30-event decay carries several`, () => {
+      const { carousel, scroller, scroll, wheel, snaps } = setupWheel({
+        wheel: true, variant, slides: Array.from({ length: 20 }, (_, i) => ({ title: String(i) })),
+      });
+      scroll.mockImplementation(() => {});
       try {
-        expect(wheel().defaultPrevented).toBe(true);
-        wheel(); wheel();
+        wheel({ deltaY: 100 });
         expect(carousel.getCurrentSlide()).toBe(1);
         expect(scroll).toHaveBeenCalledTimes(1);
-        await new Promise(resolve => setTimeout(resolve, 200));
-        wheel({ deltaY: -40 });
-        expect(carousel.getCurrentSlide()).toBe(0);
-        expect(scroll).toHaveBeenCalledTimes(2);
+        scroller.scrollLeft = snaps[1]!;
+        scroll.mockClear();
+        let total = 0;
+        for (let i = 0; i < 30; i++) {
+          const deltaY = 300 * 0.9 ** i;
+          total += deltaY;
+          wheel({ deltaY }, i === 0 ? 121 : 16);
+        }
+        const targets = scroll.mock.calls.map(([options]) => options.left!);
+        expect(targets.length).toBeGreaterThan(2);
+        expect(targets.every((target, i) => i === 0 || target > targets[i - 1]!)).toBe(true);
+        expect(targets.every(target => snaps.includes(target))).toBe(true);
+        expect(targets.at(-1)).toBe(snaps.find(position => position >= snaps[1]! + total));
+        // The same rule applies backward, clamping without overshoot or trapping the edge.
+        wheel({ deltaY: -100000 });
+        expect(scroll).toHaveBeenLastCalledWith({ left: 0, behavior: 'smooth' });
+        scroller.scrollLeft = 0;
+        expect(wheel({ deltaY: -100 }).defaultPrevented).toBe(false);
       } finally { carousel.destroy(); }
     });
   }
