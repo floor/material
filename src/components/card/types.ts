@@ -469,13 +469,6 @@ export interface CardComponent extends BaseComponent {
    * ```
    */
   destroy: () => void;
-  
-  /** Optional loading feature */
-  loading?: LoadingFeature;
-  /** Optional expandable feature */
-  expandable?: ExpandableFeature;
-  /** Optional swipeable feature */
-  swipeable?: SwipeableFeature;
 }
 
 /**

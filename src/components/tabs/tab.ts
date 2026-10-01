@@ -1,4 +1,5 @@
 // src/components/tabs/tab.ts
+import { processClassNames, type BaseComponentConfig } from "../../core/config/component";
 import { syncTabControls, tabIdFor } from "./utils";
 import { pipe } from "../../core/compose";
 import { createBase } from "../../core/compose/component";
@@ -57,7 +58,10 @@ export const createTab = (config: TabConfig = {}): TabComponent => {
       value: baseConfig.value,
       prefix: baseConfig.prefix,
       variant: "text", // MD3 tabs use text button style
-      class: `${baseConfig.prefix}-tab`,
+      class: [
+        `${baseConfig.prefix}-tab`,
+        processClassNames((baseConfig as BaseComponentConfig).className || ""),
+      ].filter(Boolean).join(" "),
     });
 
     // Use the button element as our element

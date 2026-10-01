@@ -5,15 +5,15 @@ import { withEvents, withLifecycle } from "../../../core/compose/features";
 import { createRipple } from "../../../core/compose/features/ripple";
 import { createComponentConfig, createElementConfig } from "../../../core/config/component";
 import { setHTML } from "../../../core/dom/html";
-import type { ChipConfig, ChipComponent, ChipEvents } from "../types";
+import type { ChipOptions, ChipComponent, ChipEvents } from "../types";
 
 const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>';
 const DROP_DOWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 10l5 5 5-5z"/></svg>';
 const CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
 
 /** Shared internal implementation for the four Material chip factories. */
-const createChip = (config: ChipConfig = {}): ChipComponent => {
-  const options = createComponentConfig<ChipConfig>({ type: "filter", ripple: true }, config, "chip");
+const createChip = (config: ChipOptions = {}): ChipComponent => {
+  const options = createComponentConfig<ChipOptions>({ type: "filter", ripple: true }, config, "chip");
   const type = options.type ?? "filter";
   const selectable = type === "filter" || type === "input";
   const base = pipe(createBase, withEvents(), withElement(createElementConfig(options, { tag: "div" })), withLifecycle())(options);

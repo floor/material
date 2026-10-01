@@ -81,6 +81,31 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   condition are gone; `main` is the ESM entry. Every subpath was already import-only, and with
   the internals off the root the bundle would have been a partial API. `require('mtrl')` no longer
   resolves (`ERR_PACKAGE_PATH_NOT_EXPORTED`): use `import`, or `await import('mtrl')` from CommonJS.
+- **Component subpaths export the component only, and are listed one by one (FLO-381).** The
+  internals 0.10.5 deprecated on `mtrl/components/<name>` are gone, with no replacement: card's
+  `withAPI`, `withLoading`, `withExpandable`, `withSwipeable`, `withElevation` and the
+  `*Feature` types; tabs' `with*` features, `addScrollIndicators`, `createTabsState`,
+  `createTabIndicator`, `updateTabPanels`, `setupKeyboardNavigation` and their config and
+  component types; switch's `withSupportingText` and `SupportingTextComponent`. Datepicker's
+  `DEFAULT_DATE_FORMAT` leaves the component's index but stays public in its constants:
+  `import { DEFAULT_DATE_FORMAT } from 'mtrl/components/datepicker/constants'`. `ChipConfig`
+  loses `managedSelection` and `cell`, which only the chip set sets. `CardComponent`'s `loading`,
+  `expandable` and `swipeable` members are removed; `createCard` never set them. Tabs'
+  `ResponsiveConfig` and `TabIndicator` and datepicker's `CalendarAPI`, which public members are
+  typed with, are now exported. The manifest's `./components/*` and `./components/*/constants`
+  patterns become one entry per component (and per component with constants), so the folders
+  inside a component no longer resolve. Each component's export list is pinned
+  (`bun run component-exports:check`).
+  Migration: these subpaths now throw `ERR_PACKAGE_PATH_NOT_EXPORTED`. They held internals, with
+  no replacement; a single chip is `createAssistChip` and the other factories in
+  `mtrl/components/chips`, and `CHIP_CLASSES`/`CHIP_STATES` are internal class and state names:
+  `mtrl/components/bottom-sheet/features`, `carousel/features`, `chips/chip`,
+  `chips/chip/constants`, `chips/features`, `drawer/features`, `list/features`, `menu/features`,
+  `progress/features`, `search/features` (the low-level `withInput`), `side-sheet/features`,
+  `slider/features`, `textfield/features`. Every other `mtrl/components/<name>` and
+  `mtrl/components/<name>/constants` that existed in 0.10 still resolves, except
+  `segmented-button` and `segmented-button/constants`, removed with segmented buttons (FLO-382,
+  above).
 
 - **Text field: a trailing icon without `trailingIconLabel` is decorative (FLO-301).** It is
   hidden from screen readers (`aria-hidden`) and no longer shows a pointer cursor. An app that
@@ -229,6 +254,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   last pending field is destroyed, allowing the next lifecycle to schedule again (FLO-363).
 - **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
   label names the field.
+- **Custom root classes survive configuration (FLO-403).** Top and bottom app bars,
+  button groups, segmented buttons, tabs and individual tabs, toolbars, FAB menus,
+  and selects now apply the `class` option to their root element, including
+  space-separated classes. They read the normalized `className` field or forward
+  it to their underlying control.
+
 - **Progress and loading indicators draw the theme of the section they're in, not only the
   page's (FLO-389).** The progress canvas read its colours from `<body>` and `:root`, so in a
   themed section, a card or a dark panel it drew the page's colours: light ones in a dark section.
