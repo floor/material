@@ -156,9 +156,17 @@ describe("decorative icons are hidden (FLO-301)", () => {
     expect(field.leadingIcon?.getAttribute("aria-hidden")).toBe("true");
   });
 
-  test("a trailing icon without a label stays the span it was (main: unchanged until 1.0)", () => {
+  test("a trailing icon without a label is a decorative span, hidden from screen readers (1.0)", () => {
     const field = mount({ trailingIcon: ICON });
     expect(field.trailingIcon?.tagName).toBe("SPAN");
+    expect(field.trailingIcon?.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  test("a button made decorative again is hidden, and a span made a button is not", () => {
+    const field = mount({ trailingIcon: ICON, trailingIconLabel: "Clear" });
+    expect(field.trailingIcon?.hasAttribute("aria-hidden")).toBe(false);
+    field.setTrailingIcon(ICON, "");
+    expect(field.trailingIcon?.getAttribute("aria-hidden")).toBe("true");
   });
 });
 
