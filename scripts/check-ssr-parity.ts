@@ -18,9 +18,14 @@ type Exception = Difference & { element: string; phase: string; issue: string };
 const allowed = exceptions as Exception[];
 const engine = process.argv.find(arg => arg.startsWith("--engine="))?.split("=")[1] ?? "chromium";
 assert.equal(engine, "chromium", "Structural parity is Chromium-only; use ssr:check for three-engine upgrade/paint coverage");
-const fixtures = cases.filter(c => c.variant === "default");
-assert.equal(fixtures.length, 37); // 36 elements, and the navigation bar (FLO-305)
-assert.deepEqual(fixtures.map(c => c.element).sort(), Object.values(elements).map(e => e.spec.name).sort());
+const defaults = cases.filter(c => c.variant === "default");
+assert.equal(defaults.length, 37); // 36 elements, and the navigation bar (FLO-305)
+assert.deepEqual(defaults.map(c => c.element).sort(), Object.values(elements).map(e => e.spec.name).sort());
+const fixtures = [
+  ...defaults,
+  { element: "textfield", variant: "multiline value", html: '<m-textfield label="Name" type="multiline" value="Ada"></m-textfield>' },
+];
+assert.equal(fixtures.length, 38);
 const bundle = await Bun.build({ entrypoints: ["scripts/fixtures/ssr-parity.ts"], target: "browser" });
 assert(bundle.success, String(bundle.logs));
 const js = await bundle.outputs[0].text();
