@@ -94,11 +94,11 @@ export async function buildStyles(outdir: string, banner: string) {
  * The shadow base (`ripple`) is what the global base stylesheet gives a
  * component in light DOM and a shadow root does not inherit.
  *
- * For SSR, link `ripple.css`, then dependencies in
- * `resolveStyleDependencies` order, then `<component>.css`, and finally
- * `hosts/<element>.css`. The resolver visits dependencies before their
- * component, matching the generated JS imports. Hosts are separate files;
- * this link contract does not change the browser's host-first `applyStyles`.
+ * For SSR, link in the browser's cascade order (`applyStyles` in
+ * src/elements/define.ts adopts host, then ripple, then the spec's styles):
+ * `hosts/<element>.css`, then `ripple.css`, then the dependencies in
+ * `resolveStyleDependencies` order, then `<component>.css`. The resolver visits
+ * dependencies before their component, matching the generated JS imports.
  *
  * Each element's module also registers its pre-upgrade rules
  * (src/styles/elements), which apply to the page until the element is
