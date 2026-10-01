@@ -4109,6 +4109,47 @@ try {
     check("carousel: items match the factory's sizes, masks, positions and colours");
   }
 
+  // FLO-395: declarative opt-in and toggling without recreating the factory.
+  await fresh(page, `<m-carousel id="wheel-carousel" wheel item-width="200" style="width:600px;height:240px">
+    ${Array.from({ length: 8 }, (_, i) => slide(String(i), `Slide ${i}`)).join("")}
+  </m-carousel>`);
+  {
+    const host = page.locator("#wheel-carousel");
+    const scroller = host.locator('[part="scroller"]');
+    await page.waitForFunction(() => {
+      const el = document.querySelector("#wheel-carousel")?.shadowRoot?.querySelector('[part="scroller"]');
+      return el && el.scrollWidth > el.clientWidth;
+    });
+    const wheel = () => scroller.evaluate(element => {
+      const event = new WheelEvent("wheel", { deltaY: 160, cancelable: true, bubbles: true });
+      element.dispatchEvent(event);
+      return event.defaultPrevented;
+    });
+    assert.equal(await wheel(), true, "wheel attribute enables scrolling at creation");
+    await page.waitForTimeout(700);
+    assert((await scroller.evaluate(el => el.scrollLeft)) > 0);
+    assert.equal(await host.evaluate(el => {
+      const host = el as HTMLElement & { component: unknown };
+      const before = host.component;
+      host.removeAttribute("wheel");
+      return host.component === before;
+    }), true, "removing wheel keeps the component");
+    await page.waitForTimeout(200);
+    const position = await scroller.evaluate(el => el.scrollLeft);
+    assert.equal(await wheel(), false, "removing wheel disables interception");
+    assert.equal(await scroller.evaluate(el => el.scrollLeft), position);
+    assert.equal(await host.evaluate(el => {
+      const host = el as HTMLElement & { component: unknown };
+      const before = host.component;
+      host.setAttribute("wheel", "");
+      return host.component === before;
+    }), true, "adding wheel keeps the component");
+    assert.equal(await wheel(), true, "adding wheel enables interception again");
+    await page.waitForTimeout(700);
+    assert((await scroller.evaluate(el => el.scrollLeft)) > position);
+    check("carousel: wheel attribute scrolls horizontally and toggles in place");
+  }
+
   // ---------------------------------------------------------------- carousel defaults
   {
     type Carousel = HTMLElement & { index: number };

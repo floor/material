@@ -130,7 +130,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   button: kb(7.6),
   "button-group": kb(11.7), // FLO-119 aria-disabled in the shared disabled feature: 11,898
   card: kb(7.0),
-  carousel: kb(10.3),
+  carousel: kb(11.2), // opt-in wheel scrolling with momentum (FLO-395): 10.3 to 10.9 KB against 2ef11f0
   checkbox: kb(5.52), // FLO-380: boolean change value plus the HTML valueAttribute token.
   chips: kb(9.2), // FLO-256..261 chips conformance; #221 pointer focus; keyboard.disable() and :dir(rtl) (FLO-343 follow-up): 9,305 to 9,319
   datepicker: kb(12.2), // FLO-238 conformance; FLO-274 swiping; FLO-275 year list; FLO-276 full screen; read-only, required, one change shape (FLO-289, FLO-295): 12,332; FLO-119 aria-disabled: 12,412
@@ -174,7 +174,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // split button passing the layer, and the opener's focus test across shadow roots, to 112,845; the
   // tooltip and snackbar top layer to 113,481; the modal surfaces' top layer to 113,761 (each measured
   // alone on dba5ba9); the time picker limits and steps (FLO-281): 113,297 on main; all of wave 2 together on 91e4d77: 115,162.
-  all: kb(122.2), // search in the top layer (FLO-285): 115,628; its combobox and variants (FLO-286, FLO-287): 115,909; search's trailing items and reopening (FLO-291): 116,488; the date picker's field states and one change shape (FLO-289, FLO-295): 116,800; the text field's field, supporting text row and counter (FLO-300): 117,305; the toolbar (FLO-304): 117,350 to 119,455; <m-toolbar>'s slotted items and the colour hooks: 119,541; the FAB menu (FLO-306): 122,060; the FAB menu motion (FLO-348): 122,085 to 122,178; merged with main at 5bc71da (FLO-349, FLO-350): 122,232; the Material shapes (FLO-346): 122,267 to 122,619; the text field's asterisk, live error and trailing button (FLO-301): 122,623 to 123,218 against 7cd57a6; slider and tabs positions without measuring (FLO-369): 123,940; the navigation bar (FLO-305): 124,071 to 125,033 against 746b127 (with FLO-380's checkbox)
+  all: kb(122.9), // search in the top layer (FLO-285): 115,628; its combobox and variants (FLO-286, FLO-287): 115,909; search's trailing items and reopening (FLO-291): 116,488; the date picker's field states and one change shape (FLO-289, FLO-295): 116,800; the text field's field, supporting text row and counter (FLO-300): 117,305; the toolbar (FLO-304): 117,350 to 119,455; <m-toolbar>'s slotted items and the colour hooks: 119,541; the FAB menu (FLO-306): 122,060; the FAB menu motion (FLO-348): 122,085 to 122,178; merged with main at 5bc71da (FLO-349, FLO-350): 122,232; the Material shapes (FLO-346): 122,267 to 122,619; the text field's asterisk, live error and trailing button (FLO-301): 122,623 to 123,218 against 7cd57a6; slider and tabs positions without measuring (FLO-369): 123,940; the navigation bar (FLO-305): 124,071 to 125,033 against 746b127 (with FLO-380's checkbox); the carousel's wheel scrolling (FLO-395) after the forward merge: 125,722 against cc8250e
   // the time picker draft (FLO-288) and search widths (FLO-290): 116,200 on c3e3e18
 };
 

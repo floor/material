@@ -9,6 +9,7 @@ import type createButton from "../src/components/button";
 import { checkDatePicker } from "./check-datepicker-browser";
 import { checkList } from "./check-list-browser";
 import { checkChips } from "./check-chips-browser";
+import { checkCarouselWheel } from "./check-carousel-browser";
 import { checkCard } from "./check-card-browser";
 import { checkRippleIsThePress } from "./check-ripple-browser";
 import { checkButtonStateLayers } from "./check-button-browser";
@@ -39,6 +40,7 @@ try {
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createSelect } from 'mtrl'; window.createSelect = createSelect;`);
   // createMenu for the menu checks, and the openers for FLO-386's: one import, two windows
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createFabMenu, createIconButton, createMenu, createSplitButton } from 'mtrl'; window.createMenu = createMenu; window.openers = { createFabMenu, createIconButton, createMenu, createSplitButton };`);
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { createCarousel } from 'mtrl'; window.createCarousel = createCarousel;`);
   const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "iife", minify: true });
   assert(bundle.success, String(bundle.logs));
   browser = await chromium.launch({ headless: true });
@@ -94,6 +96,7 @@ try {
   await page.waitForTimeout(500);
   assert.equal(await page.evaluate(() => [...(window as unknown as CoreWindow).documentListeners.values()].reduce((sum, set) => sum + set.size, 0)), 0);
   assert.equal(await page.locator(".mtrl-ripple-wave").count(), 0);
+  await checkCarouselWheel(page);
   await checkRippleIsThePress(page);
   await checkButtonStateLayers(page, artifacts);
   await checkChips(page, artifacts);

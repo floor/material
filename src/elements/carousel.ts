@@ -114,6 +114,7 @@ const carouselSpec = {
   styles: ["carousel"],
   hostStyles: ":host{display:block}",
   attributes: {
+    wheel: { type: "boolean", config: "wheel", update: (c, v) => void c.setWheel(!!v) },
     variant: { type: "string", config: "variant" },
     index: { type: "number", config: "initialSlide", update: (c, v) => void c.goTo(Number(v ?? 0)) },
     "item-width": { type: "number", config: "itemWidth" },
