@@ -14,14 +14,18 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 - **Tab and panel ids are derived from the value with a safe encoding (FLO-430).** A value of
   `[A-Za-z0-9_-]` only keeps its ids, `tab-<group>-<value>` and `tabpanel-<group>-<value>`. Any
-  other value (a space, a newline, a quote, …) gets `tabx-<group>-<encoded>` and
+  other value gets `tabx-<group>-<encoded>` and
   `tabpanelx-<group>-<encoded>`: `_` becomes `__` and every other character `_<hex code
   point>_`, so the ids hold no whitespace (an id reference such as `aria-controls` is a
   space-separated list) and two values never share one. The tab element carries its value as
   `data-value`, and the conventional panel is found from it rather than parsed out of the id.
   `tabIdFor(groupId, value)` and `tabPanelIdFor(groupId, value)` are exported from
-  `mtrl/components/tabs`. Migration: a page that names its own panels by convention, or labels
-  them with the tab's id, uses `tabPanelIdFor` / `tabIdFor` for values with other characters.
+  `mtrl/components/tabs`. Migration: values whose ids worked before change too, not only those
+  with a space, a newline or a quote: `a.b` → `tabx-g-a_2e_b`, `/home` → `tabx-g-_2f_home`,
+  `user:1` → `tabx-g-user_3a_1`, `café` → `tabx-g-caf_e9_`. A page that writes its own panels
+  with the conventional id, or labels them with the tab's id, for any value with a character
+  outside `[A-Za-z0-9_-]` must build those ids with `tabPanelIdFor` / `tabIdFor`; a hand-written
+  `tabpanel-g-a.b` is otherwise never linked.
 - **Segmented buttons are removed (FLO-382).** `createSegmentedButton` and `createSegment`
   (deprecated since 0.10), their types, `mtrl/components/segmented-button`,
   `mtrl/styles/segmented-button` and the `--mtrl-segmented-button-*` properties are gone. M3

@@ -77,7 +77,7 @@ export const tabIdFor = (groupId: string, value: string): string => derive("tab"
  */
 export const tabPanelIdFor = (groupId: string, value: string): string => derive("tabpanel", groupId, value);
 
-/** Each tab element's group, for the panel lookup; internal, so nothing new on the DOM */
+/** Each tab element's group, for the panel lookup; kept internal rather than as another attribute */
 const tabGroups = new WeakMap<HTMLElement, string>();
 
 /**
