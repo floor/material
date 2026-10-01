@@ -101,6 +101,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- The menu keyboard step of `elements:check` no longer ends one item short when a runner pauses
+  (FLO-423). It waited a fixed 450ms after opening the menu with a key, then sent the arrows; it
+  now waits for the first item to take focus, which is what the arrows depend on.
 - **Menu item ids containing selector syntax keep submenu keyboard navigation working (FLO-429).**
   Parent lookup compares `data-id`, `data-owner`, and `data-level` as strings.
 
