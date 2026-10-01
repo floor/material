@@ -24,10 +24,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   | `<m-select>` `change` on empty ID | `{ value: "" }` | `{ value: null }` |
   | `<m-radios>` `change` on empty ID | `{ value: "" }` | `{ value: null }` |
 
-  `onConfirm(string)` in the time picker config still receives a string. The
-  radio factory still reports its string getter, including `""`. Migration:
-  read `draftValue` for edits, destructure `{ value }` from factory `confirm`,
-  and handle `null` for empty select or radio element selections.
+  While the time picker is open, `input.value` no longer moves with the dial:
+  it is the committed time. Read `draftValue` for live edits. The factory's
+  `onInput` callback also receives the new `{ value, draftValue }` object,
+  described by the newly exported `TimePickerInputEvent` type. `onConfirm(string)`
+  in the time picker config still receives a string; factory `confirm` listeners
+  now destructure `{ value }`. `SelectChangeEvent["value"]` is now `string | null`
+  for an empty option ID. The radio factory still reports its string getter,
+  including `""`; handle `null` for empty select or radio element selections.
 
 - **Chip-set `add` and `remove` report the live selection (FLO-380).** Factory
   callbacks receive one object instead of a bare chip:
@@ -39,6 +43,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   | `<m-chips>` `remove` detail | `{ value: removedId }` | `{ value: remainingSelection, chipValue: removedId }` |
 
   `value` matches `getValue()` inside the callback, including for selected chips.
+  Inside a factory `remove` handler, `event.chip` is already destroyed and out
+  of the set. Its getters still answer, but `getChips().indexOf(event.chip)` is
+  `-1` and its element is disconnected.
   The element continues to emit one `remove` and no separate `change` for user
   removal; declaration edits remain silent. Migration: read the chip from
   `event.chip` in factory handlers and the removed identifier from

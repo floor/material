@@ -269,6 +269,8 @@ export interface ChipsAddEvent {
 
 /** A chip left the set; `value` is the remaining selection. */
 export interface ChipsRemoveEvent extends ChipsAddEvent {
+  /** The selection after removal, in the same shape as the set's `getValue()`. */
+  value: string | string[] | null;
   /** The removed chip's value, captured before destruction. */
   chipValue: string | null;
 }
