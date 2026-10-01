@@ -49,6 +49,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- Element CSS file and export checks run after the CI build, so unit tests pass without `dist/` (FLO-365).
 - Elements construct on a server DOM (linkedom) without browser-only APIs (FLO-362).
 
 ## [0.10.4] - 2026-10-01

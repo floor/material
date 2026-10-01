@@ -94,6 +94,12 @@ export async function buildStyles(outdir: string, banner: string) {
  * The shadow base (`ripple`) is what the global base stylesheet gives a
  * component in light DOM and a shadow root does not inherit.
  *
+ * For SSR, link `ripple.css`, then dependencies in
+ * `resolveStyleDependencies` order, then `<component>.css`, and finally
+ * `hosts/<element>.css`. The resolver visits dependencies before their
+ * component, matching the generated JS imports. Hosts are separate files;
+ * this link contract does not change the browser's host-first `applyStyles`.
+ *
  * Each element's module also registers its pre-upgrade rules
  * (src/styles/elements), which apply to the page until the element is
  * defined. The same rules for every element are `elements/preupgrade.css`,
@@ -106,7 +112,9 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   await mkdir(`${dir}/hosts`, { recursive: true });
   const { elements } = await import("../src/elements");
   const { preupgradeSheet } = await import("../src/elements/styles");
-  const { BASE_HOST_STYLES } = await import("../src/elements/define");
+  const definition = await import("../src/elements/define");
+  // Once FLO-363A lands, replace the next line with: const { hostStyleText } = definition;
+  const hostStyleText = (spec: { hostStyles?: string }): string => definition.BASE_HOST_STYLES + (spec.hostStyles ?? "");
   const preupgrade = await preupgradeStyles(Object.values(elements).map(element => element.spec.name), options);
   const write = async (name: string, source: string, imports: string[]) => {
     const css = sass.compileString(`@use "${source}";`, options).css;
@@ -127,9 +135,9 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   for (const name of names) await write(name, componentStyles[name].source, ["ripple", ...componentStyles[name].dependencies]);
   await writeFile(`${dir}/index.js`, names.map(name => `import "./${name}.js";`).join("\n") + "\n");
   await writeFile(`${dir}/index.d.ts`, "export {};\n");
-  
+
   for (const element of Object.values(elements)) {
-    const hostCss = BASE_HOST_STYLES + (element.spec.hostStyles ?? "");
+    const hostCss = hostStyleText(element.spec);
     await writeFile(`${dir}/hosts/${element.spec.name}.css`, hostCss);
   }
 
