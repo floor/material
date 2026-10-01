@@ -46,6 +46,17 @@ describe("the component subpaths' exports (FLO-381)", () => {
     expect(constants.DEFAULT_DATE_FORMAT).toBe("MM/DD/YYYY");
   });
 
+  test("the old names are deprecated toward the canonical ones, which are public (FLO-383)", () => {
+    const entry = (component: string, name: string) => now[component]?.find((e) => e.name === name);
+    for (const [component, old, to] of [["textfield", "TextfieldConfig", "TextFieldConfig"], ["textfield", "TextfieldComponent", "TextFieldComponent"],
+      ["card", "CardSchema", "CardConfig"], ["top-app-bar", "TopAppBar", "TopAppBarComponent"], ["bottom-app-bar", "BottomAppBar", "BottomAppBarComponent"]]) {
+      expect(entry(component!, to!)?.status).toBe("public");
+      expect(entry(component!, old!)).toMatchObject({ status: "deprecated" });
+      expect(entry(component!, old!)?.note).toStartWith(`Use ${to}`);
+    }
+    expect(entry("textfield", "createTextField")?.status).toBe("public");
+  });
+
   test("every /constants subpath is pinned beside its index (FLO-384)", () => {
     const constants = Object.keys(now).filter((key) => key.endsWith("/constants"));
     expect(constants.length).toBeGreaterThan(30);
