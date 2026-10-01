@@ -122,6 +122,17 @@ describe("Material date picker", () => {
     day(picker, '2026-09-18').click(); click(picker, '[data-action="confirm"]');
     expect(picker.getFormattedValue()).toBe('09/18/2026 - 09/22/2026');
   });
+  test("other-month days are never in range: the band stays in the shown month", () => {
+    const picker = mount({ variant: 'modal', selectionMode: 'range', value: ['2026-09-28', '2026-10-03'] }); picker.open();
+    const cell = (date: string) => day(picker, date).parentElement!;
+    for (const date of ['2026-09-28', '2026-09-30']) expect(cell(date).classList.contains('mtrl-datepicker__cell--range')).toBe(true);
+    expect(cell('2026-09-28').classList.contains('mtrl-datepicker__cell--range-start')).toBe(true);
+    for (const date of ['2026-10-01', '2026-10-03']) {
+      expect(day(picker, date).classList.contains('mtrl-datepicker__day--outside')).toBe(true);
+      expect(cell(date).className).toBe('mtrl-datepicker__cell');
+    }
+    expect(cell('2026-10-02').getAttribute('aria-selected')).toBe('false');
+  });
   test("bounds and special disabled dates apply to click, keyboard, entry and API", () => {
     const picker = mount({ minDate: new Date(2026, 8, 10, 14), maxDate: '2026-09-20', specialDates: [{ date: '2026-09-16', disabled: true }, { date: '2026-09-17', highlight: true, tooltip: 'Holiday' }] }); picker.open();
     expect(day(picker, '2026-09-10').disabled).toBe(false); expect(day(picker, '2026-09-09').disabled).toBe(true);
