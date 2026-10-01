@@ -1,4 +1,5 @@
 // src/components/extended-fab/types.ts
+import type { TouchEvents } from "../../core/utils/mobile";
 import type { IconManager } from "../../core/compose/features/icon";
 import type { TextManager } from "../../core/compose/features/text";
 import type { ForwardedEventPayload } from "../../core/dom";
@@ -421,7 +422,7 @@ export interface ExtendedFabConfig {
  * Collapse and expand are DOM-only events; listen on `element` for those.
  * Lifecycle callbacks are registered through the lifecycle API.
  */
-export interface ExtendedFabEvents {
+export interface ExtendedFabEvents extends TouchEvents {
   /** Clicks are not forwarded while the button is disabled. */
   click: (payload: ForwardedEventPayload<MouseEvent, HTMLButtonElement>) => void;
   /** The button took focus. */

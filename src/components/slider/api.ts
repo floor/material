@@ -1,7 +1,6 @@
 // src/components/slider/api.ts
-import { SliderColor, SliderComponent, SliderEvent } from "./types";
+import { SliderColor, SliderComponent, SliderEvents } from "./types";
 import type { EventCallback } from "../../core/state/emitter";
-import { SLIDER_EVENTS } from "./types";
 import { SliderSize } from "./constants";
 
 /**
@@ -197,21 +196,17 @@ export const withAPI =
       },
 
       // Event management
-      on(
-        event:
-          | keyof typeof SLIDER_EVENTS
-          | (typeof SLIDER_EVENTS)[keyof typeof SLIDER_EVENTS],
-        handler: (event: SliderEvent) => void
+      on<K extends keyof SliderEvents>(
+        event: K,
+        handler: SliderEvents[K]
       ) {
         if (options.events?.on) options.events.on(event, handler);
         return this;
       },
 
-      off(
-        event:
-          | keyof typeof SLIDER_EVENTS
-          | (typeof SLIDER_EVENTS)[keyof typeof SLIDER_EVENTS],
-        handler: (event: SliderEvent) => void
+      off<K extends keyof SliderEvents>(
+        event: K,
+        handler: SliderEvents[K]
       ) {
         if (options.events?.off) options.events.off(event, handler);
         return this;

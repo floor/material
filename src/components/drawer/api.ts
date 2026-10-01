@@ -124,6 +124,11 @@ export const withAPI =
         return drawerComponent;
       },
 
+      /** Alias for the selected destination identifier. */
+      getValue() {
+        return items.getActive();
+      },
+
       getActive() {
         return items.getActive();
       },

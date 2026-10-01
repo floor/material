@@ -1,5 +1,8 @@
 // src/components/slider/types.ts
 
+import type { ForwardedEventPayload } from "../../core/dom";
+import type { NormalizedEvent, TouchEvents } from "../../core/utils/mobile";
+
 import {
   SliderSize,
   SLIDER_COLORS,
@@ -300,6 +303,24 @@ export interface SliderEventHelpers {
   triggerEvent: (eventName: string, originalEvent?: Event | null) => void;
 }
 
+/** Public model, native forwarding and gesture notifications. */
+export interface SliderEvents extends TouchEvents {
+  change: (payload: SliderEvent) => void;
+  input: (payload: SliderEvent) => void;
+  focus: (payload: SliderEvent) => void;
+  blur: (payload: SliderEvent) => void;
+  start: (payload: SliderEvent) => void;
+  end: (payload: SliderEvent) => void;
+  click: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
+  keydown: (payload: ForwardedEventPayload<KeyboardEvent, HTMLElement>) => void;
+  mousedown: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
+  mousemove: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
+  mouseup: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
+  touchstart: (payload: ForwardedEventPayload<TouchEvent, HTMLElement> | NormalizedEvent) => void;
+  touchend: (payload: ForwardedEventPayload<TouchEvent, HTMLElement> | NormalizedEvent) => void;
+  touchmove: (payload: ForwardedEventPayload<TouchEvent, HTMLElement> | (NormalizedEvent & { deltaX: number; deltaY: number })) => void;
+}
+
 export interface SliderComponent {
   /** The root element of the slider */
   element: HTMLElement;
@@ -377,15 +398,15 @@ export interface SliderComponent {
   getIcon: () => string;
 
   /** Adds event listener */
-  on: (
-    event: SliderEventType,
-    handler: (event: SliderEvent) => void
+  on: <K extends keyof SliderEvents>(
+    event: K,
+    handler: SliderEvents[K]
   ) => SliderComponent;
 
   /** Removes event listener */
-  off: (
-    event: SliderEventType,
-    handler: (event: SliderEvent) => void
+  off: <K extends keyof SliderEvents>(
+    event: K,
+    handler: SliderEvents[K]
   ) => SliderComponent;
 
   /** Destroys the slider component and cleans up resources */

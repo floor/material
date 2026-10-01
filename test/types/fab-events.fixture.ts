@@ -27,11 +27,11 @@ declare const fab: FabComponent;
 
 // --- the keys -------------------------------------------------------------
 
-// Exactly the three that config.ts forwards. `mount` and `unmount` are not
+// The three native events plus touch gestures. `mount` and `unmount` are not
 // here: the lifecycle feature keeps its own emitter.
 export const theEventsAreExactlyThese: Equals<
   keyof FabEvents,
-  "click" | "focus" | "blur"
+  "click" | "focus" | "blur" | "tap" | "swipe"
 > = true;
 
 // --- the payload ----------------------------------------------------------
@@ -99,3 +99,8 @@ fab.on("blur", () => {});
 
 // Chaining survives the generic.
 fab.on("focus", () => {}).off("focus", () => {});
+
+// FLO-380: gestures are not model notifications and retain normalized metadata.
+import type { NormalizedEvent, SwipePayload } from "../../src/core/utils/mobile";
+export const tapShape: Equals<Parameters<FabEvents["tap"]>[0], NormalizedEvent> = true;
+export const swipeShape: Equals<Parameters<FabEvents["swipe"]>[0], SwipePayload> = true;

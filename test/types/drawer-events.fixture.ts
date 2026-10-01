@@ -63,3 +63,5 @@ export const itemsRequireArray: Equals<Parameters<ItemHost["setItems"]>[0], Draw
 export const adapterAcceptsOptionalItems: Equals<
   Parameters<ReturnType<typeof getApiConfig>["items"]["setItems"]>[0], DrawerItemConfig[] | undefined
 > = true;
+
+export const modelGetter: Equals<ReturnType<DrawerComponent["getValue"]>, string | null> = true;

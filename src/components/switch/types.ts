@@ -1,4 +1,5 @@
 // src/components/switch/types.ts
+import type { TouchEvents } from "../../core/utils/mobile";
 import type { EventCallback } from "../../core/state/emitter";
 
 export type SwitchPosition = "center" | "start" | "end";
@@ -78,7 +79,7 @@ export interface SwitchChangePayload {
 }
 
 /** Emitter events: change, and the input's focus and blur (FLO-267). */
-export interface SwitchEvents {
+export interface SwitchEvents extends TouchEvents {
   change: (payload: SwitchChangePayload) => void;
   focus: (event: FocusEvent) => void;
   blur: (event: FocusEvent) => void;

@@ -9,7 +9,7 @@ type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 
 const checkbox = createCheckbox();
-export const onlyChangeIsEmitted: Equals<keyof CheckboxEvents, "change"> = true;
+export const emittedEvents: Equals<keyof CheckboxEvents, "change" | "tap" | "swipe"> = true;
 export const callbackPayload: Equals<
   Parameters<Parameters<typeof checkbox.on<"change">>[1]>[0],
   CheckboxChangePayload
@@ -54,3 +54,8 @@ checkbox.on("mount", () => {});
 checkbox.on("change", payload => payload.target.checked);
 // @ts-expect-error nativeEvent is an Event, not an arbitrary object
 export const invalidNativeEvent: CheckboxChangePayload = { checked: true, value: "yes", nativeEvent: {} };
+
+// FLO-380: gestures are not model notifications and retain normalized metadata.
+import type { NormalizedEvent, SwipePayload } from "../../src/core/utils/mobile";
+export const tapShape: Equals<Parameters<CheckboxEvents["tap"]>[0], NormalizedEvent> = true;
+export const swipeShape: Equals<Parameters<CheckboxEvents["swipe"]>[0], SwipePayload> = true;

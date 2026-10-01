@@ -469,6 +469,10 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
         }
         return this;
       },
+      getValue() {
+        const values = this.getSelected();
+        return selection === 'multi' ? values : (values[0] ?? null);
+      },
       getSelected() {
         return buttons.filter(b => selectedValues.has(valueOf(b))).map(valueOf);
       },

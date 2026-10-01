@@ -126,9 +126,12 @@ export const withAPI = ({ lifecycle }: ApiOptions) =>
       return [...component.tabs];
     },
     
-    /**
-     * Gets the active tab
-     */
+    /** Reads the active tab identifier, or null when none is active. */
+    getValue() {
+      return this.getActiveTab()?.getValue() ?? null;
+    },
+
+    /** Gets the active tab. */
     getActiveTab() {
       return component.tabs.find(tab => tab.isActive()) || null;
     },

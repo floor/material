@@ -62,6 +62,8 @@ export interface NavigationRailComponent {
     isExpanded: () => boolean;
     setActive: (id: string | null) => NavigationRailComponent;
     getActive: () => string | null;
+    /** Reads the current model value without changing selection. */
+    getValue: () => string | null;
     setItems: (items: NavigationRailItemConfig[]) => NavigationRailComponent;
     getItems: () => NavigationRailItemConfig[];
     setBadge: (id: string, badge: NavigationRailItemConfig['badge'], label?: string) => NavigationRailComponent;
