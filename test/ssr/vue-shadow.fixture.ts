@@ -1,8 +1,9 @@
 // test/ssr/vue-shadow.fixture.ts
 // Spawned by vue-shadow.test.ts. No DOM shim: this process is the server.
 import { expect, test } from "bun:test";
+import { PassThrough } from "node:stream";
 import { createSSRApp, defineComponent, h, Suspense, type App } from "vue";
-import { renderToString, renderToWebStream } from "@vue/server-renderer";
+import { pipeToNodeWritable, renderToString, renderToWebStream } from "@vue/server-renderer";
 import { buttonElement, cardElement, carouselElement, tabsElement } from "../../src/elements";
 import { createComponent } from "../../src/vue/create";
 import type { ComponentSpec } from "../../src/elements/adapter";
@@ -24,6 +25,22 @@ const readStream = async (app: App): Promise<string> => {
   }
   throw new Error("Vue SSR stream did not finish");
 };
+
+const readNode = (app: App): Promise<string> => new Promise((resolve, reject) => {
+  const writable = new PassThrough();
+  const chunks: Buffer[] = [];
+  const timer = setTimeout(() => reject(new Error("Vue SSR node stream did not finish")), 3000);
+  writable.on("data", (chunk: Buffer | string) => chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk));
+  writable.on("error", (error) => {
+    clearTimeout(timer);
+    reject(error);
+  });
+  writable.on("end", () => {
+    clearTimeout(timer);
+    resolve(Buffer.concat(chunks).toString());
+  });
+  pipeToNodeWritable(app, {}, writable);
+});
 
 const render = (spec: ComponentSpec, props: Record<string, unknown>, children?: () => unknown): Promise<string> => {
   const Component = createComponent(spec, () => "m-host", "MHost");
@@ -72,6 +89,15 @@ test("an unregistered server returns no template; registration renders one and o
   expect(nested).toMatch(/<m-card[^>]*>\s*<template shadowrootmode="open"/);
   expect(nested).toMatch(/<m-button[^>]*>\s*<template shadowrootmode="open"/);
   expect(nested).toContain("Nested");
+
+  // v-html can emit an unclosed declarative template. The string scanner
+  // threw on that; the renderer's detached copy tolerates it, and the page
+  // keeps the text.
+  const vhtml = await renderToString(createSSRApp({
+    render: () => h(Button, { id: "vhtml" }, () => h("span", { innerHTML: '<template shadowrootmode="open">' })),
+  }));
+  expect(vhtml).toMatch(/<m-button[^>]*\bid="vhtml"[^>]*>\s*<template shadowrootmode="open"/);
+  expect(vhtml).toContain('<span><template shadowrootmode="open"></span>');
 
   let setups = 0;
   let reads = 0;
@@ -129,4 +155,8 @@ test("an unregistered server returns no template; registration renders one and o
   expect(setups).toBe(2);
   expect(reads).toBe(2);
   expect(streamed).toBe(asyncHtml);
+  const piped = await readNode(asyncApp());
+  expect(setups).toBe(3);
+  expect(reads).toBe(3);
+  expect(piped).toBe(asyncHtml);
 });

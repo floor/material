@@ -238,6 +238,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 ### Fixed
 
 - Vue SSR finishes when a host's child uses `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`. The shadow bridge serializes those children once (FLO-373).
+- Vue SSR renders a host whose `v-html` contains an unclosed `<template>`, instead of throwing, and `mtrl/ssr/vue` imports the server renderer from `vue/server-renderer` (FLO-373).
 - Solid async and streaming SSR finish when a component inside a host creates a resource
   under an outer `Suspense`. The shadow bridge reuses the page's serialized children,
   preserving its resource ownership and hydration keys without rendering children twice

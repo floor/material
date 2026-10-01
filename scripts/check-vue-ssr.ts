@@ -175,11 +175,27 @@ export const AsyncApp = defineComponent(() => {
 await Bun.write(join(dir, "AsyncApp.ts"), asyncApp);
 await Bun.write(join(dir, "server.ts"), `import "mtrl/ssr/vue";
 import { createSSRApp } from "vue";
-import { renderToString, renderToWebStream } from "@vue/server-renderer";
+import { pipeToNodeWritable, renderToString, renderToWebStream } from "@vue/server-renderer";
+import { PassThrough } from "node:stream";
 import { App } from "./App";
 import { AsyncApp } from "./AsyncApp";
 export const renderBody = (): Promise<string> => renderToString(createSSRApp(App));
 export const renderAsync = (): Promise<string> => renderToString(createSSRApp(AsyncApp));
+export const renderAsyncNode = (): Promise<string> => new Promise((resolve, reject) => {
+  const writable = new PassThrough();
+  const chunks: Buffer[] = [];
+  const timer = setTimeout(() => reject(new Error("Vue SSR node stream did not finish")), 5000);
+  writable.on("data", (chunk: Buffer | string) => chunks.push(Buffer.from(chunk)));
+  writable.on("error", (error) => {
+    clearTimeout(timer);
+    reject(error);
+  });
+  writable.on("end", () => {
+    clearTimeout(timer);
+    resolve(Buffer.concat(chunks).toString());
+  });
+  pipeToNodeWritable(createSSRApp(AsyncApp), {}, writable);
+});
 export const renderAsyncStream = async (): Promise<string> => {
   const stream = renderToWebStream(createSSRApp(AsyncApp));
   const reader = stream.getReader();
@@ -271,10 +287,12 @@ try {
     renderBody: () => Promise<string>;
     renderAsync: () => Promise<string>;
     renderAsyncStream: () => Promise<string>;
+    renderAsyncNode: () => Promise<string>;
   };
   html = await loaded.renderBody();
   asyncHtml = await loaded.renderAsync();
   asyncStream = await loaded.renderAsyncStream();
+  assert.equal(await loaded.renderAsyncNode(), asyncHtml, "pipeToNodeWritable did not match renderToString");
 } finally {
   await Bun.file(serverPath).delete();
 }
@@ -415,4 +433,4 @@ for (const report of summary) {
   console.log(`${report.element}: template=${report.template ? "yes" : "no"} shadow=${report.shadowBeforeScript ? "yes" : "no"} sameRoot=${root} warnings=${report.warnings} errors=${report.errors}`);
 }
 console.log(`vue-ssr: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no mtrl/ssr or linkedom`);
-console.log("vue-ssr async: setup, outside read, and stream finished with content, the declarative template, the same shadow root, and 0 warnings");
+console.log("vue-ssr async: setup, outside read, web stream, and pipeToNodeWritable finished with content, the declarative template, the same shadow root, and 0 warnings");
