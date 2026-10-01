@@ -81,6 +81,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - Element CSS file and export checks run after the CI build, so unit tests pass without `dist/` (FLO-365).
 - **Progress indicators size their canvas when they are created (FLO-368).** A linear canvas is as tall as its track (4dp, 8dp thick, 10dp wavy at the default thickness) and fills its container; a circular one is its token size (40dp, 48dp wavy, or the configured size from 24dp to 240dp). The size comes from those tokens, not from measuring the element, so the canvas no longer reserves the default 300×150 until it upgrades.
 - **Sliders, tabs and loading indicators take their first position from configuration (FLO-369).** A slider's track, stops and inset icon are a percentage of the value, so they no longer wait on a measurement that is 0 before layout. A tab's indicator anchors to the active label, or to the tab itself when it is secondary. A loading indicator's canvas is its token size (48dp, or the configured size) when it is created.
+- Source SSR reads the element CSS registry without resolving built package exports; source tests register real Sass output without mocking the CSS import (FLO-363).
+
 - SSR stylesheet links now match the browser and inline stylesheet order exactly, without adding build-manifest dependencies (FLO-363).
 
 - Elements construct on a server DOM (linkedom) without browser-only APIs (FLO-362).

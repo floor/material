@@ -73,8 +73,9 @@ const validateOptions = (options: RenderOptions): string => {
  * identity: this function is NOT a sanitizer. Configure a synchronous sanitizer
  * for untrusted children or HTML-valued attributes such as icons.
  *
- * Each call owns a temporary DOM realm (zero layout, 1024×768 viewport); hooks
- * must be synchronous and must not reenter the renderer. Base/theme CSS belongs
+ * Each call owns a temporary DOM realm (zero layout, 1024×768 viewport).
+ * Inline CSS reads the elements style registry; register CSS before rendering.
+ * Hooks must be synchronous and must not reenter the renderer. Base/theme CSS belongs
  * in the page head. Every shadow root receives its own styles.
  * Known asynchronous configurations throw before mounting (FLO-370).
  */

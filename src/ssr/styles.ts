@@ -1,5 +1,4 @@
 // src/ssr/styles.ts
-import "mtrl/elements/css";
 import { hostStyleText, SHADOW_BASE_STYLES, type ElementSpec, type ElementComponent } from "../elements/define";
 import { styleText } from "../elements/styles";
 import { escapeAttribute, rawText } from "./serialize";

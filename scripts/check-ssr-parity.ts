@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium, firefox, webkit } from "playwright";
 import { parseHTML } from "linkedom";
+import "../dist/elements/css/index.js";
 import { renderElement } from "../dist/ssr/index.js";
 import { elements } from "../dist/elements/index.js";
 import { cases } from "./fixtures/preupgrade-cases";
