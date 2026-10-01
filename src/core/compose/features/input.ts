@@ -52,6 +52,11 @@ export interface InputConfig {
    * @default true
    */
   enterToggles?: boolean;
+
+  /** Use checked state for change.value, retaining the HTML token as valueAttribute.
+   * @internal Checkbox and switch opt in; standalone inputs keep string values.
+   */
+  checkedValue?: boolean;
 }
 
 /**
@@ -167,7 +172,9 @@ export const withInput =
       if (hasEmit(component)) {
         component.emit("change", {
           checked: input.checked,
-          value: input.value,
+          ...(config.checkedValue
+            ? { value: input.checked, valueAttribute: input.value }
+            : { value: input.value }),
           nativeEvent: event,
         });
       }

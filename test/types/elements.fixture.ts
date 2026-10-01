@@ -24,7 +24,7 @@ assert<Equals<SwitchProps["disabled"], boolean | undefined>>();
 assert<Equals<SwitchProps["label"], string | undefined>>();
 
 // Events carry the detail their mapper returns.
-assert<Equals<ElementEvents<SwitchSpec>["change"], CustomEvent<{ checked: boolean; value: string }>>>();
+assert<Equals<ElementEvents<SwitchSpec>["change"], CustomEvent<{ checked: boolean; value: boolean; valueAttribute: string; nativeEvent: Event | undefined }>>>();
 assert<Equals<ElementEvents<TabsSpec>["change"], CustomEvent<{ value: string | null }>>>();
 assert<Equals<keyof ElementEvents<SwitchSpec>, "change">>();
 

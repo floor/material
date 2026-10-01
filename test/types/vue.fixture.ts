@@ -21,7 +21,7 @@ assert<Equals<SwitchProps["name"], string | undefined>>();
 assert<Equals<SwitchProps["supportingText"], string | undefined>>();
 
 type SwitchEmits = VueEmits<SwitchSpec>;
-assert<Equals<Parameters<SwitchEmits["change"]>[0], CustomEvent<{ checked: boolean; value: string }>>>();
+assert<Equals<Parameters<SwitchEmits["change"]>[0], CustomEvent<{ checked: boolean; value: boolean; valueAttribute: string; nativeEvent: Event | undefined }>>>();
 assert<Equals<Parameters<SwitchEmits["update:modelValue"]>[0], boolean>>();
 assert<Equals<Parameters<SwitchEmits["update:checked"]>[0], boolean>>();
 

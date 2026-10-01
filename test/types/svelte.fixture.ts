@@ -18,7 +18,7 @@ assert<Equals<SwitchProps["checked"], boolean | undefined>>();
 assert<Equals<SwitchProps["defaultChecked"], boolean | undefined>>();
 assert<Equals<SwitchProps["name"], string | undefined>>();
 // Svelte 5 names event props in lower case.
-assert<Equals<SwitchProps["onchange"], ((event: CustomEvent<{ checked: boolean; value: string }>) => void) | undefined>>();
+assert<Equals<SwitchProps["onchange"], ((event: CustomEvent<{ checked: boolean; value: boolean; valueAttribute: string; nativeEvent: Event | undefined }>) => void) | undefined>>();
 // `bind:checked` is allowed, and only the live properties are bindable.
 assert<Equals<Bindable<SwitchSpec>, "checked">>();
 assert<Equals<Bindable<TabsSpec>, "value">>();

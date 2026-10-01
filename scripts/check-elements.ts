@@ -9,6 +9,7 @@
 //
 //   bun run build && bun run scripts/check-elements.ts
 
+import { checkCheckableValues } from "./check-checkable-values";
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
@@ -153,6 +154,7 @@ try {
   });
   await page.goto(`http://127.0.0.1:${server.port}`);
   await page.waitForFunction(() => (window as unknown as Win).ready === true);
+  await checkCheckableValues(page, "element");
 
   // ---------------------------------------------------------------- registration
   {
@@ -189,7 +191,7 @@ try {
       const w = window as unknown as Win;
       w.events = [];
       document.getElementById("s")?.addEventListener("change", (e) => {
-        (w.events as unknown[]).push({ detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+        (w.events as unknown[]).push({ detail: { ...(e as CustomEvent).detail, nativeEvent: (e as CustomEvent).detail.nativeEvent instanceof Event }, target: (e.target as Element).id });
       });
     });
     await sw.click();
@@ -199,7 +201,7 @@ try {
       const form = new FormData(document.getElementById("f") as HTMLFormElement);
       return { events: w.events, checked: s.checked, wifi: form.get("wifi"), bt: form.get("bt") };
     });
-    assert.deepEqual(state.events, [{ detail: { checked: true, value: "yes" }, target: "s" }]);
+    assert.deepEqual(state.events, [{ detail: { checked: true, value: true, valueAttribute: "yes", nativeEvent: true }, target: "s" }]);
     assert.equal(state.checked, true);
     assert.equal(state.wifi, "yes");
     assert.equal(state.bt, "on");
@@ -662,7 +664,7 @@ try {
       const w = window as unknown as Win;
       w.events = [];
       document.getElementById("c")?.addEventListener("change", (e) => {
-        (w.events as unknown[]).push({ detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+        (w.events as unknown[]).push({ detail: { ...(e as CustomEvent).detail, nativeEvent: (e as CustomEvent).detail.nativeEvent instanceof Event }, target: (e.target as Element).id });
       });
     });
     await box.click();
@@ -672,7 +674,7 @@ try {
       const form = new FormData(document.getElementById("f") as HTMLFormElement);
       return { events: w.events, checked: c.checked, agree: form.get("agree"), news: form.get("news") };
     });
-    assert.deepEqual(state.events, [{ detail: { checked: true, value: "yes" }, target: "c" }]);
+    assert.deepEqual(state.events, [{ detail: { checked: true, value: true, valueAttribute: "yes", nativeEvent: true }, target: "c" }]);
     assert.equal(state.checked, true);
     assert.equal(state.agree, "yes");
     assert.equal(state.news, "on");
@@ -729,7 +731,7 @@ try {
     });
     assert.deepEqual(keyed, {
       checked: true, indeterminate: false, mixedClass: false,
-      events: [{ detail: { checked: true, value: "yes" }, target: "c" }],
+      events: [{ detail: { checked: true, value: true, valueAttribute: "yes", nativeEvent: true }, target: "c" }],
     });
     check("checkbox: Space on a mixed box checks it, clears the mixed state and class, and dispatches one change");
 

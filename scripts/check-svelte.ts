@@ -131,7 +131,7 @@ const run = async (): Promise<void> => {
 
     await uncontrolled.click();
     assert.deepEqual(await page.evaluate(() => (window as unknown as Win).api.log), [
-      { id: "u", detail: { checked: false, value: "on" } },
+      { id: "u", detail: { checked: false, value: false, valueAttribute: "on", nativeEvent: { isTrusted: true } } },
     ]);
     assert.equal(await uncontrolled.isChecked(), false);
     check("uncontrolled: a click calls onchange with the typed detail");

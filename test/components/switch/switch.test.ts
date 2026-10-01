@@ -159,9 +159,12 @@ describe('switch', () => {
 
   test('input changes carry the original change event, including keyboard activation', () => {
     const control = mount({ value: 'accepted' });
-    const payloads: Array<{ checked: boolean; value: string; nativeEvent?: Event }> = [];
+    const payloads: Array<{ checked: boolean; value: boolean; valueAttribute: string; nativeEvent?: Event }> = [];
     const nativeEvents: Event[] = [];
-    control.on('change', payload => payloads.push(payload));
+    control.on('change', payload => {
+      expect(payload.value).toBe(control.getValue());
+      payloads.push(payload);
+    });
     control.input.addEventListener('change', event => nativeEvents.push(event));
     control.input.click();
     const keydown = new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
@@ -169,7 +172,8 @@ describe('switch', () => {
     expect(payloads).toHaveLength(2);
     expect(payloads.map(payload => payload.checked)).toEqual([true, false]);
     payloads.forEach((payload, index) => {
-      expect(payload.value).toBe('accepted');
+      expect(payload.value).toBe(payload.checked);
+      expect(payload.valueAttribute).toBe('accepted');
       expect(payload.nativeEvent).toBe(nativeEvents[index]);
       expect(payload.nativeEvent?.type).toBe('change');
       expect(payload.nativeEvent?.target).toBe(control.input);
@@ -180,8 +184,11 @@ describe('switch', () => {
 
   test('programmatic changes are silent, as setting a native checkbox (FLO-328)', () => {
     const control = mount({ value: 'accepted' });
-    const payloads: Array<{ checked: boolean; value: string; nativeEvent?: Event }> = [];
-    control.on('change', payload => payloads.push(payload));
+    const payloads: Array<{ checked: boolean; value: boolean; valueAttribute: string; nativeEvent?: Event }> = [];
+    control.on('change', payload => {
+      expect(payload.value).toBe(control.getValue());
+      payloads.push(payload);
+    });
     const states: boolean[] = [];
     control.check();
     states.push(control.isChecked());
