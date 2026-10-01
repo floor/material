@@ -24,7 +24,6 @@ const scenarios = [
   { name: "select-open", component: "select", state: "open" },
   { name: "select-error", component: "select", state: "error" },
   { name: "checkbox", component: "checkbox" },
-  { name: "segmented-button", component: "segmented-button" },
   { name: "button-group", component: "button-group" },
   { name: "split-button", component: "split-button" },
   { name: "split-button-open", component: "split-button", state: "open" },
@@ -135,10 +134,10 @@ try {
   await writeFile(join(directory, "menu.html"), '<!doctype html><html><body><script type="module" src="./menu.ts"></script></body></html>');
   input.menu = join(directory, "menu.html");
   // Exercise deduplication even when the app explicitly imports a dependency.
-  await writeFile(join(directory, "dedup.ts"), "import 'mtrl/styles/base'; import 'mtrl/styles/segmented-button'; import 'mtrl/styles/button'; document.body.dataset.ready = 'true';");
+  await writeFile(join(directory, "dedup.ts"), "import 'mtrl/styles/base'; import 'mtrl/styles/button-group'; import 'mtrl/styles/button'; document.body.dataset.ready = 'true';");
   await writeFile(join(directory, "dedup.html"), '<!doctype html><html><body><script type="module" src="./dedup.ts"></script></body></html>');
   input.dedup = join(directory, "dedup.html");
-  await writeFile(join(directory, "dedup-reference.ts"), "import 'mtrl/styles/base'; import 'mtrl/styles/segmented-button'; document.body.dataset.ready = 'true';");
+  await writeFile(join(directory, "dedup-reference.ts"), "import 'mtrl/styles/base'; import 'mtrl/styles/button-group'; document.body.dataset.ready = 'true';");
   await writeFile(join(directory, "dedup-reference.html"), '<!doctype html><html><body><script type="module" src="./dedup-reference.ts"></script></body></html>');
   input["dedup-reference"] = join(directory, "dedup-reference.html");
   const outDir = join(directory, "site");

@@ -1,6 +1,7 @@
 // src/components/button-group/button-group.ts
 
 import { pipe } from '../../core/compose/pipe';
+import { warnUnknownValue } from '../../core/utils/warn';
 import { createBase, withElement } from '../../core/compose/component';
 import { withEvents, withLifecycle } from '../../core/compose/features';
 import { createEmitter } from '../../core/state/emitter';
@@ -53,8 +54,9 @@ type GroupButton = ButtonComponent & {
  * Creates a new Button Group component
  *
  * The Button Group component provides a container for grouping related action buttons.
- * Unlike Segmented Buttons (used for selection), Button Groups are for grouping
- * related actions where each button triggers an independent action.
+ * A standard group holds related actions, each button acting on its own; a
+ * connected group (`kind: "connected"`, with `selection`) is M3's replacement for
+ * the segmented button, which 1.0.0 removed (FLO-382).
  *
  * Per Material Design 3 specifications:
  * - Standard groups space their buttons (18/12/8/8/8dp by size) and a
@@ -480,6 +482,16 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
         return selectedValues.has(value);
       },
       select(value: string) {
+        // A value no button carries clears the selection, as for the other
+        // selection components (FLO-328), silently, with a warning in
+        // development; the segmented button did the same (FLO-382). A required
+        // group cannot be emptied, so there it changes nothing: collapsing the
+        // selection to one value is a side effect the caller did not ask for.
+        if (selection !== 'none' && !buttons.some(button => valueOf(button) === value)) {
+          warnUnknownValue('button group', value);
+          if (!required) [...selectedValues].forEach(selected => setSelected(selected, false));
+          return this;
+        }
         setSelected(value, true);
         return this;
       },

@@ -350,16 +350,6 @@
     "status": "public"
   },
   {
-    "name": "createSegment",
-    "kind": "value",
-    "status": "public"
-  },
-  {
-    "name": "createSegmentedButton",
-    "kind": "value",
-    "status": "public"
-  },
-  {
     "name": "createSelect",
     "kind": "value",
     "status": "public"
@@ -726,16 +716,6 @@
   },
   {
     "name": "SearchConfig",
-    "kind": "type",
-    "status": "public"
-  },
-  {
-    "name": "SegmentedButtonComponent",
-    "kind": "type",
-    "status": "public"
-  },
-  {
-    "name": "SegmentedButtonConfig",
     "kind": "type",
     "status": "public"
   },

@@ -38,11 +38,6 @@ const LITERAL: Record<string, Record<string, string>> = {
     '48px': 'outer corners, half the height',
     '68px': 'outer corners, half the height',
   },
-  'segmented-button': {
-    '16px': 'outer corners, half the height, beside square inner ones',
-    '18px': 'outer corners, half the height',
-    '20px': 'outer corners, half the height',
-  },
   tabs: { '3px': 'the indicator\'s top corners: 3dp in PrimaryNavigationTabTokens, not a scale step' },
   menu: {
     '24px': 'SegmentedMenuTokens.ActiveContainerShape, 24dp: not a scale step',
