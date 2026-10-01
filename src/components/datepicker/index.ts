@@ -14,8 +14,6 @@ export type {
   DatePickerVariant,
   DatePickerView,
   DatePickerSelectionMode,
-} from "./types";
-export {
-  /** @deprecated Internal, no replacement: removed from mtrl/components/datepicker in 1.0.0 (FLO-381). */
-  DEFAULT_DATE_FORMAT,
+  // Public: DatePickerComponent.calendar is typed with it (FLO-381)
+  CalendarAPI,
 } from "./types";

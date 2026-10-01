@@ -101,12 +101,6 @@ export const MONTH_NAMES_SHORT = [
 ];
 
 /**
- * Default format for displaying dates
- * @internal
- */
-export const DEFAULT_DATE_FORMAT = 'MM/DD/YYYY';
-
-/**
  * CSS class name for today's date
  * @internal
  */

@@ -1,4 +1,5 @@
 // src/components/select/features.ts
+import { processClassNames, type BaseComponentConfig } from "../../core/config/component";
 import createTextfield from "../textfield";
 import createMenu from "../menu";
 import { MenuItem, MenuContent, MenuDivider, MenuPosition } from "../menu/types";
@@ -33,6 +34,7 @@ export const withTextfield =
 
     // Create textfield component
     const textfield = createTextfield({
+      class: processClassNames((config as BaseComponentConfig).className || ""),
       label: config.label,
       variant: config.variant || "filled",
       density: config.density || "default",

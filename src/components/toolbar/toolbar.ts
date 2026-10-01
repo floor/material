@@ -1,4 +1,5 @@
 // src/components/toolbar/toolbar.ts
+import { processClassNames } from "../../core/config/component";
 
 import { pipe } from "../../core/compose/pipe";
 import { createBase, withElement } from "../../core/compose/component";
@@ -73,7 +74,7 @@ const createToolbar = (config: ToolbarConfig = {}): ToolbarComponent => {
         placement !== TOOLBAR_PLACEMENTS.NONE ? `${block}--${placement}` : "",
         variant === TOOLBAR_VARIANTS.DOCKED ? `${block}--${settings.arrangement}` : "",
         settings.elevated ? `${block}--elevated` : "",
-        settings.class ?? "",
+        processClassNames(settings.className || ""),
       ].filter(Boolean),
     }),
     withLifecycle()
