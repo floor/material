@@ -17,7 +17,9 @@ const ICON = '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
 // The suggestions a search offers, filtered by the query as the user types.
 const FRUITS = ["Apple", "Apricot", "Banana"];
 // JSX accepts data-* on any element; createElement with an object literal does not.
-const dataTest = { "data-test": "1" } as React.HTMLAttributes<HTMLElement>;
+// Without onChange: a component whose element has a change event (Button, since
+// FLO-380) types its own onChange, which React's HTML attributes would contradict.
+const dataTest = { "data-test": "1" } as Omit<React.HTMLAttributes<HTMLElement>, "onChange">;
 
 type Log = Array<{ id: string; detail: unknown }>;
 type Api = {

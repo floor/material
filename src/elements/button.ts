@@ -11,7 +11,7 @@
  */
 
 import createButton from "../components/button";
-import type { ButtonComponent, ButtonConfig } from "../components/button/types";
+import type { ButtonChangePayload, ButtonComponent, ButtonConfig } from "../components/button/types";
 import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 import { buttonForm, submitOnClick, typeAttribute } from "./form-button";
 
@@ -33,6 +33,16 @@ const buttonSpec = {
   slot: {
     attribute: "label" as const,
     config: "text",
+  },
+  events: {
+    // A toggle button's `change`, with the button's value (FLO-380). The element
+    // has no toggle attribute yet, so it fires for a toggle from the defaults.
+    change: {
+      detail: (payload) => {
+        const { selected, value } = payload as ButtonChangePayload;
+        return { selected, value };
+      },
+    },
   },
   form: buttonForm<ButtonComponent>(),
   setup: submitOnClick,

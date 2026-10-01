@@ -67,7 +67,7 @@ export const withToggle =
       element.addEventListener("click", () => {
         if ((element as HTMLButtonElement).disabled) return;
         apply(!selected);
-        component.emit?.("change", { selected });
+        component.emit?.("change", { selected, value: (element as HTMLButtonElement).value });
       });
     }
 

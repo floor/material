@@ -226,6 +226,14 @@ export interface ButtonEventPayload<E extends Event = Event> {
   originalEvent: E;
 }
 
+/** A toggle button's `change` (FLO-380). */
+export interface ButtonChangePayload {
+  /** Whether the button is now selected */
+  selected: boolean;
+  /** The button's value, as `getValue()` returns it */
+  value: string;
+}
+
 /**
  * The events a button reports, and what each hands its handler.
  *
@@ -238,8 +246,12 @@ export interface ButtonEventPayload<E extends Event = Event> {
  * `lifecycle.onUnmount`, so they never reach `component.on`.
  */
 export interface ButtonEvents {
-  /** Selection notification from a toggle button. */
-  change: (payload: { selected: boolean }) => void;
+  /**
+   * A toggle button's selected state changed on a click. `value` is the
+   * button's value (`getValue()`), as every model event carries (FLO-380);
+   * `selected` is the toggled state.
+   */
+  change: (payload: ButtonChangePayload) => void;
   /** The button was clicked. Not forwarded while the button is disabled. */
   click: (payload: ButtonEventPayload<MouseEvent>) => void;
   /** The button took focus. */
