@@ -60,11 +60,6 @@ const pixels = async (page: Page, before: Buffer, after: Buffer, regions: Box[])
   }
   return { changed, outside, maxDelta, bounds };
 }, { a: before.toString("base64"), b: after.toString("base64"), regions });
-// A new page's pointer rests at the origin, on the fixture, and whether the browser
-// applies :hover there before a capture is a matter of timing: CI once captured the
-// first button of a group hovered before the upgrade and not after (2,713 pixels).
-// Put it where no fixture reaches, the right edge of the viewport, in both passes.
-const POINTER = [1023, 384] as const;
 const report: object[] = [];
 let failures = 0, equal = 0, exceptions = 0;
 const started = performance.now();
@@ -101,7 +96,6 @@ try {
         expected.innerHTML = markup;
         return document.querySelector("#stage > :first-child")!.isEqualNode(expected.content.firstElementChild);
       }, fixture.html), `${engine}/${fixture.element}: fallback must contain only the authored host and light DOM`);
-      await inert.mouse.move(...POINTER);
       await inert.screenshot({ path: `${directory}/${fixture.element}-before.png`, animations: "disabled" });
       await inert.close();
       equal++;
@@ -114,7 +108,6 @@ try {
     const allowance = allowed.find(e => e.element === fixture.element && e.engines.includes(engine) && (!e.withoutAnchors || !anchors));
     const beforeRegions = allowance ? await regions(inert, allowance.selector) : [];
     if (allowance) assert(beforeRegions.length, `${fixture.element}: exception selector matches no SSR node`);
-    await inert.mouse.move(...POINTER);
     const before = await inert.screenshot({ path: `${directory}/${fixture.element}-before.png`, animations: "disabled" });
     await inert.close();
     const page = await browser.newPage(options);
@@ -139,7 +132,6 @@ try {
       const indicator = document.querySelector("m-tabs")!.shadowRoot!.querySelector<HTMLElement>('[part="indicator"]')!;
       return { anchors: CSS.supports("anchor-name", "none"), width: getComputedStyle(indicator).width, transform: indicator.style.transform, inlineWidth: indicator.style.width };
     }) : undefined;
-    await page.mouse.move(...POINTER);
     const after = await page.screenshot({ path: `${directory}/${fixture.element}-after.png`, animations: "disabled" });
     const afterRegions = allowance ? await regions(page, allowance.selector) : [];
     if (allowance) assert(afterRegions.length, `${fixture.element}: exception selector matches no upgraded node`);
