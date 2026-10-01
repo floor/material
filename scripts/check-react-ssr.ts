@@ -5,7 +5,13 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
 import type { BunPlugin } from "bun";
-declare global { interface Window { reactSSR: { ready: boolean; recoverable: string[] } } }
+declare global {
+  interface Window {
+    reactSSR: { ready: boolean; recoverable: string[] };
+    reactSuspense?: { ready: boolean; recoverable: string[] };
+    __ssrRoots?: { late: ShadowRoot | null; sync: ShadowRoot | null };
+  }
+}
 const browser = await chromium.launch();
 const summaries: object[] = [];
 await mkdir("analysis/react-ssr", { recursive: true });
@@ -35,8 +41,34 @@ try {
     assert.match(html, /<style>[\s\S]*?\.mtrl-button/);
     const client = await bundle("scripts/fixtures/react-ssr-client.ts", "browser");
     assert.doesNotMatch(client, /linkedom|DOMParser|SSR element nesting/);
+    const suspenseServer = `${process.cwd()}/analysis/react-ssr/suspense-server-${version}.js`;
+    await Bun.write(suspenseServer, await bundle("scripts/fixtures/react-ssr-suspense-server.ts", "bun"));
+    const { renderShapes, renderHydration } = await import(suspenseServer);
+    const shapes: Array<[string, { html: string; errors: string[] }]> = await renderShapes();
+    for (const [name, result] of shapes) {
+      const suspendError = result.errors.some((error) => error.includes("suspended while responding to synchronous input"));
+      assert.equal(suspendError, false, `React ${version} ${name} onError ${JSON.stringify(result.errors)}`);
+      assert.equal(/<!--\$!-->/.test(result.html), false, `React ${version} ${name} client-rendered`);
+      if (name === "E") {
+        assert.match(result.html, /loaded 5/, `React ${version} E`);
+        assert.doesNotMatch(result.html, /shadowrootmode/, `React ${version} E is not a host`);
+        continue;
+      }
+      assert.match(result.html, /<template shadowrootmode="open"/, `React ${version} ${name} shadow`);
+      assert.match(result.html, name === "A2" ? /lazy loaded/ : /loaded 5/, `React ${version} ${name} content`);
+      assert.match(result.html, /<slot/, `React ${version} ${name} projects resolved children`);
+    }
+    console.log(`React ${version}: suspending children streamed (${shapes.map(([name]) => name).join(", ")})`);
+    const suspenseHtml: string = await renderHydration();
+    const suspenseClient = await bundle("scripts/fixtures/react-ssr-suspense-client.ts", "browser");
+    assert.doesNotMatch(suspenseClient, /linkedom|DOMParser|SSR element nesting/);
     const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
-      if (new URL(request.url).pathname === "/client.js") return new Response(client, { headers: { "Content-Type": "text/javascript" } });
+      const pathname = new URL(request.url).pathname;
+      if (pathname === "/client.js") return new Response(client, { headers: { "Content-Type": "text/javascript" } });
+      if (pathname === "/suspense-client.js") return new Response(suspenseClient, { headers: { "Content-Type": "text/javascript" } });
+      if (pathname === "/suspense") {
+        return new Response(`<!doctype html><div id="root">${suspenseHtml}</div><script>window.__ssrRoots={late:document.getElementById("late").shadowRoot,sync:document.getElementById("sync").shadowRoot}</script><script type="module" src="/suspense-client.js"></script>`, { headers: { "Content-Type": "text/html" } });
+      }
       return new Response(`<!doctype html><div id="root">${html}</div><script type="module" src="/client.js"></script>`, { headers: { "Content-Type": "text/html" } });
     } });
     try {
@@ -69,6 +101,33 @@ try {
       const summary = { version, warnings: 0, errors: 0, recoverable: 0, mismatchErrors: mismatch };
       summaries.push(summary);
       console.log(`React ${version}: 0 warnings, 0 errors, 0 recoverable errors; deliberate mismatch caught (${mismatch}); no-JS roots, opt-out fallbacks, declarations, events, checked state and client isolation passed`);
+      const suspense = await browser.newPage();
+      const suspenseWarnings: string[] = [], suspenseErrors: string[] = [];
+      suspense.on("console", message => { if (["warning", "error"].includes(message.type())) suspenseWarnings.push(message.text()); });
+      suspense.on("pageerror", error => suspenseErrors.push(error.message));
+      await suspense.goto(`${server.url}suspense`);
+      await suspense.waitForFunction(() => window.reactSuspense?.ready);
+      const suspenseRecoverable = await suspense.evaluate(() => window.reactSuspense?.recoverable ?? []);
+      assert.deepEqual({ suspenseWarnings, suspenseErrors, suspenseRecoverable }, { suspenseWarnings: [], suspenseErrors: [], suspenseRecoverable: [] }, `React ${version} suspense hydration`);
+      const kept = await suspense.evaluate(() => {
+        const describe = (id: "late" | "sync") => {
+          const host = document.getElementById(id)!;
+          return {
+            sameRoot: host.shadowRoot === window.__ssrRoots?.[id],
+            buttons: host.shadowRoot?.querySelectorAll("button").length ?? 0,
+            slots: host.shadowRoot?.querySelectorAll("slot").length ?? 0,
+          };
+        };
+        return { late: describe("late"), sync: describe("sync") };
+      });
+      assert.deepEqual(kept, {
+        late: { sameRoot: true, buttons: 1, slots: 1 },
+        sync: { sameRoot: true, buttons: 1, slots: 1 },
+      }, `React ${version} kept the declarative shadow`);
+      assert.equal(await suspense.getByRole("button", { name: "loaded 5" }).count(), 1, `React ${version} suspended label`);
+      assert.equal(await suspense.getByRole("button", { name: "Save", exact: true }).count(), 1, `React ${version} sync label`);
+      console.log(`React ${version}: suspended child hydrated on the same shadow root, 0 warnings, 0 errors`);
+      await suspense.close();
       await page.close();
     } finally { server.stop(true); }
   }
