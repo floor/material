@@ -2931,8 +2931,8 @@ try {
       }));
     });
     assert.deepEqual(status, {
-      success: { bg: "rgb(0, 123, 90)", color: "rgb(255, 255, 255)" },
-      warning: { bg: "rgb(221, 109, 6)", color: "rgb(255, 255, 255)" },
+      success: { bg: "rgb(0, 108, 78)", color: "rgb(255, 255, 255)" },
+      warning: { bg: "rgb(151, 72, 0)", color: "rgb(255, 255, 255)" },
       info: { bg: "rgb(0, 97, 164)", color: "rgb(255, 255, 255)" },
     });
     check("badge: the success, warning and info colours have their background under baseline");
@@ -5061,6 +5061,21 @@ try {
       assert.equal(await submenus(), 1, `${where}: a hover on Share opens its submenu`);
       await page.mouse.move(0, 0);
       check(`menu top layer ${where}: ArrowRight opens the submenu on its first item, ArrowLeft returns to Share, a hover opens it`);
+
+      // An item id is data, including characters with meaning in CSS selectors.
+      ITEMS[0].id = 'share"quoted';
+      await mount("top");
+      await page.evaluate(() => void (window as unknown as TopWin).__tl.menu.open(new KeyboardEvent("keydown")));
+      await wait(450);
+      assert.equal(await focusedItem(), ITEMS[0].id, `${where}: quoted parent id has focus`);
+      await page.keyboard.press("ArrowRight");
+      await wait(450);
+      assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 1, focus: "link" }, `${where}: quoted id opens its submenu`);
+      await page.keyboard.press("ArrowLeft");
+      await wait(300);
+      assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 0, focus: ITEMS[0].id }, `${where}: ArrowLeft returns to the quoted id`);
+      check(`menu top layer ${where}: quoted item id survives ArrowRight and ArrowLeft`);
+      ITEMS[0].id = "share";
 
       await page.evaluate(() => (window as unknown as TopWin).__tl.menu.destroy());
     }

@@ -61,6 +61,59 @@ const submenus = () => [...document.querySelectorAll(".mtrl-menu--submenu")] as 
 beforeEach(() => { document.body.innerHTML = ""; });
 
 describe("a submenu knows which menu owns it", () => {
+  test.each(['quote"id', 'slash\\id', 'bracket]id', 'space id', 'line\nid'])(
+    "returns to a parent with a literal id (%j)", async (id) => {
+      const opener = document.createElement("button");
+      document.body.append(opener);
+      const menu = createMenu({ opener, items: [
+        { id, text: "Parent", hasSubmenu: true, submenu: [{ id: "child", text: "Child" }] },
+      ] });
+      menu.element.id = 'owner"\\] id\n';
+      menu.open(new dom.window.KeyboardEvent("keydown", { key: "Enter" }));
+      await after(200);
+      const parent = itemsOf(menu)[0]!;
+      expect(document.activeElement).toBe(parent);
+      expect(parent.getAttribute("data-id")).toBe(id);
+      parent.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+      await after(400);
+      const submenu = submenus()[0]!;
+      expect(submenu.getAttribute("data-parent-item")).toBe(id);
+      expect(submenu.getAttribute("data-owner")).toBe(menu.element.id);
+      const child = submenu.querySelector<HTMLElement>(".mtrl-menu__item")!;
+      expect(document.activeElement).toBe(child);
+      child.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+      expect(document.activeElement).toBe(parent);
+      menu.destroy();
+    },
+  );
+
+  test("a nested submenu resolves its parent with a literal owner and item id", async () => {
+    const opener = document.createElement("button");
+    document.body.append(opener);
+    const id = 'nested"\\] id\n';
+    const menu = createMenu({ opener, items: [
+      { id: "root", text: "Root", hasSubmenu: true, submenu: [
+        { id, text: "Nested", hasSubmenu: true, submenu: [{ id: "leaf", text: "Leaf" }] },
+      ] },
+    ] });
+    menu.element.id = 'owner"\\] id\n';
+    menu.open(new dom.window.KeyboardEvent("keydown", { key: "Enter" }));
+    await after(200);
+    itemsOf(menu)[0]!.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    await after(400);
+    const nested = submenus()[0]!.querySelector<HTMLElement>(".mtrl-menu__item")!;
+    expect(nested.getAttribute("data-id")).toBe(id);
+    nested.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    await after(400);
+    const leaf = submenus().find((el) => el.getAttribute("data-level") === "2")!;
+    expect(leaf.getAttribute("data-owner")).toBe(menu.element.id);
+    expect(leaf.getAttribute("data-parent-item")).toBe(id);
+    const leafItem = leaf.querySelector<HTMLElement>(".mtrl-menu__item")!;
+    expect(document.activeElement).toBe(leafItem);
+    leafItem.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    expect(document.activeElement).toBe(nested);
+    menu.destroy();
+  });
   test("it records its owner, and the owner is that menu's id", async () => {
     const menu = await openMenu();
     itemsOf(menu)[0]!.click();

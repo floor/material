@@ -55,6 +55,7 @@ try {
         } else {
           const peer = (file.path === "dist/ssr/react.js" && ["react", "react-dom/server"].includes(name))
             || (file.path === "dist/ssr/svelte.js" && ["svelte", "svelte/server"].includes(name))
+            || (file.path === "dist/ssr/vue.js" && ["vue", "vue/server-renderer"].includes(name))
             || (file.path === "dist/ssr/solid.js" && ["solid-js", "solid-js/web"].includes(name));
           assert(name.startsWith(".") || name.startsWith("node:") || peer, `Unbundled SSR dependency in ${file.path}: ${name}`);
         }
@@ -83,7 +84,11 @@ try {
   // Raised for the bundled server-only SSR entry (FLO-364): 888,897 to 1,002,195,
   // measured with Node 22.23.3 / npm 10.9.9, preserving the previous headroom.
   // The navigation bar (FLO-305): 1,003,847 to 1,013,492 against 51455a6, Node 22 / npm 10.
-  assert(pack.size < 1_025_000, "npm tarball exceeds 1,025,000 bytes");
+  // FLO-406 on main: medium/high contrast for all 24 themes, 1,007,632 -> 1,063,670 there.
+  // On next, with the forward merge: 1,006,369 -> 1,063,466 against
+  // 294100fe, Node 22.23.3 / npm 10.9.9; the budget keeps next's headroom.
+  // FLO-428 removed four themes: 1,063,466 -> 1,048,224, same packer; lowered with the headroom.
+  assert(pack.size < 1_067_000, "npm tarball exceeds 1,067,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
@@ -92,7 +97,11 @@ try {
   // FLO-364: 5,567,538 to 5,875,963 with SSR, same packer, preserving headroom.
   // The navigation bar (FLO-305): its component, element, adapters and CSS, 5,880,623 to
   // 5,956,491 against 51455a6, same packer; the budget keeps about the headroom it had.
-  assert(pack.unpackedSize < 5_990_000, "Unpacked package exceeds 5,990,000 bytes");
+  // FLO-406 on main: the generated SCSS plus standalone, base and full CSS copies,
+  // 5,716,236 -> 6,272,030 there. On next, with the forward merge: 5,931,197 ->
+  // 6,483,417 against 294100fe, same packer; the budget keeps next's headroom.
+  // FLO-428 removed four themes: 6,483,417 -> 6,334,330, same packer; lowered with the headroom.
+  assert(pack.unpackedSize < 6_393_000, "Unpacked package exceeds 6,393,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
   const smoke = join(temporary, "smoke.mjs");
@@ -211,7 +220,9 @@ try {
     // of the value, so the first paint does not wait on a measurement (13,356 measured).
     { name: "slider", code: "export { createSlider } from 'mtrl';", gzip: 13460 },
     { name: "navigation-rail", code: "export { createNavigationRail } from 'mtrl';", gzip: 7000 },
-    { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 6500 },
+    // FLO-406 contrast CSS: 5,266 -> 7,189 gzip bytes, Node 22.23.3 / npm 10.9.9.
+    // FLO-406 direct high values: 8,156 -> 7,631 gzip bytes (same packer).
+    { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 7800 },
     // FLO-301 (the required asterisk, the live error, the trailing icon button): 8,456 to
     // 9,058 against 7cd57a6, Node 22 / npm 10.
     { name: "textfield", code: "export { createTextfield } from 'mtrl';", gzip: 9200 },
@@ -222,16 +233,23 @@ try {
     // The text field's asterisk, live error and trailing button (FLO-301): 128,187 to 128,802, against 7cd57a6.
     // The carousel's opt-in wheel scrolling with momentum (FLO-395): 128,896 to 129,565 against
     // 2ef11f0, Node 22 / npm 10.
-    { name: "all-js", code: "export * from 'mtrl';", gzip: 129700 },
-    { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 6500 },
+    // FLO-406/main merge with FLO-403: 129,634 B measured under Node 22.23.3 / npm 10.9.9.
+    { name: "all-js", code: "export * from 'mtrl';", gzip: 129_700 },
+    // FLO-406 contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
+    // FLO-406 direct high values: 8,069 -> 7,542 gzip bytes (same packer).
+    { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 7700 },
     // The outlined text field's notched outline (#234) adds 202, 7,863 to 8,065: three
     // segments with their corners each way round, and the outline colour and width per
     // state, in place of an input border and a focus overlay. The resting label shown
     // alone (FLO-354, FLO-355): the placeholder's fill cleared and the affixes hidden
     // while it rests, 8,183 to 8,245 (+62) against 09d665b, Node 22 / npm 10.
     // The text field's trailing icon button and asterisk (FLO-301): 8,245 to 8,426 against 7cd57a6.
-    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 8500 },
-    { name: "slider-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/slider';", gzip: 6500 },
+    // FLO-406 contrast CSS: 8,426 -> 10,377 gzip bytes, Node 22.23.3 / npm 10.9.9.
+    // FLO-406 direct high values: 11,342 -> 10,811 gzip bytes (same packer).
+    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 11000 },
+    // FLO-406 contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
+    // FLO-406 direct high values: 7,639 -> 7,111 gzip bytes (same packer).
+    { name: "slider-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/slider';", gzip: 7300 },
     // The .43 rail-motion baseline is 47,117 bytes; core ripple adds about 20 bytes.
     // The tooltip stylesheet adds 486 (measured): it was authored but registered in no
     // bundle, so every budget before this one was set with its CSS missing, not excluded.
@@ -265,7 +283,10 @@ try {
     // The tabs indicator anchors in the stylesheet, and the slider visual is a size
     // container so its ticks can use cqw/cqh (FLO-369): measured 53,386.
     // The navigation bar's stylesheet (FLO-305): 53,389 to 54,659 against 51455a6.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 54800 },
+    // FLO-406 contrast CSS on main: 53,072 -> 65,291 there. On next, with the forward
+    // merge: 53,593 -> 65,790 against 294100fe, Node 22 / npm 10.
+    // FLO-428 removed four themes from the full stylesheet: 65,790 -> 62,120.
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 63400 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);

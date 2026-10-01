@@ -47,22 +47,27 @@ const CLEAR = 32;
 // Placed at the viewport's top edge whatever the stage does. Its surface has no
 // hover state; the check below still refuses a control of it under the pointer.
 const AT_ORIGIN = ["top-app-bar"];
-/** What of the fixture is under the resting pointer: nothing, its surface, or one of its controls. */
-const underPointer = (page: Page): Promise<"nothing" | "surface" | "control"> => page.evaluate(() => {
+/**
+ * What is under the resting pointer: the page itself, the fixture's surface, one of
+ * its controls, or something else. Anything but the page counts, inside the host or
+ * not: a fixture may render a scrim or a menu elsewhere in the document.
+ */
+const underPointer = (page: Page): Promise<string> => page.evaluate(() => {
   const host = document.querySelector("#stage > :first-child")!;
   let hit = document.elementFromPoint(0, 0);
-  if (!hit || !(hit === host || host.contains(hit))) return "nothing";
+  if (!hit || hit === document.body || hit === document.documentElement) return "page";
+  if (!(hit === host || host.contains(hit))) return `<${hit.localName}> outside the fixture`;
   // elementFromPoint stops at a shadow host; look inside it.
   for (let inner = hit.shadowRoot?.elementFromPoint(0, 0); inner && inner !== hit; inner = hit.shadowRoot?.elementFromPoint(0, 0)) hit = inner;
   // Landmark roles (the bar is a banner) are surfaces; these are what a pointer changes.
   const controls = "button, a, input, select, textarea, label, summary, [tabindex], " +
     ["button", "link", "tab", "menuitem", "option", "switch", "checkbox", "radio", "slider"].map(role => `[role=${role}]`).join(", ");
-  return hit.closest(controls) ? "control" : "surface";
+  return hit.closest(controls) ? "control of the fixture" : "surface of the fixture";
 });
 const clearOfPointer = async (page: Page, fixture: string, when: string): Promise<void> => {
   const under = await underPointer(page);
-  assert(under === "nothing" || (under === "surface" && AT_ORIGIN.includes(fixture)),
-    `${engine}/${fixture}: a ${under} of the fixture is under the resting pointer ${when}`);
+  assert(under === "page" || (under === "surface of the fixture" && AT_ORIGIN.includes(fixture)),
+    `${engine}/${fixture}: a ${under} is under the resting pointer ${when}`);
 };
 let html = "";
 let preupgrade = false;
@@ -170,7 +175,10 @@ try {
     await page.addScriptTag({ content: observeJS });
     await page.waitForFunction(() => !!window.ssrUpgrade);
     await page.evaluate(({ url, mutation, children }) => window.ssrUpgrade.observe(async () => {
-      // Parser-created roots, to compare with the upgraded children's.
+      // The children's roots before the upgrade. A constructor's attachShadow returns a
+      // declarative root as the same object, emptied, so comparing them afterwards shows
+      // that each host survived and upgraded, not that its root was never rebuilt: the
+      // pixel and geometry comparison is what would show a rebuild.
       const parsed = children ? Array.from(document.querySelectorAll(`#stage > :first-child ${children}`), child => child.shadowRoot) : [];
       Object.assign(window, { ssrParsedRoots: parsed });
       await import(url);
@@ -186,7 +194,7 @@ try {
       const parsed = (window as unknown as { ssrParsedRoots: (ShadowRoot | null)[] }).ssrParsedRoots;
       return Array.from(document.querySelectorAll<HTMLElement & { component?: unknown }>(`#stage > :first-child ${selector}`),
         (child, i) => !!child.component && !!parsed[i] && child.shadowRoot === parsed[i]);
-    }, children), roots.map(() => true), `${fixture.element}: every ${children} must upgrade in its parser-created root`);
+    }, children), roots.map(() => true), `${fixture.element}: every ${children} must upgrade in place`);
     const state = await page.evaluate(() => window.ssrUpgrade.state);
     const tabs = fixture.element === "tabs" ? await page.evaluate(() => {
       const indicator = document.querySelector("m-tabs")!.shadowRoot!.querySelector<HTMLElement>('[part="indicator"]')!;

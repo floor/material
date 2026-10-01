@@ -76,7 +76,7 @@ for (const item of defaults) {
   pieces.push(markup);
 }
 // Named snippets (FLO-412). The component renders each one as a light child of the
-// host, inside \`<span style="display: contents" slot="…">\`, on the server and in
+// host, inside `<span style="display: contents" slot="…">`, on the server and in
 // the browser alike; the declarative root's named slot then shows it before any
 // script runs. The default cases above pass default children only.
 const SNIPPETS = [
