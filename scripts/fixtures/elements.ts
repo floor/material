@@ -78,3 +78,7 @@ Object.assign((window as unknown as { mtrl: object }).mtrl, { createDatePicker, 
 // carry their stylesheet (FLO-386: <m-dialog>'s buttons from the defaults).
 import { setComponentDefaults, clearGlobalDefaults } from "../../dist/core/config/global.js";
 Object.assign((window as unknown as { mtrl: object }).mtrl, { setComponentDefaults, clearGlobalDefaults });
+
+// The navigation bar factory, for the parity check of <m-navigation-bar> (FLO-305).
+import createNavigationBar from "../../dist/components/navigation-bar/index.js";
+Object.assign((window as unknown as { mtrl: object }).mtrl, { createNavigationBar });

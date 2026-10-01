@@ -43,6 +43,9 @@ const CASES: Record<string, { make: string }> = {
   "list-video": {
     make: `m.createList({ items: [{ id: "v", headline: "Video", leading: { type: "video", content: ${BLOCK("#345", 56)} } }] }).element`
   },
+  bar: {
+    make: `m.createNavigationBar({ itemLayout: "vertical", items: [{ id: "a", label: "Home", icon: ${JSON.stringify(ICON)}, active: true, badge: "3" }, { id: "b", label: "Search", icon: ${JSON.stringify(ICON)} }, { id: "c", label: "Library", icon: ${JSON.stringify(ICON)} }] }).element`
+  },
   rail: {
     make: `m.createNavigationRail({ items: [{ id: "a", label: "Inbox", icon: ${JSON.stringify(ICON)}, active: true, badge: "3" }, { id: "b", label: "Sent", icon: ${JSON.stringify(ICON)} }] }).element`
   },

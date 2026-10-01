@@ -1,0 +1,17 @@
+// src/styles/elements/_navigation-bar.scss
+// <m-navigation-bar> before upgrade: the bar's surface and height, so the page
+// doesn't move when it is drawn; its <m-navigation-bar-item>s are drawn on upgrade.
+@use '../abstract/theme' as t;
+@use 'config' as c;
+
+// As components/_navigation-bar.scss: 64px and the bottom inset, surface container
+@include c.host('navigation-bar') {
+  display: block;
+  box-sizing: border-box;
+  block-size: calc(64px + env(safe-area-inset-bottom, 0px));
+  background: t.color('surface-container');
+}
+
+@include c.declarations('navigation-bar') {
+  display: none;
+}

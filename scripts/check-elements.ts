@@ -1354,6 +1354,53 @@ try {
     assert.deepEqual(parity.outlined.element, parity.outlined.factory);
     check("textfield: renders as the factory does with the global stylesheet, filled and outlined");
 
+    // FLO-305: <m-navigation-bar> renders as the factory does with the global
+    // stylesheet, and a click on a destination dispatches change once with its value
+    const navBar = await page.evaluate(async (icon) => {
+      const w = window as unknown as Win & { mtrl: { createNavigationBar: (c: object) => { element: HTMLElement; destroy: () => void } } };
+      const host = document.getElementById("factory") as HTMLElement;
+      host.innerHTML = `<div style="width:400px"><m-navigation-bar id="nb" value="home" aria-label="Main">
+        <m-navigation-bar-item value="home" icon='${icon}' badge="3">Home</m-navigation-bar-item>
+        <m-navigation-bar-item value="search" icon='${icon}'>Search</m-navigation-bar-item>
+        <m-navigation-bar-item value="library" icon='${icon}' href="#library">Library</m-navigation-bar-item>
+      </m-navigation-bar></div><div id="nbf" style="width:400px"></div>`;
+      const factory = w.mtrl.createNavigationBar({ ariaLabel: "Main", items: [
+        { id: "home", label: "Home", icon, badge: "3", active: true },
+        { id: "search", label: "Search", icon },
+        { id: "library", label: "Library", icon, href: "#library" },
+      ] });
+      (document.getElementById("nbf") as HTMLElement).append(factory.element);
+      await new Promise((r) => setTimeout(r, 400));
+      const measure = (root: HTMLElement) => {
+        const r = root.getBoundingClientRect();
+        return {
+          landmark: [root.tagName, root.getAttribute("aria-label")],
+          height: Math.round(r.height),
+          items: [...root.querySelectorAll<HTMLElement>(".mtrl-navigation-bar__item")].map((item) => {
+            const indicator = item.querySelector(".mtrl-navigation-bar__indicator")!.getBoundingClientRect();
+            const label = item.querySelector(".mtrl-navigation-bar__label") as HTMLElement;
+            return {
+              tag: item.tagName, current: item.getAttribute("aria-current"), name: item.getAttribute("aria-label"),
+              x: Math.round(item.getBoundingClientRect().left - r.left), indicator: [Math.round(indicator.width), Math.round(indicator.height)],
+              label: [getComputedStyle(label).color, getComputedStyle(label).font],
+            };
+          }),
+        };
+      };
+      const element = document.getElementById("nb") as HTMLElement;
+      const inShadow = element.shadowRoot?.querySelector(".mtrl-navigation-bar") as HTMLElement;
+      const result = { element: measure(inShadow), factory: measure(factory.element), changes: [] as string[] };
+      element.addEventListener("change", (event) => result.changes.push((event as CustomEvent).detail.value));
+      (inShadow.querySelector('[data-id="search"]') as HTMLElement).click();
+      result.changes.push(`value:${(element as HTMLElement & { value: string }).value}`);
+      factory.destroy();
+      host.innerHTML = "";
+      return result;
+    }, ICON);
+    assert.deepEqual(navBar.element, navBar.factory, "the element renders as the factory");
+    assert.deepEqual(navBar.changes, ["search", "value:search"]);
+    check("navigation bar: renders as the factory does with the global stylesheet; a click dispatches change with the value (FLO-305)");
+
     // FLO-354, FLO-355: inside the shadow root too, a resting label is all the
     // input area shows — no placeholder (even disabled), no prefix or suffix —
     // and the affixes appear once the label floats.

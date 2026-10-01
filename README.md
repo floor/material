@@ -96,7 +96,7 @@ Every component comes three ways: a factory (`createButton`), an element (`<m-bu
 |-------|------------|
 | Actions | Button, Icon button, Button group, Split button, FAB, Extended FAB, FAB menu, Toolbar |
 | Selection and input | Checkbox, Switch, Radio buttons, Chips, Slider, Text field, Select, Search, Date picker, Time picker |
-| Navigation | Navigation rail, Drawer, Tabs, Menu, Top app bar, Bottom app bar |
+| Navigation | Navigation bar, Navigation rail, Drawer, Tabs, Menu, Top app bar, Bottom app bar |
 | Containment | Card, Carousel, List, Divider, Dialog, Bottom sheet, Side sheet |
 | Communication | Badge, Progress, Loading indicator, Snackbar, Tooltip |
 

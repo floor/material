@@ -39,12 +39,13 @@ import {
 } from "./define";
 
 /**
- * The declared destinations, `active` as given. The factory throws on an item
+ * The declared destinations, `active` as given; the navigation bar reads its
+ * items the same way (FLO-305). The factory throws on an item
  * without a label or an icon and on a repeated id, which a framework can
  * render on the way to a complete item: such an item is left out until it is
  * complete.
  */
-const declaredItems = (host: HTMLElement, active: string | null): NavigationRailItemConfig[] => {
+export const declaredItems = (host: HTMLElement, active: string | null): NavigationRailItemConfig[] => {
   const itemTag = `${host.localName}-item`;
   const items: NavigationRailItemConfig[] = [];
   const ids = new Set<string>();

@@ -151,6 +151,7 @@
     "tabs:check": "bun run scripts/check-tabs.ts",
     "slider:check": "bun run scripts/check-slider.ts",
     "drawer:check": "bun run scripts/check-drawer.ts",
+    "navigation-bar:check": "bun run scripts/check-navigation-bar.ts",
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "core:check": "bun run scripts/check-core.ts",
     "ssr-security:check": "bun run scripts/check-ssr-security.ts",
