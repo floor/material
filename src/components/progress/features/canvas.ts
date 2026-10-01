@@ -400,7 +400,7 @@ export const withCanvas =
     // Wiring
     // ---------------------------------------------------------------------
 
-    if (!initialize()) {
+    if (!initialize() && typeof requestAnimationFrame === "function") {
       requestAnimationFrame(() => {
         if (initialize()) {
           startAnimation();

@@ -225,12 +225,12 @@ const menuSpec = {
     });
     keep.observe(root, { childList: true });
     // An anchor rendered just after the menu, in the same pass
-    const frame = requestAnimationFrame(() => findPending(c));
+    const frame = typeof requestAnimationFrame === "function" ? requestAnimationFrame(() => findPending(c)) : null;
     if (host.hasAttribute("open")) c.show();
     if (host.hasAttribute("aria-label")) c.element.setAttribute("aria-label", host.getAttribute("aria-label") ?? "");
     return () => {
       keep.disconnect();
-      cancelAnimationFrame(frame);
+      if (frame !== null) cancelAnimationFrame(frame);
     };
   },
   observeChildren: updateItems,

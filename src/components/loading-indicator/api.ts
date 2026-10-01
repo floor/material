@@ -74,7 +74,7 @@ export const withAPI =
     };
 
     const start = (): void => {
-      if (running) return;
+      if (running || typeof requestAnimationFrame !== 'function') return;
       running = true;
       // resume where it stopped rather than snapping back to the first shape
       startedAt = now() - pausedAt;
