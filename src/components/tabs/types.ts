@@ -360,6 +360,9 @@ export interface TabComponent {
   
   /** Disables the tab (adds disabled attribute) */
   disable: () => TabComponent;
+
+  /** Whether the tab is disabled (FLO-384) */
+  isDisabled: () => boolean;
   
   /** Sets the tab's text content */
   setText: (content: string) => TabComponent;

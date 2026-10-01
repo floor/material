@@ -338,6 +338,9 @@ export interface ButtonGroupComponent {
    */
   disable: () => ButtonGroupComponent;
 
+  /** Whether the whole group is disabled (FLO-384) */
+  isDisabled: () => boolean;
+
   /**
    * Enables a specific button by index
    * @param index - Button index
