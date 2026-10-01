@@ -13,6 +13,7 @@ describe("cornerToken", () => {
     const scss = await Bun.file("src/styles/abstract/_variables.scss").text();
     const written: Array<[ShapeStep, number]> = [
       ["extra-small", 4], ["small", 8], ["medium", 12], ["large", 16], ["large-increased", 20], ["extra-large", 28],
+      ["extra-large-increased", 32], ["extra-extra-large", 48],
     ];
     for (const [step, px] of written) expect(scss).toContain(`'${step}': ${px}px,`);
   });

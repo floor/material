@@ -16,7 +16,8 @@ const LITERAL: Record<string, Record<string, string>> = {
   drawer: {},
   carousel: {},
   dialog: { '4px': 'the scrollable content\'s scrollbar thumb, not a component shape' },
-  search: {},
+  search: { '56px': 'the bar\'s CornerFull as half its 56px height, under min() with the full token (FLO-345)' },
+  checkbox: { '2px': 'CheckboxTokens.ContainerShape, 2dp: outside the shape scale (FLO-345)' },
   slider: {
     '2px': 'TrackInsideCornerSize, the track segments\' inside corners: 2dp, not a scale step',
     '16px': 'the handle\'s invisible hit area',
@@ -64,6 +65,29 @@ const literals = (component: string): string[] => {
   }
   return [...found].sort();
 };
+
+describe('the shape scale (FLO-345)', () => {
+  const tokens = compileString(`@use 'base/tokens';`, { loadPaths: ['src/styles'], style: 'expanded' }).css;
+
+  test('the root emits M3\'s two largest steps', () => {
+    expect(tokens).toContain('--mtrl-sys-shape-corner-extra-large-increased: 32px;');
+    expect(tokens).toContain('--mtrl-sys-shape-corner-extra-extra-large: 48px;');
+  });
+
+  test('the search bar is round at half its height, a theme\'s full corner still in charge', () => {
+    const css = compileString(`@use 'components/search';`, { loadPaths: ['src/styles'], style: 'expanded' }).css;
+    const bar = 'min(var(--mtrl-sys-shape-corner-full, 9999px), 56px / 2)';
+    const full = Array.from(css.matchAll(/border-radius:\s*([^;]*corner-full[^;]*);/g), (m) => m[1]);
+    expect(full.length).toBeGreaterThan(0);
+    for (const radius of full) expect(radius).toBe(bar);
+    expect(css).not.toContain('sys-shape-corner-pill');
+  });
+
+  test('the checkbox no longer reads the deprecated tiny step', () => {
+    const css = compileString(`@use 'components/checkbox';`, { loadPaths: ['src/styles'], style: 'expanded' }).css;
+    expect(css).not.toContain('sys-shape-corner-tiny');
+  });
+});
 
 describe('corner radii read the shape tokens (FLO-331)', () => {
   for (const [component, allowed] of Object.entries(LITERAL)) {
