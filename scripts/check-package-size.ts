@@ -79,14 +79,17 @@ try {
   // headroom it had.
   // Raised for the bundled server-only SSR entry (FLO-364): 888,897 to 1,002,195,
   // measured with Node 22.23.3 / npm 10.9.9, preserving the previous headroom.
-  assert(pack.size < 1_015_000, "npm tarball exceeds 1,015,000 bytes");
+  // The navigation bar (FLO-305): 1,003,847 to 1,013,492 against 51455a6, Node 22 / npm 10.
+  assert(pack.size < 1_025_000, "npm tarball exceeds 1,025,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
   // ESM 23%, CSS 18%, SCSS sources 11%, the CommonJS bundle 8%, which 1.0.0 drops (FLO-358).
   // Lowered to 5,600,000 for that: 5,660,400 to 5,249,221, keeping the headroom it had.
   // FLO-364: 5,567,538 to 5,875,963 with SSR, same packer, preserving headroom.
-  assert(pack.unpackedSize < 5_910_000, "Unpacked package exceeds 5,910,000 bytes");
+  // The navigation bar (FLO-305): its component, element, adapters and CSS, 5,880,623 to
+  // 5,956,491 against 51455a6, same packer; the budget keeps about the headroom it had.
+  assert(pack.unpackedSize < 5_990_000, "Unpacked package exceeds 5,990,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
   const smoke = join(temporary, "smoke.mjs");
@@ -256,7 +259,8 @@ try {
     // The text field's trailing icon button and asterisk (FLO-301): 52,916 to 53,072 against 7cd57a6.
     // The tabs indicator anchors in the stylesheet, and the slider visual is a size
     // container so its ticks can use cqw/cqh (FLO-369): measured 53,386.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 53490 },
+    // The navigation bar's stylesheet (FLO-305): 53,389 to 54,659 against 51455a6.
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 54800 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);
