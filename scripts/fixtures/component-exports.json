@@ -1,0 +1,2283 @@
+{
+  "badge": [
+    {
+      "name": "BadgeColor",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "BadgeComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "BadgeConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "BadgePosition",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "BadgeVariant",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
+  "bottom-app-bar": [
+    {
+      "name": "BottomAppBar",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "BottomAppBarConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "createBottomAppBar",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
+  "bottom-sheet": [
+    {
+      "name": "BottomSheetComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "BottomSheetConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "BottomSheetEventHandlers",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "BottomSheetState",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "BottomSheetStateEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "BottomSheetVariant",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "createBottomSheet",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
+  "button": [
+    {
+      "name": "ButtonComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ButtonConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ButtonShape",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ButtonSize",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ButtonVariant",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
+  "button-group": [
+    {
+      "name": "BUTTON_GROUP_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_DENSITY",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_ORIENTATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ButtonGroupComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ButtonGroupConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ButtonGroupDensity",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ButtonGroupEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ButtonGroupEventType",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ButtonGroupItemConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ButtonGroupOrientation",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ButtonGroupVariant",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "createButtonGroup",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
+  "card": [
+    {
+      "name": "CardActionsConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CardAriaAttributes",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CardComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CardContentConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CardElevationLevel",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CardEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CardHeaderConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CardMediaConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CardSchema",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CardVariant",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "createCardActions",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "createCardContent",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "createCardHeader",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "createCardMedia",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ExpandableFeature",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "LoadingFeature",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "SwipeableFeature",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "withAPI",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "withElevation",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "withExpandable",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "withLoading",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "withSwipeable",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
+    }
+  ],
+  "carousel": [
+    {
+      "name": "CAROUSEL_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CAROUSEL_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CAROUSEL_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CarouselChangePayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CarouselComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CarouselConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CarouselEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CarouselSlide",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CarouselVariant",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "createCarousel",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SlidesAPI",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "checkbox": [
+    {
+      "name": "CHECKBOX_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CHECKBOX_LABEL_POSITION",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CHECKBOX_STATES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CHECKBOX_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CheckboxChangePayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CheckboxComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CheckboxConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CheckboxEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CheckboxLabelPosition",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CheckboxVariant",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
+  "chips": [
+    {
+      "name": "AssistChipConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ChipChangePayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ChipComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ChipConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ChipEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ChipsChangeEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ChipsComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ChipsConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ChipsEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ChipType",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "createAssistChip",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "createChips",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "createFilterChip",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "createInputChip",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "createSuggestionChip",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FilterChipConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "InputChipConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SuggestionChipConfig",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "datepicker": [
+    {
+      "name": "DatePickerChangePayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerInput",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerSelectionMode",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerSwipePayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerTapPayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerValue",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerValueOf",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerVariant",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerView",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DatePickerVisibilityPayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DEFAULT_DATE_FORMAT",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/datepicker in 1.0.0 (FLO-381)."
+    }
+  ],
+  "dialog": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DialogAnimation",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DialogButton",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DialogComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DialogConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DialogConfirmOptions",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DialogEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DialogEventType",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DialogFooterAlignment",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DialogSize",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "divider": [
+    {
+      "name": "createDivider",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DividerComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DividerConfig",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "drawer": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DrawerComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DrawerConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DrawerEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DrawerItemConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DrawerPosition",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DrawerSelectEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DrawerVariant",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "extended-fab": [
+    {
+      "name": "createExtendedFab",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ExtendedFabComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ExtendedFabConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ExtendedFabEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ExtendedFabPosition",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ExtendedFabSize",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ExtendedFabVariant",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ExtendedFabWidth",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "fab": [
+    {
+      "name": "createFab",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FabComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabPosition",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabSize",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabVariant",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "fab-menu": [
+    {
+      "name": "createFabMenu",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_MENU_COLORS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_MENU_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_MENU_PLACEMENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_MENU_PRESENTATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_MENU_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FabMenuColor",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabMenuComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabMenuConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabMenuEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabMenuItem",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabMenuMenu",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabMenuPlacement",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabMenuPresentation",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabMenuSize",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "icon-button": [
+    {
+      "name": "createIconButton",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_CONTAINER_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_CORNER_RADIUS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_ICON_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_SHAPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_WIDTH_VALUES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_WIDTHS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "IconAPI",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "IconButtonComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "IconButtonConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "IconButtonEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "IconButtonShape",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "IconButtonSize",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "IconButtonVariant",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "IconButtonWidth",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToggleManager",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "list": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LIST_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LIST_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LIST_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LIST_SCROLL_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LIST_SELECTION_MODES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LIST_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ListComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ListConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ListItem",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ListSlot",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "LoadEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SelectEvent",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "loading-indicator": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LOADING_INDICATOR_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LOADING_INDICATOR_SHAPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LoadingIndicatorComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "LoadingIndicatorConfig",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "menu": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MENU_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MENU_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MENU_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MENU_INTERACTION_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MENU_ITEM_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MENU_POSITION",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MenuComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuContent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuDivider",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuGap",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuItem",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuPosition",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "MenuSelectEvent",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "navigation-rail": [
+    {
+      "name": "createNavigationRail",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "NavigationRailComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationRailConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationRailEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationRailItemConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationRailSelectEvent",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "progress": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ProgressComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ProgressConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ProgressEventPayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ProgressEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ProgressShape",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "radios": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "RADIO_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "RADIO_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "RADIO_DIRECTIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "RADIO_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "RADIO_LABEL_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "RADIO_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "RADIO_STATES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "RADIO_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "RadioOptionConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "RadiosChangePayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "RadiosComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "RadiosConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "RadiosEvents",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "search": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SearchComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SearchConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SearchEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SearchEventType",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SearchState",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SearchSuggestion",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SearchTrailingItem",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SearchVariant",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SearchViewMode",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "segmented-button": [
+    {
+      "name": "createSegmentedButton",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "Density",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "Segment",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SegmentConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SegmentedButtonComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SegmentedButtonConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SelectionMode",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
+  "select": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SELECT_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SELECT_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SELECT_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SELECT_ICONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SELECT_INTERACTION",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SELECT_PLACEMENT",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SELECT_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SelectChangeEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SelectComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SelectConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SelectEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SelectOption",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "side-sheet": [
+    {
+      "name": "createSideSheet",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SideSheetComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SideSheetConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SideSheetEventHandlers",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SideSheetPosition",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SideSheetVariant",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "slider": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SliderComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SliderConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SliderEvent",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "snackbar": [
+    {
+      "name": "clearSnackbars",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SNACKBAR_CLOSE_REASONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SNACKBAR_DURATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SNACKBAR_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SNACKBAR_QUEUE_BEHAVIORS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SnackbarCloseReason",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SnackbarComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SnackbarConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SnackbarDuration",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SnackbarEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SnackbarEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SnackbarPosition",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SnackbarQueueBehavior",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "split-button": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SPLIT_BUTTON_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SPLIT_BUTTON_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SPLIT_BUTTON_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SplitButtonComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SplitButtonConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SplitButtonEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SplitButtonSize",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SplitButtonVariant",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "switch": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SupportingTextComponent",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/switch in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "SWITCH_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SWITCH_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SWITCH_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SWITCH_LABEL_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SWITCH_STATES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SwitchChangePayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SwitchComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SwitchConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SwitchEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "withSupportingText",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/switch in 1.0.0 (FLO-381)."
+    }
+  ],
+  "tabs": [
+    {
+      "name": "addScrollIndicators",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "createTabIndicator",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "createTabsState",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DividerConfig",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "IndicatorComponent",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "IndicatorConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "IndicatorFeatureConfig",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "ScrollableComponent",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "ScrollableConfig",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "setupKeyboardNavigation",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "setupResponsiveBehavior",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TAB_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TAB_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TAB_INDICATOR_WIDTH_STRATEGIES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TAB_STATES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TAB_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TabChangeEventData",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TabComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TabConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TABS_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TABS_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TABS_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TabsComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TabsConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TabsManagementComponent",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "TabsManagementConfig",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "updateTabPanels",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "withDivider",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "withIndicator",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "withScrollable",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    },
+    {
+      "name": "withTabsManagement",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+    }
+  ],
+  "textfield": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TextfieldComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TextfieldConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TextfieldDensity",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TextfieldEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TextfieldFocusPayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TextfieldTrailingPayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TextfieldValuePayload",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "timepicker": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIME_FORMAT",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIME_PERIOD",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIME_PICKER_ORIENTATION",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIME_PICKER_TYPE",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TimeFormat",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_DIAL",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_FORMATS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_ICONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_ORIENTATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_PERIODS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_SELECTORS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_VALUES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_Z_INDEX",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TimePickerComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TimePickerConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TimePickerEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TimePickerOrientation",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TimePickerSwipePayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TimePickerTapPayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TimePickerType",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TimePickerValueEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TimeValue",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "toolbar": [
+    {
+      "name": "createToolbar",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLBAR_ARRANGEMENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLBAR_COLORS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLBAR_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLBAR_ORIENTATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLBAR_PLACEMENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLBAR_SCROLL_BEHAVIORS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLBAR_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarArrangement",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarButtonItem",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarColor",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarElementItem",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarFabPosition",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarItem",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarOrientation",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarPlacement",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarScrollBehavior",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarVariant",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "tooltip": [
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLTIP_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLTIP_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLTIP_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLTIP_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLTIP_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TooltipComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TooltipConfig",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "top-app-bar": [
+    {
+      "name": "createTopAppBar",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOP_APP_BAR_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOP_APP_BAR_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOP_APP_BAR_STATES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOP_APP_BAR_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TopAppBar",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TopAppBarConfig",
+      "kind": "type",
+      "status": "public"
+    }
+  ]
+}

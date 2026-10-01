@@ -46,11 +46,15 @@ export interface ChipConfig {
   prefix?: string;
   componentName?: string;
   ripple?: boolean;
-  /** @internal Selection belongs to the chips container. */
+  /**
+   * @internal Selection belongs to the chips container.
+   * @deprecated Not for apps: moves out of ChipConfig in 1.0.0 (FLO-381).
+   */
   managedSelection?: boolean;
   /**
    * @internal The chip is a cell of a chip set's grid (FLO-261): the root is a
    * `gridcell`, and a one-action chip's cell is its focus target.
+   * @deprecated Not for apps: moves out of ChipConfig in 1.0.0 (FLO-381).
    */
   cell?: boolean;
 }

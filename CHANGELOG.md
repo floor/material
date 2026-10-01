@@ -44,6 +44,33 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   (49.9 to 41.8 ms; 192 to 165 ms at 4× CPU), with 1,000 fewer listeners. Nothing renders
   differently.
 
+### Deprecated
+
+- **Component internals on their subpaths (FLO-381).** `mtrl/components/<name>` is public API, and
+  some indexes re-exported implementation details. These are deprecated there and removed in
+  1.0.0, with no replacement (they are internal):
+  - **card:** `withAPI`, `withLoading`, `withExpandable`, `withSwipeable`, `withElevation`, and the
+    types `LoadingFeature`, `ExpandableFeature`, `SwipeableFeature`;
+  - **tabs:** `withTabsManagement`, `withScrollable`, `withDivider`, `withIndicator`,
+    `addScrollIndicators`, `createTabsState`, `createTabIndicator`, `updateTabPanels`,
+    `setupKeyboardNavigation`, and the types `TabsManagementConfig`, `TabsManagementComponent`,
+    `ScrollableConfig`, `ScrollableComponent`, `DividerConfig`, `IndicatorFeatureConfig`,
+    `IndicatorComponent`;
+  - **switch:** `withSupportingText` and `SupportingTextComponent`;
+  - **datepicker:** `DEFAULT_DATE_FORMAT`;
+  - **chips:** `ChipConfig`'s `managedSelection` and `cell`, set by the chip set, leave `ChipConfig`.
+
+  **Nested subpaths:** `./components/*` also matched folders inside a component, so these resolved
+  and leave in 1.0.0, when the components are listed one by one: `mtrl/components/bottom-sheet/features`,
+  `carousel/features`, `chips/chip`, `chips/features`, `drawer/features`, `list/features`,
+  `menu/features`, `progress/features`, `search/features` (the low-level `withInput`),
+  `side-sheet/features`, `slider/features`, `textfield/features`, and
+  `mtrl/components/chips/chip/constants`.
+
+  Kept public: `SlidesAPI`, `IconAPI`, `ToggleManager` and `IndicatorConfig`, which public members
+  are typed with, and tabs' documented `setupResponsiveBehavior`. Each component's export list is
+  now pinned (`bun run component-exports:check`).
+
 ### Fixed
 
 - **Progress and loading indicators draw the theme of the section they're in, not only the
