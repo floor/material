@@ -5,7 +5,7 @@ import { ssrRenderVNode } from "@vue/server-renderer";
 import "./index";
 
 const bridge = (globalThis as unknown as Record<symbol, {
-  shadow: (tag: string, markup: string, prefix: string) => string;
+  shadow: (tag: string, markup: string, prefix: string, renderedChildren?: boolean) => string;
   vue?: (
     tag: string,
     props: Record<string, unknown>,
@@ -74,44 +74,6 @@ const openTag = (tag: string, props: Record<string, unknown>, parent: ComponentI
   return html.slice(0, -closing.length);
 };
 
-/**
- * Nested hosts already emitted declarative roots for the page. The shadow
- * renderer rejects a host that contains one, so they come off this copy only.
- */
-const stripDeclarativeRoots = (html: string): string => {
-  let out = "";
-  let cursor = 0;
-  while (cursor < html.length) {
-    const start = html.indexOf("<template", cursor);
-    if (start < 0) return out + html.slice(cursor);
-    const openEnd = html.indexOf(">", start);
-    if (openEnd < 0) return out + html.slice(cursor);
-    const open = html.slice(start, openEnd + 1);
-    if (!/\sshadowrootmode(?:=|\s|>)/.test(open) && !open.endsWith(" shadowrootmode>")) {
-      out += html.slice(cursor, openEnd + 1);
-      cursor = openEnd + 1;
-      continue;
-    }
-    out += html.slice(cursor, start);
-    let depth = 1;
-    let nested = openEnd + 1;
-    while (depth > 0) {
-      const nextOpen = html.indexOf("<template", nested);
-      const nextClose = html.indexOf("</template>", nested);
-      if (nextClose < 0) throw new TypeError("Unclosed declarative shadow template");
-      if (nextOpen !== -1 && nextOpen < nextClose) {
-        depth += 1;
-        nested = nextOpen + "<template".length;
-      } else {
-        depth -= 1;
-        nested = nextClose + "</template>".length;
-      }
-    }
-    cursor = nested;
-  }
-  return out;
-};
-
 bridge.vue = (tag, props, children, prefix) => {
   if (!TAG.test(tag)) throw new TypeError(`Invalid tag: ${tag}`);
   const parent = getCurrentInstance();
@@ -120,7 +82,9 @@ bridge.vue = (tag, props, children, prefix) => {
   // child becomes a promise the page buffer already knows how to await.
   const light = renderNodes(children(), parent);
   const finish = (lightHtml: string): string => {
-    const html = bridge.shadow(tag, `${open}${stripDeclarativeRoots(lightHtml)}</${tag}>`, prefix);
+    // Nested hosts already emitted declarative roots. Strip them only from
+    // the renderer's detached copy; the page keeps this light HTML.
+    const html = bridge.shadow(tag, `${open}${lightHtml}</${tag}>`, prefix, true);
     const template = html ? `<template shadowrootmode="open" shadowrootdelegatesfocus="">${html}</template>` : "";
     return `${template}${lightHtml}`;
   };

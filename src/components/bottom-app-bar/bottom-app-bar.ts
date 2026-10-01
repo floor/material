@@ -4,6 +4,7 @@
  * @description Bottom app bar implementation
  */
 
+import { processClassNames, type BaseComponentConfig } from "../../core/config/component";
 import {
   createBase,
   withElement,
@@ -52,7 +53,7 @@ export const createBottomAppBar = (
       componentConfig.fabPosition === "center"
         ? `${component.getClass("bottom-app-bar")}--fab-center`
         : "",
-      componentConfig.class,
+      processClassNames((componentConfig as BaseComponentConfig).className || ""),
     ].filter((name): name is string => Boolean(name)),
     attributes: {
       role: "toolbar",

@@ -30,7 +30,8 @@
     "**/ssr/index.js",
     "**/ssr/react.js",
     "**/ssr/svelte.js",
-    "**/ssr/vue.js"
+    "**/ssr/vue.js",
+    "**/ssr/solid.js"
   ],
   "type": "module",
   "main": "./dist/index.js",
@@ -45,13 +46,297 @@
       "types": "./dist/styles.d.ts",
       "default": "./dist/styles.css"
     },
-    "./components/*/constants": {
-      "types": "./dist/components/*/constants.d.ts",
-      "import": "./dist/components/*/constants.js"
+    "./components/badge": {
+      "types": "./dist/components/badge/index.d.ts",
+      "import": "./dist/components/badge/index.js"
     },
-    "./components/*": {
-      "types": "./dist/components/*/index.d.ts",
-      "import": "./dist/components/*/index.js"
+    "./components/badge/constants": {
+      "types": "./dist/components/badge/constants.d.ts",
+      "import": "./dist/components/badge/constants.js"
+    },
+    "./components/bottom-app-bar": {
+      "types": "./dist/components/bottom-app-bar/index.d.ts",
+      "import": "./dist/components/bottom-app-bar/index.js"
+    },
+    "./components/bottom-app-bar/constants": {
+      "types": "./dist/components/bottom-app-bar/constants.d.ts",
+      "import": "./dist/components/bottom-app-bar/constants.js"
+    },
+    "./components/bottom-sheet": {
+      "types": "./dist/components/bottom-sheet/index.d.ts",
+      "import": "./dist/components/bottom-sheet/index.js"
+    },
+    "./components/bottom-sheet/constants": {
+      "types": "./dist/components/bottom-sheet/constants.d.ts",
+      "import": "./dist/components/bottom-sheet/constants.js"
+    },
+    "./components/button": {
+      "types": "./dist/components/button/index.d.ts",
+      "import": "./dist/components/button/index.js"
+    },
+    "./components/button/constants": {
+      "types": "./dist/components/button/constants.d.ts",
+      "import": "./dist/components/button/constants.js"
+    },
+    "./components/button-group": {
+      "types": "./dist/components/button-group/index.d.ts",
+      "import": "./dist/components/button-group/index.js"
+    },
+    "./components/button-group/constants": {
+      "types": "./dist/components/button-group/constants.d.ts",
+      "import": "./dist/components/button-group/constants.js"
+    },
+    "./components/card": {
+      "types": "./dist/components/card/index.d.ts",
+      "import": "./dist/components/card/index.js"
+    },
+    "./components/card/constants": {
+      "types": "./dist/components/card/constants.d.ts",
+      "import": "./dist/components/card/constants.js"
+    },
+    "./components/carousel": {
+      "types": "./dist/components/carousel/index.d.ts",
+      "import": "./dist/components/carousel/index.js"
+    },
+    "./components/carousel/constants": {
+      "types": "./dist/components/carousel/constants.d.ts",
+      "import": "./dist/components/carousel/constants.js"
+    },
+    "./components/checkbox": {
+      "types": "./dist/components/checkbox/index.d.ts",
+      "import": "./dist/components/checkbox/index.js"
+    },
+    "./components/checkbox/constants": {
+      "types": "./dist/components/checkbox/constants.d.ts",
+      "import": "./dist/components/checkbox/constants.js"
+    },
+    "./components/chips": {
+      "types": "./dist/components/chips/index.d.ts",
+      "import": "./dist/components/chips/index.js"
+    },
+    "./components/chips/constants": {
+      "types": "./dist/components/chips/constants.d.ts",
+      "import": "./dist/components/chips/constants.js"
+    },
+    "./components/datepicker": {
+      "types": "./dist/components/datepicker/index.d.ts",
+      "import": "./dist/components/datepicker/index.js"
+    },
+    "./components/datepicker/constants": {
+      "types": "./dist/components/datepicker/constants.d.ts",
+      "import": "./dist/components/datepicker/constants.js"
+    },
+    "./components/dialog": {
+      "types": "./dist/components/dialog/index.d.ts",
+      "import": "./dist/components/dialog/index.js"
+    },
+    "./components/dialog/constants": {
+      "types": "./dist/components/dialog/constants.d.ts",
+      "import": "./dist/components/dialog/constants.js"
+    },
+    "./components/divider": {
+      "types": "./dist/components/divider/index.d.ts",
+      "import": "./dist/components/divider/index.js"
+    },
+    "./components/divider/constants": {
+      "types": "./dist/components/divider/constants.d.ts",
+      "import": "./dist/components/divider/constants.js"
+    },
+    "./components/drawer": {
+      "types": "./dist/components/drawer/index.d.ts",
+      "import": "./dist/components/drawer/index.js"
+    },
+    "./components/drawer/constants": {
+      "types": "./dist/components/drawer/constants.d.ts",
+      "import": "./dist/components/drawer/constants.js"
+    },
+    "./components/extended-fab": {
+      "types": "./dist/components/extended-fab/index.d.ts",
+      "import": "./dist/components/extended-fab/index.js"
+    },
+    "./components/extended-fab/constants": {
+      "types": "./dist/components/extended-fab/constants.d.ts",
+      "import": "./dist/components/extended-fab/constants.js"
+    },
+    "./components/fab": {
+      "types": "./dist/components/fab/index.d.ts",
+      "import": "./dist/components/fab/index.js"
+    },
+    "./components/fab/constants": {
+      "types": "./dist/components/fab/constants.d.ts",
+      "import": "./dist/components/fab/constants.js"
+    },
+    "./components/fab-menu": {
+      "types": "./dist/components/fab-menu/index.d.ts",
+      "import": "./dist/components/fab-menu/index.js"
+    },
+    "./components/fab-menu/constants": {
+      "types": "./dist/components/fab-menu/constants.d.ts",
+      "import": "./dist/components/fab-menu/constants.js"
+    },
+    "./components/icon-button": {
+      "types": "./dist/components/icon-button/index.d.ts",
+      "import": "./dist/components/icon-button/index.js"
+    },
+    "./components/icon-button/constants": {
+      "types": "./dist/components/icon-button/constants.d.ts",
+      "import": "./dist/components/icon-button/constants.js"
+    },
+    "./components/list": {
+      "types": "./dist/components/list/index.d.ts",
+      "import": "./dist/components/list/index.js"
+    },
+    "./components/list/constants": {
+      "types": "./dist/components/list/constants.d.ts",
+      "import": "./dist/components/list/constants.js"
+    },
+    "./components/loading-indicator": {
+      "types": "./dist/components/loading-indicator/index.d.ts",
+      "import": "./dist/components/loading-indicator/index.js"
+    },
+    "./components/loading-indicator/constants": {
+      "types": "./dist/components/loading-indicator/constants.d.ts",
+      "import": "./dist/components/loading-indicator/constants.js"
+    },
+    "./components/menu": {
+      "types": "./dist/components/menu/index.d.ts",
+      "import": "./dist/components/menu/index.js"
+    },
+    "./components/menu/constants": {
+      "types": "./dist/components/menu/constants.d.ts",
+      "import": "./dist/components/menu/constants.js"
+    },
+    "./components/navigation-bar": {
+      "types": "./dist/components/navigation-bar/index.d.ts",
+      "import": "./dist/components/navigation-bar/index.js"
+    },
+    "./components/navigation-rail": {
+      "types": "./dist/components/navigation-rail/index.d.ts",
+      "import": "./dist/components/navigation-rail/index.js"
+    },
+    "./components/navigation-rail/constants": {
+      "types": "./dist/components/navigation-rail/constants.d.ts",
+      "import": "./dist/components/navigation-rail/constants.js"
+    },
+    "./components/progress": {
+      "types": "./dist/components/progress/index.d.ts",
+      "import": "./dist/components/progress/index.js"
+    },
+    "./components/progress/constants": {
+      "types": "./dist/components/progress/constants.d.ts",
+      "import": "./dist/components/progress/constants.js"
+    },
+    "./components/radios": {
+      "types": "./dist/components/radios/index.d.ts",
+      "import": "./dist/components/radios/index.js"
+    },
+    "./components/radios/constants": {
+      "types": "./dist/components/radios/constants.d.ts",
+      "import": "./dist/components/radios/constants.js"
+    },
+    "./components/search": {
+      "types": "./dist/components/search/index.d.ts",
+      "import": "./dist/components/search/index.js"
+    },
+    "./components/search/constants": {
+      "types": "./dist/components/search/constants.d.ts",
+      "import": "./dist/components/search/constants.js"
+    },
+    "./components/select": {
+      "types": "./dist/components/select/index.d.ts",
+      "import": "./dist/components/select/index.js"
+    },
+    "./components/select/constants": {
+      "types": "./dist/components/select/constants.d.ts",
+      "import": "./dist/components/select/constants.js"
+    },
+    "./components/side-sheet": {
+      "types": "./dist/components/side-sheet/index.d.ts",
+      "import": "./dist/components/side-sheet/index.js"
+    },
+    "./components/side-sheet/constants": {
+      "types": "./dist/components/side-sheet/constants.d.ts",
+      "import": "./dist/components/side-sheet/constants.js"
+    },
+    "./components/slider": {
+      "types": "./dist/components/slider/index.d.ts",
+      "import": "./dist/components/slider/index.js"
+    },
+    "./components/slider/constants": {
+      "types": "./dist/components/slider/constants.d.ts",
+      "import": "./dist/components/slider/constants.js"
+    },
+    "./components/snackbar": {
+      "types": "./dist/components/snackbar/index.d.ts",
+      "import": "./dist/components/snackbar/index.js"
+    },
+    "./components/snackbar/constants": {
+      "types": "./dist/components/snackbar/constants.d.ts",
+      "import": "./dist/components/snackbar/constants.js"
+    },
+    "./components/split-button": {
+      "types": "./dist/components/split-button/index.d.ts",
+      "import": "./dist/components/split-button/index.js"
+    },
+    "./components/split-button/constants": {
+      "types": "./dist/components/split-button/constants.d.ts",
+      "import": "./dist/components/split-button/constants.js"
+    },
+    "./components/switch": {
+      "types": "./dist/components/switch/index.d.ts",
+      "import": "./dist/components/switch/index.js"
+    },
+    "./components/switch/constants": {
+      "types": "./dist/components/switch/constants.d.ts",
+      "import": "./dist/components/switch/constants.js"
+    },
+    "./components/tabs": {
+      "types": "./dist/components/tabs/index.d.ts",
+      "import": "./dist/components/tabs/index.js"
+    },
+    "./components/tabs/constants": {
+      "types": "./dist/components/tabs/constants.d.ts",
+      "import": "./dist/components/tabs/constants.js"
+    },
+    "./components/textfield": {
+      "types": "./dist/components/textfield/index.d.ts",
+      "import": "./dist/components/textfield/index.js"
+    },
+    "./components/textfield/constants": {
+      "types": "./dist/components/textfield/constants.d.ts",
+      "import": "./dist/components/textfield/constants.js"
+    },
+    "./components/timepicker": {
+      "types": "./dist/components/timepicker/index.d.ts",
+      "import": "./dist/components/timepicker/index.js"
+    },
+    "./components/timepicker/constants": {
+      "types": "./dist/components/timepicker/constants.d.ts",
+      "import": "./dist/components/timepicker/constants.js"
+    },
+    "./components/toolbar": {
+      "types": "./dist/components/toolbar/index.d.ts",
+      "import": "./dist/components/toolbar/index.js"
+    },
+    "./components/toolbar/constants": {
+      "types": "./dist/components/toolbar/constants.d.ts",
+      "import": "./dist/components/toolbar/constants.js"
+    },
+    "./components/tooltip": {
+      "types": "./dist/components/tooltip/index.d.ts",
+      "import": "./dist/components/tooltip/index.js"
+    },
+    "./components/tooltip/constants": {
+      "types": "./dist/components/tooltip/constants.d.ts",
+      "import": "./dist/components/tooltip/constants.js"
+    },
+    "./components/top-app-bar": {
+      "types": "./dist/components/top-app-bar/index.d.ts",
+      "import": "./dist/components/top-app-bar/index.js"
+    },
+    "./components/top-app-bar/constants": {
+      "types": "./dist/components/top-app-bar/constants.d.ts",
+      "import": "./dist/components/top-app-bar/constants.js"
     },
     "./elements": {
       "types": "./dist/elements/index.d.ts",
@@ -134,6 +419,12 @@
       "browser": "./dist/ssr/browser.js",
       "node": "./dist/ssr/vue.js",
       "default": "./dist/ssr/vue.js"
+    },
+    "./ssr/solid": {
+      "types": "./dist/ssr/solid.d.ts",
+      "browser": "./dist/ssr/browser.js",
+      "node": "./dist/ssr/solid.js",
+      "default": "./dist/ssr/solid.js"
     }
   },
   "files": [
@@ -186,7 +477,8 @@
     "themes:generate": "bun scripts/generate-themes.ts",
     "react-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react-ssr.ts",
     "svelte-ssr:check": "bun run scripts/check-svelte-ssr.ts",
-    "vue-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-vue-ssr.ts"
+    "vue-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-vue-ssr.ts",
+    "solid-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-solid-ssr.ts"
   },
   "repository": {
     "type": "git",

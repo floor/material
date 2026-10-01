@@ -31,9 +31,12 @@ interface ExpandableConfig {
   expandableContent?: HTMLElement;
 }
 
+/** The card a swipe callback receives: the enhanced card, with reset() */
+type SwipeableCard = CardComponent & { swipeable: SwipeableFeature };
+
 interface SwipeableConfig {
-  onSwipeLeft?: (component: CardComponent) => void;
-  onSwipeRight?: (component: CardComponent) => void;
+  onSwipeLeft?: (component: SwipeableCard) => void;
+  onSwipeRight?: (component: SwipeableCard) => void;
   threshold?: number;
 }
 
@@ -368,7 +371,7 @@ export const withSwipeable =
       if (config.onSwipeLeft) {
         component.element.style.transform = "translateX(-100%)";
         component.element.style.transition = "transform 0.3s ease";
-        config.onSwipeLeft(card as CardComponent);
+        config.onSwipeLeft(card as SwipeableCard);
       }
     });
 
@@ -376,7 +379,7 @@ export const withSwipeable =
       if (config.onSwipeRight) {
         component.element.style.transform = "translateX(100%)";
         component.element.style.transition = "transform 0.3s ease";
-        config.onSwipeRight(card as CardComponent);
+        config.onSwipeRight(card as SwipeableCard);
       }
     });
 
@@ -406,11 +409,11 @@ export const withSwipeable =
         if (diffX > 0 && config.onSwipeRight) {
           // Swipe right
           component.element.style.transform = "translateX(100%)";
-          config.onSwipeRight(card as CardComponent);
+          config.onSwipeRight(card as SwipeableCard);
         } else if (diffX < 0 && config.onSwipeLeft) {
           // Swipe left
           component.element.style.transform = "translateX(-100%)";
-          config.onSwipeLeft(card as CardComponent);
+          config.onSwipeLeft(card as SwipeableCard);
         } else {
           // Reset if no handler
           component.element.style.transform = "translateX(0)";

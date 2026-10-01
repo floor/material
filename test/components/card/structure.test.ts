@@ -41,10 +41,8 @@ import createCard, {
   createCardContent,
   createCardHeader,
   createCardMedia,
-  withExpandable,
-  withLoading,
-  withSwipeable,
 } from '../../../src/components/card';
+import { withExpandable, withLoading, withSwipeable } from '../../../src/components/card/features';
 import { CARD_CLASSES } from '../../../src/components/card/constants';
 
 const wait = (ms = 20) => new Promise((resolve) => setTimeout(resolve, ms));

@@ -30,3 +30,7 @@ export const expanded: Equals<Parameters<CardEvents["expandedChanged"]>[0], { ex
 card.on("expandedChanged", payload => payload.expanded).off("expandedChanged", payload => payload.expanded);
 // @ts-expect-error expansion is presentation state, not a model value
 card.on("expandedChanged", payload => payload.value);
+
+// FLO-381: createCard never set loading, expandable or swipeable, and 1.0.0 has
+// no public way to add them, so CardComponent does not declare them.
+export const noEnhancerMembers: Equals<Extract<keyof CardComponent, "loading" | "expandable" | "swipeable">, never> = true;

@@ -284,54 +284,6 @@
       "name": "default",
       "kind": "value",
       "status": "public"
-    },
-    {
-      "name": "ExpandableFeature",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "LoadingFeature",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "SwipeableFeature",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "withAPI",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "withElevation",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "withExpandable",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "withLoading",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "withSwipeable",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/card in 1.0.0 (FLO-381)."
     }
   ],
   "carousel": [
@@ -547,6 +499,11 @@
   ],
   "datepicker": [
     {
+      "name": "CalendarAPI",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "DatePickerChangePayload",
       "kind": "type",
       "status": "public"
@@ -615,12 +572,6 @@
       "name": "default",
       "kind": "value",
       "status": "public"
-    },
-    {
-      "name": "DEFAULT_DATE_FORMAT",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/datepicker in 1.0.0 (FLO-381)."
     }
   ],
   "dialog": [
@@ -1675,12 +1626,6 @@
       "status": "public"
     },
     {
-      "name": "SupportingTextComponent",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/switch in 1.0.0 (FLO-381)."
-    },
-    {
       "name": "SWITCH_CLASSES",
       "kind": "value",
       "status": "public"
@@ -1724,49 +1669,13 @@
       "name": "SwitchEvents",
       "kind": "type",
       "status": "public"
-    },
-    {
-      "name": "withSupportingText",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/switch in 1.0.0 (FLO-381)."
     }
   ],
   "tabs": [
     {
-      "name": "addScrollIndicators",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "createTabIndicator",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "createTabsState",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
-    },
-    {
       "name": "default",
       "kind": "value",
       "status": "public"
-    },
-    {
-      "name": "DividerConfig",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "IndicatorComponent",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
     },
     {
       "name": "IndicatorConfig",
@@ -1774,28 +1683,9 @@
       "status": "public"
     },
     {
-      "name": "IndicatorFeatureConfig",
+      "name": "ResponsiveConfig",
       "kind": "type",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "ScrollableComponent",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "ScrollableConfig",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "setupKeyboardNavigation",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
+      "status": "public"
     },
     {
       "name": "setupResponsiveBehavior",
@@ -1843,6 +1733,11 @@
       "status": "public"
     },
     {
+      "name": "TabIndicator",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "TABS_CLASSES",
       "kind": "value",
       "status": "public"
@@ -1866,48 +1761,6 @@
       "name": "TabsConfig",
       "kind": "type",
       "status": "public"
-    },
-    {
-      "name": "TabsManagementComponent",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "TabsManagementConfig",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "updateTabPanels",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "withDivider",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "withIndicator",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "withScrollable",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
-    },
-    {
-      "name": "withTabsManagement",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Internal, no replacement: removed from mtrl/components/tabs in 1.0.0 (FLO-381)."
     }
   ],
   "textfield": [

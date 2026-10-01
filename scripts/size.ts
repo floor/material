@@ -126,7 +126,8 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "bottom-sheet": kb(6.7), // a modal outside the top layer: inert page and Tab trap (FLO-324): 6,639; the handle as a button (FLO-324): 6,773
   "side-sheet": kb(6.2), // a modal outside the top layer: inert page and Tab trap (FLO-324): 6,242
   button: kb(7.6),
-  "button-group": kb(11.85), // FLO-382 select(unknown) clears with a dev warning: 11,912 → 12,094
+  "button-group": kb(11.9), // FLO-382 select(unknown) clears with a dev warning: 11,912 → 12,094
+  // main's root class option (FLO-403) on the forward merge: next 12,107 to 12,148.
   card: kb(7.0),
   carousel: kb(11.2), // opt-in wheel scrolling with momentum (FLO-395): 10.3 to 10.9 KB against 2ef11f0
   checkbox: kb(5.52), // FLO-380: boolean change value plus the HTML valueAttribute token.
@@ -149,7 +150,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "split-button": kb(17.9), // the menu's top layer: 17,644 to 18,122; the menu's positionTarget (FLO-300): 18,228
   radios: kb(5.1),
   search: kb(10.3), // the open view in the top layer (FLO-285): 9,759; combobox, contained and divided (FLO-286, FLO-287): 10,114; minWidth and maxWidth (FLO-290): 10,161; trailing items, avatar, supporting text, reopening (FLO-291): 10,477
-  select: kb(20.3), // the menu's top layer: 19,600 to 20,115; the field, the supporting text row and the counter (FLO-300): 20,608
+  select: kb(20.35), // the menu's top layer: 19,600 to 20,115; the field, the supporting text row and the counter (FLO-300): 20,608; main's root class option (FLO-403) on the forward merge: next 20,743 to 20,790
   slider: kb(13.1), // FLO-249..255 slider conformance; FLO-331 the track corner token (12,918 measured); track, stops and the inset icon as a percentage of the value (FLO-369): 13,276
   // layer: "top", the core/dom top-layer helper and the modal-dialog placement, which
   // follows modals opening and closing: 11,533 to 12,320

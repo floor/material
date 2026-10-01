@@ -17,9 +17,10 @@
  * and +2709 B to switch; gzip measured them +1866 and +959, because in
  * select's 140 KB bundle the adapter runtime sits beyond 32 KB from the
  * element code it compresses against. Brotli measures +878 and +872. React
- * and Solid stay under 1.1 KB. Vue's declarative-shadow hook is a little
- * larger; the largest measured is split-button, +1205. Svelte's branch is
- * larger still; the largest measured is the Svelte switch + button pair, +1571.
+ * stays under 1.1 KB, and so does Solid (datepicker +1072, FLO-374). Vue's
+ * declarative-shadow hook measured +1205 on split-button and the bottom app
+ * bar. Svelte's branch is larger; the largest measured is the Svelte switch
+ * + button pair, +1587.
  *
  * Build first:
  *   bun run build && bun run adapters:size
@@ -37,7 +38,7 @@ import { elementModules } from "./element-modules";
 
 /**
  * The adapter's own runtime (create.ts or runtime.js) and wrapper, brotli
- * bytes, on top of the element: the largest measured, +1631, and headroom.
+ * bytes, on top of the element: the largest measured, +1587, and headroom.
  */
 const ADAPTER_MARGIN = 1700;
 

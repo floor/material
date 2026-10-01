@@ -1,0 +1,60 @@
+# Fills the caches that CI restores: bun's packages, Playwright's browsers and the
+# system packages they need (.github/actions/browsers).
+#
+# A pull request can restore a cache saved on its own ref, on its base branch or
+# on the default branch, and nothing else. CI runs on pull requests only, so
+# without this every cache was saved on a pull request's ref, where no other pull
+# request could read it: the first run of each one started cold. Saving them on
+# main and next lets every pull request start warm.
+#
+# The keys hold the runner image version, which changes about weekly, and GitHub
+# drops a cache nobody read for seven days. The daily run refills them without
+# waiting for a merge: a scheduled run is on the default branch, whose caches
+# every pull request can read.
+#
+# This runs no check and gates nothing. When the caches are current it restores
+# them and stops, in well under a minute.
+name: Cache
+
+on:
+  push:
+    branches: [main, next]
+  schedule:
+    - cron: "47 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cache-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The same two browser sets as CI's browser groups.
+  browsers:
+    runs-on: ubuntu-latest
+    # Long enough for the slowest mirror seen (42 minutes for both installs): a
+    # job that times out saves nothing, and this one gates nothing.
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        browsers: ["chromium", "chromium firefox webkit"]
+    name: browsers (${{ matrix.browsers }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: ./.github/actions/browsers
+        with:
+          browsers: ${{ matrix.browsers }}

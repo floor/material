@@ -76,8 +76,7 @@ jobs:
       - name: Tests
         run: bun test
 
-  # The build, and the checks that read the built package. The browser jobs reuse
-  # its dist/ instead of building again.
+  # The build alone, so the jobs that read dist/ start as soon as it exists.
   build:
     runs-on: ubuntu-latest
     steps:
@@ -92,13 +91,32 @@ jobs:
       - run: bun install --frozen-lockfile
       - name: Build
         run: bun run build
-      - name: Element CSS files and exports
-        run: bun run elements-css:check
       - uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist
           retention-days: 1
+
+  # The checks that read the built package, on the build's dist/.
+  package:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Element CSS files and exports
+        run: bun run elements-css:check
       - name: Build and consumer tooling types
         run: bun run tooling:check
       - uses: actions/setup-node@v4
@@ -115,20 +133,35 @@ jobs:
       - name: One adapter component ships only its element
         run: bun run adapters:size
 
-  # The browser checks, in three groups that run side by side, on the build's dist/.
+  # The browser checks, in groups that run side by side, on the build's dist/.
+  # A run takes as long as its slowest group, so a check that grows moves to a
+  # group of its own rather than making one group longer. Every check is in
+  # exactly one group; test/build/ci-commands.test.ts holds the list.
   browser:
     needs: build
     runs-on: ubuntu-latest
+    # A group takes about four minutes. A runner that stalls fails here, and is
+    # run again, instead of holding the pull request for most of an hour.
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         include:
           - group: elements
+            browsers: chromium
             checks: elements:check shadow-styles:check
           - group: adapters
-            checks: react:check react-ssr:check vue:check svelte:check svelte-ssr:check vue-ssr:check solid:check
+            browsers: chromium
+            checks: react:check react-ssr:check vue:check svelte:check svelte-ssr:check vue-ssr:check solid-ssr:check solid:check
           - group: components
-            checks: consumer:check tabs:check slider:check drawer:check navigation-bar:check navigation-rail:check core:check preupgrade:check tokens:check ssr:check
+            browsers: chromium
+            checks: consumer:check tabs:check slider:check drawer:check navigation-bar:check navigation-rail:check core:check
+          - group: styles
+            browsers: chromium
+            checks: preupgrade:check tokens:check
+          - group: ssr
+            browsers: chromium firefox webkit
+            checks: ssr:check
     name: browser (${{ matrix.group }})
     steps:
       - uses: actions/checkout@v4
@@ -147,15 +180,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - uses: actions/cache@v4
+      - uses: ./.github/actions/browsers
         with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-      - name: Install Chromium
-        run: node node_modules/playwright/cli.js install --with-deps chromium
-      - name: Install Firefox and WebKit for SSR
-        if: matrix.group == 'components'
-        run: node node_modules/playwright/cli.js install --with-deps firefox webkit
+          browsers: ${{ matrix.browsers }}
       - name: Checks (${{ matrix.checks }})
         run: |
           for script in ${{ matrix.checks }}; do
@@ -163,6 +190,11 @@ jobs:
             bun run "$script" || { echo "::endgroup::"; echo "::error::$script failed"; exit 1; }
             echo "::endgroup::"
           done
+      - name: Solid SSR at the peer floor (1.8.0)
+        if: matrix.group == 'adapters'
+        run: |
+          bun add --no-save --ignore-scripts solid-js@1.8.0
+          bun run solid-ssr:check
       - name: Browser comparison artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -179,17 +211,20 @@ jobs:
             analysis/react-ssr/summary.json
             analysis/svelte-ssr/summary.json
             analysis/vue-ssr/summary.json
+            analysis/solid-ssr/summary.json
+            analysis/solid-ssr/async-*.json
           retention-days: 7
           if-no-files-found: ignore
 
   # The status the main ruleset requires: green only when every job above is.
   check:
     if: always()
-    needs: [static, tests, build, browser]
+    needs: [static, tests, build, package, browser]
     runs-on: ubuntu-latest
     steps:
       - name: Every job passed
         run: |
-          echo 'static=${{ needs.static.result }} tests=${{ needs.tests.result }} build=${{ needs.build.result }} browser=${{ needs.browser.result }}'
+          echo 'static=${{ needs.static.result }} tests=${{ needs.tests.result }} build=${{ needs.build.result }} package=${{ needs.package.result }} browser=${{ needs.browser.result }}'
           [ '${{ needs.static.result }}' = success ] && [ '${{ needs.tests.result }}' = success ] \
-            && [ '${{ needs.build.result }}' = success ] && [ '${{ needs.browser.result }}' = success ]
+            && [ '${{ needs.build.result }}' = success ] && [ '${{ needs.package.result }}' = success ] \
+            && [ '${{ needs.browser.result }}' = success ]

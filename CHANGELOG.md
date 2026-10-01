@@ -81,6 +81,31 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   condition are gone; `main` is the ESM entry. Every subpath was already import-only, and with
   the internals off the root the bundle would have been a partial API. `require('mtrl')` no longer
   resolves (`ERR_PACKAGE_PATH_NOT_EXPORTED`): use `import`, or `await import('mtrl')` from CommonJS.
+- **Component subpaths export the component only, and are listed one by one (FLO-381).** The
+  internals 0.10.5 deprecated on `mtrl/components/<name>` are gone, with no replacement: card's
+  `withAPI`, `withLoading`, `withExpandable`, `withSwipeable`, `withElevation` and the
+  `*Feature` types; tabs' `with*` features, `addScrollIndicators`, `createTabsState`,
+  `createTabIndicator`, `updateTabPanels`, `setupKeyboardNavigation` and their config and
+  component types; switch's `withSupportingText` and `SupportingTextComponent`. Datepicker's
+  `DEFAULT_DATE_FORMAT` leaves the component's index but stays public in its constants:
+  `import { DEFAULT_DATE_FORMAT } from 'mtrl/components/datepicker/constants'`. `ChipConfig`
+  loses `managedSelection` and `cell`, which only the chip set sets. `CardComponent`'s `loading`,
+  `expandable` and `swipeable` members are removed; `createCard` never set them. Tabs'
+  `ResponsiveConfig` and `TabIndicator` and datepicker's `CalendarAPI`, which public members are
+  typed with, are now exported. The manifest's `./components/*` and `./components/*/constants`
+  patterns become one entry per component (and per component with constants), so the folders
+  inside a component no longer resolve. Each component's export list is pinned
+  (`bun run component-exports:check`).
+  Migration: these subpaths now throw `ERR_PACKAGE_PATH_NOT_EXPORTED`. They held internals, with
+  no replacement; a single chip is `createAssistChip` and the other factories in
+  `mtrl/components/chips`, and `CHIP_CLASSES`/`CHIP_STATES` are internal class and state names:
+  `mtrl/components/bottom-sheet/features`, `carousel/features`, `chips/chip`,
+  `chips/chip/constants`, `chips/features`, `drawer/features`, `list/features`, `menu/features`,
+  `progress/features`, `search/features` (the low-level `withInput`), `side-sheet/features`,
+  `slider/features`, `textfield/features`. Every other `mtrl/components/<name>` and
+  `mtrl/components/<name>/constants` that existed in 0.10 still resolves, except
+  `segmented-button` and `segmented-button/constants`, removed with segmented buttons (FLO-382,
+  above).
 
 - **Text field: a trailing icon without `trailingIconLabel` is decorative (FLO-301).** It is
   hidden from screen readers (`aria-hidden`) and no longer shows a pointer cursor. An app that
@@ -120,7 +145,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - `mtrl/ssr/react`: an opt-in, server-only entry. Imported in the server bootstrap, it makes the React adapters emit styled declarative shadow roots during SSR (React 18 and 19), with no server code in the client bundle. Without it, React output is unchanged (FLO-372).
 - `mtrl/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Svelte output gains only the empty branch marker (FLO-375).
 - `mtrl/ssr/vue`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Vue component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Vue output is unchanged (FLO-373).
+- `mtrl/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Solid output is unchanged (FLO-374).
 - `ssr:check` (CI): server-rendered elements are checked in Chromium, Firefox and WebKit, for a styled first paint without JavaScript, pixel stability and no layout movement on upgrade, and the security reparse; markup parity stays in Chromium (FLO-371).
+- `ssr:check` and `svelte-ssr:check` cover two more cases (FLO-412): a toolbar's server-rendered
+  icon buttons are measured across the upgrade (pixels, layout, and each button keeping its
+  parser-created root), and Svelte named snippets (card `headline` and `actions`, top app bar
+  `leading` and `trailing`) are checked as slotted before script and adopted by hydration.
 - Element CSS also ships as `.css` files (`mtrl/elements/css/<name>.css`, `hosts/<element>.css`), for server-rendered `<link>` styles (FLO-365).
 - **Synchronous declarative shadow DOM rendering (FLO-363, part B).** The server-only
   `src/ssr` entry exports `renderElement` with inline CSS by default, optional stylesheet
@@ -172,6 +202,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   icons, affixes, required, density). Mounting 1,000 filled fields takes 16% less script time
   (49.9 to 41.8 ms; 192 to 165 ms at 4× CPU), with 1,000 fewer listeners. Nothing renders
   differently.
+- **CI runs the same checks in less time.** The browser checks run in five groups instead of
+  three, the package checks no longer hold the browser groups back, and Playwright's browsers
+  and their system packages come from a cache that every pull request can read (a slow Ubuntu
+  mirror made one install step take 26 minutes). `test/build/ci-commands.test.ts` lists the
+  commands CI runs and fails when one is dropped.
 
 ### Deprecated
 
@@ -203,6 +238,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 ### Fixed
 
 - Vue SSR finishes when a host's child uses `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`. The shadow bridge serializes those children once (FLO-373).
+- Solid async and streaming SSR finish when a component inside a host creates a resource
+  under an outer `Suspense`. The shadow bridge reuses the page's serialized children,
+  preserving its resource ownership and hydration keys without rendering children twice
+  (FLO-374).
 
 - Element upgrade removes leftover direct declarative shadow templates, including when definitions precede parsing; those templates no longer count as label content (FLO-366).
 
@@ -227,6 +266,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   last pending field is destroyed, allowing the next lifecycle to schedule again (FLO-363).
 - **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
   label names the field.
+- **Custom root classes survive configuration (FLO-403).** Top and bottom app bars,
+  button groups, segmented buttons, tabs and individual tabs, toolbars, FAB menus,
+  and selects now apply the `class` option to their root element, including
+  space-separated classes. They read the normalized `className` field or forward
+  it to their underlying control.
+
 - **Progress and loading indicators draw the theme of the section they're in, not only the
   page's (FLO-389).** The progress canvas read its colours from `<body>` and `:root`, so in a
   themed section, a card or a dark panel it drew the page's colours: light ones in a dark section.
