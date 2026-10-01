@@ -32,12 +32,14 @@ export function renderCalendar(state: DatePickerState): HTMLElement {
       const row = make("div", "week", undefined, { role: "row" });
       for (const item of dates.slice(week * 7, week * 7 + 7)) {
         const selected = !!state.selectedDate && (isSameDay(item.date, state.selectedDate) || !!state.rangeEndDate && isSameDay(item.date, state.rangeEndDate));
-        const inRange = !!state.selectedDate && !!state.rangeEndDate && item.date >= state.selectedDate && item.date <= state.rangeEndDate;
+        // Another month's day is never in range: the band is the shown month's (as in
+        // Compose, which leaves those cells empty), so it never runs into them.
+        const inRange = item.isCurrentMonth && !!state.selectedDate && !!state.rangeEndDate && item.date >= state.selectedDate && item.date <= state.rangeEndDate;
         if (list && !item.isCurrentMonth) { row.append(make("div", "cell", undefined, { role: "gridcell" })); continue; }
         const cell = make("div", "cell", undefined, { role: "gridcell", "aria-selected": String(selected || inRange) });
         if (inRange) cell.classList.add(cls("cell--range"));
-        if (state.selectedDate && isSameDay(item.date, state.selectedDate)) cell.classList.add(cls("cell--range-start"));
-        if (state.rangeEndDate && isSameDay(item.date, state.rangeEndDate)) cell.classList.add(cls("cell--range-end"));
+        if (item.isCurrentMonth && state.selectedDate && isSameDay(item.date, state.selectedDate)) cell.classList.add(cls("cell--range-start"));
+        if (item.isCurrentMonth && state.rangeEndDate && isSameDay(item.date, state.rangeEndDate)) cell.classList.add(cls("cell--range-end"));
         const special = state.specialDates.find(special => { const date = parseDate(special.date); return date && isSameDay(date, item.date); });
         const day = make("button", "day", String(item.day), {
           type: "button", "data-date": formatDate(item.date, "YYYY-MM-DD"), "aria-label": item.date.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
