@@ -100,6 +100,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   file; a pre-release (`-next.N`) is marked one and never becomes Latest. 0.10.0 to 0.10.4 were
   created by hand.
 
+### Changed
+
+- **A plain filled text field sets no placement up (FLO-378).** Every text field installed a
+  class observer, a resize observer and a window `resize` listener, and scheduled a first
+  measure, even a filled field with no prefix, suffix or leading icon, which has nothing to
+  place. They now wait for the first setter that gives it something to place (variant, label,
+  icons, affixes, required, density). Mounting 1,000 filled fields takes 16% less script time
+  (49.9 to 41.8 ms; 192 to 165 ms at 4× CPU), with 1,000 fewer listeners. Nothing renders
+  differently.
+
 ### Fixed
 
 - Element upgrade removes leftover direct declarative shadow templates, including when definitions precede parsing; those templates no longer count as label content (FLO-366).
@@ -136,16 +146,6 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   menu's FAB from 16 to 8px corners and took its shadow away (`presentation: 'menu'`). Only an mtrl
   button, such as the split button's trailing button, keeps its pressed shape now; other openers
   get `mtrl-menu__opener--active`.
-
-### Changed
-
-- **A plain filled text field sets no placement up (FLO-378).** Every text field installed a
-  class observer, a resize observer and a window `resize` listener, and scheduled a first
-  measure, even a filled field with no prefix, suffix or leading icon, which has nothing to
-  place. They now wait for the first setter that gives it something to place (variant, label,
-  icons, affixes, required, density). Mounting 1,000 filled fields takes 16% less script time
-  (49.9 to 41.8 ms; 192 to 165 ms at 4× CPU), with 1,000 fewer listeners. Nothing renders
-  differently.
 
 ## [0.10.4] - 2026-10-01
 
