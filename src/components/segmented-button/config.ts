@@ -1,5 +1,5 @@
 // src/components/segmented-button/config.ts
-import { createComponentConfig } from "../../core/config/component";
+import { createComponentConfig, processClassNames, type BaseComponentConfig } from "../../core/config/component";
 import { SegmentedButtonConfig, SegmentConfig, SelectionMode, Density } from "./types";
 import { SEGMENTED_BUTTON_DEFAULTS } from "./constants";
 
@@ -44,7 +44,7 @@ export const getContainerConfig = (config: SegmentedButtonConfig) => {
       "data-density": density,
     },
     className: [
-      config.class,
+      processClassNames((config as BaseComponentConfig).className || ""),
       config.disabled ? `${config.prefix}-segmented-button--disabled` : null,
       density !== Density.DEFAULT
         ? `${config.prefix}-segmented-button--${density}`
