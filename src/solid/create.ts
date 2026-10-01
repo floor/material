@@ -146,8 +146,7 @@ export const createComponent = <S, E extends HTMLElement>(
         return Dynamic({ component: "span", slot, style: "display: contents", children: value } as never);
       }));
     // Attributes the shadow renderer reads. Slot nodes stay out: a component
-    // in a slot is not the attribute's text, and reading the memo here would
-    // reuse the page's nodes inside the discarded string.
+    // in a slot is not the attribute's text.
     const shadowAttributes = (): Record<string, unknown> => {
       const snapshot: Record<string, unknown> = {};
       const take = (source: object): void => {
@@ -162,33 +161,15 @@ export const createComponent = <S, E extends HTMLElement>(
       take(others);
       return snapshot;
     };
-    // Light DOM for the shadow string only. Props are read directly, not
-    // through the memos above, so the page keeps the nodes those memos built.
-    const shadowLight = (): JSX.Element => {
-      const named: JSX.Element[] = [];
-      for (const [key, slot] of slots) {
-        const value = props[key];
-        if (value == null || value === false || (attributes.has(key) && typeof value === "string")) continue;
-        named.push(Dynamic({ component: "span", slot, style: "display: contents", children: value } as never));
-      }
-      const body = props.children as JSX.Element;
-      return named.length ? [body, ...named] : body;
-    };
     const tag = `${getPrefix()}-${spec.name}`;
-    // Unregistered, `shadow` returns "" without calling `shadowLight`, so the
-    // page renders once and matches the client. Registered, the template is a
-    // raw string: it takes no hydration key, and the parser consumes it.
-    const template = isServer ? shadow(tag, shadowAttributes(), shadowLight) : "";
     Object.defineProperty(host, "children", {
       enumerable: true,
       get: () => {
         const named = wrappers.map((wrapper) => wrapper()).filter((wrapper) => wrapper !== null);
-        const body = named.length ? [props.children, ...named] : props.children;
-        if (!template) return body;
-        // A string child is escaped. Solid leaves an SSR fragment's `t` raw,
-        // which is what the declarative template needs.
-        const fragment = { t: template };
-        return Array.isArray(body) ? [fragment, ...body] : [fragment, body];
+        const body = (named.length ? [props.children, ...named] : props.children) as JSX.Element;
+        // Render children once in the page's owner and hydration context. The
+        // server hook serializes this same body for both light and shadow DOM.
+        return isServer ? shadow(tag, shadowAttributes(), body) : body;
       },
     });
 

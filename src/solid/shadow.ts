@@ -7,14 +7,14 @@ import { getPrefix } from "../elements/adapter";
 type Renderer = (
   tag: string,
   props: Record<string, unknown>,
-  children: () => JSX.Element,
+  children: JSX.Element,
   prefix: string,
-) => string;
+) => JSX.Element;
 
-/** Declarative shadow template for one host, or "" in the browser and when no renderer is registered. */
-export const shadow = (tag: string, props: Record<string, unknown>, children: () => JSX.Element): string => {
-  if (!isServer) return "";
+/** Host children with a declarative shadow template when the server renderer is registered. */
+export const shadow = (tag: string, props: Record<string, unknown>, children: JSX.Element): JSX.Element => {
+  if (!isServer) return children;
   const render = (globalThis as unknown as Record<symbol, { solid?: Renderer } | undefined>)[Symbol.for("mtrl.ssr")]?.solid;
-  if (!render) return "";
+  if (!render) return children;
   return render(tag, props, children, getPrefix());
 };

@@ -9,10 +9,31 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { transformAsync } from "@babel/core";
 import { parseHTML } from "linkedom";
-import { chromium } from "playwright";
+import { chromium, type Page } from "playwright";
 import type { BunPlugin } from "bun";
 import { declarations, elements } from "../src/elements";
 import { cases } from "./fixtures/preupgrade-cases";
+import type { Shape } from "./fixtures/solid-ssr-async";
+
+const version = (await Bun.file("node_modules/solid-js/package.json").json() as { version: string }).version;
+// Include the original browser error when hydration cannot reach its ready flag.
+const waitForHydration = async (page: Page, warnings: string[], errors: string[]): Promise<void> => {
+  assert.deepEqual({ warnings, errors }, { warnings: [], errors: [] });
+  const failure = new Promise<never>((_, reject) => page.once("pageerror", reject));
+  await Promise.race([
+    page.waitForFunction(() => (window as unknown as { solidSSR?: { ready: boolean } }).solidSSR?.ready),
+    failure,
+  ]);
+  assert.deepEqual({ warnings, errors }, { warnings: [], errors: [] });
+};
+const within = async <T>(work: Promise<T>, name: string): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([work, new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`${name}: SSR did not finish within 3 seconds`)), 3000);
+    })]);
+  } finally { clearTimeout(timer); }
+};
 
 const OPT_OUT = new Set(["carousel", "fab-menu", "toolbar"]);
 const pascal = (name: string): string => name.replace(/(^|-)([a-z])/g, (_, __, c: string) => c.toUpperCase());
@@ -93,10 +114,25 @@ const dir = join(process.cwd(), "analysis/solid-ssr");
 await mkdir(dir, { recursive: true });
 await Bun.write(join(dir, "App.tsx"), app);
 await Bun.write(join(dir, "server.tsx"), `import "mtrl/ssr/solid";
-import { generateHydrationScript, renderToString } from "solid-js/web";
+import { generateHydrationScript, renderToString, renderToStringAsync, renderToStream } from "solid-js/web";
+import { AsyncApp, counts, type Shape } from "../../scripts/fixtures/solid-ssr-async";
 import { App } from "./App";
 export const renderBody = (): string => renderToString(() => <App />);
 export const hydrationScript = (): string => generateHydrationScript();
+export const renderScenario = async (shape: Shape, mode: "async" | "stream") => {
+  counts.fetches = counts.children = 0;
+  const app = () => <AsyncApp shape={shape} />;
+  const html = mode === "async"
+    ? await renderToStringAsync(app, { timeoutMs: 2500 })
+    : await new Promise<string>((resolve, reject) => {
+      let output = "";
+      renderToStream(app, { onError: reject }).pipe({
+        write(chunk: string) { output += chunk; },
+        end() { resolve(output); },
+      });
+    });
+  return { html, ...counts };
+};
 `);
 await Bun.write(join(dir, "client.tsx"), `import { hydrate } from "solid-js/web";
 import { App } from "./App";
@@ -112,10 +148,22 @@ for (const id of ids) {
 state.ready = true;
 `);
 
+await Bun.write(join(dir, "async-client.tsx"), `import { hydrate } from "solid-js/web";
+import { AsyncApp, type Shape } from "../../scripts/fixtures/solid-ssr-async";
+const shape = new URLSearchParams(location.search).get("shape") as Shape;
+const host = document.getElementById("async-host");
+const before = host?.shadowRoot;
+const state = { ready: false, same: false, before: !!before, lightBefore: host?.textContent, labelBefore: host?.getAttribute("label") };
+Object.assign(window, { solidSSR: state });
+hydrate(() => <AsyncApp shape={shape} />, document.getElementById("root") as HTMLElement);
+state.same = !!before && document.getElementById("async-host")?.shadowRoot === before;
+state.ready = true;
+`);
+
 const solid = (generate: "dom" | "ssr"): BunPlugin => ({
   name: "solid",
   setup(build) {
-    build.onLoad({ filter: /solid-ssr\/.+\.tsx$/ }, async ({ path }) => {
+    build.onLoad({ filter: /(?:solid-ssr\/.+|fixtures\/solid-ssr-async)\.tsx$/ }, async ({ path }) => {
       const result = await transformAsync(await Bun.file(path).text(), {
         filename: path,
         presets: [["babel-preset-solid", { generate, hydratable: true }], "@babel/preset-typescript"],
@@ -153,14 +201,18 @@ const serverPath = join(process.cwd(), ".check-solid-ssr.js");
 await Bun.write(serverPath, serverBundle);
 let html: string;
 let head: string;
+let renderScenario: (shape: Shape, mode: "async" | "stream") => Promise<{ html: string; fetches: number; children: number }>;
 try {
   const loaded = await import(serverPath);
+  renderScenario = loaded.renderScenario;
   html = (loaded as { renderBody: () => string }).renderBody();
   head = (loaded as { hydrationScript: () => string }).hydrationScript();
 } finally {
   await Bun.file(serverPath).delete();
 }
 const client = await bundle(join(dir, "client.tsx"), "browser");
+const asyncClient = await bundle(join(dir, "async-client.tsx"), "browser");
+let scenarioHTML = "";
 
 interface Report {
   element: string;
@@ -192,6 +244,8 @@ const server = Bun.serve({
   hostname: "127.0.0.1", port: 0,
   fetch(request) {
     const path = new URL(request.url).pathname;
+    if (path === "/async-client.js") return new Response(asyncClient, { headers: { "Content-Type": "text/javascript" } });
+    if (path === "/scenario") return new Response(`<!doctype html><html><head>${head}</head><body><div id="root">${scenarioHTML}</div><script type="module" src="/async-client.js"></script></body></html>`, { headers: { "Content-Type": "text/html" } });
     if (path === "/client.js") return new Response(client, { headers: { "Content-Type": "text/javascript" } });
     if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
     return new Response(`<!doctype html><html><head><link rel="stylesheet" href="/styles.css">${head}</head><body><div id="root">${html}</div><script type="module" src="/client.js"></script></body></html>`, { headers: { "Content-Type": "text/html" } });
@@ -221,7 +275,7 @@ try {
   page.on("console", (message) => { if (message.type() === "warning" || message.type() === "error") pageWarnings.push(message.text()); });
   page.on("pageerror", (error) => pageErrors.push(error.message));
   await page.goto(server.url.href);
-  await page.waitForFunction(() => (window as unknown as { solidSSR?: { ready: boolean } }).solidSSR?.ready);
+  await waitForHydration(page, pageWarnings, pageErrors);
   const same = await page.evaluate(() => (window as unknown as { solidSSR: { same: Record<string, boolean | null> } }).solidSSR.same);
   for (const [element, report] of reports) {
     report.sameRoot = same[`host-${element}`] ?? null;
@@ -244,6 +298,62 @@ try {
   assert.equal(await page.locator("#host-switch").getByRole("switch", { name: "Wi-Fi" }).isChecked(), false);
   assert.deepEqual({ warnings: pageWarnings, errors: pageErrors }, { warnings: [], errors: [] });
   await page.close();
+
+  const asyncReports: object[] = [];
+  const failures: Error[] = [];
+  for (const mode of ["async", "stream"] as const) {
+    for (const shape of ["A", "C", "B", "D", "F"] as const) {
+      const name = `${mode} ${shape}`;
+      let scenarioPage: Page | undefined;
+      try {
+        const result = await within(renderScenario(shape, mode), name);
+        scenarioHTML = result.html;
+        assert.equal(result.fetches, 1, `${name}: fetcher runs once`);
+        assert.match(scenarioHTML, /<template shadowrootmode="open"/, `${name}: declarative template missing`);
+        assert.match(scenarioHTML, /loaded/, `${name}: resolved resource missing`);
+        if (mode === "stream" && shape !== "F") assert.match(scenarioHTML, /pending/, `${name}: streamed the pending shell`);
+        // F has no boundary to re-render its unresolved light DOM; Solid still
+        // serializes the resource for hydration. The other shapes re-render once.
+        assert.equal(result.children, shape === "D" ? 0 : shape === "F" ? 1 : 2, `${name}: no duplicate child render`);
+        scenarioPage = await browser.newPage();
+        const warnings: string[] = [];
+        const errors: string[] = [];
+        scenarioPage.on("console", (message) => { if (message.type() === "warning" || message.type() === "error") warnings.push(message.text()); });
+        scenarioPage.on("pageerror", (error) => errors.push(error.message));
+        await scenarioPage.goto(`${server.url.href}scenario?shape=${shape}`);
+        await waitForHydration(scenarioPage, warnings, errors);
+        const state = await scenarioPage.evaluate(() => {
+          const host = document.getElementById("async-host");
+          return {
+            ...(window as unknown as { solidSSR: { before: boolean; same: boolean; lightBefore: string | null; labelBefore: string | null } }).solidSSR,
+            light: host?.textContent,
+            label: host?.getAttribute("label"),
+            templates: host?.querySelectorAll("template[shadowrootmode]").length,
+          };
+        });
+        assert.equal(state.before, true, `${name}: shadow root before hydration`);
+        assert.equal(state.same, true, `${name}: same shadow root after hydration`);
+        assert.equal(state.templates, 0, `${name}: all declarative templates consumed`);
+        if (shape === "D") {
+          assert.equal(state.labelBefore, "loaded", `${name}: resolved label before hydration`);
+          assert.equal(state.label, "loaded", `${name}: resolved label`);
+        } else {
+          const expected = shape === "F" ? "provided " : "provided loaded";
+          assert.equal(state.lightBefore, expected, `${name}: light DOM and provider context before hydration`);
+          assert.equal(state.light, expected, `${name}: light DOM and provider context after hydration`);
+        }
+        assert.deepEqual({ warnings, errors }, { warnings: [], errors: [] });
+        asyncReports.push({ mode, shape, fetches: result.fetches, children: result.children, ...state, warnings, errors });
+        console.log(`Solid ${version} ${name}: completed; template, loaded content, same root, 0 warnings and 0 errors`);
+      } catch (cause) {
+        const error = new Error(`${name}: ${String(cause)}`, { cause });
+        failures.push(error);
+        console.error(error.message);
+      } finally { await scenarioPage?.close(); }
+    }
+  }
+  await Bun.write(join(dir, `async-${version}.json`), JSON.stringify(asyncReports, null, 2));
+  assert.equal(failures.length, 0, failures.map((error) => error.message).join("\n"));
 } finally {
   server.stop(true);
   await browser.close();

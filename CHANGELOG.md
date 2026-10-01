@@ -202,6 +202,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- Solid async and streaming SSR finish when a component inside a host creates a resource
+  under an outer `Suspense`. The shadow bridge reuses the page's serialized children,
+  preserving its resource ownership and hydration keys without rendering children twice
+  (FLO-374).
+
 - Element upgrade removes leftover direct declarative shadow templates, including when definitions precede parsing; those templates no longer count as label content (FLO-366).
 
 - SSR parity now requires exact Chromium matches for progress, sliders, tabs and loading
