@@ -144,7 +144,7 @@ export const withCanvas =
     const isIndeterminate = (): boolean =>
       (component.state?.indeterminate as boolean) ?? config.indeterminate ?? false;
 
-    const colors = createColors(() => draw(animationTime));
+    const colors = createColors(component.element, () => draw(animationTime));
 
     // Linear bitmap width in CSS pixels. The layout width is the container's,
     // unknown until layout and on a server, so the bitmap stays fixed and

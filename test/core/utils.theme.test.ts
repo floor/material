@@ -28,6 +28,42 @@ describe("theme utils", () => {
     expect(calls).toBe(2);
   });
 
+  // FLO-389: a theme set on a section, a card or a dark panel
+  test("onThemeChange fires for data-theme set on any element in the document", async () => {
+    let calls = 0;
+    const off = onThemeChange(() => calls++);
+    const section = document.createElement("section");
+    const card = document.createElement("div");
+    section.append(card);
+    document.body.append(section);
+    card.setAttribute("data-theme-mode", "dark");
+    await tick();
+    expect(calls).toBe(1);
+    section.setAttribute("data-theme", "ocean");
+    await tick();
+    expect(calls).toBe(2);
+    card.setAttribute("class", "unrelated");
+    await tick();
+    expect(calls).toBe(2);
+    off();
+    section.remove();
+  });
+
+  test("getThemeColor reads the theme where the given element sits", () => {
+    document.documentElement.style.setProperty("--mtrl-sys-color-primary", "#6750a4");
+    const panel = document.createElement("div");
+    // JSDOM does not inherit custom properties: the tokens sit on the element
+    panel.style.setProperty("--mtrl-sys-color-primary", "#d0bcff");
+    expect(getThemeColor("sys-color-primary", { element: panel })).toBe("#6750a4");
+    document.body.append(panel);
+    expect(getThemeColor("sys-color-primary", { element: panel })).toBe("#d0bcff");
+    expect(getThemeColor("sys-color-primary", { element: panel, alpha: 0.5 })).toBe("rgba(208, 188, 255, 0.5)");
+    expect(getThemeColor("sys-color-primary-rgb", { element: panel })).toBe("208, 188, 255");
+    expect(getThemeColor("sys-color-nope", { element: panel, fallback: "#123456" })).toBe("#123456");
+    expect(getThemeColor("sys-color-primary")).toBe("#6750a4");
+    panel.remove();
+  });
+
   test("getThemeColor falls back when the variable is not defined", () => {
     expect(getThemeColor("sys-color-nope", { fallback: "#123456" })).toBe("#123456");
   });
