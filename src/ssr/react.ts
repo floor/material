@@ -21,5 +21,6 @@ bridge.react = (tag, props, children, prefix) => {
   } finally { serializingChildren = false; }
   // Let React serialize host props (style objects, tabIndex, boolean/data/aria
   // attributes). The server bridge parses them in its own DOM realm.
-  return bridge.shadow(tag, markup, prefix);
+  // An opted-out host has no shadow content and must not get an empty template.
+  return bridge.shadow(tag, markup, prefix) || undefined;
 };

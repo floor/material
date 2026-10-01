@@ -12,12 +12,6 @@
     "reason": "Canvas bitmap opt-out: the server has no drawing context. FLO-369 preserves the styled canvas box; upgrade paints its pixels. Layout must remain unchanged."
   },
   {
-    "element": "carousel",
-    "engines": ["chromium", "firefox", "webkit"],
-    "selector": "[part=carousel]",
-    "reason": "FLO-370: client measurement sets item widths, transforms, clipping and corner shape. Pixel differences are confined to the carousel; its box and following content must not shift."
-  },
-  {
     "element": "chips",
     "engines": ["chromium"],
     "selector": "[part=chips]",

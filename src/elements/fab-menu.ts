@@ -60,6 +60,8 @@ const create = (config: FabMenuConfig & { host: HTMLElement }): FabMenuElementCo
 
 const fabMenuSpec = {
   name: "fab-menu",
+  // Its presentation depends on the viewport and can import a menu asynchronously.
+  ssr: false,
   // `config` below supplies the host and the items
   create: (config) => create(config as unknown as FabMenuConfig & { host: HTMLElement }),
   // The menu presentation's menu renders in this shadow root, next to the FAB

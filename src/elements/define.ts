@@ -110,6 +110,12 @@ export interface ElementSpec<C extends ElementComponent> {
   /** Name after the prefix: "switch" registers `<m-switch>`. */
   name: string;
   create: (config: Config) => C;
+  /**
+   * Whether renderElement may build this element's shadow root. Defaults to
+   * true. False emits only the host and light DOM; a synchronous predicate
+   * can opt out based on the authored host. Browser upgrade is unchanged.
+   */
+  ssr?: boolean | ((host: HTMLElement) => boolean);
   /** Style entries, in cascade order. */
   styles: readonly string[];
   /** CSS for the host, after the shared host rules. */

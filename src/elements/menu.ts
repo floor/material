@@ -168,6 +168,11 @@ const updateItems = (host: HTMLElement, c: MenuComponent): boolean => {
 
 const menuSpec = {
   name: "menu",
+  // Nested submenus start asynchronous imports during construction.
+  ssr: (host) => {
+    const item = host.localName.replace(/menu$/, "menu-item");
+    return !host.querySelector(`${item} ${item}`);
+  },
   // `config` below supplies the host
   create: (config) => create(config as unknown as MenuElementConfig),
   styles: ["menu"],

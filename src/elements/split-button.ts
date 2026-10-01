@@ -72,6 +72,11 @@ const updateSplitButton = (host: HTMLElement, c: SplitButtonComponent): boolean 
 
 const splitButtonSpec = {
   name: "split-button",
+  // Nested submenus start asynchronous imports during construction.
+  ssr: (host) => {
+    const item = host.localName.replace(/split-button$/, "menu-item");
+    return !host.querySelector(`${item} ${item}`);
+  },
   create: (config) => create(config as SplitButtonConfig),
   styles: ["progress", "button", "menu", "split-button"],
   hostStyles: ":host{vertical-align:middle}",

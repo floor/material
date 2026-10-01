@@ -154,6 +154,7 @@
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "core:check": "bun run scripts/check-core.ts",
     "ssr-security:check": "bun run scripts/check-ssr-security.ts",
+    "ssr:check": "bun run scripts/check-ssr.ts",
     "ssr-parity:check": "bun run scripts/check-ssr-parity.ts",
     "elements:check": "bun run scripts/check-elements.ts",
     "elements-css:check": "bun run scripts/check-elements-css.ts",
@@ -165,8 +166,7 @@
     "solid:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-solid.ts",
     "tooling:check": "tsc --project scripts/tsconfig.json --noEmit && tsc --project test/types/tsconfig.json --noEmit",
     "themes:generate": "bun scripts/generate-themes.ts",
-    "react-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react-ssr.ts",
-    "ssr:check": "bun run scripts/check-ssr.ts"
+    "react-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react-ssr.ts"
   },
   "repository": {
     "type": "git",

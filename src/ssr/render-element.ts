@@ -77,7 +77,19 @@ const validateOptions = (options: RenderOptions): string => {
  * The published mtrl/ssr entry registers element CSS automatically.
  * Hooks must be synchronous and must not reenter the renderer. Base/theme CSS belongs
  * in the page head. Every shadow root receives its own styles.
- * Known asynchronous configurations throw before mounting (FLO-370).
+ * Specs may opt out with `ssr: false` or a synchronous `(host) => boolean`.
+ * An opted-out element emits its authored host and light DOM without a
+ * declarative root or shadow styles. Eligible light-DOM descendants still
+ * render their own roots. Load mtrl/elements/preupgrade.css in the page to
+ * preserve the host's box until normal browser upgrade.
+ *
+ * Carousel, FAB menu and toolbar opt out; menu and split-button opt out when
+ * they declare nested submenus. Async button `showProgress` or card `buttons`
+ * global defaults conservatively opt out every element in the call, since
+ * those factories can also be created inside other components.
+ * Invalid attributes/options, an existing declarative root, ambiguous HTML,
+ * excessive nesting, missing CSS, reentrant rendering and failing synchronous
+ * hooks still throw: returning markup for those inputs would be incorrect.
  */
 export function renderElement(
   tag: string,
@@ -100,12 +112,9 @@ function render(tag: string, attributes: RenderAttributes, children: string, opt
   // Global defaults also reach factories created inside another component.
   // These paths start native promises/imports, outside the inert scheduler.
   const defaultsFor = getComponentDefaults as (name: string) => {
-    showProgress?: boolean; buttons?: readonly unknown[]; presentation?: string;
+    showProgress?: boolean; buttons?: readonly unknown[];
   } | undefined;
-  if (defaultsFor("button")?.showProgress || defaultsFor("card")?.buttons?.length ||
-      defaultsFor("fab-menu")?.presentation === "menu") {
-    throw new TypeError("SSR cannot use asynchronous button/card/fab-menu global defaults (FLO-370)");
-  }
+  const asyncDefaults = !!(defaultsFor("button")?.showProgress || defaultsFor("card")?.buttons?.length);
   const resolve = (name: string): ElementSpec<ElementComponent> | undefined =>
     name.startsWith(`${prefix}-`) ? specs.get(name.slice(prefix.length + 1)) : undefined;
   const spec = typeof tag === "string" ? resolve(tag) : undefined;
@@ -145,9 +154,6 @@ function render(tag: string, attributes: RenderAttributes, children: string, opt
         if (entry) {
           if (depth >= 64) throw new RangeError("SSR element nesting exceeds 64 levels");
           validateAttributes(Object.fromEntries(Array.from(element.attributes, a => [a.name, a.value])), entry);
-          if (entry.name === "fab-menu" && (element.hasAttribute("open") || element.getAttribute("presentation") === "menu")) {
-            throw new TypeError("SSR cannot render fab-menu[open] or fab-menu[presentation=menu] (FLO-370)");
-          }
           if (Array.from(element.children).some(child => child.localName === "template" && child.hasAttribute("shadowrootmode"))) {
             throw new TypeError("SSR host already declares a shadow root");
           }
@@ -156,9 +162,6 @@ function render(tag: string, attributes: RenderAttributes, children: string, opt
           // definition. Upgrade only the audited node; templates stay inert.
           customElements.upgrade(element);
           depth++;
-        }
-        if (element.localName === `${prefix}-menu-item` && element.querySelector(`${prefix}-menu-item`)) {
-          throw new TypeError("SSR cannot render nested submenu declarations (FLO-370)");
         }
         for (const child of Array.from(element.children)) audit(child, depth);
       };
@@ -170,6 +173,11 @@ function render(tag: string, attributes: RenderAttributes, children: string, opt
         audit(element, depth);
         const authored = Array.from(element.attributes, a => [a.name, a.value] as const);
         const light = Array.from(element.childNodes, node => node.cloneNode(true));
+        const ssr = !asyncDefaults && (typeof entry.ssr === "function" ? entry.ssr(element) : entry.ssr !== false);
+        if (!ssr) {
+          const content = light.map(node => serializeNode(node, expand, depth + 1)).join("");
+          return `<${element.localName}${attributesText(authored)}>${content}</${element.localName}>`;
+        }
         const styles = renderStyles(entry, options);
         scope.mount(element);
         const shadow = Array.from(element.shadowRoot!.childNodes)

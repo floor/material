@@ -43,6 +43,10 @@ try {
       const inert = await browser.newPage({ javaScriptEnabled: false });
       await inert.goto(server.url.href);
       assert.deepEqual(await inert.evaluate(() => ["button", "switch", "tabs", "card", "nested"].map(id => !!document.getElementById(id)?.shadowRoot)), [true, true, true, true, true]);
+      assert.deepEqual(await inert.evaluate(() => [0, 1, 2].map(index => {
+        const host = document.getElementById(`fallback-${index}`)!;
+        return { root: !!host.shadowRoot, template: !!host.querySelector("template"), light: host.innerHTML };
+      })), [0, 1, 2].map(() => ({ root: false, template: false, light: "<span>Light content</span>" })), "React SSR respects element opt-out");
       assert.equal(await inert.getByRole("tab", { name: "Trips", selected: true }).count(), 1, "Declaration children reach the renderer");
       assert.equal(await inert.getByRole("switch", { name: "Wi-Fi" }).isChecked(), true);
       await inert.close();
@@ -64,7 +68,7 @@ try {
       const mismatch = await page.evaluate(() => window.reactSSR.recoverable.length);
       const summary = { version, warnings: 0, errors: 0, recoverable: 0, mismatchErrors: mismatch };
       summaries.push(summary);
-      console.log(`React ${version}: 0 warnings, 0 errors, 0 recoverable errors; deliberate mismatch caught (${mismatch}); no-JS roots, declarations, events, checked state and client isolation passed`);
+      console.log(`React ${version}: 0 warnings, 0 errors, 0 recoverable errors; deliberate mismatch caught (${mismatch}); no-JS roots, opt-out fallbacks, declarations, events, checked state and client isolation passed`);
       await page.close();
     } finally { server.stop(true); }
   }

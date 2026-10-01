@@ -45,14 +45,22 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- Per-element SSR opt-out (FLO-370): specs accept `ssr: false` or a synchronous host
+  predicate. Carousel, FAB menu and toolbar emit their host and light DOM without a
+  declarative root; menu and split-button do the same for nested submenus. Async
+  button/card global defaults conservatively use this fallback for the whole render.
+  Eligible light-DOM descendants still render their own roots. Pre-upgrade CSS keeps
+  the host's box until browser upgrade, and these paths no longer throw. React SSR
+  honors the same opt-out without emitting an empty declarative template.
+
 - `mtrl/ssr`: `renderElement` renders elements as declarative shadow DOM on a server (Node, Bun); server-only, with no runtime dependencies (FLO-363, FLO-364).
 - `mtrl/ssr/react`: an opt-in, server-only entry. Imported in the server bootstrap, it makes the React adapters emit styled declarative shadow roots during SSR (React 18 and 19), with no server code in the client bundle. Without it, React output is unchanged (FLO-372).
 - `ssr:check` (CI): server-rendered elements are checked in Chromium, Firefox and WebKit, for a styled first paint without JavaScript, pixel stability and no layout movement on upgrade, and the security reparse; markup parity stays in Chromium (FLO-371).
 - Element CSS also ships as `.css` files (`mtrl/elements/css/<name>.css`, `hosts/<element>.css`), for server-rendered `<link>` styles (FLO-365).
 - **Synchronous declarative shadow DOM rendering (FLO-363, part B).** The server-only
   `src/ssr` entry exports `renderElement` with inline CSS by default, optional stylesheet
-  links, nested elements, and the shared HTML policy. It rejects asynchronous FAB-menu
-  and submenu configurations before mounting. The identity HTML policy is not a sanitizer;
+  links, nested elements, and the shared HTML policy. Asynchronous FAB-menu
+  and submenu configurations use the host-only fallback (FLO-370). The identity HTML policy is not a sanitizer;
   configure a synchronous sanitizer for untrusted markup. Package exports follow in FLO-364.
   Chromium security and per-node parity checks cover all 36 element defaults.
 
