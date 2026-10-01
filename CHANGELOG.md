@@ -82,6 +82,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- The carousel wheel check in `core:check` no longer fails when a CI runner stalls a frame. A
+  283ms stall split its 30-event wheel gesture in two, and the carousel correctly went one slide
+  further than the recording expected. A recording with a frame over 50ms is now taken again
+  (three in a row fail); the assertions are unchanged (FLO-395).
 - **Custom root classes survive configuration (FLO-403).** Top and bottom app bars,
   button groups, segmented buttons, tabs and individual tabs, toolbars, FAB menus,
   and selects now apply the `class` option to their root element, including
