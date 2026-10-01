@@ -141,7 +141,7 @@ bun run build
 bun run size:check
 ```
 
-The size check packs and installs the local distribution in a temporary directory, checks Node ESM/CommonJS and TypeScript imports, and measures minified consumer bundles with gzip and Brotli. It enforces budgets for individual imports, a form, CSS, and the initial button chunks. Results are saved to `analysis/package-size.json`. It does not rebuild `dist`.
+The size check packs and installs the local distribution in a temporary directory, checks Node ESM and TypeScript imports (and that `require('mtrl')` does not resolve: the package is ESM-only), and measures minified consumer bundles with gzip and Brotli. It enforces budgets for individual imports, a form, CSS, and the initial button chunks. Results are saved to `analysis/package-size.json`. It does not rebuild `dist`.
 
 For a second bundler and real-browser checks:
 

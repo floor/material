@@ -17,20 +17,6 @@ try {
     buildModules(staging);
     console.log("Writing the Svelte components...");
     await emitSvelte(staging);
-    console.log("Building CommonJS compatibility bundle...");
-    const cjs = await Bun.build({
-      entrypoints: ["./src/index.ts"],
-      outdir: staging,
-      format: "cjs",
-      target: "browser",
-      minify: true,
-      sourcemap: "none",
-      banner,
-      naming: { entry: "index.cjs" },
-      define: { "process.env.NODE_ENV": '"production"' },
-    });
-    if (!cjs.success) throw new AggregateError(cjs.logs, "CommonJS build failed");
-
     console.log("Building full and optional stylesheets...");
     await buildStyles(staging, banner);
 

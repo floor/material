@@ -39,7 +39,7 @@ try {
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
-  // ESM 23%, CSS 18%, SCSS sources 11%, the CommonJS bundle 8% (a 1.0.0 decision).
+  // ESM 23%, CSS 18%, SCSS sources 11%, the CommonJS bundle 8%, which 1.0.0 drops (FLO-358).
   assert(pack.unpackedSize < 6_000_000, "Unpacked package exceeds 6,000,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
@@ -58,9 +58,8 @@ try {
     assert.equal(rail, esm.createNavigationRail);
     // 1.0.0: the core helpers are at their subpath only, not on the root (FLO-351)
     assert.equal(esm.addClass, undefined);
-    const cjs = createRequire(import.meta.url)('mtrl');
-    assert.equal(typeof cjs.createButton, 'function');
-    assert.deepEqual(Object.keys(esm).sort(), Object.keys(cjs).sort());
+    // 1.0.0 is ESM-only (FLO-358): no require condition, so require('mtrl') does not resolve
+    assert.throws(() => createRequire(import.meta.url)('mtrl'), { code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });
     const dom = new JSDOM('<!doctype html><html><body></body></html>', { pretendToBeVisual: true });
     for (const key of ['window', 'document', 'Node', 'Element', 'HTMLElement', 'HTMLInputElement', 'HTMLButtonElement', 'Event', 'CustomEvent', 'MutationObserver']) {
       globalThis[key] = dom.window[key];
