@@ -57,6 +57,8 @@
       "types": "./dist/elements/css/index.d.ts",
       "import": "./dist/elements/css/index.js"
     },
+    "./elements/css/hosts/*.css": "./dist/elements/css/hosts/*.css",
+    "./elements/css/*.css": "./dist/elements/css/*.css",
     "./elements/css/*": {
       "types": "./dist/elements/css/*.d.ts",
       "import": "./dist/elements/css/*.js"
