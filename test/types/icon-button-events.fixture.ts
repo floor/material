@@ -4,6 +4,7 @@ import {
   createIconButton,
   type IconButtonComponent,
   type IconButtonEvents,
+  type IconButtonChangePayload,
 } from "../../src/components/icon-button";
 import type { ForwardedEventPayload } from "../../src/core/dom";
 
@@ -20,8 +21,11 @@ export const exactlyTheEvents: Equals<
 
 export const changePayload: Equals<
   Parameters<Parameters<typeof button.on<"change">>[1]>[0],
-  { selected: boolean }
+  IconButtonChangePayload
 > = true;
+// FLO-380: selected is the toggled state; value is the model, as getValue() returns it.
+export const changeShape: Equals<IconButtonChangePayload, { selected: boolean; value: string }> = true;
+export const changeValue: Equals<IconButtonChangePayload["value"], ReturnType<typeof button.getValue>> = true;
 
 export const clickPayload: Equals<
   Parameters<Parameters<typeof button.on<"click">>[1]>[0],

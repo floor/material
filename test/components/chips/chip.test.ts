@@ -77,6 +77,16 @@ describe("Material chip factories", () => {
       expect(events).toHaveLength(2);
     });
   }
+  for (const factory of [createFilterChip, createInputChip]) {
+    test(`${factory.name}: change carries the chip's value, as getValue() reads it in the handler (FLO-380)`, () => {
+      const seen: unknown[] = [];
+      const valued = mount(factory({ label: "Vegetarian", value: "veg", ripple: false }));
+      valued.on("change", payload => seen.push([payload.value, valued.getValue(), payload.selected]));
+      valued.action.click();
+      valued.action.click();
+      expect(seen).toEqual([["veg", "veg", true], ["veg", "veg", false]]);
+    });
+  }
   for (const factory of [createFilterChip, createInputChip]) test(`${factory.name}: selection replaces the leading icon instead of duplicating it`, () => {
     const chip = mount(factory({ label: "Selectable", leadingIcon: ICON, ripple: false }));
     const leading = chip.element.querySelector<HTMLElement>(".mtrl-chip__leading-icon")!;

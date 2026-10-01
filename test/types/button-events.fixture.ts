@@ -25,6 +25,7 @@ import type {
   ButtonComponent,
   ButtonEvents,
   ButtonEventPayload,
+  ButtonChangePayload,
 } from "../../src/components/button/types";
 
 /** true when A and B are the same type */
@@ -84,8 +85,11 @@ export const focusCarriesAFocusEvent: Equals<
 button.on("chick", () => {});
 
 button.on("change", ({ selected }) => { const value: boolean = selected; void value; });
-// @ts-expect-error the unchanged toggle payload does not yet carry a value
-button.on("change", payload => payload.value);
+// FLO-380: the toggle's change carries the button's value, as getValue() returns it.
+button.on("change", payload => { const value: string = payload.value; void value; });
+export const buttonChangeValue: Equals<ButtonChangePayload["value"], ReturnType<typeof button.getValue>> = true;
+// @ts-expect-error selected stays the toggled state, a boolean
+button.on("change", ({ selected }) => { const value: string = selected; void value; });
 
 // The mistake the four call sites made, now caught at the call.
 // @ts-expect-error the handler receives the payload, not the DOM event

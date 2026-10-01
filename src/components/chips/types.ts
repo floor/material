@@ -69,7 +69,12 @@ export type FilterChipConfig = NamedChipConfig & Pick<ChipConfig, "selected" | "
 // An input chip's trailing button is its remove button, so it takes no trailing action.
 export type InputChipConfig = Omit<FilterChipConfig, "elevated" | "onTrailingClick" | "trailingLabel" | "trailingMenu"> & Pick<ChipConfig, "avatar" | "onRemove" | "removeLabel">;
 
-export interface ChipChangePayload { selected: boolean; chip: ChipComponent; }
+export interface ChipChangePayload {
+  selected: boolean;
+  chip: ChipComponent;
+  /** The chip's value, as `getValue()` returns it; every model event carries it (FLO-380) */
+  value: string | null;
+}
 export interface ChipEvents {
   click: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
   keydown: (payload: ForwardedEventPayload<KeyboardEvent, HTMLElement>) => void;
