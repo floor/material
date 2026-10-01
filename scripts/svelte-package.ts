@@ -27,11 +27,15 @@ const component = (name: string, live: string[], from: string, styles: string[])
   const bindable = live.map((p) => `    ${p} = $bindable(),\n`).join("");
   const liveObject = `{ ${live.join(", ")} }`;
   const setters = `{ ${live.map((p) => `${p}: (next: unknown) => (${p} = next)`).join(", ")} }`;
+  // Every host can emit a declarative shadow root (FLO-375). The value is ""
+  // in the browser and for opted-out elements, so `{#if}` renders nothing
+  // where the parser already consumed the template. `props` and `children`
+  // stay inside `$derived`: reading them while the script runs is a warning.
   return `${HEADER}
 <script lang="ts">
   import type { Snippet } from "svelte";
 ${styles.map((style) => `  import "mtrl/elements/css/${style}";\n`).join("")}  import { ${name}Element, define${P} } from "../elements/${from}.js";
-  import { adapter } from "./runtime.js";
+  import { adapter, shadowMarkup } from "./runtime.js";
 
   const runtime = adapter(${name}Element.spec, define${P});
   const action = runtime.action;
@@ -42,6 +46,7 @@ ${bindable}    children,
   // \`bind:this\` on the component reads \`element\`, as Vue's template ref does (FLO-325).
   let node = $state<HTMLElement | null>(null);
   export { node as element };
+  let shadow = $derived(shadowMarkup(runtime, props, children, ${liveObject}));
 </script>
 
 <svelte:element
@@ -49,7 +54,7 @@ ${bindable}    children,
   bind:this={node}
   {...runtime.attributes(props, ${liveObject})}
   use:action={{ props, live: ${liveObject}, set: ${setters} }}
->{@render children?.()}{#each runtime.snippets(props) as [slot, snippet] (slot)}<span style="display: contents" {...{ slot }}>{@render snippet()}</span>{/each}</svelte:element>
+>{#if shadow}{@html shadow}{/if}{@render children?.()}{#each runtime.snippets(props) as [slot, snippet] (slot)}<span style="display: contents" {...{ slot }}>{@render snippet()}</span>{/each}</svelte:element>
 `;
 };
 
@@ -65,6 +70,12 @@ const declarationComponent = (name: string, from: string): string => `${HEADER}
 
 <svelte:element this={runtime.tag} {...runtime.attributes(props)}>{@render children?.()}</svelte:element>
 `;
+
+/** The source `emitSvelte` writes for one element. Tests read it without a build. */
+export const componentSource = component;
+
+/** The source `emitSvelte` writes for one declaration child. */
+export const declarationSource = declarationComponent;
 
 export async function emitSvelte(outdir: string): Promise<void> {
   const dir = `${outdir}/svelte`;

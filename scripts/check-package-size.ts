@@ -53,7 +53,9 @@ try {
         if (!server) {
           assert(!/(?:^|\/)ssr(?:\/|$|\.)/.test(target), `Client imports SSR in ${file.path}: ${name}`);
         } else {
-          assert(name.startsWith(".") || name.startsWith("node:") || (file.path === "dist/ssr/react.js" && ["react", "react-dom/server"].includes(name)), `Unbundled SSR dependency in ${file.path}: ${name}`);
+          const peer = (file.path === "dist/ssr/react.js" && ["react", "react-dom/server"].includes(name))
+            || (file.path === "dist/ssr/svelte.js" && ["svelte", "svelte/server"].includes(name));
+          assert(name.startsWith(".") || name.startsWith("node:") || peer, `Unbundled SSR dependency in ${file.path}: ${name}`);
         }
       }
       ts.forEachChild(node, visit);
