@@ -177,12 +177,14 @@ bun run test:coverage                      # with a coverage report
 - Tests live in `test/`, mirroring `src/`, and end in `.test.ts`; `bun run test:naming` fails on a suite the runner would not collect.
 - A test file that needs the DOM creates a JSDOM at its top, as most do, or imports `test/setup.ts` for the shared one.
 - Test the real component through its public API and its DOM: no mock copies of components. Add or update the tests in the same commit as the change, and check that they fail without it.
-- Behaviour that needs a real browser (focus, layout, the top layer, form association, motion) goes in the Chromium checks, which CI runs in three groups:
-  - `bun run elements:check` for the elements;
+- Behaviour that needs a real browser (focus, layout, the top layer, form association, motion) goes in the Chromium checks, which CI runs in groups side by side:
+  - `bun run elements:check` and `shadow-styles:check` for the elements;
   - `react:check`, `vue:check`, `svelte:check` and `solid:check` for the adapters;
-  - `consumer:check`, `tokens:check` and the per-component checks (`tabs:check`, `slider:check`, `drawer:check`, …) for the factories and the packed build.
+  - `consumer:check` and the per-component checks (`tabs:check`, `slider:check`, `drawer:check`, `core:check`, …) for the factories and the packed build;
+  - `preupgrade:check` and `tokens:check` for the styles.
 
   Install Chromium once with `node node_modules/playwright/cli.js install chromium`.
+- A new check goes in one of those groups in `.github/workflows/ci.yml` and in the list in `test/build/ci-commands.test.ts`, which fails when CI stops running a command. A run takes as long as its slowest group, so give a long check a group of its own.
 
 ## Documentation
 
