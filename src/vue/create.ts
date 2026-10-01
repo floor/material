@@ -10,10 +10,11 @@
  * live property shadows is its `default*` prop. Element events are Vue events
  * of the same name. The element registers on mount, never at import.
  *
- * When `mtrl/ssr/vue` is loaded, a server render prepends the declarative
- * shadow template. The client renders nothing in its place: the HTML parser
- * has already moved that template into the shadow root. Without the import
- * the markup is unchanged (FLO-373).
+ * When `mtrl/ssr/vue` is loaded, a server render emits the declarative shadow
+ * template and the light DOM from a single pass over the slots, including an
+ * `async setup()` child under Suspense. The client renders the slots and not
+ * the template: the HTML parser has already moved that template into the
+ * shadow root. Without the import the markup is unchanged (FLO-373).
  *
  * @module vue
  */
@@ -209,11 +210,19 @@ export const createComponent = <S, E extends HTMLElement>(
 
       return () => {
         const nodes = slotted(slots);
-        // Unregistered, or in the browser, this is "" and `nodes` is exactly
-        // the list Vue rendered before. The parser consumes a template, so the
-        // client must not render one of its own.
-        const template = isBrowser ? "" : shadow(tag(), shadowProps(), () => slotted(slots));
-        if (template) nodes.unshift(createStaticVNode(template, 1));
+        // Unregistered, or in the browser, this is "" and the vnode children
+        // stay `nodes`. The parser consumes a template, so the client must not
+        // render one of its own. On the server the bridge has already rendered
+        // `nodes` once; rendering them again would run an async child twice.
+        const inner = isBrowser ? "" : shadow(tag(), shadowProps(), () => nodes);
+        if (typeof inner !== "string") {
+          // A promise is an object, and Vue would treat it as a slot. The
+          // static vnode pushes its children straight into the SSR buffer.
+          const held = createStaticVNode("", 1);
+          held.children = inner as unknown as string;
+          return h(tag(), host(), [held]);
+        }
+        if (inner) return h(tag(), host(), [createStaticVNode(inner, 1)]);
         return h(tag(), host(), nodes);
       };
     },

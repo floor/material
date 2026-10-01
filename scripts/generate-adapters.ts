@@ -200,10 +200,14 @@ type Renderer = (
   props: Record<string, unknown>,
   children: () => VNode[],
   prefix: string,
-) => string;
+) => string | Promise<string>;
 
-/** Declarative shadow template for one host, or "" in the browser and when no renderer is registered. */
-export const shadow = (tag: string, props: Record<string, unknown>, children: () => VNode[]): string => {
+/**
+ * Inner HTML for one host during SSR: the declarative template followed by its
+ * light DOM, or "" in the browser and when no renderer is registered. Async
+ * children resolve to that same string.
+ */
+export const shadow = (tag: string, props: Record<string, unknown>, children: () => VNode[]): string | Promise<string> => {
   if (isBrowser) return "";
   const render = (globalThis as unknown as Record<symbol, { vue?: Renderer } | undefined>)[Symbol.for("mtrl.ssr")]?.vue;
   if (!render) return "";

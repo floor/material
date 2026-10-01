@@ -18,8 +18,8 @@
  * select's 140 KB bundle the adapter runtime sits beyond 32 KB from the
  * element code it compresses against. Brotli measures +878 and +872. React
  * and Solid stay under 1.1 KB. Vue's declarative-shadow hook is a little
- * larger; the largest measured is the datepicker, +1190. Svelte's branch is
- * larger still; the largest measured is the Svelte switch + button pair, +1631.
+ * larger; the largest measured is split-button, +1205. Svelte's branch is
+ * larger still; the largest measured is the Svelte switch + button pair, +1571.
  *
  * Build first:
  *   bun run build && bun run adapters:size

@@ -113,11 +113,90 @@ export const App = defineComponent(() => {
 const dir = join(process.cwd(), "analysis/vue-ssr");
 await mkdir(dir, { recursive: true });
 await Bun.write(join(dir, "App.ts"), app);
+const asyncApp = `import { defineComponent, h, Suspense } from "vue";
+import { MButton } from "mtrl/vue";
+
+const pending = new Promise<string>((resolve) => setTimeout(() => resolve("outside-loaded"), 20));
+
+const Slow = defineComponent({
+  name: "Slow",
+  async setup() {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    return () => h("i", { id: "async-setup" }, "async-loaded");
+  },
+});
+
+const Reader = defineComponent({
+  name: "Reader",
+  async setup() {
+    const text = await pending;
+    return () => h("i", { id: "outside" }, text);
+  },
+});
+
+const SyncRead = defineComponent({
+  name: "SyncRead",
+  async setup() {
+    const text = await pending;
+    return () => h(MButton, { id: "host-sync" }, () => h("i", { id: "sync-read" }, text));
+  },
+});
+
+const Plain = defineComponent({
+  name: "Plain",
+  async setup() {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    return () => h("i", { id: "plain-setup" }, "plain-loaded");
+  },
+});
+
+export const AsyncApp = defineComponent(() => {
+  return () => h("main", null, [
+    h(Suspense, null, {
+      default: () => h(MButton, { id: "host-async" }, () => h(Slow)),
+      fallback: () => h("em", "async-pending"),
+    }),
+    h(Suspense, null, {
+      default: () => h(MButton, { id: "host-outside" }, () => h(Reader)),
+      fallback: () => h("em", "outside-pending"),
+    }),
+    h(Suspense, null, {
+      default: () => h(SyncRead),
+      fallback: () => h("em", "sync-pending"),
+    }),
+    h(Suspense, null, {
+      default: () => h("div", { id: "plain-async" }, [h(Plain)]),
+      fallback: () => h("em", "plain-pending"),
+    }),
+  ]);
+});
+`;
+
+await Bun.write(join(dir, "AsyncApp.ts"), asyncApp);
 await Bun.write(join(dir, "server.ts"), `import "mtrl/ssr/vue";
 import { createSSRApp } from "vue";
-import { renderToString } from "@vue/server-renderer";
+import { renderToString, renderToWebStream } from "@vue/server-renderer";
 import { App } from "./App";
+import { AsyncApp } from "./AsyncApp";
 export const renderBody = (): Promise<string> => renderToString(createSSRApp(App));
+export const renderAsync = (): Promise<string> => renderToString(createSSRApp(AsyncApp));
+export const renderAsyncStream = async (): Promise<string> => {
+  const stream = renderToWebStream(createSSRApp(AsyncApp));
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let html = "";
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline) {
+    const remaining = Math.max(1, deadline - Date.now());
+    const next = await Promise.race([
+      reader.read(),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Vue SSR stream did not finish")), remaining)),
+    ]);
+    if (next.done) return html + decoder.decode();
+    html += decoder.decode(next.value, { stream: true });
+  }
+  throw new Error("Vue SSR stream did not finish");
+};
 `);
 await Bun.write(join(dir, "client.ts"), `import { createSSRApp } from "vue";
 import { App } from "./App";
@@ -126,6 +205,19 @@ const before = new Map(ids.map((id) => [id, document.getElementById(id)?.shadowR
 const state: { ready: boolean; same: Record<string, boolean | null> } = { ready: false, same: {} };
 Object.assign(window, { vueSSR: state });
 createSSRApp(App).mount("#root");
+for (const id of ids) {
+  const previous = before.get(id) ?? null;
+  state.same[id] = previous ? document.getElementById(id)?.shadowRoot === previous : null;
+}
+state.ready = true;
+`);
+await Bun.write(join(dir, "async-client.ts"), `import { createSSRApp } from "vue";
+import { AsyncApp } from "./AsyncApp";
+const ids = ["host-async", "host-outside", "host-sync"];
+const before = new Map(ids.map((id) => [id, document.getElementById(id)?.shadowRoot ?? null]));
+const state: { ready: boolean; same: Record<string, boolean | null> } = { ready: false, same: {} };
+Object.assign(window, { vueAsync: state });
+createSSRApp(AsyncApp).mount("#root");
 for (const id of ids) {
   const previous = before.get(id) ?? null;
   state.same[id] = previous ? document.getElementById(id)?.shadowRoot === previous : null;
@@ -172,13 +264,31 @@ const serverBundle = await bundle(join(dir, "server.ts"), "bun");
 const serverPath = join(process.cwd(), ".check-vue-ssr.js");
 await Bun.write(serverPath, serverBundle);
 let html: string;
+let asyncHtml = "";
+let asyncStream = "";
 try {
-  const loaded = await import(serverPath);
-  html = await (loaded as { renderBody: () => Promise<string> }).renderBody();
+  const loaded = await import(serverPath) as {
+    renderBody: () => Promise<string>;
+    renderAsync: () => Promise<string>;
+    renderAsyncStream: () => Promise<string>;
+  };
+  html = await loaded.renderBody();
+  asyncHtml = await loaded.renderAsync();
+  asyncStream = await loaded.renderAsyncStream();
 } finally {
   await Bun.file(serverPath).delete();
 }
+assert.equal(asyncStream, asyncHtml, "renderToWebStream did not match renderToString");
+assert.match(asyncHtml, /<i id="async-setup">async-loaded<\/i>/);
+assert.match(asyncHtml, /<i id="outside">outside-loaded<\/i>/);
+assert.match(asyncHtml, /<i id="sync-read">outside-loaded<\/i>/);
+assert.match(asyncHtml, /<div id="plain-async"><i id="plain-setup">plain-loaded<\/i><\/div>/);
+assert.doesNotMatch(asyncHtml, /pending/);
+for (const id of ["host-async", "host-outside", "host-sync"]) {
+  assert.match(asyncHtml, new RegExp(`<m-button[^>]*\\bid="${id}"[^>]*>\\s*<template shadowrootmode="open"`), id);
+}
 const client = await bundle(join(dir, "client.ts"), "browser");
+const asyncClient = await bundle(join(dir, "async-client.ts"), "browser");
 
 interface Report {
   element: string;
@@ -209,7 +319,10 @@ const browser = await chromium.launch();
 const server = Bun.serve({
   hostname: "127.0.0.1", port: 0,
   fetch(request) {
-    if (new URL(request.url).pathname === "/client.js") return new Response(client, { headers: { "Content-Type": "text/javascript" } });
+    const pathname = new URL(request.url).pathname;
+    if (pathname === "/client.js") return new Response(client, { headers: { "Content-Type": "text/javascript" } });
+    if (pathname === "/async.js") return new Response(asyncClient, { headers: { "Content-Type": "text/javascript" } });
+    if (pathname === "/async") return new Response(`<!doctype html><div id="root">${asyncHtml}</div><script type="module" src="/async.js"></script>`, { headers: { "Content-Type": "text/html" } });
     return new Response(`<!doctype html><div id="root">${html}</div><script type="module" src="/client.js"></script>`, { headers: { "Content-Type": "text/html" } });
   },
 });
@@ -260,6 +373,36 @@ try {
   assert.equal(await page.locator("#host-switch").getByRole("switch", { name: "Wi-Fi" }).isChecked(), false);
   assert.deepEqual({ warnings: pageWarnings, errors: pageErrors }, { warnings: [], errors: [] });
   await page.close();
+
+  const asyncPage = `${server.url.origin}/async`;
+  const asyncInert = await browser.newPage({ javaScriptEnabled: false });
+  await asyncInert.goto(asyncPage);
+  const asyncShadow = await asyncInert.evaluate(() => ["host-async", "host-outside", "host-sync"].map((id) => ({
+    id, shadow: !!document.getElementById(id)?.shadowRoot,
+  })));
+  for (const row of asyncShadow) assert.equal(row.shadow, true, `${row.id} shadow root before script`);
+  assert.equal(await asyncInert.locator("#plain-setup").textContent(), "plain-loaded");
+  await asyncInert.close();
+
+  const asyncLive = await browser.newPage();
+  const asyncWarnings: string[] = [];
+  const asyncErrors: string[] = [];
+  asyncLive.on("console", (message) => { if (message.type() === "warning" || message.type() === "error") asyncWarnings.push(message.text()); });
+  asyncLive.on("pageerror", (error) => asyncErrors.push(error.message));
+  await asyncLive.goto(asyncPage);
+  await asyncLive.waitForFunction(() => {
+    const state = (window as unknown as { vueAsync?: { ready: boolean } }).vueAsync;
+    return state?.ready
+      && document.getElementById("async-setup")?.textContent === "async-loaded"
+      && document.getElementById("outside")?.textContent === "outside-loaded"
+      && document.getElementById("sync-read")?.textContent === "outside-loaded"
+      && document.getElementById("plain-setup")?.textContent === "plain-loaded";
+  });
+  const asyncSame = await asyncLive.evaluate(() => (window as unknown as { vueAsync: { same: Record<string, boolean | null> } }).vueAsync.same);
+  for (const id of ["host-async", "host-outside", "host-sync"]) assert.equal(asyncSame[id], true, `${id} did not keep its declarative shadow root`);
+  assert.equal(await asyncLive.locator("body").textContent().then((text) => text?.includes("pending")), false);
+  assert.deepEqual({ warnings: asyncWarnings, errors: asyncErrors }, { warnings: [], errors: [] });
+  await asyncLive.close();
 } finally {
   server.stop(true);
   await browser.close();
@@ -272,3 +415,4 @@ for (const report of summary) {
   console.log(`${report.element}: template=${report.template ? "yes" : "no"} shadow=${report.shadowBeforeScript ? "yes" : "no"} sameRoot=${root} warnings=${report.warnings} errors=${report.errors}`);
 }
 console.log(`vue-ssr: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no mtrl/ssr or linkedom`);
+console.log("vue-ssr async: setup, outside read, and stream finished with content, the declarative template, the same shadow root, and 0 warnings");
