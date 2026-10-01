@@ -7,6 +7,11 @@
 # request could read it: the first run of each one started cold. Saving them on
 # main and next lets every pull request start warm.
 #
+# The keys hold the runner image version, which changes about weekly, and GitHub
+# drops a cache nobody read for seven days. The daily run refills them without
+# waiting for a merge: a scheduled run is on the default branch, whose caches
+# every pull request can read.
+#
 # This runs no check and gates nothing. When the caches are current it restores
 # them and stops, in well under a minute.
 name: Cache
@@ -14,6 +19,8 @@ name: Cache
 on:
   push:
     branches: [main, next]
+  schedule:
+    - cron: "47 2 * * *"
   workflow_dispatch:
 
 permissions:
@@ -24,14 +31,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # The browser sets of CI's browser groups.
+  # The same two browser sets as CI's browser groups.
   browsers:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Long enough for the slowest mirror seen (42 minutes for both installs): a
+    # job that times out saves nothing, and this one gates nothing.
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        browsers: ["chromium"]
+        browsers: ["chromium", "chromium firefox webkit"]
     name: browsers (${{ matrix.browsers }})
     steps:
       - uses: actions/checkout@v4

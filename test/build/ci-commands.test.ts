@@ -19,9 +19,11 @@ const COMMANDS = [
   "core:check", "preupgrade:check", "tokens:check",
 ];
 
-interface Step { run?: string }
+interface Step { run?: string; if?: string; "continue-on-error"?: unknown }
 interface Job {
   needs?: string | string[];
+  if?: string;
+  "continue-on-error"?: unknown;
   steps: Step[];
   strategy?: { matrix?: { include?: Record<string, string>[] } };
 }
@@ -57,6 +59,24 @@ describe("CI (.github/workflows/ci.yml)", () => {
 
   test("runs only scripts that package.json defines", () => {
     expect(ran.filter(command => command !== "bun test" && !(command in scripts))).toEqual([]);
+  });
+
+  // A command that may be skipped, or may fail without failing its job, still
+  // appears in the list above and no longer checks anything.
+  test("runs them unconditionally, and their failure fails the job", () => {
+    const loose: string[] = [];
+    for (const [name, job] of Object.entries(workflow.jobs)) {
+      const steps = job.steps.filter(step => commandsOf(job, step).length);
+      if (!steps.length) continue;
+      if (job.if !== undefined) loose.push(`${name}: if`);
+      if (job["continue-on-error"] !== undefined) loose.push(`${name}: continue-on-error`);
+      for (const step of steps) {
+        const command = commandsOf(job, step).join(" ");
+        if (step.if !== undefined) loose.push(`${name} (${command}): if`);
+        if (step["continue-on-error"] !== undefined) loose.push(`${name} (${command}): continue-on-error`);
+      }
+    }
+    expect(loose).toEqual([]);
   });
 
   test("gates the required `check` status on every other job", () => {
