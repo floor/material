@@ -19,6 +19,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **A disabled, empty text field no longer shows its placeholder over the label (FLO-354).** The
+  disabled input's `-webkit-text-fill-color` was inherited by the placeholder and painted over its
+  transparent colour, in both variants and in every engine. The placeholder now shows only while
+  the label floats (or when there is no label), disabled or not.
 - **The search bar's corners follow the theme (FLO-345).** The bar was rounded with the mtrl-only
   `pill` step (100px), so a theme's `--mtrl-sys-shape-corner-full` never reached it, and opening
   the view held the corners still before they snapped square. The bar is now M3's full corner

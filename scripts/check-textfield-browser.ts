@@ -232,3 +232,59 @@ export async function checkTextfieldAnatomy(page: Page): Promise<void> {
   await page.evaluate(() => (window as unknown as AnatomyWindow).anatomy.forEach((part) => part.destroy()));
   console.log("Passed text field anatomy: 56px field aligned with a button, the helper row adds only its lines and wraps, the counter at the end, the select's menu against the field.");
 }
+
+/**
+ * A placeholder shows only where the label leaves room for it (FLO-354): in
+ * both variants, with and without a leading icon, enabled, disabled, empty or
+ * with a value, no painted placeholder overlaps the label's text. The disabled
+ * input's -webkit-text-fill-color is inherited by the placeholder and paints
+ * over its color, so the paint is read from the fill.
+ */
+export async function checkTextfieldPlaceholder(page: Page): Promise<void> {
+  const cases = await page.evaluate(async () => {
+    const { createTextfield } = (window as unknown as FieldWindow).inputs;
+    const icon = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>';
+    const rows: { name: string; painted: boolean; overlaps: boolean }[] = [];
+    for (const variant of ["filled", "outlined"] as const) {
+      for (const withIcon of [false, true]) {
+        for (const disabled of [false, true]) {
+          for (const value of ["", "Ada"]) {
+            for (const focus of disabled ? [false] : [false, true]) {
+              const field = createTextfield({
+                variant, label: "Name", placeholder: "Enter your name", supportingText: "Helper", disabled, value,
+                ...(withIcon ? { leadingIcon: icon } : {}),
+              });
+              field.element.style.width = "280px";
+              document.body.append(field.element);
+              const input = field.element.querySelector("input") as HTMLInputElement;
+              const label = field.element.querySelector("label") as HTMLElement;
+              if (focus) input.focus();
+              await new Promise((resolve) => setTimeout(resolve, 300));
+              const fill = getComputedStyle(input, "::placeholder").webkitTextFillColor;
+              const painted = input.value === "" && !/^rgba\(0, 0, 0, 0\)$|transparent|\/ 0\)$/.test(fill);
+              // The placeholder's em box, centred in the content box as the input centres its line
+              const box = input.getBoundingClientRect();
+              const s = getComputedStyle(input);
+              const mid = (box.top + parseFloat(s.paddingTop) + box.bottom - parseFloat(s.paddingBottom)) / 2;
+              const em = parseFloat(s.fontSize);
+              const range = document.createRange();
+              range.selectNodeContents(label);
+              const text = range.getBoundingClientRect();
+              const overlaps = text.top < mid + em / 2 && text.bottom > mid - em / 2
+                && text.left < box.right - parseFloat(s.paddingRight) && text.right > box.left + parseFloat(s.paddingLeft);
+              rows.push({ name: `${variant} icon=${withIcon} disabled=${disabled} value=${value !== ""} focused=${focus}`, painted, overlaps });
+              field.destroy();
+            }
+          }
+        }
+      }
+    }
+    return rows;
+  });
+  assert.equal(cases.length, 24);
+  for (const row of cases) assert.ok(!(row.painted && row.overlaps), `${row.name}: the placeholder paints over the label`);
+  // The checks see both sides: a focused empty field shows its placeholder, a resting one does not.
+  assert.ok(cases.some((row) => row.painted), "no case painted its placeholder");
+  assert.ok(cases.some((row) => row.overlaps), "no case rested its label over the text");
+  console.log("Passed text field placeholder: 24 cases, filled and outlined, icon, disabled, value, focus — never over the label.");
+}

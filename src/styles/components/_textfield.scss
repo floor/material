@@ -108,8 +108,11 @@ $component: "#{base.$prefix}-textfield";
         }
     }
 
+    // The disabled input's -webkit-text-fill-color is inherited by its
+    // placeholder and paints over color, so both are cleared (FLO-354)
     &:has(> .#{$component}__field > .#{$component}__label):not(.#{$component}--focused) .#{$component}__input::placeholder {
         color: transparent;
+        -webkit-text-fill-color: transparent;
     }
 
     // Prefix text
