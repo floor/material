@@ -18,6 +18,7 @@ import {
   lerp,
   pointOnCurve,
   reverseCubic,
+  splitCubic,
   rotate90,
   straightLine,
   transformCubic,
@@ -197,17 +198,28 @@ export const roundedPolygon = (
     cornerRuns.push(cornerCubics(corner, allowed[0]!, allowed[1]!));
   }
 
-  // Corners joined by straight edges; zero-length cubics (unrounded corners)
-  // are dropped, the edges already meet at the vertex
-  const cubics: Cubic[] = [];
+  // The features in order, each corner followed by the straight edge to the next
+  const features: Cubic[][] = [];
   for (let i = 0; i < n; i++) {
     const run = cornerRuns[i]!;
-    const nextRun = cornerRuns[(i + 1) % n]!;
-    for (const c of run) if (!zeroLength(c)) cubics.push(c);
     const last = run[run.length - 1]!;
-    const first = nextRun[0]!;
-    const edge = straightLine(last[6], last[7], first[0], first[1]);
-    if (!zeroLength(edge)) cubics.push(edge);
+    const first = cornerRuns[(i + 1) % n]![0]!;
+    features.push(run, [straightLine(last[6], last[7], first[0], first[1])]);
+  }
+
+  // Flattened as graphics-shapes' RoundedPolygon.cubics does (FLO-346): a rounded
+  // first corner is split in the middle of its arc, so the outline starts there
+  // and ends with the corner's first half; zero-length cubics are dropped, the
+  // cubic before them taking their end point; the last cubic ends exactly on
+  // the first one's start.
+  const first = features[0]!;
+  const split = first.length === 3 ? splitCubic(first[1]!, 0.5) : null;
+  const all = split ? [split[1], first[2]!, ...features.slice(1).flat(), first[0]!, split[0]] : features.flat();
+  const cubics: Cubic[] = [];
+  for (const c of all) {
+    const last = cubics.length - 1;
+    if (!zeroLength(c)) cubics.push(c);
+    else if (last >= 0) cubics[last] = [...cubics[last]!.slice(0, 6), c[6], c[7]] as unknown as Cubic;
   }
 
   let cx = centerX;
@@ -222,6 +234,9 @@ export const roundedPolygon = (
     cx = sx / n;
     cy = sy / n;
   }
+  const last = cubics.length - 1;
+  if (last >= 0) cubics[last] = [...cubics[last]!.slice(0, 6), cubics[0]![0], cubics[0]![1]] as unknown as Cubic;
+  else cubics.push([cx, cy, cx, cy, cx, cy, cx, cy]);
   return { cubics, centerX: cx, centerY: cy };
 };
 
@@ -275,6 +290,22 @@ export const star = (
     vertices.push(...radial(innerRadius, (Math.PI / numVerticesPerRadius) * (2 * i + 1), centerX, centerY));
   }
   return roundedPolygon(vertices, rounding, pvRounding, centerX, centerY);
+};
+
+/** A rectangle centred on (centerX, centerY), its first vertex at the bottom right (graphics-shapes rectangle) */
+export const rectangle = (
+  width = 2,
+  height = 2,
+  rounding: CornerRounding = UNROUNDED,
+  perVertexRounding?: CornerRounding[],
+  centerX = 0,
+  centerY = 0,
+): RoundedPolygon => {
+  const left = centerX - width / 2;
+  const top = centerY - height / 2;
+  const right = centerX + width / 2;
+  const bottom = centerY + height / 2;
+  return roundedPolygon([right, bottom, left, bottom, left, top, right, top], rounding, perVertexRounding, centerX, centerY);
 };
 
 export const transformPolygon = (polygon: RoundedPolygon, f: PointTransformer): RoundedPolygon => {

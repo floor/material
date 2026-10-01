@@ -26,7 +26,8 @@ describe('size gate', () => {
   });
 
   test('budgets every measured scenario', () => {
-    expect(SCENARIO_DEFS.length).toBe(COMPONENTS.length + 2);
+    // core, every component, all, and the two shapes scenarios (FLO-346)
+    expect(SCENARIO_DEFS.length).toBe(COMPONENTS.length + 4);
     for (const scenario of SCENARIO_DEFS) {
       expect(BUDGET_BYTES[scenario.name]).toBeGreaterThan(0);
     }

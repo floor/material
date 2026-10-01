@@ -45,11 +45,11 @@ export const LOADING_INDICATOR_SPRING = {
  */
 export const LOADING_INDICATOR_SHAPES: readonly MaterialShapeName[] = [
   'softBurst',
-  'cookie9',
+  'cookie9Sided',
   'pentagon',
   'pill',
   'sunny',
-  'cookie4',
+  'cookie4Sided',
   'oval'
 ];
 

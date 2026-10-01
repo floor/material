@@ -46,8 +46,9 @@ describe('rounded polygons', () => {
 
   test('rounding a corner replaces it with an arc on the rounding circle; smoothing adds flanks', () => {
     const rounded = roundedPolygon([1, 1, -1, 1, -1, -1, 1, -1], { radius: 0.5 });
-    // without smoothing the flanks have no length: 4 arcs + 4 edges
-    expect(rounded.cubics.length).toBe(8);
+    // without smoothing the flanks have no length: 4 arcs + 4 edges, the first
+    // arc split in two where the outline starts, as graphics-shapes does (FLO-346)
+    expect(rounded.cubics.length).toBe(9);
     expect(contiguous(rounded.cubics)).toBe(true);
     // the arc of the first corner (1, 1) is centred at (0.5, 0.5) with radius 0.5
     const arc = rounded.cubics[0]!;
@@ -57,7 +58,8 @@ describe('rounded polygons', () => {
     }
     expect(polygonBounds(rounded)).toEqual([-1, -1, 1, 1]);
     const smoothed = roundedPolygon([1, 1, -1, 1, -1, -1, 1, -1], { radius: 0.5, smoothing: 0.5 });
-    expect(smoothed.cubics.length).toBe(16);
+    // 4 corners of 3 cubics, 4 edges, and the split first arc
+    expect(smoothed.cubics.length).toBe(17);
     expect(contiguous(smoothed.cubics)).toBe(true);
   });
 
@@ -128,7 +130,10 @@ describe('material shapes', () => {
   test('profiles sample the outline around the area centroid at even angles', () => {
     const profile = radialProfile(materialShape('circle'), 90);
     expect(profile.radii.length).toBe(90);
-    expect(profile.centerX).toBeCloseTo(0.5, 4);
+    // Normalised from its control-point hull, which the split first arc makes
+    // slightly lopsided: the circle sits 0.004 right of the box's middle, as in
+    // Compose (test/fixtures/material-shapes.json)
+    expect(profile.centerX).toBeCloseTo(0.504, 3);
     expect(profile.centerY).toBeCloseTo(0.5, 4);
     // the pentagon's mass sits below the middle of its box; the pivot follows it
     const pentagon = radialProfile(materialShape('pentagon'));

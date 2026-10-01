@@ -11,6 +11,20 @@ import { createPackageFixture, run } from "./package-fixture";
 
 const fixture = await createPackageFixture();
 const { directory: temporary, pack } = fixture;
+
+// The packed size depends on the packer: npm's gzip differs between Node and npm
+// versions (#325: one dist packed to 998,498 B under Node 26 / npm 11 and to
+// 1,000,150 B under CI's Node 22 / npm 10). CI's figure is the one that counts.
+const CI_NODE_MAJOR = 22;
+const versionOf = (command: string): string => Bun.spawnSync([command, "--version"]).stdout.toString().trim();
+const packer = { node: versionOf("node"), npm: versionOf("npm") };
+if (Number(packer.node.replace(/^v/, "").split(".")[0]) !== CI_NODE_MAJOR) {
+  console.warn(
+    `\n!! Packed with Node ${packer.node} / npm ${packer.npm}, not CI's Node ${CI_NODE_MAJOR}: the packed size\n` +
+      `!! below is only indicative, and CI's is authoritative. For CI's figure, run\n` +
+      `!!   npx -y -p node@${CI_NODE_MAJOR} -p npm@10 -- bun run size:check\n`,
+  );
+}
 const sizes: Record<string, { raw: number; gzip: number; brotli: number }> = {};
 function measure(data: Uint8Array) {
   return { raw: data.length, gzip: gzipSync(data, { level: 9 }).length, brotli: brotliCompressSync(data).length };
@@ -18,8 +32,10 @@ function measure(data: Uint8Array) {
 try {
   assert(!pack.files.some((file: { path: string }) => file.path.endsWith(".map")), "Unexpected source maps in npm package");
   // What an install downloads. Raised from 900,000 on 2026-09-29 (Dr Jones) for the
-  // overlay elements of wave 2; 830,286 measured after wave 1 (#245).
-  assert(pack.size < 1_000_000, "npm tarball exceeds 1,000,000 bytes");
+  // overlay elements of wave 2; 830,286 measured after wave 1 (#245). Raised to
+  // 1,010,000 for the 35 public Material shapes (FLO-346): 994,762 to 1,000,150,
+  // measured with CI's Node 22 / npm 10.
+  assert(pack.size < 1_010_000, "npm tarball exceeds 1,010,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
@@ -145,7 +161,8 @@ try {
     { name: "form", code: "export { createButton, createTextfield, createCheckbox } from 'mtrl';", gzip: 22000 },
     // The toolbar (FLO-304): 123,080 to 125,176, measured against b1dbf77.
     // The FAB menu (FLO-306): 125,245 to 127,714, measured against 1bd8343.
-    { name: "all-js", code: "export * from 'mtrl';", gzip: 128000 },
+    // The Material shapes' geometry in the loading indicator (FLO-346): 127,894 to 128,195, measured against 5b314c5.
+    { name: "all-js", code: "export * from 'mtrl';", gzip: 128300 },
     { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 6500 },
     // The outlined text field's notched outline (#234) adds 202, 7,863 to 8,065: three
     // segments with their corners each way round, and the outline colour and width per
@@ -244,7 +261,7 @@ try {
   assert(sizes["button-initial"].gzip < 9000, "Button initial payload exceeds 9000 gzip bytes");
 
   console.table(sizes);
-  console.log(`npm package: ${pack.size} bytes compressed, ${pack.unpackedSize} unpacked, ${pack.entryCount} files`);
+  console.log(`npm package: ${pack.size} bytes compressed, ${pack.unpackedSize} unpacked, ${pack.entryCount} files (packed with Node ${packer.node} / npm ${packer.npm})`);
   await mkdir("analysis", { recursive: true });
   await writeFile("analysis/package-size.json", JSON.stringify({ sizes, package: {
     size: pack.size, unpackedSize: pack.unpackedSize, entryCount: pack.entryCount,

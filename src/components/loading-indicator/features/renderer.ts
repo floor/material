@@ -7,7 +7,35 @@
 
 import { createCanvasContext, updateCanvasDimensions, CanvasContext } from '../../../core/canvas/utils';
 import { onThemeChange } from '../../../core/utils/theme';
-import { materialShape, radialProfile, RadialProfile, MaterialShapeName } from '../../../core/shapes';
+import {
+  RadialProfile,
+  MaterialShapeName,
+  RoundedPolygon,
+  shapeCircle,
+  shapeCookie4Sided,
+  shapeCookie9Sided,
+  shapeOval,
+  shapePentagon,
+  shapePill,
+  shapeSoftBurst,
+  shapeSunny,
+} from '../../../core/shapes';
+// The indicator's shapes are star-shaped (test/core/material-shapes.test.ts):
+// it samples them without radialProfile's check
+import { sampleProfile } from '../../../core/shapes/material';
+
+// The shapes the indicator draws, by name: only these, so the indicator does
+// not carry the other Material shapes (FLO-346)
+const indicatorShapes: Partial<Record<MaterialShapeName, () => RoundedPolygon>> = {
+  circle: shapeCircle,
+  oval: shapeOval,
+  pentagon: shapePentagon,
+  pill: shapePill,
+  softBurst: shapeSoftBurst,
+  sunny: shapeSunny,
+  cookie4Sided: shapeCookie4Sided,
+  cookie9Sided: shapeCookie9Sided,
+};
 import { BaseComponent, LoadingIndicatorConfig } from '../types';
 import { LOADING_INDICATOR_CLASSES, LOADING_INDICATOR_DEFAULTS } from '../constants';
 
@@ -39,7 +67,7 @@ const profileCache = new Map<MaterialShapeName, RadialProfile>();
 const profileFor = (name: MaterialShapeName): RadialProfile => {
   let profile = profileCache.get(name);
   if (!profile) {
-    profile = radialProfile(materialShape(name), LOADING_INDICATOR_DEFAULTS.SAMPLES);
+    profile = sampleProfile((indicatorShapes[name] ?? shapeCircle)(), LOADING_INDICATOR_DEFAULTS.SAMPLES);
     profileCache.set(name, profile);
   }
   return profile;

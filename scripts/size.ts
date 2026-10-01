@@ -97,6 +97,10 @@ export const SCENARIO_DEFS = [
     name: "all",
     imports: COMPONENTS.flatMap((component) => component.imports),
   },
+  // mtrl/core/shapes (FLO-346), not the package root: every Material shape by
+  // name, and one shape alone, which must not carry the other 34
+  { name: "shapes", imports: ["materialShapePath"] },
+  { name: "shape-heart", imports: ["shapeHeart", "polygonPath"] },
 ] as const;
 
 export type ScenarioName = (typeof SCENARIO_DEFS)[number]["name"];
@@ -141,7 +145,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   menu: kb(12.8),
   "navigation-rail": kb(6.6),
   progress: kb(10.4),
-  "loading-indicator": kb(9.1),
+  "loading-indicator": kb(9.3), // the Compose-exact shapes (FLO-346): 9,138 to 9,447, the first-arc split 149 B of it
   "split-button": kb(17.9), // the menu's top layer: 17,644 to 18,122; the menu's positionTarget (FLO-300): 18,228
   radios: kb(5.1),
   search: kb(10.3), // the open view in the top layer (FLO-285): 9,759; combobox, contained and divided (FLO-286, FLO-287): 10,114; minWidth and maxWidth (FLO-290): 10,161; trailing items, avatar, supporting text, reopening (FLO-291): 10,477
@@ -157,12 +161,15 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   timepicker: kb(10.5), // the draft, input event, dialog in the component's tree and disabled (FLO-288): 10,639
   "top-app-bar": kb(4.4),
   toolbar: kb(11.2), // FLO-304, with its icon buttons and buttons; the overflow menu is injected: 11,302; slotted items for <m-toolbar>: 11,374
+  // mtrl/core/shapes (FLO-346): every shape by name, and one shape alone
+  shapes: kb(4.2), // materialShapePath, all 35: 4,190
+  "shape-heart": kb(2.7), // shapeHeart and polygonPath: 2,623
   tooltip: kb(5.9), // layer: "top" and the core/dom top-layer helper: 5,562 to 5,952
   // the conformance work above, measured 2026-09-29; the menu's top layer (#251) to 112,692; select and
   // split button passing the layer, and the opener's focus test across shadow roots, to 112,845; the
   // tooltip and snackbar top layer to 113,481; the modal surfaces' top layer to 113,761 (each measured
   // alone on dba5ba9); the time picker limits and steps (FLO-281): 113,297 on main; all of wave 2 together on 91e4d77: 115,162.
-  all: kb(119.5), // search in the top layer (FLO-285): 115,628; its combobox and variants (FLO-286, FLO-287): 115,909; search's trailing items and reopening (FLO-291): 116,488; the date picker's field states and one change shape (FLO-289, FLO-295): 116,800; the text field's field, supporting text row and counter (FLO-300): 117,305; the toolbar (FLO-304): 117,350 to 119,455; <m-toolbar>'s slotted items and the colour hooks: 119,541; the FAB menu (FLO-306): 122,060; the FAB menu motion (FLO-348): 122,085 to 122,178; merged with main at 5bc71da (FLO-349, FLO-350): 122,232
+  all: kb(119.9), // search in the top layer (FLO-285): 115,628; its combobox and variants (FLO-286, FLO-287): 115,909; search's trailing items and reopening (FLO-291): 116,488; the date picker's field states and one change shape (FLO-289, FLO-295): 116,800; the text field's field, supporting text row and counter (FLO-300): 117,305; the toolbar (FLO-304): 117,350 to 119,455; <m-toolbar>'s slotted items and the colour hooks: 119,541; the FAB menu (FLO-306): 122,060; the FAB menu motion (FLO-348): 122,085 to 122,178; merged with main at 5bc71da (FLO-349, FLO-350): 122,232; the Material shapes (FLO-346): 122,267 to 122,619
   // the time picker draft (FLO-288) and search widths (FLO-290): 116,200 on c3e3e18
 };
 
@@ -408,7 +415,8 @@ const scenarioSource = (scenario: Scenario): string => {
     return `import { pipe, createBase, withElement } from "${root}/src/core/compose/index.ts"; globalThis._v = [pipe, createBase, withElement];`;
   }
   const imports = scenario.imports.join(", ");
-  return `import { ${imports} } from "${entry}"; globalThis._v = [${imports}];`;
+  const from = scenario.name === "shapes" || scenario.name === "shape-heart" ? `${root}/src/core/shapes/index.ts` : entry;
+  return `import { ${imports} } from "${from}"; globalThis._v = [${imports}];`;
 };
 
 const main = async (): Promise<void> => {
@@ -512,7 +520,11 @@ const main = async (): Promise<void> => {
     if (scenario.name === "all") continue;
     const bundle = bundles.get(scenario.name);
     if (!bundle) continue;
-    const keep = scenario.name === "core" ? new Set<ComponentName>() : allowed(scenario.name);
+    // core and the shapes scenarios may carry no component at all
+    const keep =
+      scenario.name === "core" || scenario.name === "shapes" || scenario.name === "shape-heart"
+        ? new Set<ComponentName>()
+        : allowed(scenario.name);
     for (const component of COMPONENTS) {
       if (keep.has(component.name)) continue;
       for (const marker of markers.get(component.name) ?? []) {
