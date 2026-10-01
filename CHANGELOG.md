@@ -58,15 +58,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   |---|---|
   | button, icon button (toggle) | `{ selected }` → `{ selected, value: string }` (the button's value) |
   | icon button, deprecated DOM `toggle` | `{ selected }` → `{ selected, value: string }` |
-  | filter and input chips | `{ selected, chip }` → `{ selected, chip, value: string \| null }` |
+  | selectable chips (filter and input) | `{ selected, chip }` → `{ selected, chip, value: string \| null }` |
   | carousel | `{ index }` → `{ value: number, index }` |
 
   The custom elements' `event.detail` carries the same fields, and `<m-button>` now dispatches
   `change` for a toggle button. `ButtonChangePayload` and `IconButtonChangePayload` are
   exported. Migration: keep reading `selected` for the toggled state and `index` for the
-  carousel; code that builds these payloads (mocks, test doubles) adds `value`. In React,
-  `Button` now types its own `onChange` (the element's `change`): code that spreads a full
-  `React.HTMLAttributes` into `Button` must omit `onChange`.
+  carousel; code that builds these payloads (mocks, test doubles) adds `value`. In React and
+  Solid, `Button` now types its own `onChange` (the element's `change`): code that spreads a
+  full `React.HTMLAttributes` (or Solid's `JSX.HTMLAttributes`) into `Button` must omit
+  `onChange`.
 
 - **The shape scale is M3's and nothing else (FLO-345).** The mtrl-only steps `extra-tiny` (1px),
   `tiny` (2px) and `pill` (100px) are removed from `$shape`, with their

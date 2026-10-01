@@ -35,7 +35,8 @@ export interface ToggleComponent {
  * state, the element carries `aria-pressed`, and the `--toggle` and
  * `--selected` classes drive the selected colours and the shape swap.
  *
- * Emits a `change` event with `{ selected }` when the user toggles it.
+ * Emits a `change` event with `{ selected, value }` when the user toggles it;
+ * `value` is the button's value, as `getValue()` returns it (FLO-380).
  * With `toggleOnClick: false` the click does nothing and a container
  * (button group) drives the state through `setSelected`.
  *

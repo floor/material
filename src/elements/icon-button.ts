@@ -5,7 +5,7 @@
  *
  * With `toggle`, the `selected` attribute is the default state and the
  * `selected` property the live one: the attribute moves the state until the
- * user or script changes it. A click dispatches `change` with `{ selected }`
+ * user or script changes it. A click dispatches `change` with `{ selected, value }`
  * from the host, as `<m-switch>` and `<m-checkbox>` do; `toggle`, which
  * clashed with the native ToggleEvent, is dispatched as well for one release
  * (deprecated, FLO-295).

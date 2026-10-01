@@ -5,6 +5,10 @@
  * `type="submit"` and `type="reset"` act on the host's form, which a button
  * inside a shadow root cannot reach by itself (see `form-button`).
  *
+ * A toggle button (for now from the button's global defaults: the element has
+ * no toggle attribute) dispatches `change` with `{ selected, value }` from the
+ * host on each click (FLO-380).
+ *
  * Parts: `button`, `icon`, `label` (also `text`), `ripple`.
  *
  * @module elements
