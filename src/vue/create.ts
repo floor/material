@@ -10,10 +10,17 @@
  * live property shadows is its `default*` prop. Element events are Vue events
  * of the same name. The element registers on mount, never at import.
  *
+ * When `mtrl/ssr/vue` is loaded, a server render emits the declarative shadow
+ * template and the light DOM from a single pass over the slots, including an
+ * `async setup()` child under Suspense. The client renders the slots and not
+ * the template: the HTML parser has already moved that template into the
+ * shadow root. Without the import the markup is unchanged (FLO-373).
+ *
  * @module vue
  */
 
 import {
+  createStaticVNode,
   defineComponent,
   h,
   onBeforeUnmount,
@@ -47,6 +54,7 @@ import {
   type FormProps,
   type ModelOf,
 } from "../elements/adapter";
+import { shadow } from "./shadow";
 
 export { configure } from "../elements/adapter";
 
@@ -123,7 +131,7 @@ export const createComponent = <S, E extends HTMLElement>(
   );
 
   const component = defineComponent(
-    (raw: Record<string, unknown>, { emit, slots, expose }) => {
+    (raw: Record<string, unknown>, { emit, slots, expose, attrs }) => {
       const props = raw;
       const element = ref<E | null>(null);
       expose({
@@ -184,7 +192,39 @@ export const createComponent = <S, E extends HTMLElement>(
       onUpdated(sync);
       onBeforeUnmount(() => listeners.splice(0).forEach((remove) => remove()));
 
-      return () => h(`${getPrefix()}-${spec.name}`, host(), slotted(slots));
+      const tag = (): string => `${getPrefix()}-${spec.name}`;
+      // Fallthrough (`id`, `class`, `style`) is not in `host()`. The shadow
+      // string needs it; the page vnode still inherits it from Vue.
+      const shadowProps = (): Record<string, unknown> => {
+        const result: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(host())) {
+          if (key === "ref" || typeof value === "function" || value === undefined) continue;
+          result[key] = value;
+        }
+        for (const [key, value] of Object.entries(attrs)) {
+          if (key === "ref" || typeof value === "function" || value === undefined || Object.prototype.hasOwnProperty.call(result, key)) continue;
+          result[key] = value;
+        }
+        return result;
+      };
+
+      return () => {
+        const nodes = slotted(slots);
+        // Unregistered, or in the browser, this is "" and the vnode children
+        // stay `nodes`. The parser consumes a template, so the client must not
+        // render one of its own. On the server the bridge has already rendered
+        // `nodes` once; rendering them again would run an async child twice.
+        const inner = isBrowser ? "" : shadow(tag(), shadowProps(), () => nodes);
+        if (typeof inner !== "string") {
+          // A promise is an object, and Vue would treat it as a slot. The
+          // static vnode pushes its children straight into the SSR buffer.
+          const held = createStaticVNode("", 1);
+          held.children = inner as unknown as string;
+          return h(tag(), host(), [held]);
+        }
+        if (inner) return h(tag(), host(), [createStaticVNode(inner, 1)]);
+        return h(tag(), host(), nodes);
+      };
     },
     { name, props, emits }
   );
