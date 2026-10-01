@@ -72,6 +72,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 ### Fixed
 
 - Element CSS file and export checks run after the CI build, so unit tests pass without `dist/` (FLO-365).
+- **Progress indicators size their canvas when they are created (FLO-368).** A linear canvas is as tall as its track (4dp, 8dp thick, 10dp wavy at the default thickness) and fills its container; a circular one is its token size (40dp, 48dp wavy, or the configured size from 24dp to 240dp). The size comes from those tokens, not from measuring the element, so the canvas no longer reserves the default 300×150 until it upgrades.
 - Elements construct on a server DOM (linkedom) without browser-only APIs (FLO-362).
 - Element teardown finishes cleanup after an individual cleanup throws (FLO-363).
 - Text field and select placement cancel and reset their shared measurement timer when the

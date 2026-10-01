@@ -135,7 +135,11 @@ describe('progress', () => {
     sized(null, 240);
     const flat = createProgress({});
     expect(flat.canvas.style.height).toBe('4px');
-    expect(flat.canvas.style.width).toBe('240px');
+    // The layout width is the container's. The bitmap stays a fixed width, so
+    // the markup does not wait for a measurement.
+    expect(flat.canvas.style.width).toBe('100%');
+    expect(flat.canvas.width).toBe(2048);
+    expect(flat.canvas.height).toBe(4);
 
     const thick = createProgress({ thickness: 'thick' });
     expect(thick.canvas.style.height).toBe('8px');
@@ -143,6 +147,36 @@ describe('progress', () => {
     // 3dp of wave above and below a 4dp track is the 10dp the tokens describe
     const wavy = createProgress({ shape: 'wavy' });
     expect(wavy.canvas.style.height).toBe('10px');
+  });
+
+  test('the canvas is sized from the tokens before it has a box or a context', () => {
+    const original = dom.window.HTMLCanvasElement.prototype.getContext;
+    dom.window.HTMLCanvasElement.prototype.getContext = (() => null) as typeof original;
+    sized(null, 0);
+    try {
+      const linear = createProgress({ value: 40 });
+      expect(linear.canvas.style.width).toBe('100%');
+      expect(linear.canvas.style.height).toBe('4px');
+      expect(linear.canvas.width).toBe(2048);
+      expect(linear.canvas.height).toBe(4);
+
+      const circular = createProgress({ variant: 'circular', indeterminate: true });
+      expect(circular.canvas.style.width).toBe('40px');
+      expect(circular.canvas.style.height).toBe('40px');
+      expect(circular.canvas.width).toBe(40);
+      expect(circular.canvas.height).toBe(40);
+
+      const wavy = createProgress({ variant: 'circular', shape: 'wavy' });
+      expect(wavy.canvas.style.width).toBe('48px');
+      expect(wavy.canvas.height).toBe(48);
+
+      const thick = createProgress({ thickness: 'thick', shape: 'wavy' });
+      expect(thick.canvas.style.height).toBe('20px');
+      expect(thick.canvas.height).toBe(20);
+    } finally {
+      dom.window.HTMLCanvasElement.prototype.getContext = original;
+      sized(null, 200);
+    }
   });
 
   test('circular: 40px flat, 48px wavy, and anywhere from 24 to 240 on request', () => {
