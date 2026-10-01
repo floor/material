@@ -25,6 +25,7 @@ try {
   const files = pack.files.filter((file: { path: string }) => file.path.startsWith("dist/ssr/"));
   assert.deepEqual(files.map((file: { path: string }) => file.path).sort(), [
     "dist/ssr/browser.js", "dist/ssr/index.d.ts", "dist/ssr/index.js", "dist/ssr/react.d.ts", "dist/ssr/react.js",
+    "dist/ssr/svelte.d.ts", "dist/ssr/svelte.js",
   ]);
   console.log("Packed SSR files:");
   console.table(files);
@@ -84,6 +85,7 @@ try {
   for (const [name, code, specifier] of [
     ["side-effect", 'import "mtrl/ssr"; console.log("browser import is safe");', "mtrl/ssr"],
     ["react-side-effect", 'import "mtrl/ssr/react"; console.log("browser import is safe");', "mtrl/ssr/react"],
+    ["svelte-side-effect", 'import "mtrl/ssr/svelte"; console.log("browser import is safe");', "mtrl/ssr/svelte"],
     ["call", 'import { renderElement } from "mtrl/ssr"; export { renderElement };', "mtrl/ssr"],
   ]) {
     const entry = join(directory, `${name}.js`);

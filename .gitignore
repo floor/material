@@ -94,6 +94,7 @@ demo/
 .check-react-*.js
 .check-vue.js
 .check-svelte.js
+.check-svelte-ssr.js
 .check-solid.js
 
 # Local Claude Code settings

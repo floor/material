@@ -126,7 +126,7 @@ jobs:
           - group: elements
             checks: elements:check shadow-styles:check
           - group: adapters
-            checks: react:check react-ssr:check vue:check svelte:check solid:check
+            checks: react:check react-ssr:check vue:check svelte:check svelte-ssr:check solid:check
           - group: components
             checks: consumer:check tabs:check slider:check drawer:check navigation-bar:check navigation-rail:check core:check preupgrade:check tokens:check ssr:check
     name: browser (${{ matrix.group }})
@@ -177,6 +177,7 @@ jobs:
             analysis/ssr-parity-chromium.json
             analysis/ssr-upgrade
             analysis/react-ssr/summary.json
+            analysis/svelte-ssr/summary.json
           retention-days: 7
           if-no-files-found: ignore
 
