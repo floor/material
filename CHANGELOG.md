@@ -10,6 +10,25 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Deprecated
+
+- **137 internal names on the package root (FLO-351).** Every root export is public API, and the
+  root re-exported all of `mtrl/core`: the composition core, DOM and timing helpers, the store,
+  the progress indicator's canvas code. In 1.0.0 the root keeps the components, `configureHTML`,
+  the theme helpers (`schemeToTokens`, `THEME_ROLES`) and the global defaults; everything else
+  leaves it. Each name is the same export at its subpath, so only the import changes, and the
+  deprecation shows in your editor on the root import alone. The
+  [migration table](https://github.com/floor/mtrl/blob/main/scripts/fixtures/root-exports.md)
+  lists every name and its path; the largest group is the composition core:
+
+  ```ts
+  import { pipe, createBase, withEvents } from 'mtrl';            // deprecated
+  import { pipe, createBase, withEvents } from 'mtrl/core/compose';
+  ```
+
+  No runtime change: the root's runtime exports and the bundles are the same. The root's export
+  list is now pinned (`bun run root-exports:check`).
+
 ## [0.10.3] - 2026-10-01
 
 Text field fixes: a disabled, empty field no longer shows its placeholder over the label, and
