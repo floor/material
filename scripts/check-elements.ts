@@ -1350,6 +1350,38 @@ try {
     assert.deepEqual(parity.outlined.element, parity.outlined.factory);
     check("textfield: renders as the factory does with the global stylesheet, filled and outlined");
 
+    // FLO-354, FLO-355: inside the shadow root too, a resting label is all the
+    // input area shows — no placeholder (even disabled), no prefix or suffix —
+    // and the affixes appear once the label floats.
+    const resting = await page.evaluate(async () => {
+      const host = document.getElementById("factory") as HTMLElement;
+      const attrs = 'label="Name" placeholder="Enter your name" prefix-text="$" suffix-text="USD" supporting-text="Help"';
+      host.innerHTML = ["filled", "outlined"].flatMap((variant) => [
+        `<m-textfield id="r-${variant}" variant="${variant}" ${attrs}></m-textfield>`,
+        `<m-textfield id="d-${variant}" variant="${variant}" ${attrs} disabled></m-textfield>`,
+        `<m-textfield id="v-${variant}" variant="${variant}" ${attrs} value="12"></m-textfield>`,
+      ]).join("");
+      await new Promise((r) => setTimeout(r, 300));
+      const read = (id: string) => {
+        const root = (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
+        const input = root.querySelector("input") as HTMLInputElement;
+        const opacity = (part: string) => Number(getComputedStyle(root.querySelector(`[class*="textfield__${part}"]`) as HTMLElement).opacity);
+        return { placeholder: getComputedStyle(input, "::placeholder").webkitTextFillColor, prefix: opacity("prefix"), suffix: opacity("suffix") };
+      };
+      const ids = ["filled", "outlined"].flatMap((v) => [`r-${v}`, `d-${v}`, `v-${v}`]);
+      const result = Object.fromEntries(ids.map((id) => [id, read(id)]));
+      host.innerHTML = "";
+      return result;
+    });
+    for (const variant of ["filled", "outlined"]) {
+      for (const id of [`r-${variant}`, `d-${variant}`]) {
+        assert.equal(resting[id]!.placeholder, "rgba(0, 0, 0, 0)", `${id}: the placeholder shows under the resting label`);
+        assert.deepEqual([resting[id]!.prefix, resting[id]!.suffix], [0, 0], `${id}: the affixes show beside the resting label`);
+      }
+      assert.deepEqual([resting[`v-${variant}`]!.prefix, resting[`v-${variant}`]!.suffix], [1, 1], `v-${variant}: the floated label's affixes are hidden`);
+    }
+    check("textfield: a resting label shows alone, enabled or disabled; the prefix and suffix appear as it floats");
+
     // #234: the outline leaves a notch for the floated label. The label used
     // to be painted with a background copied from the nearest ancestor, which
     // found document.body from inside a shadow root and covered any surface

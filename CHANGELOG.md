@@ -23,6 +23,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   disabled input's `-webkit-text-fill-color` was inherited by the placeholder and painted over its
   transparent colour, in both variants and in every engine. The placeholder now shows only while
   the label floats (or when there is no label), disabled or not.
+- **A resting label no longer sits between the prefix and suffix (FLO-355).** An empty, unfocused
+  field with `prefixText` and `suffixText` showed "$ Name … USD". While the label rests in the input
+  area it is now all that area shows; the prefix and suffix fade in as the label floats, in both
+  variants, with or without an icon, enabled or disabled, and in `<m-textfield>`.
 - **The search bar's corners follow the theme (FLO-345).** The bar was rounded with the mtrl-only
   `pill` step (100px), so a theme's `--mtrl-sys-shape-corner-full` never reached it, and opening
   the view held the corners still before they snapped square. The bar is now M3's full corner
