@@ -97,6 +97,10 @@ export const SCENARIO_DEFS = [
     name: "all",
     imports: COMPONENTS.flatMap((component) => component.imports),
   },
+  // mtrl/core/shapes (FLO-346), not the package root: every Material shape by
+  // name, and one shape alone, which must not carry the other 34
+  { name: "shapes", imports: ["materialShapePath"] },
+  { name: "shape-heart", imports: ["shapeHeart", "polygonPath"] },
 ] as const;
 
 export type ScenarioName = (typeof SCENARIO_DEFS)[number]["name"];
@@ -408,7 +412,8 @@ const scenarioSource = (scenario: Scenario): string => {
     return `import { pipe, createBase, withElement } from "${root}/src/core/compose/index.ts"; globalThis._v = [pipe, createBase, withElement];`;
   }
   const imports = scenario.imports.join(", ");
-  return `import { ${imports} } from "${entry}"; globalThis._v = [${imports}];`;
+  const from = scenario.name === "shapes" || scenario.name === "shape-heart" ? `${root}/src/core/shapes/index.ts` : entry;
+  return `import { ${imports} } from "${from}"; globalThis._v = [${imports}];`;
 };
 
 const main = async (): Promise<void> => {

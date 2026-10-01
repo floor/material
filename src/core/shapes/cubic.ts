@@ -71,6 +71,22 @@ export const pointOnCurve = (c: Cubic, t: number): Point => {
   ];
 };
 
+/** Splits a cubic at `t` into two that together trace it (de Casteljau) */
+export const splitCubic = (c: Cubic, t: number): [Cubic, Cubic] => {
+  const u = 1 - t;
+  const [x0, y0, x1, y1, x2, y2, x3, y3] = c;
+  const ax = u * x0 + t * x1, ay = u * y0 + t * y1;
+  const bx = u * x1 + t * x2, by = u * y1 + t * y2;
+  const cx = u * x2 + t * x3, cy = u * y2 + t * y3;
+  const dx = u * ax + t * bx, dy = u * ay + t * by;
+  const ex = u * bx + t * cx, ey = u * by + t * cy;
+  const mx = u * dx + t * ex, my = u * dy + t * ey;
+  return [
+    [x0, y0, ax, ay, dx, dy, mx, my],
+    [mx, my, ex, ey, cx, cy, x3, y3],
+  ];
+};
+
 export const reverseCubic = (c: Cubic): Cubic => [c[6], c[7], c[4], c[5], c[2], c[3], c[0], c[1]];
 
 export const zeroLength = (c: Cubic): boolean =>

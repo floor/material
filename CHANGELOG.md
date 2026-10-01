@@ -12,12 +12,33 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **The 35 Material 3 Expressive shapes in `mtrl/core/shapes` (FLO-346).**
+  - **Shapes:** every one of Compose Material 3's `MaterialShapes`, from `shapeCircle` and
+    `shapeSquare` to `shapeCookie12Sided`, `shapePixelTriangle` and `shapeHeart`. Each is a
+    `RoundedPolygon` normalised into the unit square, built once on first use.
+  - **One export per shape,** so a bundle carries only the shapes it names: one shape and
+    `polygonPath` are 2.6 KB gzip.
+  - **`materialShape(name)` and `materialShapePath(name, size)`** look any shape up by name, and
+    carry all 35 (4.2 KB gzip). `MaterialShapeName` lists Compose's names, camelCased; `'cookie4'`
+    and `'cookie9'` stay as deprecated aliases of `'cookie4Sided'` and `'cookie9Sided'`.
+  - **`polygonPath(polygon, size)`** gives a polygon's outline as an SVG path. Also new are
+    `rectangle()` and `splitCubic()`.
+  - **Verification:** a port of Compose (Apache 2.0) at androidx `080d2b3e`, held cubic for cubic
+    to Compose's own builders run on graphics-shapes 1.0.1, the version Compose depends on
+    (`test/fixtures/material-shapes.json`, from `scripts/generate-material-shapes.kt`).
+  - **`radialProfile`** now throws for a shape that is not star-shaped around its centroid, rather
+    than return a wrong profile. Of the Material shapes, `puffy` and `pixelTriangle` are not.
+  - Not exported from the package root.
 - **`chips.keyboard` is typed (FLO-352).** A chip set had `keyboard.enable()` and
   `keyboard.disable()` at runtime without them in `ChipsComponent`, so TypeScript needed a cast to
   turn the arrow keys off.
 
 ### Fixed
 
+- **The loading indicator's shapes match Compose exactly (FLO-346).** Rounded polygons now start
+  their outline in the middle of the first corner's arc, as graphics-shapes does. Normalised from
+  that outline, each shape is up to about 1.6% larger, and its outline starts where Compose's does. Its
+  shapes' names are now `'cookie9Sided'` and `'cookie4Sided'` in `LOADING_INDICATOR_SHAPES`.
 - **Keyboard fixes in tabs and chips**, found while moving them onto `createRoving` (FLO-343, not
   merged):
   - The arrows skip a tab marked `aria-disabled`, as they skip a disabled one.
