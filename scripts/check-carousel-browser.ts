@@ -9,6 +9,17 @@ type CarouselWindow = Window & {
   wheelCarousel: CarouselComponent;
 };
 
+// The recordings below dispatch one wheel event per animation frame and read the
+// position on every frame, so they describe the carousel only while the browser
+// delivers frames steadily. A stalled frame changes the input: events more than
+// 120ms apart (WHEEL_QUIET) are two gestures, the second measured from wherever
+// the first had glided to, and a velocity read across the stall is an average.
+// A CI runner stalled once for 283ms and the carousel, correctly, went one slide
+// further than the recording expected. Such a recording is taken again, never
+// judged; three in a row fail the check.
+const STEADY_FRAME = 50;
+const RECORDINGS = 3;
+
 /** Packed carousel wheel input and per-frame velocity and snap restoration. */
 export async function checkCarouselWheel(page: Page): Promise<void> {
   const viewport = page.viewportSize();
@@ -39,44 +50,60 @@ export async function checkCarouselWheel(page: Page): Promise<void> {
         assert.equal(await scroller.evaluate(el => getComputedStyle(el).scrollSnapType), "x mandatory");
       }
       for (const momentum of [false, true]) {
-        await scroller.evaluate(el => el.scrollTo({ left: 0, behavior: "instant" }));
-        await page.waitForTimeout(150);
-        const trace = await scroller.evaluate(async (element, momentum) => {
-          const snaps = Array.from(element.querySelectorAll<HTMLElement>(".mtrl-carousel__snap"), el => parseFloat(el.style.left));
-          const deltas = momentum ? Array.from({ length: 30 }, (_, i) => 300 * 0.9 ** i) : [100];
-          const target = snaps.find(position => position >= deltas.reduce((sum, delta) => sum + delta, 0))!;
-          const samples: { ms: number; left: number; snap: string }[] = [];
-          const prevented: boolean[] = [];
-          const targets: { frame: number; left: number }[] = [];
-          const snapBefore = element.style.scrollSnapType;
-          const start = performance.now();
-          await new Promise<void>(resolve => {
-            let frame = 0;
-            const sample = (now: number) => {
-              samples.push({ ms: now - start, left: element.scrollLeft, snap: element.style.scrollSnapType });
-              if (frame < deltas.length) {
-                const event = new WheelEvent("wheel", { deltaY: deltas[frame], bubbles: true, cancelable: true });
-                element.dispatchEvent(event);
-                prevented.push(event.defaultPrevented);
-                const left = snaps[(window as unknown as CarouselWindow).wheelCarousel.getCurrentSlide()]!;
-                if (targets.at(-1)?.left !== left) targets.push({ frame, left });
-              }
-              frame++;
-              if (now - start < 2200) requestAnimationFrame(sample);
-              else resolve();
-            };
-            requestAnimationFrame(sample);
-          });
-          // px/ms from actual frame intervals, independent of display refresh rate.
-          const velocities = samples.slice(1).map((sample, i) =>
-            (sample.left - samples[i]!.left) / (sample.ms - samples[i]!.ms));
-          return { momentum, snaps, target, samples, velocities, prevented, targets, snapBefore };
-        }, momentum);
-        traces.push({ variant, ...trace });
+        const label = `${variant} ${momentum ? "30-event decay" : "100px notch"}`;
+        const record = async () => {
+          await scroller.evaluate(el => el.scrollTo({ left: 0, behavior: "instant" }));
+          await page.waitForTimeout(150);
+          return scroller.evaluate(async (element, momentum) => {
+            const snaps = Array.from(element.querySelectorAll<HTMLElement>(".mtrl-carousel__snap"), el => parseFloat(el.style.left));
+            const deltas = momentum ? Array.from({ length: 30 }, (_, i) => 300 * 0.9 ** i) : [100];
+            const target = snaps.find(position => position >= deltas.reduce((sum, delta) => sum + delta, 0))!;
+            const samples: { ms: number; left: number; snap: string }[] = [];
+            const prevented: boolean[] = [];
+            const targets: { frame: number; left: number }[] = [];
+            const snapBefore = element.style.scrollSnapType;
+            const start = performance.now();
+            await new Promise<void>(resolve => {
+              let frame = 0;
+              const sample = (now: number) => {
+                samples.push({ ms: now - start, left: element.scrollLeft, snap: element.style.scrollSnapType });
+                if (frame < deltas.length) {
+                  const event = new WheelEvent("wheel", { deltaY: deltas[frame], bubbles: true, cancelable: true });
+                  element.dispatchEvent(event);
+                  prevented.push(event.defaultPrevented);
+                  const left = snaps[(window as unknown as CarouselWindow).wheelCarousel.getCurrentSlide()]!;
+                  if (targets.at(-1)?.left !== left) targets.push({ frame, left });
+                }
+                frame++;
+                if (now - start < 2200) requestAnimationFrame(sample);
+                else resolve();
+              };
+              requestAnimationFrame(sample);
+            });
+            // px/ms from actual frame intervals, independent of display refresh rate.
+            const velocities = samples.slice(1).map((sample, i) =>
+              (sample.left - samples[i]!.left) / (sample.ms - samples[i]!.ms));
+            return { momentum, snaps, target, samples, velocities, prevented, targets, snapBefore };
+          }, momentum);
+        };
+        let trace = await record();
+        let longestFrame = 0;
+        for (let recording = 1; ; recording++) {
+          longestFrame = Math.max(...trace.samples.slice(1).map((sample, i) => sample.ms - trace.samples[i]!.ms));
+          traces.push({ variant, recording, longestFrame, ...trace });
+          if (longestFrame <= STEADY_FRAME || recording === RECORDINGS) break;
+          console.log(`${label}: a frame took ${longestFrame.toFixed(1)}ms, recording again (${recording} of ${RECORDINGS} discarded)`);
+          // A stalled glide may outlast its recording; the next one starts from rest.
+          await page.waitForFunction(() => document.querySelector<HTMLElement>(".mtrl-carousel__scroller")!.style.scrollSnapType !== "none");
+          trace = await record();
+        }
+        if (longestFrame > STEADY_FRAME) {
+          failures.push(`${label}: no steady recording in ${RECORDINGS} attempts (a frame took ${longestFrame.toFixed(1)}ms, the limit is ${STEADY_FRAME}ms)`);
+          continue;
+        }
         const positions = trace.samples.map(sample => sample.left);
         const first = positions.findIndex(left => left > 0);
         const last = positions.findIndex(left => Math.abs(left - trace.target) <= 0.5);
-        const label = `${variant} ${momentum ? "30-event decay" : "100px notch"}`;
         const restored = trace.samples.findIndex((sample, i) => i > first && sample.snap === trace.snapBefore);
         const lastExtension = trace.targets.at(-1)!.frame;
         // Include the next two frames to catch a delayed native-scroll restart.
