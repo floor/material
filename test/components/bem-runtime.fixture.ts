@@ -7,7 +7,6 @@ import createSwitch from "../../src/components/switch";
 import createTextfield from "../../src/components/textfield";
 import { TEXTFIELD_CLASSES } from "../../src/components/textfield/constants";
 import createMenu from "../../src/components/menu";
-import createSegmentedButton from "../../src/components/segmented-button";
 
 let dom: JSDOM;
 let cleanup: (() => void)[];
@@ -110,14 +109,3 @@ test("a <button> opener that is not an mtrl button gets the menu's own opener cl
   expect(opener.classList.contains("mtrl-menu__opener--active")).toBe(true);
 });
 
-test("segmented buttons retain their independent button block and expose a BEM group hook", () => {
-  const group = createSegmentedButton({ segments: [{ value: "day", text: "Day" }, { value: "week", text: "Week" }] });
-  cleanup.push(() => group.destroy());
-  for (const segment of group.segments) {
-    expect(segment.element.classList.contains("mtrl-button")).toBe(true);
-    expect(segment.element.classList.contains("mtrl-segmented-button__segment")).toBe(true);
-    expect(segment.element.classList.contains("mtrl-segmented-button-segment")).toBe(false);
-  }
-  (group.segments[1].element as HTMLButtonElement).click();
-  expect(group.getValue()).toEqual(["week"]);
-});

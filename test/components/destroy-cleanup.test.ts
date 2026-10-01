@@ -60,7 +60,6 @@ const CONFIGS: Record<string, Record<string, unknown>> = {
   createList: { items: [{ id: "1", text: "One" }] },
   createNavigationRail: { items: [{ id: "a", label: "A", icon: "<svg></svg>" }] },
   createRadios: { name: "r", options: [{ value: "a", label: "A" }] },
-  createSegmentedButton: { segments: [{ text: "A" }] },
   createSelect: { options: [{ id: "a", value: "a", text: "A" }] },
   createSnackbar: { message: "Saved" },
   createSplitButton: { text: "Go", menu: [{ id: "a", text: "A" }] },
@@ -77,7 +76,6 @@ const NOT_A_COMPONENT: Record<string, string> = {
   createCardContent: "builds card content, returns no component",
   createCardHeader: "builds card content, returns no component",
   createCardMedia: "builds card content, returns no component",
-  createSegment: "a part of segmented-button, not constructed on its own",
 };
 
 const factories = Object.entries(components).filter(

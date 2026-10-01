@@ -12,6 +12,28 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **Segmented buttons are removed (FLO-382).** `createSegmentedButton` and `createSegment`
+  (deprecated since 0.10), their types, `mtrl/components/segmented-button`,
+  `mtrl/styles/segmented-button` and the `--mtrl-segmented-button-*` properties are gone. M3
+  replaced the segmented button with the connected button group. Migrate:
+
+  ```ts
+  createSegmentedButton({ mode: 'multi', density: 'compact',            // 0.10
+    segments: [{ text: 'Day', value: 'day', checkmarkIcon }] });
+  createButtonGroup({ kind: 'connected', selection: 'multi', density: 'compact', // 1.0
+    buttons: [{ text: 'Day', value: 'day', selectedIcon: checkmarkIcon }] });
+  ```
+
+  - `mode` is `selection` (`single`, `multi`, or `none` for plain actions); `segments` are
+    `buttons`; `checkmarkIcon` is `selectedIcon`. `density`, `disabled`, `ripple`,
+    `rippleConfig` and `on.change` keep their meaning.
+  - `enableSegment(value)` / `disableSegment(value)` become `enableButton(index)` /
+    `disableButton(index)`, or `getButtonById(id)` for one button.
+  - The `change` event carries the selection; it has no `oldValue`, so keep the previous value
+    if you need it.
+  - The button group's `select(value)` now clears the selection when no button carries `value`,
+    with a warning in development and no event, as the segmented button and the other selection
+    components do (FLO-328).
 - Menu items and search suggestions are present synchronously when their factories return,
   including in server-rendered shadow DOM (FLO-367). Migration: DOM inspection no longer needs
   a timer before reading initial items or suggestions. Menu positioning still waits for

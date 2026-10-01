@@ -128,5 +128,5 @@ declare global {
 // and `mock` were declared `any`, so all 3,873 assertions and 82 mock() calls
 // in this tree type-checked against nothing, while a 2-argument `test`
 // signature rejected the valid 3-argument form that bun accepts and two
-// segmented-button suites use. They hid real errors and invented false ones at
+// suites used. They hid real errors and invented false ones at
 // once. The real types come from `"types": ["bun"]` in test/tsconfig.json.

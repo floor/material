@@ -1,6 +1,6 @@
 // Loaded only by the packed Vite fixture, never by Bun's unit test runner.
 import {
-  createButton, createTextfield, createSelect, createCheckbox, createSegmentedButton,
+  createButton, createTextfield, createSelect, createCheckbox,
   createButtonGroup, createSplitButton, createTabs, createCard, createDialog, createSnackbar,
 } from "mtrl";
 
@@ -45,12 +45,6 @@ const cases: Record<string, () => unknown> = {
     add(createCheckbox({ label: "Checked", checked: true }));
     add(createCheckbox({ label: "Mixed", indeterminate: true }));
     add(createCheckbox({ label: "Disabled", disabled: true, checked: true }));
-  },
-  "segmented-button"() {
-    add(createSegmentedButton({ segments: [
-      { text: "Day", value: "day", selected: true }, { text: "Week", value: "week" },
-      { text: "Month", value: "month", disabled: true },
-    ] }));
   },
   "button-group"() {
     add(createButtonGroup({ kind: "connected", buttons: [{ text: "Cut" }, { text: "Copy" }, { text: "Paste", disabled: true }] }));

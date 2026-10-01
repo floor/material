@@ -4,8 +4,9 @@
  * Button Group component exports
  *
  * The Button Group component provides a container for grouping related action buttons.
- * Unlike Segmented Buttons (used for selection), Button Groups are for grouping
- * related actions where each button triggers an independent action.
+ * A standard group holds related actions, each button acting on its own; a
+ * connected group (`kind: "connected"`, with `selection`) is M3's replacement for
+ * the segmented button, which 1.0.0 removed (FLO-382).
  *
  * @packageDocumentation
  */

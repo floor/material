@@ -17,7 +17,6 @@ export const componentStyles: Record<string, { source: string; dependencies: str
   "fab-menu": { source: "components/fab-menu", dependencies: ["fab", "menu"] },
   "extended-fab": { source: "components/extended-fab", dependencies: [] },
   "icon-button": { source: "components/icon-button", dependencies: [] },
-  "segmented-button": { source: "components/segmented-button", dependencies: ["button"] },
   card: { source: "components/card", dependencies: ["button"] },
   carousel: { source: "components/carousel", dependencies: [] },
   checkbox: { source: "components/checkbox", dependencies: [] },

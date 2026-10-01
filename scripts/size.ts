@@ -61,7 +61,6 @@ export const COMPONENTS = [
   { name: "radios", imports: ["createRadios"] },
   { name: "search", imports: ["createSearch"] },
   { name: "select", imports: ["createSelect"] },
-  { name: "segmented-button", imports: ["createSegmentedButton"] },
   { name: "slider", imports: ["createSlider"] },
   { name: "snackbar", imports: ["createSnackbar"] },
   { name: "switch", imports: ["createSwitch"] },
@@ -81,7 +80,6 @@ export type ComponentName = (typeof COMPONENTS)[number]["name"];
 // chunk, and button must not be in card's.
 export const KNOWN_DEPS: Partial<Record<ComponentName, readonly ComponentName[]>> = {
   "button-group": ["button", "icon-button"],
-  "segmented-button": ["button"],
   dialog: ["button", "divider"],
   snackbar: ["button", "icon-button"],
   select: ["textfield", "menu"],
@@ -152,7 +150,6 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   radios: kb(5.1),
   search: kb(10.3), // the open view in the top layer (FLO-285): 9,759; combobox, contained and divided (FLO-286, FLO-287): 10,114; minWidth and maxWidth (FLO-290): 10,161; trailing items, avatar, supporting text, reopening (FLO-291): 10,477
   select: kb(20.3), // the menu's top layer: 19,600 to 20,115; the field, the supporting text row and the counter (FLO-300): 20,608
-  "segmented-button": kb(9.3),
   slider: kb(13.1), // FLO-249..255 slider conformance; FLO-331 the track corner token (12,918 measured); track, stops and the inset icon as a percentage of the value (FLO-369): 13,276
   // layer: "top", the core/dom top-layer helper and the modal-dialog placement, which
   // follows modals opening and closing: 11,533 to 12,320

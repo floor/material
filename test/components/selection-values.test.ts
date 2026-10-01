@@ -16,7 +16,8 @@
 //
 // Measured before the change: radios already did both; select selected a
 // disabled option but kept the previous one for an unknown value; tabs refused
-// a disabled tab and kept the previous one; segmented button refused both.
+// a disabled tab and kept the previous one; segmented button refused both (its
+// cases now cover the connected button group that replaces it, FLO-382).
 
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { JSDOM } from "jsdom";
@@ -48,7 +49,7 @@ g.ResizeObserver = TestResizeObserver;
 import createRadios from "../../src/components/radios";
 import createSelect from "../../src/components/select";
 import createTabs from "../../src/components/tabs";
-import createSegmentedButton from "../../src/components/segmented-button";
+import createButtonGroup from "../../src/components/button-group";
 
 beforeEach(() => {
   document.body.innerHTML = "";
@@ -127,18 +128,20 @@ describe("a disabled option can be selected by code", () => {
     expect(mtrlWarnings()).toEqual([]);
   });
 
-  test("segmented button", () => {
-    const group = createSegmentedButton({
-      segments: [
-        { value: "x", text: "X" },
+  test("connected button group", () => {
+    const group = createButtonGroup({
+      kind: "connected",
+      selection: "single",
+      buttons: [
+        { value: "x", text: "X", selected: true },
         { value: "z", text: "Z", disabled: true },
       ],
-    } as never);
+    });
     document.body.append(group.element);
 
     group.select("z");
 
-    expect(group.getValue()).toEqual(["z"]);
+    expect(group.getValue()).toBe("z");
     expect(mtrlWarnings()).toEqual([]);
   });
 });
@@ -207,13 +210,15 @@ describe("a value no option carries clears the selection", () => {
     expect(events).toEqual([]);
   });
 
-  test("segmented button clears, warns once, and emits no change, as a programmatic change is silent (FLO-328)", () => {
-    const group = createSegmentedButton({
-      segments: [
-        { value: "x", text: "X" },
+  test("connected button group clears, warns once, and emits no change, as a programmatic change is silent (FLO-328, FLO-382)", () => {
+    const group = createButtonGroup({
+      kind: "connected",
+      selection: "multi",
+      buttons: [
+        { value: "x", text: "X", selected: true },
         { value: "y", text: "Y" },
       ],
-    } as never);
+    });
     document.body.append(group.element);
 
     const events: unknown[] = [];
@@ -222,7 +227,7 @@ describe("a value no option carries clears the selection", () => {
     group.select("nope");
 
     expect(group.getValue()).toEqual([]);
-    expect(mtrlWarnings()).toEqual(['[mtrl] segmented button: no option with value "nope"']);
+    expect(mtrlWarnings()).toEqual(['[mtrl] button group: no option with value "nope"']);
     expect(events).toEqual([]);
   });
 });
@@ -247,18 +252,19 @@ describe("the user still cannot select a disabled option", () => {
     expect(tabs.getActiveTab()?.getValue()).toBe("one");
   });
 
-  test("clicking a disabled segment does not select it", () => {
-    const group = createSegmentedButton({
-      segments: [
-        { value: "x", text: "X" },
+  test("clicking a disabled button of a connected group does not select it", () => {
+    const group = createButtonGroup({
+      kind: "connected",
+      selection: "single",
+      buttons: [
+        { value: "x", text: "X", selected: true },
         { value: "z", text: "Z", disabled: true },
       ],
-    } as never);
+    });
     document.body.append(group.element);
 
-    const disabled = group.segments.find((segment) => segment.value === "z")!;
-    disabled.element.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
+    group.buttons[1]!.element.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
 
-    expect(group.getValue()).toEqual(["x"]);
+    expect(group.getValue()).toBe("x");
   });
 });
