@@ -135,7 +135,7 @@ import type { ElementEvents, ElementMarkup } from "../elements";
 /**
  * The element's events as React 19 listens to them on a custom element: an
  * \`on<event>\` prop in lower case gets the element's own event
- * (\`onchange={(e) => e.detail.checked}\`). \`onChange\` stays React's synthetic
+ * (\`onchange={(e) => e.detail.value}\`). \`onChange\` stays React's synthetic
  * event, which has no \`detail\`; React 18 sets no event props on a custom element.
  */
 type Events<S> = {

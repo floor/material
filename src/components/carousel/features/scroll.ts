@@ -108,7 +108,7 @@ export const withScroll = (config: CarouselConfig) =>
     };
 
     const emitChange = (): void => {
-      component.emit?.(CAROUSEL_EVENTS.CHANGE, { index: currentIndex });
+      component.emit?.(CAROUSEL_EVENTS.CHANGE, { value: currentIndex, index: currentIndex });
     };
 
     const nearestIndex = (position: number): number => {

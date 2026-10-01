@@ -35,6 +35,35 @@ const only = process.argv.find(arg => arg.startsWith("--element="))?.split("=")[
 assert(only === undefined || fixtures.some(f => f.element === only), "Unknown element");
 const directory = `analysis/ssr-upgrade/${engine}${mutation ? `/mutation-${mutation}` : only ? `/element-${only}` : ""}`;
 await mkdir(directory, { recursive: true });
+// A new page's pointer rests at the viewport origin, and whether the browser has
+// applied :hover there by the time of a capture is timing. With the fixture at the
+// origin, CI captured a button group's first button hovered before the upgrade and
+// not after (2,713 pixels); ten of the fixtures change under a pointer there. So
+// the stage starts below the origin, clear of the tallest touch target that
+// overflows its host, and each pass checks that nothing of the fixture is under
+// the pointer. No pointer event is dispatched: moving the pointer away instead
+// starts the un-hover transition it was meant to avoid.
+const CLEAR = 32;
+// Placed at the viewport's top edge whatever the stage does. Its surface has no
+// hover state; the check below still refuses a control of it under the pointer.
+const AT_ORIGIN = ["top-app-bar"];
+/** What of the fixture is under the resting pointer: nothing, its surface, or one of its controls. */
+const underPointer = (page: Page): Promise<"nothing" | "surface" | "control"> => page.evaluate(() => {
+  const host = document.querySelector("#stage > :first-child")!;
+  let hit = document.elementFromPoint(0, 0);
+  if (!hit || !(hit === host || host.contains(hit))) return "nothing";
+  // elementFromPoint stops at a shadow host; look inside it.
+  for (let inner = hit.shadowRoot?.elementFromPoint(0, 0); inner && inner !== hit; inner = hit.shadowRoot?.elementFromPoint(0, 0)) hit = inner;
+  // Landmark roles (the bar is a banner) are surfaces; these are what a pointer changes.
+  const controls = "button, a, input, select, textarea, label, summary, [tabindex], " +
+    ["button", "link", "tab", "menuitem", "option", "switch", "checkbox", "radio", "slider"].map(role => `[role=${role}]`).join(", ");
+  return hit.closest(controls) ? "control" : "surface";
+});
+const clearOfPointer = async (page: Page, fixture: string, when: string): Promise<void> => {
+  const under = await underPointer(page);
+  assert(under === "nothing" || (under === "surface" && AT_ORIGIN.includes(fixture)),
+    `${engine}/${fixture}: a ${under} of the fixture is under the resting pointer ${when}`);
+};
 let html = "";
 let preupgrade = false;
 const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
@@ -42,7 +71,7 @@ const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   if (path === "/fixture.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
   if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
   if (path === "/preupgrade.css") return new Response(Bun.file("dist/elements/preupgrade.css"));
-  return new Response(`<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css">${preupgrade ? '<link rel="stylesheet" href="/preupgrade.css">' : ""}<style>body{width:600px;margin:0}#stage{width:600px}</style></head><body><main id="stage">${html}<div id="following">Following content</div></main></body></html>`, { headers: { "Content-Type": "text/html" } });
+  return new Response(`<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css">${preupgrade ? '<link rel="stylesheet" href="/preupgrade.css">' : ""}<style>body{width:600px;margin:0;padding-top:${CLEAR}px}#stage{width:600px}</style></head><body><main id="stage">${html}<div id="following">Following content</div></main></body></html>`, { headers: { "Content-Type": "text/html" } });
 } });
 const browser = await ({ chromium, firefox, webkit })[engine].launch();
 type Box = { x: number; y: number; width: number; height: number };
@@ -110,6 +139,7 @@ try {
         return document.querySelector("#stage > :first-child")!.isEqualNode(expected.content.firstElementChild);
       }, fixture.html), `${engine}/${fixture.element}: fallback must contain only the authored host and light DOM`);
       if (!children) {
+        await clearOfPointer(inert, fixture.element, "without JavaScript");
         await inert.screenshot({ path: `${directory}/${fixture.element}-before.png`, animations: "disabled" });
         await inert.close();
         equal++;
@@ -129,6 +159,7 @@ try {
     const allowance = allowed.find(e => e.element === fixture.element && e.engines.includes(engine) && (!e.withoutAnchors || !anchors));
     const beforeRegions = allowance ? await regions(inert, allowance.selector) : [];
     if (allowance) assert(beforeRegions.length, `${fixture.element}: exception selector matches no SSR node`);
+    await clearOfPointer(inert, fixture.element, "before the upgrade");
     const before = await inert.screenshot({ path: `${directory}/${fixture.element}-before.png`, animations: "disabled" });
     await inert.close();
     const page = await browser.newPage(options);
@@ -161,6 +192,7 @@ try {
       const indicator = document.querySelector("m-tabs")!.shadowRoot!.querySelector<HTMLElement>('[part="indicator"]')!;
       return { anchors: CSS.supports("anchor-name", "none"), width: getComputedStyle(indicator).width, transform: indicator.style.transform, inlineWidth: indicator.style.width };
     }) : undefined;
+    await clearOfPointer(page, fixture.element, "after the upgrade");
     const after = await page.screenshot({ path: `${directory}/${fixture.element}-after.png`, animations: "disabled" });
     const afterRegions = allowance ? await regions(page, allowance.selector) : [];
     if (allowance) assert(afterRegions.length, `${fixture.element}: exception selector matches no upgraded node`);

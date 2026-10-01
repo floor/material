@@ -163,7 +163,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   textfield: kb(8.9),
   timepicker: kb(10.5), // the draft, input event, dialog in the component's tree and disabled (FLO-288): 10,639
   "top-app-bar": kb(4.4),
-  toolbar: kb(11.2), // FLO-304, with its icon buttons and buttons; the overflow menu is injected: 11,302; slotted items for <m-toolbar>: 11,374
+  toolbar: kb(11.3), // FLO-304, with its icon buttons and buttons; the overflow menu is injected: 11,302; slotted items for <m-toolbar>: 11,374; the toggles' change value (FLO-380): 11,454 to 11,479
   // mtrl/core/shapes (FLO-346): every shape by name, and one shape alone
   shapes: kb(4.2), // materialShapePath, all 35: 4,190
   "shape-heart": kb(2.7), // shapeHeart and polygonPath: 2,623

@@ -5,7 +5,7 @@
  *
  * With `toggle`, the `selected` attribute is the default state and the
  * `selected` property the live one: the attribute moves the state until the
- * user or script changes it. A click dispatches `change` with `{ selected }`
+ * user or script changes it. A click dispatches `change` with `{ selected, value }`
  * from the host, as `<m-switch>` and `<m-checkbox>` do; `toggle`, which
  * clashed with the native ToggleEvent, is dispatched as well for one release
  * (deprecated, FLO-295).
@@ -17,7 +17,7 @@
  */
 
 import createIconButton from "../components/icon-button";
-import type { IconButtonComponent, IconButtonConfig } from "../components/icon-button/types";
+import type { IconButtonChangePayload, IconButtonComponent, IconButtonConfig } from "../components/icon-button/types";
 import { defineElement, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 import { buttonForm, submitOnClick, typeAttribute } from "./form-button";
 
@@ -57,18 +57,24 @@ const iconButtonSpec = {
   events: {
     // The factory's emitter `change` (FLO-295).
     change: {
-      detail: (payload) => ({ selected: (payload as { selected: boolean }).selected }),
+      detail: (payload) => {
+        const { selected, value } = payload as IconButtonChangePayload;
+        return { selected, value };
+      },
     },
     // Deprecated: dispatched by `setup` beside `change`, for one release.
     toggle: {
-      detail: (payload) => ({ selected: (payload as { selected: boolean }).selected }),
+      detail: (payload) => {
+        const { selected, value } = payload as IconButtonChangePayload;
+        return { selected, value };
+      },
     },
   },
   form: buttonForm<IconButtonComponent>(),
   setup: (host, component) => {
     // The deprecated `toggle`, beside the `change` the element dispatches.
-    const onChange = ({ selected }: { selected: boolean }): void => {
-      host.dispatchEvent(new CustomEvent("toggle", { detail: { selected }, bubbles: true, composed: true }));
+    const onChange = ({ selected, value }: IconButtonChangePayload): void => {
+      host.dispatchEvent(new CustomEvent("toggle", { detail: { selected, value }, bubbles: true, composed: true }));
     };
     component.on("change", onChange);
     const cleanup = submitOnClick(host);
