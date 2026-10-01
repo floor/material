@@ -5,7 +5,10 @@ import { dirname, join, relative, resolve } from "node:path";
 export function buildModules(outdir: string) {
   const config = ts.readConfigFile("tsconfig.json", ts.sys.readFile);
   if (config.error) throw new Error(ts.flattenDiagnosticMessageText(config.error.messageText, "\n"));
-  const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, process.cwd(), {
+  // FLO-364: exclude the unfinished server entry from JS and declarations only;
+  // ts:check still uses the full source tree in tsconfig.json.
+  const buildConfig = { ...config.config, exclude: [...(config.config.exclude ?? []), "src/ssr/**"] };
+  const parsed = ts.parseJsonConfigFileContent(buildConfig, ts.sys, process.cwd(), {
     rootDir: resolve("src"),
     outDir: resolve(outdir),
     noEmit: false,
