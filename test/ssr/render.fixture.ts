@@ -156,3 +156,19 @@ test("missing registered styles fail clearly", () => {
   try { expect(() => renderElement("m-button")).toThrow("Missing SSR CSS module: button"); }
   finally { registerStyles({ button: previous }); }
 });
+
+test("only encountered tags are defined, after the HTML policy, with templates inert", () => {
+  const original = toolbarElement.spec.create;
+  let defined: string[] = [];
+  toolbarElement.spec.create = config => {
+    defined = Object.values(elements).map(({ spec }) => `ui-${spec.name}`).filter(tag => !!customElements.get(tag));
+    return original(config);
+  };
+  configureHTML({ sanitize: html => html.replaceAll("ui-card", "ui-button") });
+  try {
+    const html = renderElement("ui-toolbar", {}, '<ui-card>Save</ui-card><ui-button>Again</ui-button><template><ui-dialog></ui-dialog></template>', { prefix: "ui" });
+    expect(defined.sort()).toEqual(["ui-button", "ui-toolbar"]);
+    expect(html.match(/shadowrootmode/g)).toHaveLength(3);
+    expect(html).toContain('<template><ui-dialog></ui-dialog></template>');
+  } finally { toolbarElement.spec.create = original; configureHTML(null); }
+});

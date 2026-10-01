@@ -103,7 +103,11 @@ export function renderElement(
   if (typeof children !== "string") throw new TypeError("Children must be an HTML string");
   try {
     return withServerScope(scope => {
-      for (const [name, entry] of specs) customElements.define(`${prefix}-${name}`, createElementClass(entry));
+      const define = (entry: ElementSpec<ElementComponent>): void => {
+        const name = `${prefix}-${entry.name}`;
+        if (!customElements.get(name)) customElements.define(name, createElementClass(entry));
+      };
+      define(spec);
       const host = scope.document.createElement(tag);
       for (const [name, value] of attrs) host.setAttribute(name, value);
       setHTML(host, children);
@@ -136,6 +140,10 @@ export function renderElement(
           if (Array.from(element.children).some(child => child.localName === "template" && child.hasAttribute("shadowrootmode"))) {
             throw new TypeError("SSR host already declares a shadow root");
           }
+          define(entry);
+          // Parsed, detached and factory-generated hosts may predate their
+          // definition. Upgrade only the audited node; templates stay inert.
+          customElements.upgrade(element);
           depth++;
         }
         if (element.localName === `${prefix}-menu-item` && element.querySelector(`${prefix}-menu-item`)) {
