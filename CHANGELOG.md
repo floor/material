@@ -38,6 +38,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
   The subpaths are ESM-only, as 1.0.0 is. The root's export list is pinned
   (`bun run root-exports:check`), so a name cannot join it unnoticed.
+- **mtrl is ESM-only (FLO-358).** The CommonJS bundle (`dist/index.cjs`) and the root's `require`
+  condition are gone; `main` is the ESM entry. Every subpath was already import-only, and with
+  the internals off the root the bundle would have been a partial API. `require('mtrl')` no longer
+  resolves (`ERR_PACKAGE_PATH_NOT_EXPORTED`): use `import`, or `await import('mtrl')` from CommonJS.
 
 ### Deprecated
 

@@ -205,7 +205,7 @@ Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, 
 
 ## Imports and tree-shaking
 
-mtrl publishes ESM with type declarations, so bundlers drop unused exports and split dynamic imports. CommonJS remains available through `require('mtrl')`.
+mtrl publishes ESM only, with type declarations, so bundlers drop unused exports and split dynamic imports. From CommonJS, load it with a dynamic `import('mtrl')`.
 
 | Import | Path |
 |--------|------|

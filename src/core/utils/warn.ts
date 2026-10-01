@@ -6,9 +6,8 @@
 // so it warns -- but only where a warning helps, which is not production.
 //
 // The guard is written defensively rather than as a bare
-// `process.env.NODE_ENV`. The CommonJS bundle has that expression replaced at
-// build time (`scripts/build.ts`), but the ESM modules are emitted by tsc, which
-// substitutes nothing. A consumer loading those modules straight into a
+// `process.env.NODE_ENV`. The ESM modules are emitted by tsc, which
+// substitutes nothing (a consumer's bundler may). A consumer loading them straight into a
 // browser has no `process`, and a bare read would throw where the library is
 // only trying to warn. The cost of `typeof process` is that raw-browser ESM
 // gets no warning; throwing instead would be worse.
