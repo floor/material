@@ -156,3 +156,15 @@ test("only encountered tags are defined, after the HTML policy, with templates i
     expect(html).toContain('<template><ui-dialog></ui-dialog></template>');
   } finally { containerSpec.create = original; configureHTML(null); }
 });
+
+test("menu items and search suggestions are included in the synchronous server tree", () => {
+  const menu = parsed(renderElement("m-menu", {}, '<m-menu-item value="copy">Copy</m-menu-item><m-menu-item divider></m-menu-item><m-menu-item value="paste" disabled>Paste</m-menu-item>'));
+  const menuTree = menu.querySelector("template")!.content;
+  expect(Array.from(menuTree.querySelectorAll('[role="menuitem"]'), item => [item.textContent, item.getAttribute("tabindex")])).toEqual([["Copy", "0"], ["Paste", "-1"]]);
+  expect(menuTree.querySelectorAll('[role="separator"]')).toHaveLength(1);
+
+  const search = parsed(renderElement("m-search", { value: "app" }, '<m-search-suggestion value="apple">Apple</m-search-suggestion><m-search-suggestion>Banana</m-search-suggestion>'));
+  const searchTree = search.querySelector("template")!.content;
+  expect(Array.from(searchTree.querySelectorAll('[role="option"]'), item => item.textContent)).toEqual(["Apple", "Banana"]);
+  expect(searchTree.querySelector("strong")?.textContent).toBe("App");
+});

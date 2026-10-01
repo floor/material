@@ -743,23 +743,8 @@ const withController =
     }
   };
 
-  /**
-   * Sets up the menu
-   */
+  /** Positions an initially visible menu after the caller can attach it. */
   const initMenu = () => {
-    // Set up menu structure
-    renderMenuItems();
-
-    // Set up keyboard navigation if available. A listbox's options never take
-    // focus, so they get no tab stops and no handlers: the combobox owns the keys.
-    if (!listbox && component.keyboard && component.keyboard.setupKeyboardHandlers) {
-      component.keyboard.setupKeyboardHandlers(component.element, state, {
-        closeMenu,
-        findItemById,
-        ...submenuActions,
-      });
-    }
-
     // Position if visible
     if (state.visible) {
       const openerElement = getOpenerElement();
@@ -814,7 +799,20 @@ const withController =
     });
   });
 
-  // Initialize after DOM is ready
+  // The element and keyboard feature already exist at this pipe stage. Render
+  // the same initial tree in the browser and on the server, including tab stops.
+  renderMenuItems();
+  // A listbox leaves focus and keyboard handling with its combobox.
+  if (!listbox && component.keyboard && component.keyboard.setupKeyboardHandlers) {
+    component.keyboard.setupKeyboardHandlers(component.element, state, {
+      closeMenu,
+      findItemById,
+      ...submenuActions,
+    });
+  }
+
+  // Keep the original attachment boundary for positioning an initially visible
+  // menu. Opening animation and focus retain their own deferred work in openMenu.
   tasks.setTimeout(initMenu, 0);
 
   // Something other than the menu took it out of the top layer: close, so

@@ -12,6 +12,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- Menu items and search suggestions are present synchronously when their factories return,
+  including in server-rendered shadow DOM (FLO-367). Migration: DOM inspection no longer needs
+  a timer before reading initial items or suggestions. Menu positioning still waits for
+  attachment; opening, focus, lazy submenus and suggestion updates keep their existing behavior.
+
 - **The shape scale is M3's and nothing else (FLO-345).** The mtrl-only steps `extra-tiny` (1px),
   `tiny` (2px) and `pill` (100px) are removed from `$shape`, with their
   `--mtrl-sys-shape-corner-*` properties on `:root`. `v.shape('tiny')` and the rest now stop the
