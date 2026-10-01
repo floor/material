@@ -108,6 +108,13 @@ export const withAPI =
       return this;
     },
 
+    isDisabled(): boolean {
+
+      return disabled.isDisabled();
+
+    },
+
+
     disable(): CheckboxComponent {
       disabled.disable();
       return this;

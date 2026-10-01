@@ -340,6 +340,13 @@ export const withAPI =
         return this;
       },
 
+      isDisabled(): boolean {
+
+        return disabled.isDisabled();
+
+      },
+
+
       disable(): TextfieldComponent {
         disabled.disable();
         setTrailingDisabled(true);
