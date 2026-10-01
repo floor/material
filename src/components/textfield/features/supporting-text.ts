@@ -96,30 +96,49 @@ export const withSupportingText =
       else removeIdRef(component.input, "aria-describedby", supportingId);
     };
 
-    // Helper function to create supporting text element
-    const createSupportingElement = (
-      text: string,
-      isError = false
-    ): HTMLElement => {
+    // The element is a polite live region, so an error is read when it appears,
+    // not only when the input is next focused (FLO-301). A region announces
+    // changes to its text, so the element stays and its text changes in place.
+    // One inserted already holding its text is often not announced, so when an
+    // update at run time creates it, the text is written again on the next
+    // frame: the same text, a new text node, which the region announces. The
+    // text itself is there at once, as before. Created from the config, nothing
+    // is announced at load, and construction schedules nothing (FLO-362).
+    let pendingFrame = 0;
+    const cancelFill = (): void => {
+      if (pendingFrame) cancelAnimationFrame(pendingFrame);
+      pendingFrame = 0;
+    };
+
+    const createSupportingElement = (): HTMLElement => {
       const element = document.createElement("div");
       element.className = `${PREFIX}-${COMPONENT}__helper`;
       element.id = supportingId;
-      element.textContent = text;
-
-      // The helper's own colour only: the field's error state (the root
-      // --error class, aria-invalid) belongs to withError, so replacing the
-      // text can't end an error the field is still in (FLO-303).
-      if (isError) element.classList.add(`${PREFIX}-${COMPONENT}__helper--error`);
-
+      element.setAttribute("aria-live", "polite");
       return element;
+    };
+
+    // The helper's own colour only: the field's error state (the root --error
+    // class, aria-invalid) belongs to withError, so replacing the text can't end
+    // an error the field is still in (FLO-303).
+    const markError = (element: HTMLElement, isError: boolean): void => {
+      element.classList.toggle(`${PREFIX}-${COMPONENT}__helper--error`, isError);
+    };
+
+    const detach = (): void => {
+      cancelFill();
+      if (!supportingElement) return;
+      supportingElement.remove();
+      supportingElement = null;
+      row.release();
+      describe(null);
     };
 
     // Create initial supporting text element if provided
     if (config.supportingText) {
-      supportingElement = createSupportingElement(
-        config.supportingText,
-        config.error
-      );
+      supportingElement = createSupportingElement();
+      supportingElement.textContent = config.supportingText;
+      markError(supportingElement, Boolean(config.error));
       show(supportingElement);
       describe(supportingElement);
     }
@@ -128,10 +147,7 @@ export const withSupportingText =
     if ("lifecycle" in component && component.lifecycle?.destroy) {
       const originalDestroy = component.lifecycle.destroy as Function;
       component.lifecycle.destroy = () => {
-        if (supportingElement) {
-          supportingElement.remove();
-          row.release();
-        }
+        detach();
         originalDestroy.call(component.lifecycle);
       };
     }
@@ -146,21 +162,30 @@ export const withSupportingText =
       },
 
       setSupportingText(text: string, isError = false) {
-        supportingElement?.remove();
-        supportingElement = text ? createSupportingElement(text, isError) : null;
-        if (supportingElement) show(supportingElement);
-        else row.release();
+        if (!text) {
+          detach();
+          return this;
+        }
+        if (supportingElement) {
+          supportingElement.textContent = text;
+          markError(supportingElement, isError);
+          return this;
+        }
+        supportingElement = createSupportingElement();
+        supportingElement.textContent = text;
+        markError(supportingElement, isError);
+        show(supportingElement);
         describe(supportingElement);
+        const element = supportingElement;
+        pendingFrame = requestAnimationFrame(() => {
+          pendingFrame = 0;
+          element.replaceChildren(document.createTextNode(element.textContent ?? ""));
+        });
         return this;
       },
 
       removeSupportingText() {
-        if (supportingElement) {
-          supportingElement.remove();
-          supportingElement = null;
-          row.release();
-          describe(null);
-        }
+        detach();
         return this;
       },
     };

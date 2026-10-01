@@ -161,19 +161,23 @@ try {
     { name: "slider", code: "export { createSlider } from 'mtrl';", gzip: 13090 },
     { name: "navigation-rail", code: "export { createNavigationRail } from 'mtrl';", gzip: 7000 },
     { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 6500 },
-    { name: "textfield", code: "export { createTextfield } from 'mtrl';", gzip: 8600 },
+    // FLO-301 (the required asterisk, the live error, the trailing icon button): 8,456 to
+    // 9,058 against 7cd57a6, Node 22 / npm 10.
+    { name: "textfield", code: "export { createTextfield } from 'mtrl';", gzip: 9200 },
     { name: "form", code: "export { createButton, createTextfield, createCheckbox } from 'mtrl';", gzip: 22000 },
     // The toolbar (FLO-304): 123,080 to 125,176, measured against b1dbf77.
     // The FAB menu (FLO-306): 125,245 to 127,714, measured against 1bd8343.
     // The Material shapes' geometry in the loading indicator (FLO-346): 127,894 to 128,195, measured against 5b314c5.
-    { name: "all-js", code: "export * from 'mtrl';", gzip: 128300 },
+    // The text field's asterisk, live error and trailing button (FLO-301): 128,187 to 128,802, against 7cd57a6.
+    { name: "all-js", code: "export * from 'mtrl';", gzip: 128900 },
     { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 6500 },
     // The outlined text field's notched outline (#234) adds 202, 7,863 to 8,065: three
     // segments with their corners each way round, and the outline colour and width per
     // state, in place of an input border and a focus overlay. The resting label shown
     // alone (FLO-354, FLO-355): the placeholder's fill cleared and the affixes hidden
     // while it rests, 8,183 to 8,245 (+62) against 09d665b, Node 22 / npm 10.
-    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 8300 },
+    // The text field's trailing icon button and asterisk (FLO-301): 8,245 to 8,426 against 7cd57a6.
+    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 8500 },
     { name: "slider-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/slider';", gzip: 6500 },
     // The .43 rail-motion baseline is 47,117 bytes; core ripple adds about 20 bytes.
     // The tooltip stylesheet adds 486 (measured): it was authored but registered in no
@@ -204,7 +208,8 @@ try {
     // The toolbar (FLO-304): 50,752 to 51,449, measured against b1dbf77.
     // The FAB menu (FLO-306): 51,494 to 52,688, measured against 1bd8343.
     // The date picker's range bleed: 52,705 to 52,916, measured against d741e93.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 53000 },
+    // The text field's trailing icon button and asterisk (FLO-301): 52,916 to 53,072 against 7cd57a6.
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 53200 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);

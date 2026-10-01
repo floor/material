@@ -1382,6 +1382,26 @@ try {
     }
     check("textfield: a resting label shows alone, enabled or disabled; the prefix and suffix appear as it floats");
 
+    // FLO-301: the required attribute moves the input's required and the label's asterisk together
+    const required = await page.evaluate(() => {
+      const host = document.getElementById("factory") as HTMLElement;
+      host.innerHTML = '<m-textfield id="rq" label="Email"></m-textfield>';
+      const element = document.getElementById("rq") as HTMLElement;
+      const read = () => {
+        const root = element.shadowRoot?.firstElementChild as HTMLElement;
+        return [root.querySelector("input")!.required, !!root.querySelector('label [class*="textfield__required"]')];
+      };
+      const states = [read()];
+      element.setAttribute("required", "");
+      states.push(read());
+      element.removeAttribute("required");
+      states.push(read());
+      host.innerHTML = "";
+      return states;
+    });
+    assert.deepEqual(required, [[false, false], [true, true], [false, false]]);
+    check("textfield: required toggles the input's required and the label's asterisk");
+
     // #234: the outline leaves a notch for the floated label. The label used
     // to be painted with a background copied from the nearest ancestor, which
     // found document.body from inside a shadow root and covered any surface

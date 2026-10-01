@@ -9,4 +9,5 @@ export type {
   TextfieldEvents,
   TextfieldValuePayload,
   TextfieldFocusPayload,
+  TextfieldTrailingPayload,
 } from "./types";
