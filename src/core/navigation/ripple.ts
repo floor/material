@@ -1,3 +1,4 @@
+// src/core/navigation/ripple.ts
 /** A CSS-animated state layer with no document listeners, timers, or animation frames. */
 export function mountRailRipple(root: HTMLElement, className: (part: string) => string): () => void {
     const waveClass = className('__ripple');

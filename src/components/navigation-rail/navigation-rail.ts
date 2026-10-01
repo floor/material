@@ -4,24 +4,13 @@ import { createBase, withElement } from '../../core/compose/component';
 import { withLifecycle } from '../../core/compose/features/lifecycle';
 import { createElementConfig } from '../../core/config/component';
 import { createEmitter } from '../../core/state/emitter';
-import { mountRailRipple } from './ripple';
+import { mountRailRipple } from '../../core/navigation/ripple';
 import { createBaseConfig } from './config';
 import type { NavigationRailConfig, NavigationRailComponent, NavigationRailItemConfig } from './types';
-import { safeUrl } from '../../core/utils/url';
 import { setHTML } from "../../core/dom/html";
 import { activeElementOf } from "../../core/dom/focus";
-const copyItems = (items: NavigationRailItemConfig[]): NavigationRailItemConfig[] => {
-    const ids = new Set<string>();
-    let selected = false;
-    return items.map(item => {
-        if (!item.id || !item.label || !item.icon || ids.has(item.id))
-            throw new Error('NavigationRail destinations require unique IDs, labels, and icons');
-        ids.add(item.id);
-        const active = !!item.active && !item.disabled && !selected;
-        selected ||= active;
-        return { ...item, active };
-    });
-};
+import { copyDestinations, createDestination, moveDestinationFocus, updateBadge as updateDestinationBadge, updateSelection as updateDestinations } from '../../core/navigation/destinations';
+const copyItems = (items: NavigationRailItemConfig[]): NavigationRailItemConfig[] => copyDestinations(items, 'NavigationRail');
 /**
  * Creates an M3 Expressive navigation rail with stable destinations during expansion.
  * Import its styles separately with `mtrl/styles/navigation-rail`.
@@ -75,75 +64,14 @@ export default function createNavigationRail(config: NavigationRailConfig = {}):
         root.append(header);
     root.append(destinations);
     root.style.setProperty(`--${PREFIX}-navigation-rail-expanded-width`, `${options.expandedWidth}px`);
-    const updateBadge = (item: NavigationRailItemConfig, element: HTMLElement): void => {
-        let badge = element.querySelector<HTMLElement>(`.${cls('__badge')}`);
-        const visible = item.badge !== undefined && item.badge !== false && item.badge !== '';
-        if (!visible) {
-            badge?.remove();
-            element.classList.remove(cls('__item--badged'));
-            element.setAttribute('aria-label', item.label);
-            return;
-        }
-        if (!badge) {
-            badge = document.createElement('span');
-            badge.className = cls('__badge');
-            badge.setAttribute('aria-hidden', 'true');
-            element.querySelector(`.${cls("__content")}`)!.append(badge);
-        }
-        badge.classList.toggle(cls('__badge--dot'), item.badge === true);
-        badge.textContent = item.badge === true ? '' : String(item.badge);
-        element.classList.toggle(cls('__item--badged'), item.badge !== true);
-        element.setAttribute('aria-label', `${item.label}, ${item.badgeLabel || (item.badge === true ? 'New activity' : String(item.badge))}`);
-    };
-    const updateSelection = (): void => {
-        for (const item of items) {
-            const element = nodes.get(item.id)!;
-            element.classList.toggle(cls('__item--active'), !!item.active);
-            if (item.active)
-                element.setAttribute('aria-current', 'page');
-            else
-                element.removeAttribute('aria-current');
-            const icon = element.querySelector<HTMLElement>(`.${cls('__icon')}`)!;
-            setHTML(icon, item.active && item.activeIcon ? item.activeIcon : item.icon);
-        }
-    };
+    const updateBadge = (item: NavigationRailItemConfig, element: HTMLElement): void => updateDestinationBadge(item, element, cls);
+    const updateSelection = (): void => updateDestinations(items, nodes, cls);
     const render = (): void => {
         const focusedId = [...nodes].find(([, element]) => element === activeElementOf(destinations))?.[0];
         nodes.clear();
         destinations.replaceChildren();
         for (const item of items) {
-            const element = document.createElement(item.href ? 'a' : 'button');
-            if (item.href) {
-                if (!item.disabled)
-                    element.setAttribute("href", safeUrl(item.href));
-                else {
-                    element.setAttribute('role', 'link');
-                    element.tabIndex = -1;
-                }
-            }
-            else {
-                element.setAttribute('type', 'button');
-                if (item.disabled)
-                    element.setAttribute('disabled', '');
-            }
-            if (item.disabled)
-                element.setAttribute('aria-disabled', 'true');
-            element.className = cls('__item');
-            element.dataset.id = item.id;
-            const indicator = document.createElement('span');
-            indicator.className = cls('__indicator');
-            indicator.setAttribute('aria-hidden', 'true');
-            const icon = document.createElement('span');
-            icon.className = cls('__icon');
-            icon.setAttribute('aria-hidden', 'true');
-            const label = document.createElement('span');
-            label.className = cls('__label');
-            label.textContent = item.label;
-            const content = document.createElement('span');
-            content.className = cls('__content');
-            content.append(indicator, icon, label);
-            element.append(content);
-            updateBadge(item, element);
+            const element = createDestination(item, cls);
             nodes.set(item.id, element);
             destinations.append(element);
         }
@@ -236,28 +164,7 @@ export default function createNavigationRail(config: NavigationRailConfig = {}):
             options.onSelect?.(detail);
     };
     const handleKeydown = (event: KeyboardEvent): void => {
-        const enabled = [...nodes.values()].filter(element => !element.hasAttribute('aria-disabled'));
-        const index = enabled.indexOf(activeElementOf(destinations) as HTMLElement);
-        if (index < 0 || event.altKey || event.ctrlKey || event.metaKey)
-            return;
-        let next: number;
-        switch (event.key) {
-            case 'ArrowDown':
-                next = (index + 1) % enabled.length;
-                break;
-            case 'ArrowUp':
-                next = (index + enabled.length - 1) % enabled.length;
-                break;
-            case 'Home':
-                next = 0;
-                break;
-            case 'End':
-                next = enabled.length - 1;
-                break;
-            default: return;
-        }
-        event.preventDefault();
-        enabled[next].focus();
+        moveDestinationFocus(event, nodes, destinations, { next: 'ArrowDown', previous: 'ArrowUp' });
     };
     const modalTab = (event: KeyboardEvent): void => {
         if (event.key !== 'Tab' || event.defaultPrevented)
