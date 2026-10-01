@@ -48,15 +48,16 @@ try {
     import assert from 'node:assert/strict';
     import { createRequire } from 'node:module';
     import * as esm from 'mtrl';
-    import { createButton, createTextfield, createCard, addClass } from 'mtrl';
+    import { createButton, createTextfield, createCard } from 'mtrl';
     import button from 'mtrl/components/button';
     import rail from 'mtrl/components/navigation-rail';
     import { BUTTON_VARIANTS } from 'mtrl/components/button/constants';
-    import { addClass as directAddClass } from 'mtrl/core/dom';
+    import { addClass } from 'mtrl/core/dom';
     import { JSDOM } from ${JSON.stringify(pathToFileURL(resolve("node_modules/jsdom/lib/api.js")).href)};
     assert.equal(button, createButton);
     assert.equal(rail, esm.createNavigationRail);
-    assert.equal(directAddClass, addClass);
+    // 1.0.0: the core helpers are at their subpath only, not on the root (FLO-351)
+    assert.equal(esm.addClass, undefined);
     const cjs = createRequire(import.meta.url)('mtrl');
     assert.equal(typeof cjs.createButton, 'function');
     assert.deepEqual(Object.keys(esm).sort(), Object.keys(cjs).sort());
@@ -121,7 +122,8 @@ try {
     "--target", "ES2020", "--types", "node", "--typeRoots", resolve("node_modules/@types")]);
 
   const fixtures = [
-    { name: "addClass", code: "export { addClass } from 'mtrl';", gzip: 900 },
+    // From its subpath since 1.0.0 removed it from the root (FLO-351)
+    { name: "addClass", code: "export { addClass } from 'mtrl/core/dom';", gzip: 900 },
     { name: "button", code: "export { createButton } from 'mtrl';", gzip: 15000 },
     // The URL scheme allowlist is reached through core/dom, so every bundle that builds
     // an element carries it: +260 here, +256 button, +267 rail, +260 textfield, +243 form,

@@ -57,11 +57,12 @@ try {
   // Library mode retains exports for measurement; an HTML fixture below tests
   // actual application mode, CSS extraction, network loading, and rendering.
   const sizes: Record<string, { initialGzip: number; totalGzip: number }> = {};
-  for (const [name, symbol, budget] of [
-    ["addClass", "addClass", 1000], ["textfield", "createTextfield", 9000], ["button", "createButton", 10000],
+  // addClass from its subpath since 1.0.0 removed it from the root (FLO-351)
+  for (const [name, symbol, budget, from] of [
+    ["addClass", "addClass", 1000, "mtrl/core/dom"], ["textfield", "createTextfield", 9000, "mtrl"], ["button", "createButton", 10000, "mtrl"],
   ] as const) {
     const entry = join(directory, `${name}.ts`);
-    await writeFile(entry, `export { ${symbol} } from 'mtrl';`);
+    await writeFile(entry, `export { ${symbol} } from '${from}';`);
     const result = await build({
       root: directory, configFile: false, envFile: false, logLevel: "error",
       build: { write: false, minify: true, lib: { entry, formats: ["es"] } },
