@@ -26,7 +26,9 @@
     "**/*.css",
     "**/*.scss",
     "**/styles/*.js",
-    "**/elements/css/*.js"
+    "**/elements/css/*.js",
+    "**/ssr/index.js",
+    "**/ssr/react.js"
   ],
   "type": "module",
   "main": "./dist/index.js",
@@ -112,7 +114,13 @@
       "types": "./dist/styles/*.d.ts",
       "import": "./dist/styles/*.js"
     },
-    "./themes/*": "./dist/themes/*.css"
+    "./themes/*": "./dist/themes/*.css",
+    "./ssr/react": {
+      "types": "./dist/ssr/react.d.ts",
+      "browser": "./dist/ssr/browser.js",
+      "node": "./dist/ssr/react.js",
+      "default": "./dist/ssr/react.js"
+    }
   },
   "files": [
     "dist",
@@ -156,7 +164,8 @@
     "svelte:check": "bun run scripts/check-svelte.ts",
     "solid:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-solid.ts",
     "tooling:check": "tsc --project scripts/tsconfig.json --noEmit && tsc --project test/types/tsconfig.json --noEmit",
-    "themes:generate": "bun scripts/generate-themes.ts"
+    "themes:generate": "bun scripts/generate-themes.ts",
+    "react-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react-ssr.ts"
   },
   "repository": {
     "type": "git",

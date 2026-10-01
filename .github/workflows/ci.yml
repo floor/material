@@ -126,7 +126,7 @@ jobs:
           - group: elements
             checks: elements:check
           - group: adapters
-            checks: react:check vue:check svelte:check solid:check
+            checks: react:check react-ssr:check vue:check svelte:check solid:check
           - group: components
             checks: consumer:check tabs:check slider:check drawer:check navigation-rail:check core:check preupgrade:check tokens:check ssr-security:check ssr-parity:check
     name: browser (${{ matrix.group }})
