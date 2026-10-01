@@ -50,22 +50,52 @@ export function allocateTabsGroupId(): string {
   return `tabs-${++nextTabsGroupId}`;
 }
 
-/** A tab's element id within its group. */
-export function tabIdFor(groupId: string, value: string): string {
-  return `tab-${groupId}-${value}`;
-}
+/**
+ * A value as part of an id (FLO-430). An id reference (`aria-controls`,
+ * `aria-labelledby`) is a space-separated list, so a value with a space or a
+ * newline cannot go into an id raw. A value of `[A-Za-z0-9_-]` only is kept as
+ * it is, so most ids are unchanged; any other value is encoded, `_` as `__` and
+ * every other character as `_<hex code point>_`, under its own prefix (`tabx`,
+ * `tabpanelx`). The encoding reads back one way only, and no plain value
+ * reaches that prefix, so two values never share an id.
+ */
+const derive = (prefix: string, groupId: string, value: string): string =>
+  /^[\w-]*$/.test(value)
+    ? `${prefix}-${groupId}-${value}`
+    : `${prefix}x-${groupId}-${value.replace(/[^A-Za-z0-9-]/gu, (c) => c === "_" ? "__" : `_${c.codePointAt(0)!.toString(16)}_`)}`;
 
-/** The panel id a group looks for when a page does not label its panels. */
-export function tabPanelIdFor(groupId: string, value: string): string {
-  return `tabpanel-${groupId}-${value}`;
+/**
+ * A tab's element id within its group: `tab-<groupId>-<value>` for a value of
+ * `[A-Za-z0-9_-]`, and `tabx-<groupId>-<encoded value>` otherwise (FLO-430).
+ */
+export const tabIdFor = (groupId: string, value: string): string => derive("tab", groupId, value);
+
+/**
+ * The panel id a group looks for when a page does not label its panels:
+ * `tabpanel-<groupId>-<value>`, or `tabpanelx-<groupId>-<encoded value>` for a
+ * value with other characters, as {@link tabIdFor} derives the tab's (FLO-430).
+ */
+export const tabPanelIdFor = (groupId: string, value: string): string => derive("tabpanel", groupId, value);
+
+/** Each tab element's group, for the panel lookup; kept internal rather than as another attribute */
+const tabGroups = new WeakMap<HTMLElement, string>();
+
+/**
+ * Records a tab's value and group on its element: the value as `data-value`,
+ * which the panel lookup reads instead of parsing the id (FLO-430).
+ */
+export function registerTab(element: HTMLElement, groupId: string, value: string): void {
+  element.setAttribute("data-value", value);
+  tabGroups.set(element, groupId);
 }
 
 /**
  * The panel registered to a tab, or null.
  *
  * A page registers a panel either by labelling it with the tab's own id, or
- * by giving it the conventional `tabpanel-<groupId>-<value>` id. Both are
- * keyed on the tab's id, so a panel can only ever belong to one group.
+ * by giving it the conventional id, {@link tabPanelIdFor} of the tab's group
+ * and value. Both are keyed on the group, so a panel can only ever belong to
+ * one group.
  */
 export function findRegisteredPanel(tab: HTMLElement): HTMLElement | null {
   const tabId = tab.id;
@@ -75,9 +105,12 @@ export function findRegisteredPanel(tab: HTMLElement): HTMLElement | null {
     .find((panel) => panel.getAttribute("aria-labelledby") === tabId);
   if (labelled) return labelled;
 
-  // `tab-<groupId>-<value>` -> `tabpanel-<groupId>-<value>`
-  if (tabId.startsWith("tab-")) {
-    const byConvention = document.getElementById(`tabpanel-${tabId.slice(4)}`);
+  // The conventional panel id, from the tab's value and group rather than
+  // parsed out of its id (FLO-430)
+  const value = tab.getAttribute("data-value");
+  const groupId = tabGroups.get(tab);
+  if (value !== null && groupId !== undefined) {
+    const byConvention = document.getElementById(tabPanelIdFor(groupId, value));
     if (byConvention?.getAttribute("role") === "tabpanel") return byConvention;
   }
 
