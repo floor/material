@@ -243,6 +243,8 @@ export const withRadio =
       return component;
     },
     
+    isDisabled: () => component.element.classList.contains(`${radiosClass}--disabled`),
+
     disable: () => {
       component.element.classList.add(`${radiosClass}--disabled`);
       

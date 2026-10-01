@@ -137,6 +137,9 @@ jobs:
   # A run takes as long as its slowest group, so a check that grows moves to a
   # group of its own rather than making one group longer. Every check is in
   # exactly one group; test/build/ci-commands.test.ts holds the list.
+  # The `:floor` commands run a check again on the lowest peer version that
+  # package.json allows, and put the installed version back before they return
+  # (scripts/check-at-peer-floor.ts), so their place in a group does not matter.
   browser:
     needs: build
     runs-on: ubuntu-latest
@@ -152,7 +155,7 @@ jobs:
             checks: elements:check shadow-styles:check
           - group: adapters
             browsers: chromium
-            checks: react:check react-ssr:check vue:check svelte:check svelte-ssr:check solid-ssr:check solid:check
+            checks: react:check react-ssr:check vue:check svelte:check svelte-ssr:check vue-ssr:check solid-ssr:check solid:check solid-ssr:floor vue-ssr:floor
           - group: components
             browsers: chromium
             checks: consumer:check tabs:check slider:check drawer:check navigation-bar:check navigation-rail:check core:check
@@ -190,11 +193,6 @@ jobs:
             bun run "$script" || { echo "::endgroup::"; echo "::error::$script failed"; exit 1; }
             echo "::endgroup::"
           done
-      - name: Solid SSR at the peer floor (1.8.0)
-        if: matrix.group == 'adapters'
-        run: |
-          bun add --no-save --ignore-scripts solid-js@1.8.0
-          bun run solid-ssr:check
       - name: Browser comparison artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -210,6 +208,7 @@ jobs:
             analysis/ssr-upgrade
             analysis/react-ssr/summary.json
             analysis/svelte-ssr/summary.json
+            analysis/vue-ssr/summary.json
             analysis/solid-ssr/summary.json
             analysis/solid-ssr/async-*.json
           retention-days: 7

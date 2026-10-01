@@ -9,6 +9,7 @@
 // dark block, .dark-theme, and the selectable [data-theme=baseline] light and dark.
 import { describe, expect, test } from 'bun:test';
 import { compileString } from 'sass';
+import { colorBlocks, resolvedColorBody } from './theme-css';
 import { baseStyles, componentStyles, utilityStyles } from '../../scripts/style-manifest';
 
 const options = { loadPaths: ['src/styles'] };
@@ -68,7 +69,7 @@ describe('baseline declares every colour role the stylesheets read', () => {
 
     for (const [selector, body] of found) {
       test(`${name} ${selector}: declares every role read`, () => {
-        const missing = [...reads].filter(([role]) => !body.includes(`--mtrl-sys-color-${role}:`))
+        const missing = [...reads].filter(([role]) => !resolvedColorBody(css, 'baseline', selector, colorBlocks(css).find(block => block.selector === selector)?.body ?? body).includes(`--mtrl-sys-color-${role}:`))
           .map(([role, sources]) => `${role} (${[...sources].join(', ')})`);
         expect(missing).toEqual([]);
       });

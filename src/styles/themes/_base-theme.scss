@@ -1,4 +1,5 @@
 // src/styles/themes/_base-theme.scss
+@use 'sass:map';
 @use '../abstract/base' as *;
 
 // Base theme definition with common properties and structure
@@ -8,34 +9,121 @@
   }
 }
 
+// Media queries cannot condition one member of a selector list. Emit high
+// values in both explicit and system activation rules so standard/inherited
+// tokens stay untouched when the system preference is off.
+@function contrast-scope($name) {
+  @if $name == "baseline" {
+    @return ':is([data-theme="baseline"], :root:not([data-theme]))';
+  }
+  @return '[data-theme="#{$name}"]';
+}
+
+@mixin contrast-values($tokens, $mode) {
+  @each $role, $value in map.get($tokens, $mode) {
+    --#{$prefix}-sys-color-#{$role}: #{$value};
+  }
+}
+
+@mixin contrast-modes($name, $tokens) {
+  // Light must not leak into dark when its unchanged roles are omitted.
+  &:not([data-theme-mode="dark"]) {
+    @if $name == "baseline" {
+      &[data-theme] {
+        @include contrast-values($tokens, light);
+      }
+    } @else {
+      @include contrast-values($tokens, light);
+    }
+  }
+  @if $name == "baseline" {
+    // Match baseline's standard palette: the unthemed root ignores the mode
+    // attribute, following only the OS scheme and the manual dark class.
+    @media not (prefers-color-scheme: dark) {
+      &:root:not([data-theme]):not(.dark-theme) {
+        @include contrast-values($tokens, light);
+      }
+    }
+    &[data-theme][data-theme-mode="dark"], &:root:not([data-theme]).dark-theme {
+      @include contrast-values($tokens, dark);
+    }
+    @media (prefers-color-scheme: dark) {
+      &:root:not([data-theme]):not(.dark-theme) {
+        @include contrast-values($tokens, dark);
+      }
+    }
+  } @else {
+    &[data-theme-mode="dark"] {
+      @include contrast-values($tokens, dark);
+    }
+  }
+}
+
+@mixin create-theme-contrast($name, $levels) {
+  $scope: contrast-scope($name);
+  $high: map.get($levels, high);
+  $shared: (light: (), dark: ());
+  $distinct: $levels;
+  @each $mode, $tokens in map.get($levels, medium) {
+    @each $role, $value in $tokens {
+      @if $value == map.get($high, $mode, $role) {
+        $shared: map.set($shared, $mode, $role, $value);
+        @each $level in (medium, high) {
+          $distinct: map.set($distinct, $level, $mode, map.remove(map.get($distinct, $level, $mode), $role));
+        }
+      }
+    }
+  }
+  #{$scope}:is([data-theme-contrast="medium"], [data-theme-contrast="high"]) {
+    @include contrast-modes($name, $shared);
+  }
+  @each $level, $tokens in $distinct {
+    #{$scope}[data-theme-contrast="#{$level}"] {
+      @include contrast-modes($name, $tokens);
+    }
+  }
+  @media (prefers-contrast: more) {
+    #{$scope}:not([data-theme-contrast]) {
+      @include contrast-modes($name, $high);
+    }
+  }
+}
+
 // Success, warning and info: not M3 scheme roles, so no scheme generates them.
 // Every theme takes these values, baseline included (FLO-329).
+// Each keeps its colour's HCT hue and chroma (material-color-utilities) at the
+// tones M3 uses for a role and its on-role: light tone 40 on 100, dark tone 80
+// on 20 (ColorSpec2021 primary / onPrimary). Those tones clear 4.5:1, so none
+// is shifted further (FLO-407).
 @mixin status-roles-light() {
-  // Success colors
-  --#{$prefix}-sys-color-success: #007B5A;
+  // Success: #007B5A (hue 169, chroma 43) brought from tone 46 to 40. 6.45:1.
+  --#{$prefix}-sys-color-success: #006C4E;
   --#{$prefix}-sys-color-on-success: #FFFFFF;
 
-  // Warning colors
-  --#{$prefix}-sys-color-warning: #DD6D06;
+  // Warning: #DD6D06 (hue 51, chroma 63) was tone 58, 3.35:1 under white.
+  // Tone 40 is #974800, 6.48:1, still orange.
+  --#{$prefix}-sys-color-warning: #974800;
   --#{$prefix}-sys-color-on-warning: #FFFFFF;
 
-  // Info colors
+  // Info: #0061A4 is already tone 40 of its palette. 6.47:1.
   --#{$prefix}-sys-color-info: #0061A4;
   --#{$prefix}-sys-color-on-info: #FFFFFF;
 }
 
 @mixin status-roles-dark() {
-  // Success colors
-  --#{$prefix}-sys-color-success: #85CFA9;
-  --#{$prefix}-sys-color-on-success: #00392D;
+  // Success: #85CFA9 (hue 165, chroma 37) at tone 80, on-role at tone 20. 7.76:1.
+  --#{$prefix}-sys-color-success: #8CD6AF;
+  --#{$prefix}-sys-color-on-success: #003824;
 
-  // Warning colors
+  // Warning: #FFB95C is already tone 80 (hue 71, chroma 43). Its on-role was
+  // tone 16; tone 20 is #462A00. 7.76:1.
   --#{$prefix}-sys-color-warning: #FFB95C;
-  --#{$prefix}-sys-color-on-warning: #3F2200;
+  --#{$prefix}-sys-color-on-warning: #462A00;
 
-  // Info colors
+  // Info: #99CBFF is already tone 80. Its on-role was tone 20 in hue, not of
+  // this palette; tone 20 is #003355. 7.69:1.
   --#{$prefix}-sys-color-info: #99CBFF;
-  --#{$prefix}-sys-color-on-info: #003060;
+  --#{$prefix}-sys-color-on-info: #003355;
 }
 
 // Common status colors that should be available in all themes
