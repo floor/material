@@ -10,6 +10,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-10-01
+
+The full Material 3 Expressive shape library: all 35 of Compose's shapes in `mtrl/core/shapes`,
+verified against Google's own geometry code, with the loading indicator's shapes now exact. Also
+keyboard fixes in tabs and chips, and the chip set's keyboard switch typed.
+
 ### Added
 
 - **The 35 Material 3 Expressive shapes in `mtrl/core/shapes` (FLO-346).**
@@ -1611,7 +1617,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.1...HEAD
+[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.2...HEAD
+[0.10.2]: https://github.com/floor/mtrl/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/floor/mtrl/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/floor/mtrl/compare/v0.10.0-next.3...v0.10.0
 [0.10.0-next.3]: https://github.com/floor/mtrl/compare/v0.10.0-next.2...v0.10.0-next.3
