@@ -174,6 +174,48 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
     return { size: c.backgroundSize, position: c.backgroundPosition, radius: c.borderRadius, inRange: getComputedStyle(document.querySelector('[data-date="2026-09-11"]')!).color };
   });
   assert.deepEqual(band, { size: '50% 100%', position: '100% 0px', radius: '0px', inRange: await role('on-secondary-container') }, 'the band starts square at the centre of the start date; in-range days on-secondary-container');
+  // Where the range wraps a week, the band runs through the grid's 12dp inline padding
+  // to the container edge (m3.material.io's range picker): out of the last column on
+  // the row it leaves, into the first on the row it continues on. Nowhere else.
+  const bleed = (date: string) => page.locator(`[data-date="${date}"]`).evaluate(day => {
+    const cell = day.parentElement!, grid = cell.closest('.mtrl-datepicker__days')!, c = getComputedStyle(cell, '::before');
+    if (c.content === 'none') return null;
+    const r = cell.getBoundingClientRect(), g = grid.getBoundingClientRect(), left = r.left + parseFloat(c.left), width = parseFloat(c.width);
+    // From the cell's right side to the grid's right edge, or from the grid's left edge to the cell's left side.
+    const edge = Math.abs(left - r.right) < 0.5 && Math.abs(left + width - g.right) < 0.5 ? 'right' : Math.abs(left - g.left) < 0.5 && Math.abs(left + width - r.left) < 0.5 ? 'left' : `${left}..${left + width} in ${g.left}..${g.right}`;
+    return { edge, width, top: c.top, height: c.height, colour: c.backgroundColor };
+  });
+  const secondary = await role('secondary-container');
+  const wraps = async (label: string, rtl = false) => {
+    const out = rtl ? 'left' : 'right', back = rtl ? 'right' : 'left';
+    assert.deepEqual(await bleed('2026-09-12'), { edge: out, width: 12, top: '4px', height: '40px', colour: secondary }, `${label}: a middle day in the last column runs the band to the ${out} edge`);
+    assert.deepEqual(await bleed('2026-09-13'), { edge: back, width: 12, top: '4px', height: '40px', colour: secondary }, `${label}: a middle day in the first column runs it from the ${back} edge`);
+    for (const date of ['2026-09-09', '2026-09-11', '2026-09-17']) assert.equal(await bleed(date), null, `${label}: no bleed off the edges or at the endpoints (${date})`);
+  };
+  await wraps('modal');
+  await page.screenshot({ path: join(artifacts, 'datepicker-range-wrap-modal.png'), animations: 'disabled' });
+  // The endpoints bleed only on the side the range goes on: a start out of the last
+  // column, an end into the first; never an end out or a start in, nor a one-day range.
+  await remount({ variant: 'modal', selectionMode: 'range', value: ['2026-09-12', '2026-09-13'] });
+  assert.equal((await bleed('2026-09-12'))?.edge, 'right', 'a start in the last column runs the band to the edge');
+  assert.equal((await bleed('2026-09-13'))?.edge, 'left', 'an end in the first column runs the band from the edge');
+  await remount({ variant: 'modal', selectionMode: 'range', value: ['2026-09-10', '2026-09-12'] });
+  assert.equal(await bleed('2026-09-12'), null, 'an end in the last column has no bleed');
+  await remount({ variant: 'modal', selectionMode: 'range', value: ['2026-09-13', '2026-09-15'] });
+  assert.equal(await bleed('2026-09-13'), null, 'a start in the first column has no bleed');
+  await remount({ variant: 'modal', selectionMode: 'range', value: ['2026-09-12', '2026-09-12'] });
+  assert.equal(await bleed('2026-09-12'), null, 'a one-day range has no band and no bleed');
+  // Docked and right to left (the first and last columns are the right and left edges).
+  await remount({ selectionMode: 'range', value: ['2026-09-09', '2026-09-17'] });
+  await wraps('docked');
+  await page.evaluate(() => { document.documentElement.dir = 'rtl'; });
+  await remount({ variant: 'modal', selectionMode: 'range', value: ['2026-09-09', '2026-09-17'] });
+  await wraps('right to left', true);
+  await page.evaluate(() => { document.documentElement.dir = 'ltr'; });
+  await remount({ variant: 'fullscreen', selectionMode: 'range', value: ['2026-09-09', '2026-09-17'] });
+  await wraps('full screen');
+  assert.equal(await page.locator('.mtrl-datepicker__list').evaluate(el => el.scrollWidth <= el.clientWidth), true, 'full screen: the bleed stays inside the list');
+  await page.screenshot({ path: join(artifacts, 'datepicker-range-wrap-fullscreen.png'), animations: 'disabled' });
   await page.evaluate(() => { document.documentElement.dir = 'rtl'; });
   await remount({ variant: 'modal', value: '2026-09-15' });
   await page.keyboard.press('ArrowRight');
@@ -222,5 +264,5 @@ export async function checkDatePicker(page: Page, artifacts: string): Promise<vo
   assert.equal(await shadowFocus(), '2026-09-15', 'the full-screen list grows without losing the focused day');
   await page.evaluate(() => { (window as unknown as PickerWindow).picker.destroy(); document.getElementById('date-host')?.remove(); });
   assert.equal(await page.locator('.mtrl-datepicker').count(), 0);
-  console.log('Passed packed date picker: selective CSS, token geometry, native modal/scrim, focus, keyboard, input validation, draft/commit/cancel, range, themes, mobile, month swiping in both directions, the scrolling year list, the full-screen range picker, M3 day states, corners, colours, the range band, right-to-left keys, focus inside a shadow root (Tab wrap, swipe, list growth, focus return) and cleanup.');
+  console.log('Passed packed date picker: selective CSS, token geometry, native modal/scrim, focus, keyboard, input validation, draft/commit/cancel, range, themes, mobile, month swiping in both directions, the scrolling year list, the full-screen range picker, M3 day states, corners, colours, the range band and its bleed where it wraps a week (modal, docked, full screen, right to left), right-to-left keys, focus inside a shadow root (Tab wrap, swipe, list growth, focus return) and cleanup.');
 }

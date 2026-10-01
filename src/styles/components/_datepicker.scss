@@ -35,6 +35,8 @@ $component: '#{base.$prefix}-datepicker';
   &__help { color: t.color('on-surface-variant'); }
   &__error { color: t.color('error'); &:empty { display: none; } }
   &__calendar {
+    // The day grid's inline padding, shared by the range band's bleed into it.
+    --#{$component}-grid-inset: 12px;
     box-sizing: border-box; padding: 0; border: 0;
     width: 360px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px);
     overflow: auto; color: t.color('on-surface'); background: t.color('surface-container-high');
@@ -54,7 +56,7 @@ $component: '#{base.$prefix}-datepicker';
     .#{$component}__save { position: absolute; inset-inline-end: 12px; top: 8px; }
     .#{$component}__title { margin-bottom: 0; }
     .#{$component}__headline { @include m.typography('title-large'); }
-    .#{$component}__weekdays { padding: 0 12px; }
+    .#{$component}__weekdays { padding: 0 var(--#{$component}-grid-inset); }
   }
   &__list { flex: 1; min-height: 0; position: relative; overflow-y: auto; overscroll-behavior: contain; }
   &__subhead { @include m.typography('title-small'); color: t.color('on-surface-variant'); padding: 20px 24px 8px; }
@@ -87,7 +89,7 @@ $component: '#{base.$prefix}-datepicker';
   &--animate[open] { animation: #{$component}-appear v.motion('duration-short3') v.motion('easing-standard'); }
   @media (prefers-reduced-motion: reduce) { &--animate[open] { animation: none; } }
   // No bottom padding: the modal is Compose's 568dp, the footer included. FLO-277.
-  &__days { padding: 0 12px; }
+  &__days { padding: 0 var(--#{$component}-grid-inset); }
   // The months' scroll-snapping track: one month per page, no visible scrollbar.
   // Swipe, trackpad and wheel paging are the browser's own. FLO-274.
   &__track {
@@ -104,12 +106,23 @@ $component: '#{base.$prefix}-datepicker';
   // drawRangeBackground); it was rounded to the cell edge. In-range days read
   // on-secondary-container. FLO-277.
   &__cell--range {
+    position: relative;
     background: linear-gradient(transparent 4px, t.color('secondary-container') 4px, t.color('secondary-container') 44px, transparent 44px) no-repeat;
     .#{$component}__day:not(.#{$component}__day--selected) { color: t.color('on-secondary-container'); }
   }
   &__cell--range-start { background-size: 50% 100%; background-position: 100% 0; &:dir(rtl) { background-position: 0 0; } }
   &__cell--range-end { background-size: 50% 100%; background-position: 0 0; &:dir(rtl) { background-position: 100% 0; } }
   &__cell--range-start#{&}__cell--range-end { background: none; }
+  // Where the range wraps to the next week, the band runs on through the grid's inline
+  // padding to the container edge, as m3.material.io's range picker draws it: the row
+  // it leaves to the end edge, the row it continues on from the start edge. Under the
+  // day by tree order: the day's own ::before and ::after are its selection and layer.
+  &__cell--range:is(:last-child:not(&__cell--range-end), :first-child:not(&__cell--range-start))::before {
+    content: ''; position: absolute; top: 4px; width: var(--#{$component}-grid-inset); height: 40px;
+    background: t.color('secondary-container');
+  }
+  &__cell--range:last-child::before { inset-inline-start: 100%; }
+  &__cell--range:first-child::before { inset-inline-end: 100%; }
   &__day {
     position: relative; isolation: isolate; width: 100%; height: 48px; padding: 0; border: 0;
     background: transparent; color: t.color('on-surface'); cursor: pointer;

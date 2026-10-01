@@ -199,7 +199,8 @@ try {
     // var(--token, <compiled>), measured 50,184 to 50,678 (+494) at 64c1e86.
     // The toolbar (FLO-304): 50,752 to 51,449, measured against b1dbf77.
     // The FAB menu (FLO-306): 51,494 to 52,688, measured against 1bd8343.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 52800 },
+    // The date picker's range bleed: 52,705 to 52,916, measured against d741e93.
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 53000 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);

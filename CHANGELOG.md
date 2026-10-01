@@ -45,6 +45,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   No runtime change: the root's runtime exports and the bundles are the same. The root's export
   list is now pinned (`bun run root-exports:check`).
 
+### Fixed
+
+- **Date picker: the range band runs to the container edge where it wraps a week.** As in
+  m3.material.io's range picker, the row a range leaves runs the band out to the end edge and the
+  row it continues on starts it from the start edge; it stopped at the day grid, 12dp short on
+  each side. Docked, modal and full screen, mirrored right to left. The grid's inline padding is
+  `--mtrl-datepicker-grid-inset` (12px), which the band follows. Days of another month shown in
+  the grid are no longer in range (no band, `aria-selected="false"`): the band stays in the shown
+  month.
+
 ## [0.10.3] - 2026-10-01
 
 Text field fixes: a disabled, empty field no longer shows its placeholder over the label, and
