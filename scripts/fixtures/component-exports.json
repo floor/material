@@ -57,6 +57,12 @@
     {
       "name": "BottomAppBar",
       "kind": "type",
+      "status": "deprecated",
+      "note": "Use BottomAppBarComponent, the name every component type has. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "BottomAppBarComponent",
+      "kind": "type",
       "status": "public"
     },
     {
@@ -446,6 +452,11 @@
       "status": "public"
     },
     {
+      "name": "CardConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "CardContentConfig",
       "kind": "type",
       "status": "public"
@@ -473,7 +484,8 @@
     {
       "name": "CardSchema",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated",
+      "note": "Use CardConfig. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "CardVariant",
@@ -3201,6 +3213,11 @@
   ],
   "textfield": [
     {
+      "name": "createTextField",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "default",
       "kind": "value",
       "status": "public"
@@ -3208,10 +3225,22 @@
     {
       "name": "TextfieldComponent",
       "kind": "type",
+      "status": "deprecated",
+      "note": "Use TextFieldComponent: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TextFieldComponent",
+      "kind": "type",
       "status": "public"
     },
     {
       "name": "TextfieldConfig",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Use TextFieldConfig: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TextFieldConfig",
       "kind": "type",
       "status": "public"
     },
@@ -3771,6 +3800,12 @@
     },
     {
       "name": "TopAppBar",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Use TopAppBarComponent, the name every component type has. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TopAppBarComponent",
       "kind": "type",
       "status": "public"
     },

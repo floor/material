@@ -25,13 +25,25 @@ describe("the root exports (FLO-351)", () => {
 
   test("the root keeps the components and the app-level helpers; the composition core is leaving", () => {
     const status = new Map(now.map((e) => [e.name, e]));
-    for (const name of ["createButton", "createTextfield", "clearSnackbars", "configureHTML", "schemeToTokens", "THEME_ROLES", "setComponentDefaults", "ComponentConfigMap"]) {
+    for (const name of ["createButton", "createTextField", "clearSnackbars", "configureHTML", "schemeToTokens", "THEME_ROLES", "setComponentDefaults", "ComponentConfigMap"]) {
       expect(status.get(name)?.status).toBe("public");
     }
     for (const [name, path] of [["pipe", "mtrl/core/compose"], ["createBase", "mtrl/core/compose"], ["throttle", "mtrl/core/utils"],
       ["loggingMiddleware", "mtrl/core/state"], ["CleanupManager", "mtrl/core/canvas"], ["addClass", "mtrl/core/dom"]]) {
       expect(status.get(name)).toMatchObject({ status: "deprecated", path });
     }
+  });
+
+  test("the canonical names are public; the old ones are renamed to them (FLO-383)", () => {
+    const status = new Map(now.map((e) => [e.name, e]));
+    const renames = [["createTextfield", "createTextField"], ["TextfieldConfig", "TextFieldConfig"],
+      ["TextfieldComponent", "TextFieldComponent"], ["CardSchema", "CardConfig"],
+      ["TopAppBar", "TopAppBarComponent"], ["BottomAppBar", "BottomAppBarComponent"]];
+    for (const [old, to] of renames) {
+      expect(status.get(to!)?.status).toBe("public");
+      expect(status.get(old!)).toMatchObject({ status: "renamed", to });
+    }
+    expect(now.filter((e) => e.status === "renamed").map((e) => e.name).sort()).toEqual(renames.map(([old]) => old!).sort());
   });
 });
 
@@ -93,6 +105,9 @@ export const isManager = manager instanceof CleanupManager;`;
     const { flagged, errors } = analyse(`${importsOf(now, () => fromRoot)}\n${classUse(fromRoot)}`);
     expect(errors).toEqual([]);
     expect(deprecated.filter((e) => !flagged.has(e.name)).map((e) => e.name)).toEqual([]);
+    // FLO-383: a renamed name is flagged too, and its new name is not
+    expect(now.filter((e) => e.status === "renamed" && !flagged.has(e.name)).map((e) => e.name)).toEqual([]);
+    expect(now.filter((e) => e.status === "renamed" && flagged.has(e.to!)).map((e) => e.to)).toEqual([]);
     // A kept name may be deprecated at its own declaration (the segmented button is); the root adds none
     const own = analyse(importsOf(kept, (e) => (KEPT_CORE.has(e.name) ? "../src/core/index" : "../src/components/index")));
     expect(own.errors).toEqual([]);

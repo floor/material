@@ -17,4 +17,9 @@ export {
 // Export main component and types
 export default createTopAppBar;
 export { createTopAppBar };
-export type { TopAppBarConfig, TopAppBar } from './types';
+export type {
+  TopAppBarConfig,
+  TopAppBar as TopAppBarComponent,
+  /** @deprecated Use TopAppBarComponent, the name every component type has. Removed in 1.0 (FLO-383). */
+  TopAppBar,
+} from './types';

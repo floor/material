@@ -15,7 +15,7 @@ const now = readComponentExports();
 // The index subpaths' leaving internals; the /constants subpaths are pinned too (FLO-384)
 // and carry deprecations of their own, which this list is not about.
 const deprecated = Object.entries(now).filter(([component]) => !component.includes("/")).flatMap(([component, exports]) =>
-  exports.filter((e) => e.status === "deprecated").map((e) => ({ component, ...e })));
+  exports.filter((e) => e.status === "deprecated" && !e.note?.startsWith("Use ")).map((e) => ({ component, ...e })));
 
 describe("the component subpaths' exports (FLO-381)", () => {
   test("match the pinned lists: an added or removed name fails until the fixture is regenerated", async () => {
@@ -35,6 +35,17 @@ describe("the component subpaths' exports (FLO-381)", () => {
       "tabs:withDivider", "tabs:withIndicator", "tabs:withScrollable", "tabs:withTabsManagement",
     ].sort());
     for (const e of deprecated) expect(e.note).toContain(`removed from mtrl/components/${e.component} in 1.0.0`);
+  });
+
+  test("the old names are deprecated toward the canonical ones, which are public (FLO-383)", () => {
+    const entry = (component: string, name: string) => now[component]?.find((e) => e.name === name);
+    for (const [component, old, to] of [["textfield", "TextfieldConfig", "TextFieldConfig"], ["textfield", "TextfieldComponent", "TextFieldComponent"],
+      ["card", "CardSchema", "CardConfig"], ["top-app-bar", "TopAppBar", "TopAppBarComponent"], ["bottom-app-bar", "BottomAppBar", "BottomAppBarComponent"]]) {
+      expect(entry(component!, to!)?.status).toBe("public");
+      expect(entry(component!, old!)).toMatchObject({ status: "deprecated" });
+      expect(entry(component!, old!)?.note).toStartWith(`Use ${to}`);
+    }
+    expect(entry("textfield", "createTextField")?.status).toBe("public");
   });
 
   test("every /constants subpath is pinned beside its index (FLO-384)", () => {

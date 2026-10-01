@@ -12,6 +12,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Canonical names (FLO-383):** `createTextField`, `TextFieldConfig` and `TextFieldComponent` (M3
+  writes "text field" as two words), `CardConfig`, `TopAppBarComponent` and
+  `BottomAppBarComponent`, from `mtrl` and from each component's subpath. They are the same
+  factory and types as the old names. `createTopAppBar` now returns the one public `TopAppBar`
+  declaration (`top-app-bar.ts` had a second); assignability is unchanged.
 - **API gaps from the 1.0 audit (FLO-384).**
   - `isDisabled()` on every component that can be disabled and lacked it: button, icon button,
     FAB, extended FAB, checkbox, switch, text field, select, radios, button group and a tab.
@@ -86,6 +91,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Deprecated
 
+- **The old names, renamed (FLO-383):** `createTextfield` → `createTextField`, `TextfieldConfig` →
+  `TextFieldConfig`, `TextfieldComponent` → `TextFieldComponent`, `CardSchema` → `CardConfig`,
+  `TopAppBar` → `TopAppBarComponent`, `BottomAppBar` → `BottomAppBarComponent`. Each is flagged
+  where it is imported and removed in 1.0. Tags, CSS classes, folders and events keep their
+  names.
 - **Component internals on their subpaths (FLO-381).** `mtrl/components/<name>` is public API, and
   some indexes re-exported implementation details. These are deprecated there and removed in
   1.0.0, with no replacement (they are internal):

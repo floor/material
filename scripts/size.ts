@@ -133,7 +133,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   checkbox: kb(5.5),
   chips: kb(9.2), // FLO-256..261 chips conformance; #221 pointer focus; keyboard.disable() and :dir(rtl) (FLO-343 follow-up): 9,305 to 9,319
   datepicker: kb(12.2), // FLO-238 conformance; FLO-274 swiping; FLO-275 year list; FLO-276 full screen; read-only, required, one change shape (FLO-289, FLO-295): 12,332; FLO-119 aria-disabled: 12,412
-  dialog: kb(12.7), // layer: "top", as the sheets: 12,047 to 12,870
+  dialog: kb(12.8), // layer: "top", as the sheets: 12,047 to 12,870; no headroom after FLO-384 (12,999 to 13,004, the budget) and FLO-383 (13,005)
   divider: kb(3.7),
   drawer: kb(8.1), // the modal drawer's layer: "top": 7,622 to 8,109
   fab: kb(5.6),
