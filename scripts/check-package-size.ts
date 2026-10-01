@@ -86,7 +86,8 @@ try {
   // FLO-406 on main: medium/high contrast for all 24 themes, 1,007,632 -> 1,063,670 there.
   // On next, with the forward merge: 1,006,369 -> 1,063,466 against
   // 294100fe, Node 22.23.3 / npm 10.9.9; the budget keeps next's headroom.
-  assert(pack.size < 1_082_000, "npm tarball exceeds 1,082,000 bytes");
+  // FLO-428 removed four themes: 1,063,466 -> 1,048,224, same packer; lowered with the headroom.
+  assert(pack.size < 1_067_000, "npm tarball exceeds 1,067,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
@@ -98,7 +99,8 @@ try {
   // FLO-406 on main: the generated SCSS plus standalone, base and full CSS copies,
   // 5,716,236 -> 6,272,030 there. On next, with the forward merge: 5,931,197 ->
   // 6,483,417 against 294100fe, same packer; the budget keeps next's headroom.
-  assert(pack.unpackedSize < 6_542_000, "Unpacked package exceeds 6,542,000 bytes");
+  // FLO-428 removed four themes: 6,483,417 -> 6,334,330, same packer; lowered with the headroom.
+  assert(pack.unpackedSize < 6_393_000, "Unpacked package exceeds 6,393,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
   const smoke = join(temporary, "smoke.mjs");
@@ -282,7 +284,8 @@ try {
     // The navigation bar's stylesheet (FLO-305): 53,389 to 54,659 against 51455a6.
     // FLO-406 contrast CSS on main: 53,072 -> 65,291 there. On next, with the forward
     // merge: 53,593 -> 65,790 against 294100fe, Node 22 / npm 10.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 67000 },
+    // FLO-428 removed four themes from the full stylesheet: 65,790 -> 62,120.
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 63400 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);
