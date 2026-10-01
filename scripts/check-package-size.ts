@@ -31,6 +31,17 @@ function measure(data: Uint8Array) {
 }
 try {
   assert(!pack.files.some((file: { path: string }) => file.path.endsWith(".map")), "Unexpected source maps in npm package");
+  // FLO-364: keep the unfinished server entry and its dev-only dependency out of the package.
+  for (const file of pack.files as { path: string }[]) {
+    assert(!file.path.startsWith("dist/ssr/"), `Unexpected SSR file in npm package: ${file.path}`);
+    if (!/\.[cm]?[jt]sx?$/.test(file.path)) continue;
+    const source = await Bun.file(join(fixture.installed, file.path)).text();
+    const imports = ts.preProcessFile(source, true, true).importedFiles;
+    assert(
+      !imports.some(({ fileName }) => fileName === "linkedom" || fileName.startsWith("linkedom/")),
+      `Unexpected linkedom import in npm package: ${file.path}`,
+    );
+  }
   // What an install downloads. Raised from 900,000 on 2026-09-29 (Dr Jones) for the
   // overlay elements of wave 2; 830,286 measured after wave 1 (#245). Raised to
   // 1,010,000 for the 35 public Material shapes (FLO-346): 994,762 to 1,000,150,
