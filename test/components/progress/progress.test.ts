@@ -344,6 +344,53 @@ describe('progress', () => {
   });
 });
 
+// FLO-389: the colours are the theme where the indicator sits, not only the
+// page's. JSDOM does not inherit custom properties, so the section's tokens
+// are set on the indicator's own element here; in a browser they inherit from
+// any ancestor or shadow host (scripts/check-elements.ts samples the pixels,
+// and checks the redraw on a theme change of the section; the theme observer
+// is a module singleton bound to the first test file's document, so that is
+// checked in test/core/utils.theme.test.ts and in the browser, not here).
+describe('progress draws the theme of the section it is in', () => {
+  const root = document.documentElement.style;
+  beforeEach(() => {
+    root.setProperty('--mtrl-sys-color-primary', '#6750a4');
+    root.setProperty('--mtrl-sys-color-secondary-container', '#e8def8');
+  });
+  afterEach(() => {
+    root.removeProperty('--mtrl-sys-color-primary');
+    root.removeProperty('--mtrl-sys-color-secondary-container');
+  });
+  const dark = (el: HTMLElement): void => {
+    el.style.setProperty('--mtrl-sys-color-primary', '#d0bcff');
+    el.style.setProperty('--mtrl-sys-color-secondary-container', '#4a4458');
+  };
+  const colours = (p: { canvas?: unknown }): string[] => [...new Set(shapes(p).map((s) => s.color))].sort();
+
+  test('a themed section, with :root light: the indicator and track take its colours', () => {
+    for (const variant of ['linear', 'circular'] as const) {
+      const progress = createProgress({ variant, value: 50 });
+      dark(progress.element);
+      document.body.appendChild(progress.element);
+      progress.setValue(60);
+      flush(performance.now() + 5000);
+      expect(colours(progress)).toEqual(['#4a4458', '#d0bcff']);
+      progress.destroy();
+    }
+  });
+
+  test('detached, it draws the fallbacks and reads its theme once attached', () => {
+    const progress = createProgress({ variant: 'circular', value: 50 });
+    dark(progress.element);
+    expect(colours(progress)).toEqual(['#6750A4', '#E8DEF8']);
+    document.body.appendChild(progress.element);
+    progress.setValue(60);
+    flush(performance.now() + 5000);
+    expect(colours(progress)).toEqual(['#4a4458', '#d0bcff']);
+    progress.destroy();
+  });
+});
+
 // The API reads the state withState built from the config. getApiConfig used to
 // carry a fallback that built a state of its own when `comp.state` was missing
 // -- unreachable, since withState assigns it unconditionally and runs first,

@@ -8,31 +8,25 @@ const themeChangeCallbacks = new Set<ThemeChangeCallback>();
 let themeObserver: MutationObserver | null = null;
 
 /**
- * Setup observer for theme changes on body element
+ * Setup observer for theme changes anywhere in the document
  */
 const setupThemeObserver = (): void => {
   if (themeObserver) return; // Already set up
 
-  themeObserver = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      if (
-        mutation.type === 'attributes' && 
-        (mutation.attributeName === 'data-theme' || mutation.attributeName === 'data-theme-mode')
-      ) {
-        // Notify all registered callbacks
-        themeChangeCallbacks.forEach(callback => callback());
-        break;
-      }
-    }
+  // The filter keeps the records to these two attributes, so any record is a
+  // theme change
+  themeObserver = new MutationObserver(() => {
+    themeChangeCallbacks.forEach(callback => callback());
   });
 
-  // Themes are set with data-theme / data-theme-mode on <html> or on <body>;
-  // observe both so a change on either notifies.
-  const options = { attributes: true, attributeFilter: ['data-theme', 'data-theme-mode'] };
-  themeObserver.observe(document.documentElement, options);
-  if (document.body) {
-    themeObserver.observe(document.body, options);
-  }
+  // A theme is data-theme / data-theme-mode on <html>, on <body>, or on any
+  // element below them: a themed section, a card, a dark panel (FLO-389).
+  // The subtree takes them all in; the filter keeps it to those attributes.
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme', 'data-theme-mode'],
+    subtree: true,
+  });
 };
 
 /**
@@ -69,23 +63,29 @@ const hexToTriplet = (value: string): string | null => {
   return [0, 2, 4].map((i) => parseInt(full.substring(i, i + 2), 16)).join(', ');
 };
 
-/** Reads --<prefix>-<name> from the active theme (<body>), then from :root. */
-const readVar = (name: string): string => {
-  const prefixed = `--${PREFIX}-${name}`;
-  const value = getComputedStyle(document.body).getPropertyValue(prefixed).trim();
-  return value || getComputedStyle(document.documentElement).getPropertyValue(prefixed).trim();
+/**
+ * Reads --<prefix>-<name> where `element` sits, so a theme set on any
+ * ancestor, or on a shadow host, applies (FLO-389). Without a connected
+ * element: from the active theme (<body>), then from :root.
+ */
+const readVar = (name: string, element?: Element | null): string => {
+  const read = (from: Element): string => getComputedStyle(from).getPropertyValue(`--${PREFIX}-${name}`).trim();
+  return element?.isConnected ? read(element) : read(document.body) || read(document.documentElement);
 };
 
 /**
  * Gets a theme color from CSS variables, with optional alpha/opacity support.
  * The prefix is automatically added to the variable name.
- * Colors are retrieved from the active theme (defined on body element) if available,
- * falling back to the default theme (defined on :root) if not found.
+ * With `element`, colors are read where that element sits, so a theme set on
+ * any ancestor (or a shadow host) applies. Otherwise they are retrieved from
+ * the active theme (defined on body element) if available, falling back to
+ * the default theme (defined on :root) if not found.
  *
  * @param {string} varName - The CSS variable name without prefix (e.g. 'sys-color-primary')
  * @param {object} [options] - Options for color retrieval
  * @param {number} [options.alpha] - Alpha value (0-1): a hex colour is returned as rgba()
  * @param {string} [options.fallback] - Fallback color if variable is not found
+ * @param {Element} [options.element] - Element whose theme to read; used when it is in a document
  * @param {ThemeChangeCallback} [options.onThemeChange] - Optional callback for theme changes
  * @returns {string} The color value (hex, rgb, or rgba)
  *
@@ -111,6 +111,7 @@ export function getThemeColor(
   options?: { 
     alpha?: number, 
     fallback?: string,
+    element?: Element | null,
     onThemeChange?: ThemeChangeCallback 
   }
 ): string {
@@ -119,12 +120,12 @@ export function getThemeColor(
     onThemeChange(options.onThemeChange);
   }
 
-  let value = readVar(varName);
+  let value = readVar(varName, options?.element);
 
   // Deprecated: a '-rgb' twin that the theme no longer declares is derived
   // from its colour role, so existing callers keep their 'r, g, b' triplet.
   if (!value && varName.endsWith('-rgb')) {
-    value = hexToTriplet(readVar(varName.slice(0, -4))) ?? '';
+    value = hexToTriplet(readVar(varName.slice(0, -4), options?.element)) ?? '';
   }
 
   // If still not found, use fallback or return empty

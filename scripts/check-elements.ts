@@ -2741,6 +2741,95 @@ try {
     check("loading indicator: renders as the factory does with the global stylesheet");
   }
 
+  // ---------------------------------------------------------- canvas theme (FLO-389)
+  // A theme set on a section, with :root light: the canvases draw the
+  // section's colours, factory and element, and follow a theme change on it.
+  await fresh(
+    page,
+    `<div id="themed" data-theme="baseline" data-theme-mode="dark">
+       <m-progress id="tl" value="50"></m-progress>
+       <m-progress id="tli" indeterminate></m-progress>
+       <m-progress id="tc" variant="circular" value="50"></m-progress>
+       <m-progress id="tci" variant="circular" indeterminate></m-progress>
+       <m-loading-indicator id="tload"></m-loading-indicator>
+       <section id="factory"></section>
+     </div>`
+  );
+  {
+    type Palette = { primary: string; track: string; canvases: Record<string, Record<string, number>> };
+    const sample = (): Promise<Palette> =>
+      page.evaluate(async () => {
+        await new Promise((r) => setTimeout(r, 300));
+        const themed = document.getElementById("themed") as HTMLElement;
+        const probe = document.createElement("canvas").getContext("2d") as CanvasRenderingContext2D;
+        const hex = (name: string): string => {
+          probe.fillStyle = "#000";
+          probe.fillStyle = getComputedStyle(themed).getPropertyValue(name).trim();
+          return probe.fillStyle;
+        };
+        const histogram = (canvas: HTMLCanvasElement): Record<string, number> => {
+          const data = (canvas.getContext("2d") as CanvasRenderingContext2D).getImageData(0, 0, canvas.width, canvas.height).data;
+          const counts: Record<string, number> = {};
+          for (let i = 0; i < data.length; i += 4) {
+            if (data[i + 3]! < 250) continue;
+            const key = `#${[data[i]!, data[i + 1]!, data[i + 2]!].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+            counts[key] = (counts[key] ?? 0) + 1;
+          }
+          return counts;
+        };
+        const canvases: Record<string, Record<string, number>> = {};
+        for (const id of ["tl", "tli", "tc", "tci", "tload"]) {
+          canvases[`element ${id}`] = histogram((document.getElementById(id) as HTMLElement).shadowRoot?.querySelector("canvas") as HTMLCanvasElement);
+        }
+        for (const [name, el] of Object.entries((window as unknown as { factories: Record<string, HTMLElement> }).factories)) {
+          canvases[`factory ${name}`] = histogram(el.querySelector("canvas") as HTMLCanvasElement);
+        }
+        return { primary: hex("--mtrl-sys-color-primary"), track: hex("--mtrl-sys-color-secondary-container"), canvases };
+      });
+    await page.evaluate(() => {
+      const w = window as unknown as Win & {
+        mtrl: { createProgress: (c: object) => { element: HTMLElement }; createLoadingIndicator: (c: object) => { element: HTMLElement } };
+      };
+      const factories: Record<string, HTMLElement> = {
+        tl: w.mtrl.createProgress({ value: 50 }).element,
+        tli: w.mtrl.createProgress({ indeterminate: true }).element,
+        tc: w.mtrl.createProgress({ variant: "circular", value: 50 }).element,
+        tci: w.mtrl.createProgress({ variant: "circular", indeterminate: true }).element,
+        tload: w.mtrl.createLoadingIndicator({}).element,
+      };
+      document.getElementById("factory")?.append(...Object.values(factories));
+      (window as unknown as { factories: Record<string, HTMLElement> }).factories = factories;
+    });
+    const light = await page.evaluate(() => {
+      const probe = document.createElement("canvas").getContext("2d") as CanvasRenderingContext2D;
+      const hex = (name: string): string => {
+        probe.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        return probe.fillStyle;
+      };
+      return { primary: hex("--mtrl-sys-color-primary"), track: hex("--mtrl-sys-color-secondary-container") };
+    });
+    const expectPalette = (palette: Palette, not: { primary: string; track: string }, when: string): void => {
+      assert.notEqual(palette.primary, not.primary, `${when}: the section's primary differs from the other theme's`);
+      for (const [name, counts] of Object.entries(palette.canvases)) {
+        const what = `${when}, ${name}: ${JSON.stringify(Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4))}`;
+        assert.ok((counts[palette.primary] ?? 0) > 10, `${what} draws the section's primary ${palette.primary}`);
+        assert.equal(counts[not.primary] ?? 0, 0, `${what} draws no ${not.primary}`);
+        if (name.endsWith("tload")) continue; // a loading indicator has no track
+        assert.ok((counts[palette.track] ?? 0) > 10, `${what} draws the section's track ${palette.track}`);
+        assert.equal(counts[not.track] ?? 0, 0, `${what} draws no ${not.track}`);
+      }
+    };
+    const dark = await sample();
+    expectPalette(dark, light, "dark section");
+    check("canvas theme: progress (linear, circular, determinate, indeterminate) and loading indicator draw a dark section's colours with :root light, factory and element");
+
+    await page.evaluate(() => document.getElementById("themed")?.setAttribute("data-theme-mode", "light"));
+    expectPalette(await sample(), dark, "section switched to light");
+    await page.evaluate(() => document.getElementById("themed")?.setAttribute("data-theme-mode", "dark"));
+    expectPalette(await sample(), light, "section switched back to dark");
+    check("canvas theme: a theme change on the section redraws them in its new colours");
+  }
+
   // ---------------------------------------------------------------- badge
   await fresh(
     page,
