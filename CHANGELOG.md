@@ -10,6 +10,19 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Changed (breaking)
+
+- **The shape scale is M3's and nothing else (FLO-345).** The mtrl-only steps `extra-tiny` (1px),
+  `tiny` (2px) and `pill` (100px) are removed from `$shape`, with their
+  `--mtrl-sys-shape-corner-*` properties on `:root`. `v.shape('tiny')` and the rest now stop the
+  build with an error naming the migration (as does any step not on the scale). Migrate:
+  - `extra-tiny` and `tiny`: write the radius as a literal (`1px`, `2px`).
+  - `pill`: use `full`, or half the component's height when its corners animate (a 9999px
+    radius snaps when animated).
+  - A theme setting `--mtrl-sys-shape-corner-pill` can drop it; nothing reads it.
+- **`$mtrl-sys-shape` is removed from `abstract/theme` (FLO-345).** Nothing read it. Use
+  `v.shape(<step>)`.
+
 ### Added
 
 - **M3's two largest corner steps (FLO-345).** `extra-large-increased` (32px) and

@@ -69,9 +69,24 @@ const literals = (component: string): string[] => {
 describe('the shape scale (FLO-345)', () => {
   const tokens = compileString(`@use 'base/tokens';`, { loadPaths: ['src/styles'], style: 'expanded' }).css;
 
-  test('the root emits M3\'s two largest steps', () => {
-    expect(tokens).toContain('--mtrl-sys-shape-corner-extra-large-increased: 32px;');
-    expect(tokens).toContain('--mtrl-sys-shape-corner-extra-extra-large: 48px;');
+  test('the root emits M3\'s scale and nothing else: no extra-tiny, tiny or pill', () => {
+    const steps = Array.from(tokens.matchAll(/--mtrl-sys-shape-corner-([a-z-]+):\s*([^;]+);/g), (m) => `${m[1]} ${m[2]}`);
+    expect(steps).toEqual([
+      'none 0', 'extra-small 4px', 'small 8px', 'medium 12px', 'large 16px', 'large-increased 20px',
+      'extra-large 28px', 'extra-large-increased 32px', 'extra-extra-large 48px', 'full 9999px',
+    ]);
+  });
+
+  test('a removed step fails to compile, naming the migration', () => {
+    for (const step of ['extra-tiny', 'tiny', 'pill']) {
+      const read = () => compileString(`@use 'abstract/variables' as v; a { b: v.shape('${step}'); }`, { loadPaths: ['src/styles'] });
+      expect(read).toThrow(/No shape step '.+'.*removed in 1\.0\.0/s);
+    }
+  });
+
+  test('abstract/theme no longer exports the unused $mtrl-sys-shape map', () => {
+    const read = () => compileString(`@use 'abstract/theme' as t; a { b: inspect(t.$mtrl-sys-shape); }`, { loadPaths: ['src/styles'] });
+    expect(read).toThrow(/Undefined variable/);
   });
 
   test('the search bar is round at half its height, a theme\'s full corner still in charge', () => {
@@ -83,7 +98,7 @@ describe('the shape scale (FLO-345)', () => {
     expect(css).not.toContain('sys-shape-corner-pill');
   });
 
-  test('the checkbox no longer reads the deprecated tiny step', () => {
+  test('the checkbox reads no removed step', () => {
     const css = compileString(`@use 'components/checkbox';`, { loadPaths: ['src/styles'], style: 'expanded' }).css;
     expect(css).not.toContain('sys-shape-corner-tiny');
   });
