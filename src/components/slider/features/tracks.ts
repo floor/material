@@ -69,6 +69,30 @@ export const trackPositionCss = (fraction: number, inset: number): string =>
     ? `calc(${fraction * 100}% + ${inset * (1 - 2 * fraction)}px)`
     : `${fraction * 100}%`;
 
+/** A distance along the track: `f` of its length, plus `p` pixels. No measured width. */
+type Along = { f: number; p: number };
+const A0: Along = { f: 0, p: 0 };
+const A1: Along = { f: 1, p: 0 };
+const ap = (f: number, p: number): Along => ({ f, p });
+const add = (a: Along, b: Along): Along => ap(a.f + b.f, a.p + b.p);
+const sub = (a: Along, b: Along): Along => ap(a.f - b.f, a.p - b.p);
+const px = (p: number): Along => ap(0, p);
+
+/**
+ * `calc(40% - 8px)`, or a bare percent or pixel length. Rounded so `0.4 * 100`
+ * stays `40`. A zero fraction is `0px` (the track tests read that), and a
+ * negative pixel term is written ` - ` so a browser does not rewrite `+ -`.
+ * `unit` is `%` for positions; ticks pass `cqw`/`cqh` because a percentage in
+ * `background-position` is not a fraction of the element.
+ */
+const alongCss = (a: Along, unit = "%"): string => {
+  const pct = Math.round(a.f * 1e8) / 1e6;
+  const p = Math.round(a.p * 1e6) / 1e6;
+  if (pct === 0) return `${p}px`;
+  if (p === 0) return `${pct}${unit}`;
+  return `calc(${pct}${unit} ${p < 0 ? "-" : "+"} ${Math.abs(p)}px)`;
+};
+
 const INSET_ICON_PADDING = 10;
 
 /** The handle's width: 4dp, halved while it is pressed or focused (PressedHandleWidth, FocusHandleWidth). */
@@ -170,109 +194,128 @@ export const withTracks =
     if (destroyed) return;
     if (next) state = { ...next };
     axis = getAxis(config, isRtl(component.element));
-    // The track's length along the axis; the names below say width for it.
-    const width = lengthOf(container.getBoundingClientRect(), axis) || 200;
+    // Only the decisions that depend on the real length (a sliver shorter than the
+    // corner, an icon that fits) read it. 0, on a server, keeps the calc: the
+    // sign of those decisions is known without a width except at a short end.
+    const width = lengthOf(container.getBoundingClientRect(), axis) || 0;
     const corner = getExternalTrackRadius(size);
     const inset = config.ticks ? corner : 0;
     const fraction = (value: number) => Math.min(1, Math.max(0,
       state.max === state.min ? 0 : (value - state.min) / (state.max - state.min),
     ));
-    const position = (value: number) => trackPosition(fraction(value), width, inset);
-    const first = position(state.value);
-    const second = position(state.secondValue ?? state.max);
+    // trackPosition, as a fraction plus pixels. The inset drops off at the ends.
+    const atValue = (value: number): Along => {
+      const f = fraction(value);
+      return ap(f, inset && f > 0 && f < 1 ? inset * (1 - 2 * f) : 0);
+    };
+    const cmp = (a: Along, b: Along): number =>
+      width > 0 ? a.f * width + a.p - (b.f * width + b.p) : (a.f - b.f) || (a.p - b.p);
     // ThumbTrackGapSize is measured from the handle's edge, so it is half the handle's
     // current width plus 6dp from its centre.
-    const gapOf = (which: "first" | "second") =>
-      (narrowed(which) ? NARROW_HANDLE_WIDTH : HANDLE_WIDTH) / 2 + SLIDER_MEASUREMENTS.HANDLE_GAP;
+    const gapOf = (which: "first" | "second"): Along =>
+      px((narrowed(which) ? NARROW_HANDLE_WIDTH : HANDLE_WIDTH) / 2 + SLIDER_MEASUREMENTS.HANDLE_GAP);
     const firstGap = gapOf("first");
     const secondGap = gapOf("second");
-    let parts: [number, number, boolean][];
-    let activeStart: number, activeEnd: number;
+    const first = atValue(state.value);
+    const second = atValue(state.secondValue ?? state.max);
+    let parts: [Along, Along, boolean][];
+    let activeStart: Along, activeEnd: Along;
     if (config.centered) {
       // The active track runs from the centre to the handle, with the gap on the
       // handle's side only; the inactive track stops one gap before the centre.
-      const zero = position(Math.min(state.max, Math.max(state.min, 0)));
-      if (first >= zero) {
+      const zero = atValue(Math.min(state.max, Math.max(state.min, 0)));
+      if (cmp(first, zero) >= 0) {
         activeStart = zero; activeEnd = first;
-        parts = [[0, zero - firstGap, false], [zero, first - firstGap, true], [first + firstGap, width, false]];
+        parts = [[A0, sub(zero, firstGap), false], [zero, sub(first, firstGap), true], [add(first, firstGap), A1, false]];
       } else {
         activeStart = first; activeEnd = zero;
-        parts = [[0, first - firstGap, false], [first + firstGap, zero, true], [zero + firstGap, width, false]];
+        parts = [[A0, sub(first, firstGap), false], [add(first, firstGap), zero, true], [add(zero, firstGap), A1, false]];
       }
     } else if (config.range && state.secondValue !== null) {
-      const lowIsFirst = first <= second;
-      const [low, high] = lowIsFirst ? [first, second] : [second, first];
-      const [lowGap, highGap] = lowIsFirst ? [firstGap, secondGap] : [secondGap, firstGap];
+      const lowIsFirst = cmp(first, second) <= 0;
+      const low = lowIsFirst ? first : second;
+      const high = lowIsFirst ? second : first;
+      const lowGap = lowIsFirst ? firstGap : secondGap;
+      const highGap = lowIsFirst ? secondGap : firstGap;
       activeStart = low; activeEnd = high;
-      parts = [[0, low - lowGap, false], [low + lowGap, high - highGap, true], [high + highGap, width, false]];
+      parts = [[A0, sub(low, lowGap), false], [add(low, lowGap), sub(high, highGap), true], [add(high, highGap), A1, false]];
     } else {
-      activeStart = 0; activeEnd = first;
-      parts = [[0, 0, false], [0, first - firstGap, true], [first + firstGap, width, false]];
+      activeStart = A0; activeEnd = first;
+      parts = [[A0, A0, false], [A0, sub(first, firstGap), true], [add(first, firstGap), A1, false]];
     }
     // A piece of track that meets an end of the slider is drawn only while it is
     // longer than the corner radius (drawTrack's activeTrackThreshold and inactive
-    // thresholds): below that its rounded end would paint as a sliver.
+    // thresholds): below that its rounded end would paint as a sliver. With no
+    // width, only a length that is short at every width collapses.
     const standard = !config.centered && !(config.range && state.secondValue !== null);
+    const short = (len: Along): boolean =>
+      width > 0 ? len.f * width + len.p <= corner : len.f < 0 || (len.f === 0 && len.p <= corner);
     parts.forEach((part, index) => {
       const meetsEnd = index !== 1 || standard;
-      if (meetsEnd && part[1] - part[0] <= corner) part[1] = part[0];
+      if (meetsEnd && short(sub(part[1], part[0]))) part[1] = part[0];
     });
     segments.forEach((segment, index) => {
-      const [start, end, active] = parts[index] ?? [0, 0, false];
-      at(segment, `${start}px`);
-      segment.style[axis.size] = `${Math.max(0, end - start)}px`;
+      const [start, end, active] = parts[index] ?? [A0, A0, false];
+      const len = sub(end, start);
+      const drawn = (width > 0 ? len.f * width + len.p < 0 : len.f < 0 || (len.f === 0 && len.p < 0)) ? A0 : len;
+      at(segment, alongCss(start));
+      segment.style[axis.size] = alongCss(drawn);
       segment.classList.toggle(component.getClass("slider__segment--active"), active);
     });
     // A stop indicator ends each inactive piece that is drawn. With ticks the ends are
-    // ticks already.
-    dots[0].hidden = !!config.ticks || standard || parts[0][1] <= parts[0][0];
-    dots[1].hidden = !!config.ticks || parts[2][1] <= parts[2][0];
-    at(dots[0], `${corner - 2}px`);
-    at(dots[1], `${width - corner - 2}px`);
-    placeInsetIcon(parts);
+    // ticks already. The end stop sits one corner in, which is `100%` minus that.
+    dots[0].hidden = !!config.ticks || standard || cmp(parts[0][1], parts[0][0]) <= 0;
+    dots[1].hidden = !!config.ticks || cmp(parts[2][1], parts[2][0]) <= 0;
+    at(dots[0], alongCss(px(corner - 2)));
+    at(dots[1], alongCss(ap(1, -(corner + 2))));
+    placeInsetIcon(parts, width);
     const discrete = !!config.ticks && state.step > 0 && state.max > state.min;
     ticks.forEach(tick => { tick.hidden = !discrete; });
     if (discrete) {
-      // Ticks sit on the inset scale, TickSize 4dp, and none is drawn within a gap
-      // of a handle.
-      const spacing = (width - 2 * inset) * state.step / (state.max - state.min);
-      const tickAt = (value: number) => inset + fraction(value) * Math.max(0, width - 2 * inset);
+      // Ticks sit on the inset scale, including the ends (trackPosition drops the
+      // inset there). TickSize 4dp, and none is drawn within a gap of a handle.
+      // cqw/cqh: background-position percentages are not a fraction of the box.
+      const stepF = state.step / (state.max - state.min);
+      const repeat = `max(0.01px, ${alongCss(ap(stepF, -2 * inset * stepF))})`;
+      const offset = alongCss(ap(-stepF / 2, inset * (1 + stepF)), axis.vertical ? "cqh" : "cqw");
+      const tickAt = (value: number): Along => {
+        const f = fraction(value);
+        return ap(f, inset * (1 - 2 * f));
+      };
       const last = tickAt(state.min + Math.floor((state.max - state.min) / state.step) * state.step);
-      const holes: number[][] = [
-        [first - firstGap, first + firstGap],
-        ...(config.range && state.secondValue !== null ? [[second - secondGap, second + secondGap]] : []),
-      ];
-      const mask = (intervals: number[][]) => {
-        const merged: number[][] = [];
-        for (const [start, end] of intervals.sort((a, b) => a[0] - b[0])) {
+      const holes: [Along, Along][] = [[sub(first, firstGap), add(first, firstGap)]];
+      if (config.range && state.secondValue !== null) holes.push([sub(second, secondGap), add(second, secondGap)]);
+      const mask = (intervals: [Along, Along][]) => {
+        const merged: [Along, Along][] = [];
+        for (const [start, end] of [...intervals].sort((a, b) => cmp(a[0], b[0]))) {
           const previous = merged[merged.length - 1];
-          if (previous && start <= previous[1]) previous[1] = Math.max(previous[1], end);
+          if (previous && cmp(start, previous[1]) <= 0) { if (cmp(end, previous[1]) > 0) previous[1] = end; }
           else merged.push([start, end]);
         }
-        const stops = merged.flatMap(([start, end]) => [`black ${start}px`, `transparent ${start}px`, `transparent ${end}px`, `black ${end}px`]);
+        const stops = merged.flatMap(([start, end]) => [`black ${alongCss(start)}`, `transparent ${alongCss(start)}`, `transparent ${alongCss(end)}`, `black ${alongCss(end)}`]);
         const direction = { left: "to right", right: "to left", top: "to bottom", bottom: "to top" }[axis.start];
         return stops.length ? `linear-gradient(${direction}, black 0px, ${stops.join(",")}, black 100%)` : "none";
       };
       ticks.forEach((tick, index) => {
-        const repeat = `${Math.max(spacing, 0.01)}px`;
         tick.style.backgroundSize = axis.vertical ? `100% ${repeat}` : `${repeat} 100%`;
         tick.style.backgroundPosition = axis.vertical
-          ? `center ${axis.start} ${inset - spacing / 2}px`
-          : `${axis.start} ${inset - spacing / 2}px center`;
-        tick.style.maskImage = mask([
-          ...holes,
-          ...(index === 0 ? [[activeStart - 2, activeEnd + 2]] : []),
-        ]);
+          ? `center ${axis.start} ${offset}`
+          : `${axis.start} ${offset} center`;
+        tick.style.maskImage = mask(index === 0 ? [...holes, [sub(activeStart, px(2)), add(activeEnd, px(2))]] : holes);
       });
-      // Cut from the start and from the end of the axis.
-      const clip = (fromStart: number, fromEnd: number) => ({
-        left: `inset(0 ${fromEnd}px 0 ${fromStart}px)`,
-        right: `inset(0 ${fromStart}px 0 ${fromEnd}px)`,
-        top: `inset(${fromStart}px 0 ${fromEnd}px 0)`,
-        bottom: `inset(${fromEnd}px 0 ${fromStart}px 0)`,
+      // Cut from the start and from the end. min() picks the nearer end without a width.
+      const clip = (fromStart: string, fromEnd: string) => ({
+        left: `inset(0 ${fromEnd} 0 ${fromStart})`,
+        right: `inset(0 ${fromStart} 0 ${fromEnd})`,
+        top: `inset(${fromStart} 0 ${fromEnd} 0)`,
+        bottom: `inset(${fromEnd} 0 ${fromStart} 0)`,
       })[axis.start];
-      ticks[0].style.clipPath = clip(0, Math.max(0, width - last - 2));
-      ticks[1].style.clipPath = clip(Math.max(0, activeStart - 2), Math.max(0, width - Math.min(last + 2, activeEnd + 2)));
+      const fromEnd = (edge: Along) => `max(0px, calc(100% - ${alongCss(edge)}))`;
+      ticks[0].style.clipPath = clip("0px", fromEnd(add(last, px(2))));
+      ticks[1].style.clipPath = clip(
+        `max(0px, ${alongCss(sub(activeStart, px(2)))})`,
+        `max(0px, calc(100% - min(${alongCss(add(last, px(2)))}, ${alongCss(add(activeEnd, px(2)))})))`,
+      );
     }
   };
   // Standard sliders at M, L and XL only (m3.material.io specs: 24 / 24 / 32dp). The
@@ -280,16 +323,16 @@ export const withTracks =
   // inactive track when the active one is shorter than the icon and its padding on
   // both sides (material-components-android BaseSlider calculateTrackIconBounds,
   // m3_slider_track_icon_padding = 10dp).
-  function placeInsetIcon(parts: [number, number, boolean][]) {
+  function placeInsetIcon(parts: [Along, Along, boolean][], width: number) {
     const trackHeight = getTrackHeight(size);
     const eligible = !config.range && !config.centered && trackHeight >= SLIDER_SIZES.M;
     const markup = state.value <= state.min && insetMarkup.atMin ? insetMarkup.atMin : insetMarkup.icon;
     const iconSize = trackHeight >= SLIDER_SIZES.XL ? 32 : 24;
     const room = iconSize + 2 * INSET_ICON_PADDING;
-    const [activeStart, activeEnd] = parts[1];
-    const [inactiveStart, inactiveEnd] = parts[2];
-    const onActive = activeEnd - activeStart >= room;
-    const onInactive = !onActive && inactiveEnd - inactiveStart >= room;
+    const fits = (len: Along) =>
+      width > 0 ? len.f * width + len.p >= room : len.f > 0 || (len.f === 0 && len.p >= room);
+    const onActive = fits(sub(parts[1][1], parts[1][0]));
+    const onInactive = !onActive && fits(sub(parts[2][1], parts[2][0]));
     insetIcon.hidden = !eligible || !markup || (!onActive && !onInactive);
     if (insetIcon.hidden) return;
     if (markup !== shownMarkup) {
@@ -297,7 +340,7 @@ export const withTracks =
       shownMarkup = markup;
     }
     insetIcon.style.width = insetIcon.style.height = `${iconSize}px`;
-    at(insetIcon, `${(onActive ? activeStart : inactiveStart) + INSET_ICON_PADDING}px`);
+    at(insetIcon, alongCss(add(onActive ? parts[1][0] : parts[2][0], px(INSET_ICON_PADDING))));
     insetIcon.classList.toggle(component.getClass("slider__inset-icon--inactive"), onInactive);
   }
   component.setInsetIcon = (icon: string, atMin = "") => {

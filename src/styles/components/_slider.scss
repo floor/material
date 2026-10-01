@@ -130,7 +130,9 @@ $component: '#{base.$prefix}-slider';
     --#{base.$prefix}-slider-tick-opacity: 0.38;
     --#{base.$prefix}-slider-active-tick-opacity: 0.12;
   }
-  &__visual { position: absolute; inset: 0; pointer-events: none; }
+  // Discrete ticks offset their repeat with cqw/cqh, which resolve against this
+  // box. inset: 0 already gives it a definite size, so size containment holds.
+  &__visual { position: absolute; inset: 0; pointer-events: none; container-type: size; }
   &__track { position: absolute; top: 50%; width: 100%; transform: translateY(-50%); overflow: hidden; }
   // The track clips the outer corners (its radius is set per size); a segment's own
   // corners are the inside ones, TrackInsideCornerSize = 2dp.

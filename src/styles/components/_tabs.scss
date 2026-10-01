@@ -1,4 +1,5 @@
 // src/components/tabs/_styles.scss
+@use "sass:string";
 @use "../../styles/abstract/base" as base;
 @use "../../styles/abstract/variables" as v;
 @use "../../styles/abstract/functions" as f;
@@ -117,6 +118,71 @@ $container: "#{base.$prefix}-tabs";
         // the first render and on resize. FLO-262.
         transition: m.spring(transform, default-spatial), m.spring(width, default-spatial);
         z-index: 1; // Ensure indicator appears above divider
+    }
+
+    // Resting position where anchor positioning exists (Baseline 2026). `left: 0`
+    // above stays the fallback, and older browsers keep the transform spring.
+    // The name is scoped to this component. The active tab carries it; a primary
+    // label replaces it so the indicator insets that text. FLO-369.
+    @supports (#{string.unquote("anchor-name: --a")}) {
+        anchor-scope: string.unquote("--#{base.$prefix}-tabs-indicator");
+        $anchor: string.unquote("--#{base.$prefix}-tabs-indicator");
+
+        &__indicator {
+            position-anchor: $anchor;
+        }
+
+        .#{base.$prefix}-tab--active {
+            anchor-name: $anchor;
+        }
+
+        &--primary:not(:has(#{&}__indicator--fixed)):not(:has(#{&}__indicator--dynamic)) {
+            .#{base.$prefix}-tab--active:has(.#{base.$prefix}-button__text) {
+                anchor-name: none;
+            }
+
+            .#{base.$prefix}-tab--active .#{base.$prefix}-button__text {
+                anchor-name: $anchor;
+            }
+        }
+
+        &--primary &__indicator,
+        &--secondary &__indicator {
+            transition: m.spring(left, default-spatial), m.spring(width, default-spatial);
+        }
+
+        &--primary &__indicator {
+            width: string.unquote("max(24px, calc(anchor-size(width) - 4px))");
+            left: string.unquote("calc(anchor(center) - 0.5 * max(24px, anchor-size(width) - 4px))");
+        }
+
+        &--secondary &__indicator {
+            left: anchor(left);
+            width: anchor-size(width);
+            min-width: 0;
+        }
+
+        // Same specificity as the variant rules above, and later, so a strategy wins.
+        // A primary tab with no label uses the dynamic half, centred on the tab.
+        &--primary:has(.#{base.$prefix}-tab--active:not(:has(.#{base.$prefix}-button__text))) &__indicator:not(#{&}__indicator--fixed):not(#{&}__indicator--content),
+        &--primary &__indicator--dynamic,
+        &--secondary &__indicator--dynamic {
+            width: string.unquote("max(30px, calc(anchor-size(width) / 2))");
+            left: string.unquote("calc(anchor(center) - 0.5 * max(30px, calc(anchor-size(width) / 2)))");
+        }
+
+        &--primary &__indicator--content,
+        &--secondary &__indicator--content {
+            width: string.unquote("max(30px, anchor-size(width))");
+            left: string.unquote("calc(anchor(center) - 0.5 * max(30px, anchor-size(width)))");
+        }
+
+        &:has(.#{base.$prefix}-tab--active:not(:has(.#{base.$prefix}-button__text))) &__indicator--content,
+        &--primary &__indicator--fixed,
+        &--secondary &__indicator--fixed {
+            width: var(--#{base.$prefix}-tabs-indicator-width, 40px);
+            left: string.unquote("calc(anchor(center) - 0.5 * var(--#{base.$prefix}-tabs-indicator-width, 40px))");
+        }
     }
 }
 

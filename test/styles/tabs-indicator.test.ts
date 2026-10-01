@@ -22,6 +22,17 @@ test('the indicator starts at the left edge the script measures from', () => {
   expect(value('.mtrl-tabs__indicator', 'left')).toBe('0');
 });
 
+test('where anchors exist the indicator follows the active label or tab', () => {
+  expect(css).toContain('anchor-scope: --mtrl-tabs-indicator');
+  expect(css).toContain('position-anchor: --mtrl-tabs-indicator');
+  expect(css).toContain('anchor-name: --mtrl-tabs-indicator');
+  expect(value('.mtrl-tabs--primary .mtrl-tabs__indicator', 'width')).toBe('max(24px, calc(anchor-size(width) - 4px))');
+  expect(value('.mtrl-tabs--primary .mtrl-tabs__indicator', 'left')).toBe('calc(anchor(center) - 0.5 * max(24px, anchor-size(width) - 4px))');
+  expect(value('.mtrl-tabs--primary .mtrl-tabs__indicator', 'transition')).toMatch(/^left \d+ms linear\(.+\), width \d+ms linear\(/);
+  expect(value('.mtrl-tabs--secondary .mtrl-tabs__indicator', 'left')).toBe('anchor(left)');
+  expect(value('.mtrl-tabs--secondary .mtrl-tabs__indicator', 'width')).toBe('anchor-size(width)');
+});
+
 test('the scrollable row keeps its edge padding, which the indicator must not inherit', () => {
   expect(value('.mtrl-tabs--scrollable .mtrl-tabs__scroll', 'padding-inline')).toBe('52px');
 });

@@ -102,6 +102,20 @@ describe('loading indicator', () => {
     expect(contained.element.getAttribute('aria-label')).toBe('Loading news');
   });
 
+  test('the canvas is sized before it has a context', () => {
+    const original = dom.window.HTMLCanvasElement.prototype.getContext;
+    dom.window.HTMLCanvasElement.prototype.getContext = (() => null) as typeof original;
+    try {
+      const indicator = createLoadingIndicator();
+      expect(indicator.canvas.style.width).toBe('48px');
+      expect(indicator.canvas.style.height).toBe('48px');
+      expect(indicator.canvas.width).toBe(48);
+      expect(indicator.canvas.height).toBe(48);
+    } finally {
+      dom.window.HTMLCanvasElement.prototype.getContext = original;
+    }
+  });
+
   test('the size is kept between 24 and 240', () => {
     expect(createLoadingIndicator({ size: 10 }).getSize()).toBe(24);
     expect(createLoadingIndicator({ size: 400 }).getSize()).toBe(240);

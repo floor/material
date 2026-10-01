@@ -166,6 +166,21 @@ describe('tabs', () => {
     expect(mount().element.querySelector('.mtrl-tabs__indicator')).not.toBeNull();
   });
 
+  test('the indicator anchors to the active label before it is measured', () => {
+    const view = document.defaultView as Window & { CSS?: unknown };
+    const previous = view.CSS;
+    delete view.CSS;
+    try {
+      const tabs = mount();
+      const indicator = tabs.element.querySelector('.mtrl-tabs__indicator') as HTMLElement;
+      expect(indicator.style.width).toBe('');
+      expect(indicator.style.transform).toBe('');
+      expect(indicator.className).toBe('mtrl-tabs__indicator');
+    } finally {
+      view.CSS = previous;
+    }
+  });
+
   test('off() removes a handler', () => {
     const tabs = mount();
     const changes = mock(() => {});

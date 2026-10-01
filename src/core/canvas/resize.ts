@@ -14,7 +14,7 @@
  */
 export const observeCanvasResize = (
   element: HTMLElement,
-  canvas: HTMLCanvasElement,
+  _canvas: HTMLCanvasElement,
   onResize: () => void
 ): (() => void) => {
   
@@ -30,13 +30,15 @@ export const observeCanvasResize = (
   
   // Use ResizeObserver if available
   if (typeof ResizeObserver !== 'undefined') {
+    // canvas.style.width may be a percentage, so remember the last box.
+    // seen starts at -1 so the first real width draws: construction may have
+    // measured nothing.
+    let seen = -1;
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        const { width } = entry.contentRect;
-        const currentWidth = parseFloat(canvas.style.width || '0');
-        
-        // Only trigger if the element actually changed size significantly
-        if (Math.abs(width - currentWidth) > 2) {
+        const width = entry.contentRect.width;
+        if (Math.abs(width - seen) > 2) {
+          seen = width;
           debouncedResize();
         }
       }

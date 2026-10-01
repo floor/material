@@ -27,7 +27,8 @@ describe('tab indicator', () => {
 
   test('a duration or an easing from the app moves it instead', () => {
     const { transition } = createTabIndicator({ animationDuration: 300 }).element.style;
-    expect(transition).toContain('transform 300ms');
+    // Anchors slide left. An older browser, where supports() is false, slides transform.
+    expect(transition).toMatch(/^(left|transform) 300ms /);
     expect(transition).toContain('width 300ms');
   });
 });

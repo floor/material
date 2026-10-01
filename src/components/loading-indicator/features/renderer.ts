@@ -147,6 +147,15 @@ export const withRenderer = (config: LoadingIndicatorConfig) =>
     };
 
     const resize = (size: number): void => {
+      // Before a context exists. A server canvas has none, and createCanvasContext
+      // bails before it can size one; the bitmap is the same number it would write.
+      const ratio = component.element.ownerDocument.defaultView?.devicePixelRatio || 1;
+      const bitmap = Math.round(size * ratio);
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
+      // Assigning width or height clears the bitmap even when unchanged.
+      if (canvas.width !== bitmap) canvas.width = bitmap;
+      if (canvas.height !== bitmap) canvas.height = bitmap;
       ensureContext(size);
       refreshColor();
       redraw();

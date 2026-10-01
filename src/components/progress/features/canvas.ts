@@ -146,30 +146,42 @@ export const withCanvas =
 
     const colors = createColors(() => draw(animationTime));
 
-    /** Sizes the canvas to the element and the device's pixel ratio */
-    const measure = (): void => {
-      if (!context) return;
-      const ratio = view?.devicePixelRatio || 1;
-      let width: number;
-      let height: number;
+    // Linear bitmap width in CSS pixels. The layout width is the container's,
+    // unknown until layout and on a server, so the bitmap stays fixed and
+    // drawing scales it onto the border box. Same attributes either side.
+    const LINEAR_BITMAP = 2048;
+    const ratioOf = (): number => view?.devicePixelRatio || 1;
+    const boxHeight = (): number =>
+      isCircular ? currentSize : getLinearHeight(strokeWidth(), isWavy());
 
-      if (isCircular) {
-        width = height = currentSize;
-      } else {
-        const rect = component.element.getBoundingClientRect?.();
-        width = Math.max(rect?.width || component.element.offsetWidth || 0, 0);
-        height = getLinearHeight(strokeWidth(), isWavy());
-      }
-
-      canvas.style.width = `${width}px`;
+    /** Token box, with no layout read: a server canvas has no context to size it. */
+    const paintBox = (): void => {
+      const ratio = ratioOf();
+      const height = boxHeight();
+      const bitmapW = Math.round((isCircular ? currentSize : LINEAR_BITMAP) * ratio);
+      const bitmapH = Math.round(height * ratio);
+      canvas.style.width = isCircular ? `${currentSize}px` : "100%";
       canvas.style.height = `${height}px`;
-      canvas.width = Math.round(width * ratio);
-      canvas.height = Math.round(height * ratio);
+      // Assigning width or height clears the bitmap even when unchanged.
+      if (canvas.width !== bitmapW) canvas.width = bitmapW;
+      if (canvas.height !== bitmapH) canvas.height = bitmapH;
+    };
+
+    /** Points the drawing at the element's box and the device's pixel ratio */
+    const measure = (): void => {
+      paintBox();
+      if (!context) return;
+      const height = boxHeight();
+      const width = isCircular
+        ? currentSize
+        : Math.max(component.element.getBoundingClientRect?.().width || component.element.offsetWidth || 0, 0);
       context.width = width;
       context.height = height;
-      context.pixelRatio = ratio;
-      context.ctx.setTransform(1, 0, 0, 1, 0, 0);
-      context.ctx.scale(ratio, ratio);
+      context.pixelRatio = ratioOf();
+      if (width <= 0 || height <= 0) return;
+      // Border-box CSS pixels onto the bitmap. Display is the content box
+      // (width 100%), the squash a border-box pixel width got from max-width.
+      context.ctx.setTransform(canvas.width / width, 0, 0, canvas.height / height, 0, 0);
     };
 
     const initialize = (): boolean => {
@@ -399,6 +411,10 @@ export const withCanvas =
     // ---------------------------------------------------------------------
     // Wiring
     // ---------------------------------------------------------------------
+
+    // Before a context exists. A server canvas has none, and the box is known
+    // from the tokens either way.
+    paintBox();
 
     if (!initialize() && typeof requestAnimationFrame === "function") {
       requestAnimationFrame(() => {
