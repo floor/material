@@ -375,14 +375,12 @@ export const withSuggestions =
     });
   };
 
-  // Initialize keyboard navigation after structure is ready. Suggestions given
-  // in config were stored and never drawn -- rendering only happened inside the
-  // public setSuggestions() -- so draw them here too, and again whenever the
-  // view opens, so the open list always shows the current suggestions.
-  setTimeout(() => {
-    setupKeyboardNavigation();
-    if (getSuggestions().length > 0) renderSuggestions();
-  }, 0);
+  // Structure and input already exist, so render before the factory returns.
+  // Keep keyboard setup after input's deferred listeners: its Enter handler must
+  // see the active suggestion before ours selects it and clears the highlight.
+  if (getSuggestions().length > 0) renderSuggestions();
+  setTimeout(setupKeyboardNavigation, 0);
+  // Reopening always uses the current suggestions.
   component.on?.("expand", () => renderSuggestions());
 
   // Return enhanced component with suggestions features

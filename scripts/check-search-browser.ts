@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createSearch from "../src/components/search";
 
-type SearchWindow = Window & { createSearch: typeof createSearch; search: ReturnType<typeof createSearch> };
+type SearchWindow = Window & { searchEvents: string[]; createSearch: typeof createSearch; search: ReturnType<typeof createSearch> };
 
 /** Mounts a search between two paragraphs, optionally in a clipping parent. */
 const mount = (page: Page, config: Parameters<typeof createSearch>[0], clip = false) => page.evaluate(({ config, clip }) => {
@@ -47,6 +47,39 @@ const layout = (page: Page) => page.evaluate(() => {
 export async function checkSearch(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1000, height: 800 });
   await page.emulateMedia({ reducedMotion: "reduce" });
+
+  // Initial content is present before the construction task ends.
+  const immediate = await page.evaluate(() => {
+    document.body.replaceChildren();
+    const state = window as unknown as SearchWindow;
+    state.search = state.createSearch({ value: "ap", suggestions: ["Apple", "Banana"], collapseOnBlur: false });
+    const count = state.search.element.querySelectorAll('[role="option"]').length;
+    state.searchEvents = [];
+    state.search.on("submit", () => state.searchEvents.push("submit"));
+    state.search.on("suggestionSelect", () => state.searchEvents.push("select"));
+    document.body.append(state.search.element);
+    return count;
+  });
+  assert.equal(immediate, 2, "suggestions are ready in the construction task");
+  await page.locator(".mtrl-search__input").focus();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  assert.equal(await page.locator(".mtrl-search__input").inputValue(), "Apple", "keyboard selection still works");
+  assert.deepEqual(await page.evaluate(() => (window as unknown as SearchWindow).searchEvents), ["select"], "Enter selects without submitting the query");
+  // Consumers can filter immediately or supply suggestions after an async source resolves.
+  await page.evaluate(() => {
+    const search = (window as unknown as SearchWindow).search;
+    search.on("input", event => search.setSuggestions(["Apple", "Banana"].filter(text => text.toLowerCase().includes(event.value.toLowerCase()))));
+  });
+  await page.locator(".mtrl-search__input").fill("ban");
+  assert.deepEqual(await page.locator('[role="option"]').allTextContents(), ["Banana"]);
+  await page.evaluate(async () => {
+    const search = (window as unknown as SearchWindow).search;
+    search.setSuggestions(await Promise.resolve(["Async result"]));
+    search.collapse();
+    search.expand();
+  });
+  assert.deepEqual(await page.locator('[role="option"]').allTextContents(), ["Async result"], "reopening preserves async results");
 
   // Docked: the page does not move; the bar and results show over it, in the
   // top layer, placed on the bar, over a 0.32 scrim.

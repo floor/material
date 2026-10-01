@@ -15,6 +15,7 @@ import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
 import { checkTextfield, checkTextfieldTokens, checkTextfieldAnatomy, checkTextfieldPlaceholder, checkTextfieldA11y } from "./check-textfield-browser";
 import { checkControls } from "./check-controls-browser";
+import { checkMenu } from "./check-menu-browser";
 import { checkSearch } from "./check-search-browser";
 import { createPackageFixture } from "./package-fixture";
 
@@ -34,6 +35,7 @@ try {
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createTimePicker } from 'mtrl'; window.createTimePicker = createTimePicker;`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createSearch } from 'mtrl'; window.createSearch = createSearch;`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createSelect } from 'mtrl'; window.createSelect = createSelect;`);
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { createMenu } from 'mtrl'; window.createMenu = createMenu;`);
   const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "iife", minify: true });
   assert(bundle.success, String(bundle.logs));
   browser = await chromium.launch({ headless: true });
@@ -99,6 +101,7 @@ try {
   await checkTextfieldPlaceholder(page);
   await checkTextfieldA11y(page);
   await checkControls(page);
+  await checkMenu(page);
   await checkSearch(page);
   await checkTimePicker(page, artifacts);
   await checkCard(page, artifacts);
