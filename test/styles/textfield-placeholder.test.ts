@@ -33,19 +33,18 @@ test('the disabled input still sets the fill the placeholder would inherit', () 
 
 // FLO-355: the prefix and suffix rest with the label too, and fade in as it floats.
 const restingAffixes = Array.from(
-  css.matchAll(/(?:^|\n)([^{}\n]*\.mtrl-textfield__(?:prefix|suffix))\s*[,{]/g),
+  css.matchAll(/(?:^|\n)([^{}\n]*:is\(\.mtrl-textfield__prefix, \.mtrl-textfield__suffix\))\s*\{\s*opacity: 0;/g),
   (m) => m[1]!,
 ).filter((selector) => selector.startsWith('.mtrl-textfield--empty:has(> .mtrl-textfield__field > .mtrl-textfield__label)'));
 
 test('a resting label hides the prefix and the suffix, in both variants', () => {
-  expect(restingAffixes.length).toBe(2);
+  expect(restingAffixes.length).toBe(1);
   for (const selector of restingAffixes) {
     expect(selector).not.toMatch(/--filled|--outlined/);
     expect(selector).toContain(':not(.mtrl-textfield--focused)');
     // The float rules' complement: a value or an autofill floats the label
     expect(selector).toContain(':not(:has(.mtrl-textfield__input:is(:not(:placeholder-shown), :autofill, :-webkit-autofill)))');
   }
-  expect(css).toMatch(/\.mtrl-textfield__suffix\s*\{\s*opacity: 0;/);
 });
 
 test('the affixes fade on the label\'s float timing', () => {

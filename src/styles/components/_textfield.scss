@@ -120,8 +120,7 @@ $component: "#{base.$prefix}-textfield";
     // Resting is the float rules' complement: empty to the script and to the
     // input itself, and not focused.
     &--empty:has(> .#{$component}__field > .#{$component}__label):not(.#{$component}--focused):not(:has(.#{$component}__input:is(:not(:placeholder-shown), :autofill, :-webkit-autofill))) {
-        .#{$component}__prefix,
-        .#{$component}__suffix {
+        :is(.#{$component}__prefix, .#{$component}__suffix) {
             opacity: 0;
         }
     }
