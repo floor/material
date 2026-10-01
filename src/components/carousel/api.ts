@@ -12,6 +12,7 @@ interface ApiComponent {
   next: () => void;
   prev: () => void;
   goTo: (index: number) => void;
+  setWheel: (on: boolean) => void;
   lifecycle?: { destroy: () => void };
   on?: (event: string, handler: EventCallback) => unknown;
   off?: (event: string, handler: EventCallback) => unknown;
@@ -34,6 +35,10 @@ export const withAPI = () => (component: ApiComponent): CarouselComponent => {
     },
     goTo(index: number) {
       component.goTo(index);
+      return api;
+    },
+    setWheel(on: boolean) {
+      component.setWheel(on);
       return api;
     },
     getCurrentSlide: () => component.getCurrentSlide(),

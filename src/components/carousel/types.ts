@@ -54,6 +54,14 @@ export interface CarouselConfig {
   cornerRadius?: number;
   /** Snap to items after scrolling; on by default except for uncontained layouts */
   snap?: boolean;
+  /**
+   * Scroll horizontal carousels with a vertical mouse wheel; false by default.
+   * Normalized deltas accumulate per gesture and glide to directional snap points.
+   * One notch advances at least one item; momentum can pass several whole items.
+   * At either edge the page scrolls.
+   * Horizontal trackpad gestures, zoom and vertical layouts stay native.
+   */
+  wheel?: boolean;
   initialSlide?: number;
   minSmallItemWidth?: number;
   maxSmallItemWidth?: number;
@@ -75,6 +83,8 @@ export interface CarouselComponent {
   goTo: (index: number) => CarouselComponent;
   getCurrentSlide: () => number;
   getVariant: () => CarouselVariant;
+  /** Enable or disable vertical mouse wheel scrolling in place. */
+  setWheel: (on: boolean) => CarouselComponent;
 
   addSlide: (slide: CarouselSlide, index?: number) => CarouselComponent;
   removeSlide: (index: number) => CarouselComponent;

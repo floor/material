@@ -32,6 +32,8 @@ import type { SlidesComponent } from "./slides";
 const FLING_VELOCITY = 0.4;
 /** Pointer travel below this is a click, not a drag */
 const DRAG_THRESHOLD = 4;
+/** 120 ms of quiet separates gestures while retaining a continuous momentum tail. */
+const WHEEL_QUIET = 120;
 
 interface ScrollComponent {
   getCurrentSlide: () => number;
@@ -39,6 +41,7 @@ interface ScrollComponent {
   next: () => void;
   prev: () => void;
   goTo: (index: number) => void;
+  setWheel: (on: boolean) => void;
   lifecycle: { destroy: () => void };
 }
 
@@ -70,6 +73,7 @@ export const withScroll = (config: CarouselConfig) =>
     const snapClass = `${prefix}__snap`;
     element.classList.toggle(`${prefix}--snap`, snap);
 
+    let lastWheel = -Infinity;
     let strategy: Strategy | null = null;
     let count = 0;
     let containerSize = 0;
@@ -235,6 +239,7 @@ export const withScroll = (config: CarouselConfig) =>
     };
 
     const rebuild = (): void => {
+      stopWheel();
       build();
       if (strategy) {
         expect(currentIndex);
@@ -246,6 +251,7 @@ export const withScroll = (config: CarouselConfig) =>
     // ── Navigation ──────────────────────────────────────────────
 
     const goTo = (index: number): void => {
+      stopWheel();
       if (!count) return;
       const target = Math.min(Math.max(index, 0), count - 1);
       if (strategy) {
@@ -268,6 +274,7 @@ export const withScroll = (config: CarouselConfig) =>
     };
 
     const handleKeyDown = (e: KeyboardEvent): void => {
+      stopWheel();
       const from = indexOf(e.target);
       if (from < 0) return;
       const forward = vertical ? "ArrowDown" : "ArrowRight";
@@ -308,9 +315,11 @@ export const withScroll = (config: CarouselConfig) =>
     };
 
     const handlePointerDown = (e: PointerEvent): void => {
+      stopWheel();
       clearPending();
       if (e.pointerType !== "mouse" || e.button !== 0 || !strategy) return;
       dragging = true;
+      lastWheel = -Infinity;
       dragged = false;
       dragStart = vertical ? e.clientY : e.clientX;
       dragLast = dragStart;
@@ -368,11 +377,121 @@ export const withScroll = (config: CarouselConfig) =>
       }
     };
 
+    // ── Opt-in mouse wheel ──────────────────────────────────────
+
+    let wheelDirection = 0;
+    let wheelStart = 0;
+    let wheelDelta = 0;
+    let wheelTarget = 0;
+    let wheelFrame = 0;
+    let wheelPosition = 0;
+    let wheelVelocity = 0;
+    let wheelTime = 0;
+    let wheelSnap: string | null = null;
+    let wheelSnapPriority = "";
+    const stopWheel = (resetGesture = true): void => {
+      if (wheelFrame) window.cancelAnimationFrame(wheelFrame);
+      wheelFrame = 0;
+      wheelVelocity = 0;
+      if (resetGesture) lastWheel = -Infinity;
+      if (wheelSnap !== null) {
+        scroller.style.setProperty("scroll-snap-type", wheelSnap, wheelSnapPriority);
+        wheelSnap = null;
+        clearPending();
+      }
+    };
+    const glide = (now: number): void => {
+      // Exact critically damped spring, in seconds. Retargets change only the
+      // destination: position and velocity survive. 12/s settles a notch in
+      // about 0.8s, with no overshoot and no frame-rate-dependent integration.
+      const dt = (now - wheelTime) / 1000;
+      wheelTime = now;
+      const offset = wheelPosition - wheelTarget;
+      const decay = Math.exp(-12 * dt);
+      const carry = wheelVelocity + 12 * offset;
+      wheelPosition = wheelTarget + (offset + carry * dt) * decay;
+      wheelVelocity = (wheelVelocity - 12 * carry * dt) * decay;
+      // A fresh gesture after quiet can choose a nearer target while the old
+      // velocity is still high. Land there rather than overshooting it.
+      const resting = wheelDirection * (wheelPosition - wheelTarget) >= 0 ||
+        (Math.abs(wheelPosition - wheelTarget) < 0.5 && Math.abs(wheelVelocity) < 5);
+      scroller.scrollLeft = resting ? wheelTarget : wheelPosition;
+      if (resting) stopWheel(false);
+      else wheelFrame = window.requestAnimationFrame(glide);
+    };
+    const handleTouchStart = (): void => {
+      stopWheel();
+      clearPending();
+    };
+    const handleWheel = (e: WheelEvent): void => {
+      if (e.ctrlKey || dragging || Math.abs(e.deltaX) >= Math.abs(e.deltaY) || !strategy) return;
+      const position = scrollPosition();
+      const end = snapPositions[count - 1] ?? 0;
+      const direction = Math.sign(e.deltaY);
+      // Use the physical range: a smooth navigation may still be travelling.
+      if (direction < 0 ? position <= 1 : position >= end - 1) return;
+      e.preventDefault();
+      if (direction !== wheelDirection) stopWheel();
+      if (e.timeStamp - lastWheel >= WHEEL_QUIET || direction !== wheelDirection) {
+        wheelStart = position;
+        wheelDelta = 0;
+        wheelTarget = position;
+      }
+      lastWheel = e.timeStamp;
+      wheelDirection = direction;
+      // Lines use computed line height (16px for "normal"); pages use the viewport.
+      const unit = e.deltaMode === 1
+        ? parseFloat(window.getComputedStyle(scroller).lineHeight) || 16
+        : e.deltaMode === 2 ? containerSize : 1;
+      wheelDelta += e.deltaY * unit;
+      const destination = Math.max(0, Math.min(end, wheelStart + wheelDelta));
+      let index = direction > 0 ? count - 1 : 0;
+      for (let i = direction > 0 ? 0 : count - 1; i >= 0 && i < count; i += direction) {
+        if (direction * (snapPositions[i]! - destination) >= 0 &&
+            direction * (snapPositions[i]! - wheelStart) > 0) {
+          index = i;
+          break;
+        }
+      }
+      const target = snapPositions[index]!;
+      // One spring for notches and momentum avoids switching animation engines
+      // when a second wheel event arrives. Suspend native snap until landing.
+      if (direction * (target - wheelTarget) > 0) {
+        wheelTarget = target;
+        expect(index);
+        if (reduceMotion?.matches) {
+          setScrollPosition(target, false);
+        } else if (!wheelFrame) {
+          wheelSnap = scroller.style.getPropertyValue("scroll-snap-type");
+          wheelSnapPriority = scroller.style.getPropertyPriority("scroll-snap-type");
+          scroller.style.setProperty("scroll-snap-type", "none");
+          // Also cancel any native smooth navigation already in flight.
+          scroller.scrollLeft = position;
+          wheelPosition = position;
+          wheelTime = performance.now();
+          wheelFrame = window.requestAnimationFrame(glide);
+        }
+        if (index !== currentIndex) {
+          currentIndex = index;
+          emitChange();
+        }
+      } else {
+        // The existing passive listener clears pending before this handler runs.
+        expect(currentIndex);
+      }
+    };
+    const setWheel = (on: boolean): void => {
+      scroller.removeEventListener("wheel", handleWheel);
+      stopWheel();
+      if (on && !vertical) scroller.addEventListener("wheel", handleWheel, { passive: false });
+    };
+
     // ── Wiring ──────────────────────────────────────────────────
 
     scroller.addEventListener("scroll", layout, { passive: true });
     scroller.addEventListener("wheel", clearPending, { passive: true });
-    scroller.addEventListener("touchstart", clearPending, { passive: true });
+    setWheel(!!config.wheel);
+    scroller.addEventListener("touchstart", handleTouchStart, { passive: true });
     scroller.addEventListener("keydown", handleKeyDown);
     scroller.addEventListener("focusin", handleFocusIn);
     scroller.addEventListener("pointerdown", handlePointerDown);
@@ -395,15 +514,17 @@ export const withScroll = (config: CarouselConfig) =>
     enhanced.next = next;
     enhanced.prev = prev;
     enhanced.goTo = goTo;
+    enhanced.setWheel = setWheel;
     enhanced.lifecycle = {
       destroy: () => {
+        setWheel(false);
         restoreSnap();
         resizeObserver?.disconnect();
         reduceMotion?.removeEventListener?.("change", rebuild);
         clearPending();
         scroller.removeEventListener("scroll", layout);
         scroller.removeEventListener("wheel", clearPending);
-        scroller.removeEventListener("touchstart", clearPending);
+        scroller.removeEventListener("touchstart", handleTouchStart);
         scroller.removeEventListener("keydown", handleKeyDown);
         scroller.removeEventListener("focusin", handleFocusIn);
         scroller.removeEventListener("pointerdown", handlePointerDown);
