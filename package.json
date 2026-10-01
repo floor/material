@@ -29,7 +29,9 @@
     "**/elements/css/*.js",
     "**/ssr/index.js",
     "**/ssr/react.js",
-    "**/ssr/svelte.js"
+    "**/ssr/svelte.js",
+    "**/ssr/vue.js",
+    "**/ssr/solid.js"
   ],
   "type": "module",
   "main": "./dist/index.js",
@@ -411,6 +413,18 @@
       "browser": "./dist/ssr/browser.js",
       "node": "./dist/ssr/svelte.js",
       "default": "./dist/ssr/svelte.js"
+    },
+    "./ssr/vue": {
+      "types": "./dist/ssr/vue.d.ts",
+      "browser": "./dist/ssr/browser.js",
+      "node": "./dist/ssr/vue.js",
+      "default": "./dist/ssr/vue.js"
+    },
+    "./ssr/solid": {
+      "types": "./dist/ssr/solid.d.ts",
+      "browser": "./dist/ssr/browser.js",
+      "node": "./dist/ssr/solid.js",
+      "default": "./dist/ssr/solid.js"
     }
   },
   "files": [
@@ -462,7 +476,9 @@
     "tooling:check": "tsc --project scripts/tsconfig.json --noEmit && tsc --project test/types/tsconfig.json --noEmit",
     "themes:generate": "bun scripts/generate-themes.ts",
     "react-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react-ssr.ts",
-    "svelte-ssr:check": "bun run scripts/check-svelte-ssr.ts"
+    "svelte-ssr:check": "bun run scripts/check-svelte-ssr.ts",
+    "vue-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-vue-ssr.ts",
+    "solid-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-solid-ssr.ts"
   },
   "repository": {
     "type": "git",

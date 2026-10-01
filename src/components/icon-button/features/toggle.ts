@@ -287,11 +287,13 @@ export const withToggle =
       // `change` through the emitter, as a switch or checkbox reports its
       // state (FLO-295): the DOM `toggle` this dispatched shares its name with
       // the native ToggleEvent, so TypeScript typed its listeners wrongly.
-      component.emit?.("change", { selected: isSelected });
+      // `value` is the button's value, as every model event carries (FLO-380).
+      const value = (component.element as HTMLButtonElement).value;
+      component.emit?.("change", { selected: isSelected, value });
       // Deprecated: the DOM `toggle`, kept for one release.
       const event = new CustomEvent("toggle", {
         bubbles: true,
-        detail: { selected: isSelected },
+        detail: { selected: isSelected, value },
       });
       component.element.dispatchEvent(event);
     };

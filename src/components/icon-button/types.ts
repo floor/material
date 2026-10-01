@@ -232,6 +232,14 @@ export interface ToggleManager {
   isSelected: () => boolean;
 }
 
+/** A toggle icon button's `change` (FLO-380). */
+export interface IconButtonChangePayload {
+  /** Whether the button is now selected */
+  selected: boolean;
+  /** The button's value, as `getValue()` returns it */
+  value: string;
+}
+
 /**
  * The icon button's events: native ones forwarded through its emitter, and a
  * toggle button's `change`.
@@ -240,8 +248,10 @@ export interface IconButtonEvents extends TouchEvents {
   /**
    * A toggle button's selected state changed on a click (FLO-295). The DOM
    * `toggle` event on `element` is deprecated and goes in the next release.
+   * `value` is the button's value (`getValue()`), as every model event
+   * carries (FLO-380); `selected` is the toggled state.
    */
-  change: (payload: { selected: boolean }) => void;
+  change: (payload: IconButtonChangePayload) => void;
   /** Clicks are not forwarded while the button is disabled. */
   click: (payload: ForwardedEventPayload<MouseEvent, HTMLButtonElement>) => void;
   /** The button took focus. */

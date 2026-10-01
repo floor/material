@@ -75,6 +75,25 @@ for (const item of defaults) {
   if (item.element === "switch") markup += `\n<output id="checked">{checked}</output>`;
   pieces.push(markup);
 }
+// Named snippets (FLO-412). The component renders each one as a light child of the
+// host, inside \`<span style="display: contents" slot="…">\`, on the server and in
+// the browser alike; the declarative root's named slot then shows it before any
+// script runs. The default cases above pass default children only.
+const SNIPPETS = [
+  {
+    host: "snippet-card",
+    markup: `<Card id="snippet-card">{#snippet headline()}<b id="snippet-headline">Headline</b>{/snippet}{#snippet actions()}<Button id="snippet-action" label="Go"></Button>{/snippet}<p>Body</p></Card>`,
+    slots: { headline: "snippet-headline", actions: "snippet-action" },
+  },
+  {
+    host: "snippet-bar",
+    markup: `<TopAppBar id="snippet-bar" headline="Title">{#snippet leading()}<i id="snippet-leading">L</i>{/snippet}{#snippet trailing()}<i id="snippet-trailing">T</i>{/snippet}</TopAppBar>`,
+    slots: { leading: "snippet-leading", trailing: "snippet-trailing" },
+  },
+];
+const SLOTTED = SNIPPETS.flatMap((item) => Object.entries(item.slots).map(([slot, id]) => ({ host: item.host, slot, id })));
+for (const name of ["Card", "TopAppBar", "Button"]) used.add(name);
+for (const item of SNIPPETS) pieces.push(item.markup);
 // The switch above is built before the checked binding is added. Add it on the host.
 const switchHost = `id=${expr("host-switch")}`;
 const app = `<script lang="ts">
@@ -97,13 +116,16 @@ await Bun.write(join(dir, "client.ts"), `import { hydrate } from "svelte";
 import App from "./App.svelte";
 const ids = [...document.querySelectorAll("[id^='host-']")].map((node) => node.id);
 const before = new Map(ids.map((id) => [id, document.getElementById(id)?.shadowRoot ?? null]));
-const state: { ready: boolean; same: Record<string, boolean | null> } = { ready: false, same: {} };
+// Snippet content the server sent: hydration must adopt these nodes, not replace them.
+const sent = new Map(${JSON.stringify(SLOTTED.map((item) => item.id))}.map((id: string) => [id, document.getElementById(id)]));
+const state: { ready: boolean; same: Record<string, boolean | null>; adopted: Record<string, boolean> } = { ready: false, same: {}, adopted: {} };
 Object.assign(window, { svelteSSR: state });
 hydrate(App, { target: document.getElementById("root") as HTMLElement });
 for (const id of ids) {
   const previous = before.get(id) ?? null;
   state.same[id] = previous ? document.getElementById(id)?.shadowRoot === previous : null;
 }
+for (const [id, node] of sent) state.adopted[id] = !!node && document.getElementById(id) === node;
 state.ready = true;
 `);
 
@@ -189,6 +211,31 @@ for (const item of defaults) {
   });
 }
 
+for (const { host, slot, id } of SLOTTED) {
+  const element = parsed.getElementById(host) as DomElement | null;
+  assert(element, `missing ${host} in server HTML`);
+  assert([...element.children].some((child) => child.localName === "template" && child.hasAttribute("shadowrootmode")), `${host} template`);
+  const wrapper = [...element.children].find((child) => child.getAttribute("slot") === slot);
+  assert(wrapper, `${host}: no light child with slot="${slot}" in server HTML`);
+  assert.equal(wrapper.localName, "span", `${host} ${slot} wrapper`);
+  assert.equal(wrapper.getAttribute("style"), "display: contents", `${host} ${slot} wrapper style`);
+  assert(wrapper.querySelector(`#${id}`), `${host}: the ${slot} snippet is not inside its wrapper in server HTML`);
+}
+// Where each snippet's content sits in the browser, and which slot shows it.
+const slotted = (items: typeof SLOTTED) => items.map(({ id }) => {
+  const wrapper = document.getElementById(id)?.parentElement;
+  return {
+    id,
+    wrapper: wrapper?.localName ?? null,
+    slot: wrapper?.getAttribute("slot") ?? null,
+    display: wrapper ? getComputedStyle(wrapper).display : null,
+    host: wrapper?.parentElement?.id ?? null,
+    assigned: wrapper?.assignedSlot?.name ?? null,
+    inRoot: !!wrapper?.assignedSlot && wrapper.assignedSlot.getRootNode() === wrapper.parentElement?.shadowRoot,
+  };
+});
+const expectedSlotted = SLOTTED.map(({ host, slot, id }) => ({ id, wrapper: "span", slot, display: "contents", host, assigned: slot, inRoot: true }));
+
 const browser = await chromium.launch();
 const server = Bun.serve({
   hostname: "127.0.0.1", port: 0,
@@ -213,6 +260,7 @@ try {
     assert.equal(row.shadow, !OPT_OUT.has(element), `${element} shadow root before script`);
     if (row.childShadow !== null) assert.equal(row.childShadow, true, "toolbar's icon button has a shadow root before script");
   }
+  assert.deepEqual(await inert.evaluate(slotted, SLOTTED), expectedSlotted, "named snippets are slotted before script");
   await inert.close();
 
   const page = await browser.newPage();
@@ -230,6 +278,12 @@ try {
     if (!OPT_OUT.has(element)) assert.equal(report.sameRoot, true, `${element} did not keep its declarative shadow root`);
     else assert.equal(report.sameRoot, null, `${element} had a declarative root`);
   }
+  assert.deepEqual(await page.evaluate(slotted, SLOTTED), expectedSlotted, "named snippets are slotted after hydration");
+  assert.deepEqual(
+    await page.evaluate(() => (window as unknown as { svelteSSR: { adopted: Record<string, boolean> } }).svelteSSR.adopted),
+    Object.fromEntries(SLOTTED.map(({ id }) => [id, true])),
+    "hydration adopts the server's snippet nodes",
+  );
   const upgraded = await page.evaluate(() => !!(document.getElementById("host-button") as HTMLElement & { component?: unknown }).component);
   assert.equal(upgraded, true, "button did not upgrade");
   // Every default host shares the page, and fixed bars cover the first controls.
@@ -255,4 +309,5 @@ for (const report of summary) {
   const root = report.sameRoot === null ? "n/a" : report.sameRoot ? "kept" : "replaced";
   console.log(`${report.element}: template=${report.template ? "yes" : "no"} shadow=${report.shadowBeforeScript ? "yes" : "no"} sameRoot=${root} warnings=${report.warnings} errors=${report.errors}`);
 }
+console.log(`named snippets: ${SLOTTED.map(({ host, slot }) => `${host.slice("snippet-".length)}/${slot}`).join(", ")}: slotted before script and after hydration, nodes adopted`);
 console.log(`svelte-ssr: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no mtrl/ssr or linkedom`);

@@ -141,6 +141,16 @@ document.documentElement.dataset.themeMode = 'dark';
 
 Available themes: `baseline`, `ocean`, `desert`, `forest`, `sunset`, `spring`, `summer`, `autumn`, `brownbeige`, `sageivory`, `tealcaramel` and `highcontrast`. With selective styles, import the theme's entry, for example `mtrl/themes/ocean`.
 
+Every theme supports `data-theme-contrast="standard"`, `"medium"` and `"high"` on the same element as `data-theme` and `data-theme-mode`:
+
+```html
+<html data-theme="desert" data-theme-mode="dark" data-theme-contrast="high">
+```
+
+Without `data-theme-contrast`, `prefers-contrast: more` selects high contrast on every themed element independently. An explicit `standard` opts out on that element; `medium` overrides the preference too. In 1.0, contrast settings do not inherit from an ancestor across a nested theme: put `data-theme-contrast` on the same element as each `data-theme`, including nested sections. For example, opting out on the root does not opt out a nested theme without its own `data-theme-contrast="standard"`.
+
+The default baseline also supports this setting without `data-theme`. On that unthemed root, both standard and higher contrast follow the OS color scheme and `.dark-theme`, ignoring `data-theme-mode`. Medium and high use M3 contrast levels 0.5 and 1.0; hand-authored themes derive them with Tonal Spot from their documented seed (falling back to their light primary), preserving their light secondary and tertiary hues and chroma. Neutral palettes come from the seed, while standard colors stay unchanged. Success, warning and info keep their existing status colors. The `highcontrast` theme is a theme in its own right and supports all three contrast settings.
+
 M3's scheme variants, generated from the baseline seed, ship as their own entries only (not in the full stylesheet): `neutral`, `vibrant`, `expressive`, `fidelity`, `content`, `monochrome`, `rainbow` and `fruit-salad`, for example `mtrl/themes/vibrant`. `schemeToTokens` (`mtrl/core/theme`) turns any M3 scheme's role colours into these tokens.
 
 Deprecated, removed in 1.0: `material` (use `baseline`), `winter` (use `ocean`), `browngreen` (use `brownbeige`) and `legacy`.
@@ -200,6 +210,8 @@ The framework components render the elements, so everything above holds: forms, 
 | Solid | `import { Switch } from 'mtrl/solid'` | `checked` + `onChange` |
 
 Each framework is an optional peer dependency; mtrl installs none of them. All adapters render on the server and hydrate. Angular apps use the elements directly, with `CUSTOM_ELEMENTS_SCHEMA`.
+
+A component owns the `on…` props of its element's events (`onChange`, `onInput`, `onSelect`, …) and its `default…` props, typed with the element's own payloads. Any other HTML attribute passes to the host; to spread a whole set of HTML attributes into a component, omit the props it owns (`Omit<React.HTMLAttributes<HTMLElement>, "onChange">`).
 
 Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, controlled and uncontrolled state, named slots, refs and server rendering.
 

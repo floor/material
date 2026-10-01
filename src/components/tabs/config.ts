@@ -1,5 +1,5 @@
 // src/components/tabs/config.ts
-import { createComponentConfig } from "../../core/config/component";
+import { createComponentConfig, processClassNames, type BaseComponentConfig } from "../../core/config/component";
 import { BaseComponent, ElementComponent, withElement } from "../../core/compose/component";
 import { TabConfig, TabsConfig } from "./types";
 import { TAB_STATES, TABS_DEFAULTS } from "./constants";
@@ -48,7 +48,7 @@ export const getTabsElementConfig = (config: TabsConfig) => {
     className: [
       `${config.prefix}-tabs`,
       `${config.prefix}-tabs--${config.variant || "primary"}`,
-      config.class,
+      processClassNames((config as BaseComponentConfig).className || ""),
     ].filter((name): name is string => Boolean(name)),
   };
 

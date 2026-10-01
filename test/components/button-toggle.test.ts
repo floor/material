@@ -54,12 +54,13 @@ describe('withToggle', () => {
     component.element.click();
     expect(enhanced.toggle?.isSelected()).toBe(true);
     expect(component.element.getAttribute('aria-pressed')).toBe('true');
-    expect(component.emit).toHaveBeenCalledWith('change', { selected: true });
+    // The button's value rides along (FLO-380); this element has none, so ''.
+    expect(component.emit).toHaveBeenCalledWith('change', { selected: true, value: '' });
 
     component.element.click();
     expect(enhanced.toggle?.isSelected()).toBe(false);
     expect(component.element.classList.contains(`${PREFIX}-button--selected`)).toBe(false);
-    expect(component.emit).toHaveBeenLastCalledWith('change', { selected: false });
+    expect(component.emit).toHaveBeenLastCalledWith('change', { selected: false, value: '' });
   });
 
   test('a disabled toggle button ignores clicks', () => {

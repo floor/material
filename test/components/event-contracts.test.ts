@@ -15,12 +15,13 @@ import createDatePicker from "../../src/components/datepicker";
 import createTimePicker from "../../src/components/timepicker";
 const mount = callbacksFixture();
 
-test("button toggle keeps its selected-only payload", () => {
-  const c = mount(createButton({ toggle: true }));
+test("button toggle change carries selected and the button's value, as getValue() reads it (FLO-380)", () => {
+  const c = mount(createButton({ toggle: true, value: "bold" }));
   const seen: unknown[] = [];
-  c.on("change", payload => seen.push(payload));
+  c.on("change", payload => seen.push([payload, c.getValue()]));
   c.element.click();
-  expect(seen).toEqual([{ selected: true }]);
+  c.element.click();
+  expect(seen).toEqual([[{ selected: true, value: "bold" }, "bold"], [{ selected: false, value: "bold" }, "bold"]]);
 });
 test("card expandedChanged keeps presentation state", () => {
   const c = mount(createCard());

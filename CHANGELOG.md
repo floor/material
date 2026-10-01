@@ -51,6 +51,24 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `{ event, element, originalEvent }`; its nonexistent `component` field is removed.
   Migration: use `element` for the event root, or retain your list reference.
 
+- **Toggle buttons, chips and the carousel report `value` with `change` (FLO-380).** Every
+  model event carries `value` in the type `getValue()` returns, read at dispatch:
+
+  | Component | `change` payload, 0.10 → 1.0 |
+  |---|---|
+  | button, icon button (toggle) | `{ selected }` → `{ selected, value: string }` (the button's value) |
+  | icon button, deprecated DOM `toggle` | `{ selected }` → `{ selected, value: string }` |
+  | selectable chips (filter and input) | `{ selected, chip }` → `{ selected, chip, value: string \| null }` |
+  | carousel | `{ index }` → `{ value: number, index }` |
+
+  The custom elements' `event.detail` carries the same fields, and `<m-button>` now dispatches
+  `change` for a toggle button. `ButtonChangePayload` and `IconButtonChangePayload` are
+  exported. Migration: keep reading `selected` for the toggled state and `index` for the
+  carousel; code that builds these payloads (mocks, test doubles) adds `value`. In React and
+  Solid, `Button` now types its own `onChange` (the element's `change`): code that spreads a
+  full `React.HTMLAttributes` (or Solid's `JSX.HTMLAttributes`) into `Button` must omit
+  `onChange`.
+
 - **The shape scale is M3's and nothing else (FLO-345).** The mtrl-only steps `extra-tiny` (1px),
   `tiny` (2px) and `pill` (100px) are removed from `$shape`, with their
   `--mtrl-sys-shape-corner-*` properties on `:root`. `v.shape('tiny')` and the rest now stop the
@@ -144,7 +162,17 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - `mtrl/ssr`: `renderElement` renders elements as declarative shadow DOM on a server (Node, Bun); server-only, with no runtime dependencies (FLO-363, FLO-364).
 - `mtrl/ssr/react`: an opt-in, server-only entry. Imported in the server bootstrap, it makes the React adapters emit styled declarative shadow roots during SSR (React 18 and 19), with no server code in the client bundle. Without it, React output is unchanged (FLO-372).
 - `mtrl/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Svelte output gains only the empty branch marker (FLO-375).
+- `mtrl/ssr/vue`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Vue component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Vue output is unchanged (FLO-373).
+- `mtrl/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Solid output is unchanged (FLO-374).
 - `ssr:check` (CI): server-rendered elements are checked in Chromium, Firefox and WebKit, for a styled first paint without JavaScript, pixel stability and no layout movement on upgrade, and the security reparse; markup parity stays in Chromium (FLO-371).
+- `ssr:check` and `svelte-ssr:check` cover two more cases (FLO-412): a toolbar's server-rendered
+  icon buttons are measured across the upgrade (pixels, layout, and each button keeping its
+  parser-created root), and Svelte named snippets (card `headline` and `actions`, top app bar
+  `leading` and `trailing`) are checked as slotted before script and adopted by hydration.
+- `ssr:check` no longer depends on whether the browser has applied `:hover` at the page origin
+  when it captures. The fixture sat there, under a new page's resting pointer, and CI captured a
+  button group hovered before the upgrade and not after. The stage now starts 32px down, and both
+  passes assert that no control of the fixture is under the pointer.
 - Element CSS also ships as `.css` files (`mtrl/elements/css/<name>.css`, `hosts/<element>.css`), for server-rendered `<link>` styles (FLO-365).
 - **Synchronous declarative shadow DOM rendering (FLO-363, part B).** The server-only
   `src/ssr` entry exports `renderElement` with inline CSS by default, optional stylesheet
@@ -156,6 +184,19 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - Internal detached element lifecycle, style registry seams, and a synchronous server DOM
   scope with inert scheduling and complete resource teardown (FLO-363, part A). The public
   SSR renderer follows separately.
+- **Contrast on every theme (FLO-406).** `data-theme-contrast="standard"`, `"medium"`
+  and `"high"` select M3 contrast levels in light and dark. Put the attribute on the
+  same element as `data-theme`, including each nested theme. With no contrast attribute,
+  `prefers-contrast: more` selects high on every themed element independently; explicit
+  `standard` opts out on that element. In 1.0, a nested theme does not inherit an ancestor's
+  contrast setting or opt-out. The unthemed root follows the OS color scheme and
+  `.dark-theme` at every contrast level, ignoring `data-theme-mode`.
+  Hand-authored medium and high palettes use each theme's documented seed, falling back
+  to its light primary, and preserve the light secondary and tertiary hues and chroma.
+  M3 supplies the contrast tones; neutral palettes come from the seed. Generated headers
+  name all three inputs, and browser checks share the generator's input selection.
+  Hand-authored standard colors and success, warning and info roles stay unchanged.
+  The `highcontrast` theme is a theme in its own right and supports all three contrast settings.
 
 - **Carousel: opt-in mouse wheel scrolling (FLO-395).** Set `wheel: true`, call
   `setWheel(true)`, or add `<m-carousel wheel>` (also toggleable after creation).
@@ -196,6 +237,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   icons, affixes, required, density). Mounting 1,000 filled fields takes 16% less script time
   (49.9 to 41.8 ms; 192 to 165 ms at 4× CPU), with 1,000 fewer listeners. Nothing renders
   differently.
+- **CI runs the same checks in less time.** The browser checks run in five groups instead of
+  three, the package checks no longer hold the browser groups back, and Playwright's browsers
+  and their system packages come from a cache that every pull request can read (a slow Ubuntu
+  mirror made one install step take 26 minutes). `test/build/ci-commands.test.ts` lists the
+  commands CI runs and fails when one is dropped.
 
 ### Deprecated
 
@@ -227,6 +273,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 ### Fixed
 
 - React SSR keeps a host's child on the server when that child suspends. `mtrl/ssr/react` rendered the host's children with `renderToStaticMarkup`, which has no Suspense boundary, so the throw left the page's boundary client-rendered, or aborted a host with no boundary above it. The static pass retries the host only when that render suspended, and the shadow root is built from the children once they can render (FLO-415). A child that throws is not retried: the page render reaches it, so the error is reported as it is without the bridge. Retries wait on a backoff (doubling to 250ms) and stop after 40 attempts, about eight seconds, which ends the request with an error. A Suspense boundary already inside the host still contributes its own fallback to that snapshot.
+- Vue SSR finishes when a host's child uses `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`. The shadow bridge serializes those children once (FLO-373).
+- Vue SSR renders a host whose `v-html` contains an unclosed `<template>`, instead of throwing, and `mtrl/ssr/vue` imports the server renderer from `vue/server-renderer` (FLO-373).
+- Prefilled multiline text fields render in SSR, including inside another custom element (FLO-416).
+- Solid async and streaming SSR finish when a component inside a host creates a resource
+  under an outer `Suspense`. The shadow bridge reuses the page's serialized children,
+  preserving its resource ownership and hydration keys without rendering children twice
+  (FLO-374).
 
 - Element upgrade removes leftover direct declarative shadow templates, including when definitions precede parsing; those templates no longer count as label content (FLO-366).
 
@@ -251,6 +304,22 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   last pending field is destroyed, allowing the next lifecycle to schedule again (FLO-363).
 - **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
   label names the field.
+- The carousel wheel check in `core:check` no longer fails when a CI runner stalls a frame. A
+  283ms stall split its 30-event wheel gesture in two, and the carousel correctly went one slide
+  further than the recording expected. A recording with a frame over 50ms is now taken again
+  (three in a row fail); the assertions are unchanged (FLO-395).
+- **Status text meets 4.5:1 (FLO-407).** Success, warning and info are one fixed
+  pair per mode, shared by every theme. White on the light warning (`#DD6D06`)
+  was 3.35:1. Each colour keeps its hue and chroma at the tones M3 uses for a
+  role and its on-role (light tone 40 on 100, dark tone 80 on 20). Ratios, old
+  then new: light success 5.28 → 6.45, warning 3.35 → 6.48, info 6.47 unchanged;
+  dark success 7.08 → 7.76, warning 8.57 → 7.76, info 7.75 → 7.69.
+- **Custom root classes survive configuration (FLO-403).** Top and bottom app bars,
+  button groups, segmented buttons, tabs and individual tabs, toolbars, FAB menus,
+  and selects now apply the `class` option to their root element, including
+  space-separated classes. They read the normalized `className` field or forward
+  it to their underlying control.
+
 - **Progress and loading indicators draw the theme of the section they're in, not only the
   page's (FLO-389).** The progress canvas read its colours from `<body>` and `:root`, so in a
   themed section, a card or a dark panel it drew the page's colours: light ones in a dark section.

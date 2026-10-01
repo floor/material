@@ -12,6 +12,11 @@
  *
  * Written without JSX, so it compiles with the rest of the library.
  *
+ * When `mtrl/ssr/solid` is loaded, a server render prepends the declarative
+ * shadow template. The client renders nothing in its place: the HTML parser
+ * has already moved that template into the shadow root. Without the import
+ * the markup is unchanged (FLO-374).
+ *
  * @module solid
  */
 
@@ -33,6 +38,7 @@ import {
   type FormProps,
   type Pascal,
 } from "../elements/adapter";
+import { shadow } from "./shadow";
 
 export { configure } from "../elements/adapter";
 export type { DefaultProps, FormProps } from "../elements/adapter";
@@ -139,11 +145,31 @@ export const createComponent = <S, E extends HTMLElement>(
         if (value == null || value === false || (attributes.has(key) && typeof value === "string")) return null;
         return Dynamic({ component: "span", slot, style: "display: contents", children: value } as never);
       }));
+    // Attributes the shadow renderer reads. Slot nodes stay out: a component
+    // in a slot is not the attribute's text.
+    const shadowAttributes = (): Record<string, unknown> => {
+      const snapshot: Record<string, unknown> = {};
+      const take = (source: object): void => {
+        for (const key of Object.keys(source)) {
+          if (key === "children" || key === "ref" || key === "component") continue;
+          const value = (source as Props)[key];
+          if (typeof value === "function" || value === undefined) continue;
+          snapshot[key] = value;
+        }
+      };
+      take(host);
+      take(others);
+      return snapshot;
+    };
+    const tag = `${getPrefix()}-${spec.name}`;
     Object.defineProperty(host, "children", {
       enumerable: true,
       get: () => {
         const named = wrappers.map((wrapper) => wrapper()).filter((wrapper) => wrapper !== null);
-        return named.length ? [props.children, ...named] : props.children;
+        const body = (named.length ? [props.children, ...named] : props.children) as JSX.Element;
+        // Render children once in the page's owner and hydration context. The
+        // server hook serializes this same body for both light and shadow DOM.
+        return isServer ? shadow(tag, shadowAttributes(), body) : body;
       },
     });
 
