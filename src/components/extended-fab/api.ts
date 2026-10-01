@@ -19,6 +19,8 @@ interface ApiOptions {
     enable: () => void;
     /** Disables the component */
     disable: () => void;
+    /** Whether the component is disabled */
+    isDisabled: () => boolean;
   };
   
   /**
@@ -121,6 +123,13 @@ export const withAPI = ({ disabled, lifecycle, text, className }: ApiOptions) =>
       disabled.enable();
       return this;
     },
+    
+    isDisabled() {
+    
+      return disabled.isDisabled();
+    
+    },
+
     
     disable() {
       disabled.disable();

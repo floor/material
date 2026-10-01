@@ -12,7 +12,9 @@ import { diffComponentExports, readComponentExports, readPinned } from "../scrip
 
 const ROOT = join(import.meta.dir, "..");
 const now = readComponentExports();
-const deprecated = Object.entries(now).flatMap(([component, exports]) =>
+// The index subpaths' leaving internals; the /constants subpaths are pinned too (FLO-384)
+// and carry deprecations of their own, which this list is not about.
+const deprecated = Object.entries(now).filter(([component]) => !component.includes("/")).flatMap(([component, exports]) =>
   exports.filter((e) => e.status === "deprecated").map((e) => ({ component, ...e })));
 
 describe("the component subpaths' exports (FLO-381)", () => {
@@ -33,6 +35,13 @@ describe("the component subpaths' exports (FLO-381)", () => {
       "tabs:withDivider", "tabs:withIndicator", "tabs:withScrollable", "tabs:withTabsManagement",
     ].sort());
     for (const e of deprecated) expect(e.note).toContain(`removed from mtrl/components/${e.component} in 1.0.0`);
+  });
+
+  test("every /constants subpath is pinned beside its index (FLO-384)", () => {
+    const constants = Object.keys(now).filter((key) => key.endsWith("/constants"));
+    expect(constants.length).toBeGreaterThan(30);
+    for (const key of constants) expect(Object.keys(now)).toContain(key.slice(0, -"/constants".length));
+    expect(now["button/constants"]?.map((e) => e.name)).toContain("BUTTON_VARIANTS");
   });
 
   test("the types public members are typed with, and the documented tabs helper, stay public", () => {

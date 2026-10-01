@@ -454,6 +454,10 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
         return this;
       },
 
+      isDisabled() {
+        return component.element.classList.contains(`${baseConfig.prefix}-button-group--disabled`);
+      },
+
       disable() {
         component.element.classList.add(`${baseConfig.prefix}-button-group--disabled`);
         buttons.forEach(button => {
