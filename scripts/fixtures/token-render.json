@@ -1138,9 +1138,9 @@
   ],
   [
    "2:div.mtrl-search__container",
-   "100px 100px 100px 100px",
+   "28px 28px 28px 28px",
    "Roboto, sans-serif",
-   false,
+   true,
    true
   ],
   [
@@ -1231,9 +1231,9 @@
   ],
   [
    "2:div.mtrl-search__container",
-   "100px 100px 100px 100px",
+   "28px 28px 28px 28px",
    "Roboto, sans-serif",
-   false,
+   true,
    true
   ],
   [

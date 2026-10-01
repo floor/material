@@ -28,6 +28,8 @@ $mtrl-sys-motion: (
   'easing-emphasized-decelerate': v.$motion('easing-emphasized-decelerate')
 );
 
+// Deprecated: nothing reads this map; it is removed in 1.0.0. Use v.shape()
+// (FLO-345).
 $mtrl-sys-shape: (
   'none': v.$shape('none'),
   'extra-small': v.$shape('extra-small'),
@@ -35,6 +37,8 @@ $mtrl-sys-shape: (
   'medium': v.$shape('medium'),
   'large': v.$shape('large'),
   'extra-large': v.$shape('extra-large'),
+  'extra-large-increased': v.$shape('extra-large-increased'),
+  'extra-extra-large': v.$shape('extra-extra-large'),
   'full': v.$shape('full'),
   'pill': v.$shape('pill')
 );

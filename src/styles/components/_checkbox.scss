@@ -45,7 +45,8 @@ $component: '#{base.$prefix}-checkbox';
     width: 18px;
     height: 18px;
     box-sizing: border-box;
-    border-radius: f.get-shape('tiny');
+    // CheckboxTokens.ContainerShape: 2dp, outside the shape scale (FLO-345)
+    border-radius: 2px;
     background-color: transparent;
     border: 2px solid t.color('on-surface-variant');
     transition: m.spring(background-color, fast-effects), m.spring(border-color, fast-effects);

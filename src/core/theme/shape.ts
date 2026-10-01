@@ -6,7 +6,9 @@
  */
 
 /** A step of M3's shape scale, as `$shape` in src/styles/abstract/_variables.scss names it. */
-export type ShapeStep = "none" | "extra-small" | "small" | "medium" | "large" | "large-increased" | "extra-large";
+export type ShapeStep =
+  | "none" | "extra-small" | "small" | "medium" | "large" | "large-increased"
+  | "extra-large" | "extra-large-increased" | "extra-extra-large";
 
 /** `var(--mtrl-sys-shape-corner-small, 8px)`: a step's token, its px the fallback. */
 export const cornerToken = (step: ShapeStep, px: number, prefix = "mtrl"): string =>
