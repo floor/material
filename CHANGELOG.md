@@ -12,6 +12,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Contrast on every theme (FLO-406).** `data-theme-contrast="standard"`, `"medium"`
+  and `"high"` select M3 contrast levels in light and dark. With no contrast attribute,
+  `prefers-contrast: more` selects high; explicit `standard` opts out. Hand-authored
+  standard colors and success, warning and info roles stay unchanged. The `highcontrast`
+  theme remains available; `data-theme-contrast="high"` on any theme supersedes it.
+
 - **Every release gets its GitHub Release.** The release workflow published to npm only, so
   GitHub showed 0.9.8 as the latest release. Once npm has the version, it now creates the
   release for the tag from the version's CHANGELOG section, with links to npm, md3.io and this

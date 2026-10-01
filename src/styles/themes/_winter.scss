@@ -1,4 +1,5 @@
 // src/styles/themes/_winter.scss
+// Medium/high contrast: Tonal Spot from light primary seed #406374.
 // Deprecated in 0.10, removed in 1.0 (FLO-308): use `ocean`, its near-duplicate.
 @use "../abstract/base" as *;
 @use "base-theme" as *;
@@ -84,5 +85,206 @@
 
         // Include status colors for dark theme
         @include status-colors-dark();
+    }
+}
+
+// contrast roles: generated, do not edit
+@include create-theme-contrast("winter", "medium") using ($dark) {
+    @if $dark {
+        @include status-roles-dark();
+        --#{$prefix}-sys-color-error: #ffd2cc;
+        --#{$prefix}-sys-color-on-error: #540003;
+        --#{$prefix}-sys-color-error-container: #ff5449;
+        --#{$prefix}-sys-color-on-error-container: #000000;
+        --#{$prefix}-sys-color-primary: #afe4ff;
+        --#{$prefix}-sys-color-on-primary: #002938;
+        --#{$prefix}-sys-color-primary-container: #5499b8;
+        --#{$prefix}-sys-color-on-primary-container: #000000;
+        --#{$prefix}-sys-color-secondary: #cae0ec;
+        --#{$prefix}-sys-color-on-secondary: #142832;
+        --#{$prefix}-sys-color-secondary-container: #7f949f;
+        --#{$prefix}-sys-color-on-secondary-container: #000000;
+        --#{$prefix}-sys-color-tertiary: #ddd8ff;
+        --#{$prefix}-sys-color-on-tertiary: #242241;
+        --#{$prefix}-sys-color-tertiary-container: #918db2;
+        --#{$prefix}-sys-color-on-tertiary-container: #000000;
+        --#{$prefix}-sys-color-primary-fixed: #bfe9ff;
+        --#{$prefix}-sys-color-primary-fixed-dim: #8ccff0;
+        --#{$prefix}-sys-color-on-primary-fixed: #00131c;
+        --#{$prefix}-sys-color-on-primary-fixed-variant: #003b4f;
+        --#{$prefix}-sys-color-secondary-fixed: #d0e6f3;
+        --#{$prefix}-sys-color-secondary-fixed-dim: #b4cad6;
+        --#{$prefix}-sys-color-on-secondary-fixed: #00131c;
+        --#{$prefix}-sys-color-on-secondary-fixed-variant: #253943;
+        --#{$prefix}-sys-color-tertiary-fixed: #e4dfff;
+        --#{$prefix}-sys-color-tertiary-fixed-dim: #c7c2ea;
+        --#{$prefix}-sys-color-on-tertiary-fixed: #100d2b;
+        --#{$prefix}-sys-color-on-tertiary-fixed-variant: #353253;
+        --#{$prefix}-sys-color-surface: #0f1417;
+        --#{$prefix}-sys-color-surface-dim: #0f1417;
+        --#{$prefix}-sys-color-surface-bright: #404548;
+        --#{$prefix}-sys-color-surface-variant: #40484c;
+        --#{$prefix}-sys-color-surface-container-lowest: #04080a;
+        --#{$prefix}-sys-color-surface-container-low: #191e21;
+        --#{$prefix}-sys-color-surface-container: #24292b;
+        --#{$prefix}-sys-color-surface-container-high: #2e3336;
+        --#{$prefix}-sys-color-surface-container-highest: #393e41;
+        --#{$prefix}-sys-color-on-surface: #ffffff;
+        --#{$prefix}-sys-color-on-surface-variant: #d6dde3;
+        --#{$prefix}-sys-color-outline: #abb3b8;
+        --#{$prefix}-sys-color-outline-variant: #8a9196;
+        --#{$prefix}-sys-color-shadow: #000000;
+        --#{$prefix}-sys-color-scrim: #000000;
+        --#{$prefix}-sys-color-inverse-surface: #dfe3e7;
+        --#{$prefix}-sys-color-inverse-on-surface: #262b2e;
+        --#{$prefix}-sys-color-inverse-primary: #004e67;
+    } @else {
+        @include status-roles-light();
+        --#{$prefix}-sys-color-error: #740006;
+        --#{$prefix}-sys-color-on-error: #ffffff;
+        --#{$prefix}-sys-color-error-container: #cf2c27;
+        --#{$prefix}-sys-color-on-error-container: #ffffff;
+        --#{$prefix}-sys-color-primary: #003b4f;
+        --#{$prefix}-sys-color-on-primary: #ffffff;
+        --#{$prefix}-sys-color-primary-container: #2b7592;
+        --#{$prefix}-sys-color-on-primary-container: #ffffff;
+        --#{$prefix}-sys-color-secondary: #253943;
+        --#{$prefix}-sys-color-on-secondary: #ffffff;
+        --#{$prefix}-sys-color-secondary-container: #5c707b;
+        --#{$prefix}-sys-color-on-secondary-container: #ffffff;
+        --#{$prefix}-sys-color-tertiary: #353253;
+        --#{$prefix}-sys-color-on-tertiary: #ffffff;
+        --#{$prefix}-sys-color-tertiary-container: #6d698d;
+        --#{$prefix}-sys-color-on-tertiary-container: #ffffff;
+        --#{$prefix}-sys-color-primary-fixed: #2b7592;
+        --#{$prefix}-sys-color-primary-fixed-dim: #005c78;
+        --#{$prefix}-sys-color-on-primary-fixed: #ffffff;
+        --#{$prefix}-sys-color-on-primary-fixed-variant: #ffffff;
+        --#{$prefix}-sys-color-secondary-fixed: #5c707b;
+        --#{$prefix}-sys-color-secondary-fixed-dim: #445862;
+        --#{$prefix}-sys-color-on-secondary-fixed: #ffffff;
+        --#{$prefix}-sys-color-on-secondary-fixed-variant: #ffffff;
+        --#{$prefix}-sys-color-tertiary-fixed: #6d698d;
+        --#{$prefix}-sys-color-tertiary-fixed-dim: #545173;
+        --#{$prefix}-sys-color-on-tertiary-fixed: #ffffff;
+        --#{$prefix}-sys-color-on-tertiary-fixed-variant: #ffffff;
+        --#{$prefix}-sys-color-surface: #f6fafe;
+        --#{$prefix}-sys-color-surface-dim: #c3c7cb;
+        --#{$prefix}-sys-color-surface-bright: #f6fafe;
+        --#{$prefix}-sys-color-surface-variant: #dce3e9;
+        --#{$prefix}-sys-color-surface-container-lowest: #ffffff;
+        --#{$prefix}-sys-color-surface-container-low: #f0f4f8;
+        --#{$prefix}-sys-color-surface-container: #e4e9ec;
+        --#{$prefix}-sys-color-surface-container-high: #d9dde1;
+        --#{$prefix}-sys-color-surface-container-highest: #ced2d6;
+        --#{$prefix}-sys-color-on-surface: #0d1215;
+        --#{$prefix}-sys-color-on-surface-variant: #30373c;
+        --#{$prefix}-sys-color-outline: #4c5458;
+        --#{$prefix}-sys-color-outline-variant: #666e73;
+        --#{$prefix}-sys-color-shadow: #000000;
+        --#{$prefix}-sys-color-scrim: #000000;
+        --#{$prefix}-sys-color-inverse-surface: #2c3134;
+        --#{$prefix}-sys-color-inverse-on-surface: #edf1f5;
+        --#{$prefix}-sys-color-inverse-primary: #8ccff0;
+    }
+}
+
+@include create-theme-contrast("winter", "high") using ($dark) {
+    @if $dark {
+        @include status-roles-dark();
+        --#{$prefix}-sys-color-error: #ffece9;
+        --#{$prefix}-sys-color-on-error: #000000;
+        --#{$prefix}-sys-color-error-container: #ffaea4;
+        --#{$prefix}-sys-color-on-error-container: #220001;
+        --#{$prefix}-sys-color-primary: #dff3ff;
+        --#{$prefix}-sys-color-on-primary: #000000;
+        --#{$prefix}-sys-color-primary-container: #88cbec;
+        --#{$prefix}-sys-color-on-primary-container: #000d14;
+        --#{$prefix}-sys-color-secondary: #dff3ff;
+        --#{$prefix}-sys-color-on-secondary: #000000;
+        --#{$prefix}-sys-color-secondary-container: #b0c6d2;
+        --#{$prefix}-sys-color-on-secondary-container: #000d14;
+        --#{$prefix}-sys-color-tertiary: #f2eeff;
+        --#{$prefix}-sys-color-on-tertiary: #000000;
+        --#{$prefix}-sys-color-tertiary-container: #c3bee6;
+        --#{$prefix}-sys-color-on-tertiary-container: #0a0725;
+        --#{$prefix}-sys-color-primary-fixed: #bfe9ff;
+        --#{$prefix}-sys-color-primary-fixed-dim: #8ccff0;
+        --#{$prefix}-sys-color-on-primary-fixed: #000000;
+        --#{$prefix}-sys-color-on-primary-fixed-variant: #00131c;
+        --#{$prefix}-sys-color-secondary-fixed: #d0e6f3;
+        --#{$prefix}-sys-color-secondary-fixed-dim: #b4cad6;
+        --#{$prefix}-sys-color-on-secondary-fixed: #000000;
+        --#{$prefix}-sys-color-on-secondary-fixed-variant: #00131c;
+        --#{$prefix}-sys-color-tertiary-fixed: #e4dfff;
+        --#{$prefix}-sys-color-tertiary-fixed-dim: #c7c2ea;
+        --#{$prefix}-sys-color-on-tertiary-fixed: #000000;
+        --#{$prefix}-sys-color-on-tertiary-fixed-variant: #100d2b;
+        --#{$prefix}-sys-color-surface: #0f1417;
+        --#{$prefix}-sys-color-surface-dim: #0f1417;
+        --#{$prefix}-sys-color-surface-bright: #4c5154;
+        --#{$prefix}-sys-color-surface-variant: #40484c;
+        --#{$prefix}-sys-color-surface-container-lowest: #000000;
+        --#{$prefix}-sys-color-surface-container-low: #1b2023;
+        --#{$prefix}-sys-color-surface-container: #2c3134;
+        --#{$prefix}-sys-color-surface-container-high: #373c3f;
+        --#{$prefix}-sys-color-surface-container-highest: #42474b;
+        --#{$prefix}-sys-color-on-surface: #ffffff;
+        --#{$prefix}-sys-color-on-surface-variant: #ffffff;
+        --#{$prefix}-sys-color-outline: #eaf1f6;
+        --#{$prefix}-sys-color-outline-variant: #bcc4c9;
+        --#{$prefix}-sys-color-shadow: #000000;
+        --#{$prefix}-sys-color-scrim: #000000;
+        --#{$prefix}-sys-color-inverse-surface: #dfe3e7;
+        --#{$prefix}-sys-color-inverse-on-surface: #000000;
+        --#{$prefix}-sys-color-inverse-primary: #004e67;
+    } @else {
+        @include status-roles-light();
+        --#{$prefix}-sys-color-error: #600004;
+        --#{$prefix}-sys-color-on-error: #ffffff;
+        --#{$prefix}-sys-color-error-container: #98000a;
+        --#{$prefix}-sys-color-on-error-container: #ffffff;
+        --#{$prefix}-sys-color-primary: #003041;
+        --#{$prefix}-sys-color-on-primary: #ffffff;
+        --#{$prefix}-sys-color-primary-container: #004f68;
+        --#{$prefix}-sys-color-on-primary-container: #ffffff;
+        --#{$prefix}-sys-color-secondary: #1b2f38;
+        --#{$prefix}-sys-color-on-secondary: #ffffff;
+        --#{$prefix}-sys-color-secondary-container: #384c56;
+        --#{$prefix}-sys-color-on-secondary-container: #ffffff;
+        --#{$prefix}-sys-color-tertiary: #2b2848;
+        --#{$prefix}-sys-color-on-tertiary: #ffffff;
+        --#{$prefix}-sys-color-tertiary-container: #484567;
+        --#{$prefix}-sys-color-on-tertiary-container: #ffffff;
+        --#{$prefix}-sys-color-primary-fixed: #004f68;
+        --#{$prefix}-sys-color-primary-fixed-dim: #00374a;
+        --#{$prefix}-sys-color-on-primary-fixed: #ffffff;
+        --#{$prefix}-sys-color-on-primary-fixed-variant: #ffffff;
+        --#{$prefix}-sys-color-secondary-fixed: #384c56;
+        --#{$prefix}-sys-color-secondary-fixed-dim: #21353f;
+        --#{$prefix}-sys-color-on-secondary-fixed: #ffffff;
+        --#{$prefix}-sys-color-on-secondary-fixed-variant: #ffffff;
+        --#{$prefix}-sys-color-tertiary-fixed: #484567;
+        --#{$prefix}-sys-color-tertiary-fixed-dim: #322f4f;
+        --#{$prefix}-sys-color-on-tertiary-fixed: #ffffff;
+        --#{$prefix}-sys-color-on-tertiary-fixed-variant: #ffffff;
+        --#{$prefix}-sys-color-surface: #f6fafe;
+        --#{$prefix}-sys-color-surface-dim: #b5b9bd;
+        --#{$prefix}-sys-color-surface-bright: #f6fafe;
+        --#{$prefix}-sys-color-surface-variant: #dce3e9;
+        --#{$prefix}-sys-color-surface-container-lowest: #ffffff;
+        --#{$prefix}-sys-color-surface-container-low: #edf1f5;
+        --#{$prefix}-sys-color-surface-container: #dfe3e7;
+        --#{$prefix}-sys-color-surface-container-high: #d1d5d9;
+        --#{$prefix}-sys-color-surface-container-highest: #c3c7cb;
+        --#{$prefix}-sys-color-on-surface: #000000;
+        --#{$prefix}-sys-color-on-surface-variant: #000000;
+        --#{$prefix}-sys-color-outline: #262d31;
+        --#{$prefix}-sys-color-outline-variant: #434a4f;
+        --#{$prefix}-sys-color-shadow: #000000;
+        --#{$prefix}-sys-color-scrim: #000000;
+        --#{$prefix}-sys-color-inverse-surface: #2c3134;
+        --#{$prefix}-sys-color-inverse-on-surface: #ffffff;
+        --#{$prefix}-sys-color-inverse-primary: #8ccff0;
     }
 }

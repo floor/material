@@ -34,7 +34,7 @@ import {
   argbFromHex,
   hexFromArgb,
 } from "@material/material-color-utilities";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { schemeToTokens, THEME_ROLES } from "../src/core/theme";
 
 /** M3's baseline seed, the source of `baseline` and of the eight variants */
@@ -50,7 +50,7 @@ export interface ThemeSpec {
   description: string;
   seed: string;
   variant: VariantName;
-  /** M3 contrast level: 0 standard, 1 high */
+  /** M3 contrast level: 0 standard, 0.5 medium, 1 high */
   contrast?: number;
   /**
    * A custom secondary colour, for a two-colour theme: its hue and chroma
@@ -136,7 +136,29 @@ export const rolesOf = (scheme: DynamicScheme): Record<string, string> =>
 const declarations = (tokens: Record<string, string>, indent: string): string =>
   Object.entries(tokens).map(([name, value]) => `${indent}${name}: ${value};`).join("\n");
 
-/** One theme's SCSS */
+const CONTRAST_START = "// contrast roles: generated, do not edit";
+const CONTRAST_HEADER = "// Medium/high contrast: ";
+
+/** Contrast roles use the same mapper as standard, including the scheme's error. */
+export const renderContrast = (spec: ThemeSpec): string => CONTRAST_START + "\n" +
+  ([["medium", 0.5], ["high", 1]] as const).map(([level, contrast]) => {
+    const tokens = schemeToTokens({
+      light: rolesOf(schemeFor({ ...spec, contrast }, false)),
+      dark: rolesOf(schemeFor({ ...spec, contrast }, true)),
+    }, { prefix: "#{$prefix}" });
+    return `@include create-theme-contrast("${spec.name}", "${level}") using ($dark) {
+    @if $dark {
+        @include status-roles-dark();
+${declarations(tokens.dark, "        ")}
+    } @else {
+        @include status-roles-light();
+${declarations(tokens.light, "        ")}
+    }
+}
+`;
+  }).join("\n");
+
+/** One generated theme's standard, medium and high SCSS. */
 export const renderTheme = (spec: ThemeSpec): string => {
   const tokens = schemeToTokens(
     { light: rolesOf(schemeFor(spec, false)), dark: rolesOf(schemeFor(spec, true)) },
@@ -166,7 +188,8 @@ ${declarations(tokens.light, "    ")}
 ${declarations(tokens.dark, "        ")}
     }
 }
-`;
+
+${renderContrast(spec)}`;
 };
 
 /**
@@ -256,12 +279,30 @@ const renderFixed = (source: string): string => {
   return `${source.slice(0, at)}\n${block}\n${source.slice(at)}`;
 };
 
+/** All hand-authored themes, including the still-shipped deprecated themes. */
+export const HAND_THEMES = readdirSync("src/styles/themes")
+  .filter((file) => /^_[a-z-]+\.scss$/.test(file) && !["_index.scss", "_base-theme.scss"].includes(file))
+  .map((file) => file.slice(1, -5))
+  .filter((name) => !THEMES.some((spec) => spec.name === name));
+
+/** Keep the entire standard source intact; replace only generated contrast blocks. */
+export const renderHandContrast = (name: string, source: string): string => {
+  const original = source.split(CONTRAST_START)[0].trimEnd() + "\n";
+  const standard = KEPT_THEMES.includes(name) ? renderKept(original) : original;
+  const primary = standard.match(/--#\{\$prefix\}-sys-color-primary:\s*(#[0-9a-fA-F]{6})/)?.[1];
+  if (!primary) throw new Error(`${name}: hand-made theme has no clear light primary`);
+  const header = `${CONTRAST_HEADER}Tonal Spot from light primary seed ${primary}.`;
+  const withoutHeader = standard.split("\n").filter((line) => !line.startsWith(CONTRAST_HEADER));
+  withoutHeader.splice(1, 0, header);
+  return withoutHeader.join("\n") + "\n" + renderContrast({ name, seed: primary, variant: "tonal-spot", description: "" });
+};
+
 /** Every generated file, by path */
 export const renderThemes = (): Record<string, string> => ({
   ...Object.fromEntries(THEMES.map((spec) => [`src/styles/themes/_${spec.name}.scss`, renderTheme(spec)])),
-  ...Object.fromEntries(KEPT_THEMES.map((name) => {
+  ...Object.fromEntries(HAND_THEMES.map((name) => {
     const path = `src/styles/themes/_${name}.scss`;
-    return [path, renderKept(readFileSync(path, "utf8"))];
+    return [path, renderHandContrast(name, readFileSync(path, "utf8"))];
   })),
 });
 

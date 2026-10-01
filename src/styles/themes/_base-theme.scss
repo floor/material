@@ -8,6 +8,47 @@
   }
 }
 
+// Contrast follows the same element's theme and mode. Absence alone opts into
+// the system preference: even an explicit "standard" excludes this fallback.
+@mixin contrast-modes($name) {
+  @content(false);
+  &[data-theme-mode="dark"] {
+    @content(true);
+  }
+  @if $name == "baseline" {
+    // The unselected root is baseline and also follows the system dark mode.
+    &:root:not([data-theme]).dark-theme {
+      @content(true);
+    }
+    @media (prefers-color-scheme: dark) {
+      &:root:not([data-theme]):not([data-theme-mode="light"]) {
+        @content(true);
+      }
+    }
+  }
+}
+
+@mixin create-theme-contrast($name, $level) {
+  $scope: '[data-theme="#{$name}"]';
+  @if $name == "baseline" {
+    $scope: ':is([data-theme="baseline"], :root:not([data-theme]))';
+  }
+  #{$scope}[data-theme-contrast="#{$level}"] {
+    @include contrast-modes($name) using ($dark) {
+      @content($dark);
+    }
+  }
+  @if $level == "high" {
+    @media (prefers-contrast: more) {
+      #{$scope}:not([data-theme-contrast]) {
+        @include contrast-modes($name) using ($dark) {
+          @content($dark);
+        }
+      }
+    }
+  }
+}
+
 // Success, warning and info: not M3 scheme roles, so no scheme generates them.
 // Every theme takes these values, baseline included (FLO-329).
 @mixin status-roles-light() {

@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
 import type createButton from "../src/components/button";
+import { checkThemeContrast } from "./check-theme-contrast-browser";
 import { checkDatePicker } from "./check-datepicker-browser";
 import { checkList } from "./check-list-browser";
 import { checkChips } from "./check-chips-browser";
@@ -42,6 +43,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 600, height: 300 } });
   await page.setContent('<!doctype html><html><body></body></html>');
   await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/styles.css"), "utf8") });
+  await checkThemeContrast(page);
   await page.addScriptTag({ content: await bundle.outputs[0].text() });
   await page.evaluate(() => {
     const state = window as unknown as CoreWindow;
