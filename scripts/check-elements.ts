@@ -5429,9 +5429,16 @@ try {
     assert.equal(await focused(), "mb", "focus is back on the anchor");
     check("menu: arrows, typeahead and Enter select once, close once, and return focus to the anchor");
 
+    // A menu opened with a key puts focus on its first item on a timer, about 120ms
+    // after the key. A fixed wait is not that moment: on a runner whose main thread
+    // paused for a third of a second, the keys below got there first, were handled
+    // with no item focused, and focus ended one item short (FLO-423).
+    const focusOn = async (label: string): Promise<void> => {
+      for (const end = Date.now() + 5000; Date.now() < end && (await focused()) !== label;) await wait(20);
+    };
     await page.focus("#mb");
     await page.keyboard.press("Enter");
-    await settle();
+    await focusOn("Copy");
     assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
     await page.keyboard.press("Escape");
     await settle();
@@ -5474,7 +5481,8 @@ try {
         ((document.getElementById("mm") as HTMLElement).shadowRoot as ShadowRoot).querySelectorAll('[class*="menu--submenu"]').length);
     await page.focus("#mb");
     await page.keyboard.press("Enter");
-    await settle();
+    await focusOn("Copy");
+    assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
     for (const key of ["ArrowDown", "ArrowDown"]) await page.keyboard.press(key);
     assert.equal(await focused(), "Share", "Copy, Cut (disabled, focusable), then Share");
     await page.keyboard.press("ArrowRight");

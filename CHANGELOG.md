@@ -269,6 +269,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- CI's Solid and Vue SSR runs on the lowest supported peer version are ordinary commands,
+  `solid-ssr:floor` and `vue-ssr:floor` (FLO-426). Each reads the floor from `peerDependencies`,
+  installs it without saving, runs the check and restores the installed version, so nothing after
+  it runs on the floor version unnoticed.
 - **A plain filled text field sets no placement up (FLO-378).** Every text field installed a
   class observer, a resize observer and a window `resize` listener, and scheduled a first
   measure, even a filled field with no prefix, suffix or leading icon, which has nothing to
@@ -311,6 +315,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- The menu keyboard step of `elements:check` no longer ends one item short when a runner pauses
+  (FLO-423). It waited a fixed 450ms after opening the menu with a key, then sent the arrows; it
+  now waits for the first item to take focus, which is what the arrows depend on.
 - The search check in `core:check` no longer times out when a frame arrives late (FLO-420). It
   pressed the scrim before the view's opening had put focus back on the input, and that focus
   re-opened the view. The check now waits for the opening's frame, and reads the scrim press at
