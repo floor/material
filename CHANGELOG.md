@@ -14,8 +14,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 - **The deprecated themes `material`, `winter`, `browngreen` and `legacy` are removed
   (FLO-428).** 0.10 deprecated them (FLO-308); their files, `mtrl/themes/<name>` entries and
-  their rules in the full stylesheet are gone, so `data-theme="winter"` and the rest fall back
-  to the unthemed baseline. Migration: `material` → `baseline`, `winter` → `ocean`,
+  their rules in the full stylesheet are gone. A leftover `data-theme="winter"` (or any of the
+  four) gets the light baseline colours, and `data-theme-mode="dark"` and `data-theme-contrast`
+  on that element are ignored: an app with its own dark toggle shows the light baseline until
+  it renames the theme. Migration: `material` → `baseline`, `winter` → `ocean`,
   `browngreen` → `brownbeige`; `legacy` has no replacement (pick any theme, or keep its
   colours as custom properties of your own).
 - **Segmented buttons are removed (FLO-382).** `createSegmentedButton` and `createSegment`
