@@ -484,10 +484,12 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       select(value: string) {
         // A value no button carries clears the selection, as for the other
         // selection components (FLO-328), silently, with a warning in
-        // development; the segmented button did the same (FLO-382).
+        // development; the segmented button did the same (FLO-382). A required
+        // group cannot be emptied, so there it changes nothing: collapsing the
+        // selection to one value is a side effect the caller did not ask for.
         if (selection !== 'none' && !buttons.some(button => valueOf(button) === value)) {
           warnUnknownValue('button group', value);
-          [...selectedValues].forEach(selected => setSelected(selected, false));
+          if (!required) [...selectedValues].forEach(selected => setSelected(selected, false));
           return this;
         }
         setSelected(value, true);

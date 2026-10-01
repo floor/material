@@ -34,6 +34,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   - The button group's `select(value)` now clears the selection when no button carries `value`,
     with a warning in development and no event, as the segmented button and the other selection
     components do (FLO-328).
+    On a `required` group, which cannot be emptied, it warns and leaves the selection as it was.
 - Menu items and search suggestions are present synchronously when their factories return,
   including in server-rendered shadow DOM (FLO-367). Migration: DOM inspection no longer needs
   a timer before reading initial items or suggestions. Menu positioning still waits for

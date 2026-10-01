@@ -216,7 +216,8 @@ describe("a value no option carries clears the selection", () => {
       selection: "multi",
       buttons: [
         { value: "x", text: "X", selected: true },
-        { value: "y", text: "Y" },
+        { value: "y", text: "Y", selected: true },
+        { value: "z", text: "Z" },
       ],
     });
     document.body.append(group.element);
@@ -227,6 +228,32 @@ describe("a value no option carries clears the selection", () => {
     group.select("nope");
 
     expect(group.getValue()).toEqual([]);
+    expect(mtrlWarnings()).toEqual(['[mtrl] button group: no option with value "nope"']);
+    expect(events).toEqual([]);
+  });
+
+  // A required group cannot be emptied, and an unknown value is a caller error,
+  // not a request to change the selection: it leaves the selection exactly as
+  // it was rather than collapsing it to one value (FLO-382).
+  test("a required connected button group keeps its whole selection, warns once, and emits no change (FLO-382)", () => {
+    const group = createButtonGroup({
+      kind: "connected",
+      selection: "multi",
+      required: true,
+      buttons: [
+        { value: "x", text: "X", selected: true },
+        { value: "y", text: "Y", selected: true },
+        { value: "z", text: "Z" },
+      ],
+    });
+    document.body.append(group.element);
+
+    const events: unknown[] = [];
+    group.on("change", (event: unknown) => events.push(event));
+
+    group.select("nope");
+
+    expect(group.getValue()).toEqual(["x", "y"]);
     expect(mtrlWarnings()).toEqual(['[mtrl] button group: no option with value "nope"']);
     expect(events).toEqual([]);
   });
