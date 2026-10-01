@@ -104,6 +104,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - **Menu item ids containing selector syntax keep submenu keyboard navigation working (FLO-429).**
   Parent lookup compares `data-id`, `data-owner`, and `data-level` as strings.
 
+- **Search keeps custom root classes (FLO-421).** Both contained and divided
+  search variants apply the `class` option, including space-separated classes.
 - **Tabs with quotes or backslashes in their value no longer fail to link panels (FLO-417).**
   Panel lookup compares `aria-labelledby` directly with the tab id, so values
   that are CSS selector syntax are handled as data.
