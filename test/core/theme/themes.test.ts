@@ -136,6 +136,15 @@ describe("generated themes", () => {
     expect([...themeStyles, ...standaloneThemes].sort()).toEqual([...files].sort());
   });
 
+  test("1.0.0 removed the deprecated themes: no file, manifest entry or forward (FLO-428)", () => {
+    const removed = ["material", "winter", "browngreen", "legacy"];
+    const files = readdirSync(THEMES_DIR).map((file) => file.slice(1, -".scss".length));
+    const index = readFileSync(`${THEMES_DIR}/_index.scss`, "utf8");
+    expect(removed.filter((name) => files.includes(name) || themeStyles.includes(name) || standaloneThemes.includes(name) || index.includes(`"${name}"`))).toEqual([]);
+    // The full stylesheet's themes, which md3.io's picker and the migration name
+    expect(themeStyles).toEqual(["baseline", "ocean", "desert", "forest", "sunset", "spring", "summer", "autumn", "brownbeige", "sageivory", "tealcaramel", "highcontrast"]);
+  });
+
   test("the variants are standalone; the full stylesheet's set is unchanged", () => {
     expect(standaloneThemes.sort()).toEqual(THEMES.filter((spec) => spec.standalone).map((spec) => spec.name).sort());
     const index = readFileSync(`${THEMES_DIR}/_index.scss`, "utf8");

@@ -106,7 +106,7 @@ test("colour replacement remains functional and cannot revive a destroyed slider
   }
   component.destroy();
   component.setColor("secondary");
-  await theme("winter");
+  await theme("ocean");
   expect(component.element.isConnected).toBe(false);
   expect(draws.size).toBe(0);
 });

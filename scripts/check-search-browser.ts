@@ -44,6 +44,18 @@ const layout = (page: Page) => page.evaluate(() => {
   };
 });
 
+/**
+ * The view is open and its opening is over. Opening puts focus back on the input in
+ * the next animation frame (`expandToView`). Until that frame has run the view is not
+ * settled: a press or a Tab that gets there first is followed by that focus, which
+ * re-opens a view just dismissed (the 30s timeout of FLO-420) or takes focus back from
+ * the control it moved to. A frame requested now runs after the one the view asked for.
+ */
+const opened = async (page: Page): Promise<void> => {
+  await page.waitForFunction(() => document.querySelector(".mtrl-search--view"));
+  await page.evaluate(() => new Promise(requestAnimationFrame));
+};
+
 export async function checkSearch(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1000, height: 800 });
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -87,7 +99,7 @@ export async function checkSearch(page: Page): Promise<void> {
   const closed = await layout(page);
   assert.deepEqual([closed.state, closed.root[1], closed.popover], ["bar", 56, false], "docked: a 56dp bar in the page");
   await page.locator(".mtrl-search__input").click();
-  await page.waitForFunction(() => document.querySelector(".mtrl-search--view"));
+  await opened(page);
   const docked = await layout(page);
   assert.equal(docked.after, closed.after, "docked: opening does not push the page down");
   assert.equal(docked.root[1], 56, "docked: the bar's place is kept");
@@ -95,16 +107,18 @@ export async function checkSearch(page: Page): Promise<void> {
   assert.deepEqual(docked.surface.slice(0, 3), docked.bar, "docked: placed on the bar, its width");
   assert.ok(docked.content >= 240, `docked: results at least 240dp tall (${docked.content})`);
   assert.deepEqual(docked.modal, ["DIALOG", false, "none"], "docked: not modal, and not announced as a dialog");
-  // A click on the scrim closes it.
+  // A press on the scrim closes it, in the press itself. Read at once, not waited
+  // for: the input also loses focus to that click, and its blur closes the view
+  // 150ms later whether or not the scrim is handled.
   await page.mouse.click(docked.surface[0] + docked.surface[2] + 100, 700);
-  await page.waitForFunction(() => document.querySelector(".mtrl-search--bar"));
+  assert.equal(await page.evaluate(() => !!document.querySelector(".mtrl-search--bar")), true, "the press on the scrim closes it, without waiting for the blur");
   const dismissed = await layout(page);
   assert.deepEqual([dismissed.popover, dismissed.after], [false, closed.after], "the scrim closes it, back in the page");
 
   // In a parent that clips, the results still show: the top layer escapes it.
   await mount(page, { suggestions: ["Apple", "Banana"] }, true);
   await page.locator(".mtrl-search__input").click();
-  await page.waitForFunction(() => document.querySelector(".mtrl-search--view"));
+  await opened(page);
   assert.equal((await layout(page)).reachable, true, "a clipping parent does not hide the results");
 
   // Full screen: a bar in the page until it opens; then the viewport, modal,
@@ -113,7 +127,7 @@ export async function checkSearch(page: Page): Promise<void> {
   const bar = await layout(page);
   assert.deepEqual([bar.root[1], bar.surface[3], bar.after > bar.root[0]], [56, 56, true], "full screen, closed: a bar in the page, not covering it");
   await page.locator(".mtrl-search__input").click();
-  await page.waitForFunction(() => document.querySelector(".mtrl-search--view"));
+  await opened(page);
   const full = await layout(page);
   assert.deepEqual(full.surface, [0, 0, ...full.viewport], "full screen: the viewport");
   assert.deepEqual(full.modal, ["DIALOG", true, null], "full screen: a modal dialog (showModal)");
@@ -130,7 +144,7 @@ export async function checkSearch(page: Page): Promise<void> {
   await page.keyboard.press("Escape");
   await page.waitForFunction(() => document.querySelector(".mtrl-search--bar"));
   await page.locator(".mtrl-search__input").click();
-  await page.waitForFunction(() => document.querySelector(".mtrl-search--view"));
+  await opened(page);
   await page.locator(".mtrl-search__input").focus();
   await page.keyboard.press("Escape");
   await page.waitForFunction(() => document.querySelector(".mtrl-search--bar"));
@@ -187,7 +201,7 @@ async function checkSearchTokens(page: Page): Promise<void> {
   });
   assert.deepEqual(await combobox(), { role: "combobox", autocomplete: "list", expanded: "false", list: "listbox", active: null, status: "" }, "a combobox controlling the listbox, collapsed, announcing nothing");
   await page.locator(".mtrl-search__input").focus();
-  await page.waitForFunction(() => document.querySelector(".mtrl-search--view"));
+  await opened(page);
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("ArrowDown");
   assert.deepEqual(await combobox(), { role: "combobox", autocomplete: "list", expanded: "true", list: "listbox", active: "Banana", status: "3 suggestions" }, "expanded, pointing at the option the arrows reach");
@@ -211,7 +225,7 @@ async function checkSearchVariants(page: Page): Promise<void> {
   const open = async (config: Parameters<typeof createSearch>[0]) => {
     await mount(page, { suggestions: ["Apple", "Banana"], ...config });
     await page.locator(".mtrl-search__input").click();
-    await page.waitForFunction(() => document.querySelector(".mtrl-search--view"));
+    await opened(page);
     await page.waitForTimeout(350);
   };
   const shape = () => page.evaluate(() => {

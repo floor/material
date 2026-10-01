@@ -82,8 +82,7 @@ describe('every theme contrast level', () => {
       // The status colours of FLO-407 (#369) pass at standard and medium; only
       // light high (7:1) still falls short for them.
       const preservedFailure = (fg: string) =>
-        (mode === 'light' && level === 'high' && ['on-warning', 'on-success', 'on-info'].includes(fg)) ||
-        (name === 'legacy' && level === 'standard' && (fg === 'on-tertiary' || (mode === 'light' && fg === 'on-secondary')));
+        (mode === 'light' && level === 'high' && ['on-warning', 'on-success', 'on-info'].includes(fg));
       test(`${name} ${level} ${mode}: generated block and text pairs reach ${minimum}:1`, () => {
         if (level !== 'standard' && !(name === 'highcontrast' && level === 'high')) expect(contrastBlocks.length).toBeGreaterThanOrEqual(2);
         const failures = pairs.flatMap(([fg, bg]) => {
