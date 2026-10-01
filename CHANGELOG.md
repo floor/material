@@ -196,6 +196,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   icons, affixes, required, density). Mounting 1,000 filled fields takes 16% less script time
   (49.9 to 41.8 ms; 192 to 165 ms at 4× CPU), with 1,000 fewer listeners. Nothing renders
   differently.
+- **CI runs the same checks in less time.** The browser checks run in five groups instead of
+  three, the package checks no longer hold the browser groups back, and Playwright's browsers
+  and their system packages come from a cache that every pull request can read (a slow Ubuntu
+  mirror made one install step take 26 minutes). `test/build/ci-commands.test.ts` lists the
+  commands CI runs and fails when one is dropped.
 
 ### Deprecated
 
