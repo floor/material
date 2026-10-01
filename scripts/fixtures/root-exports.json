@@ -1,29 +1,5 @@
 [
   {
-    "name": "activeElementOf",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "addClass",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "ANIMATION_DURATIONS",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
-    "name": "AnimationFrameManager",
-    "kind": "class",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
     "name": "AssistChipConfig",
     "kind": "type",
     "status": "public"
@@ -37,24 +13,6 @@
     "name": "BadgeConfig",
     "kind": "type",
     "status": "public"
-  },
-  {
-    "name": "BaseComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "BaseConfig",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "batchAttributes",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
   },
   {
     "name": "BottomAppBar",
@@ -152,18 +110,6 @@
     "status": "public"
   },
   {
-    "name": "byString",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/utils"
-  },
-  {
-    "name": "CanvasContext",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
     "name": "CardSchema",
     "kind": "type",
     "status": "public"
@@ -177,18 +123,6 @@
     "name": "CarouselConfig",
     "kind": "type",
     "status": "public"
-  },
-  {
-    "name": "CheckableComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "CheckableManager",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
   },
   {
     "name": "CheckboxComponent",
@@ -236,24 +170,6 @@
     "status": "public"
   },
   {
-    "name": "classNames",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core"
-  },
-  {
-    "name": "CleanupManager",
-    "kind": "class",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
-    "name": "clearCanvas",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
     "name": "clearGlobalDefaults",
     "kind": "value",
     "status": "public"
@@ -264,51 +180,9 @@
     "status": "public"
   },
   {
-    "name": "clipRoundedRect",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
-    "name": "Component",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "ComponentConfig",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core"
-  },
-  {
     "name": "ComponentConfigMap",
     "kind": "type",
     "status": "public"
-  },
-  {
-    "name": "ComponentWithEmit",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "ComponentWithLifecycle",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "compose",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "Computation",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/state"
   },
   {
     "name": "configureHTML",
@@ -324,12 +198,6 @@
     "name": "createBadge",
     "kind": "value",
     "status": "public"
-  },
-  {
-    "name": "createBase",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
   },
   {
     "name": "createBottomAppBar",
@@ -350,18 +218,6 @@
     "name": "createButtonGroup",
     "kind": "value",
     "status": "public"
-  },
-  {
-    "name": "createCanvasContext",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
-    "name": "createCanvasThemeObserver",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
   },
   {
     "name": "createCard",
@@ -404,18 +260,6 @@
     "status": "public"
   },
   {
-    "name": "createComponent",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "createComponentConfig",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core"
-  },
-  {
     "name": "createDatePicker",
     "kind": "value",
     "status": "public"
@@ -434,36 +278,6 @@
     "name": "createDrawer",
     "kind": "value",
     "status": "public"
-  },
-  {
-    "name": "createElement",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "createElementConfig",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core"
-  },
-  {
-    "name": "CreateElementOptions",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "createEmitter",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/state"
-  },
-  {
-    "name": "createEventManager",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
   },
   {
     "name": "createExtendedFab",
@@ -526,18 +340,6 @@
     "status": "public"
   },
   {
-    "name": "createRoundedRectPath",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
-    "name": "createRoving",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
     "name": "createSearch",
     "kind": "value",
     "status": "public"
@@ -578,33 +380,9 @@
     "status": "public"
   },
   {
-    "name": "createStateEventManager",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core"
-  },
-  {
-    "name": "createStore",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/state"
-  },
-  {
-    "name": "createStyledCanvas",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
     "name": "createSuggestionChip",
     "kind": "value",
     "status": "public"
-  },
-  {
-    "name": "createSVGElement",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
   },
   {
     "name": "createSwitch",
@@ -657,36 +435,6 @@
     "status": "public"
   },
   {
-    "name": "debounce",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/utils"
-  },
-  {
-    "name": "DebounceComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "DebounceConfig",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "deepActiveElement",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "deriveFiltered",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/state"
-  },
-  {
     "name": "DialogComponent",
     "kind": "type",
     "status": "public"
@@ -695,18 +443,6 @@
     "name": "DialogConfig",
     "kind": "type",
     "status": "public"
-  },
-  {
-    "name": "DisabledComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "DisabledManager",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
   },
   {
     "name": "DividerComponent",
@@ -749,60 +485,6 @@
     "status": "public"
   },
   {
-    "name": "easeOutCubic",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
-    "name": "EASING_FUNCTIONS",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
-    "name": "ElementComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "Emitter",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/state"
-  },
-  {
-    "name": "EnhancedEventComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "EventCallback",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/state"
-  },
-  {
-    "name": "EventComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "EventManager",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "EventManagerState",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/state"
-  },
-  {
     "name": "ExtendedFabComponent",
     "kind": "type",
     "status": "public"
@@ -843,104 +525,14 @@
     "status": "public"
   },
   {
-    "name": "fillRoundedRect",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
-    "name": "fillRoundedRectLR",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
     "name": "FilterChipConfig",
     "kind": "type",
     "status": "public"
   },
   {
-    "name": "ForwardedEventPayload",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "getAttribute",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "getComponentClass",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core"
-  },
-  {
     "name": "getComponentDefaults",
     "kind": "value",
     "status": "public"
-  },
-  {
-    "name": "getElementClass",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core"
-  },
-  {
-    "name": "getHTMLPolicy",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "getInheritedBackground",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/utils"
-  },
-  {
-    "name": "getModifierClass",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core"
-  },
-  {
-    "name": "hasAttribute",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "hasClass",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "hasEmit",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "hasLifecycle",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "hasTouchSupport",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/utils"
-  },
-  {
-    "name": "hideFromTopLayer",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
   },
   {
     "name": "HTMLInput",
@@ -963,69 +555,9 @@
     "status": "public"
   },
   {
-    "name": "IconComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "inertOutside",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "initializeCanvasWithRetry",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
     "name": "InputChipConfig",
     "kind": "type",
     "status": "public"
-  },
-  {
-    "name": "InputComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "isObject",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/utils"
-  },
-  {
-    "name": "isTextEditable",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "joinClasses",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core"
-  },
-  {
-    "name": "LabelComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "Lifecycle",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "LifecycleComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
   },
   {
     "name": "ListComponent",
@@ -1068,12 +600,6 @@
     "status": "public"
   },
   {
-    "name": "loggingMiddleware",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/state"
-  },
-  {
     "name": "MenuComponent",
     "kind": "type",
     "status": "public"
@@ -1114,54 +640,6 @@
     "status": "public"
   },
   {
-    "name": "normalizeClasses",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "NormalizedEvent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core"
-  },
-  {
-    "name": "normalizeEvent",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/utils"
-  },
-  {
-    "name": "observeCanvasResize",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
-    "name": "once",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/utils"
-  },
-  {
-    "name": "onTopLayerClose",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "pipe",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "PREFIX",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core"
-  },
-  {
     "name": "ProgressComponent",
     "kind": "type",
     "status": "public"
@@ -1190,36 +668,6 @@
     "name": "RadiosConfig",
     "kind": "type",
     "status": "public"
-  },
-  {
-    "name": "removeAttributes",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "removeClass",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "RippleComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "Roving",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "RovingOptions",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
   },
   {
     "name": "SchemeRoles",
@@ -1282,18 +730,6 @@
     "status": "public"
   },
   {
-    "name": "Selector",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/state"
-  },
-  {
-    "name": "setAttributes",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
     "name": "setComponentDefaults",
     "kind": "value",
     "status": "public"
@@ -1302,18 +738,6 @@
     "name": "setGlobalDefaults",
     "kind": "value",
     "status": "public"
-  },
-  {
-    "name": "setHTML",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "showInTopLayer",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
   },
   {
     "name": "SideSheetComponent",
@@ -1376,33 +800,9 @@
     "status": "public"
   },
   {
-    "name": "StateComponentConfig",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core"
-  },
-  {
-    "name": "Store",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/state"
-  },
-  {
-    "name": "StoreOptions",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/state"
-  },
-  {
     "name": "SuggestionChipConfig",
     "kind": "type",
     "status": "public"
-  },
-  {
-    "name": "supportsTopLayer",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
   },
   {
     "name": "SwitchComponent",
@@ -1435,12 +835,6 @@
     "status": "public"
   },
   {
-    "name": "TextComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
     "name": "TextfieldComponent",
     "kind": "type",
     "status": "public"
@@ -1451,27 +845,9 @@
     "status": "public"
   },
   {
-    "name": "TextInputComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
     "name": "THEME_ROLES",
     "kind": "value",
     "status": "public"
-  },
-  {
-    "name": "ThemeConfig",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core"
-  },
-  {
-    "name": "ThemedComponentConfig",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core"
   },
   {
     "name": "ThemeRole",
@@ -1484,24 +860,6 @@
     "status": "public"
   },
   {
-    "name": "throttle",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/utils"
-  },
-  {
-    "name": "ThrottleComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "ThrottleConfig",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
     "name": "TimePickerComponent",
     "kind": "type",
     "status": "public"
@@ -1510,12 +868,6 @@
     "name": "TimePickerConfig",
     "kind": "type",
     "status": "public"
-  },
-  {
-    "name": "toggleClass",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
   },
   {
     "name": "ToolbarComponent",
@@ -1558,182 +910,8 @@
     "status": "public"
   },
   {
-    "name": "TopLayerKind",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "TopLayerOptions",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/dom"
-  },
-  {
-    "name": "TouchState",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "TrackComponent",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "transform",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
     "name": "TrustedHTMLLike",
     "kind": "type",
     "status": "public"
-  },
-  {
-    "name": "updateCanvasDimensions",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/canvas"
-  },
-  {
-    "name": "Updater",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/state"
-  },
-  {
-    "name": "VariantComponentConfig",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core"
-  },
-  {
-    "name": "when",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/utils"
-  },
-  {
-    "name": "withCheckable",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withDebounce",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withDisabled",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withElement",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "WithElementOptions",
-    "kind": "type",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withEnhancedEvents",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withEvents",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withIcon",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withInput",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withLifecycle",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withPosition",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withRipple",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withSize",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withStyle",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withText",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withTextInput",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withTextLabel",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withThrottle",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withTrack",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
-  },
-  {
-    "name": "withVariant",
-    "kind": "value",
-    "status": "deprecated",
-    "path": "mtrl/core/compose"
   }
 ]
