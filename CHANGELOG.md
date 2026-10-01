@@ -67,6 +67,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- Elements construct on a server DOM (linkedom) without browser-only APIs (FLO-362).
 - **Date picker: the range band runs to the container edge where it wraps a week.** As in
   m3.material.io's range picker, the row a range leaves runs the band out to the end edge and the
   row it continues on starts it from the start edge; it stopped at the day grid, 12dp short on

@@ -79,7 +79,7 @@ export const createRipple = (config: RippleConfig = {}): RippleController => {
       const doc = element.ownerDocument;
       const view = doc.defaultView;
       if (!view) return;
-      if (view.getComputedStyle(element).position === "static") {
+      if (view.getComputedStyle?.(element).position === "static") {
         element.style.position = "relative";
       }
       const container = doc.createElement("div");

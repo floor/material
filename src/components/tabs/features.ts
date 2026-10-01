@@ -386,35 +386,24 @@ export const withIndicator =
       }, 10);
     };
 
-    // Position indicator on initial active tab
-    setTimeout(() => {
-      const activeTab = component.tabs.find((tab) => tab.isActive());
-      if (activeTab) {
-        indicator.moveToTab(activeTab, true);
-      }
-    }, 50);
-
-    // Add scroll event handling
-    const scrollHandler = () => {
+    // Keep the indicator on the active tab after initial layout, scroll or resize.
+    const updateIndicator = () => {
       const activeTab = component.tabs.find((tab) => tab.isActive());
       if (activeTab) {
         indicator.moveToTab(activeTab, true);
       }
     };
 
+    setTimeout(updateIndicator, 50);
+
     if (scrollContainer) {
-      scrollContainer.addEventListener("scroll", scrollHandler);
+      scrollContainer.addEventListener("scroll", updateIndicator);
     }
 
     // Watch for window resize to update indicator
-    const resizeObserver = new ResizeObserver(() => {
-      const activeTab = component.tabs.find((tab) => tab.isActive());
-      if (activeTab) {
-        indicator.moveToTab(activeTab, true);
-      }
-    });
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateIndicator) : null;
 
-    resizeObserver.observe(scrollContainer);
+    resizeObserver?.observe(scrollContainer);
 
     // Add MutationObserver to detect tab state changes
     const mutationObserver = new MutationObserver((mutations) => {
@@ -453,11 +442,11 @@ export const withIndicator =
     // Override destroy to clean up resources
     component.destroy = function () {
       indicator.destroy();
-      resizeObserver.disconnect();
+      resizeObserver?.disconnect();
       mutationObserver.disconnect();
 
       if (scrollContainer) {
-        scrollContainer.removeEventListener("scroll", scrollHandler);
+        scrollContainer.removeEventListener("scroll", updateIndicator);
       }
 
       // Call original destroy if it exists
