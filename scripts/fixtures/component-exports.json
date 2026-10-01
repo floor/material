@@ -1183,6 +1183,48 @@
       "status": "public"
     }
   ],
+  "navigation-bar": [
+    {
+      "name": "createNavigationBar",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "NavigationBarComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationBarConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationBarEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationBarItemConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationBarItemLayout",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "NavigationBarSelectEvent",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
   "navigation-rail": [
     {
       "name": "createNavigationRail",
@@ -1540,6 +1582,11 @@
     },
     {
       "name": "SliderEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SliderEvents",
       "kind": "type",
       "status": "public"
     }
