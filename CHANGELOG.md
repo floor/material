@@ -168,6 +168,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   icon buttons are measured across the upgrade (pixels, layout, and each button keeping its
   parser-created root), and Svelte named snippets (card `headline` and `actions`, top app bar
   `leading` and `trailing`) are checked as slotted before script and adopted by hydration.
+- `ssr:check` no longer depends on whether the browser has applied `:hover` at the page origin
+  when it captures. The fixture sat there, under a new page's resting pointer, and CI captured a
+  button group hovered before the upgrade and not after. The stage now starts 32px down, and both
+  passes assert that no control of the fixture is under the pointer.
 - Element CSS also ships as `.css` files (`mtrl/elements/css/<name>.css`, `hosts/<element>.css`), for server-rendered `<link>` styles (FLO-365).
 - **Synchronous declarative shadow DOM rendering (FLO-363, part B).** The server-only
   `src/ssr` entry exports `renderElement` with inline CSS by default, optional stylesheet
