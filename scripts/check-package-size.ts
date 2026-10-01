@@ -48,7 +48,10 @@ try {
   // measured with CI's Node 22 / npm 10.
   // Lowered to 885,000 when 1.0.0 dropped the CommonJS bundle (FLO-358): 997,366 to 872,414
   // against 073eeeb, Node 22 / npm 10, keeping the headroom it had.
-  assert(pack.size < 885_000, "npm tarball exceeds 885,000 bytes");
+  // Raised to 900,000 for the element CSS as .css files (FLO-365), which SSR's <link>
+  // styles need: 876,697 on next to 886,448 with them, Node 22 / npm 10, keeping the
+  // headroom it had.
+  assert(pack.size < 900_000, "npm tarball exceeds 900,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
