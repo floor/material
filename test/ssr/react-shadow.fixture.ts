@@ -10,6 +10,7 @@ import { assertGlobalHost, GLOBAL_ATTRS_WITH_IS } from "../../scripts/fixtures/s
 const Button = createComponent(buttonElement.spec, () => "m-button", "MButton");
 const Card = createComponent(cardElement.spec, () => "m-card", "MCard");
 
+// The adapters' prop types don't yet accept arbitrary HTML attributes; the test still passes them so the bridge forwards them onto the host.
 const hostProps = {
   id: "globals",
   label: "Save",
@@ -20,7 +21,13 @@ const hostProps = {
   itemProp: "name",
   nonce: "abc",
   is: "x-y",
-};
+} as React.ComponentProps<typeof Button>;
+
+const nestedHostProps = {
+  id: "inner",
+  popover: "auto",
+  label: "Nested",
+} as React.ComponentProps<typeof Button>;
 
 test("ordinary host attributes render through the React bridge and stay out of the shadow markup", async () => {
   const plain = renderToString(React.createElement(Button, hostProps));
@@ -39,7 +46,7 @@ test("ordinary host attributes render through the React bridge and stay out of t
   expect(html).toContain("disabled");
 
   const nested = renderToString(React.createElement(Card, { id: "card" },
-    React.createElement(Button, { id: "inner", popover: "auto", label: "Nested" })));
+    React.createElement(Button, nestedHostProps)));
   expect(nested).toMatch(/<(?:m-button)[^>]*\bid="inner"[^>]*>/);
   const innerAt = nested.indexOf('id="inner"');
   const innerTemplate = nested.slice(innerAt).match(/<template shadowrootmode="open"[^>]*>([\s\S]*?)<\/template>/);

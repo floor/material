@@ -1,7 +1,7 @@
 // test/ssr/solid-shadow.fixture.ts
 // Spawned by solid-shadow.test.ts. No DOM shim: this process is the server.
 import { expect, test } from "bun:test";
-import { createComponent as createSolid } from "solid-js";
+import { createComponent as createSolid, type ComponentProps } from "solid-js";
 import { renderToString } from "solid-js/web";
 import { buttonElement, cardElement, carouselElement, tabsElement } from "../../src/elements";
 import { createComponent } from "../../src/solid/create";
@@ -53,9 +53,15 @@ test("an unregistered server returns no template; registration renders one and o
 
   const Card = createComponent(cardElement.spec, () => "m-card");
   const Inner = createComponent(buttonElement.spec, () => "m-button");
+  // The adapters' prop types don't yet accept arbitrary HTML attributes; the test still passes them so the bridge forwards them onto the host.
+  const nestedHostProps = {
+    id: "inner",
+    popover: "auto",
+    label: "Nested",
+  } as ComponentProps<typeof Inner>;
   const nested = renderToString(() => createSolid(Card, {
     id: "card",
-    children: createSolid(Inner, { id: "inner", popover: "auto", label: "Nested" }),
+    children: createSolid(Inner, nestedHostProps),
   }));
   const innerAt = nested.indexOf('id="inner"');
   expect(innerAt).toBeGreaterThan(-1);
