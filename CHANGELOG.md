@@ -101,6 +101,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Tabs with quotes or backslashes in their value no longer fail to link panels (FLO-417).**
+  Panel lookup compares `aria-labelledby` directly with the tab id, so values
+  that are CSS selector syntax are handled as data.
+
 - The carousel wheel check in `core:check` no longer fails when a CI runner stalls a frame. A
   283ms stall split its 30-event wheel gesture in two, and the carousel correctly went one slide
   further than the recording expected. A recording with a frame over 50ms is now taken again
