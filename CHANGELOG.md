@@ -304,6 +304,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   last pending field is destroyed, allowing the next lifecycle to schedule again (FLO-363).
 - **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
   label names the field.
+- **Search keeps custom root classes (FLO-421).** Both contained and divided
+  search variants apply the `class` option, including space-separated classes.
+- **Tabs with quotes or backslashes in their value no longer fail to link panels (FLO-417).**
+  Panel lookup compares `aria-labelledby` directly with the tab id, so values
+  that are CSS selector syntax are handled as data.
+
 - The carousel wheel check in `core:check` no longer fails when a CI runner stalls a frame. A
   283ms stall split its 30-event wheel gesture in two, and the carousel correctly went one slide
   further than the recording expected. A recording with a frame over 50ms is now taken again

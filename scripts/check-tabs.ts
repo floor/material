@@ -226,6 +226,34 @@ try {
   assert.equal(ring, `3px solid ${colours.secondary} -3px`, "focused tab: a 3dp secondary ring drawn inward");
   checks += 3;
 
+  // FLO-417: a tab value is data, so quotes in its id must not enter a CSS selector.
+  const quotedValue = await page.evaluate(() => {
+    const value = 'a"b';
+    const panel = document.createElement("div");
+    panel.id = "quoted-tab-panel";
+    panel.setAttribute("role", "tabpanel");
+    panel.setAttribute("aria-labelledby", `tab-special-${value}`);
+    document.body.append(panel);
+    (window as unknown as { mount: (c: unknown) => void }).mount({
+      groupId: "special",
+      tabs: [
+        { text: "Other", value: "other" },
+        { text: "Quoted", value, state: "active" },
+      ],
+    });
+    const tab = document.getElementById(`tab-special-${value}`)!;
+    return {
+      id: tab.id,
+      selected: tab.getAttribute("aria-selected"),
+      controls: tab.getAttribute("aria-controls"),
+      visible: !panel.hasAttribute("hidden"),
+    };
+  });
+  assert.deepEqual(quotedValue, {
+    id: 'tab-special-a"b', selected: "true", controls: "quoted-tab-panel", visible: true,
+  }, "quoted tab value links to its selected panel");
+  checks++;
+
   assert.deepEqual(errors, [], `page errors: ${errors.join(", ")}`);
   console.log(
     `Passed ${checks} tabs checks: fixed tabs in an evenly divided row, ` +
