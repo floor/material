@@ -31,17 +31,43 @@ function measure(data: Uint8Array) {
 }
 try {
   assert(!pack.files.some((file: { path: string }) => file.path.endsWith(".map")), "Unexpected source maps in npm package");
-  // FLO-364: keep the unfinished server entry and its dev-only dependency out of the package.
+  assert(pack.files.some((file: { path: string }) => file.path === "dist/ssr/index.js"), "Missing SSR bundle");
+  // The SSR bundle owns linkedom; every other shipped module (including its
+  // browser stub) must remain outside the server graph. Resolve relative paths
+  // as well as public subpaths, so ../ssr/index.js cannot bypass the guard.
   for (const file of pack.files as { path: string }[]) {
-    assert(!file.path.startsWith("dist/ssr/"), `Unexpected SSR file in npm package: ${file.path}`);
-    if (!/\.[cm]?[jt]sx?$/.test(file.path)) continue;
+    if (!file.path.startsWith("dist/") || !/\.(?:[cm]?[jt]sx?|svelte)$/.test(file.path)) continue;
     const source = await Bun.file(join(fixture.installed, file.path)).text();
-    const imports = ts.preProcessFile(source, true, true).importedFiles;
-    assert(
-      !imports.some(({ fileName }) => fileName === "linkedom" || fileName.startsWith("linkedom/")),
-      `Unexpected linkedom import in npm package: ${file.path}`,
-    );
+    const server = file.path.startsWith("dist/ssr/") && file.path !== "dist/ssr/browser.js";
+    const parsed = ts.createSourceFile(file.path, source, ts.ScriptTarget.Latest, true);
+    const visit = (node: ts.Node): void => {
+      let specifier: ts.Node | undefined;
+      if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) specifier = node.moduleSpecifier;
+      if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) specifier = node.argument.literal;
+      if (ts.isCallExpression(node) && (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
+          (ts.isIdentifier(node.expression) && node.expression.text === "require"))) specifier = node.arguments[0];
+      if (specifier && ts.isStringLiteralLike(specifier)) {
+        const name = specifier.text;
+        assert(!/^linkedom(?:\/|$)/.test(name), `Unbundled linkedom in ${file.path}: ${name}`);
+        const target = name.startsWith(".") ? resolve(dirname(file.path), name) : name;
+        if (!server) {
+          assert(!/(?:^|\/)ssr(?:\/|$|\.)/.test(target), `Client imports SSR in ${file.path}: ${name}`);
+        } else {
+          assert(name.startsWith(".") || name.startsWith("node:"), `Unbundled SSR dependency in ${file.path}: ${name}`);
+        }
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(parsed);
+    if (!server) assert(!source.includes("linkedom"), `linkedom code in client module: ${file.path}`);
   }
+  sizes.ssr = measure(new Uint8Array(await Bun.file(join(fixture.installed, "dist/ssr/index.js")).arrayBuffer()));
+  console.log(`SSR entry: ${sizes.ssr.raw} bytes raw, ${sizes.ssr.gzip} gzip (shared mtrl modules/CSS excluded)`);
+  // FLO-364: linkedom and its dependencies plus the renderer, measured at
+  // 306,706 B raw / 111,726 B gzip, including dependency license notices.
+  // Client budgets below are unchanged.
+  assert(sizes.ssr.raw < 315_000, "SSR entry exceeds 315,000 raw bytes");
+  assert(sizes.ssr.gzip < 114_000, "SSR entry exceeds 114,000 gzip bytes");
   // What an install downloads. Raised from 900,000 on 2026-09-29 (Dr Jones) for the
   // overlay elements of wave 2; 830,286 measured after wave 1 (#245). Raised to
   // 1,010,000 for the 35 public Material shapes (FLO-346): 994,762 to 1,000,150,
@@ -51,13 +77,16 @@ try {
   // Raised to 900,000 for the element CSS as .css files (FLO-365), which SSR's <link>
   // styles need: 876,697 on next to 886,448 with them, Node 22 / npm 10, keeping the
   // headroom it had.
-  assert(pack.size < 900_000, "npm tarball exceeds 900,000 bytes");
+  // Raised for the bundled server-only SSR entry (FLO-364): 888,897 to 1,002,195,
+  // measured with Node 22.23.3 / npm 10.9.9, preserving the previous headroom.
+  assert(pack.size < 1_015_000, "npm tarball exceeds 1,015,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
   // ESM 23%, CSS 18%, SCSS sources 11%, the CommonJS bundle 8%, which 1.0.0 drops (FLO-358).
   // Lowered to 5,600,000 for that: 5,660,400 to 5,249,221, keeping the headroom it had.
-  assert(pack.unpackedSize < 5_600_000, "Unpacked package exceeds 5,600,000 bytes");
+  // FLO-364: 5,567,538 to 5,875,963 with SSR, same packer, preserving headroom.
+  assert(pack.unpackedSize < 5_910_000, "Unpacked package exceeds 5,910,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
   const smoke = join(temporary, "smoke.mjs");
