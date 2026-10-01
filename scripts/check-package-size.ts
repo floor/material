@@ -172,7 +172,9 @@ try {
     // PageDown by a tenth of the steps, arrows that follow the track as drawn, and an
     // axis that can start on the right.
     // Raised from 12,900 for FLO-331: the track's corner reads its shape token (12,983 measured).
-    { name: "slider", code: "export { createSlider } from 'mtrl';", gzip: 13090 },
+    // Raised from 13,090 for FLO-369: the track, stops and inset icon are a percentage
+    // of the value, so the first paint does not wait on a measurement (13,356 measured).
+    { name: "slider", code: "export { createSlider } from 'mtrl';", gzip: 13460 },
     { name: "navigation-rail", code: "export { createNavigationRail } from 'mtrl';", gzip: 7000 },
     { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 6500 },
     // FLO-301 (the required asterisk, the live error, the trailing icon button): 8,456 to
@@ -223,7 +225,9 @@ try {
     // The FAB menu (FLO-306): 51,494 to 52,688, measured against 1bd8343.
     // The date picker's range bleed: 52,705 to 52,916, measured against d741e93.
     // The text field's trailing icon button and asterisk (FLO-301): 52,916 to 53,072 against 7cd57a6.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 53200 },
+    // The tabs indicator anchors in the stylesheet, and the slider visual is a size
+    // container so its ticks can use cqw/cqh (FLO-369): measured 53,386.
+    { name: "full-css", code: "import 'mtrl/styles';", gzip: 53490 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);

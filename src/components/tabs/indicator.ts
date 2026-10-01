@@ -79,13 +79,28 @@ export const createTabIndicator = (config: TabIndicatorConfig = {}): TabIndicato
   element.className = `${prefix}-tabs__indicator`;
   // The stylesheet moves the indicator on the default spatial spring. An app that
   // passes a duration or an easing gets that instead.
+  // null when the document has no CSS API (a server): the stylesheet anchor is
+  // what both sides record, and nothing is measured. false is an older browser,
+  // which still measures. FLO-369.
+  const anchorSupport = (): boolean | null => {
+    const host = (element.ownerDocument.defaultView ?? globalThis) as { CSS?: { supports?: (property: string, value: string) => boolean } };
+    const supports = host.CSS?.supports;
+    return typeof supports === 'function' ? supports('anchor-name', 'none') : null;
+  };
+  const anchor = anchorSupport();
+  const strategy = mergedConfig.widthStrategy ?? 'auto';
   const custom = mergedConfig.animationDuration !== undefined || mergedConfig.animationTiming !== undefined;
   const motion = (property: string): string =>
     `${property} ${mergedConfig.animationDuration ?? 250}ms ${mergedConfig.animationTiming ?? 'cubic-bezier(0.4, 0, 0.2, 1)'}`;
-  const transition = custom ? `${motion('transform')}, ${motion('width')}` : '';
+  // Anchors slide `left`. Older browsers slide `transform`.
+  const transition = custom ? `${motion(anchor === false ? 'transform' : 'left')}, ${motion('width')}` : '';
   element.style.transition = transition;
-  element.style.width = `${mergedConfig.fixedWidth}px`; // Set initial width
   element.style.height = `${mergedConfig.height ?? (mergedConfig.variant === 'secondary' ? SECONDARY_HEIGHT : PRIMARY_HEIGHT)}px`;
+  if (anchor === false) element.style.width = `${mergedConfig.fixedWidth}px`;
+  if (strategy !== 'auto') element.classList.add(`${prefix}-tabs__indicator--${strategy}`);
+  if (strategy === 'fixed' || strategy === 'content') {
+    element.style.setProperty(`--${prefix}-tabs-indicator-width`, `${mergedConfig.fixedWidth || 40}px`);
+  }
   
   // Set initial visibility
   if (mergedConfig.visible === false) {
@@ -214,9 +229,21 @@ export const createTabIndicator = (config: TabIndicatorConfig = {}): TabIndicato
       console.error('Invalid tab or tab has no element');
       return;
     }
-    
+
     // Store current tab for later updates
     currentTab = tab;
+
+    // The stylesheet anchors the indicator to the active label or tab and
+    // springs `left`. A resize has already moved that anchor, so an immediate
+    // update snaps instead of gliding. Nothing here is measured.
+    if (anchor !== false) {
+      if (anchor === true && immediate) {
+        element.style.transition = 'none';
+        void element.offsetHeight;
+        element.style.transition = transition;
+      }
+      return;
+    }
     
     // Calculate indicator width based on strategy and variant
     const width = calculateWidth(tab);

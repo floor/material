@@ -394,6 +394,9 @@ export const withIndicator =
       }
     };
 
+    // The synchronous call is what a server records. The timeout still covers
+    // the first layout in a browser; measurement only runs when anchors are absent.
+    updateIndicator();
     setTimeout(updateIndicator, 50);
 
     if (scrollContainer) {
