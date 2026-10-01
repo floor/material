@@ -23,6 +23,28 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - **`$mtrl-sys-shape` is removed from `abstract/theme` (FLO-345).** Nothing read it. Use
   `v.shape(<step>)`.
 
+### Deprecated
+
+- **137 internal names on the package root (FLO-351).** Every root export is public API, and the
+  root re-exported all of `mtrl/core`: the composition core, DOM and timing helpers, the store,
+  the progress indicator's canvas code. In 1.0.0 the root keeps the components, `configureHTML`,
+  the theme helpers (`schemeToTokens`, `THEME_ROLES`) and the global defaults; everything else
+  leaves it. Each name is the same export at its subpath, so only the import changes, and the
+  deprecation shows in your editor on the root import alone. The
+  [migration table](https://github.com/floor/mtrl/blob/main/scripts/fixtures/root-exports.md)
+  lists every name and its path; the largest group is the composition core:
+
+  ```ts
+  import { pipe, createBase, withEvents } from 'mtrl';            // deprecated
+  import { pipe, createBase, withEvents } from 'mtrl/core/compose';
+  ```
+
+  **The subpaths are ESM-only, and 1.0.0 is ESM-only.** CommonJS (`require('mtrl')`) reaches only
+  the root, so on 0.10.x a CommonJS app keeps its root imports and moves to ESM for 1.0.0.
+
+  No runtime change: the root's runtime exports and the bundles are the same. The root's export
+  list is now pinned (`bun run root-exports:check`).
+
 ## [0.10.3] - 2026-10-01
 
 Text field fixes: a disabled, empty field no longer shows its placeholder over the label, and
