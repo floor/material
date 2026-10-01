@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 // scripts/bench-ssr.ts
-// Build first. CSS loading and fixture parsing are outside the measured calls.
+// Source CSS loading and fixture parsing are outside the measured calls.
 import { parseHTML } from "linkedom";
-import "../dist/elements/css/index.js";
-import { renderElement } from "../dist/ssr/index.js";
+import "./fixtures/ssr-css";
+import { renderElement } from "../src/ssr/index.ts";
 import { cases } from "./fixtures/preupgrade-cases";
 
 const fixtures = cases.filter(c => c.variant === "default").map(fixture => {

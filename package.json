@@ -138,6 +138,7 @@
     "drawer:check": "bun run scripts/check-drawer.ts",
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "core:check": "bun run scripts/check-core.ts",
+    "ssr-security:check": "bun run scripts/check-ssr-security.ts",
     "ssr-parity:check": "bun run scripts/check-ssr-parity.ts",
     "elements:check": "bun run scripts/check-elements.ts",
     "elements-css:check": "bun run scripts/check-elements-css.ts",
