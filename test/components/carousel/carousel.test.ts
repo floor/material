@@ -1,6 +1,6 @@
 // test/components/carousel/carousel.test.ts
 import { corner } from '../../utils/corner';
-import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach, mock, spyOn } from 'bun:test';
 import { JSDOM } from 'jsdom';
 
 let dom: JSDOM;
@@ -247,5 +247,309 @@ describe('carousel event contract', () => {
     root.dispatchEvent(new dom.window.FocusEvent('blur'));
     carousel.next();
     expect(notify).not.toHaveBeenCalled();
+  });
+});
+
+
+// FLO-395: each negative case includes a positive wheel control, so the
+// original implementation cannot pass simply by ignoring every wheel event.
+describe('carousel opt-in wheel', () => {
+  // Target-selection tests use reduced motion so navigation is synchronous;
+  // animation continuity and cancellation have a controlled frame clock below.
+  beforeEach(() => {
+    Object.defineProperty(dom.window, 'matchMedia', { value: () => ({ matches: true }), configurable: true });
+  });
+  const setupWheel = (config: Parameters<typeof createCarousel>[0] = {}) => {
+    const carousel = createCarousel({ slides, ...config });
+    const scroller = sized(carousel, 600);
+    carousel.addSlide({ title: 'Last' });
+    const scroll = mock((options: ScrollToOptions) => {
+      if (options.left !== undefined) scroller.scrollLeft = options.left;
+      if (options.top !== undefined) scroller.scrollTop = options.top;
+    });
+    Object.defineProperty(scroller, 'scrollTo', { value: scroll, configurable: true });
+    let time = 1000;
+    const wheel = (options: WheelEventInit = {}, elapsed = 16) => {
+      time += elapsed;
+      const event = new dom.window.WheelEvent('wheel', { deltaY: 40, bubbles: true, cancelable: true, ...options });
+      Object.defineProperty(event, 'timeStamp', { value: time });
+      scroller.dispatchEvent(event);
+      return event;
+    };
+    const snaps = Array.from(carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__snap'), el => parseFloat(el.style.left));
+    return { carousel, scroller, scroll, wheel, snaps };
+  };
+
+  const animated = (variant: 'multi-browse' | 'uncontained' | 'hero' | 'hero-center' = 'hero') => {
+    Object.defineProperty(dom.window, 'matchMedia', { value: () => ({ matches: false }), configurable: true });
+    const callbacks = new Map<number, FrameRequestCallback>();
+    let id = 0;
+    let now = performance.now();
+    spyOn(dom.window, 'requestAnimationFrame').mockImplementation(callback => {
+      callbacks.set(++id, callback);
+      return id;
+    });
+    spyOn(dom.window, 'cancelAnimationFrame').mockImplementation(frame => { callbacks.delete(frame); });
+    const fixture = setupWheel({ wheel: true, variant, slides: Array.from({ length: 20 }, (_, i) => ({ title: String(i) })) });
+    fixture.scroller.style.setProperty('scroll-snap-type', 'x mandatory', 'important');
+    const step = () => {
+      now += 1000 / 60;
+      const pending = [...callbacks.values()];
+      callbacks.clear();
+      pending.forEach(callback => callback(now));
+    };
+    return { ...fixture, callbacks, step };
+  };
+
+  for (const variant of ['multi-browse', 'uncontained', 'hero', 'hero-center'] as const) {
+    test(`${variant} preserves velocity on retarget and restores snap only at rest`, () => {
+      const { carousel, scroller, wheel, snaps, callbacks, step } = animated(variant);
+      try {
+        wheel({ deltaY: 100 });
+        expect(scroller.style.scrollSnapType).toBe('none');
+        for (let i = 0; i < 8; i++) step();
+        const before = scroller.scrollLeft;
+        step();
+        const velocity = scroller.scrollLeft - before;
+        expect(velocity).toBeGreaterThan(0);
+        wheel({ deltaY: 1500 });
+        const retargeted = scroller.scrollLeft;
+        step();
+        expect(scroller.scrollLeft - retargeted).toBeGreaterThanOrEqual(velocity * 0.7);
+        expect(callbacks.size).toBe(1);
+        let previous = scroller.scrollLeft;
+        for (let i = 0; i < 150 && callbacks.size; i++) {
+          expect(scroller.style.scrollSnapType).toBe('none');
+          step();
+          expect(scroller.scrollLeft).toBeGreaterThanOrEqual(previous);
+          previous = scroller.scrollLeft;
+        }
+        expect(callbacks.size).toBe(0);
+        expect(scroller.scrollLeft).toBe(snaps.find(position => position >= 1600));
+        expect(scroller.style.scrollSnapType).toBe('x mandatory');
+        expect(scroller.style.getPropertyPriority('scroll-snap-type')).toBe('important');
+        step();
+        expect(scroller.scrollLeft).toBe(previous);
+      } finally { carousel.destroy(); }
+    });
+  }
+
+  test('resting does not turn a continuing small momentum tail into a new gesture', () => {
+    const { carousel, scroller, wheel, snaps, callbacks, step } = animated();
+    try {
+      wheel({ deltaY: 100 });
+      expect(scroller.style.scrollSnapType).toBe('none');
+      // Keep events inside the quiet period while the first target comes to rest.
+      for (let i = 0; i < 100; i++) {
+        step();
+        wheel({ deltaY: 1 });
+      }
+      expect(callbacks.size).toBe(0);
+      expect(carousel.getCurrentSlide()).toBe(1);
+      expect(scroller.scrollLeft).toBe(snaps[1]);
+    } finally { carousel.destroy(); }
+  });
+
+  test('a fresh notch after quiet lands without overshooting a nearer target', () => {
+    const { carousel, scroller, wheel, snaps, callbacks, step } = animated();
+    try {
+      wheel({ deltaY: 3000 });
+      for (let i = 0; i < 12; i++) step();
+      expect(scroller.style.scrollSnapType).toBe('none');
+      const position = scroller.scrollLeft;
+      expect(position).toBeGreaterThan(0);
+      wheel({ deltaY: 1 }, 121);
+      const target = snaps.find(snap => snap > position)!;
+      for (let i = 0; i < 150 && callbacks.size; i++) {
+        step();
+        expect(scroller.scrollLeft).toBeGreaterThanOrEqual(position);
+        expect(scroller.scrollLeft).toBeLessThanOrEqual(target);
+      }
+      expect(scroller.scrollLeft).toBe(target);
+      expect(callbacks.size).toBe(0);
+    } finally { carousel.destroy(); }
+  });
+
+  for (const interruption of ['pointerdown', 'touchstart', 'keydown', 'disable', 'destroy', 'navigation', 'rebuild']) {
+    test(`${interruption} cancels an active wheel frame and restores snap`, () => {
+      const { carousel, scroller, wheel, callbacks, step } = animated();
+      try {
+        wheel();
+        step();
+        step();
+        expect(callbacks.size).toBe(1);
+        const position = scroller.scrollLeft;
+        expect(position).toBeGreaterThan(0);
+        if (interruption === 'disable') carousel.setWheel(false);
+        else if (interruption === 'destroy') carousel.destroy();
+        else if (interruption === 'navigation') carousel.goTo(3);
+        else if (interruption === 'rebuild') carousel.addSlide({ title: 'New slide' });
+        else scroller.dispatchEvent(new dom.window.Event(interruption));
+        expect(callbacks.size).toBe(0);
+        expect(scroller.style.scrollSnapType).toBe('x mandatory');
+        const stopped = scroller.scrollLeft;
+        if (!['navigation', 'rebuild'].includes(interruption)) expect(stopped).toBe(position);
+        step();
+        expect(scroller.scrollLeft).toBe(stopped);
+      } finally { carousel.destroy(); }
+    });
+  }
+
+  test('wheel is off by default and can be enabled in place', () => {
+    const { carousel, scroller, scroll, wheel, snaps } = setupWheel();
+    try {
+      expect(wheel().defaultPrevented).toBe(false);
+      expect(scroll).not.toHaveBeenCalled();
+      expect(scroller.scrollLeft).toBe(0);
+      expect(carousel.setWheel(true)).toBe(carousel);
+      expect(wheel().defaultPrevented).toBe(true);
+      expect(scroller.scrollLeft).toBe(snaps[1]);
+    } finally { carousel.destroy(); }
+  });
+
+  for (const variant of ['multi-browse', 'uncontained', 'hero', 'hero-center'] as const) {
+    test(`${variant} accumulates normalized momentum and advances only to directional snap points`, () => {
+      const { carousel, scroller, scroll, wheel, snaps } = setupWheel({
+        wheel: true, variant, slides: Array.from({ length: 16 }, (_, i) => ({ title: String(i) })),
+      });
+      scroller.style.lineHeight = '20px';
+      // Model an in-flight browser scroll: issuing a target does not teleport there.
+      scroll.mockImplementation(() => {});
+      try {
+        expect(wheel({ deltaY: 100 }).defaultPrevented).toBe(true);
+        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[1], behavior: 'auto' });
+        wheel({ deltaY: 2, deltaMode: 1 });
+        expect(scroll).toHaveBeenCalledTimes(1);
+        wheel({ deltaY: 2, deltaMode: 2 });
+        const target = snaps.find(position => position >= 1340)!;
+        expect(scroll).toHaveBeenLastCalledWith({ left: target, behavior: 'auto' });
+        expect(carousel.element.dataset.settling).toBeUndefined();
+        wheel({ deltaY: 1 });
+        expect(scroll).toHaveBeenCalledTimes(2);
+        // Reverse immediately from the physical position, not the old forward target.
+        scroller.scrollLeft = snaps[2]!;
+        wheel({ deltaY: -100 });
+        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[1], behavior: 'auto' });
+        wheel({ deltaY: -2, deltaMode: 2 });
+        expect(scroll).toHaveBeenLastCalledWith({ left: 0, behavior: 'auto' });
+        // Quiet starts a fresh gesture even while the previous glide is unfinished.
+        scroller.scrollLeft = snaps[4]!;
+        wheel({ deltaY: -100 }, 121);
+        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[3], behavior: 'auto' });
+      } finally { carousel.destroy(); }
+    });
+
+    test(`${variant} one notch advances one item and a 30-event decay carries several`, () => {
+      const { carousel, scroller, scroll, wheel, snaps } = setupWheel({
+        wheel: true, variant, slides: Array.from({ length: 20 }, (_, i) => ({ title: String(i) })),
+      });
+      scroll.mockImplementation(() => {});
+      try {
+        wheel({ deltaY: 100 });
+        expect(carousel.getCurrentSlide()).toBe(1);
+        expect(scroll).toHaveBeenCalledTimes(1);
+        scroller.scrollLeft = snaps[1]!;
+        scroll.mockClear();
+        let total = 0;
+        for (let i = 0; i < 30; i++) {
+          const deltaY = 300 * 0.9 ** i;
+          total += deltaY;
+          wheel({ deltaY }, i === 0 ? 121 : 16);
+        }
+        const targets = scroll.mock.calls.map(([options]) => options.left!);
+        expect(targets.length).toBeGreaterThan(2);
+        expect(targets.every((target, i) => i === 0 || target > targets[i - 1]!)).toBe(true);
+        expect(targets.every(target => snaps.includes(target))).toBe(true);
+        expect(targets.at(-1)).toBe(snaps.find(position => position >= snaps[1]! + total));
+        // The same rule applies backward, clamping without overshoot or trapping the edge.
+        wheel({ deltaY: -100000 });
+        expect(scroll).toHaveBeenLastCalledWith({ left: 0, behavior: 'auto' });
+        scroller.scrollLeft = 0;
+        expect(wheel({ deltaY: -100 }).defaultPrevented).toBe(false);
+      } finally { carousel.destroy(); }
+    });
+  }
+
+  test('last slide passes wheel down through and start passes wheel up through', () => {
+    const { carousel, wheel, scroll } = setupWheel({ wheel: true, variant: 'hero' });
+    try {
+      expect(wheel({ deltaY: -40 }).defaultPrevented).toBe(false);
+      // A distinct gesture after the edge event.
+      carousel.setWheel(true);
+      expect(wheel().defaultPrevented).toBe(true);
+      carousel.goTo(4);
+      scroll.mockClear();
+      expect(wheel().defaultPrevented).toBe(false);
+      expect(scroll).not.toHaveBeenCalled();
+    } finally { carousel.destroy(); }
+  });
+
+  test('horizontal/equal deltas and ctrl zoom are ignored while enabled', () => {
+    const { carousel, wheel, scroll } = setupWheel({ wheel: true });
+    try {
+      for (const options of [{ deltaX: 50 }, { deltaX: -40 }, { ctrlKey: true }]) {
+        expect(wheel(options).defaultPrevented).toBe(false);
+      }
+      expect(scroll).not.toHaveBeenCalled();
+      expect(wheel().defaultPrevented).toBe(true);
+      expect(scroll).toHaveBeenCalledTimes(1);
+    } finally { carousel.destroy(); }
+  });
+
+  test('turning wheel off removes only the opt-in listener; destroy removes it too', () => {
+    const { carousel, scroller, scroll, wheel } = setupWheel();
+    const add = spyOn(scroller, 'addEventListener');
+    const remove = spyOn(scroller, 'removeEventListener');
+    try {
+      carousel.setWheel(true);
+      const registration = add.mock.calls.find(([type]) => type === 'wheel')!;
+      expect(registration[2]).toEqual({ passive: false });
+      expect(wheel().defaultPrevented).toBe(true);
+      carousel.setWheel(false);
+      expect(remove).toHaveBeenCalledWith('wheel', registration[1]);
+      scroll.mockClear();
+      expect(wheel().defaultPrevented).toBe(false);
+      expect(scroll).not.toHaveBeenCalled();
+      // The existing passive listener still releases a programmatic target.
+      carousel.goTo(0);
+      wheel();
+      scroller.scrollLeft = 10000;
+      scroller.dispatchEvent(new dom.window.Event('scroll'));
+      expect(carousel.getCurrentSlide()).toBe(4);
+      carousel.setWheel(true);
+      remove.mockClear();
+      carousel.destroy();
+      expect(remove).toHaveBeenCalledWith('wheel', registration[1]);
+      scroll.mockClear();
+      expect(wheel({ deltaY: -40 }).defaultPrevented).toBe(false);
+      expect(scroll).not.toHaveBeenCalled();
+    } finally { add.mockRestore(); remove.mockRestore(); carousel.destroy(); }
+  });
+
+  test('dragging ignores wheel input and release restores it', () => {
+    const { carousel, scroller, scroll, wheel } = setupWheel({ wheel: true });
+    scroller.setPointerCapture = () => {};
+    scroller.hasPointerCapture = () => false;
+    const down = new dom.window.MouseEvent('pointerdown', { button: 0 });
+    Object.defineProperty(down, 'pointerType', { value: 'mouse' });
+    try {
+      scroller.dispatchEvent(down);
+      expect(wheel().defaultPrevented).toBe(false);
+      expect(scroll).not.toHaveBeenCalled();
+      scroller.dispatchEvent(new dom.window.MouseEvent('pointerup'));
+      expect(wheel().defaultPrevented).toBe(true);
+    } finally { carousel.destroy(); }
+  });
+
+  test('reduced motion uses auto navigation; vertical full-screen keeps native wheel', () => {
+    Object.defineProperty(dom.window, 'matchMedia', { value: () => ({ matches: true }), configurable: true });
+    const hero = setupWheel({ wheel: true, variant: 'hero' });
+    const vertical = setupWheel({ wheel: true, variant: 'full-screen' });
+    try {
+      expect(hero.wheel().defaultPrevented).toBe(true);
+      expect(hero.scroll).toHaveBeenLastCalledWith({ left: expect.any(Number), behavior: 'auto' });
+      expect(vertical.wheel().defaultPrevented).toBe(false);
+      expect(vertical.scroll).not.toHaveBeenCalled();
+    } finally { hero.carousel.destroy(); vertical.carousel.destroy(); }
   });
 });

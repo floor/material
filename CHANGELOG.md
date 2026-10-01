@@ -18,6 +18,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   standard colors and success, warning and info roles stay unchanged. The `highcontrast`
   theme is a theme in its own right and supports all three contrast settings.
 
+- **Carousel: opt-in mouse wheel scrolling (FLO-395).** Set `wheel: true`, call
+  `setWheel(true)`, or add `<m-carousel wheel>` (also toggleable after creation).
+  Horizontal layouts accumulate wheel momentum and preserve glide velocity to the snap
+  point at or beyond that distance, at least one item per notch. Targets advance
+  through whole items; 120 ms of quiet or a reversal starts a new gesture. Edges let
+  the page scroll, horizontal trackpad gestures and zoom stay native, and reduced
+  motion jumps straight to the target. Pointer, touch and keyboard input interrupt the
+  glide; CSS snap resumes at rest. Full-screen carousels keep native vertical scrolling.
+
 - **Every release gets its GitHub Release.** The release workflow published to npm only, so
   GitHub showed 0.9.8 as the latest release. Once npm has the version, it now creates the
   release for the tag from the version's CHANGELOG section, with links to npm, md3.io and this

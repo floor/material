@@ -175,7 +175,9 @@ try {
     // The FAB menu (FLO-306): 125,245 to 127,714, measured against 1bd8343.
     // The Material shapes' geometry in the loading indicator (FLO-346): 127,894 to 128,195, measured against 5b314c5.
     // The text field's asterisk, live error and trailing button (FLO-301): 128,187 to 128,802, against 7cd57a6.
-    { name: "all-js", code: "export * from 'mtrl';", gzip: 128900 },
+    // The carousel's opt-in wheel scrolling with momentum (FLO-395): 128,896 to 129,565 against
+    // 2ef11f0, Node 22 / npm 10.
+    { name: "all-js", code: "export * from 'mtrl';", gzip: 129700 },
     // FLO-406 contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 8,069 -> 7,542 gzip bytes (same packer).
     { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 7700 },
