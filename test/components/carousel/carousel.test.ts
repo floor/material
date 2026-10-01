@@ -254,6 +254,11 @@ describe('carousel event contract', () => {
 // FLO-395: each negative case includes a positive wheel control, so the
 // original implementation cannot pass simply by ignoring every wheel event.
 describe('carousel opt-in wheel', () => {
+  // Target-selection tests use reduced motion so navigation is synchronous;
+  // animation continuity and cancellation have a controlled frame clock below.
+  beforeEach(() => {
+    Object.defineProperty(dom.window, 'matchMedia', { value: () => ({ matches: true }), configurable: true });
+  });
   const setupWheel = (config: Parameters<typeof createCarousel>[0] = {}) => {
     const carousel = createCarousel({ slides, ...config });
     const scroller = sized(carousel, 600);
@@ -274,6 +279,121 @@ describe('carousel opt-in wheel', () => {
     const snaps = Array.from(carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__snap'), el => parseFloat(el.style.left));
     return { carousel, scroller, scroll, wheel, snaps };
   };
+
+  const animated = (variant: 'multi-browse' | 'uncontained' | 'hero' | 'hero-center' = 'hero') => {
+    Object.defineProperty(dom.window, 'matchMedia', { value: () => ({ matches: false }), configurable: true });
+    const callbacks = new Map<number, FrameRequestCallback>();
+    let id = 0;
+    let now = performance.now();
+    spyOn(dom.window, 'requestAnimationFrame').mockImplementation(callback => {
+      callbacks.set(++id, callback);
+      return id;
+    });
+    spyOn(dom.window, 'cancelAnimationFrame').mockImplementation(frame => { callbacks.delete(frame); });
+    const fixture = setupWheel({ wheel: true, variant, slides: Array.from({ length: 20 }, (_, i) => ({ title: String(i) })) });
+    fixture.scroller.style.setProperty('scroll-snap-type', 'x mandatory', 'important');
+    const step = () => {
+      now += 1000 / 60;
+      const pending = [...callbacks.values()];
+      callbacks.clear();
+      pending.forEach(callback => callback(now));
+    };
+    return { ...fixture, callbacks, step };
+  };
+
+  for (const variant of ['multi-browse', 'uncontained', 'hero', 'hero-center'] as const) {
+    test(`${variant} preserves velocity on retarget and restores snap only at rest`, () => {
+      const { carousel, scroller, wheel, snaps, callbacks, step } = animated(variant);
+      try {
+        wheel({ deltaY: 100 });
+        expect(scroller.style.scrollSnapType).toBe('none');
+        for (let i = 0; i < 8; i++) step();
+        const before = scroller.scrollLeft;
+        step();
+        const velocity = scroller.scrollLeft - before;
+        expect(velocity).toBeGreaterThan(0);
+        wheel({ deltaY: 1500 });
+        const retargeted = scroller.scrollLeft;
+        step();
+        expect(scroller.scrollLeft - retargeted).toBeGreaterThanOrEqual(velocity * 0.7);
+        expect(callbacks.size).toBe(1);
+        let previous = scroller.scrollLeft;
+        for (let i = 0; i < 150 && callbacks.size; i++) {
+          expect(scroller.style.scrollSnapType).toBe('none');
+          step();
+          expect(scroller.scrollLeft).toBeGreaterThanOrEqual(previous);
+          previous = scroller.scrollLeft;
+        }
+        expect(callbacks.size).toBe(0);
+        expect(scroller.scrollLeft).toBe(snaps.find(position => position >= 1600));
+        expect(scroller.style.scrollSnapType).toBe('x mandatory');
+        expect(scroller.style.getPropertyPriority('scroll-snap-type')).toBe('important');
+        step();
+        expect(scroller.scrollLeft).toBe(previous);
+      } finally { carousel.destroy(); }
+    });
+  }
+
+  test('resting does not turn a continuing small momentum tail into a new gesture', () => {
+    const { carousel, scroller, wheel, snaps, callbacks, step } = animated();
+    try {
+      wheel({ deltaY: 100 });
+      expect(scroller.style.scrollSnapType).toBe('none');
+      // Keep events inside the quiet period while the first target comes to rest.
+      for (let i = 0; i < 100; i++) {
+        step();
+        wheel({ deltaY: 1 });
+      }
+      expect(callbacks.size).toBe(0);
+      expect(carousel.getCurrentSlide()).toBe(1);
+      expect(scroller.scrollLeft).toBe(snaps[1]);
+    } finally { carousel.destroy(); }
+  });
+
+  test('a fresh notch after quiet lands without overshooting a nearer target', () => {
+    const { carousel, scroller, wheel, snaps, callbacks, step } = animated();
+    try {
+      wheel({ deltaY: 3000 });
+      for (let i = 0; i < 12; i++) step();
+      expect(scroller.style.scrollSnapType).toBe('none');
+      const position = scroller.scrollLeft;
+      expect(position).toBeGreaterThan(0);
+      wheel({ deltaY: 1 }, 121);
+      const target = snaps.find(snap => snap > position)!;
+      for (let i = 0; i < 150 && callbacks.size; i++) {
+        step();
+        expect(scroller.scrollLeft).toBeGreaterThanOrEqual(position);
+        expect(scroller.scrollLeft).toBeLessThanOrEqual(target);
+      }
+      expect(scroller.scrollLeft).toBe(target);
+      expect(callbacks.size).toBe(0);
+    } finally { carousel.destroy(); }
+  });
+
+  for (const interruption of ['pointerdown', 'touchstart', 'keydown', 'disable', 'destroy', 'navigation', 'rebuild']) {
+    test(`${interruption} cancels an active wheel frame and restores snap`, () => {
+      const { carousel, scroller, wheel, callbacks, step } = animated();
+      try {
+        wheel();
+        step();
+        step();
+        expect(callbacks.size).toBe(1);
+        const position = scroller.scrollLeft;
+        expect(position).toBeGreaterThan(0);
+        if (interruption === 'disable') carousel.setWheel(false);
+        else if (interruption === 'destroy') carousel.destroy();
+        else if (interruption === 'navigation') carousel.goTo(3);
+        else if (interruption === 'rebuild') carousel.addSlide({ title: 'New slide' });
+        else scroller.dispatchEvent(new dom.window.Event(interruption));
+        expect(callbacks.size).toBe(0);
+        expect(scroller.style.scrollSnapType).toBe('x mandatory');
+        const stopped = scroller.scrollLeft;
+        if (!['navigation', 'rebuild'].includes(interruption)) expect(stopped).toBe(position);
+        step();
+        expect(scroller.scrollLeft).toBe(stopped);
+      } finally { carousel.destroy(); }
+    });
+  }
 
   test('wheel is off by default and can be enabled in place', () => {
     const { carousel, scroller, scroll, wheel, snaps } = setupWheel();
@@ -297,25 +417,25 @@ describe('carousel opt-in wheel', () => {
       scroll.mockImplementation(() => {});
       try {
         expect(wheel({ deltaY: 100 }).defaultPrevented).toBe(true);
-        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[1], behavior: 'smooth' });
+        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[1], behavior: 'auto' });
         wheel({ deltaY: 2, deltaMode: 1 });
         expect(scroll).toHaveBeenCalledTimes(1);
         wheel({ deltaY: 2, deltaMode: 2 });
         const target = snaps.find(position => position >= 1340)!;
-        expect(scroll).toHaveBeenLastCalledWith({ left: target, behavior: 'smooth' });
+        expect(scroll).toHaveBeenLastCalledWith({ left: target, behavior: 'auto' });
         expect(carousel.element.dataset.settling).toBeUndefined();
         wheel({ deltaY: 1 });
         expect(scroll).toHaveBeenCalledTimes(2);
         // Reverse immediately from the physical position, not the old forward target.
         scroller.scrollLeft = snaps[2]!;
         wheel({ deltaY: -100 });
-        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[1], behavior: 'smooth' });
+        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[1], behavior: 'auto' });
         wheel({ deltaY: -2, deltaMode: 2 });
-        expect(scroll).toHaveBeenLastCalledWith({ left: 0, behavior: 'smooth' });
+        expect(scroll).toHaveBeenLastCalledWith({ left: 0, behavior: 'auto' });
         // Quiet starts a fresh gesture even while the previous glide is unfinished.
         scroller.scrollLeft = snaps[4]!;
         wheel({ deltaY: -100 }, 121);
-        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[3], behavior: 'smooth' });
+        expect(scroll).toHaveBeenLastCalledWith({ left: snaps[3], behavior: 'auto' });
       } finally { carousel.destroy(); }
     });
 
@@ -343,7 +463,7 @@ describe('carousel opt-in wheel', () => {
         expect(targets.at(-1)).toBe(snaps.find(position => position >= snaps[1]! + total));
         // The same rule applies backward, clamping without overshoot or trapping the edge.
         wheel({ deltaY: -100000 });
-        expect(scroll).toHaveBeenLastCalledWith({ left: 0, behavior: 'smooth' });
+        expect(scroll).toHaveBeenLastCalledWith({ left: 0, behavior: 'auto' });
         scroller.scrollLeft = 0;
         expect(wheel({ deltaY: -100 }).defaultPrevented).toBe(false);
       } finally { carousel.destroy(); }
