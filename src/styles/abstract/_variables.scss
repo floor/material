@@ -214,13 +214,9 @@ $typescale: (
   )
 ) !default;
 
+// M3's shape scale, Compose ShapeTokens, and nothing else (FLO-345)
 $shape: (
   'none': 0,
-  // Deprecated: extra-tiny, tiny and pill are not on M3's scale and are
-  // removed in 1.0.0. Use a literal radius for extra-tiny and tiny; for pill,
-  // use full or half the component's height (FLO-345).
-  'extra-tiny': 1px,
-  'tiny': 2px,
   'extra-small': 4px,
   'small': 8px,
   'medium': 12px,
@@ -233,8 +229,7 @@ $shape: (
   // CornerValueExtraExtraLarge (FLO-345)
   'extra-large-increased': 32px,
   'extra-extra-large': 48px,
-  'full': 9999px,
-  'pill': 100px
+  'full': 9999px
 ) !default;
 
 $breakpoints: (
@@ -398,6 +393,10 @@ $spacing-scale: (
 // A corner as its token, the compiled value as the fallback (FLO-330): an app or
 // theme sets --{prefix}-sys-shape-corner-<size> (base/_tokens.scss declares them)
 @function shape($size) {
+  @if not map.has-key($shape, $size) {
+    @error "No shape step '#{$size}'. M3's scale: #{map.keys($shape)}. "
+      + "extra-tiny, tiny and pill were removed in 1.0.0: write a literal radius, or use full (FLO-345).";
+  }
   @return var(--#{$prefix}-sys-shape-corner-#{$size}, #{map.get($shape, $size)});
 }
 
