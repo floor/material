@@ -444,6 +444,13 @@ $text-field: (
   'height': 56px,
   'height-small': 48px,
   'height-large': 64px,
+  // The textarea's box (components/_textfield.scss, &--multiline). Not an M3
+  // measure: TextFieldDefaults.MinHeight is the 56px line above. The
+  // padding-top is the first line a sibling on the field's line aligns to.
+  'height-multiline': 100px,
+  'padding-top-multiline': 12px,
+  // Compact multiline keeps the compact field's 40px and pads the textarea 8px.
+  'padding-top-multiline-compact': 8px,
   'padding-horizontal': 16px,
   'padding-vertical': 16px,
   'border-radius': map.get($shape, 'extra-small'),
