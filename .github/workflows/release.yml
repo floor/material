@@ -3,6 +3,12 @@
 # npmjs.com for the package), no token is stored, and the release carries
 # provenance. A pre-release version (x.y.z-next.N) goes under the `next`
 # dist-tag, anything else under `latest`.
+# The step "A material release is 3.0.0 or later" refuses a `material` version
+# below 3: this same file is the `material` repository's release workflow, and
+# npm's trusted publisher cannot tell the two lines apart (it knows the
+# repository and this file's name, not the branch).
+# Never push this repository's version tags to floor/material: a pushed v* tag
+# starts a publish there.
 name: Release
 
 on:
@@ -39,6 +45,20 @@ jobs:
           if [ "$tag" != "$version" ]; then
             echo "tag v$tag does not match package.json version $version" >&2
             exit 1
+          fi
+
+      - name: A material release is 3.0.0 or later
+        run: |
+          name="$(node -p "require('./package.json').name")"
+          version="$(node -p "require('./package.json').version")"
+          if [ "$name" = "material" ]; then
+            case "$version" in
+              [3-9].*|[1-9][0-9]*.*) ;;
+              *)
+                echo "$name $version: a material release is 3.0.0 or later; the 1.x line is published from the v1 branch" >&2
+                exit 1
+                ;;
+            esac
           fi
 
       - run: bun install --frozen-lockfile
