@@ -5399,8 +5399,262 @@ try {
         if (!(Number(pressedRow?.opacity) > 0)) failures.push(`${where} Connected pressed opacity ${pressedRow?.opacity}`);
         await page.mouse.up();
 
-        assert.deepEqual(failures, [], `${where}: the state layer must take the row's expressive shape`);
+        assert.deepEqual(failures.slice(), [], `${where}: the state layer must take the row's expressive shape`);
         check(`list: ${where}, the state layer takes the row's expressive shape`);
+
+        // The press above clicked Connected, so it is selected. Clicking it
+        // again clears that and leaves the action focused without :focus-visible.
+        // Hovering it is then the hover shape, not the focused one.
+        await away();
+        await button(listName, "Connected").click();
+        await button(listName, "Connected").hover();
+        const clicked = (await read(listName)).find((row) => row.headline === "Connected");
+        if (clicked?.focusVisible) failures.push(`${where} Connected is focus-visible after a mouse click`);
+        if (clicked?.row !== "12px 12px 12px 12px" || clicked.layer !== clicked.row || clicked.action !== clicked.row) {
+          failures.push(`${where} Connected after a click then hover ${clicked?.row} action ${clicked?.action} layer ${clicked?.layer}`);
+        }
+        assert.deepEqual(failures, [], `${where}: a mouse click then a hover is 12px`);
+        check(`list: ${where}, a mouse click then a hover is 12px`);
+      }
+    }
+  }
+
+  // Runs, a single row, a trailing control, and square rows from the four properties.
+  {
+    const ZERO = "0px 0px 0px 0px";
+    const R12 = "12px 12px 12px 12px";
+    const R16 = "16px 16px 16px 16px";
+    const runsRest: Record<string, string> = {
+      Alpha: "16px 16px 4px 4px",
+      Bravo: "4px 4px 16px 16px",
+      Charlie: "16px 16px 16px 16px",
+      Delta: "16px 16px 4px 4px",
+      Echo: "4px 4px 16px 16px",
+    };
+    const runsMarkup = (dir: string): string => `<div dir="${dir}">
+      <m-list aria-label="Runs element ${dir}">
+        <m-list-item value="a">Alpha</m-list-item>
+        <m-list-item value="b">Bravo</m-list-item>
+        <m-list-item kind="divider"></m-list-item>
+        <m-list-item value="c">Charlie</m-list-item>
+        <m-list-item kind="subheader">Group</m-list-item>
+        <m-list-item value="d">Delta</m-list-item>
+        <m-list-item value="e" disabled>Echo</m-list-item>
+      </m-list>
+      <m-list aria-label="Solo element ${dir}"><m-list-item value="s">Solo</m-list-item></m-list>
+      <m-list aria-label="Ends element ${dir}">
+        <m-list-item value="f">First</m-list-item>
+        <m-list-item value="l">Last</m-list-item>
+      </m-list>
+      <m-list aria-label="Trail element ${dir}">
+        <m-list-item value="a">Alpha</m-list-item>
+        <m-list-item value="b">Bravo</m-list-item>
+        <m-list-item value="c">Charlie</m-list-item>
+      </m-list>
+      <m-list aria-label="Square element ${dir}">
+        <m-list-item value="1">One</m-list-item>
+        <m-list-item value="2">Two</m-list-item>
+        <m-list-item value="3">Three</m-list-item>
+      </m-list>
+      <m-list aria-label="Only element ${dir}"><m-list-item value="o">Only</m-list-item></m-list>
+    </div><section id="factory"></section>`;
+    type ShapeRow = { headline: string; row: string; action: string; layer: string; opacity: string; focusVisible: boolean };
+    const readRows = (listName: string): Promise<ShapeRow[]> => page.evaluate((listName) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`);
+      const root = (list?.shadowRoot ?? list) as ParentNode;
+      const four = (style: CSSStyleDeclaration): string => [
+        style.borderTopLeftRadius, style.borderTopRightRadius,
+        style.borderBottomRightRadius, style.borderBottomLeftRadius,
+      ].join(" ");
+      return [...root.querySelectorAll('[role="listitem"]')].map((row) => {
+        const action = row.querySelector("button") as HTMLElement;
+        const layer = getComputedStyle(action, "::before");
+        return {
+          headline: row.querySelector('[class*="headline"]')?.textContent ?? "",
+          row: four(getComputedStyle(row)),
+          action: four(getComputedStyle(action)),
+          layer: four(layer),
+          opacity: layer.opacity,
+          focusVisible: action.matches(":focus-visible"),
+        };
+      });
+    }, listName);
+    const rowOf = (rows: ShapeRow[], headline: string): ShapeRow | undefined => rows.find((row) => row.headline === headline);
+    const matches = (where: string, rows: ShapeRow[], want: Record<string, string>, failures: string[]): void => {
+      for (const [headline, radius] of Object.entries(want)) {
+        const row = rowOf(rows, headline);
+        if (!row) { failures.push(`${where}: missing ${headline}`); continue; }
+        if (row.row !== radius) failures.push(`${where} ${headline} row ${row.row} != ${radius}`);
+        if (row.action !== row.row) failures.push(`${where} ${headline} action ${row.action} != row ${row.row}`);
+        if (row.layer !== row.row) failures.push(`${where} ${headline} layer ${row.layer} != row ${row.row}`);
+      }
+    };
+    const park = (): Promise<void> => page.mouse.move(880, 680);
+    const named = (listName: string, item: string) =>
+      page.getByRole("list", { name: listName }).getByRole("button", { name: item, exact: true });
+    const focusNamed = async (listName: string, item: string): Promise<void> => {
+      await page.evaluate(() => {
+        const active = document.activeElement as HTMLElement | null;
+        (active?.shadowRoot?.activeElement as HTMLElement | null)?.blur();
+        active?.blur();
+      });
+      for (let i = 0; i < 16; i++) {
+        await page.keyboard.press("Tab");
+        const hit = await page.evaluate(({ listName, item }) => {
+          const list = document.querySelector(`[aria-label="${listName}"]`);
+          const light = document.activeElement as HTMLElement | null;
+          const button = (list?.shadowRoot?.activeElement ?? (list?.contains(light) ? light : null)) as HTMLElement | null;
+          const headline = button?.closest('[role="listitem"]')?.querySelector('[class*="headline"]')?.textContent;
+          const name = button?.getAttribute("aria-label") ?? button?.textContent;
+          return button?.matches(":focus-visible") === true && (headline === item || name === item);
+        }, { listName, item });
+        if (hit) return;
+      }
+      throw new Error(`no focus-visible on ${listName} / ${item}`);
+    };
+    const zeroList = (listName: string): Promise<void> => page.evaluate((listName) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`) as HTMLElement;
+      const root = (list.classList.contains("mtrl-list") ? list : list.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement | null;
+      if (!root) throw new Error(`no list root for ${listName}`);
+      for (const name of ["--mtrl-list-item-shape", "--mtrl-list-item-shape-outer", "--mtrl-list-item-shape-hover", "--mtrl-list-item-shape-active"]) {
+        root.style.setProperty(name, "0");
+      }
+    }, listName);
+
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const kind of ["element", "factory"] as const) {
+        const where = `${kind} ${dir}`;
+        const runs = `Runs ${kind} ${dir}`;
+        const solo = `Solo ${kind} ${dir}`;
+        const ends = `Ends ${kind} ${dir}`;
+        const trail = `Trail ${kind} ${dir}`;
+        const square = `Square ${kind} ${dir}`;
+        const only = `Only ${kind} ${dir}`;
+        await fresh(page, runsMarkup(dir));
+        if (kind === "factory") {
+          await page.evaluate((dir) => {
+            const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+            const host = document.getElementById("factory") as HTMLElement;
+            const add = (ariaLabel: string, items: object[]): void => {
+              host.append(w.mtrl.createList({ ariaLabel, trackSelection: true, items }).element);
+            };
+            add(`Runs factory ${dir}`, [
+              { id: "a", headline: "Alpha" },
+              { id: "b", headline: "Bravo" },
+              { kind: "divider" },
+              { id: "c", headline: "Charlie" },
+              { kind: "subheader", headline: "Group" },
+              { id: "d", headline: "Delta" },
+              { id: "e", headline: "Echo", disabled: true },
+            ]);
+            add(`Solo factory ${dir}`, [{ id: "s", headline: "Solo" }]);
+            add(`Ends factory ${dir}`, [{ id: "f", headline: "First" }, { id: "l", headline: "Last" }]);
+            const sw = document.createElement("button");
+            sw.type = "button";
+            sw.textContent = "Switch";
+            add(`Trail factory ${dir}`, [
+              { id: "a", headline: "Alpha" },
+              { id: "b", headline: "Bravo", trailing: { type: "control", content: sw } },
+              { id: "c", headline: "Charlie" },
+            ]);
+            add(`Square factory ${dir}`, [
+              { id: "1", headline: "One" },
+              { id: "2", headline: "Two" },
+              { id: "3", headline: "Three" },
+            ]);
+            add(`Only factory ${dir}`, [{ id: "o", headline: "Only" }]);
+            document.querySelector(`[aria-label="Runs element ${dir}"]`)?.closest("div")?.remove();
+          }, dir);
+          await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+        } else {
+          await page.evaluate((dir) => {
+            const list = document.querySelector(`[aria-label="Trail element ${dir}"]`);
+            const bravo = [...(list?.shadowRoot?.querySelectorAll('[role="listitem"]') ?? [])]
+              .find((row) => row.querySelector('[class*="headline"]')?.textContent === "Bravo");
+            const sw = document.createElement("button");
+            sw.type = "button";
+            sw.textContent = "Switch";
+            bravo?.append(sw);
+          }, dir);
+        }
+        const failures: string[] = [];
+        await park();
+        matches(where, await readRows(runs), runsRest, failures);
+        matches(where, await readRows(solo), { Solo: R16 }, failures);
+        await named(runs, "Alpha").hover();
+        matches(where, await readRows(runs), { ...runsRest, Alpha: R12 }, failures);
+        await park();
+        // A disabled action is not the hit target (the headline is), so the pointer
+        // moves onto the row itself. The row stays at rest: hover does not apply.
+        const echoBox = await page.evaluate((listName) => {
+          const list = document.querySelector(`[aria-label="${listName}"]`);
+          const root = (list?.shadowRoot ?? list) as ParentNode;
+          const row = [...root.querySelectorAll('[role="listitem"]')].find((item) => item.querySelector('[class*="headline"]')?.textContent === "Echo");
+          const box = row?.getBoundingClientRect();
+          return box ? { x: box.x, y: box.y, width: box.width, height: box.height } : null;
+        }, runs);
+        if (!echoBox) throw new Error(`no box for ${runs} / Echo`);
+        await page.mouse.move(echoBox.x + echoBox.width / 2, echoBox.y + echoBox.height / 2);
+        matches(where, await readRows(runs), runsRest, failures);
+        const echo = rowOf(await readRows(runs), "Echo");
+        if (echo && Number(echo.opacity) !== 0) failures.push(`${where} Echo disabled hover opacity ${echo.opacity}`);
+        await park();
+        await named(ends, "First").hover();
+        matches(where, await readRows(ends), { First: R12, Last: "4px 4px 16px 16px" }, failures);
+        await park();
+        await named(ends, "Last").hover();
+        matches(where, await readRows(ends), { First: "16px 16px 4px 4px", Last: R12 }, failures);
+        await park();
+        await named(ends, "First").click();
+        await named(ends, "First").hover();
+        matches(where, await readRows(ends), { First: R16, Last: "4px 4px 16px 16px" }, failures);
+        await named(ends, "Last").click();
+        await named(ends, "Last").hover();
+        matches(where, await readRows(ends), { First: "16px 16px 4px 4px", Last: R16 }, failures);
+        await park();
+        assert.deepEqual(failures.slice(), [], `${where}: runs, a single row, and the first and last rows`);
+        check(`list: ${where}, a divider, a subheader, a single row, a disabled row, and the first and last rows`);
+
+        await park();
+        await focusNamed(trail, "Switch");
+        const trailed = rowOf(await readRows(trail), "Bravo");
+        if (trailed?.row !== "4px 4px 4px 4px" || trailed.layer !== trailed.row) {
+          failures.push(`${where} Bravo with the switch focused ${trailed?.row} layer ${trailed?.layer}`);
+        }
+        assert.deepEqual(failures.slice(), [], `${where}: a trailing control leaves the row at rest`);
+        check(`list: ${where}, focus in a trailing control leaves the row at rest`);
+
+        await zeroList(square);
+        await zeroList(only);
+        await park();
+        const squareRest = { One: ZERO, Two: ZERO, Three: ZERO };
+        matches(where, await readRows(square), squareRest, failures);
+        matches(where, await readRows(only), { Only: ZERO }, failures);
+        await named(square, "One").hover();
+        matches(where, await readRows(square), squareRest, failures);
+        await park();
+        await named(square, "Three").hover();
+        matches(where, await readRows(square), squareRest, failures);
+        await park();
+        await named(only, "Only").hover();
+        matches(where, await readRows(only), { Only: ZERO }, failures);
+        await park();
+        await focusNamed(square, "Two");
+        matches(where, await readRows(square), squareRest, failures);
+        const twoBox = await named(square, "Two").boundingBox();
+        if (!twoBox) throw new Error(`no box for ${square} / Two`);
+        await page.mouse.move(twoBox.x + twoBox.width / 2, twoBox.y + twoBox.height / 2);
+        await page.mouse.down();
+        matches(where, await readRows(square), squareRest, failures);
+        await page.mouse.up();
+        await named(square, "One").click();
+        matches(where, await readRows(square), squareRest, failures);
+        await named(square, "Three").click();
+        matches(where, await readRows(square), squareRest, failures);
+        await named(only, "Only").click();
+        matches(where, await readRows(only), { Only: ZERO }, failures);
+        assert.deepEqual(failures, [], `${where}: the four shape properties at 0`);
+        check(`list: ${where}, the four shape properties at 0 square every state`);
       }
     }
   }
