@@ -89,7 +89,7 @@ the card, tabs and switch internals on their subpaths, `ChipConfig`'s `managedSe
 ship for reference; configuring them with `@use … with` is not a supported API in 1.0. Theme
 with CSS custom properties.
 
-**Type changes the compiler reports.** Besides renames and removals, six entries below change
+**Type changes the compiler reports.** Besides renames and removals, seven entries below change
 a type your code may rely on: tabs' `on` and `off` take a closed event map, and a tab's `click`
 payload is wrapped (FLO-523); React's and Solid's `Button` type their own `onChange`, so a
 spread of full `HTMLAttributes` must omit it (FLO-380); `SelectChangeEvent["value"]` is
@@ -112,7 +112,11 @@ a listener annotated `(event: SearchEvent) => void` on those two is an error. Th
 `<m-timepicker>` component's `on` and `off` take the time picker's event map
 (`TimePickerEvents`) in place of any string and an untyped handler (FLO-547): a name outside
 it is an error, and each handler's argument is typed, so one annotated with another type, or
-an argument on `open`, `close` or `cancel`, is an error.
+an argument on `open`, `close` or `cancel`, is an error. The menu's and the select's `open`
+and `close` payloads (`MenuEvent`, `SelectEvent`) have no `preventDefault` and no
+`defaultPrevented` (FLO-548): neither event could ever be cancelled, so
+`event.preventDefault()` in an `open` or `close` listener is an error. The menu's `select`
+(where it keeps the menu open) and the select's `change` keep both.
 
 **Changes your compiler won't catch**
 
@@ -257,6 +261,16 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **`dialog.close()` on a closed dialog and `dialog.open()` on an open one** emit nothing. Code
   that counted on `close` or `afterclose` from a `close()` called "to be sure" no longer hears
   them.
+- **A menu's `close` listener** runs inside `close()`, 50 ms earlier than it did: the menu is
+  still in the document and still has its visible class. One that read the DOM expecting the
+  menu gone must wait for the fade (350 ms). The same for a select's `close`, a split
+  button's `collapse` when the user dismisses its menu, and a FAB menu's `close` in its
+  `menu` presentation.
+- **`menu.close(); menu.open()`** reopens the menu. The `open()` was ignored for the 50 ms
+  the close took, so the menu ended closed.
+- **`menu.isOpen()` right after `close()`** is false. Code that waited 50 ms for it no
+  longer needs to; code that relied on it still being true (two menus open at once for a
+  moment, a toggle read just after a dismissal) now sees the closed state.
 
 ### Changed (breaking)
 
@@ -624,6 +638,44 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   value runs twice — the change that was not that value, then the move onto it — and then
   stops, because `selectByValue` emits only when the selection changed.
 
+- **The menu is closed when `close()` returns (FLO-548).** The same rule as the dialog's, for
+  the menu in both layers and for the two components that hold one, the select and the split
+  button. `open()` already worked this way; `close()` set the state and emitted `close` on a
+  50 ms timer. Migration: move out of a `close` listener anything that needs the menu gone
+  from the document (it leaves 350 ms later), and drop `event.preventDefault()` from `open`
+  and `close` listeners.
+
+  ```ts
+  menu.close();
+  menu.isOpen(); // 0.10: true for another 50 ms. 1.0: false
+  menu.open();   // 0.10: ignored, the menu ended closed. 1.0: it reopens
+  ```
+
+  - **`close` is emitted inside `close()`,** and `isOpen()` is false on the next line. The
+    listener runs while the menu is still in the document with its visible class: the class
+    and `aria-hidden` follow 50 ms later, the removal 300 ms after that, as before.
+  - **Repeat calls do nothing and emit nothing.** Two `close()` calls within 50 ms emitted
+    `close` twice outside the top layer.
+  - **The later call wins.** `close()` then `open()` at once reopens the menu, with one
+    `close` and one `open`; `open()` then `close()` at once ends closed and the surface
+    is never shown.
+  - **One menu at a time, in the call:** opening a menu closes the one that was open before
+    its own `open` is emitted. The other's `close` used to come 50 ms after.
+  - **An open menu can be dismissed as soon as `open()` returns:** a click outside and
+    Escape close it from then, not 20 ms later. The event that opened it never dismisses it:
+    a menu opened by code from a click or a key press on another element ignores that click
+    or key press, and the next one counts.
+  - **Select:** `close()`, Escape and a chosen option set `isOpen()` false, emit `close` and
+    set `aria-expanded="false"` in that call or event.
+  - **Split button:** when the user dismisses the menu, `isExpanded()` turns false and
+    `collapse` and `change` are emitted in that event, not 50 ms later; `collapse()` then
+    `expand()` at once ends expanded (the menu ignored the reopening and collapsed the
+    button again).
+  - **FAB menu, `menu` presentation:** `close()` sets `isOpen()` false and emits `close` in
+    the call. Its `open()` is unchanged here.
+  - **`MenuEvent` and `SelectEvent`,** the payloads of `open` and `close`, lose
+    `preventDefault` and `defaultPrevented`: nothing read them, and neither event can be
+    cancelled. The objects passed at run time still carry both, as no-ops.
 ### Removed
 
 - **`select.menu` and `splitButton.menu` (FLO-543).** The menu inside a select or a split button

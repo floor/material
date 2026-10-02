@@ -4937,6 +4937,55 @@ try {
       "a dialog opened from an Escape keydown: open after that key press, closed by the next one, in both layers",
     );
     check("dialog: the Escape key press that opened it does not close it, and the next one does, in both layers");
+
+    // The same sentence for the menu (FLO-548): its click-outside and Escape
+    // listeners are added inside open(). A button that is not the menu's
+    // opener opens it by code, from a click and from an Escape keydown: that
+    // event is still on its way up to the document. Every form is read before
+    // the assertion, so a failure shows which ones disagree.
+    const menuOpenedBy = async (how: "click" | "Escape", layer?: "top"): Promise<{ afterTheEventThatOpenedIt: boolean; afterTheNextOne: boolean }> => {
+      await fresh(page, `<button id="opener" type="button">More</button><button id="other" type="button">Other</button>`);
+      await page.evaluate(({ how, layer }) => {
+        const mtrl = (window as unknown as { mtrl: Factories }).mtrl;
+        const menu = mtrl.createMenu({
+          opener: document.getElementById("opener") as HTMLElement,
+          items: [{ id: "copy", text: "Copy" }, { id: "paste", text: "Paste" }],
+          ...(layer ? { layer } : {}),
+        });
+        (window as unknown as Win).__overlay = menu;
+        const other = document.getElementById("other") as HTMLElement;
+        if (how === "click") other.addEventListener("click", () => void menu.open());
+        else other.addEventListener("keydown", (event) => { if (event.key === "Escape") menu.open(event); });
+      }, { how, layer });
+      const isOpen = (): Promise<boolean> =>
+        page.evaluate(() => ((window as unknown as Win).__overlay as { isOpen: () => boolean }).isOpen());
+      if (how === "click") await page.click("#other");
+      else {
+        await page.focus("#other");
+        await page.keyboard.press("Escape");
+      }
+      await wait(400);
+      const afterTheEventThatOpenedIt = await isOpen();
+      // The next one: a click on the page beside the menu, or Escape again
+      if (how === "click") await page.mouse.click(700, 600);
+      else await page.keyboard.press("Escape");
+      await until(async () => !(await isOpen()));
+      const afterTheNextOne = await isOpen();
+      await page.evaluate(() => void ((window as unknown as Win).__overlay as { destroy: () => unknown }).destroy());
+      return { afterTheEventThatOpenedIt, afterTheNextOne };
+    };
+    const stayed = { afterTheEventThatOpenedIt: true, afterTheNextOne: false };
+    assert.deepEqual(
+      {
+        click: await menuOpenedBy("click"),
+        clickTop: await menuOpenedBy("click", "top"),
+        escape: await menuOpenedBy("Escape"),
+        escapeTop: await menuOpenedBy("Escape", "top"),
+      },
+      { click: stayed, clickTop: stayed, escape: stayed, escapeTop: stayed },
+      "a menu opened by code from a click or an Escape keydown: open after that event, closed by the next one, in both layers",
+    );
+    check("menu: the click or the key press that opened it does not dismiss it, and the next one does, in both layers");
     await returnsFocus("bottom sheet", "createBottomSheet");
     check("factories in a shadow root: a modal bottom sheet returns focus to its opener inside the shadow root");
     await returnsFocus("side sheet", "createSideSheet");
