@@ -109,8 +109,8 @@ export interface RadioItem {
 
 /** Selection or unknown-value clearing reported by the radio group. */
 export interface RadiosChangePayload {
-  /** Selected value, or an empty string when an unknown value clears selection. */
-  value: string;
+  /** Selected value, or null when nothing is selected: the value `getValue()` reads. */
+  value: string | null;
   /** Native input change event; undefined for programmatic clearing. */
   originalEvent: Event | undefined;
   /** Selected option, or null when an unknown value clears selection. */
@@ -147,10 +147,10 @@ export interface RadiosComponent {
   getClass: (name: string) => string;
   
   /**
-   * Gets the radios component name
-   * @returns Selected radio value or empty string if none selected
+   * Gets the selected value
+   * @returns Selected radio value, or null if none is selected
    */
-  getValue: () => string;
+  getValue: () => string | null;
   
   /**
    * Sets the radios component value (selects a radio)

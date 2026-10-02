@@ -220,7 +220,8 @@ try {
     assert.deepEqual(values.timeEmptyConfirm, values.timeEmptyChange);
     assert.deepEqual(values.selectFactory, [[null, null]]);
     assert.deepEqual(values.selectElement, [[null, null]]);
-    assert.deepEqual(values.radiosFactory, [["a", "a"], ["", ""]]);
+    // 1.0: the factory reports null for the option without a value, as the element does
+    assert.deepEqual(values.radiosFactory, [["a", "a"], [null, null]]);
     assert.deepEqual(values.radiosElement, [["a", "a"], [null, null]]);
     check("time input/confirm, select empty id and radio empty id match getters inside factory and element handlers");
   }

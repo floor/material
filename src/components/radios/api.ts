@@ -15,7 +15,7 @@ interface ApiOptions {
 interface ComponentWithRadio {
   element: HTMLElement;
   radios: RadioItem[];
-  getValue: () => string;
+  getValue: () => string | null;
   setValue: (value: string) => void;
   getSelected: () => RadioOptionConfig | null;
   addOption: (option: RadioOptionConfig) => void;

@@ -124,7 +124,8 @@ export const withRadio =
         // from the input also bubbles, so every selection reached handlers twice
         // -- once with this payload and once with undefined.
         component.emit?.('change', {
-          value: option.value,
+          // null, not "", for an option without a value: what getValue() reads
+          value: option.value || null,
           originalEvent: e,
           option
         });
@@ -203,7 +204,8 @@ export const withRadio =
     ...component,
     radios,
     
-    getValue: () => selectedValue,
+    // Nothing selected reads null, as the select and <m-radios> report it
+    getValue: () => selectedValue || null,
     
     setValue: (value: string) => {
       // A value no option carries checks nothing, so it selects nothing:

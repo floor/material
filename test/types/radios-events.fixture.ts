@@ -19,8 +19,6 @@ export const callbackPayload: Equals<
 // 1.0: null, not "", when nothing is selected, as the select and <m-radios> report it
 export const valueIsStringOrNull: Equals<RadiosChangePayload["value"], string | null> = true;
 export const getterIsStringOrNull: Equals<ReturnType<RadiosComponent["getValue"]>, string | null> = true;
-// @ts-expect-error the getter can be null: compare with null, not with ""
-export const getterAsString: string = radios.getValue();
 export const optionCanBeCleared: Equals<RadiosChangePayload["option"], RadioOptionConfig | null> = true;
 export const originalEventCanBeAbsent: Equals<RadiosChangePayload["originalEvent"], Event | undefined> = true;
 export const originalEventKeyIsRequired: {} extends Pick<RadiosChangePayload, "originalEvent"> ? true : false = false;

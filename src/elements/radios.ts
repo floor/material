@@ -46,7 +46,7 @@ const readRadios = (host: HTMLElement): Config => ({ options: declaredRadios(hos
  */
 const select = (component: RadiosComponent, value: unknown): void => {
   if (value === null || value === undefined || value === "") {
-    if (component.getValue() !== "") component.setValue("");
+    if (component.getValue() !== null) component.setValue("");
   } else {
     component.setValue(String(value));
   }
@@ -127,20 +127,20 @@ const radiosSpec = {
     },
   },
   properties: {
-    value: { get: (c) => c.getValue() || null, set: (c, v) => select(c, v), config: "value" },
+    value: { get: (c) => c.getValue(), set: (c, v) => select(c, v), config: "value" },
   },
   model: "value" as const,
   events: {
     change: {
-      detail: (payload) => ({ value: (payload as { value: string }).value || null }),
+      detail: (payload) => ({ value: (payload as { value: string | null }).value }),
     },
   },
   form: {
-    value: (c) => c.getValue() || null,
+    value: (c) => c.getValue(),
     control: validityControl,
     events: ["change"],
     activate: (c) => validityControl(c)?.focus(),
-    state: (c) => c.getValue(),
+    state: (c) => c.getValue() ?? "",
     restore: (c, state) => select(c, state),
     disable: (c, disabled) => void (disabled ? c.disable() : c.enable()),
   },
