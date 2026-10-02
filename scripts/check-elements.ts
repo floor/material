@@ -10072,9 +10072,10 @@ try {
   // should be at least 48x48 CSS pixels". The case, ltr and rtl: on every side
   // the target reaches at least 4 px past the visible 40 px button (a hit 3 px
   // outside reaches the button, and the outward walk finds the change no sooner
-  // than 4 px out); the visible button stays 40 x 40 where it was (16 px from
-  // the header's inline end, centred on the side sheet's header row and 16 px
-  // from the top of the dialog's); and the header holds no other control the
+  // than 4 px out and prints its x or y); the visible button stays 40 x 40 where
+  // it was (16 px from the header's inline end, centred on the side sheet's
+  // header row and 16 px from the top of the dialog's); and the header holds no
+  // other control the
   // target could cover — the side sheet's neighbour is its title, the dialog's
   // the header-content block with the title and subtitle, and neither is
   // focusable.
@@ -10087,6 +10088,7 @@ try {
         createDialog: (config: object) => Close;
       } };
       const failures: string[] = [];
+      const measured: string[] = [];
       const round = (value: number): string => value.toFixed(2);
       const controls = 'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
       const show = (el: Element): string => `${el.localName}.${(el.className || "").toString().split(" ")[0]}`;
@@ -10113,6 +10115,7 @@ try {
         if (Math.round(r.width) !== 40 || Math.round(r.height) !== 40) {
           failures.push(`${where}: the visible button is ${round(r.width)} x ${round(r.height)}, not 40 x 40`);
         }
+        const changes: string[] = [];
         for (const side of ["left", "right", "top", "bottom"] as const) {
           const at = (d: number): [number, number] =>
             side === "left" ? [r.left - d, cy] : side === "right" ? [r.right + d, cy] : side === "top" ? [cx, r.top - d] : [cx, r.bottom + d];
@@ -10132,7 +10135,11 @@ try {
             if (!reaches(x, y)) { change = d; break; }
           }
           if (change !== null && change < 4) failures.push(`${where}: the hit changes ${change} px past the ${side} edge (${axis} ${round(coordinateOf(change))}), under the 4 px a 48 box needs`);
+          changes.push(change === null
+            ? `${side}: the hit still reaches 64 px out`
+            : `${side}: changes at ${axis} ${round(coordinateOf(change))} (${change} px out)`);
         }
+        measured.push(`${where}: ${changes.join("; ")}`);
       };
       for (const dir of ["ltr", "rtl"] as const) {
         const wrap = document.getElementById(`close-${dir}`) as HTMLElement;
@@ -10172,8 +10179,9 @@ try {
         dialog.destroy();
         dialog.element.remove();
       }
-      return { failures };
+      return { failures, measured };
     });
+    for (const line of measured.measured) console.log(`  ${line}`);
     for (const line of measured.failures) console.log(`  FAIL ${line}`);
     assert.deepEqual(measured.failures, []);
     check("side sheet and dialog: the close button's target reaches at least 4 px past the 40 px button on all four sides, ltr and rtl");
