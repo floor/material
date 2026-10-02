@@ -29,7 +29,7 @@ import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
 /**
  * Creates a new TextField component
  *
- * Textfields allow users to enter text into a UI. They typically appear in forms and dialogs.
+ * Text fields allow users to enter text into a UI. They typically appear in forms and dialogs.
  * This implementation follows Material Design 3 guidelines for accessible, customizable textfields.
  *
  * @param {TextFieldConfig} config - TextField configuration options
