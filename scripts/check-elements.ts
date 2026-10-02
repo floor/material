@@ -5244,6 +5244,152 @@ try {
     assert.deepEqual(modalResults, modalWanted, "Escape as a key press for the modal sheets and the modal drawer, in both layers");
     check("sheets and drawer: Escape closes a modal one from wherever focus is, a refusal holds for five presses, the key press that opened it does not close it, and a forced close is followed");
 
+    // And for the time picker, the modal date picker and the full-screen search
+    // (FLO-548 family 6 C): Escape with focus on the body; the key press that
+    // opened it, then the next; and one opened above a dialog, which takes the
+    // key first. All read before the assertion.
+    const pickerEscapes = async (kind: "time picker" | "date picker" | "search"): Promise<Record<string, unknown>> => {
+      await fresh(page, `<button id="opener" type="button">Open</button><div id="place"></div>`);
+      const build = (): Promise<void> =>
+        page.evaluate((kind) => {
+          const w = window as unknown as Win & { mtrl: Factories };
+          (w.__overlay as { destroy?: () => void } | undefined)?.destroy?.();
+          const made = kind === "time picker" ? w.mtrl.createTimePicker({ value: "09:30" })
+            : kind === "date picker" ? w.mtrl.createDatePicker({ label: "Date", variant: "modal" })
+            : w.mtrl.createSearch({ viewMode: "fullscreen" });
+          (document.getElementById("place") as HTMLElement).append(made.element);
+          const search = kind === "search";
+          w.__overlay = {
+            open: () => (search ? made.expand() : made.open()),
+            isOpen: () => (search ? made.isExpanded() : made.isOpen()),
+            destroy: () => made.destroy(),
+          };
+        }, kind);
+      const isOpen = (): Promise<boolean> =>
+        page.evaluate(() => ((window as unknown as Win).__overlay as { isOpen: () => boolean }).isOpen());
+      const escape = async (): Promise<void> => {
+        await page.keyboard.press("Escape");
+        await wait(500);
+      };
+      const result: Record<string, unknown> = {};
+
+      await build();
+      await page.evaluate(() => void ((window as unknown as Win).__overlay as { open: () => unknown }).open());
+      await wait(500);
+      result.opened = await isOpen();
+      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+      await escape();
+      result.fromTheBody = await isOpen();
+
+      await build();
+      await page.evaluate(() => {
+        const overlay = (window as unknown as Win).__overlay as { open: () => unknown };
+        (document.getElementById("opener") as HTMLElement).addEventListener("keydown", (event) => {
+          if (event.key === "Escape") overlay.open();
+        }, { once: true });
+      });
+      await page.focus("#opener");
+      await escape();
+      result.afterTheKeyThatOpenedIt = await isOpen();
+      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+      await escape();
+      result.afterTheNextEscape = await isOpen();
+
+      // Above a top-layer dialog
+      await build();
+      await page.evaluate(() => {
+        const w = window as unknown as Win & { mtrl: Factories };
+        const dialog = w.mtrl.createDialog({ title: "Schedule", layer: "top" });
+        w.__dialog = dialog;
+        dialog.open();
+        (w.__overlay as { open: () => unknown }).open();
+      });
+      await wait(500);
+      const both = (): Promise<{ dialog: boolean; above: boolean }> =>
+        page.evaluate(() => {
+          const w = window as unknown as Win;
+          return { dialog: (w.__dialog as { isOpen: () => boolean }).isOpen(), above: (w.__overlay as { isOpen: () => boolean }).isOpen() };
+        });
+      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+      await escape();
+      result.aboveADialog = await both();
+      await escape();
+      result.thenTheDialog = await both();
+      await page.evaluate(() => {
+        const w = window as unknown as Win;
+        (w.__dialog as { destroy: () => void }).destroy();
+        (w.__overlay as { destroy: () => void }).destroy();
+      });
+      return result;
+    };
+    const pickerExpected = {
+      opened: true, fromTheBody: false, afterTheKeyThatOpenedIt: true, afterTheNextEscape: false,
+      aboveADialog: { dialog: true, above: false }, thenTheDialog: { dialog: false, above: false },
+    };
+    assert.deepEqual(
+      { "time picker": await pickerEscapes("time picker"), "date picker": await pickerEscapes("date picker"), search: await pickerEscapes("search") },
+      { "time picker": pickerExpected, "date picker": pickerExpected, search: pickerExpected },
+      "Escape as a key press for the time picker, the modal date picker and the full-screen search",
+    );
+    check("pickers and search: Escape closes a modal one with focus on the body, the key press that opened it does not, and one above a dialog takes the key first");
+
+    // The time picker's open option: open when the factory returns, shown a task
+    // later where the caller put it
+    const openOption = await page.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: Factories };
+      const picker = w.mtrl.createTimePicker({ value: "09:30", open: true });
+      const atCreation = (picker.isOpen as () => boolean)();
+      const place = document.getElementById("place") as HTMLElement;
+      place.append(picker.element);
+      await new Promise((r) => setTimeout(r, 400));
+      const dialog = picker.element.querySelector("dialog") as HTMLDialogElement;
+      const shown = { open: (picker.isOpen as () => boolean)(), modal: dialog.matches(":modal"), where: picker.element.parentElement === place };
+      (picker.destroy as () => void)();
+      return { atCreation, shown };
+    });
+    assert.deepEqual(openOption, { atCreation: true, shown: { open: true, modal: true, where: true } });
+    check("time picker: open: true is open when the factory returns, and its modal is shown where the picker was put");
+
+    // The docked date picker (the default variant), with real clicks: open() from
+    // a click on a button outside it. That click must leave it open, the next
+    // click outside must close it, once. Then open() by script and a real click
+    // outside at once. The test engineer's case from the three-engine probe of #492.
+    await fresh(page, `<button id="opener" type="button">Open</button><button id="other" type="button">Other</button><div id="place"></div>`);
+    await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: Factories };
+      const picker = w.mtrl.createDatePicker({ label: "Date" });
+      (document.getElementById("place") as HTMLElement).append(picker.element);
+      w.__picker = picker;
+      w.__closes = 0;
+      (picker.on as (name: string, handler: () => void) => void)("close", () => { (w.__closes as number)++; });
+      (document.getElementById("opener") as HTMLElement).addEventListener("click", () => void (picker.open as () => unknown)());
+    });
+    const docked = (): Promise<{ open: boolean; closes: number }> =>
+      page.evaluate(() => {
+        const w = window as unknown as Win;
+        return { open: (w.__picker as { isOpen: () => boolean }).isOpen(), closes: w.__closes as number };
+      });
+    const dockedSteps: Record<string, unknown> = {};
+    await page.click("#opener");
+    dockedSteps.afterTheClickThatOpenedIt = await docked();
+    await wait(400);
+    dockedSteps.stillOpenLater = await docked();
+    await page.click("#other");
+    await wait(400);
+    dockedSteps.afterTheNextClickOutside = await docked();
+    await page.evaluate(() => void ((window as unknown as Win).__picker as { open: () => unknown }).open());
+    await page.click("#other");
+    await wait(400);
+    dockedSteps.openedByScriptThenAClickOutsideAtOnce = await docked();
+    await page.evaluate(() => ((window as unknown as Win).__picker as { destroy: () => void }).destroy());
+    assert.deepEqual(dockedSteps, {
+      afterTheClickThatOpenedIt: { open: true, closes: 0 },
+      stillOpenLater: { open: true, closes: 0 },
+      afterTheNextClickOutside: { open: false, closes: 1 },
+      openedByScriptThenAClickOutsideAtOnce: { open: false, closes: 2 },
+    });
+    check("date picker, docked: the click that opened it leaves it open, and the next click outside closes it once");
+
     // The same sentence for the menu (FLO-548): its click-outside and Escape
     // listeners are added inside open(). A button that is not the menu's
     // opener opens it by code, from a click and from an Escape keydown: that

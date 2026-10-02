@@ -17,6 +17,7 @@ import type { EventCallback } from '../../core/state/emitter';
 import type { ElementComponent } from '../../core/compose/component';
 import { setFormValue } from '../../core/dom/form-value';
 import { deepActiveElement } from '../../core/dom/focus';
+import { onModalEscape, type ModalEscape } from '../../core/dom/layer';
 
 interface ApiOptions {
   events: {
@@ -111,11 +112,36 @@ export const createTimePickerAPI = (
     options.events.emit(EVENTS.CONFIRM, { value: getValue() });
     timePickerAPI.close();
   };
-  // Escape reaches this picker only, through its dialog's cancel event; it was a
-  // document listener that closed every open picker. FLO-278.
+  // The picker's place among the open modals, while it is open: Escape is a
+  // key press handled there, for the topmost one only (FLO-548). It was the
+  // dialog's cancel event, and before that a document listener that closed
+  // every open picker (FLO-278).
+  let escape: ModalEscape | undefined;
+  // A close request that is not a key press (a back gesture) still arrives as
+  // the dialog's cancel. The browser's cancel in the task the picker opened in
+  // is the opening key's, when the page stopped that key press before it
+  // reached the window.
   const handleCancel = (event: Event) => {
     event.preventDefault();
-    cancel();
+    if (!escape?.opening) cancel();
+  };
+  // Shows the surface of an open picker. At creation (the `open` option) it
+  // runs a task later: by then the caller has put the picker in the page, and
+  // a modal <dialog> must not be moved once it is shown.
+  const show = () => {
+    if (!isOpen) return;
+    // The dialog is in the component's own element (FLO-288); an app that
+    // only calls open() never put that element in the page.
+    if (!baseComponent.element.isConnected && !dialog.isConnected) document.body.append(baseComponent.element);
+    // Whatever really had focus, through any shadow roots (FLO-284).
+    const active = deepActiveElement();
+    returnFocus = active instanceof HTMLElement && active !== document.body ? active : null;
+    // The top layer, scrim and inert page are the browser's; environments
+    // without dialog methods still get the open state.
+    if (typeof dialog.showModal === 'function' && dialog.isConnected) dialog.showModal();
+    else dialog.setAttribute('open', '');
+    dialogElement.classList.add('active');
+    focusField();
   };
   // A click on the backdrop lands on the dialog element itself, outside its box.
   const handleClickOutside = (event: MouseEvent) => {
@@ -138,27 +164,19 @@ export const createTimePickerAPI = (
     isOpen: () => isOpen,
 
     
-    open() {
+    /** @param later - At creation: the surface is shown a task later (see `show`) */
+    open(later?: boolean) {
       if (isOpen || disabled) return this;
       // Each opening edits a fresh draft of the committed value.
       restoreDraft();
-      // The dialog is in the component's own element (FLO-288); an app that
-      // only calls open() never put that element in the page.
-      if (!baseComponent.element.isConnected && !dialog.isConnected) document.body.append(baseComponent.element);
-      
-      // Whatever really had focus, through any shadow roots (FLO-284).
-      const active = deepActiveElement();
-      returnFocus = active instanceof HTMLElement && active !== document.body ? active : null;
-      // The top layer, scrim and inert page are the browser's; environments
-      // without dialog methods still get the open state.
-      if (typeof dialog.showModal === 'function' && dialog.isConnected) dialog.showModal();
-      else dialog.setAttribute('open', '');
-      dialogElement.classList.add('active');
-      focusField();
-      
+
       // Update state
       isOpen = true;
       baseComponent.element.classList.add(`${config.prefix}-time-picker--open`);
+      escape?.stop();
+      escape = onModalEscape(dialog, cancel);
+      if (later) setTimeout(show, 0);
+      else show();
       
       options.events.emit(EVENTS.OPEN);
       
@@ -176,6 +194,7 @@ export const createTimePickerAPI = (
       
       // Update state
       isOpen = false;
+      escape?.stop();
       baseComponent.element.classList.remove(`${config.prefix}-time-picker--open`);
       
       options.events.emit(EVENTS.CLOSE);

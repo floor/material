@@ -56,7 +56,7 @@ describe("a draft until OK", () => {
 
   for (const [how, dismiss] of [
     ["Cancel", (p: ReturnType<typeof setup>) => p.button("cancel").click()],
-    ["Escape", (p: ReturnType<typeof setup>) => p.dialog.dispatchEvent(new Event("cancel", { cancelable: true }))],
+    ["Escape", (p: ReturnType<typeof setup>) => p.dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }))],
   ] as const) {
     test(`${how} discards the draft and emits cancel while open`, () => {
       const p = setup();

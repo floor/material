@@ -4,6 +4,7 @@ import { withEvents, withDisabled, withLifecycle } from "../../core/compose/feat
 import { createElement } from "../../core/dom/create";
 import { setHTML } from "../../core/dom/html";
 import { activeElementOf, deepActiveElement } from "../../core/dom/focus";
+import { eventsFrom, onModalEscape, type EventsFrom, type ModalEscape } from "../../core/dom/layer";
 import { DATEPICKER_ICONS } from "./constants";
 import { PREFIX } from "../../core/config";
 import { createBaseConfig, getContainerConfig } from "./config";
@@ -50,7 +51,12 @@ const createDatePicker = <M extends string = "single">(
     isAllowed: date => (!state.minDate || date >= state.minDate) && (!state.maxDate || date <= state.maxDate) && !state.specialDates.some(item => { const special = parseDate(item.date); return item.disabled && special && isSameDay(date, special); }),
   };
   const modal = state.variant !== "docked";
-  let opened = false, opening = false, destroyed = false, navigationRequested = false, readOnly = false;
+  let opened = false, destroyed = false, navigationRequested = false, readOnly = false;
+  // While it is open: a modal picker's place among the open modals (Escape is
+  // a key press handled there, for the topmost one), and for a docked one the
+  // marker that tells the click that opened it from every later one (FLO-548)
+  let escape: ModalEscape | undefined, from: EventsFrom | undefined;
+  const release = () => { escape?.stop(); from?.stop(); escape = from = undefined; };
   let committed: Date | null = null, committedEnd: Date | null = null;
   let returnFocus: HTMLElement | null = null;
   let unlock: (() => void) | undefined;
@@ -167,7 +173,7 @@ const createDatePicker = <M extends string = "single">(
   };
   const close = (restoreFocus = true) => {
     if (!opened) return;
-    opened = false;
+    opened = false; release();
     if (typeof dialog.close === "function") dialog.close(); else dialog.removeAttribute("open");
     unlock?.(); unlock = undefined; resetDraft();
     trigger.setAttribute("aria-expanded", "false");
@@ -176,7 +182,9 @@ const createDatePicker = <M extends string = "single">(
   };
   const open = () => {
     if (destroyed || opened || base.disabled.isDisabled() || readOnly) return;
-    opened = true; opening = true; setTimeout(() => { opening = false; }, 0); resetDraft(); state.inputMode = state.variant === "modal-input"; state.listStart = undefined;
+    opened = true; release();
+    if (modal) escape = onModalEscape(dialog, () => close()); else from = eventsFrom(dialog);
+    resetDraft(); state.inputMode = state.variant === "modal-input"; state.listStart = undefined;
     let initial = committed ?? today;
     if (state.minDate && initial < state.minDate) initial = state.minDate;
     if (state.maxDate && initial > state.maxDate) initial = state.maxDate;
@@ -355,12 +363,14 @@ const createDatePicker = <M extends string = "single">(
     if ("onscrollend" in view) return;
     clearTimeout(quiet); quiet = setTimeout(settle, 150);
   };
-  const onCancel = (event: Event) => { event.preventDefault(); close(); };
+  // A close request that is not a key press. The browser's cancel in the task
+  // the picker opened in is the opening key's, when the page stopped that key
+  // press before it reached the window.
+  const onCancel = (event: Event) => { event.preventDefault(); if (!escape?.opening) close(); };
   const onOutside = (event: MouseEvent) => {
-    // The click that called open() reaches the document after it, in the same
-    // task: the event that opened the picker never dismisses it (FLO-548).
-    // `opening` is true for the rest of that task, as the dialog's is.
-    if (!opened || opening) return;
+    // The click that called open() reaches the document after it: the event
+    // that opened the picker never dismisses it, and only that one (FLO-548)
+    if (!opened || (from && !from.after(event))) return;
     if (!modal && event.target instanceof Node && !event.composedPath().includes(base.element)) close(false);
     if (modal && event.target === dialog) { const bounds = dialog.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) close(); }
   };
