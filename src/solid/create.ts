@@ -37,6 +37,7 @@ import {
   type DefaultProps,
   type FormProps,
   type Pascal,
+  type RetiredEvents,
 } from "../elements/adapter";
 import { shadow } from "./shadow";
 
@@ -84,9 +85,13 @@ export type SolidHostAttributes<E extends HTMLElement = HTMLElement> =
  * `OwnProps` includes the element's `on*` handlers, so those names keep the component's event.
  */
 export type SolidProps<S, E extends HTMLElement> = OwnProps<S> &
-  Omit<SolidHostAttributes, keyof OwnProps<S> | "ref"> & {
+  Omit<SolidHostAttributes, keyof OwnProps<S> | "ref" | RetiredProps<S>> &
+  { [K in RetiredProps<S>]?: never } & {
     ref?: E | ((element: E) => void);
   };
+
+/** The handler props of events 1.0 removed (`onToggle` on the icon button): refused, see `RetiredEvents`. */
+type RetiredProps<S> = `on${Pascal<RetiredEvents<S>>}`;
 
 export type DeclarationProps<A> = A & Omit<SolidHostAttributes, keyof A>;
 

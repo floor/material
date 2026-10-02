@@ -54,6 +54,7 @@ import {
   type DefaultProps,
   type FormProps,
   type ModelOf,
+  type RetiredEvents,
 } from "../elements/adapter";
 import { shadow } from "./shadow";
 
@@ -103,7 +104,12 @@ type EventKeys<S> =
   | ([ModelOf<S>] extends [never] ? never : "onUpdate:modelValue");
 
 /** Props of a generated component: the element's own, plus any HTML attribute for the host. */
-export type VueProps<S> = OwnProps<S> & Omit<VueHostAttributes, keyof OwnProps<S> | EventKeys<S>>;
+export type VueProps<S> = OwnProps<S> &
+  Omit<VueHostAttributes, keyof OwnProps<S> | EventKeys<S> | RetiredProps<S>> &
+  { [K in RetiredProps<S>]?: never };
+
+/** The handler props of events 1.0 removed (`onToggle` on the icon button): refused, see `RetiredEvents`. */
+type RetiredProps<S> = `on${Capitalize<RetiredEvents<S>>}`;
 
 /** Its events: the element's, and `update:*` for two-way binding. */
 export type VueEmits<S> = {

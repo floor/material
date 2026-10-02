@@ -40,6 +40,7 @@ import {
   type DeclarationSpec,
   type DefaultProps,
   type FormProps,
+  type RetiredEvents,
 } from "../elements/adapter";
 
 export { configure } from "../elements/adapter";
@@ -82,7 +83,11 @@ type SvelteHostAttributes = HTMLAttributes<HTMLElement> & Missing<HTMLAttributes
  * `OwnProps` includes the element's `on<event>` handlers (`onchange`), so those names keep the component's event.
  */
 export type SvelteProps<S> = OwnProps<S> &
-  Omit<SvelteHostAttributes, keyof OwnProps<S> | "children"> & { children?: Snippet };
+  Omit<SvelteHostAttributes, keyof OwnProps<S> | "children" | RetiredProps<S>> &
+  { [K in RetiredProps<S>]?: never } & { children?: Snippet };
+
+/** The handler props of events 1.0 removed (`ontoggle` on the icon button): refused, see `RetiredEvents`. */
+type RetiredProps<S> = `on${RetiredEvents<S>}`;
 
 /** The live properties a generated component binds (`bind:checked`). */
 export type Bindable<S> = keyof ElementProperties<S> & string;

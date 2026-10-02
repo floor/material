@@ -36,6 +36,7 @@ import {
   type DefaultProps,
   type FormProps,
   type Pascal,
+  type RetiredEvents,
 } from "../elements/adapter";
 
 export { configure } from "../elements/adapter";
@@ -83,7 +84,11 @@ export type ReactHostAttributes<E extends HTMLElement = HTMLElement> =
  */
 export type ComponentProps<S> = OwnProps<S> &
   FormProps<S> &
-  Omit<ReactHostAttributes, keyof OwnProps<S>> & { children?: React.ReactNode };
+  Omit<ReactHostAttributes, keyof OwnProps<S> | RetiredProps<S>> &
+  { [K in RetiredProps<S>]?: never } & { children?: React.ReactNode };
+
+/** The handler props of events 1.0 removed (`onToggle` on the icon button): refused, see `RetiredEvents`. */
+type RetiredProps<S> = `on${Pascal<RetiredEvents<S>>}`;
 
 /** A generated component; named so declarations stay short. */
 export type MComponent<S, E extends HTMLElement> = React.ForwardRefExoticComponent<
