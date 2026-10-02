@@ -14,7 +14,7 @@ export const withAPI =
     element: component.element,
     // withMenu warns and returns early without a textfield, so a select that
     // reaches the API has both
-    textfield: component.textfield!,
+    textField: component.textField!,
     menu: component.menu!,
 
     getValue: options.select.getValue,
@@ -43,7 +43,7 @@ export const withAPI =
     open(interactionType: "mouse" | "keyboard" = "mouse"): SelectComponent {
       // A disabled select does not open. The click and keyboard paths already
       // checked this; open() did not, so code could open a disabled select.
-      if (component.textfield?.input?.disabled) return this;
+      if (component.textField?.input?.disabled) return this;
       if (component.menu && typeof component.menu.open === "function") {
         component.menu.open(undefined, interactionType);
       } else {
@@ -61,16 +61,16 @@ export const withAPI =
 
     setDensity(density: string): SelectComponent {
       // Delegate to the textfield's setDensity method
-      if (component.textfield?.setDensity) {
-        component.textfield.setDensity(density);
+      if (component.textField?.setDensity) {
+        component.textField.setDensity(density);
       }
       return this;
     },
 
     getDensity(): string {
       // Delegate to the textfield's getDensity method
-      if (component.textfield?.getDensity) {
-        return component.textfield.getDensity();
+      if (component.textField?.getDensity) {
+        return component.textField.getDensity();
       }
       return "default";
     },
@@ -104,21 +104,21 @@ export const withAPI =
     },
 
     isDisabled(): boolean {
-      return component.textfield?.input?.disabled === true;
+      return component.textField?.input?.disabled === true;
     },
 
     setError(error: boolean, message?: string): SelectComponent {
       // Delegate to the textfield's setError method
-      if (component.textfield?.setError) {
-        component.textfield.setError(error, message);
+      if (component.textField?.setError) {
+        component.textField.setError(error, message);
       }
       return this;
     },
 
     clearError(): SelectComponent {
       // Clear error state on textfield
-      if (component.textfield?.setError) {
-        component.textfield.setError(false);
+      if (component.textField?.setError) {
+        component.textField.setError(false);
       }
       return this;
     },

@@ -88,7 +88,7 @@ export const SELECT_DEFAULTS = {
 export const SELECT_CLASSES = {
   /** Container element */
   CONTAINER: 'select',
-  /** Textfield element */
+  /** TextField element */
   TEXTFIELD: 'select__textfield',
   /** Dropdown icon */
   DROPDOWN_ICON: 'select__dropdown-icon',

@@ -4,7 +4,7 @@
 // element's type. Nothing here runs; the assertions are the test.
 //
 // Compiled by `bun run tooling:check` via test/types/tsconfig.json.
-import type { declarations, elements, SwitchElement, TabAttributes, TextfieldElement } from "../../src/elements";
+import type { declarations, elements, SwitchElement, TabAttributes, TextFieldElement } from "../../src/elements";
 
 /** true when A and B are the same type */
 type Equals<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
@@ -16,7 +16,7 @@ void checked;
 const found = document.querySelector("m-switch");
 assert<Equals<typeof found, SwitchElement | null>>();
 const created = document.createElement("m-textfield");
-assert<Equals<typeof created, TextfieldElement>>();
+assert<Equals<typeof created, TextFieldElement>>();
 created.select();
 // @ts-expect-error -- the switch's `value` is a string
 const wrong: number = document.querySelector("m-switch")!.value;
