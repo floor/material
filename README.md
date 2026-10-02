@@ -23,7 +23,7 @@ React, Vue, Svelte and Solid are optional peer dependencies: mtrl uses the one y
 | Solid | `mtrl/solid` | SolidJS, SolidStart |
 | Vanilla factories | `mtrl` | The smallest bundles and full control |
 
-Every app imports the base stylesheet once: the theme, the tokens and the ripple.
+Every app imports the base stylesheet once: the theme, the tokens a component reads, and the ripple. Type classes and the type scale are `mtrl/styles/typography` (see [Styles](#styles)).
 
 ```typescript
 import 'mtrl/styles/base';
@@ -124,7 +124,15 @@ import 'mtrl/themes/ocean';
 import 'mtrl/styles/utilities';
 ```
 
-The base includes the baseline theme in light and dark, the tokens, a reset, typography and the ripple. Each selective entry imports what it depends on (the select brings the text field and the menu), so use a CSS-capable bundler to resolve and deduplicate them. Choose either the full stylesheet or selective imports, not both.
+The base includes the baseline theme in light and dark, the colour, shape and typeface tokens, the three body-medium type tokens the page's text reads (`--mtrl-sys-typescale-body-medium-font`, `-font-size` and `-line-height`), a reset and the ripple. The type classes (`.mtrl-display-large` through `.mtrl-label-small`), the text utilities (`.mtrl-text-*`, `.mtrl-font-*`, `.mtrl-truncate*`), mtrl's styles for `h1`–`h6` and `p`, and the rest of the type scale are a separate import:
+
+```typescript
+import 'mtrl/styles/typography';
+```
+
+Import it when the page uses those classes or utilities, when it relies on mtrl's heading and paragraph styles, or when its own CSS reads a `--mtrl-sys-typescale-*` token. Without it a `.mtrl-headline-small` element keeps the body's font size, and a `var(--mtrl-sys-typescale-*)` with no fallback is invalid at computed-value time. Body text keeps its font. The full stylesheet includes typography, so `import 'mtrl/styles'` is unchanged.
+
+Each selective entry imports what it depends on (the select brings the text field and the menu), so use a CSS-capable bundler to resolve and deduplicate them. Choose either the full stylesheet or selective imports, not both.
 
 Library styles sit in ordered `mtrl` cascade layers, so unlayered application CSS overrides them without specificity battles.
 
@@ -168,7 +176,7 @@ Components read the theme's colour roles, so overriding a role restyles every co
 }
 ```
 
-The type scale, the typefaces and the corner scale are custom properties too (`--mtrl-sys-typescale-*`, `--mtrl-ref-typeface-brand` and `--mtrl-ref-typeface-plain`, `--mtrl-sys-shape-corner-*`): setting a typeface or a corner step on `:root` restyles every component that uses it. Component hooks follow one convention, `--mtrl-<component>-<name>`:
+The typefaces and the corner scale are custom properties on the base (`--mtrl-ref-typeface-brand`, `--mtrl-ref-typeface-plain`, `--mtrl-sys-shape-corner-*`): setting one on `:root` restyles every component that uses it. The type scale (`--mtrl-sys-typescale-*`) ships in `mtrl/styles/typography` and in the full stylesheet; setting a role's size there restyles the type classes and the heading styles. Component hooks follow one convention, `--mtrl-<component>-<name>`:
 
 ```css
 .brand-slider {
@@ -221,7 +229,7 @@ Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, 
 
 ## Server rendering
 
-`renderElement` from `mtrl/ssr` renders an element to declarative shadow DOM. Import `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` in the server bootstrap and that framework's components emit the same roots. Node and Bun are supported in 1.0.
+`renderElement` from `mtrl/ssr` renders an element to declarative shadow DOM. Import `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` in the server bootstrap and that framework's components emit the same roots. Node and Bun are supported in 1.0. Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one.
 
 Worker and edge runtimes are unsupported in 1.0. Each server entry lists the `browser` condition first. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers does) loads the browser stub: `renderElement` throws "mtrl/ssr is server-only", and importing a bridge does nothing, so the page renders with no declarative roots and no error.
 

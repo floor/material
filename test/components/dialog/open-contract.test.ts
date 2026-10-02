@@ -21,6 +21,22 @@ g.CustomEvent = dom.window.CustomEvent;
 g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
 g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0);
 
+// JSDOM has no showModal(), and without it `layer: "top"` falls back to the
+// default layer (config.ts): stubbed as in modal-layer.test.ts, the open
+// attribute and a queued close event, so the top-layer tests below run the
+// top layer's code.
+g.HTMLDialogElement = dom.window.HTMLDialogElement;
+const dialogProto = dom.window.HTMLDialogElement.prototype as unknown as Record<string, unknown>;
+dialogProto.showModal = function (this: HTMLDialogElement) {
+  if (!this.isConnected) throw new Error('InvalidStateError: not connected');
+  this.setAttribute('open', '');
+};
+dialogProto.close = function (this: HTMLDialogElement) {
+  if (!this.hasAttribute('open')) return;
+  this.removeAttribute('open');
+  setTimeout(() => this.dispatchEvent(new dom.window.Event('close')), 0);
+};
+
 // JSDOM lays nothing out, so every element would look invisible to the
 // focusable filter
 Object.defineProperty(dom.window.HTMLElement.prototype, 'offsetWidth', { get: () => 40, configurable: true });
@@ -371,6 +387,43 @@ describe('dialog: open means it can be dismissed', () => {
     document.dispatchEvent(escape());
     expect(dialog.isOpen()).toBe(false);
     expect(seen).toEqual(['beforeopen', 'open', 'afteropen', 'beforeclose', 'close']);
+  });
+
+  // In the top layer Escape reaches the dialog as its `cancel` event. Opened
+  // by showModal() inside an Escape keydown, the dialog is the browser's
+  // topmost modal while that key press is still being handled, and the
+  // browser sends it a `cancel` for it: before the next timer task, in
+  // Chromium, Firefox and WebKit (measured, see the PR). JSDOM sends none, so
+  // the test dispatches it where the browsers do.
+  test('top layer: the cancel of the key press that opened it does not close it; the next one does', async () => {
+    const { dialog, seen } = make({ layer: 'top' });
+    expect(dialog.element.tagName).toBe('DIALOG');
+    const cancel = () => new dom.window.Event('cancel', { cancelable: true });
+    trigger.addEventListener('keydown', (event) => { if (event.key === 'Escape') dialog.open(); });
+    trigger.dispatchEvent(escape());
+    const first = cancel();
+    dialog.element.dispatchEvent(first);
+    // Prevented, so the browser leaves the dialog open, and not closed by the dialog either
+    expect(first.defaultPrevented).toBe(true);
+    expect(dialog.isOpen()).toBe(true);
+    expect(seen).toEqual(['beforeopen', 'open']);
+    await after(SETTLED);
+    expect(dialog.isOpen()).toBe(true);
+    expect(seen).toEqual(['beforeopen', 'open', 'afteropen']);
+    const second = cancel();
+    dialog.element.dispatchEvent(second);
+    expect(second.defaultPrevented).toBe(true);
+    expect(dialog.isOpen()).toBe(false);
+    expect(seen).toEqual(['beforeopen', 'open', 'afteropen', 'beforeclose', 'close']);
+  });
+
+  test('top layer: a cancel in a later task than open() closes it, shown or not', async () => {
+    const { dialog, seen } = make({ layer: 'top' });
+    dialog.open();
+    await after(0);
+    dialog.element.dispatchEvent(new dom.window.Event('cancel', { cancelable: true }));
+    expect(dialog.isOpen()).toBe(false);
+    expect(seen).toEqual(['beforeopen', 'open', 'beforeclose', 'close']);
   });
 
   test('closeOnEscape: false is still honoured in that window', async () => {
