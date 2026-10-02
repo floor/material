@@ -28,6 +28,12 @@ Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
   `withInput`'s `change` reports the checked boolean as `value`, with the input's string value
   as `valueAttribute`.
 
+### Fixed
+
+- **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
+  centre while animating in and be squeezed at the viewport edge. Placement now uses its full
+  layout size; reduced-motion placement is unchanged.
+
 ## [0.10.5] - 2026-10-02
 
 Preparing for 1.0.0, continued: every exported identifier writes "text field" as two words
