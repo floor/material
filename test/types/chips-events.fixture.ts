@@ -1,5 +1,5 @@
 // FLO-114: the container emits positional arguments through its own dispatcher.
-import { createChips, type ChipsComponent, type ChipsConfig, type ChipsEvents, type ChipsChangeEvent, type ChipComponent, type ChipChangePayload, type ChipEvents } from "../../src/components/chips";
+import { createChips, type ChipsComponent, type ChipsConfig, type ChipsEvents, type ChipsChangeEvent, type ChipsAddEvent, type ChipsRemoveEvent, type ChipComponent, type ChipChangePayload, type ChipEvents } from "../../src/components/chips";
 import { CHIPS_EVENTS } from "../../src/components/chips/constants";
 
 type Equals<A, B> =
@@ -9,27 +9,31 @@ export const change: Equals<Parameters<ChipsEvents["change"]>, [event: ChipsChan
 // FLO-320: the payload names the element's field; the array and the second argument stay, deprecated.
 export const fields: Equals<Pick<ChipsChangeEvent, "value" | "selected" | "changed">, { value: string | string[] | null; selected: (string | null)[]; changed: string | null }> = true;
 export const stillArray: ChipsChangeEvent extends (string | null)[] ? true : false = true;
-export const add: Equals<Parameters<ChipsEvents["add"]>, [chip: ChipComponent]> = true;
-export const remove: Equals<Parameters<ChipsEvents["remove"]>, [chip: ChipComponent]> = true;
+export const add: Equals<Parameters<ChipsEvents["add"]>, [event: ChipsAddEvent]> = true;
+export const remove: Equals<Parameters<ChipsEvents["remove"]>, [event: ChipsRemoveEvent]> = true;
+export const addShape: Equals<ChipsAddEvent, { value: string | string[] | null; chip: ChipComponent }> = true;
+export const removeShape: Equals<ChipsRemoveEvent, { value: string | string[] | null; chip: ChipComponent; chipValue: string | null }> = true;
+export const addValue: Equals<ChipsAddEvent["value"], ReturnType<ChipsComponent["getValue"]>> = true;
+export const removeValue: Equals<ChipsRemoveEvent["value"], ReturnType<ChipsComponent["getValue"]>> = true;
 export const configEvents: Equals<ChipsConfig["on"], Partial<ChipsEvents> | undefined> = true;
 const chips = createChips({ on: {
   change: (values, changed) => { const selected: (string | null)[] = values; const value: string | null = changed; void selected; void value; },
-  add: chip => chip.getValue(),
-  remove: chip => chip.getText(),
+  add: event => event.chip.getValue(),
+  remove: event => event.chip.getText(),
 } });
 export const inferred: Equals<Parameters<Parameters<typeof chips.on<"change">>[1]>, Parameters<ChipsEvents["change"]>> = true;
 const handler: ChipsEvents["change"] = () => {};
 export const chained: ChipsComponent = chips.on(CHIPS_EVENTS.CHANGE, handler).off("change", handler);
-chips.on("add", chip => chip.setSelected(true));
-chips.off("remove", chip => chip.getValue());
+chips.on("add", event => event.chip.setSelected(true));
+chips.off("remove", event => event.chip.getValue());
 chips.on("change", () => {});
 // @ts-expect-error change carries two positional values, not a DOM event
 chips.on("change", (event: Event) => event.preventDefault());
 // @ts-expect-error off checks the same contract
 chips.off("change", (value: string) => value.toUpperCase());
-// @ts-expect-error add receives a chip, not a wrapped payload
-chips.on("add", payload => payload.chip.getValue());
-// @ts-expect-error remove receives a chip, not an index
+// @ts-expect-error add receives a wrapped payload, not a bare chip
+chips.on("add", chip => chip.getValue());
+// @ts-expect-error remove receives a payload object, not an index
 chips.off("remove", (index: number) => index.toFixed());
 // @ts-expect-error misspelled names are rejected
 chips.on("chnage", () => {});

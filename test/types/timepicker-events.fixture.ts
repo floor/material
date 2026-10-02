@@ -4,6 +4,7 @@ import createTimePicker, {
   type TimePickerComponent,
   type TimePickerEvents,
   type TimePickerValueEvent,
+  type TimePickerInputEvent,
   type TimePickerTapPayload,
   type TimePickerSwipePayload,
 } from "../../src/components/timepicker";
@@ -19,9 +20,10 @@ export const names: Equals<keyof TimePickerEvents,
 // One object, the <m-timepicker> element's shape (FLO-320)
 export const changeIsValue: Equals<Parameters<TimePickerEvents["change"]>, [event: TimePickerValueEvent]> = true;
 export const valueIsString: Equals<TimePickerValueEvent, { value: string }> = true;
-// The draft, while the picker is open (FLO-288): the same shape as change.
-export const inputIsValue: Equals<Parameters<TimePickerEvents["input"]>, [event: TimePickerValueEvent]> = true;
-export const confirmIsString: Equals<Parameters<TimePickerEvents["confirm"]>, [string]> = true;
+// Input reports both the committed value and the draft.
+export const inputIsValue: Equals<Parameters<TimePickerEvents["input"]>, [event: TimePickerInputEvent]> = true;
+export const inputShape: Equals<TimePickerInputEvent, { value: string; draftValue: string }> = true;
+export const confirmIsValue: Equals<Parameters<TimePickerEvents["confirm"]>, [event: TimePickerValueEvent]> = true;
 export const openHasNoPayload: Equals<Parameters<TimePickerEvents["open"]>, []> = true;
 export const closeHasNoPayload: Equals<Parameters<TimePickerEvents["close"]>, []> = true;
 export const cancelHasNoPayload: Equals<Parameters<TimePickerEvents["cancel"]>, []> = true;
@@ -35,7 +37,8 @@ export const inferredChange: Equals<Parameters<Parameters<typeof picker.on<"chan
 
 const onChange = ({ value }: TimePickerValueEvent) => { value.toUpperCase(); };
 export const chained: TimePickerComponent = picker.on(TIMEPICKER_EVENTS.CHANGE, onChange).off("change", onChange);
-picker.on(TIMEPICKER_EVENTS.CONFIRM, value => value.toUpperCase());
+picker.on(TIMEPICKER_EVENTS.CONFIRM, event => event.value.toUpperCase());
+picker.on(TIMEPICKER_EVENTS.INPUT, event => { event.value.toUpperCase(); event.draftValue.toUpperCase(); });
 picker.on(TIMEPICKER_EVENTS.OPEN, () => {}).off("close", () => {}).on("cancel", () => {});
 picker.on("click", payload => { payload.event.clientX; payload.element.style; });
 picker.on("keydown", payload => payload.originalEvent.key);

@@ -12,6 +12,47 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **Time picker, select and radio events agree with their getters (FLO-380).**
+
+  | Event | 0.10 payload | 1.0 payload |
+  |---|---|---|
+  | Factory time picker `input` | `{ value: draft }` | `{ value: committed, draftValue: draft }` |
+  | `<m-timepicker>` `input` detail | `{ value: draft }` | `{ value: committedOrEmpty, draftValue: draft }` |
+  | Factory time picker `confirm` | time string | `{ value: time }` |
+  | `<m-timepicker>` `confirm` detail | no event | `{ value: time }` |
+  | Factory select `change` on empty ID | `{ value: "", ... }` | `{ value: null, ... }` |
+  | `<m-select>` `change` on empty ID | `{ value: "" }` | `{ value: null }` |
+  | `<m-radios>` `change` on empty ID | `{ value: "" }` | `{ value: null }` |
+
+  While the time picker is open, `input.value` no longer moves with the dial:
+  it is the committed time. Read `draftValue` for live edits. The factory's
+  `onInput` callback also receives the new `{ value, draftValue }` object,
+  described by the newly exported `TimePickerInputEvent` type. `onConfirm(string)`
+  in the time picker config still receives a string; factory `confirm` listeners
+  now destructure `{ value }`. `SelectChangeEvent["value"]` is now `string | null`
+  for an empty option ID. The radio factory still reports its string getter,
+  including `""`; handle `null` for empty select or radio element selections.
+
+- **Chip-set `add` and `remove` report the live selection (FLO-380).** Factory
+  callbacks receive one object instead of a bare chip:
+
+  | Event | 0.10 payload | 1.0 payload |
+  |---|---|---|
+  | `add` | `chip` | `{ value: string \| string[] \| null, chip }` |
+  | `remove` | `chip` before removal | `{ value: string \| string[] \| null, chip, chipValue: string \| null }` after removal |
+  | `<m-chips>` `remove` detail | `{ value: removedId }` | `{ value: remainingSelection, chipValue: removedId }` |
+
+  `value` matches `getValue()` inside the callback, including for selected chips.
+  Inside a factory `remove` handler, `event.chip` is already destroyed and out
+  of the set. Its getters still answer, but `getChips().indexOf(event.chip)` is
+  `-1` and its element is disconnected.
+  The element continues to emit one `remove` and no separate `change` for user
+  removal; declaration edits remain silent. Migration: read the chip from
+  `event.chip` in factory handlers and the removed identifier from
+  `event.chipValue` (or `event.detail.chipValue` on the element). Read the
+  remaining selection from `event.value` or `event.detail.value`. The exported
+  `ChipsAddEvent` and `ChipsRemoveEvent` types describe the new factory payloads.
+
 - **Tab and panel ids are derived from the value with a safe encoding (FLO-430).** A value of
   `[A-Za-z0-9_-]` only keeps its ids, `tab-<group>-<value>` and `tabpanel-<group>-<value>`. Any
   other value gets `tabx-<group>-<encoded>` and
@@ -206,6 +247,23 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - Internal detached element lifecycle, style registry seams, and a synchronous server DOM
   scope with inert scheduling and complete resource teardown (FLO-363, part A). The public
   SSR renderer follows separately.
+- **Canonical names (FLO-383):** `createTextField`, `TextFieldConfig` and `TextFieldComponent` (M3
+  writes "text field" as two words), `CardConfig`, `TopAppBarComponent` and
+  `BottomAppBarComponent`, from `mtrl` and from each component's subpath. They are the same
+  factory and types as the old names. `createTopAppBar` now returns the one public `TopAppBar`
+  declaration (`top-app-bar.ts` had a second); assignability is unchanged.
+- **API gaps from the 1.0 audit (FLO-384).**
+  - `isDisabled()` on every component that can be disabled and lacked it: button, icon button,
+    FAB, extended FAB, checkbox, switch, text field, select, radios, button group and a tab.
+  - Exported beside their factories: `ButtonEvents` (`mtrl/components/button`), `MenuEvents`,
+    `SelectEvents`, the button group's `ButtonGroupKind`, `ButtonGroupSelection` and
+    `ButtonGroupChangeEvent`, and `createTab` from `mtrl/components/tabs`.
+  - Event maps that now declare what is already emitted: a toggle button's `change`
+    (`{ selected }`), the card's `expandedChanged` and the list's `keydown`. The list's
+    `scroll` is typed as the forwarded payload; its `component` field, never sent, is optional
+    and deprecated (1.0 removes it).
+  - The `mtrl/components/<name>/constants` subpaths' exports are pinned beside the indexes
+    (`bun run component-exports:check`).
 - **Contrast on every theme (FLO-406).** `data-theme-contrast="standard"`, `"medium"`
   and `"high"` select M3 contrast levels in light and dark. Put the attribute on the
   same element as `data-theme`, including each nested theme. With no contrast attribute,
@@ -252,6 +310,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed
 
+- CI's Solid and Vue SSR runs on the lowest supported peer version are ordinary commands,
+  `solid-ssr:floor` and `vue-ssr:floor` (FLO-426). Each reads the floor from `peerDependencies`,
+  installs it without saving, runs the check and restores the installed version, so nothing after
+  it runs on the floor version unnoticed.
 - **A plain filled text field sets no placement up (FLO-378).** Every text field installed a
   class observer, a resize observer and a window `resize` listener, and scheduled a first
   measure, even a filled field with no prefix, suffix or leading icon, which has nothing to
@@ -267,6 +329,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Deprecated
 
+- **The old names, renamed (FLO-383):** `createTextfield` → `createTextField`, `TextfieldConfig` →
+  `TextFieldConfig`, `TextfieldComponent` → `TextFieldComponent`, `CardSchema` → `CardConfig`,
+  `TopAppBar` → `TopAppBarComponent`, `BottomAppBar` → `BottomAppBarComponent`. Each is flagged
+  where it is imported and removed in 1.0. Tags, CSS classes, folders and events keep their
+  names.
 - **Component internals on their subpaths (FLO-381).** `mtrl/components/<name>` is public API, and
   some indexes re-exported implementation details. These are deprecated there and removed in
   1.0.0, with no replacement (they are internal):
@@ -333,6 +400,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   last pending field is destroyed, allowing the next lifecycle to schedule again (FLO-363).
 - **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
   label names the field.
+- The checkbox and switch change payload docs said setters emit `change`; they are silent, as
+  they have been since FLO-328 (FLO-384).
 - **Menu item ids containing selector syntax keep submenu keyboard navigation working (FLO-429).**
   Parent lookup compares `data-id`, `data-owner`, and `data-level` as strings.
 - **Search keeps custom root classes (FLO-421).** Both contained and divided

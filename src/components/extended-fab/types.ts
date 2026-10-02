@@ -575,6 +575,9 @@ export interface ExtendedFabComponent {
    */
   disable: () => ExtendedFabComponent;
 
+  /** Whether the extended FAB is disabled (FLO-384) */
+  isDisabled: () => boolean;
+
   /**
    * Sets the Extended FAB's icon
    *

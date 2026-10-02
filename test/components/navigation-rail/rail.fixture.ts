@@ -55,9 +55,9 @@ test('selection swaps icons and modified link clicks preserve current page', () 
 test('select carries value, the id, as the element change does (FLO-320)', () => {
     const selected: unknown[] = [];
     const rail = make({ items: [{ id: 'a', label: 'A', icon: 'A', active: true }, { id: 'b', label: 'B', icon: 'B' }] });
-    rail.on('select', (event) => selected.push([event.id, event.value]));
+    rail.on('select', (event) => selected.push([event.id, event.value, rail.getValue()]));
     (rail.element.querySelector('[data-id="b"]') as HTMLElement).click();
-    expect(selected).toEqual([['b', 'b']]);
+    expect(selected).toEqual([['b', 'b', 'b']]);
 });
 test('items are copied, badges update without losing focus, invalid IDs preserve selection', () => {
     const items = [{ id: 'a"b', label: 'Home', icon: 'H', active: true }];

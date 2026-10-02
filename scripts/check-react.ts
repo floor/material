@@ -11,6 +11,7 @@
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import type { BunPlugin } from "bun";
+import { checkAdapterEventValues } from "./check-adapter-event-values";
 
 // React 18 is installed as react-18 and react-dom-18; this points every import
 // of react and react-dom, including react-dom's own, at them.
@@ -210,6 +211,8 @@ const run = async (version: 18 | 19): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("diet")?.textContent === "veg,gf");
     assert.equal(await diet.getByRole("gridcell", { name: "Gluten free", exact: true, selected: true }).count(), 1);
     check("chips: controlled value and onChange");
+    await checkAdapterEventValues(page);
+    check("change/input handlers read boolean, string and array detail.value equal to the host model");
 
     // ------------------------------------------------------------- navigation rail
     const rail = page.getByRole("navigation", { name: "Main" });

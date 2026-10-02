@@ -22,6 +22,7 @@ interface ComponentWithRadio {
   removeOption: (value: string) => void;
   enable: () => void;
   disable: () => void;
+  isDisabled: () => boolean;
   enableOption: (value: string) => void;
   disableOption: (value: string) => void;
   getClass: (name: string) => string;
@@ -72,6 +73,10 @@ export const withAPI =
       enable() {
         component.enable();
         return this;
+      },
+
+      isDisabled() {
+        return component.isDisabled();
       },
 
       disable() {
