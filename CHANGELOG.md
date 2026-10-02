@@ -158,6 +158,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `.mtrl-textfield…` or `::part(textfield)` matches nothing, a `classList` call with the old
   class changes nothing, and defaults set under `'textfield'` are ignored. Nothing warns.
   Search your CSS and your code for `textfield`.
+- **A text field with a prefix or a suffix has no inline padding (FLO-299).**
+  `field.input.style.paddingLeft` and `paddingRight` read `''`, and the label has no inline
+  `left`: the stylesheet pads the input from `--mtrl-text-field-prefix-width` and
+  `--mtrl-text-field-suffix-width`, which the field writes on its root. A page rule that set
+  the padding of `.mtrl-text-field__input` beside an affix was overridden by the inline value
+  and now competes with the stylesheet's rule.
 - **A FAB's `'surface'` or `'small'`** (the options take any string) renders as the default
   `primary-container`, or at the default 56dp.
 - **`data-theme="winter"`** (or `material`, `browngreen`, `legacy`) on the root element gets the
@@ -1040,6 +1046,56 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **Text field: the spacing follows the M3 measurements (FLO-299).** A field's layout shifts
+  by the amounts below; nothing in the API changes. Sources: the measurement tables on
+  m3.material.io's text fields page, and Compose's `TextFieldImpl.kt` for the positions the
+  site gives only as diagrams.
+  - **A filled field's text is 24px down under its label and 8px above the bottom edge**
+    ("Top/bottom padding 8dp"; the label's 16dp line is between): it was 22px down and 10px
+    above. The floated label's line is centred 16px down, 1.8px lower than it was. A select's
+    text moves with it. **Without a label the text is centred,** 16px down
+    (`contentPaddingWithoutLabel`): it kept the labelled field's place, 22px.
+  - **An outlined field's text is 16px down** (was 15.5px), and its floated label is centred
+    on the top edge (it sat 1.7px below it).
+  - **A prefix or suffix is on the text's line** in every case; in a compact field it was
+    1.5px above it, in an outlined one half a pixel below.
+  - **Compact density, which M3 does not measure, keeps its own heights and takes the rules
+    that are not numbers:** the outlined floated label centred on the edge (1.5px lower
+    before), the text centred in an outlined or unlabelled field (10px down; it was 10.5px
+    outlined, 13.5px filled without a label), and the insets around its 20px icon box, 12px
+    and 16px.
+  - **An icon is 12px in and what follows it 16px further** ("Left/right padding with icons
+    12dp", "Padding between icons and text 16dp"): beside a leading icon the text and the
+    label start 52px in, and before a trailing icon the text ends 52px in. Both were 44px (the
+    outlined field's text 45px). At compact density, whose icon box is 20px, 48px (was 40px,
+    and 41px outlined). A select's text ends 52px before its end, as it has a trailing icon.
+  - **A filled field's floated label stays beside the leading icon,** 52px in, where the
+    resting label is (Compose places both with one expression). It moved to 16px. The outlined
+    field's floated label goes to the notch, 16px in, as before.
+  - **A prefix starts where the content does,** 16px in (`TextFieldPadding`), or 52px beside a
+    leading icon; it was 12px, and 44px. **An affix is 2px from the text**
+    (`PrefixSuffixTextPadding`): the prefix was 4px from it (5px outlined), and the text
+    touched the suffix.
+  - **The label is not moved by a prefix** (Compose: "Prefix/suffix does not get applied to
+    label"). Resting, it starts 16px in, where it was 25.5px beside a "$" (the prefix is hidden
+    while the label rests). Floated in a filled field, 16px, where it was 12px.
+  - **The outlined input has no border at its sides:** its transparent border is top and
+    bottom only and its horizontal padding is 16px (was 15px beside a 1px border), so both
+    variants place the text at the same pixel. The outline itself is unchanged.
+  - **A multiline field's first line and label are where a single-line field has them**
+    (Compose places the text with no single-line branch). The first line starts 24px down in a
+    filled field with a label (was 12px) and 16px down in an outlined field or without a label
+    (was 13px and 12px); the resting label is 16px down (was 12px), and the floated label is
+    the single-line field's (4px lower than it was). Compact, which M3 does not measure, takes
+    the compact single-line field's: the first line 14px down under a filled label (was 8px),
+    10px otherwise (was 8px and 9px). The Sass map's `padding-top-multiline` is 16px (was
+    12px) and `padding-top-multiline-compact` 10px (was 8px), with two new keys for the filled
+    field's label, `padding-top-multiline-label` (24px) and
+    `padding-top-multiline-compact-label` (14px). **The 100px minimum height stays:** M3 gives a
+    text area no height ("Text areas are taller than text fields and wrap overflow text onto a
+    new line … These should be used instead of multi-line fields on the web",
+    m3.material.io/components/text-fields/guidelines, "Input text"); Compose's 56dp is its
+    multi-line field, which starts as one line and grows.
 - **SSR docs: what the two style modes cost (FLO-554).** Inline styles stay the default. The
   README's server-rendering section and `RenderOptions`' TSDoc now say what inline costs (gzip
   cannot see a repeat further back than its 32 KB window, so serve brotli or use link mode
@@ -1067,6 +1123,32 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **Text field: with reduced motion, the filled field's focus indicator no longer fades
+  (FLO-299).** Its 0.2s transition was not in the field's reduced-motion rule, where the
+  label, the outline, the icons and the affixes are. It also runs on the motion tokens now
+  (`duration-short4`, `easing-standard`: the same 0.2s, on the standard curve, where it was the
+  browser's `ease`).
+- **Text field, right to left: a compact filled field with a leading icon keeps its compact
+  padding (FLO-299).** The right-to-left rule beside an icon set all four sides, so the
+  field took the default density's top and bottom padding and its text sat 2.5px low.
+- **A filled multiline text field's first line no longer runs under its floated label
+  (FLO-299).** The textarea padded its text 12px from the top whatever the variant, and the
+  floated label's box ends 19.2px down: they overlapped by 7.2px (13px at compact density).
+  The first line now starts under the label, at the single-line field's text (the values are
+  under "Changed"). `<m-text-field type="multiline">` reserves the same first line before it
+  upgrades, so a sibling on its line does not move when the element is defined.
+- **Text field: beside an icon, a prefix or a suffix no longer leaves the value under the icon
+  (FLO-299).** The input's padding was sized from the affix alone. With a leading icon and a
+  prefix the value began 25.5px in, under the icon (12 to 36px) and before the prefix (44px);
+  a trailing icon with a suffix did the same at the other end; right to left, the padding was
+  on the wrong side. The text now starts 2px after the prefix and ends 2px before the suffix,
+  whatever stands outside them, in both variants, both densities and both directions
+  (measured: with the icon, the text starts at 63.5px, after a 9.5px prefix at 52px). The
+  script no longer writes `padding-left` and `padding-right` on the input or `left` on the
+  label. It writes each affix's measured width on the field's root, as
+  `--mtrl-text-field-prefix-width` and `--mtrl-text-field-suffix-width`, and the stylesheet
+  adds the icon's inset. The insets themselves, the gap to the text and the label, which no
+  longer follows the prefix, are under "Changed".
 - **A top-layer dialog that refuses Escape stays open, however often it is pressed
   (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
   listener that refused, the third Escape made the browser close the `<dialog>` while

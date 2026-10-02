@@ -128,8 +128,8 @@ export const withPlacement =
       ensureOutline();
 
     /**
-     * Reads what placing the label, the notch and the prefix and suffix
-     * needs, and returns the write that applies it: the batch runs every
+     * Reads what placing the notch and padding the input beside a prefix or
+     * suffix needs, and returns the write that applies it: the batch runs every
      * field's read before any field's write (FLO-335).
      */
     const measure = (): (() => void) => {
@@ -142,15 +142,13 @@ export const withPlacement =
       const isOutlined = has("outlined");
       const isFocused = has("focused");
       const isEmpty = has("empty");
-      const hasLeadingIcon = has("with-leading-icon");
 
       // Reads. The direction as computed, which reaches into a shadow root
       // where the stylesheet's [dir] selectors do not; offsetWidth is the
       // label's untransformed width, so it holds mid-transition too.
       const rtl = isOutlined ? getComputedStyle(element).direction === "rtl" : false;
       const labelWidth = isOutlined && labelEl ? labelEl.offsetWidth : 0;
-      const prefixWidth = prefixEl && component.input ? prefixEl.getBoundingClientRect().width : null;
-      const suffixWidth = suffixEl && component.input ? suffixEl.getBoundingClientRect().width : null;
+      const affixes = [prefixEl, suffixEl].map((affix) => affix?.getBoundingClientRect().width);
 
       return () => {
         if (destroyed) return;
@@ -164,30 +162,12 @@ export const withPlacement =
           outline.classList.toggle(`${outlineClass}--notched`, isOutlined && !!labelEl && (isFocused || !isEmpty));
         }
 
-        // The prefix: input padding and, at rest, the label beside it
-        if (prefixWidth !== null && component.input) {
-          const inputPadding = prefixWidth + 4 + 12; // 4px spacing, 12px padding
-          component.input.style.paddingLeft = `${inputPadding}px`;
-          if (labelEl) {
-            if (!isFocused && isEmpty) {
-              // When unfocused and empty, align with prefix/input
-              labelEl.style.left = `${hasLeadingIcon ? Math.max(inputPadding, 44) : inputPadding}px`;
-            } else {
-              // When focused or filled, move to default position: the
-              // stylesheet's for outlined, where the notch expects the label
-              labelEl.style.left = isOutlined ? "" : "12px";
-            }
-          }
-        } else if (hasLeadingIcon && labelEl && isOutlined) {
-          // The stylesheet places the label by the icon at rest and at the
-          // start of the notch when floated, per density and direction
-          labelEl.style.left = "";
-        }
-
-        // The suffix: input padding
-        if (suffixWidth !== null && component.input) {
-          component.input.style.paddingRight = `${suffixWidth + 4 + 12}px`; // 4px spacing, 12px padding
-        }
+        // The prefix and suffix widths, for the stylesheet: it adds each to
+        // the inset its side has (an icon, the density, the direction) to pad
+        // the input (FLO-299). The label is the stylesheet's alone.
+        affixes.forEach((width, end) => {
+          if (width !== undefined) element.style.setProperty(`--${PREFIX}-${COMPONENT}-${end ? "suffix" : "prefix"}-width`, `${width}px`);
+        });
       };
     };
 
