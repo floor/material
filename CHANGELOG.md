@@ -1125,6 +1125,24 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 ### Fixed
 
 - **A button's asymmetric icon padding mirrors in right-to-left.** A size `s` button with a leading icon, and a text button at `xs` or `s` with a leading icon, keep 12px before the icon and 16px after the label in both directions. Under `dir="rtl"` those insets had stayed physical, so the start side was 16px and the end side 12px. The insets are logical and follow the direction the icon already follows, including into a shadow root whose `dir` ancestor is outside it.
+- **`<m-text-field>` in a right-to-left page is mirrored (FLO-562).** A `dir="rtl"` on an
+  ancestor is outside the element's shadow root, where the stylesheet's `[dir]` selectors do
+  not reach, and the class that stands in for it was set for the outlined variant only: a
+  filled `<m-text-field>` kept its left-to-right layout (label, icons, prefix and suffix on
+  the wrong side, the text's padding unswapped), and an outlined one mirrored its label and
+  its outline's corners only. A field now takes the `mtrl-text-field--rtl` class from its
+  computed direction in both variants, and the stylesheet mirrors on that class or on an
+  ancestor's `dir`. The same holds for a text field built by the factory inside a shadow
+  root of your own. In the light DOM a plain filled field is still mirrored by the
+  stylesheet alone, with no style read: it reads its direction only inside a shadow root,
+  once, in the task that created it. **A plain filled field that is attached to a shadow
+  root in a later task than the one that created it, or whose host is not yet connected
+  when that task ends, is not mirrored until you call `updatePositions()`.** A direction
+  changed afterwards is likewise picked up only by the field's next placement
+  (`updatePositions()`, or a setter that places), as it was for the outlined variant; the
+  field does not watch for either. Also fixed, in the light DOM too: **right to left, a
+  field with both a leading and a trailing icon** padded its text 16px on the leading icon's
+  side, under the icon; it is 52px on both.
 - **Text field: with reduced motion, the filled field's focus indicator no longer fades
   (FLO-299).** Its 0.2s transition was not in the field's reduced-motion rule, where the
   label, the outline, the icons and the affixes are. It also runs on the motion tokens now
