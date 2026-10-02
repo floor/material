@@ -190,6 +190,18 @@ export async function checkChips(page: Page, artifacts: string): Promise<void> {
   await page.locator("#grid-set [role=gridcell]").nth(2).click();
   assert.deepEqual(await ringOf(), { label: "Three", ring: "0px" }, "no ring where focusVisible is ignored");
   await page.evaluate(() => { HTMLElement.prototype.focus = (window as unknown as { nativeFocus: HTMLElement["focus"] }).nativeFocus; });
+  // FLO-542: a chip destroyed directly while it has focus hands focus to its
+  // neighbour, as the set's removeChip does; it used to fall to the page.
+  const handed = await page.evaluate(() => {
+    type Chip = { focus: () => void; destroy: () => void; getValue: () => string | null };
+    const set = (window as unknown as { gridSet: { getChips: () => Chip[] } }).gridSet;
+    const two = set.getChips()[1];
+    two.focus();
+    const before = document.activeElement?.textContent;
+    two.destroy();
+    return { before, after: document.activeElement?.textContent, left: set.getChips().map((chip) => chip.getValue()) };
+  });
+  assert.deepEqual(handed, { before: "Two", after: "Three", left: ["one", "three"] }, "a focused chip destroyed directly hands focus to the next");
   await page.evaluate(() => {
     (window as unknown as { gridSet: { destroy: () => void } }).gridSet.destroy();
     document.querySelector("#grid-set")?.remove();
