@@ -18,3 +18,11 @@ export const button: DialogButton = { text: "OK", color: "primary" };
 export const tooltip: TooltipConfig = { text: "Hi", rich: true };
 // @ts-expect-error TOOLTIP_DEFAULTS.RICH was the default of the removed option
 export const richDefault = TOOLTIP_DEFAULTS.RICH;
+
+// Commit 2: rippleConfig's timing and opacity were never applied (FLO-268)
+import type { ButtonConfig } from "../../src/components/button/types";
+import type { RippleConfig } from "../../src/core/compose/features/ripple";
+// @ts-expect-error rippleConfig.timing: the stylesheet draws the wave's motion
+export const buttonRipple: ButtonConfig = { rippleConfig: { duration: 300, timing: "linear" } };
+// @ts-expect-error opacity: the wave is the pressed state layer, drawn by the stylesheet
+export const coreRipple: RippleConfig = { duration: 300, opacity: ["0.4", "0"] };

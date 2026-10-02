@@ -12,7 +12,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
-- **The options 0.10 promised to remove in 1.0 are removed.** Migration:
+- **The options 0.10 deprecated are removed**, first those it promised to remove in 1.0. Migration:
 
   | 0.10 | 1.0 |
   |---|---|
@@ -20,6 +20,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   | a dialog button's `color` | nothing: it had no effect; M3's dialog actions are text buttons in the dialog's colours (FLO-324) |
   | the tooltip's `rich` option, and `TOOLTIP_DEFAULTS.RICH` | `variant: 'rich'`; `rich` was never read (FLO-324) |
   | card `withElevation` (internal since FLO-381) | nothing: a no-op; the variant sets the elevation (FLO-323) |
+  | `rippleConfig.timing` and `rippleConfig.opacity` (button, icon button, FAB, extended FAB, button group, radios, tabs, and the core `RippleConfig`) | nothing: never applied; the stylesheet draws the wave's motion and opacity (FLO-260, FLO-268). `duration` stays. |
 - **1.0 exports nothing deprecated.** What 0.10.0 deprecated and 0.10.x already replaced (or
   never used) is removed. Migration:
 
