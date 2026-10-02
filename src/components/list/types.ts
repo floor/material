@@ -22,7 +22,14 @@ export interface ListConfig<T = unknown> {
 
   /**
    * Whether to track item selection
-   * When true, clicked items will receive a selected class
+   * When true, clicked items will receive a selected class.
+   *
+   * With `trackSelection`, each row's action is a button with `aria-pressed`,
+   * inside its `listitem`. That is this option's contract and it stays: a row
+   * can also hold a control of the app's, and pressing the selected row again
+   * deselects it. A listbox of options (`role="listbox"`, `aria-selected`,
+   * one tab stop), which allows neither, would be a separate opt-in mode, not
+   * a change to this one.
    * @default true
    */
   trackSelection?: boolean;
@@ -95,6 +102,12 @@ export interface ListItem {
   overline?: string;
   supportingText?: string;
   leading?: ListSlot;
+  /**
+   * The slot at the row's end: text, an icon, or a control of the app's
+   * (a checkbox, a radio, a switch). It is sized by its content: a control
+   * that fills its container, such as a slider, is not a list-row control
+   * and goes outside the row.
+   */
   trailing?: ListSlot;
   /** Blocks user activation; programmatic selection is still allowed. */
   disabled?: boolean;

@@ -90,6 +90,10 @@ demo/
 .agents/*
 !.agents/agents.yaml
 
+# the build stages into this directory and renames it to dist; it is left
+# behind only when a build is killed before its cleanup runs
+.mtrl-build-*/
+
 # the adapter checks write their server bundle here while they run
 .check-react-*.js
 .check-vue.js

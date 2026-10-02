@@ -52,6 +52,7 @@ export type {
   CheckableManager,
   TextInputComponent,
   LabelComponent,
+  LabelManager,
   TrackComponent,
   EnhancedEventComponent,
   ThrottleComponent,
