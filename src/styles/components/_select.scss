@@ -8,7 +8,7 @@
 $component: "#{base.$prefix}-select";
 
 .#{$component} {
-    // Base styles - building on textfield base
+    // Base styles - building on text field base
     position: relative;
     width: 100%;
     cursor: pointer;
@@ -27,15 +27,15 @@ $component: "#{base.$prefix}-select";
     // Transition
     @include m.motion-transition(border-color, background-color, box-shadow);
 
-    // Ensure the textfield input works with our select
-    .#{base.$prefix}-textfield__input {
+    // Ensure the text field input works with our select
+    .#{base.$prefix}-text-field__input {
         cursor: pointer;
         pointer-events: none; // Let clicks pass through to the container
         caret-color: transparent; // Hide text cursor since it's not editable
     }
 
     // Trailing icon (dropdown arrow)
-    .#{base.$prefix}-textfield__trailing-icon {
+    .#{base.$prefix}-text-field__trailing-icon {
         pointer-events: auto; // Allow clicks on the icon
         cursor: pointer;
         transform: translateY(-50%); // Keep vertical centering
@@ -61,34 +61,34 @@ $component: "#{base.$prefix}-select";
         // menu (FLO-300 moved the indicator to the field, which revived it).
 
         // These styles handle the focused state when the menu is open
-        .#{base.$prefix}-textfield--filled {
-            .#{base.$prefix}-textfield__field::before {
+        .#{base.$prefix}-text-field--filled {
+            .#{base.$prefix}-text-field__field::before {
                 opacity: 1; // Show the active indicator
             }
 
-            .#{base.$prefix}-textfield__label {
+            .#{base.$prefix}-text-field__label {
                 color: t.color("primary");
             }
 
             // Fix for filled variant positioning
-            .#{base.$prefix}-textfield__trailing-icon {
-                top: 28px; // Match the filled textfield's icon positioning
+            .#{base.$prefix}-text-field__trailing-icon {
+                top: 28px; // Match the filled text field's icon positioning
             }
         }
 
-        .#{base.$prefix}-textfield--outlined {
+        .#{base.$prefix}-text-field--outlined {
             &::before {
                 opacity: 1;
                 border-color: t.color("primary");
             }
 
-            .#{base.$prefix}-textfield__label {
+            .#{base.$prefix}-text-field__label {
                 color: t.color("primary");
             }
         }
 
         // Apply rotation to SVG instead of the container for better positioning
-        .#{base.$prefix}-textfield__trailing-icon {
+        .#{base.$prefix}-text-field__trailing-icon {
             color: t.color("primary");
 
             svg {
@@ -103,15 +103,15 @@ $component: "#{base.$prefix}-select";
         opacity: 0.38;
         cursor: default;
 
-        .#{base.$prefix}-textfield__input,
-        .#{base.$prefix}-textfield__trailing-icon {
+        .#{base.$prefix}-text-field__input,
+        .#{base.$prefix}-text-field__trailing-icon {
             cursor: default;
         }
     }
 
     // Error state
     &--error {
-        .#{base.$prefix}-textfield__trailing-icon {
+        .#{base.$prefix}-text-field__trailing-icon {
             color: t.color("error");
         }
     }
@@ -157,11 +157,11 @@ $component: "#{base.$prefix}-select";
 
     // Size variants
     &--small {
-        .#{base.$prefix}-textfield {
+        .#{base.$prefix}-text-field {
             height: v.text-field("height-small");
         }
 
-        .#{base.$prefix}-textfield__input {
+        .#{base.$prefix}-text-field__input {
             height: v.text-field("height-small");
             padding-top: 8px;
             padding-bottom: 8px;
@@ -169,11 +169,11 @@ $component: "#{base.$prefix}-select";
     }
 
     &--large {
-        .#{base.$prefix}-textfield {
+        .#{base.$prefix}-text-field {
             height: v.text-field("height-large");
         }
 
-        .#{base.$prefix}-textfield__input {
+        .#{base.$prefix}-text-field__input {
             height: v.text-field("height-large");
             padding-top: 16px;
             padding-bottom: 16px;
@@ -183,21 +183,21 @@ $component: "#{base.$prefix}-select";
     // Variant adjustments
     &--filled {
         // Specific adjustments for filled variant
-        .#{base.$prefix}-textfield__label {
+        .#{base.$prefix}-text-field__label {
             // Adjust label position for filled select
         }
     }
 
     &--outlined {
         // Specific adjustments for outlined variant
-        .#{base.$prefix}-textfield__label {
+        .#{base.$prefix}-text-field__label {
             // Adjust label position for outlined select
         }
     }
 
     // Focus styles
     &:focus-within {
-        .#{base.$prefix}-textfield__trailing-icon {
+        .#{base.$prefix}-text-field__trailing-icon {
             color: t.color("primary");
         }
     }

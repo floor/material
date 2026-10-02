@@ -22,7 +22,7 @@ export { Fab } from "./fab";
 export { ExtendedFab } from "./extended-fab";
 export { Checkbox } from "./checkbox";
 export { Slider } from "./slider";
-export { TextField } from "./textfield";
+export { TextField } from "./text-field";
 export { Radios } from "./radios";
 export { NavigationBar } from "./navigation-bar";
 export { NavigationRail } from "./navigation-rail";

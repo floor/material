@@ -42,7 +42,7 @@ export const withSuggestions =
   () =>
   // Generic, so the accumulated pipeline type survives to the features after
   // this one. A concrete parameter type would erase it — the defect fixed in
-  // textfield's withDensity (#109).
+  // text field's withDensity (#109).
   <C extends SuggestionsHost>(component: C) => {
   // State
   let highlightedIndex = -1;

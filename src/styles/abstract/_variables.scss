@@ -444,7 +444,7 @@ $text-field: (
   'height': 56px,
   'height-small': 48px,
   'height-large': 64px,
-  // The textarea's box (components/_textfield.scss, &--multiline). Not an M3
+  // The textarea's box (components/_text-field.scss, &--multiline). Not an M3
   // measure: TextFieldDefaults.MinHeight is the 56px line above. The
   // padding-top is the first line a sibling on the field's line aligns to.
   'height-multiline': 100px,

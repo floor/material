@@ -1569,30 +1569,30 @@
    true
   ]
  ],
- "textfield": [
+ "text-field": [
   [
-   "0:div.mtrl-textfield.mtrl-textfield--filled",
+   "0:div.mtrl-text-field.mtrl-text-field--filled",
    "0px 0px 0px 0px",
    "Roboto, sans-serif",
    false,
    true
   ],
   [
-   "1:div.mtrl-textfield__field",
+   "1:div.mtrl-text-field__field",
    "0px 0px 0px 0px",
    "Roboto, sans-serif",
    false,
    true
   ],
   [
-   "2:label.mtrl-textfield__label.mtrl-textfield__label--start",
+   "2:label.mtrl-text-field__label.mtrl-text-field__label--start",
    "0px 0px 0px 0px",
    "Roboto, sans-serif",
    false,
    true
   ],
   [
-   "3:input.mtrl-textfield__input",
+   "3:input.mtrl-text-field__input",
    "4px 4px 0px 0px",
    "Roboto, sans-serif",
    true,

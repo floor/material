@@ -50,7 +50,7 @@ export { clearSnackbars } from "./snackbar";
 export { default as createSwitch } from "./switch";
 export { default as createTabs } from "./tabs";
 export { createTab } from "./tabs/tab";
-export { default as createTextField } from "./textfield";
+export { default as createTextField } from "./text-field";
 export { default as createTimePicker } from "./timepicker";
 export { default as createToolbar } from "./toolbar";
 export { default as createTopAppBar } from "./top-app-bar";
@@ -257,7 +257,7 @@ export type {
   TextFieldConfig,
   TextFieldVariant,
   TextFieldComponent,
-} from "./textfield/types";
+} from "./text-field/types";
 
 // Timepicker
 export type { TimePickerConfig, TimePickerComponent } from "./timepicker/types";

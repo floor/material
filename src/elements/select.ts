@@ -18,7 +18,7 @@
  * value. The field is read-only, which takes it out of constraint validation:
  * the element reports `required` itself, as `valueMissing`.
  *
- * Parts: `select`, `textfield`, `field`, `label`, `input`, `trailing-icon`.
+ * Parts: `select`, `text-field`, `field`, `label`, `input`, `trailing-icon`.
  *
  * @module elements
  */
@@ -27,7 +27,7 @@ import createSelect from "../components/select";
 import type { MenuPosition } from "../components/menu/types";
 import { innerMenu } from "../components/menu/inner";
 import type { SelectComponent, SelectConfig, SelectOption } from "../components/select/types";
-import type { TextFieldVariant } from "../components/textfield/types";
+import type { TextFieldVariant } from "../components/text-field/types";
 import {
   createDeclarationClass, defineElement, DEFAULT_PREFIX, type AttributeValue, type Config, type DefineOptions,
   type ElementAttributes, type ElementHost, type ElementInstance, type ElementSpec,
@@ -112,7 +112,7 @@ const updateOptions = (host: HTMLElement, c: SelectComponent): boolean => {
 const selectSpec = {
   name: "select",
   create: (config) => create(config as SelectConfig),
-  styles: ["textfield", "menu", "select"],
+  styles: ["text-field", "menu", "select"],
   // The field fills a host given a width, as a native select does; the
   // listbox beside it sizes itself
   hostStyles: ":host>:first-child{width:100%}",

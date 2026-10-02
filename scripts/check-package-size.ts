@@ -241,7 +241,7 @@ try {
     { name: "addClass", code: "export { addClass } from 'mtrl/core/dom';", gzip: 550 }, // 428 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9; 428, 100 B floor, 550 against b9dab36e, Node 22.23.3 / npm 10.9.9
     { name: "button", code: "export { createButton } from 'mtrl';", gzip: 13900 }, // 13,744 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // The URL scheme allowlist is reached through core/dom, so every bundle that builds
-    // an element carries it: +260 here, +256 button, +267 rail, +260 textfield, +243 form,
+    // an element carries it: +260 here, +256 button, +267 rail, +260 text field, +243 form,
     // measured against 0.9.0. The slider simply had the least headroom (10,934 of 11,000).
     // all-js is 1,353 smaller, the shared code deduplicating across the barrel.
     // Taking part in forms (N12) adds 187: a hidden input carrying the value,
@@ -253,7 +253,7 @@ try {
     // the feature costs what it costs.
     // The boolean-attribute predicate (FLO-240) is reached through core/dom in
     // the same way the URL allowlist is, so every bundle that builds an element
-    // carries it: +71 here, +79 button, +85 rail, +77 textfield, +87 form,
+    // carries it: +71 here, +79 button, +85 rail, +77 text field, +87 form,
     // +107 all-js, measured against 73cbb0c. Slider again had the least
     // headroom (11,652 of 11,700) and was the only fixture to cross its budget.
     // Most of the cost is the eight attribute names themselves; an array with
@@ -285,7 +285,7 @@ try {
     // FLO-301 (the required asterisk, the live error, the trailing icon button): 8,456 to
     // 9,058 against 7cd57a6, Node 22 / npm 10.
     // 9,138 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
-    { name: "textfield", code: "export { createTextField } from 'mtrl';", gzip: 9250 },
+    { name: "text-field", code: "export { createTextField } from 'mtrl';", gzip: 9250 },
     { name: "form", code: "export { createButton, createTextField, createCheckbox } from 'mtrl';", gzip: 20100 }, // 19,865 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // The toolbar (FLO-304): 123,080 to 125,176, measured against b1dbf77.
     // The FAB menu (FLO-306): 125,245 to 127,714, measured against 1bd8343.
@@ -383,9 +383,9 @@ try {
       assert(text.includes(".mtrl-"), "CSS side-effect import was discarded");
       if (fixture.name === "button-css") {
         assert(text.includes(".mtrl-button") && text.includes(".mtrl-progress"));
-        assert(!text.includes(".mtrl-textfield"), "Unrelated component CSS retained");
+        assert(!text.includes(".mtrl-text-field"), "Unrelated component CSS retained");
       }
-      if (fixture.name === "select-css") assert(text.includes(".mtrl-menu") && text.includes(".mtrl-textfield"));
+      if (fixture.name === "select-css") assert(text.includes(".mtrl-menu") && text.includes(".mtrl-text-field"));
     }
   }
 

@@ -89,7 +89,7 @@ const CASES: Record<string, { make: string }> = {
   dialog: {
     make: `(() => { const d = m.createDialog({ title: "Discard draft?", content: "Your changes will be lost." }); d.open(); return d.element; })()`
   },
-  textfield: { make: `m.createTextField({ label: "Name", value: "Ada" }).element` },
+  "text-field": { make: `m.createTextField({ label: "Name", value: "Ada" }).element` },
 };
 
 /** The probe: every corner step the components read, and both typefaces. */

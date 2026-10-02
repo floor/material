@@ -1,6 +1,6 @@
 /** Public selective CSS entries. Keep dependency order consistent with main.scss. */
 export const componentStyles: Record<string, { source: string; dependencies: string[] }> = {
-  textfield: { source: "components/textfield", dependencies: [] },
+  "text-field": { source: "components/text-field", dependencies: [] },
   badge: { source: "components/badge", dependencies: [] },
   "bottom-app-bar": { source: "components/bottom-app-bar", dependencies: [] },
   "bottom-sheet": { source: "components/bottom-sheet", dependencies: [] },
@@ -8,7 +8,7 @@ export const componentStyles: Record<string, { source: string; dependencies: str
   menu: { source: "components/menu", dependencies: [] },
   slider: { source: "components/slider", dependencies: [] },
   switch: { source: "components/switch", dependencies: [] },
-  select: { source: "components/select", dependencies: ["textfield", "menu"] },
+  select: { source: "components/select", dependencies: ["text-field", "menu"] },
   tabs: { source: "components/tabs", dependencies: ["badge", "button"] },
   "top-app-bar": { source: "components/top-app-bar", dependencies: [] },
   button: { source: "components/button", dependencies: ["progress"] },

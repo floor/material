@@ -28,7 +28,7 @@ const cases: Record<string, Case> = {
   fab: {}, extendedFab: {},
   checkbox: { event: "change", getter: "checked", factoryEvent: "change", action: click("input") },
   slider: { markup: '<m-slider value="40" aria-label="Level"></m-slider>', event: "change", getter: "value", factoryEvent: "change", changesTo: 41, action: `const slider = host.shadowRoot.querySelector('[role="slider"]'); slider.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }))` },
-  textfield: { event: "input", getter: "value", factoryEvent: "input", action: `const input = host.shadowRoot.querySelector("input"); input.value = "Ada"; input.dispatchEvent(new Event("input", { bubbles: true }))` },
+  textField: { event: "input", getter: "value", factoryEvent: "input", action: `const input = host.shadowRoot.querySelector("input"); input.value = "Ada"; input.dispatchEvent(new Event("input", { bubbles: true }))` },
   radios: { markup: choices("radios", "radio"), event: "change", getter: "value", factoryEvent: "change", action: `host.component.radios[1].input.click()` },
   navigationBar: { markup: `<m-navigation-bar><m-navigation-bar-item value="a" icon='${icon}'>Alpha</m-navigation-bar-item><m-navigation-bar-item value="b" icon='${icon}'>Beta</m-navigation-bar-item></m-navigation-bar>`, event: "change", getter: "value", factoryEvent: "select", action: click('[data-id="b"]') },
   navigationRail: { markup: `<m-navigation-rail><m-navigation-rail-item value="a" icon='${icon}'>Alpha</m-navigation-rail-item><m-navigation-rail-item value="b" icon='${icon}'>Beta</m-navigation-rail-item></m-navigation-rail>`, event: "change", getter: "value", factoryEvent: "select", action: click('[data-id="b"]') },
