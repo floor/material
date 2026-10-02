@@ -12,15 +12,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
-- **Only the canonical names (FLO-383).** 0.10.5 exported both spellings, the old ones
-  deprecated; 1.0 has only the canonical ones. Every exported identifier writes "text field" as
+- **Only the canonical names (FLO-383).** For every row below but the last, 0.10.5 exported
+  both spellings, the old ones deprecated; 1.0 has only the canonical ones. Every exported identifier writes "text field" as
   two words; string values are unchanged (the `<m-textfield>` tag, the `textfield` element name,
   CSS classes, event strings and the constants' values). The declarations are renamed too, so the
   types read the same in an editor. Svelte's component file is `TextField.svelte`. Migration:
 
   | 0.10 | 1.0 | Entry |
   |---|---|---|
-  | `createTextfield` | `createTextField` | `mtrl`, `mtrl/components/textfield` |
+  | `createTextfield` | `createTextField` | `mtrl` (`mtrl/components/textfield` exports `createTextField` too) |
   | `TextfieldConfig`, `TextfieldComponent` | `TextFieldConfig`, `TextFieldComponent` | `mtrl`, `mtrl/components/textfield` |
   | `TextfieldDensity`, `TextfieldEvents` | `TextFieldDensity`, `TextFieldEvents` | `mtrl/components/textfield` |
   | `TextfieldValuePayload`, `TextfieldFocusPayload`, `TextfieldTrailingPayload` | `TextFieldValuePayload`, `TextFieldFocusPayload`, `TextFieldTrailingPayload` | `mtrl/components/textfield` |
@@ -32,7 +32,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   | `TextfieldSpec`, `TextfieldElement`, `TextfieldElementComponent` | `TextFieldSpec`, `TextFieldElement`, `TextFieldElementComponent` | `mtrl/elements` |
   | `Textfield` (component) | `TextField` | `mtrl/react`, `mtrl/solid`, `mtrl/svelte` |
   | `MTextfield` | `MTextField` | `mtrl/vue` |
-  | `select.textfield` | `select.textField` | the select's property |
+  | `select.textfield` | `select.textField` | the select's property: no overlap, `textField` is new in 1.0, and reading `select.textfield` in JavaScript now gives `undefined` rather than an error |
 
   Each is a rename of the import; the values and types are the same. The React, Solid and
   Svelte `TopAppBar` and `BottomAppBar` components keep their names: only the factory's types
