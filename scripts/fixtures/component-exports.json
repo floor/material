@@ -2923,6 +2923,11 @@
       "status": "public"
     },
     {
+      "name": "TabEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "tabIdFor",
       "kind": "value",
       "status": "public"
@@ -2959,6 +2964,11 @@
     },
     {
       "name": "TabsConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TabsEvents",
       "kind": "type",
       "status": "public"
     },

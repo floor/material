@@ -10,6 +10,7 @@ export interface ChipConfig {
   label?: string;
   value?: string;
   disabled?: boolean;
+  /** In a single-select set, selecting this chip replaces the previous selection; the last selected config wins. */
   selected?: boolean;
   /** Elevated styling is supported by assist, filter and suggestion chips. */
   elevated?: boolean;
@@ -53,6 +54,8 @@ export interface ChipConfig {
 export interface ChipOptions extends ChipConfig {
   /** Selection belongs to the chips container. */
   managedSelection?: boolean;
+  /** Notify the owning set when a chip becomes selected. */
+  onSelected?: (chip: ChipComponent) => void;
   /**
    * The chip is a cell of a chip set's grid (FLO-261): the root is a
    * `gridcell`, and a one-action chip's cell is its focus target.
@@ -110,6 +113,7 @@ export interface ChipComponent {
   setLeadingIcon: (icon: string) => ChipComponent;
   setTrailingIcon: (icon: string) => ChipComponent;
   isSelected: () => boolean;
+  /** Selects or deselects this chip silently. In a single-select set, selecting it deselects the previous chip. */
   setSelected: (selected: boolean) => ChipComponent;
   toggleSelected: () => ChipComponent;
   focus: () => ChipComponent;
@@ -291,7 +295,9 @@ export interface ChipsComponent {
   element: HTMLElement;
 
   /**
-   * Adds a new chip to the chips container
+   * Adds a new chip to the chips container. In a single-select set, a selected
+   * chip replaces the previous selection before `add` fires; `add.value`
+   * reads the new selection. Programmatic additions do not emit `change`.
    * @param chipConfig - Configuration for the chip
    * @returns The chips instance for chaining
    */
