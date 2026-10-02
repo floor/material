@@ -149,6 +149,8 @@ try {
   // up to 1,000, is 1,083,000, above next's 1,078,000, so the ceiling stays.
   // Merged again with next (reduced motion, the child selector): 1,073,438.
   // Measured + 1%, up to 1,000, is 1,085,000, above 1,078,000, so it stays.
+  // The child subject is :defined: 1,073,624. Measured + 1%, up to 1,000,
+  // is 1,085,000, above 1,078,000, so it stays.
   assert(pack.size < 1_078_000, "npm tarball exceeds 1,078,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
@@ -172,6 +174,8 @@ try {
   // above next's 6,458,000, so the ceiling stays.
   // Merged again with next: 6,434,514. The child selector is in the 38 pre-upgrade
   // files. Measured + 1%, up to 1,000, is 6,499,000, above 6,458,000, so it stays.
+  // The child subject is :defined: 6,435,269. Measured + 1%, up to 1,000,
+  // is 6,500,000, above 6,458,000, so it stays.
   assert(pack.unpackedSize < 6_458_000, "Unpacked package exceeds 6,458,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.

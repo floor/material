@@ -77,14 +77,19 @@ export const RENDERED_HOST_ATTRIBUTE = "data-mtrl-ssr";
  * `:not(#\0)` is an id selector (specificity 1,0,0) that matches every element,
  * so each selector outranks every pre-upgrade selector of the same subject
  * (the host, its `::before` and `::after`, and a direct child), none of which
- * has an id. The deepest pre-upgrade subject is a direct child, including a
- * following sibling of one (`> * + *`); none styles a grandchild or a child's
- * pseudo-element. `all` does not reset custom properties; the element rules
- * set none. Not tag-specific, so retagging for another prefix leaves it as it is.
+ * has an id. The child subject is `:defined` (specificity 1,3,0). Every
+ * built-in element is defined, so a slotted `div` or `span` is rolled back.
+ * An undefined custom element is not: a carousel, a FAB menu, or a menu that
+ * opted out keeps its own pre-upgrade rule. A rendered mtrl child carries
+ * this attribute and is covered by the host selector. The deepest pre-upgrade
+ * subject is a direct child, including a following sibling of one (`> * + *`);
+ * none styles a grandchild or a child's pseudo-element. `all` does not reset
+ * custom properties; the element rules set none. Not tag-specific, so
+ * retagging for another prefix leaves it as it is.
  */
 export const preupgradeRollback = (): string => {
   const selector = `[${RENDERED_HOST_ATTRIBUTE}]:not(:defined):not(#\\0)`;
-  return `${selector},${selector}::before,${selector}::after,${selector} > *{all:revert-layer}`;
+  return `${selector},${selector}::before,${selector}::after,${selector} > :defined{all:revert-layer}`;
 };
 
 /**
