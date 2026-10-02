@@ -17,6 +17,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `BottomAppBarComponent`, from `mtrl` and from each component's subpath. They are the same
   factory and types as the old names. `createTopAppBar` now returns the one public `TopAppBar`
   declaration (`top-app-bar.ts` had a second); assignability is unchanged.
+- **"Text field" in two words everywhere in the API (FLO-383):** `TextFieldDensity`,
+  `TextFieldEvents`, `TextFieldValuePayload`, `TextFieldFocusPayload` and
+  `TextFieldTrailingPayload` (`mtrl/components/textfield`); `TEXT_FIELD_VARIANTS`, `_STATES`,
+  `_TYPES`, `_EVENTS`, `_DENSITY`, `_DEFAULTS` and `_CLASSES`
+  (`mtrl/components/textfield/constants`); `textFieldElement`, `defineTextField`,
+  `TextFieldSpec`, `TextFieldElement` and `TextFieldElementComponent` (`mtrl/elements`); and the
+  `TextField` component in `mtrl/react`, `mtrl/solid` and `mtrl/svelte`, `MTextField` in
+  `mtrl/vue`. Each is the same binding as the old spelling. Every exported identifier is two
+  words; string values are unchanged: the `<m-textfield>` tag, CSS classes, event strings and
+  the constants' values, as are folders.
 - **API gaps from the 1.0 audit (FLO-384).**
   - `isDisabled()` on every component that can be disabled and lacked it: button, icon button,
     FAB, extended FAB, checkbox, switch, text field, select, radios, button group and a tab.
@@ -93,7 +103,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 - **The old names, renamed (FLO-383):** `createTextfield` → `createTextField`, `TextfieldConfig` →
   `TextFieldConfig`, `TextfieldComponent` → `TextFieldComponent`, `CardSchema` → `CardConfig`,
-  `TopAppBar` → `TopAppBarComponent`, `BottomAppBar` → `BottomAppBarComponent`. Each is flagged
+  `TopAppBar` → `TopAppBarComponent`, `BottomAppBar` → `BottomAppBarComponent`; and the
+  rest of the old text field spelling: `TextfieldDensity`, `TextfieldEvents`, the three
+  `Textfield*Payload` types, the seven `TEXTFIELD_*` constants, `textfieldElement`,
+  `defineTextfield`, `TextfieldSpec`, `TextfieldElement`, `TextfieldElementComponent`, the
+  `Textfield` adapter component and Vue's `MTextfield`. Each is flagged
   where it is imported and removed in 1.0. Tags, CSS classes, folders and events keep their
   names.
 - **Component internals on their subpaths (FLO-381).** `mtrl/components/<name>` is public API, and
@@ -127,6 +141,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   back. A menu returns focus to its opener in the animation frame after it closes; the check read
   the state after a fixed 450ms, and on a runner that produced no frame in that time it found
   focus nowhere. It now waits for the opener's focus, after the same 450ms.
+- The menu keyboard step of `elements:check` no longer ends one item short when a runner pauses
+  (FLO-423). It waited a fixed 450ms after opening the menu with a key, then sent the arrows; it
+  now waits for the first item to take focus, which is what the arrows depend on.
 - The search check in `core:check` no longer times out when a frame arrives late (FLO-420). It
   pressed the scrim before the view's opening had put focus back on the input, and that focus
   re-opened the view. The check now waits for the opening's frame, and reads the scrim press at
