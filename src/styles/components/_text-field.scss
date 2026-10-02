@@ -8,6 +8,18 @@
 // Define the component once
 $component: "#{base.$prefix}-text-field";
 
+// Mirroring for the filled variant too (FLO-562). The [dir] selectors cannot
+// see a direction set outside a shadow root, so placement.ts also sets --rtl
+// from the computed direction; both forms are emitted, the ancestor one so a
+// light-DOM field mirrors without JavaScript. For rules inside a shadow root,
+// where --rtl is on the field root itself, not an ancestor.
+@mixin rtl {
+    [dir='rtl'] &,
+    &.#{$component}--rtl {
+        @content;
+    }
+}
+
 // Autofill detection animations
 @keyframes onAutoFillStart {
     from {
@@ -486,8 +498,12 @@ $component: "#{base.$prefix}-text-field";
 
         &--with-trailing-icon {
             .#{$component}__input {
-                padding-right: 16px;
                 padding-left: 44px;
+            }
+
+            // Both icons: the start side keeps the leading icon's inset
+            &:not(.#{$component}--with-leading-icon) .#{$component}__input {
+                padding-right: 16px;
             }
 
             &.#{$component}--with-suffix {
@@ -502,6 +518,48 @@ $component: "#{base.$prefix}-text-field";
                     padding-left: 76px;
                 }
             }
+        }
+    }
+
+    // The five positions above, and the icon-beside-affix ones, for a field
+    // inside a shadow root, where the [dir] selectors stop at the boundary:
+    // they follow --rtl instead (FLO-562). The per-variant padding and the
+    // modifier defaults follow in each variant's own block below.
+    &.#{$component}--rtl {
+        .#{$component}__label {
+            left: auto;
+            right: 16px;
+            transform-origin: right top;
+        }
+
+        .#{$component}__prefix {
+            left: auto;
+            right: 16px;
+        }
+
+        .#{$component}__suffix {
+            right: auto;
+            left: 16px;
+        }
+
+        .#{$component}__leading-icon {
+            left: auto;
+            right: 12px;
+        }
+
+        .#{$component}__trailing-icon {
+            right: auto;
+            left: 12px;
+        }
+
+        .#{$component}--with-leading-icon.#{$component}--with-prefix .#{$component}__prefix {
+            left: auto;
+            right: 44px;
+        }
+
+        .#{$component}--with-trailing-icon.#{$component}--with-suffix .#{$component}__suffix {
+            right: auto;
+            left: 44px;
         }
     }
 
@@ -674,8 +732,9 @@ $component: "#{base.$prefix}-text-field";
             }
         }
 
-        // RTL support
-        @include m.rtl {
+        // RTL support: the class serves a shadow root, the [dir] ancestor a
+        // light-DOM field without JavaScript (FLO-562)
+        @include rtl {
             .#{$component}__label {
                 left: auto;
                 right: 16px;
@@ -694,8 +753,12 @@ $component: "#{base.$prefix}-text-field";
 
             &.#{$component}--with-trailing-icon {
                 .#{$component}__input {
-                    padding-right: 16px;
                     padding-left: 44px;
+                }
+
+                // Both icons: the start side keeps the leading icon's inset
+                &:not(.#{$component}--with-leading-icon) .#{$component}__input {
+                    padding-right: 16px;
                 }
             }
         }
@@ -920,8 +983,9 @@ $component: "#{base.$prefix}-text-field";
             }
         }
 
-        // RTL support for the light DOM
-        @include m.rtl {
+        // RTL input padding: the class serves a shadow root, the [dir]
+        // ancestor a light-DOM field without JavaScript (FLO-562)
+        @include rtl {
             &.#{$component}--with-leading-icon {
                 .#{$component}__input {
                     padding-left: 16px;
@@ -931,8 +995,12 @@ $component: "#{base.$prefix}-text-field";
 
             &.#{$component}--with-trailing-icon {
                 .#{$component}__input {
-                    padding-right: 16px;
                     padding-left: 44px;
+                }
+
+                // Both icons: the start side keeps the leading icon's inset
+                &:not(.#{$component}--with-leading-icon) .#{$component}__input {
+                    padding-right: 16px;
                 }
             }
         }
@@ -1098,8 +1166,10 @@ $component: "#{base.$prefix}-text-field";
             }
         }
 
-        // RTL adjustments for compact density
-        @include m.rtl {
+        // RTL adjustments for compact density: the class serves a shadow
+        // root, the [dir] ancestor a light-DOM field without JavaScript
+        // (FLO-562)
+        @include rtl {
             &.#{$component}--with-leading-icon {
                 .#{$component}__label {
                     left: auto;
@@ -1131,8 +1201,12 @@ $component: "#{base.$prefix}-text-field";
 
             &.#{$component}--with-trailing-icon {
                 .#{$component}__input {
-                    padding-right: 16px;
                     padding-left: 40px;
+                }
+
+                // Both icons: the start side keeps the leading icon's inset
+                &:not(.#{$component}--with-leading-icon) .#{$component}__input {
+                    padding-right: 16px;
                 }
 
                 &.#{$component}--with-suffix {
@@ -1202,7 +1276,10 @@ $component: "#{base.$prefix}-text-field";
         cursor: default;
     }
 
-    @include m.rtl {
+    // [dir] stops at a shadow root; the class is set on the field root
+    // inside it instead (FLO-562)
+    [dir='rtl'] &,
+    .#{$component}--rtl & {
         right: auto;
         left: 4px;
     }

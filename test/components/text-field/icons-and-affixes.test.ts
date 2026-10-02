@@ -145,7 +145,7 @@ describe("placement is batched (FLO-335)", () => {
       const prefix = field.element.querySelector<HTMLElement>(".mtrl-text-field__prefix")!;
       prefix.getBoundingClientRect = () => { log.push(`read ${i}`); return { width: 10 } as DOMRect; };
       const style = field.input.style;
-      Object.defineProperty(style, "paddingLeft", { configurable: true, set: () => void log.push(`write ${i}`), get: () => "" });
+      Object.defineProperty(style, "paddingInlineStart", { configurable: true, set: () => void log.push(`write ${i}`), get: () => "" });
       return field;
     });
     await new Promise((r) => setTimeout(r, 0));

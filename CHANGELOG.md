@@ -1062,6 +1062,14 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A filled `<m-text-field>` in a right-to-left page mirrors (FLO-562).** A `dir="rtl"` ancestor
+  outside the element's shadow root cannot reach the `[dir]` rules inside it, so the label, the
+  leading and trailing icons and the prefix and suffix stayed laid out left to right. Placement
+  now reads the computed direction for both variants (it read it for the outlined one only) and
+  sets `mtrl-text-field--rtl`, which the filled variant's rules now follow as the outlined ones
+  already did; a light-DOM field still mirrors through `[dir]` without JavaScript. A field with
+  both icons also keeps the inset each icon needs on its own side: the trailing icon's rule
+  overwrote the leading icon's.
 - **A top-layer dialog that refuses Escape stays open, however often it is pressed
   (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
   listener that refused, the third Escape made the browser close the `<dialog>` while

@@ -147,7 +147,7 @@ export const withPlacement =
       // Reads. The direction as computed, which reaches into a shadow root
       // where the stylesheet's [dir] selectors do not; offsetWidth is the
       // label's untransformed width, so it holds mid-transition too.
-      const rtl = isOutlined ? getComputedStyle(element).direction === "rtl" : false;
+      const rtl = getComputedStyle(element).direction === "rtl";
       const labelWidth = isOutlined && labelEl ? labelEl.offsetWidth : 0;
       const prefixWidth = prefixEl && component.input ? prefixEl.getBoundingClientRect().width : null;
       const suffixWidth = suffixEl && component.input ? suffixEl.getBoundingClientRect().width : null;
@@ -157,36 +157,39 @@ export const withPlacement =
         // Size the notch to the floated label and open it while the label floats
         if (isOutlined) {
           ensureOutline();
-          element.classList.toggle(`${PREFIX}-${COMPONENT}--rtl`, rtl);
         }
+        // For both variants: the stylesheet's RTL rules follow --rtl, which
+        // also reaches a direction set outside this field's shadow root
+        element.classList.toggle(`${PREFIX}-${COMPONENT}--rtl`, rtl);
         if (outline && notch) {
           if (labelWidth > 0) notch.style.width = `${labelWidth * FLOATED_LABEL_SCALE + NOTCH_PADDING * 2}px`;
           outline.classList.toggle(`${outlineClass}--notched`, isOutlined && !!labelEl && (isFocused || !isEmpty));
         }
 
-        // The prefix: input padding and, at rest, the label beside it
+        // The prefix: input padding and, at rest, the label beside it.
+        // Inline insets are logical, so the start edge is the right one in RTL
         if (prefixWidth !== null && component.input) {
           const inputPadding = prefixWidth + 4 + 12; // 4px spacing, 12px padding
-          component.input.style.paddingLeft = `${inputPadding}px`;
+          component.input.style.paddingInlineStart = `${inputPadding}px`;
           if (labelEl) {
             if (!isFocused && isEmpty) {
               // When unfocused and empty, align with prefix/input
-              labelEl.style.left = `${hasLeadingIcon ? Math.max(inputPadding, 44) : inputPadding}px`;
+              labelEl.style.insetInlineStart = `${hasLeadingIcon ? Math.max(inputPadding, 44) : inputPadding}px`;
             } else {
               // When focused or filled, move to default position: the
               // stylesheet's for outlined, where the notch expects the label
-              labelEl.style.left = isOutlined ? "" : "12px";
+              labelEl.style.insetInlineStart = isOutlined ? "" : "12px";
             }
           }
         } else if (hasLeadingIcon && labelEl && isOutlined) {
           // The stylesheet places the label by the icon at rest and at the
           // start of the notch when floated, per density and direction
-          labelEl.style.left = "";
+          labelEl.style.insetInlineStart = "";
         }
 
         // The suffix: input padding
         if (suffixWidth !== null && component.input) {
-          component.input.style.paddingRight = `${suffixWidth + 4 + 12}px`; // 4px spacing, 12px padding
+          component.input.style.paddingInlineEnd = `${suffixWidth + 4 + 12}px`; // 4px spacing, 12px padding
         }
       };
     };

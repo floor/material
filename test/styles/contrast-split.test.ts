@@ -109,10 +109,11 @@ describe("explicit contrast levels are opt-in", () => {
       loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent,
     }).css;
     // `@use "main"` compressed, before the banner the build adds.
-    // The hash is this sheet after the text field strings are two words (FLO-560).
+    // The hash is this sheet after the filled text field's RTL rules follow
+    // the --rtl class, not only a [dir] ancestor (FLO-562).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("ce3b499badf2c58204d0c797714fc2a7e77296897fdb47b7ce530a1cf851610e");
-    expect(css.length).toBe(530220);
+      .toBe("7acf03b8a711b9af1107502a5ed6c8cd95e4648467487e8307ab3acbc0822542");
+    expect(css.length).toBe(533717);
   });
 
   test("today's sheets still resolve to the fixture", () => {
