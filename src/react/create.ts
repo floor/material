@@ -60,11 +60,13 @@ type OwnProps<S> = Omit<BaseProps<S>, ElementSlotProp<S>> & SlotProps<S>;
 /**
  * `@types/react` 18's `HTMLAttributes` has no `popover` through 18.3.31.
  * `enterKeyHint` joins that interface in 18.3.31; earlier 18 types it on inputs.
+ * `nonce` is absent on 18.0.0 and present by 18.0.28.
  * A release that already declares a key keeps its own type.
  */
 type ReactHostGaps = {
   popover?: "" | "auto" | "manual" | "hint";
   enterKeyHint?: "enter" | "done" | "go" | "next" | "previous" | "search" | "send";
+  nonce?: string;
 };
 
 type Missing<Base, Extra> = {
@@ -75,7 +77,10 @@ type Missing<Base, Extra> = {
 export type ReactHostAttributes<E extends HTMLElement = HTMLElement> =
   React.HTMLAttributes<E> & Missing<React.HTMLAttributes<E>, ReactHostGaps>;
 
-/** Props of a generated component: the element's own, plus any HTML attribute for the host. */
+/**
+ * Props of a generated component: the element's own, plus any HTML attribute for the host.
+ * `OwnProps` includes the element's `on*` handlers, so those names keep the component's event.
+ */
 export type ComponentProps<S> = OwnProps<S> &
   FormProps<S> &
   Omit<ReactHostAttributes, keyof OwnProps<S>> & { children?: React.ReactNode };

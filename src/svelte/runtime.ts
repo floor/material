@@ -77,7 +77,10 @@ type Missing<Base, Extra> = {
 
 type SvelteHostAttributes = HTMLAttributes<HTMLElement> & Missing<HTMLAttributes<HTMLElement>, SvelteHostGaps>;
 
-/** Props of a generated component: the element's own, plus any HTML attribute for the host. */
+/**
+ * Props of a generated component: the element's own, plus any HTML attribute for the host.
+ * `OwnProps` includes the element's `on<event>` handlers (`onchange`), so those names keep the component's event.
+ */
 export type SvelteProps<S> = OwnProps<S> &
   Omit<SvelteHostAttributes, keyof OwnProps<S> | "children"> & { children?: Snippet };
 

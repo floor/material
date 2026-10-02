@@ -89,8 +89,21 @@ type Missing<Base, Extra> = {
 /** `HTMLAttributes` for the host, plus globals a supported Vue release omits. */
 type VueHostAttributes = HTMLAttributes & Missing<HTMLAttributes, VueHostGaps>;
 
+/**
+ * `on…` names Vue builds from this component's emits (`change` → `onChange`).
+ * Vue intersects those with the declared props, so a host handler of the same
+ * name would meet the component's and the parameter would become
+ * `Event | CustomEvent`. Dropping them leaves the emit's handler.
+ * `onUpdate:*` is the `v-model` family. Vue's attributes do not declare it;
+ * omitting it keeps a later collision from intersecting the binding callback.
+ */
+type EventKeys<S> =
+  | `on${Capitalize<keyof ElementEvents<S> & string>}`
+  | `onUpdate:${keyof ElementProperties<S> & string}`
+  | ([ModelOf<S>] extends [never] ? never : "onUpdate:modelValue");
+
 /** Props of a generated component: the element's own, plus any HTML attribute for the host. */
-export type VueProps<S> = OwnProps<S> & Omit<VueHostAttributes, keyof OwnProps<S>>;
+export type VueProps<S> = OwnProps<S> & Omit<VueHostAttributes, keyof OwnProps<S> | EventKeys<S>>;
 
 /** Its events: the element's, and `update:*` for two-way binding. */
 export type VueEmits<S> = {

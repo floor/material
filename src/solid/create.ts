@@ -79,7 +79,10 @@ type Missing<Base, Extra> = {
 export type SolidHostAttributes<E extends HTMLElement = HTMLElement> =
   JSX.HTMLAttributes<E> & Missing<JSX.HTMLAttributes<E>, SolidHostGaps>;
 
-/** Props of a generated component: the element's own, plus any HTML attribute for the host. */
+/**
+ * Props of a generated component: the element's own, plus any HTML attribute for the host.
+ * `OwnProps` includes the element's `on*` handlers, so those names keep the component's event.
+ */
 export type SolidProps<S, E extends HTMLElement> = OwnProps<S> &
   Omit<SolidHostAttributes, keyof OwnProps<S> | "ref"> & {
     ref?: E | ((element: E) => void);
