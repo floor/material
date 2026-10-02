@@ -773,10 +773,14 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
-- **Accessibility: `scrollToChip` honours reduced motion (FLO-553).** It asked for a smooth
-  scroll explicitly, which overrides the stylesheet, so a chip set glided to the chip with the
-  reduced-motion preference on. It now names no behaviour: a scrollable set still scrolls
-  smoothly, from its stylesheet, and jumps at once under reduced motion. Also on 0.10.x.
+- **Accessibility: scrolling from script honours reduced motion in the chips, the tabs and the
+  search (FLO-553).** The chip set's `scrollToChip`, the tabs' scroll buttons and the search's
+  arrow keys through the suggestions each asked for a smooth scroll explicitly, which overrides
+  the stylesheet, so they glided with the reduced-motion preference on. They now name no
+  behaviour: each scroller scrolls smoothly from its stylesheet (`scroll-behavior: smooth`,
+  new on the tabs' scroller and the suggestion list), and jumps at once under reduced motion.
+  A script of yours that scrolls the tabs' scroller or the suggestion list now scrolls it
+  smoothly too. Also on 0.10.x.
 - **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
   centre while animating in and be squeezed at the viewport edge. Placement now uses its full
   layout size; reduced-motion placement is unchanged.
