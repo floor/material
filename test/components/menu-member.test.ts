@@ -26,6 +26,14 @@ test("select.menu and splitButton.menu are not there; the menu is behind the int
   expect(innerMenu(plain)).toBeUndefined();
 });
 
+test("a placement set on a closed select is applied to its menu, as <m-select placement> sets it", async () => {
+  const select = mount(createSelect({ options: [{ id: "a", text: "Alpha" }] }));
+  await wait();
+  innerMenu(select)!.setPosition("top-start");
+  expect(innerMenu(select)!.getPosition()).toBe("top-start");
+  expect(select.isOpen()).toBe(false);
+});
+
 test("split button setItems replaces the menu's items and getItems reads them", async () => {
   const split = mount(createSplitButton({ text: "Export", items: [{ id: "pdf", text: "PDF" }] }));
   await wait();

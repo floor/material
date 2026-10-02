@@ -6021,6 +6021,20 @@ try {
     assert.equal(await focused(), "combobox", "a <label for> focuses the combobox");
     check("select: <label for> focuses the combobox");
 
+    // FLO-543: the attribute reaches the select's menu, which has no public
+    // member for it; the menu is under mtrl's registry symbol.
+    const placed = await page.evaluate(() => {
+      const el = document.getElementById("ms") as Host;
+      const menu = (): { getPosition: () => string } =>
+        (el.component as unknown as Record<symbol, { getPosition: () => string }>)[Symbol.for("mtrl.menu")];
+      el.setAttribute("placement", "top-start");
+      const set = { position: menu().getPosition(), member: "menu" in (el.component as object) };
+      el.removeAttribute("placement");
+      return { set, removed: menu().getPosition() };
+    });
+    assert.deepEqual(placed, { set: { position: "top-start", member: false }, removed: "bottom-start" });
+    check("select: placement set after creation reaches its menu, which is not a member");
+
     const options = await page.evaluate(async () => {
       const el = document.getElementById("ms") as Host & { value: string | null };
       const before = el.component;
