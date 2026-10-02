@@ -21,8 +21,10 @@ $supporting-row: 20px;
   // The unsized field's width, as components/_text-field.scss sets it.
   width: v.text-field('width');
   height: v.text-field('height');
-  // The input's line: its text is centred in the space its padding leaves.
-  padding: 22px (v.text-field('padding-horizontal') + $trailing) 0 v.text-field('padding-horizontal');
+  // The input's line, where the upgraded field's text is: 24px down under a
+  // label (FLO-299). The half pixel is the line's baseline, as measured: with
+  // it, the sibling on this line does not move at upgrade.
+  padding: 24.5px (v.text-field('padding-horizontal') + $trailing) 0 v.text-field('padding-horizontal');
   border-radius: v.text-field('border-radius') v.text-field('border-radius') 0 0;
   border-bottom: v.text-field('border-width') solid t.color('on-surface-variant');
   background-color: t.color('surface-container-highest');
@@ -51,6 +53,11 @@ $supporting-row: 20px;
     @include m.typography('body-small');
   }
 
+  // Without a label the text is centred in the field
+  &:not([label]) {
+    padding-top: 16.5px;
+  }
+
   &[variant='outlined'] {
     padding-top: 15.5px;
     border: v.text-field('border-width') solid t.color('outline');
@@ -74,8 +81,12 @@ $supporting-row: 20px;
       @include m.typography('body-medium');
     }
 
+    &:not([label]) {
+      padding-top: 10px;
+    }
+
     &[variant='outlined'] {
-      padding-top: 9.5px;
+      padding-top: 9px;
     }
   }
 

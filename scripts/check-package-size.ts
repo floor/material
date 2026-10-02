@@ -351,7 +351,15 @@ try {
     // 10,602 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // FLO-539 typography leaves the base: 10,602 -> 9,589. Ceiling was 9,700.
     // FLO-540 merged tree: 8,440. 8,440 + 100 = 8,540, rounded up to 8,550. Node 22.23.3 / npm 10.9.9.
-    { name: "select-css", code: "import 'material/styles/base'; import 'material/styles/select';", gzip: 8550 },
+    // FLO-299 the text field's layout, against 1dc3bc72 (8,468). The input's padding beside a
+    // prefix or a suffix moves from the script to the stylesheet, two insets per side: 8,539
+    // (all-js gives back 86). A multiline field's first line and label where the single-line
+    // field has them, per variant and density: 8,595. The M3 insets, with the outlined input's
+    // side borders and the filled floated label's own rule gone: 8,542. The vertical metrics,
+    // with the affix's place no longer a rule per state: 8,499.
+    // The filled indicator's reduced-motion rule: 8,511. With main's package name taken in
+    // (47a3ebcd): 8,528. 8,528 + 100 = 8,628, rounded up to 8,650.
+    { name: "select-css", code: "import 'material/styles/base'; import 'material/styles/select';", gzip: 8650 },
     // FLO-406 contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 7,639 -> 7,111 gzip bytes (same packer).
     // 6,918 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
