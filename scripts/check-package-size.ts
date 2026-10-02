@@ -365,7 +365,10 @@ try {
     // with the affix's place no longer a rule per state: 8,499.
     // The filled indicator's reduced-motion rule: 8,511. With main's package name taken in
     // (47a3ebcd): 8,528. 8,528 + 100 = 8,628, rounded up to 8,650.
-    { name: "select-css", code: "import 'material/styles/base'; import 'material/styles/select';", gzip: 8650 },
+    // FLO-562 the text field's insets as custom properties, mirrored by one block for both
+    // directions in place of a rule per case: 8,528 -> 8,268 against a8c24f7f.
+    // 8,268 + 100 = 8,368, rounded up to 8,400.
+    { name: "select-css", code: "import 'material/styles/base'; import 'material/styles/select';", gzip: 8400 },
     // FLO-406 contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 7,639 -> 7,111 gzip bytes (same packer).
     // 6,918 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.

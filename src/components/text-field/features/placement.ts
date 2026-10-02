@@ -144,19 +144,20 @@ export const withPlacement =
       const isEmpty = has("empty");
 
       // Reads. The direction as computed, which reaches into a shadow root
-      // where the stylesheet's [dir] selectors do not; offsetWidth is the
-      // label's untransformed width, so it holds mid-transition too.
-      const rtl = isOutlined ? getComputedStyle(element).direction === "rtl" : false;
+      // where the stylesheet's [dir] selectors do not (a server's DOM has no
+      // computed style: left to right there); offsetWidth is the label's
+      // untransformed width, so it holds mid-transition too.
+      const rtl = globalThis.getComputedStyle?.(element).direction === "rtl";
       const labelWidth = isOutlined && labelEl ? labelEl.offsetWidth : 0;
       const affixes = [prefixEl, suffixEl].map((affix) => affix?.getBoundingClientRect().width);
 
       return () => {
         if (destroyed) return;
         // Size the notch to the floated label and open it while the label floats
-        if (isOutlined) {
-          ensureOutline();
-          element.classList.toggle(`${PREFIX}-${COMPONENT}--rtl`, rtl);
-        }
+        if (isOutlined) ensureOutline();
+        // Both variants: the stylesheet's mirror follows --rtl where an
+        // ancestor's `dir` cannot reach, inside a shadow root (FLO-562)
+        element.classList.toggle(`${PREFIX}-${COMPONENT}--rtl`, rtl);
         if (outline && notch) {
           if (labelWidth > 0) notch.style.width = `${labelWidth * FLOATED_LABEL_SCALE + NOTCH_PADDING * 2}px`;
           outline.classList.toggle(`${outlineClass}--notched`, isOutlined && !!labelEl && (isFocused || !isEmpty));
@@ -218,8 +219,8 @@ export const withPlacement =
     };
 
     // A filled field with no prefix, suffix or leading icon has nothing to
-    // place: measure() would write nothing, the label sits where the stylesheet
-    // puts it. Its observers and first measure wait for a request (FLO-378).
+    // place: the label sits where the stylesheet puts it. Its observers and
+    // its first measure wait for a request (FLO-378).
     // A filled field with only a leading icon is a no-op too, but stays on the
     // measuring side. The rest: the first placement in the next batch with the
     // other fields created in this task.
@@ -228,7 +229,12 @@ export const withPlacement =
       has("outlined") ||
       has("with-leading-icon") ||
       component.element.querySelector(`.${PREFIX}-${COMPONENT}__prefix, .${PREFIX}-${COMPONENT}__suffix`) !== null;
+    // Unless it is in a shadow root, where an ancestor's `dir` does not reach
+    // the stylesheet: there one measure sets --rtl (FLO-562). Asked in the
+    // batch, as the field has no root yet; a root with a host is a shadow root.
+    const inShadowRoot = (): (() => void) => ((component.element.getRootNode() as ShadowRoot).host ? measure() : () => {});
     if (needsPlacement) schedulePositionUpdate();
+    else schedule(inShadowRoot);
 
     // Add lifecycle integration
     if ("lifecycle" in component && component.lifecycle?.destroy) {
@@ -237,6 +243,7 @@ export const withPlacement =
         if (destroyed) return;
         destroyed = true;
         pending.delete(measure);
+        pending.delete(inShadowRoot);
         if (!pending.size && flushing !== null) {
           clearTimeout(flushing);
           flushing = null;

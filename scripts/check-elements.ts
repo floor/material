@@ -1651,7 +1651,7 @@ try {
 
     // FLO-299: the layout against the M3 measurements, inside the shadow root
     await checkTextFieldLayout(page, "element");
-    check("text field: the layout at the M3 measurements, 52 fields (FLO-299)");
+    check("text field: the layout at the M3 measurements, 112 fields, in both directions (FLO-299, FLO-562)");
     await checkTextFieldReducedMotion(page, "element", null);
     check("text field: the filled indicator's fade stops with reduced motion (FLO-299)");
 
@@ -1783,6 +1783,118 @@ try {
     assert.notEqual(focusNotch.blurred, TRANSPARENT, "blur on an empty field closes it");
     await page.evaluate(() => ((document.getElementById("factory") as HTMLElement).innerHTML = ""));
     check("text field: focus opens the notch of an empty outlined field and blur closes it");
+
+    // FLO-562. A [dir='rtl'] ancestor outside a shadow root is invisible to the
+    // stylesheet inside it, so the mirroring must follow the --rtl class
+    // placement.ts sets from the computed direction. Four fields under
+    // <div dir="rtl"> — filled and outlined, each a factory in the light DOM
+    // and an <m-text-field> — each with a label, a value and both icons, and a
+    // filled element carrying a prefix and a suffix besides, and one with a
+    // leading icon and a prefix. Each of those two has a twin without the
+    // ancestor, as the mirror to swap with.
+    const mirror = await page.evaluate(async (icon) => {
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement } } };
+      const host = document.getElementById("factory") as HTMLElement;
+      const attrs = `label="Right to left" value="Ada" leading-icon='${icon}' trailing-icon='${icon}'`;
+      host.innerHTML = `<div dir="rtl" style="display:grid;gap:24px;width:320px">
+        <div id="m-filled-factory"></div>
+        <div id="m-outlined-factory"></div>
+        <m-text-field id="m-filled-element" variant="filled" ${attrs}></m-text-field>
+        <m-text-field id="m-outlined-element" variant="outlined" ${attrs}></m-text-field>
+        <m-text-field id="m-affix-element" variant="filled" label="Amount" value="12" prefix-text="$" suffix-text="USD"></m-text-field>
+        <m-text-field id="m-icon-prefix-element" variant="filled" label="Amount" value="12" prefix-text="$" leading-icon='${icon}'></m-text-field>
+      </div>
+      <div style="display:grid;gap:24px;width:320px">
+        <m-text-field id="m-affix-twin" variant="filled" label="Amount" value="12" prefix-text="$" suffix-text="USD"></m-text-field>
+        <m-text-field id="m-icon-prefix-twin" variant="filled" label="Amount" value="12" prefix-text="$" leading-icon='${icon}'></m-text-field>
+      </div>`;
+      (document.getElementById("m-filled-factory") as HTMLElement).append(
+        w.mtrl.createTextField({ variant: "filled", label: "Right to left", value: "Ada", leadingIcon: icon, trailingIcon: icon }).element,
+      );
+      (document.getElementById("m-outlined-factory") as HTMLElement).append(
+        w.mtrl.createTextField({ variant: "outlined", label: "Right to left", value: "Ada", leadingIcon: icon, trailingIcon: icon }).element,
+      );
+      // placement, the class toggle and the label's transition
+      await new Promise((r) => setTimeout(r, 500));
+      const round = (n: number): number => Math.round(n * 100) / 100;
+      const box = (el: Element | null): { left: number; right: number; width: number } => {
+        const { left, right, width } = el?.getBoundingClientRect() ?? new DOMRect();
+        return { left: round(left), right: round(right), width: round(width) };
+      };
+      const measure = (id: string) => {
+        const wrapper = document.getElementById(id) as HTMLElement;
+        const root = (wrapper.shadowRoot?.firstElementChild as HTMLElement | null) ?? (wrapper.firstElementChild as HTMLElement);
+        const part = (name: string): HTMLElement | null => root.querySelector(`[class*="text-field__${name}"]`);
+        const input = root.querySelector("input") as HTMLInputElement;
+        const style = getComputedStyle(input);
+        return {
+          field: box(root), label: box(root.querySelector("label")),
+          leading: box(part("leading-icon")), trailing: box(part("trailing-icon")),
+          prefix: box(part("prefix")), suffix: box(part("suffix")),
+          direction: style.direction,
+          paddingLeft: round(parseFloat(style.paddingLeft)), paddingRight: round(parseFloat(style.paddingRight)),
+        };
+      };
+      return {
+        "filled factory": measure("m-filled-factory"), "outlined factory": measure("m-outlined-factory"),
+        "filled element": measure("m-filled-element"), "outlined element": measure("m-outlined-element"),
+        "filled element, prefix and suffix": measure("m-affix-element"), affixTwin: measure("m-affix-twin"),
+        "filled element, leading icon and prefix": measure("m-icon-prefix-element"), iconPrefixTwin: measure("m-icon-prefix-twin"),
+      };
+    }, ICON);
+    type Measured = (typeof mirror)[keyof typeof mirror];
+    const line = (name: string, m: Measured): string =>
+      `${name}: label [${m.label.left}, ${m.label.right}], leading [${m.leading.left}, ${m.leading.right}], ` +
+      `trailing [${m.trailing.left}, ${m.trailing.right}], ${m.direction}, padding ${m.paddingLeft}/${m.paddingRight}` +
+      (m.prefix.width ? `, prefix [${m.prefix.left}, ${m.prefix.right}]` : "") + (m.suffix.width ? `, suffix [${m.suffix.left}, ${m.suffix.right}]` : "");
+    const rtlFailures: string[] = [];
+    const mirrorFailure = (name: string, m: Measured, withIcons: boolean): void => {
+      const middle = m.field.left + m.field.width / 2;
+      const inside = (edge: number, ref: number): boolean => Math.abs(edge - ref) <= 1.5;
+      if (!(m.label.left > middle))
+        rtlFailures.push(`${name}: the label's left edge ${m.label.left} is not in the right half (past ${middle})`);
+      if (withIcons) {
+        if (m.leading.left <= middle || !inside(m.leading.right, m.field.right - 12))
+          rtlFailures.push(`${name}: the leading icon [${m.leading.left}, ${m.leading.right}] is not at the right edge (12 from ${m.field.right})`);
+        if (m.trailing.right >= middle || !inside(m.trailing.left, m.field.left + 12))
+          rtlFailures.push(`${name}: the trailing icon [${m.trailing.left}, ${m.trailing.right}] is not at the left edge (12 from ${m.field.left})`);
+      }
+      if (m.direction !== "rtl") rtlFailures.push(`${name}: the input's computed direction is ${m.direction}`);
+    };
+    for (const [name, m, withIcons] of [
+      ["filled factory", mirror["filled factory"], true],
+      ["outlined factory", mirror["outlined factory"], true],
+      ["filled element", mirror["filled element"], true],
+      ["outlined element", mirror["outlined element"], true],
+      ["filled element, prefix and suffix", mirror["filled element, prefix and suffix"], false],
+      ["filled element, leading icon and prefix", mirror["filled element, leading icon and prefix"], false],
+    ] as const) {
+      console.log(`  rtl ${line(name, m)}`);
+      mirrorFailure(name, m, withIcons);
+      // Both icons inset the text by 52 on their sides (12dp, the 24dp icon,
+      // 16dp): mirrored, the pair is still 52/52.
+      if (withIcons && (m.paddingLeft !== 52 || m.paddingRight !== 52))
+        rtlFailures.push(`${name}: the input's padding ${m.paddingLeft}/${m.paddingRight} is not the icons' 52/52`);
+    }
+    const affix = mirror["filled element, prefix and suffix"];
+    if (affix.prefix.left <= affix.field.left + affix.field.width / 2 || !(Math.abs(affix.field.right - affix.prefix.right - 16) <= 1.5))
+      rtlFailures.push(`filled element, prefix and suffix: the prefix [${affix.prefix.left}, ${affix.prefix.right}] is not at the right edge`);
+    if (affix.suffix.right >= affix.field.left + affix.field.width / 2 || !(Math.abs(affix.suffix.left - affix.field.left - 16) <= 1.5))
+      rtlFailures.push(`filled element, prefix and suffix: the suffix [${affix.suffix.left}, ${affix.suffix.right}] is not at the left edge`);
+    if (Math.abs(affix.paddingRight - mirror.affixTwin.paddingLeft) > 0.5 || Math.abs(affix.paddingLeft - mirror.affixTwin.paddingRight) > 0.5)
+      rtlFailures.push(`filled element, prefix and suffix: the input's padding ${affix.paddingLeft}/${affix.paddingRight} is not the twin's ${mirror.affixTwin.paddingRight}/${mirror.affixTwin.paddingLeft} swapped`);
+    // The icon, the prefix, then the text, from the right: the prefix 52dp
+    // in, and the input's padding the left-to-right twin's, swapped
+    const iconPrefix = mirror["filled element, leading icon and prefix"];
+    if (Math.abs(iconPrefix.field.right - iconPrefix.leading.right - 12) > 0.5)
+      rtlFailures.push(`filled element, leading icon and prefix: the leading icon [${iconPrefix.leading.left}, ${iconPrefix.leading.right}] is not 12 from the right edge`);
+    if (Math.abs(iconPrefix.field.right - iconPrefix.prefix.right - 52) > 0.5)
+      rtlFailures.push(`filled element, leading icon and prefix: the prefix [${iconPrefix.prefix.left}, ${iconPrefix.prefix.right}] is not 52 from the right edge`);
+    if (Math.abs(iconPrefix.paddingRight - mirror.iconPrefixTwin.paddingLeft) > 0.5 || Math.abs(iconPrefix.paddingLeft - mirror.iconPrefixTwin.paddingRight) > 0.5)
+      rtlFailures.push(`filled element, leading icon and prefix: the input's padding ${iconPrefix.paddingLeft}/${iconPrefix.paddingRight} is not the twin's ${mirror.iconPrefixTwin.paddingRight}/${mirror.iconPrefixTwin.paddingLeft} swapped`);
+    assert.deepEqual(rtlFailures, [], rtlFailures.join("\n"));
+    await page.evaluate(() => ((document.getElementById("factory") as HTMLElement).innerHTML = ""));
+    check("text field: mirrors under dir=rtl in the light DOM and across the shadow boundary, filled and outlined (FLO-562)");
 
     const layout = await page.evaluate(() => {
       const host = document.getElementById("factory") as HTMLElement;
