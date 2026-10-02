@@ -21,6 +21,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   | the tooltip's `rich` option | `variant: 'rich'`; `rich` was never read (FLO-324) |
   | `TOOLTIP_DEFAULTS.RICH` (deprecated in 0.10.5) | nothing: it was the default of the removed `rich` option |
   | card `withElevation` (internal since FLO-381) | nothing: a no-op; the variant sets the elevation (FLO-323) |
+  | checkbox `variant` | nothing: M3 has one checkbox style (FLO-94, FLO-265). `CheckboxVariant` stays exported. |
+  | list `prefix` | nothing: the prefix is fixed at build time (FLO-118) |
+  | radios `rippleConfig` | nothing: never applied; the stylesheet draws the state layer (FLO-266) |
+  | tabs `ResponsiveConfig.smallScreen.maxVisibleTabs` | nothing: it never had an effect; for more than four tabs, use a scrollable row (FLO-232) |
+  | time picker `closeOnSelect`, `TIMEPICKER_DEFAULTS.CLOSE_ON_SELECT` | nothing: never applied; the picker is confirmed with OK, as M3 specifies (FLO-281) |
   | `rippleConfig.timing` and `rippleConfig.opacity` (button, icon button, FAB, extended FAB, button group, radios, tabs, and the core `RippleConfig`) | nothing: never applied; the stylesheet draws the wave's motion and opacity (FLO-260, FLO-268). `duration` stays. |
 - **1.0 exports nothing deprecated.** What 0.10.0 deprecated and 0.10.x already replaced (or
   never used) is removed. Migration:

@@ -82,11 +82,6 @@ export interface CheckboxConfig {
   labelPosition?: CheckboxLabelPosition | string;
 
   /**
-   * @deprecated Has no effect (FLO-94): M3 has one checkbox style. FLO-265.
-   */
-  variant?: CheckboxVariant | string;
-
-  /**
    * Error state: the outline, the selected container and the state layers
    * take the error role, and the input is marked `aria-invalid`. FLO-265.
    * @default false

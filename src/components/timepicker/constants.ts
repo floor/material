@@ -174,8 +174,6 @@ export const TIMEPICKER_DEFAULTS = {
   ORIENTATION: TIMEPICKER_ORIENTATIONS.VERTICAL,
   /** Whether to show seconds selector */
   SHOW_SECONDS: false,
-  /** @deprecated `closeOnSelect` has no effect (FLO-281). */
-  CLOSE_ON_SELECT: true,
   /** Step interval for minute selection */
   MINUTE_STEP: 1,
   /** Step interval for second selection */

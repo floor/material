@@ -84,15 +84,6 @@ export interface RadiosConfig {
    * Component name used in class generation
    */
   componentName?: string;
-  
-  /**
-   * @deprecated Never applied (FLO-266). The state layer is drawn by the
-   * stylesheet.
-   */
-  rippleConfig?: {
-    /** How long, in milliseconds, a released wave lingers before it is removed */
-    duration?: number;
-  };
 }
 
 /**

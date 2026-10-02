@@ -56,11 +56,6 @@ export interface ListConfig<T = unknown> {
   animate?: boolean;
 
   /**
-   * @deprecated The prefix is fixed at build time (FLO-118); this option is ignored.
-   */
-  prefix?: string;
-
-  /**
    * Component name used in CSS class generation
    * @default 'list'
    */
