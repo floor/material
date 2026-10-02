@@ -359,7 +359,7 @@ export interface SelectChangeEvent extends SelectEvent {
   /**
    * The selected option id
    */
-  value: string;
+  value: string | null;
 
   /**
    * The selected option text

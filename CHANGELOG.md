@@ -12,6 +12,23 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **Time picker, select and radio events agree with their getters (FLO-380).**
+
+  | Event | 0.10 payload | 1.0 payload |
+  |---|---|---|
+  | Factory time picker `input` | `{ value: draft }` | `{ value: committed, draftValue: draft }` |
+  | `<m-timepicker>` `input` detail | `{ value: draft }` | `{ value: committedOrEmpty, draftValue: draft }` |
+  | Factory time picker `confirm` | time string | `{ value: time }` |
+  | `<m-timepicker>` `confirm` detail | no event | `{ value: time }` |
+  | Factory select `change` on empty ID | `{ value: "", ... }` | `{ value: null, ... }` |
+  | `<m-select>` `change` on empty ID | `{ value: "" }` | `{ value: null }` |
+  | `<m-radios>` `change` on empty ID | `{ value: "" }` | `{ value: null }` |
+
+  `onConfirm(string)` in the time picker config still receives a string. The
+  radio factory still reports its string getter, including `""`. Migration:
+  read `draftValue` for edits, destructure `{ value }` from factory `confirm`,
+  and handle `null` for empty select or radio element selections.
+
 - **Chip-set `add` and `remove` report the live selection (FLO-380).** Factory
   callbacks receive one object instead of a bare chip:
 
