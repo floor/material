@@ -470,7 +470,9 @@ $component: "#{base.$prefix}-text-field";
         }
         .#{$component}__input {
             background-color: t.color("surface-container-highest");
-            padding: 20px 16px 7px;
+            // Under the label: 8dp, its 16dp line, the 24dp text, then 8dp with
+            // the 1dp indicator (m3.material.io: "Top/bottom padding 8dp")
+            padding: 24px 16px 7px;
             border-bottom: 1px solid t.color("on-surface-variant");
             border-radius: f.get-shape("extra-small") f.get-shape("extra-small")
                 0 0;
@@ -500,28 +502,36 @@ $component: "#{base.$prefix}-text-field";
         // Populated field (not empty) or focused field label position
         &:not(.#{$component}--empty) .#{$component}__label,
         &.#{$component}--focused .#{$component}__label {
-            transform: translateY(-95%) scale(0.75);
-            // Don't specify left position here - let JS handle it
+            // Its line centred 16dp down, 8dp and half the 16dp line: from the
+            // field's centre, 12px up and half its own scaled height
+            transform: translateY(calc(-12px - 37.5%)) scale(0.75);
         }
 
         // Floated from the input's own state too: a value, or autofill before
         // the script has seen it. The label precedes the input, so the root
         // reads it (FLO-303).
         &:has(.#{$component}__input:is(:not(:placeholder-shown), :autofill, :-webkit-autofill)) .#{$component}__label {
-            transform: translateY(-95%) scale(0.75);
+            transform: translateY(calc(-12px - 37.5%)) scale(0.75);
         }
 
-        // Position adjustments for prefix/suffix when in filled focused/populated state
-        &.mtrl-text-field--with-prefix,
-        &.mtrl-text-field--with-suffix {
-            &:not(.#{$component}--empty),
-            &.#{$component}--focused {
-                .#{$component}__prefix,
-                .#{$component}__suffix {
-                    top: 34px; // Align with input text when focused or populated
-                }
+        // A prefix or suffix is on the text's line: under a label, 24dp down
+        // (its centre 36dp); without one it is centred, as the base places it.
+        // It shows only once the label has floated, so the state is not in
+        // the selector.
+        &:has(> .#{$component}__field > .#{$component}__label) {
+            .#{$component}__prefix,
+            .#{$component}__suffix {
+                top: 36px;
             }
         }
+
+        // Without a label the text is centred: 16dp above and below it
+        // (contentPaddingWithoutLabel), the indicator in the last of them
+        &:not(:has(> .#{$component}__field > .#{$component}__label)) .#{$component}__input {
+            padding-top: 16px;
+            padding-bottom: 15px;
+        }
+
         // Focus state
         &.#{$component}--focused {
             .#{$component}__label {
@@ -581,23 +591,10 @@ $component: "#{base.$prefix}-text-field";
             pointer-events: none;
         }
 
-        // Prefix/suffix adjustments for filled variant
-        &.#{$component}--with-prefix {
-            .#{$component}__prefix {
-                top: 28px; // Align with input text in filled variant - default state
-            }
-        }
-
-        &.#{$component}--with-suffix {
-            .#{$component}__suffix {
-                top: 28px; // Align with input text in filled variant - default state
-            }
-        }
-
         // Icon adjustments for filled variant
         &.#{$component}--with-leading-icon {
             .#{$component}__input {
-                padding: 20px 16px 7px 52px;
+                padding-left: 52px;
             }
 
             .#{$component}__label {
@@ -628,7 +625,10 @@ $component: "#{base.$prefix}-text-field";
 
             &.#{$component}--with-leading-icon {
                 .#{$component}__input {
-                    padding: 20px 52px 7px 16px;
+                    // The sides only: the shorthand also set the default density's
+                    // top and bottom on a compact field
+                    padding-left: 16px;
+                    padding-right: 52px;
                 }
 
                 .#{$component}__label {
@@ -718,7 +718,8 @@ $component: "#{base.$prefix}-text-field";
 
         .#{$component}__input {
             background-color: transparent;
-            padding: 12px 16px 13px;
+            // 16dp all round (contentPaddingWithoutLabel), 1px of it the border
+            padding: 15px 16px;
             // transparent: the outline draws the edge, this keeps the text
             // where the old input border put it. Top and bottom only: the
             // horizontal insets are the filled field's, to the pixel
@@ -741,7 +742,9 @@ $component: "#{base.$prefix}-text-field";
         // Populated field (not empty) or focused field label position
         &:not(.#{$component}--empty) .#{$component}__label,
         &.#{$component}--focused .#{$component}__label {
-            transform: translateY(-147%) scale(0.75);
+            // Centred on the top edge (`endY = -(it.height / 2)`), whatever
+            // its height: up the 28px to the edge, and half its scaled box
+            transform: translateY(calc(-28px - 37.5%)) scale(0.75);
             // The floated label starts 16dp in, inside the notch, whatever
             // the icon or prefix at rest
             left: 16px;
@@ -749,7 +752,9 @@ $component: "#{base.$prefix}-text-field";
 
         // Floated from the input's own state too, as the filled variant is
         &:has(.#{$component}__input:is(:not(:placeholder-shown), :autofill, :-webkit-autofill)) .#{$component}__label {
-            transform: translateY(-147%) scale(0.75);
+            // Centred on the top edge (`endY = -(it.height / 2)`), whatever
+            // its height: up the 28px to the edge, and half its scaled box
+            transform: translateY(calc(-28px - 37.5%)) scale(0.75);
             left: 16px;
         }
 
@@ -796,19 +801,6 @@ $component: "#{base.$prefix}-text-field";
         &.#{$component}--disabled {
             --#{$component}-outline-color: #{t.alpha("on-surface", 0.12)};
             pointer-events: none;
-        }
-
-        // Prefix/suffix vertical alignment for outlined variant
-        &.#{$component}--with-prefix {
-            .#{$component}__prefix {
-                top: 50%; // Centered vertically in outlined variant
-            }
-        }
-
-        &.#{$component}--with-suffix {
-            .#{$component}__suffix {
-                top: 50%; // Centered vertically in outlined variant
-            }
         }
 
         // Icon adjustments for outlined variant
@@ -980,16 +972,18 @@ $component: "#{base.$prefix}-text-field";
                 transform: translateY(-90%) scale(0.75); // Adjusted for compact height
             }
 
-            // Adjust prefix/suffix position when focused/populated
-            &.mtrl-text-field--with-prefix,
-            &.mtrl-text-field--with-suffix {
-                &:not(.#{$component}--empty),
-                &.#{$component}--focused {
-                    .#{$component}__prefix,
-                    .#{$component}__suffix {
-                        top: 22px; // Adjusted for compact filled variant
-                    }
+            // A prefix or suffix on the compact text's line, under a label
+            &:has(> .#{$component}__field > .#{$component}__label) {
+                .#{$component}__prefix,
+                .#{$component}__suffix {
+                    top: 23.5px;
                 }
+            }
+
+            // Without a label, the 20px line centred in the 40px box
+            &:not(:has(> .#{$component}__field > .#{$component}__label)) .#{$component}__input {
+                padding-top: 10px;
+                padding-bottom: 9px;
             }
 
             // Adjust icons for filled compact
@@ -1002,13 +996,14 @@ $component: "#{base.$prefix}-text-field";
         // Outlined variant with compact density
         &.#{$component}--outlined {
             .#{$component}__input {
-                padding: 9px 16px 8px;
+                padding: 9px 16px;
             }
 
             // Focused/populated position
             &:not(.#{$component}--empty) .#{$component}__label,
             &.#{$component}--focused .#{$component}__label {
-                transform: translateY(-130%) scale(0.75); // Same as default, scale is important
+                // On the edge of the 40px box: 20px up, and half its scaled box
+                transform: translateY(calc(-20px - 37.5%)) scale(0.75);
             }
         }
 
@@ -1028,7 +1023,9 @@ $component: "#{base.$prefix}-text-field";
                 padding-top: calc(#{v.text-field('padding-top-multiline-compact')} - #{v.text-field('border-width')});
             }
 
-            .#{$component}__label {
+            .#{$component}__label,
+            .#{$component}__prefix,
+            .#{$component}__suffix {
                 top: 20px;
             }
         }

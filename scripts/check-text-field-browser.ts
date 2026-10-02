@@ -492,6 +492,7 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
       ["trailing icon, suffix, value", { trailingIcon: icon, suffixText: "kg", value: "12" }],
       ["label", {}],
       ["label, value", { value: "Ada" }],
+      ["no label, value", { label: "", value: "Ada" }],
       ["multiline", { type: "multiline" }],
       ["multiline, value", { type: "multiline", value: "Ada" }],
       ["multiline, no label, value", { type: "multiline", label: "", value: "Ada" }],
@@ -572,7 +573,7 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
   // Every failure is reported, not only the first
   const failures: string[] = [];
   const expect = (ok: boolean, message: string): void => { if (!ok) failures.push(message); };
-  assert.equal(rows.length, api === "factory" ? 96 : 48);
+  assert.equal(rows.length, api === "factory" ? 104 : 52);
   const named = new Map(rows.map((row) => [row.name, row]));
   for (const row of rows) {
     const { name } = row;
@@ -618,6 +619,32 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
       expect(row.label.start === label, `${name}: the label starts ${label}dp in (${row.label.start})`);
     }
 
+    // 3. Vertical metrics (m3.material.io: "Top/bottom padding 8dp", label
+    // "Vertically centered"; Compose: `TextFieldWithLabelVerticalPadding 8.dp`,
+    // `textPosition = topPaddingValue + labelPlaceable.height`, the outlined
+    // floated label `endY = -(it.height / 2)`, 16dp all round without a label).
+    // Compact has no M3 measure: it keeps the two rules that are not numbers,
+    // the outlined label centred on the edge and an unlabelled line centred.
+    const standard = name.includes("default");
+    if (!name.includes("multiline")) {
+      const filled = !outlined;
+      if (standard && filled && row.label && floated) expect(row.textTop === 24, `${name}: under the label, the text starts 24dp down (${row.textTop})`);
+      if (standard && outlined) expect(row.textTop === 16, `${name}: the text starts 16dp down (${row.textTop})`);
+      if (!row.label) expect(row.textTop === (standard ? 16 : 10), `${name}: without a label the text is centred, ${standard ? 16 : 10}dp down (${row.textTop})`);
+    }
+    if (row.label && floated) {
+      const centre = round((row.label.top + row.label.bottom) / 2);
+      // The filled label's 16dp line is 8dp down: its centre 16dp down
+      if (standard && !outlined) expect(centre === 16, `${name}: the floated label's line is centred 16dp down (${centre})`);
+      if (outlined) expect(centre === 0, `${name}: the floated label is centred on the top edge (${centre})`);
+    }
+    // An affix is on the text's line (`placeRelativeWithLayer(…, yOffset + textPosition)`)
+    if (!name.includes("multiline")) {
+      for (const affix of [row.prefix, row.suffix]) {
+        if (affix) expect(near(affix.top, row.textTop), `${name}: the affix is on the text's line (${affix.top} against ${row.textTop})`);
+      }
+    }
+
     // 4. Multiline. The first line and the label are where a single-line
     // field has them: Compose places the text with no singleLine branch
     // (`textPosition = topPaddingValue + labelPlaceable.height`: 8 + 16 = 24dp
@@ -649,5 +676,5 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
     }
   }
   assert.deepEqual(failures, [], `${failures.length} of the layout assertions failed`);
-  console.log(`Passed text field layout (${api}): ${rows.length} fields, filled and outlined, default and compact${api === "factory" ? ", left to right and right to left" : ""} — icons 12dp in and 16dp from the content, an affix 2dp from the text, the label at the content's start; a multiline field's first line clear of its label.`);
+  console.log(`Passed text field layout (${api}): ${rows.length} fields, filled and outlined, default and compact${api === "factory" ? ", left to right and right to left" : ""} — icons 12dp in and 16dp from the content, an affix 2dp from the text, the label at the content's start; 8dp above the filled label's line and under the text, the outlined label on the edge; a multiline field's first line clear of its label.`);
 }

@@ -1045,6 +1045,20 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   by the amounts below; nothing in the API changes. Sources: the measurement tables on
   m3.material.io's text fields page, and Compose's `TextFieldImpl.kt` for the positions the
   site gives only as diagrams.
+  - **A filled field's text is 24px down under its label and 8px above the bottom edge**
+    ("Top/bottom padding 8dp"; the label's 16dp line is between): it was 22px down and 10px
+    above. The floated label's line is centred 16px down, 1.8px lower than it was. A select's
+    text moves with it. **Without a label the text is centred,** 16px down
+    (`contentPaddingWithoutLabel`): it kept the labelled field's place, 22px.
+  - **An outlined field's text is 16px down** (was 15.5px), and its floated label is centred
+    on the top edge (it sat 1.7px below it).
+  - **A prefix or suffix is on the text's line** in every case; in a compact field it was
+    1.5px above it, in an outlined one half a pixel below.
+  - **Compact density, which M3 does not measure, keeps its own heights and takes the rules
+    that are not numbers:** the outlined floated label centred on the edge (1.5px lower
+    before), the text centred in an outlined or unlabelled field (10px down; it was 10.5px
+    outlined, 13.5px filled without a label), and the insets around its 20px icon box, 12px
+    and 16px.
   - **An icon is 12px in and what follows it 16px further** ("Left/right padding with icons
     12dp", "Padding between icons and text 16dp"): beside a leading icon the text and the
     label start 52px in, and before a trailing icon the text ends 52px in. Both were 44px (the
@@ -1104,6 +1118,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **Text field, right to left: a compact filled field with a leading icon keeps its compact
+  padding (FLO-299).** The right-to-left rule beside an icon set all four sides, so the
+  field took the default density's top and bottom padding and its text sat 2.5px low.
 - **A filled multiline text field's first line no longer runs under its floated label
   (FLO-299).** The textarea padded its text 12px from the top whatever the variant, and the
   floated label's box ends 19.2px down: they overlapped by 7.2px (13px at compact density).

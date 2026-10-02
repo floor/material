@@ -65,6 +65,10 @@ export const cases: PreupgradeCase[] = [
   c("text-field", "density=compact", `<m-text-field density="compact" label="Name"></m-text-field>`),
   c("text-field", "outlined compact value", `<m-text-field variant="outlined" density="compact" label="Name" value="Ada"></m-text-field>`),
   c("text-field", "width set by the page", `<m-text-field label="Name" style="width:300px"></m-text-field>`),
+  // FLO-299: without a label the text is centred, in both densities
+  c("text-field", "no label value", `<m-text-field aria-label="Name" value="Ada"></m-text-field>`),
+  c("text-field", "no label compact value", `<m-text-field density="compact" aria-label="Name" value="Ada"></m-text-field>`),
+  c("text-field", "no label outlined value", `<m-text-field variant="outlined" aria-label="Name" value="Ada"></m-text-field>`),
   // FLO-425: the multiline box is the textarea's, not the single-line field's
   c("text-field", "type=multiline", `<m-text-field label="Name" type="multiline"></m-text-field>`),
   c("text-field", "type=multiline value", `<m-text-field label="Name" type="multiline" value="Ada"></m-text-field>`),

@@ -432,7 +432,7 @@ try {
         };
       });
       assert(before.root, "phase B hosts did not render the roots the page asked for");
-      assert(before.padding !== "22px 16px 0px", `text field still has pre-upgrade padding (${before.padding})`);
+      assert(before.padding !== "24.5px 16px 0px", `text field still has pre-upgrade padding (${before.padding})`);
       assert(before.before === "none", `text field ::before is pre-upgrade text (${before.before})`);
       assert(before.after === "none", `text field ::after is pre-upgrade text (${before.after})`);
       assert(before.bare > 30, "a host without a declarative root lost its reserved box");
