@@ -3955,7 +3955,9 @@ try {
     const partState = (): Promise<unknown> =>
       page.evaluate(() => {
         const host = document.getElementById("tl") as TrailingHost;
-        const node = (host.shadowRoot as ShadowRoot).querySelector('[class*="trailing-icon"]');
+        // The exact class: `[class*=…]` also matches the field's own
+        // `--with-trailing-icon` modifier.
+        const node = (host.shadowRoot as ShadowRoot).querySelector(".mtrl-text-field__trailing-icon");
         return {
           tag: node?.tagName ?? null,
           hidden: node?.getAttribute("aria-hidden") ?? null,
