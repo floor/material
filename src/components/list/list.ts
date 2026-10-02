@@ -14,6 +14,13 @@ import type { ListComponent, ListConfig, ListItem } from "./types";
  * The List component provides a simple way to render static arrays of data
  * with Material item anatomy and built-in selection capabilities.
  *
+ * The row's corners are four custom properties on `.mtrl-list` (on `<m-list>`,
+ * `::part(list)`), named as the button's `--mtrl-button-shape` and
+ * `--mtrl-button-shape-pressed`: `--mtrl-list-item-shape` (4px at rest),
+ * `--mtrl-list-item-shape-outer` (16px on the list's outer corners),
+ * `--mtrl-list-item-shape-hover` (12px) and `--mtrl-list-item-shape-active`
+ * (16px focused, pressed or selected). Set the four to `0` for square rows.
+ *
  * @param config - Configuration options for the list
  * @returns List component instance
  */

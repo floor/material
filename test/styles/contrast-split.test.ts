@@ -122,9 +122,11 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_menu.scss), the chip's secondary-action floor
     // (styles/components/_chips.scss), and the touch target centred physically
     // (styles/abstract/_mixins.scss, FLO-592).
+    // The list row's expressive corners, read from four list custom properties,
+    // with keyboard focus on the row action (styles/components/_list.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("4412b7db5fbb5b6229537842cb434ffef9f677d7cd9812dc69f47dd63edc7e47");
-    expect(css.length).toBe(525072);
+      .toBe("ae83e7ba027a9d9d0ca8fa5862d95cdb7819e7b992e9b6fa51173eec9f578016");
+    expect(css.length).toBe(526641);
   });
 
   test("today's sheets still resolve to the fixture", () => {

@@ -1099,6 +1099,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **A list row takes the expressive shape.** A row is 4 px at rest, 16 px on the list's outer corners, 12 px hovered, and 16 px focused, pressed or selected. With the default colours nothing changes at rest on screen: the row and the list are both the surface colour. Hover, focus and press look different, and rows given their own background show the corners. Set `--mtrl-list-item-shape`, `--mtrl-list-item-shape-outer`, `--mtrl-list-item-shape-hover` and `--mtrl-list-item-shape-active` to `0` on `.mtrl-list` for square rows; on `<m-list>` that element is `::part(list)`. M3 Lists specs: "Unselected corner radius: 4dp inner, 16dp outer" and "Selected corner radius: 16dp".
 - **The package's README on npm is a short one.** `npm-readme.md` is packed as the package's
   `README.md` (install, one example, the component list, and links to md3.io); the full
   README stays on GitHub. Nothing in the API changes.
