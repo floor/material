@@ -129,16 +129,17 @@ describe("chips set onChange is an on(change) listener", () => {
     let set!: ChipsComponent;
     set = mountSet({
       chips: [{ value: "a", ripple: false }, { value: "b", ripple: false }],
+      onChange: () => calls.push("onChange"),
       on: {
         change: () => {
-          calls.push("early");
+          calls.push("map");
           set.destroy();
         },
       },
-      onChange: () => calls.push("onChange"),
     });
+    set.on("change", () => calls.push("later"));
     expect(() => set.getChips()[0]!.element.click()).not.toThrow();
-    expect(calls).toEqual(["early"]);
+    expect(calls).toEqual(["onChange", "map"]);
     calls.length = 0;
     expect(() => set.selectByValue("b", true)).not.toThrow();
     expect(() => set.destroy()).not.toThrow();

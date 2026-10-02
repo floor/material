@@ -191,7 +191,8 @@ export interface ChipsConfig {
   selectionRequired?: boolean;
 
   /**
-   * Same payload as an `on("change")` listener registered at this point.
+   * Same payload as an `on("change")` listener. Registered before the `on`
+   * map and before a listener added after `createChips`.
    * `selectByValue(values, true)` reaches it, with `changed: null`.
    * `selectByValue(values)` and `clearSelection()` stay silent.
    */

@@ -345,7 +345,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | Second `changedValue` parameter | `undefined` in both `on("change")` and `onChange`; each handler is passed exactly one argument. |
 
 - **A chips config `on*` option is its event's listener.** The factory registers it with
-  `on(event)`, so it runs with that listener's payload and at that listener's place: after
+  `on(event)`, so it runs with that listener's payload and at that listener's place: before
   a handler supplied in `on`, and before a listener added after the factory returns. It used
   to be called beside the emit, with its own arguments. `onSelect` has no matching event and
   is unchanged. A chip in a set emits its own `change` on a click, after the set has toggled
