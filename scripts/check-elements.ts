@@ -10,6 +10,7 @@
 //   bun run build && bun run scripts/check-elements.ts
 
 import { checkCheckableValues } from "./check-checkable-values";
+import { expectedFailure } from "./expected-failure";
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
@@ -5506,6 +5507,48 @@ try {
     assert.deepEqual((await log()).map((e) => e.type), ["open", "close", "open", "close"]);
     assert.deepEqual(await menuState(), { open: false, attribute: false });
     check("menu: ArrowRight opens the submenu on its first item, ArrowLeft returns to Share, a hover opens it");
+
+    // FLO-515's acceptance: arrows pressed before the menu's initial focus are not
+    // undone by it. A menu opened with a key focuses its first item on a 100ms
+    // timer; here that timer is held until the arrows have been handled, the order
+    // fast keys (or a paused page) produce. Today the timer then puts focus back
+    // on the first item.
+    await expectedFailure("FLO-515", "the menu's initial focus undoes arrows pressed before it", async () => {
+      await page.evaluate(() => {
+        const timeout = window.setTimeout;
+        const held: Array<() => void> = [];
+        // The menu's timers are 0, 20 and 100ms: only the focus one is held.
+        window.setTimeout = ((callback: () => void, delay?: number, ...rest: unknown[]) => {
+          if (delay !== 100) return timeout(callback, delay, ...rest);
+          held.push(callback);
+          return 0;
+        }) as typeof window.setTimeout;
+        Object.assign(window, { releaseTimers: () => {
+          window.setTimeout = timeout;
+          for (const callback of held.splice(0)) callback();
+        } });
+      });
+      let before: string | null;
+      try {
+        await page.focus("#mb");
+        await page.keyboard.press("Enter");
+        // The menu is placed and shown 20ms after the key; its focus timer is held.
+        // (Not `wait(100)`: that is a 100ms timer in the page, and would be held too.)
+        await wait(60);
+        assert.equal((await menuState()).open, true, "the menu opened with Enter");
+        for (const key of ["ArrowDown", "ArrowDown"]) await page.keyboard.press(key);
+        before = await focused();
+        assert.notEqual(before, "mb", "the arrows moved focus into the menu");
+      } finally {
+        await page.evaluate(() => (window as unknown as { releaseTimers: () => void }).releaseTimers());
+      }
+      await wait(50);
+      const after = await focused();
+      await page.keyboard.press("Escape");
+      await settle();
+      await log();
+      assert.equal(after, before, "FLO-515: focus stays where the arrows put it once the menu's initial focus has run");
+    });
 
     await page.evaluate(() => (document.getElementById("mm") as Host & { show: () => void }).show());
     await settle();

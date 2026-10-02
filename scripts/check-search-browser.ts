@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createSearch from "../src/components/search";
+import { expectedFailure } from "./expected-failure";
 
 type SearchWindow = Window & { searchEvents: string[]; createSearch: typeof createSearch; search: ReturnType<typeof createSearch> };
 
@@ -54,6 +55,43 @@ const layout = (page: Page) => page.evaluate(() => {
 const opened = async (page: Page): Promise<void> => {
   await page.waitForFunction(() => document.querySelector(".mtrl-search--view"));
   await page.evaluate(() => new Promise(requestAnimationFrame));
+};
+
+/**
+ * FLO-514's acceptance: a view dismissed before its opening frame has run stays
+ * dismissed. Opening defers `input.focus()` to the next animation frame; here that
+ * frame is held until the scrim has been pressed, the order a slow frame produces.
+ * Today the late focus opens the view again.
+ */
+const dismissedBeforeItsOpeningFrame = async (page: Page): Promise<void> => {
+  await mount(page, { placeholder: "Search messages", suggestions: ["Apple", "Banana", "Cherry"] });
+  // Frames the page asks for while a view is open wait for `releaseFrames()`.
+  await page.evaluate(() => {
+    const raf = window.requestAnimationFrame;
+    const held: FrameRequestCallback[] = [];
+    window.requestAnimationFrame = callback => {
+      if (!document.querySelector(".mtrl-search--view")) return raf.call(window, callback);
+      held.push(callback);
+      return 0;
+    };
+    Object.assign(window, { releaseFrames: () => {
+      window.requestAnimationFrame = raf;
+      for (const callback of held.splice(0)) callback(performance.now());
+    } });
+  });
+  try {
+    await page.locator(".mtrl-search__input").click();
+    await page.waitForFunction(() => document.querySelector(".mtrl-search--view"));
+    const surface = (await layout(page)).surface;
+    await page.mouse.click(surface[0] + surface[2] + 100, 700);
+    assert.equal(await page.evaluate(() => !!document.querySelector(".mtrl-search--bar")), true, "the press on the scrim closes the view, its opening frame still pending");
+  } finally {
+    await page.evaluate(() => (window as unknown as { releaseFrames: () => void }).releaseFrames());
+  }
+  // Past the opening's frame, and past the 150ms a blur takes to close a view.
+  await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 300)));
+  assert.equal(await page.evaluate(() => document.querySelector(".mtrl-search--view") ? "view" : "bar"), "bar",
+    "FLO-514: a view dismissed before its opening frame stays dismissed");
 };
 
 export async function checkSearch(page: Page): Promise<void> {
@@ -114,6 +152,8 @@ export async function checkSearch(page: Page): Promise<void> {
   assert.equal(await page.evaluate(() => !!document.querySelector(".mtrl-search--bar")), true, "the press on the scrim closes it, without waiting for the blur");
   const dismissed = await layout(page);
   assert.deepEqual([dismissed.popover, dismissed.after], [false, closed.after], "the scrim closes it, back in the page");
+
+  await expectedFailure("FLO-514", "a search view dismissed before its opening frame opens again", () => dismissedBeforeItsOpeningFrame(page));
 
   // In a parent that clips, the results still show: the top layer escapes it.
   await mount(page, { suggestions: ["Apple", "Banana"] }, true);
