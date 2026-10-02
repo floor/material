@@ -10,6 +10,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+## [0.10.5] - 2026-10-02
+
+Preparing for 1.0.0, continued: every exported identifier writes "text field" as two words
+(`createTextField`, `TextFieldConfig`, …), beside the old names, which are deprecated with the
+other names and members 1.0.0 removes. Also contrast levels on every theme, opt-in wheel
+scrolling on the carousel, and the text field's required asterisk, announced errors and trailing
+icon button.
+
 ### Added
 
 - **Canonical names (FLO-383):** `createTextField`, `TextFieldConfig` and `TextFieldComponent` (M3
@@ -43,7 +51,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   and `"high"` select M3 contrast levels in light and dark. Put the attribute on the
   same element as `data-theme`, including each nested theme. With no contrast attribute,
   `prefers-contrast: more` selects high on every themed element independently; explicit
-  `standard` opts out on that element. In 1.0, a nested theme does not inherit an ancestor's
+  `standard` opts out on that element. A nested theme does not inherit an ancestor's
   contrast setting or opt-out. The unthemed root follows the OS color scheme and
   `.dark-theme` at every contrast level, ignoring `data-theme-mode`.
   Hand-authored medium and high palettes use each theme's documented seed, falling back
@@ -104,8 +112,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 - **The ripple defaults of options never applied (FLO-268):** `DEFAULT_RIPPLE_CONFIG.TIMING` and
   `.OPACITY` (`mtrl/components/button/constants`, `mtrl/components/icon-button/constants`) and
   `BUTTON_GROUP_DEFAULTS.RIPPLE_TIMING` and `.RIPPLE_OPACITY`. They have no effect: the options they
-  are the defaults of, `rippleConfig`'s `timing` and `opacity`, are never applied (deprecated in 0.10.0). Removed in 1.0. Comments only; nothing changes at
-  run time.
+  are the defaults of, `rippleConfig`'s `timing` and `opacity`, are never applied (deprecated in
+  0.10.0). Removed in 1.0. Comments only; nothing changes at run time.
 
 - **The small FAB's class and icon size:** `FAB_CLASSES.SMALL` and `FAB_ICON_SIZES.SMALL`
   (`mtrl/components/fab/constants`). The small size they belong to, `FAB_SIZES.SMALL`, is already
@@ -1919,7 +1927,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.4...HEAD
+[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.5...HEAD
+[0.10.5]: https://github.com/floor/mtrl/compare/v0.10.4...v0.10.5
 [0.10.4]: https://github.com/floor/mtrl/compare/v0.10.3...v0.10.4
 [0.10.3]: https://github.com/floor/mtrl/compare/v0.10.2...v0.10.3
 [0.10.2]: https://github.com/floor/mtrl/compare/v0.10.1...v0.10.2
