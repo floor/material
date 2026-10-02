@@ -16,6 +16,7 @@ export const removeShape: Equals<ChipsRemoveEvent, { value: string | string[] | 
 export const addValue: Equals<ChipsAddEvent["value"], ReturnType<ChipsComponent["getValue"]>> = true;
 export const removeValue: Equals<ChipsRemoveEvent["value"], ReturnType<ChipsComponent["getValue"]>> = true;
 export const configEvents: Equals<ChipsConfig["on"], Partial<ChipsEvents> | undefined> = true;
+export const onChangeIsListener: Equals<NonNullable<ChipsConfig["onChange"]>, ChipsEvents["change"]> = true;
 const chips = createChips({ on: {
   change: event => { const selected: (string | null)[] = event.selected; const value: string | null = event.changed; void selected; void value; },
   add: event => event.chip.getValue(),
