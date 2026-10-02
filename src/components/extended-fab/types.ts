@@ -23,8 +23,7 @@ export type ExtendedFabVariant =
   | "tertiary-container"
   | "primary"
   | "secondary"
-  | "tertiary"
-  | "surface";
+  | "tertiary";
 
 /**
  * Expressive extended FAB size: small 56dp, medium 80dp, large 96dp.
@@ -346,10 +345,6 @@ export interface ExtendedFabConfig {
   rippleConfig?: {
     /** How long, in milliseconds, a released wave lingers before it is removed */
     duration?: number;
-    /** @deprecated Not applied: the ripple's motion comes from the stylesheet (FLO-268). */
-    timing?: string;
-    /** @deprecated Not applied: the wave is the 0.10 pressed state layer, drawn by the stylesheet (FLO-268). */
-    opacity?: [string, string];
   };
 
   /**

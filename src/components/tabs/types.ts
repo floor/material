@@ -192,10 +192,6 @@ export interface TabConfig {
   rippleConfig?: {
     /** How long, in milliseconds, a released wave lingers before it is removed */
     duration?: number;
-    /** @deprecated Not applied: the ripple's motion comes from the stylesheet (FLO-268). */
-    timing?: string;
-    /** @deprecated Not applied: the wave is the 0.10 pressed state layer, drawn by the stylesheet (FLO-268). */
-    opacity?: [string, string];
   };
   
   /**
@@ -275,18 +271,6 @@ export interface TabsConfig {
    * Tab indicator configuration
    */
   indicator?: IndicatorConfig;
-  
-  /**
-   * Tab indicator height in pixels
-   * @deprecated Use indicator.height instead
-   */
-  indicatorHeight?: number;
-  
-  /**
-   * Tab indicator width strategy
-   * @deprecated Use indicator.widthStrategy instead
-   */
-  indicatorWidthStrategy?: 'fixed' | 'dynamic' | 'content' | 'auto';
 }
 
 /**
@@ -528,7 +512,8 @@ export interface TabsComponent {
   off: <K extends keyof TabsEvents>(event: K, handler: TabsEvents[K]) => TabsComponent;
   
   /**
-   * Emit an event
+   * Emit an event. `emit` accepts any event name; listeners typed through
+   * `on`/`off` cover the component's own events ({@link TabsEvents}).
    * @param event - Event name
    * @param data - Event data
    * @returns Tabs component for chaining

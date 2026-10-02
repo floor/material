@@ -87,8 +87,6 @@ export const TIMEPICKER_VALUES = {
 export const TIMEPICKER_SELECTORS = {
   /** Main container selector */
   CONTAINER: '.mtrl-time-picker',
-  /** @deprecated Matches nothing: the backdrop is the dialog's `::backdrop` (FLO-278). */
-  MODAL: '.mtrl-time-picker__modal',
   /** Dialog container selector */
   DIALOG: '.mtrl-time-picker__dialog',
   /** Title element selector */
@@ -97,12 +95,8 @@ export const TIMEPICKER_SELECTORS = {
   CONTENT: '.mtrl-time-picker__content',
   /** Clock dial container selector */
   DIAL: '.mtrl-time-picker__dial',
-  /** @deprecated Matches nothing: the dial is DOM, not a canvas (FLO-279). */
-  DIAL_CANVAS: '.mtrl-time-picker__dial-canvas',
   /** Clock dial face selector */
   DIAL_FACE: '.mtrl-time-picker__dial-face',
-  /** @deprecated Matches nothing: the hand is `__dial-track` and `__dial-handle` (FLO-279). */
-  DIAL_HAND: '.mtrl-time-picker__dial-hand',
   /** Clock centre dot selector */
   DIAL_CENTER: '.mtrl-time-picker__dial-centre',
   /** Clock numbers container selector */
@@ -174,8 +168,6 @@ export const TIMEPICKER_DEFAULTS = {
   ORIENTATION: TIMEPICKER_ORIENTATIONS.VERTICAL,
   /** Whether to show seconds selector */
   SHOW_SECONDS: false,
-  /** @deprecated `closeOnSelect` has no effect (FLO-281). */
-  CLOSE_ON_SELECT: true,
   /** Step interval for minute selection */
   MINUTE_STEP: 1,
   /** Step interval for second selection */

@@ -277,7 +277,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
   // a chip the app makes draggable; mtrl does no dragging itself. FLO-259.
   listen(root, "dragstart", () => root.classList.add(base.getClass("chip--dragged")));
   listen(root, "dragend", () => root.classList.remove(base.getClass("chip--dragged")));
-  label.textContent = options.label ?? options.text ?? "";
+  label.textContent = options.label ?? "";
   setHTML(leading, avatar || leadingIcon);
   setHTML(trailing, trailingIcon);
   render();

@@ -8,8 +8,6 @@ export type ChipType = "assist" | "filter" | "input" | "suggestion";
 export interface ChipConfig {
   type?: ChipType;
   label?: string;
-  /** @deprecated Use label. Kept for existing chips-container item configs. */
-  text?: string;
   value?: string;
   disabled?: boolean;
   /** In a single-select set, selecting this chip replaces the previous selection; the last selected config wins. */

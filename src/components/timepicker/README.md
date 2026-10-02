@@ -55,7 +55,6 @@ The `createTimePicker` function accepts a configuration object with the followin
 | `title` | `string` | `undefined` | Title text for the time picker |
 | `showSeconds` | `boolean` | `false` | Whether to show seconds selector |
 | `class` | `string` | `undefined` | Additional CSS classes to add to the time picker |
-| `closeOnSelect` | `boolean` | `true` | Deprecated, no effect: the picker is confirmed with OK |
 | `minTime` | `string` | `undefined` | Earliest selectable time, 24-hour (HH:MM or HH:MM:SS). Dial numbers and AM/PM that cannot reach it are disabled; a picked or typed time before it moves up to it |
 | `maxTime` | `string` | `undefined` | Latest selectable time, as `minTime` at the other end |
 | `minuteStep` | `number` | `1` | Minutes off the step are disabled on the dial; a pointer picks the nearest step, and a typed minute rounds to it when committed |

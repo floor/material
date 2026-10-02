@@ -3,7 +3,7 @@
  * Enable declarative shadow DOM for mtrl/react in this server process.
  * The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup.
  * The server-rendered shadow root is built in a separate render, without the context of providers above the component.
- * The page's own render (the light DOM) sees the provided value. Until upgrade, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves this component without a declarative shadow root while the page still renders.
+ * The page's own render (the light DOM) sees the provided value. Until upgrade, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves this component without a declarative shadow root while the page still renders. In development, a warning names the element.
  * The Vue and Solid bridges see the provided value in both the shadow root and light DOM. Svelte has this same context limit and logs a development-only warning naming the element when required context leaves it without a shadow root.
  * Pass the resolved string as a prop or attribute, or accept client-rendered text until the upgrade. A fix is planned for 1.1 (FLO-517).
  * @module ssr/react
@@ -197,7 +197,12 @@ bridge.react = (tag, props, children, prefix) => {
   } catch (error) {
     if (!isSynchronousSuspend(error)) {
       // Returning lets the host finish. The page then renders this child and
-      // reports its error, as it does without the bridge.
+      // reports its error, as it does without the bridge. Development names the
+      // host and the error; nothing is remembered past this call.
+      if (isDevelopment()) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn(`[mtrl] ${elementLabel(tag, props)} child snapshot failed, often because it needs ancestor context; this response has no shadow root for it: ${message}`);
+      }
       clearAttempt(children);
       return undefined;
     }
