@@ -50,12 +50,12 @@ import 'mtrl/styles/base';
 
 ```tsx
 import 'mtrl/styles/base';
-import { Button, Switch, Textfield } from 'mtrl/react';
+import { Button, Switch, TextField } from 'mtrl/react';
 
 export function Signup() {
   return (
     <form>
-      <Textfield name="email" type="email" label="Email" required />
+      <TextField name="email" type="email" label="Email" required />
       <Switch name="news" defaultChecked>Newsletter</Switch>
       <Button type="submit">Sign up</Button>
     </form>
@@ -67,9 +67,9 @@ export function Signup() {
 
 ```typescript
 import 'mtrl/styles';
-import { createButton, createTextfield } from 'mtrl';
+import { createButton, createTextField } from 'mtrl';
 
-const name = createTextfield({ label: 'Name' });
+const name = createTextField({ label: 'Name' });
 const save = createButton({ text: 'Save', variant: 'filled' });
 save.disabled.disable();
 
@@ -100,7 +100,7 @@ Every component comes three ways: a factory (`createButton`), an element (`<m-bu
 | Containment | Card, Carousel, List, Divider, Dialog, Bottom sheet, Side sheet |
 | Communication | Badge, Progress, Loading indicator, Snackbar, Tooltip |
 
-The factories are exported from `mtrl`: `createButton`, `createIconButton`, `createButtonGroup`, `createSplitButton`, `createFab`, `createExtendedFab`, `createFabMenu`, `createToolbar`, `createCheckbox`, `createSwitch`, `createRadios`, `createChips` (with `createAssistChip`, `createFilterChip`, `createInputChip` and `createSuggestionChip`), `createSlider`, `createTextfield`, `createSelect`, `createSearch`, `createDatePicker`, `createTimePicker`, `createNavigationRail`, `createDrawer`, `createTabs` and `createTab`, `createMenu`, `createTopAppBar`, `createBottomAppBar`, `createCard` (with `createCardHeader`, `createCardContent`, `createCardMedia` and `createCardActions`), `createCarousel`, `createList`, `createDivider`, `createDialog`, `createBottomSheet`, `createSideSheet`, `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar` and `createTooltip`.
+The factories are exported from `mtrl`: `createButton`, `createIconButton`, `createButtonGroup`, `createSplitButton`, `createFab`, `createExtendedFab`, `createFabMenu`, `createToolbar`, `createCheckbox`, `createSwitch`, `createRadios`, `createChips` (with `createAssistChip`, `createFilterChip`, `createInputChip` and `createSuggestionChip`), `createSlider`, `createTextField`, `createSelect`, `createSearch`, `createDatePicker`, `createTimePicker`, `createNavigationRail`, `createDrawer`, `createTabs` and `createTab`, `createMenu`, `createTopAppBar`, `createBottomAppBar`, `createCard` (with `createCardHeader`, `createCardContent`, `createCardMedia` and `createCardActions`), `createCarousel`, `createList`, `createDivider`, `createDialog`, `createBottomSheet`, `createSideSheet`, `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar` and `createTooltip`.
 
 ## Styles
 

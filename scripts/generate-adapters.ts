@@ -12,10 +12,11 @@
 
 import { readdirSync, unlinkSync } from "node:fs";
 import { elements } from "../src/elements";
-import { declarationModules, elementModules, kebab } from "./element-modules";
+import { CANONICAL, declarationModules, elementModules, kebab } from "./element-modules";
 
 const pascal = (name: string): string =>
   name.replace(/(^|-)([a-z])/g, (_, __: string, c: string) => c.toUpperCase());
+const DEPRECATED_NOTE = (to: string) => `Use ${to}: M3 writes "text field" as two words. Removed in 1.0 (FLO-383).`;
 
 interface Framework {
   dir: string;
@@ -92,7 +93,12 @@ ${framework.directive ? `${framework.directive}\n` : ""}/**
 
 ${framework.exports}
 
-${[...elementModules, ...declarationModules].map(({ name }) => `export { ${framework.component(name)} } from "./${kebab(name)}";`).join("\n")}
+${[...elementModules, ...declarationModules].map(({ name }) => {
+  const C = framework.component(name);
+  if (!CANONICAL[name]) return `export { ${C} } from "./${kebab(name)}";`;
+  const to = framework.component(name).replace(pascal(name), CANONICAL[name]);
+  return `export { ${C} as ${to} } from "./${kebab(name)}";\nexport {\n  /** @deprecated ${DEPRECATED_NOTE(to)} */\n  ${C},\n} from "./${kebab(name)}";`;
+}).join("\n")}
 `;
 
 // The bare tags in the framework's JSX, an opt-in types entry (FLO-333):

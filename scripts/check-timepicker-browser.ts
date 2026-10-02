@@ -31,8 +31,8 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
     state.timeDrafts = [];
     state.timePicker.on("change", ({ value }) => { state.timeChanges.push(value); });
     // Edits are a draft until OK (FLO-288): they show in `input`.
-    state.timePicker.on("input", ({ value }) => { state.timeDrafts.push(value); });
-    state.timePicker.on("confirm", value => { state.confirmedTime = value; });
+    state.timePicker.on("input", ({ draftValue }) => { state.timeDrafts.push(draftValue); });
+    state.timePicker.on("confirm", ({ value }) => { state.confirmedTime = value; });
     state.timePicker.open();
     // Edit in the same task as open(), before the former 50ms redraw.
     state.openingInput = state.timePicker.dialogElement.querySelector<HTMLInputElement>('[data-type="minute"]')!;
