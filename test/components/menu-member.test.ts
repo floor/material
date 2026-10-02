@@ -98,6 +98,15 @@ test("setItems on an expanded split button without a menu opens the menu it crea
   expect(innerMenu(split)!.isOpen()).toBe(true);
 });
 
+test("setItems after destroy() creates no menu", () => {
+  const split = mount(createSplitButton({ text: "Export" }));
+  split.destroy();
+  expect(split.setItems([{ id: "csv", text: "CSV" }])).toBe(split);
+  expect(innerMenu(split)).toBeUndefined();
+  expect(split.getItems()).toEqual([]);
+  expect(document.querySelector(".mtrl-menu")).toBeNull();
+});
+
 test("setItems([]) empties the menu and keeps it; on a split button without a menu it creates none", async () => {
   const split = mount(createSplitButton({ text: "Export" }));
   await wait();

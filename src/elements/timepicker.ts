@@ -116,7 +116,7 @@ const create = (config: TimepickerElementConfig): TimepickerElementComponent => 
     },
     show: () => void picker.open(),
     close: () => void picker.close(),
-    isOpen: () => picker.isOpen,
+    isOpen: picker.isOpen,
     required: !!required,
     // `change` and `input` use the element's possibly empty committed value.
     on: (event, handler) => void (event === "change" || event === "input" ? changes.on(event, handler as EventCallback) : picker.on(event, handler)),
