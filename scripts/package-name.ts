@@ -555,11 +555,15 @@ function structuralProblems(pair: Pair, spec: NameSpec): Problem[] {
       problems.push({ file: unwanted, line: 0, message: `the \`${other.name}\` tree's release workflow is still here` });
     }
   }
-  // The lockfile's workspace name is written by `bun install`, not by the rules.
+  // The lockfile's workspace name. Plan 2.2 says `bun install` writes it; the
+  // tree says otherwise — on bun 1.4.2 `bun install` and `bun install
+  // --lockfile-only` both leave the old name and report no changes (measured
+  // 2026-10-02). So the rename writes the line itself (as step 1, package.json)
+  // and this check holds that it did.
   const lock = read("bun.lock");
   const lockName = lock === undefined ? null : /"name": "([^"]+)"/.exec(lock);
   if (lock !== undefined && lockName !== null && lockName[1] !== spec.name) {
-    problems.push({ file: "bun.lock", line: lineAt(lineStartsOf(lock), lockName.index), message: `the lockfile names \`${lockName[1]}\`; run \`bun install\` after the rename` });
+    problems.push({ file: "bun.lock", line: lineAt(lineStartsOf(lock), lockName.index), message: `the lockfile names \`${lockName[1]}\`, not \`${spec.name}\` (the rename syncs this line; \`bun install\` does not write it)` });
   }
   return problems;
 }
@@ -794,6 +798,21 @@ function rename(target: string, version: string, repository: string, dryRun: boo
   edits.push(...manifestEdit.edits);
   handled.set("package.json", manifestEdit.edits.map(({ start, end }) => ({ start, end })));
 
+  // The lockfile's workspace name, the same way: the plan says `bun install`
+  // writes it, the tree says it does not (see structuralProblems), so the
+  // rename syncs the one line and `bun install` verifies the rest.
+  const lockText = read("bun.lock");
+  if (lockText !== undefined) {
+    const find = `"name": "${other.name}"`;
+    const at = locate(lockText, find);
+    if (at === "absent" || at === "many") {
+      problems.push({ file: "bun.lock", line: 0, message: `no unique lockfile name to rename (\`${find}\`)` });
+    } else {
+      edits.push({ file: "bun.lock", line: lineAt(lineStartsOf(lockText), at.start), id: "lockfile.name", from: find, to: `"name": "${spec.name}"`, ...at });
+      handled.set("bun.lock", [...(handled.get("bun.lock") ?? []), { start: at.start, end: at.end }]);
+    }
+  }
+
   // The explicit entries, before the rules: their spans are handled too.
   const applied: string[] = [];
   for (const { entry, file, find, replace } of entriesFor(other, spec)) {
@@ -828,10 +847,10 @@ function rename(target: string, version: string, repository: string, dryRun: boo
   }
 
   console.log(`package-name: ${other.name} → ${spec.name} · ${version} · ${spec.repository}${dryRun ? " (dry run)" : ""}`);
-  const manifestIds = ["name", "version", "repository.url", "bugs.url", "typedocOptions.navigationLinks.GitHub", "scripts.name:check"];
+  const manifestIds = ["name", "version", "repository.url", "bugs.url", "typedocOptions.navigationLinks.GitHub", "scripts.name:check", "lockfile.name"];
   const workflowIds = ["release-title", "contributing-workflow-name", "release-notes-test-workflow-name"];
   const steps: [string, string[]][] = [
-    ["step 1 package.json", manifestIds],
+    ["step 1 manifests", manifestIds],
     ["step 2 import forms", CHANGES.map((rule) => rule.id).filter((id) => id !== "repository-link")],
     ["step 3 repository links", ["repository-link"]],
     ["step 4 workflow", workflowIds],

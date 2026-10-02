@@ -113,13 +113,6 @@
       ]
     },
     {
-      "id": "lockfile",
-      "reason": "bun.lock's name line is written by `bun install`, not by the rename (plan 2.2)",
-      "file": "bun.lock",
-      "guard": true,
-      "examples": [{ "file": "bun.lock", "text": "\"name\": \"mtrl\"" }]
-    },
-    {
       "id": "package-name-test",
       "reason": "the script's own unit test: its inputs and expectations are the mapping's literal data, written in the source name, and must survive the rename they test",
       "file": "test/scripts/package-name.test.ts",

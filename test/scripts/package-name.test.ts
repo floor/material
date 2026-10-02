@@ -123,8 +123,13 @@ describe("idempotence", () => {
 });
 
 // ---------------------------------------------------------------------------
-// The explicit entries: their find text is in the tree today, and applying
-// them swaps the name and nothing else.
+// The explicit entries: their find text is in the tree, and applying them
+// swaps the name and nothing else. The tree's own package name picks the
+// direction, so the suite is green under either name.
+
+const treeName = (JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as { name: string }).name;
+const treeFrom = treeName === material.name ? material : mtrl;
+const treeTo = treeFrom === mtrl ? material : mtrl;
 
 const fill = (template: string, from: NameSpec, to: NameSpec): string =>
   template.replaceAll("%s", from.name).replaceAll("%S", from.workflow).replaceAll("%t", to.name).replaceAll("%T", to.workflow);
@@ -132,10 +137,10 @@ const fill = (template: string, from: NameSpec, to: NameSpec): string =>
 describe("the explicit entries", () => {
   for (const entry of ENTRIES) {
     test(`${entry.id} is in the tree and only swaps the name`, () => {
-      const find = fill(entry.find, mtrl, material);
-      const replace = fill(entry.replace, mtrl, material);
-      expect(readFileSync(join(ROOT, fill(entry.file, mtrl, material)), "utf8")).toContain(find);
-      expect(replace).toBe(find.replaceAll(mtrl.name, material.name).replaceAll(mtrl.workflow, material.workflow));
+      const find = fill(entry.find, treeFrom, treeTo);
+      const replace = fill(entry.replace, treeFrom, treeTo);
+      expect(readFileSync(join(ROOT, fill(entry.file, treeFrom, treeTo)), "utf8")).toContain(find);
+      expect(replace).toBe(find.replaceAll(treeFrom.name, treeTo.name).replaceAll(treeFrom.workflow, treeTo.workflow));
     });
   }
 });
