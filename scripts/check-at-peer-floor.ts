@@ -9,10 +9,14 @@
  *
  * The floor is read from `peerDependencies` (`>=3.3` is 3.3.0), so the check
  * follows the range when it changes. Companions are packages that must match the
- * peer's version. Nothing is saved: package.json and the lockfile are not touched,
- * and `bun install --frozen-lockfile` restores node_modules whether the check
- * passed or failed, so whatever runs next sees the versions the lockfile pins.
+ * peer's version. Nothing is saved: package.json and the lockfile are not touched.
+ * Whether the check passed, failed or was interrupted (Ctrl-C, SIGTERM),
+ * `bun install --frozen-lockfile` puts the lockfile's versions back and the packages
+ * that only the floor version brought in are removed, so whatever runs next sees
+ * the tree it would have seen without this run. A SIGKILL cannot be caught: after
+ * one, run `bun install --frozen-lockfile` yourself.
  */
+import { readdir, rm } from "node:fs/promises";
 
 /** The lowest version a `>=` range allows: `>=1.8` is `1.8.0`. */
 export const floorOf = (range: string): string => {
@@ -24,8 +28,22 @@ export const floorOf = (range: string): string => {
 const installed = async (name: string): Promise<string> =>
   (await Bun.file(`node_modules/${name}/package.json`).json() as { version: string }).version;
 
-const run = async (command: string[]): Promise<number> =>
-  Bun.spawn(command, { stdout: "inherit", stderr: "inherit" }).exited;
+let running: ReturnType<typeof Bun.spawn> | undefined;
+const run = async (command: string[]): Promise<number> => {
+  running = Bun.spawn(command, { stdout: "inherit", stderr: "inherit" });
+  try { return await running.exited; } finally { running = undefined; }
+};
+
+/** Every package directory in node_modules: `vue`, `@vue/server-renderer`. */
+const packageDirectories = async (): Promise<string[]> => {
+  const names: string[] = [];
+  for (const entry of await readdir("node_modules", { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name.startsWith(".")) continue;
+    if (!entry.name.startsWith("@")) names.push(entry.name);
+    else for (const scoped of await readdir(`node_modules/${entry.name}`)) names.push(`${entry.name}/${scoped}`);
+  }
+  return names;
+};
 
 if (import.meta.main) {
   const args = process.argv.slice(2);
@@ -42,6 +60,32 @@ if (import.meta.main) {
   if (!(script in manifest.scripts)) throw new TypeError(`package.json has no script "${script}"`);
   const floor = floorOf(range);
   const before = await Promise.all(packages.map(installed));
+  const present = new Set(await packageDirectories());
+
+  let restoring: Promise<boolean> | undefined;
+  /** The lockfile's versions, and nothing the floor brought with it; true when it is all back. */
+  const restore = (): Promise<boolean> => restoring ??= (async () => {
+    const reinstalled = await run(["bun", "install", "--frozen-lockfile"]);
+    // A frozen install does not remove what the lockfile does not know.
+    const extra = (await packageDirectories()).filter(name => !present.has(name));
+    for (const name of extra) await rm(`node_modules/${name}`, { recursive: true, force: true });
+    const after = await Promise.all(packages.map(installed));
+    console.log(`Restored: ${packages.map((name, i) => `${name}@${after[i]}`).join(", ")}${extra.length ? `; removed ${extra.join(", ")}` : ""}`);
+    const same = reinstalled === 0 && after.every((version, i) => version === before[i]);
+    if (!same) console.error(`The installed versions were not restored (before: ${before.join(", ")}; after: ${after.join(", ")})`);
+    return same;
+  })();
+  // `finally` does not run when the process is interrupted.
+  for (const [signal, status] of [["SIGINT", 130], ["SIGTERM", 143]] as const) {
+    process.on(signal, async () => {
+      // A signal sent to this process alone leaves the check running: stop it first.
+      const check = running;
+      check?.kill();
+      await check?.exited;
+      await restore();
+      process.exit(status);
+    });
+  }
 
   let code = 1;
   try {
@@ -55,15 +99,7 @@ if (import.meta.main) {
     }
     code = await run(["bun", "run", script]);
   } finally {
-    // The lockfile's versions, for whatever runs after this.
-    const restored = await run(["bun", "install", "--frozen-lockfile"]);
-    const after = await Promise.all(packages.map(installed));
-    const same = after.every((version, i) => version === before[i]);
-    console.log(`Restored: ${packages.map((name, i) => `${name}@${after[i]}`).join(", ")}`);
-    if (restored !== 0 || !same) {
-      console.error(`The installed versions were not restored (before: ${before.join(", ")}; after: ${after.join(", ")})`);
-      code = code || 1;
-    }
+    if (!await restore()) code = code || 1;
   }
   process.exit(code);
 }

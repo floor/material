@@ -13,17 +13,17 @@ import {
 } from "../../core/compose";
 
 import { createConfig } from "./config";
-import { BottomAppBar, BottomAppBarConfig } from "./types";
+import { BottomAppBarComponent, BottomAppBarConfig } from "./types";
 
 /**
  * Creates a bottom app bar component
  *
  * @param {BottomAppBarConfig} config - Configuration options
- * @returns {BottomAppBar} Bottom app bar component instance
+ * @returns {BottomAppBarComponent} Bottom app bar component instance
  */
 export const createBottomAppBar = (
   config: BottomAppBarConfig = {}
-): BottomAppBar => {
+): BottomAppBarComponent => {
   // Process configuration with defaults
   const componentConfig = createConfig(config);
 
@@ -110,7 +110,7 @@ export const createBottomAppBar = (
     };
   }
 
-  const bottomBar: BottomAppBar = {
+  const bottomBar: BottomAppBarComponent = {
     ...withLifecycleComponent,
 
     // Spreading a component copies `addClass` but not the `this` it returns:

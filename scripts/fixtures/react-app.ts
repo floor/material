@@ -3,7 +3,7 @@
 import * as React from "react";
 import {
   Button, Checkbox, List, ListItem, NavigationRail, NavigationRailItem, Progress, Radio, Radios, Slider, Switch, Tab, Tabs,
-  Textfield, ExtendedFab,
+  TextField, ExtendedFab,
 } from "../../dist/react/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 import { Chip, Chips } from "../../dist/react/index.js";
@@ -104,7 +104,7 @@ export const App = (): React.ReactElement => {
     h("output", { id: "agreed" }, String(agreed)),
     h(Slider, { id: "sl", ariaLabel: "Level", value: level, onChange: (e) => setLevel(e.detail.value) }),
     h("output", { id: "level" }, String(level)),
-    h(Textfield, { id: "tf", label: "Name", value: text, onInput: (e) => { model("string", e); setText(e.detail.value); } }),
+    h(TextField, { id: "tf", label: "Name", value: text, onInput: (e) => { model("string", e); setText(e.detail.value); } }),
     h("output", { id: "text" }, text),
     h(
       Radios,

@@ -40,7 +40,7 @@ import {
   createRadios,
   createSelect,
   createSwitch,
-  createTextfield,
+  createTextField,
   createCard,
 } from '../../../src';
 
@@ -69,7 +69,7 @@ describe('components and name', () => {
   const inputBacked: [string, () => { element: HTMLElement }][] = [
     ['checkbox', () => createCheckbox({ name: 'field', label: 'Accept' })],
     ['switch', () => createSwitch({ name: 'field', label: 'Wi-Fi' })],
-    ['textfield', () => createTextfield({ name: 'field', label: 'Email' })],
+    ['textfield', () => createTextField({ name: 'field', label: 'Email' })],
     ['select', () => createSelect({ name: 'field', label: 'Size', options: [] } as any)],
     ['datepicker', () => createDatePicker({ name: 'field' } as any)],
   ];

@@ -65,7 +65,7 @@ export const COMPONENTS = [
   { name: "snackbar", imports: ["createSnackbar"] },
   { name: "switch", imports: ["createSwitch"] },
   { name: "tabs", imports: ["createTabs", "createTab"] },
-  { name: "textfield", imports: ["createTextfield"] },
+  { name: "textfield", imports: ["createTextField"] },
   { name: "timepicker", imports: ["createTimePicker"] },
   { name: "top-app-bar", imports: ["createTopAppBar"] },
   { name: "tooltip", imports: ["createTooltip"] },
