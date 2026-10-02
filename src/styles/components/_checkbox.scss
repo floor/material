@@ -21,6 +21,16 @@ $component: '#{base.$prefix}-checkbox';
   padding: 4px 0;
   user-select: none;
 
+  // With no label the root is its own 48px target, so the box belongs in its
+  // centre: M3 "Icon alignment Center-aligned", (48 - 18) / 2 = 15px a side,
+  // which leaves the 40px state layer 4px inside the root on all sides. With
+  // a label the root hugs box, gap and label, has no free space, and keeps
+  // the box at the inline-start (the layout scripts/check-elements.ts holds
+  // as its contract).
+  &:not(:has(> .#{$component}__label)) {
+    justify-content: center;
+  }
+
   // Input (visually hidden but accessible)
   &__input {
     position: absolute;

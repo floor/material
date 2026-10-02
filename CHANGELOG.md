@@ -1067,6 +1067,14 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **An unlabelled checkbox centres its box in its 48px target, state layer inside.** The 18px
+  box sat flush at the inline-start (start inset 0, end inset 30), so the 40px state layer
+  (`::before`, centred on the box) spanned −11 to 29 — 11px outside the target — and the
+  focus ring reached 16px before the root's edge. Factory and element, left-to-right and
+  right-to-left. With no label the root is its own target, so the box now keeps 15px on both
+  sides (M3 "Icon alignment Center-aligned", "Target size 48dp") and the state layer
+  ("State-layer size 40dp") lies 4px inside the root on all sides. A labelled checkbox, whose
+  root hugs box, gap and label, is unchanged.
 - **A top-layer dialog that refuses Escape stays open, however often it is pressed
   (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
   listener that refused, the third Escape made the browser close the `<dialog>` while
