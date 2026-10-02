@@ -207,8 +207,10 @@ export interface TimePickerConfig {
   confirmText?: string;
 
   /**
-   * Whether the time picker opens once it is created. It was `isOpen`, the
-   * name of the method that reads the state (FLO-548).
+   * Whether the time picker is open when the factory returns: `isOpen()` is
+   * true and `open` has been emitted (to `onOpen`). Its surface is shown a
+   * task later, in the place the picker has been put by then, or in the body.
+   * It was `isOpen`, the name of the method that reads the state (FLO-548).
    * @default false
    */
   open?: boolean;
