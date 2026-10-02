@@ -567,6 +567,18 @@ $component: "#{base.$prefix}-text-field";
         &--notched .#{$component}__outline-notch {
             border-top-color: transparent;
         }
+
+        // FLO-566: forced colours paints a declared-`transparent` border in the
+        // line's own colour, so the open notch's gap was drawn as part of the
+        // top line, across the floated label. In the mode the open notch has no
+        // top edge at all; the leading and trailing segments still draw theirs.
+        // The input-state fallbacks need nothing: they run before placement.ts
+        // sizes the notch, whose zero width paints nothing.
+        @include m.high-contrast {
+            &--notched .#{$component}__outline-notch {
+                border-top-style: none;
+            }
+        }
     }
 
     &--outlined {
