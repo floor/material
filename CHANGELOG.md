@@ -1204,6 +1204,17 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A labelled slider reserves its label's line before upgrade (FLO-594).** The pre-upgrade
+  stylesheet gave every `<m-slider>` the 48px row of the unlabelled default size, but a
+  horizontal slider with a `label` is taller once its script runs: 76px at XS and S, 80 at M,
+  96 at L and 136 at XL — the label's body-large 24px line and its 4px gutter over the
+  container — so a labelled slider pushed what followed it down by 28px or more mid-upgrade.
+  The reserved height is now keyed on `[label]` and the size (in any case, as the element reads
+  it), with the label's line taken from the body-large typescale and the container heights the
+  factory sets (`max(handle height, 48)`: 48/52/68/108). An empty `label=""` builds no label and
+  keeps the 48px row, as before. `preupgrade:check` now covers a label at every size, both label
+  positions, an icon and an empty label; each passes with the host's box equal before and after.
+  A vertical slider's length is the page's, and numeric sizes are not reserved.
 - **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"` (FLO-592).**
   The `touch-target` mixin anchored its `::after` with `inset-inline-start: 50%` and then moved it
   with the physical `translate(-50%, -50%)`. Right-to-left, the logical inset pins the box's right
