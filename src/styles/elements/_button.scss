@@ -77,4 +77,17 @@ $containers: (
   &[icon][size='s'] {
     padding-inline-start: v.button('padding-icon');
   }
+
+  // The text button beside its icon: the component's 12/16
+  // (TextButtonWithIconContentPadding), and 16/12 with the icon at the end,
+  // at the sizes whose spacing is the text button's (default, xs, s).
+  &[variant='text'][icon]:not([size]),
+  &[variant='text'][icon][size='xs'],
+  &[variant='text'][icon][size='s'] {
+    padding-inline: v.button('padding-horizontal-small') v.button('padding-s');
+
+    &[icon-position='end'] {
+      padding-inline: v.button('padding-s') v.button('padding-horizontal-small');
+    }
+  }
 }
