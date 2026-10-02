@@ -475,6 +475,7 @@
     "svelte:check": "bun run scripts/check-svelte.ts",
     "solid:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-solid.ts",
     "tooling:check": "tsc --project scripts/tsconfig.json --noEmit && tsc --project test/types/tsconfig.json --noEmit",
+    "name:check": "bun scripts/package-name.ts material --check",
     "themes:generate": "bun scripts/generate-themes.ts",
     "react-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react-ssr.ts",
     "svelte-ssr:check": "bun run scripts/check-svelte-ssr.ts",

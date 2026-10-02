@@ -559,7 +559,7 @@ const MANIFEST_FIELDS = (spec: NameSpec): { find: string; what: string }[] => [
   { find: `"url": "https://github.com/${spec.repository}/issues"`, what: "bugs.url" },
   { find: `"GitHub": "https://github.com/${spec.repository}"`, what: "typedocOptions.navigationLinks.GitHub" },
   { find: `"name": "${spec.name} Documentation"`, what: "typedocOptions.name" },
-  { find: `bun run scripts/package-name.ts ${spec.name} --check`, what: "scripts.name:check" },
+  { find: `bun scripts/package-name.ts ${spec.name} --check`, what: "scripts.name:check" },
 ];
 
 /** Every field of step 1, each unique in package.json, as text edits. Exported for the unit test. */
@@ -750,7 +750,7 @@ export function check(target: string): number {
     if (have !== want) problems.push({ file: "package.json", line: 0, message: `${what} is \`${have}\`, not \`${want}\`` });
   }
   const nameCheck = manifest.scripts?.["name:check"];
-  const wantNameCheck = `bun run scripts/package-name.ts ${spec.name} --check`;
+  const wantNameCheck = `bun scripts/package-name.ts ${spec.name} --check`;
   if (nameCheck !== undefined && nameCheck !== wantNameCheck) {
     problems.push({ file: "package.json", line: 0, message: `name:check is \`${nameCheck}\`, not \`${wantNameCheck}\`` });
   }
