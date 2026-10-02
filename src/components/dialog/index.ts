@@ -14,7 +14,7 @@
  */
 
 // Main factory function
-export { default } from "./dialog";
+export { default, default as createDialog } from "./dialog";
 
 // TypeScript types and interfaces
 export type {

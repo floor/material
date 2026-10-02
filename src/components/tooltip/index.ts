@@ -1,5 +1,5 @@
 // src/components/tooltip/index.ts
-export { default } from './tooltip';
+export { default, default as createTooltip } from './tooltip';
 
 // Export constants
 export { 

@@ -7,7 +7,7 @@
  * or highlights an element requiring attention.
  */
 
-export { default } from "./badge";
+export { default, default as createBadge } from "./badge";
 
 export type {
   BadgeConfig,
