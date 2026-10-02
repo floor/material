@@ -571,11 +571,18 @@ $component: "#{base.$prefix}-text-field";
         // Forced colours paints a declared-`transparent` border in the
         // line's own colour, so the open notch's gap was drawn as part of the
         // top line, across the floated label. In the mode the open notch has no
-        // top edge at all; the leading and trailing segments still draw theirs.
-        // The input-state fallbacks need nothing: they run before placement.ts
-        // sizes the notch, whose zero width paints nothing.
+        // top edge at all, whether placement.ts has opened it (--notched) or
+        // the input's own state has and the script has not caught up: a value
+        // set without an event, an autofilled field. The leading and trailing
+        // segments still draw theirs.
         @include m.high-contrast {
             &--notched .#{$component}__outline-notch {
+                border-top-style: none;
+            }
+
+            .#{$component}__input:not(:placeholder-shown) ~ & .#{$component}__outline-notch,
+            .#{$component}__input:-webkit-autofill ~ & .#{$component}__outline-notch,
+            .#{$component}__input:autofill ~ & .#{$component}__outline-notch {
                 border-top-style: none;
             }
         }
