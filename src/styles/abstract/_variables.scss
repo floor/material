@@ -438,7 +438,8 @@ $button-shape-tokens: (
   @return $fallback;
 }
 
-// Textfield configuration
+// Text field configuration. `$textfield` is the 0.10 name, deprecated for
+// `$text-field` (FLO-383) and removed in 1.0; it keeps working until then.
 $textfield: (
   // The width of a field the page does not size (TextFieldDefaults.MinWidth)
   'width': 280px,
@@ -453,8 +454,17 @@ $textfield: (
   'icon-size': 24px
 ) !default;
 
-// Add textfield function
-@function textfield($key) {
+// The text field's map, under the name 1.0 keeps (FLO-383): the same map as
+// `$textfield` unless a theme configures this one.
+$text-field: $textfield !default;
+
+/// A text field measurement: `v.text-field('height')`.
+@function text-field($key) {
   @if $key == 'border-radius' { @return shape('extra-small'); }
-  @return map.get($textfield, $key);
+  @return map.get($text-field, $key);
+}
+
+/// Deprecated: use `text-field()`. Removed in 1.0 (FLO-383).
+@function textfield($key) {
+  @return text-field($key);
 }

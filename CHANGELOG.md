@@ -101,6 +101,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Deprecated
 
+- **The text field's Sass map and function: `$textfield` and `textfield()` (FLO-383).** Use
+  `$text-field` and `v.text-field()`, the same map: a theme may configure either name until 1.0
+  removes the old one. The built CSS is unchanged.
+
 - **The old names, renamed (FLO-383):** `createTextfield` → `createTextField`, `TextfieldConfig` →
   `TextFieldConfig`, `TextfieldComponent` → `TextFieldComponent`, `CardSchema` → `CardConfig`,
   `TopAppBar` → `TopAppBarComponent`, `BottomAppBar` → `BottomAppBarComponent`; and the
