@@ -10,7 +10,6 @@
 //   bun run build && bun run scripts/check-elements.ts
 
 import { checkCheckableValues } from "./check-checkable-values";
-import { expectedFailure } from "./expected-failure";
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
@@ -5709,7 +5708,7 @@ try {
     // timer; here that timer is held until the arrows have been handled, the order
     // fast keys (or a paused page) produce. Today the timer then puts focus back
     // on the first item.
-    await expectedFailure("FLO-515", "the menu's initial focus undoes arrows pressed before it", async () => {
+    await (async () => {
       await page.evaluate(() => {
         const timeout = window.setTimeout, clear = window.clearTimeout;
         const held = new Map<number, () => void>();
@@ -5755,7 +5754,7 @@ try {
       // focus is not FLO-515 and fails as usual.
       assert(!(after === "Copy" && before !== "Copy"), "FLO-515: the menu's initial focus moved focus back to the first item, after arrows had moved it on");
       assert.equal(after, before, "focus stays where the arrows put it once the menu's initial focus has run");
-    });
+    })();
 
     await page.evaluate(() => (document.getElementById("mm") as Host & { show: () => void }).show());
     await settle();
