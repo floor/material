@@ -112,9 +112,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **A removed constant key** reads `undefined` in JavaScript, with no error:
   `SELECT_CLASSES.TEXTFIELD`, `FAB_SIZES.SMALL`, `TABS_DEFAULTS.INDICATOR_HEIGHT` and the other
   keys in the tables above.
-- **Your own CSS reading `var(--mtrl-sys-shape-corner-pill)`** (or `-tiny`, `-extra-tiny`): the
-  property is no longer declared, so without a fallback `border-radius: var(…)` computes to no
-  radius, silently.
+- **Your own CSS reading `var(--mtrl-sys-shape-corner-pill)`** (or `-tiny`, `-extra-tiny`): mtrl's
+  stylesheet no longer declares the property, and a `var()` of an undeclared property without a
+  fallback gives no value, so the radius is lost silently.
 - **Tab and panel ids** change for any value with a character outside `[A-Za-z0-9_-]`
   (`a.b` → `tabx-g-a_2e_b`); a hand-written panel with the old id is never linked. Build ids with
   `tabIdFor` and `tabPanelIdFor`.
@@ -519,12 +519,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   SSR parity and benchmark tooling load the source renderer and source CSS registry (FLO-363).
 - Source SSR reads the element CSS registry without resolving built package exports; source tests register real Sass output without mocking the CSS import (FLO-363).
 
-### Also in 0.10.5
+## [0.10.5] - 2026-10-02
 
-These ship first in 0.10.5, released from `main`, so an app on 0.10.5 already has them. They
-stay here until 0.10.5's own section joins this file.
+Preparing for 1.0.0, continued: every exported identifier writes "text field" as two words
+(`createTextField`, `TextFieldConfig`, …), beside the old names, which are deprecated with the
+other names and members 1.0.0 removes. Also contrast levels on every theme, opt-in wheel
+scrolling on the carousel, and the text field's required asterisk, announced errors and trailing
+icon button.
 
-**Added**
+### Added
 
 - **Canonical names (FLO-383):** `createTextField`, `TextFieldConfig` and `TextFieldComponent` (M3
   writes "text field" as two words), `CardConfig`, `TopAppBarComponent` and
@@ -557,7 +560,7 @@ stay here until 0.10.5's own section joins this file.
   and `"high"` select M3 contrast levels in light and dark. Put the attribute on the
   same element as `data-theme`, including each nested theme. With no contrast attribute,
   `prefers-contrast: more` selects high on every themed element independently; explicit
-  `standard` opts out on that element. In 1.0, a nested theme does not inherit an ancestor's
+  `standard` opts out on that element. A nested theme does not inherit an ancestor's
   contrast setting or opt-out. The unthemed root follows the OS color scheme and
   `.dark-theme` at every contrast level, ignoring `data-theme-mode`.
   Hand-authored medium and high palettes use each theme's documented seed, falling back
@@ -566,6 +569,7 @@ stay here until 0.10.5's own section joins this file.
   name all three inputs, and browser checks share the generator's input selection.
   Hand-authored standard colors and success, warning and info roles stay unchanged.
   The `highcontrast` theme is a theme in its own right and supports all three contrast settings.
+
 - **Carousel: opt-in mouse wheel scrolling (FLO-395).** Set `wheel: true`, call
   `setWheel(true)`, or add `<m-carousel wheel>` (also toggleable after creation).
   Horizontal layouts accumulate wheel momentum and preserve glide velocity to the snap
@@ -574,6 +578,12 @@ stay here until 0.10.5's own section joins this file.
   the page scroll, horizontal trackpad gestures and zoom stay native, and reduced
   motion jumps straight to the target. Pointer, touch and keyboard input interrupt the
   glide; CSS snap resumes at rest. Full-screen carousels keep native vertical scrolling.
+
+- **Every release gets its GitHub Release.** The release workflow published to npm only, so
+  GitHub showed 0.9.8 as the latest release. Once npm has the version, it now creates the
+  release for the tag from the version's CHANGELOG section, with links to npm, md3.io and this
+  file; a pre-release (`-next.N`) is marked one and never becomes Latest. 0.10.0 to 0.10.4 were
+  created by hand.
 - **Text field: a required field's label ends in an asterisk (FLO-301).** M3's text field
   guidelines mark a required field with an asterisk after its label; it is in the label's colour,
   as Material Web draws it, and hidden from screen readers, which the input's native `required`
@@ -590,13 +600,8 @@ stay here until 0.10.5's own section joins this file.
 - **Text field: errors are announced when they appear (FLO-301).** The supporting text is a polite
   live region, so an error set with `setError(true, message)` is read without the field being
   refocused. Its element now stays and its text changes in place.
-- **Every release gets its GitHub Release.** The release workflow published to npm only, so
-  GitHub showed 0.9.8 as the latest release. Once npm has the version, it now creates the
-  release for the tag from the version's CHANGELOG section, with links to npm, md3.io and this
-  file; a pre-release (`-next.N`) is marked one and never becomes Latest. 0.10.0 to 0.10.4 were
-  created by hand.
 
-**Changed**
+### Changed
 
 - **A plain filled text field sets no placement up (FLO-378).** Every text field installed a
   class observer, a resize observer and a window `resize` listener, and scheduled a first
@@ -605,26 +610,43 @@ stay here until 0.10.5's own section joins this file.
   icons, affixes, required, density). Mounting 1,000 filled fields takes 16% less script time
   (49.9 to 41.8 ms; 192 to 165 ms at 4× CPU), with 1,000 fewer listeners. Nothing renders
   differently.
+- **CI runs the same checks in less time.** The browser checks run in four groups instead of
+  three, the package checks no longer hold the browser groups back, and Playwright's browser and
+  its system packages come from a cache that every pull request can read (a slow Ubuntu mirror
+  made one install step take 26 minutes). `test/build/ci-commands.test.ts` lists the commands CI
+  runs and fails when one is dropped.
 
-**Deprecated**
+### Deprecated
 
 - **The ripple defaults of options never applied (FLO-268):** `DEFAULT_RIPPLE_CONFIG.TIMING` and
   `.OPACITY` (`mtrl/components/button/constants`, `mtrl/components/icon-button/constants`) and
   `BUTTON_GROUP_DEFAULTS.RIPPLE_TIMING` and `.RIPPLE_OPACITY`. They have no effect: the options they
-  are the defaults of, `rippleConfig`'s `timing` and `opacity`, are never applied (deprecated in 0.10.0). Removed in 1.0. Comments only; nothing changes at
-  run time.
+  are the defaults of, `rippleConfig`'s `timing` and `opacity`, are never applied (deprecated in
+  0.10.0). Removed in 1.0. Comments only; nothing changes at run time.
+
 - **The small FAB's class and icon size:** `FAB_CLASSES.SMALL` and `FAB_ICON_SIZES.SMALL`
   (`mtrl/components/fab/constants`). The small size they belong to, `FAB_SIZES.SMALL`, is already
   deprecated (M3 Expressive). Removed in 1.0. Comments only; nothing changes at run time.
+
 - **`CheckboxVariant`** (`mtrl/components/checkbox`): the type of the checkbox's `variant` option,
   deprecated in 0.10.0, which has no effect (M3 has one checkbox style). Removed in 1.0. Comments
   only.
+
 - **`SELECT_CLASSES.TEXTFIELD`** (`mtrl/components/select/constants`): 1.0 renames the key
   `TEXT_FIELD`, as every text field name (FLO-383). The class string, `select__textfield`, stays.
   Comments only; the new key is not on 0.10.x.
+
+- **`select.textfield`** (the select's property): renamed `textField` in 1.0, as every text field
+  name (FLO-383); `textfield` remains as an alias through 1.x. Comments only.
+
+- **`CardComponent`'s `loading`, `expandable` and `swipeable`** (`mtrl/components/card`): `createCard`
+  never sets them; only the deprecated `withLoading`, `withExpandable` and `withSwipeable` features
+  add them. Removed in 1.0 with those features (FLO-381). Comments only.
+
 - **The text field's Sass map and function: `$textfield` and `textfield()` (FLO-383).** Use
   `$text-field` and `v.text-field()`, the same map: a theme may configure either name until 1.0
   removes the old one. The built CSS is unchanged.
+
 - **The old names, renamed (FLO-383):** `createTextfield` → `createTextField`, `TextfieldConfig` →
   `TextFieldConfig`, `TextfieldComponent` → `TextFieldComponent`, `CardSchema` → `CardConfig`,
   `TopAppBar` → `TopAppBarComponent`, `BottomAppBar` → `BottomAppBarComponent`; and the
@@ -658,10 +680,11 @@ stay here until 0.10.5's own section joins this file.
   Kept public: `SlidesAPI`, `IconAPI`, `ToggleManager` and `IndicatorConfig`, which public members
   are typed with, and tabs' documented `setupResponsiveBehavior`. Each component's export list is
   now pinned (`bun run component-exports:check`).
+
 - `TOOLTIP_DEFAULTS.RICH` is deprecated: the tooltip's `rich` option, already deprecated, has no
   effect, and 1.0 removes both (FLO-324).
 
-**Fixed**
+### Fixed
 
 - Arrow keys used soon after opening a menu keep their selected focus when the initial-focus timer runs (FLO-515). A menu opened with ArrowUp on its opener now keeps focus on the last item (it was pulled back to the first; FLO-524).
 - A search view dismissed before its opening focus frame runs stays closed (FLO-514).
@@ -676,8 +699,6 @@ stay here until 0.10.5's own section joins this file.
   pressed the scrim before the view's opening had put focus back on the input, and that focus
   re-opened the view. The check now waits for the opening's frame, and reads the scrim press at
   once, which it could not tell from the input's blur before.
-- **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
-  label names the field.
 - **ArrowLeft and Escape work in a submenu whose parent item's id holds a quote or a backslash
   (FLO-429).** They threw, or did nothing, because the id was put into a CSS selector.
 - CI's `static` job prints the output of a failing check again. Under the job's shell a failing
@@ -685,11 +706,13 @@ stay here until 0.10.5's own section joins this file.
   else, so the failure could not be read from CI.
 - The checkbox and switch change payload docs said setters emit `change`; they are silent, as
   they have been since FLO-328 (FLO-384).
+
 - **Search keeps custom root classes (FLO-421).** Both contained and divided
   search variants apply the `class` option, including space-separated classes.
 - **Tabs with quotes or backslashes in their value no longer fail to link panels (FLO-417).**
   Panel lookup compares `aria-labelledby` directly with the tab id, so values
   that are CSS selector syntax are handled as data.
+
 - The carousel wheel check in `core:check` no longer fails when a CI runner stalls a frame. A
   283ms stall split its 30-event wheel gesture in two, and the carousel correctly went one slide
   further than the recording expected. A recording with a frame over 50ms is now taken again
@@ -705,6 +728,7 @@ stay here until 0.10.5's own section joins this file.
   and selects now apply the `class` option to their root element, including
   space-separated classes. They read the normalized `className` field or forward
   it to their underlying control.
+
 - **Progress and loading indicators draw the theme of the section they're in, not only the
   page's (FLO-389).** The progress canvas read its colours from `<body>` and `:root`, so in a
   themed section, a card or a dark panel it drew the page's colours: light ones in a dark section.
@@ -723,6 +747,8 @@ stay here until 0.10.5's own section joins this file.
   menu's FAB from 16 to 8px corners and took its shadow away (`presentation: 'menu'`). Only an mtrl
   button, such as the split button's trailing button, keeps its pressed shape now; other openers
   get `mtrl-menu__opener--active`.
+- **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
+  label names the field.
 
 ## [0.10.4] - 2026-10-01
 
@@ -2410,7 +2436,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.4...HEAD
+[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.5...HEAD
+[0.10.5]: https://github.com/floor/mtrl/compare/v0.10.4...v0.10.5
 [0.10.4]: https://github.com/floor/mtrl/compare/v0.10.3...v0.10.4
 [0.10.3]: https://github.com/floor/mtrl/compare/v0.10.2...v0.10.3
 [0.10.2]: https://github.com/floor/mtrl/compare/v0.10.1...v0.10.2
