@@ -221,7 +221,8 @@ try {
     assert.deepEqual(values.timeEmptyConfirm, values.timeEmptyChange);
     assert.deepEqual(values.selectFactory, [[null, null]]);
     assert.deepEqual(values.selectElement, [[null, null]]);
-    assert.deepEqual(values.radiosFactory, [["a", "a"], ["", ""]]);
+    // 1.0: the factory reports null for the option without a value, as the element does
+    assert.deepEqual(values.radiosFactory, [["a", "a"], [null, null]]);
     assert.deepEqual(values.radiosElement, [["a", "a"], [null, null]]);
     check("time input/confirm, select empty id and radio empty id match getters inside factory and element handlers");
   }
@@ -4157,14 +4158,14 @@ try {
     await photos.getByRole("group", { name: "2 of 5" }).focus();
     await page.keyboard.press("ArrowRight");
     let state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
-    // FLO-380: value is the model (the index), beside index.
-    assert.deepEqual(state, { events: [{ detail: { value: 2, index: 2 }, target: "r" }], index: 2 });
+    // FLO-380: value is the model (the index). 1.0 dropped the doubled detail.index.
+    assert.deepEqual(state, { events: [{ detail: { value: 2 }, target: "r" }], index: 2 });
     check("carousel: an arrow key moves to the next item and dispatches change");
 
     await page.evaluate(() => ((window as unknown as Win).events = []));
     await photos.getByRole("group", { name: "4 of 5" }).click();
     state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
-    assert.deepEqual(state, { events: [{ detail: { value: 3, index: 3 }, target: "r" }], index: 3 });
+    assert.deepEqual(state, { events: [{ detail: { value: 3 }, target: "r" }], index: 3 });
     check("carousel: a click on an item makes it current and dispatches change");
 
     state = await page.evaluate(() => {
