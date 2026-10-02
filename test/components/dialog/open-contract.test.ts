@@ -339,23 +339,31 @@ describe('dialog open and close in one task: the last call wins, pending timers 
 describe('dialog: open means it can be dismissed', () => {
   const escape = () => new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
 
-  /** The document's listeners, by type, while `run` is watched */
+  /**
+   * The listeners the dialog holds on the document and on the window, by
+   * type: the scrim's mouseup is on the document, Escape on the window
+   * (FLO-548 family 6).
+   */
   const watchDocument = () => {
     const held = new Map<string, Set<unknown>>();
-    const add = document.addEventListener.bind(document);
-    const remove = document.removeEventListener.bind(document);
-    document.addEventListener = ((type: string, listener: EventListener, options?: unknown) => {
-      if (!held.has(type)) held.set(type, new Set());
-      held.get(type)!.add(listener);
-      add(type, listener, options as AddEventListenerOptions);
-    }) as typeof document.addEventListener;
-    document.removeEventListener = ((type: string, listener: EventListener, options?: unknown) => {
-      held.get(type)?.delete(listener);
-      remove(type, listener, options as EventListenerOptions);
-    }) as typeof document.removeEventListener;
+    const undo: Array<() => void> = [];
+    for (const target of [document, dom.window] as unknown as EventTarget[]) {
+      const add = target.addEventListener.bind(target);
+      const remove = target.removeEventListener.bind(target);
+      target.addEventListener = ((type: string, listener: EventListener, options?: unknown) => {
+        if (!held.has(type)) held.set(type, new Set());
+        held.get(type)!.add(listener);
+        add(type, listener, options as AddEventListenerOptions);
+      }) as typeof target.addEventListener;
+      target.removeEventListener = ((type: string, listener: EventListener, options?: unknown) => {
+        held.get(type)?.delete(listener);
+        remove(type, listener, options as EventListenerOptions);
+      }) as typeof target.removeEventListener;
+      undo.push(() => { target.addEventListener = add; target.removeEventListener = remove; });
+    }
     return {
       count: (type: string) => held.get(type)?.size ?? 0,
-      stop: () => { document.addEventListener = add; document.removeEventListener = remove; },
+      stop: () => undo.forEach((put) => put()),
     };
   };
 
@@ -444,12 +452,14 @@ describe('dialog: open means it can be dismissed', () => {
     expect(seen).toEqual(['beforeopen', 'open', 'beforeclose', 'close']);
   });
 
-  test('close() and destroy() in that window leave no document listener behind', async () => {
+  test('close() and destroy() in that window leave no document or window listener behind', async () => {
     const watched = watchDocument();
     try {
+      // keydown: the Escape listener and the marker that numbers events, both
+      // on the window
       const closed = make().dialog;
       closed.open();
-      expect(watched.count('keydown')).toBe(1);
+      expect(watched.count('keydown')).toBe(2);
       expect(watched.count('mouseup')).toBe(1);
       closed.close();
       expect(watched.count('keydown')).toBe(0);
@@ -457,7 +467,7 @@ describe('dialog: open means it can be dismissed', () => {
 
       const destroyed = make().dialog;
       destroyed.open();
-      expect(watched.count('keydown')).toBe(1);
+      expect(watched.count('keydown')).toBe(2);
       destroyed.destroy();
       expect(watched.count('keydown')).toBe(0);
       expect(watched.count('mouseup')).toBe(0);
@@ -471,13 +481,178 @@ describe('dialog: open means it can be dismissed', () => {
       shown.open();
       await after(SETTLED);
       expect(shown.element.classList.contains(VISIBLE)).toBe(true);
-      expect(watched.count('keydown')).toBe(1);
+      expect(watched.count('keydown')).toBe(2);
       expect(watched.count('mouseup')).toBe(1);
       shown.destroy();
       expect(watched.count('keydown')).toBe(0);
+      expect(watched.count('click')).toBe(0);
       expect(watched.count('mouseup')).toBe(0);
     } finally {
       watched.stop();
     }
+  });
+});
+
+// FLO-556 and family 6: Escape is handled as a key press, in both layers. The
+// key is prevented, so in the top layer the browser sends the <dialog> no
+// `cancel` and its allowance (it forces the third refused cancel in a row) is
+// never spent: closeOnEscape: false and a refusing beforeclose hold for any
+// number of presses. Only the topmost dialog answers, and a key something
+// inside has already used is left alone.
+describe('dialog: Escape is a key press, in both layers', () => {
+  const press = (target: EventTarget = document.body, init: KeyboardEventInit = {}) => {
+    const event = new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true, ...init });
+    target.dispatchEvent(event);
+    return event;
+  };
+
+  for (const layer of [undefined, 'top'] as const) {
+    const where = layer ? 'top layer' : 'default layer';
+
+    test(`${where}: Escape with focus on a child, then on the body, closes it and is prevented`, async () => {
+      const { dialog, seen } = make({ layer });
+      dialog.open();
+      await after(SETTLED);
+      expect(press(dialog.element.querySelector('button')!).defaultPrevented).toBe(true);
+      expect(dialog.isOpen()).toBe(false);
+      await after(SETTLED);
+      dialog.open();
+      await after(SETTLED);
+      expect(press(document.body).defaultPrevented).toBe(true);
+      expect(dialog.isOpen()).toBe(false);
+      expect(seen.filter((name) => name === 'close')).toHaveLength(2);
+    });
+
+    // The pin the task flag failed (CI, solid:check): a real key press can be
+    // delivered before any timer has run. What is ignored is the event that
+    // was on its way when open() ran, and nothing else.
+    test(`${where}: a key press in the same task as open(), and one in the first task after it, close it`, async () => {
+      const first = make({ layer }).dialog;
+      first.open();
+      expect(press().defaultPrevented).toBe(true);
+      expect(first.isOpen()).toBe(false);
+
+      const second = make({ layer }).dialog;
+      second.open();
+      await Promise.resolve();
+      press();
+      expect(second.isOpen()).toBe(false);
+    });
+
+    test(`${where}: closeOnEscape: false holds for any number of presses, each prevented`, async () => {
+      const { dialog, seen } = make({ layer, closeOnEscape: false });
+      dialog.open();
+      await after(SETTLED);
+      for (let i = 0; i < 5; i++) {
+        expect(press().defaultPrevented).toBe(true);
+        expect(dialog.isOpen()).toBe(true);
+      }
+      expect(seen).toEqual(['beforeopen', 'open', 'afteropen']);
+    });
+
+    test(`${where}: a beforeclose that refuses holds for any number of presses`, async () => {
+      const { dialog, seen } = make({ layer });
+      dialog.on('beforeclose', (event) => { event.preventDefault(); });
+      dialog.open();
+      await after(SETTLED);
+      for (let i = 0; i < 5; i++) {
+        expect(press().defaultPrevented).toBe(true);
+        expect(dialog.isOpen()).toBe(true);
+      }
+      expect(seen.filter((name) => name === 'beforeclose')).toHaveLength(5);
+      expect(seen).not.toContain('close');
+    });
+
+    test(`${where}: the Escape that opened it is prevented, so no cancel follows, and does not close it`, () => {
+      const { dialog } = make({ layer });
+      trigger.addEventListener('keydown', (event) => { if (event.key === 'Escape') dialog.open(); });
+      expect(press(trigger).defaultPrevented).toBe(true);
+      expect(dialog.isOpen()).toBe(true);
+    });
+
+    test(`${where}: a key something inside has used, and one that cancels a composition, are left alone`, async () => {
+      const { dialog } = make({ layer });
+      dialog.open();
+      await after(SETTLED);
+      const child = dialog.element.querySelector('button')!;
+      child.addEventListener('keydown', (event) => { event.preventDefault(); });
+      press(child);
+      expect(dialog.isOpen()).toBe(true);
+      expect(press(document.body, { isComposing: true }).defaultPrevented).toBe(false);
+      expect(dialog.isOpen()).toBe(true);
+    });
+
+    test(`${where}: only the topmost dialog answers`, async () => {
+      const under = make({ layer });
+      const over = make({ layer });
+      under.dialog.open();
+      await after(SETTLED);
+      over.dialog.open();
+      await after(SETTLED);
+      press();
+      expect([under.dialog.isOpen(), over.dialog.isOpen()]).toEqual([true, false]);
+      press();
+      expect([under.dialog.isOpen(), over.dialog.isOpen()]).toEqual([false, false]);
+    });
+  }
+
+  // <m-dialog> listens for `cancel` on the <dialog>, in the capture phase,
+  // to ask its host first: "cancel is still dispatched on Escape", and a
+  // refusal there stops the factory's own listener. With no `cancel` from the
+  // browser any more, the key press sends one itself.
+  test('top layer: every Escape is a cancel event on the <dialog>, which a listener before the dialog\'s own can refuse', async () => {
+    const { dialog, seen } = make({ layer: 'top' });
+    let cancels = 0;
+    let refuse = true;
+    dialog.element.addEventListener('cancel', (event) => {
+      cancels++;
+      if (refuse) { event.preventDefault(); event.stopImmediatePropagation(); }
+    }, true);
+    dialog.open();
+    await after(SETTLED);
+    press();
+    press(dialog.element.querySelector('button')!);
+    expect(cancels).toBe(2);
+    expect(dialog.isOpen()).toBe(true);
+    expect(seen).not.toContain('beforeclose');
+    refuse = false;
+    press();
+    expect(cancels).toBe(3);
+    expect(dialog.isOpen()).toBe(false);
+  });
+
+  test('top layer: closeOnEscape: false still sends that cancel event, and stays open', async () => {
+    const { dialog } = make({ layer: 'top', closeOnEscape: false });
+    let cancels = 0;
+    dialog.element.addEventListener('cancel', () => { cancels++; }, true);
+    dialog.open();
+    await after(SETTLED);
+    press();
+    expect(cancels).toBe(1);
+    expect(dialog.isOpen()).toBe(true);
+  });
+
+  // What is not a key press still arrives as the dialog's cancel (a back
+  // gesture), and the browser forces the third one refused in a row: it closes
+  // the <dialog> without asking. The dialog's state follows whatever closed it.
+  test('top layer: a close the browser forces closes the dialog, though beforeclose refuses', async () => {
+    const { dialog, seen } = make({ layer: 'top' });
+    dialog.on('beforeclose', (event) => { event.preventDefault(); });
+    dialog.open();
+    await after(SETTLED);
+    expect(document.body.style.overflow).toBe('hidden');
+    // As the browser does it: the open attribute goes, then the close event
+    dialog.element.removeAttribute('open');
+    dialog.element.dispatchEvent(new dom.window.Event('close'));
+    expect(dialog.isOpen()).toBe(false);
+    expect(seen).toEqual(['beforeopen', 'open', 'afteropen', 'close']);
+    expect(document.body.style.overflow).toBe('');
+    expect(dialog.element.classList.contains(VISIBLE)).toBe(false);
+    await after(SETTLED);
+    expect(seen).toEqual(['beforeopen', 'open', 'afteropen', 'close', 'afterclose']);
+    // And it opens again
+    dialog.open();
+    expect(dialog.isOpen()).toBe(true);
+    expect(dialog.element.hasAttribute('open')).toBe(true);
   });
 });

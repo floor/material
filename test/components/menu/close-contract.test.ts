@@ -211,6 +211,24 @@ for (const layer of LAYERS) {
       expect(seen).toEqual(["open", "close"]);
     });
 
+    // The pin the task flag failed: a real click or key press can be delivered
+    // before any timer has run. Only the event on its way when open() ran is
+    // ignored.
+    test("a click outside, and Escape, in the same task as open() close it", async () => {
+      const first = make({ layer });
+      await wait();
+      first.menu.open();
+      document.body.dispatchEvent(click());
+      expect(first.menu.isOpen()).toBe(false);
+
+      const second = make({ layer });
+      await wait();
+      second.menu.open();
+      document.body.dispatchEvent(escape());
+      expect(second.menu.isOpen()).toBe(false);
+      expect(second.seen).toEqual(["open", "close"]);
+    });
+
     test("the click that opened it does not close it; the next one outside does", async () => {
       const { menu, seen } = make({ layer });
       await wait();

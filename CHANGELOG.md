@@ -292,6 +292,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   one that measures the dialog or moves focus belongs on `afteropen`.
 - **An open dialog answers Escape as soon as `open()` returns,** except the key press that
   opened it. It ignored Escape and the scrim for its first 10 ms.
+- **An open dialog prevents every Escape key press that reaches the window,** even with
+  `closeOnEscape: false`: a `keydown` listener of the page on the window that runs after it
+  sees `event.defaultPrevented` true, and nothing else the browser does for Escape happens
+  while a dialog is open. A listener on the document, or inside the dialog, runs before it.
 - **`dialog.close()` on a closed dialog and `dialog.open()` on an open one** emit nothing. Code
   that counted on `close` or `afterclose` from a `close()` called "to be sure" no longer hears
   them.
@@ -620,10 +624,22 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   - **An open dialog can be dismissed as soon as `open()` returns:** Escape and a click on the
     scrim close it from then, not 10 ms later. One exception, the same for every overlay: the
     event that opened it never dismisses it. A dialog opened from an Escape `keydown` handler
-    stays open through that key press, and the next Escape closes it. This holds in both
+    stays open through that key press, and the next Escape closes it. "The event that opened
+    it" is exactly the one whose dispatch had begun when `open()` ran: any other, in the same
+    task or the next, counts. This holds in both
     layers: a `layer: "top"` dialog and `<m-dialog>` opened that way used to close at once,
     on the `cancel` the browser sends for that same key press.
   - **`destroy()` right after `open()`** leaves nothing behind (see Fixed).
+  - **Escape is handled as a key press, in both layers (FLO-556).** The dialog listens on the
+    window and prevents the key, so the browser sends a `layer: "top"` dialog no `cancel` for
+    it. `closeOnEscape: false` and a `beforeclose` listener that refuses now hold for any
+    number of presses (see Fixed). Only the topmost open dialog answers; a key that something
+    open inside it has used (a menu, a select) is left to it. An Escape that cancels an IME
+    composition is left to the IME: a default-layer dialog no longer closes on it (a
+    top-layer one is the browser's to decide, as before). `<m-dialog>` still dispatches `cancel` for every Escape, and
+    `preventDefault()` on it still refuses. A page listener that saw the native `cancel` on
+    the factory's `<dialog>` for Escape sees one the dialog sends itself; a close request that
+    is not a key press (a back gesture) still arrives as the browser's.
 - **The menu is closed when `close()` returns (FLO-548).** The same rule as the dialog's, for
   the menu in both layers and for the two components that hold one, the select and the split
   button. `open()` already worked this way; `close()` set the state and emitted `close` on a
@@ -681,6 +697,24 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     the sheets. It used to be applied a microtask later and to dispatch both. `show()`,
     `hide()`, `toggle()`, the anchor and the user still dispatch one event per opening and
     per closing.
+- **The modal sheets and the modal drawer handle Escape as a key press (FLO-548, FLO-556).**
+  The bottom sheet, the side sheet and the drawer, when modal, join the dialog on one stack,
+  in both layers. Migration: nothing, unless a page listener relied on what follows.
+  - **A refusal holds.** With `layer: "top"`, a sheet with `closeOnEscape: false` and a
+    drawer with `dismissible: false` were closed by the browser on the third Escape (it forces
+    the third `cancel` refused in a row; measured on the dialog, the same `<dialog>` path).
+    The key is now prevented, so no `cancel` is sent.
+  - **Only the topmost modal answers,** and after whatever is open inside it has used the
+    key. A dialog opened above a sheet takes Escape first.
+  - **The event that opened it never dismisses it:** a sheet or a drawer opened from an Escape
+    `keydown` handler stays open through that key press. In the top layer it used to close at
+    once, on the `cancel` the browser sends for that key press.
+  - **Outside the top layer** the listener moves from the document to the window: a menu or a
+    select open inside the sheet or the drawer takes Escape first. Every Escape that reaches
+    the window while one is open is prevented, a refusing one included.
+  - **`<m-drawer>`** still refuses Escape with `no-close-on-escape`: the key press is sent on
+    as a `cancel` event on its `<dialog>`, where it listens.
+  - A standard (not modal) sheet is unchanged: Escape closes it when pressed inside it.
 - **A config `on*` option is the listener registered at creation.** It runs with the same
   argument, the same number of times, as a listener passed to `on(event)` at that point, and it
   runs before a listener added afterwards. Whether a method notifies is unchanged (a silent
@@ -984,6 +1018,16 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A top-layer dialog that refuses Escape stays open, however often it is pressed
+  (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
+  listener that refused, the third Escape made the browser close the `<dialog>` while
+  `isOpen()` stayed true and no `close` was emitted (measured in Chromium, Firefox and
+  WebKit: the browser lets a page refuse `cancel` twice in a row and forces the third). Escape
+  is now a key press the dialog prevents, so no `cancel` is sent. And when the browser does
+  close the `<dialog>` itself, the dialog's state follows: `isOpen()` is false and `close` is
+  emitted, without `beforeclose`. The defect is also in 0.10.x; the fix is in 1.0.
+- **Escape with a menu open inside a default-layer dialog closes the menu only (FLO-548).** It
+  closed the dialog as well, under the menu: the dialog's listener ran before the menu's.
 - **Chips: a chip destroyed while it has focus hands focus to its neighbour (FLO-542).**
   `chip.destroy()` called directly on a focused chip of a set left focus on the page, so a
   keyboard user lost their place. Focus now moves to the chip that takes its place, or to
