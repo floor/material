@@ -4853,9 +4853,9 @@ try {
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
     await wait(350);
-    // The menu's "close" comes 50ms after Enter, and the select looks at its focused
-    // styling again 10ms after that: read once the menu has closed and that turn has
-    // passed, or the class read is the one left from the open menu.
+    // The menu's "close" comes with Enter (FLO-548; it came 50ms after), and the select
+    // looks at its focused styling again 10ms after that: read once the menu has closed
+    // and that turn has passed, or the class read is the one left from the open menu.
     await until(() => page.evaluate(() =>
       ((window as unknown as Win).__select as { element: HTMLElement }).element.querySelector("[aria-expanded]")?.getAttribute("aria-expanded") === "false"));
     await wait(50);
@@ -4937,6 +4937,55 @@ try {
       "a dialog opened from an Escape keydown: open after that key press, closed by the next one, in both layers",
     );
     check("dialog: the Escape key press that opened it does not close it, and the next one does, in both layers");
+
+    // The same sentence for the menu (FLO-548): its click-outside and Escape
+    // listeners are added inside open(). A button that is not the menu's
+    // opener opens it by code, from a click and from an Escape keydown: that
+    // event is still on its way up to the document. Every form is read before
+    // the assertion, so a failure shows which ones disagree.
+    const menuOpenedBy = async (how: "click" | "Escape", layer?: "top"): Promise<{ afterTheEventThatOpenedIt: boolean; afterTheNextOne: boolean }> => {
+      await fresh(page, `<button id="opener" type="button">More</button><button id="other" type="button">Other</button>`);
+      await page.evaluate(({ how, layer }) => {
+        const mtrl = (window as unknown as { mtrl: Factories }).mtrl;
+        const menu = mtrl.createMenu({
+          opener: document.getElementById("opener") as HTMLElement,
+          items: [{ id: "copy", text: "Copy" }, { id: "paste", text: "Paste" }],
+          ...(layer ? { layer } : {}),
+        });
+        (window as unknown as Win).__overlay = menu;
+        const other = document.getElementById("other") as HTMLElement;
+        if (how === "click") other.addEventListener("click", () => void menu.open());
+        else other.addEventListener("keydown", (event) => { if (event.key === "Escape") menu.open(event); });
+      }, { how, layer });
+      const isOpen = (): Promise<boolean> =>
+        page.evaluate(() => ((window as unknown as Win).__overlay as { isOpen: () => boolean }).isOpen());
+      if (how === "click") await page.click("#other");
+      else {
+        await page.focus("#other");
+        await page.keyboard.press("Escape");
+      }
+      await wait(400);
+      const afterTheEventThatOpenedIt = await isOpen();
+      // The next one: a click on the page beside the menu, or Escape again
+      if (how === "click") await page.mouse.click(700, 600);
+      else await page.keyboard.press("Escape");
+      await until(async () => !(await isOpen()));
+      const afterTheNextOne = await isOpen();
+      await page.evaluate(() => void ((window as unknown as Win).__overlay as { destroy: () => unknown }).destroy());
+      return { afterTheEventThatOpenedIt, afterTheNextOne };
+    };
+    const stayed = { afterTheEventThatOpenedIt: true, afterTheNextOne: false };
+    assert.deepEqual(
+      {
+        click: await menuOpenedBy("click"),
+        clickTop: await menuOpenedBy("click", "top"),
+        escape: await menuOpenedBy("Escape"),
+        escapeTop: await menuOpenedBy("Escape", "top"),
+      },
+      { click: stayed, clickTop: stayed, escape: stayed, escapeTop: stayed },
+      "a menu opened by code from a click or an Escape keydown: open after that event, closed by the next one, in both layers",
+    );
+    check("menu: the click or the key press that opened it does not dismiss it, and the next one does, in both layers");
     await returnsFocus("bottom sheet", "createBottomSheet");
     check("factories in a shadow root: a modal bottom sheet returns focus to its opener inside the shadow root");
     await returnsFocus("side sheet", "createSideSheet");
@@ -5499,8 +5548,9 @@ try {
       fm.addEventListener("select", (e) => seen.push((e as CustomEvent<{ value: string }>).detail.value));
       (fm.shadowRoot?.querySelectorAll(".mtrl-menu__item")[1] as HTMLElement).click();
       await new Promise((r) => setTimeout(r, 400));
-      // The menu's "close" comes on a 50ms timer of its own: after the fixed wait,
-      // give it 5s more to arrive. The assertion below reports an `open` that stayed.
+      // The menu's "close" comes with the click since FLO-548 (it came on a 50ms timer),
+      // so this loop should find the attribute gone at once; it stays as the guard it
+      // was. The assertion below reports an `open` that stayed.
       for (const end = Date.now() + 5000; fm.hasAttribute("open") && Date.now() < end;) await new Promise((r) => setTimeout(r, 20));
       return { seen, open: fm.hasAttribute("open") };
     });
@@ -5700,7 +5750,7 @@ try {
     const settle = (): Promise<unknown> => wait(450);
     // `settle()` is the menu's open or close transition. What the next step needs
     // comes on the menu's own timers and frames (focus 120ms after opening, the
-    // "close" event 50ms after a dismissal, focus back on the anchor a frame later, a
+    // "close" event with a dismissal since FLO-548, focus back on the anchor a frame later, a
     // submenu's focus a frame and 300ms after it opens), and on a runner that paused
     // the fixed wait ended first. `eventually` waits for that state, after the fixed
     // wait, for 5s at most. When it never comes, the failure says at which step,
