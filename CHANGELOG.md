@@ -111,6 +111,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   (`mtrl/components/fab/constants`). The small size they belong to, `FAB_SIZES.SMALL`, is already
   deprecated (M3 Expressive). Removed in 1.0. Comments only; nothing changes at run time.
 
+- **`CheckboxVariant`** (`mtrl/components/checkbox`): the type of the checkbox's `variant` option,
+  deprecated in 0.10.0, which has no effect (M3 has one checkbox style). Removed in 1.0. Comments
+  only.
+
+- **`SELECT_CLASSES.TEXTFIELD`** (`mtrl/components/select/constants`): 1.0 renames the key
+  `TEXT_FIELD`, as every text field name (FLO-383). The class string, `select__textfield`, stays.
+  Comments only; the new key is not on 0.10.x.
+
 - **The text field's Sass map and function: `$textfield` and `textfield()` (FLO-383).** Use
   `$text-field` and `v.text-field()`, the same map: a theme may configure either name until 1.0
   removes the old one. The built CSS is unchanged.

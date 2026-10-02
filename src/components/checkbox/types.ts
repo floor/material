@@ -8,6 +8,8 @@ import type { EventCallback } from "../../core/state/emitter";
  * @remarks
  * - filled: Checkbox with filled background when checked (default)
  * - outlined: Checkbox with outline only, for less visual emphasis
+ * @deprecated The type of the deprecated `variant` option, which has no effect: M3 has one
+ * checkbox style (FLO-94, FLO-265). Removed in 1.0.
  */
 export type CheckboxVariant = "filled" | "outlined";
 
