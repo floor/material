@@ -31,7 +31,7 @@ const globals: Record<string, unknown> = {
   CustomEvent: dom.window.CustomEvent,
   getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
   requestAnimationFrame: (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0),
-  cancelAnimationFrame: () => {},
+  cancelAnimationFrame: (frame: number) => clearTimeout(frame),
 };
 const previous: Record<string, unknown> = {};
 
@@ -41,8 +41,8 @@ const previous: Record<string, unknown> = {};
 // stops the 60 Hz interval jsdom runs, and every later frame is never run.
 // The same stub on the window puts frames on the test's own clock, run by an
 // advance like every other wait; its cancel clears the fake timeout.
-dom.window.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0);
-dom.window.cancelAnimationFrame = (frame: number) => clearTimeout(frame);
+dom.window.requestAnimationFrame = globals.requestAnimationFrame as (cb: FrameRequestCallback) => number;
+dom.window.cancelAnimationFrame = globals.cancelAnimationFrame as (frame: number) => void;
 
 type Proto = Record<string, unknown>;
 const proto = dom.window.HTMLElement.prototype as unknown as Proto;
