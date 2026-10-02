@@ -2219,6 +2219,105 @@ try {
     await page.evaluate(() => ((document.getElementById("factory") as HTMLElement).innerHTML = ""));
     check("text field: focus opens the notch of an empty outlined field and blur closes it");
 
+    // FLO-566. Forced colours repaints a declared-`transparent` border in the
+    // line's own colour, so with the notch open the top line was drawn through
+    // the floated label. In the mode the floated label must be clear of the
+    // line, and the outline must still be drawn on the rest of the top edge and
+    // on the other three sides. Its own context, forced colours being one.
+    const forcedContext = await browser.newContext({ forcedColors: "active", deviceScaleFactor: 1, viewport: { width: 900, height: 700 } });
+    const forcedPage = await forcedContext.newPage();
+    await forcedPage.goto(`http://127.0.0.1:${server.port}`);
+    await forcedPage.waitForFunction(() => (window as unknown as Win).ready === true);
+    const forcedFields = await forcedPage.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement } } };
+      const host = document.getElementById("host") as HTMLElement;
+      const attrs = 'variant="outlined" label="Label" value="Ada" style="width:280px"';
+      host.innerHTML = `<div style="padding:24px;display:grid;gap:24px;width:280px">
+          <div id="fc-fl"></div>
+          <m-text-field id="fc-el" ${attrs}></m-text-field>
+        </div>
+        <div dir="rtl" style="padding:24px;display:grid;gap:24px;width:280px">
+          <div id="fc-fr"></div>
+          <m-text-field id="fc-er" ${attrs}></m-text-field>
+        </div>`;
+      for (const id of ["fc-fl", "fc-fr"]) {
+        const factory = w.mtrl.createTextField({ variant: "outlined", label: "Label", value: "Ada" });
+        factory.element.style.width = "280px";
+        (document.getElementById(id) as HTMLElement).append(factory.element);
+      }
+      // placement.ts, the labels' float and the border transitions
+      await new Promise((r) => setTimeout(r, 600));
+      const box = (el: Element): { left: number; right: number; top: number; bottom: number } => {
+        const { left, right, top, bottom } = el.getBoundingClientRect();
+        return { left, right, top, bottom };
+      };
+      const measure = (id: string) => {
+        const field = document.getElementById(id) as HTMLElement;
+        const root = (field.shadowRoot?.firstElementChild as HTMLElement | null) ?? field;
+        const label = root.querySelector("label") as HTMLElement;
+        const leading = root.querySelector('[class*="text-field__outline-leading"]') as HTMLElement;
+        return { root: box(root), label: box(label), line: getComputedStyle(leading).borderTopColor };
+      };
+      return {
+        "factory ltr": measure("fc-fl"),
+        "factory rtl": measure("fc-fr"),
+        "element ltr": measure("fc-el"),
+        "element rtl": measure("fc-er"),
+      };
+    });
+    const forcedPng = (await forcedPage.screenshot()).toString("base64");
+    const forced = await forcedPage.evaluate(async ({ png, fields }) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${png}`;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+      context.drawImage(image, 0, 0);
+      const px = (x: number, y: number): number[] =>
+        Array.from(context.getImageData(Math.floor(x), Math.floor(y), 1, 1).data.slice(0, 3));
+      return Object.entries(fields).map(([name, field]) => {
+        const line = (field.line.match(/\d+/g) ?? []).slice(0, 3).map(Number);
+        const near = (pixel: number[]): boolean => pixel.every((v, i) => Math.abs(v - (line[i] ?? 0)) <= 16);
+        const row = Math.round(field.root.top);
+        const middle = Math.round(field.root.top + (field.root.bottom - field.root.top) / 2);
+        let run = 0;
+        let longest = 0;
+        for (let x = Math.ceil(field.label.left); x <= Math.floor(field.label.right); x++) {
+          run = near(px(x, row)) ? run + 1 : 0;
+          longest = Math.max(longest, run);
+        }
+        return {
+          name,
+          line: field.line,
+          onLabel: field.label.top < field.root.top && field.label.bottom > field.root.top,
+          longest,
+          width: Math.floor(field.label.right) - Math.ceil(field.label.left) + 1,
+          drawn: {
+            "the top edge before the notch": near(px(field.root.left + 8, row)),
+            "the top edge after the notch": near(px(field.root.right - 8, row)),
+            "the leading side": near(px(field.root.left, middle)),
+            "the trailing side": near(px(field.root.right - 1, middle)),
+            "the bottom edge": near(px(field.root.left + 28, field.root.bottom - 1)),
+          },
+        };
+      });
+    }, { png: forcedPng, fields: forcedFields });
+    const forcedFailures: string[] = [];
+    for (const field of forced) {
+      const edges = Object.entries(field.drawn);
+      const missing = edges.filter(([, drawn]) => !drawn).map(([edge]) => edge);
+      console.log(`  forced colours ${field.name}: the outline's colour runs ${field.longest}px of ${field.width}px across the label; ${edges.length - missing.length}/${edges.length} edges drawn`);
+      if (!field.onLabel) forcedFailures.push(`${field.name}: the label is not floated onto the top edge`);
+      if (field.longest >= 8) forcedFailures.push(`${field.name}: the outline crosses the floated label (${field.longest}px of ${field.width}px in ${field.line})`);
+      if (missing.length > 0) forcedFailures.push(`${field.name}: the outline is not drawn on ${missing.join(", ")}`);
+    }
+    for (const line of forcedFailures) console.log(`  FAIL ${line}`);
+    assert.deepEqual(forcedFailures, [], "forced colours: the notch leaves the floated label clear and the outline drawn");
+    await forcedContext.close();
+    check("text field: in forced colours the notch leaves the floated label clear and the outline is still drawn (FLO-566)");
+
     // FLO-562. A [dir='rtl'] ancestor outside a shadow root is invisible to the
     // stylesheet inside it, so the mirroring must follow the --rtl class
     // placement.ts sets from the computed direction. Four fields under
