@@ -77,16 +77,16 @@ describe("chips set onChange is an on(change) listener", () => {
     }
   });
 
-  test("onChange runs after a listener registered earlier and before one registered later", () => {
+  test("onChange is registered before the on map and before a listener added later", () => {
     const order: string[] = [];
     const set = mountSet({
       chips: [{ value: "a", ripple: false }],
-      on: { change: () => order.push("earlier") },
+      on: { change: () => order.push("map") },
       onChange: () => order.push("option"),
     });
     set.on("change", () => order.push("later"));
     set.getChips()[0]!.element.click();
-    expect(order).toEqual(["earlier", "option", "later"]);
+    expect(order).toEqual(["option", "map", "later"]);
   });
 
   test("off(change) drops onChange, and selectByValue without the flag stays silent", () => {
