@@ -5080,6 +5080,21 @@ try {
       check(`menu top layer ${where}: quoted item id survives ArrowRight and ArrowLeft`);
       ITEMS[0].id = "share";
 
+      // ArrowUp on the opener opens the menu on its last item (FLO-524), for the
+      // factory, in a shadow root and in light DOM. The opener puts focus there
+      // 100ms after the key; the menu's own initial focus, 20ms later, used to move
+      // it to the first item. The fixed wait is the assertion: focus is still on the
+      // last item once every opening timer has run.
+      await mount("top");
+      await page.evaluate(() => ((window as unknown as TopWin).__tl.root.querySelector("#tl-opener") as HTMLElement).focus());
+      await page.keyboard.press("ArrowUp");
+      await wait(450);
+      assert.deepEqual({ open: (await state()).open, focus: await focusedItem() }, { open: true, focus: "paste" }, `${where}: ArrowUp on the opener opens on the last item, and focus stays there`);
+      await page.keyboard.press("Escape");
+      await wait(450);
+      assert.equal((await state()).open, false, `${where}: Escape closes the menu opened with ArrowUp`);
+      check(`menu top layer ${where}: ArrowUp on the opener opens it on the last item`);
+
       await page.evaluate(() => (window as unknown as TopWin).__tl.menu.destroy());
     }
   }
