@@ -74,6 +74,47 @@ try {
   assert(sizes.ssr.raw < 311_000, "SSR entry exceeds 311,000 raw bytes");
   // 111,838 gzip tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
   assert(sizes.ssr.gzip < 113_000, "SSR entry exceeds 113,000 gzip bytes");
+  // What a server-rendered page weighs, by style mode. No other check asserts it.
+  // The page: 30 buttons, 10 icon buttons and 4 chip sets of 5 chips, 44 roots, the
+  // scenario whose size moves most with the number of elements.
+  // - inline (the default): each root carries its whole CSS as text in a <style>:
+  //   the host rules, the ripple, the element's stylesheet and its dependencies'
+  //   (16,345 B for a button, 11,383 for an icon button, 12,277 for a chip set).
+  //   Nothing is shared between roots, so the raw size is the sum over the roots.
+  // - link: each root carries one <link> per stylesheet and no CSS text.
+  // A ceiling fails when a root's CSS grows, or when link mode starts to carry CSS.
+  // A floor fails when the page shrinks by more than the headroom: deduplication
+  // gained, or a stylesheet lost, is then looked at and the budget set again.
+  // Ceilings by the rule at the top of scripts/size.ts (measured plus 1% or 100
+  // bytes, whichever is more, rounded up to 50); floors mirror it.
+  {
+    const { renderElement } = await import(pathToFileURL(join(fixture.installed, "dist/ssr/index.js")).href) as {
+      renderElement: (tag: string, attributes?: Record<string, string>, content?: string, options?: object) => unknown;
+    };
+    const icon = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 21 3 12l9-9 9 9z"/></svg>';
+    const chips = Array.from({ length: 5 }, () => '<m-chip value="v">Vegetarian</m-chip>').join("");
+    const page = (options: object): Uint8Array => new TextEncoder().encode([
+      ...Array.from({ length: 30 }, () => String(renderElement("m-button", {}, "Save", options))),
+      ...Array.from({ length: 10 }, () => String(renderElement("m-icon-button", { icon, "aria-label": "Favourite" }, "", options))),
+      ...Array.from({ length: 4 }, () => String(renderElement("m-chips", { "aria-label": "Diet" }, chips, options))),
+    ].join("\n"));
+    const budgets = {
+      // Measured against b475ea5d: 688,073 raw, 10,981 gzip.
+      inline: { options: {}, raw: [681_150, 695_000], gzip: [10_850, 11_100] },
+      // Measured against b475ea5d: 41,993 raw, 1,026 gzip.
+      link: { options: { styles: "link", cssBase: "/css" }, raw: [41_550, 42_450], gzip: [900, 1_150] },
+    } as const;
+    for (const [mode, budget] of Object.entries(budgets)) {
+      const size = measure(page(budget.options));
+      sizes[`ssr-page-${mode}`] = size;
+      console.log(`SSR page, ${mode}: ${size.raw} bytes raw, ${size.gzip} gzip, ${size.brotli} brotli (44 roots)`);
+      for (const unit of ["raw", "gzip"] as const) {
+        const [floor, ceiling] = budget[unit];
+        assert(size[unit] < ceiling, `SSR page (${mode}) exceeds ${ceiling.toLocaleString("en-US")} ${unit} bytes: ${size[unit]}`);
+        assert(size[unit] > floor, `SSR page (${mode}) is under ${floor.toLocaleString("en-US")} ${unit} bytes: ${size[unit]}. Smaller is welcome: set the budget again`);
+      }
+    }
+  }
   // What an install downloads. Raised from 900,000 on 2026-09-29 (Dr Jones) for the
   // overlay elements of wave 2; 830,286 measured after wave 1 (#245). Raised to
   // 1,010,000 for the 35 public Material shapes (FLO-346): 994,762 to 1,000,150,
