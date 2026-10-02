@@ -22,6 +22,10 @@ $component: "#{base.$prefix}-select";
         right: 0;
         z-index: 1;
         margin-top: 0;
+        // The field's width, as in the top layer (Compose
+        // exposedDropdownSize(matchAnchorWidth = true)): the menu's own 280px
+        // maximum left it short of a wider field. Its 112px minimum stays.
+        max-width: none;
     }
 
     // Transition

@@ -111,8 +111,8 @@ describe("explicit contrast levels are opt-in", () => {
     // `@use "main"` compressed, before the banner the build adds.
     // The hash is this sheet with the text field's insets mirrored by one block (FLO-562).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("e2da07e8b1d74506d928c0a1280e99f28046f95969a27bb98544985e3815c568");
-    expect(css.length).toBe(525097);
+      .toBe("51421d667634563623f8a21dd6b8b3a2e58297f52e2c2038f537d7914475426e");
+    expect(css.length).toBe(525112);
   });
 
   test("today's sheets still resolve to the fixture", () => {
