@@ -247,8 +247,7 @@ for (const layer of LAYERS) {
         await wait(SHOWN);
         expect([count("click"), count("keydown")]).toEqual([0, 0]);
 
-        const destroyed = createMenu({ items: ITEMS, layer } as never);
-        document.body.append(destroyed.element);
+        const destroyed = make({ layer }).menu;
         await wait();
         held.clear();
         destroyed.open();
@@ -264,6 +263,42 @@ for (const layer of LAYERS) {
     });
   });
 }
+
+describe("a menu with a submenu open", () => {
+  const nested = [{ id: "share", text: "Share", hasSubmenu: true, submenu: [{ id: "link", text: "Copy link" }] }, { id: "copy", text: "Copy" }];
+
+  for (const layer of LAYERS) {
+    test(`${named(layer)}: close() closes both in the call, with one close; the submenu's item closes both too`, async () => {
+      const { menu, seen } = make({ layer, items: nested });
+      // The submenu feature is a lazy chunk, loaded when the menu is created
+      await import("../../../src/components/menu/features/submenu");
+      await wait();
+      const submenu = (): HTMLElement | null => document.querySelector(".mtrl-menu--submenu");
+
+      menu.open();
+      await wait(SHOWN);
+      menu.element.querySelector<HTMLElement>('[data-id="share"]')!.click();
+      await wait(60);
+      expect(submenu()).not.toBeNull();
+      menu.close();
+      expect(menu.isOpen()).toBe(false);
+      expect(seen).toEqual(["open", "close"]);
+      await wait(GONE);
+      expect(submenu()).toBeNull();
+      expect(menu.element.isConnected).toBe(false);
+
+      menu.open();
+      await wait(SHOWN);
+      menu.element.querySelector<HTMLElement>('[data-id="share"]')!.click();
+      await wait(60);
+      submenu()!.querySelector<HTMLElement>('[data-id="link"]')!.click();
+      expect(menu.isOpen()).toBe(false);
+      expect(seen).toEqual(["open", "close", "open", "close"]);
+      await wait(GONE);
+      expect(submenu()).toBeNull();
+    });
+  }
+});
 
 describe("one menu open at a time", () => {
   test("opening a second menu closes the first in that call: its close comes before the second's open", async () => {

@@ -67,13 +67,19 @@ test("setItems on a split button created without items creates its menu, which t
   const seen: string[] = [];
   split.on("select", event => { selected.push(event.value); });
   for (const name of ["expand", "collapse"] as const) split.on(name, () => { seen.push(name); });
-  split.expand();
+  // One menu is open at a time, and opening one closes the other in that call
+  // (FLO-548): the two are expanded in turn. They used to overlap for the
+  // 50ms a close took.
   made.expand();
+  await wait();
+  const madeControls = made.trailingElement.hasAttribute("aria-controls");
+  made.collapse();
+  split.expand();
   await wait();
   const menu = innerMenu(split)!;
   expect(menu.isOpen()).toBe(true);
   expect(split.trailingElement.getAttribute("aria-controls")).not.toBeNull();
-  expect(split.trailingElement.hasAttribute("aria-controls")).toBe(made.trailingElement.hasAttribute("aria-controls"));
+  expect(split.trailingElement.hasAttribute("aria-controls")).toBe(madeControls);
   expect([...menu.element.querySelectorAll<HTMLElement>("[data-id]")].map(item => item.dataset.id)).toEqual(["csv", "json"]);
   menu.element.querySelector<HTMLElement>('[data-id="json"]')!.click();
   await wait(250);
