@@ -219,8 +219,8 @@ export const withPlacement =
     };
 
     // A filled field with no prefix, suffix or leading icon has nothing to
-    // place but its direction: the label sits where the stylesheet puts it.
-    // Its observers wait for a request (FLO-378).
+    // place: the label sits where the stylesheet puts it. Its observers and
+    // its first measure wait for a request (FLO-378).
     // A filled field with only a leading icon is a no-op too, but stays on the
     // measuring side. The rest: the first placement in the next batch with the
     // other fields created in this task.
@@ -229,9 +229,12 @@ export const withPlacement =
       has("outlined") ||
       has("with-leading-icon") ||
       component.element.querySelector(`.${PREFIX}-${COMPONENT}__prefix, .${PREFIX}-${COMPONENT}__suffix`) !== null;
+    // Unless it is in a shadow root, where an ancestor's `dir` does not reach
+    // the stylesheet: there one measure sets --rtl (FLO-562). Asked in the
+    // batch, as the field has no root yet; a root with a host is a shadow root.
+    const inShadowRoot = (): (() => void) => ((component.element.getRootNode() as ShadowRoot).host ? measure() : () => {});
     if (needsPlacement) schedulePositionUpdate();
-    // Its one measure, in the same batch, sets --rtl (FLO-562)
-    else schedule(measure);
+    else schedule(inShadowRoot);
 
     // Add lifecycle integration
     if ("lifecycle" in component && component.lifecycle?.destroy) {
@@ -240,6 +243,7 @@ export const withPlacement =
         if (destroyed) return;
         destroyed = true;
         pending.delete(measure);
+        pending.delete(inShadowRoot);
         if (!pending.size && flushing !== null) {
           clearTimeout(flushing);
           flushing = null;

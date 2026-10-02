@@ -1,10 +1,11 @@
 // test/components/text-field/placement-setup.test.ts
 //
 // FLO-378: a filled field with nothing to place installs no observers and no
-// resize listener. The first request for placement, from any setter that can
-// give it something to place, sets them up. It does join the batch once, for
-// its direction: the --rtl class is all a plain field needs from the script,
-// and inside a shadow root nothing else can give it (FLO-562).
+// resize listener, and reads no style. The first request for placement, from
+// any setter that can give it something to place, sets them up. It does join
+// the batch once, to ask whether it is in a shadow root (a field has no root
+// when it is created): there, and only there, one measure reads its direction
+// for the --rtl class, which nothing else can give it (FLO-562).
 import { describe, test, expect, beforeEach, afterAll } from "bun:test";
 import { JSDOM } from "jsdom";
 
@@ -14,7 +15,11 @@ for (const key of [
   "window", "document", "navigator", "HTMLElement", "HTMLInputElement", "HTMLButtonElement",
   "HTMLTextAreaElement", "Element", "Node", "Event", "MouseEvent", "KeyboardEvent", "FocusEvent", "CustomEvent",
 ]) g[key] = (dom.window as any)[key];
-g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
+const computedStyle = dom.window.getComputedStyle.bind(dom.window);
+g.getComputedStyle = (element: Element, pseudo?: string | null) => {
+  if (element.classList?.contains("mtrl-text-field")) styleReads++;
+  return computedStyle(element, pseudo);
+};
 g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(0), 0);
 g.cancelAnimationFrame = () => {};
 
@@ -22,6 +27,8 @@ g.cancelAnimationFrame = () => {};
 let observed = 0;
 let resized = 0;
 let timers = 0;
+// Style reads on a field's root: placement's direction read
+let styleReads = 0;
 // Placement's own: a class observer on the field's root, and the label's
 // ResizeObserver (the input's autofill and the counter observe other things)
 g.MutationObserver = class {
@@ -49,9 +56,9 @@ const mount = (config: Record<string, unknown> = {}) => {
   document.body.append(field.element);
   return field;
 };
-const reset = () => { observed = 0; resized = 0; timers = 0; };
+const reset = () => { observed = 0; resized = 0; timers = 0; styleReads = 0; };
 const setUp = () => ({ observed: observed > 0, resized: resized > 0, scheduled: timers > 0 });
-// One measure in the shared batch, for the direction; nothing that stays
+// One entry in the shared batch, to ask for its root; nothing that stays
 const NOTHING = { observed: false, resized: false, scheduled: true };
 const EVERYTHING = { observed: true, resized: true, scheduled: true };
 
@@ -64,9 +71,20 @@ beforeEach(async () => {
 afterAll(() => dom.window.close());
 
 describe("placement waits for something to place (FLO-378)", () => {
-  test("a filled field with no prefix, suffix or icon sets up no observer and no listener: one measure, for its direction", () => {
+  test("a filled field with no prefix, suffix or icon, in the light DOM, sets up no observer and no listener and reads no style", async () => {
     mount({ variant: "filled" });
     expect(setUp()).toEqual(NOTHING);
+    await new Promise((resolve) => realSetTimeout(resolve, 5));
+    expect({ ...setUp(), styleReads }).toEqual({ ...NOTHING, styleReads: 0 });
+  });
+
+  test("the same field in a shadow root reads its direction once, and still sets up no observer and no listener (FLO-562)", async () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    const field = createTextField({ label: "Name", variant: "filled" } as never);
+    host.attachShadow({ mode: "open" }).append(field.element);
+    await new Promise((resolve) => realSetTimeout(resolve, 5));
+    expect({ ...setUp(), styleReads }).toEqual({ ...NOTHING, styleReads: 1 });
   });
 
   for (const [name, config] of [

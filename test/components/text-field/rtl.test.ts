@@ -61,15 +61,36 @@ describe("the --rtl class follows the computed direction (FLO-562)", () => {
     });
   }
 
-  // A plain filled field has nothing else to place and installs no observer
-  // (FLO-378): its direction is read once, in the batch its creation joins.
-  test("a plain filled field gets the class from its first batch, without being asked", async () => {
-    const field = mount({ variant: "filled" });
+  // A plain filled field has nothing to place and installs no observer
+  // (FLO-378). In a shadow root, where an ancestor's `dir` does not reach the
+  // stylesheet, its direction is read once, in the batch its creation joins.
+  test("a plain filled field in a shadow root gets the class from its first batch, without being asked", async () => {
+    const host = document.createElement("div");
+    host.dir = "rtl";
+    document.body.append(host);
+    const field = createTextField({ label: "Name", variant: "filled" } as never) as never as Record<string, any>;
+    // jsdom does not inherit `direction` across the boundary as a browser does
     field.element.style.direction = "rtl";
+    host.attachShadow({ mode: "open" }).append(field.element);
 
     await new Promise((r) => setTimeout(r, 0));
 
     expect(field.element.classList.contains(RTL)).toBe(true);
+    field.destroy();
+  });
+
+  // In the light DOM the stylesheet's [dir] selector mirrors it with no script
+  test("a plain filled field in the light DOM is left to the stylesheet: no class, no style read", async () => {
+    const field = mount({ variant: "filled" });
+    field.element.style.direction = "rtl";
+    const read = g.getComputedStyle;
+    let reads = 0;
+    g.getComputedStyle = (...args: [Element]) => { if (args[0] === field.element) reads++; return read(...args); };
+
+    await new Promise((r) => setTimeout(r, 0));
+    g.getComputedStyle = read;
+
+    expect([field.element.classList.contains(RTL), reads]).toEqual([false, 0]);
     field.destroy();
   });
 

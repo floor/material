@@ -1128,12 +1128,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   not reach, and the class that stands in for it was set for the outlined variant only: a
   filled `<m-text-field>` kept its left-to-right layout (label, icons, prefix and suffix on
   the wrong side, the text's padding unswapped), and an outlined one mirrored its label and
-  its outline's corners only. Every field now takes the `mtrl-text-field--rtl` class from its computed
-  direction, in both variants, and the stylesheet mirrors on that class or on an ancestor's
-  `dir`. The same holds for a text field built by the factory inside a shadow root of your
-  own. A direction changed after the field was created is picked up by its next placement
-  (`updatePositions()`, or a setter that places), as it was for the outlined variant; the
-  field does not watch for it. Also fixed, in the light DOM too: **right to left, a field with both a leading and
+  its outline's corners only. A field now takes the `mtrl-text-field--rtl` class from its
+  computed direction in both variants, and the stylesheet mirrors on that class or on an
+  ancestor's `dir`. The same holds for a text field built by the factory inside a shadow
+  root of your own. In the light DOM a plain filled field is still mirrored by the
+  stylesheet alone, with no style read: it reads its direction only inside a shadow root,
+  once, when it is created. A direction changed afterwards, or a plain field moved into a
+  shadow root after its creation, is picked up by the field's next placement
+  (`updatePositions()`, or a setter that places), as a direction change was for the outlined
+  variant; the field does not watch for either. Also fixed, in the light DOM too: **right to left, a field with both a leading and
   a trailing icon** padded its text 16px on the leading icon's side, under the icon; it is
   52px on both.
 - **Text field: with reduced motion, the filled field's focus indicator no longer fades
