@@ -247,10 +247,10 @@ export interface BaseComponent {
   /** Add CSS class(es) */
   addClass: (...classes: string[]) => BaseComponent;
   /**
-   * Emit an event. `emit` accepts any event name; listeners typed through
-   * `on`/`off` cover the component's own events ({@link CardEvents}).
+   * Emit one of the card's own events ({@link CardEvents}), with its payload:
+   * the names and payloads `on` and `off` accept.
    */
-  emit?: (event: string, data?: unknown) => void;
+  emit?: <K extends keyof CardEvents>(event: K, payload: Parameters<CardEvents[K]>[0]) => void;
   /** Component configuration */
   config: CardComponentConfig;
   /** Touch state for touch interactions */
