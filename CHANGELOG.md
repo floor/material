@@ -1068,8 +1068,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   now reads the computed direction for both variants (it read it for the outlined one only) and
   sets `mtrl-text-field--rtl`, which the filled variant's rules now follow as the outlined ones
   already did; a light-DOM field still mirrors through `[dir]` without JavaScript. A field with
-  both icons also keeps the inset each icon needs on its own side: the trailing icon's rule
-  overwrote the leading icon's.
+  both icons also keeps the leading icon's padding in right-to-left: the trailing icon's rule
+  used to overwrite it.
 - **A top-layer dialog that refuses Escape stays open, however often it is pressed
   (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
   listener that refused, the third Escape made the browser close the `<dialog>` while
