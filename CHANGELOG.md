@@ -139,6 +139,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   are typed with, and tabs' documented `setupResponsiveBehavior`. Each component's export list is
   now pinned (`bun run component-exports:check`).
 
+- `TOOLTIP_DEFAULTS.RICH` is deprecated: the tooltip's `rich` option, already deprecated, has no
+  effect, and 1.0 removes both (FLO-324).
+
 ### Fixed
 
 - The top-layer menu steps of `elements:check` no longer read focus before the menu has given it
