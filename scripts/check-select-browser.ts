@@ -86,8 +86,8 @@ export async function checkSelectMenu(page: Page, api: "factory" | "factory-top"
       const range = document.createRange();
       range.selectNodeContents(item);
       const text = range.getBoundingClientRect();
-      // The mark's box, from its own computed left and width inside the item
-      const left = box.left + parseFloat(after.left);
+      // The mark's box, from its own used left, margin and width inside the item
+      const left = box.left + parseFloat(after.left) + parseFloat(after.marginLeft);
       const right = left + parseFloat(after.width);
       rows.push({
         name: `${dir}, ${width}px`,
