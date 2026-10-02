@@ -16,7 +16,7 @@ import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
 import { checkTextFieldLayout, checkTextFieldReducedMotion } from "./check-text-field-browser";
-import { checkSelectMenu } from "./check-select-browser";
+import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
 // Runs against the build: `bun run build` first, as CI does.
@@ -1659,6 +1659,7 @@ try {
     // The select's menu in the top layer, inside the shadow root: its width, its
     // selected option's mark in both directions, and its colours
     await checkSelectMenu(page, "element");
+    await checkSelectWidth(page, "element");
     check("select: the menu is its field's width, the selected mark at the item's end in both directions, the selected option on secondary-container");
 
     // FLO-301: the required attribute moves the input's required and the label's asterisk together

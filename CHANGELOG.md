@@ -1047,6 +1047,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 ### Changed
 
 - **An extra-small button's space between its icon and its label is 4px.** It was 8px. Material 3's token `md.comp.button.xsmall.icon-label-space` is 4, and Compose's `ButtonDefaults.ExtraSmallIconSpacing` is 4.
+- **An unsized select is 280px wide, as an unsized text field is.** `createSelect()` made a
+  select that took its container's whole width (200px in a 200px container, 400px in a
+  400px one), where the text field, on both paths, and `<m-select>` are 280px whatever holds
+  them. The factory's select now sizes as they do. Migration, to keep a select filling its
+  container: give it the width, `select.element.style.width = '100%'` or the rule
+  `.mtrl-select { width: 100%; }`; for the element, `m-select { width: 100%; }`. There is
+  no option for it.
 - **Text field: the spacing follows the M3 measurements (FLO-299).** A field's layout shifts
   by the amounts below; nothing in the API changes. Sources: the measurement tables on
   m3.material.io's text fields page, and Compose's `TextFieldImpl.kt` for the positions the

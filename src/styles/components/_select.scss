@@ -8,9 +8,10 @@
 $component: "#{base.$prefix}-select";
 
 .#{$component} {
-    // Base styles - building on text field base
+    // Base styles - building on text field base. No width of its own: unsized,
+    // a select is the text field's 280px, as <m-select> is; it took 100% of
+    // its container, which the text field never did.
     position: relative;
-    width: 100%;
     cursor: pointer;
 
     // Menu when it's a direct child of select (container mode)

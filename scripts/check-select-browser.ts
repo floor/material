@@ -129,3 +129,47 @@ export async function checkSelectMenu(page: Page, api: "factory" | "factory-top"
   assert.deepEqual(failures, [], `${failures.length} of the select menu assertions failed`);
   console.log(`Passed select menu (${api}): 8 selects, 100 to 400px wide, left to right and right to left — the menu as wide as its field, the selected mark at the item's end, the selected option on secondary-container.`);
 }
+
+/**
+ * An unsized select is as wide as an unsized text field: 280px
+ * (`TextFieldDefaults.MinWidth`, FLO-293), whatever holds it, and the same
+ * for the factory and for `<m-select>`. The factory's select took its
+ * container's width (`.mtrl-select { width: 100% }`): 200, 400 and 1000px
+ * here, where the text field and `<m-select>` were 280 in all three.
+ */
+export async function checkSelectWidth(page: Page, api: "factory" | "element"): Promise<void> {
+  const widths = await page.evaluate(async (api) => {
+    const options = [{ id: "cat", text: "Cat" }];
+    const out: Record<string, number> = {};
+    for (const [name, css] of [["200px container", "width:200px"], ["400px container", "width:400px"], ["unconstrained", ""]] as const) {
+      const box = document.createElement("div");
+      box.style.cssText = css;
+      document.body.append(box);
+      let root: HTMLElement;
+      let destroy = (): void => {};
+      if (api === "element") {
+        const host = document.createElement("m-select");
+        host.setAttribute("label", "Pet");
+        const declared = document.createElement("m-select-option");
+        declared.setAttribute("value", "cat");
+        declared.setAttribute("label", "Cat");
+        host.append(declared);
+        box.append(host);
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        root = host.shadowRoot?.firstElementChild as HTMLElement;
+      } else {
+        const select = (window as unknown as SelectWindow).createSelect({ label: "Pet", options });
+        box.append(select.element);
+        root = select.element;
+        destroy = () => select.destroy();
+      }
+      out[name] = Math.round(root.getBoundingClientRect().width * 100) / 100;
+      destroy();
+      box.remove();
+    }
+    return out;
+  }, api);
+  assert.deepEqual(widths, { "200px container": 280, "400px container": 280, unconstrained: 280 },
+    `an unsized select (${api}) is 280px wide in any container, as an unsized text field is`);
+  console.log(`Passed select width (${api}): 280px in a 200px, a 400px and an unconstrained container.`);
+}

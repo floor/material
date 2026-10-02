@@ -21,7 +21,7 @@ import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextF
 import { checkControls } from "./check-controls-browser";
 import { checkMenu } from "./check-menu-browser";
 import { checkSearch } from "./check-search-browser";
-import { checkSelectMenu } from "./check-select-browser";
+import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
 import { createPackageFixture } from "./package-fixture";
 
 type CoreWindow = Window & {
@@ -119,6 +119,7 @@ try {
   await checkSearch(page);
   await checkSelectMenu(page, "factory");
   await checkSelectMenu(page, "factory-top");
+  await checkSelectWidth(page, "factory");
   await checkTimePicker(page, artifacts);
   await checkCard(page, artifacts);
   // Datepicker must also work with only base + its selective stylesheet.
