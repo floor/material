@@ -7,7 +7,7 @@ import * as ReactDOMServer from "react-dom/server";
 import { Writable } from "node:stream";
 import {
   SuspenseHydration, hydrationPromise, suspenseShape, SUSPENSE_SHAPES, SUSPENSE_TEXT,
-  countedSuspendedButton, neverPromise, rejectionTree, rejectingPromise, renderCounts,
+  countedSuspendedButton, mislabelledTree, neverPromise, rejectionTree, rejectingPromise, renderCounts,
 } from "./react-ssr-suspense-app";
 
 export interface StreamResult { html: string; errors: string[]; ms: number }
@@ -127,6 +127,9 @@ const settled = async (node: React.ReactNode, options: StreamOptions): Promise<S
 export const renderRejection = (boundary: boolean): Promise<StreamResult> =>
   settled(rejectionTree(rejectingPromise(), boundary), { timeout: 3000 });
 
+/** A child error that copies the production suspend wording. It must surface at once, not after the retry cap. */
+export const renderMislabelled = (): Promise<StreamResult> => settled(mislabelledTree(), { timeout: 3000 });
+
 /** A child that never resolves, aborted at 300ms. `after` is sibling renders in the following 500ms. */
 export const renderAborted = async (): Promise<StreamResult & { during: number; after: number }> => {
   renderCounts.sibling = 0;
@@ -144,9 +147,10 @@ export const renderCeiling = async (): Promise<StreamResult & { sibling: number 
   return { ...result, sibling: renderCounts.sibling };
 };
 
-/** A child that never resolves and is not aborted. The retry cap must end the stream. */
+/** A child that resolves after the retry cap. The page streams its content and that host has no shadow root. */
 export const renderGiveUp = async (): Promise<StreamResult & { sibling: number }> => {
   renderCounts.sibling = 0;
-  const result = await settled(countedSuspendedButton(neverPromise()), { timeout: 12000 });
+  const promise = new Promise<string>((resolve) => { setTimeout(() => resolve(SUSPENSE_TEXT), 9500); });
+  const result = await settled(countedSuspendedButton(promise), { timeout: 15000 });
   return { ...result, sibling: renderCounts.sibling };
 };

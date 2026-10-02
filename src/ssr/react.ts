@@ -18,24 +18,75 @@ const bridge = (globalThis as unknown as Record<symbol, {
 const RETRY_DELAYS_MS = [0, 2, 4, 8, 16, 32, 64, 128, 250];
 
 /**
- * One more suspension than this ends the request. Forty attempts is about
- * eight seconds at the delays above: a child that resolves in a second is
- * snapshotted well before the cap, and a child that never resolves becomes an
- * error the page can report.
+ * Suspensions past this are left to the page. Forty attempts is about eight
+ * seconds at the delays above. The host is then rendered with no shadow root,
+ * and the page keeps streaming for as long as it would without the bridge.
  */
 const MAX_SUSPENDS = 40;
 
-const SUSPEND_GAVE_UP = "A suspending child did not resolve during server rendering.";
-
 let serializingChildren = false;
 
-interface Attempt { count: number; nodes: object[] }
+interface Attempt { count: number; nodes: object[]; gaveUp: boolean }
 
 /** One counter per host. The child element is stable across the host's retries; a ref is not. */
 const attempts = new WeakMap<object, Attempt>();
 
-const isSynchronousSuspend = (error: unknown): boolean =>
-  error instanceof Error && error.message.includes("suspended while responding to synchronous input");
+/**
+ * renderToStaticMarkup reports a synchronous suspend as a plain Error thrown
+ * from one place in React. The thenable the child threw does not escape, and
+ * the Error has no code or digest. The message depends on the build, so it is
+ * not the signal: the header is skipped and the first call frame is compared
+ * with a frame sampled from this process's own React. A child's error is
+ * thrown from the child, including one whose text copies React's message.
+ */
+const firstFrame = (error: unknown): string | undefined => {
+  if (!(error instanceof Error) || typeof error.stack !== "string") return undefined;
+  const header = `${error.name}: ${error.message}`;
+  const rest = error.stack.startsWith(header) ? error.stack.slice(header.length) : error.stack;
+  return rest.split("\n").map((line) => line.trim()).find((line) => line.startsWith("at ") || /@[^@]*:\d+:\d+/.test(line));
+};
+
+/** `null` until the first suspend samples this process's React. An empty sample stays unset. */
+let sampledFrame: string | undefined | null = null;
+
+const suspendFrame = (): string | undefined => {
+  if (sampledFrame !== null) return sampledFrame;
+  const pending = new Promise<never>(() => {});
+  const Probe = (): never => { throw pending; };
+  const errorLog = console.error;
+  const warnLog = console.warn;
+  console.error = () => {};
+  console.warn = () => {};
+  try {
+    renderToStaticMarkup(React.createElement(Probe));
+    sampledFrame = undefined;
+  } catch (error) {
+    sampledFrame = firstFrame(error);
+  } finally {
+    console.error = errorLog;
+    console.warn = warnLog;
+  }
+  return sampledFrame;
+};
+
+const isSynchronousSuspend = (error: unknown): boolean => {
+  const frame = firstFrame(error);
+  return frame !== undefined && frame === sampledFrame;
+};
+
+/** Same guard as core/utils/warn.ts: tsc leaves NODE_ENV in place, and a browser without process must not throw. */
+const isDevelopment = (): boolean => {
+  try {
+    return typeof process !== "undefined" && process.env != null && process.env.NODE_ENV !== "production";
+  } catch {
+    return false;
+  }
+};
+
+const elementLabel = (tag: string, props: Record<string, unknown>): string => {
+  const id = typeof props.id === "string" && props.id ? ` id=${JSON.stringify(props.id)}` : "";
+  return `<${tag}${id}>`;
+};
 
 /** Elements the attempt counter can hang from. Slot wrappers are recreated on every host render, so the counter hangs from the child inside them. */
 const childNodes = (children: React.ReactNode): object[] => {
@@ -70,11 +121,30 @@ const nextAttempt = (children: React.ReactNode): number => {
     state = attempts.get(node);
     if (state) break;
   }
-  if (!state) state = { count: 0, nodes };
+  if (!state) state = { count: 0, nodes, gaveUp: false };
   state.count += 1;
   state.nodes = nodes;
   for (const node of nodes) attempts.set(node, state);
   return state.count;
+};
+
+const suspendedGaveUp = (children: React.ReactNode): boolean => {
+  for (const node of childNodes(children)) {
+    if (attempts.get(node)?.gaveUp) return true;
+  }
+  return false;
+};
+
+/** Keeps the counter so a later render of the same child does not warn again. */
+const markGaveUp = (children: React.ReactNode): boolean => {
+  let state: Attempt | undefined;
+  for (const node of childNodes(children)) {
+    state = attempts.get(node);
+    if (state) break;
+  }
+  if (!state || state.gaveUp) return false;
+  state.gaveUp = true;
+  return true;
 };
 
 const clearAttempt = (children: React.ReactNode): void => {
@@ -96,14 +166,18 @@ bridge.react = (tag, props, children, prefix) => {
   // Nested hosts emit their own roots when React renders the outer tree.
   // A template from this pass would declare a shadow root twice.
   if (serializingChildren) return undefined;
+  // The cap already let this child go. A later pass must not open another wait or warn again.
+  if (suspendedGaveUp(children)) return undefined;
+  // Sample outside a render. Doing it from the catch would nest renderToStaticMarkup.
+  suspendFrame();
   let markup: string;
   serializingChildren = true;
   try {
     // No Suspense wrapper here. renderToStaticMarkup renders an error and a
     // suspension as the same fallback, so a wrapper cannot tell them apart.
-    // A suspension throws "suspended while responding to synchronous input".
-    // Any other throw is the child's error. A boundary already inside the
-    // children still renders its own fallback, and this pass does not throw.
+    // A suspension is thrown from React's static renderer; any other throw is
+    // the child's error. A boundary already inside the children still renders
+    // its own fallback, and this pass does not throw.
     markup = renderToStaticMarkup(React.createElement(tag, props, children));
   } catch (error) {
     if (!isSynchronousSuspend(error)) {
@@ -114,8 +188,11 @@ bridge.react = (tag, props, children, prefix) => {
     }
     const attempt = nextAttempt(children);
     if (attempt > MAX_SUSPENDS) {
-      clearAttempt(children);
-      throw new Error(SUSPEND_GAVE_UP);
+      // No template, and the page render reaches the child. A slow response is not a failed request.
+      if (markGaveUp(children) && isDevelopment()) {
+        console.warn(`[mtrl] ${elementLabel(tag, props)} still had a suspending child after ${MAX_SUSPENDS} attempts, so this response has no shadow root for it.`);
+      }
+      return undefined;
     }
     const delay = retryDelay(attempt);
     throw new Promise<void>((resolve) => { setTimeout(resolve, delay); });

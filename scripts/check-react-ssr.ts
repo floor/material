@@ -14,6 +14,26 @@ declare global {
     __ssrRoots?: { late: ShadowRoot | null; sync: ShadowRoot | null };
   }
 }
+type SuspenseServer = typeof import("./fixtures/react-ssr-suspense-server");
+/** React's own suspend report, in development text or the minified production form. The bridge does not read this text. */
+const suspendError = (errors: string[]): boolean => errors.some((error) =>
+  error.includes("suspended while responding to synchronous input") || /Minified React error #426\b/.test(error));
+
+/** Warnings from the bridge while `run` is in progress. */
+const mtrlWarnings = async <T>(run: () => Promise<T>): Promise<{ result: T; warnings: string[] }> => {
+  const warnings: string[] = [];
+  const original = console.warn;
+  console.warn = (...args: Parameters<typeof console.warn>) => {
+    warnings.push(args.map((arg) => String(arg)).join(" "));
+    original(...args);
+  };
+  try {
+    const result = await run();
+    return { result, warnings: warnings.filter((warning) => warning.includes("[mtrl]")) };
+  } finally {
+    console.warn = original;
+  }
+};
 const browser = await chromium.launch();
 const summaries: object[] = [];
 const contextFailures: string[] = [];
@@ -91,6 +111,8 @@ try {
         contextFailures.push(`${label}: ${message.split("\n")[0]}`);
       }
     }
+    // The context production bundle replaced Symbol.for("mtrl.ssr"). The development
+    // bundles imported below install their own bridge before those cases run.
     const path = `${process.cwd()}/analysis/react-ssr/server-${version}.js`;
     await Bun.write(path, await bundle("scripts/fixtures/react-ssr-server.ts", "bun"));
     const { render } = await import(path);
@@ -101,11 +123,10 @@ try {
     assert.doesNotMatch(client, /linkedom|DOMParser|SSR element nesting/);
     const suspenseServer = `${process.cwd()}/analysis/react-ssr/suspense-server-${version}.js`;
     await Bun.write(suspenseServer, await bundle("scripts/fixtures/react-ssr-suspense-server.ts", "bun"));
-    const { renderShapes, renderHydration, renderRejection, renderAborted, renderCeiling, renderGiveUp } = await import(suspenseServer);
+    const { renderShapes, renderHydration, renderRejection, renderMislabelled, renderAborted, renderCeiling, renderGiveUp } = await import(suspenseServer) as SuspenseServer;
     const shapes: Array<[string, { html: string; errors: string[] }]> = await renderShapes();
     for (const [name, result] of shapes) {
-      const suspendError = result.errors.some((error) => error.includes("suspended while responding to synchronous input"));
-      assert.equal(suspendError, false, `React ${version} ${name} onError ${JSON.stringify(result.errors)}`);
+      assert.equal(suspendError(result.errors), false, `React ${version} ${name} onError ${JSON.stringify(result.errors)}`);
       assert.equal(/<!--\$!-->/.test(result.html), false, `React ${version} ${name} client-rendered`);
       if (name === "E") {
         assert.match(result.html, /loaded 5/, `React ${version} E`);
@@ -117,6 +138,44 @@ try {
       assert.match(result.html, /<slot/, `React ${version} ${name} projects resolved children`);
     }
     console.log(`React ${version}: suspending children streamed (${shapes.map(([name]) => name).join(", ")})`);
+    const mislabelled = await renderMislabelled();
+    assert.ok(mislabelled.errors.some((error) => error.includes("Minified React error #426")), `React ${version} mislabelled child onError ${JSON.stringify(mislabelled.errors)}`);
+    assert.ok(mislabelled.ms < 1000, `React ${version} mislabelled child retried for ${mislabelled.ms.toFixed(0)} ms`);
+    console.log(`React ${version}: a child error copying the production suspend text surfaced in ${mislabelled.ms.toFixed(0)} ms`);
+    // The production bundle loads React's production server build and its own copy of the
+    // bridge, which samples that build's throw site. Importing it replaces the shared SSR
+    // slot, so keep the development slot and put it back before the cases that follow.
+    const ssrSymbol = Symbol.for("mtrl.ssr");
+    const ssrSlots = globalThis as unknown as Record<symbol, unknown>;
+    const devSlot = ssrSlots[ssrSymbol];
+    const prodServer = `${process.cwd()}/analysis/react-ssr/suspense-server-${version}-prod.js`;
+    await Bun.write(prodServer, await bundle("scripts/fixtures/react-ssr-suspense-server.ts", "bun", "production"));
+    const { renderShapes: renderProductionShapes, renderMislabelled: renderProductionMislabelled, renderGiveUp: renderProductionGiveUp } = await import(prodServer) as SuspenseServer;
+    const production = await renderProductionShapes();
+    const productionMislabelled = await renderProductionMislabelled();
+    assert.ok(productionMislabelled.errors.some((error) => error.includes("Minified React error #426")), `React ${version} production mislabelled child onError ${JSON.stringify(productionMislabelled.errors)}`);
+    assert.ok(productionMislabelled.ms < 1000, `React ${version} production mislabelled child retried for ${productionMislabelled.ms.toFixed(0)} ms`);
+    const productionCap = await mtrlWarnings(() => renderProductionGiveUp());
+    ssrSlots[ssrSymbol] = devSlot;
+    for (const name of ["A", "F"] as const) {
+      const result = production.find(([shape]) => shape === name)?.[1];
+      assert.ok(result, `React ${version} production ${name} missing`);
+      assert.equal(suspendError(result.errors), false, `React ${version} production ${name} onError ${JSON.stringify(result.errors)}`);
+      assert.equal(/<!--\$!-->/.test(result.html), false, `React ${version} production ${name} client-rendered`);
+      assert.match(result.html, /<template shadowrootmode="open"/, `React ${version} production ${name} shadow`);
+      assert.match(result.html, /loaded 5/, `React ${version} production ${name} content`);
+      assert.match(result.html, /<slot/, `React ${version} production ${name} projects resolved children`);
+    }
+    console.log(`React ${version}: production shapes A and F streamed with a shadow root`);
+    const productionGaveUp = productionCap.result;
+    assert.equal(suspendError(productionGaveUp.errors) || productionGaveUp.errors.some((error) => error.includes("did not resolve during server rendering")), false, `React ${version} production cap onError ${JSON.stringify(productionGaveUp.errors)}`);
+    assert.match(productionGaveUp.html, /loaded 5/, `React ${version} production cap content`);
+    assert.doesNotMatch(productionGaveUp.html, /shadowrootmode/, `React ${version} production cap shadow`);
+    assert.equal(/<!--\$!-->/.test(productionGaveUp.html), false, `React ${version} production cap client-rendered`);
+    assert.ok(productionGaveUp.ms >= 9000 && productionGaveUp.ms < 14000, `React ${version} production cap completed at ${productionGaveUp.ms.toFixed(0)} ms`);
+    assert.ok(productionGaveUp.sibling > 20 && productionGaveUp.sibling < 55, `React ${version} production cap sibling renders ${productionGaveUp.sibling}`);
+    assert.equal(productionCap.warnings.length, 0, `React ${version} production cap warnings ${JSON.stringify(productionCap.warnings)}`);
+    console.log(`React ${version}: production cap streamed in ${productionGaveUp.ms.toFixed(0)} ms after ${productionGaveUp.sibling} sibling renders, no shadow root and no warning`);
     for (const boundary of [true, false]) {
       const rejected = await renderRejection(boundary);
       const where = boundary ? "Suspense" : "no Suspense";
@@ -132,15 +191,22 @@ try {
     assert.equal(aborted.after, 0, `React ${version} retried ${aborted.after} times after abort`);
     console.log(`React ${version}: never-resolving child aborted at ${aborted.ms.toFixed(0)} ms; retries before=${aborted.during}, after=${aborted.after}`);
     const ceiling = await renderCeiling();
-    assert.equal(ceiling.errors.some((error) => error.includes("suspended while responding to synchronous input") || error.includes("did not resolve during server rendering")), false, `React ${version} ceiling errors ${JSON.stringify(ceiling.errors)}`);
+    assert.equal(suspendError(ceiling.errors) || ceiling.errors.some((error) => error.includes("did not resolve during server rendering")), false, `React ${version} ceiling errors ${JSON.stringify(ceiling.errors)}`);
     assert.match(ceiling.html, /loaded 5/, `React ${version} ceiling content`);
     assert.match(ceiling.html, /<slot/, `React ${version} ceiling slot`);
     assert.ok(ceiling.sibling <= 40, `React ${version} ceiling sibling renders ${ceiling.sibling}`);
     console.log(`React ${version}: 1s child snapshotted in ${ceiling.ms.toFixed(0)} ms with ${ceiling.sibling} sibling renders`);
-    const gaveUp = await renderGiveUp();
-    assert.ok(gaveUp.errors.some((error) => error.includes("did not resolve during server rendering")), `React ${version} cap onError ${JSON.stringify(gaveUp.errors)}`);
-    assert.ok(gaveUp.sibling > 20 && gaveUp.sibling < 50, `React ${version} cap sibling renders ${gaveUp.sibling}`);
-    console.log(`React ${version}: never-resolving child hit the retry cap in ${gaveUp.ms.toFixed(0)} ms after ${gaveUp.sibling} sibling renders`);
+    const gaveUpRun = await mtrlWarnings(() => renderGiveUp());
+    const gaveUp = gaveUpRun.result;
+    assert.equal(suspendError(gaveUp.errors) || gaveUp.errors.some((error) => error.includes("did not resolve during server rendering")), false, `React ${version} cap onError ${JSON.stringify(gaveUp.errors)}`);
+    assert.match(gaveUp.html, /loaded 5/, `React ${version} cap content`);
+    assert.doesNotMatch(gaveUp.html, /shadowrootmode/, `React ${version} cap shadow`);
+    assert.equal(/<!--\$!-->/.test(gaveUp.html), false, `React ${version} cap client-rendered`);
+    assert.ok(gaveUp.ms >= 9000 && gaveUp.ms < 14000, `React ${version} cap completed at ${gaveUp.ms.toFixed(0)} ms`);
+    assert.ok(gaveUp.sibling > 20 && gaveUp.sibling < 55, `React ${version} cap sibling renders ${gaveUp.sibling}`);
+    assert.equal(gaveUpRun.warnings.length, 1, `React ${version} cap warnings ${JSON.stringify(gaveUpRun.warnings)}`);
+    assert.match(gaveUpRun.warnings[0] ?? "", /<m-button id="count">/, `React ${version} cap warning ${gaveUpRun.warnings[0]}`);
+    console.log(`React ${version}: child resolving past the retry cap streamed in ${gaveUp.ms.toFixed(0)} ms after ${gaveUp.sibling} sibling renders, no shadow root; one warning`);
     const suspenseHtml: string = await renderHydration();
     const suspenseClient = await bundle("scripts/fixtures/react-ssr-suspense-client.ts", "browser");
     assert.doesNotMatch(suspenseClient, /linkedom|DOMParser|SSR element nesting/);
