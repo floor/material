@@ -197,14 +197,18 @@ export interface TooltipComponent {
   setTarget: (target: HTMLElement) => TooltipComponent;
   
   /**
-   * Shows the tooltip
+   * Shows the tooltip. Outside the overlays' open and close contract, by
+   * design: it is shown after the show delay and emits no event, so
+   * `isVisible()` is still false when `show()` returns. `show(true)` shows it
+   * at once.
    * @param immediate - Whether to show immediately (bypassing delay)
    * @returns The tooltip component for chaining
    */
   show: (immediate?: boolean) => TooltipComponent;
   
   /**
-   * Hides the tooltip
+   * Hides the tooltip, after the hide delay and without an event; `hide(true)`
+   * hides it at once.
    * @param immediate - Whether to hide immediately (bypassing delay)
    * @returns The tooltip component for chaining
    */
