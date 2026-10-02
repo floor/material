@@ -8,17 +8,19 @@ export type ChipType = "assist" | "filter" | "input" | "suggestion";
 export interface ChipConfig {
   type?: ChipType;
   label?: string;
-  /** @deprecated Use label. Kept for existing chips-container item configs. */
-  text?: string;
   value?: string;
   disabled?: boolean;
+  /** In a single-select set, selecting this chip replaces the previous selection; the last selected config wins. */
   selected?: boolean;
   /** Elevated styling is supported by assist, filter and suggestion chips. */
   elevated?: boolean;
+  /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   leadingIcon?: string;
+  /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. Same sink as `leadingIcon`. */
   icon?: string;
+  /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   trailingIcon?: string;
-  /** Decorative avatar HTML for an input chip; takes precedence over leadingIcon. */
+  /** Decorative avatar for an input chip; takes precedence over leadingIcon. Markup (HTML), not a person's name or an image URL. Not sanitized by default: see Markup and sanitizing. */
   avatar?: string;
   /**
    * Called when an input chip is removed, from its remove button or with Backspace or
@@ -55,6 +57,8 @@ export interface ChipConfig {
 export interface ChipOptions extends ChipConfig {
   /** Selection belongs to the chips container. */
   managedSelection?: boolean;
+  /** Notify the owning set when a chip becomes selected. */
+  onSelected?: (chip: ChipComponent) => void;
   /**
    * The chip is a cell of a chip set's grid (FLO-261): the root is a
    * `gridcell`, and a one-action chip's cell is its focus target.
@@ -112,6 +116,7 @@ export interface ChipComponent {
   setLeadingIcon: (icon: string) => ChipComponent;
   setTrailingIcon: (icon: string) => ChipComponent;
   isSelected: () => boolean;
+  /** Selects or deselects this chip silently. In a single-select set, selecting it deselects the previous chip. */
   setSelected: (selected: boolean) => ChipComponent;
   toggleSelected: () => ChipComponent;
   focus: () => ChipComponent;
@@ -269,6 +274,8 @@ export interface ChipsAddEvent {
 
 /** A chip left the set; `value` is the remaining selection. */
 export interface ChipsRemoveEvent extends ChipsAddEvent {
+  /** The selection after removal, in the same shape as the set's `getValue()`. */
+  value: string | string[] | null;
   /** The removed chip's value, captured before destruction. */
   chipValue: string | null;
 }
@@ -291,7 +298,9 @@ export interface ChipsComponent {
   element: HTMLElement;
 
   /**
-   * Adds a new chip to the chips container
+   * Adds a new chip to the chips container. In a single-select set, a selected
+   * chip replaces the previous selection before `add` fires; `add.value`
+   * reads the new selection. Programmatic additions do not emit `change`.
    * @param chipConfig - Configuration for the chip
    * @returns The chips instance for chaining
    */

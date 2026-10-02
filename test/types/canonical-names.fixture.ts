@@ -1,47 +1,45 @@
 // test/types/canonical-names.fixture.ts
 //
-// FLO-383: the canonical names are the same types and the same factory as the
-// old ones, which stay (deprecated) until 1.0. The TopAppBar the factory
-// returned was a second declaration in top-app-bar.ts; it now returns the public
-// one, and assignability is unchanged both ways. Compiled under both
-// strictNullChecks gates (tooling:check and test:types).
+// FLO-383 PR B: 1.0 has only the canonical names. 0.10.5 exported both
+// spellings (PR A, A2); the old ones are gone from every entry, and the
+// factory's TopAppBarComponent chains as it did.
 import {
-  createTextField, createTextfield, createTopAppBar,
-  type TextFieldConfig, type TextfieldConfig, type TextFieldComponent, type TextfieldComponent,
-  type CardConfig, type CardSchema, type TopAppBarComponent, type TopAppBar,
-  type BottomAppBarComponent, type BottomAppBar,
+  createTextField, createTopAppBar, createSelect,
+  type TextFieldConfig, type TextFieldComponent, type CardConfig,
+  type TopAppBarComponent, type BottomAppBarComponent,
 } from "../../src";
-import type { ElementComponent } from "../../src/core/compose";
-import type { TopAppBarType } from "../../src/components/top-app-bar/types";
+// @ts-expect-error createTextfield is createTextField in 1.0
+import { createTextfield } from "../../src";
+// @ts-expect-error TextfieldConfig is TextFieldConfig in 1.0
+import type { TextfieldConfig } from "../../src";
+// @ts-expect-error CardSchema is CardConfig in 1.0
+import type { CardSchema } from "../../src";
+// @ts-expect-error TopAppBar is TopAppBarComponent in 1.0
+import type { TopAppBar } from "../../src";
+// @ts-expect-error BottomAppBar is BottomAppBarComponent in 1.0
+import type { BottomAppBar } from "../../src";
 
-type Equals<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
-
-export const textFieldConfig: Equals<TextFieldConfig, TextfieldConfig> = true;
-export const textFieldComponent: Equals<TextFieldComponent, TextfieldComponent> = true;
-export const cardConfig: Equals<CardConfig, CardSchema> = true;
-export const topAppBar: Equals<TopAppBarComponent, TopAppBar> = true;
-export const bottomAppBar: Equals<BottomAppBarComponent, BottomAppBar> = true;
-export const factory: Equals<typeof createTextField, typeof createTextfield> = true;
-
-// The interface top-app-bar.ts declared before (FLO-383 removed the duplicate)
-interface LegacyTopAppBar extends ElementComponent {
-  setTitle: (title: string) => LegacyTopAppBar;
-  getTitle: () => string;
-  addLeadingElement: (element: HTMLElement) => LegacyTopAppBar;
-  addTrailingElement: (element: HTMLElement) => LegacyTopAppBar;
-  setType: (type: TopAppBarType) => LegacyTopAppBar;
-  setScrollState: (scrolled: boolean) => LegacyTopAppBar;
-  getHeadlineElement: () => HTMLElement;
-  getLeadingContainer: () => HTMLElement;
-  getTrailingContainer: () => HTMLElement;
-}
-// What the factory returns still goes wherever either declaration was expected,
-// and either declaration still takes what the other holds.
-export const asLegacy: LegacyTopAppBar = createTopAppBar();
-export const asPublic: TopAppBarComponent = createTopAppBar();
-declare const legacy: LegacyTopAppBar;
-declare const bar: TopAppBarComponent;
-export const legacyToPublic: TopAppBarComponent = legacy;
-export const publicToLegacy: LegacyTopAppBar = bar;
-// Chaining keeps the type
+export const field: TextFieldComponent = createTextField({ label: "Name" } satisfies TextFieldConfig);
+export const card: CardConfig = { variant: "outlined" };
 export const chained: TopAppBarComponent = createTopAppBar().setTitle("Inbox").setType("medium");
+export type Bottom = BottomAppBarComponent;
+export type Gone = [typeof createTextfield, TextfieldConfig, CardSchema, TopAppBar, BottomAppBar];
+
+// The select's text field is a property a user reads (FLO-383): textField only
+const select = createSelect({ label: "Size", options: [] });
+export const selectField: TextFieldComponent = select.textField;
+// select.textfield stays a deprecated alias of select.textField through 1.x
+export const oldSelectField: TextFieldComponent = select.textfield;
+
+// Every public variant option's type is exported (FLO-383 follow-up)
+import type { TextFieldVariant, SelectVariant, TextFieldConfig as FieldConfig, SelectConfig } from "../../src";
+export const fieldVariant: TextFieldVariant = "outlined";
+export const selectVariant: SelectVariant = "filled";
+export const fieldWithVariant: FieldConfig = { variant: fieldVariant };
+export const selectWithVariant: SelectConfig = { variant: selectVariant, options: [] };
+
+// Constant keys are identifiers too: two words; the class value is unchanged
+import { SELECT_CLASSES } from "../../src/components/select/constants";
+export const selectFieldClass: "select__textfield" = SELECT_CLASSES.TEXT_FIELD;
+// @ts-expect-error SELECT_CLASSES.TEXTFIELD is TEXT_FIELD in 1.0
+export const oldSelectFieldKey = SELECT_CLASSES.TEXTFIELD;

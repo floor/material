@@ -1,6 +1,6 @@
 // src/components/select/types.ts
 import type { MenuColor, MenuComponent, MenuVariant } from "../menu/types";
-import type { TextfieldComponent } from "../textfield/types";
+import type { TextFieldComponent } from "../textfield/types";
 
 /**
  * Available Select variants
@@ -35,7 +35,8 @@ export interface SelectOption {
   disabled?: boolean;
 
   /**
-   * Optional icon to display with the option
+   * Optional icon to display with the option.
+   * Markup (HTML). Not sanitized by default: see Markup and sanitizing.
    */
   icon?: string;
 
@@ -192,7 +193,13 @@ export interface SelectComponent {
   /**
    * The textfield component
    */
-  textfield: TextfieldComponent;
+  textField: TextFieldComponent;
+
+  /**
+   * The same text field, under its 0.10 name.
+   * @deprecated Use `textField`; removed in 2.0.
+   */
+  readonly textfield: TextFieldComponent;
 
   /**
    * The menu component
@@ -359,7 +366,7 @@ export interface SelectChangeEvent extends SelectEvent {
   /**
    * The selected option id
    */
-  value: string;
+  value: string | null;
 
   /**
    * The selected option text
@@ -435,7 +442,7 @@ export interface SelectController {
  */
 export interface BaseComponent {
   element: HTMLElement;
-  textfield?: TextfieldComponent;
+  textField?: TextFieldComponent;
   menu?: MenuComponent;
   select?: SelectController;
   // Narrowed to match the public signature above. `handler: Function` is a

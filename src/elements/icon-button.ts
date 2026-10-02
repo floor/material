@@ -7,8 +7,8 @@
  * `selected` property the live one: the attribute moves the state until the
  * user or script changes it. A click dispatches `change` with `{ selected, value }`
  * from the host, as `<m-switch>` and `<m-checkbox>` do; `toggle`, which
- * clashed with the native ToggleEvent, is dispatched as well for one release
- * (deprecated, FLO-295).
+ * clashed with the native ToggleEvent, is dispatched as well through 1.x and
+ * removed in 2.0 (deprecated, FLO-295).
  * `type="submit"` and `type="reset"` act on the host's form.
  *
  * Parts: `icon-button`, `icon`, `ripple`.
@@ -33,7 +33,9 @@ const iconButtonSpec = {
     shape: { type: "string", config: "shape", update: (c, v) => void c.setShape(String(v ?? "round")) },
     width: { type: "string", config: "width", update: (c, v) => void c.setWidth(String(v ?? "default")) },
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string", config: "icon", update: (c, v) => void c.setIcon(String(v ?? "")) },
+    /** Markup (HTML), shown while `toggle` and `selected`. Not sanitized by default: see Markup and sanitizing. */
     "selected-icon": {
       type: "string",
       config: "selectedIcon",
@@ -62,7 +64,7 @@ const iconButtonSpec = {
         return { selected, value };
       },
     },
-    // Deprecated: dispatched by `setup` beside `change`, for one release.
+    // Deprecated: dispatched by `setup` beside `change`, through 1.x; removed in 2.0.
     toggle: {
       detail: (payload) => {
         const { selected, value } = payload as IconButtonChangePayload;

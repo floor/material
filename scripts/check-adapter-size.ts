@@ -34,15 +34,17 @@ import { compile } from "svelte/compiler";
 import { build as viteBuild, type Plugin, type Rolldown } from "vite";
 
 import { createPackageFixture } from "./package-fixture";
-import { elementModules } from "./element-modules";
+import { elementModules, pascal } from "./element-modules";
 
 /**
  * The adapter's own runtime (create.ts or runtime.js) and wrapper, brotli
  * bytes, on top of the element: the largest measured, +1587, and headroom.
+ * The largest over is +1626 (Svelte switch + button), tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+ * +1,615 against b9dab36e, Node 22.23.3 / npm 10.9.9. The 100 B floor would be
+ * 1,750, above the ceiling next had before this PR (1,700), so it stays 1,700.
  */
 const ADAPTER_MARGIN = 1700;
 
-const pascal = (name: string): string => name.replace(/^[a-z]/, (c) => c.toUpperCase());
 const FRAMEWORKS = [
   { dir: "react", component: pascal },
   { dir: "vue", component: (name: string) => `M${pascal(name)}` },

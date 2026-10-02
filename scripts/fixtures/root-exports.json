@@ -15,10 +15,9 @@
     "status": "public"
   },
   {
-    "name": "BottomAppBar",
+    "name": "BadgeVariant",
     "kind": "type",
-    "status": "renamed",
-    "to": "BottomAppBarComponent"
+    "status": "public"
   },
   {
     "name": "BottomAppBarComponent",
@@ -121,10 +120,9 @@
     "status": "public"
   },
   {
-    "name": "CardSchema",
+    "name": "CardVariant",
     "kind": "type",
-    "status": "renamed",
-    "to": "CardConfig"
+    "status": "public"
   },
   {
     "name": "CarouselComponent",
@@ -133,6 +131,11 @@
   },
   {
     "name": "CarouselConfig",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "CarouselVariant",
     "kind": "type",
     "status": "public"
   },
@@ -407,12 +410,6 @@
     "status": "public"
   },
   {
-    "name": "createTextfield",
-    "kind": "value",
-    "status": "renamed",
-    "to": "createTextField"
-  },
-  {
     "name": "createTextField",
     "kind": "value",
     "status": "public"
@@ -444,6 +441,11 @@
   },
   {
     "name": "DatePickerConfig",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "DatePickerVariant",
     "kind": "type",
     "status": "public"
   },
@@ -508,6 +510,11 @@
     "status": "public"
   },
   {
+    "name": "ExtendedFabVariant",
+    "kind": "type",
+    "status": "public"
+  },
+  {
     "name": "FabComponent",
     "kind": "type",
     "status": "public"
@@ -538,6 +545,11 @@
     "status": "public"
   },
   {
+    "name": "FabVariant",
+    "kind": "type",
+    "status": "public"
+  },
+  {
     "name": "FilterChipConfig",
     "kind": "type",
     "status": "public"
@@ -564,6 +576,11 @@
   },
   {
     "name": "IconButtonConfig",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "IconButtonVariant",
     "kind": "type",
     "status": "public"
   },
@@ -624,6 +641,11 @@
   },
   {
     "name": "MenuItem",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "MenuVariant",
     "kind": "type",
     "status": "public"
   },
@@ -698,6 +720,11 @@
     "status": "public"
   },
   {
+    "name": "ProgressVariant",
+    "kind": "type",
+    "status": "public"
+  },
+  {
     "name": "RadioOptionConfig",
     "kind": "type",
     "status": "public"
@@ -738,6 +765,11 @@
     "status": "public"
   },
   {
+    "name": "SearchVariant",
+    "kind": "type",
+    "status": "public"
+  },
+  {
     "name": "SelectChangeEvent",
     "kind": "type",
     "status": "public"
@@ -759,6 +791,11 @@
   },
   {
     "name": "SelectOption",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "SelectVariant",
     "kind": "type",
     "status": "public"
   },
@@ -833,6 +870,11 @@
     "status": "public"
   },
   {
+    "name": "SplitButtonVariant",
+    "kind": "type",
+    "status": "public"
+  },
+  {
     "name": "SuggestionChipConfig",
     "kind": "type",
     "status": "public"
@@ -868,10 +910,9 @@
     "status": "public"
   },
   {
-    "name": "TextfieldComponent",
+    "name": "TabsVariant",
     "kind": "type",
-    "status": "renamed",
-    "to": "TextFieldComponent"
+    "status": "public"
   },
   {
     "name": "TextFieldComponent",
@@ -879,13 +920,12 @@
     "status": "public"
   },
   {
-    "name": "TextfieldConfig",
+    "name": "TextFieldConfig",
     "kind": "type",
-    "status": "renamed",
-    "to": "TextFieldConfig"
+    "status": "public"
   },
   {
-    "name": "TextFieldConfig",
+    "name": "TextFieldVariant",
     "kind": "type",
     "status": "public"
   },
@@ -935,6 +975,11 @@
     "status": "public"
   },
   {
+    "name": "ToolbarVariant",
+    "kind": "type",
+    "status": "public"
+  },
+  {
     "name": "TooltipComponent",
     "kind": "type",
     "status": "public"
@@ -945,10 +990,9 @@
     "status": "public"
   },
   {
-    "name": "TopAppBar",
+    "name": "TooltipVariant",
     "kind": "type",
-    "status": "renamed",
-    "to": "TopAppBarComponent"
+    "status": "public"
   },
   {
     "name": "TopAppBarComponent",

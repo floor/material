@@ -10,6 +10,7 @@
 
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
+import { checkAdapterEventValues } from "./check-adapter-event-values";
 
 // Development builds, so Vue reports hydration mismatches and warnings.
 const defines = {
@@ -195,6 +196,8 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("diet")?.textContent === "veg,gf");
     assert.equal(await diet.getByRole("gridcell", { name: "Gluten free", exact: true, selected: true }).count(), 1);
     check("chips: v-model");
+    await checkAdapterEventValues(page);
+    check("change/input handlers read boolean, string and array detail.value equal to the host model");
 
     // ------------------------------------------------------------- navigation rail
     const rail = page.getByRole("navigation", { name: "Main" });

@@ -50,12 +50,12 @@ import 'mtrl/styles/base';
 
 ```tsx
 import 'mtrl/styles/base';
-import { Button, Switch, Textfield } from 'mtrl/react';
+import { Button, Switch, TextField } from 'mtrl/react';
 
 export function Signup() {
   return (
     <form>
-      <Textfield name="email" type="email" label="Email" required />
+      <TextField name="email" type="email" label="Email" required />
       <Switch name="news" defaultChecked>Newsletter</Switch>
       <Button type="submit">Sign up</Button>
     </form>
@@ -126,6 +126,8 @@ The base includes the baseline theme in light and dark, the tokens, a reset, typ
 
 Library styles sit in ordered `mtrl` cascade layers, so unlayered application CSS overrides them without specificity battles.
 
+The Sass sources ship for reference; configuring them with `@use … with` is not a supported API in 1.0. Theme with CSS custom properties.
+
 ### Themes
 
 The baseline theme applies by default and follows the system light or dark preference. Choose a theme and mode on the root element:
@@ -147,7 +149,7 @@ Every theme supports `data-theme-contrast="standard"`, `"medium"` and `"high"` o
 <html data-theme="desert" data-theme-mode="dark" data-theme-contrast="high">
 ```
 
-Without `data-theme-contrast`, `prefers-contrast: more` selects high contrast on every themed element independently. An explicit `standard` opts out on that element; `medium` overrides the preference too. In 1.0, contrast settings do not inherit from an ancestor across a nested theme: put `data-theme-contrast` on the same element as each `data-theme`, including nested sections. For example, opting out on the root does not opt out a nested theme without its own `data-theme-contrast="standard"`.
+Without `data-theme-contrast`, `prefers-contrast: more` selects high contrast on every themed element independently. An explicit `standard` opts out on that element; `medium` overrides the preference too. Contrast settings do not inherit from an ancestor across a nested theme: put `data-theme-contrast` on the same element as each `data-theme`, including nested sections. For example, opting out on the root does not opt out a nested theme without its own `data-theme-contrast="standard"`.
 
 The default baseline also supports this setting without `data-theme`. On that unthemed root, both standard and higher contrast follow the OS color scheme and `.dark-theme`, ignoring `data-theme-mode`. Medium and high use M3 contrast levels 0.5 and 1.0; hand-authored themes derive them with Tonal Spot from their documented seed (falling back to their light primary), preserving their light secondary and tertiary hues and chroma. Neutral palettes come from the seed, while standard colors stay unchanged. Success, warning and info keep their existing status colors. The `highcontrast` theme is a theme in its own right and supports all three contrast settings.
 
@@ -207,11 +209,25 @@ The framework components render the elements, so everything above holds: forms, 
 | Svelte 5 | `import { Switch } from 'mtrl/svelte'` | `bind:checked` |
 | Solid | `import { Switch } from 'mtrl/solid'` | `checked` + `onChange` |
 
+With `skipLibCheck: false`, use `@types/react` 18.2.71 or later.
+
 Each framework is an optional peer dependency; mtrl installs none of them. All adapters render on the server and hydrate. Angular apps use the elements directly, with `CUSTOM_ELEMENTS_SCHEMA`.
 
 A component owns the `on…` props of its element's events (`onChange`, `onInput`, `onSelect`, …) and its `default…` props, typed with the element's own payloads. Any other HTML attribute passes to the host; to spread a whole set of HTML attributes into a component, omit the props it owns (`Omit<React.HTMLAttributes<HTMLElement>, "onChange">`).
 
 Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, controlled and uncontrolled state, named slots, refs and server rendering.
+
+## Server rendering
+
+`renderElement` from `mtrl/ssr` renders an element to declarative shadow DOM. Import `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` in the server bootstrap and that framework's components emit the same roots. Node and Bun are supported in 1.0.
+
+Worker and edge runtimes are unsupported in 1.0. Each server entry lists the `browser` condition first. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers does) loads the browser stub: `renderElement` throws "mtrl/ssr is server-only", and importing a bridge does nothing, so the page renders with no declarative roots and no error.
+
+With `mtrl/ssr/react`, put a `Suspense` boundary outside the component when its server-rendered shadow root needs the resolved child. A boundary inside the component contributes its fallback to that root: a button with an empty fallback has no label slot, while a text fallback gives it a slot and shows the fallback text. In tabs, a boundary around a tab leaves the server-rendered root without that tab with either fallback; a boundary inside a tab label keeps the tab, with an empty or fallback-text label.
+
+With `mtrl/ssr/react` and `mtrl/ssr/svelte`, the server-rendered shadow root is built in a separate render, without the context of providers above the component. The page's own render (the light DOM) sees the provided value. Until the component upgrades, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves that component without a declarative shadow root, while the page still renders. React and Svelte each log a development-only warning naming the element in the latter case. Keep context-dependent text outside mtrl components: pass the resolved string as a prop or attribute, or accept client-rendered text until the upgrade. A fix is planned for 1.1 (FLO-517). The Vue and Solid bridges see the provided value in both the shadow root and light DOM.
+
+The same HTML policy as [Markup and sanitizing](#markup-and-sanitizing) applies to `mtrl/ssr` and the four bridges.
 
 ## Imports and tree-shaking
 
@@ -288,6 +304,58 @@ configureHTML({ sanitize: (html) => policy.createHTML(html) });
 ```
 
 The policy sees every string, the library's own icons included; a `TrustedHTML` value passed as an icon or content skips it. With no policy set, markup is written as it is. Text options (`text`, a card's `text`) never go through `innerHTML`.
+
+These attributes are markup. With no policy set they are written as HTML, in the browser and when `mtrl/ssr` or one of the four bridges renders the element. `avatar` and `leading-avatar` are not a person's name or an image URL.
+
+<!-- markup-attributes -->
+
+On the element:
+
+- `icon` on `<m-button>`
+- `icon` on `<m-extended-fab>`
+- `icon` on `<m-fab>`
+- `icon` on `<m-icon-button>`
+- `selected-icon` on `<m-icon-button>` — while `toggle` and `selected`
+- `expand-icon` on `<m-navigation-rail>` — while the rail is collapsed
+- `collapse-icon` on `<m-navigation-rail>` — while the rail is expanded
+- `leading-icon` on `<m-search>`
+- `trailing-icon` on `<m-search>`
+- `avatar` on `<m-search>` — not a person's name or an image URL
+- `icon` on `<m-slider>`
+- `inset-icon` on `<m-slider>` — size M, L or XL, not a range or centred slider, when the track can hold it
+- `inset-icon-at-min` on `<m-slider>` — the same, while the value is at the minimum
+- `icon` on `<m-split-button>`
+- `icon` on `<m-switch>`
+- `leading-icon` on `<m-textfield>`
+- `trailing-icon` on `<m-textfield>`
+
+On a declaration child:
+
+- `icon` on `<m-button-group-item>`
+- `selected-icon` on `<m-button-group-item>` — an icon-only item, while selected
+- `icon` on `<m-chip>`
+- `trailing-icon` on `<m-chip>`
+- `avatar` on `<m-chip>` — input chips only, and it takes precedence over `icon`; not a person's name or an image URL
+- `icon` on `<m-drawer-item>`
+- `leading-icon` on `<m-list-item>`
+- `leading-avatar` on `<m-list-item>` — not a person's name or an image URL
+- `trailing-icon` on `<m-list-item>`
+- `icon` on `<m-menu-item>`
+- `icon` on `<m-navigation-bar-item>`
+- `selected-icon` on `<m-navigation-bar-item>` — while that destination is active
+- `icon` on `<m-navigation-rail-item>`
+- `selected-icon` on `<m-navigation-rail-item>` — while that destination is active
+- `icon` on `<m-search-suggestion>`
+- `icon` on `<m-select-option>` — written into the menu
+- `icon` on `<m-tab>`
+
+`<m-fab-menu>` and `<m-fab-menu-item>` `icon` are markup too. The menu opts out of server rendering, so the server leaves those attributes escaped, and the same policy applies when the component upgrades.
+
+<!-- /markup-attributes -->
+
+## Upgrading from 0.10
+
+1.0.0 removes what 0.10 deprecated. Upgrade to 0.10.5 first: it has the 1.0 names beside the old ones and flags in your editor each name, option and constant 1.0 removes. Then follow the [1.0 migration guide](CHANGELOG.md#migrating-from-010x): mtrl is ESM-only, the package root keeps the components (the internals move to their subpaths), "text field" is two words in every identifier, and a few leftovers fail silently instead of at compile time, such as a chip's `{ text }`, which renders an empty chip.
 
 ## Upgrading from 0.9
 

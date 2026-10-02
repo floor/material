@@ -42,11 +42,11 @@ export interface ButtonConfig extends Omit<BaseButtonConfig, "variant"> {
  * Card configuration interface defining all possible card options.
  * This is the primary configuration interface for creating card components.
  * 
- * @interface CardSchema
+ * @interface CardConfig
  * @category Components
  * @example
  * ```typescript
- * const cardConfig: CardSchema = {
+ * const cardConfig: CardConfig = {
  *   variant: 'elevated',
  *   interactive: true,
  *   header: {
@@ -62,7 +62,7 @@ export interface ButtonConfig extends Omit<BaseButtonConfig, "variant"> {
  * };
  * ```
  */
-export interface CardSchema {
+export interface CardConfig {
   /** Card variant type (elevated, filled, outlined) */
   variant?: CardVariant | string;
   /**
@@ -246,7 +246,10 @@ export interface BaseComponent {
   getElementClass: (base: string, element: string) => string;
   /** Add CSS class(es) */
   addClass: (...classes: string[]) => BaseComponent;
-  /** Emit an event */
+  /**
+   * Emit an event. `emit` accepts any event name; listeners typed through
+   * `on`/`off` cover the component's own events ({@link CardEvents}).
+   */
   emit?: (event: string, data?: unknown) => void;
   /** Component configuration */
   config: CardComponentConfig;
@@ -298,10 +301,10 @@ export interface ComponentLifecycle {
  * with additional required properties.
  * 
  * @interface CardComponentConfig
- * @extends CardSchema
+ * @extends CardConfig
  * @category Components
  */
-export interface CardComponentConfig extends CardSchema {
+export interface CardComponentConfig extends CardConfig {
   /** Component name */
   componentName: string;
   /** CSS class prefix */
@@ -531,12 +534,12 @@ export interface ApiOptions {
 }
 
 /**
- * Registers CardSchema with the global defaults map, so
+ * Registers CardConfig with the global defaults map, so
  * `setComponentDefaults("card", ...)` is typed without core
  * importing anything from this component. FLO-115.
  */
 declare module "../../core/config/global" {
   interface ComponentConfigMap {
-    card?: Partial<CardSchema>;
+    card?: Partial<CardConfig>;
   }
 }

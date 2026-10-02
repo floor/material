@@ -13,12 +13,17 @@ export interface TimePickerSwipePayload {
 }
 
 /**
- * The payload of `change` and `input`: the 24-hour value, the same shape as
- * the `<m-timepicker>` element's events (FLO-320).
+ * The committed 24-hour value carried by `change` and `confirm`.
  */
 export interface TimePickerValueEvent {
   /** HH:MM, or HH:MM:SS with showSeconds */
   value: string;
+}
+
+/** A draft edit while the committed value remains available as `value`. */
+export interface TimePickerInputEvent extends TimePickerValueEvent {
+  /** The uncommitted 24-hour value shown in the open picker. */
+  draftValue: string;
 }
 
 /** Events emitted by the picker API and its interactive root. */
@@ -29,10 +34,10 @@ export interface TimePickerEvents {
    * silent (FLO-328). Moves on the dial or in the fields are `input` (FLO-288).
    */
   change: (event: TimePickerValueEvent) => void;
-  /** The draft, as the dial, fields or AM/PM change it while the picker is open (FLO-288). */
-  input: (event: TimePickerValueEvent) => void;
+  /** The committed value and draft as the dial, fields or AM/PM change. */
+  input: (event: TimePickerInputEvent) => void;
   /** The confirmed 24-hour value, matching getValue() and the submitted form value. */
-  confirm: (value: string) => void;
+  confirm: (event: TimePickerValueEvent) => void;
   open: () => void;
   close: () => void;
   cancel: () => void;
@@ -162,14 +167,6 @@ export interface TimePickerConfig {
   componentName?: string;
 
   /**
-   * Whether to close the picker when time is selected
-   * @default true
-   * @deprecated Never applied, and has no effect: the time picker is confirmed
-   * with OK, as M3 specifies (FLO-281).
-   */
-  closeOnSelect?: boolean;
-
-  /**
    * Earliest selectable time, 24-hour `HH:MM` or `HH:MM:SS`. Dial numbers and
    * AM/PM that cannot reach it are disabled, and a picked or typed time before
    * it moves up to it. `setValue` is not held to it.
@@ -247,7 +244,7 @@ export interface TimePickerConfig {
   /**
    * Callback as the draft changes while the picker is open (FLO-288)
    */
-  onInput?: (event: TimePickerValueEvent) => void;
+  onInput?: (event: TimePickerInputEvent) => void;
 
   /**
    * Callback when time picker is opened
@@ -288,7 +285,6 @@ export type ResolvedTimePickerConfig = TimePickerConfig &
       | "format"
       | "orientation"
       | "showSeconds"
-      | "closeOnSelect"
       | "minuteStep"
       | "secondStep"
       | "cancelText"

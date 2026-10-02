@@ -26,7 +26,7 @@
 import createSelect from "../components/select";
 import type { MenuPosition } from "../components/menu/types";
 import type { SelectComponent, SelectConfig, SelectOption } from "../components/select/types";
-import type { TextfieldVariant } from "../components/textfield/types";
+import type { TextFieldVariant } from "../components/textfield/types";
 import {
   createDeclarationClass, defineElement, DEFAULT_PREFIX, type AttributeValue, type Config, type DefineOptions,
   type ElementAttributes, type ElementHost, type ElementInstance, type ElementSpec,
@@ -62,8 +62,8 @@ const valueMissingMessage = (): string =>
 const validate = (c: SelectComponent): void => {
   const internals = hosts.get(c)?.internals;
   if (!internals) return;
-  if (c.textfield.input.required && c.getValue() === null) {
-    internals.setValidity({ valueMissing: true }, valueMissingMessage(), c.textfield.input);
+  if (c.textField.input.required && c.getValue() === null) {
+    internals.setValidity({ valueMissing: true }, valueMissingMessage(), c.textField.input);
   } else {
     internals.setValidity({});
   }
@@ -78,8 +78,8 @@ const setValue = (c: SelectComponent, value: unknown): void => {
 const inputAttribute =
   (name: string) =>
   (c: SelectComponent, v: AttributeValue): void => {
-    if (v === null || v === false) c.textfield.input.removeAttribute(name);
-    else c.textfield.input.setAttribute(name, v === true ? "" : String(v));
+    if (v === null || v === false) c.textField.input.removeAttribute(name);
+    else c.textField.input.setAttribute(name, v === true ? "" : String(v));
   };
 
 const create = (config: SelectConfig & { ariaLabel?: string }): SelectComponent => {
@@ -87,7 +87,7 @@ const create = (config: SelectConfig & { ariaLabel?: string }): SelectComponent 
   const select = createSelect({ ...rest, layer: "top" });
   applied.set(select, JSON.stringify(select.getOptions()));
   // The factory takes no aria-label; it names the combobox
-  if (ariaLabel) select.textfield.input.setAttribute("aria-label", ariaLabel);
+  if (ariaLabel) select.textField.input.setAttribute("aria-label", ariaLabel);
   return select;
 };
 
@@ -119,7 +119,7 @@ const selectSpec = {
     variant: {
       type: "string",
       config: "variant",
-      update: (c, v) => void c.textfield.setVariant((v === "outlined" ? "outlined" : "filled") as TextfieldVariant),
+      update: (c, v) => void c.textField.setVariant((v === "outlined" ? "outlined" : "filled") as TextFieldVariant),
     },
     density: { type: "string", config: "density", update: (c, v) => void c.setDensity(String(v ?? "default")) },
     label: { type: "string", config: "label" },
@@ -135,7 +135,7 @@ const selectSpec = {
       config: "supportingText",
       update: (c, v) => {
         // Both setters clear the error class along with the text: put it back.
-        const field = c.textfield;
+        const field = c.textField;
         if (v) field.setSupportingText(String(v), field.isError());
         else field.removeSupportingText().setError(field.isError(), "");
       },
@@ -162,7 +162,7 @@ const selectSpec = {
   form: {
     value: (c) => c.getValue(),
     events: ["change"],
-    activate: (c) => c.textfield.input.focus(),
+    activate: (c) => c.textField.input.focus(),
     state: (c) => c.getValue() ?? "",
     restore: (c, state) => setValue(c, state || null),
     disable: (c, disabled) => void (disabled ? c.disable() : c.enable()),
@@ -192,6 +192,7 @@ export const selectOptionDeclaration = {
   attributes: {
     value: { type: "string" },
     label: { type: "string" },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string" },
     disabled: { type: "boolean" },
   },

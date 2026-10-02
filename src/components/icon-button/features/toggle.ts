@@ -290,7 +290,7 @@ export const withToggle =
       // `value` is the button's value, as every model event carries (FLO-380).
       const value = (component.element as HTMLButtonElement).value;
       component.emit?.("change", { selected: isSelected, value });
-      // Deprecated: the DOM `toggle`, kept for one release.
+      // Deprecated: the DOM `toggle`, kept through 1.x and removed in 2.0.
       const event = new CustomEvent("toggle", {
         bubbles: true,
         detail: { selected: isSelected, value },

@@ -3,20 +3,20 @@ import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createCheckbox from "../src/components/checkbox";
 import type createSwitch from "../src/components/switch";
-import type createTextfield from "../src/components/textfield";
+import type createTextField from "../src/components/textfield";
 
 type InputWindow = Window & {
-  inputs: { createCheckbox: typeof createCheckbox; createSwitch: typeof createSwitch; createTextfield: typeof createTextfield };
+  inputs: { createCheckbox: typeof createCheckbox; createSwitch: typeof createSwitch; createTextField: typeof createTextField };
   inputControls: { destroy: () => void }[];
 };
 
 export async function checkInputBEM(page: Page): Promise<void> {
   await page.evaluate(() => {
     const state = window as unknown as InputWindow;
-    const { createCheckbox, createSwitch, createTextfield } = state.inputs;
+    const { createCheckbox, createSwitch, createTextField } = state.inputs;
     const checkbox = createCheckbox({ label: "Agree" });
     const control = createSwitch({ label: "Wi-Fi", supportingText: "Network access" });
-    const field = createTextfield({ label: "Name", value: "Ada" });
+    const field = createTextField({ label: "Name", value: "Ada" });
     state.inputControls = [checkbox, control, field];
     document.body.append(checkbox.element, control.element, field.element);
     field.element.style.width = "240px";

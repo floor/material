@@ -35,7 +35,7 @@ try {
   const entry = join(fixture.directory, "core.ts");
   await writeFile(entry, `import { createButton, createAssistChip, createFilterChip, createInputChip, createSuggestionChip, createChips, createList, createDatePicker } from 'mtrl'; window.core = { createButton, createAssistChip, createFilterChip, createInputChip, createSuggestionChip, createChips, createList, createDatePicker };`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import * as cardParts from 'mtrl/components/card'; window.cardParts = cardParts;`);
-  await writeFile(entry, `${await readFile(entry, "utf8")} import { createCheckbox, createSwitch, createTextfield, createRadios } from 'mtrl'; window.inputs = { createCheckbox, createSwitch, createTextfield, createRadios };`);
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { createCheckbox, createSwitch, createTextField, createRadios } from 'mtrl'; window.inputs = { createCheckbox, createSwitch, createTextField, createRadios };`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createTimePicker } from 'mtrl'; window.createTimePicker = createTimePicker;`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createSearch } from 'mtrl'; window.createSearch = createSearch;`);
   await writeFile(entry, `${await readFile(entry, "utf8")} import { createSelect } from 'mtrl'; window.createSelect = createSelect;`);

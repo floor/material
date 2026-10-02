@@ -227,9 +227,12 @@ const searchSpec = {
       config: "fullWidth",
       update: (c, v) => void c.element.classList.toggle(`${PREFIX}-search--full-width`, !!v),
     },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     "leading-icon": { type: "string", config: "leadingIcon" },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     "trailing-icon": { type: "string", config: "trailingIcon" },
     "trailing-label": { type: "string", config: "trailingLabel" },
+    /** Markup (HTML), not a person's name or an image URL. Not sanitized by default: see Markup and sanitizing. */
     avatar: { type: "string", config: "avatar" },
     "avatar-label": { type: "string", config: "avatarLabel" },
     open: { type: "boolean", config: "open", update: (c, v) => setOpen(c, !!v) },
@@ -306,6 +309,7 @@ export const searchSuggestionDeclaration = {
   attributes: {
     value: { type: "string" },
     label: { type: "string" },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string" },
     group: { type: "string" },
   },

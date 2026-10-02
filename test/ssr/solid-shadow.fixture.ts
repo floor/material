@@ -1,10 +1,11 @@
 // test/ssr/solid-shadow.fixture.ts
 // Spawned by solid-shadow.test.ts. No DOM shim: this process is the server.
 import { expect, test } from "bun:test";
-import { createComponent as createSolid } from "solid-js";
+import { createComponent as createSolid, type ComponentProps } from "solid-js";
 import { renderToString } from "solid-js/web";
-import { buttonElement, carouselElement, tabsElement } from "../../src/elements";
+import { buttonElement, cardElement, carouselElement, tabsElement, type ButtonElement, type ButtonSpec, type CardElement, type CardSpec } from "../../src/elements";
 import { createComponent } from "../../src/solid/create";
+import { assertGlobalHost, GLOBAL_ATTRS_WITH_IS } from "../../scripts/fixtures/ssr-global-host";
 
 const render = (spec: Parameters<typeof createComponent>[0], props: Record<string, unknown>): string => {
   const Component = createComponent(spec, () => "m-host");
@@ -31,6 +32,42 @@ test("an unregistered server returns no template; registration renders one and o
   expect(html).toContain("disabled");
   expect(html).toContain("Save");
   expect(html).not.toContain("onClick");
+
+  const ordinary = render(buttonElement.spec, {
+    id: "globals",
+    label: "Save",
+    disabled: true,
+    popover: "auto",
+    inputMode: "numeric",
+    enterKeyHint: "send",
+    itemProp: "name",
+    nonce: "abc",
+    is: "x-y",
+    onclick: "window.__xss=1",
+  });
+  assertGlobalHost(ordinary, GLOBAL_ATTRS_WITH_IS);
+  expect(ordinary).toContain("disabled");
+  const shadow = ordinary.slice(ordinary.indexOf('<template shadowrootmode="open"'), ordinary.indexOf("</template>"));
+  expect(shadow).not.toContain("onclick");
+  expect(shadow).not.toContain("__xss");
+
+  const Card = createComponent<CardSpec, CardElement>(cardElement.spec, () => "m-card");
+  const Inner = createComponent<ButtonSpec, ButtonElement>(buttonElement.spec, () => "m-button");
+  const nestedHostProps: ComponentProps<typeof Inner> = {
+    id: "inner",
+    popover: "auto",
+    label: "Nested",
+  };
+  const nested = renderToString(() => createSolid(Card, {
+    id: "card",
+    children: createSolid(Inner, nestedHostProps),
+  }));
+  const innerAt = nested.indexOf('id="inner"');
+  expect(innerAt).toBeGreaterThan(-1);
+  const innerTemplate = nested.slice(innerAt).match(/<template shadowrootmode="open"[^>]*>([\s\S]*?)<\/template>/);
+  expect(innerTemplate).not.toBeNull();
+  expect(innerTemplate![1]).toContain("mtrl-button");
+  expect(innerTemplate![1]).not.toContain("popover");
 
   const carousel = render(carouselElement.spec, { ariaLabel: "Photos", children: "Light content" });
   expect(carousel).not.toContain("shadowrootmode");
