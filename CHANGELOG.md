@@ -98,12 +98,14 @@ the card, tabs and switch internals on their subpaths, `ChipConfig`'s `managedSe
 `component`, which was never sent.
 
 **Reserved before 3.0.0.** `mtrl` 0.10.7 marks deprecated, so your editor flags each use,
-`ProgressComponent`'s `canvas`, `resize`, `track`, `indicator` and `buffer` (the table above)
-and the slider's `components`, which is internal in 3.0.0 (use the slider's own API and
-`slider.element`). Nothing flags the other two, so search for them: an import from
-`mtrl/core/compose/features`, whose names are imported from `material/core/compose`, and a
+`ProgressComponent`'s `canvas`, `resize`, `track`, `indicator` and `buffer` (the table above).
+Nothing marks the other three, so search for them: the slider's `components`, which is
+internal in 3.0.0 and was never on the public `SliderComponent` type (TypeScript already
+rejects it; use the slider's own API and `slider.element`); an import from
+`mtrl/core/compose/features`, whose names are imported from `material/core/compose`; and a
 read of `tab.badge` without a guard, since it may be `undefined` until the badge is shown
-(`setBadge()`, `getBadge()`, `showBadge()` and `hideBadge()` work either way).
+(a strict TypeScript project is already told; `setBadge()`, `getBadge()`, `showBadge()` and
+`hideBadge()` work either way).
 
 **Sass.** The two Sass rows above are for stylesheets that `@use` material's sources. The Sass sources
 ship for reference; configuring them with `@use … with` is not a supported API in material 3.0.0. Theme
