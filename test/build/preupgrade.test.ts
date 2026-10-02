@@ -23,9 +23,27 @@ const options: sass.StringOptions<"sync"> = {
 const names = Object.values(elements).map((element) => element.spec.name);
 const rules = await preupgradeStyles(names, options);
 
+/** A comma inside a functional pseudo (`:is(a, b)`) is not a selector separator. */
+const splitSelectors = (prelude: string): string[] => {
+  const parts: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < prelude.length; i++) {
+    const char = prelude[i];
+    if (char === "(") depth += 1;
+    else if (char === ")") depth = Math.max(0, depth - 1);
+    else if (char === "," && depth === 0) {
+      parts.push(prelude.slice(start, i));
+      start = i + 1;
+    }
+  }
+  parts.push(prelude.slice(start));
+  return parts;
+};
+
 /** The selectors of compressed CSS without nested at-rules. */
 const selectors = (css: string): string[] =>
-  Array.from(css.matchAll(/([^{}]+)\{[^{}]*\}/g), (match) => match[1].split(",")).flat();
+  Array.from(css.matchAll(/([^{}]+)\{[^{}]*\}/g), (match) => splitSelectors(match[1])).flat();
 
 // jsdom's engine (nwsapi) does not implement `:defined`. This applies the
 // child selector the sheet emits: the parent compound, then `>`, then the
