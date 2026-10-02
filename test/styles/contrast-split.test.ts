@@ -122,10 +122,11 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_menu.scss), the chip's secondary-action floor
     // (styles/components/_chips.scss), the touch target centred physically
     // (styles/abstract/_mixins.scss), and the outlined field's open
-    // notch unpainted in forced colours (styles/components/_text-field.scss).
+    // notch unpainted in forced colours, from the script's class and from the
+    // input's own state (styles/components/_text-field.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("1e7aee550e64e2085cb34a9085dd93ce989d0cfbb928fdf0be7e3c449688f669");
-    expect(css.length).toBe(525192);
+      .toBe("091c470efac80c86d5c514ef38e5c1a2098bd77288dd55e915456d3700d54d23");
+    expect(css.length).toBe(525510);
   });
 
   test("today's sheets still resolve to the fixture", () => {
