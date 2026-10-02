@@ -221,6 +221,8 @@ A page that uses one element can load that element's file instead: `material/ele
 
 With another tag prefix, `preupgradeStyles('x')` from `material/elements/preupgrade` returns the whole stylesheet for `<x-*>`, to inline on the server. The element CSS modules do not apply these rules.
 
+The API for writing elements of your own (`defineElement`, `ElementSpec`, `registerStyles`, `hasStyles` and `SHADOW_BASE_STYLES`, from `material/elements`) is experimental: it is outside semantic versioning in 3.x and may change in a minor release. The elements material defines, and their attributes, properties and events, are not.
+
 ## React, Vue, Svelte and Solid
 
 The framework components render the elements, so everything above holds: forms, the top layer, the styling. `material/react`, `material/vue`, `material/svelte` and `material/solid` load the elements' CSS and register each element the first time it mounts.

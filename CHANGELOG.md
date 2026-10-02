@@ -1061,6 +1061,14 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **The element authoring API is experimental.** `defineElement`, `ElementSpec`,
+  `registerStyles`, `hasStyles` and `SHADOW_BASE_STYLES` (from `material/elements`), the API
+  for writing custom elements of your own on material's machinery, are tagged
+  `@experimental` in their TSDoc and are outside semantic versioning in 3.x: they may change
+  in a minor release. Nothing about them changes in this release. The elements material
+  defines (`<m-button>`, `<m-text-field>` and the rest), their attributes, properties and
+  events, and the `define…()` functions are covered by semantic versioning as before. If
+  you build your own elements on this API, pin the minor version (`~3.0.0`).
 - **Slider: the `components` bag is internal.** The slider's controller reads an older
   `components` object as a fallback for its elements; nothing in the library fills it, the
   public `SliderComponent` never had it, and it is now marked internal and outside the
