@@ -125,8 +125,8 @@ export interface TextFieldConfig {
    */
   trailingIconLabel?: string;
 
-  /** Called when the trailing icon button is activated, after `trailing` is emitted */
-  onTrailingClick?: (event: TextFieldTrailingPayload) => void;
+  /** `trailing` listener registered at creation. */
+  onTrailingClick?: TextFieldEvents["trailing"];
 
   /** Supporting text content */
   supportingText?: string;
