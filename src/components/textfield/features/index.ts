@@ -18,7 +18,7 @@ export type { LeadingIconComponent, LeadingIconConfig } from "./leading-icon";
 export type {
   TrailingIconComponent,
   TrailingIconConfig,
-  TextfieldTrailingPayload,
+  TextFieldTrailingPayload,
 } from "./trailing-icon";
 export type { RequiredConfig, RequiredFeature } from "./required";
 export type { PrefixTextComponent, PrefixTextConfig } from "./prefix-text";

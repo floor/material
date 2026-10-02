@@ -19,18 +19,18 @@
  * @module elements
  */
 
-import createTextfield from "../components/textfield";
-import type { TextfieldComponent, TextfieldConfig } from "../components/textfield/types";
+import createTextField from "../components/textfield";
+import type { TextFieldComponent, TextFieldConfig } from "../components/textfield/types";
 import { defineElement, type AttributeValue, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
 /** The text field, with the methods the element adds to it. */
-export type TextfieldElementComponent = TextfieldComponent & {
+export type TextFieldElementComponent = TextFieldComponent & {
   /** Selects the field's text. */
   select: () => void;
 };
 
-const create = (config: TextfieldConfig & { ariaLabel?: string }): TextfieldElementComponent => {
-  const field = createTextfield(config);
+const create = (config: TextFieldConfig & { ariaLabel?: string }): TextFieldElementComponent => {
+  const field = createTextField(config);
   const input = field.input;
   // The factory writes the value as a `value` attribute, which a textarea
   // ignores: a multiline field would start empty. Its default value is set here.
@@ -46,14 +46,14 @@ const create = (config: TextfieldConfig & { ariaLabel?: string }): TextfieldElem
 /** Mirrors an attribute onto the inner input. */
 const inputAttribute =
   (name: string) =>
-  (c: TextfieldElementComponent, v: AttributeValue): void => {
+  (c: TextFieldElementComponent, v: AttributeValue): void => {
     if (v === null || v === false) c.removeAttribute(name);
     else c.setAttribute(name, v === true ? "" : String(v));
   };
 
 const textfieldSpec = {
   name: "textfield",
-  create: (config) => create(config as TextfieldConfig),
+  create: (config) => create(config as TextFieldConfig),
   styles: ["textfield"],
   // The field fills a host given a width, as a native input does.
   hostStyles: ":host>*{width:100%}",
@@ -142,19 +142,19 @@ const textfieldSpec = {
     c.input.addEventListener("input", stop);
     return () => c.input.removeEventListener("input", stop);
   },
-} satisfies ElementSpec<TextfieldElementComponent>;
+} satisfies ElementSpec<TextFieldElementComponent>;
 
-export const textfieldElement = defineElement<TextfieldElementComponent>(textfieldSpec);
-export type TextfieldSpec = typeof textfieldSpec;
+export const textFieldElement = defineElement<TextFieldElementComponent>(textfieldSpec);
+export type TextFieldSpec = typeof textfieldSpec;
 /** `<m-textfield>` as a ref or a query returns it. */
-export type TextfieldElement = ElementInstance<TextfieldSpec, TextfieldElementComponent>;
+export type TextFieldElement = ElementInstance<TextFieldSpec, TextFieldElementComponent>;
 
 /** Registers `<m-textfield>` (or `<prefix-textfield>`). */
-export const defineTextfield = (options?: DefineOptions): string => textfieldElement.define(options);
+export const defineTextField = (options?: DefineOptions): string => textFieldElement.define(options);
 
 declare global {
   /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
   interface HTMLElementTagNameMap {
-    "m-textfield": TextfieldElement;
+    "m-textfield": TextFieldElement;
   }
 }

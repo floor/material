@@ -50,12 +50,12 @@ import 'mtrl/styles/base';
 
 ```tsx
 import 'mtrl/styles/base';
-import { Button, Switch, Textfield } from 'mtrl/react';
+import { Button, Switch, TextField } from 'mtrl/react';
 
 export function Signup() {
   return (
     <form>
-      <Textfield name="email" type="email" label="Email" required />
+      <TextField name="email" type="email" label="Email" required />
       <Switch name="news" defaultChecked>Newsletter</Switch>
       <Button type="submit">Sign up</Button>
     </form>
