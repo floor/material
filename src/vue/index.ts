@@ -22,11 +22,7 @@ export { MFab } from "./fab";
 export { MExtendedFab } from "./extended-fab";
 export { MCheckbox } from "./checkbox";
 export { MSlider } from "./slider";
-export { MTextfield as MTextField } from "./textfield";
-export {
-  /** @deprecated Use MTextField: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
-  MTextfield,
-} from "./textfield";
+export { MTextField } from "./textfield";
 export { MRadios } from "./radios";
 export { MNavigationBar } from "./navigation-bar";
 export { MNavigationRail } from "./navigation-rail";

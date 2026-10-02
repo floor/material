@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, expect, test } from "bun:test";
 import { JSDOM } from "jsdom";
-import createTextfield from "../../../src/components/textfield";
+import createTextField from "../../../src/components/textfield";
 
 let dom: JSDOM;
 let restore: (() => void)[];
-let fields: ReturnType<typeof createTextfield>[];
+let fields: ReturnType<typeof createTextField>[];
 let activeObservers: Set<MutationObserver>;
 let activeResizeObservers: Set<object>;
 let listeners: Map<string, Set<EventListenerOrEventListenerObject>>;
@@ -42,7 +42,7 @@ afterEach(() => {
   restore.reverse().forEach(fn => fn()); dom.window.close();
 });
 const make = () => {
-  const field = createTextfield({ label: "Amount", value: "10", variant: "outlined", leadingIcon: "<span>+</span>", prefixText: "$", suffixText: "USD", supportingText: "Total" });
+  const field = createTextField({ label: "Amount", value: "10", variant: "outlined", leadingIcon: "<span>+</span>", prefixText: "$", suffixText: "USD", supportingText: "Total" });
   document.querySelector("main")!.append(field.element); fields.push(field); return field;
 };
 const released = () => {

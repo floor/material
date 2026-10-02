@@ -40,7 +40,6 @@ export type {
  * @category Components
  */
 export { 
-  CHECKBOX_VARIANTS,
   CHECKBOX_LABEL_POSITION,
   CHECKBOX_STATES,
   CHECKBOX_CLASSES

@@ -1,10 +1,10 @@
 // src/components/textfield/constants.ts
 
 /**
- * Textfield variant constants
+ * TextField variant constants
  * @category Components
  */
-const TEXTFIELD_VARIANTS = {
+const TEXT_FIELD_VARIANTS = {
   /** Filled variant with background and animated label */
   FILLED: "filled",
   /** Outlined variant with border and animated label */
@@ -12,23 +12,23 @@ const TEXTFIELD_VARIANTS = {
 } as const;
 
 /**
- * Textfield state constants
+ * TextField state constants
  * @category Components
  */
-const TEXTFIELD_STATES = {
-  /** Textfield is active (focused) */
+const TEXT_FIELD_STATES = {
+  /** TextField is active (focused) */
   ACTIVE: "active",
-  /** Textfield is inactive (not focused) */
+  /** TextField is inactive (not focused) */
   INACTIVE: "inactive",
-  /** Textfield is disabled */
+  /** TextField is disabled */
   DISABLED: "disabled",
 } as const;
 
 /**
- * Textfield type constants
+ * TextField type constants
  * @category Components
  */
-const TEXTFIELD_TYPES = {
+const TEXT_FIELD_TYPES = {
   /** Standard text input */
   TEXT: "text",
   /** Password input with obscured characters */
@@ -48,10 +48,10 @@ const TEXTFIELD_TYPES = {
 } as const;
 
 /**
- * Textfield event constants
+ * TextField event constants
  * @category Components
  */
-const TEXTFIELD_EVENTS = {
+const TEXT_FIELD_EVENTS = {
   /** Emitted on native input change; setValue() is silent */
   CHANGE: "change",
   /** Fired during input */
@@ -71,10 +71,10 @@ const TEXTFIELD_EVENTS = {
 } as const;
 
 /**
- * Textfield density constants
+ * TextField density constants
  * @category Components
  */
-const TEXTFIELD_DENSITY = {
+const TEXT_FIELD_DENSITY = {
   /** Default density (56px height) */
   DEFAULT: "default",
   /** Compact density (40px height) */
@@ -85,13 +85,13 @@ const TEXTFIELD_DENSITY = {
  * Default textfield configuration values
  * @category Components
  */
-const TEXTFIELD_DEFAULTS = {
+const TEXT_FIELD_DEFAULTS = {
   /** Default input type */
-  TYPE: TEXTFIELD_TYPES.TEXT,
+  TYPE: TEXT_FIELD_TYPES.TEXT,
   /** Default visual variant */
-  VARIANT: TEXTFIELD_VARIANTS.FILLED,
+  VARIANT: TEXT_FIELD_VARIANTS.FILLED,
   /** Default density level */
-  DENSITY: TEXTFIELD_DENSITY.DEFAULT,
+  DENSITY: TEXT_FIELD_DENSITY.DEFAULT,
   /** Default disabled state */
   DISABLED: false,
   /** Default required state */
@@ -108,7 +108,7 @@ const TEXTFIELD_DEFAULTS = {
  * CSS class names used by the textfield component
  * @category Components
  */
-const TEXTFIELD_CLASSES = {
+const TEXT_FIELD_CLASSES = {
   /** Root element class */
   ROOT: "textfield",
   /** Input element class */
@@ -166,25 +166,11 @@ const TEXTFIELD_CLASSES = {
 // Every exported identifier writes "text field" as two words (FLO-383); the
 // values (class names, event strings) are unchanged.
 export {
-  TEXTFIELD_VARIANTS as TEXT_FIELD_VARIANTS,
-  TEXTFIELD_STATES as TEXT_FIELD_STATES,
-  TEXTFIELD_TYPES as TEXT_FIELD_TYPES,
-  TEXTFIELD_EVENTS as TEXT_FIELD_EVENTS,
-  TEXTFIELD_DENSITY as TEXT_FIELD_DENSITY,
-  TEXTFIELD_DEFAULTS as TEXT_FIELD_DEFAULTS,
-  TEXTFIELD_CLASSES as TEXT_FIELD_CLASSES,
-  /** @deprecated Use TEXT_FIELD_VARIANTS: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
-  TEXTFIELD_VARIANTS,
-  /** @deprecated Use TEXT_FIELD_STATES: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
-  TEXTFIELD_STATES,
-  /** @deprecated Use TEXT_FIELD_TYPES: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
-  TEXTFIELD_TYPES,
-  /** @deprecated Use TEXT_FIELD_EVENTS: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
-  TEXTFIELD_EVENTS,
-  /** @deprecated Use TEXT_FIELD_DENSITY: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
-  TEXTFIELD_DENSITY,
-  /** @deprecated Use TEXT_FIELD_DEFAULTS: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
-  TEXTFIELD_DEFAULTS,
-  /** @deprecated Use TEXT_FIELD_CLASSES: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
-  TEXTFIELD_CLASSES,
+  TEXT_FIELD_VARIANTS,
+  TEXT_FIELD_STATES,
+  TEXT_FIELD_TYPES,
+  TEXT_FIELD_EVENTS,
+  TEXT_FIELD_DENSITY,
+  TEXT_FIELD_DEFAULTS,
+  TEXT_FIELD_CLASSES,
 };

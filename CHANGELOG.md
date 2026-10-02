@@ -12,6 +12,41 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **1.0 exports nothing deprecated.** What 0.10.0 deprecated and 0.10.x already replaced (or
+  never used) is removed. Migration:
+
+  | 0.10 | 1.0 |
+  |---|---|
+  | `CHECKBOX_VARIANTS` (`mtrl/components/checkbox`, `/constants`) | nothing: M3 has one checkbox style, and `variant` had no effect (FLO-94, FLO-265) |
+  | `RADIO_VARIANTS`, `RADIO_LABEL_POSITIONS`, `RADIO_SIZES`, `RADIO_CLASSES` (`mtrl/components/radios`, `/constants`) | nothing: no component read them (FLO-266). `RADIO_DEFAULTS` keeps its values. |
+  | `TIMEPICKER_DIAL`, `TIMEPICKER_Z_INDEX` (`mtrl/components/timepicker`, `/constants`) | nothing: the dial is sized in CSS and the picker is a modal `<dialog>` in the top layer (FLO-278, FLO-279, FLO-281) |
+  | `TIMEPICKER_CLASSES` | `TIMEPICKER_SELECTORS` (public since 0.9.0), which is not a like-for-like swap: its values are prefixed selectors (`".mtrl-time-picker__dial"`) where the old were bare class names (`"time-picker__dial"`), and 13 of the 33 old keys have no selector of the same name (`ROOT`, `OPEN`, the six `DIALOG_*`, `DIAL_NUMBER_ACTIVE`, `PERIOD_ACTIVE`, `TOGGLE_TYPE`, `CANCEL`, `CONFIRM`) |
+  | `getThemeColor('sys-color-X-rgb')` (`mtrl/core/utils`): the `'r, g, b'` triplet, derived | `getThemeColor('sys-color-X', { alpha })`. The `-rgb` name now returns `''` (or the `fallback`), as any undeclared variable does, so `rgba(${getThemeColor('sys-color-primary-rgb')}, 0.12)` now yields `rgba(, 0.12)`, an invalid colour that CSS and canvas drop silently: a missing colour, not an error. Use `getThemeColor('sys-color-primary', { alpha: 0.12 })`. A theme that declares its own `-rgb` properties is unaffected (FLO-311). |
+- **Only the canonical names (FLO-383).** For every row below but the last, 0.10.5 exported
+  both spellings, the old ones deprecated; 1.0 has only the canonical ones. Every exported identifier writes "text field" as
+  two words; string values are unchanged (the `<m-textfield>` tag, the `textfield` element name,
+  CSS classes, event strings and the constants' values). The declarations are renamed too, so the
+  types read the same in an editor. Svelte's component file is `TextField.svelte`. Migration:
+
+  | 0.10 | 1.0 | Entry |
+  |---|---|---|
+  | `createTextfield` | `createTextField` | `mtrl` (`mtrl/components/textfield` exports `createTextField` too) |
+  | `TextfieldConfig`, `TextfieldComponent` | `TextFieldConfig`, `TextFieldComponent` | `mtrl`, `mtrl/components/textfield` |
+  | `TextfieldDensity`, `TextfieldEvents` | `TextFieldDensity`, `TextFieldEvents` | `mtrl/components/textfield` |
+  | `TextfieldValuePayload`, `TextfieldFocusPayload`, `TextfieldTrailingPayload` | `TextFieldValuePayload`, `TextFieldFocusPayload`, `TextFieldTrailingPayload` | `mtrl/components/textfield` |
+  | `TEXTFIELD_VARIANTS`, `_STATES`, `_TYPES`, `_EVENTS`, `_DENSITY`, `_DEFAULTS`, `_CLASSES` | `TEXT_FIELD_VARIANTS`, … `TEXT_FIELD_CLASSES` | `mtrl/components/textfield/constants` |
+  | `CardSchema` | `CardConfig` | `mtrl`, `mtrl/components/card` |
+  | `TopAppBar` (type) | `TopAppBarComponent` | `mtrl`, `mtrl/components/top-app-bar` |
+  | `BottomAppBar` (type) | `BottomAppBarComponent` | `mtrl`, `mtrl/components/bottom-app-bar` |
+  | `textfieldElement`, `defineTextfield` | `textFieldElement`, `defineTextField` | `mtrl/elements` |
+  | `TextfieldSpec`, `TextfieldElement`, `TextfieldElementComponent` | `TextFieldSpec`, `TextFieldElement`, `TextFieldElementComponent` | `mtrl/elements` |
+  | `Textfield` (component) | `TextField` | `mtrl/react`, `mtrl/solid`, `mtrl/svelte` |
+  | `MTextfield` | `MTextField` | `mtrl/vue` |
+  | `select.textfield` | `select.textField` | the select's property: no overlap, `textField` is new in 1.0, and reading `select.textfield` in JavaScript now gives `undefined` rather than an error |
+
+  Each is a rename of the import; the values and types are the same. The React, Solid and
+  Svelte `TopAppBar` and `BottomAppBar` components keep their names: only the factory's types
+  were renamed.
 - **Time picker, select and radio events agree with their getters (FLO-380).**
 
   | Event | 0.10 payload | 1.0 payload |
@@ -379,6 +414,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- `consumer:check` no longer fails on the open split button's screenshot pair. One of the two
+  captures sometimes blended the menu's shadow a few levels lighter where it falls on the buttons
+  (26 to 29 pixels, either build). The comparison fixture now keeps an open menu on a compositor
+  layer of its own, and a pair that differs in pixels only is captured once more before it counts.
 - The top-layer menu steps of `elements:check` no longer read focus before the menu has given it
   back. A menu returns focus to its opener in the animation frame after it closes; the check read
   the state after a fixed 450ms, and on a runner that produced no frame in that time it found

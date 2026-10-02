@@ -4,8 +4,8 @@ import createButton from "../../src/components/button";
 import { BUTTON_CLASSES } from "../../src/components/button/constants";
 import createCheckbox from "../../src/components/checkbox";
 import createSwitch from "../../src/components/switch";
-import createTextfield from "../../src/components/textfield";
-import { TEXT_FIELD_CLASSES as TEXTFIELD_CLASSES } from "../../src/components/textfield/constants";
+import createTextField from "../../src/components/textfield";
+import { TEXT_FIELD_CLASSES } from "../../src/components/textfield/constants";
 import createMenu from "../../src/components/menu";
 
 let dom: JSDOM;
@@ -23,7 +23,7 @@ beforeEach(() => {
 afterEach(() => { cleanup.reverse().forEach(destroy => destroy()); dom.window.close(); });
 
 test("shared inputs expose the BEM classes their styles target", () => {
-  const controls = [createCheckbox({ label: "Agree" }), createSwitch({ label: "Wi-Fi" }), createTextfield({ label: "Email" })];
+  const controls = [createCheckbox({ label: "Agree" }), createSwitch({ label: "Wi-Fi" }), createTextField({ label: "Email" })];
   for (const [index, control] of controls.entries()) {
     cleanup.push(() => control.destroy());
     const block = ["checkbox", "switch", "textfield"][index];
@@ -44,17 +44,17 @@ test("switch supporting text reuses the existing BEM content wrapper", () => {
 });
 
 test("textfield constants select live slots and their error state", () => {
-  const field = createTextfield({ label: "Cost", prefixText: "$", suffixText: "USD", supportingText: "Required", error: true });
+  const field = createTextField({ label: "Cost", prefixText: "$", suffixText: "USD", supportingText: "Required", error: true });
   cleanup.push(() => field.destroy());
   for (const [key, text] of [["PREFIX_TEXT", "$"], ["SUFFIX_TEXT", "USD"], ["SUPPORTING_TEXT", "Required"], ["SUPPORTING_TEXT_ERROR", "Required"]] as const) {
-    expect(field.element.querySelector(`.mtrl-${TEXTFIELD_CLASSES[key]}`)?.textContent).toBe(text);
+    expect(field.element.querySelector(`.mtrl-${TEXT_FIELD_CLASSES[key]}`)?.textContent).toBe(text);
   }
   field.setError(false);
-  expect(field.element.querySelector(`.mtrl-${TEXTFIELD_CLASSES.SUPPORTING_TEXT_ERROR}`)).toBeNull();
+  expect(field.element.querySelector(`.mtrl-${TEXT_FIELD_CLASSES.SUPPORTING_TEXT_ERROR}`)).toBeNull();
 });
 
 test("textfield icon setters add and remove BEM input modifiers", () => {
-  const field = createTextfield();
+  const field = createTextField();
   cleanup.push(() => field.destroy());
   field.setLeadingIcon("<svg></svg>"); field.setTrailingIcon("<svg></svg>");
   for (const side of ["leading", "trailing"]) {
