@@ -182,7 +182,10 @@ try {
     // against 3f9ca0c7, Node 22.23.3 / npm 10.9.9; the budget keeps the headroom it had.
     // FLO-514 and FLO-515: 129,790 to 129,874 against e0e424e4, Node 22.23.3 / npm 10.9.9.
     // The ceiling rises by that 84 and keeps the 60 bytes it had.
-    { name: "all-js", code: "export * from 'mtrl';", gzip: 129934 },
+    // FLO-537: the button group's press widths start from a measured length.
+    // 129,894 to 129,999 against this branch's main, Node 22.23.3 / npm 10.9.9.
+    // The ceiling rises by that 105 and keeps the 40 bytes it had.
+    { name: "all-js", code: "export * from 'mtrl';", gzip: 130039 },
     // FLO-406 contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 8,069 -> 7,542 gzip bytes (same packer).
     { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 7700 },
