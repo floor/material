@@ -123,10 +123,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `valueAttribute`, also in `event.detail`.
 - **The chip set's `change`** hands its factory listener and `onChange` one plain object,
   `{ value, selected, changed }`, not an array with the changed value as a second argument. In
-  a leftover handler `event[0]` and `event.length` are `undefined`, `[...event]` throws
-  `TypeError: Spread syntax requires ...iterable[Symbol.iterator] to be a function`,
-  `event.includes(x)` throws a `TypeError` too, and a second parameter is `undefined`. Read
-  `selected` and `changed`.
+  a leftover handler `event[0]` and `event.length` are `undefined`, `[...event]` and
+  `event.includes(x)` each throw a `TypeError` (the message is the engine's), and a second
+  parameter is `undefined`. Read `selected` and `changed`. `onChange` is called for a user's
+  change only; `on("change")` listeners get a method's change too, with `changed: null`.
 - **Chip-set `add` and `remove`** factory handlers receive `{ value, chip }` and
   `{ value, chip, chipValue }`, not the chip; `<m-chips>`'s `remove` detail `value` is the
   remaining selection, and the removed id is `chipValue`.
@@ -273,10 +273,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `<m-icon-button>`, so a listener reading `event.detail.selected` keeps working.
 
 - **The chips set's `change` payload is a plain object and has one argument (FLO-530).**
-  Both `chips.on("change", handler)` and the config's `onChange` receive
+  `chips.on("change", handler)` listeners and the config's `onChange` are passed
   `{ value, selected, changed }`. `value` keeps the set's single or multi value
   shape, `selected` keeps the selected chip values, and `changed` is the toggled
-  chip's value (or `null` for a method-triggered change). `<m-chips>` still emits
+  chip's value. `on("change")` listeners get every change, with `changed: null`
+  for one made by a method (`selectByValue(values, true)`); the config's
+  `onChange` is called for a user's change only. `<m-chips>` still emits
   `change` with `{ value }` detail. Migration:
 
   ```ts
@@ -284,18 +286,18 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   chips.on("change", (selectedValues, changedValue) => {
     use(selectedValues[0], changedValue);
   });
-  // 1.0: on("change") and onChange each receive one object.
+  // 1.0: on("change") and onChange are each passed one object.
   chips.on("change", ({ selected, changed }) => {
     use(selected[0], changed);
   });
   ```
 
-  | Leftover 0.10 handler expression | 1.0 runtime result on the built package (Bun) |
+  | Leftover 0.10 handler expression | 1.0 runtime result on the built package |
   |---|---|
   | `event[0]`, `event.length` | Both are `undefined`. |
-  | `[...event]` | `TypeError: Spread syntax requires ...iterable[Symbol.iterator] to be a function` |
-  | `event.includes("a")` | `TypeError: event.includes is not a function. (In 'event.includes("a")', 'event.includes' is undefined)` |
-  | Second `changedValue` parameter | `undefined` in both `on("change")` and `onChange`; each handler receives exactly one argument. |
+  | `[...event]` | Throws a `TypeError`. The message is the engine's: in Bun (JavaScriptCore), `Spread syntax requires ...iterable[Symbol.iterator] to be a function`. |
+  | `event.includes("a")` | Throws a `TypeError`. In Bun (JavaScriptCore): `event.includes is not a function. (In 'event.includes("a")', 'event.includes' is undefined)`. |
+  | Second `changedValue` parameter | `undefined` in both `on("change")` and `onChange`; each handler is passed exactly one argument. |
 
 - **Tabs `on` and `off` take a closed event map (FLO-523).** A group accepts
   `change` (`TabChangeEventData`). A single tab accepts `click` (the button's

@@ -175,7 +175,10 @@ export interface ChipsConfig {
   selectionRequired?: boolean;
 
   /**
-   * Callback function when chip selection changes
+   * Callback function when a user changes the chip selection. It is called for
+   * a user's change only: a change made by a method (`selectByValue(values, true)`)
+   * goes to `on("change")` listeners, not to this callback. Listen to `change`
+   * for every change.
    */
   onChange?: (event: ChipsChangeEvent) => void;
 
