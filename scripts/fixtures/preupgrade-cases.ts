@@ -32,6 +32,12 @@ export const cases: PreupgradeCase[] = [
   c("switch", "default", `<m-switch>Wi-Fi</m-switch>`),
   c("switch", "supporting-text", `<m-switch supporting-text="Saves power">Wi-Fi</m-switch>`),
   c("switch", "checked", `<m-switch checked>Wi-Fi</m-switch>`),
+  // No slotted text and no label attribute: the host is the 52 x 48 track box
+  // itself, as the upgraded root is.
+  c("switch", "unlabelled", `<m-switch aria-label="Switch"></m-switch>`),
+  // An empty label attribute matches [label] but the element reads it as no
+  // label, so the pre-upgrade rule must size this host too.
+  c("switch", "label=''", `<m-switch aria-label="Switch" label=""></m-switch>`),
   c("tabs", "default", `<m-tabs value="a"><m-tab value="a">Flights</m-tab><m-tab value="b">Trips</m-tab><m-tab value="c">Explore</m-tab></m-tabs>`),
   c("tabs", "icon", `<m-tabs value="a"><m-tab value="a" icon="${ICON}">Flights</m-tab><m-tab value="b" icon="${ICON}">Trips</m-tab></m-tabs>`),
   c("progress", "default", `<m-progress value="40" aria-label="Upload"></m-progress>`),
