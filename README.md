@@ -86,7 +86,7 @@ name.destroy();
 save.destroy();
 ```
 
-Two rules hold for every factory's events. A config `on*` option (`onChange`, `onOpen`, …) is the listener registered at creation: it gets the same argument as a listener passed to `on()`, and runs before one added later. And when `open()` or `close()` returns, the state has changed (`isOpen()`) and the event has been emitted, a cancellable `beforeopen` or `beforeclose` first where the component has one; the classes, the paint, focus and the animation may follow, so add an `open` listener before calling `open()`. Opening an open component, or closing a closed one, does nothing and emits nothing, and the event that opened it never dismisses it. The dialog, the snackbar (`show()` and `hide()`), the date picker and the time picker follow the second rule; the other overlays join them before 1.0. The tooltip is outside it, by design: its `show()` and `hide()` wait for their delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`.
+Two rules hold for every factory's events. A config `on*` option (`onChange`, `onOpen`, …) is the listener registered at creation: it gets the same argument as a listener passed to `on()`, and runs before one added later. And when `open()` or `close()` returns, the state has changed (`isOpen()`) and the event has been emitted, a cancellable `beforeopen` or `beforeclose` first where the component has one; the classes, the paint, focus and the animation may follow, so add an `open` listener before calling `open()`. Opening an open component, or closing a closed one, does nothing and emits nothing, and the event that opened it never dismisses it. The dialog, the menu, the select, the split button, the snackbar (`show()` and `hide()`), the date picker and the time picker follow the second rule; the other overlays join them before 1.0. The tooltip is outside it, by design: its `show()` and `hide()` wait for their delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`.
 
 The factories are the fastest way to render hundreds of components at once, such as a long editable table; the elements style a shadow root each. `mtrl/styles` loads every component's styles; for a smaller bundle, import only what you use (see [Styles](#styles)).
 
@@ -129,6 +129,8 @@ The base includes the baseline theme in light and dark, the colour, shape and ty
 ```typescript
 import 'mtrl/styles/typography';
 ```
+
+It has to load after the base: both sheets style `h1`–`h6` and `p`, and the later one wins. The import above takes care of it (the module imports `mtrl/styles/base` first, in whatever order your own imports are). If your bundler splits the two into different chunks, make sure the base's CSS loads first: an import order is not a CSS order in every bundler. With `<link>` tags, put `dist/styles/typography.css` after `dist/styles/base.css`.
 
 Import it when the page uses those classes or utilities, when it relies on mtrl's heading and paragraph styles, or when its own CSS reads a `--mtrl-sys-typescale-*` token. Without it a `.mtrl-headline-small` element keeps the body's font size, and a `var(--mtrl-sys-typescale-*)` with no fallback is invalid at computed-value time. Body text keeps its font. The full stylesheet includes typography, so `import 'mtrl/styles'` is unchanged.
 

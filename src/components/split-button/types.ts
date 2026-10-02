@@ -136,7 +136,13 @@ export interface SplitButtonComponent {
    */
   expand: () => SplitButtonComponent;
 
-  /** Closes it */
+  /**
+   * Closes it. When it returns, `isExpanded()` is false and `collapse` and
+   * `change` have been emitted. The same holds when the user dismisses the
+   * menu (Escape, a click outside, an item chosen): both are emitted in that
+   * event, with the menu's `close`. `collapse()` then `expand()` at once
+   * ends expanded.
+   */
   collapse: () => SplitButtonComponent;
 
   /** Whether it is open */
