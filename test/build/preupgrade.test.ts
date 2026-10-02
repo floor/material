@@ -15,31 +15,13 @@ import {
 } from "../../scripts/build-styles";
 import { elements } from "../../src/elements";
 import { preupgradeRollback, preupgradeSheet, retagPreupgrade } from "../../src/elements/styles";
-import { assertRollbackBeats, repeatedAttributeBytes, ruleSelectors, selectorSpecificity, subjectShape } from "../../scripts/preupgrade-specificity";
+import { assertRollbackBeats, repeatedAttributeBytes, ruleSelectors, selectorSpecificity, splitSelectors, subjectShape } from "../../scripts/preupgrade-specificity";
 
 const options: sass.StringOptions<"sync"> = {
   loadPaths: [resolve("src/styles")], style: "compressed", logger: sass.Logger.silent,
 };
 const names = Object.values(elements).map((element) => element.spec.name);
 const rules = await preupgradeStyles(names, options);
-
-/** A comma inside a functional pseudo (`:is(a, b)`) is not a selector separator. */
-const splitSelectors = (prelude: string): string[] => {
-  const parts: string[] = [];
-  let depth = 0;
-  let start = 0;
-  for (let i = 0; i < prelude.length; i++) {
-    const char = prelude[i];
-    if (char === "(") depth += 1;
-    else if (char === ")") depth = Math.max(0, depth - 1);
-    else if (char === "," && depth === 0) {
-      parts.push(prelude.slice(start, i));
-      start = i + 1;
-    }
-  }
-  parts.push(prelude.slice(start));
-  return parts;
-};
 
 /** The selectors of compressed CSS without nested at-rules. */
 const selectors = (css: string): string[] =>
