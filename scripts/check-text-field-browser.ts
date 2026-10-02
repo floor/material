@@ -455,3 +455,268 @@ export async function checkTextFieldLatePlacement(page: Page): Promise<void> {
   if (before) await page.setViewportSize(before);
   console.log(`Passed text field late placement: ${cases.length} setters on a plain field place it as a field created with them, at rest and floated, and after a resize.`);
 }
+
+type LayoutBox = { start: number; end: number; top: number; bottom: number; width: number };
+type LayoutRow = {
+  name: string;
+  textStart: number;
+  textEnd: number;
+  textTop: number;
+  label: LayoutBox | null;
+  leading: LayoutBox | null;
+  trailing: LayoutBox | null;
+  prefix: LayoutBox | null;
+  suffix: LayoutBox | null;
+};
+
+/**
+ * The text field's layout against the M3 measurements (FLO-299), rendered from
+ * the packed CSS: filled and outlined, default and compact, left to right and
+ * right to left, built by the factory or as `<m-text-field>`. Every distance is
+ * from the container's start edge (its end edge for `…End`), so one expectation
+ * covers both directions.
+ *
+ * Right to left is measured for the factory only: inside a shadow root the
+ * filled rules' `[dir]` selectors do not match (FLO-562).
+ */
+export async function checkTextFieldLayout(page: Page, api: "factory" | "element"): Promise<void> {
+  const rows = await page.evaluate(async (api) => {
+    const icon = '<svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/></svg>';
+    const cases: [string, Record<string, string>][] = [
+      ["leading icon", { leadingIcon: icon }],
+      ["leading icon, value", { leadingIcon: icon, value: "Ada" }],
+      ["trailing icon, value", { trailingIcon: icon, value: "Ada" }],
+      ["prefix, value", { prefixText: "$", value: "12" }],
+      ["suffix, value", { suffixText: "kg", value: "12" }],
+      ["leading icon, prefix, value", { leadingIcon: icon, prefixText: "$", value: "12" }],
+      ["trailing icon, suffix, value", { trailingIcon: icon, suffixText: "kg", value: "12" }],
+      ["label", {}],
+      ["label, value", { value: "Ada" }],
+      ["no label, value", { label: "", value: "Ada" }],
+      ["multiline", { type: "multiline" }],
+      ["multiline, value", { type: "multiline", value: "Ada" }],
+      ["multiline, no label, value", { type: "multiline", label: "", value: "Ada" }],
+    ];
+    const stage = document.createElement("div");
+    document.body.append(stage);
+    const mounted: { name: string; root: HTMLElement; rtl: boolean; destroy?: () => void }[] = [];
+    for (const variant of ["filled", "outlined"]) for (const density of ["default", "compact"]) for (const dir of api === "factory" ? ["ltr", "rtl"] : ["ltr"]) {
+      for (const [name, extra] of cases) {
+        const cell = document.createElement("div");
+        cell.dir = dir;
+        cell.style.cssText = "width:280px;margin:0 0 8px";
+        stage.append(cell);
+        const config: Record<string, string> = { label: "Label", variant, density, ...extra };
+        let root: HTMLElement;
+        let destroy: (() => void) | undefined;
+        if (api === "factory") {
+          const field = (window as unknown as FieldWindow).inputs.createTextField(config as never);
+          field.element.style.width = "280px";
+          cell.append(field.element);
+          // A textarea ignores the value attribute the factory writes
+          if (config.type === "multiline" && config.value) field.setValue(config.value);
+          root = field.element;
+          destroy = () => field.destroy();
+        } else {
+          const host = document.createElement("m-text-field");
+          for (const [key, value] of Object.entries(config)) if (value !== "") host.setAttribute(key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`), value);
+          host.style.cssText = "display:inline-block;width:280px";
+          cell.append(host);
+          root = host.shadowRoot?.firstElementChild as HTMLElement;
+        }
+        mounted.push({ name: `${variant}, ${density}, ${dir}, ${name}`, root, rtl: dir === "rtl", destroy });
+      }
+    }
+    // Past the label's float and the placement pass
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const px = (value: string) => parseFloat(value) || 0;
+    const round = (value: number) => Math.round(value * 100) / 100;
+    const rows = mounted.map(({ name, root, rtl }) => {
+      const part = (suffix: string) => root.querySelector<HTMLElement>(`.mtrl-text-field__${suffix}`);
+      const field = part("field")!.getBoundingClientRect();
+      const box = (el: HTMLElement | null) => {
+        if (!el) return null;
+        const b = el.getBoundingClientRect();
+        return {
+          start: round(rtl ? field.right - b.right : b.left - field.left),
+          end: round(rtl ? b.left - field.left : field.right - b.right),
+          top: round(b.top - field.top),
+          bottom: round(b.bottom - field.top),
+          width: round(b.width),
+        };
+      };
+      const input = part("input")!;
+      const style = getComputedStyle(input);
+      const inset = box(input)!;
+      const [left, right] = [px(style.paddingLeft) + px(style.borderLeftWidth), px(style.paddingRight) + px(style.borderRightWidth)];
+      // The first line's box: at the padding edge in a textarea, centred in an input
+      const content = input.getBoundingClientRect().height - px(style.borderTopWidth) - px(style.borderBottomWidth) - px(style.paddingTop) - px(style.paddingBottom);
+      const lead = input.tagName === "TEXTAREA" ? 0 : (content - px(style.lineHeight)) / 2;
+      return {
+        name,
+        textStart: round(inset.start + (rtl ? right : left)),
+        textEnd: round(inset.end + (rtl ? left : right)),
+        textTop: round(inset.top + px(style.borderTopWidth) + px(style.paddingTop) + lead),
+        label: box(part("label")),
+        leading: box(part("leading-icon")),
+        trailing: box(part("trailing-icon")),
+        prefix: box(part("prefix")),
+        suffix: box(part("suffix")),
+      };
+    });
+    mounted.forEach((field) => field.destroy?.());
+    stage.remove();
+    return rows;
+  }, api) as LayoutRow[];
+
+  const round = (value: number) => Math.round(value * 100) / 100;
+  // Every failure is reported, not only the first
+  const failures: string[] = [];
+  const expect = (ok: boolean, message: string): void => { if (!ok) failures.push(message); };
+  assert.equal(rows.length, api === "factory" ? 104 : 52);
+  const named = new Map(rows.map((row) => [row.name, row]));
+  for (const row of rows) {
+    const { name } = row;
+    const outlined = name.startsWith("outlined");
+    const floated = name.endsWith("value");
+    // 1. Icons: 12dp in from the edge ("Left/right padding with icons 12dp"),
+    // then 16dp to what follows ("Padding between icons and text 16dp",
+    // m3.material.io text fields, measurements). With the 24dp icon that is
+    // 52dp in, as Compose's 48dp icon box plus 4dp is. Compact has no M3
+    // measure: its 20dp icon box keeps the 12dp and the 16dp.
+    const beside = (icon: LayoutBox | null, edge: "start" | "end"): number => (icon ? icon[edge] + icon.width + 16 : 16);
+    const content = { start: beside(row.leading, "start"), end: beside(row.trailing, "end") };
+    if (row.leading) {
+      expect(row.leading.start === 12, `${name}: the leading icon is 12dp in (${row.leading.start})`);
+      if (name.includes("default")) expect(content.start === 52, `${name}: a 24dp icon puts the content 52dp in (${content.start})`);
+    }
+    if (row.trailing) {
+      expect(row.trailing.end === 12, `${name}: the trailing icon is 12dp in (${row.trailing.end})`);
+      if (name.includes("default")) expect(content.end === 52, `${name}: a 24dp icon ends the content 52dp in (${content.end})`);
+    }
+    // 2. The content: a prefix, the text, a suffix. An affix starts where the
+    // content does (TextFieldPadding 16dp, or after the icon) and is 2dp from
+    // the text (PrefixSuffixTextPadding). The prefix follows the leading icon
+    // box and the text the prefix (Compose TextFieldImpl:
+    // `prefixPlaceable?.placeRelativeWithLayer(leadingPlaceable.widthOrZero, …)`,
+    // `textHorizontalPosition = leadingPlaceable.widthOrZero + prefixPlaceable.widthOrZero`).
+    // The text was sized from the affix alone, so beside an icon it began
+    // under the icon, before the prefix.
+    const near = (a: number, b: number): boolean => Math.abs(a - b) < 0.05;
+    if (row.prefix) expect(row.prefix.start === content.start, `${name}: the prefix starts ${content.start}dp in (${row.prefix.start})`);
+    if (row.suffix) expect(row.suffix.end === content.end, `${name}: the suffix ends ${content.end}dp in (${row.suffix.end})`);
+    const text = {
+      start: row.prefix ? row.prefix.start + row.prefix.width + 2 : content.start,
+      end: row.suffix ? row.suffix.end + row.suffix.width + 2 : content.end,
+    };
+    expect(near(row.textStart, text.start), `${name}: the text starts ${round(text.start)}dp in${row.prefix ? ", 2dp after the prefix" : ""} (${row.textStart})`);
+    expect(near(row.textEnd, text.end), `${name}: the text ends ${round(text.end)}dp in${row.suffix ? ", 2dp before the suffix" : ""} (${row.textEnd})`);
+    // The label starts where the content does, not after a prefix ("Prefix/suffix
+    // does not get applied to label"), resting and floated; the outlined one
+    // floats into the notch, 16dp in, whatever the icon (the outlined `endX`).
+    if (row.label) {
+      const label = floated && outlined ? 16 : content.start;
+      expect(row.label.start === label, `${name}: the label starts ${label}dp in (${row.label.start})`);
+    }
+
+    // 3. Vertical metrics (m3.material.io: "Top/bottom padding 8dp", label
+    // "Vertically centered"; Compose: `TextFieldWithLabelVerticalPadding 8.dp`,
+    // `textPosition = topPaddingValue + labelPlaceable.height`, the outlined
+    // floated label `endY = -(it.height / 2)`, 16dp all round without a label).
+    // Compact has no M3 measure: it keeps the two rules that are not numbers,
+    // the outlined label centred on the edge and an unlabelled line centred.
+    const standard = name.includes("default");
+    if (!name.includes("multiline")) {
+      const filled = !outlined;
+      if (standard && filled && row.label && floated) expect(row.textTop === 24, `${name}: under the label, the text starts 24dp down (${row.textTop})`);
+      if (standard && outlined) expect(row.textTop === 16, `${name}: the text starts 16dp down (${row.textTop})`);
+      if (!row.label) expect(row.textTop === (standard ? 16 : 10), `${name}: without a label the text is centred, ${standard ? 16 : 10}dp down (${row.textTop})`);
+    }
+    if (row.label && floated) {
+      const centre = round((row.label.top + row.label.bottom) / 2);
+      // The filled label's 16dp line is 8dp down: its centre 16dp down
+      if (standard && !outlined) expect(centre === 16, `${name}: the floated label's line is centred 16dp down (${centre})`);
+      if (outlined) expect(centre === 0, `${name}: the floated label is centred on the top edge (${centre})`);
+    }
+    // An affix is on the text's line (`placeRelativeWithLayer(…, yOffset + textPosition)`)
+    if (!name.includes("multiline")) {
+      for (const affix of [row.prefix, row.suffix]) {
+        if (affix) expect(near(affix.top, row.textTop), `${name}: the affix is on the text's line (${affix.top} against ${row.textTop})`);
+      }
+    }
+
+    // 4. Multiline. The first line and the label are where a single-line
+    // field has them: Compose places the text with no singleLine branch
+    // (`textPosition = topPaddingValue + labelPlaceable.height`: 8 + 16 = 24dp
+    // filled; outlined and an unlabelled field at the 16dp padding). The
+    // textarea's own 12dp put the first line under the floated label.
+    if (name.includes("multiline")) {
+      const [group] = name.split(", multiline");
+      const single = named.get(`${group}, label${name.endsWith("value") ? ", value" : ""}`)!;
+      const labelled = !name.includes("no label");
+      if (name.includes("default")) {
+        const top = name.startsWith("filled") && labelled ? 24 : 16;
+        expect(row.textTop === top, `${name}: the first line starts ${top}dp down (${row.textTop})`);
+        if (labelled && !name.endsWith("value")) expect(row.label!.top === 16, `${name}: the resting label is on the first line, 16dp down (${row.label!.top})`);
+      } else if (labelled) {
+        // Compact has no M3 measure: the first line is the single-line field's, to the pixel
+        expect(Math.abs(row.textTop - single.textTop) <= 0.5, `${name}: the first line is where the single-line field's text is (${row.textTop} against ${single.textTop})`);
+      } else {
+        // Without a label, where one 20px line is centred in the 40px box
+        expect(row.textTop === 10, `${name}: the first line starts 10px down (${row.textTop})`);
+      }
+      if (labelled) {
+        expect(row.label!.top === single.label!.top, `${name}: the label is where the single-line field's is (${row.label!.top} against ${single.label!.top})`);
+        if (name.endsWith("value") && name.startsWith("filled")) {
+          const overlap = round(row.label!.bottom - row.textTop);
+          const allowed = round(single.label!.bottom - single.textTop);
+          expect(overlap <= Math.max(0, allowed), `${name}: the floated label's box ends ${overlap}px into the first line (a single-line field: ${allowed}px)`);
+        }
+      }
+    }
+  }
+  assert.deepEqual(failures, [], `${failures.length} of the layout assertions failed`);
+  console.log(`Passed text field layout (${api}): ${rows.length} fields, filled and outlined, default and compact${api === "factory" ? ", left to right and right to left" : ""} — icons 12dp in and 16dp from the content, an affix 2dp from the text, the label at the content's start; 8dp above the filled label's line and under the text, the outlined label on the edge; a multiline field's first line clear of its label.`);
+}
+
+/**
+ * The filled field's focus indicator and reduced motion (FLO-299): its fade
+ * runs on the motion tokens, and with `prefers-reduced-motion: reduce` it does
+ * not run, as the label, the outline, the icons and the affixes already do not.
+ * No M3 source gives a number here: the tokens are the library's.
+ *
+ * The check sets the preference for both readings and hands the page back
+ * with `restore`, the value its caller runs under (`"reduce"` in check-core
+ * from the ripple case on, none in check-elements).
+ */
+export async function checkTextFieldReducedMotion(page: Page, api: "factory" | "element", restore: "reduce" | "no-preference" | null): Promise<void> {
+  const read = () => page.evaluate((api) => {
+    let root: HTMLElement;
+    let destroy: () => void;
+    if (api === "factory") {
+      const field = (window as unknown as FieldWindow).inputs.createTextField({ label: "Name", variant: "filled" });
+      document.body.append(field.element);
+      root = field.element;
+      destroy = () => field.destroy();
+    } else {
+      const host = document.createElement("m-text-field");
+      host.setAttribute("label", "Name");
+      document.body.append(host);
+      root = host.shadowRoot?.firstElementChild as HTMLElement;
+      destroy = () => host.remove();
+    }
+    const indicator = getComputedStyle(root.querySelector(".mtrl-text-field__field") as HTMLElement, "::before");
+    const result = { property: indicator.transitionProperty, duration: indicator.transitionDuration, easing: indicator.transitionTimingFunction };
+    destroy();
+    return result;
+  }, api);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const moving = await read();
+  assert.deepEqual(moving, { property: "opacity", duration: "0.2s", easing: "cubic-bezier(0.2, 0, 0, 1)" },
+    "the indicator fades on the motion tokens: duration-short4, easing-standard");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const reduced = await read();
+  await page.emulateMedia({ reducedMotion: restore });
+  assert.equal(reduced.duration, "0s", `with reduced motion the indicator has no transition (${reduced.property} ${reduced.duration})`);
+  console.log(`Passed text field reduced motion (${api}): the filled indicator fades on the motion tokens, and not at all with reduced motion.`);
+}

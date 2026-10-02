@@ -144,8 +144,13 @@ describe("placement is batched (FLO-335)", () => {
       const field = mount({ prefixText: "$", suffixText: "kg", variant: "outlined" });
       const prefix = field.element.querySelector<HTMLElement>(".mtrl-text-field__prefix")!;
       prefix.getBoundingClientRect = () => { log.push(`read ${i}`); return { width: 10 } as DOMRect; };
-      const style = field.input.style;
-      Object.defineProperty(style, "paddingLeft", { configurable: true, set: () => void log.push(`write ${i}`), get: () => "" });
+      // The write is the prefix's width, as a custom property on the root (FLO-299)
+      const style = field.element.style;
+      const setProperty = style.setProperty.bind(style);
+      style.setProperty = (name: string, value: string | null) => {
+        if (name === "--mtrl-text-field-prefix-width") log.push(`write ${i}`);
+        setProperty(name, value);
+      };
       return field;
     });
     await new Promise((r) => setTimeout(r, 0));
@@ -161,5 +166,44 @@ describe("placement is batched (FLO-335)", () => {
     field.destroy();
     await new Promise((r) => setTimeout(r, 0));
     expect(log).toEqual([]);
+  });
+});
+
+// FLO-299. The script sized the input's padding from the affix alone, so beside
+// an icon the value was drawn under the icon. It now hands the stylesheet each
+// affix's width, and the stylesheet adds what else stands on that side.
+describe("the affix widths go to the stylesheet (FLO-299)", () => {
+  const widths = (el: HTMLElement) => ["prefix", "suffix"].map((affix) => el.style.getPropertyValue(`--mtrl-text-field-${affix}-width`));
+  const measured = (field: { element: HTMLElement }, part: string, width: number) => {
+    field.element.querySelector<HTMLElement>(`.mtrl-text-field__${part}`)!.getBoundingClientRect = () => ({ width }) as DOMRect;
+  };
+
+  test("each affix's measured width is a custom property on the root", async () => {
+    const field = mount({ prefixText: "$", suffixText: "kg", leadingIcon: ICON });
+    measured(field, "prefix", 9.5);
+    measured(field, "suffix", 18);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(widths(field.element)).toEqual(["9.5px", "18px"]);
+    field.destroy();
+  });
+
+  test("a field with one affix writes only that one", async () => {
+    const field = mount({ suffixText: "kg" });
+    measured(field, "suffix", 18);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(widths(field.element)).toEqual(["", "18px"]);
+    field.destroy();
+  });
+
+  test("nothing is written on the input or the label: the stylesheet places both", async () => {
+    for (const variant of ["filled", "outlined"]) {
+      const field = mount({ variant, prefixText: "$", suffixText: "kg", leadingIcon: ICON });
+      await new Promise((r) => setTimeout(r, 0));
+      field.setValue("12");
+      await new Promise((r) => setTimeout(r, 0));
+      const label = field.element.querySelector("label") as HTMLElement;
+      expect([field.input.style.paddingLeft, field.input.style.paddingRight, label.style.left]).toEqual(["", "", ""]);
+      field.destroy();
+    }
   });
 });
