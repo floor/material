@@ -109,7 +109,7 @@ try {
     import assert from 'node:assert/strict';
     import { createRequire } from 'node:module';
     import * as esm from 'mtrl';
-    import { createButton, createTextfield, createCard } from 'mtrl';
+    import { createButton, createTextField, createCard } from 'mtrl';
     import button from 'mtrl/components/button';
     import rail from 'mtrl/components/navigation-rail';
     import { BUTTON_VARIANTS } from 'mtrl/components/button/constants';
@@ -141,7 +141,7 @@ try {
     assert(b.element.textContent.includes('Save'));
     const navigation = rail({ items: [{ id: 'home', label: 'Home', icon: '<svg></svg>' }] });
     document.body.append(navigation.element); navigation.expand(); assert(navigation.isExpanded()); navigation.destroy();
-    const field = createTextfield({ label: 'Name' });
+    const field = createTextField({ label: 'Name' });
     field.setValue('Ada');
     assert.equal(field.getValue(), 'Ada');
     const loading = button({ text: 'Upload', progress: { indeterminate: false } });
@@ -225,8 +225,8 @@ try {
     { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 7800 },
     // FLO-301 (the required asterisk, the live error, the trailing icon button): 8,456 to
     // 9,058 against 7cd57a6, Node 22 / npm 10.
-    { name: "textfield", code: "export { createTextfield } from 'mtrl';", gzip: 9200 },
-    { name: "form", code: "export { createButton, createTextfield, createCheckbox } from 'mtrl';", gzip: 22000 },
+    { name: "textfield", code: "export { createTextField } from 'mtrl';", gzip: 9200 },
+    { name: "form", code: "export { createButton, createTextField, createCheckbox } from 'mtrl';", gzip: 22000 },
     // The toolbar (FLO-304): 123,080 to 125,176, measured against b1dbf77.
     // The FAB menu (FLO-306): 125,245 to 127,714, measured against 1bd8343.
     // The Material shapes' geometry in the loading indicator (FLO-346): 127,894 to 128,195, measured against 5b314c5.

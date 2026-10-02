@@ -34,7 +34,7 @@ import { compile } from "svelte/compiler";
 import { build as viteBuild, type Plugin, type Rolldown } from "vite";
 
 import { createPackageFixture } from "./package-fixture";
-import { elementModules } from "./element-modules";
+import { elementModules, pascal } from "./element-modules";
 
 /**
  * The adapter's own runtime (create.ts or runtime.js) and wrapper, brotli
@@ -42,7 +42,6 @@ import { elementModules } from "./element-modules";
  */
 const ADAPTER_MARGIN = 1700;
 
-const pascal = (name: string): string => name.replace(/^[a-z]/, (c) => c.toUpperCase());
 const FRAMEWORKS = [
   { dir: "react", component: pascal },
   { dir: "vue", component: (name: string) => `M${pascal(name)}` },

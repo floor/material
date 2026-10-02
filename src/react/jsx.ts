@@ -9,6 +9,7 @@
  */
 import type * as React from "react";
 import type { ElementEvents, ElementMarkup } from "../elements";
+import type { ReactHostAttributes } from "./create";
 
 /**
  * The element's events as React 19 listens to them on a custom element: an
@@ -22,7 +23,7 @@ type Events<S> = {
 
 /** A tag's props: its attributes as markup writes them, its events, and any HTML attribute. */
 type Tag<S, E extends HTMLElement> = Omit<
-  React.DetailedHTMLProps<React.HTMLAttributes<E>, E>,
+  React.DetailedHTMLProps<ReactHostAttributes<E>, E>,
   keyof ElementMarkup<S> | keyof Events<S>
 > &
   ElementMarkup<S> &
@@ -44,7 +45,7 @@ declare module "react" {
       "m-extended-fab": Tag<import("../elements/extended-fab").ExtendedFabSpec, import("../elements/extended-fab").ExtendedFabElement>;
       "m-checkbox": Tag<import("../elements/checkbox").CheckboxSpec, import("../elements/checkbox").CheckboxElement>;
       "m-slider": Tag<import("../elements/slider").SliderSpec, import("../elements/slider").SliderElement>;
-      "m-textfield": Tag<import("../elements/textfield").TextfieldSpec, import("../elements/textfield").TextfieldElement>;
+      "m-textfield": Tag<import("../elements/textfield").TextFieldSpec, import("../elements/textfield").TextFieldElement>;
       "m-radios": Tag<import("../elements/radios").RadiosSpec, import("../elements/radios").RadiosElement>;
       "m-navigation-bar": Tag<import("../elements/navigation-bar").NavigationBarSpec, import("../elements/navigation-bar").NavigationBarElement>;
       "m-navigation-rail": Tag<import("../elements/navigation-rail").NavigationRailSpec, import("../elements/navigation-rail").NavigationRailElement>;

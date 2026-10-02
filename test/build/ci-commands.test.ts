@@ -18,6 +18,8 @@ const COMMANDS = [
   "react:check", "react-ssr:check", "vue:check", "svelte:check", "svelte-ssr:check", "vue-ssr:check", "solid-ssr:check", "solid:check",
   // the same SSR checks on the lowest peer version package.json allows
   "solid-ssr:floor", "vue-ssr:floor",
+  "react-types:check", "vue-types:check", "solid-types:check", "svelte-types:check",
+  "react-types:floor", "vue-types:floor", "solid-types:floor", "svelte-types:floor",
   "consumer:check", "tabs:check", "slider:check", "drawer:check", "navigation-bar:check", "navigation-rail:check",
   "core:check", "preupgrade:check", "tokens:check", "ssr:check",
 ];
@@ -38,20 +40,28 @@ const manifest = await Bun.file("package.json").json() as { scripts: Record<stri
 const { scripts, peerDependencies: peers } = manifest;
 
 // The commands of one step: `bun test`, `bun run <script>`, and the scripts of a
-// `for script in …` loop, whose list is written out or comes from the matrix.
+// `for script in …` loop. A list written out counts once per step (the static step
+// loops over it twice, to run and then to report). A list that comes from the
+// matrix counts once per group it appears in, so a command in two groups, or twice
+// in one, is two runs.
 const commandsOf = (job: Job, step: Step): string[] => {
-  const found = new Set<string>();
+  const written = new Set<string>();
+  const perGroup: string[] = [];
+  const fromMatrix = new Set<string>();
   for (const line of (step.run ?? "").split("\n").map(text => text.trim())) {
-    if (line === "bun test") found.add(line);
+    if (line === "bun test") written.add(line);
     const single = /^bun run ([\w:-]+)$/.exec(line);
-    if (single) found.add(single[1]);
+    if (single) written.add(single[1]);
     const loop = /^for script in (.+); do$/.exec(line);
     if (!loop) continue;
     const key = /^\$\{\{ matrix\.(\w+) \}\}$/.exec(loop[1]);
-    const lists = key ? (job.strategy?.matrix?.include ?? []).map(entry => entry[key[1]]) : [loop[1]];
-    for (const list of lists) for (const script of list.split(/\s+/)) found.add(script);
+    if (!key) for (const script of loop[1].split(/\s+/)) written.add(script);
+    else if (!fromMatrix.has(key[1])) {
+      fromMatrix.add(key[1]);
+      for (const entry of job.strategy?.matrix?.include ?? []) perGroup.push(...entry[key[1]].split(/\s+/));
+    }
   }
-  return [...found];
+  return [...written, ...perGroup];
 };
 
 const ran = Object.values(workflow.jobs).flatMap(job => job.steps.flatMap(step => commandsOf(job, step)));

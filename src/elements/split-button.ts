@@ -83,6 +83,7 @@ const splitButtonSpec = {
   attributes: {
     // Read with the text by `config`: the attribute wins over the text.
     label: { type: "string", update: (c, _v, host) => void c.setText(labelOf(host)) },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string", config: "icon", update: (c, v) => void c.setIcon(v === null ? "" : String(v)) },
     variant: { type: "string", config: "variant" },
     size: { type: "string", config: "size" },

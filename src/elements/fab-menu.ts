@@ -71,6 +71,7 @@ const fabMenuSpec = {
       type: "boolean",
       update: (c, v) => queueMicrotask(() => (v ? c.show() : c.hide())),
     },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. The menu opts out of server rendering, so the server leaves this escaped until the component upgrades. */
     icon: { type: "string", config: "icon" },
     "aria-label": {
       type: "string",
@@ -109,6 +110,7 @@ export const fabMenuItemDeclaration = {
   attributes: {
     value: { type: "string" },
     label: { type: "string" },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. The menu opts out of server rendering, so the server leaves this escaped until the component upgrades. */
     icon: { type: "string" },
   },
 } as const;

@@ -32,7 +32,7 @@ export interface DrawerItemConfig {
   /** Destination label text */
   label?: string;
 
-  /** Icon HTML content (placed before label) */
+  /** Icon HTML content (placed before label). Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   icon?: string;
 
   /** Badge text (e.g. unread count) */
