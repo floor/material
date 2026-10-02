@@ -1125,6 +1125,23 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **An unlabelled checkbox centres its box in its 48px target, state layer inside.** The 18px
+  box sat flush at the inline-start (start inset 0, end inset 30), so the 40px state layer
+  (`::before`, centred on the box) spanned −11 to 29 — 11px outside the target — and the
+  focus ring reached 16px before the root's edge. Factory and element, left-to-right and
+  right-to-left. With no label the root is its own target, so the box now keeps 15px on both
+  sides (M3 "Icon alignment Center-aligned", "Target size 48dp") and the state layer
+  ("State-layer size 40dp") lies 4px inside the root on all sides. A labelled checkbox, whose
+  root hugs box, gap and label, is unchanged. Before upgrade, write the tag with nothing between
+  its tags: a whitespace-only text node (a space, a line break) is not `:empty`, so such a host
+  keeps the labelled layout although the element then builds no label.
+- **An `<m-icon-button>`'s icon keeps its size token.** The element's inner `<button>` kept Chrome's
+  default padding, `1px 6px`, because the page reset's `button { padding: 0 }` is not in the shadow
+  root's adopted stylesheets, while the factory, which the page's global stylesheet does reach,
+  computes `0px`. Where the container left no room for icon and padding, the icon, a shrinkable flex
+  item, was drawn under its token: outlined xs narrow 14 against 20, outlined s narrow 18 against 24,
+  filled, tonal and standard xs narrow 16 against 20 and their s narrow 20 against 24, outlined xs
+  default width 18 against 20. The component stylesheet the element adopts now repeats the reset.
 - The package no longer contains a second copy of the README and licence under `dist/`.
 - **A button's asymmetric icon padding mirrors in right-to-left.** A size `s` button with a leading icon, and a text button at `xs` or `s` with a leading icon, keep 12px before the icon and 16px after the label in both directions. Under `dir="rtl"` those insets had stayed physical, so the start side was 16px and the end side 12px. The insets are logical and follow the direction the icon already follows, including into a shadow root whose `dir` ancestor is outside it.
 - **`<m-text-field>` in a right-to-left page is mirrored (FLO-562).** A `dir="rtl"` on an
