@@ -5410,7 +5410,8 @@ try {
     const eventually = async (step: string, what: string, ready: () => Promise<boolean>, found: () => Promise<object> = async () => ({})): Promise<void> => {
       for (const end = Date.now() + 5000; !(await ready());) {
         if (Date.now() > end) {
-          throw new Error(`menus, ${step}: still waiting after 5s for ${what}; found ${JSON.stringify({ focus: await focused(), ...(await found()) })}`);
+          const onBody = await page.evaluate(() => document.activeElement === document.body);
+          throw new Error(`${step}: still waiting after 5s for ${what}; found ${JSON.stringify({ focus: onBody ? "(body)" : await focused(), ...(await found()) })}`);
         }
         await wait(20);
       }
@@ -5451,7 +5452,7 @@ try {
 
     await page.click("#mb");
     await settle();
-    await menuFocused("opened with the pointer");
+    await menuFocused("menu, opened with the pointer");
     assert.deepEqual(await surface("mm", '[role="menu"]'), OPEN, "menu: the surface");
     assert.deepEqual(await menuState(), { open: true, attribute: true });
     assert.deepEqual(await log(), [{ type: "open", detail: {} }]);
@@ -5468,8 +5469,8 @@ try {
     assert.deepEqual(moves, ["Copy", "Cut", "PasteCtrl+V"]);
     await page.keyboard.press("Enter");
     await settle();
-    await closed("Enter on an item");
-    await focusIs("Enter on an item", "mb");
+    await closed("menu, Enter on an item");
+    await focusIs("menu, Enter on an item", "mb");
     assert.deepEqual(await log(), [{ type: "select", detail: { value: "paste" } }, { type: "close", detail: {} }]);
     assert.deepEqual(await menuState(), { open: false, attribute: false });
     assert.equal(await focused(), "mb", "focus is back on the anchor");
@@ -5488,8 +5489,8 @@ try {
     assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
     await page.keyboard.press("Escape");
     await settle();
-    await closed("Escape, opened with Enter");
-    await focusIs("Escape, opened with Enter", "mb");
+    await closed("menu, Escape, opened with Enter");
+    await focusIs("menu, Escape, opened with Enter", "mb");
     assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
     assert.equal(await focused(), "mb");
     check("menu: Enter on the anchor focuses the first item; Escape closes once and returns focus");
@@ -5505,8 +5506,8 @@ try {
     assert.equal(await focused(), "PasteCtrl+V", "opened with ArrowUp, the last item has focus, and keeps it");
     await page.keyboard.press("Escape");
     await settle();
-    await closed("Escape, opened with ArrowUp");
-    await focusIs("Escape, opened with ArrowUp", "mb");
+    await closed("menu, Escape, opened with ArrowUp");
+    await focusIs("menu, Escape, opened with ArrowUp", "mb");
     assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
     assert.equal(await focused(), "mb");
     check("menu: ArrowUp on the anchor opens it on the last item");
@@ -5518,7 +5519,7 @@ try {
     assert.equal((await menuState()).open, true, "a click inside the surface, on a disabled item, keeps it open");
     await outside();
     await settle();
-    await closed("a click outside");
+    await closed("menu, a click outside");
     assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
     assert.deepEqual(await menuState(), { open: false, attribute: false });
     check("menu: a click in the surface keeps it open, a click outside closes it once");
@@ -5535,7 +5536,7 @@ try {
     assert.deepEqual(submenu, { open: true, items: ["link", "mail"] }, "nested items are the submenu, in the shadow root");
     await clickIn("mm", '[data-id="link"]');
     await settle();
-    await closed("a click on a submenu item");
+    await closed("menu, a click on a submenu item");
     assert.deepEqual(await log(), [
       { type: "open", detail: {} }, { type: "select", detail: { value: "link" } }, { type: "close", detail: {} },
     ]);
@@ -5554,26 +5555,26 @@ try {
     assert.equal(await focused(), "Share", "Copy, Cut (disabled, focusable), then Share");
     await page.keyboard.press("ArrowRight");
     await settle();
-    await focusIs("ArrowRight on Share", "Copy link");
+    await focusIs("menu, ArrowRight on Share", "Copy link");
     assert.deepEqual({ submenus: await openSubmenus(), focus: await focused() }, { submenus: 1, focus: "Copy link" }, "ArrowRight");
     await page.keyboard.press("ArrowLeft");
     await wait(300);
-    await eventually("ArrowLeft in the submenu", "<m-menu>'s submenu to close and focus to return to Share", async () => (await openSubmenus()) === 0 && (await focused()) === "Share", async () => ({ submenus: await openSubmenus() }));
+    await eventually("menu, ArrowLeft in the submenu", "<m-menu>'s submenu to close and focus to return to Share", async () => (await openSubmenus()) === 0 && (await focused()) === "Share", async () => ({ submenus: await openSubmenus() }));
     assert.deepEqual({ submenus: await openSubmenus(), focus: await focused() }, { submenus: 0, focus: "Share" }, "ArrowLeft");
     await page.keyboard.press("Escape");
     await settle();
-    await closed("Escape after the submenu");
+    await closed("menu, Escape after the submenu");
     await page.click("#mb");
     await settle();
     const share = await center("mm", '[data-id="share"]');
     await page.mouse.move(share.x, share.y);
     // The hover intent, then the transition
     await wait(550);
-    await eventually("a hover on Share", "<m-menu>'s submenu under the hovered item", async () => (await openSubmenus()) === 1, async () => ({ submenus: await openSubmenus() }));
+    await eventually("menu, a hover on Share", "<m-menu>'s submenu under the hovered item", async () => (await openSubmenus()) === 1, async () => ({ submenus: await openSubmenus() }));
     assert.equal(await openSubmenus(), 1, "a hover on Share opens its submenu");
     await page.keyboard.press("Escape");
     await settle();
-    await closed("Escape after the hover");
+    await closed("menu, Escape after the hover");
     await page.mouse.move(0, 0);
     assert.deepEqual((await log()).map((e) => e.type), ["open", "close", "open", "close"]);
     assert.deepEqual(await menuState(), { open: false, attribute: false });
@@ -5626,19 +5627,19 @@ try {
     assert.deepEqual(await menuState(), { open: true, attribute: true });
     await page.evaluate(() => (document.getElementById("mm") as Host & { hide: () => void }).hide());
     await settle();
-    await closed("hide()");
+    await closed("menu, hide()");
     await page.evaluate(() => document.getElementById("mm")?.setAttribute("open", ""));
     await settle();
     assert.deepEqual(await menuState(), { open: true, attribute: true });
     await page.evaluate(() => document.getElementById("mm")?.removeAttribute("open"));
     await settle();
-    await closed("the open attribute removed");
+    await closed("menu, the open attribute removed");
     assert.deepEqual(await menuState(), { open: false, attribute: false });
     await page.evaluate(() => (document.getElementById("mm") as Host & { toggle: () => void }).toggle());
     await settle();
     await page.evaluate(() => (document.getElementById("mm") as Host & { toggle: () => void }).toggle());
     await settle();
-    await closed("toggle(), the second");
+    await closed("menu, toggle(), the second");
     assert.deepEqual((await log()).map((e) => e.type), ["open", "close", "open", "close", "open", "close"]);
     check("menu: show(), hide(), toggle() and the open attribute open and close it, each with its event");
 
@@ -5680,12 +5681,12 @@ try {
     });
     await page.click("#mb2");
     await settle();
-    await menuFocused("opened from an anchor set as a property");
+    await menuFocused("menu, opened from an anchor set as a property");
     const byProperty = await menuState();
     await page.keyboard.press("Escape");
     await settle();
-    await closed("Escape, anchor as a property");
-    await focusIs("Escape, anchor as a property", "mb2");
+    await closed("menu, Escape, anchor as a property");
+    await focusIs("menu, Escape, anchor as a property", "mb2");
     assert.equal(await focused(), "mb2");
     await page.evaluate(() => {
       const shadow = document.createElement("div");
@@ -6048,7 +6049,7 @@ try {
     await page.getByRole("button", { name: "Save", exact: true }).click();
     await page.getByRole("button", { name: "More options", exact: true }).click();
     await settle();
-    await menuFocused("the trailing button clicked");
+    await menuFocused("split button, the trailing button clicked");
     assert.deepEqual((await log()).map((e) => e.type), ["click"], "the leading button's click only");
     assert.deepEqual(await surface("sb", '[role="menu"]'), OPEN, "split button: the menu");
     check("split button: click is the leading action's; the trailing button opens the menu in its shadow root, above z-index 9999");
@@ -6059,30 +6060,30 @@ try {
     await page.keyboard.press("Enter");
     await settle();
     await splitIs("Enter on an item", { open: false, closes: 1 });
-    await focusIs("Enter on an item", "More options");
+    await focusIs("split button, Enter on an item", "More options");
     assert.deepEqual(await log(), [{ type: "select", detail: { value: "pdf" } }]);
     assert.deepEqual(await splitState(), { open: false, closes: 1 });
     assert.equal(await focused(), "More options", "focus is back on the trailing button");
     await page.keyboard.press("Enter");
     await settle();
-    await menuFocused("Enter on the trailing button");
+    await menuFocused("split button, Enter on the trailing button");
     await page.keyboard.press("Escape");
     await settle();
     await splitIs("Escape", { open: false, closes: 2 });
-    await focusIs("Escape", "More options");
+    await focusIs("split button, Escape", "More options");
     assert.deepEqual(await splitState(), { open: false, closes: 2 });
     assert.equal(await focused(), "More options");
     check("split button: arrows and Enter select once, close once and return focus; Escape closes");
 
     await page.getByRole("button", { name: "More options", exact: true }).click();
     await settle();
-    await menuFocused("the trailing button clicked, before the click outside");
+    await menuFocused("split button, the trailing button clicked, before the click outside");
     await outside();
     await settle();
     await splitIs("a click outside", { open: false, closes: 3 });
     await page.getByRole("button", { name: "More options", exact: true }).click();
     await settle();
-    await menuFocused("the trailing button clicked, before the item click");
+    await menuFocused("split button, the trailing button clicked, before the item click");
     await page.evaluate(() => {
       const w = window as unknown as Win & { __splitValues: unknown[] };
       w.__splitValues = [];
