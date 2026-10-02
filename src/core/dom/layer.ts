@@ -238,6 +238,13 @@ const onEscapeKey = (event: KeyboardEvent): void => {
   while (at-- && escapes[at].view !== event.currentTarget);
   const top = escapes[at];
   if (!top) return;
+  // Taken out of the document without being closed: it is not open, and must
+  // not keep the key from the modal under it, or from the page
+  if (!top.element.isConnected) {
+    top.stop();
+    onEscapeKey(event);
+    return;
+  }
   // Focus inside an open <dialog> that is not this modal: one shown above it
   // that is not on the stack (another component's, the page's own). The
   // browser has made the rest inert, and Escape is that dialog's `cancel`.
