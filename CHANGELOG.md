@@ -1204,6 +1204,18 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"` (FLO-592).**
+  The `touch-target` mixin anchored its `::after` with `inset-inline-start: 50%` and then moved it
+  with the physical `translate(-50%, -50%)`. Right-to-left, the logical inset pins the box's right
+  edge at the button's centre and the translate then pushes it another 24px left: the 48 x 48 box
+  sat with its centre 48px left of the button's centre and its right edge 4px left of the button's
+  left edge, so the button's hit area was its own 40px box (plus the engine's one pixel), measured
+  by walking `elementFromPoint` out from each edge in headless Chromium. The mixin now anchors with
+  physical offsets (`left: 50%`), as the icon button's own rule does, so the physical translate
+  centres it in both directions; left-to-right measures the same as before. Only the trailing-icon
+  target rule changes in the compiled sheet (2,744 rules before and after, one changed). The
+  mixin's only live user is the text field's trailing icon button, which only the factory renders
+  (the `<m-text-field>` element has no attribute for the label that makes the icon a button).
 - **The side sheet's and the dialog's close buttons reach 48 x 48.** Both were hand-built 40px
   buttons with no expanded target, so a pointer 4px outside an edge — the outer band of the M3
   target — hit nothing, left-to-right and right-to-left alike. Each now carries the icon button's

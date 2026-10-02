@@ -9,11 +9,11 @@
 // 100%/100%, so the hit area is exactly the root box and raising the box is the whole
 // fix — a pseudo-element overlay would add nothing.
 //
-// The `touch-target` mixin is also covered here. It has no live callers, but it is
-// reachable from abstract/mixins, and it emitted an over-constrained box: `inset: 50%`
-// together with width and height. CSS resolves that by dropping one offset — right in
-// LTR, which happens to centre correctly, but the inline-start one under RTL, which
-// does not.
+// The `touch-target` mixin is also covered here. Its only live caller is the text
+// field's trailing icon button (FLO-301); it is reachable from abstract/mixins too.
+// It centres physically now (`left: 50%`, FLO-592): a logical inline-start inset
+// pinned the box's inline-start edge to the centre, and the physical translate then
+// moved the whole box a further 24px past it — a full box-width off under RTL.
 import { describe, test, expect, beforeAll } from 'bun:test';
 import { compileString } from 'sass';
 
@@ -58,15 +58,16 @@ describe('the checkbox meets the 48dp interactive size', () => {
   });
 });
 
-describe('the touch-target mixin states its offsets unambiguously', () => {
+describe('the touch-target mixin centres against the physical box', () => {
   test('it no longer emits an over-constrained inset', () => {
     expect(mixinCss).not.toContain('inset: 50%');
   });
 
-  test('it anchors with a block and an inline-start offset', () => {
+  test('it anchors with physical offsets, so the translate centres it in both directions', () => {
     const probe = rule(mixinCss, '.probe::after');
     expect(declaration(probe, 'top')).toBe('50%');
-    expect(declaration(probe, 'inset-inline-start')).toBe('50%');
+    expect(declaration(probe, 'left')).toBe('50%');
+    expect(declaration(probe, 'inset-inline-start')).toBeUndefined();
   });
 
   test('it still centres a box of the requested size', () => {
