@@ -1,5 +1,5 @@
 // src/components/timepicker/index.ts
-export { default } from './timepicker';
+export { default, default as createTimePicker } from './timepicker';
 
 // Export constants
 export { 

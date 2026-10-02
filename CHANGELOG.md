@@ -979,6 +979,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `v.shape(<step>)`.
 
 ### Added
+- `material/components/chips` and `material/components/divider` now have their factory as the default export, as the other component entries do. Every `material/components/<name>` entry exports its factory as the default export and by its name.
 
 - **`isOpen()` on the snackbar and the date picker (FLO-548)**, as on every other overlay.
 - **Split button `setItems(items)` and `getItems()` (FLO-543).** `setItems` replaces the menu's

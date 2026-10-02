@@ -3,7 +3,7 @@
 /** Material list anatomy for static data. */
 
 // Export main component factory
-export { default } from "./list";
+export { default, default as createList } from "./list";
 
 // Export constants
 export {
