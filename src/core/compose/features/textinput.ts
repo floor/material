@@ -154,7 +154,8 @@ export const withTextInput =
       maxLength: config.maxLength,
       pattern: config.pattern,
       autocomplete: config.autocomplete,
-      value: config.value || "",
+      // A textarea ignores a value attribute. Its default value is its text.
+      value: isMultiline ? undefined : config.value || "",
       placeholder: config.placeholder || " ", // Always set placeholder (space if empty) for CSS detection
     };
 
@@ -177,6 +178,10 @@ export const withTextInput =
         }
       }
     });
+
+    // While the textarea is still clean, this sets the live value too, so a
+    // reset restores the configured text. An input's value attribute did that.
+    if (isMultiline) input.defaultValue = config.value || "";
 
     // Handle input state changes
     const updateInputState = (): boolean => {
