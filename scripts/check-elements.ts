@@ -3412,6 +3412,133 @@ try {
     check("chips: renders as the factory does with the global stylesheet");
   }
 
+  // ---------------------------------------------------------------- chips: the secondary action's 88 px floor
+  // m3.material.io, Chips: "Secondary actions (such as a trailing icon button
+  // for Remove) must have a 48x48dp interaction target that doesn't interfere
+  // with the chip's primary action (such as Edit or Drag). To achieve this,
+  // apply a minimum width of 88dp to the chip, or 42dp to the label text." A
+  // chip with a secondary action is at least 88 px wide: the target takes the
+  // last 48 px, the primary action the first 40 at the floor, and no point on
+  // the centre line of either falls inside the other's region.
+  await fresh(
+    page,
+    `<div><m-chips id="sec-in-ltr" aria-label="Input chips left to right">
+       <m-chip variant="input" value="ok">OK</m-chip>
+       <m-chip variant="input" value="label">Label</m-chip>
+       <m-chip variant="input" value="long">A considerably longer chip label</m-chip>
+     </m-chips></div>
+     <div dir="rtl"><m-chips id="sec-in-rtl" aria-label="Input chips right to left">
+       <m-chip variant="input" value="ok">OK</m-chip>
+       <m-chip variant="input" value="label">Label</m-chip>
+       <m-chip variant="input" value="long">A considerably longer chip label</m-chip>
+     </m-chips></div>
+     <section id="factory"></section>`
+  );
+  {
+    const measured = await page.evaluate(async () => {
+      type Factory = { element: HTMLElement };
+      const w = window as unknown as Win & { mtrl: {
+        createInputChip: (c: object) => Factory;
+        createFilterChip: (c: object) => Factory;
+      } };
+      // The factory chips: input chips, and filter chips whose trailing icon has
+      // its own action (the factory's onTrailingClick; the element has no
+      // attribute for a trailing action).
+      const factory = document.getElementById("factory") as HTMLElement;
+      const wraps: Array<[string, HTMLElement]> = [];
+      for (const dir of ["ltr", "rtl"] as const) {
+        const wrap = document.createElement("div");
+        if (dir === "rtl") wrap.setAttribute("dir", "rtl");
+        for (const label of ["OK", "Label", "A considerably longer chip label"]) {
+          wrap.append(w.mtrl.createInputChip({ label }).element);
+          wrap.append(w.mtrl.createFilterChip({ label, onTrailingClick: () => {} }).element);
+        }
+        factory.append(wrap);
+        wraps.push([dir, wrap]);
+      }
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+
+      type Case = { api: string; dir: string; kind: string; root: HTMLElement; area: DocumentOrShadowRoot };
+      const cases: Case[] = [];
+      for (const [dir, id] of [["ltr", "sec-in-ltr"], ["rtl", "sec-in-rtl"]] as const) {
+        const shadow = (document.getElementById(id) as HTMLElement).shadowRoot as ShadowRoot;
+        for (const root of Array.from(shadow.querySelectorAll('[class~="mtrl-chip"]'))) {
+          cases.push({ api: "element", dir, kind: "input", root: root as HTMLElement, area: shadow });
+        }
+      }
+      for (const [dir, wrap] of wraps) {
+        for (const root of Array.from(wrap.querySelectorAll('[class~="mtrl-chip"]'))) {
+          const kind = root.querySelector(".mtrl-chip__remove") ? "input" : "filter trailing action";
+          cases.push({ api: "factory", dir, kind, root: root as HTMLElement, area: document });
+        }
+      }
+
+      const round = (value: number): string => value.toFixed(2);
+      const failures: string[] = [];
+      for (const { api, dir, kind, root, area } of cases) {
+        const label = root.querySelector('[class~="mtrl-chip__label"]')?.textContent ?? "";
+        const where = `${api} ${dir} ${kind} "${label}"`;
+        const rect = root.getBoundingClientRect();
+        const width = rect.width;
+        const issues: string[] = [];
+        // (a) the 88 px floor: the target's 48 px leave the action at least 40.
+        if (width < 88) issues.push(`${round(width)} px wide (the floor is 88; the action's share ${round(width - 48)} < 40)`);
+        // (b) the secondary control's 48 x 48 target.
+        const secondary = root.querySelector(".mtrl-chip__remove, .mtrl-chip__trailing-action") as HTMLElement | null;
+        if (secondary) {
+          const target = getComputedStyle(secondary, "::before");
+          const targetWidth = parseFloat(target.width);
+          const targetHeight = parseFloat(target.height);
+          if (Math.round(targetWidth) !== 48 || Math.round(targetHeight) !== 48) {
+            issues.push(`the secondary target is ${targetWidth} x ${targetHeight} (expected 48 x 48)`);
+          }
+        } else {
+          issues.push("the chip is missing its remove or trailing button");
+        }
+        // (c) the two regions tile the centre line; (d) neither takes hits inside
+        // the other: the specification's six probes, then every pixel. The two
+        // regions meet where the target's 48 px begin, at W - 48. Chromium
+        // hit-tests pixel-snapped boxes, so a point within half a pixel of an edge
+        // can land on it: the probes keep 2 px clear of the boundary (the site's
+        // W - 49 and W - 47, one px further in) and 1 px clear of the chip's ends.
+        const boundary = width - 48;
+        const x = (fromStart: number): number => (dir === "ltr" ? rect.left + fromStart : rect.right - fromStart);
+        const hit = (fromStart: number): string => {
+          const el = area.elementFromPoint(x(fromStart), rect.top + rect.height / 2);
+          if (!el) return "nothing";
+          if (el !== root && !root.contains(el)) return "another element";
+          if (el.closest(".mtrl-chip__remove, .mtrl-chip__trailing-action")) return "the secondary control";
+          if (el.closest(".mtrl-chip__action")) return "the primary action";
+          return `${el.localName} (neither)`;
+        };
+        const expect = (fromStart: number, wanted: string): void => {
+          const got = hit(fromStart);
+          if (got !== wanted) issues.push(`a hit ${round(fromStart)} px from the start (${round(width - fromStart)} from the end) returns ${got} (expected ${wanted})`);
+        };
+        expect(4, "the primary action");
+        expect(boundary / 2, "the primary action");
+        expect(boundary - 2, "the primary action");
+        expect(boundary + 2, "the secondary control");
+        expect(width - 24, "the secondary control");
+        expect(width - 4, "the secondary control");
+        for (let px = 0; px + 0.5 < width; px++) {
+          const at = px + 0.5;
+          if (at < 1 || at > width - 1) continue; // the chip's own ends
+          if (Math.abs(at - boundary) <= 2) continue; // where the two regions meet
+          const got = hit(at);
+          const wanted = at < boundary ? "the primary action" : "the secondary control";
+          if (got !== wanted) issues.push(`the centre line at ${round(at)} px from the start is ${got}, inside the ${wanted === "the primary action" ? "secondary control's" : "primary action's"} region`);
+        }
+        if (issues.length > 0) failures.push(`chips ${where}: ${issues.join("; ")}`);
+      }
+      return { failures, cases: cases.length };
+    });
+    assert.equal(measured.cases, 18, "the chips under test");
+    for (const line of measured.failures) console.log(`  FAIL ${line}`);
+    assert.deepEqual(measured.failures, []);
+    check("chips: a chip with a secondary action keeps the 88 px floor, its 48 x 48 target, and the two regions tile");
+  }
+
   // ---------------------------------------------------------------- progress
   await fresh(
     page,
