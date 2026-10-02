@@ -100,6 +100,8 @@ describe("explicit contrast levels are opt-in", () => {
     expect(primaryOf(today, { ...root, dark: true }, more)).toBe("#f5edff");
     expect(primaryOf(today, { root: false, theme: null, mode: null, contrast: null, dark: true }, more)).toBe("#d0bcff");
     expect(unsupportedColorSelectors(today[0]!)).toEqual([]);
+    // The theme sheet, not only the base. Split sheets are asserted below.
+    expect(unsupportedColorSelectors(today[1]!)).toEqual([]);
   });
 
   test("the full stylesheet's selectors and declarations are unchanged", () => {
@@ -114,7 +116,10 @@ describe("explicit contrast levels are opt-in", () => {
   });
 
   test("today's sheets still resolve to the fixture", () => {
-    for (const theme of themes) expect(mismatches(theme, "today")).toEqual({ total: 0, sample: [] });
+    for (const theme of themes) {
+      expect(unsupportedColorSelectors(sheets(theme, "today")[1]!)).toEqual([]);
+      expect(mismatches(theme, "today")).toEqual({ total: 0, sample: [] });
+    }
   });
 
   test("preference keeps the media guard and explicit keeps only the attribute", () => {
@@ -127,6 +132,8 @@ describe("explicit contrast levels are opt-in", () => {
     expect(explicit).toContain("[data-theme-contrast=medium]");
     expect(explicit).toContain("[data-theme-contrast=high]");
     expect(explicit).not.toContain("prefers-contrast");
+    expect(unsupportedColorSelectors(preference)).toEqual([]);
+    expect(unsupportedColorSelectors(explicit)).toEqual([]);
     // Same layer as the base's theme rules, so load order cannot reorder the layers.
     expect(inBaseLayer(explicit)).toContain(`${styleLayerOrder()}@layer mtrl.base{`);
     expect(inBaseLayer(explicit)).not.toContain("@layer mtrl.contrast");
@@ -135,6 +142,7 @@ describe("explicit contrast levels are opt-in", () => {
   test("with the contrast sheet, both load orders match today", () => {
     expect(splitEnabled()).toBe(true);
     for (const theme of themes) {
+      for (const sheet of sheets(theme, "with")) expect(unsupportedColorSelectors(sheet)).toEqual([]);
       expect(mismatches(theme, "with", false)).toEqual({ total: 0, sample: [] });
       expect(mismatches(theme, "with", true)).toEqual({ total: 0, sample: [] });
     }

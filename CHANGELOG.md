@@ -133,7 +133,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   stays standard primary `#6750a4`, not high `#312259`. The OS preference (`prefers-contrast: more`)
   still selects high contrast from `mtrl/styles/base`. Import `mtrl/styles/contrast` after
   `mtrl/styles/base`, as with `mtrl/styles/typography`: the opt-in sheets share that cascade
-  layer. The contrast colours are the same in either order.
+  layer. The contrast colours are the same in either order. `data-theme-contrast` is read
+  on the element that carries `data-theme`, or on the root when the page has no `data-theme`;
+  on any other element it does nothing (that element inherits its themed ancestor's level).
 - **A chip's `{ text }`** renders an empty chip, silently: no label, no error, no warning.
 - **Tabs `indicatorHeight` / `indicatorWidthStrategy`** are ignored: the indicator falls back to
   its variant's height (3px on a primary row, 2px on a secondary one) and automatic width.
