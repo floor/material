@@ -175,9 +175,12 @@ export interface ChipsConfig {
   selectionRequired?: boolean;
 
   /**
-   * Callback function when chip selection changes
+   * Callback function when a user changes the chip selection. It is called for
+   * a user's change only: a change made by a method (`selectByValue(values, true)`)
+   * goes to `on("change")` listeners, not to this callback. Listen to `change`
+   * for every change.
    */
-  onChange?: (event: ChipsChangeEvent, changedValue: string | null) => void;
+  onChange?: (event: ChipsChangeEvent) => void;
 
   /**
    * Component prefix for class names
@@ -252,12 +255,10 @@ export type ChipsEventListeners = Record<string, EventCallback[]>;
 /**
  * The payload of the chips set's `change`.
  *
- * It is still the array of selected values, with the fields added, and the
- * changed value still comes as a second argument, so a
- * `(selectedValues, changedValue)` handler keeps working. Both are
- * deprecated: read `selected` and `changed`. They go in the next prerelease.
+ * Read `value` for the set's current value, `selected` for selected chip
+ * values, and `changed` for the chip toggled by the user.
  */
-export interface ChipsChangeEvent extends Array<string | null> {
+export interface ChipsChangeEvent {
   /** The selection in the `value` property's shape: a string or null for a single-select set, an array for a multi-select one. */
   value: string | string[] | null;
   /** The values of the selected chips, in chip order (a chip without a value gives null) */
@@ -286,7 +287,7 @@ export interface ChipsEvents {
    * The selection after the change. Read `event.value`, the same field the
    * `<m-chips>` element's `change` carries.
    */
-  change: (event: ChipsChangeEvent, changedValue: string | null) => void;
+  change: (event: ChipsChangeEvent) => void;
   /** The newly created chip and the selection after insertion. */
   add: (event: ChipsAddEvent) => void;
   /** The removed chip and the selection after removal. */

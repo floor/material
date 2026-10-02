@@ -88,11 +88,12 @@ with CSS custom properties.
 **Kept through 1.x, deprecated.** `select.textfield` (use `textField`) and the icon button's DOM
 `toggle` event (listen to `change`) still work in 1.0. Both are removed in 2.0.
 
-**Type changes the compiler reports.** Besides renames and removals, three entries below change
+**Type changes the compiler reports.** Besides renames and removals, four entries below change
 a type your code may rely on: tabs' `on` and `off` take a closed event map, and a tab's `click`
 payload is wrapped (FLO-523); React's and Solid's `Button` type their own `onChange`, so a
-spread of full `HTMLAttributes` must omit it (FLO-380); and `SelectChangeEvent["value"]` is
-`string | null` (FLO-380).
+spread of full `HTMLAttributes` must omit it (FLO-380); `SelectChangeEvent["value"]` is
+`string | null` (FLO-380); and the chip set's `change` listener takes one object, not an array
+and a second argument (FLO-530).
 
 **Changes your compiler won't catch**
 
@@ -120,6 +121,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `tabIdFor` and `tabPanelIdFor`.
 - **Checkbox and switch `change.value`** is the boolean checked state; the HTML string token is
   `valueAttribute`, also in `event.detail`.
+- **The chip set's `change`** hands its factory listener and `onChange` one plain object,
+  `{ value, selected, changed }`, not an array with the changed value as a second argument. In
+  a leftover handler `event[0]` and `event.length` are `undefined`, `[...event]` and
+  `event.includes(x)` each throw a `TypeError` (the message is the engine's), and a second
+  parameter is `undefined`. Read `selected` and `changed`. `onChange` is called for a user's
+  change only; `on("change")` listeners get a method's change too, with `changed: null`.
 - **Chip-set `add` and `remove`** factory handlers receive `{ value, chip }` and
   `{ value, chip, chipValue }`, not the chip; `<m-chips>`'s `remove` detail `value` is the
   remaining selection, and the removed id is `chipValue`.
@@ -264,6 +271,34 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   listen to `change`. This revises 0.10.0's notes, which said it would fire "until the next
   minor". Its `detail` is `{ selected, value }`, from the factory's button and from
   `<m-icon-button>`, so a listener reading `event.detail.selected` keeps working.
+
+- **The chips set's `change` payload is a plain object and has one argument (FLO-530).**
+  `chips.on("change", handler)` listeners and the config's `onChange` are passed
+  `{ value, selected, changed }`. `value` keeps the set's single or multi value
+  shape, `selected` keeps the selected chip values, and `changed` is the toggled
+  chip's value. `on("change")` listeners get every change, with `changed: null`
+  for one made by a method (`selectByValue(values, true)`); the config's
+  `onChange` is called for a user's change only. `<m-chips>` still emits
+  `change` with `{ value }` detail. Migration:
+
+  ```ts
+  // 0.10: the event was an array, and changedValue was a second argument.
+  chips.on("change", (selectedValues, changedValue) => {
+    use(selectedValues[0], changedValue);
+  });
+  // 1.0: on("change") and onChange are each passed one object.
+  chips.on("change", ({ selected, changed }) => {
+    use(selected[0], changed);
+  });
+  ```
+
+  | Leftover 0.10 handler expression | 1.0 runtime result on the built package |
+  |---|---|
+  | `event[0]`, `event.length` | Both are `undefined`. |
+  | `[...event]` | Throws a `TypeError`. The message is the engine's: in Bun (JavaScriptCore), `Spread syntax requires ...iterable[Symbol.iterator] to be a function`. |
+  | `event.includes("a")` | Throws a `TypeError`. In Bun (JavaScriptCore): `event.includes is not a function. (In 'event.includes("a")', 'event.includes' is undefined)`. |
+  | Second `changedValue` parameter | `undefined` in both `on("change")` and `onChange`; each handler is passed exactly one argument. |
+
 - **Tabs `on` and `off` take a closed event map (FLO-523).** A group accepts
   `change` (`TabChangeEventData`). A single tab accepts `click` (the button's
   wrapped `{ event, element, originalEvent }` payload), `focus` and `blur`
