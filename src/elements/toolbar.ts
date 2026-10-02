@@ -112,6 +112,10 @@ const toolbarSpec = {
     const onOverflow = (): void => anchorMenus(component);
     overflow?.addEventListener("slotchange", onOverflow);
     anchorMenus(component);
+    // The factory syncs the roving tabindex on the bar's slotchange
+    // (src/components/toolbar/toolbar.ts). The browser queues that event as a
+    // microtask; dispatching it here sets the one tab stop before connect returns.
+    component.bar.dispatchEvent(new Event("slotchange"));
     return () => overflow?.removeEventListener("slotchange", onOverflow);
   },
 } satisfies ElementSpec<ToolbarComponent>;
