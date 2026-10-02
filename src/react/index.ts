@@ -23,7 +23,11 @@ export { Fab } from "./fab";
 export { ExtendedFab } from "./extended-fab";
 export { Checkbox } from "./checkbox";
 export { Slider } from "./slider";
-export { Textfield } from "./textfield";
+export { Textfield as TextField } from "./textfield";
+export {
+  /** @deprecated Use TextField: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
+  Textfield,
+} from "./textfield";
 export { Radios } from "./radios";
 export { NavigationRail } from "./navigation-rail";
 export { Drawer } from "./drawer";

@@ -17,6 +17,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `BottomAppBarComponent`, from `mtrl` and from each component's subpath. They are the same
   factory and types as the old names. `createTopAppBar` now returns the one public `TopAppBar`
   declaration (`top-app-bar.ts` had a second); assignability is unchanged.
+- **"Text field" in two words everywhere in the API (FLO-383):** `TextFieldDensity`,
+  `TextFieldEvents`, `TextFieldValuePayload`, `TextFieldFocusPayload` and
+  `TextFieldTrailingPayload` (`mtrl/components/textfield`); `TEXT_FIELD_VARIANTS`, `_STATES`,
+  `_TYPES`, `_EVENTS`, `_DENSITY`, `_DEFAULTS` and `_CLASSES`
+  (`mtrl/components/textfield/constants`); `textFieldElement`, `defineTextField`,
+  `TextFieldSpec`, `TextFieldElement` and `TextFieldElementComponent` (`mtrl/elements`); and the
+  `TextField` component in `mtrl/react`, `mtrl/solid` and `mtrl/svelte`, `MTextField` in
+  `mtrl/vue`. Each is the same binding as the old spelling. Every exported identifier is two
+  words; string values are unchanged: the `<m-textfield>` tag, CSS classes, event strings and
+  the constants' values, as are folders.
 - **API gaps from the 1.0 audit (FLO-384).**
   - `isDisabled()` on every component that can be disabled and lacked it: button, icon button,
     FAB, extended FAB, checkbox, switch, text field, select, radios, button group and a tab.
@@ -93,7 +103,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 - **The old names, renamed (FLO-383):** `createTextfield` → `createTextField`, `TextfieldConfig` →
   `TextFieldConfig`, `TextfieldComponent` → `TextFieldComponent`, `CardSchema` → `CardConfig`,
-  `TopAppBar` → `TopAppBarComponent`, `BottomAppBar` → `BottomAppBarComponent`. Each is flagged
+  `TopAppBar` → `TopAppBarComponent`, `BottomAppBar` → `BottomAppBarComponent`; and the
+  rest of the old text field spelling: `TextfieldDensity`, `TextfieldEvents`, the three
+  `Textfield*Payload` types, the seven `TEXTFIELD_*` constants, `textfieldElement`,
+  `defineTextfield`, `TextfieldSpec`, `TextfieldElement`, `TextfieldElementComponent`, the
+  `Textfield` adapter component and Vue's `MTextfield`. Each is flagged
   where it is imported and removed in 1.0. Tags, CSS classes, folders and events keep their
   names.
 - **Component internals on their subpaths (FLO-381).** `mtrl/components/<name>` is public API, and

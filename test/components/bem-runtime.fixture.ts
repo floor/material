@@ -5,7 +5,7 @@ import { BUTTON_CLASSES } from "../../src/components/button/constants";
 import createCheckbox from "../../src/components/checkbox";
 import createSwitch from "../../src/components/switch";
 import createTextfield from "../../src/components/textfield";
-import { TEXTFIELD_CLASSES } from "../../src/components/textfield/constants";
+import { TEXT_FIELD_CLASSES as TEXTFIELD_CLASSES } from "../../src/components/textfield/constants";
 import createMenu from "../../src/components/menu";
 import createSegmentedButton from "../../src/components/segmented-button";
 
