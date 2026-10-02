@@ -3818,6 +3818,128 @@ try {
     check("chips: a chip with a secondary action keeps the 88 px floor, its 48 x 48 target, and the two regions tile");
   }
 
+  // ---------------------------------------------------------------- text field: the trailing icon button's 48 px target (FLO-592)
+  // M3 "Text fields" -> Specs: an interactive trailing icon is an icon button
+  // with a 48 x 48 dp target (checkTextFieldA11y measures the 40 dp round state
+  // layer it centres in). The target must sit on the button's centre in both
+  // directions: FLO-592 measured it 48 px to the left in RTL, where the
+  // `touch-target` mixin's inline-start inset met a physical translate.
+  //
+  // The mixin's live users, `git grep -n "touch-target" -- src/styles`:
+  //   components/_text-field.scss:917   @include m.touch-target(48px);  <- this button
+  //   components/_checkbox.scss:243     // @include m.touch-target;  (commented; the 48px box is raised instead)
+  //   components/_switch.scss:328       // @include m.touch-target;  (commented; the 48px box is raised instead)
+  //   components/_button.scss:240       height: v.button('touch-target');   (the token, not the mixin)
+  //   components/_split-button.scss:211 height: v.button("touch-target");   (the token, not the mixin)
+  //   abstract/_config.scss:26, abstract/_mixins.scss:353, abstract/_variables.scss:345  (the export, the definition, the token)
+  // so the button is the only target the mixin draws, and it is measured here
+  // in both directions. The element has no attribute for `trailingIconLabel`,
+  // so the button exists on the factory only; its cases record that.
+  await fresh(page, `<section id="tt-field"></section>`);
+  {
+    const measured = await page.evaluate(async () => {
+      type Factory = { element: HTMLElement };
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => Factory } };
+      const icon = '<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="8"/></svg>';
+      const host = document.getElementById("tt-field") as HTMLElement;
+      type Case = { where: string; button: HTMLElement | null; area: DocumentOrShadowRoot };
+      const cases: Case[] = [];
+      for (const dir of ["ltr", "rtl"] as const) {
+        const wrap = document.createElement("div");
+        if (dir === "rtl") wrap.setAttribute("dir", "rtl");
+        wrap.style.cssText = "width:320px;padding:24px";
+        const field = w.mtrl.createTextField({ variant: "outlined", label: "Email", trailingIcon: icon, trailingIconLabel: "Clear" });
+        wrap.append(field.element);
+        const el = document.createElement("m-text-field");
+        el.setAttribute("variant", "outlined");
+        el.setAttribute("label", "Email");
+        el.setAttribute("trailing-icon", icon);
+        wrap.append(el);
+        host.append(wrap);
+        cases.push({ where: `factory ${dir}`, button: field.element.querySelector(".mtrl-text-field__trailing-icon--button"), area: document });
+        cases.push({ where: `element ${dir}`, button: (el.shadowRoot as ShadowRoot).querySelector(".mtrl-text-field__trailing-icon--button"), area: el.shadowRoot as ShadowRoot });
+      }
+      await new Promise((r) => setTimeout(r, 100));
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+
+      const round = (value: number): number => Math.round(value * 100) / 100;
+      const failures: string[] = [];
+      const lines: string[] = [];
+      for (const { where, button, area } of cases) {
+        if (!button) {
+          // Only the factory renders the button: <m-text-field> has no attribute for the label.
+          lines.push(`  text field trailing target ${where}: no button (the element has no attribute for the label)`);
+          continue;
+        }
+        const rect = button.getBoundingClientRect();
+        const target = getComputedStyle(button, "::after");
+        // The ::after has no node of its own: its box is read from the computed
+        // used values (Chrome resolves the inset to a physical left/top) plus
+        // the transform.
+        const matrix = new DOMMatrixReadOnly(target.transform);
+        const box = {
+          left: rect.left + parseFloat(target.left) + matrix.m41,
+          top: rect.top + parseFloat(target.top) + matrix.m42,
+          right: rect.left + parseFloat(target.left) + matrix.m41 + parseFloat(target.width),
+          bottom: rect.top + parseFloat(target.top) + matrix.m42 + parseFloat(target.height),
+          width: parseFloat(target.width),
+          height: parseFloat(target.height),
+        };
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dx = box.left + box.width / 2 - cx;
+        const dy = box.top + box.height / 2 - cy;
+        const issues: string[] = [];
+        if (Math.abs(box.width - 48) > 0.01 || Math.abs(box.height - 48) > 0.01) {
+          issues.push(`the target is ${round(box.width)} x ${round(box.height)} (expected 48 x 48)`);
+        }
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+          issues.push(`the target's centre is (${round(dx)}, ${round(dy)}) px from the button's centre (expected within 1)`);
+        }
+        // The hit region answers from the button's edge out to the box's edge
+        // and no further: walking outward in 0.25 px steps, the first sample
+        // that stops reaching the button is the box's edge, within the one
+        // pixel Chromium's hit testing adds beyond a box's left and top
+        // (measured 2026-10-02; the chips case above documents it).
+        const reaches = (x: number, y: number): boolean => {
+          const el = area.elementFromPoint(x, y);
+          return !!el && (el === button || button.contains(el));
+        };
+        const stops: string[] = [];
+        const sides: Array<[string, (d: number) => [number, number], number]> = [
+          ["left", (d) => [rect.left - d, cy], rect.left - box.left],
+          ["right", (d) => [rect.right + d, cy], box.right - rect.right],
+          ["top", (d) => [cx, rect.top - d], rect.top - box.top],
+          ["bottom", (d) => [cx, rect.bottom + d], box.bottom - rect.bottom],
+        ];
+        for (const [side, at, reach] of sides) {
+          if (reach < 0.5) {
+            issues.push(`the box does not reach past the button's ${side} edge (${round(reach)} px)`);
+            stops.push(`${side} -`);
+            continue;
+          }
+          let stop: number | null = null;
+          for (let i = 1; i * 0.25 <= reach + 4; i++) {
+            const d = round(i * 0.25);
+            if (!reaches(...at(d))) { stop = d; break; }
+          }
+          stops.push(`${side} ${stop === null ? "none" : round(stop)}`);
+          if (stop === null || stop < reach - 0.5 || stop > reach + 1.5) {
+            issues.push(`the ${side} hit stops at ${stop === null ? `nowhere within ${round(reach + 4)}` : `${round(stop)}`} px where the box's edge is ${round(reach)} px out (want ${round(Math.max(reach - 0.5, 0.25))} to ${round(reach + 1.5)})`);
+          }
+        }
+        lines.push(`  text field trailing target ${where}: button [${round(rect.left)}, ${round(rect.top)}, ${round(rect.right)}, ${round(rect.bottom)}], target box [${round(box.left)}, ${round(box.top)}, ${round(box.right)}, ${round(box.bottom)}], offset (${round(dx)}, ${round(dy)}), hit stops ${stops.join(", ")}`);
+        if (issues.length > 0) failures.push(`text field trailing target ${where}: ${issues.join("; ")}`);
+      }
+      return { failures, lines, cases: cases.length };
+    });
+    assert.equal(measured.cases, 4, "the cases under test");
+    for (const line of measured.lines) console.log(line);
+    for (const line of measured.failures) console.log(`  FAIL ${line}`);
+    assert.deepEqual(measured.failures, []);
+    check("text field: the trailing icon button's 48 px target is centred on the button in both directions");
+  }
+
   // ---------------------------------------------------------------- progress
   await fresh(
     page,
