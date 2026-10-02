@@ -221,6 +221,8 @@ Worker and edge runtimes are unsupported in 1.0. Each server entry lists the `br
 
 With `mtrl/ssr/react`, put a `Suspense` boundary outside the component. A boundary inside the component stays on the fallback until the component upgrades: the declarative shadow root is built from that fallback, so a button gets no slot and tabs get no tab until JavaScript runs.
 
+With `mtrl/ssr/react`, the server-rendered shadow root is built without the providers above the component. The children see that context in the page's own render: the component's light DOM, the children as React rendered them, is right. The bridge's separate render for the declarative shadow root is the one built without those providers. Until the component upgrades, what is painted is the context's default value in that shadow root (a translated tab label shows its untranslated default), or there is no declarative shadow root when a child requires its provider. Both are correct once the element upgrades. Keep context-dependent text outside mtrl components: pass the resolved string as a prop or attribute, or accept client-rendered text until the upgrade. A fix is planned for 1.1 (FLO-517). The Solid, Vue and Svelte bridges are not affected.
+
 The same HTML policy as [Markup and sanitizing](#markup-and-sanitizing) applies to `mtrl/ssr` and the four bridges.
 
 ## Imports and tree-shaking

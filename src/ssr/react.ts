@@ -2,12 +2,19 @@
 /**
  * Enable declarative shadow DOM for mtrl/react in this server process.
  * The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup.
+ * The server-rendered shadow root is built without the providers above the component.
+ * The children see that context in the page's own render; this separate render for the declarative shadow root is built without those providers.
+ * Until upgrade, the painted shadow root shows the context's default value, or there is no declarative shadow root when a child requires its provider.
+ * Pass the resolved string as a prop or attribute, or accept client-rendered text until the upgrade. A fix is planned for 1.1 (FLO-517).
  * @module ssr/react
  */
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 /**
  * The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup.
+ * The server-rendered shadow root is built without the providers above the component.
+ * The children see that context in the page's own render; this separate render for the declarative shadow root is built without those providers.
+ * Until upgrade, the painted shadow root shows the context's default value, or there is no declarative shadow root when a child requires its provider (FLO-517).
  * @module ssr/react
  */
 import "./index";
