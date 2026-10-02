@@ -126,6 +126,8 @@ The base includes the baseline theme in light and dark, the tokens, a reset, typ
 
 Library styles sit in ordered `mtrl` cascade layers, so unlayered application CSS overrides them without specificity battles.
 
+The Sass sources ship for reference; configuring them with `@use … with` is not a supported API in 1.0. Theme with CSS custom properties.
+
 ### Themes
 
 The baseline theme applies by default and follows the system light or dark preference. Choose a theme and mode on the root element:
