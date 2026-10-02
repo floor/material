@@ -191,6 +191,7 @@ bun run test:coverage                      # with a coverage report
 
 - TypeDoc comments on every public function and type, with an `@example`.
 - The file path as a comment on the first line of each file.
+- `README.md` is the GitHub page and `npm-readme.md` the npm page; a change to what one says usually belongs in both. `bun run readme:check` (after `bun run build` and `bun run size:check`) compiles every TypeScript example of both against the packed package, runs the ones marked `<!-- example: run -->`, resolves every `material/…` specifier, checks the `<m-…>` tags and attributes, the install line, the size table and the links; `bun run readme:check --online` also fetches the external links.
 - User documentation lives in md3.io's `docs/components/<name>.md`, where `bun run docs:check` type-checks and runs every example against your material checkout. Add or update the page with the change.
 
 ## Community and Communication
@@ -218,8 +219,17 @@ Until 3.0.0 is `latest`, `npm install material` installs 1.0.4, the earlier
 
 1. Open a release pull request that bumps `package.json` (`x.y.z`, or
    `x.y.z-next.N` for a pre-release), turns `[Unreleased]` in `CHANGELOG.md`
-   into the version's section, and updates the README where the release
-   changes it. Merge it when CI passes.
+   into the version's section, and updates `README.md` and `npm-readme.md`
+   where the release changes them. Merge it when CI passes.
+
+   **The 3.0.0 release pull request changes the install section** of both
+   files, between `<!-- install -->` and `<!-- /install -->`: the command
+   becomes `npm install material` and the paragraph about the `next` tag
+   goes. `bun run readme:check` holds the two to the version: it requires
+   `npm install material@next` while `package.json` is a 3.0.0 pre-release
+   and `npm install material` once it is not, so the pull request that sets
+   `3.0.0` is red until both files are changed. The size table of both files
+   is checked against `size:check` in the same run.
 2. Tag the merge commit `vx.y.z` and push the tag:
 
    ```bash
@@ -230,3 +240,8 @@ Until 3.0.0 is `latest`, `npm install material` installs 1.0.4, the earlier
 3. The workflow checks that the tag matches the version, builds, and
    publishes: a pre-release under the `next` dist-tag, a release under
    `latest`. `npm view material dist-tags` confirms.
+   What it publishes is the root manifest without its repository-only fields,
+   and `npm-readme.md` as the package's `README.md`: npm's page shows the
+   short README, GitHub the long one. `scripts/package-fixture.ts` runs that
+   same workflow step on a copy of the tree for every packed check, and
+   `size:check` asserts which README and manifest are in the tarball.

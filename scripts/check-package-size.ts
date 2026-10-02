@@ -32,6 +32,19 @@ function measure(data: Uint8Array) {
 try {
   assert(!pack.files.some((file: { path: string }) => file.path.endsWith(".map")), "Unexpected source maps in npm package");
   assert(pack.files.some((file: { path: string }) => file.path === "dist/ssr/index.js"), "Missing SSR bundle");
+  // Which README and manifest ship. The fixture packs what publish.yml's step
+  // makes of the tree, so these hold for a release: npm's page shows the short
+  // README, the repository's long one stays on GitHub, and the manifest carries
+  // nothing only the repository uses.
+  const paths = (pack.files as { path: string }[]).map(file => file.path);
+  assert.deepEqual(paths.filter(path => /readme/i.test(path)), ["README.md"], "The package ships one README, at its root");
+  const shipped = await Bun.file(join(fixture.installed, "README.md")).text();
+  assert.equal(shipped, await Bun.file("npm-readme.md").text(), "The packed README.md is not npm-readme.md");
+  assert.notEqual(shipped, await Bun.file("README.md").text(), "npm-readme.md and README.md are the same file");
+  const published = await Bun.file(join(fixture.installed, "package.json")).json() as Record<string, unknown>;
+  for (const key of ["scripts", "eslintConfig", "typedocOptions"]) {
+    assert(!(key in published), `The packed manifest still has "${key}"`);
+  }
   // The SSR bundle owns linkedom; every other shipped module (including its
   // browser stub) must remain outside the server graph. Resolve relative paths
   // as well as public subpaths, so ../ssr/index.js cannot bypass the guard.
@@ -160,6 +173,9 @@ try {
   // Measured + 1%, up to 1,000, is 1,085,000, above 1,078,000.
   // Merged with FLO-299 (a8c24f7f), same packer: 1,075,142. The README and
   // LICENSE are packed once. Measured + 1%, up to 1,000, is 1,086,000.
+  // The fixture packs what publish.yml publishes, the short npm-readme.md as README.md
+  // and the manifest without its repository-only fields: 1,065,352, same packer.
+  // Measured + 1%, up to 1,000, is 1,077,000; the ceiling stays until it is set again.
   assert(pack.size < 1_086_000, "npm tarball exceeds 1,086,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
@@ -192,6 +208,7 @@ try {
   // 1,000, is 6,476,000, above 6,458,000, so the ceiling stays.
   // Merged with FLO-299 (a8c24f7f), same packer: 6,410,644. Under 6,458,000,
   // so the ceiling stays.
+  // What publish.yml publishes (the short README, the stripped manifest): 6,379,050.
   assert(pack.unpackedSize < 6_458_000, "Unpacked package exceeds 6,458,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.

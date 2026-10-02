@@ -1,14 +1,35 @@
 # material
 
-Material Design 3 components for the web: as plain JavaScript, as web components, and as React, Vue, Svelte and Solid components. Written in TypeScript, with zero dependencies.
+Material Design 3 components for the web: as web components, as React, Vue, Svelte and Solid components, and as plain JavaScript. Written in TypeScript, with zero dependencies.
 
-material implements the M3 Expressive update: component sizes, shapes, colours and spring motion follow the Material 3 tokens. One implementation serves every way of using it, so a button looks and behaves the same in each. The documentation site, [md3.io](https://md3.io), has a live playground and examples in every framework for each component.
+```html
+<form>
+  <m-text-field name="email" type="email" label="Email" required></m-text-field>
+  <m-switch name="news" checked>Newsletter</m-switch>
+  <m-button type="submit">Sign up</m-button>
+</form>
+```
+
+Once the elements are registered ([below](#use-it-your-way)), these controls take part in the form as native ones do: its value, reset and validation. Try every component in the playground on **[md3.io](https://md3.io)**, with examples in each framework.
+
+## Why material
+
+- **Material 3 Expressive.** Component sizes, shapes, colours and spring motion follow the Material 3 tokens.
+- **One implementation, every stack.** The same component is an element (`<m-button>`), a React, Vue, Svelte or Solid component (`Button`) and a factory (`createButton`), so it looks and behaves the same in each.
+- **Measured sizes.** Every component has a gzip budget that CI enforces on each pull request, and bundlers keep only what you import. The numbers are under [Sizes](#sizes).
+- **Zero dependencies.** Installing `material` installs nothing else. React, Vue, Svelte and Solid are optional peers: material uses the one your app has.
+- **Server rendering.** Elements and framework components render to declarative shadow DOM on Node and Bun, styled at first paint, and hydrate. See [Server rendering](#server-rendering).
+- **Native behaviour.** Form controls are form-associated, and overlays open in the browser's top layer, trap focus and make the page inert where M3 says so.
 
 ## Install
 
+<!-- install -->
 ```bash
-npm install material
+npm install material@next
 ```
+
+3.0.0 is in pre-release, on the `next` tag. Until it is released, `npm install material` without the tag installs 1.0.4, an earlier and separate library (see [Where this came from](#where-this-came-from)).
+<!-- /install -->
 
 React, Vue, Svelte and Solid are optional peer dependencies: material uses the one your app has and installs none of them.
 
@@ -86,8 +107,6 @@ name.destroy();
 save.destroy();
 ```
 
-Two rules hold for every factory's events. A config `on*` option (`onChange`, `onOpen`, …) is the listener registered at creation: it gets the same argument as a listener passed to `on()`, and runs before one added later. And when `open()` or `close()` returns, the state has changed (`isOpen()`) and the event has been emitted, a cancellable `beforeopen` or `beforeclose` first where the component has one; the classes, the paint, focus and the animation may follow, so add an `open` listener before calling `open()`. Opening an open component, or closing a closed one, does nothing and emits nothing. Every overlay follows this second rule (the snackbar with `show()` and `hide()`, the split button with `expand()` and `collapse()`); a surface loaded on demand, such as the FAB menu's menu, may be painted after `open()` returns. The event that opened an overlay never dismisses it: it ignores exactly the event whose dispatch had begun when `open()` ran, and nothing later. Escape is a key press for every modal (the dialog, the modal sheets and drawer, the pickers, the full-screen search): only the topmost one answers, and a refusal (`closeOnEscape: false`, a `beforeclose` that refuses, a drawer that is not `dismissible`) holds for any number of presses; only a close request that is not a key press, such as a back gesture, can still be forced by the browser, on its third refusal. On the elements, the `open` attribute and property are applied at once and dispatch nothing; `open` and `close` are dispatched when a method or the user opens or closes. The tooltip is outside the second rule, by design: its `show()` and `hide()` wait for their delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`. The state getter is a method on every component that has one: `isOpen()` on the dialog, the menu, the select, the FAB menu, the sheets, the drawer, the snackbar and both pickers; `isExpanded()` on the search, the split button, the navigation rail and the card; `isVisible()` on the tooltip, the bottom app bar and the toolbar; `isHidden()` on the navigation bar.
-
 The factories are the fastest way to render hundreds of components at once, such as a long editable table; the elements style a shadow root each. `material/styles` loads every component's styles; for a smaller bundle, import only what you use (see [Styles](#styles)).
 
 ## Components
@@ -102,7 +121,7 @@ Every component comes three ways: a factory (`createButton`), an element (`<m-bu
 | Containment | Card, Carousel, List, Divider, Dialog, Bottom sheet, Side sheet |
 | Communication | Badge, Progress, Loading indicator, Snackbar, Tooltip |
 
-The factories are exported from `material`: `createButton`, `createIconButton`, `createButtonGroup`, `createSplitButton`, `createFab`, `createExtendedFab`, `createFabMenu`, `createToolbar`, `createCheckbox`, `createSwitch`, `createRadios`, `createChips` (with `createAssistChip`, `createFilterChip`, `createInputChip` and `createSuggestionChip`), `createSlider`, `createTextField`, `createSelect`, `createSearch`, `createDatePicker`, `createTimePicker`, `createNavigationRail`, `createDrawer`, `createTabs` and `createTab`, `createMenu`, `createTopAppBar`, `createBottomAppBar`, `createCard` (with `createCardHeader`, `createCardContent`, `createCardMedia` and `createCardActions`), `createCarousel`, `createList`, `createDivider`, `createDialog`, `createBottomSheet`, `createSideSheet`, `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar` and `createTooltip`.
+The factories are exported from `material`: `createButton`, `createIconButton`, `createButtonGroup`, `createSplitButton`, `createFab`, `createExtendedFab`, `createFabMenu`, `createToolbar`, `createCheckbox`, `createSwitch`, `createRadios`, `createChips` (with `createAssistChip`, `createFilterChip`, `createInputChip` and `createSuggestionChip`), `createSlider`, `createTextField`, `createSelect`, `createSearch`, `createDatePicker`, `createTimePicker`, `createNavigationBar`, `createNavigationRail`, `createDrawer`, `createTabs` and `createTab`, `createMenu`, `createTopAppBar`, `createBottomAppBar`, `createCard` (with `createCardHeader`, `createCardContent`, `createCardMedia` and `createCardActions`), `createCarousel`, `createList`, `createDivider`, `createDialog`, `createBottomSheet`, `createSideSheet`, `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar` and `createTooltip`.
 
 ## Styles
 
@@ -269,6 +288,26 @@ With `material/ssr/react` and `material/ssr/svelte`, the server-rendered shadow 
 
 The same HTML policy as [Markup and sanitizing](#markup-and-sanitizing) applies to `material/ssr` and the four bridges.
 
+## Events and overlays
+
+Two rules hold for every factory's events.
+
+A config `on*` option (`onChange`, `onOpen`, …) is the listener registered at creation: it gets the same argument as a listener passed to `on()`, and runs before one added later.
+
+And when `open()` or `close()` returns, the state has changed (`isOpen()`) and the event has been emitted, a cancellable `beforeopen` or `beforeclose` first where the component has one; the classes, the paint, focus and the animation may follow, so add an `open` listener before calling `open()`. Opening an open component, or closing a closed one, does nothing and emits nothing.
+
+Every overlay follows this second rule (the snackbar with `show()` and `hide()`, the split button with `expand()` and `collapse()`); a surface loaded on demand, such as the FAB menu's menu, may be painted after `open()` returns.
+
+The event that opened an overlay never dismisses it: it ignores exactly the event whose dispatch had begun when `open()` ran, and nothing later.
+
+Escape is a key press for every modal (the dialog, the modal sheets and drawer, the pickers, the full-screen search): only the topmost one answers, and a refusal (`closeOnEscape: false`, a `beforeclose` that refuses, a drawer that is not `dismissible`) holds for any number of presses; only a close request that is not a key press, such as a back gesture, can still be forced by the browser, on its third refusal.
+
+On the elements, the `open` attribute and property are applied at once and dispatch nothing; `open` and `close` are dispatched when a method or the user opens or closes.
+
+The tooltip is outside the second rule, by design: its `show()` and `hide()` wait for their delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`.
+
+The state getter is a method on every component that has one: `isOpen()` on the dialog, the menu, the select, the FAB menu, the sheets, the drawer, the snackbar and both pickers; `isExpanded()` on the search, the split button, the navigation rail and the card; `isVisible()` on the tooltip, the bottom app bar and the toolbar; `isHidden()` on the navigation bar.
+
 ## Imports and tree-shaking
 
 material publishes ESM only, with type declarations, so bundlers drop unused exports and split dynamic imports. From CommonJS, load it with a dynamic `import('material')`.
@@ -337,7 +376,7 @@ configureHTML({ sanitize: (html) => DOMPurify.sanitize(html) });
 
 // Trusted Types: under `require-trusted-types-for 'script'` a plain string
 // assignment throws, so return a TrustedHTML from a policy your CSP allows
-const policy = window.trustedTypes.createPolicy('mtrl', {
+const policy = window.trustedTypes.createPolicy('app', {
   createHTML: (html) => DOMPurify.sanitize(html),
 });
 configureHTML({ sanitize: (html) => policy.createHTML(html) });
@@ -393,6 +432,40 @@ On a declaration child:
 
 <!-- /markup-attributes -->
 
+## Sizes
+
+What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from the packed package by `bun run size:check`:
+
+<!-- sizes -->
+| Import | gzip |
+|--------|-----:|
+| `createButton` from `material`, initial chunks (its progress indicator loads on demand) | 7.4 kB |
+| `createButton`, in one file | 13.7 kB |
+| `createButton`, `createTextField` and `createCheckbox`, in one file | 19.8 kB |
+| Everything the root exports (`export * from 'material'`), in one file | 126.9 kB |
+| `material/styles/base` | 2.9 kB |
+| `material/styles/base` and `material/styles/button` | 5.2 kB |
+| `material/styles`, the full stylesheet | 62.2 kB |
+<!-- /sizes -->
+
+`bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size.
+
+<!-- size-comparison: if the measured table against Material Web (@material/web) is shown, it goes
+     here, whole: the cases where material is larger beside the ones where it is smaller. No
+     comparative size claim anywhere else in this file. -->
+
+## Browser support
+
+Current Chrome, Edge, Firefox and Safari. The spring motion uses CSS `linear()` easing (Safari 17.2 or later); older browsers render every component but skip those transitions. The elements use form-associated custom elements and the top layer (`popover` and `<dialog>`), both available in every current browser.
+
+## Upgrading
+
+`material` 3.0.0 removes what `mtrl` 0.10 deprecated. Upgrade to the latest `mtrl` 0.10.x first: it has the 3.0.0 names beside the old ones and flags in your editor each name, option and constant 3.0.0 removes. Then change the package name to `material` and follow the migration guide. Each step is in the changelog:
+
+- From 0.10: [Migrating from 0.10.x](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-010x), the 3.0.0 guide.
+- From 0.9: [Migrating from 0.9.x](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-09x).
+- From 0.7: [the 0.8.0 changes](https://github.com/floor/material/blob/main/CHANGELOG.md#080---2026-09-15).
+
 ## Where this came from
 
 The package was published as `mtrl` up to 0.10.x. The history before 3.0.0 was developed in
@@ -404,30 +477,6 @@ Versions of `material` up to 1.0.4 are an earlier, separate library (GPL-3). Its
 
 What a page meets keeps the name: the `mtrl-` class prefix, the `--mtrl-` custom properties,
 the `m-` tags and the `mtrl.*` cascade layers are unchanged.
-
-## Upgrading from `mtrl` 0.10
-
-`material` 3.0.0 removes what 0.10 deprecated. Upgrade to the latest `mtrl` 0.10.x first: it has the 3.0.0 names beside the old ones and flags in your editor each name, option and constant 3.0.0 removes. Then change the package name to `material` and follow the [3.0.0 migration guide](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-010x): `material` is ESM-only, the package root keeps the components (the internals move to their subpaths), "text field" is two words in every identifier, and a few leftovers fail silently instead of at compile time, such as a chip's `{ text }`, which renders an empty chip.
-
-## Upgrading from `mtrl` 0.9
-
-0.10.0 adds the elements and framework components; for factory users, most apps need nothing. The changes to check are listed in the [0.10.0 changelog's migration section](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-09x): setters no longer emit `change`, the time picker's events pass `{ value }`, the `--mtrl-sys-color-*-rgb` properties are gone, disabled non-form roots use `aria-disabled`, cards are `article`s, and the text field's DOM gained a `__field` wrapper.
-
-## Upgrading from `mtrl` 0.7
-
-0.8.0 aligns the components with Material 3 expressive, and some of that changes the API or the styles:
-
-- `createSheet` is removed; use `createBottomSheet` or `createSideSheet`.
-- FAB and extended FAB: `variant: 'primary'`, `'secondary'` and `'tertiary'` are now the tone styles; the former look is `'primary-container'` (the default), `'secondary-container'` and `'tertiary-container'`.
-- Component custom properties are renamed to `--mtrl-<component>-<name>`, for example `--drawer-width` to `--mtrl-drawer-width` and `--item-offset` to `--mtrl-list-item-offset`.
-- `title-large` uses weight 400, as M3 specifies.
-- The slider draws with DOM and CSS; styles for `.mtrl-slider-canvas` no longer apply.
-
-The full list, with every renamed property, is in the [0.8.0 changelog](https://github.com/floor/material/blob/main/CHANGELOG.md#080---2026-09-15).
-
-## Browser support
-
-Current Chrome, Edge, Firefox and Safari. The spring motion uses CSS `linear()` easing (Safari 17.2 or later); older browsers render every component but skip those transitions. The elements use form-associated custom elements and the top layer (`popover` and `<dialog>`), both available in every current browser.
 
 ## Contributing
 

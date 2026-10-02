@@ -135,6 +135,8 @@ jobs:
         run: bun run ssr-consumer:check
       - name: Packed imports and size budgets
         run: bun run size:check
+      - name: README examples, specifiers, sizes and links against the packed package
+        run: bun run readme:check
       - name: Per-component gzip budgets
         run: bun run size
       - name: One adapter component ships only its element
