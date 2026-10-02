@@ -112,10 +112,14 @@ describe("dialog, layer: top", () => {
 
   test("open() shows it with showModal() at once, and close() closes it once and keeps it in place", async () => {
     const { dialog, closes } = make();
+    const opened: string[] = [];
+    dialog.on("open", () => { opened.push("open"); });
     dialog.open();
     expect(calls).toEqual(["showModal"]);
     expect(dialog.element.hasAttribute("open")).toBe(true);
+    // Synchronous in the top layer: state and event are there on return (FLO-543)
     expect(dialog.isOpen()).toBe(true);
+    expect(opened).toEqual(["open"]);
     dialog.close();
     expect(calls).toEqual(["showModal", "close"]);
     await after(400);
