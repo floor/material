@@ -86,7 +86,9 @@ test("releaseNotes ends the section with the npm, docs and history footer", () =
   expect(releaseNotes(CHANGELOG, "0.10.4")).toBe(
     "### Fixed\n\n- The range band.\n\n---\n\n" +
       "npm: [`material@0.10.4`](https://www.npmjs.com/package/material/v/0.10.4) · Docs: [md3.io](https://md3.io) · " +
-      "Full history: [CHANGELOG.md](https://github.com/floor/material/blob/main/CHANGELOG.md)\n",
+      "Full history: [CHANGELOG.md](https://github.com/floor/material/blob/main/CHANGELOG.md)\n\n" +
+      "The history before 3.0.0 was developed in `floor/mtrl`; `#numbers` in commit subjects before 3.0.0 refer to " +
+      "[pull requests there](https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed).\n",
   );
 });
 

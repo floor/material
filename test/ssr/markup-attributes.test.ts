@@ -153,7 +153,7 @@ test("server rendering docs name unsupported runtimes, Suspense fallbacks, and e
   const svelte = readFileSync("src/ssr/svelte.ts", "utf8");
   const unreleased = changelog.split("## [Unreleased]")[1]?.split("\n## [")[0] ?? "";
   for (const text of [readme, unreleased]) {
-    expect(text).toContain("Worker and edge runtimes are unsupported in 1.0");
+    expect(text).toContain("Worker and edge runtimes are unsupported in `material` 3.0.0");
     expect(text).toContain("material/ssr is server-only");
   }
   expect(readme).toContain("put a `Suspense` boundary outside the component");

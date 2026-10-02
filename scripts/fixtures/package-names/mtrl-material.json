@@ -235,6 +235,18 @@
       "file": "README.md",
       "text": "https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed",
       "reason": "the pulls URL in \"Where this came from\" names the repository the history was developed in, not a specifier"
+    },
+    {
+      "id": "release-notes-history-link",
+      "file": "scripts/release-notes.ts",
+      "text": "https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed",
+      "reason": "the pulls URL in the release footer's history sentence names the repository the history was developed in, not a specifier"
+    },
+    {
+      "id": "release-notes-test-history-link",
+      "file": "test/scripts/release-notes.test.ts",
+      "text": "https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed",
+      "reason": "the expected footer in the script's test carries the same history sentence, not a specifier"
     }
   ]
 }
