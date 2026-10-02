@@ -116,6 +116,14 @@ $component: '#{base.$prefix}-radios';
         margin-inline: 0 8px;
       }
     }
+
+    // An empty label leaves the 40px control. The row is the 48dp target and
+    // the control is centred in it: the circle inset is 14px and the state
+    // layer inset is 4px. Without the width the row would be 40px.
+    &:has(> .#{$component}__text:empty) {
+      min-width: 48px;
+      justify-content: center;
+    }
   }
 
   // Radio control: the 40dp state layer area
@@ -196,5 +204,11 @@ $component: '#{base.$prefix}-radios';
   // margin-left, 0px in right-to-left layouts). FLO-266.
   &__text {
     margin-inline-start: 8px;
+
+    // An empty span would still take the 8px gap and push the control to the
+    // inline start. Taking no space lets the unlabelled row centre it.
+    &:empty {
+      display: none;
+    }
   }
 }
