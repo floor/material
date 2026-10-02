@@ -86,13 +86,17 @@ export interface InputFeature {
   input: HTMLInputElement;
 
   /**
-   * Gets the current input value
+   * Gets the current input value.
+   * In 1.0 `getValue()` returns the checked boolean, and the input's string
+   * value is `getValueAttribute()`.
    * @returns Current value
    */
   getValue: () => string;
 
   /**
-   * Sets the input value and emits a value event
+   * Sets the input value and emits a value event.
+   * In 1.0 `setValue()` takes the checked boolean and is silent (no `value`
+   * event); the input's string value is set with `setValueAttribute()`.
    * @param value - New value to set
    * @returns Component instance for chaining
    */

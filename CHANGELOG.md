@@ -27,6 +27,27 @@ Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
   own events; the radio factory's `change` reports `null`, not `""`, when nothing is selected;
   `withInput`'s `change` reports the checked boolean as `value`, with the input's string value
   as `valueAttribute`.
+- **`select.menu` and `splitButton.menu`** (the inner menu component) are removed in 1.0. Use
+  the component's own methods and events: on the select `open()`, `close()`, `isOpen()`,
+  `getOptions()`, `setOptions()` and `open`, `close`, `change`; on the split button `expand()`,
+  `collapse()`, `isExpanded()` and `expand`, `collapse`, `select` (FLO-543).
+- **Told in the TSDoc, for 1.0, values and payloads:**
+  - the radio factory's `getValue()` returns `null` when nothing is selected, and `setValue`
+    accepts `null` to clear;
+  - `withInput`'s `getValue()` and `setValue()` work on the checked boolean, the string is
+    `getValueAttribute()` / `setValueAttribute()`, and `setValue` emits no `value` event;
+  - the carousel's `change` carries the index as `value`, and `index` is gone.
+- **Told in the TSDoc, for 1.0, the `on*` options that become their event's listener:** each
+  receives what a listener passed to `on(event)` receives.
+  - Time picker `onConfirm`: `{ value }`, not the time string.
+  - Search `onSubmit` and `onInput`: the `SearchEvent` (the query is `event.value`), not the
+    string. `onClear`: the `SearchEvent`. `onSuggestionSelect`: the `SearchEvent` (the
+    suggestion is `event.suggestion`). `onExpand` and `onCollapse`: the event's object.
+  - Navigation rail `onExpand` and `onCollapse`: `{ expanded: true }` and `{ expanded: false }`.
+  - A chip's `onChange`: one object, `{ selected, chip, value }`, not `(selected, chip)`. A
+    chip's `onClick`: `{ event, originalEvent, element }`, not the chip. The chip set's
+    `onChange`: one object, `{ value, selected, changed }`, and it also hears
+    `selectByValue(values, true)`.
 
 ### Fixed
 

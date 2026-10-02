@@ -109,7 +109,11 @@ export interface SplitButtonComponent {
   /** The trailing button's element */
   trailingElement: HTMLButtonElement;
 
-  /** The menu, when the component was given items */
+  /**
+   * The menu, when the component was given items
+   * @deprecated Removed in 1.0. Use the split button's own methods and events: `expand()`,
+   * `collapse()`, `isExpanded()`, and `expand`, `collapse` and `select`.
+   */
   menu?: MenuComponent;
 
   /** Sets the leading button's label */
