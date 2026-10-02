@@ -36,7 +36,7 @@ import { TIMEPICKER_DEFAULTS } from "../../src/components/timepicker/constants";
 // @ts-expect-error checkbox variant: M3 has one checkbox style (FLO-94, FLO-265)
 export const checkboxVariant: CheckboxConfig = { variant: "filled" };
 // @ts-expect-error list prefix: fixed at build time (FLO-118)
-export const listPrefix: ListConfig = { prefix: "x" };
+export const listPrefix: ListConfig = { items: [], prefix: "x" };
 // @ts-expect-error radios rippleConfig: never applied (FLO-266)
 export const radiosRipple: RadiosConfig = { name: "r", options: [], rippleConfig: { duration: 300 } };
 // @ts-expect-error closeOnSelect: the time picker is confirmed with OK (FLO-281)
