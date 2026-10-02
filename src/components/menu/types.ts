@@ -401,8 +401,8 @@ export interface MenuComponent {
    *
    * From then on a click outside and Escape close it (`closeOnClickOutside`,
    * `closeOnEscape`). The event that opened it never does: the click or the
-   * key press still on its way up the document is ignored, unless it was made
-   * after `open()` ran.
+   * key press whose dispatch had begun when `open()` ran is ignored, and only
+   * that one.
    * @param event - Optional event that triggered the open
    * @param interactionType - The type of interaction that triggered the open ('mouse' or 'keyboard')
    * @returns The menu component for chaining

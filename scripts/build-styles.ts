@@ -1,23 +1,18 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as sass from "sass";
 import {
   componentStyles, fullOnlyStyles, themeStyles, standaloneThemes, baseStyles, typographyStyles, typographyDependencies, utilityStyles,
-  resolveStyleDependencies,
+  contrastStyle, resolveStyleDependencies,
 } from "./style-manifest";
 import { preupgradeSheet } from "../src/elements/styles";
 
-/**
- * Cascade order repeated at the top of every selective stylesheet. Pre-upgrade
- * is first: a file that only opens `@layer mtrl.preupgrade` and is parsed
- * earlier stays first, because this statement appends the names it does not
- * yet know. The same string in whichever asset loads first locks the order.
- */
+/** Same string as `styleLayerOrder`. The pre-upgrade check and its test name this. */
 export function cascadeLayerOrder(): string {
-  const layers = ["preupgrade", "base", "utilities", ...resolveStyleDependencies(Object.keys(componentStyles))];
-  return `@layer ${layers.map(layer => `mtrl.${layer}`).join(",")};`;
+  return styleLayerOrder();
 }
 
 /** JS module for one element stylesheet. It registers shadow CSS and nothing else. */
@@ -30,6 +25,55 @@ export function elementStyleModule(name: string, css: string, imports: string[])
 /** One pre-upgrade file: the banner and the rules in `@layer mtrl.preupgrade`. */
 export function preupgradeStylesheet(rules: string, banner: string): string {
   return `${banner}\n${preupgradeSheet(rules)}\n`;
+}
+
+/** Which part of `create-theme-contrast` a compilation emits. See `$contrast-emit`. */
+export type ContrastEmit = "all" | "preference" | "explicit";
+
+export function sassOptions(): sass.StringOptions<"sync"> {
+  return { loadPaths: [resolve("src/styles")], style: "compressed", logger: sass.Logger.silent };
+}
+
+/**
+ * The cascade-layer prelude on every `mtrl/styles/*` asset, including
+ * `styles/contrast`. Pre-upgrade is first: a file that only opens
+ * `@layer mtrl.preupgrade` and is parsed earlier stays first, because this
+ * statement appends the names it does not yet know. The same string in
+ * whichever asset loads first locks the order. A `themes/<name>-contrast`
+ * file is unlayered and does not declare this order, so it cannot place
+ * another layer ahead of pre-upgrade.
+ */
+export function styleLayerOrder(): string {
+  const layers = ["preupgrade", "base", "utilities", ...resolveStyleDependencies(Object.keys(componentStyles))];
+  return `@layer ${layers.map(layer => `mtrl.${layer}`).join(",")};`;
+}
+
+/** Theme rules from the base live in `mtrl.base`. Contrast uses that same layer. */
+export function inBaseLayer(css: string): string {
+  return `${styleLayerOrder()}@layer mtrl.base{${css}}`;
+}
+
+/**
+ * Compile selective sources. `preference` keeps standard roles and the
+ * `prefers-contrast` block; `explicit` is not used here (that sheet is only
+ * the contrast block: `compileExplicitContrast`).
+ */
+export function compileThemeSources(sources: string[], emit: ContrastEmit = "all"): string {
+  const config = emit === "all" ? ""
+    : `@use "themes/base-theme" as contrast-config with ($contrast-emit: ${emit});\n`;
+  const body = sources.map((source, i) => `@use "${source}" as entry${i};`).join("\n");
+  return sass.compileString(config + body, sassOptions()).css;
+}
+
+const CONTRAST_MARKER = "// contrast roles: generated, do not edit";
+
+/** The explicit `data-theme-contrast` rules of one theme, and not its standard roles. */
+export function compileExplicitContrast(name: string): string {
+  const source = readFileSync(`src/styles/themes/_${name}.scss`, "utf8");
+  const at = source.indexOf(CONTRAST_MARKER);
+  if (at < 0) throw new Error(`${name} has no contrast block`);
+  const scss = `@use "themes/base-theme" as * with ($contrast-emit: explicit);\n${source.slice(at)}`;
+  return sass.compileString(scss, sassOptions()).css;
 }
 
 /** Verify CSS dependencies against the emitted JS, including lazy imports. */
@@ -61,10 +105,7 @@ async function validateRuntimeDependencies(outdir: string) {
 export async function buildStyles(outdir: string, banner: string) {
   resolveStyleDependencies(Object.keys(componentStyles));
   await validateRuntimeDependencies(outdir);
-  const options: sass.StringOptions<"sync"> = {
-    loadPaths: [resolve("src/styles")], style: "compressed", logger: sass.Logger.silent,
-  };
-  const use = (sources: string[]) => sources.map((source, i) => `@use "${source}" as entry${i};`).join("\n");
+  const options = sassOptions();
   const full = sass.compileString(await readFile("src/styles/main.scss", "utf8"), options);
 
   // Use Sass's parsed dependency graph, not text matching, to detect manifest drift.
@@ -76,19 +117,17 @@ export async function buildStyles(outdir: string, banner: string) {
   const themes = loaded.filter(path => path.startsWith("themes/") && !["themes/_index.scss", "themes/_base-theme.scss"].includes(path)).sort();
   assert.deepEqual(themes, themeStyles.map(name => `themes/_${name}.scss`).sort(), "Theme CSS manifest differs from the full stylesheet");
 
-  async function emit(path: string, sources: string[], dependencies: string[] = []) {
-    const css = sass.compileString(use(sources), options).css;
+  async function emit(path: string, sources: string[], dependencies: string[] = [], contrast: ContrastEmit = "all") {
+    const css = compileThemeSources(sources, contrast);
     if (path.startsWith("styles/")) {
       const name = path.slice("styles/".length);
       // Vite can hoist shared CSS ahead of (or after) its consumer. Declare the
       // same cascade order in EVERY asset so the first loaded asset establishes
       // it, even when the base asset is loaded later. App CSS stays unlayered.
-      // `preupgrade` is first, so a pre-upgrade file parsed before this asset
-      // (it only opens `@layer mtrl.preupgrade`) stays first when this statement
-      // appends the rest. Import order against base.css does not reorder it.
+      const order = styleLayerOrder();
       // Typography used to be part of the base file, so its rules stay in
       // mtrl.base. A new layer would change the order every sheet declares.
-      const order = cascadeLayerOrder();
+      // Contrast is emitted separately, in that same layer (`emitExplicit`).
       const layer = name === "typography" ? "base" : name;
       await writeFile(`${outdir}/${path}.css`, `${banner}\n${order}@layer mtrl.${layer}{${css}}\n`);
       // JS module edges are deduplicated across entries. Nested CSS @imports
@@ -100,19 +139,37 @@ export async function buildStyles(outdir: string, banner: string) {
       await writeFile(`${outdir}/${path}.css`, `${banner}\n${css}\n`);
     }
   }
+  // Explicit contrast sits in mtrl.base, the layer the base's theme rules use,
+  // so load order against `styles/base` cannot put the two in different layers.
+  // It does not import the base: within one layer, specificity decides.
+  async function emitExplicit(path: string, theme: string, layered: boolean) {
+    const css = compileExplicitContrast(theme);
+    if (layered) {
+      const name = path.slice("styles/".length);
+      await writeFile(`${outdir}/${path}.css`, `${banner}\n${styleLayerOrder()}@layer mtrl.base{${css}}\n`);
+      await writeFile(`${outdir}/${path}.js`, `\nimport "./${name}.css";\n`);
+      await writeFile(`${outdir}/${path}.d.ts`, "export {};\n");
+    } else {
+      await writeFile(`${outdir}/${path}.css`, `${banner}\n${css}\n`);
+    }
+  }
   await mkdir(`${outdir}/styles`, { recursive: true });
   await mkdir(`${outdir}/themes`, { recursive: true });
   await writeFile(`${outdir}/styles.css`, `${banner}\n${full.css}\n`);
   // `import 'mtrl/styles'` resolves through the types condition under NodeNext,
   // as the per-component entries do
   await writeFile(`${outdir}/styles.d.ts`, "export {};\n");
-  await emit("styles/base", baseStyles);
+  await emit("styles/base", baseStyles, [], "preference");
   await emit("styles/typography", typographyStyles, typographyDependencies);
+  await emitExplicit(`styles/${contrastStyle}`, "baseline", true);
   await emit("styles/utilities", utilityStyles);
   for (const [name, entry] of Object.entries(componentStyles)) {
     await emit(`styles/${name}`, [entry.source], entry.dependencies);
   }
-  for (const name of [...themeStyles, ...standaloneThemes]) await emit(`themes/${name}`, [`themes/${name}`]);
+  for (const name of [...themeStyles, ...standaloneThemes]) {
+    await emit(`themes/${name}`, [`themes/${name}`], [], "preference");
+    await emitExplicit(`themes/${name}-contrast`, name, false);
+  }
   await emitElementStyles(outdir, options, banner);
 }
 

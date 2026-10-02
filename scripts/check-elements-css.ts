@@ -103,6 +103,11 @@ const typography = await readFile("dist/styles/typography.css", "utf8");
 assert(typography.includes(order), "typography.css does not declare the shared layer order");
 assert(typography.includes("@layer mtrl.base{"), "typography rules left mtrl.base");
 assert(!typography.includes("@layer mtrl.typography"), "typography opened its own layer");
+const contrast = await readFile("dist/styles/contrast.css", "utf8");
+assert(contrast.includes(order), "contrast.css does not declare the shared layer order");
+assert(contrast.includes("@layer mtrl.base{"), "contrast rules left mtrl.base");
+const themeContrast = await readFile("dist/themes/baseline-contrast.css", "utf8");
+assert(!themeContrast.includes("@layer"), "a -contrast theme file declares a layer order");
 const button = await readFile("dist/elements/preupgrade/button.css", "utf8");
 assert(!button.includes("@layer mtrl.preupgrade,mtrl.base"), "a per-element file redeclares the layer order");
 assert.equal(

@@ -86,7 +86,7 @@ name.destroy();
 save.destroy();
 ```
 
-Two rules hold for every factory's events. A config `on*` option (`onChange`, `onOpen`, …) is the listener registered at creation: it gets the same argument as a listener passed to `on()`, and runs before one added later. And when `open()` or `close()` returns, the state has changed (`isOpen()`) and the event has been emitted, a cancellable `beforeopen` or `beforeclose` first where the component has one; the classes, the paint, focus and the animation may follow, so add an `open` listener before calling `open()`. Opening an open component, or closing a closed one, does nothing and emits nothing, and the event that opened it never dismisses it. The dialog, the menu, the select, the split button, the snackbar (`show()` and `hide()`), the date picker and the time picker follow the second rule; the other overlays join them before 1.0. The tooltip is outside it, by design: its `show()` and `hide()` wait for their delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`.
+Two rules hold for every factory's events. A config `on*` option (`onChange`, `onOpen`, …) is the listener registered at creation: it gets the same argument as a listener passed to `on()`, and runs before one added later. And when `open()` or `close()` returns, the state has changed (`isOpen()`) and the event has been emitted, a cancellable `beforeopen` or `beforeclose` first where the component has one; the classes, the paint, focus and the animation may follow, so add an `open` listener before calling `open()`. Opening an open component, or closing a closed one, does nothing and emits nothing. Every overlay follows this second rule (the snackbar with `show()` and `hide()`, the split button with `expand()` and `collapse()`); a surface loaded on demand, such as the FAB menu's menu, may be painted after `open()` returns. The event that opened an overlay never dismisses it: that holds for the dialog, the menu, the select, the split button, the FAB menu, the modal sheets and the modal drawer, and will for the search and the pickers before 1.0. Escape is a key press for the dialog, the modal sheets and the modal drawer: only the topmost one answers, and a refusal (`closeOnEscape: false`, a `beforeclose` that refuses, a drawer that is not `dismissible`) holds for any number of presses; only a close request that is not a key press, such as a back gesture, can still be forced by the browser, on its third refusal. On the elements, the `open` attribute and property are applied at once and dispatch nothing; `open` and `close` are dispatched when a method or the user opens or closes. The tooltip is outside the second rule, by design: its `show()` and `hide()` wait for their delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`. The state getter is a method on every component that has one: `isOpen()` on the dialog, the menu, the select, the FAB menu, the sheets, the drawer, the snackbar and both pickers; `isExpanded()` on the search, the split button, the navigation rail and the card; `isVisible()` on the tooltip, the bottom app bar and the toolbar; `isHidden()` on the navigation bar.
 
 The factories are the fastest way to render hundreds of components at once, such as a long editable table; the elements style a shadow root each. `mtrl/styles` loads every component's styles; for a smaller bundle, import only what you use (see [Styles](#styles)).
 
@@ -155,13 +155,22 @@ document.documentElement.dataset.themeMode = 'dark';
 
 Available themes: `baseline`, `ocean`, `desert`, `forest`, `sunset`, `spring`, `summer`, `autumn`, `brownbeige`, `sageivory`, `tealcaramel` and `highcontrast`. With selective styles, import the theme's entry, for example `mtrl/themes/ocean`.
 
-Every theme supports `data-theme-contrast="standard"`, `"medium"` and `"high"` on the same element as `data-theme` and `data-theme-mode`:
+Every theme supports `data-theme-contrast="standard"`, `"medium"` and `"high"` on the same element as `data-theme` and `data-theme-mode`. The attribute is opt-in: the full stylesheet includes it, and selective styles add `mtrl/styles/contrast` for the baseline theme, or `mtrl/themes/<name>-contrast` beside `mtrl/themes/<name>`. Without that import the attribute changes no colour. The OS preference does not need an import.
 
 ```html
 <html data-theme="desert" data-theme-mode="dark" data-theme-contrast="high">
 ```
 
-Without `data-theme-contrast`, `prefers-contrast: more` selects high contrast on every themed element independently. An explicit `standard` opts out on that element; `medium` overrides the preference too. Contrast settings do not inherit from an ancestor across a nested theme: put `data-theme-contrast` on the same element as each `data-theme`, including nested sections. For example, opting out on the root does not opt out a nested theme without its own `data-theme-contrast="standard"`.
+```typescript
+import 'mtrl/styles/base';
+import 'mtrl/styles/contrast';
+import 'mtrl/themes/desert';
+import 'mtrl/themes/desert-contrast';
+```
+
+Import `mtrl/styles/contrast` after `mtrl/styles/base`, as with `mtrl/styles/typography`: the opt-in sheets share the base cascade layer, so their order inside it matters. Typography's heading margins depend on that order. The contrast sheet's colours do not: an explicit level is a more specific selector than the standard rule, and `prefers-contrast: more` is guarded by `:not([data-theme-contrast])`, so either load order resolves the same colours.
+
+Without `data-theme-contrast`, `prefers-contrast: more` selects high contrast on every themed element independently. An explicit `standard` opts out on that element; `medium` overrides the preference too. Contrast settings do not inherit from an ancestor across a nested theme: put `data-theme-contrast` on the same element as each `data-theme`, including nested sections. For example, opting out on the root does not opt out a nested theme without its own `data-theme-contrast="standard"`. `data-theme-contrast` is read on the element that carries `data-theme`, or on the root when the page has no `data-theme`; on any other element it does nothing (that element inherits its themed ancestor's level).
 
 The default baseline also supports this setting without `data-theme`. On that unthemed root, both standard and higher contrast follow the OS color scheme and `.dark-theme`, ignoring `data-theme-mode`. Medium and high use M3 contrast levels 0.5 and 1.0; hand-authored themes derive them with Tonal Spot from their documented seed (falling back to their light primary), preserving their light secondary and tertiary hues and chroma. Neutral palettes come from the seed, while standard colors stay unchanged. Success, warning and info keep their existing status colors. The `highcontrast` theme is a theme in its own right and supports all three contrast settings.
 
@@ -234,6 +243,15 @@ Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, 
 ## Server rendering
 
 `renderElement` from `mtrl/ssr` renders an element to declarative shadow DOM. Import `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` in the server bootstrap and that framework's components emit the same roots. Node and Bun are supported in 1.0. Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one.
+
+**Styles: inline by default.** Each root carries its whole CSS as a `<style>`, so it is styled at first paint in every engine with no extra request. That has two costs:
+
+- **How well it compresses depends on the compressor.** gzip cannot see a repeat further back than its 32 KB window. A select's root is about 44 KB of style text, so gzip never finds the previous select: 30 selects measured 141.0 KB with gzip against 5.0 KB with brotli. Smaller roots compress well when the same element repeats (30 buttons, at 16 KB a root: 6.4 KB with gzip; 30 dialogs: 10.3 KB), and badly when large roots of different types alternate, because the previous copy of each is then out of the window: selects, text fields, dialogs and buttons in turn measured 83.9 KB with gzip against 8.1 KB with brotli. Serve brotli, or use link mode for pages with many selects, or that mix large roots (text fields, dialogs) in turn.
+- **Uncompressed it is large:** 0.5 to 0.9 MB for 30 to 44 roots (489 KB for 30 buttons, 671 KB for a list page of 44 roots, 878 KB for the 30 large roots). That matters for anything that stores or streams the HTML uncompressed.
+
+**Link mode** (`renderElement(tag, attributes, children, { styles: 'link', cssBase: '/css' })`, with `dist/elements/css` served at that base) writes `<link>` tags in place of the style text: the same pages are 15 to 40 KB of HTML, and the stylesheets are fetched once and cached. Its caveat: WebKit paints the roots unstyled until the stylesheets arrive (about 470 ms with each stylesheet 300 ms away; a preload in the head does not help), where Chromium and Firefox wait for them before painting.
+
+Measured on Playwright's engines (Chromium 153, Firefox 155, WebKit 26.6); sizes are of the HTML `renderElement` returns, gzip at level 9, brotli at its default.
 
 A framework page that server-renders without that bridge (Next.js, Nuxt, SvelteKit, SolidStart) does not reserve an element's box between the HTML and hydration. Put the `<link>` above in `<head>` (or import the stylesheet). The link reserves the box from the first paint, before any script. The overlap, a pre-upgrade rule painting over a host that already has a shadow root, shows only when that page also loads the stylesheet.
 

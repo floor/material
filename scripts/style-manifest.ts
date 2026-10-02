@@ -62,6 +62,12 @@ export const baseStyles = [
   "themes/baseline", "base/foundation", "base/reset",
   "utilities/ripple", "base/document",
 ];
+
+// Opt-in explicit contrast for the baseline theme (`mtrl/styles/contrast`).
+// Emitted in the base cascade layer, beside typography. A theme's own file is
+// `mtrl/themes/<name>-contrast`.
+export const contrastStyle = "contrast";
+
 // The type classes, text utilities, heading styles and typescale tokens that
 // left the base (FLO-539). Emitted in the base cascade layer: see build-styles.
 export const typographyStyles = [

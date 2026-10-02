@@ -43,6 +43,7 @@ exists only in 1.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
 | `SELECT_CLASSES.TEXTFIELD` | `SELECT_CLASSES.TEXT_FIELD`, the same value. A recorded exception: 0.10.x flags the old key but has no new one, so change it when you upgrade. In 1.0 the old key reads `undefined`. |
 | `select.textfield` | `select.textField`. A recorded exception, like the key above: 0.10.x flags the old name but has no `textField`, so rename it when you upgrade. In 1.0 `select.textfield` reads `undefined`. |
 | `CardSchema` | `CardConfig` |
+| the time picker's config option `isOpen`, and its default `TIMEPICKER_DEFAULTS.IS_OPEN` | `open` and `TIMEPICKER_DEFAULTS.OPEN`, as on the dialog and the drawer. `isOpen()` is the method that reads the state |
 | `TopAppBar`, `BottomAppBar` (the factory types) | `TopAppBarComponent`, `BottomAppBarComponent` |
 | a chip's `text` | `label` |
 | tabs `indicatorHeight`, `indicatorWidthStrategy` | `indicator.height`, `indicator.widthStrategy` |
@@ -125,6 +126,16 @@ the menu open, keeps both.
 
 Check these by searching your code: they compile, or come from plain JavaScript, markup or CSS.
 
+- **An app with its own contrast switch** adds `import 'mtrl/styles/contrast'` (and
+  `mtrl/themes/<name>-contrast` for a theme it imports on its own). Without that import,
+  `data-theme-contrast="medium"` or `"high"` changes no colour, and nothing warns (FLO-540).
+  Measured on the unthemed root: with the OS asking for more contrast, `data-theme-contrast="high"`
+  stays standard primary `#6750a4`, not high `#312259`. The OS preference (`prefers-contrast: more`)
+  still selects high contrast from `mtrl/styles/base`. Import `mtrl/styles/contrast` after
+  `mtrl/styles/base`, as with `mtrl/styles/typography`: the opt-in sheets share that cascade
+  layer. The contrast colours are the same in either order. `data-theme-contrast` is read
+  on the element that carries `data-theme`, or on the root when the page has no `data-theme`;
+  on any other element it does nothing (that element inherits its themed ancestor's level).
 - **A chip's `{ text }`** renders an empty chip, silently: no label, no error, no warning.
 - **Tabs `indicatorHeight` / `indicatorWidthStrategy`** are ignored: the indicator falls back to
   its variant's height (3px on a primary row, 2px on a secondary one) and automatic width.
@@ -212,6 +223,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **The time picker's `isOpen` is a method, `isOpen()` (FLO-548).** A leftover
   `if (picker.isOpen)` compiles in JavaScript and is always true: `picker.isOpen` is now a
   function. Call it.
+- **The time picker's config option `isOpen` is `open` (FLO-548).** TypeScript reports a
+  leftover in an object literal. In JavaScript `createTimePicker({ isOpen: true })` is
+  ignored: the picker stays closed (measured). `TIMEPICKER_DEFAULTS.IS_OPEN` is
+  `TIMEPICKER_DEFAULTS.OPEN`; a leftover reads `undefined`.
 - **A snackbar waiting behind another is `"queued"`, not `"visible"` (FLO-548).** Right after
   `show()`, `snackbar.state === "visible"` is true only if nothing else was on screen; it was
   true at once. Use `snackbar.isOpen()`, or listen to `open`, which is emitted together with
@@ -278,6 +293,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   one that measures the dialog or moves focus belongs on `afteropen`.
 - **An open dialog answers Escape as soon as `open()` returns,** except the key press that
   opened it. It ignored Escape and the scrim for its first 10 ms.
+- **An open dialog prevents every Escape key press that reaches the window,** even with
+  `closeOnEscape: false`: a `keydown` listener of the page on the window that runs after it
+  sees `event.defaultPrevented` true, and nothing else the browser does for Escape happens
+  while a dialog is open. A listener on the document, or inside the dialog, runs before it.
 - **`dialog.close()` on a closed dialog and `dialog.open()` on an open one** emit nothing. Code
   that counted on `close` or `afterclose` from a `close()` called "to be sure" no longer hears
   them.
@@ -286,6 +305,14 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   menu gone must wait for the fade (350 ms). The same for a select's `close`, a split
   button's `collapse` when the user dismisses its menu, and a FAB menu's `close` in its
   `menu` presentation.
+- **A listener for `open` or `close` on `<m-menu>` or `<m-fab-menu>`** no longer hears an
+  opening or a closing made by setting or removing the `open` attribute (or the property):
+  that is applied at once and dispatches nothing, as on `<m-dialog>`. Code that set the
+  attribute and waited for the event waits for ever; read the state on the next line, or call
+  `show()` / `hide()`, which dispatch.
+- **`fabMenu.isOpen()` right after `open()`** is true in the `menu` presentation too, before
+  its surface exists. An `open` listener that reads the menu's surface must wait for it; a
+  second click on the FAB before the surface has arrived now closes the menu.
 - **`event.preventDefault()` in a menu's or a select's `open` or `close` listener, or in a
   select's `change` listener,** throws a `TypeError` in JavaScript: the payload has no such
   method any more. It never did anything there; remove the call.
@@ -297,6 +324,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed (breaking)
 
+- **Explicit contrast levels are opt-in (FLO-540).** `mtrl/styles/base` and `mtrl/themes/<name>`
+  keep standard contrast and `prefers-contrast: more`. `data-theme-contrast="medium"` and `"high"`
+  (material-color-utilities contrast 0.5 and 1.0; the values are unchanged) move to
+  `mtrl/styles/contrast` and `mtrl/themes/<name>-contrast`. The full stylesheet `mtrl/styles`
+  still includes them. Without the new import the attribute changes no colour and nothing warns.
+  Import `mtrl/styles/contrast` after `mtrl/styles/base`, as with `mtrl/styles/typography`:
+  the opt-in sheets share that cascade layer. The contrast colours are the same in either
+  order (an explicit level is more specific than the standard rule, and the preference rule
+  does not match once the attribute is set).
 - **Typography leaves `mtrl/styles/base` (FLO-539).** The base no longer carries the type
   classes (`.mtrl-display-large` … `.mtrl-label-small`), the text utilities (`.mtrl-text-*`,
   `.mtrl-font-*`, `.mtrl-truncate*`), mtrl's styles for `h1`–`h6` and `p`, or the
@@ -323,7 +359,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     `"visible"` for good, and `show()` on it did nothing. After `destroy()` the state is
     `"hidden"` (it was left as it was), and a queued snackbar that is destroyed is not shown
     at its turn.
-  - **Time picker:** the `isOpen` property is the method `isOpen()`.
+  - **Time picker:** the `isOpen` property is the method `isOpen()`, and the config option
+    that opens the picker at creation is `open`, not `isOpen` (its default is
+    `TIMEPICKER_DEFAULTS.OPEN`, not `IS_OPEN`): one name was a config key and a method on the
+    same component.
+  - **`<m-snackbar>`:** its `open` property is `false` while the snackbar waits behind
+    another, and `true` from its `open` event; it was `true` as soon as `show()` was called.
   - **Date picker:** new `isOpen()`. The click that calls `open()` no longer closes a docked
     picker: the event that opened an overlay never dismisses it.
   - **The tooltip is outside the rule, by design:** `show()` and `hide()` wait for their
@@ -587,10 +628,22 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   - **An open dialog can be dismissed as soon as `open()` returns:** Escape and a click on the
     scrim close it from then, not 10 ms later. One exception, the same for every overlay: the
     event that opened it never dismisses it. A dialog opened from an Escape `keydown` handler
-    stays open through that key press, and the next Escape closes it. This holds in both
+    stays open through that key press, and the next Escape closes it. "The event that opened
+    it" is exactly the one whose dispatch had begun when `open()` ran: any other, in the same
+    task or the next, counts. This holds in both
     layers: a `layer: "top"` dialog and `<m-dialog>` opened that way used to close at once,
     on the `cancel` the browser sends for that same key press.
   - **`destroy()` right after `open()`** leaves nothing behind (see Fixed).
+  - **Escape is handled as a key press, in both layers (FLO-556).** The dialog listens on the
+    window and prevents the key, so the browser sends a `layer: "top"` dialog no `cancel` for
+    it. `closeOnEscape: false` and a `beforeclose` listener that refuses now hold for any
+    number of presses (see Fixed). Only the topmost open dialog answers; a key that something
+    open inside it has used (a menu, a select) is left to it. An Escape that cancels an IME
+    composition is left to the IME: a default-layer dialog no longer closes on it (a
+    top-layer one is the browser's to decide, as before). `<m-dialog>` still dispatches `cancel` for every Escape, and
+    `preventDefault()` on it still refuses. A page listener that saw the native `cancel` on
+    the factory's `<dialog>` for Escape sees one the dialog sends itself; a close request that
+    is not a key press (a back gesture) still arrives as the browser's.
 - **The menu is closed when `close()` returns (FLO-548).** The same rule as the dialog's, for
   the menu in both layers and for the two components that hold one, the select and the split
   button. `open()` already worked this way; `close()` set the state and emitted `close` on a
@@ -631,6 +684,41 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     the objects passed at run time: nothing read them, and none of these events can be
     cancelled. A leftover call throws; it never did anything. The menu's `select` keeps
     both: preventing it keeps a `closeOnSelect` menu open.
+- **The FAB menu is open when `open()` returns, and `open` on `<m-menu>` and
+  `<m-fab-menu>` is applied at once (FLO-548).** The last two parts of the overlays' rule.
+  Migration: read the state on the line after setting `open` on either element instead of
+  waiting for its event, or call `show()` / `hide()`.
+  - **FAB menu, `menu` presentation:** `open()` sets `isOpen()` and `aria-expanded` and
+    emits `open` in the call. It used to do so after the menu's module had loaded: a
+    microtask later once loaded, a network round trip the first time. The surface is shown
+    when the module has arrived. `close()` before that ends closed, with one `open` and one
+    `close`, and nothing is shown; it used to be ignored, and the menu then opened. If the
+    module fails to load, the FAB menu closes again (`close` is emitted). The `list`
+    presentation already worked this way.
+  - **`<m-menu>` and `<m-fab-menu>`, the `open` attribute and property:** applied inside
+    the attribute callback, so the element is open, or closed, on the next line. Applied
+    that way it dispatches no `open` and no `close`, as on `<m-dialog>`, the drawer and
+    the sheets. It used to be applied a microtask later and to dispatch both. `show()`,
+    `hide()`, `toggle()`, the anchor and the user still dispatch one event per opening and
+    per closing.
+- **The modal sheets and the modal drawer handle Escape as a key press (FLO-548, FLO-556).**
+  The bottom sheet, the side sheet and the drawer, when modal, join the dialog on one stack,
+  in both layers. Migration: nothing, unless a page listener relied on what follows.
+  - **A refusal holds.** With `layer: "top"`, a sheet with `closeOnEscape: false` and a
+    drawer with `dismissible: false` were closed by the browser on the third Escape (it forces
+    the third `cancel` refused in a row; measured on the dialog, the same `<dialog>` path).
+    The key is now prevented, so no `cancel` is sent.
+  - **Only the topmost modal answers,** and after whatever is open inside it has used the
+    key. A dialog opened above a sheet takes Escape first.
+  - **The event that opened it never dismisses it:** a sheet or a drawer opened from an Escape
+    `keydown` handler stays open through that key press. In the top layer it used to close at
+    once, on the `cancel` the browser sends for that key press.
+  - **Outside the top layer** the listener moves from the document to the window: a menu or a
+    select open inside the sheet or the drawer takes Escape first. Every Escape that reaches
+    the window while one is open is prevented, a refusing one included.
+  - **`<m-drawer>`** still refuses Escape with `no-close-on-escape`: the key press is sent on
+    as a `cancel` event on its `<dialog>`, where it listens.
+  - A standard (not modal) sheet is unchanged: Escape closes it when pressed inside it.
 - **A config `on*` option is the listener registered at creation.** It runs with the same
   argument, the same number of times, as a listener passed to `on(event)` at that point, and it
   runs before a listener added afterwards. Whether a method notifies is unchanged (a silent
@@ -907,6 +995,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **SSR docs: what the two style modes cost (FLO-554).** Inline styles stay the default. The
+  README's server-rendering section and `RenderOptions`' TSDoc now say what inline costs (gzip
+  cannot see a repeat further back than its 32 KB window, so serve brotli or use link mode
+  for pages with many selects, or that mix large roots (text fields, dialogs) in turn; and
+  the HTML is 0.5 to 0.9 MB uncompressed for 30 to 44 roots) and link mode's caveat (WebKit paints the roots unstyled until the
+  stylesheets arrive). No code changes.
 - **What `open()` has done when it returns is documented and pinned by tests (FLO-543).** The
   surface may be painted after `open()` returns; the state is not deferred. On return: a
   select's `isOpen()` is true, its input has `aria-expanded="true"` and `open` has been emitted;
@@ -928,6 +1022,20 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A top-layer dialog that refuses Escape stays open, however often it is pressed
+  (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
+  listener that refused, the third Escape made the browser close the `<dialog>` while
+  `isOpen()` stayed true and no `close` was emitted (measured in Chromium, Firefox and
+  WebKit: the browser lets a page refuse `cancel` twice in a row and forces the third). Escape
+  is now a key press the dialog prevents, so no `cancel` is sent. And when the browser does
+  close the `<dialog>` itself, the dialog's state follows: `isOpen()` is false and `close` is
+  emitted, without `beforeclose`. The defect is also in 0.10.x; the fix is in 1.0.
+- **Escape with a menu open inside a default-layer dialog closes the menu only (FLO-548).** It
+  closed the dialog as well, under the menu: the dialog's listener ran before the menu's.
+- **Chips: a chip destroyed while it has focus hands focus to its neighbour (FLO-542).**
+  `chip.destroy()` called directly on a focused chip of a set left focus on the page, so a
+  keyboard user lost their place. Focus now moves to the chip that takes its place, or to
+  the one before when it was the last, as it does when the set removes a chip.
 - **A dialog destroyed right after `open()` no longer locks the page's scroll (FLO-548).** The
   default-layer dialog shows its surface 10 ms after `open()`. `destroy()` in that window left
   the timer running: it then set `overflow: hidden` on the body for a dialog that was gone,
@@ -936,10 +1044,16 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **Snackbar: a queued snackbar dropped from the queue can be shown again (FLO-548).** One
   waiting behind another and then dropped by a `queueBehavior: 'replace'` snackbar or by
   `clearSnackbars()` kept `state` `"visible"` without ever being shown, and `show()` on it
-  did nothing from then on. It is now hidden when dropped. Also on 0.10.x.
+  did nothing from then on. It is now hidden when dropped. The defect is also in 0.10.x; the
+  fix is in 1.0.
 - **Date picker: `open()` called from a click outside a docked picker opens it (FLO-548).**
   The same click then reached the picker's outside-click listener and closed it at once. A
-  click in the task that called `open()` no longer closes it. Also on 0.10.x.
+  click in the task that called `open()` no longer closes it. The defect is also in 0.10.x;
+  the fix is in 1.0.
+- **Snackbar: destroying the one on screen lets the next take its turn (FLO-548).**
+  `destroy()` on the visible snackbar left the queue waiting for it, so snackbars shown behind
+  it stayed queued until some other snackbar was shown. The queue now moves on, after its
+  usual gap.
 - **Accessibility: scrolling from script honours reduced motion in the chips, the tabs and the
   search (FLO-553).** The chip set's `scrollToChip`, the tabs' scroll buttons and the search's
   arrow keys through the suggestions each asked for a smooth scroll explicitly, which overrides
