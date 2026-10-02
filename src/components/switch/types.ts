@@ -154,6 +154,9 @@ export interface SwitchComponent {
   /** Disables the switch */
   disable: () => SwitchComponent;
 
+  /** Whether the switch is disabled (FLO-384) */
+  isDisabled: () => boolean;
+
   /** Destroys the switch component and cleans up resources */
   destroy: () => void;
 }
@@ -165,6 +168,7 @@ export interface ApiOptions {
   disabled: {
     enable: () => void;
     disable: () => void;
+    isDisabled: () => boolean;
   };
   lifecycle: {
     destroy: () => void;
@@ -194,6 +198,7 @@ export interface BaseComponent {
   disabled?: {
     enable: () => void;
     disable: () => void;
+    isDisabled: () => boolean;
   };
   lifecycle?: {
     destroy: () => void;

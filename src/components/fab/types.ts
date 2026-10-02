@@ -506,6 +506,9 @@ export interface FabComponent {
    */
   disable: () => FabComponent;
 
+  /** Whether the FAB is disabled (FLO-384) */
+  isDisabled: () => boolean;
+
   /**
    * Sets the FAB's icon
    *

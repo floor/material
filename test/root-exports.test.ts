@@ -21,12 +21,13 @@ describe("the root exports (FLO-351)", () => {
   });
 
   test("nothing on the root is deprecated any more: what was is gone", () => {
-    expect(now.filter((e) => e.status !== "public").map((e) => e.name)).toEqual([]);
+    // The FLO-383 renames stay, flagged, until PR B removes them on next
+    expect(now.filter((e) => e.status === "deprecated").map((e) => e.name)).toEqual([]);
   });
 
   test("the root keeps the components and the app-level helpers; the composition core is gone", () => {
     const names = new Set(now.map((e) => e.name));
-    for (const name of ["createButton", "createTextfield", "clearSnackbars", "configureHTML", "schemeToTokens", "THEME_ROLES", "setComponentDefaults", "ComponentConfigMap"]) {
+    for (const name of ["createButton", "createTextField", "clearSnackbars", "configureHTML", "schemeToTokens", "THEME_ROLES", "setComponentDefaults", "ComponentConfigMap"]) {
       expect(names.has(name)).toBe(true);
     }
     for (const name of ["pipe", "createBase", "withEvents", "throttle", "loggingMiddleware", "CleanupManager", "addClass"]) {
@@ -37,6 +38,18 @@ describe("the root exports (FLO-351)", () => {
   test("the migration table, frozen as 0.10.4 published it, still holds: each name is gone from the root and at its path", () => {
     expect(table.length).toBe(137);
     expect(verifyMigrationTable(table, now)).toEqual([]);
+  });
+
+  test("the canonical names are public; the old ones are renamed to them (FLO-383)", () => {
+    const status = new Map(now.map((e) => [e.name, e]));
+    const renames = [["createTextfield", "createTextField"], ["TextfieldConfig", "TextFieldConfig"],
+      ["TextfieldComponent", "TextFieldComponent"], ["CardSchema", "CardConfig"],
+      ["TopAppBar", "TopAppBarComponent"], ["BottomAppBar", "BottomAppBarComponent"]];
+    for (const [old, to] of renames) {
+      expect(status.get(to!)?.status).toBe("public");
+      expect(status.get(old!)).toMatchObject({ status: "renamed", to });
+    }
+    expect(now.filter((e) => e.status === "renamed").map((e) => e.name).sort()).toEqual(renames.map(([old]) => old!).sort());
   });
 });
 
@@ -85,5 +98,35 @@ export const isManager = manager instanceof CleanupManager;`;
       .map((d) => ts.flattenDiagnosticMessageText(d.messageText, " ").match(/has no exported member (?:named )?'([^']+)'/)?.[1])
       .filter((name): name is string => !!name);
     expect(new Set(missing)).toEqual(new Set(table.map((row) => row.name)));
+  }, 60_000);
+});
+
+describe("the renamed names are flagged where they are imported (FLO-383)", () => {
+  const CONSUMER = join(ROOT, "test/__root-renames-consumer.ts");
+  test("imported from mtrl, each old name is flagged and its new name is not", () => {
+    const renamed = now.filter((e) => e.status === "renamed");
+    const source = `import { ${renamed.flatMap((e, i) => [`${e.name} as old${i}`, `${e.to} as new${i}`]).join(", ")} } from "../src/index";`;
+    const options: ts.CompilerOptions = {
+      strict: true, skipLibCheck: true, noEmit: true,
+      target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,
+      lib: ["lib.es2022.d.ts", "lib.dom.d.ts", "lib.dom.iterable.d.ts"],
+    };
+    const host: ts.LanguageServiceHost = {
+      getScriptFileNames: () => [CONSUMER],
+      getScriptVersion: () => "1",
+      getScriptSnapshot: (file) => file === CONSUMER ? ts.ScriptSnapshot.fromString(source)
+        : ts.sys.fileExists(file) ? ts.ScriptSnapshot.fromString(ts.sys.readFile(file)!) : undefined,
+      getCurrentDirectory: () => ROOT,
+      getCompilationSettings: () => options,
+      getDefaultLibFileName: ts.getDefaultLibFilePath,
+      fileExists: (file) => file === CONSUMER || ts.sys.fileExists(file),
+      readFile: (file) => file === CONSUMER ? source : ts.sys.readFile(file),
+    };
+    const flagged = new Set(ts.createLanguageService(host).getSuggestionDiagnostics(CONSUMER)
+      .filter((d) => d.code === 6385 || d.code === 6387)
+      .map((d) => source.slice(d.start!, d.start! + d.length!).split(" as ")[0]!));
+    expect(renamed.length).toBe(6);
+    expect(renamed.filter((e) => !flagged.has(e.name)).map((e) => e.name)).toEqual([]);
+    expect(renamed.filter((e) => flagged.has(e.to!)).map((e) => e.to)).toEqual([]);
   }, 60_000);
 });

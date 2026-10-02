@@ -156,6 +156,73 @@ try {
   await page.waitForFunction(() => (window as unknown as Win).ready === true);
   await checkCheckableValues(page, "element");
 
+  // FLO-380: each model payload agrees with the public getter during dispatch.
+  await fresh(page, `<m-timepicker id="event-time"></m-timepicker>
+    <m-select id="event-select" value="a"><m-select-option value="a">Alpha</m-select-option><m-select-option value="">None</m-select-option></m-select>
+    <m-radios id="event-radios"><m-radio value="a">Alpha</m-radio><m-radio value="">None</m-radio></m-radios>`);
+  {
+    const values = await page.evaluate(() => {
+      type TimeHost = HTMLElement & { value: string; component: {
+        getValue: () => string;
+        on: (name: string, handler: (event: { value: string; draftValue?: string }) => void) => void;
+        picker: { getValue: () => string; setType: (type: string) => void; open: () => void; dialogElement: HTMLElement;
+          on: (name: string, handler: (event: { value: string; draftValue?: string }) => void) => void };
+      } };
+      type ChoiceHost = HTMLElement & { value: string | null; component: {
+        getValue: () => string | null; on: (name: string, handler: (event: { value: string | null }) => void) => void;
+        menu?: { element: HTMLElement }; radios?: Array<{ input: HTMLInputElement }>;
+      } };
+      const time = document.getElementById("event-time") as TimeHost;
+      const select = document.getElementById("event-select") as ChoiceHost;
+      const radios = document.getElementById("event-radios") as ChoiceHost;
+      const result = { timeFactoryInput: [] as Array<[unknown, unknown, unknown]>, timeInput: [] as Array<[unknown, unknown, unknown]>,
+        timeConfirm: [] as Array<[unknown, unknown]>, timeEmptyConfirm: [] as Array<[unknown, unknown]>,
+        timeEmptyChange: [] as Array<[unknown, unknown]>, selectFactory: [] as Array<[unknown, unknown]>,
+        selectElement: [] as Array<[unknown, unknown]>, radiosFactory: [] as Array<[unknown, unknown]>,
+        radiosElement: [] as Array<[unknown, unknown]> };
+      const p = time.component.picker;
+      p.on("input", (e) => result.timeFactoryInput.push([e.value, p.getValue(), e.draftValue]));
+      time.addEventListener("input", (e) => { const d = (e as CustomEvent<{ value: string; draftValue: string }>).detail;
+        result.timeInput.push([d.value, time.value, d.draftValue]); });
+      time.addEventListener("confirm", (e) => { const d = (e as CustomEvent<{ value: string }>).detail;
+        result.timeConfirm.push([d.value, time.value]); });
+      select.component.on("change", (e) => result.selectFactory.push([e.value, select.component.getValue()]));
+      select.addEventListener("change", (e) => result.selectElement.push([(e as CustomEvent<{ value: string | null }>).detail.value, select.value]));
+      radios.component.on("change", (e) => result.radiosFactory.push([e.value, radios.component.getValue()]));
+      radios.addEventListener("change", (e) => result.radiosElement.push([(e as CustomEvent<{ value: string | null }>).detail.value, radios.value]));
+      p.setType("input");
+      p.open();
+      const hour = p.dialogElement.querySelector<HTMLInputElement>('[data-type="hour"]')!;
+      hour.value = String((Number(hour.value) + 1) % 24);
+      hour.dispatchEvent(new Event("change", { bubbles: true }));
+      p.dialogElement.querySelector<HTMLElement>('[class$="time-picker__confirm"]')!.click();
+      const untouched = document.createElement("m-timepicker") as TimeHost;
+      document.getElementById("host")!.append(untouched);
+      untouched.addEventListener("change", (e) => result.timeEmptyChange.push([(e as CustomEvent<{ value: string }>).detail.value, untouched.value]));
+      untouched.addEventListener("confirm", (e) => result.timeEmptyConfirm.push([(e as CustomEvent<{ value: string }>).detail.value, untouched.value]));
+      untouched.component.picker.open();
+      untouched.component.picker.dialogElement.querySelector<HTMLElement>('[class$="time-picker__confirm"]')!.click();
+      select.component.menu!.element.querySelector<HTMLElement>('[data-id=""]')!.click();
+      radios.component.radios![0].input.click();
+      radios.component.radios![1].input.click();
+      return result;
+    });
+    assert.equal(values.timeFactoryInput.length, 1);
+    assert.equal(values.timeFactoryInput[0][0], values.timeFactoryInput[0][1]);
+    assert.notEqual(values.timeFactoryInput[0][2], values.timeFactoryInput[0][0]);
+    assert.deepEqual(values.timeInput, [["", "", values.timeFactoryInput[0][2]]]);
+    assert.equal(values.timeConfirm.length, 1);
+    assert.equal(values.timeConfirm[0][0], values.timeConfirm[0][1]);
+    assert.equal(values.timeEmptyChange.length, 1);
+    assert.equal(values.timeEmptyChange[0][0], values.timeEmptyChange[0][1]);
+    assert.deepEqual(values.timeEmptyConfirm, values.timeEmptyChange);
+    assert.deepEqual(values.selectFactory, [[null, null]]);
+    assert.deepEqual(values.selectElement, [[null, null]]);
+    assert.deepEqual(values.radiosFactory, [["a", "a"], ["", ""]]);
+    assert.deepEqual(values.radiosElement, [["a", "a"], [null, null]]);
+    check("time input/confirm, select empty id and radio empty id match getters inside factory and element handlers");
+  }
+
   // ---------------------------------------------------------------- registration
   {
     const result = await page.evaluate(() => {
@@ -2309,7 +2376,7 @@ try {
      <m-chips id="so" selection="single" aria-label="Sort">
        <m-chip value="new" selected>Newest</m-chip><m-chip value="old">Oldest</m-chip>
      </m-chips>
-     <m-chips id="to" aria-label="Recipients">
+     <m-chips id="to" aria-label="Recipients" value="ada,bob">
        <m-chip variant="input" value="ada">Ada</m-chip><m-chip variant="input" value="bob">Bob</m-chip>
      </m-chips>
      <section id="factory"></section>`
@@ -2332,7 +2399,10 @@ try {
       for (const id of ["ch", "so", "to"]) {
         for (const type of ["change", "remove"]) {
           document.getElementById(id)?.addEventListener(type, (e) => {
-            (w.events as unknown[]).push({ type, detail: (e as CustomEvent).detail, target: (e.target as Element).id });
+            const target = e.target as Chips;
+            (w.events as unknown[]).push(type === "remove"
+              ? { type, detail: (e as CustomEvent).detail, target: target.id, currentValue: target.value }
+              : { type, detail: (e as CustomEvent).detail, target: target.id });
           });
         }
       }
@@ -2408,7 +2478,7 @@ try {
 
     const recipients = page.getByRole("grid", { name: "Recipients" });
     await recipients.getByRole("button", { name: "Remove Bob" }).click();
-    assert.deepEqual(await events(), [{ type: "remove", detail: { value: "bob" }, target: "to" }]);
+    assert.deepEqual(await events(), [{ type: "remove", detail: { value: ["ada"], chipValue: "bob" }, target: "to", currentValue: ["ada"] }]);
     await page.evaluate(() => {
       const ada = document.querySelector('#to [value="ada"]') as HTMLElement;
       ada.textContent = "Ada L.";
@@ -2418,7 +2488,7 @@ try {
     assert.deepEqual(lingering, ["Ada L."], "a removed chip stays removed while its <m-chip> is there");
     await recipients.getByRole("button", { name: "Remove Ada L." }).focus();
     await page.keyboard.press("Delete");
-    assert.deepEqual(await events(), [{ type: "remove", detail: { value: "ada" }, target: "to" }]);
+    assert.deepEqual(await events(), [{ type: "remove", detail: { value: [], chipValue: "ada" }, target: "to", currentValue: [] }]);
     const readded = await page.evaluate(async () => {
       const to = document.getElementById("to") as HTMLElement;
       to.replaceChildren();
@@ -5426,9 +5496,16 @@ try {
     assert.equal(await focused(), "mb", "focus is back on the anchor");
     check("menu: arrows, typeahead and Enter select once, close once, and return focus to the anchor");
 
+    // A menu opened with a key puts focus on its first item on a timer, about 120ms
+    // after the key. A fixed wait is not that moment: on a runner whose main thread
+    // paused for a third of a second, the keys below got there first, were handled
+    // with no item focused, and focus ended one item short (FLO-423).
+    const focusOn = async (label: string): Promise<void> => {
+      for (const end = Date.now() + 5000; Date.now() < end && (await focused()) !== label;) await wait(20);
+    };
     await page.focus("#mb");
     await page.keyboard.press("Enter");
-    await settle();
+    await focusOn("Copy");
     assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
     await page.keyboard.press("Escape");
     await settle();
@@ -5471,7 +5548,8 @@ try {
         ((document.getElementById("mm") as HTMLElement).shadowRoot as ShadowRoot).querySelectorAll('[class*="menu--submenu"]').length);
     await page.focus("#mb");
     await page.keyboard.press("Enter");
-    await settle();
+    await focusOn("Copy");
+    assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
     for (const key of ["ArrowDown", "ArrowDown"]) await page.keyboard.press(key);
     assert.equal(await focused(), "Share", "Copy, Cut (disabled, focusable), then Share");
     await page.keyboard.press("ArrowRight");

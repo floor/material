@@ -58,12 +58,18 @@ export const withController =
     }
   };
 
-  /** The `change` payload: the selected values, which old handlers read as an array, with the named fields. */
-  const changeEvent = (values: (string | null)[], changed: string | null): ChipsChangeEvent => {
-    const set = values.filter((value): value is string => value !== null);
-    const value = config.multiSelect ? set : (set[0] ?? null);
-    return Object.assign([...values], { value, selected: values, changed });
+  /** Convert selected chip values to the public getter's single or multi shape. */
+  const selectionValue = (values: (string | null)[]): string | string[] | null => {
+    const selected = values.filter((value): value is string => value !== null);
+    return config.multiSelect ? selected : (selected[0] ?? null);
   };
+
+  /** The `change` payload stays an array with named fields and a second positional argument. */
+  const changeEvent = (values: (string | null)[], changed: string | null): ChipsChangeEvent => {
+    return Object.assign([...values], { value: selectionValue(values), selected: values, changed });
+  };
+
+  const currentValue = (): string | string[] | null => selectionValue(getSelectedValues());
 
   const handleSelection = (selectedChip: ChipComponent) => {
     if (!config.multiSelect) {
@@ -256,7 +262,7 @@ export const withController =
     syncTabStop();
 
     // Dispatch add event
-    dispatchEvent(CHIPS_EVENTS.ADD, chipInstance);
+    dispatchEvent(CHIPS_EVENTS.ADD, { value: currentValue(), chip: chipInstance });
 
     return chipInstance;
   };
@@ -273,10 +279,8 @@ export const withController =
 
     if (index >= 0 && index < component.chipInstances.length) {
       const chip = component.chipInstances[index];
+      const chipValue = chip.getValue();
       const hadFocus = chip.element.contains(activeElementOf(chip.element));
-
-      // Dispatch remove event before actual removal
-      dispatchEvent(CHIPS_EVENTS.REMOVE, chip);
 
       chip.element.removeEventListener("keydown", handleKeyboardNavigation);
       chip.destroy();
@@ -302,6 +306,7 @@ export const withController =
           chips[next].focus();
         }
       }
+      dispatchEvent(CHIPS_EVENTS.REMOVE, { value: currentValue(), chip, chipValue });
     }
   };
 

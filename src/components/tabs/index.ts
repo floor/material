@@ -1,6 +1,7 @@
 // src/components/tabs/index.ts
 import createTabs from "./tabs";
 import { setupResponsiveBehavior } from "./responsive";
+import { tabIdFor, tabPanelIdFor } from "./utils";
 
 // Export constants
 export {
@@ -28,9 +29,14 @@ export type {
 // Public and documented (md3.io tabs); a responsive option on createTabs
 // replaces it in 1.1 (FLO-381)
 export { setupResponsiveBehavior };
+// Public: a page that writes its own panels names them with the derived ids (FLO-430)
+export { tabIdFor, tabPanelIdFor };
 export type { ResponsiveConfig } from "./responsive";
 // Public: TabsComponent.getIndicator returns it (FLO-381)
 export type { TabIndicator } from "./indicator";
 
 // Default export
 export default createTabs;
+
+// A single tab, for a tablist built by hand or `addTab` with an instance (FLO-384)
+export { createTab } from "./tab";

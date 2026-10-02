@@ -13,7 +13,7 @@
  * minute, as on `<input type=time>`; empty is `""`. The dial starts on the
  * value, or on the current time when there is none.
  *
- * The dial edits a draft (FLO-288): `input` is dispatched with `{ value }`
+ * The dial edits a draft (FLO-288): `input` is dispatched with `{ value, draftValue }`
  * as it moves, and OK commits it, dispatching `change` with `{ value }` when
  * the time differs; Cancel, Escape and the backdrop discard it. `open`
  * reflects the dialog's state, as on `<dialog open>`; `open` and `close` are
@@ -37,7 +37,7 @@
 import createTimePicker from "../components/timepicker";
 import {
   TIME_FORMAT, TIME_PICKER_ORIENTATION, TIME_PICKER_TYPE,
-  type TimePickerComponent, type TimePickerConfig, type TimePickerValueEvent,
+  type TimePickerComponent, type TimePickerConfig, type TimePickerInputEvent, type TimePickerValueEvent,
 } from "../components/timepicker/types";
 import { createEmitter, type EventCallback } from "../core/state/emitter";
 import { defineElement, type DefineOptions, type ElementHost, type ElementInstance, type ElementSpec } from "./define";
@@ -90,10 +90,14 @@ const create = (config: TimepickerElementConfig): TimepickerElementComponent => 
     empty = false;
     changes.emit("change", event);
   };
-  const onConfirm = (time: string): void => {
-    if (empty) onChange({ value: time });
+  const onInput = (event: TimePickerInputEvent): void => {
+    changes.emit("input", { value: empty ? "" : event.value, draftValue: event.draftValue });
+  };
+  const onConfirm = (event: TimePickerValueEvent): void => {
+    if (empty) onChange(event);
   };
   picker.on("change", onChange);
+  picker.on("input", onInput);
   picker.on("confirm", onConfirm);
 
   return {
@@ -112,11 +116,12 @@ const create = (config: TimepickerElementConfig): TimepickerElementComponent => 
     close: () => void picker.close(),
     isOpen: () => picker.isOpen,
     required: !!required,
-    // `change` is the element's; the rest are the factory's own.
-    on: (event, handler) => void (event === "change" ? changes.on(event, handler) : picker.on(event as "input", handler as (e: TimePickerValueEvent) => void)),
-    off: (event, handler) => void (event === "change" ? changes.off(event, handler) : picker.off(event as "input", handler as (e: TimePickerValueEvent) => void)),
+    // `change` and `input` use the element's possibly empty committed value.
+    on: (event, handler) => void (event === "change" || event === "input" ? changes.on(event, handler) : picker.on(event as "confirm", handler as (e: TimePickerValueEvent) => void)),
+    off: (event, handler) => void (event === "change" || event === "input" ? changes.off(event, handler) : picker.off(event as "confirm", handler as (e: TimePickerValueEvent) => void)),
     destroy: () => {
       picker.off("change", onChange);
+      picker.off("input", onInput);
       picker.off("confirm", onConfirm);
       changes.clear();
       picker.destroy();
@@ -203,8 +208,9 @@ const timepickerSpec = {
   methods: ["show", "close"] as const,
   events: {
     change: { detail: (payload) => ({ value: (payload as TimePickerValueEvent).value }) },
-    // The draft, live, as the dial and the fields move.
-    input: { detail: (payload) => ({ value: (payload as TimePickerValueEvent).value }) },
+    // The wrapper may still be empty while the picker edits a draft.
+    input: { detail: (payload) => ({ value: (payload as TimePickerInputEvent).value, draftValue: (payload as TimePickerInputEvent).draftValue }) },
+    confirm: { detail: (payload) => ({ value: (payload as TimePickerValueEvent).value }) },
     open: { detail: () => null, state: true },
     close: { detail: () => null, state: true },
   },
