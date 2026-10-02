@@ -77,3 +77,13 @@ export const noSmall: Equals<Extract<FabSize, "small">, never> = true;
 export const fabSmallKey = FAB_SIZES.SMALL;
 // @ts-expect-error FAB_VARIANTS.SURFACE is gone with the style
 export const fabSurfaceKey = FAB_VARIANTS.SURFACE;
+
+// Renamed members whose new names 0.10 already had
+import type { ChipConfig } from "../../src/components/chips/types";
+import type { TabsConfig } from "../../src/components/tabs/types";
+// @ts-expect-error a chip's text is its label
+export const chipText: ChipConfig = { text: "Veg" };
+// @ts-expect-error indicatorHeight is indicator.height
+export const tabsHeight: TabsConfig = { indicatorHeight: 3 };
+// @ts-expect-error indicatorWidthStrategy is indicator.widthStrategy
+export const tabsWidth: TabsConfig = { indicatorWidthStrategy: "fixed" };

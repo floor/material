@@ -255,18 +255,6 @@ export interface TabsConfig {
    * Tab indicator configuration
    */
   indicator?: IndicatorConfig;
-  
-  /**
-   * Tab indicator height in pixels
-   * @deprecated Use indicator.height instead
-   */
-  indicatorHeight?: number;
-  
-  /**
-   * Tab indicator width strategy
-   * @deprecated Use indicator.widthStrategy instead
-   */
-  indicatorWidthStrategy?: 'fixed' | 'dynamic' | 'content' | 'auto';
 }
 
 /**
