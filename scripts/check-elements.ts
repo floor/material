@@ -430,6 +430,162 @@ try {
     check("switch: renders as the factory does with the global stylesheet");
   }
 
+  // A switch with no label is its own target: the 12px gap belongs between a
+  // label and the track and there is none, so the root is the 52px track wide
+  // and 48px tall with the 32px track centred — M3 "Switch" -> Specs ->
+  // Measurements (m3-switch.txt:52): Track 32x52dp, "Target: Size 48dp", and no
+  // height for a label row; its accessibility section (m3-switch.txt:130) calls
+  // 48x48 CSS pixels "our best practice". A labelled root keeps the 56px row
+  // (the root's 4px above and below the 48px container) and hugs label + 12px +
+  // track, so its measured layout below must not move. The sweep at 1dc3bc72
+  // measured the unlabelled root at 64 = 12 + 52 and the labelled one at
+  // 105.19 = 41.19 + 64 (analysis/sweep/switch/measure.json).
+  {
+    const dirs = ["ltr", "rtl"] as const;
+    const states = ["unchecked", "checked", "disabled"] as const;
+    const elements = (dir: string): string => {
+      const sw = (id: string, state: string): string =>
+        `<m-switch id="${id}" aria-label="Switch"${state === "checked" ? " checked" : ""}${state === "disabled" ? " disabled" : ""}></m-switch>`;
+      return (
+        states.map((state) => sw(`u-${dir}-${state}`, state)).join("") +
+        states.map((state) => `<div style="width:52px">${sw(`s-${dir}-${state}`, state)}</div>`).join("") +
+        `<m-switch id="l-${dir}">Label</m-switch>`
+      );
+    };
+    await fresh(
+      page,
+      `${dirs.map((dir) => `<div dir="${dir}">${elements(dir)}</div>`).join("")}<section id="factory"></section>`
+    );
+
+    const measured = await page.evaluate(
+      ({ dirs, states }: { dirs: string[]; states: string[] }) => {
+        type Box = { left: number; top: number; right: number; bottom: number };
+        const w = window as unknown as Win & { mtrl: { createSwitch: (c: object) => { element: HTMLElement } } };
+        const factory = document.getElementById("factory") as HTMLElement;
+        const r2 = (n: number): number => Math.round(n * 100) / 100;
+        const show = (r: Box): string => `[${r2(r.left)}, ${r2(r.top)}, ${r2(r.right)}, ${r2(r.bottom)}]`;
+        /** The element's component root inside its shadow root (the host is what the page holds). */
+        const inner = (host: HTMLElement): HTMLElement => (host.shadowRoot?.firstElementChild as HTMLElement) ?? host;
+        const trackOf = (root: HTMLElement): HTMLElement => root.querySelector('[class*="switch__track"]') as HTMLElement;
+        const failures: string[] = [];
+        const labelFailures: string[] = [];
+
+        /** The unlabelled contract: a 52 x 48 root, the track flush with it
+            horizontally and centred vertically, and — with a slot — the track
+            inside the slot. */
+        const unlabelled = (root: HTMLElement, slot: HTMLElement | null, what: string): void => {
+          const rootRect = root.getBoundingClientRect();
+          const trackRect = trackOf(root).getBoundingClientRect();
+          if (Math.abs(rootRect.width - 52) > 0.5) failures.push(`${what}: root is ${r2(rootRect.width)}px wide (want 52)`);
+          if (Math.abs(rootRect.height - 48) > 0.5) failures.push(`${what}: root is ${r2(rootRect.height)}px tall (want 48)`);
+          if (Math.abs(trackRect.left - rootRect.left) > 0.5 || Math.abs(trackRect.right - rootRect.right) > 0.5) {
+            failures.push(`${what}: track ${show(trackRect)} is not flush with the root ${show(rootRect)} horizontally`);
+          }
+          const dy = Math.abs((trackRect.top + trackRect.bottom - rootRect.top - rootRect.bottom) / 2);
+          if (dy > 0.5) failures.push(`${what}: track ${show(trackRect)} is ${r2(dy)}px off the root ${show(rootRect)} vertically`);
+          if (slot) {
+            const slotRect = slot.getBoundingClientRect();
+            if (
+              trackRect.left < slotRect.left - 0.5 || trackRect.right > slotRect.right + 0.5 ||
+              trackRect.top < slotRect.top - 0.5 || trackRect.bottom > slotRect.bottom + 0.5
+            ) {
+              failures.push(`${what}: track ${show(trackRect)} runs outside the 52px slot ${show(slotRect)}`);
+            }
+          }
+        };
+
+        // The labelled layout the fix must keep: the root hugs the label, the
+        // 12px gap and the 52px track. Every expectation below is derived from
+        // the label's own rendered width in this run (root = label + 64, the far
+        // insets 64), so it holds on any machine's sans-serif. The word "Label"
+        // rendered 41.19px here; that number is not asserted.
+        const labelled = (root: HTMLElement, position: "start" | "end", what: string): void => {
+          const rootRect = root.getBoundingClientRect();
+          const rtl = getComputedStyle(root).direction === "rtl";
+          const trackRect = trackOf(root).getBoundingClientRect();
+          const labelRect = (root.querySelector(".mtrl-switch__label") as HTMLElement).getBoundingClientRect();
+          const labelW = r2(labelRect.width);
+          /** A rect edge's inset from the root's, on the inline axis. */
+          const inset = (rect: Box, side: "start" | "end"): number => {
+            if (side === "start") return rtl ? rootRect.right - rect.right : rect.left - rootRect.left;
+            return rtl ? rect.left - rootRect.left : rootRect.right - rect.right;
+          };
+          const got = {
+            rootW: r2(rootRect.width),
+            rootH: r2(rootRect.height),
+            labelStart: r2(inset(labelRect, "start")),
+            labelEnd: r2(inset(labelRect, "end")),
+            trackStart: r2(inset(trackRect, "start")),
+            trackEnd: r2(inset(trackRect, "end")),
+            trackTop: r2(trackRect.top - rootRect.top),
+          };
+          // start: label [0, labelW], gap 12, track [labelW + 12, ...]. end: the
+          // row is reversed — track [0, 52], gap, label [64, ...]. The row is
+          // 56 tall (4 + the 48px container + 4), so the track starts 12 in.
+          const want = position === "start"
+            ? { rootW: labelW + 64, rootH: 56, labelStart: 0, labelEnd: 64, trackStart: labelW + 12, trackEnd: 0, trackTop: 12 }
+            : { rootW: labelW + 64, rootH: 56, labelStart: 64, labelEnd: 0, trackStart: 0, trackEnd: labelW + 12, trackTop: 12 };
+          const off = (a: number, b: number): boolean => Math.abs(a - b) > 0.5;
+          if (
+            off(got.rootW, want.rootW) || off(got.rootH, want.rootH) ||
+            off(got.labelStart, want.labelStart) || off(got.labelEnd, want.labelEnd) ||
+            off(got.trackStart, want.trackStart) || off(got.trackEnd, want.trackEnd) ||
+            off(got.trackTop, want.trackTop)
+          ) {
+            labelFailures.push(
+              `${what}: root ${got.rootW}x${got.rootH} (want ${want.rootW}x${want.rootH}), ` +
+                `label start ${got.labelStart} / end ${got.labelEnd} (want ${want.labelStart} / ${want.labelEnd}), ` +
+                `track start ${got.trackStart} / end ${got.trackEnd} / top ${got.trackTop} (want ${want.trackStart} / ${want.trackEnd} / ${want.trackTop})`
+            );
+          }
+        };
+
+        /** A shrink-to-fit holder, as the sweep's page: the root's width:100%
+            must resolve to its content, not to a block's width. */
+        const hold = (dir: string, child: HTMLElement): HTMLElement => {
+          const holder = document.createElement("div");
+          holder.dir = dir;
+          holder.style.display = "inline-block";
+          holder.append(child);
+          factory.append(holder);
+          return child;
+        };
+        /** A 52px wide slot: the whole track must stay inside it. */
+        const slot = (dir: string, child: HTMLElement, what: string): void => {
+          const box = document.createElement("div");
+          box.dir = dir;
+          box.style.width = "52px";
+          box.append(child);
+          factory.append(box);
+          unlabelled(inner(child), box, `${what} in a 52px slot`);
+        };
+
+        for (const dir of dirs) {
+          for (const state of states) {
+            unlabelled(inner(document.getElementById(`u-${dir}-${state}`) as HTMLElement), null, `element ${dir} ${state}`);
+            const slotted = document.getElementById(`s-${dir}-${state}`) as HTMLElement;
+            unlabelled(inner(slotted), slotted.parentElement as HTMLElement, `element ${dir} ${state} in a 52px slot`);
+            unlabelled(
+              hold(dir, w.mtrl.createSwitch({ checked: state === "checked", disabled: state === "disabled" }).element),
+              null,
+              `factory ${dir} ${state}`
+            );
+            slot(dir, w.mtrl.createSwitch({ checked: state === "checked", disabled: state === "disabled" }).element, `factory ${dir} ${state}`);
+          }
+          labelled(inner(document.getElementById(`l-${dir}`) as HTMLElement), "start", `element ${dir} labelled`);
+          labelled(hold(dir, w.mtrl.createSwitch({ label: "Label" }).element), "start", `factory ${dir} labelled`);
+          labelled(hold(dir, w.mtrl.createSwitch({ label: "Label", labelPosition: "end" }).element), "end", `factory ${dir} labelled-end`);
+        }
+        return { failures, labelFailures };
+      },
+      { dirs: [...dirs], states: [...states] }
+    );
+    for (const line of [...measured.failures, ...measured.labelFailures]) console.log(`  FAIL ${line}`);
+    assert.deepEqual(measured.failures, [], "the unlabelled switch must be the 52px track wide and 48px tall, the track inside a 52px slot");
+    assert.deepEqual(measured.labelFailures, [], "the labelled layout must not move");
+    check("switch: an unlabelled switch is its 52 x 48 track box, the track inside a 52px slot, and the labelled layout is unchanged");
+  }
+
   // ---------------------------------------------------------------- button
   await fresh(
     page,
