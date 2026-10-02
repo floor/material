@@ -15,7 +15,8 @@
  *
  * The dial edits a draft (FLO-288): `input` is dispatched with `{ value, draftValue }`
  * as it moves, and OK commits it, dispatching `change` with `{ value }` when
- * the time differs; Cancel, Escape and the backdrop discard it. `open`
+ * the time differs and `confirm` with `{ value }` on every OK. Cancel, Escape
+ * and the backdrop discard the draft. `open`
  * reflects the dialog's state, as on `<dialog open>`; `open` and `close` are
  * dispatched as it opens and closes (not when the attribute is what changed).
  *

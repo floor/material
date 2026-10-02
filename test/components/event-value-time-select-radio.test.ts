@@ -1,4 +1,4 @@
-// test/components/event-value-pr5.test.ts
+// test/components/event-value-time-select-radio.test.ts
 import { expect, test } from "bun:test";
 import createTimePicker from "../../src/components/timepicker";
 import createSelect from "../../src/components/select";
