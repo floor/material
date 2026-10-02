@@ -86,7 +86,7 @@ export type SolidHostAttributes<E extends HTMLElement = HTMLElement> =
  */
 export type SolidProps<S, E extends HTMLElement> = OwnProps<S> &
   Omit<SolidHostAttributes, keyof OwnProps<S> | "ref" | RetiredProps<S>> &
-  { [K in RetiredProps<S>]?: never } & {
+  { [K in RetiredProps<S>]?: `${K} was removed in 1.0: use onChange` } & {
     ref?: E | ((element: E) => void);
   };
 
