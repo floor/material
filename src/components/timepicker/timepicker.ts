@@ -97,10 +97,10 @@ const createTimePicker = (
       formValue
     );
 
-    // Open time picker if initially open
-    if (baseConfig.open) {
-      setTimeout(() => timePicker.open(), 0);
-    }
+    // Open when the factory returns, as every overlay's `open` option: the
+    // state and `open` now, the surface a task later, where the caller has
+    // put the picker by then (FLO-548)
+    if (baseConfig.open) (timePicker.open as (later?: boolean) => unknown)(true);
 
     return timePicker;
   } catch (error) {

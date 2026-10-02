@@ -394,7 +394,7 @@ describe("typed event payloads (FLO-114)", () => {
     } finally { picker.destroy(); }
   });
 
-  // FLO-278: Escape is the dialog's own cancel event, and a backdrop click cancels.
+  // FLO-278, FLO-548: Escape is a key press, for this picker only, and a backdrop click cancels.
   test("cancel button, Escape and the backdrop cancel without payload", () => {
     const picker = mount({ type: TIME_PICKER_TYPE.INPUT, value: "09:30" });
     const canceled = mock((..._args: unknown[]) => {});
@@ -403,7 +403,7 @@ describe("typed event payloads (FLO-114)", () => {
       picker.on("cancel", canceled).on("close", closed).open();
       picker.dialogElement.querySelector<HTMLButtonElement>(TIMEPICKER_SELECTORS.CANCEL_BUTTON)!.click();
       picker.open();
-      picker.dialogElement.dispatchEvent(new dom.window.Event("cancel", { cancelable: true }));
+      picker.dialogElement.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
       picker.open();
       picker.dialogElement.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true, clientX: -10, clientY: -10 }));
       expect(canceled.mock.calls).toEqual([[undefined], [undefined], [undefined]]);
@@ -534,7 +534,7 @@ describe("a native modal dialog", () => {
     const first = mount(); const second = mount();
     try {
       first.open(); second.open();
-      second.dialogElement.dispatchEvent(new dom.window.Event("cancel", { cancelable: true }));
+      second.dialogElement.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
       expect([first.isOpen(), second.isOpen()]).toEqual([true, false]);
     } finally { first.destroy(); second.destroy(); }
   });

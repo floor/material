@@ -19,7 +19,7 @@ import { addClass, removeClass } from "../../core/dom/classes";
 
 import { setHTML } from "../../core/dom/html";
 import { activeElementOf, deepActiveElement, tabStops, wrapTab } from "../../core/dom/focus";
-import { hideFromTopLayer, onTopLayerClose, showInTopLayer } from "../../core/dom/layer";
+import { hideFromTopLayer, onModalEscape, onTopLayerClose, showInTopLayer, type ModalEscape } from "../../core/dom/layer";
 const DIALOG_EVENTS = {
   OPEN: "open",
   CLOSE: "close",
@@ -449,14 +449,12 @@ export const withVisibility =
   // trapped, `afteropen`, and the removal with `afterclose`. A call the other
   // way, or destroy(), cancels what is still pending.
   let opened = isOpen;
-  // True for the rest of the task open() ran in. The event that opened the
-  // dialog is still being handled in that task: an Escape key press on its
-  // way up to the document, or the `cancel` the browser sends the topmost
-  // modal for it (before the next timer task in Chromium, Firefox and WebKit).
-  // It is not a request to close what it has just opened. A key pressed after
-  // open() is a later task; should the browser deliver one before the timer
-  // below, that one press is ignored and the next closes.
-  let opening = false;
+  // The dialog's place among the open modals, while it is open: Escape is a
+  // key press handled there, for the topmost one, and never the key press
+  // that opened the dialog.
+  let escape: ModalEscape | undefined;
+  // True while the dialog sends a key press on as a `cancel` of its own
+  let asking = false;
   let showTimer: ReturnType<typeof setTimeout> | undefined;
   let afterOpenTimer: ReturnType<typeof setTimeout> | undefined;
   let afterCloseTimer: ReturnType<typeof setTimeout> | undefined;
@@ -598,19 +596,28 @@ export const withVisibility =
       document.addEventListener("mouseup", handleOverlayMouseUp);
     }
 
-    // Handle Escape key: in the top layer it is the dialog's cancel event,
-    // which reaches the topmost modal only
-    if (top) {
-      component.element.addEventListener("cancel", handleCancel);
-    } else if (component.config.closeOnEscape !== false) {
-      document.addEventListener("keydown", handleEscKey);
-    }
+    // Escape, in both layers: a key press, prevented, so the browser sends a
+    // top-layer dialog no `cancel` and never forces one closed. closeOnEscape:
+    // false still takes the key: it is the topmost modal's.
+    escape?.stop();
+    escape = onModalEscape(component.element, () => {
+      // In the top layer the key press asks as the browser's `cancel` did, on
+      // the <dialog>: what listens for it there (<m-dialog>, which asks its
+      // host first) still hears every Escape, and can still refuse it
+      if (top) {
+        asking = true;
+        component.element.dispatchEvent(new Event("cancel", { cancelable: true }));
+        asking = false;
+      } else if (component.config.closeOnEscape !== false) visibility.close();
+    });
+    // What is not a key press (a back gesture) asks through `cancel` too
+    if (top) component.element.addEventListener("cancel", handleCancel);
   };
 
   const cleanupEvents = () => {
     scrim.removeEventListener("mousedown", handleOverlayMouseDown);
     document.removeEventListener("mouseup", handleOverlayMouseUp);
-    document.removeEventListener("keydown", handleEscKey);
+    escape?.stop();
     component.element.removeEventListener("cancel", handleCancel);
   };
 
@@ -639,11 +646,14 @@ export const withVisibility =
     mouseDownOnOverlay = false;
   }
 
-  // The dialog stays open unless the dialog decides: Escape closes it through
-  // close(), so the close event comes once and beforeclose can keep it open
+  // The dialog stays open unless the dialog decides: a close request goes
+  // through close(), so the close event comes once and beforeclose can keep it
+  // open. A `cancel` from the browser in the task the dialog opened in is the
+  // opening key's, when the page stopped that key press before it reached the
+  // window: it is a new event, which only the task can tell.
   function handleCancel(e: Event) {
     e.preventDefault();
-    if (!opening && component.config.closeOnEscape !== false && visibility.isOpen()) {
+    if ((asking || !escape?.opening) && component.config.closeOnEscape !== false && visibility.isOpen()) {
       visibility.close();
     }
   }
@@ -657,12 +667,6 @@ export const withVisibility =
       component.element.setAttribute("open", "");
     }
   };
-
-  function handleEscKey(e: KeyboardEvent) {
-    if (e.key === "Escape" && !opening && visibility.isOpen()) {
-      visibility.close();
-    }
-  }
 
   // Setup initial state
   if (isOpen) {
@@ -707,10 +711,6 @@ export const withVisibility =
       // dialog stays in the document, and that close has no `afterclose`.
       opened = true;
       clearTimeout(afterCloseTimer);
-      opening = true;
-      setTimeout(() => {
-        opening = false;
-      }, 0);
 
       // In the top layer everything happens now: the dialog is styled in its
       // hidden state before it is made visible, which is what it animates from
@@ -768,7 +768,8 @@ export const withVisibility =
       }, 10);
     },
 
-    close() {
+    /** @param forced - The browser has closed the <dialog>: nothing can refuse */
+    close(forced?: boolean) {
       // A closed dialog stays as it is, and emits nothing
       if (!opened) return;
 
@@ -781,7 +782,7 @@ export const withVisibility =
         },
       };
 
-      if (typeof component.emit === "function") {
+      if (!forced && typeof component.emit === "function") {
         component.emit(DIALOG_EVENTS.BEFORE_CLOSE, beforeCloseEvent);
       }
 
@@ -868,12 +869,11 @@ export const withVisibility =
     });
   }
 
-  // A close the browser made on its own (a form's dialog method, a repeated
-  // Escape it would not let the dialog cancel) still goes through close()
+  // A close the browser made on its own (a form's dialog method, a close
+  // request it would not let the dialog refuse a third time): the <dialog> is
+  // closed, so the dialog's state follows, and beforeclose is not asked
   if (top) {
-    onTopLayerClose(component.element, () => {
-      if (visibility.isOpen()) visibility.close();
-    });
+    onTopLayerClose(component.element, () => visibility.close(true));
   }
 
   return {

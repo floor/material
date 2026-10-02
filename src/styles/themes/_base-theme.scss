@@ -2,6 +2,12 @@
 @use 'sass:map';
 @use '../abstract/base' as *;
 
+// Build switch, not a public API (the README's Sass `@use … with` is unsupported).
+// all: explicit attribute rules and the prefers-contrast block (the full stylesheet).
+// explicit: the attribute rules only (mtrl/styles/contrast, mtrl/themes/<name>-contrast).
+// preference: the prefers-contrast block only (mtrl/styles/base, mtrl/themes/<name>).
+$contrast-emit: all !default;
+
 // Base theme definition with common properties and structure
 @mixin create-theme($name) {
   [data-theme="#{$name}"] {
@@ -74,17 +80,21 @@
       }
     }
   }
-  #{$scope}:is([data-theme-contrast="medium"], [data-theme-contrast="high"]) {
-    @include contrast-modes($name, $shared);
-  }
-  @each $level, $tokens in $distinct {
-    #{$scope}[data-theme-contrast="#{$level}"] {
-      @include contrast-modes($name, $tokens);
+  @if $contrast-emit != preference {
+    #{$scope}:is([data-theme-contrast="medium"], [data-theme-contrast="high"]) {
+      @include contrast-modes($name, $shared);
+    }
+    @each $level, $tokens in $distinct {
+      #{$scope}[data-theme-contrast="#{$level}"] {
+        @include contrast-modes($name, $tokens);
+      }
     }
   }
-  @media (prefers-contrast: more) {
-    #{$scope}:not([data-theme-contrast]) {
-      @include contrast-modes($name, $high);
+  @if $contrast-emit != explicit {
+    @media (prefers-contrast: more) {
+      #{$scope}:not([data-theme-contrast]) {
+        @include contrast-modes($name, $high);
+      }
     }
   }
 }
