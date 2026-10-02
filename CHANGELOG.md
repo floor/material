@@ -1067,6 +1067,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- The package no longer contains a second copy of the README and licence under `dist/`.
 - **A top-layer dialog that refuses Escape stays open, however often it is pressed
   (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
   listener that refused, the third Escape made the browser close the `<dialog>` while
