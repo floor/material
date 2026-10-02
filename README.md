@@ -207,6 +207,8 @@ The framework components render the elements, so everything above holds: forms, 
 | Svelte 5 | `import { Switch } from 'mtrl/svelte'` | `bind:checked` |
 | Solid | `import { Switch } from 'mtrl/solid'` | `checked` + `onChange` |
 
+With `skipLibCheck: false`, use `@types/react` 18.2.71 or later.
+
 Each framework is an optional peer dependency; mtrl installs none of them. All adapters render on the server and hydrate. Angular apps use the elements directly, with `CUSTOM_ELEMENTS_SCHEMA`.
 
 A component owns the `on…` props of its element's events (`onChange`, `onInput`, `onSelect`, …) and its `default…` props, typed with the element's own payloads. Any other HTML attribute passes to the host; to spread a whole set of HTML attributes into a component, omit the props it owns (`Omit<React.HTMLAttributes<HTMLElement>, "onChange">`).

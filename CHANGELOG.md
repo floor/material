@@ -12,6 +12,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **The Vue peer dependency is `>=3.4.20` (FLO-527).** The Vue adapter's declarations
+  import `DefineSetupFnComponent`, which `@vue/runtime-core` first declared in 3.4.20.
+  On Vue below 3.4.20 a project with `skipLibCheck: false` fails to compile them
+  (TS2724); with `skipLibCheck: true` every Vue component is `any`. With
+  `skipLibCheck: false`, use `@types/react` 18.2.71 or later. Migration:
+  install Vue 3.4.20 or newer.
 - **Tabs `on` and `off` take a closed event map (FLO-523).** A group accepts
   `change` (`TabChangeEventData`). A single tab accepts `click` (the button's
   wrapped `{ event, element, originalEvent }` payload), `focus` and `blur`

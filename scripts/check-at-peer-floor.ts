@@ -6,10 +6,13 @@
  *
  *   bun run scripts/check-at-peer-floor.ts <peer> [companion…] -- <script>
  *   bun run scripts/check-at-peer-floor.ts vue @vue/server-renderer -- vue-ssr:check
+ *   bun run scripts/check-at-peer-floor.ts react @types/react@override -- react-types:check
  *
- * The floor is read from `peerDependencies` (`>=3.3` is 3.3.0), so the check
+ * The floor is read from `peerDependencies` (`>=3.4.20` is 3.4.20), so the check
  * follows the range when it changes. Companions are packages that must match the
- * peer's version. Nothing is saved: package.json and the lockfile are not touched.
+ * peer's version, unless the name ends in `@override`: that package is installed
+ * at the version in `floorOverrides`, and the script states why. Nothing is
+ * saved: package.json and the lockfile are not touched.
  *
  * Afterwards `bun install --frozen-lockfile` puts the lockfile's versions back, and
  * whatever the floor install left in node_modules that was not there before is
@@ -29,6 +32,45 @@ export const floorOf = (range: string): string => {
   const match = /^>=\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?$/.exec(range.trim());
   if (!match) throw new TypeError(`Not a ">=" range, so it has no single floor: ${range}`);
   return [match[1], match[2] ?? "0", match[3] ?? "0"].join(".");
+};
+
+/**
+ * A package installed at a fixed version instead of the peer's floor. Request
+ * it with a trailing `@override` (`@types/react@override`). Every other package
+ * stays on the range-derived floor.
+ *
+ * `@types/react` older than 18.2.71 imports `scheduler/tracing`, which the
+ * current `@types/scheduler` no longer declares, so those versions fail with
+ * `skipLibCheck: false` with or without mtrl.
+ */
+export const floorOverrides: Readonly<Record<string, { version: string; reason: string }>> = {
+  "@types/react": {
+    version: "18.2.71",
+    reason: "`@types/react` older than 18.2.71 imports `scheduler/tracing`, which the current `@types/scheduler` no longer declares, so those versions fail with `skipLibCheck: false` with or without mtrl.",
+  },
+};
+
+const OVERRIDE_SUFFIX = "@override";
+
+export interface FloorInstall {
+  name: string;
+  version: string;
+  /** Set when this package is pinned in `floorOverrides`, and printed before the install. */
+  reason?: string;
+}
+
+/** The version each argument is installed at. An `@override` whose name is not in `floorOverrides` throws. */
+export const versionsFor = (tokens: readonly string[], peerRange: string): FloorInstall[] => {
+  const floor = floorOf(peerRange);
+  return tokens.map(token => {
+    const override = token.endsWith(OVERRIDE_SUFFIX);
+    const name = override ? token.slice(0, -OVERRIDE_SUFFIX.length) : token;
+    if (!name) throw new TypeError(`Not a package name: ${token}`);
+    if (!override) return { name, version: floor };
+    const pin = floorOverrides[name];
+    if (!pin) throw new TypeError(`No floor override named ${name}`);
+    return { name, version: pin.version, reason: pin.reason };
+  });
 };
 
 const installed = async (name: string): Promise<string> =>
@@ -80,18 +122,20 @@ const entries = async (): Promise<string[]> => {
 if (import.meta.main) {
   const args = process.argv.slice(2);
   const split = args.indexOf("--");
-  const packages = args.slice(0, split);
+  const tokens = args.slice(0, split);
   const script = args[split + 1];
   if (split < 1 || !script || args.length !== split + 2) {
     console.error("Usage: check-at-peer-floor.ts <peer> [companion…] -- <script>");
     process.exit(2);
   }
   const manifest = await Bun.file("package.json").json() as { peerDependencies?: Record<string, string>; scripts: Record<string, string> };
-  const range = manifest.peerDependencies?.[packages[0]];
-  if (!range) throw new TypeError(`${packages[0]} is not a peer dependency`);
+  const peer = tokens[0].endsWith(OVERRIDE_SUFFIX) ? tokens[0].slice(0, -OVERRIDE_SUFFIX.length) : tokens[0];
+  const range = manifest.peerDependencies?.[peer];
+  if (!range) throw new TypeError(`${peer} is not a peer dependency`);
   if (!(script in manifest.scripts)) throw new TypeError(`package.json has no script "${script}"`);
-  const floor = floorOf(range);
-  const before = await Promise.all(packages.map(installed));
+  const plan = versionsFor(tokens, range);
+  const names = plan.map(item => item.name);
+  const before = await Promise.all(names.map(installed));
   const present = new Set(await entries());
 
   /** The lockfile's versions, and nothing the floor install left behind; true when it is all back. */
@@ -101,9 +145,9 @@ if (import.meta.main) {
     // only the floor version depends on, and the copy bun parks when it is stopped.
     const extra = (await entries()).filter(name => !present.has(name));
     for (const name of extra) await rm(`node_modules/${name}`, { recursive: true, force: true });
-    const after = await Promise.all(packages.map(name => installed(name).catch(() => "missing")));
+    const after = await Promise.all(names.map(name => installed(name).catch(() => "missing")));
     const same = reinstalled === 0 && after.every((version, i) => version === before[i]);
-    if (same) console.log(`Restored: ${packages.map((name, i) => `${name}@${after[i]}`).join(", ")}${extra.length ? `; removed ${extra.join(", ")}` : ""}`);
+    if (same) console.log(`Restored: ${names.map((name, i) => `${name}@${after[i]}`).join(", ")}${extra.length ? `; removed ${extra.join(", ")}` : ""}`);
     else console.error(`Not restored (before: ${before.join(", ")}; now: ${after.join(", ")}; bun install exited ${reinstalled})`);
     return same;
   };
@@ -124,15 +168,16 @@ if (import.meta.main) {
 
   let code = 1;
   try {
-    console.log(`${script} at the peer floor: ${packages.map(name => `${name}@${floor}`).join(", ")} (peerDependencies: ${packages[0]} ${range})`);
+    console.log(`${script} at the peer floor: ${plan.map(item => `${item.name}@${item.version}`).join(", ")} (peerDependencies: ${peer} ${range})`);
+    for (const item of plan) if (item.reason) console.log(item.reason);
     if (interrupted !== undefined) throw new Error("Interrupted before the floor install");
-    if (await runWork(["bun", "add", "--no-save", "--ignore-scripts", ...packages.map(name => `${name}@${floor}`)]) !== 0) {
+    if (await runWork(["bun", "add", "--no-save", "--ignore-scripts", ...plan.map(item => `${item.name}@${item.version}`)]) !== 0) {
       throw new Error(interrupted ? "Interrupted during the floor install" : "Could not install the floor versions");
     }
     if (interrupted === undefined) {
-      for (const name of packages) {
-        const version = await installed(name);
-        if (version !== floor) throw new Error(`${name} is ${version} after the install, not ${floor}`);
+      for (const item of plan) {
+        const version = await installed(item.name);
+        if (version !== item.version) throw new Error(`${item.name} is ${version} after the install, not ${item.version}`);
       }
       code = await runWork(["bun", "run", script]);
     }
