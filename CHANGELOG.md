@@ -844,9 +844,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 - **SSR docs: what the two style modes cost (FLO-554).** Inline styles stay the default. The
   README's server-rendering section and `RenderOptions`' TSDoc now say what inline costs (gzip
-  cannot absorb a root larger than its 32 KB window, so serve brotli or use link mode for
-  pages with many selects, dialogs or text fields; and the HTML is 0.5 to 0.9 MB uncompressed
-  for 30 to 44 roots) and link mode's caveat (WebKit paints the roots unstyled until the
+  cannot see a repeat further back than its 32 KB window, so serve brotli or use link mode
+  for pages with many selects, or that mix large roots (text fields, dialogs) in turn; and
+  the HTML is 0.5 to 0.9 MB uncompressed for 30 to 44 roots) and link mode's caveat (WebKit paints the roots unstyled until the
   stylesheets arrive). No code changes.
 - **What `open()` has done when it returns is documented and pinned by tests (FLO-543).** The
   surface may be painted after `open()` returns; the state is not deferred. On return: a

@@ -15,11 +15,13 @@ export type RenderAttributes = Readonly<Record<string, string | number | boolean
  * Tag prefix defaults to "m".
  *
  * `styles: "inline"` (the default) writes each root's whole CSS as a `<style>`:
- * styled at first paint in every engine, at two costs. gzip cannot absorb a
- * root larger than its 32 KB window (a select's is about 45 KB: 30 large roots
- * measured 83.9 KB gzip against 8.1 KB brotli), so serve brotli or use link
- * mode for pages with many selects, dialogs or text fields; and the HTML is
- * 0.5 to 0.9 MB uncompressed for 30 to 44 roots.
+ * styled at first paint in every engine, at two costs. gzip cannot see a
+ * repeat further back than its 32 KB window: a select's root is about 44 KB
+ * (30 selects measured 141.0 KB gzip against 5.0 KB brotli), and large roots
+ * of different types in turn push each other out of it (30 measured 83.9 KB
+ * against 8.1 KB). So serve brotli, or use link mode for pages with many
+ * selects, or that mix large roots (text fields, dialogs) in turn. And the
+ * HTML is 0.5 to 0.9 MB uncompressed for 30 to 44 roots.
  *
  * `styles: "link"` writes `<link>` tags to the stylesheets under `cssBase`
  * (`dist/elements/css`). WebKit paints the roots unstyled until they arrive
