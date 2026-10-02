@@ -357,3 +357,132 @@ describe("modal drawer, layer: top", () => {
     modal.close();
   });
 });
+
+// FLO-548 family 6, part B: Escape is a key press for the modal sheets and the
+// modal drawer, in both layers, on the shared stack of core/dom/layer. The
+// key is prevented (no `cancel` from the browser, so a refusal holds for any
+// number of presses), only the topmost modal answers, and never for the key
+// press that opened it.
+const pressEscape = (target: EventTarget = document.body, init: KeyboardEventInit = {}): KeyboardEvent => {
+  const event = new dom.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true, ...init });
+  target.dispatchEvent(event);
+  return event;
+};
+
+/** What the Escape tests use of a sheet or a drawer. */
+interface Modal {
+  element: HTMLElement;
+  open: () => unknown;
+  close: () => unknown;
+  isOpen: () => boolean;
+  destroy: () => void;
+}
+const modalKinds: Array<[string, (layer: "top" | undefined, refuses: boolean) => Modal]> = [
+  ["bottom sheet", (layer, refuses) => createBottomSheet({ title: "Share", layer, ...(refuses ? { closeOnEscape: false } : {}) }) as unknown as Modal],
+  ["side sheet", (layer, refuses) => createSideSheet({ title: "Share", layer, ...(refuses ? { closeOnEscape: false } : {}) }) as unknown as Modal],
+  ["modal drawer", (layer, refuses) => {
+    const drawer = createDrawer({ variant: "modal", layer, items: [{ id: "a", label: "Inbox" }], ...(refuses ? { dismissible: false } : {}) });
+    document.body.append(drawer.element);
+    return drawer as unknown as Modal;
+  }],
+];
+
+for (const [name, create] of modalKinds) {
+  for (const layer of ["top", undefined] as const) {
+    describe(`${name}, ${layer ? "layer: top" : "default layer"}: Escape is a key press`, () => {
+      test("Escape from a child, then from the body, closes it and is prevented", () => {
+        const modal = create(layer, false);
+        modal.open();
+        const child = modal.element.querySelector<HTMLElement>("button, [tabindex], a") ?? modal.element;
+        expect(pressEscape(child).defaultPrevented).toBe(true);
+        expect(modal.isOpen()).toBe(false);
+        modal.open();
+        expect(pressEscape(document.body).defaultPrevented).toBe(true);
+        expect(modal.isOpen()).toBe(false);
+        modal.destroy();
+      });
+
+      test("a refusal holds for any number of presses, each prevented", () => {
+        const modal = create(layer, true);
+        modal.open();
+        for (let i = 0; i < 5; i++) {
+          expect(pressEscape().defaultPrevented).toBe(true);
+          expect(modal.isOpen()).toBe(true);
+        }
+        modal.destroy();
+      });
+
+      test("the Escape that opened it is prevented and does not close it; one in the same task does", () => {
+        const modal = create(layer, false);
+        const opener = document.body.appendChild(document.createElement("button"));
+        opener.addEventListener("keydown", () => void modal.open(), { once: true });
+        expect(pressEscape(opener).defaultPrevented).toBe(true);
+        expect(modal.isOpen()).toBe(true);
+        pressEscape();
+        expect(modal.isOpen()).toBe(false);
+        modal.destroy();
+      });
+
+      test("a dialog opened above it takes Escape first", () => {
+        const modal = create(layer, false);
+        modal.open();
+        const dialog = createDialog({ title: "Discard?", layer });
+        dialog.open();
+        pressEscape();
+        expect([modal.isOpen(), dialog.isOpen()]).toEqual([true, false]);
+        pressEscape();
+        expect([modal.isOpen(), dialog.isOpen()]).toEqual([false, false]);
+        dialog.destroy();
+        modal.destroy();
+      });
+
+      test("closed, and destroyed while open, it leaves the stack: Escape is the page's again", () => {
+        const closed = create(layer, false);
+        closed.open();
+        closed.close();
+        expect(pressEscape().defaultPrevented).toBe(false);
+        const destroyed = create(layer, false);
+        destroyed.open();
+        destroyed.destroy();
+        expect(pressEscape().defaultPrevented).toBe(false);
+        closed.destroy();
+      });
+    });
+  }
+}
+
+describe("modal drawer, layer: top: the key press asks as the browser's cancel did", () => {
+  // <m-drawer> refuses Escape (no-close-on-escape) with a capture listener for
+  // `cancel` on the drawer's <dialog>. With no `cancel` from the browser, the
+  // key press sends one itself.
+  test("every Escape is a cancel event on the <dialog>, which a listener before the drawer's own can refuse", () => {
+    const drawer = createDrawer({ variant: "modal", layer: "top", items: [{ id: "a", label: "Inbox" }] });
+    document.body.append(drawer.element);
+    let cancels = 0;
+    let refuse = true;
+    drawer.element.addEventListener("cancel", (event) => {
+      cancels++;
+      if (refuse) { event.preventDefault(); event.stopImmediatePropagation(); }
+    }, true);
+    drawer.open();
+    pressEscape();
+    pressEscape();
+    expect([cancels, drawer.isOpen()]).toEqual([2, true]);
+    refuse = false;
+    pressEscape();
+    expect([cancels, drawer.isOpen()]).toEqual([3, false]);
+    drawer.destroy();
+  });
+
+  test("the browser's own cancel in the task it opened in is the opening key's, and does not close it", async () => {
+    const drawer = createDrawer({ variant: "modal", layer: "top", items: [{ id: "a", label: "Inbox" }] });
+    document.body.append(drawer.element);
+    drawer.open();
+    expect(escape(drawer.element).defaultPrevented).toBe(true);
+    expect(drawer.isOpen()).toBe(true);
+    await after(0);
+    escape(drawer.element);
+    expect(drawer.isOpen()).toBe(false);
+    drawer.destroy();
+  });
+});
