@@ -130,7 +130,7 @@ The base includes the baseline theme in light and dark, the colour, shape and ty
 import 'mtrl/styles/typography';
 ```
 
-It has to load after the base: both sheets style `h1`–`h6` and `p`, and the later one wins. The import above takes care of it (the module imports `mtrl/styles/base` first, in whatever order your own imports are). With `<link>` tags, put `styles/typography.css` after `styles/base.css`.
+It has to load after the base: both sheets style `h1`–`h6` and `p`, and the later one wins. The import above takes care of it (the module imports `mtrl/styles/base` first, in whatever order your own imports are). If your bundler splits the two into different chunks, make sure the base's CSS loads first: an import order is not a CSS order in every bundler. With `<link>` tags, put `dist/styles/typography.css` after `dist/styles/base.css`.
 
 Import it when the page uses those classes or utilities, when it relies on mtrl's heading and paragraph styles, or when its own CSS reads a `--mtrl-sys-typescale-*` token. Without it a `.mtrl-headline-small` element keeps the body's font size, and a `var(--mtrl-sys-typescale-*)` with no fallback is invalid at computed-value time. Body text keeps its font. The full stylesheet includes typography, so `import 'mtrl/styles'` is unchanged.
 
