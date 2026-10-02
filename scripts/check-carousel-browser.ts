@@ -20,6 +20,27 @@ type CarouselWindow = Window & {
 const STEADY_FRAME = 50;
 const RECORDINGS = 3;
 
+/**
+ * `page.waitForFunction`, with a failure that says which wait it was and where the
+ * carousel and the page stood. A bare "Timeout 30000ms exceeded" from this check
+ * (seen once, under load, after the uncontained traces) names neither.
+ */
+const waitFor = async (page: Page, what: string, ready: () => unknown): Promise<void> => {
+  try {
+    await page.waitForFunction(ready);
+  } catch (error) {
+    const state = await page.evaluate(() => {
+      const scroller = document.querySelector<HTMLElement>(".mtrl-carousel__scroller");
+      return scroller && {
+        scrollLeft: scroller.scrollLeft, end: scroller.scrollWidth - scroller.clientWidth,
+        snap: scroller.style.scrollSnapType || "(none set)", slide: (window as unknown as CarouselWindow).wheelCarousel?.getCurrentSlide(),
+        pageScrollY: window.scrollY, hovered: scroller.matches(":hover"),
+      };
+    }).catch(() => "the page could not be read");
+    throw new Error(`waiting for ${what}: ${String(error).split("\n")[0]} ${JSON.stringify(state)}`);
+  }
+};
+
 /** Packed carousel wheel input and per-frame velocity and snap restoration. */
 export async function checkCarouselWheel(page: Page): Promise<void> {
   const viewport = page.viewportSize();
@@ -45,7 +66,7 @@ export async function checkCarouselWheel(page: Page): Promise<void> {
         state.wheelCarousel = carousel;
       }, variant);
       const scroller = page.locator("#wheel-carousel .mtrl-carousel__scroller");
-      await page.waitForFunction(() => document.querySelector(".mtrl-carousel__scroller")!.scrollWidth > 760);
+      await waitFor(page, "the carousel to lay its slides out", () => document.querySelector(".mtrl-carousel__scroller")!.scrollWidth > 760);
       if (variant !== "uncontained") {
         assert.equal(await scroller.evaluate(el => getComputedStyle(el).scrollSnapType), "x mandatory");
       }
@@ -94,7 +115,7 @@ export async function checkCarouselWheel(page: Page): Promise<void> {
           if (longestFrame <= STEADY_FRAME || recording === RECORDINGS) break;
           console.log(`${label}: a frame took ${longestFrame.toFixed(1)}ms, recording again (${recording} of ${RECORDINGS} discarded)`);
           // A stalled glide may outlast its recording; the next one starts from rest.
-          await page.waitForFunction(() => document.querySelector<HTMLElement>(".mtrl-carousel__scroller")!.style.scrollSnapType !== "none");
+          await waitFor(page, "the glide of a discarded recording to end", () => document.querySelector<HTMLElement>(".mtrl-carousel__scroller")!.style.scrollSnapType !== "none");
           trace = await record();
         }
         if (longestFrame > STEADY_FRAME) {
@@ -132,7 +153,7 @@ export async function checkCarouselWheel(page: Page): Promise<void> {
       }
       // Go to the actual end, then verify both cancellation and native default action.
       await page.evaluate(() => (window as unknown as CarouselWindow).wheelCarousel.goTo(19));
-      await page.waitForFunction(() => {
+      await waitFor(page, "goTo(19) to reach the end", () => {
         const el = document.querySelector(".mtrl-carousel__scroller")!;
         return Math.abs(el.scrollWidth - el.clientWidth - el.scrollLeft) < 0.5;
       });
@@ -143,7 +164,7 @@ export async function checkCarouselWheel(page: Page): Promise<void> {
       }), false, `${variant}: end wheel is not prevented`);
       await scroller.hover();
       await page.mouse.wheel(0, 180);
-      await page.waitForFunction(() => window.scrollY > 0);
+      await waitFor(page, "the trusted wheel at the end to scroll the page", () => window.scrollY > 0);
       console.log(`Checked carousel ${variant}: frame traces recorded; trusted edge wheel scrolls the page.`);
     } catch (error) {
       failures.push(`${variant}: ${String(error)}`);

@@ -10,6 +10,7 @@
 //   bun run build && bun run scripts/check-elements.ts
 
 import { checkCheckableValues } from "./check-checkable-values";
+import { expectedFailure } from "./expected-failure";
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
@@ -4952,6 +4953,13 @@ try {
         while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
         return { open: menu.isOpen(), closes, connected: menu.element.isConnected, focus: active?.id || null };
       });
+    // A menu gives focus back to its opener in the animation frame after it closes.
+    // The fixed waits below are for the close itself, and long enough to see a second
+    // close; a page that got no frame in that time has not moved focus yet, and the
+    // read came back with `focus: null`. This waits for the frame, after the fixed wait.
+    const focusBack = async (): Promise<void> => {
+      for (const end = Date.now() + 5000; Date.now() < end && (await state()).focus !== "tl-opener";) await wait(20);
+    };
     const center = (selector: string): Promise<{ x: number; y: number }> =>
       page.evaluate((selector) => {
         const { root, menu } = (window as unknown as TopWin).__tl;
@@ -5028,6 +5036,7 @@ try {
       await openMenu();
       await page.keyboard.press("Escape");
       await wait(450);
+      await focusBack();
       assert.deepEqual(await state(), { open: false, closes: 2, connected: false, focus: "tl-opener" }, `${where}: Escape`);
 
       // An item
@@ -5035,6 +5044,7 @@ try {
       const copy = await center('[data-id="copy"]');
       await page.mouse.click(copy.x, copy.y);
       await wait(450);
+      await focusBack();
       assert.deepEqual(await state(), { open: false, closes: 3, connected: false, focus: "tl-opener" }, `${where}: an item`);
 
       // Two dismissals at once: the opener has focus when the pointer goes
@@ -5088,6 +5098,7 @@ try {
       assert.deepEqual(afterOne, { menu: true, submenus: 0 }, `${where}: Escape closes the submenu only`);
       await page.keyboard.press("Escape");
       await wait(450);
+      await focusBack();
       assert.deepEqual(await state(), { open: false, closes: 6, connected: false, focus: "tl-opener" }, `${where}: then the menu`);
 
       // An item of the submenu closes both, once
@@ -5097,6 +5108,7 @@ try {
       const link = await center('[data-id="link"]');
       await page.mouse.click(link.x, link.y);
       await wait(450);
+      await focusBack();
       const both = await page.evaluate(() => (window as unknown as TopWin).__tl.root.querySelectorAll('[class*="mtrl-menu"]').length);
       assert.deepEqual({ ...(await state()), both }, { open: false, closes: 7, connected: false, focus: "tl-opener", both: 0 }, `${where}: a submenu item`);
       check(`menu top layer ${where}: a submenu opens above it, Escape closes it then the menu, and its item closes both once`);
@@ -5574,6 +5586,59 @@ try {
     assert.deepEqual((await log()).map((e) => e.type), ["open", "close", "open", "close"]);
     assert.deepEqual(await menuState(), { open: false, attribute: false });
     check("menu: ArrowRight opens the submenu on its first item, ArrowLeft returns to Share, a hover opens it");
+
+    // FLO-515's acceptance: arrows pressed before the menu's initial focus are not
+    // undone by it. A menu opened with a key focuses its first item on a 100ms
+    // timer; here that timer is held until the arrows have been handled, the order
+    // fast keys (or a paused page) produce. Today the timer then puts focus back
+    // on the first item.
+    await expectedFailure("FLO-515", "the menu's initial focus undoes arrows pressed before it", async () => {
+      await page.evaluate(() => {
+        const timeout = window.setTimeout, clear = window.clearTimeout;
+        const held = new Map<number, () => void>();
+        let next = -1;
+        // Every 100ms timer the page sets during this case is held; the menu's own
+        // are 0, 20 and 100ms, and the 100ms one is its initial focus. A held timer
+        // has an id of its own and can be cleared, so a fix that cancels the
+        // initial focus is seen as one, like a fix that guards it.
+        window.setTimeout = ((callback: () => void, delay?: number, ...rest: unknown[]) => {
+          if (delay !== 100) return timeout(callback, delay, ...rest);
+          held.set(next, callback);
+          return next--;
+        }) as typeof window.setTimeout;
+        window.clearTimeout = ((id?: number) => { if (id === undefined || !held.delete(id)) clear(id); }) as typeof window.clearTimeout;
+        Object.assign(window, { releaseTimers: () => {
+          window.setTimeout = timeout;
+          window.clearTimeout = clear;
+          delete (window as unknown as { releaseTimers?: unknown }).releaseTimers;
+          for (const callback of [...held.values()]) callback();
+          held.clear();
+        } });
+      });
+      let before: string | null;
+      try {
+        await page.focus("#mb");
+        await page.keyboard.press("Enter");
+        // The menu is placed and shown 20ms after the key; its focus timer is held.
+        // (Not `wait(100)`: that is a 100ms timer in the page, and would be held too.)
+        await wait(60);
+        assert.equal((await menuState()).open, true, "the menu opened with Enter");
+        for (const key of ["ArrowDown", "ArrowDown"]) await page.keyboard.press(key);
+        before = await focused();
+        assert.notEqual(before, "mb", "the arrows moved focus into the menu");
+      } finally {
+        await page.evaluate(() => (window as unknown as { releaseTimers: () => void }).releaseTimers());
+      }
+      await wait(50);
+      const after = await focused();
+      await page.keyboard.press("Escape");
+      await settle();
+      await log();
+      // The known bug is this one move, back to the first item. Any other change of
+      // focus is not FLO-515 and fails as usual.
+      assert(!(after === "Copy" && before !== "Copy"), "FLO-515: the menu's initial focus moved focus back to the first item, after arrows had moved it on");
+      assert.equal(after, before, "focus stays where the arrows put it once the menu's initial focus has run");
+    });
 
     await page.evaluate(() => (document.getElementById("mm") as Host & { show: () => void }).show());
     await settle();
