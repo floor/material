@@ -1,0 +1,241 @@
+{
+  "pair": "mtrl-material",
+  "names": [
+    {
+      "name": "mtrl",
+      "repository": "floor/mtrl",
+      "workflow": "release.yml"
+    },
+    {
+      "name": "material",
+      "repository": "floor/material",
+      "workflow": "publish.yml"
+    }
+  ],
+  "allowlist": [
+    {
+      "id": "class-and-property-prefix",
+      "reason": "the class prefix `mtrl-` and every name built on it — class strings, `--mtrl-` custom properties, `$mtrl-sys-shape` — stay under either name (decided)",
+      "rule": "name-dash",
+      "guard": true,
+      "examples": [
+        { "text": ".mtrl-button" },
+        { "text": "--mtrl-sys-color-primary" },
+        { "text": "mtrl-card__content" },
+        { "text": "mtrl-button--filled" }
+      ]
+    },
+    {
+      "id": "class-prefix-fallbacks",
+      "reason": "the class prefix's fallbacks stay: the prefix is decided (plan 2.3)",
+      "pattern": "(?:prefix \\|\\| |PREFIX = )[\"']mtrl[\"']",
+      "guard": true,
+      "examples": [
+        { "text": "config.prefix || \"mtrl\"" },
+        { "text": "PREFIX = 'mtrl'" }
+      ]
+    },
+    {
+      "id": "cascade-layers",
+      "reason": "the cascade layers `mtrl.*` stay (decided)",
+      "pattern": "mtrl\\.[a-z]",
+      "guard": true,
+      "examples": [
+        { "text": "@layer mtrl.base" },
+        { "text": "mtrl.preupgrade" },
+        { "text": "@layer mtrl.components, mtrl.base" }
+      ]
+    },
+    {
+      "id": "symbol-keys",
+      "reason": "the process-wide symbols stay, so an `mtrl` and a `material` renderer find each other (plan 2.1, decided)",
+      "pattern": "Symbol(?:\\.for)?\\([\"']mtrl\\.",
+      "guard": true,
+      "examples": [
+        { "text": "Symbol.for(\"mtrl.ssr\")" },
+        { "text": "Symbol(\"mtrl.menu\")" }
+      ]
+    },
+    {
+      "id": "ssr-attribute",
+      "reason": "the `data-mtrl-ssr` attribute stays (arrives with the pre-upgrade stylesheet)",
+      "pattern": "data-mtrl-",
+      "guard": true,
+      "examples": [{ "text": "data-mtrl-ssr" }]
+    },
+    {
+      "id": "bench-env-variable",
+      "reason": "the environment variable the benchmarks read is a label, not a specifier",
+      "pattern": "MTRL_BENCH",
+      "guard": true,
+      "examples": [{ "text": "MTRL_BENCH=1 bun run bench" }]
+    },
+    {
+      "id": "temp-folder-names",
+      "reason": "the temp folder prefixes are labels, not specifiers",
+      "pattern": "mtrl-consumer-|\\.mtrl-build-",
+      "guard": true,
+      "examples": [
+        { "text": "mkdtemp(join(tmpdir(), \"mtrl-consumer-\"))" },
+        { "text": "mkdtemp(\".mtrl-build-\")" }
+      ]
+    },
+    {
+      "id": "addons-names",
+      "reason": "`mtrl-addons` and `mtrl-app` are other names; `floor/mtrl-addons` must never be caught by the repository-link rule (plan 1.3)",
+      "pattern": "floor/mtrl-addons|mtrl-addons|mtrl-app",
+      "guard": true,
+      "examples": [
+        { "text": "floor/mtrl-addons" },
+        { "text": "mtrl-addons" },
+        { "text": "mtrl.app" },
+        { "text": "then wraps them in mtrl-addons' color utils" }
+      ]
+    },
+    {
+      "id": "scoped-dependency",
+      "reason": "`@material/material-color-utilities` is a dependency's scope, not this package's name",
+      "rule": "scoped-name",
+      "guard": true,
+      "examples": [
+        { "text": "@material/material-color-utilities" },
+        { "text": "from \"@material/material-color-utilities\"" }
+      ]
+    },
+    {
+      "id": "changelog",
+      "reason": "the whole of CHANGELOG.md: the history describes releases published as `mtrl`, and the release-day 3.0.0 section is written by hand (plan 1.6, 2.4)",
+      "file": "CHANGELOG.md",
+      "guard": true,
+      "examples": [
+        { "file": "CHANGELOG.md", "text": "`import 'mtrl/styles/base'`" },
+        { "file": "CHANGELOG.md", "text": "[CHANGELOG](https://github.com/floor/mtrl/blob/main/CHANGELOG.md)" }
+      ]
+    },
+    {
+      "id": "lockfile",
+      "reason": "bun.lock's name line is written by `bun install`, not by the rename (plan 2.2)",
+      "file": "bun.lock",
+      "guard": true,
+      "examples": [{ "file": "bun.lock", "text": "\"name\": \"mtrl\"" }]
+    },
+    {
+      "id": "package-name-test",
+      "reason": "the script's own unit test: its inputs and expectations are the mapping's literal data, written in the source name, and must survive the rename they test",
+      "file": "test/scripts/package-name.test.ts",
+      "guard": true,
+      "examples": [
+        { "file": "test/scripts/package-name.test.ts", "text": "import { createButton } from 'mtrl';" },
+        { "file": "test/scripts/package-name.test.ts", "text": "github.com/floor/mtrl" }
+      ]
+    },
+    {
+      "id": "package-name-script",
+      "reason": "the script itself: it is the mapping's machinery and names both packages by design, in its header, its usage lines and its messages",
+      "file": "scripts/package-name.ts",
+      "guard": true,
+      "examples": [
+        { "file": "scripts/package-name.ts", "text": "bun scripts/package-name.ts material 3.0.0 floor/material" },
+        { "file": "scripts/package-name.ts", "text": "mtrl 1.0.0 and material 3.0.0 are the same code." }
+      ]
+    },
+    {
+      "id": "prose-word",
+      "reason": "the bare word `mtrl` in prose and comments that is not a specifier",
+      "rule": "prose",
+      "examples": [
+        { "text": "# mtrl" },
+        { "text": "contributing to mtrl!" },
+        { "text": "mtrl is ESM-only" },
+        { "text": "clone it beside your mtrl checkout" },
+        { "file": ".github/CONTRIBUTING.md", "text": "mtrl aims to be a modern, flexible UI component library." }
+      ]
+    },
+    {
+      "id": "quoted-name-outside-import",
+      "reason": "a bare quoted `\"mtrl\"` that is not in an import form — a table cell, a policy name, a defaults list (plan 2.3: the script must not touch it)",
+      "rule": "quoted-bare",
+      "examples": [
+        { "text": "| Vanilla factories | `mtrl` |" },
+        { "text": "trustedTypes.createPolicy('mtrl', { createHTML: (s) => s })" },
+        { "text": "[\"mtrl\"]" }
+      ]
+    },
+    {
+      "id": "member-uses",
+      "reason": "`mtrl` as a property or handle in a script — the browser fixtures' own `window.mtrl` global, `w.mtrl[kind]`, `Symbol.for(…)` — not the package name",
+      "rule": "member-access",
+      "examples": [
+        { "text": "window.mtrl.createDatePicker({})" },
+        { "text": "Object.keys(mtrl.elements)" },
+        { "text": "}).mtrl, {" }
+      ]
+    },
+    {
+      "id": "object-key-uses",
+      "reason": "`mtrl` as an object key or type member in a script, not the package name",
+      "rule": "object-key",
+      "examples": [
+        { "text": "{ mtrl: Record<string, () => void> }" },
+        { "text": "mtrl: Record<string, (config: object) => unknown>;" }
+      ]
+    },
+    {
+      "id": "identifier-uses",
+      "reason": "`mtrl` inside a longer identifier (`mtrlWarnings`, the Android token `mtrl_textinput_box_label_cutout_padding`), not the package name",
+      "rule": "identifier-runs",
+      "examples": [
+        { "text": "const mtrlWarnings = async () => {}" },
+        { "text": "`mtrl_textinput_box_label_cutout_padding`" }
+      ]
+    },
+    {
+      "id": "path-and-url-fragments",
+      "reason": "`mtrl` in a path or host that is not this repository or a specifier: the addons' sibling checkout, a routed test host, a fork's clone URL",
+      "rule": "path-fragment",
+      "examples": [
+        { "text": "it depends on `file:../mtrl`" },
+        { "text": "await page.route(\"https://mtrl.test/card.svg\")" },
+        { "text": "git clone https://github.com/YOUR-USERNAME/mtrl.git" }
+      ]
+    },
+    {
+      "id": "dotted-forms",
+      "reason": "`mtrl` followed by a dot that is not a layer or a symbol: the site `mtrl.app`, a sentence's full stop, a file name",
+      "rule": "dotted-form",
+      "examples": [
+        { "text": "mtrl.app redirects to md3.io" },
+        { "text": "with or without mtrl." },
+        { "text": "https://mtrl.test/card.svg" }
+      ]
+    },
+    {
+      "id": "warning-tag",
+      "reason": "the console warning's own tag (`[mtrl] component: …`) is a label the runner and its tests share, not a specifier",
+      "pattern": "\\[mtrl\\]",
+      "examples": [
+        { "file": "src/core/utils/warn.ts", "text": "console.warn(`[mtrl] ${component}: ${message}`)" }
+      ]
+    }
+  ],
+  "keeps": [
+    {
+      "id": "consumer-exports-comment",
+      "file": "test/core/consumer-exports.test.ts",
+      "text": "imports from \"mtrl\", read from its",
+      "reason": "a comment about what mtrl-addons imports, not a specifier: the sentence names the package the addons repository depends on"
+    },
+    {
+      "id": "consumer-exports-doc",
+      "file": "test/core/consumer-exports.test.ts",
+      "text": "imports from \"mtrl\": its component factories.",
+      "reason": "a doc comment about what mtrl-addons imports, not a specifier"
+    },
+    {
+      "id": "consumer-harness-title",
+      "file": "scripts/check-consumer.ts",
+      "text": "<title>mtrl CSS comparison</title>",
+      "reason": "the harness page's own title, not a specifier"
+    }
+  ]
+}
