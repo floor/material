@@ -150,7 +150,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "loading-indicator": kb(9.3), // the Compose-exact shapes (FLO-346): 9,138 to 9,447, the first-arc split 149 B of it
   "split-button": kb(17.9), // the menu's top layer: 17,644 to 18,122; the menu's positionTarget (FLO-300): 18,228
   radios: kb(5.1),
-  search: kb(10.4), // the open view in the top layer (FLO-285): 9,759; combobox, contained and divided (FLO-286, FLO-287): 10,114; minWidth and maxWidth (FLO-290): 10,161; trailing items, avatar, supporting text, reopening (FLO-291): 10,477; FLO-514 deferred-focus cancellation: 10,509 to 10,609 gzip bytes, budget 10,547 to 10,649 (+102)
+  search: 10564, // the open view in the top layer (FLO-285): 9,759; combobox, contained and divided (FLO-286, FLO-287): 10,114; minWidth and maxWidth (FLO-290): 10,161; trailing items, avatar, supporting text, reopening (FLO-291): 10,477; FLO-514 cancels the deferred opening focus: 10,509 to 10,564. kb(10.3) is 10,547, which does not fit, so the ceiling is the measured size (the generation guard had raised it to 10,649)
   select: kb(20.35), // the menu's top layer: 19,600 to 20,115; the field, the supporting text row and the counter (FLO-300): 20,608; main's root class option (FLO-403) on the forward merge: next 20,743 to 20,790
   slider: kb(13.1), // FLO-249..255 slider conformance; FLO-331 the track corner token (12,918 measured); track, stops and the inset icon as a percentage of the value (FLO-369): 13,276
   // layer: "top", the core/dom top-layer helper and the modal-dialog placement, which
