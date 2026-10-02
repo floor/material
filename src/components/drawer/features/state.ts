@@ -1,7 +1,7 @@
 import { DrawerConfig } from "../types";
 import { DRAWER_EVENTS } from "../constants";
 import { activeElementOf, deepActiveElement } from "../../../core/dom/focus";
-import { hideFromTopLayer, onTopLayerClose, showInTopLayer } from "../../../core/dom/layer";
+import { hideFromTopLayer, onModalEscape, onTopLayerClose, showInTopLayer, type ModalEscape } from "../../../core/dom/layer";
 
 interface StateBaseComponent {
   element: HTMLElement;
@@ -85,6 +85,11 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   let destroyed = false;
   let frame: number | null = null;
   let previousFocus: HTMLElement | null = null;
+  // A modal drawer's place among the open modals, while it is open: Escape is
+  // a key press handled there, for the topmost one, in both layers
+  let escape: ModalEscape | undefined;
+  // True while the drawer sends a key press on as a `cancel` of its own
+  let asking = false;
   // In the top layer the root's ::backdrop is the scrim
   const scrimElement = isModal && !top ? doc.createElement("div") : null;
   if (scrimElement) {
@@ -107,10 +112,7 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   const isTopModal = () => modals.get(doc)?.roots.at(-1) === root;
   function handleKeydown(event: KeyboardEvent): void {
     if (!isOpen || !isTopModal() || event.defaultPrevented) return;
-    // In the top layer Escape is the dialog's cancel event
-    if (event.key === "Escape" && dismissible && !top) {
-      event.preventDefault(); close();
-    } else if (event.key === "Tab") {
+    if (event.key === "Tab") {
       const items = focusable();
       const first = items[0], last = items.at(-1);
       const active = activeElementOf(root);
@@ -127,10 +129,21 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   function handleFocus(): void {
     if (isOpen && isTopModal() && !root.contains(activeElementOf(root))) focusInside();
   }
-  // Escape reaches the topmost modal as its cancel event; the drawer decides
+  // A close request reaches the topmost modal as its cancel event; the drawer
+  // decides. The browser's `cancel` of the task it opened in is the opening
+  // key's, when the page stopped that key press before it reached the window.
   const handleCancel = (event: Event): void => {
     event.preventDefault();
-    if (dismissible) close();
+    if ((asking || !escape?.opening) && dismissible) close();
+  };
+  // Escape as a key press. In the top layer it asks as the browser's `cancel`
+  // did, on the <dialog>: <m-drawer> refuses it there (no-close-on-escape).
+  const onEscape = (): void => {
+    if (top) {
+      asking = true;
+      root.dispatchEvent(new Event("cancel", { cancelable: true }));
+      asking = false;
+    } else if (dismissible) close();
   };
   // The root covers the page, so a click beside the sheet lands on it, as on
   // the ::backdrop behind it
@@ -151,6 +164,8 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
     if (!isModal) return;
     previousFocus = deepActiveElement() as HTMLElement | null;
     if (root.isConnected) acquireModal(root);
+    escape?.stop();
+    escape = onModalEscape(root, onEscape);
     doc.addEventListener("keydown", handleKeydown);
     doc.addEventListener("focusin", handleFocus);
     frame = requestAnimationFrame(() => {
@@ -163,6 +178,7 @@ export const withState = (config: DrawerConfig) => <C extends StateBaseComponent
   };
   const deactivate = () => {
     cancelFocus();
+    escape?.stop();
     doc.removeEventListener("keydown", handleKeydown);
     doc.removeEventListener("focusin", handleFocus);
     const restore = isTopModal();

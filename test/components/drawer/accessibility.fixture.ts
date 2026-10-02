@@ -44,7 +44,7 @@ test('modal traps Tab, restores focus and preserves body overflow', () => {
   expect(document.activeElement).toBe(items[0]);
   items[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }));
   expect(document.activeElement).toBe(items[1]);
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
   expect(d.isOpen()).toBe(false); expect(document.activeElement).toBe(opener);
   expect(document.body.style.overflow).toBe('clip'); expect(document.body.style.getPropertyPriority('overflow')).toBe('important');
   expect(document.querySelector('main')!.hasAttribute('inert')).toBe(false);
@@ -97,7 +97,7 @@ test('empty non-dismissible modal traps focus and preserves existing inert conte
   const d = make({ variant: 'modal', items: [], dismissible: false, prefix: 'custom' });
   d.open(); flush(); expect(document.activeElement).toBe(d.element);
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }));
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
   expect(d.isOpen()).toBe(true); expect(document.activeElement).toBe(d.element);
   d.destroy(); expect(main.hasAttribute('inert')).toBe(true);
 });

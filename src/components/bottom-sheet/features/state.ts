@@ -11,8 +11,10 @@ import { deepActiveElement, wrapTab } from "../../../core/dom/focus";
 import {
   hideFromTopLayer,
   inertOutside,
+  onModalEscape,
   onTopLayerClose,
   showInTopLayer,
+  type ModalEscape,
 } from "../../../core/dom/layer";
 
 interface StateComponent {
@@ -63,6 +65,18 @@ export const withState =
       }
     };
 
+    // A modal sheet's place among the open modals, while it is open: Escape
+    // is a key press handled there, for the topmost one, in both layers
+    let escape: ModalEscape | undefined;
+    const onStack = (on: boolean): void => {
+      escape?.stop();
+      escape = on && isModal
+        ? onModalEscape(element, () => {
+            if (config.closeOnEscape) close();
+          })
+        : undefined;
+    };
+
     const applyState = (next: BottomSheetState): void => {
       for (const name of Object.values(BOTTOM_SHEET_STATES)) {
         element.classList.toggle(`${root}--${name}`, name === next);
@@ -85,9 +99,9 @@ export const withState =
       if (event.key !== "Escape") return;
       if (state === BOTTOM_SHEET_STATES.HIDDEN) return;
       if (!config.closeOnEscape) return;
-      // A standard sheet sits beside the page, not over it: Escape pressed
-      // elsewhere (closing a menu, say) is not meant for it (FLO-324)
-      if (!isModal && !event.composedPath().includes(element)) return;
+      // A standard sheet (a modal one is on the stack) sits beside the page,
+      // not over it: Escape pressed elsewhere (closing a menu, say) is not meant for it (FLO-324)
+      if (!event.composedPath().includes(element)) return;
       event.preventDefault();
       close();
     };
@@ -106,10 +120,13 @@ export const withState =
     // leaving for the browser's own controls
     const handleTab = (event: KeyboardEvent): void => wrapTab(element, event);
 
-    // Escape reaches the topmost modal as its cancel event; the sheet decides
+    // A close request that is not a key press (a back gesture) reaches the
+    // topmost modal as its cancel event; the sheet decides. The `cancel` of
+    // the task it opened in is the opening key's, when the page stopped that
+    // key press before it reached the window.
     const handleCancel = (event: Event): void => {
       event.preventDefault();
-      if (config.closeOnEscape) close();
+      if (!escape?.opening && config.closeOnEscape) close();
     };
 
     function open(to: BottomSheetState = BOTTOM_SHEET_STATES.PARTIAL): void {
@@ -130,6 +147,7 @@ export const withState =
 
       if (wasHidden) {
         trap(true);
+      onStack(true);
         if (isModal) structure.container.focus();
         component.emit(BOTTOM_SHEET_EVENTS.OPEN);
       }
@@ -139,6 +157,7 @@ export const withState =
       if (state === BOTTOM_SHEET_STATES.HIDDEN) return;
       setState(BOTTOM_SHEET_STATES.HIDDEN);
       trap(false);
+      onStack(false);
       // out of the top layer first: the page is inert until then. The
       // stylesheet keeps it in the top layer while it slides out.
       if (top) hideFromTopLayer(element);
@@ -154,6 +173,7 @@ export const withState =
     }
 
     applyState(state);
+    if (state !== BOTTOM_SHEET_STATES.HIDDEN) onStack(true);
     let stopCloses: (() => void) | null = null;
     if (top) {
       element.addEventListener("cancel", handleCancel);
@@ -164,7 +184,7 @@ export const withState =
       if (state !== BOTTOM_SHEET_STATES.HIDDEN && element.isConnected) {
         showInTopLayer(element, { kind: "modal" });
       }
-    } else if (config.closeOnEscape) {
+    } else if (!isModal && config.closeOnEscape) {
       document.addEventListener("keydown", handleKeydown);
     }
     structure.scrim?.addEventListener("click", handleScrimClick);
@@ -187,6 +207,7 @@ export const withState =
           element.removeEventListener("click", handleBackdropClick);
           element.removeEventListener("keydown", handleTab);
           trap(false);
+          onStack(false);
           stopCloses?.();
           if (top) hideFromTopLayer(element);
         },

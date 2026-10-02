@@ -231,6 +231,9 @@ describe.each([
   test("Escape reaches it as cancel and closes it once", async () => {
     const { sheet, closes } = make();
     sheet.open();
+    // A later close request. A cancel in the task open() ran in is the one the
+    // browser sends for the key that opened the sheet (FLO-548).
+    await after(0);
     expect(escape(sheet.element).defaultPrevented).toBe(true);
     expect(sheet.isOpen()).toBe(false);
     await after(10);
@@ -308,6 +311,9 @@ describe("modal drawer, layer: top", () => {
   test("Escape reaches it as cancel and closes it once; a click beside the sheet does too", async () => {
     const { drawer, closes } = make();
     drawer.open();
+    // A later close request: a cancel in the task open() ran in is the
+    // opening key's (FLO-548)
+    await after(0);
     expect(escape(drawer.element).defaultPrevented).toBe(true);
     expect(drawer.isOpen()).toBe(false);
     drawer.open();
