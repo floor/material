@@ -216,9 +216,11 @@ export const createComponent = <S, E extends HTMLElement>(
     if (template != null) hostProps[RENDERED_HOST_ATTRIBUTE] = "";
     // The attribute is server HTML. React records an extra attribute as a
     // hydration difference and does not remove it. `suppressHydrationWarning`
-    // is React's way to keep that difference off the warning; it has to be on
-    // the client vnode, and it also silences every other mismatch on this host.
-    if (isBrowser) hostProps.suppressHydrationWarning = true;
+    // is on the client vnode of a host the server can mark (`ssr` is not
+    // `false`: carousel and the FAB menu never are; menu and split button,
+    // whose `ssr` is a function, still can be). It keeps that difference off
+    // the warning, and it also silences every other mismatch on this host.
+    if (isBrowser && spec.ssr !== false) hostProps.suppressHydrationWarning = true;
     return React.createElement(tag, hostProps, template, children as React.ReactNode, ...named);
   });
   Component.displayName = displayName;

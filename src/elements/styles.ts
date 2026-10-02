@@ -75,13 +75,16 @@ export const RENDERED_HOST_ATTRIBUTE = "data-mtrl-ssr";
 /**
  * Last rule of every pre-upgrade sheet, inside `mtrl.preupgrade`.
  * `:not(#\0)` is an id selector (specificity 1,0,0) that matches every element,
- * so the rule outranks every pre-upgrade selector, none of which has an id.
- * `all` does not reset custom properties; the element rules set none.
- * Not tag-specific, so retagging for another prefix leaves it as it is.
+ * so each selector outranks every pre-upgrade selector of the same subject
+ * (the host, its `::before` and `::after`, and a direct child), none of which
+ * has an id. The deepest pre-upgrade subject is a direct child, including a
+ * following sibling of one (`> * + *`); none styles a grandchild or a child's
+ * pseudo-element. `all` does not reset custom properties; the element rules
+ * set none. Not tag-specific, so retagging for another prefix leaves it as it is.
  */
 export const preupgradeRollback = (): string => {
   const selector = `[${RENDERED_HOST_ATTRIBUTE}]:not(:defined):not(#\\0)`;
-  return `${selector},${selector}::before,${selector}::after{all:revert-layer}`;
+  return `${selector},${selector}::before,${selector}::after,${selector} > *{all:revert-layer}`;
 };
 
 /**

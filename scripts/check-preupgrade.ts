@@ -45,7 +45,11 @@ const phaseB = [
     id: "variant", label: "Name", value: "Ada", type: "multiline", variant: "outlined",
     density: "compact", "supporting-text": "Help",
   }),
-].join("") + '<m-textfield id="variant-bare" label="Name" value="Ada" type="multiline" variant="outlined" density="compact" supporting-text="Help"></m-textfield>';
+  renderElement("m-navigation-rail", { id: "rail" }, '<div slot="header">Menu</div>'),
+  renderElement("m-card", { id: "card" }, '<span slot="headline">Title</span>'),
+].join("") + '<m-textfield id="variant-bare" label="Name" value="Ada" type="multiline" variant="outlined" density="compact" supporting-text="Help"></m-textfield>'
+  + '<m-navigation-rail id="rail-bare"><div slot="header">Menu</div></m-navigation-rail>'
+  + '<m-card id="card-bare"><span slot="headline">Title</span></m-card>';
 
 const THRESHOLD = 0.01;
 const STAGE_WIDTH = 360;
@@ -383,9 +387,21 @@ try {
         const bare = document.querySelector("#bare")!;
         const variant = document.querySelector("#variant")!;
         const variantBare = document.querySelector("#variant-bare")!;
+        const rail = document.querySelector("#rail")!;
+        const railBare = document.querySelector("#rail-bare")!;
+        const card = document.querySelector("#card")!;
+        const cardBare = document.querySelector("#card-bare")!;
+        const header = rail.querySelector("[slot=header]")!;
+        const headerBare = railBare.querySelector("[slot=header]")!;
+        const headline = card.querySelector("[slot=headline]")!;
+        const headlineBare = cardBare.querySelector("[slot=headline]")!;
+        const box = (element: Element): { w: number; h: number } => {
+          const r = element.getBoundingClientRect();
+          return { w: r.width, h: r.height };
+        };
         const style = getComputedStyle(field);
         return {
-          root: !!field.shadowRoot && !!button.shadowRoot && !!select.shadowRoot && !!variant.shadowRoot && !bare.shadowRoot && !variantBare.shadowRoot,
+          root: !!field.shadowRoot && !!button.shadowRoot && !!select.shadowRoot && !!variant.shadowRoot && !!rail.shadowRoot && !!card.shadowRoot && !bare.shadowRoot && !variantBare.shadowRoot && !railBare.shadowRoot && !cardBare.shadowRoot,
           padding: style.padding,
           background: style.backgroundColor,
           before: getComputedStyle(field, "::before").content,
@@ -397,6 +413,10 @@ try {
           variantBefore: getComputedStyle(variant, "::before").content,
           barePadding: getComputedStyle(variantBare).padding,
           bareBefore: getComputedStyle(variantBare, "::before").content,
+          header: { visibility: getComputedStyle(header).visibility, ...box(header) },
+          headerBare: { visibility: getComputedStyle(headerBare).visibility, ...box(headerBare) },
+          headline: { visibility: getComputedStyle(headline).visibility, order: getComputedStyle(headline).order, ...box(headline) },
+          headlineBare: { visibility: getComputedStyle(headlineBare).visibility, order: getComputedStyle(headlineBare).order, ...box(headlineBare) },
         };
       });
       assert(before.root, "phase B hosts did not render the roots the page asked for");
@@ -407,6 +427,20 @@ try {
       assert(before.variantPadding !== before.barePadding, `outlined multiline text field still has pre-upgrade padding (${before.variantPadding})`);
       assert(before.variantBefore === "none", `outlined multiline ::before is pre-upgrade text (${before.variantBefore})`);
       assert(before.bareBefore !== "none", "the bare outlined multiline host lost its pre-upgrade ::before");
+      // The rail's header slot is a direct child. The pre-upgrade rule hides it
+      // and gives it a 64px box; the rendered host's child is neither.
+      assert.equal(before.headerBare.visibility, "hidden");
+      assert.equal(Math.round(before.headerBare.h), 64);
+      assert.equal(before.header.visibility, "visible");
+      assert.notEqual(Math.round(before.header.h), Math.round(before.headerBare.h));
+      // The card's headline is a direct child. The rule sets order (and the
+      // title type, which sizes the bare twin). The rendered headline keeps
+      // neither the hidden treatment nor that order.
+      assert.equal(before.headline.visibility, "visible");
+      assert.equal(before.headlineBare.visibility, "visible");
+      assert.equal(before.headlineBare.order, "-2");
+      assert.notEqual(before.headline.order, before.headlineBare.order);
+      assert(before.headline.h > 0 && before.headlineBare.h > 0, "a card headline has no box");
       await p.addScriptTag({ url: "/elements.js", type: "module" });
       await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true && !document.querySelector("#stage :not(:defined)"));
       await p.waitForTimeout(300);
@@ -419,7 +453,7 @@ try {
       assert(Math.abs(before.button - after.button) < 0.5, `button width ${before.button} before the script, ${after.button} after`);
       assert(Math.abs(before.select - after.select) < 0.5, `select width ${before.select} before the script, ${after.select} after`);
       assert.equal(before.background, after.background, "text field background changed when the script ran");
-      console.log(`Phase B, stylesheet loaded, script held back: field padding ${before.padding}, button ${before.button.toFixed(1)}px, select ${before.select.toFixed(1)}px, bare ${before.bare.toFixed(1)}px`);
+      console.log(`Phase B, stylesheet loaded, script held back: field padding ${before.padding}, button ${before.button.toFixed(1)}px, select ${before.select.toFixed(1)}px, bare ${before.bare.toFixed(1)}px, header ${before.header.visibility} ${before.header.h.toFixed(1)}px (bare ${before.headerBare.visibility} ${before.headerBare.h.toFixed(1)}px), headline ${before.headline.visibility} ${before.headline.h.toFixed(1)}px order ${before.headline.order} (bare ${before.headlineBare.visibility} ${before.headlineBare.h.toFixed(1)}px order ${before.headlineBare.order})`);
     } finally {
       await p.close();
     }

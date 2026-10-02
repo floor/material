@@ -169,23 +169,140 @@ const specificity = (selector: string): Specificity => {
 export const selectorSpecificity = specificity;
 
 /**
+ * What a selector styles, relative to the undefined host: `host`, `host::before`,
+ * `child` (a direct child, including a following sibling of one), and so on.
+ * Combinators inside a function (`:has(> [icon])`) are not the subject.
+ */
+export const subjectShape = (selector: string): string => {
+  let depth = 0;
+  let descendant = false;
+  let pseudo = "";
+  let compound = false;
+  let i = 0;
+  const fail = (): never => {
+    throw new Error(`Unparsed pre-upgrade selector at ${JSON.stringify(selector.slice(i))} in ${selector}`);
+  };
+  const escape = (): void => {
+    i++;
+    if (i >= selector.length) return;
+    if (/[0-9a-fA-F]/.test(selector[i])) {
+      let digits = 0;
+      while (digits < 6 && i < selector.length && /[0-9a-fA-F]/.test(selector[i])) {
+        i++;
+        digits++;
+      }
+      if (i < selector.length && /[\n\r\f\t ]/.test(selector[i])) i++;
+      return;
+    }
+    i++;
+  };
+  const ident = (): void => {
+    if (selector[i] === "-") i++;
+    if (i >= selector.length) fail();
+    if (selector[i] === "\\") escape();
+    else i++;
+    while (i < selector.length) {
+      const char = selector[i];
+      if (char === "\\") escape();
+      else if (/[A-Za-z0-9_-]/.test(char) || char.charCodeAt(0) > 127) i++;
+      else break;
+    }
+  };
+  const skip = (open: string, close: string): void => {
+    let nest = 0;
+    let quote = "";
+    while (i < selector.length) {
+      const char = selector[i];
+      if (quote) {
+        i += char === "\\" ? 2 : 1;
+        if (char === quote) quote = "";
+        continue;
+      }
+      if (char === '"' || char === "'") { quote = char; i++; continue; }
+      if (char === "\\") { i += 2; continue; }
+      i++;
+      if (char === open) nest++;
+      else if (char === close) {
+        nest--;
+        if (nest === 0) return;
+      }
+    }
+    fail();
+  };
+  const nextCompound = (child: boolean): void => {
+    if (child) depth++;
+    pseudo = "";
+    compound = false;
+  };
+  while (i < selector.length) {
+    const char = selector[i];
+    if (char === " " || char === "\n" || char === "\t") {
+      let j = i;
+      while (j < selector.length && /[\n\t ]/.test(selector[j])) j++;
+      const next = selector[j];
+      if (next === ">" || next === "+" || next === "~") { i = j; continue; }
+      if (compound && next) {
+        depth++;
+        descendant = true;
+        pseudo = "";
+        compound = false;
+      }
+      i = j;
+      continue;
+    }
+    if (char === ">") { nextCompound(true); i++; continue; }
+    if (char === "+" || char === "~") { nextCompound(false); i++; continue; }
+    compound = true;
+    if (char === "*") { i++; continue; }
+    if (char === "#") { i++; ident(); continue; }
+    if (char === ".") { i++; ident(); continue; }
+    if (char === "[") { skip("[", "]"); continue; }
+    if (char === ":") {
+      const pseudoElement = selector[i + 1] === ":";
+      i += pseudoElement ? 2 : 1;
+      const nameStart = i;
+      ident();
+      const name = selector.slice(nameStart, i);
+      if (selector[i] === "(") skip("(", ")");
+      if (pseudoElement) pseudo = name;
+      continue;
+    }
+    if (char === "\\" || /[A-Za-z_]/.test(char) || char.charCodeAt(0) > 127 || char === "-") {
+      ident();
+      continue;
+    }
+    fail();
+  }
+  const base = depth === 0 ? "host" : descendant ? `descendant-${depth}` : depth === 1 ? "child" : `child-${depth}`;
+  return pseudo ? `${base}::${pseudo}` : base;
+};
+
+/**
  * The rollback is last, has no tag, and its specificity is strictly above
  * every selector in `rules` (the sheet without the rollback). No rule in
  * `rules` may contain an id, which is what makes `:not(#\0)` win for good.
+ * A selector is beaten by a rollback selector of the same subject.
  */
 export const assertRollbackBeats = (rules: string): { selector: string; specificity: Specificity } => {
   const rollback = preupgradeRollback();
   const prelude = rollback.slice(0, rollback.indexOf("{"));
-  const rollbackSpecificity = splitSelectors(prelude).map(specificity);
+  const rollbackByShape = new Map<string, Specificity[]>();
+  for (const selector of splitSelectors(prelude)) {
+    const shape = subjectShape(selector);
+    const ranks = rollbackByShape.get(shape) ?? [];
+    ranks.push(specificity(selector));
+    rollbackByShape.set(shape, ranks);
+  }
   let max: { selector: string; specificity: Specificity } = { selector: "", specificity: [0, 0, 0] };
   for (const selector of ruleSelectors(rules)) {
     const rank = specificity(selector);
     if (rank[0] !== 0) throw new Error(`A pre-upgrade selector has an id, so :not(#\\0) does not beat it: ${selector}`);
     if (compare(rank, max.specificity) > 0) max = { selector, specificity: rank };
-    for (const required of rollbackSpecificity) {
-      if (compare(required, rank) <= 0) {
-        throw new Error(`Rollback ${required.join(",")} does not beat ${selector} (${rank.join(",")})`);
-      }
+    const shape = subjectShape(selector);
+    const covering = rollbackByShape.get(shape);
+    if (!covering) throw new Error(`Rollback has no selector for ${shape}: ${selector}`);
+    if (!covering.some((required) => compare(required, rank) > 0)) {
+      throw new Error(`Rollback does not beat ${shape} ${selector} (${rank.join(",")})`);
     }
   }
   return max;
@@ -195,7 +312,7 @@ export const assertRollbackBeats = (rules: string): { selector: string; specific
 export const repeatedAttributeBytes = (classColumn: number): number => {
   const attribute = "[data-mtrl-ssr]".repeat(classColumn + 1);
   const base = `${attribute}:not(:defined)`;
-  return `${base},${base}::before,${base}::after{all:revert-layer}`.length;
+  return `${base},${base}::before,${base}::after,${base} > *{all:revert-layer}`.length;
 };
 
 export const specificityText = (rank: Specificity): string => rank.join(",");

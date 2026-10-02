@@ -14,7 +14,7 @@ import {
 } from "../../scripts/build-styles";
 import { elements } from "../../src/elements";
 import { preupgradeRollback, preupgradeSheet, retagPreupgrade } from "../../src/elements/styles";
-import { assertRollbackBeats, repeatedAttributeBytes, selectorSpecificity } from "../../scripts/preupgrade-specificity";
+import { assertRollbackBeats, repeatedAttributeBytes, ruleSelectors, selectorSpecificity, subjectShape } from "../../scripts/preupgrade-specificity";
 
 const options: sass.StringOptions<"sync"> = {
   loadPaths: [resolve("src/styles")], style: "compressed", logger: sass.Logger.silent,
@@ -62,7 +62,13 @@ describe("pre-upgrade styles", () => {
     );
     expect(retagPreupgrade(rollback, "x-y")).toBe(rollback);
     expect(selectorSpecificity("[data-mtrl-ssr]:not(:defined):not(#\\0)")).toEqual([1, 2, 0]);
+    expect(selectorSpecificity("[data-mtrl-ssr]:not(:defined):not(#\\0) > *")).toEqual([1, 2, 0]);
     expect(selectorSpecificity("m-textfield:not(:defined)[type=multiline][supporting-text]:not([supporting-text=''])[variant=outlined]")).toEqual([0, 5, 1]);
+    expect(subjectShape("m-navigation-rail:not(:defined)>*+*")).toBe("child");
+    expect(subjectShape("m-card:not(:defined)>[slot=headline]")).toBe("child");
+    expect(subjectShape("m-tabs:not(:defined):has(>[icon])")).toBe("host");
+    expect(subjectShape("m-textfield:not(:defined)::before")).toBe("host::before");
+    expect(subjectShape("[data-mtrl-ssr]:not(:defined):not(#\\0) > *")).toBe("child");
   });
 
   test("no element CSS module registers pre-upgrade rules", () => {
@@ -89,6 +95,10 @@ describe("pre-upgrade styles", () => {
     const joined = [...rules.values()].join("");
     const whole = preupgradeStylesheet(joined, banner);
     expect(inner(whole)).toBe(`${joined}${rollback}`);
+    const rollbackSelectors = rollback.slice(0, rollback.indexOf("{")).split(",");
+    expect(rollbackSelectors.some((selector) => subjectShape(selector) === "child")).toBe(true);
+    const shapes = [...new Set(ruleSelectors(joined).map(subjectShape))].sort();
+    expect(shapes).toEqual(["child", "host", "host::after", "host::before"]);
     const max = assertRollbackBeats(joined);
     expect(rollback.length).toBeLessThan(repeatedAttributeBytes(max.specificity[1]));
     expect(joined).not.toMatch(/(?:^|[{;}])\s*--[A-Za-z0-9-]+\s*:/);

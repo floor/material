@@ -99,18 +99,23 @@ const run = async (version: 18 | 19): Promise<void> => {
   check("renders on a server without a DOM, attributes in the markup");
 
   const client = await bundle("scripts/fixtures/react-client.ts", "browser", plugins);
+  const clientRender = await bundle("scripts/fixtures/react-client-render.ts", "browser", plugins);
   assert.doesNotMatch(client, /dist\/ssr|src\/ssr|linkedom|SSR element nesting/);
   check("client bundle contains no SSR implementation or linkedom");
+  const shell = (body: string, script: string): string =>
+    `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
+<body>${body}<script type="module" src="${script}"></script></body></html>`;
   const http = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
     fetch(request) {
       const path = new URL(request.url).pathname;
       if (path === "/client.js") return new Response(client, { headers: { "Content-Type": "text/javascript" } });
+      if (path === "/client-render.js") return new Response(clientRender, { headers: { "Content-Type": "text/javascript" } });
       if (path === "/styles.css") return new Response(Bun.file("dist/styles.css"));
+      if (path === "/client-render") return new Response(shell(`<div id="root"></div>`, "/client-render.js"), { headers: { "Content-Type": "text/html" } });
       return new Response(
-        `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
-<body><div id="root">${html}</div><script type="module" src="/client.js"></script></body></html>`,
+        shell(`<div id="root">${html}</div>`, "/client.js"),
         { headers: { "Content-Type": "text/html" } }
       );
     },
@@ -127,6 +132,34 @@ const run = async (version: 18 | 19): Promise<void> => {
     await page.goto(`http://127.0.0.1:${http.port}`);
     await page.waitForFunction(() => (window as unknown as Win).hydrated && (window as unknown as Win).api);
     await page.waitForFunction(() => !!(document.getElementById("t") as HTMLElement & { component?: unknown }).component);
+
+    // Host attributes after hydration, against a client render of the same
+    // app. `data-mtrl-ssr` is the server's mark; everything else must agree,
+    // which is what `suppressHydrationWarning` would otherwise hide.
+    const readHosts = (target: Page): Promise<Array<{ tag: string; ssr: boolean; attrs: Record<string, string> }>> =>
+      target.evaluate(() => {
+        const root = document.getElementById("root") as HTMLElement;
+        return [...root.querySelectorAll("*")].flatMap((el) => {
+          if (!el.localName.startsWith("m-")) return [];
+          const attrs: Record<string, string> = {};
+          for (const attr of el.attributes) {
+            if (attr.name === "data-mtrl-ssr") continue;
+            attrs[attr.name] = attr.value;
+          }
+          return [{ tag: el.localName, ssr: el.hasAttribute("data-mtrl-ssr"), attrs }];
+        });
+      });
+    const clientPage = await browser.newPage();
+    let hydratedHosts: Array<{ tag: string; ssr: boolean; attrs: Record<string, string> }> = [];
+    let clientHosts: Array<{ tag: string; ssr: boolean; attrs: Record<string, string> }> = [];
+    try {
+      await clientPage.goto(`http://127.0.0.1:${http.port}/client-render`);
+      await clientPage.waitForFunction(() => (window as unknown as { rendered?: boolean }).rendered === true && !!(document.getElementById("t") as HTMLElement & { component?: unknown }).component);
+      hydratedHosts = await readHosts(page);
+      clientHosts = await readHosts(clientPage);
+    } finally {
+      await clientPage.close();
+    }
 
     // ------------------------------------------------------------- switch
     const uncontrolled = page.getByRole("switch", { name: "Uncontrolled", exact: true });
@@ -378,6 +411,14 @@ const run = async (version: 18 | 19): Promise<void> => {
     assert.deepEqual(unmounted, { removed: true, destroyed: true });
     check("unmounting destroys the component");
 
+    assert(hydratedHosts.length > 0 && hydratedHosts.length === clientHosts.length, "hydrated hosts and the client render differ in count");
+    assert(hydratedHosts.some((host) => host.ssr), "a hydrated host is missing data-mtrl-ssr");
+    assert(clientHosts.every((host) => !host.ssr), "the client render wrote data-mtrl-ssr");
+    assert.deepEqual(
+      hydratedHosts.map(({ tag, attrs }) => ({ tag, attrs })),
+      clientHosts.map(({ tag, attrs }) => ({ tag, attrs })),
+      "a hydrated host's attributes differ from the client render, other than data-mtrl-ssr",
+    );
     assert.deepEqual(problems, [], "no errors, hydration warnings or React warnings");
     check("no errors or warnings, hydration included");
   } finally {

@@ -108,9 +108,10 @@ const validateOptions = (options: RenderOptions): string => {
  * render their own roots. Load mtrl/elements/preupgrade.css in the page to
  * preserve an opted-out host's box until normal browser upgrade. A host this
  * function renders with a shadow root carries `data-mtrl-ssr`. The pre-upgrade
- * sheet's last rule rolls that layer back for the attribute, so the stylesheet
- * does not style a host the server already rendered. An opted-out host does
- * not carry it, and the link still reserves its box.
+ * sheet's last rule rolls that layer back for the attribute, on the host, its
+ * `::before` and `::after`, and its direct children, so the stylesheet does
+ * not style a host the server already rendered or that host's children.
+ * An opted-out host does not carry it, and the link still reserves its box.
  *
  * Carousel and FAB menu opt out; menu and split-button opt out when
  * they declare nested submenus. Async button `showProgress` or card `buttons`
