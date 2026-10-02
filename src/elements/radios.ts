@@ -40,13 +40,12 @@ const declaredRadios = (host: HTMLElement): RadioOptionConfig[] => {
 const readRadios = (host: HTMLElement): Config => ({ options: declaredRadios(host) }) satisfies Partial<RadiosConfig>;
 
 /**
- * Selects a value; null clears the selection. The factory has no clear: an
- * unknown value clears, with a development warning, so clearing goes through
- * `setValue("")` only when something is selected.
+ * Selects a value; null, undefined or an empty string clears the selection,
+ * through the factory's `setValue(null)`.
  */
 const select = (component: RadiosComponent, value: unknown): void => {
   if (value === null || value === undefined || value === "") {
-    if (component.getValue() !== null) component.setValue("");
+    component.setValue(null);
   } else {
     component.setValue(String(value));
   }

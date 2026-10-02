@@ -207,10 +207,11 @@ export const withRadio =
     // Nothing selected reads null, as the select and <m-radios> report it
     getValue: () => selectedValue || null,
     
-    setValue: (value: string) => {
+    setValue: (value: string | null) => {
       // A value no option carries checks nothing, so it selects nothing:
       // getValue() must not report a selection the group does not show.
-      const known = radios.some(radio => radio.config.value === value);
+      // null is what getValue() returns for no selection: it clears, on purpose.
+      const known = value !== null && radios.some(radio => radio.config.value === value);
       selectedValue = known ? value : '';
 
       radios.forEach(radio => {
@@ -219,7 +220,7 @@ export const withRadio =
 
       // An unknown value clears and warns (FLO-106). Silently: a programmatic
       // change emits no `change`, as on a native control (FLO-328).
-      if (!known) warnUnknownValue('radios', value);
+      if (!known && value !== null) warnUnknownValue('radios', value);
 
       return component;
     },

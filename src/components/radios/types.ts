@@ -153,11 +153,13 @@ export interface RadiosComponent {
   getValue: () => string | null;
   
   /**
-   * Sets the radios component value (selects a radio)
-   * @param value - Value to select
+   * Sets the radios component value (selects a radio). `null`, what
+   * `getValue()` returns when nothing is selected, clears the selection.
+   * Silent either way: a programmatic change emits no `change`.
+   * @param value - Value to select, or null to clear
    * @returns The radios component for chaining
    */
-  setValue: (value: string) => RadiosComponent;
+  setValue: (value: string | null) => RadiosComponent;
   
   /**
    * Gets the selected radio option's configuration
