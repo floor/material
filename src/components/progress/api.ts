@@ -1,7 +1,7 @@
 // src/components/progress/api.ts - Canvas-based API
 
 import { PREFIX } from "../../core";
-import { ProgressComponent, ProgressThickness, ProgressShape, ProgressEvents, ProgressEventPayload } from "./types";
+import { ProgressComponent, ProgressInternals, ProgressThickness, ProgressShape, ProgressEvents, ProgressEventPayload } from "./types";
 import type { EventCallback } from "../../core/state/emitter";
 import {
   PROGRESS_CLASSES,
@@ -154,7 +154,8 @@ export const withAPI =
     }
 
     // Build the API
-    const api: ProgressComponent = {
+    // The drawing members are on the object, off the public type
+    const api: ProgressComponent & ProgressInternals = {
       // Element references
       element,
       canvas: canvas as HTMLCanvasElement,

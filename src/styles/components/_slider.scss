@@ -54,11 +54,11 @@ $component: '#{base.$prefix}-slider';
     outline: none;
   }
   
-  // Label styles
+  // Label
+  // Body Large, as the checkbox, radio and switch labels (FLO-587).
   &__label {
     display: block;
-    font-size: 18px;
-    font-weight: 400;
+    @include m.typography('body-large');
     color: t.color('on-surface');
     margin-bottom: 4px;
     // labelPosition: 'end' puts it below the track.

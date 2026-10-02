@@ -27,6 +27,11 @@ const sheets = new Map<string, CSSStyleSheet>();
 /**
  * Registers the CSS text of style entries, keyed as in `componentStyles`.
  * Must run before the elements that use them are created.
+ *
+ * @experimental The element authoring API (`defineElement`, `ElementSpec`,
+ * `registerStyles`, `hasStyles`, `SHADOW_BASE_STYLES`) is outside semantic
+ * versioning in 3.x: it may change in a minor release. The elements the
+ * library defines, and their attributes, properties and events, are not.
  */
 export const registerStyles = (css: Record<string, string>): void => {
   for (const [name, text] of Object.entries(css)) {
@@ -35,7 +40,14 @@ export const registerStyles = (css: Record<string, string>): void => {
   }
 };
 
-/** Whether CSS is registered under a name. */
+/**
+ * Whether CSS is registered under a name.
+ *
+ * @experimental The element authoring API (`defineElement`, `ElementSpec`,
+ * `registerStyles`, `hasStyles`, `SHADOW_BASE_STYLES`) is outside semantic
+ * versioning in 3.x: it may change in a minor release. The elements the
+ * library defines, and their attributes, properties and events, are not.
+ */
 export const hasStyles = (name: string): boolean => sources.has(name);
 
 const canAdopt = (): boolean =>

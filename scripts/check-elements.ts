@@ -10243,6 +10243,128 @@ try {
     check("tokens: --mtrl-ref-typeface-plain and --mtrl-sys-shape-corner-medium reach <m-button> and the factories");
   }
 
+  // ---------------------------------------------------------------- the sheets' and the dialog's close target
+  // FLO-579: the side sheet's and the dialog's close buttons are hand-built
+  // 40 x 40 buttons with no expanded target, so a click a few pixels outside
+  // them does not reach them. m3.material.io, Density: "The default target size
+  // should be at least 48x48 CSS pixels". The case, ltr and rtl: on every side
+  // the target reaches at least 4 px past the visible 40 px button (a hit 3 px
+  // outside reaches the button, and the outward walk finds the change no sooner
+  // than 4 px out and prints its x or y); the visible button stays 40 x 40 where
+  // it was (16 px from the header's inline end, centred on the side sheet's
+  // header row and 16 px from the top of the dialog's); and the header holds no
+  // other control the
+  // target could cover — the side sheet's neighbour is its title, the dialog's
+  // the header-content block with the title and subtitle, and neither is
+  // focusable.
+  await fresh(page, `<div id="close-ltr" dir="ltr"></div><div id="close-rtl" dir="rtl"></div>`);
+  {
+    const measured = await page.evaluate(async () => {
+      type Close = { element: HTMLElement; open: () => void; close: () => void; destroy: () => void };
+      const w = window as unknown as Window & { mtrl: {
+        createSideSheet: (config: object) => Close;
+        createDialog: (config: object) => Close;
+      } };
+      const failures: string[] = [];
+      const measured: string[] = [];
+      const round = (value: number): string => value.toFixed(2);
+      const controls = 'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+      const show = (el: Element): string => `${el.localName}.${(el.className || "").toString().split(" ")[0]}`;
+      /** Let the open motion finish: a fixed wait, then two stable samples. */
+      const settle = async (el: HTMLElement): Promise<void> => {
+        await new Promise((r) => setTimeout(r, 700));
+        let last = "";
+        for (let i = 0; i < 40; i++) {
+          const r = el.getBoundingClientRect();
+          const now = `${r.left},${r.top}`;
+          if (now === last) return;
+          last = now;
+          await new Promise((r2) => setTimeout(r2, 50));
+        }
+      };
+      const checkTarget = (where: string, button: HTMLElement): void => {
+        const r = button.getBoundingClientRect();
+        const cx = (r.left + r.right) / 2;
+        const cy = (r.top + r.bottom) / 2;
+        const reaches = (x: number, y: number): boolean => {
+          const el = document.elementFromPoint(x, y);
+          return !!el && (el === button || button.contains(el));
+        };
+        if (Math.round(r.width) !== 40 || Math.round(r.height) !== 40) {
+          failures.push(`${where}: the visible button is ${round(r.width)} x ${round(r.height)}, not 40 x 40`);
+        }
+        const changes: string[] = [];
+        for (const side of ["left", "right", "top", "bottom"] as const) {
+          const at = (d: number): [number, number] =>
+            side === "left" ? [r.left - d, cy] : side === "right" ? [r.right + d, cy] : side === "top" ? [cx, r.top - d] : [cx, r.bottom + d];
+          const axis = side === "left" || side === "right" ? "x" : "y";
+          const coordinateOf = (d: number): number =>
+            side === "left" ? r.left - d : side === "right" ? r.right + d : side === "top" ? r.top - d : r.bottom + d;
+          const [x3, y3] = at(3);
+          if (!reaches(x3, y3)) failures.push(`${where}: the hit 3 px past the ${side} edge (${axis} ${round(coordinateOf(3))}) does not reach the button`);
+          // Walk outward and assert where the hit changes, not the last integer
+          // that hits: a 48 box centred on the 40 px button spans
+          // [edge - 4, edge + 4], Chromium covers integer points only up to
+          // edge + 3 on a box whose right edge falls on an integer, and the
+          // change on that side sits exactly 4 px out.
+          let change: number | null = null;
+          for (let d = 1; d <= 64; d++) {
+            const [x, y] = at(d);
+            if (!reaches(x, y)) { change = d; break; }
+          }
+          if (change !== null && change < 4) failures.push(`${where}: the hit changes ${change} px past the ${side} edge (${axis} ${round(coordinateOf(change))}), under the 4 px a 48 box needs`);
+          changes.push(change === null
+            ? `${side}: the hit still reaches 64 px out`
+            : `${side}: changes at ${axis} ${round(coordinateOf(change))} (${change} px out)`);
+        }
+        measured.push(`${where}: ${changes.join("; ")}`);
+      };
+      for (const dir of ["ltr", "rtl"] as const) {
+        const wrap = document.getElementById(`close-${dir}`) as HTMLElement;
+
+        const sheet = w.mtrl.createSideSheet({ title: "Data tools", variant: "standard", content: "<p>Data tools</p>", width: 360, container: wrap });
+        sheet.open();
+        const sheetButton = sheet.element.querySelector(".mtrl-side-sheet__close") as HTMLElement;
+        await settle(sheetButton);
+        const sheetHeader = sheet.element.querySelector(".mtrl-side-sheet__header") as HTMLElement;
+        checkTarget(`side sheet ${dir}`, sheetButton);
+        const sb = sheetButton.getBoundingClientRect();
+        const sh = sheetHeader.getBoundingClientRect();
+        const endGap = dir === "ltr" ? sh.right - sb.right : sb.left - sh.left;
+        if (Math.abs(endGap - 16) > 0.5) failures.push(`side sheet ${dir}: the visible button is ${round(endGap)} px from the header's inline end, not 16`);
+        const offCentre = Math.abs((sb.top + sb.bottom) / 2 - (sh.top + sh.bottom) / 2);
+        if (offCentre > 0.5) failures.push(`side sheet ${dir}: the visible button is ${round(offCentre)} px off the header's row centre`);
+        const sheetOthers = Array.from(sheetHeader.querySelectorAll(controls)).filter((el) => el !== sheetButton);
+        if (sheetOthers.length > 0) failures.push(`side sheet ${dir}: the header holds another control (${sheetOthers.map(show).join(", ")})`);
+        sheet.close();
+        sheet.destroy();
+        sheet.element.remove();
+
+        const dialog = w.mtrl.createDialog({ title: "Discard draft?", subtitle: "This cannot be undone.", closeButton: true, content: "<p>Your changes will be lost.</p>", container: wrap });
+        dialog.open();
+        const dialogButton = dialog.element.querySelector(".mtrl-dialog__header-close") as HTMLElement;
+        await settle(dialogButton);
+        const dialogHeader = dialog.element.querySelector(".mtrl-dialog__header") as HTMLElement;
+        checkTarget(`dialog ${dir}`, dialogButton);
+        const db = dialogButton.getBoundingClientRect();
+        const dh = dialogHeader.getBoundingClientRect();
+        const dialogEndGap = dir === "ltr" ? dh.right - db.right : db.left - dh.left;
+        if (Math.abs(dialogEndGap - 16) > 0.5) failures.push(`dialog ${dir}: the visible button is ${round(dialogEndGap)} px from the header's inline end, not 16`);
+        if (Math.abs(db.top - dh.top - 16) > 0.5) failures.push(`dialog ${dir}: the visible button is ${round(db.top - dh.top)} px from the header's top, not 16`);
+        const dialogOthers = Array.from(dialogHeader.querySelectorAll(controls)).filter((el) => el !== dialogButton);
+        if (dialogOthers.length > 0) failures.push(`dialog ${dir}: the header holds another control (${dialogOthers.map(show).join(", ")})`);
+        dialog.close();
+        dialog.destroy();
+        dialog.element.remove();
+      }
+      return { failures, measured };
+    });
+    for (const line of measured.measured) console.log(`  ${line}`);
+    for (const line of measured.failures) console.log(`  FAIL ${line}`);
+    assert.deepEqual(measured.failures, []);
+    check("side sheet and dialog: the close button's target reaches at least 4 px past the 40 px button on all four sides, ltr and rtl");
+  }
+
   assert.deepEqual(errors, [], "no page errors");
   check("no page errors");
 } finally {

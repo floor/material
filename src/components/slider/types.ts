@@ -230,6 +230,13 @@ export interface SliderStateComponent {
   valueBubble?: HTMLElement | null;
   secondHandle?: HTMLElement | null;
   secondValueBubble?: HTMLElement | null;
+  /**
+   * The older bag the same elements were kept in. **Internal, and not part of
+   * the public contract** (3.0.0): nothing in the library fills it, the
+   * controller and the handlers only fall back to it, and it may go in any
+   * release. `SliderComponent` has no `components`.
+   * @internal
+   */
   components?: Record<string, HTMLElement | null | undefined>;
   getClass: (name: string) => string;
   emit: (event: string, data: unknown) => unknown;

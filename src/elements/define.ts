@@ -106,6 +106,16 @@ export interface ElementHost<C extends ElementComponent> extends HTMLElement {
   readonly dirty: boolean;
 }
 
+/**
+ * What `defineElement` builds an element from: its name, the factory, the
+ * styles its shadow root adopts, and how attributes, properties, slots,
+ * events and the form map onto the component.
+ *
+ * @experimental The element authoring API (`defineElement`, `ElementSpec`,
+ * `registerStyles`, `hasStyles`, `SHADOW_BASE_STYLES`) is outside semantic
+ * versioning in 3.x: it may change in a minor release. The elements the
+ * library defines, and their attributes, properties and events, are not.
+ */
 export interface ElementSpec<C extends ElementComponent> {
   /** Name after the prefix: "switch" registers `<m-switch>`. */
   name: string;
@@ -167,6 +177,11 @@ export { DEFAULT_PREFIX };
 /**
  * Global base styles components rely on, which a shadow root does not inherit.
  * Registered under these names like the component entries.
+ *
+ * @experimental The element authoring API (`defineElement`, `ElementSpec`,
+ * `registerStyles`, `hasStyles`, `SHADOW_BASE_STYLES`) is outside semantic
+ * versioning in 3.x: it may change in a minor release. The elements the
+ * library defines, and their attributes, properties and events, are not.
  */
 export const SHADOW_BASE_STYLES = ["ripple"] as const;
 
@@ -794,6 +809,11 @@ export interface ElementDefinition<C extends ElementComponent> {
 /**
  * Creates the definition for a spec. Nothing is built or registered until
  * `element` or `define()` is used, so the module can be imported on a server.
+ *
+ * @experimental The element authoring API (`defineElement`, `ElementSpec`,
+ * `registerStyles`, `hasStyles`, `SHADOW_BASE_STYLES`) is outside semantic
+ * versioning in 3.x: it may change in a minor release. The elements the
+ * library defines, and their attributes, properties and events, are not.
  */
 export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>): ElementDefinition<C> => {
   let element: CustomElementConstructor | null = null;

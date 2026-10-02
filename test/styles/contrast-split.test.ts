@@ -113,15 +113,18 @@ describe("explicit contrast levels are opt-in", () => {
     // its insets mirrored by one block (FLO-562), the unlabelled checkbox's centring
     // (styles/components/_checkbox.scss), the icon button's inner padding
     // (styles/components/_icon-button.scss), the unlabelled switch's 52 x 48 box
-    // (styles/components/_switch.scss), a radio row that grows with its label
-    // with an unlabelled radio centred (styles/components/_radios.scss), the select
+    // (styles/components/_switch.scss), the close target of the side sheet and the
+    // dialog (styles/components/_side-sheet.scss, styles/components/_dialog.scss),
+    // a radio row that grows with its label
+    // with an unlabelled radio centred (styles/components/_radios.scss), the slider's
+    // label at Body Large, not 18px (styles/components/_slider.scss), the select
     // menu's width, mark and selected colours (styles/components/_select.scss,
     // styles/components/_menu.scss), the chip's secondary-action floor
     // (styles/components/_chips.scss), and the touch target centred physically
     // (styles/abstract/_mixins.scss, FLO-592).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("b9d4f77ce9319184b2ba61c649108ecf68dc35c0bb0077c3fcc748fb120bcc5e");
-    expect(css.length).toBe(524687);
+      .toBe("4412b7db5fbb5b6229537842cb434ffef9f677d7cd9812dc69f47dd63edc7e47");
+    expect(css.length).toBe(525072);
   });
 
   test("today's sheets still resolve to the fixture", () => {
