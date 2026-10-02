@@ -40,6 +40,7 @@ export type { TabIndicator } from "./indicator";
 
 // Default export
 export default createTabs;
+export { createTabs };
 
 // A single tab, for a tablist built by hand or `addTab` with an instance (FLO-384)
 export { createTab } from "./tab";

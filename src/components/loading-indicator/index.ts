@@ -1,5 +1,5 @@
 // src/components/loading-indicator/index.ts
-export { default } from './loading-indicator';
+export { default, default as createLoadingIndicator } from './loading-indicator';
 
 // Export types
 export type { LoadingIndicatorConfig, LoadingIndicatorComponent } from './types';

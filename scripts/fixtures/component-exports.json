@@ -26,6 +26,11 @@
       "status": "public"
     },
     {
+      "name": "createBadge",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "default",
       "kind": "value",
       "status": "public"
@@ -195,6 +200,11 @@
     {
       "name": "ButtonVariant",
       "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "createButton",
+      "kind": "value",
       "status": "public"
     },
     {
@@ -486,6 +496,11 @@
       "status": "public"
     },
     {
+      "name": "createCard",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "createCardActions",
       "kind": "value",
       "status": "public"
@@ -674,6 +689,11 @@
       "status": "public"
     },
     {
+      "name": "createCheckbox",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "default",
       "kind": "value",
       "status": "public"
@@ -783,6 +803,11 @@
       "status": "public"
     },
     {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "FilterChipConfig",
       "kind": "type",
       "status": "public"
@@ -819,6 +844,11 @@
     {
       "name": "CalendarAPI",
       "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "createDatePicker",
+      "kind": "value",
       "status": "public"
     },
     {
@@ -946,6 +976,11 @@
   ],
   "dialog": [
     {
+      "name": "createDialog",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "default",
       "kind": "value",
       "status": "public"
@@ -1055,6 +1090,11 @@
       "status": "public"
     },
     {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "DividerComponent",
       "kind": "type",
       "status": "public"
@@ -1093,6 +1133,11 @@
     }
   ],
   "drawer": [
+    {
+      "name": "createDrawer",
+      "kind": "value",
+      "status": "public"
+    },
     {
       "name": "default",
       "kind": "value",
@@ -1679,6 +1724,11 @@
   ],
   "list": [
     {
+      "name": "createList",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "default",
       "kind": "value",
       "status": "public"
@@ -1778,6 +1828,11 @@
   ],
   "loading-indicator": [
     {
+      "name": "createLoadingIndicator",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "default",
       "kind": "value",
       "status": "public"
@@ -1831,6 +1886,11 @@
     }
   ],
   "menu": [
+    {
+      "name": "createMenu",
+      "kind": "value",
+      "status": "public"
+    },
     {
       "name": "default",
       "kind": "value",
@@ -2057,6 +2117,11 @@
   ],
   "progress": [
     {
+      "name": "createProgress",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "default",
       "kind": "value",
       "status": "public"
@@ -2151,6 +2216,11 @@
   ],
   "radios": [
     {
+      "name": "createRadios",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "default",
       "kind": "value",
       "status": "public"
@@ -2224,6 +2294,11 @@
     }
   ],
   "search": [
+    {
+      "name": "createSearch",
+      "kind": "value",
+      "status": "public"
+    },
     {
       "name": "default",
       "kind": "value",
@@ -2333,6 +2408,11 @@
     }
   ],
   "select": [
+    {
+      "name": "createSelect",
+      "kind": "value",
+      "status": "public"
+    },
     {
       "name": "default",
       "kind": "value",
@@ -2512,6 +2592,11 @@
   ],
   "slider": [
     {
+      "name": "createSlider",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "default",
       "kind": "value",
       "status": "public"
@@ -2582,6 +2667,11 @@
   "snackbar": [
     {
       "name": "clearSnackbars",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "createSnackbar",
       "kind": "value",
       "status": "public"
     },
@@ -2705,6 +2795,11 @@
   ],
   "split-button": [
     {
+      "name": "createSplitButton",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "default",
       "kind": "value",
       "status": "public"
@@ -2783,6 +2878,11 @@
     }
   ],
   "switch": [
+    {
+      "name": "createSwitch",
+      "kind": "value",
+      "status": "public"
+    },
     {
       "name": "default",
       "kind": "value",
@@ -2864,6 +2964,11 @@
   "tabs": [
     {
       "name": "createTab",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "createTabs",
       "kind": "value",
       "status": "public"
     },
@@ -3120,6 +3225,11 @@
     }
   ],
   "timepicker": [
+    {
+      "name": "createTimePicker",
+      "kind": "value",
+      "status": "public"
+    },
     {
       "name": "default",
       "kind": "value",
@@ -3483,6 +3593,11 @@
     }
   ],
   "tooltip": [
+    {
+      "name": "createTooltip",
+      "kind": "value",
+      "status": "public"
+    },
     {
       "name": "default",
       "kind": "value",

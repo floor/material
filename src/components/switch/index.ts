@@ -1,5 +1,5 @@
 // src/components/switch/index.ts
-export { default } from './switch'
+export { default, default as createSwitch } from './switch'
 
 // Export constants
 export { 

@@ -5,7 +5,7 @@
  * @module components/button
  */
 
-export { default } from "./button";
+export { default, default as createButton } from "./button";
 export type { ButtonConfig, ButtonComponent, ButtonVariant, ButtonChangePayload } from "./types";
 // The event map `on` and `off` are typed with (FLO-384)
 export type { ButtonEvents } from "./types";

@@ -220,7 +220,15 @@ $component: "#{$prefix}-menu";
             &::after {
                 content: "";
                 position: absolute;
+                // At the item's end in either direction, where the padding
+                // keeps room for it: `right` alone left it over the text in
+                // RTL. Both sides are set and the start margin takes the
+                // space between: bundlers lower a logical inset
+                // (inset-inline-end) into :lang() lists that miss dir="rtl",
+                // and leave a logical margin as written.
+                left: 12px;
                 right: 12px;
+                margin-inline-start: auto;
                 top: 50%;
                 transform: translateY(-50%);
                 width: 18px;
