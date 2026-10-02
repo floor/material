@@ -24,17 +24,9 @@ export type SearchViewMode = "docked" | "fullscreen";
 export type SearchVariant = "contained" | "divided";
 
 /**
- * Valid event types for search component per MD3 spec
+ * Valid event types for search component per MD3 spec: the names in {@link SearchEvents}
  */
-export type SearchEventType =
-  | "focus"
-  | "blur"
-  | "input"
-  | "submit"
-  | "clear"
-  | "expand"
-  | "collapse"
-  | "suggestionSelect";
+export type SearchEventType = keyof SearchEvents;
 
 /**
  * Trailing content item configuration
@@ -88,6 +80,34 @@ export interface SearchEvent {
   preventDefault: () => void;
   /** Whether default was prevented */
   defaultPrevented: boolean;
+}
+
+/**
+ * What `expand` and `collapse` carry: the search after the change. Not a
+ * {@link SearchEvent}: there is no value, no DOM event and nothing to prevent.
+ */
+export interface SearchStateEvent {
+  /** The search component instance */
+  component: SearchComponent;
+  /** The state after the change: `view` on expand, `bar` on collapse */
+  state: SearchState;
+  /** The view mode the search has */
+  viewMode: SearchViewMode;
+}
+
+/**
+ * The search's events and what each hands its listener. A config `on*` option
+ * is the same listener, registered at creation.
+ */
+export interface SearchEvents {
+  focus: (event: SearchEvent) => void;
+  blur: (event: SearchEvent) => void;
+  input: (event: SearchEvent) => void;
+  submit: (event: SearchEvent) => void;
+  clear: (event: SearchEvent) => void;
+  suggestionSelect: (event: SearchEvent) => void;
+  expand: (event: SearchStateEvent) => void;
+  collapse: (event: SearchStateEvent) => void;
 }
 
 /**
@@ -169,25 +189,25 @@ export interface SearchConfig {
   // === Event Handlers ===
 
   /** `submit` listener registered at creation. */
-  onSubmit?: (event: SearchEvent) => void;
+  onSubmit?: SearchEvents["submit"];
 
   /** `input` listener registered at creation. */
-  onInput?: (event: SearchEvent) => void;
+  onInput?: SearchEvents["input"];
 
   /** `clear` listener registered at creation. */
-  onClear?: (event: SearchEvent) => void;
+  onClear?: SearchEvents["clear"];
 
   /** `expand` listener registered at creation. */
-  onExpand?: (event: SearchEvent) => void;
+  onExpand?: SearchEvents["expand"];
 
   /** `collapse` listener registered at creation. */
-  onCollapse?: (event: SearchEvent) => void;
+  onCollapse?: SearchEvents["collapse"];
 
   /** `suggestionSelect` listener registered at creation. */
-  onSuggestionSelect?: (event: SearchEvent) => void;
+  onSuggestionSelect?: SearchEvents["suggestionSelect"];
 
   /** Event handlers map */
-  on?: Partial<Record<SearchEventType, (event: SearchEvent) => void>>;
+  on?: Partial<SearchEvents>;
 }
 
 /**
@@ -293,16 +313,10 @@ export interface SearchComponent {
   // === Events ===
 
   /** Adds an event listener */
-  on: (
-    event: SearchEventType,
-    handler: (event: SearchEvent) => void,
-  ) => SearchComponent;
+  on: <K extends keyof SearchEvents>(event: K, handler: SearchEvents[K]) => SearchComponent;
 
   /** Removes an event listener */
-  off: (
-    event: SearchEventType,
-    handler: (event: SearchEvent) => void,
-  ) => SearchComponent;
+  off: <K extends keyof SearchEvents>(event: K, handler: SearchEvents[K]) => SearchComponent;
 
   // === Lifecycle ===
 

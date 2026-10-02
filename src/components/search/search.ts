@@ -10,7 +10,7 @@ import {
   withSuggestions,
 } from "./features";
 import { withAPI } from "./api";
-import { SearchConfig, SearchComponent } from "./types";
+import { SearchConfig, SearchComponent, SearchEvents } from "./types";
 import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
 
 /**
@@ -82,7 +82,7 @@ const createSearch = (config: SearchConfig = {}): SearchComponent => {
     if (baseConfig.on && typeof search.on === "function") {
       Object.entries(baseConfig.on).forEach(([event, handler]) => {
         if (typeof handler === "function") {
-          search.on(event as Parameters<typeof search.on>[0], handler);
+          search.on(event as keyof SearchEvents, handler);
         }
       });
     }

@@ -87,12 +87,13 @@ test("onSuggestionSelect matches its listener when a suggestion is chosen", () =
 test("onExpand and onCollapse match their listeners for the methods and the leading icon", async () => {
   const expanded = optionPair();
   const collapsed = optionPair();
+  const states: string[] = [];
   const search = create({
     onExpand: (event) => expanded.option(event),
     onCollapse: (event) => collapsed.option(event),
   });
-  search.on("expand", (event) => expanded.listener(event));
-  search.on("collapse", (event) => collapsed.listener(event));
+  search.on("expand", (event) => { states.push(`${event.state} ${event.viewMode}`); expanded.listener(event); });
+  search.on("collapse", (event) => { states.push(`${event.state} ${event.viewMode}`); collapsed.listener(event); });
   search.expand();
   search.collapse();
   await wait();
@@ -102,8 +103,8 @@ test("onExpand and onCollapse match their listeners for the methods and the lead
   expectSameListener(collapsed);
   expect(expanded.optionCalls).toHaveLength(2);
   expect(collapsed.optionCalls).toHaveLength(2);
-  expect((expanded.listenerCalls[0] as { state: string }).state).toBe("view");
-  expect((collapsed.listenerCalls[0] as { state: string }).state).toBe("bar");
+  expect(states).toEqual(["view docked", "bar docked", "view docked", "bar docked"]);
+  expect(Object.keys(expanded.listenerCalls[0] as object).sort()).toEqual(["component", "state", "viewMode"]);
 });
 
 test("off(onSubmit) removes the config handler, which is the registered function", () => {

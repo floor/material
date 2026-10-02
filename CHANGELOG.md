@@ -98,7 +98,14 @@ type: `onConfirm: (time: string) => void`, search `onInput` / `onSubmit:
 (value: string) => void`, and `onSuggestionSelect: (suggestion: SearchSuggestion)
 => void` are errors. A `() => void` callback is still assignable, so search
 `onClear`, `onExpand` and `onCollapse`, and the navigation rail's `onExpand`
-and `onCollapse`, are not.
+and `onCollapse`, are not. The search's `expand` and `collapse` are typed with the
+object they emit, `SearchStateEvent` (`{ component, state, viewMode }`), in `on()`, `off()`,
+the `on` map and `onExpand` / `onCollapse`: they were typed `SearchEvent`, so
+`event.value` and `event.preventDefault()` there are now errors (they were `undefined`
+and a `TypeError` at run time, measured), `event.state` and `event.viewMode` compile, and
+a listener annotated `(event: SearchEvent) => void` on those two is an error. The
+`<m-search>` component's `on` and `off` take the same map with the element's names
+(`open` and `close` carry the `SearchStateEvent`), so a name outside it is an error too.
 
 **Changes your compiler won't catch**
 
@@ -160,8 +167,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   were called with no argument, so a template of it was `"undefined"`. Each now receives the
   event's object, and a template of that argument is `"[object Object]"` (measured). The rail's
   object is `{ expanded: true }` or `{ expanded: false }`. Search `expand` and `collapse` emit
-  `{ component, state, viewMode }` and are declared as `(event: SearchEvent) => void`, which is
-  what `on("expand")` accepts; that emitted object is unchanged, so `event.value` is not on it.
+  `{ component, state, viewMode }` and are declared as `(event: SearchStateEvent) => void`,
+  which is what `on("expand")` accepts; that emitted object is unchanged, so `event.value` and
+  `event.preventDefault` are not on it.
 - **The button group's `on` map** (`click`, `focus`, `blur`, `change`) was accepted and never
   called. Those handlers now run, with the listener's argument. The type is unchanged, so this
   is not a compile error. The segmented-button note that `on.change` keeps its meaning describes
@@ -423,7 +431,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | Search | `onInput`, `onSubmit` | the query string | the `SearchEvent` |
   | Search | `onClear` | the query string (declared with no argument; `""` after a clear) | the `SearchEvent` |
   | Search | `onSuggestionSelect` | the suggestion | the `SearchEvent` (`suggestion` holds it) |
-  | Search | `onExpand`, `onCollapse` | no argument | `{ component, state, viewMode }`, declared as `SearchEvent` |
+  | Search | `onExpand`, `onCollapse` | no argument | the `SearchStateEvent`: `{ component, state, viewMode }` |
   | Navigation rail | `onExpand` | no argument | `{ expanded: true }` |
   | Navigation rail | `onCollapse` | no argument | `{ expanded: false }` |
   | Navigation rail, navigation bar | `onSelect` | the select event | the same object |
@@ -599,6 +607,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   before 18.3.31, `nonce` on React 18.0.0, Vue and Svelte);
   a release that already declares the key keeps its own type. Vue spells `inputmode`
   and `itemprop`, and Solid and Svelte spell `enterkeyhint`.
+- Search listener types on `mtrl/components/search`, beside `SearchEvent`: `SearchEvents`
+  (each event's listener, so `SearchEvents["expand"]` types a handler) and `SearchStateEvent`
+  (what `expand` and `collapse` carry). `mtrl/elements` adds `SearchElementEvents`, the same
+  map with `<m-search>`'s names (`change`, `select`, `open`, `close`).
 - Read-only `getValue()` aliases on carousel, tabs, drawer, navigation rail and
   button group (FLO-380); existing accessors remain. Button toggle `change`, card
   `expandedChanged`, list `keydown`, and interactive touch events now have their

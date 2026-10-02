@@ -5,7 +5,7 @@
 import createTimePicker from "../../src/components/timepicker";
 import type { TimePickerConfig, TimePickerEvents } from "../../src/components/timepicker/types";
 import createSearch from "../../src/components/search";
-import type { SearchConfig, SearchEventType, SearchSuggestion } from "../../src/components/search/types";
+import type { SearchConfig, SearchEvents, SearchSuggestion } from "../../src/components/search/types";
 import type { NavigationRailConfig, NavigationRailEvents } from "../../src/components/navigation-rail/types";
 import type { NavigationBarConfig, NavigationBarEvents } from "../../src/components/navigation-bar/types";
 import type { DrawerConfig, DrawerEvents } from "../../src/components/drawer/types";
@@ -13,7 +13,6 @@ import type { TextFieldConfig, TextFieldEvents } from "../../src/components/text
 
 type Equals<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 type Fn<T> = NonNullable<T>;
-type SearchHandler = Fn<Fn<SearchConfig["on"]>[SearchEventType]>;
 
 export const timeConfirm: Equals<Fn<TimePickerConfig["onConfirm"]>, TimePickerEvents["confirm"]> = true;
 export const timeChange: Equals<Fn<TimePickerConfig["onChange"]>, TimePickerEvents["change"]> = true;
@@ -22,12 +21,13 @@ export const timeOpen: Equals<Fn<TimePickerConfig["onOpen"]>, TimePickerEvents["
 export const timeClose: Equals<Fn<TimePickerConfig["onClose"]>, TimePickerEvents["close"]> = true;
 export const timeCancel: Equals<Fn<TimePickerConfig["onCancel"]>, TimePickerEvents["cancel"]> = true;
 
-export const searchInput: Equals<Fn<SearchConfig["onInput"]>, SearchHandler> = true;
-export const searchSubmit: Equals<Fn<SearchConfig["onSubmit"]>, SearchHandler> = true;
-export const searchClear: Equals<Fn<SearchConfig["onClear"]>, SearchHandler> = true;
-export const searchExpand: Equals<Fn<SearchConfig["onExpand"]>, SearchHandler> = true;
-export const searchCollapse: Equals<Fn<SearchConfig["onCollapse"]>, SearchHandler> = true;
-export const searchSuggestion: Equals<Fn<SearchConfig["onSuggestionSelect"]>, SearchHandler> = true;
+export const searchInput: Equals<Fn<SearchConfig["onInput"]>, SearchEvents["input"]> = true;
+export const searchSubmit: Equals<Fn<SearchConfig["onSubmit"]>, SearchEvents["submit"]> = true;
+export const searchClear: Equals<Fn<SearchConfig["onClear"]>, SearchEvents["clear"]> = true;
+export const searchExpand: Equals<Fn<SearchConfig["onExpand"]>, SearchEvents["expand"]> = true;
+export const searchCollapse: Equals<Fn<SearchConfig["onCollapse"]>, SearchEvents["collapse"]> = true;
+export const searchOnMap: Equals<Fn<SearchConfig["on"]>, Partial<SearchEvents>> = true;
+export const searchSuggestion: Equals<Fn<SearchConfig["onSuggestionSelect"]>, SearchEvents["suggestionSelect"]> = true;
 
 export const railSelect: Equals<Fn<NavigationRailConfig["onSelect"]>, (event: NavigationRailEvents["select"]) => void> = true;
 export const railExpand: Equals<Fn<NavigationRailConfig["onExpand"]>, (event: NavigationRailEvents["expand"]) => void> = true;

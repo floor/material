@@ -6,6 +6,7 @@
 // emitted (features/states.ts), from the SearchEvents map.
 import createSearch from "../../src/components/search";
 import type { SearchComponent, SearchState, SearchViewMode } from "../../src/components/search/types";
+import type { SearchElementComponent } from "../../src/elements/search";
 
 declare const search: SearchComponent;
 
@@ -35,3 +36,14 @@ search.on("submit", (event) => { const value: string = event.value; event.preven
 createSearch({ onInput: (event) => void event.value, onSuggestionSelect: (event) => void event.suggestion?.text });
 // @ts-expect-error submit carries no state
 search.on("submit", (event) => event.state);
+
+// <m-search>'s component: `open` and `close` are expand and collapse under the element's names
+declare const element: SearchElementComponent;
+element.on("open", (event) => { const state: SearchState = event.state; void state; });
+element.off("close", (event) => void event.viewMode);
+element.on("expand", (event) => void event.state);
+element.on("change", (event) => { const value: string = event.value; void value; });
+// @ts-expect-error open carries no value
+element.on("open", (event) => event.value);
+// @ts-expect-error close carries no preventDefault
+element.on("close", (event) => event.preventDefault());
