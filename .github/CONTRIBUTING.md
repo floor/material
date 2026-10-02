@@ -212,8 +212,9 @@ Thank you for contributing to material! Your efforts help make this library bett
 Releases are published by GitHub Actions with npm trusted publishing
 (`.github/workflows/publish.yml`); no npm token is involved.
 
-Until 3.0.0 is `latest`, `npm install material` installs 0.10.6: the 3.0.0
-pre-releases are on the `next` tag (`npm install material@next`).
+Until 3.0.0 is `latest`, `npm install material` installs 1.0.4, the earlier
+1.x library that lived under this name; the 3.0.0 pre-releases are on the
+`next` tag (`npm install material@next`).
 
 1. Open a release pull request that bumps `package.json` (`x.y.z`, or
    `x.y.z-next.N` for a pre-release), turns `[Unreleased]` in `CHANGELOG.md`
