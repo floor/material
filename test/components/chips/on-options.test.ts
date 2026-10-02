@@ -12,6 +12,7 @@ import {
   type ChipsComponent,
   type ChipsConfig,
 } from "../../../src/components/chips";
+import { expectSameListener, optionPair } from "../on-option-pair";
 
 let dom: JSDOM;
 let chips: ChipComponent[];
@@ -50,23 +51,20 @@ const mountSet = (config: ChipsConfig) => {
 describe("chips set onChange is an on(change) listener", () => {
   test("a click and selectByValue(value, true) call onChange and on(change) once each, with the same object", () => {
     for (const multiSelect of [false, true]) {
-      const option: ChipsChangeEvent[] = [];
-      const listener: ChipsChangeEvent[] = [];
+      const seen = optionPair();
       const set = mountSet({
         multiSelect,
         chips: [{ value: "a", ripple: false }, { value: "b", ripple: false }],
-        onChange: event => option.push(event),
+        onChange: event => seen.option(event),
       });
-      set.on("change", event => listener.push(event));
+      set.on("change", event => seen.listener(event));
 
       set.getChips()[0]!.element.click();
       set.selectByValue("b", true);
 
-      expect(option).toHaveLength(2);
-      expect(listener).toHaveLength(2);
-      expect(option[0]).toBe(listener[0]);
-      expect(option[1]).toBe(listener[1]);
-      expect(option.map(event => ({ ...event }))).toEqual([
+      expectSameListener(seen);
+      expect(seen.optionCalls).toHaveLength(2);
+      expect(seen.optionCalls.map(event => ({ ...(event as ChipsChangeEvent) }))).toEqual([
         { value: multiSelect ? ["a"] : "a", selected: ["a"], changed: "a" },
         {
           value: multiSelect ? ["a", "b"] : "b",
@@ -149,23 +147,15 @@ describe("chips set onChange is an on(change) listener", () => {
 
 describe("a chip alone: on* options are the event listeners", () => {
   test("onChange matches the change listener for a click, including a leftover (selected, chip)", () => {
-    const option: ChipChangePayload[] = [];
-    const listener: ChipChangePayload[] = [];
-    const order: string[] = [];
+    const seen = optionPair();
     const leftover: { length: number; selected: unknown; chip: unknown }[] = [];
     const chip = mountChip(createFilterChip({
       label: "Filter",
       value: "f",
       ripple: false,
-      onChange: (payload) => {
-        order.push("option");
-        option.push(payload);
-      },
+      onChange: (payload) => seen.option(payload),
     }));
-    chip.on("change", (payload) => {
-      order.push("listener");
-      listener.push(payload);
-    });
+    chip.on("change", (payload) => seen.listener(payload));
     const old = mountChip(createFilterChip({
       label: "Old",
       value: "old",
@@ -180,40 +170,28 @@ describe("a chip alone: on* options are the event listeners", () => {
     old.action.click();
     old.action.click();
 
-    expect(option).toHaveLength(2);
-    expect(listener).toHaveLength(2);
-    expect(option[0]).toBe(listener[0]);
-    expect(option[1]).toBe(listener[1]);
-    expect(option).toEqual([
+    expectSameListener(seen);
+    expect(seen.optionCalls).toEqual([
       { selected: true, chip, value: "f" },
       { selected: false, chip, value: "f" },
     ]);
-    expect(order).toEqual(["option", "listener", "option", "listener"]);
     expect(leftover).toEqual([
       { length: 1, selected: { selected: true, chip: old, value: "old" }, chip: undefined },
       { length: 1, selected: { selected: false, chip: old, value: "old" }, chip: undefined },
     ]);
     chip.setSelected(true);
-    expect(option).toHaveLength(2);
+    expect(seen.optionCalls).toHaveLength(2);
   });
 
   test("onClick matches the click listener, including a leftover that expected the chip", () => {
-    const option: unknown[] = [];
-    const listener: unknown[] = [];
-    const order: string[] = [];
+    const seen = optionPair();
     let leftover: { length: number; first: unknown; second: unknown } | undefined;
     const chip = mountChip(createFilterChip({
       label: "Filter",
       ripple: false,
-      onClick: (payload) => {
-        order.push("option");
-        option.push(payload);
-      },
+      onClick: (payload) => seen.option(payload),
     }));
-    chip.on("click", (payload) => {
-      order.push("listener");
-      listener.push(payload);
-    });
+    chip.on("click", (payload) => seen.listener(payload));
     const old = mountChip(createAssistChipStandIn());
     function createAssistChipStandIn() {
       return createFilterChip({
@@ -227,14 +205,12 @@ describe("a chip alone: on* options are the event listeners", () => {
     old.action.click();
     chip.action.click();
 
-    expect(option).toHaveLength(1);
-    expect(listener).toHaveLength(1);
-    expect(option[0]).toBe(listener[0]);
-    const payload = option[0] as { event: MouseEvent; originalEvent: MouseEvent; element: HTMLElement };
+    expectSameListener(seen);
+    expect(seen.optionCalls).toHaveLength(1);
+    const payload = seen.optionCalls[0] as { event: MouseEvent; originalEvent: MouseEvent; element: HTMLElement };
     expect(payload.element).toBe(chip.element);
     expect(payload.event).toBe(payload.originalEvent);
     expect(payload.event.type).toBe("click");
-    expect(order).toEqual(["option", "listener"]);
     expect(leftover?.length).toBe(1);
     expect(leftover?.second).toBeUndefined();
     const first = leftover?.first as { element?: HTMLElement; focus?: unknown };
@@ -243,49 +219,29 @@ describe("a chip alone: on* options are the event listeners", () => {
   });
 
   test("onRemove matches the remove listener and is registered before a later one", () => {
-    const option: ChipComponent[] = [];
-    const listener: ChipComponent[] = [];
-    const order: string[] = [];
+    const seen = optionPair();
     const chip = mountChip(createInputChip({
       label: "Ada",
       ripple: false,
-      onRemove: (instance) => {
-        order.push("option");
-        option.push(instance);
-      },
+      onRemove: (instance) => seen.option(instance),
     }));
-    chip.on("remove", (instance) => {
-      order.push("listener");
-      listener.push(instance);
-    });
+    chip.on("remove", (instance) => seen.listener(instance));
     chip.element.querySelector<HTMLButtonElement>(".mtrl-chip__remove")!.click();
-    expect(option).toEqual([chip]);
-    expect(listener).toEqual([chip]);
-    expect(option[0]).toBe(listener[0]);
-    expect(order).toEqual(["option", "listener"]);
+    expectSameListener(seen);
+    expect(seen.optionCalls).toEqual([chip]);
   });
 
   test("onTrailingClick matches the trailing listener and is registered before a later one", () => {
-    const option: ChipComponent[] = [];
-    const listener: ChipComponent[] = [];
-    const order: string[] = [];
+    const seen = optionPair();
     const chip = mountChip(createFilterChip({
       label: "Price",
       ripple: false,
-      onTrailingClick: (instance) => {
-        order.push("option");
-        option.push(instance);
-      },
+      onTrailingClick: (instance) => seen.option(instance),
     }));
-    chip.on("trailing", (instance) => {
-      order.push("listener");
-      listener.push(instance);
-    });
+    chip.on("trailing", (instance) => seen.listener(instance));
     chip.trailingAction!.click();
-    expect(option).toEqual([chip]);
-    expect(listener).toEqual([chip]);
-    expect(option[0]).toBe(listener[0]);
-    expect(order).toEqual(["option", "listener"]);
+    expectSameListener(seen);
+    expect(seen.optionCalls).toEqual([chip]);
   });
 
   test("onSelect still receives the chip and has no event of its own", () => {
