@@ -469,6 +469,17 @@ describe("fab menu presentation", () => {
     expect(m.isOpen()).toBe(true);
   });
 
+  test("menu presentation: opened again before the surface arrives, it opens as the last call asked", async () => {
+    const app = fakeMenu();
+    const m = make({ presentation: "menu", menu: () => app });
+    // A key's click, then a close, then a pointer's click
+    m.open(new dom.window.MouseEvent("click", { detail: 0 }));
+    m.close();
+    m.open(new dom.window.MouseEvent("click", { detail: 1 }));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(app.calls).toEqual(["open:mouse"]);
+  });
+
   test("menu presentation: a second click on the FAB before the surface arrives closes it", async () => {
     const app = fakeMenu();
     const m = make({ presentation: "menu", menu: () => app });

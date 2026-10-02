@@ -207,10 +207,11 @@ export interface TimePickerConfig {
   confirmText?: string;
 
   /**
-   * Whether the time picker is initially visible (for inline mode)
+   * Whether the time picker opens once it is created. It was `isOpen`, the
+   * name of the method that reads the state (FLO-548).
    * @default false
    */
-  isOpen?: boolean;
+  open?: boolean;
 
   /**
    * Whether the picker is disabled: it does not open (FLO-288)
@@ -291,7 +292,7 @@ export type ResolvedTimePickerConfig = TimePickerConfig &
       | "secondStep"
       | "cancelText"
       | "confirmText"
-      | "isOpen"
+      | "open"
       | "clockIcon"
       | "keyboardIcon"
       | "prefix"

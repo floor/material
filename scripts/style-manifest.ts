@@ -67,6 +67,11 @@ export const baseStyles = [
 export const typographyStyles = [
   "base/typescale", "base/typography",
 ];
+// What `mtrl/styles/typography`'s module imports first, as a component's
+// imports its dependencies. The sheet has to come after the base: both are in
+// mtrl.base, and its `margin-bottom` on h1 to h6 and p has the specificity of
+// the reset's `margin: 0`, so the later one wins.
+export const typographyDependencies = ["base"];
 export const utilityStyles = [
   "utilities/spacing", "utilities/visibility", "utilities/colors",
   "utilities/flexbox", "utilities/typography", "utilities/layout",
