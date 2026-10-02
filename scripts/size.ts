@@ -26,8 +26,9 @@
  * PR. The SSR entry's raw ceiling, the npm tarball and the unpacked size
  * are measured plus 1%, rounded up to the next multiple of 1,000. Checkbox,
  * list, navigation-rail, select and switch, and the packed textfield gzip,
- * were raised to the rule once, not grown. The unpacked size stays at
- * 6,393,000.
+ * were raised to the rule once, not grown. The unpacked size stayed at
+ * 6,393,000 until the 1.0 contract work filled it; it is 6,458,000 by the
+ * same rule (scripts/check-package-size.ts), until FLO-546 tightens it.
  *
  * Usage:
  *   bun run size
