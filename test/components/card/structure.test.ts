@@ -196,7 +196,7 @@ describe('card structure order', () => {
 });
 
 describe('card parts', () => {
-  test('content renders text as text, html as markup, and children', () => {
+  test('content renders text, html as markup, and children', () => {
     const child = document.createElement('span');
     const text = createCardContent({ text: '<b>bold</b>', children: [child] });
     expect(text.querySelector('b')).toBeNull();

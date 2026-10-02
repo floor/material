@@ -10,7 +10,7 @@ import { withServerScope, removeEmptyStyles, type ServerScope } from "../../src/
 import type { ServerResources } from "../../src/ssr/resources";
 import { setHTML } from "../../src/core/dom/html";
 import { cases } from "../../scripts/fixtures/preupgrade-cases";
-import createTextfield from "../../src/components/textfield";
+import createTextField from "../../src/components/textfield";
 
 const nativeTimeout = setTimeout;
 const nativeMicrotask = queueMicrotask;
@@ -324,10 +324,10 @@ test("textfield and select disposal reset the shared batch for a subsequent norm
   const view = new JSDOM("<!doctype html><html><body></body></html>").window;
   const keys = ["window", "document", "HTMLElement", "Element", "Node", "MutationObserver", "getComputedStyle"];
   const previous = keys.map((key) => Object.getOwnPropertyDescriptor(globalThis, key));
-  let field: ReturnType<typeof createTextfield>;
+  let field: ReturnType<typeof createTextField>;
   try {
     for (const key of keys) Object.defineProperty(globalThis, key, { configurable: true, writable: true, value: Reflect.get(view, key) });
-    field = createTextfield({ label: "Label", variant: "outlined", value: "Value" });
+    field = createTextField({ label: "Label", variant: "outlined", value: "Value" });
     document.body.append(field.element);
     const label = field.element.querySelector(".mtrl-textfield__label")!;
     Object.defineProperty(label, "offsetWidth", { value: 100 });

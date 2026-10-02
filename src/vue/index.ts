@@ -22,7 +22,7 @@ export { MFab } from "./fab";
 export { MExtendedFab } from "./extended-fab";
 export { MCheckbox } from "./checkbox";
 export { MSlider } from "./slider";
-export { MTextfield } from "./textfield";
+export { MTextField } from "./textfield";
 export { MRadios } from "./radios";
 export { MNavigationBar } from "./navigation-bar";
 export { MNavigationRail } from "./navigation-rail";

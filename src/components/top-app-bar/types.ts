@@ -78,11 +78,11 @@ export interface TopAppBarConfig {
  * Top App Bar component interface
  * @category Components
  */
-export interface TopAppBar extends ElementComponent {
+export interface TopAppBarComponent extends ElementComponent {
   /**
    * Sets the title of the top app bar
    * @param {string} title - Title text
-   * @returns {TopAppBar} TopAppBar instance for chaining
+   * @returns {TopAppBarComponent} TopAppBarComponent instance for chaining
    */
   setTitle(title: string): this;
   
@@ -95,28 +95,28 @@ export interface TopAppBar extends ElementComponent {
   /**
    * Adds a leading navigation icon or element
    * @param {HTMLElement} element - Element to add to the leading section
-   * @returns {TopAppBar} TopAppBar instance for chaining
+   * @returns {TopAppBarComponent} TopAppBarComponent instance for chaining
    */
   addLeadingElement(element: HTMLElement): this;
   
   /**
    * Adds a trailing action icon or element
    * @param {HTMLElement} element - Element to add to the trailing section
-   * @returns {TopAppBar} TopAppBar instance for chaining
+   * @returns {TopAppBarComponent} TopAppBarComponent instance for chaining
    */
   addTrailingElement(element: HTMLElement): this;
   
   /**
    * Changes the top app bar type
    * @param {TopAppBarType} type - New app bar type
-   * @returns {TopAppBar} TopAppBar instance for chaining
+   * @returns {TopAppBarComponent} TopAppBarComponent instance for chaining
    */
   setType(type: TopAppBarType): this;
   
   /**
    * Manually sets the scrolled state
    * @param {boolean} scrolled - Whether to show the scrolled state
-   * @returns {TopAppBar} TopAppBar instance for chaining
+   * @returns {TopAppBarComponent} TopAppBarComponent instance for chaining
    */
   setScrollState(scrolled: boolean): this;
   

@@ -12,10 +12,8 @@
 
 import { readdirSync, unlinkSync } from "node:fs";
 import { elements } from "../src/elements";
-import { declarationModules, elementModules, kebab } from "./element-modules";
+import { camel, declarationModules, elementModules, kebab, pascal } from "./element-modules";
 
-const pascal = (name: string): string =>
-  name.replace(/(^|-)([a-z])/g, (_, __: string, c: string) => c.toUpperCase());
 
 interface Framework {
   dir: string;
@@ -66,9 +64,9 @@ ${body}
 const elementModule = (framework: Framework, { name, module: from, styles }: (typeof elementModules)[number]): string => {
   const P = pascal(name);
   const C = framework.component(name);
-  return module(framework, name, `export const ${C}: MComponent<${P}Spec, ${P}Element> = /*#__PURE__*/ createComponent(${name}Element.spec, define${P}, "${C}");`, [
+  return module(framework, name, `export const ${C}: MComponent<${P}Spec, ${P}Element> = /*#__PURE__*/ createComponent(${camel(name)}Element.spec, define${P}, "${C}");`, [
     ...styles.map((style) => `import "mtrl/elements/css/${style}";`),
-    `import { ${name}Element, define${P}, type ${P}Spec, type ${P}Element } from "../elements/${from}";`,
+    `import { ${camel(name)}Element, define${P}, type ${P}Spec, type ${P}Element } from "../elements/${from}";`,
     `import { createComponent, type MComponent } from "./create";`,
   ]);
 };

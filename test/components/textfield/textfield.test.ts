@@ -38,14 +38,14 @@ g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date
 g.cancelAnimationFrame = () => {};
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
-import createTextfield, { type TextfieldValuePayload, type TextfieldFocusPayload } from '../../../src/components/textfield';
+import createTextField, { type TextFieldValuePayload, type TextFieldFocusPayload } from '../../../src/components/textfield';
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>';
 
 beforeEach(() => { document.body.innerHTML = ''; });
 
-const mount = (config: Parameters<typeof createTextfield>[0] = {}) => {
-  const field = createTextfield(config);
+const mount = (config: Parameters<typeof createTextField>[0] = {}) => {
+  const field = createTextField(config);
   document.body.append(field.element);
   return field;
 };
@@ -437,8 +437,8 @@ for (const inputType of ['text', 'multiline'] as const) {
   describe(`textfield ${inputType} event contract`, () => {
     test('native input and change report the value, empty state and autofill flag', () => {
       const field = mount({ type: inputType });
-      const inputs = mock((_payload: TextfieldValuePayload) => {});
-      const changes = mock((_payload: TextfieldValuePayload) => {});
+      const inputs = mock((_payload: TextFieldValuePayload) => {});
+      const changes = mock((_payload: TextFieldValuePayload) => {});
       try {
         expect(field.on('input', inputs).on('change', changes)).toBe(field);
         type(field, 'Ada');
@@ -463,8 +463,8 @@ for (const inputType of ['text', 'multiline'] as const) {
 
     test('focus and blur report only the empty state and can be unsubscribed', () => {
       const field = mount({ type: inputType });
-      const focus = mock((_payload: TextfieldFocusPayload) => {});
-      const blur = mock((_payload: TextfieldFocusPayload) => {});
+      const focus = mock((_payload: TextFieldFocusPayload) => {});
+      const blur = mock((_payload: TextFieldFocusPayload) => {});
       try {
         field.on('focus', focus).on('blur', blur);
         field.input.focus();
@@ -482,7 +482,7 @@ for (const inputType of ['text', 'multiline'] as const) {
 
     test('autofill detection emits the same value payload with isAutofilled true', () => {
       const field = mount({ type: inputType });
-      const inputs = mock((_payload: TextfieldValuePayload) => {});
+      const inputs = mock((_payload: TextFieldValuePayload) => {});
       try {
         field.on('input', inputs);
         field.input.value = 'Autofilled';

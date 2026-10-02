@@ -149,7 +149,7 @@ export const withTextInput =
       name: config.name,
       required: config.required,
       disabled: config.disabled,
-      // Documented on TextfieldConfig and never applied, so a readonly field stayed editable.
+      // Documented on TextFieldConfig and never applied, so a readonly field stayed editable.
       readonly: config.readonly,
       maxLength: config.maxLength,
       pattern: config.pattern,
