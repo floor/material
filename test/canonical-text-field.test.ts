@@ -7,7 +7,10 @@
 // covers it. Read with the type checker, so nothing here needs a build.
 import { expect, test } from "bun:test";
 import ts from "typescript";
+import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { changelogHistoryHeading, lineKept, oneWordHits } from "../scripts/text-field-rename-allowlist";
 
 const ROOT = join(import.meta.dir, "..");
 const CONSTANTS = ["VARIANTS", "STATES", "TYPES", "EVENTS", "DENSITY", "DEFAULTS", "CLASSES"];
@@ -47,4 +50,28 @@ test("1.0 exports only the canonical names: every old spelling is gone from its 
     for (const name of names) if (/Textfield|textfield[A-Z]|TEXTFIELD/.test(name)) problems.push(`${file} exports ${name}`);
   }
   expect(problems).toEqual([]);
+}, 60_000);
+
+// The one-word spelling is the nine letters in any case except textField and
+// TextField. The allowlist is the same data the rename script reads.
+test("no tracked path or line keeps the one-word spelling outside the allowlist", () => {
+  const listed = spawnSync("git", ["ls-files", "-z"], { cwd: ROOT, encoding: "utf8" });
+  if (listed.status !== 0) throw new Error(listed.stderr || "git ls-files failed");
+  const paths = listed.stdout.split("\0").filter((file) => file.length > 0);
+  const found: string[] = [];
+  for (const file of paths) {
+    if (oneWordHits(file).length > 0) found.push(`path ${file}`);
+    const raw = readFileSync(join(ROOT, file));
+    if (raw.includes(0)) continue;
+    let inHistory = false;
+    const lines = raw.toString("utf8").split("\n");
+    for (let index = 0; index < lines.length; index += 1) {
+      const line = lines[index] ?? "";
+      if (file === "CHANGELOG.md" && line.startsWith(changelogHistoryHeading)) inHistory = true;
+      if (oneWordHits(line).length === 0) continue;
+      if (lineKept(file, line, inHistory)) continue;
+      found.push(`${file}:${index + 1}`);
+    }
+  }
+  expect({ count: found.length, first: found.slice(0, 15) }).toEqual({ count: 0, first: [] });
 }, 60_000);
