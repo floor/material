@@ -1052,6 +1052,16 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **A short chip with a secondary action is wider, by the specification.** Material 3, Chips:
+  "Secondary actions (such as a trailing icon button for Remove) must have a 48x48dp
+  interaction target that doesn't interfere with the chip's primary action (such as Edit or
+  Drag). To achieve this, apply a minimum width of 88dp to the chip, or 42dp to the label
+  text." A chip with a remove or trailing button is therefore at least 88px wide, its label
+  at least 42px: the last 48px of the chip are the secondary action's target, by the
+  specification, and the chip's own action owns the rest, at least 40px. An input chip
+  labelled "Label" is 88px (was 80.05) and one labelled "OK" 88px (was 64.5); a filter chip,
+  whose action starts 16px in, measures 92px (was 84.05 for "Label" and 68.5 for "OK"). A
+  chip whose label already filled the 88px floor is unchanged.
 - **An extra-small button's space between its icon and its label is 4px.** It was 8px. Material 3's token `md.comp.button.xsmall.icon-label-space` is 4, and Compose's `ButtonDefaults.ExtraSmallIconSpacing` is 4.
 - **An unsized select is 280px wide, as an unsized text field is.** `createSelect()` made a
   select that took its container's whole width (200px in a 200px container, 400px in a
