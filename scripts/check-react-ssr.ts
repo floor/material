@@ -84,7 +84,12 @@ try {
               await inert.goto(server.url.href);
               return await inert.evaluate(() => ["provided-tabs", "required-tabs"].map(id => {
                 const host = document.getElementById(id);
-                return { host: !!host, root: !!host?.shadowRoot, text: host?.shadowRoot?.textContent ?? null };
+                return {
+                  host: !!host,
+                  root: !!host?.shadowRoot,
+                  text: host?.shadowRoot?.textContent ?? null,
+                  light: host?.textContent ?? null,
+                };
               }));
             } finally { await inert.close(); }
           })();
@@ -99,6 +104,8 @@ try {
             assert.deepEqual({ warnings, errors, recoverable }, { warnings: [], errors: [], recoverable: [] }, `${label} hydration`);
           } finally { await page.close(); }
           assert.equal(shadows[0].host && shadows[1].host, true, `${label}: context hosts exist`);
+          assert.equal(shadows[0].light, "from provider", `${label}: light DOM saw the default-valued provider`);
+          assert.equal(shadows[1].light, "required provider", `${label}: light DOM saw the required provider`);
           expectContextKnownLimit(`${label} default-valued context`,
             shadows[0].root && shadows[0].text?.includes("DEFAULT") === true,
             shadows[0].text?.includes("from provider") === true, "shadow contains DEFAULT");
@@ -108,7 +115,8 @@ try {
         } finally { server.stop(true); }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        contextFailures.push(`${label}: ${message.split("\n")[0]}`);
+        const line = message.split("\n")[0] ?? message;
+        contextFailures.push(line.startsWith(label) ? line : `${label}: ${line}`);
       }
     }
     // The context production bundle replaced Symbol.for("mtrl.ssr"). The development
