@@ -37,7 +37,7 @@ $component: "#{base.$prefix}-textfield";
     // differently per platform for the same font: 167px on macOS, 220px on
     // Linux (FLO-293). A width from the page still applies.
     contain: inline-size;
-    contain-intrinsic-inline-size: v.textfield('width');
+    contain-intrinsic-inline-size: v.text-field('width');
     // align-self: flex-start; // Prevents growing to fill the container's height
     flex: 0 0 auto; // Don't grow or shrink; keep natural size
     // The container: the label, input, outline, icons and affixes are placed
