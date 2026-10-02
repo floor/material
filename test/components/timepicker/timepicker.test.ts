@@ -45,6 +45,15 @@ const mount = (config: Record<string, unknown> = {}): TimePicker => {
   return picker;
 };
 
+// The published open() takes no argument. A listener, or any other caller,
+// can still pass one. Only the factory's own `true` may defer the surface.
+const openWith = (picker: TimePicker, value: unknown): void => {
+  (picker.open as (later?: unknown) => TimePicker)(value);
+};
+
+const surfaceShown = (picker: TimePicker): boolean =>
+  picker.dialogElement.hasAttribute("open") && picker.dialogElement.classList.contains("active");
+
 const dialogClass = (picker: TimePicker, modifier: string) =>
   picker.dialogElement.classList.contains(`mtrl-time-picker__dialog--${modifier}`);
 
@@ -154,6 +163,40 @@ describe("opening and closing", () => {
     picker.open();
 
     expect(picker.isOpen()).toBe(true);
+  });
+
+  // A click listener passes the event. 1 and {} are the other truthy values
+  // that must not take the creation-only path.
+  test("open(event), open(1) and open({}) show the surface in the same task, as open() does", () => {
+    const plain = mount();
+    plain.open();
+    expect(surfaceShown(plain)).toBe(true);
+    plain.close();
+
+    for (const value of [new Event("click"), 1, {}]) {
+      const picker = mount();
+      try {
+        openWith(picker, value);
+        expect(surfaceShown(picker)).toBe(true);
+      } finally {
+        // A deferred show returns once the picker is closed.
+        picker.close();
+      }
+    }
+  });
+
+  test("open: true at creation shows the surface a task later", async () => {
+    const picker = mount({ open: true });
+
+    try {
+      expect(picker.isOpen()).toBe(true);
+      expect(surfaceShown(picker)).toBe(false);
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(surfaceShown(picker)).toBe(true);
+    } finally {
+      picker.destroy();
+    }
   });
 });
 
