@@ -127,6 +127,34 @@ export const ENTRIES: ChangeEntry[] = [
     replace: "(%T)",
     reason: "the test's header names the workflow the release notes come from",
   },
+  {
+    id: "ssr-consumer-stub-message",
+    file: "scripts/check-ssr-consumer.ts",
+    find: "%s\\/ssr is server-only",
+    replace: "%t\\/ssr is server-only",
+    reason: "the check's regex matches the browser stub's error message, which follows the package name; the regex-escaped slash hides the subpath from the quoted-subpath pattern (found by the in-place proof)",
+  },
+  {
+    id: "solid-ssr-bundle-guard",
+    file: "scripts/check-solid-ssr.ts",
+    find: "from\"%s\\/ssr\"|from '%s\\/ssr'",
+    replace: "from\"%t\\/ssr\"|from '%t\\/ssr'",
+    reason: "the browser-bundle guard looks for the ssr specifier in Solid's output; the regex-escaped slash hides it (found by the in-place proof)",
+  },
+  {
+    id: "svelte-ssr-bundle-guard",
+    file: "scripts/check-svelte-ssr.ts",
+    find: "from\"%s\\/ssr\"|from '%s\\/ssr'",
+    replace: "from\"%t\\/ssr\"|from '%t\\/ssr'",
+    reason: "the browser-bundle guard looks for the ssr specifier in Svelte's output; the regex-escaped slash hides it (found by the in-place proof)",
+  },
+  {
+    id: "vue-ssr-bundle-guard",
+    file: "scripts/check-vue-ssr.ts",
+    find: "from\"%s\\/ssr\"|from '%s\\/ssr'",
+    replace: "from\"%t\\/ssr\"|from '%t\\/ssr'",
+    reason: "the browser-bundle guard looks for the ssr specifier in Vue's output; the regex-escaped slash hides it (found by the in-place proof)",
+  },
 ];
 
 /** Files whose name-bearing lines are written by a generator or are data,
