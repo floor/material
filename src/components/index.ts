@@ -217,6 +217,7 @@ export type { SearchConfig, SearchComponent } from "./search/types";
 // Select
 export type {
   SelectConfig,
+  SelectVariant,
   SelectComponent,
   SelectOption,
   SelectEvent,
@@ -248,6 +249,7 @@ export type {
 // TextField
 export type {
   TextFieldConfig,
+  TextFieldVariant,
   TextFieldComponent,
 } from "./textfield/types";
 

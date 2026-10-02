@@ -745,6 +745,11 @@
     "status": "public"
   },
   {
+    "name": "SelectVariant",
+    "kind": "type",
+    "status": "public"
+  },
+  {
     "name": "setComponentDefaults",
     "kind": "value",
     "status": "public"
@@ -856,6 +861,11 @@
   },
   {
     "name": "TextFieldConfig",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "TextFieldVariant",
     "kind": "type",
     "status": "public"
   },

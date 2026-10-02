@@ -241,6 +241,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- `TextFieldVariant` and `SelectVariant`, from `mtrl` and from `mtrl/components/textfield` and
+  `mtrl/components/select`: every public `variant` option's type is exported, as `ButtonVariant`,
+  `CheckboxVariant` and `CardVariant` are.
 - Read-only `getValue()` aliases on carousel, tabs, drawer, navigation rail and
   button group (FLO-380); existing accessors remain. Button toggle `change`, card
   `expandedChanged`, list `keydown`, and interactive touch events now have their
