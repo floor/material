@@ -20,7 +20,8 @@ $component: '#{base.$prefix}-radios';
     // them (a 12px margin made the pitch 60px).
   }
 
-  // Horizontal layout
+  // Horizontal layout. align-items stays flex-start: options on one line share
+  // the start edge, and the next line starts after the tallest row.
   &--horizontal {
     flex-direction: row;
     flex-wrap: wrap;
@@ -92,14 +93,17 @@ $component: '#{base.$prefix}-radios';
     }
   }
 
-  // Radio label
+  // Radio label. The row is at least 48dp and grows with a wrapping label.
+  // 4px of vertical padding leaves a 40px content box, so a one-line row stays
+  // 48px: the control's top is 4px and the 20px circle's top is 14px. The
+  // circle stays centred on the label block (align-items: center).
   &__label {
     position: relative;
     display: inline-flex;
     align-items: center;
     cursor: pointer;
-    padding: 8px 0;
-    height: 48px;
+    padding: 4px 0;
+    min-height: 48px;
     color: t.color('on-surface');
 
     // Body Large, as the checkbox and switch labels: a list item's headline.

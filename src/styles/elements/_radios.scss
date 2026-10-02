@@ -13,11 +13,12 @@
   }
 }
 
-// As components/_radios.scss: a 48px row, the 40px control and 8px before the text.
+// As components/_radios.scss: a row at least 48px, the 40px control and 8px
+// before the text. A wrapping label grows the row.
 @include c.declarations('radios') {
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  height: 48px;
+  min-height: 48px;
   padding-inline-start: 48px;
 }
