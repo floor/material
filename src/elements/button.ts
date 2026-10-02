@@ -2,6 +2,9 @@
 /**
  * `<m-button>`: the button as a custom element. Children are the label.
  *
+ * `icon-position="end"` places the icon after the label. It has no setter:
+ * changing it recreates the element.
+ *
  * `type="submit"` and `type="reset"` act on the host's form, which a button
  * inside a shadow root cannot reach by itself (see `form-button`).
  *
