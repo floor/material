@@ -86,17 +86,30 @@ export interface InputFeature {
   input: HTMLInputElement;
 
   /**
-   * Gets the current input value
-   * @returns Current value
+   * Gets the checked state: the `value` a `change` carries
+   * @returns Whether the input is checked
    */
-  getValue: () => string;
+  getValue: () => boolean;
 
   /**
-   * Sets the input value and emits a value event
-   * @param value - New value to set
+   * Checks or unchecks the input. Silent: only the user's change emits `change`
+   * @param value - Whether the input is checked
    * @returns Component instance for chaining
    */
-  setValue(value: string): this;
+  setValue(value: boolean): this;
+
+  /**
+   * Gets the input's `value` attribute: the string a form submits while checked
+   * @returns The input's string value
+   */
+  getValueAttribute: () => string;
+
+  /**
+   * Sets the input's `value` attribute. Silent
+   * @param value - The string a form submits while checked
+   * @returns Component instance for chaining
+   */
+  setValueAttribute(value: string): this;
 
   /**
    * Event emission method if available
@@ -115,8 +128,9 @@ export interface InputComponent extends ElementComponent, InputFeature {}
  *
  * `change` carries `{ checked, value, valueAttribute, nativeEvent }`: `value` is
  * the checked boolean, as the checkbox and the switch report it, and
- * `valueAttribute` the input's string value. `getValue()`, `setValue()` and the
- * `value` event are the input's string value.
+ * `valueAttribute` the input's string value. The methods match: `getValue()`
+ * and `setValue()` work on the checked boolean, `getValueAttribute()` and
+ * `setValueAttribute()` on the string. Both setters are silent.
  *
  * @param config - Input configuration
  * @returns Function that enhances a component with input functionality
@@ -198,22 +212,19 @@ export const withInput =
       ...component,
       input,
 
-      /**
-       * Gets the current input value
-       * @returns Current value
-       */
-      getValue: () => input.value,
+      // The checked boolean, as change.value; the string pair is the attribute's,
+      // under the names the checkbox and the switch use. Setters are silent.
+      getValue: () => input.checked,
 
-      /**
-       * Sets the input value and emits a value event
-       * @param value - New value to set
-       * @returns Component instance for chaining
-       */
-      setValue(value: string) {
+      setValue(value: boolean) {
+        input.checked = value;
+        return this;
+      },
+
+      getValueAttribute: () => input.value,
+
+      setValueAttribute(value: string) {
         input.value = value;
-        if (hasEmit(component)) {
-          component.emit("value", { value });
-        }
         return this;
       },
     };
