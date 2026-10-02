@@ -189,7 +189,7 @@ describe('Ripple Effect', () => {
   });
 });
 // FLO-268: only duration is read. The wave is the pressed state layer (FLO-260),
-// its opacity and motion drawn by the stylesheet; 1.0 removed the timing and
+// its opacity and motion drawn by the stylesheet; 3.0.0 removed the timing and
 // opacity options, which were never applied.
 describe('rippleConfig', () => {
   test('duration sets when a released wave is removed; the wave carries no inline motion or opacity', async () => {

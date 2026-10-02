@@ -75,7 +75,7 @@ describe('the shape scale (FLO-345)', () => {
   test('a removed step fails to compile, naming the migration', () => {
     for (const step of ['extra-tiny', 'tiny', 'pill']) {
       const read = () => compileString(`@use 'abstract/variables' as v; a { b: v.shape('${step}'); }`, { loadPaths: ['src/styles'] });
-      expect(read).toThrow(/No shape step '.+'.*removed in 1\.0\.0/s);
+      expect(read).toThrow(/No shape step '.+'.*removed in material 3\.0\.0/s);
     }
   });
 

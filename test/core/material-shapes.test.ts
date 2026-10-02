@@ -71,7 +71,7 @@ describe("every Material shape", () => {
 });
 
 describe("names", () => {
-  test("1.0 has only Compose's names: the 'cookie4' and 'cookie9' aliases are gone", () => {
+  test("3.0.0 has only Compose's names: the 'cookie4' and 'cookie9' aliases are gone", () => {
     expect(materialShape("cookie4Sided")).toBe(shapeCookie4Sided());
     expect(materialShape("cookie9Sided")).toBe(shapeCookie9Sided());
     // @ts-expect-error 'cookie4' was 0.10's alias of 'cookie4Sided'

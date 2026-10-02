@@ -1,6 +1,6 @@
 /**
  * Check the packed Card builders against their shipped CSS. The loading,
- * expandable and swipeable enhancers are internal since 1.0.0 (FLO-381), so the
+ * expandable and swipeable enhancers are internal since 3.0.0 (FLO-381), so the
  * packed package has no way to them; their unit tests cover them from source.
  */
 import assert from "node:assert/strict";

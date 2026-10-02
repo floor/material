@@ -1,6 +1,6 @@
 // test/core/dom/raw-class.test.ts
 //
-// 1.0 removed `rawClass` (FLO-117 made class and className unprefixed, so it
+// 3.0.0 removed `rawClass` (FLO-117 made class and className unprefixed, so it
 // did what they do), and no longer reserves the key. A 0.10 caller that still
 // passes it gets no class: like any unknown option it is written out as an
 // attribute, `rawclass`.

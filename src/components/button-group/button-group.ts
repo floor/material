@@ -56,7 +56,7 @@ type GroupButton = ButtonComponent & {
  * The Button Group component provides a container for grouping related action buttons.
  * A standard group holds related actions, each button acting on its own; a
  * connected group (`kind: "connected"`, with `selection`) is M3's replacement for
- * the segmented button, which 1.0.0 removed (FLO-382).
+ * the segmented button, which material 3.0.0 removed (FLO-382).
  *
  * Per Material Design 3 specifications:
  * - Standard groups space their buttons (18/12/8/8/8dp by size) and a

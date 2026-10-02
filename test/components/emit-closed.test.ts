@@ -1,6 +1,6 @@
 // test/components/emit-closed.test.ts
 //
-// 1.0 closes the type of `emit` on the card and the tabs to the component's
+// 3.0.0 closes the type of `emit` on the card and the tabs to the component's
 // event map (test/types/emit-closed.fixture.ts). The emitter underneath is
 // unchanged: untyped code that still emits a name of its own reaches the
 // listeners registered for it. This pins what the migration row says.

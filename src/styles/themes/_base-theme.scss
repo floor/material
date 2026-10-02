@@ -4,8 +4,8 @@
 
 // Build switch, not a public API (the README's Sass `@use … with` is unsupported).
 // all: explicit attribute rules and the prefers-contrast block (the full stylesheet).
-// explicit: the attribute rules only (mtrl/styles/contrast, mtrl/themes/<name>-contrast).
-// preference: the prefers-contrast block only (mtrl/styles/base, mtrl/themes/<name>).
+// explicit: the attribute rules only (material/styles/contrast, material/themes/<name>-contrast).
+// preference: the prefers-contrast block only (material/styles/base, material/themes/<name>).
 $contrast-emit: all !default;
 
 // Base theme definition with common properties and structure

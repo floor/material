@@ -1,6 +1,6 @@
 // scripts/fixtures/react-ssr-app.ts
 import * as React from "react";
-import { Button, Switch, Tabs, Tab, Card, Carousel, FabMenu, configure } from "mtrl/react";
+import { Button, Switch, Tabs, Tab, Card, Carousel, FabMenu, configure } from "material/react";
 configure({ prefix: "demo" });
 export const App = ({ mismatch = false }: { mismatch?: boolean }) => {
   const [checked, setChecked] = React.useState(true);

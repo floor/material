@@ -1,7 +1,7 @@
 // scripts/fixtures/react-ssr-suspense-server.ts
 // React 19 uses renderToReadableStream. React 18's Node build of react-dom/server does not
 // export it, so 18 uses renderToPipeableStream.
-import "mtrl/ssr/react";
+import "material/ssr/react";
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import { Writable } from "node:stream";

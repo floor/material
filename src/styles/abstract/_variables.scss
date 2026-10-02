@@ -395,7 +395,7 @@ $spacing-scale: (
 @function shape($size) {
   @if not map.has-key($shape, $size) {
     @error "No shape step '#{$size}'. M3's scale: #{map.keys($shape)}. "
-      + "extra-tiny, tiny and pill were removed in 1.0.0: write a literal radius, or use full (FLO-345).";
+      + "extra-tiny, tiny and pill were removed in material 3.0.0: write a literal radius, or use full (FLO-345).";
   }
   @return var(--#{$prefix}-sys-shape-corner-#{$size}, #{map.get($shape, $size)});
 }
@@ -468,7 +468,7 @@ $text-field: (
 ) !default;
 
 /// A text field measurement: `v.text-field('height')`. 0.10's `$textfield` and
-/// `textfield()` are removed in 1.0 (FLO-383).
+/// `textfield()` are removed in material 3.0.0 (FLO-383).
 @function text-field($key) {
   @if $key == 'border-radius' { @return shape('extra-small'); }
   @return map.get($text-field, $key);

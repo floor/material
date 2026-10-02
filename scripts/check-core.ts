@@ -33,15 +33,15 @@ const fixture = await createPackageFixture();
 let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
 try {
   const entry = join(fixture.directory, "core.ts");
-  await writeFile(entry, `import { createButton, createAssistChip, createFilterChip, createInputChip, createSuggestionChip, createChips, createList, createDatePicker } from 'mtrl'; window.core = { createButton, createAssistChip, createFilterChip, createInputChip, createSuggestionChip, createChips, createList, createDatePicker };`);
-  await writeFile(entry, `${await readFile(entry, "utf8")} import * as cardParts from 'mtrl/components/card'; window.cardParts = cardParts;`);
-  await writeFile(entry, `${await readFile(entry, "utf8")} import { createCheckbox, createSwitch, createTextField, createRadios } from 'mtrl'; window.inputs = { createCheckbox, createSwitch, createTextField, createRadios };`);
-  await writeFile(entry, `${await readFile(entry, "utf8")} import { createTimePicker } from 'mtrl'; window.createTimePicker = createTimePicker;`);
-  await writeFile(entry, `${await readFile(entry, "utf8")} import { createSearch } from 'mtrl'; window.createSearch = createSearch;`);
-  await writeFile(entry, `${await readFile(entry, "utf8")} import { createSelect } from 'mtrl'; window.createSelect = createSelect;`);
+  await writeFile(entry, `import { createButton, createAssistChip, createFilterChip, createInputChip, createSuggestionChip, createChips, createList, createDatePicker } from 'material'; window.core = { createButton, createAssistChip, createFilterChip, createInputChip, createSuggestionChip, createChips, createList, createDatePicker };`);
+  await writeFile(entry, `${await readFile(entry, "utf8")} import * as cardParts from 'material/components/card'; window.cardParts = cardParts;`);
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { createCheckbox, createSwitch, createTextField, createRadios } from 'material'; window.inputs = { createCheckbox, createSwitch, createTextField, createRadios };`);
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { createTimePicker } from 'material'; window.createTimePicker = createTimePicker;`);
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { createSearch } from 'material'; window.createSearch = createSearch;`);
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { createSelect } from 'material'; window.createSelect = createSelect;`);
   // createMenu for the menu checks, and the openers for FLO-386's: one import, two windows
-  await writeFile(entry, `${await readFile(entry, "utf8")} import { createFabMenu, createIconButton, createMenu, createSplitButton } from 'mtrl'; window.createMenu = createMenu; window.openers = { createFabMenu, createIconButton, createMenu, createSplitButton };`);
-  await writeFile(entry, `${await readFile(entry, "utf8")} import { createCarousel } from 'mtrl'; window.createCarousel = createCarousel;`);
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { createFabMenu, createIconButton, createMenu, createSplitButton } from 'material'; window.createMenu = createMenu; window.openers = { createFabMenu, createIconButton, createMenu, createSplitButton };`);
+  await writeFile(entry, `${await readFile(entry, "utf8")} import { createCarousel } from 'material'; window.createCarousel = createCarousel;`);
   const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "iife", minify: true });
   assert(bundle.success, String(bundle.logs));
   browser = await chromium.launch({ headless: true });

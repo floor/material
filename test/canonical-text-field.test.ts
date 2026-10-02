@@ -1,7 +1,7 @@
 // test/canonical-text-field.test.ts
 //
 // FLO-383: every exported identifier writes "text field" as two words.
-// 0.10.5 exported both spellings; 1.0 has only the canonical ones. The strings
+// 0.10.5 exported both spellings; 3.0.0 has only the canonical ones. The strings
 // follow (FLO-560): the tag, the classes and the constants' values are
 // text-field too. The list below pins that the old identifier spellings are
 // gone. The guard under it pins that the one-word spelling does not return.
@@ -31,7 +31,7 @@ const ENTRIES: Record<string, Array<[old: string, to: string]>> = {
   "src/vue/index.ts": [["MTextfield", "MTextField"]],
 };
 
-test("1.0 exports only the canonical names: every old spelling is gone from its entry (FLO-383)", () => {
+test("3.0.0 exports only the canonical names: every old spelling is gone from its entry (FLO-383)", () => {
   const files = Object.keys(ENTRIES).map((file) => join(ROOT, file));
   const program = ts.createProgram(files, {
     strict: true, skipLibCheck: true, noEmit: true, jsx: ts.JsxEmit.ReactJSX,

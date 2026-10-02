@@ -233,9 +233,9 @@ describe("pre-upgrade styles", () => {
 
 describe("pre-upgrade export keys", () => {
   const specifiers = [
-    "mtrl/elements/preupgrade/button.css",
-    "mtrl/elements/preupgrade.css",
-    "mtrl/elements/preupgrade",
+    "material/elements/preupgrade/button.css",
+    "material/elements/preupgrade.css",
+    "material/elements/preupgrade",
   ];
   const targets = [
     "dist/elements/preupgrade/button.css",
@@ -249,7 +249,7 @@ describe("pre-upgrade export keys", () => {
   const consumer = (): { dir: string, expected: string[] } => {
     const dir = mkdtempSync(resolve(tmpdir(), "mtrl-preupgrade-"));
     const pkg = JSON.parse(readFileSync("package.json", "utf8")) as { name: string, exports: unknown };
-    const installed = resolve(dir, "node_modules/mtrl");
+    const installed = resolve(dir, "node_modules/material");
     mkdirSync(installed, { recursive: true });
     writeFileSync(resolve(installed, "package.json"), JSON.stringify({ name: pkg.name, exports: pkg.exports }));
     for (const target of targets) {

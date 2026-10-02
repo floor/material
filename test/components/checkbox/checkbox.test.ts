@@ -14,7 +14,7 @@
 //
 // Deliberately not asserted, because each is open and a test would bless it:
 // the `variant` option, which changes nothing (M3 defines no checkbox variants;
-// 1.0 removed CHECKBOX_VARIANTS); and a custom class gaining the
+// 3.0.0 removed CHECKBOX_VARIANTS); and a custom class gaining the
 // library prefix (F11).
 import { describe, test, expect, beforeEach, mock } from 'bun:test';
 import { JSDOM } from 'jsdom';

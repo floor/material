@@ -8,24 +8,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 This changelog starts at 0.8.0, the first release with written notes (September 2026).
 Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/main).
 
+Up to 0.10.x the package was published as `mtrl`, from `floor/mtrl`: the sections for `[0.10.6]` and
+below are kept as they were published, and the release they announce as 1.0.0 is this one,
+`material` 3.0.0.
+
 ## [Unreleased]
 
 ### Migrating from 0.10.x
 
-Upgrade to the latest 0.10.x first. It exports the 1.0 names beside the old ones, and marks deprecated the
-TypeScript names, options and constants that 1.0 removes, so your editor flags each use with its
-replacement. Two of those warnings can't be cleared before you upgrade, because the new name
-exists only in 1.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
-`select.textfield` (1.0 has `select.textField`). Clear the others, then upgrade. Each change's full entry follows this guide.
+Upgrade to the latest `mtrl` 0.10.x first, then change the package name to `material` (version 3) and
+follow this guide. The latest 0.10.x exports the 3.0.0 names beside the old ones, and marks
+deprecated the TypeScript names, options and constants that 3.0.0 removes, so your editor flags
+each use with its replacement. Two of those warnings can't be cleared before you upgrade, because
+the new name exists only in 3.0.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
+`select.textfield` (3.0.0 has `select.textField`). Clear the others, then upgrade. Each change's full entry follows this guide.
 
 **Packages and imports**
 
-- **ESM only.** `require('mtrl')` throws `ERR_PACKAGE_PATH_NOT_EXPORTED`. Use `import`, or
-  `await import('mtrl')` from CommonJS.
+- **ESM only.** `require('material')` throws `ERR_PACKAGE_PATH_NOT_EXPORTED`. Use `import`, or
+  `await import('material')` from CommonJS.
 - **The root keeps the components.** The composition core, the DOM, timing and store helpers and
   the progress canvas code are imported from their subpaths, under the same names
-  (`import { pipe } from 'mtrl/core/compose'`). The
-  [migration table](https://github.com/floor/mtrl/blob/main/scripts/fixtures/root-exports.md)
+  (`import { pipe } from 'material/core/compose'`). The
+  [migration table](https://github.com/floor/material/blob/main/scripts/fixtures/root-exports.md)
   gives every one.
 - **Folders inside a component no longer resolve** (`mtrl/components/chips/chip`,
   `…/features`): they held internals, with no replacement.
@@ -33,15 +38,15 @@ exists only in 1.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
 
 **Renamed**
 
-| 0.10 | 1.0 |
+| 0.10 | material 3.0.0 |
 |---|---|
 | `createTextfield`, `TextfieldConfig`, `TextfieldComponent`, `TextfieldDensity`, `TextfieldEvents`, `TextfieldValuePayload`, `TextfieldFocusPayload`, `TextfieldTrailingPayload` | `createTextField`, `TextFieldConfig`, `TextFieldComponent`, `TextFieldDensity`, `TextFieldEvents`, `TextFieldValuePayload`, `TextFieldFocusPayload`, `TextFieldTrailingPayload` |
 | `TEXTFIELD_VARIANTS`, `TEXTFIELD_STATES`, `TEXTFIELD_TYPES`, `TEXTFIELD_EVENTS`, `TEXTFIELD_DENSITY`, `TEXTFIELD_DEFAULTS`, `TEXTFIELD_CLASSES` | `TEXT_FIELD_VARIANTS`, `TEXT_FIELD_STATES`, `TEXT_FIELD_TYPES`, `TEXT_FIELD_EVENTS`, `TEXT_FIELD_DENSITY`, `TEXT_FIELD_DEFAULTS`, `TEXT_FIELD_CLASSES` |
 | `textfieldElement`, `defineTextfield`, `TextfieldSpec`, `TextfieldElement`, `TextfieldElementComponent` (`mtrl/elements`) | `textFieldElement`, `defineTextField`, `TextFieldSpec`, `TextFieldElement`, `TextFieldElementComponent` |
 | `Textfield` (`mtrl/react`, `mtrl/solid`, `mtrl/svelte`), `MTextfield` (`mtrl/vue`) | `TextField`, `MTextField` |
 | Sass `$textfield`, `textfield()` | `$text-field`, `text-field()` |
-| `SELECT_CLASSES.TEXTFIELD` | `SELECT_CLASSES.TEXT_FIELD`, its value is `select__text-field`. A recorded exception: 0.10.x flags the old key but has no new one, so change it when you upgrade. In 1.0 the old key reads `undefined`. |
-| `select.textfield` | `select.textField`. A recorded exception, like the key above: 0.10.x flags the old name but has no `textField`, so rename it when you upgrade. In 1.0 `select.textfield` reads `undefined`. |
+| `SELECT_CLASSES.TEXTFIELD` | `SELECT_CLASSES.TEXT_FIELD`, its value is `select__text-field`. A recorded exception: 0.10.x flags the old key but has no new one, so change it when you upgrade. In material 3.0.0 the old key reads `undefined`. |
+| `select.textfield` | `select.textField`. A recorded exception, like the key above: 0.10.x flags the old name but has no `textField`, so rename it when you upgrade. In material 3.0.0 `select.textfield` reads `undefined`. |
 | `<m-textfield>` | `<m-text-field>`. The old tag is not defined: it renders nothing. |
 | the classes `mtrl-textfield`, `mtrl-textfield__…`, `mtrl-textfield--…` | `mtrl-text-field`, `mtrl-text-field__…`, `mtrl-text-field--…` |
 | `::part(textfield)` on the text field and on `<m-select>` | `::part(text-field)` |
@@ -55,11 +60,11 @@ exists only in 1.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
 | shapes `'cookie4'`, `'cookie9'` | `'cookie4Sided'`, `'cookie9Sided'` |
 | `createElement({ rawClass })` | `class` or `className` |
 | the tooltip's `rich` | `variant: 'rich'` |
-| `onToggle` on the icon button (`mtrl/react`, `mtrl/vue`, `mtrl/solid`; `ontoggle` in `mtrl/svelte`) | `onChange` (`onchange`), whose `event.detail` is `{ selected, value }`. A leftover is a type error: `… is not assignable to type '"onToggle was removed in 1.0: use onChange"'`. |
+| `onToggle` on the icon button (`mtrl/react`, `mtrl/vue`, `mtrl/solid`; `ontoggle` in `mtrl/svelte`) | `onChange` (`onchange`), whose `event.detail` is `{ selected, value }`. A leftover is a type error: `… is not assignable to type '"onToggle was removed in material 3.0.0: use onChange"'`. |
 
 **Removed, with what to use instead**
 
-| 0.10 | 1.0 |
+| 0.10 | material 3.0.0 |
 |---|---|
 | the icon button's DOM `toggle` event | `change`, on the factory's button (`button.on('change', …)`) and on `<m-icon-button>` |
 | segmented buttons (`createSegmentedButton`, `createSegment`) | `createButtonGroup({ kind: 'connected' })`: see its entry for the option mapping |
@@ -69,7 +74,7 @@ exists only in 1.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
 | `getThemeColor('sys-color-X-rgb')` | `getThemeColor('sys-color-X', { alpha })` |
 | `TIMEPICKER_CLASSES` | `TIMEPICKER_SELECTORS`, which is not a like-for-like swap: see its row |
 | `TABS_DEFAULTS.INDICATOR_HEIGHT`, `INDICATOR_ANIMATION_DURATION` | `indicator.height`, `indicator.animationDuration` |
-| `DEFAULT_DATE_FORMAT` from `mtrl/components/datepicker` | the same from `mtrl/components/datepicker/constants` |
+| `DEFAULT_DATE_FORMAT` from `mtrl/components/datepicker` | the same from `material/components/datepicker/constants` |
 | the shape steps `extra-tiny`, `tiny`, `pill` | literal `1px`, `2px`; `full` for `pill` |
 | Sass `$mtrl-sys-shape` | `v.shape(<step>)` |
 | `select.menu` (the menu inside a select) | the select's own `open()`, `close()`, `isOpen()`, `getOptions()`, `setOptions()` and its `open`, `close` and `change` events. The `menu` config option (`container`, `maxHeight`, …) stays |
@@ -88,8 +93,8 @@ the card, tabs and switch internals on their subpaths, `ChipConfig`'s `managedSe
 `cell`, `CardComponent`'s `loading`, `expandable` and `swipeable`, and the list `scroll` payload's
 `component`, which was never sent.
 
-**Sass.** The two Sass rows above are for stylesheets that `@use` mtrl's sources. The Sass sources
-ship for reference; configuring them with `@use … with` is not a supported API in 1.0. Theme
+**Sass.** The two Sass rows above are for stylesheets that `@use` material's sources. The Sass sources
+ship for reference; configuring them with `@use … with` is not a supported API in material 3.0.0. Theme
 with CSS custom properties.
 
 **Type changes the compiler reports.** Besides renames and removals, seven entries below change
@@ -128,13 +133,13 @@ the menu open, keeps both.
 
 Check these by searching your code: they compile, or come from plain JavaScript, markup or CSS.
 
-- **An app with its own contrast switch** adds `import 'mtrl/styles/contrast'` (and
-  `mtrl/themes/<name>-contrast` for a theme it imports on its own). Without that import,
+- **An app with its own contrast switch** adds `import 'material/styles/contrast'` (and
+  `material/themes/<name>-contrast` for a theme it imports on its own). Without that import,
   `data-theme-contrast="medium"` or `"high"` changes no colour, and nothing warns (FLO-540).
   Measured on the unthemed root: with the OS asking for more contrast, `data-theme-contrast="high"`
   stays standard primary `#6750a4`, not high `#312259`. The OS preference (`prefers-contrast: more`)
-  still selects high contrast from `mtrl/styles/base`. Import `mtrl/styles/contrast` after
-  `mtrl/styles/base`, as with `mtrl/styles/typography`: the opt-in sheets share that cascade
+  still selects high contrast from `material/styles/base`. Import `material/styles/contrast` after
+  `material/styles/base`, as with `material/styles/typography`: the opt-in sheets share that cascade
   layer. The contrast colours are the same in either order. `data-theme-contrast` is read
   on the element that carries `data-theme`, or on the root when the page has no `data-theme`;
   on any other element it does nothing (that element inherits its themed ancestor's level).
@@ -171,14 +176,14 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **A removed constant key** reads `undefined` in JavaScript, with no error:
   `SELECT_CLASSES.TEXTFIELD`, `FAB_SIZES.SMALL`, `TABS_DEFAULTS.INDICATOR_HEIGHT` and the other
   keys in the tables above.
-- **Your own CSS reading `var(--mtrl-sys-shape-corner-pill)`** (or `-tiny`, `-extra-tiny`): mtrl's
+- **Your own CSS reading `var(--mtrl-sys-shape-corner-pill)`** (or `-tiny`, `-extra-tiny`): material's
   stylesheet no longer declares the property, and a `var()` of an undeclared property without a
   fallback gives no value, so the radius is lost silently.
-- **`mtrl/styles/base` no longer carries typography (FLO-539).** Without
-  `import 'mtrl/styles/typography'`, `.mtrl-display-large` … `.mtrl-label-small`,
+- **`material/styles/base` no longer carries typography (FLO-539).** Without
+  `import 'material/styles/typography'`, `.mtrl-display-large` … `.mtrl-label-small`,
   `.mtrl-text-center` / `left` / `right`, `.mtrl-font-thin` / `light` / `regular` /
   `medium` / `bold`, and `.mtrl-truncate`, `-2` and `-3` do nothing, and `h1`–`h6` and `p`
-  lose mtrl's type styles. Measured in Chromium with only the base stylesheet: a
+  lose material's type styles. Measured in Chromium with only the base stylesheet: a
   `<div class="mtrl-headline-small">` computed `font-size: 14px`, inherited from `body`
   (with the import it is `24px`).
   `getPropertyValue('--mtrl-sys-typescale-title-large-font-size')` returned `""`, and an
@@ -186,11 +191,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   at `32px` computed `32px`: the custom property is undefined, so the declaration is invalid
   at computed-value time and `font-size` inherits (with the import the property is `22px`
   and the element computes `22px`). Body text keeps its font: `body` stayed `14px`
-  `Roboto, sans-serif`. `import 'mtrl/styles'` is unchanged. The typography sheet has to
+  `Roboto, sans-serif`. `import 'material/styles'` is unchanged. The typography sheet has to
   load after the base (both style `h1`–`h6` and `p`; loaded first, it loses its bottom
-  margins to the reset): `import 'mtrl/styles/typography'` imports the base first itself, and
+  margins to the reset): `import 'material/styles/typography'` imports the base first itself, and
   a page using `<link>` tags puts `styles/typography.css` after `styles/base.css`.
-- **A bundle that evaluates an element CSS module (`mtrl/elements/css/…`) in an earlier task than `define…()`** (a lazy route, a deferred hydration) no longer reserves that element's box in between. On a framework SSR page that does not load the `mtrl/ssr` bridge (Next.js, Nuxt, SvelteKit, SolidStart), the hosts arrive with no shadow root, and the reserved box between the server HTML and hydration is gone. Put `<link rel="stylesheet" href="…/mtrl/elements/preupgrade.css">` in `<head>`, or `import 'mtrl/elements/preupgrade.css'` (one element: `mtrl/elements/preupgrade/<name>.css`). The link also reserves the box from the first paint, before any script. With the bridge loaded, the hosts already have their shadow roots and nothing is lost.
+- **A bundle that evaluates an element CSS module (`material/elements/css/…`) in an earlier task than `define…()`** (a lazy route, a deferred hydration) no longer reserves that element's box in between. On a framework SSR page that does not load the `material/ssr` bridge (Next.js, Nuxt, SvelteKit, SolidStart), the hosts arrive with no shadow root, and the reserved box between the server HTML and hydration is gone. Put `<link rel="stylesheet" href="…/material/elements/preupgrade.css">` in `<head>`, or `import 'material/elements/preupgrade.css'` (one element: `material/elements/preupgrade/<name>.css`). The link also reserves the box from the first paint, before any script. With the bridge loaded, the hosts already have their shadow roots and nothing is lost.
 - **Tab and panel ids** change for any value with a character outside `[A-Za-z0-9_-]`
   (`a.b` → `tabx-g-a_2e_b`); a hand-written panel with the old id is never linked. Build ids with
   `tabIdFor` and `tabPanelIdFor`.
@@ -286,7 +291,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   is never true.
 - **The carousel's `change`** carries `value` alone: `event.index` (and `event.detail.index` on
   `<m-carousel>`) is `undefined`. Read `value`.
-- **A `withInput` you compose yourself** (`mtrl/core/compose`) works on the checked boolean,
+- **A `withInput` you compose yourself** (`material/core/compose`) works on the checked boolean,
   like the checkbox and the switch: `change.value` and `getValue()` are booleans, and
   a leftover `setValue('x')` checks the input and leaves its string unchanged (`setValue('')`
   unchecks it), with no error. The string is `valueAttribute` in the payload, and
@@ -336,29 +341,29 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed (breaking)
 
-- **Explicit contrast levels are opt-in (FLO-540).** `mtrl/styles/base` and `mtrl/themes/<name>`
+- **Explicit contrast levels are opt-in (FLO-540).** `material/styles/base` and `material/themes/<name>`
   keep standard contrast and `prefers-contrast: more`. `data-theme-contrast="medium"` and `"high"`
   (material-color-utilities contrast 0.5 and 1.0; the values are unchanged) move to
-  `mtrl/styles/contrast` and `mtrl/themes/<name>-contrast`. The full stylesheet `mtrl/styles`
+  `material/styles/contrast` and `material/themes/<name>-contrast`. The full stylesheet `material/styles`
   still includes them. Without the new import the attribute changes no colour and nothing warns.
-  Import `mtrl/styles/contrast` after `mtrl/styles/base`, as with `mtrl/styles/typography`:
+  Import `material/styles/contrast` after `material/styles/base`, as with `material/styles/typography`:
   the opt-in sheets share that cascade layer. The contrast colours are the same in either
   order (an explicit level is more specific than the standard rule, and the preference rule
   does not match once the attribute is set).
-- **Typography leaves `mtrl/styles/base` (FLO-539).** The base no longer carries the type
+- **Typography leaves `material/styles/base` (FLO-539).** The base no longer carries the type
   classes (`.mtrl-display-large` … `.mtrl-label-small`), the text utilities (`.mtrl-text-*`,
-  `.mtrl-font-*`, `.mtrl-truncate*`), mtrl's styles for `h1`–`h6` and `p`, or the
+  `.mtrl-font-*`, `.mtrl-truncate*`), material's styles for `h1`–`h6` and `p`, or the
   `--mtrl-sys-typescale-*` tokens, except the three the `body` rule reads
   (`--mtrl-sys-typescale-body-medium-font`, `-font-size` and `-line-height`).
-  `import 'mtrl/styles/typography'` restores what left. The full stylesheet `mtrl/styles`
+  `import 'material/styles/typography'` restores what left. The full stylesheet `material/styles`
   is unchanged. Migration: without the import, a `<div class="mtrl-headline-small">`
   computed `font-size: 14px` (inherited from `body`; `24px` with the import), and
   `font-size: var(--mtrl-sys-typescale-title-large-font-size)` computed the parent's `32px`
   because the property is undefined and the declaration is invalid at computed-value time
   (`22px` with the import). Body text keeps its font (`14px`, `Roboto, sans-serif`).
-- **Pre-upgrade rules leave the element CSS modules (FLO-546).** `mtrl/elements/css/<name>` no longer applies `:not(:defined)` rules when the module is evaluated. The reserved box comes from `mtrl/elements/preupgrade.css` or `mtrl/elements/preupgrade/<name>.css` (the element's spec name), in `<head>` or as an import. A host `renderElement` or a bridge renders with a shadow root carries `data-mtrl-ssr`. The stylesheet's last rule, in `mtrl.preupgrade`, rolls that layer back for the attribute, on the host, its `::before` and `::after`, and its direct children that are not themselves elements waiting to upgrade, so the stylesheet does not style a host the server already rendered or those children. Without the stylesheet, an element has no reserved box until it is defined.
+- **Pre-upgrade rules leave the element CSS modules (FLO-546).** `material/elements/css/<name>` no longer applies `:not(:defined)` rules when the module is evaluated. The reserved box comes from `material/elements/preupgrade.css` or `material/elements/preupgrade/<name>.css` (the element's spec name), in `<head>` or as an import. A host `renderElement` or a bridge renders with a shadow root carries `data-mtrl-ssr`. The stylesheet's last rule, in `mtrl.preupgrade`, rolls that layer back for the attribute, on the host, its `::before` and `::after`, and its direct children that are not themselves elements waiting to upgrade, so the stylesheet does not style a host the server already rendered or those children. Without the stylesheet, an element has no reserved box until it is defined.
 
-  **Migration:** a bundle that evaluates the element CSS module in an earlier task than `define…()` (a lazy route, a deferred hydration), including a framework SSR page that does not load the `mtrl/ssr` bridge, loads `mtrl/elements/preupgrade.css` in `<head>`.
+  **Migration:** a bundle that evaluates the element CSS module in an earlier task than `define…()` (a lazy route, a deferred hydration), including a framework SSR page that does not load the `material/ssr` bridge, loads `material/elements/preupgrade.css` in `<head>`.
 - **Snackbar, time picker and date picker follow the overlays' one open and close rule
   (FLO-548).** When `open()` or `close()` (the snackbar's `show()` or `hide()`) returns, the
   state getter has changed and the event has been emitted; opening an open one and closing a
@@ -381,25 +386,25 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     picker: the event that opened an overlay never dismisses it.
   - **The tooltip is outside the rule, by design:** `show()` and `hide()` wait for their
     delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`.
-- **mtrl is ESM-only (FLO-358).** The CommonJS bundle (`dist/index.cjs`) and the root's `require`
+- **material is ESM-only (FLO-358).** The CommonJS bundle (`dist/index.cjs`) and the root's `require`
   condition are gone; `main` is the ESM entry. Every subpath was already import-only, and with
-  the internals off the root the bundle would have been a partial API. `require('mtrl')` no longer
-  resolves (`ERR_PACKAGE_PATH_NOT_EXPORTED`): use `import`, or `await import('mtrl')` from CommonJS.
+  the internals off the root the bundle would have been a partial API. `require('material')` no longer
+  resolves (`ERR_PACKAGE_PATH_NOT_EXPORTED`): use `import`, or `await import('material')` from CommonJS.
 - **The package root exports the components and the app-level helpers only (FLO-351).** The 137
   internal names 0.10.4 deprecated on the root are gone from it: the composition core (`pipe`,
   `createBase`, the `with*` features), the DOM, timing and store helpers, and the progress
   indicator's canvas code. The root keeps the component factories and their types,
   `configureHTML`, `schemeToTokens` and `THEME_ROLES`, and the global defaults. Each removed name
   is the same export at its subpath; the
-  [migration table](https://github.com/floor/mtrl/blob/main/scripts/fixtures/root-exports.md)
+  [migration table](https://github.com/floor/material/blob/main/scripts/fixtures/root-exports.md)
   gives every one:
 
   ```ts
   import { pipe, createBase, withEvents } from 'mtrl';             // 0.10
-  import { pipe, createBase, withEvents } from 'mtrl/core/compose'; // 1.0
+  import { pipe, createBase, withEvents } from 'material/core/compose'; // material 3.0.0
   ```
 
-  The subpaths are ESM-only, as 1.0.0 is. The root's export list is pinned
+  The subpaths are ESM-only, as material 3.0.0 is. The root's export list is pinned
   (`bun run root-exports:check`), so a name cannot join it unnoticed.
 - **The Vue peer dependency is `>=3.4.20` (FLO-527).** The Vue adapter's declarations
   import `DefineSetupFnComponent`, which `@vue/runtime-core` first declared in 3.4.20.
@@ -408,29 +413,29 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   install Vue 3.4.20 or newer.
 - **With `skipLibCheck: false`, use `@types/react` 18.2.71 or later.** Earlier versions import
   `scheduler/tracing`, which the current `@types/scheduler` no longer declares, so they fail to
-  compile with `skipLibCheck: false`, with or without mtrl.
+  compile with `skipLibCheck: false`, with or without material.
 - **Only the canonical names (FLO-383).** For every row below but the last two, 0.10.5 exported
-  both spellings, the old ones deprecated; 1.0 has only the canonical ones. Every exported identifier writes "text field" as
+  both spellings, the old ones deprecated; material 3.0.0 has only the canonical ones. Every exported identifier writes "text field" as
   two words; the strings follow: see 'Text field in two words in every string' below. The declarations are renamed too, so the
   types read the same in an editor. Svelte's component file is `TextField.svelte`. Migration:
 
-  | 0.10 | 1.0 | Entry |
+  | 0.10 | material 3.0.0 | Entry |
   |---|---|---|
-  | `createTextfield` | `createTextField` | `mtrl` (`mtrl/components/text-field` exports `createTextField` too) |
-  | `TextfieldConfig`, `TextfieldComponent` | `TextFieldConfig`, `TextFieldComponent` | `mtrl`, `mtrl/components/text-field` |
-  | `TextfieldDensity`, `TextfieldEvents` | `TextFieldDensity`, `TextFieldEvents` | `mtrl/components/text-field` |
-  | `TextfieldValuePayload`, `TextfieldFocusPayload`, `TextfieldTrailingPayload` | `TextFieldValuePayload`, `TextFieldFocusPayload`, `TextFieldTrailingPayload` | `mtrl/components/text-field` |
-  | `TEXTFIELD_VARIANTS`, `TEXTFIELD_STATES`, `TEXTFIELD_TYPES`, `TEXTFIELD_EVENTS`, `TEXTFIELD_DENSITY`, `TEXTFIELD_DEFAULTS`, `TEXTFIELD_CLASSES` | `TEXT_FIELD_VARIANTS`, `TEXT_FIELD_STATES`, `TEXT_FIELD_TYPES`, `TEXT_FIELD_EVENTS`, `TEXT_FIELD_DENSITY`, `TEXT_FIELD_DEFAULTS`, `TEXT_FIELD_CLASSES` | `mtrl/components/text-field/constants` |
-  | `CardSchema` | `CardConfig` | `mtrl`, `mtrl/components/card` |
-  | `TopAppBar` (type) | `TopAppBarComponent` | `mtrl`, `mtrl/components/top-app-bar` |
-  | `BottomAppBar` (type) | `BottomAppBarComponent` | `mtrl`, `mtrl/components/bottom-app-bar` |
-  | `textfieldElement`, `defineTextfield` | `textFieldElement`, `defineTextField` | `mtrl/elements` |
-  | `TextfieldSpec`, `TextfieldElement`, `TextfieldElementComponent` | `TextFieldSpec`, `TextFieldElement`, `TextFieldElementComponent` | `mtrl/elements` |
-  | `Textfield` (component) | `TextField` | `mtrl/react`, `mtrl/solid`, `mtrl/svelte` |
-  | `MTextfield` | `MTextField` | `mtrl/vue` |
+  | `createTextfield` | `createTextField` | `material` (`material/components/text-field` exports `createTextField` too) |
+  | `TextfieldConfig`, `TextfieldComponent` | `TextFieldConfig`, `TextFieldComponent` | `material`, `material/components/text-field` |
+  | `TextfieldDensity`, `TextfieldEvents` | `TextFieldDensity`, `TextFieldEvents` | `material/components/text-field` |
+  | `TextfieldValuePayload`, `TextfieldFocusPayload`, `TextfieldTrailingPayload` | `TextFieldValuePayload`, `TextFieldFocusPayload`, `TextFieldTrailingPayload` | `material/components/text-field` |
+  | `TEXTFIELD_VARIANTS`, `TEXTFIELD_STATES`, `TEXTFIELD_TYPES`, `TEXTFIELD_EVENTS`, `TEXTFIELD_DENSITY`, `TEXTFIELD_DEFAULTS`, `TEXTFIELD_CLASSES` | `TEXT_FIELD_VARIANTS`, `TEXT_FIELD_STATES`, `TEXT_FIELD_TYPES`, `TEXT_FIELD_EVENTS`, `TEXT_FIELD_DENSITY`, `TEXT_FIELD_DEFAULTS`, `TEXT_FIELD_CLASSES` | `material/components/text-field/constants` |
+  | `CardSchema` | `CardConfig` | `material`, `material/components/card` |
+  | `TopAppBar` (type) | `TopAppBarComponent` | `material`, `material/components/top-app-bar` |
+  | `BottomAppBar` (type) | `BottomAppBarComponent` | `material`, `material/components/bottom-app-bar` |
+  | `textfieldElement`, `defineTextfield` | `textFieldElement`, `defineTextField` | `material/elements` |
+  | `TextfieldSpec`, `TextfieldElement`, `TextfieldElementComponent` | `TextFieldSpec`, `TextFieldElement`, `TextFieldElementComponent` | `material/elements` |
+  | `Textfield` (component) | `TextField` | `material/react`, `material/solid`, `material/svelte` |
+  | `MTextfield` | `MTextField` | `material/vue` |
   | Sass `$textfield`, `textfield()` (`abstract/variables`) | `$text-field`, `v.text-field()`, the same map (both names in 0.10.5); the built CSS is unchanged |
-  | `SELECT_CLASSES.TEXTFIELD` (deprecated in 0.10.5) | `SELECT_CLASSES.TEXT_FIELD`, `"select__text-field"`: no overlap, the key is new in 1.0. A recorded exception to the rule that 0.10.x carries the replacement: a class-name key users rarely type, where an alias on 0.10.x would cost the select's last bytes. |
-  | `select.textfield` (deprecated in 0.10.5) | `select.textField` | the select's property: no overlap, `textField` is new in 1.0, and reading `select.textfield` in JavaScript now gives `undefined` rather than an error. The same recorded exception as the row above. |
+  | `SELECT_CLASSES.TEXTFIELD` (deprecated in 0.10.5) | `SELECT_CLASSES.TEXT_FIELD`, `"select__text-field"`: no overlap, the key is new in material 3.0.0. A recorded exception to the rule that 0.10.x carries the replacement: a class-name key users rarely type, where an alias on 0.10.x would cost the select's last bytes. |
+  | `select.textfield` (deprecated in 0.10.5) | `select.textField` | the select's property: no overlap, `textField` is new in material 3.0.0, and reading `select.textfield` in JavaScript now gives `undefined` rather than an error. The same recorded exception as the row above. |
 
   Each is a rename of the import; the values and types are the same. The React, Solid and
   Svelte `TopAppBar` and `BottomAppBar` components keep their names: only the factory's types
@@ -440,9 +445,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   is written one way everywhere. The tag is `<m-text-field>`. The classes are `mtrl-text-field`,
   `mtrl-text-field__input`, `mtrl-text-field--focused` and so on, on the text field and inside
   the select. The CSS part is `::part(text-field)`, as parts are named after the classes. The
-  subpaths are `mtrl/components/text-field`, `mtrl/components/text-field/constants`,
-  `mtrl/styles/text-field`, `mtrl/elements/css/text-field` and
-  `mtrl/elements/preupgrade/text-field.css`. The global defaults key is `'text-field'`, as
+  subpaths are `material/components/text-field`, `material/components/text-field/constants`,
+  `material/styles/text-field`, `material/elements/css/text-field` and
+  `material/elements/preupgrade/text-field.css`. The global defaults key is `'text-field'`, as
   `'navigation-rail'` and `'side-sheet'` are. The values of `TEXT_FIELD_CLASSES` change with the
   classes, and `SELECT_CLASSES.TEXT_FIELD` is `select__text-field`. The registry key in
   `elements` is `textField`. Generated ids start with `mtrl-text-field-`. Nothing else changes:
@@ -455,7 +460,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   new subpaths, so imports can move first).
 - **Time picker, select and radio events agree with their getters (FLO-380).**
 
-  | Event | 0.10 payload | 1.0 payload |
+  | Event | 0.10 payload | material 3.0.0 payload |
   |---|---|---|
   | Factory time picker `input` | `{ value: draft }` | `{ value: committed, draftValue: draft }` |
   | `<m-timepicker>` `input` detail | `{ value: draft }` | `{ value: committedOrEmpty, draftValue: draft }` |
@@ -483,7 +488,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **Chip-set `add` and `remove` report the live selection (FLO-380).** Factory
   callbacks receive one object instead of a bare chip:
 
-  | Event | 0.10 payload | 1.0 payload |
+  | Event | 0.10 payload | material 3.0.0 payload |
   |---|---|---|
   | `add` | `chip` | `{ value: string \| string[] \| null, chip }` |
   | `remove` | `chip` before removal | `{ value: string \| string[] \| null, chip, chipValue: string \| null }` after removal |
@@ -504,7 +509,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `value` matches the checked model, and `valueAttribute` holds the HTML string token.
   Native forms still submit that token only while checked; setters remain silent and
   element/framework bindings remain `checked`-based. A standalone `withInput`
-  (`mtrl/core/compose`) emits the same payload (0.10 sent `{ checked, value: <the input's
+  (`material/core/compose`) emits the same payload (0.10 sent `{ checked, value: <the input's
   string>, nativeEvent }`), and its methods match it: `getValue()` and `setValue()` work on
   the checked boolean, and the input's string is `getValueAttribute()` / `setValueAttribute()`,
   the names the checkbox and the switch use. Both setters are silent: the `value` event
@@ -517,7 +522,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **Toggle buttons, chips and the carousel report `value` with `change` (FLO-380).** Every
   model event carries `value` in the type `getValue()` returns, read at dispatch:
 
-  | Component | `change` payload, 0.10 → 1.0 |
+  | Component | `change` payload, 0.10 → material 3.0.0 |
   |---|---|
   | button, icon button (toggle) | `{ selected }` → `{ selected, value: string }` (the button's value) |
   | selectable chips (filter and input) | `{ selected, chip }` → `{ selected, chip, value: string \| null }` |
@@ -550,13 +555,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   chips.on("change", (selectedValues, changedValue) => {
     use(selectedValues[0], changedValue);
   });
-  // 1.0: on("change") and onChange are each passed one object.
+  // material 3.0.0: on("change") and onChange are each passed one object.
   chips.on("change", ({ selected, changed }) => {
     use(selected[0], changed);
   });
   ```
 
-  | Leftover 0.10 handler expression | 1.0 runtime result on the built package |
+  | Leftover 0.10 handler expression | material 3.0.0 runtime result on the built package |
   |---|---|
   | `event[0]`, `event.length` | Both are `undefined`. |
   | `[...event]` | Throws a `TypeError`. The message is the engine's: in Bun (JavaScriptCore), `Spread syntax requires ...iterable[Symbol.iterator] to be a function`. |
@@ -582,7 +587,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   ```ts
   card.emit?.('custom', data);                          // 0.10
   tabs.emit?.('change', { value: 'two' });              // 0.10: a partial payload
-  tabs.emit?.('change', { tab, value: 'two' });         // 1.0: the event's whole payload
+  tabs.emit?.('change', { tab, value: 'two' });         // material 3.0.0: the event's whole payload
   ```
 
   - An event name of your own is a type error. At run time nothing changed: the emitter is
@@ -597,7 +602,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   space-separated list) and two values never share one. The tab element carries its value as
   `data-value`, and the conventional panel is found from it rather than parsed out of the id.
   `tabIdFor(groupId, value)` and `tabPanelIdFor(groupId, value)` are exported from
-  `mtrl/components/tabs`. Migration: values whose ids worked before change too, not only those
+  `material/components/tabs`. Migration: values whose ids worked before change too, not only those
   with a space, a newline or a quote: `a.b` → `tabx-g-a_2e_b`, `/home` → `tabx-g-_2f_home`,
   `user:1` → `tabx-g-user_3a_1`, `café` → `tabx-g-caf_e9_`. A page that writes its own panels
   with the conventional id, or labels them with the tab's id, for any value with a character
@@ -615,7 +620,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   factory option: `<m-text-field>` and the React, Vue, Svelte and Solid components have no label
   attribute or prop, so a trailing icon there is decorative.
 - **The dialog is open when `open()` returns, and closed when `close()` returns (FLO-548).**
-  The rule, for the dialog first and for every overlay by 1.0: when `open()` or `close()`
+  The rule, for the dialog first and for every overlay by material 3.0.0: when `open()` or `close()`
   returns, `isOpen()` has changed and the event has been emitted (the cancellable `beforeopen`
   or `beforeclose` first). The classes, the paint, the focus trap and the animation may follow.
   A dialog created with `layer: "top"` and `<m-dialog>` already worked this way, and change
@@ -627,9 +632,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   ```ts
   // 0.10: the listener was added in time, because `open` came 10 ms later
   dialog.open();
-  dialog.on('open', build); // 1.0: never runs, so the dialog opens empty
+  dialog.on('open', build); // material 3.0.0: never runs, so the dialog opens empty
 
-  // 1.0: add it before the call
+  // material 3.0.0: add it before the call
   dialog.on('open', build);
   dialog.open();
   ```
@@ -682,8 +687,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
   ```ts
   menu.close();
-  menu.isOpen(); // 0.10: true for another 50 ms. 1.0: false
-  menu.open();   // 0.10: ignored, the menu ended closed. 1.0: it reopens
+  menu.isOpen(); // 0.10: true for another 50 ms. material 3.0.0: false
+  menu.open();   // 0.10: ignored, the menu ended closed. material 3.0.0: it reopens
   ```
 
   - **`close` is emitted inside `close()`,** and `isOpen()` is false on the next line. The
@@ -810,12 +815,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
   ```ts
   createTimePicker({ onConfirm: (time) => { input.value = time; } });          // 0.10
-  createTimePicker({ onConfirm: ({ value }) => { input.value = value; } });    // 1.0
+  createTimePicker({ onConfirm: ({ value }) => { input.value = value; } });    // material 3.0.0
   createSearch({                                                                // 0.10
     onSubmit: (query) => console.log(query),
     onSuggestionSelect: (suggestion) => console.log(suggestion.text),
   });
-  createSearch({                                                                // 1.0
+  createSearch({                                                                // material 3.0.0
     onSubmit: (event) => console.log(event.value),
     onSuggestionSelect: (event) => console.log(event.suggestion?.text),
   });
@@ -865,11 +870,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   migration table lists them). Changing a split button's items after creation, which only
   `splitButton.menu.setItems()` did, is `splitButton.setItems()`. The select has no public way
   to change its `placement` after creation; `<m-select>`'s `placement` attribute still does.
-- **The options 0.10 deprecated are removed**, first those it promised to remove in 1.0. Migration:
+- **The options 0.10 deprecated are removed**, first those it promised to remove in material 3.0.0. Migration:
 
-  | 0.10 | 1.0 |
+  | 0.10 | material 3.0.0 |
   |---|---|
-  | `createElement({ rawClass })` (`mtrl/core/dom`) | `class` or `className`, unprefixed since 0.10 (FLO-117). `rawClass` was applied on 0.10.x. In 1.0 `createElement` applies no class for it and, as for any option it does not know, writes it out as an attribute: `<div rawclass="legacy-a legacy-b">` (an array becomes `rawclass="a,b"`). The seven component configs that typed it (those extending `BaseComponentConfig`) never applied it, and a leftover there still does nothing, so for them only the type changes. |
+  | `createElement({ rawClass })` (`mtrl/core/dom`) | `class` or `className`, unprefixed since 0.10 (FLO-117). `rawClass` was applied on 0.10.x. In material 3.0.0 `createElement` applies no class for it and, as for any option it does not know, writes it out as an attribute: `<div rawclass="legacy-a legacy-b">` (an array becomes `rawclass="a,b"`). The seven component configs that typed it (those extending `BaseComponentConfig`) never applied it, and a leftover there still does nothing, so for them only the type changes. |
   | a dialog button's `color` | nothing: it had no effect; M3's dialog actions are text buttons in the dialog's colours (FLO-324) |
   | the tooltip's `rich` option | `variant: 'rich'`; `rich` was never read (FLO-324) |
   | `TOOLTIP_DEFAULTS.RICH` (deprecated in 0.10.5) | nothing: it was the default of the removed `rich` option |
@@ -889,16 +894,16 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | shape names `'cookie4'`, `'cookie9'` (`materialShape`, the shapes) | `'cookie4Sided'`, `'cookie9Sided'`, Compose's names (since 0.10.2). `materialShape('cookie4')` now throws (`TypeError: byName[name] is not a function`). |
   | `rippleConfig.timing` and `rippleConfig.opacity` (button, icon button, FAB, extended FAB, button group, radios, tabs, and the core `RippleConfig`); their defaults `DEFAULT_RIPPLE_CONFIG.TIMING`, `.OPACITY` (button, icon button) and `BUTTON_GROUP_DEFAULTS.RIPPLE_TIMING`, `.RIPPLE_OPACITY` (deprecated in 0.10.5) | nothing: never applied; the stylesheet draws the wave's motion and opacity (FLO-260, FLO-268). `duration` stays. The core's `RIPPLE_CONFIG.timing`, `.opacity`, `RIPPLE_TIMING` and `RIPPLE_SCHEMA`, on no public entry, go with them. |
 
-- **1.0 exports nothing deprecated.** What 0.10.0 deprecated and 0.10.x already replaced (or
-  never used) is removed, and so is what was kept only for compatibility: 1.0 has no deprecated
+- **material 3.0.0 exports nothing deprecated.** What 0.10.0 deprecated and 0.10.x already replaced (or
+  never used) is removed, and so is what was kept only for compatibility: material 3.0.0 has no deprecated
   export, member or event. Migration:
 
-  | 0.10 | 1.0 |
+  | 0.10 | material 3.0.0 |
   |---|---|
   | `CHECKBOX_VARIANTS` (`mtrl/components/checkbox`, `/constants`) | nothing: M3 has one checkbox style, and `variant` had no effect (FLO-94, FLO-265) |
   | `RADIO_VARIANTS`, `RADIO_LABEL_POSITIONS`, `RADIO_SIZES`, `RADIO_CLASSES` (`mtrl/components/radios`, `/constants`) | nothing: no component read them (FLO-266) |
   | `RADIO_DEFAULTS.VARIANT`, `.LABEL_POSITION`, `.SIZE` (deprecated in 0.10.6) | nothing: the radios have no such options, and nothing read the keys. `RADIO_DEFAULTS.DIRECTION` stays. In JavaScript a removed key reads `undefined`. |
-  | the icon button's DOM `toggle` event, from the factory's button and from `<m-icon-button>` (deprecated in 0.10.0, FLO-295) | `change`, which carries `{ selected, value }`. A leftover `toggle` listener never fires, with no error. In the React, Vue, Svelte and Solid components the icon button refuses `onToggle` (Svelte: `ontoggle`), and the compiler's error says what to do: `Type '() => void' is not assignable to type '"onToggle was removed in 1.0: use onChange"'`. Without that guard the name would fall through to the host's native `toggle` handler, compile, and never fire. |
+  | the icon button's DOM `toggle` event, from the factory's button and from `<m-icon-button>` (deprecated in 0.10.0, FLO-295) | `change`, which carries `{ selected, value }`. A leftover `toggle` listener never fires, with no error. In the React, Vue, Svelte and Solid components the icon button refuses `onToggle` (Svelte: `ontoggle`), and the compiler's error says what to do: `Type '() => void' is not assignable to type '"onToggle was removed in material 3.0.0: use onChange"'`. Without that guard the name would fall through to the host's native `toggle` handler, compile, and never fire. |
   | `TIMEPICKER_DIAL`, `TIMEPICKER_Z_INDEX` (`mtrl/components/timepicker`, `/constants`) | nothing: the dial is sized in CSS and the picker is a modal `<dialog>` in the top layer (FLO-278, FLO-279, FLO-281) |
   | `TIMEPICKER_CLASSES` | `TIMEPICKER_SELECTORS` (public since 0.9.0), which is not a like-for-like swap: its values are prefixed selectors (`".mtrl-time-picker__dial"`) where the old were bare class names (`"time-picker__dial"`), and 13 of the 33 old keys have no selector of the same name (`ROOT`, `OPEN`, the six `DIALOG_*`, `DIAL_NUMBER_ACTIVE`, `PERIOD_ACTIVE`, `TOGGLE_TYPE`, `CANCEL`, `CONFIRM`) |
   | `getThemeColor('sys-color-X-rgb')` (`mtrl/core/utils`): the `'r, g, b'` triplet, derived | `getThemeColor('sys-color-X', { alpha })`. The `-rgb` name now returns `''` (or the `fallback`), as any undeclared variable does, so `rgba(${getThemeColor('sys-color-primary-rgb')}, 0.12)` now yields `rgba(, 0.12)`, an invalid colour that CSS and canvas drop silently: a missing colour, not an error. Use `getThemeColor('sys-color-primary', { alpha: 0.12 })`. A theme that declares its own `-rgb` properties is unaffected (FLO-311). |
@@ -910,7 +915,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `createTabIndicator`, `updateTabPanels`, `setupKeyboardNavigation` and their config and
   component types; switch's `withSupportingText` and `SupportingTextComponent`. Datepicker's
   `DEFAULT_DATE_FORMAT` leaves the component's index but stays public in its constants:
-  `import { DEFAULT_DATE_FORMAT } from 'mtrl/components/datepicker/constants'`. `ChipConfig`
+  `import { DEFAULT_DATE_FORMAT } from 'material/components/datepicker/constants'`. `ChipConfig`
   loses `managedSelection` and `cell`, which only the chip set sets. `CardComponent`'s `loading`,
   `expandable` and `swipeable` members are removed; `createCard` never set them. Tabs'
   `ResponsiveConfig` and `TabIndicator` and datepicker's `CalendarAPI`, which public members are
@@ -920,12 +925,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   (`bun run component-exports:check`).
   Migration: these subpaths now throw `ERR_PACKAGE_PATH_NOT_EXPORTED`. They held internals, with
   no replacement; a single chip is `createAssistChip` and the other factories in
-  `mtrl/components/chips`, and `CHIP_CLASSES`/`CHIP_STATES` are internal class and state names:
+  `material/components/chips`, and `CHIP_CLASSES`/`CHIP_STATES` are internal class and state names:
   `mtrl/components/bottom-sheet/features`, `carousel/features`, `chips/chip`,
   `chips/chip/constants`, `chips/features`, `drawer/features`, `list/features`, `menu/features`,
   `progress/features`, `search/features` (the low-level `withInput`), `side-sheet/features`,
-  `slider/features`, `textfield/features`. Every other `mtrl/components/<name>` and
-  `mtrl/components/<name>/constants` that existed in 0.10 still resolves, except
+  `slider/features`, `textfield/features`. Every other `material/components/<name>` and
+  `material/components/<name>/constants` that existed in 0.10 still resolves, except
   `segmented-button` and `segmented-button/constants`, removed with segmented buttons (FLO-382,
   above).
 - **Segmented buttons are removed (FLO-382).** `createSegmentedButton` and `createSegment`
@@ -936,7 +941,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   ```ts
   createSegmentedButton({ mode: 'multi', density: 'compact',            // 0.10
     segments: [{ text: 'Day', value: 'day', checkmarkIcon }] });
-  createButtonGroup({ kind: 'connected', selection: 'multi', density: 'compact', // 1.0
+  createButtonGroup({ kind: 'connected', selection: 'multi', density: 'compact', // material 3.0.0
     buttons: [{ text: 'Day', value: 'day', selectedIcon: checkmarkIcon }] });
   ```
 
@@ -995,9 +1000,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     whose destination code the bar now shares.
   - **`hideOnScroll`:** off by default; it slides the bar away while the page scrolls down,
     without the slide under reduced motion, and focus inside always brings it back.
-- **Every public `variant` option's type is exported from `mtrl` and from its component's
+- **Every public `variant` option's type is exported from `material` and from its component's
   subpath.** New on both: `TextFieldVariant`, `SelectVariant`, `MenuVariant`, `ProgressVariant`,
-  `TabsVariant`, `TooltipVariant`. New on `mtrl` (already on the subpath): `BadgeVariant`,
+  `TabsVariant`, `TooltipVariant`. New on `material` (already on the subpath): `BadgeVariant`,
   `CardVariant`, `CarouselVariant`, `DatePickerVariant`, `ExtendedFabVariant`, `FabVariant`,
   `IconButtonVariant`, `SearchVariant`, `SplitButtonVariant`, `ToolbarVariant`.
 - **Framework components accept the host element's HTML attributes (FLO-519).**
@@ -1011,19 +1016,19 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   before 18.3.31, `nonce` on React 18.0.0, Vue and Svelte);
   a release that already declares the key keeps its own type. Vue spells `inputmode`
   and `itemprop`, and Solid and Svelte spell `enterkeyhint`.
-- Search listener types on `mtrl/components/search`, beside `SearchEvent`: `SearchEvents`
+- Search listener types on `material/components/search`, beside `SearchEvent`: `SearchEvents`
   (each event's listener, so `SearchEvents["expand"]` types a handler) and `SearchStateEvent`
-  (what `expand` and `collapse` carry). `mtrl/elements` adds `SearchElementEvents`, the same
+  (what `expand` and `collapse` carry). `material/elements` adds `SearchElementEvents`, the same
   map with `<m-search>`'s names (`change`, `select`, `open`, `close`).
 - Read-only `getValue()` aliases on carousel, tabs, drawer, navigation rail and
   button group (FLO-380); existing accessors remain. Button toggle `change`, card
   `expandedChanged`, list `keydown`, and interactive touch events now have their
   actual payload types, including both slider touch delivery shapes.
-- `mtrl/ssr`: `renderElement` renders elements as declarative shadow DOM on Node or Bun; server-only, with no runtime dependencies (FLO-363, FLO-364). `<m-toolbar>` renders a declarative shadow root like the other elements (FLO-387). Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one. Carousel and FAB menu stay opted out. It inlines the CSS by default, or links the stylesheets in the same order as the browser and the inline styles (without adding build-manifest dependencies), renders nested elements, and applies the shared HTML policy; each call defines only the host tags it meets, including nested authored and factory-generated elements, instead of recreating all 36 classes. Asynchronous FAB-menu and submenu configurations use the host-only fallback (FLO-370). The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup. The React, Svelte, Solid and Vue bridges render a host that carries ordinary HTML attributes (`popover`, `inputmode`, `enterkeyhint`, `itemprop`, `nonce`, `is`, and the rest of the host's HTML attributes): the framework emits those attributes on the host, and the shared renderer skips names outside its allowlist, including event-handler names and `srcdoc`, so they never enter the shadow markup. Calling `renderElement` directly rejects an unknown host attribute (FLO-418). Underneath are an internal detached element lifecycle, style registry seams, and a synchronous server DOM scope with inert scheduling and complete resource teardown. Worker and edge runtimes are unsupported in 1.0. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers) loads the browser stub: `renderElement` throws "mtrl/ssr is server-only", and importing `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` does nothing, so the page has no declarative roots and no error.
-- `mtrl/ssr/react`: an opt-in, server-only entry. Imported in the server bootstrap, it makes the React adapters emit styled declarative shadow roots during SSR (React 18 and 19), with no server code in the client bundle. Without it, React output is unchanged (FLO-372). A `Suspense` boundary inside a component contributes its fallback to the server-rendered shadow root: a button has no label slot with an empty fallback but has one with a text fallback; a boundary around a tab leaves the root without that tab with either fallback. Put the boundary outside the component when the server root needs resolved content. A child that suspends stays on the server: the static pass retries the host only when that render suspended, and the shadow root is built from the children once they can render (FLO-415). A child that throws is not retried: the page render reaches it, so the error is reported as it is without the bridge. When that separate render throws something other than a suspension, development logs one warning per host in the response, naming the element and the error; production logs nothing. Retries wait on a backoff (doubling to 250ms) and stop after 40 attempts, about eight seconds; past that the host has no shadow root and the page keeps streaming, so a slower child still arrives. The suspension is recognised from the throw site of whichever React build this process loaded, not from the error text, so a production build that minifies the message still retries. At the cap, development logs one warning naming the element; production logs nothing. When no stack frame can be read, development logs one warning that suspending children render without a server shadow root; production logs nothing. The server-rendered shadow root is built in a separate render, without the context of providers above the component. The page's own render (the light DOM) sees the provided value. Until upgrade, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves this component without a declarative shadow root while the page still renders. Pass the resolved string as a prop or attribute, or accept client-rendered text until upgrade. A fix is planned for 1.1 (FLO-517). The Vue and Solid bridges see the provided value in both the shadow root and light DOM.
-- `mtrl/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Svelte output gains only the empty branch marker (FLO-375). Like React, its shadow root is built in a separate render without provider context; the page's light DOM sees the provided value. A child reading context with a default shows that default in the painted shadow root until upgrade. A child requiring context leaves that component without a declarative shadow root while the page still renders: the host falls back to light DOM, then upgrades normally in the browser. Development logs once per affected host in each response, naming the element and including the child render error; production logs nothing (FLO-525).
-- `mtrl/ssr/vue`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Vue component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Vue output is unchanged (FLO-373). A host's child may use `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`: the shadow bridge serializes those children once. A host whose `v-html` contains an unclosed `<template>` renders, and `mtrl/ssr/vue` imports the server renderer from `vue/server-renderer`.
-- `mtrl/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Solid output is unchanged (FLO-374). Async and streaming SSR finish when a component inside a host creates a resource under an outer `Suspense`: the shadow bridge reuses the page's serialized children, preserving its resource ownership and hydration keys without rendering children twice.
+- `material/ssr`: `renderElement` renders elements as declarative shadow DOM on Node or Bun; server-only, with no runtime dependencies (FLO-363, FLO-364). `<m-toolbar>` renders a declarative shadow root like the other elements (FLO-387). Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one. Carousel and FAB menu stay opted out. It inlines the CSS by default, or links the stylesheets in the same order as the browser and the inline styles (without adding build-manifest dependencies), renders nested elements, and applies the shared HTML policy; each call defines only the host tags it meets, including nested authored and factory-generated elements, instead of recreating all 36 classes. Asynchronous FAB-menu and submenu configurations use the host-only fallback (FLO-370). The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup. The React, Svelte, Solid and Vue bridges render a host that carries ordinary HTML attributes (`popover`, `inputmode`, `enterkeyhint`, `itemprop`, `nonce`, `is`, and the rest of the host's HTML attributes): the framework emits those attributes on the host, and the shared renderer skips names outside its allowlist, including event-handler names and `srcdoc`, so they never enter the shadow markup. Calling `renderElement` directly rejects an unknown host attribute (FLO-418). Underneath are an internal detached element lifecycle, style registry seams, and a synchronous server DOM scope with inert scheduling and complete resource teardown. Worker and edge runtimes are unsupported in `material` 3.0.0. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers) loads the browser stub: `renderElement` throws "material/ssr is server-only", and importing `material/ssr/react`, `material/ssr/vue`, `material/ssr/svelte` or `material/ssr/solid` does nothing, so the page has no declarative roots and no error.
+- `material/ssr/react`: an opt-in, server-only entry. Imported in the server bootstrap, it makes the React adapters emit styled declarative shadow roots during SSR (React 18 and 19), with no server code in the client bundle. Without it, React output is unchanged (FLO-372). A `Suspense` boundary inside a component contributes its fallback to the server-rendered shadow root: a button has no label slot with an empty fallback but has one with a text fallback; a boundary around a tab leaves the root without that tab with either fallback. Put the boundary outside the component when the server root needs resolved content. A child that suspends stays on the server: the static pass retries the host only when that render suspended, and the shadow root is built from the children once they can render (FLO-415). A child that throws is not retried: the page render reaches it, so the error is reported as it is without the bridge. When that separate render throws something other than a suspension, development logs one warning per host in the response, naming the element and the error; production logs nothing. Retries wait on a backoff (doubling to 250ms) and stop after 40 attempts, about eight seconds; past that the host has no shadow root and the page keeps streaming, so a slower child still arrives. The suspension is recognised from the throw site of whichever React build this process loaded, not from the error text, so a production build that minifies the message still retries. At the cap, development logs one warning naming the element; production logs nothing. When no stack frame can be read, development logs one warning that suspending children render without a server shadow root; production logs nothing. The server-rendered shadow root is built in a separate render, without the context of providers above the component. The page's own render (the light DOM) sees the provided value. Until upgrade, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves this component without a declarative shadow root while the page still renders. Pass the resolved string as a prop or attribute, or accept client-rendered text until upgrade. A fix is planned for a later 3.x release (FLO-517). The Vue and Solid bridges see the provided value in both the shadow root and light DOM.
+- `material/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Svelte output gains only the empty branch marker (FLO-375). Like React, its shadow root is built in a separate render without provider context; the page's light DOM sees the provided value. A child reading context with a default shows that default in the painted shadow root until upgrade. A child requiring context leaves that component without a declarative shadow root while the page still renders: the host falls back to light DOM, then upgrades normally in the browser. Development logs once per affected host in each response, naming the element and including the child render error; production logs nothing (FLO-525).
+- `material/ssr/vue`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Vue component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Vue output is unchanged (FLO-373). A host's child may use `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`: the shadow bridge serializes those children once. A host whose `v-html` contains an unclosed `<template>` renders, and `material/ssr/vue` imports the server renderer from `vue/server-renderer`.
+- `material/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Solid output is unchanged (FLO-374). Async and streaming SSR finish when a component inside a host creates a resource under an outer `Suspense`: the shadow bridge reuses the page's serialized children, preserving its resource ownership and hydration keys without rendering children twice.
 - Per-element SSR opt-out (FLO-370): specs accept `ssr: false` or a synchronous host
   predicate. Carousel and FAB menu emit their host and light DOM without a
   declarative root; menu and split-button do the same for nested submenus. `<m-toolbar>`
@@ -1032,7 +1037,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   Eligible light-DOM descendants still render their own roots. Pre-upgrade CSS keeps
   the host's box until browser upgrade, and these paths no longer throw. React SSR
   honors the same opt-out without emitting an empty declarative template.
-- Element CSS also ships as `.css` files (`mtrl/elements/css/<name>.css`, `hosts/<element>.css`), for server-rendered `<link>` styles (FLO-365).
+- Element CSS also ships as `.css` files (`material/elements/css/<name>.css`, `hosts/<element>.css`), for server-rendered `<link>` styles (FLO-365).
 - `ssr:check` (CI): server-rendered elements are checked in Chromium, Firefox and WebKit, for a styled first paint without JavaScript, pixel stability and no layout movement on upgrade, and the security reparse; markup parity stays in Chromium (FLO-371). Chromium security and per-node parity checks cover all 36 element defaults (FLO-363).
 - `ssr:check` and `svelte-ssr:check` cover two more cases (FLO-412): a toolbar's server-rendered
   icon buttons are measured across the upgrade (pixels, layout, and each button keeping its
@@ -1103,7 +1108,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   a split button's `expand()` has set `isExpanded()` and emitted `expand` and `change`; a time
   picker's `isOpen` is true and `open` has been emitted; a date picker has emitted `open`; a
   dialog has run `beforeopen`, and with `layer: "top"` it is open and has emitted `open`. None
-  of this changed in 1.0. The first ArrowDown, ArrowUp, Enter, Space, Home, End or typed character on a closed
+  of this changed in material 3.0.0. The first ArrowDown, ArrowUp, Enter, Space, Home, End or typed character on a closed
   select opens it and is not lost.
 - **SSR docs (FLO-419).** The README names every attribute whose value is markup, including `avatar` and `leading-avatar`, which are not a person's name or an image URL; `FabMenuConfig.closeIcon` is markup too. The React and Svelte bridges build the server-rendered shadow root without the context of providers above the component (FLO-517).
 - CI's Solid and Vue SSR runs on the lowest supported peer version are ordinary commands,
@@ -1151,7 +1156,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   WebKit: the browser lets a page refuse `cancel` twice in a row and forces the third). Escape
   is now a key press the dialog prevents, so no `cancel` is sent. And when the browser does
   close the `<dialog>` itself, the dialog's state follows: `isOpen()` is false and `close` is
-  emitted, without `beforeclose`. The defect is also in 0.10.x; the fix is in 1.0.
+  emitted, without `beforeclose`. The defect is also in 0.10.x; the fix is in material 3.0.0.
 - **Escape with a menu open inside a default-layer dialog closes the menu only (FLO-548).** It
   closed the dialog as well, under the menu: the dialog's listener ran before the menu's.
 - **Chips: a chip destroyed while it has focus hands focus to its neighbour (FLO-542).**
@@ -1167,11 +1172,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   waiting behind another and then dropped by a `queueBehavior: 'replace'` snackbar or by
   `clearSnackbars()` kept `state` `"visible"` without ever being shown, and `show()` on it
   did nothing from then on. It is now hidden when dropped. The defect is also in 0.10.x; the
-  fix is in 1.0.
+  fix is in material 3.0.0.
 - **Date picker: `open()` called from a click outside a docked picker opens it (FLO-548).**
   The same click then reached the picker's outside-click listener and closed it at once. A
   click in the task that called `open()` no longer closes it. The defect is also in 0.10.x;
-  the fix is in 1.0.
+  the fix is in material 3.0.0.
 - **Snackbar: destroying the one on screen lets the next take its turn (FLO-548).**
   `destroy()` on the visible snackbar left the queue waiting for it, so snackbars shown behind
   it stayed queued until some other snackbar was shown. The queue now moves on, after its
@@ -1217,6 +1222,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - SSR security reparsing runs in the Chromium CI job while unit tests remain browser-free;
   SSR parity and benchmark tooling load the source renderer and source CSS registry (FLO-363).
 - Source SSR reads the element CSS registry without resolving built package exports; source tests register real Sass output without mocking the CSS import (FLO-363).
+
+`material` 3.0.0 is MIT; `material` 1.x was GPL-3.
+
+## [3.0.0-next.0] - 2026-10-02
+
+The first prerelease of 3.0.0, on the npm `next` tag (`npm install material@next`).
+`npm install material` gives `material` 1.0.4, the older 1.x library that lived under this
+name (also the `legacy` tag), until 3.0.0 is released. Published without notes: its changes
+are described under Unreleased.
 
 ## [0.10.6] - 2026-10-02
 
@@ -3207,7 +3221,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.6...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.0.0-next.0...HEAD
+[3.0.0-next.0]: https://github.com/floor/material/releases/tag/v3.0.0-next.0
 [0.10.6]: https://github.com/floor/mtrl/compare/v0.10.5...v0.10.6
 [0.10.5]: https://github.com/floor/mtrl/compare/v0.10.4...v0.10.5
 [0.10.4]: https://github.com/floor/mtrl/compare/v0.10.3...v0.10.4

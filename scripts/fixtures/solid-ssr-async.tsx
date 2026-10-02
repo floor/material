@@ -2,7 +2,7 @@
 /** @jsxImportSource solid-js */
 // The review's Suspense shapes. Shared by the server and development hydration build.
 import { createContext, createResource, Suspense, useContext, type Accessor } from "solid-js";
-import { Button, Card } from "mtrl/solid";
+import { Button, Card } from "material/solid";
 
 export const counts = { fetches: 0, children: 0 };
 const Context = createContext("missing context");

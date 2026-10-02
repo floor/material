@@ -29,7 +29,7 @@ export type {
  * code completion, type safety, and to follow best practices.
  * 
  * @example
- * import { createCheckbox } from 'mtrl';
+ * import { createCheckbox } from 'material';
  * 
  * const checkbox = createCheckbox({
  *   label: 'Accept terms',
