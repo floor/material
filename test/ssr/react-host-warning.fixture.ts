@@ -12,7 +12,7 @@ if (mode !== "development" && mode !== "production") {
   console.error("Usage: react-host-warning.fixture.ts <development|production>");
   process.exit(2);
 }
-if (mode === "production") process.env.NODE_ENV = "production";
+process.env.NODE_ENV = mode;
 
 const warnings: string[] = [];
 const warn = console.warn;
@@ -109,7 +109,9 @@ const renderStream = (node: React.ReactNode): Promise<string> => {
 const named = (line: string, id: string): void => {
   if (!line.includes(`[mtrl] <m-button id="${id}">`)) fail(`warning does not name <m-button id="${id}">: ${line}`);
   if (!line.includes(MISSING)) fail(`warning does not include the error message: ${line}`);
-  if (!line.includes("has no shadow root for it")) fail(`warning does not say the shadow root is missing: ${line}`);
+  if (!line.includes("child snapshot failed, often because it needs ancestor context; this response has no shadow root for it")) {
+    fail(`warning does not match the host-snapshot sentence: ${line}`);
+  }
 };
 
 try {

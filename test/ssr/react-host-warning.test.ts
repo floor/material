@@ -18,8 +18,8 @@ test("missing context: one development warning per host per response, none in pr
   const development = await run("development");
   const production = await run("production");
   expect(development).toContain("development: context=1 two=2 second=1 suspend=0 exploded=1 threw=1");
-  expect(development).toContain('[mtrl] <m-button id="context-host"> child snapshot failed, so this response has no shadow root for it: Required provider is missing');
-  expect(development).toContain('[mtrl] <m-button id="boom"> child snapshot failed, so this response has no shadow root for it: child exploded');
+  expect(development).toContain('[mtrl] <m-button id="context-host"> child snapshot failed, often because it needs ancestor context; this response has no shadow root for it: Required provider is missing');
+  expect(development).toContain('[mtrl] <m-button id="boom"> child snapshot failed, often because it needs ancestor context; this response has no shadow root for it: child exploded');
   expect(production).toContain("production: context=0 two=0 second=0 suspend=0 exploded=0 threw=1");
   expect(production).not.toContain("child snapshot failed");
 }, 60000);
