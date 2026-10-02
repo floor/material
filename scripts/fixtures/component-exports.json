@@ -783,6 +783,11 @@
       "status": "public"
     },
     {
+      "name": "default",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "FilterChipConfig",
       "kind": "type",
       "status": "public"
@@ -1051,6 +1056,11 @@
   "divider": [
     {
       "name": "createDivider",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "default",
       "kind": "value",
       "status": "public"
     },
