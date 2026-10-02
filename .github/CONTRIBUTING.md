@@ -228,8 +228,15 @@ Until 3.0.0 is `latest`, `npm install material` installs 1.0.4, the earlier
    goes. `bun run readme:check` holds the two to the version: it requires
    `npm install material@next` while `package.json` is a 3.0.0 pre-release
    and `npm install material` once it is not, so the pull request that sets
-   `3.0.0` is red until both files are changed. The size table of both files
-   is checked against `size:check` in the same run.
+   `3.0.0` is red until both files are changed.
+
+   **Every release pull request refreshes the size table** of both files,
+   between `<!-- sizes -->` and `<!-- /sizes -->`, from `bun run size:check`
+   (under CI's Node 22: `npx -y -p node@22 -p npm@10 -- bun run size:check`),
+   in kB of 1,000 bytes to one decimal. Between releases `readme:check` lets a
+   figure be up to 2% (and at least 100 bytes) from the current build, so an
+   unrelated pull request does not fail on a rounding; it prints each row that
+   has drifted, and fails past the tolerance.
 2. Tag the merge commit `vx.y.z` and push the tag:
 
    ```bash

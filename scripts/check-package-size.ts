@@ -174,7 +174,7 @@ try {
   // stays (this file's convention, stated in the comments above it: the rule's figure
   // caps a raise; it does not move a ceiling the measurement is under).
   // The fixture packs what publish.yml publishes, the short npm-readme.md as README.md
-  // and the manifest without its repository-only fields: 1,065,466, same packer.
+  // and the manifest without its repository-only fields: 1,065,527, same packer.
   // Under 1,078,000, so the ceiling stays.
   assert(pack.size < 1_078_000, "npm tarball exceeds 1,078,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
@@ -208,7 +208,7 @@ try {
   // 1,000, is 6,476,000, above 6,458,000, so the ceiling stays.
   // Merged with FLO-299 (a8c24f7f), same packer: 6,410,644. Under 6,458,000,
   // so the ceiling stays.
-  // What publish.yml publishes (the short README, the stripped manifest): 6,379,275,
+  // What publish.yml publishes (the short README, the stripped manifest): 6,379,474,
   // Node 22.23.3 / npm 10.9.9. Under 6,458,000, so the ceiling stays.
   assert(pack.unpackedSize < 6_458_000, "Unpacked package exceeds 6,458,000 bytes");
 

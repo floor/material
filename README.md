@@ -438,15 +438,15 @@ On a declaration child:
 
 ## Sizes
 
-What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from the packed package by `bun run size:check`:
+What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from the packed package by `bun run size:check`. The table is refreshed at each release, and CI keeps every figure within 2% of the current build:
 
 <!-- sizes -->
 | Import | gzip |
 |--------|-----:|
-| `createButton` from `material`, initial chunks (its progress indicator loads on demand) | 7.4 kB |
-| `createButton`, in one file | 13.7 kB |
-| `createButton`, `createTextField` and `createCheckbox`, in one file | 19.8 kB |
-| Everything the root exports (`export * from 'material'`), in one file | 126.9 kB |
+| `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.4 kB |
+| `createButton`, without code splitting (the progress indicator included) | 13.7 kB |
+| `createButton`, `createTextField` and `createCheckbox`, without code splitting | 19.8 kB |
+| Everything the root exports (`export * from 'material'`), without code splitting | 126.9 kB |
 | `material/styles/base` | 2.9 kB |
 | `material/styles/base` and `material/styles/button` | 5.2 kB |
 | `material/styles`, the full stylesheet | 62.2 kB |
@@ -466,9 +466,9 @@ Current Chrome, Edge, Firefox and Safari. The spring motion uses CSS `linear()` 
 
 `material` 3.0.0 removes what `mtrl` 0.10 deprecated. Upgrade to the latest `mtrl` 0.10.x first: it has the 3.0.0 names beside the old ones and flags in your editor each name, option and constant 3.0.0 removes. Then change the package name to `material` and follow the migration guide. Each step is in the changelog:
 
-- From 0.10: [Migrating from 0.10.x](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-010x), the 3.0.0 guide.
-- From 0.9: [Migrating from 0.9.x](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-09x).
-- From 0.7: [the 0.8.0 changes](https://github.com/floor/material/blob/main/CHANGELOG.md#080---2026-09-15).
+- `mtrl` 0.10: [Migrating from 0.10.x](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-010x), the 3.0.0 guide.
+- `mtrl` 0.9: [Migrating from 0.9.x](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-09x).
+- `mtrl` 0.7: [the 0.8.0 changes](https://github.com/floor/material/blob/main/CHANGELOG.md#080---2026-09-15).
 
 ## Where this came from
 

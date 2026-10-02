@@ -20,7 +20,8 @@
  * - the install line follows the version: `material@next` while package.json is a
  *   3.0.0 pre-release, `material` once it is not (the release pull request that
  *   sets 3.0.0 fails here until both files are changed);
- * - the numbers between the `sizes` markers are the ones size:check measured;
+ * - the numbers between the `sizes` markers are within 2% of what size:check
+ *   measured (the release pull request refreshes them);
  * - links: an anchor names a heading of the same file, a relative link names a
  *   file of the repository (README.md only: npm-readme.md has none), and a link
  *   to this repository's CHANGELOG.md on GitHub names one of its headings.
@@ -107,6 +108,11 @@ for (const doc of docs) {
 
 // ── The sizes ─────────────────────────────────────────────────────
 // Each row of the table, in order, and the size:check measurement it states.
+// A stated figure may be up to 2% (and at least 100 bytes) from the measurement:
+// a pull request that moves a bundle by a few bytes must not fail because a row
+// now rounds differently. The release pull request refreshes the table
+// (.github/CONTRIBUTING.md), and a row that has drifted is printed until then.
+const SIZE_TOLERANCE = 0.02;
 const SIZE_ROWS = ["button-initial", "button", "form", "all-js", "base-css", "button-css", "full-css"] as const;
 const measuredFile = Bun.file("analysis/package-size.json");
 assert(await measuredFile.exists(), "analysis/package-size.json is missing: run `bun run size:check` first");
@@ -117,9 +123,13 @@ for (const doc of docs) {
   const stated = [...table.matchAll(/\| ([\d.]+) kB \|$/gm)].map(match => Number(match[1]));
   if (stated.length !== SIZE_ROWS.length) { fail(`${doc.file}: the sizes table has ${stated.length} rows, expected ${SIZE_ROWS.length}`); continue; }
   SIZE_ROWS.forEach((key, index) => {
-    const expected = (measured.sizes[key].gzip / 1000).toFixed(1);
-    if (stated[index].toFixed(1) !== expected) {
-      fail(`${doc.file}: sizes row ${index + 1} (${key}) says ${stated[index]} kB; size:check measured ${measured.sizes[key].gzip} bytes, ${expected} kB`);
+    const bytes = measured.sizes[key].gzip;
+    const current = (bytes / 1000).toFixed(1);
+    const drift = Math.abs(stated[index] * 1000 - bytes);
+    if (drift > Math.max(SIZE_TOLERANCE * bytes, 100)) {
+      fail(`${doc.file}: sizes row ${index + 1} (${key}) says ${stated[index]} kB; size:check measured ${bytes} bytes, ${current} kB, more than 2% away`);
+    } else if (stated[index].toFixed(1) !== current) {
+      console.log(`${doc.file}: sizes row ${index + 1} (${key}) says ${stated[index]} kB and the build is ${current} kB: within the tolerance, to refresh at the release`);
     }
   });
 }

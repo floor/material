@@ -66,7 +66,7 @@ The framework components render the elements, load their CSS and register each o
 
 ## Server rendering
 
-`renderElement` from `material/ssr` renders an element to declarative shadow DOM. Import `material/ssr/react`, `material/ssr/vue`, `material/ssr/svelte` or `material/ssr/solid` in the server bootstrap and that framework's components emit the same roots, then hydrate. Node and Bun are supported; worker and edge runtimes are not in `material` 3.0.0. Guide: [md3.io/docs/server-rendering](https://md3.io/docs/server-rendering/).
+`renderElement` from `material/ssr` renders an element to declarative shadow DOM. Import `material/ssr/react`, `material/ssr/vue`, `material/ssr/svelte` or `material/ssr/solid` in the server bootstrap and that framework's components emit the same roots, then hydrate. Node and Bun are supported; worker and edge runtimes are not supported in `material` 3.0.0. Guide: [md3.io/docs/server-rendering](https://md3.io/docs/server-rendering/).
 
 ## Themes
 
@@ -80,15 +80,15 @@ Colours, typefaces and shapes are CSS custom properties (`--mtrl-sys-color-prima
 
 ## Sizes
 
-What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from the packed package:
+What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from the packed package. The table is refreshed at each release, and CI keeps every figure within 2% of the current build:
 
 <!-- sizes -->
 | Import | gzip |
 |--------|-----:|
-| `createButton` from `material`, initial chunks (its progress indicator loads on demand) | 7.4 kB |
-| `createButton`, in one file | 13.7 kB |
-| `createButton`, `createTextField` and `createCheckbox`, in one file | 19.8 kB |
-| Everything the root exports (`export * from 'material'`), in one file | 126.9 kB |
+| `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.4 kB |
+| `createButton`, without code splitting (the progress indicator included) | 13.7 kB |
+| `createButton`, `createTextField` and `createCheckbox`, without code splitting | 19.8 kB |
+| Everything the root exports (`export * from 'material'`), without code splitting | 126.9 kB |
 | `material/styles/base` | 2.9 kB |
 | `material/styles/base` and `material/styles/button` | 5.2 kB |
 | `material/styles`, the full stylesheet | 62.2 kB |
