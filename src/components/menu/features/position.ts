@@ -225,6 +225,17 @@ export const createPositioner = (
     // previous placement where it no longer applies
     menuElement.style.maxHeight = fitted !== null ? `${fitted}px` : (config.maxHeight ?? "");
 
+    // A menu wider than its opener, placed at the start, keeps the opener's
+    // left in both directions. Right-to-left, that edge is the right. Only
+    // when the menu is wider, so a menu as wide as its field stays put, and
+    // not a submenu, which has its own side.
+    if (
+      !isSubmenu &&
+      menuRect.width > openerRect.width &&
+      (calculatedPosition === "top-start" || calculatedPosition === "bottom-start") &&
+      getComputedStyle(openerElement).direction === "rtl"
+    ) calculatedPosition = calculatedPosition.replace("start", "end");
+
     // Reset any existing position classes
     const positionClasses = [
       "position-top",
