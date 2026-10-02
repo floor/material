@@ -22,8 +22,7 @@ export type FabVariant =
   | "tertiary-container"
   | "primary"
   | "secondary"
-  | "tertiary"
-  | "surface";
+  | "tertiary";
 
 /**
  * FAB size variants
@@ -33,12 +32,11 @@ export type FabVariant =
  *
  * @category Components
  * @remarks
- * - small: 40px container, 24px icon; deprecated in M3 Expressive
  * - default: 56px diameter, for standard primary actions (default)
  * - medium: 80px container, 28px icon
  * - large: 96px container, 32px icon
  */
-export type FabSize = "small" | "default" | "medium" | "large";
+export type FabSize = "default" | "medium" | "large";
 
 /**
  * FAB position options
@@ -94,8 +92,8 @@ export interface FabConfig {
    *
    * @example
    * ```typescript
-   * // Create a small FAB for a secondary action
-   * createFab({ size: 'small', icon: '<svg>...</svg>' })
+   * // Create a medium FAB
+   * createFab({ size: 'medium', icon: '<svg>...</svg>' })
    *
    * // Create a large FAB for emphasis
    * createFab({ size: 'large', icon: '<svg>...</svg>' })
@@ -325,10 +323,6 @@ export interface FabConfig {
   rippleConfig?: {
     /** How long, in milliseconds, a released wave lingers before it is removed */
     duration?: number;
-    /** @deprecated Not applied: the ripple's motion comes from the stylesheet (FLO-268). */
-    timing?: string;
-    /** @deprecated Not applied: the wave is the 0.10 pressed state layer, drawn by the stylesheet (FLO-268). */
-    opacity?: [string, string];
   };
 
   /**

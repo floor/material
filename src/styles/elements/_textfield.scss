@@ -15,14 +15,14 @@
   // (filled 22px vs 12px is the measured 10px; outlined 15.5px plus the 1px
   // border vs 12px plus the border is the measured 3.5px).
   &[type='multiline'] {
-    height: v.textfield('height-multiline');
-    padding-top: v.textfield('padding-top-multiline');
+    height: v.text-field('height-multiline');
+    padding-top: v.text-field('padding-top-multiline');
 
     // Compact multiline stays the compact field (40px) and pads the textarea
     // by padding-top-multiline-compact. The single-line 13.5px is 5.5px lower.
     &[density='compact'] {
       height: 40px;
-      padding-top: v.textfield('padding-top-multiline-compact');
+      padding-top: v.text-field('padding-top-multiline-compact');
     }
 
     // The supporting row is the single-line field's. Outlined drops its top
@@ -30,18 +30,18 @@
     // the text stays where the textarea's border plus padding-top puts it.
     &[supporting-text]:not([supporting-text='']),
     &[maxlength] {
-      height: calc(#{v.textfield('height-multiline')} + #{field.$supporting-row});
+      height: calc(#{v.text-field('height-multiline')} + #{field.$supporting-row});
 
       &[variant='outlined'] {
-        padding-top: calc(#{v.textfield('padding-top-multiline')} + #{v.textfield('border-width')});
+        padding-top: calc(#{v.text-field('padding-top-multiline')} + #{v.text-field('border-width')});
       }
 
       &[density='compact'] {
         height: calc(40px + #{field.$supporting-row});
-        padding-top: v.textfield('padding-top-multiline-compact');
+        padding-top: v.text-field('padding-top-multiline-compact');
 
         &[variant='outlined'] {
-          padding-top: calc(#{v.textfield('padding-top-multiline-compact')} + #{v.textfield('border-width')});
+          padding-top: calc(#{v.text-field('padding-top-multiline-compact')} + #{v.text-field('border-width')});
         }
       }
     }

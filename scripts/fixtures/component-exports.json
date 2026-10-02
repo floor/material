@@ -674,11 +674,6 @@
       "status": "public"
     },
     {
-      "name": "CheckboxVariant",
-      "kind": "type",
-      "status": "public"
-    },
-    {
       "name": "default",
       "kind": "value",
       "status": "public"
@@ -1920,6 +1915,11 @@
       "name": "MenuSelectEvent",
       "kind": "type",
       "status": "public"
+    },
+    {
+      "name": "MenuVariant",
+      "kind": "type",
+      "status": "public"
     }
   ],
   "menu/constants": [
@@ -2083,6 +2083,11 @@
     },
     {
       "name": "ProgressShape",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ProgressVariant",
       "kind": "type",
       "status": "public"
     }
@@ -2385,6 +2390,11 @@
     },
     {
       "name": "SelectOption",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "SelectVariant",
       "kind": "type",
       "status": "public"
     }
@@ -2956,6 +2966,11 @@
       "name": "TabsEvents",
       "kind": "type",
       "status": "public"
+    },
+    {
+      "name": "TabsVariant",
+      "kind": "type",
+      "status": "public"
     }
   ],
   "tabs/constants": [
@@ -3048,6 +3063,11 @@
     },
     {
       "name": "TextFieldValuePayload",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TextFieldVariant",
       "kind": "type",
       "status": "public"
     }
@@ -3490,6 +3510,11 @@
     },
     {
       "name": "TooltipConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TooltipVariant",
       "kind": "type",
       "status": "public"
     }

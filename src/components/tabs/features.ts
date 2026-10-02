@@ -293,10 +293,6 @@ export interface IndicatorFeatureConfig {
   animationTiming?: string;
   /** Custom color for the indicator */
   color?: string;
-  /** Legacy height property */
-  indicatorHeight?: number;
-  /** Legacy width strategy property */
-  indicatorWidthStrategy?: "fixed" | "dynamic" | "content" | "auto";
   /** Indicator configuration object */
   indicator?: {
     widthStrategy?: "fixed" | "dynamic" | "content" | "auto";
@@ -341,14 +337,10 @@ export const withIndicator =
     const indicatorConfig = config.indicator || {};
     const indicator: TabIndicator = createTabIndicator({
       prefix: config.prefix,
-      // Support both new and legacy config
-      widthStrategy:
-        indicatorConfig.widthStrategy ||
-        config.indicatorWidthStrategy ||
-        TABS_DEFAULTS.INDICATOR_WIDTH_STRATEGY,
+      widthStrategy: indicatorConfig.widthStrategy || TABS_DEFAULTS.INDICATOR_WIDTH_STRATEGY,
       // Left undefined, the indicator takes its variant's height and the stylesheet's
       // spring (FLO-262); given, they override them.
-      height: indicatorConfig.height || config.indicatorHeight,
+      height: indicatorConfig.height,
       fixedWidth: indicatorConfig.fixedWidth || TABS_DEFAULTS.INDICATOR_FIXED_WIDTH,
       animationDuration: indicatorConfig.animationDuration,
       animationTiming: indicatorConfig.animationTiming,

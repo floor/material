@@ -438,7 +438,7 @@ $button-shape-tokens: (
 }
 
 // TextField configuration
-$textfield: (
+$text-field: (
   // The width of a field the page does not size (TextFieldDefaults.MinWidth)
   'width': 280px,
   'height': 56px,
@@ -459,8 +459,9 @@ $textfield: (
   'icon-size': 24px
 ) !default;
 
-// Add textfield function
-@function textfield($key) {
+/// A text field measurement: `v.text-field('height')`. 0.10's `$textfield` and
+/// `textfield()` are removed in 1.0 (FLO-383).
+@function text-field($key) {
   @if $key == 'border-radius' { @return shape('extra-small'); }
-  @return map.get($textfield, $key);
+  @return map.get($text-field, $key);
 }
