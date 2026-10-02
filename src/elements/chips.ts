@@ -85,7 +85,7 @@ const applied = new WeakMap<HTMLElement, Chip[]>();
 const defaultSelection = (host: HTMLElement, chips: Chip[]): string[] =>
   host.hasAttribute("value")
     ? parse(host.getAttribute("value"), isMulti(host))
-    : parse(chips.filter((chip) => chip.selected).map((chip) => chip.value), isMulti(host));
+    : parse(chips.filter((chip) => chip.selected).map((chip) => chip.value).slice(isMulti(host) ? 0 : -1), isMulti(host));
 
 const readChips = (host: HTMLElement): Config => {
   const chips = declaredChips(host);
