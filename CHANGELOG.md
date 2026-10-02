@@ -89,12 +89,13 @@ the card, tabs and switch internals on their subpaths, `ChipConfig`'s `managedSe
 ship for reference; configuring them with `@use … with` is not a supported API in 1.0. Theme
 with CSS custom properties.
 
-**Type changes the compiler reports.** Besides renames and removals, five entries below change
+**Type changes the compiler reports.** Besides renames and removals, six entries below change
 a type your code may rely on: tabs' `on` and `off` take a closed event map, and a tab's `click`
 payload is wrapped (FLO-523); React's and Solid's `Button` type their own `onChange`, so a
 spread of full `HTMLAttributes` must omit it (FLO-380); `SelectChangeEvent["value"]` is
 `string | null` (FLO-380); the chip set's `change` listener takes one object, not an array
-and a second argument (FLO-530); and `emit` on the card and the tabs takes only the
+and a second argument (FLO-530); a standalone chip's `onChange` and `onClick` take their
+event's payload; and `emit` on the card and the tabs takes only the
 component's own events, with their payloads. A config `on*` option is its event's listener
 type: `onConfirm: (time: string) => void`, search `onInput` / `onSubmit:
 (value: string) => void`, and `onSuggestionSelect: (suggestion: SearchSuggestion)
@@ -152,8 +153,38 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `{ value, selected, changed }`, not an array with the changed value as a second argument. In
   a leftover handler `event[0]` and `event.length` are `undefined`, `[...event]` and
   `event.includes(x)` each throw a `TypeError` (the message is the engine's), and a second
-  parameter is `undefined`. Read `selected` and `changed`. `onChange` is called for a user's
-  change only; `on("change")` listeners get a method's change too, with `changed: null`.
+  parameter is `undefined`. Read `selected` and `changed`. `onChange` hears the same changes
+  as `on("change")`, including `selectByValue(values, true)`, with `changed: null`.
+  `selectByValue(values)` and `clearSelection()` stay silent.
+- **A chip's config `on*` options** are the matching event's listener. A leftover
+  `onChange(selected, chip)` on a chip alone is called with one object: `selected` is
+  `{ selected, chip, value }` (so `selected` is always truthy, and the boolean is
+  `selected.selected`; deselecting a chip valued `"old"` passes
+  `{ selected: false, chip, value: "old" }`), and the second parameter is `undefined`.
+  A leftover `onClick(chip)` is called with `{ event, originalEvent, element }`:
+  `element` is the chip's root, and the value is not the chip (`focus` is `undefined`).
+  The set's `onChange` now hears `selectByValue(values, true)`. A chip in a set emits
+  its own `change` when it is clicked, and the item's `onChange` receives that payload.
+  A leftover `onChange(selected, chip)` on that item is called with one object, as on a
+  chip alone: `selected` is `{ selected, chip, value }` (measured on a filter chip valued
+  `"old"`: selecting passes `{ selected: true, chip, value: "old" }`, deselecting passes
+  `{ selected: false, chip, value: "old" }`), and the second parameter is `undefined`.
+  `setSelected` and `selectByValue` do not emit the chip's `change`. A single-select click
+  emits `change` on the clicked chip only; the chip it replaces is updated with
+  `setSelected`, which stays silent.
+- **A chip's `onClick` and `click` listeners run before the chip toggles**, alone or in a
+  set: `chip.isSelected()` inside them is the state before the click. A chip alone used to
+  toggle and emit `change` first. Read the new state in `onChange` or a `change` listener,
+  which follows.
+- **A chip's `change` is emitted only when the selection changed (FLO-550).** In a
+  `selectionRequired` set, a click on the last selected chip is refused: it used to emit
+  `change` on the chip and on the set, with the chip still selected, and call both `onChange`.
+  It now emits none, the item's `onSelect` is not called, and `<m-chips>` dispatches no
+  `change`; `click` and `onClick` still report the press.
+- **A chip's `remove` listeners in a set run before the set removes the chip.** The item's
+  `onRemove` and a `chip.on("remove")` listener find the chip still in `getChips()` and on the
+  page; the set then destroys it and emits its own `remove`. A listener added with `on` used
+  to run after the set had destroyed and unlisted the chip.
 - **Chip-set `add` and `remove`** factory handlers receive `{ value, chip }` and
   `{ value, chip, chipValue }`, not the chip; `<m-chips>`'s `remove` detail `value` is the
   remaining selection, and the removed id is `chipValue`.
@@ -183,7 +214,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **Options whose argument was already the event's** now run first, before a listener added with
   `on()`: time picker `onChange`, `onInput`, `onOpen`, `onClose` and `onCancel`; navigation rail
   and navigation bar `onSelect`; drawer `onSelect`, `onOpen` and `onClose`; text field
-  `onTrailingClick`. Time picker `onChange` is also the same `{ value }` object `change` emits,
+  `onTrailingClick`; the chip set's `onChange`, and a chip's `onRemove` and `onTrailingClick`.
+  Time picker `onChange` is also the same `{ value }` object `change` emits,
   not a second one.
 - **An empty selection is `null`, not `""`,** in the select and the radios, factory and element:
   the `change` payload's `value`, and the radio factory's `getValue()`. A comparison with `""`
@@ -359,7 +391,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   shape, `selected` keeps the selected chip values, and `changed` is the toggled
   chip's value. `on("change")` listeners get every change, with `changed: null`
   for one made by a method (`selectByValue(values, true)`); the config's
-  `onChange` is called for a user's change only. `<m-chips>` still emits
+  `onChange` hears those method changes too. `<m-chips>` still emits
   `change` with `{ value }` detail. Migration:
 
   ```ts
@@ -434,9 +466,20 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **A config `on*` option is the listener registered at creation.** It runs with the same
   argument, the same number of times, as a listener passed to `on(event)` at that point, and it
   runs before a listener added afterwards. Whether a method notifies is unchanged (a silent
-  `setValue`, `setActive`, `clear()` or button-group `select` stays silent). Chips are not part
-  of this change. The bottom app bar's `onVisibilityChange` and the top app bar's `onScroll`
-  have no matching event, so they stay callbacks and are not in the table.
+  `setValue`, `setActive`, `clear()` or button-group `select` stays silent). The bottom app bar's
+  `onVisibilityChange` and the top app bar's `onScroll` have no matching event, so they stay
+  callbacks and are not in the table. A chip's `onSelect`
+  has no matching event either, so it stays a callback. A chip option used to be called beside
+  the emit, with its own arguments. A chip set registers `onChange` before a handler supplied
+  in `on`, and before a listener added after `createChips`. A chip's `onChange` and `onClick`
+  are registered first: a chip's config has no `on` map. A chip in a set emits its own `change`
+  on a click, after the set has toggled it, and the item's `onChange` receives that payload
+  (`{ selected, chip, value }`). The calls on that click run in this order: the item's
+  `onClick`, the set's `onChange`, a set `change` listener added after `createChips`, the
+  item's `onSelect`, a chip `click` listener added after the chip was created, the item's
+  `onChange`, and a chip `change` listener added after the chip was created. `setSelected`
+  and `selectByValue` do not emit the chip's `change`. A single-select click emits it on the
+  clicked chip only.
 
   | Component | Option | Old argument | New argument |
   |---|---|---|---|
@@ -455,6 +498,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | Drawer | `onOpen`, `onClose` | no argument | no argument |
   | Text field | `onTrailingClick` | the trailing payload | the same object |
   | Button group | `on.click`, `on.focus`, `on.blur`, `on.change` | accepted, never called | the listener's argument |
+  | Chips | `onChange` | `{ value, selected, changed }`, and only for a user's change | The same object as `on("change")`. The set's `onChange` now hears `selectByValue(values, true)`, with `changed: null`. `selectByValue(values)` and `clearSelection()` stay silent. |
+  | Chip | `onChange` (a chip alone) | `(selected, chip)` | `{ selected, chip, value }`, the `change` payload |
+  | Chip | `onChange` (a chip in a set) | `(selected, chip)`, and the chip did not emit `change` | `{ selected, chip, value }`, the chip's `change` payload. A click emits that `change`. `setSelected` and `selectByValue` do not. |
+  | Chip | `onClick` | the chip | `{ event, originalEvent, element }`, the `click` payload |
+  | Chip | `onRemove` | the chip | the chip |
+  | Chip | `onTrailingClick` | the chip | the chip |
+  | Chip | `onSelect` | the chip | the chip. No matching event. |
 
   ```ts
   createTimePicker({ onConfirm: (time) => { input.value = time; } });          // 0.10
@@ -525,6 +575,28 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     event that opened it never dismisses it. A dialog opened from an Escape `keydown` handler
     stays open through that key press, and the next Escape closes it.
   - **`destroy()` right after `open()`** leaves nothing behind (see Fixed).
+
+  A leftover chip `onChange(selected, chip)` receives one object, measured on a filter chip
+  valued `"old"`:
+
+  | Call | `arguments.length` | First parameter | Second parameter |
+  |---|---|---|---|
+  | Selecting | 1 | `{ selected: true, chip, value: "old" }` | `undefined` |
+  | Deselecting | 1 | `{ selected: false, chip, value: "old" }` | `undefined` |
+
+  A leftover `onChange(selected, chip)` on a chip in a set gets the same object, measured
+  on a filter chip valued `"old"`: selecting passes `{ selected: true, chip, value: "old" }`
+  and deselecting passes `{ selected: false, chip, value: "old" }`, `arguments.length` is 1,
+  and the second parameter is `undefined`.
+
+  The object is always truthy, so a leftover `if (selected)` stays true when the chip is
+  deselected. The boolean is `selected.selected`. A leftover `onClick(chip)` receives one
+  argument, `{ event, originalEvent, element }`, where `element` is the chip's root; it is
+  not the chip component (`focus` is `undefined`), and a second parameter is `undefined`.
+  `onRemove` and `onTrailingClick` still receive the chip. `chips.off("change", onChange)`
+  removes the set's option. A handler that calls `selectByValue(x, true)` for one fixed
+  value runs twice — the change that was not that value, then the move onto it — and then
+  stops, because `selectByValue` emits only when the selection changed.
 
 ### Removed
 
