@@ -49,6 +49,7 @@ exists only in 1.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
 | shapes `'cookie4'`, `'cookie9'` | `'cookie4Sided'`, `'cookie9Sided'` |
 | `createElement({ rawClass })` | `class` or `className` |
 | the tooltip's `rich` | `variant: 'rich'` |
+| `onToggle` on the icon button (`mtrl/react`, `mtrl/vue`, `mtrl/solid`; `ontoggle` in `mtrl/svelte`) | `onChange` (`onchange`), whose `event.detail` is `{ selected, value }`. A leftover is a type error: `… is not assignable to type '"onToggle was removed in 1.0: use onChange"'`. |
 
 The text field's tag, element name, CSS classes, event names and constant values keep
 `textfield`.
@@ -106,8 +107,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `<div rawclass="legacy-a legacy-b">`. On a component's config a leftover `rawClass` does
   nothing.
 - **A listener on the icon button's `toggle` event** never fires: no error, and the button still
-  toggles. In React, Vue, Svelte and Solid, `onToggle` on the icon button is now the host's
-  native `ToggleEvent` (a popover's), without `detail.selected`. Listen to `change`.
+  toggles. Listen to `change`. In the React, Vue, Svelte and Solid components the compiler does
+  catch it: `onToggle` (Svelte: `ontoggle`) on the icon button is a type error.
 - **`select.textfield`** in JavaScript is `undefined`.
 - **A FAB's `'surface'` or `'small'`** (the options take any string) renders as the default
   `primary-container`, or at the default 56dp.
@@ -390,7 +391,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | `CHECKBOX_VARIANTS` (`mtrl/components/checkbox`, `/constants`) | nothing: M3 has one checkbox style, and `variant` had no effect (FLO-94, FLO-265) |
   | `RADIO_VARIANTS`, `RADIO_LABEL_POSITIONS`, `RADIO_SIZES`, `RADIO_CLASSES` (`mtrl/components/radios`, `/constants`) | nothing: no component read them (FLO-266) |
   | `RADIO_DEFAULTS.VARIANT`, `.LABEL_POSITION`, `.SIZE` (deprecated in 0.10.x) | nothing: the radios have no such options, and nothing read the keys. `RADIO_DEFAULTS.DIRECTION` stays. In JavaScript a removed key reads `undefined`. |
-  | the icon button's DOM `toggle` event, from the factory's button and from `<m-icon-button>` (deprecated in 0.10.0, FLO-295) | `change`, which carries `{ selected, value }`. A leftover `toggle` listener never fires, with no error. In the React, Vue, Svelte and Solid components `onToggle` is now the host's native `ToggleEvent`, without `detail.selected`. |
+  | the icon button's DOM `toggle` event, from the factory's button and from `<m-icon-button>` (deprecated in 0.10.0, FLO-295) | `change`, which carries `{ selected, value }`. A leftover `toggle` listener never fires, with no error. In the React, Vue, Svelte and Solid components the icon button refuses `onToggle` (Svelte: `ontoggle`), and the compiler's error says what to do: `Type '() => void' is not assignable to type '"onToggle was removed in 1.0: use onChange"'`. Without that guard the name would fall through to the host's native `toggle` handler, compile, and never fire. |
   | `TIMEPICKER_DIAL`, `TIMEPICKER_Z_INDEX` (`mtrl/components/timepicker`, `/constants`) | nothing: the dial is sized in CSS and the picker is a modal `<dialog>` in the top layer (FLO-278, FLO-279, FLO-281) |
   | `TIMEPICKER_CLASSES` | `TIMEPICKER_SELECTORS` (public since 0.9.0), which is not a like-for-like swap: its values are prefixed selectors (`".mtrl-time-picker__dial"`) where the old were bare class names (`"time-picker__dial"`), and 13 of the 33 old keys have no selector of the same name (`ROOT`, `OPEN`, the six `DIALOG_*`, `DIAL_NUMBER_ACTIVE`, `PERIOD_ACTIVE`, `TOGGLE_TYPE`, `CANCEL`, `CONFIRM`) |
   | `getThemeColor('sys-color-X-rgb')` (`mtrl/core/utils`): the `'r, g, b'` triplet, derived | `getThemeColor('sys-color-X', { alpha })`. The `-rgb` name now returns `''` (or the `fallback`), as any undeclared variable does, so `rgba(${getThemeColor('sys-color-primary-rgb')}, 0.12)` now yields `rgba(, 0.12)`, an invalid colour that CSS and canvas drop silently: a missing colour, not an error. Use `getThemeColor('sys-color-primary', { alpha: 0.12 })`. A theme that declares its own `-rgb` properties is unaffected (FLO-311). |
