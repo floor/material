@@ -2218,6 +2218,140 @@ try {
     check("button group: a change handler reading value reads the same on the factory and the element (FLO-320)");
   }
 
+  // ---------------------------------------------------------------- button group press, labels stay whole (FLO-537)
+  // Motion on: a width that starts at `auto` cannot ride the spatial spring,
+  // so a neighbour's width used to jump while its padding was still easing and
+  // the truncated label showed an ellipsis. Sample every frame from pointer
+  // down until the release animation has finished.
+  {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    try {
+      const sizes = ["xs", "s", "m", "l", "xl"] as const;
+      const labels = ["Bold", "Italic", "Underline"] as const;
+      type Sample = { scroll: number; client: number; width: number; paddingLeft: number; paddingRight: number };
+      type Frame = { phase: "press" | "release"; groupWidth: number; buttons: Sample[] };
+      const failures: string[] = [];
+      const worst = new Map<string, string>();
+
+      const markup = (options: { size: string; kind?: string; icon?: boolean }): string => {
+        const items = labels.map((label) => {
+          const icon = options.icon ? ` icon='${ICON}'` : "";
+          return `<m-button-group-item value="${label.toLowerCase()}"${icon}>${label}</m-button-group-item>`;
+        }).join("");
+        const kind = options.kind ? ` kind="${options.kind}"` : "";
+        return `<m-button-group id="press" variant="outlined" size="${options.size}"${kind} aria-label="Format">${items}</m-button-group>`;
+      };
+
+      const install = (): Promise<void> => page.evaluate(() => {
+        const host = document.getElementById("press") as HTMLElement;
+        const buttons = [...(host.shadowRoot?.querySelectorAll("button") ?? [])] as HTMLButtonElement[];
+        const group = buttons[0]?.parentElement as HTMLElement;
+        const state = { frames: [] as Array<{ phase: "press" | "release"; groupWidth: number; buttons: Array<{ scroll: number; client: number; width: number; paddingLeft: number; paddingRight: number }> }>, phase: "press" as "press" | "release", pressSettled: false, done: false };
+        (window as unknown as { __flo537: typeof state }).__flo537 = state;
+        const sample = (): void => {
+          state.frames.push({
+            phase: state.phase,
+            groupWidth: group.getBoundingClientRect().width,
+            buttons: buttons.map((button) => {
+              const label = (button.querySelector('[class*="__text"]') as HTMLElement | null) ?? button;
+              const style = getComputedStyle(button);
+              return {
+                scroll: label.scrollWidth,
+                client: label.clientWidth,
+                width: button.getBoundingClientRect().width,
+                paddingLeft: parseFloat(style.paddingLeft),
+                paddingRight: parseFloat(style.paddingRight),
+              };
+            }),
+          });
+        };
+        const active = (): boolean => buttons.some((button) => button.getAnimations().some((animation) =>
+          animation.playState === "running" || animation.playState === "pending"));
+        const loop = (): void => {
+          sample();
+          const going = active();
+          if (state.phase === "press" && !going) state.pressSettled = true;
+          if (state.phase === "release" && !going) {
+            state.done = true;
+            return;
+          }
+          requestAnimationFrame(loop);
+        };
+        const release = (): void => {
+          state.phase = "release";
+        };
+        group.addEventListener("pointerdown", () => {
+          requestAnimationFrame(loop);
+        }, { once: true });
+        document.addEventListener("pointerup", release);
+        document.addEventListener("pointercancel", release);
+      });
+
+      const press = async (name: string): Promise<Frame[]> => {
+        await install();
+        const button = page.locator("#press").getByRole("button", { name, exact: true });
+        await button.scrollIntoViewIfNeeded();
+        const box = await button.boundingBox();
+        if (!box) throw new Error(`no box for ${name}`);
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.down();
+        try {
+          await page.waitForFunction(() => (window as unknown as { __flo537: { pressSettled: boolean } }).__flo537.pressSettled);
+        } finally {
+          await page.mouse.up();
+        }
+        await page.waitForFunction(() => (window as unknown as { __flo537: { done: boolean } }).__flo537.done);
+        return page.evaluate(() => (window as unknown as { __flo537: { frames: Frame[] } }).__flo537.frames);
+      };
+
+      const runCase = async (id: string, html: string): Promise<void> => {
+        await fresh(page, html);
+        let caseWorst = 0;
+        let caseDetail = "0";
+        for (const name of labels) {
+          const frames = await press(name);
+          const base = frames.find((frame) => frame.phase === "press")?.groupWidth ?? 0;
+          let worstShort = 0;
+          let worstButton = "";
+          let worstFrame = 0;
+          let shortFrames = 0;
+          let groupDrift = 0;
+          frames.forEach((frame, index) => {
+            frame.buttons.forEach((sample, indexButton) => {
+              const short = sample.scroll - sample.client;
+              if (short > worstShort) {
+                worstShort = short;
+                worstButton = labels[indexButton] ?? "";
+                worstFrame = index;
+              }
+              if (short > 0) shortFrames += 1;
+            });
+            if (frame.phase === "press") groupDrift = Math.max(groupDrift, Math.abs(frame.groupWidth - base));
+          });
+          const pressFrames = frames.filter((frame) => frame.phase === "press").length;
+          const releaseFrames = frames.length - pressFrames;
+          console.log(`  flo537 ${id} press ${name}: worst ${worstShort}px (${worstButton || "none"} frame ${worstFrame}), ${pressFrames} press frames, ${releaseFrames} release frames, group drift ${groupDrift.toFixed(2)}px`);
+          if (worstShort > caseWorst) {
+            caseWorst = worstShort;
+            caseDetail = `${worstShort}px ${worstButton} while ${name} pressed, frame ${worstFrame}, ${shortFrames} frames`;
+          }
+          if (worstShort > 0) failures.push(`${id} press ${name}: ${worstButton} short by ${worstShort}px at frame ${worstFrame} (${shortFrames} frames)`);
+          if (groupDrift > 1) failures.push(`${id} press ${name}: group width moved ${groupDrift.toFixed(2)}px during the press`);
+        }
+        worst.set(id, caseDetail);
+      };
+
+      for (const size of sizes) await runCase(size, markup({ size }));
+      await runCase("l icon", markup({ size: "l", icon: true }));
+      await runCase("l connected", markup({ size: "l", kind: "connected" }));
+      console.log(`  flo537 worst: ${[...worst.entries()].map(([id, detail]) => `${id} ${detail}`).join("; ")}`);
+      assert.equal(failures.length, 0, `button group press (FLO-537):\n${failures.join("\n")}`);
+      check("button group: a press never ellipsizes a label, at every size, with motion on (FLO-537)");
+    } finally {
+      await page.emulateMedia({ reducedMotion: null });
+    }
+  }
+
   // ---------------------------------------------------------------- chips
   await fresh(
     page,
