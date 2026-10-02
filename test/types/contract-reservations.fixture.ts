@@ -8,6 +8,7 @@
 // Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type { ProgressComponent } from "../../src/components/progress";
 import type { ProgressComponent as RootProgressComponent } from "../../src/index";
+import type { TabComponent } from "../../src/components/tabs";
 
 // --- Progress: how the indicator is drawn is not public -----------------------
 //
@@ -28,6 +29,22 @@ export const rootProgressHasNone: Extract<keyof RootProgressComponent, DrawingMe
 
 // The assertion is about those five: the rest of the API is still there
 export const progressKeepsItsApi: "element" | "setValue" | "setBuffer" | "getBuffer" extends keyof ProgressComponent
+  ? true
+  : false = true;
+
+// --- Tabs: a tab's badge may not exist until it is shown ----------------------
+//
+// `tab.badge` and `getBadgeComponent()` admit undefined, so a tab may create
+// its badge only when it shows it. (Under a gate without strictNullChecks
+// these hold trivially; under the strict one they are the statement.)
+
+export const tabBadgeMayBeUndefined: undefined extends TabComponent["badge"] ? true : false = true;
+export const tabBadgeIsOptional: {} extends Pick<TabComponent, "badge"> ? true : false = true;
+export const badgeGetterMayReturnUndefined: undefined extends ReturnType<TabComponent["getBadgeComponent"]>
+  ? true
+  : false = true;
+// The methods that work whether the badge exists yet or not
+export const tabKeepsItsBadgeMethods: "setBadge" | "getBadge" | "showBadge" | "hideBadge" extends keyof TabComponent
   ? true
   : false = true;
 

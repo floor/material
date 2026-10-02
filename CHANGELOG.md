@@ -1061,6 +1061,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **Tabs: `tab.badge` may be `undefined` until the badge is shown.** The type always allowed
+  it (`badge?: BadgeComponent`); it is now the documented contract, on `tab.badge` and on
+  `getBadgeComponent()`: a tab creates its badge no later than when it shows it, so a later
+  release can create it only then. Nothing changes at run time in this release: the badge
+  still exists from the first `setBadge()`, or from creation with the `badge` option. Use
+  `setBadge()`, `getBadge()`, `showBadge()` and `hideBadge()`, which work whether the badge
+  exists yet or not, and check `tab.badge` for `undefined` before reading it.
 - **A short chip with a secondary action is wider, by the specification.** Material 3, Chips:
   "Secondary actions (such as a trailing icon button for Remove) must have a 48x48dp
   interaction target that doesn't interfere with the chip's primary action (such as Edit or
