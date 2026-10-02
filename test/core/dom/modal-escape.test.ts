@@ -172,6 +172,22 @@ describe('onModalEscape', () => {
     own.remove();
   });
 
+  // A modal whose element was taken out of the document without its
+  // component being closed or destroyed must not keep Escape for itself.
+  test('a modal whose element has left the document is dropped: the one under it answers, or the page', async () => {
+    const under = modal();
+    const told: number[] = [];
+    const gone = surface();
+    const entry = onModalEscape(gone, () => { told.push(1); });
+    stops.push(entry.stop);
+    await task();
+    gone.remove();
+    expect(press(document.body).defaultPrevented).toBe(true);
+    expect([under.told.length, told.length]).toEqual([1, 0]);
+    under.entry.stop();
+    expect(press(document.body).defaultPrevented).toBe(false);
+  });
+
   test('once stopped, Escape is the page\'s again; stopping twice is harmless', async () => {
     const { entry, told } = modal();
     await task();
