@@ -520,6 +520,22 @@ describe('dialog: Escape is a key press, in both layers', () => {
       expect(seen.filter((name) => name === 'close')).toHaveLength(2);
     });
 
+    // The pin the task flag failed (CI, solid:check): a real key press can be
+    // delivered before any timer has run. What is ignored is the event that
+    // was on its way when open() ran, and nothing else.
+    test(`${where}: a key press in the same task as open(), and one in the first task after it, close it`, async () => {
+      const first = make({ layer }).dialog;
+      first.open();
+      expect(press().defaultPrevented).toBe(true);
+      expect(first.isOpen()).toBe(false);
+
+      const second = make({ layer }).dialog;
+      second.open();
+      await Promise.resolve();
+      press();
+      expect(second.isOpen()).toBe(false);
+    });
+
     test(`${where}: closeOnEscape: false holds for any number of presses, each prevented`, async () => {
       const { dialog, seen } = make({ layer, closeOnEscape: false });
       dialog.open();

@@ -4,11 +4,14 @@
 // a key press. One bubble listener on the window serves a stack of modals:
 // it prevents the key (so the browser sends a modal <dialog> no `cancel`, and
 // its allowance of two refused cancels is never spent) and tells the topmost
-// one, unless that one is still in the task it opened in: the key press that
-// opened a modal never dismisses it.
+// one, unless the key press is the one that opened it: an event already on
+// its way when the modal opened never dismisses it. Which events those are is
+// not inferred from time or from the task: one capture listener on the window
+// numbers every event as its dispatch begins, and a modal answers only those
+// numbered after it opened.
 import { describe, test, expect, beforeAll, afterAll, afterEach } from 'bun:test';
 import { JSDOM } from 'jsdom';
-import { onModalEscape } from '../../../src/core/dom/layer';
+import { eventsFrom, onModalEscape } from '../../../src/core/dom/layer';
 
 let window: JSDOM['window'];
 let document: Document;
@@ -47,15 +50,71 @@ describe('onModalEscape', () => {
     expect(told).toEqual([1, 2]);
   });
 
-  test('in the task it opened in, the key is prevented and the modal is not told', async () => {
-    const { entry, told } = modal();
-    expect(entry.opening).toBe(true);
+  test('the key press that opens it is prevented and the modal is not told; one in the same task is', () => {
+    const inside = document.getElementById('inside')!;
+    let opened: ReturnType<typeof modal> | undefined;
+    const open = (): void => { opened = modal(); };
+    inside.addEventListener('keydown', open, { once: true });
+    const opening = press(inside);
+    expect(opening.defaultPrevented).toBe(true);
+    expect(opened!.told).toEqual([]);
+    // No task has passed, no timer has run
     expect(press(document.body).defaultPrevented).toBe(true);
-    expect(told).toEqual([]);
+    expect(opened!.told).toEqual([1]);
+  });
+
+  test('`opening` is true for the task it opened in: for the browser\'s cancel, which is a new event', async () => {
+    const { entry } = modal();
+    expect(entry.opening).toBe(true);
     await task();
     expect(entry.opening).toBe(false);
+  });
+
+  test('a modal opened from a key press while another is open: neither is told for that key', async () => {
+    const under = modal();
+    await task();
+    const inside = document.getElementById('inside')!;
+    let over: ReturnType<typeof modal> | undefined;
+    inside.addEventListener('keydown', () => { over = modal(); }, { once: true });
+    expect(press(inside).defaultPrevented).toBe(true);
+    expect([under.told.length, over!.told.length]).toEqual([0, 0]);
     press(document.body);
-    expect(told).toEqual([1]);
+    expect([under.told.length, over!.told.length]).toEqual([0, 1]);
+  });
+
+  test('opened from the page\'s own window listener, in the capture phase and in the bubble phase', () => {
+    for (const capture of [true, false]) {
+      let opened: ReturnType<typeof modal> | undefined;
+      const open = (): void => { opened = modal(); };
+      window.addEventListener('keydown', open, { once: true, capture });
+      press(document.body);
+      expect(opened!.told).toEqual([]);
+      press(document.body);
+      expect(opened!.told).toEqual([1]);
+      opened!.entry.stop();
+    }
+  });
+
+  test('opened from inside a shadow root', () => {
+    const host = surface();
+    const root = host.attachShadow({ mode: 'open' });
+    const button = root.appendChild(document.createElement('button'));
+    let opened: ReturnType<typeof modal> | undefined;
+    button.addEventListener('keydown', () => { opened = modal(); }, { once: true });
+    press(button, { composed: true });
+    expect(opened!.told).toEqual([]);
+    press(button, { composed: true });
+    expect(opened!.told).toEqual([1]);
+  });
+
+  test('opened late, after a promise: the first key is the modal\'s', async () => {
+    const inside = document.getElementById('inside')!;
+    let opened: ReturnType<typeof modal> | undefined;
+    inside.addEventListener('keydown', () => { void Promise.resolve().then(() => { opened = modal(); }); }, { once: true });
+    press(inside);
+    await task();
+    press(document.body);
+    expect(opened!.told).toEqual([1]);
   });
 
   test('only the topmost modal is told; the one under it when that one has stopped', async () => {
@@ -89,5 +148,53 @@ describe('onModalEscape', () => {
     entry.stop();
     expect(press(document.body).defaultPrevented).toBe(false);
     expect(told).toEqual([]);
+  });
+});
+
+describe('eventsFrom: the one marker', () => {
+  /** The capture listeners on the window, by type. */
+  const watch = () => {
+    const held = new Map<string, number>();
+    const add = window.addEventListener.bind(window);
+    const remove = window.removeEventListener.bind(window);
+    window.addEventListener = ((type: string, listener: EventListener, options?: boolean | AddEventListenerOptions) => {
+      if (options === true) held.set(type, (held.get(type) ?? 0) + 1);
+      add(type, listener, options);
+    }) as typeof window.addEventListener;
+    window.removeEventListener = ((type: string, listener: EventListener, options?: boolean | EventListenerOptions) => {
+      if (options === true) held.set(type, (held.get(type) ?? 0) - 1);
+      remove(type, listener, options);
+    }) as typeof window.removeEventListener;
+    return { count: (type: string): number => held.get(type) ?? 0, stop: () => { window.addEventListener = add; window.removeEventListener = remove; } };
+  };
+
+  test('one capture listener serves every overlay, and goes when the last one has stopped', () => {
+    const watched = watch();
+    try {
+      const first = eventsFrom(surface());
+      const second = eventsFrom(surface());
+      expect([watched.count('keydown'), watched.count('click')]).toEqual([1, 1]);
+      first.stop();
+      first.stop();
+      expect([watched.count('keydown'), watched.count('click')]).toEqual([1, 1]);
+      second.stop();
+      expect([watched.count('keydown'), watched.count('click')]).toEqual([0, 0]);
+    } finally {
+      watched.stop();
+    }
+  });
+
+  test('a click or a key created after the call is after it; the one in flight is not', () => {
+    const inside = document.getElementById('inside')!;
+    let from: ReturnType<typeof eventsFrom> | undefined;
+    const answers: boolean[] = [];
+    const ask = (event: Event): void => { if (from) answers.push(from.after(event)); };
+    document.addEventListener('click', ask);
+    inside.addEventListener('click', () => { from = eventsFrom(inside); }, { once: true });
+    inside.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    inside.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    document.removeEventListener('click', ask);
+    from!.stop();
+    expect(answers).toEqual([false, true]);
   });
 });
