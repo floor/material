@@ -3,6 +3,7 @@
 // The real component in a JSDOM document: what it renders, how it is named,
 // where focus goes, and what it does to the page behind it.
 import { describe, test, expect, beforeEach, afterEach, jest } from 'bun:test';
+import { advanceTimersByTime } from '../../utils/fake-clock';
 import { JSDOM } from 'jsdom';
 
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
@@ -236,16 +237,16 @@ describe('dialog', () => {
       const seen: string[] = [];
       dialog.on('afteropen', () => seen.push('afteropen'));
       dialog.open();
-      jest.advanceTimersByTime(9);
+      advanceTimersByTime(9);
       expect(dialog.element.classList.contains('mtrl-dialog--visible')).toBe(false);
-      jest.advanceTimersByTime(1);
+      advanceTimersByTime(1);
       expect(dialog.element.classList.contains('mtrl-dialog--visible')).toBe(true);
-      jest.advanceTimersByTime(499);
+      advanceTimersByTime(499);
       expect(seen).toEqual([]);
-      jest.advanceTimersByTime(1);
+      advanceTimersByTime(1);
       expect(seen).toEqual(['afteropen']);
       dialog.close();
-      jest.advanceTimersByTime(150);
+      advanceTimersByTime(150);
     } finally {
       jest.useRealTimers();
     }
@@ -260,14 +261,14 @@ describe('dialog', () => {
       dialog.on('afterclose', () => seen.push('afterclose'));
       dialog.open();
       // 10ms to show, then the configured 40ms
-      jest.advanceTimersByTime(49);
+      advanceTimersByTime(49);
       expect(seen).toEqual([]);
-      jest.advanceTimersByTime(1);
+      advanceTimersByTime(1);
       expect(seen).toEqual(['afteropen']);
       dialog.close();
-      jest.advanceTimersByTime(39);
+      advanceTimersByTime(39);
       expect(seen).toEqual(['afteropen']);
-      jest.advanceTimersByTime(1);
+      advanceTimersByTime(1);
       expect(seen).toEqual(['afteropen', 'afterclose']);
     } finally {
       jest.useRealTimers();

@@ -5,6 +5,7 @@
 // cancellable before* first). Classes, painting and the focus trap follow.
 // Open on an open dialog and close on a closed one do nothing and emit nothing.
 import { describe, test, expect, beforeEach, afterEach, jest } from 'bun:test';
+import { advanceTimersByTime } from '../../utils/fake-clock';
 import { JSDOM } from 'jsdom';
 
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
@@ -51,7 +52,7 @@ import type { DialogConfig, DialogComponent } from '../../../src/components/dial
 // there, and a real 80ms wait can end before it. `after(ms)` moves the fake
 // clock by exactly ms, running every timer due on the way, in order.
 const after = async (ms: number): Promise<void> => {
-  jest.advanceTimersByTime(ms);
+  advanceTimersByTime(ms);
 };
 
 const EVENTS = ['beforeopen', 'open', 'afteropen', 'beforeclose', 'close', 'afterclose'] as const;

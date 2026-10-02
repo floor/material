@@ -1,4 +1,5 @@
 import { expect, jest, test } from "bun:test";
+import { advanceTimersByTime } from "../../utils/fake-clock";
 import createDialog from "../../../src/components/dialog";
 import type { DialogComponent, DialogEvent } from "../../../src/components/dialog/types";
 import { callbacksFixture, wait } from "../callbacks.fixture";
@@ -15,9 +16,9 @@ test("all six dialog lifecycle events carry the finished dialog", () => {
   jest.useFakeTimers();
   try {
     dialog.open();
-    jest.advanceTimersByTime(30);
+    advanceTimersByTime(30);
     dialog.close();
-    jest.advanceTimersByTime(30);
+    advanceTimersByTime(30);
   } finally {
     jest.useRealTimers();
   }
