@@ -15,6 +15,8 @@ export const withAPI =
     // withMenu warns and returns early without a textfield, so a select that
     // reaches the API has both
     textField: component.textField!,
+    // The 0.10 name, kept as an alias through 1.x (FLO-383)
+    get textfield() { return this.textField; },
     menu: component.menu!,
 
     getValue: options.select.getValue,
