@@ -189,7 +189,12 @@ bridge.react = (tag, props, children, prefix) => {
   } catch (error) {
     if (!isSynchronousSuspend(error)) {
       // Returning lets the host finish. The page then renders this child and
-      // reports its error, as it does without the bridge.
+      // reports its error, as it does without the bridge. Development names the
+      // host and the error; nothing is remembered past this call.
+      if (isDevelopment()) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn(`[mtrl] ${elementLabel(tag, props)} child snapshot failed, so this response has no shadow root for it: ${message}`);
+      }
       clearAttempt(children);
       return undefined;
     }
