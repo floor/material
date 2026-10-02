@@ -80,17 +80,23 @@ describe("Material chip factories", () => {
     });
   }
   for (const factory of [createFilterChip, createInputChip]) {
-    test(`${factory.name} toggles once and reports the finished component`, () => {
-      const callbacks: [boolean, ChipComponent][] = [];
-      const events: boolean[] = [];
-      const chip = mount(factory({ label: "Toggle", ripple: false, onChange: (selected, instance) => callbacks.push([selected, instance]) }));
-      chip.on("change", payload => { expect(payload.chip).toBe(chip); events.push(payload.selected); });
+    test(`${factory.name} toggles once and reports the change payload`, () => {
+      const callbacks: { selected: boolean; chip: ChipComponent; value: string | null }[] = [];
+      const events: { selected: boolean; chip: ChipComponent; value: string | null }[] = [];
+      const chip = mount(factory({ label: "Toggle", value: "toggle", ripple: false, onChange: (payload) => callbacks.push(payload) }));
+      chip.on("change", payload => { expect(payload.chip).toBe(chip); events.push(payload); });
       chip.action.click();
       expect(chip.action.getAttribute("aria-checked")).toBe("true");
       expect(chip.element.querySelector<HTMLElement>(".mtrl-chip__checkmark")?.hidden).toBe(false);
       chip.action.click();
-      expect(callbacks).toEqual([[true, chip], [false, chip]]);
-      expect(events).toEqual([true, false]);
+      expect(callbacks).toHaveLength(2);
+      expect(events).toHaveLength(2);
+      expect(callbacks[0]).toBe(events[0]);
+      expect(callbacks[1]).toBe(events[1]);
+      expect(callbacks).toEqual([
+        { selected: true, chip, value: "toggle" },
+        { selected: false, chip, value: "toggle" },
+      ]);
       chip.setSelected(true);
       expect(events).toHaveLength(2);
     });

@@ -2600,6 +2600,26 @@ try {
     assert.deepEqual(layout, { classes: [true, true], labelled: true, same: true });
     check("chips: scrollable, label and aria-label update the set in place");
 
+    // FLO-550: a refused deselect changes nothing, so the host dispatches nothing.
+    const refusedDeselect = await page.evaluate(async () => {
+      const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
+      const host = document.createElement("m-chips") as Chips;
+      host.setAttribute("selection-required", "");
+      host.setAttribute("aria-label", "Required");
+      host.innerHTML = `<m-chip value="only" selected>Only</m-chip>`;
+      const seen: string[] = [];
+      for (const type of ["change", "click"]) host.addEventListener(type, () => seen.push(type));
+      document.body.append(host);
+      await frame();
+      (host.shadowRoot?.querySelector('[role="gridcell"]') as HTMLElement).click();
+      await frame();
+      const result = { seen, value: host.value };
+      host.remove();
+      return result;
+    });
+    assert.deepEqual(refusedDeselect, { seen: ["click"], value: ["only"] });
+    check("chips: a refused deselect in a selection-required set dispatches no change");
+
     const dirty = await page.evaluate(async () => {
       const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
       const host = document.getElementById("host") as HTMLElement;
@@ -3739,6 +3759,45 @@ try {
     }, ICON);
     assert.deepEqual(parity.element, parity.factory);
     check("toolbar: renders as the factory does with the global stylesheet");
+  }
+
+  // FLO-387: the rows the roving rule must get right. Read in the same turn as
+  // connect, before the browser's own slotchange microtask.
+  {
+    const roving = await page.evaluate((icon) => {
+      const host = document.getElementById("host")!;
+      host.replaceChildren();
+      const tb = document.createElement("m-toolbar") as HTMLElement & {
+        component: { overflowButton: HTMLElement | null } | null;
+      };
+      tb.id = "roving";
+      tb.setAttribute("aria-label", "Roving");
+      tb.innerHTML =
+        `<m-menu id="overflow" slot="overflow"><m-menu-item value="a">Align</m-menu-item></m-menu>` +
+        `<m-icon-button id="disabled" aria-label="First" icon='${icon}' disabled></m-icon-button>` +
+        `<div id="wrap"><button id="inner" type="button">Inner</button></div>` +
+        `<span id="plain">Note</span>`;
+      host.append(tb);
+      const attr = (id: string): string | null => document.getElementById(id)?.getAttribute("tabindex") ?? null;
+      const seen = [tb, ...Array.from(tb.querySelectorAll("*")), ...Array.from(tb.shadowRoot?.querySelectorAll("*") ?? [])];
+      return {
+        menu: attr("overflow"),
+        disabled: attr("disabled"),
+        wrap: attr("wrap"),
+        inner: attr("inner"),
+        plain: attr("plain"),
+        overflowButton: tb.component?.overflowButton?.getAttribute("tabindex") ?? null,
+        zeros: seen.filter((node) => node.getAttribute("tabindex") === "0").map((node) => node.id || node.localName),
+      };
+    }, ICON);
+    assert.equal(roving.menu, null, "the overflow menu carries no tabindex the toolbar wrote");
+    assert.equal(roving.wrap, null, "the wrapper carries no tabindex the toolbar wrote");
+    assert.equal(roving.plain, null, "the span carries no tabindex the toolbar wrote");
+    assert.equal(roving.disabled, "-1", "the disabled item is -1");
+    assert.equal(roving.inner, "0", "the first enabled control is the tab stop");
+    assert.equal(roving.overflowButton, "-1", "the overflow button is a target and not the tab stop");
+    assert.deepEqual(roving.zeros, ["inner"], "exactly one tab stop");
+    check("toolbar: one tab stop on the first enabled control; overflow, wrapper and text are not targets");
   }
 
   // ---------------------------------------------------------------- list
