@@ -820,7 +820,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   behaviour: each scroller scrolls smoothly from its stylesheet (`scroll-behavior: smooth`,
   new on the tabs' scroller and the suggestion list), and jumps at once under reduced motion.
   A script of yours that scrolls the tabs' scroller or the suggestion list now scrolls it
-  smoothly too. Also on 0.10.x.
+  smoothly too.
 - **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
   centre while animating in and be squeezed at the viewport edge. Placement now uses its full
   layout size; reduced-motion placement is unchanged.
