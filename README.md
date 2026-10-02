@@ -283,13 +283,11 @@ A server-rendered page sends each element as its tag and light DOM, and the elem
 
 With a bundler, import `material/elements/preupgrade.css`. What the stylesheet does, its per-element files and its limits are in the [Server rendering guide](https://md3.io/docs/server-rendering/#avoiding-layout-shift); attributes, events, slots and forms are in the [Web Components guide](https://md3.io/docs/web-components/).
 
-The API for writing elements of your own is experimental: it is outside semantic versioning in 3.x and may change in a minor release. The elements material defines, and their attributes, properties and events, are not. The experimental names, all from `material/elements`:
+The API for writing elements of your own is experimental and may change in a minor release. The elements material defines, and their attributes, properties and events, are not.
 
-- `defineElement`
-- `ElementSpec`
-- `registerStyles`
-- `hasStyles`
-- `SHADOW_BASE_STYLES`
+| Status | Names, all from `material/elements` |
+|--------|-------------------------------------|
+| Experimental: outside semantic versioning in 3.x | `defineElement`, `ElementSpec`, `registerStyles`, `hasStyles`, `SHADOW_BASE_STYLES` |
 
 ## React, Vue, Svelte and Solid
 
@@ -410,7 +408,7 @@ What the pipe built:
 - `withEvents` adds the three event methods, `on()` among them;
 - `destroy()` removes the element.
 
-Add `withLifecycle()` when features need to register cleanup; it comes from `material/core/compose`, with the others. The [Architecture guide](https://md3.io/docs/architecture/) explains the building blocks.
+Add `withLifecycle()` from `material/core/compose` when features need to register cleanup. The [Architecture guide](https://md3.io/docs/architecture/) explains the building blocks.
 
 ## Markup and sanitizing
 
@@ -490,11 +488,11 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 |--------|-----:|
 | `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.4 kB |
 | `createButton`, without code splitting (the progress indicator included) | 13.7 kB |
-| `createButton`, `createTextField` and `createCheckbox`, without code splitting | 19.8 kB |
+| `createButton`, `createTextField` and `createCheckbox`, without code splitting | 19.9 kB |
 | Everything the root exports (`export * from 'material'`), without code splitting | 126.9 kB |
 | `material/styles/base` | 2.9 kB |
 | `material/styles/base` and `material/styles/button` | 5.2 kB |
-| `material/styles`, the full stylesheet | 61.9 kB |
+| `material/styles`, the full stylesheet | 61.8 kB |
 <!-- /sizes -->
 
 `bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size.
