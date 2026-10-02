@@ -40,7 +40,7 @@ const cases: Record<string, Case> = {
   card: {},
   carousel: { markup: choices("carousel", "carousel-item"), event: "change", getter: "index", factoryEvent: "change", action: `host.next()` },
   menu: {}, fabMenu: {},
-  select: { markup: choices("select", "select-option"), event: "change", getter: "value", factoryEvent: "change", action: `host.component.menu.element.querySelector('[data-id="b"]').click()` },
+  select: { markup: choices("select", "select-option"), event: "change", getter: "value", factoryEvent: "change", action: `host.component[Object.getOwnPropertySymbols(host.component).find(key => key.description === "mtrl.menu")].element.querySelector('[data-id="b"]').click()` },
   splitButton: {}, tooltip: {}, toolbar: {}, snackbar: {}, dialog: {}, bottomSheet: {}, sideSheet: {},
   datepicker: { markup: '<m-datepicker label="Date" value="2026-09-10"></m-datepicker>', event: "change", getter: "value", factoryEvent: "change", action: `const input = host.shadowRoot.querySelector("input"); input.value = "09/12/2026"; input.dispatchEvent(new Event("change", { bubbles: true }))` },
   timepicker: { markup: '<m-timepicker value="09:30"></m-timepicker>', event: "confirm", getter: "value", factoryEvent: "confirm", factoryPath: "picker", changesTo: "10:30", action: `const picker = host.component.picker; picker.setType("input"); picker.open(); const hour = picker.dialogElement.querySelector('[data-type="hour"]'); hour.value = "10"; hour.dispatchEvent(new Event("change", { bubbles: true })); picker.dialogElement.querySelector('[class$="time-picker__confirm"]').click()` },
