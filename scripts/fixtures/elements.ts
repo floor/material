@@ -41,8 +41,8 @@ Object.assign(window, { mtrl: { ...elements, ...factories }, ready: true });
 
 // Button group and chips, the factories their elements wrap.
 import createButtonGroup from "../../dist/components/button-group/index.js";
-import { createChips } from "../../dist/components/chips/index.js";
-Object.assign((window as unknown as { mtrl: object }).mtrl, { createButtonGroup, createChips });
+import { createChips, createInputChip, createFilterChip } from "../../dist/components/chips/index.js";
+Object.assign((window as unknown as { mtrl: object }).mtrl, { createButtonGroup, createChips, createInputChip, createFilterChip });
 
 // The factories with no element yet, mounted in a plain shadow root by the
 // #244 checks: they must find focus in their own root, not the document's.

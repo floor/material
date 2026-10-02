@@ -87,6 +87,16 @@ $container: "#{base.$prefix}-chips";
         border-end-start-radius: 0;
         color: var(--#{base.$prefix}-chip-trailing-color);
     }
+    // m3.material.io, Chips: "Secondary actions (such as a trailing icon button
+    // for Remove) must have a 48x48dp interaction target that doesn't interfere
+    // with the chip's primary action (such as Edit or Drag). To achieve this,
+    // apply a minimum width of 88dp to the chip, or 42dp to the label text." The
+    // target runs its 48px back from the chip's end, so the chip is at least 88
+    // wide and the label at least 42: content and floor then meet exactly (input:
+    // 12 + 42 + 8 + 26 = 88), the primary action keeps the first 40px and the
+    // secondary control the last 48, without a gap between them.
+    &:has(> &__remove, > &__trailing-action) { min-width: 88px; }
+    &:has(> &__remove, > &__trailing-action) &__label { min-width: 42px; }
     &__label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     &__leading-icon, &__trailing-icon, &__checkmark {
         display: inline-flex;
