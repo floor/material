@@ -131,7 +131,7 @@ describe('radios', () => {
     radios.setValue('s');
     expect(payloads).toEqual([]);
     radios.setValue('missing');
-    expect(radios.getValue()).toBe('');
+    expect(radios.getValue()).toBeNull();
     expect(payloads).toEqual([]);
     radios.destroy();
   });
@@ -164,7 +164,7 @@ describe('radios', () => {
     const radios = mount({ value: 's' });
     radios.setValue('xl');
     expect(inputs(radios).every((i) => !i.checked)).toBe(true);
-    expect(radios.getValue()).toBe('');
+    expect(radios.getValue()).toBeNull();
     expect(radios.getSelected()).toBeNull();
   });
 
@@ -199,7 +199,7 @@ describe('radios', () => {
     radios.setValue('xl');
     radios.removeOption('xl');
     expect(radios.element.querySelector('input[value="xl"]')).toBeNull();
-    expect(radios.getValue()).toBe('');
+    expect(radios.getValue()).toBeNull();
   });
 
   test('a group created without a name still shares one generated name', () => {
@@ -212,6 +212,25 @@ describe('radios', () => {
   test('direction is reflected in the root class', () => {
     expect(mount().element.classList.contains('mtrl-radios--vertical')).toBe(true);
     expect(mount({ direction: 'horizontal' }).element.classList.contains('mtrl-radios--horizontal')).toBe(true);
+  });
+
+  // 1.0: an empty selection is null, as the select and <m-radios> report it
+  test('nothing selected reads null, from the getter and in the change payload', () => {
+    const radios = mount({ value: undefined });
+    expect(radios.getValue()).toBeNull();
+    radios.setValue('s');
+    radios.removeOption('s');
+    expect(radios.getValue()).toBeNull();
+    radios.destroy();
+
+    const blank = createRadios({ name: 'blank', options: [{ value: '', label: 'None' }, { value: 'a', label: 'A' }], value: 'a' });
+    document.body.appendChild(blank.element);
+    const payloads: Array<{ value: unknown }> = [];
+    blank.on('change', payload => payloads.push(payload));
+    blank.element.querySelectorAll('input')[0]!.click();
+    expect(payloads.map(payload => payload.value)).toEqual([null]);
+    expect(blank.getValue()).toBeNull();
+    blank.destroy();
   });
 
   test('destroy removes the element', () => {
