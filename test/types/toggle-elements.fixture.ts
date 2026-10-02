@@ -15,7 +15,7 @@ import type { VueEmits } from "../../src/vue";
 
 type Equals<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 type Toggle = CustomEvent<{ selected: boolean; value: string }>;
-type Slide = CustomEvent<{ value: number; index: number }>;
+type Slide = CustomEvent<{ value: number }>;
 
 // The elements' details
 export const button: Equals<ElementEvents<ButtonSpec>["change"], Toggle> = true;
