@@ -40,7 +40,7 @@ export interface SplitButtonConfig {
    */
   layer?: "top";
 
-  /** Icon of the leading button, as an HTML string */
+  /** Icon of the leading button. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   icon?: string;
 
   /** Visual style, shared by both buttons */

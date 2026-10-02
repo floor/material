@@ -192,6 +192,7 @@ export const selectOptionDeclaration = {
   attributes: {
     value: { type: "string" },
     label: { type: "string" },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string" },
     disabled: { type: "boolean" },
   },
