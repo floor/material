@@ -17,7 +17,7 @@ import {
 
 import { setHTML } from "../../../core/dom/html";
 import { PREFIX } from "../../../core/config";
-import { hideFromTopLayer, showInTopLayer } from "../../../core/dom/layer";
+import { hideFromTopLayer, showInTopLayer, onModalEscape, type ModalEscape } from "../../../core/dom/layer";
 import { activeElementOf } from "../../../core/dom/focus";
 import { getCleanup, type CleanupScope } from "../../../core/compose/cleanup";
 /**
@@ -84,10 +84,14 @@ export const withStates =
     if (surface && !event.composedPath().includes(surface)) collapseToBar(false);
   };
   // Escape on a full-screen view, from anywhere in it but the input (which
-  // clears its text first): the modal dialog's cancel.
+  // clears its text first), is a key press handled for the topmost open modal
+  // (FLO-548). What is not a key press still arrives as the modal dialog's
+  // cancel; the browser's cancel in the task the view opened in is the opening
+  // key's, when the page stopped that key press before it reached the window.
+  let escape: ModalEscape | undefined;
   const onCancel = (event: Event): void => {
     event.preventDefault();
-    collapseToBar();
+    if (!escape?.opening) collapseToBar();
   };
   // Set while the surface moves in or out of the top layer, and focus is put
   // back, so that focus does not reopen the view.
@@ -104,6 +108,8 @@ export const withStates =
       surface.setAttribute("aria-label", component.structure?.input.getAttribute("aria-label") || "Search");
       showInTopLayer(surface, { kind: "modal" });
       surface.addEventListener("cancel", onCancel);
+      escape?.stop();
+      escape = onModalEscape(surface, () => collapseToBar());
     } else {
       showInTopLayer(surface, { kind: "popover-manual" });
       document.addEventListener("pointerdown", onOutside, true);
@@ -138,6 +144,7 @@ export const withStates =
     window.removeEventListener("scroll", place, true);
     window.removeEventListener("resize", place);
     surface.removeEventListener("cancel", onCancel);
+    escape?.stop();
     document.removeEventListener("pointerdown", onOutside, true);
   };
 

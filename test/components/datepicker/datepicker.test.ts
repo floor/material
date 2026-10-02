@@ -169,12 +169,14 @@ describe("Material date picker", () => {
     expect(picker.calendar.getCurrentView()).toBe('month'); click(picker, '[data-month="0"]'); expect(picker.calendar.getCurrentView()).toBe('day');
     expect(picker.element.querySelector('[data-date="2027-01-15"]')).not.toBeNull();
   });
-  test("open/close are idempotent, Escape and native cancellation restore trigger focus", () => {
+  test("open/close are idempotent, Escape and native cancellation restore trigger focus", async () => {
     const picker = mount({ variant: 'modal' }); let opened = 0, closed = 0;
     picker.on('open', () => opened++).on('close', () => closed++);
     const trigger = query<HTMLButtonElement>(picker, '[data-action="open"]'); trigger.focus(); trigger.click(); picker.open();
     key(query(picker, 'dialog'), 'Escape'); picker.close(); expect(opened).toBe(1); expect(closed).toBe(1); expect(document.activeElement).toBe(trigger);
-    picker.open(); query(picker, 'dialog').dispatchEvent(new Event('cancel', { cancelable: true })); expect(closed).toBe(2);
+    // A cancel in the task of open() is the opening key's (FLO-548): this one comes later
+    picker.open(); await new Promise((resolve) => setTimeout(resolve, 0));
+    query(picker, 'dialog').dispatchEvent(new Event('cancel', { cancelable: true })); expect(closed).toBe(2);
   });
   test("disabled state covers both APIs, open controls, and closes an active modal", () => {
     const picker = mount({ variant: 'modal', disabled: true }); picker.open(); expect(query(picker, 'dialog').hasAttribute('open')).toBe(false);
