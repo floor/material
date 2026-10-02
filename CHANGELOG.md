@@ -27,6 +27,10 @@ Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
   own events; the radio factory's `change` reports `null`, not `""`, when nothing is selected;
   `withInput`'s `change` reports the checked boolean as `value`, with the input's string value
   as `valueAttribute`.
+- **`select.menu` and `splitButton.menu`** (the inner menu component) are removed in 1.0. Use
+  the component's own methods and events: on the select `open()`, `close()`, `isOpen()`,
+  `getOptions()`, `setOptions()` and `open`, `close`, `change`; on the split button `expand()`,
+  `collapse()`, `isExpanded()` and `expand`, `collapse`, `select` (FLO-543).
 - **Told in the TSDoc, for 1.0, values and payloads:**
   - the radio factory's `getValue()` returns `null` when nothing is selected, and `setValue`
     accepts `null` to clear;
