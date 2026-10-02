@@ -119,6 +119,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `TEXT_FIELD`, as every text field name (FLO-383). The class string, `select__textfield`, stays.
   Comments only; the new key is not on 0.10.x.
 
+- **`select.textfield`** (the select's property): 1.0 renames it `textField`, as every text field
+  name (FLO-383). Like `SELECT_CLASSES.TEXTFIELD`, the new name is not on 0.10.x; in 1.0,
+  `select.textfield` is `undefined`. Comments only.
+
+- **`CardComponent`'s `loading`, `expandable` and `swipeable`** (`mtrl/components/card`): `createCard`
+  never sets them; only the deprecated `withLoading`, `withExpandable` and `withSwipeable` features
+  add them. Removed in 1.0 with those features (FLO-381). Comments only.
+
 - **The text field's Sass map and function: `$textfield` and `textfield()` (FLO-383).** Use
   `$text-field` and `v.text-field()`, the same map: a theme may configure either name until 1.0
   removes the old one. The built CSS is unchanged.

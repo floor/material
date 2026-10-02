@@ -191,6 +191,8 @@ export interface SelectComponent {
 
   /**
    * The textfield component
+   * @deprecated Renamed `textField` in 1.0 (FLO-383); 0.10.x has no `textField`, so read this one
+   * until you upgrade. In 1.0, `select.textfield` is `undefined`.
    */
   textfield: TextfieldComponent;
 
