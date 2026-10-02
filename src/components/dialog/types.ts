@@ -246,13 +246,6 @@ export interface DialogButton {
   variant?: string;
   
   /** 
-   * Has no effect: the button has no colour option, and M3's dialog actions
-   * are text buttons in the dialog's own colours.
-   * @deprecated Since 0.10 (FLO-324); removed in 1.0.
-   */
-  color?: string;
-  
-  /** 
    * Button size
    * @default "medium"
    * @example "small" | "medium" | "large"

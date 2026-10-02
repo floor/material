@@ -19,7 +19,6 @@ export type {
   CheckboxComponent, 
   CheckboxEvents,
   CheckboxChangePayload,
-  CheckboxVariant, 
   CheckboxLabelPosition
 } from './types';
 

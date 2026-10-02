@@ -19,6 +19,10 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
   const base = pipe(createBase, withEvents(), withElement(createElementConfig(options, { tag: "div" })), withLifecycle())(options);
   const root = base.element;
   const resources = getCleanup(base);
+  // The set's selection hook. removeChip and the set's teardown both destroy
+  // the chip, which is what drops the hook: a later setSelected cannot reach
+  // a set that no longer has this chip. FLO-518.
+  resources.add(() => { options.onSelected = undefined; });
   root.classList.add(base.getClass(`chip--${type}`));
   if (options.elevated && type !== "input") root.classList.add(base.getClass("chip--elevated"));
   const action = document.createElement("button");
@@ -171,7 +175,13 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
       return api;
     },
     isSelected: () => selected,
-    setSelected(next) { animateChanges(); selected = selectable && next; render(); return api; },
+    setSelected(next) {
+      animateChanges();
+      selected = selectable && next;
+      render();
+      if (selected) options.onSelected?.(api);
+      return api;
+    },
     toggleSelected() { return api.setSelected(!selected); },
     focus() { (oneActionCell ? root : action).focus(); return api; },
     destroy: () => base.lifecycle.destroy(),
@@ -267,7 +277,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
   // a chip the app makes draggable; mtrl does no dragging itself. FLO-259.
   listen(root, "dragstart", () => root.classList.add(base.getClass("chip--dragged")));
   listen(root, "dragend", () => root.classList.remove(base.getClass("chip--dragged")));
-  label.textContent = options.label ?? options.text ?? "";
+  label.textContent = options.label ?? "";
   setHTML(leading, avatar || leadingIcon);
   setHTML(trailing, trailingIcon);
   render();

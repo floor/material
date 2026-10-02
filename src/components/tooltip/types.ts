@@ -137,13 +137,6 @@ export interface TooltipConfig {
    * it. Unset, the tooltip is appended to `document.body`.
    */
   layer?: "top";
-
-  /**
-   * Never read, so it has no effect: a rich tooltip is `variant: 'rich'`, and
-   * the content is always text.
-   * @deprecated Since 0.10 (FLO-324); removed in 1.0.
-   */
-  rich?: boolean;
 }
 
 /**

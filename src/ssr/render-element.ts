@@ -79,7 +79,8 @@ const validateOptions = (options: RenderOptions): string => {
  * Render a registered tag to declarative shadow DOM, synchronously and detached.
  * Children are HTML processed by setHTML/configureHTML. The default policy is
  * identity: this function is NOT a sanitizer. Configure a synchronous sanitizer
- * for untrusted children or HTML-valued attributes such as icons.
+ * for untrusted children or HTML-valued attributes. Which attributes take markup
+ * is listed in the README under Markup and sanitizing.
  *
  * Each call owns a temporary DOM realm (zero layout, 1024×768 viewport).
  * The published mtrl/ssr entry registers element CSS automatically.
