@@ -1133,10 +1133,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   ancestor's `dir`. The same holds for a text field built by the factory inside a shadow
   root of your own. In the light DOM a plain filled field is still mirrored by the
   stylesheet alone, with no style read: it reads its direction only inside a shadow root,
-  once, when it is created. A direction changed afterwards, or a plain field moved into a
-  shadow root after its creation, is picked up by the field's next placement
-  (`updatePositions()`, or a setter that places), as a direction change was for the outlined
-  variant; the field does not watch for either. Also fixed, in the light DOM too: **right to left, a field with both a leading and
+  once, in the task that created it. **A plain filled field that is attached to a shadow
+  root in a later task than the one that created it, or whose host is not yet connected
+  when that task ends, is not mirrored until you call `updatePositions()`.** A direction
+  changed afterwards is likewise picked up only by the field's next placement
+  (`updatePositions()`, or a setter that places), as it was for the outlined variant; the
+  field does not watch for either. Also fixed, in the light DOM too: **right to left, a field with both a leading and
   a trailing icon** padded its text 16px on the leading icon's side, under the icon; it is
   52px on both.
 - **Text field: with reduced motion, the filled field's focus indicator no longer fades
