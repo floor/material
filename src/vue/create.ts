@@ -106,7 +106,7 @@ type EventKeys<S> =
 /** Props of a generated component: the element's own, plus any HTML attribute for the host. */
 export type VueProps<S> = OwnProps<S> &
   Omit<VueHostAttributes, keyof OwnProps<S> | EventKeys<S> | RetiredProps<S>> &
-  { [K in RetiredProps<S>]?: never };
+  { [K in RetiredProps<S>]?: `${K} was removed in 1.0: use onChange` };
 
 /** The handler props of events 1.0 removed (`onToggle` on the icon button): refused, see `RetiredEvents`. */
 type RetiredProps<S> = `on${Capitalize<RetiredEvents<S>>}`;

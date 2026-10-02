@@ -44,10 +44,11 @@ export type DefaultProps<S> = {
 
 /**
  * Events a component had in 0.10 and 1.0 removed: the icon button's `toggle`.
- * The adapters refuse the matching handler prop (`onToggle`, `ontoggle`). It
- * would otherwise fall through to the host's native handler of that name,
- * compile, and never fire when the button toggles. A 1.x migration guard, with
- * no run-time code: drop it in 2.0.
+ * The adapters refuse the matching handler prop (`onToggle`, `ontoggle`): its
+ * type is a sentence, so the compiler's error says what to do. It would
+ * otherwise fall through to the host's native handler of that name, compile,
+ * and never fire when the button toggles. A 1.x migration guard, with no
+ * run-time code: drop it in 2.0.
  */
 export type RetiredEvents<S> = [S] extends [import("./icon-button").IconButtonSpec]
   ? [import("./icon-button").IconButtonSpec] extends [S] ? "toggle" : never
