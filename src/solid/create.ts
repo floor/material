@@ -59,13 +59,33 @@ type SlotProps<S> = { [K in ElementSlotProp<S>]?: JSX.Element };
 
 type OwnProps<S> = Omit<BaseProps<S>, ElementSlotProp<S>> & SlotProps<S>;
 
+/**
+ * Globals solid-js 1.8 leaves off `JSX.HTMLAttributes`: `popover` until 1.8.15,
+ * `enterkeyhint` (typed on input and textarea only), and `nonce` (script and style
+ * only; on `DOMAttributes` from 1.9). `enterKeyHint` is not a Solid prop name.
+ * A release that already declares a key keeps its own type, including `popover`'s boolean.
+ */
+type SolidHostGaps = {
+  popover?: "" | "auto" | "manual" | "hint";
+  enterkeyhint?: "enter" | "done" | "go" | "next" | "previous" | "search" | "send";
+  nonce?: string;
+};
+
+type Missing<Base, Extra> = {
+  [K in Exclude<keyof Extra, keyof Base>]?: K extends keyof Extra ? Extra[K] : never;
+};
+
+/** `JSX.HTMLAttributes` for the host, plus globals a supported Solid 1.8 type omits. */
+export type SolidHostAttributes<E extends HTMLElement = HTMLElement> =
+  JSX.HTMLAttributes<E> & Missing<JSX.HTMLAttributes<E>, SolidHostGaps>;
+
 /** Props of a generated component: the element's own, plus any HTML attribute for the host. */
 export type SolidProps<S, E extends HTMLElement> = OwnProps<S> &
-  Omit<JSX.HTMLAttributes<HTMLElement>, keyof OwnProps<S> | "ref"> & {
+  Omit<SolidHostAttributes, keyof OwnProps<S> | "ref"> & {
     ref?: E | ((element: E) => void);
   };
 
-export type DeclarationProps<A> = A & Omit<JSX.HTMLAttributes<HTMLElement>, keyof A>;
+export type DeclarationProps<A> = A & Omit<SolidHostAttributes, keyof A>;
 
 /** A generated component. */
 export type MComponent<S, E extends HTMLElement> = Component<SolidProps<S, E>>;

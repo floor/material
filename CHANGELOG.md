@@ -196,6 +196,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Framework components accept the host element's HTML attributes (FLO-519).**
+  React, Vue, Svelte and Solid props take that framework's `HTMLAttributes` as well
+  as the component's own props. Where a name is both, the component's type wins, so
+  a switch's `checked` stays a boolean and a button's `type` stays a string. A global
+  a supported release leaves off that interface is accepted too (`popover` on React 18
+  through 18.3.31 and on Vue through 3.5, `enterKeyHint` on React 18 before 18.3.31,
+  `nonce` on Vue and Svelte);
+  a release that already declares the key keeps its own type. Vue spells `inputmode`
+  and `itemprop`, and Solid and Svelte spell `enterkeyhint`.
 - Read-only `getValue()` aliases on carousel, tabs, drawer, navigation rail and
   button group (FLO-380); existing accessors remain. Button toggle `change`, card
   `expandedChanged`, list `keydown`, and interactive touch events now have their

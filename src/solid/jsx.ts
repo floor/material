@@ -6,11 +6,11 @@
  *
  * @module solid/jsx
  */
-import type { JSX } from "solid-js";
 import type { ElementEvents, ElementMarkup, ElementProperties } from "../elements";
+import type { SolidHostAttributes } from "./create";
 
 /** A tag's props: its attributes as markup writes them, and any HTML attribute. */
-type Tag<S, E extends HTMLElement> = Omit<JSX.HTMLAttributes<E>, keyof ElementMarkup<S>> & ElementMarkup<S>;
+type Tag<S, E extends HTMLElement> = Omit<SolidHostAttributes<E>, keyof ElementMarkup<S>> & ElementMarkup<S>;
 
 declare module "solid-js" {
   // eslint-disable-next-line @typescript-eslint/no-namespace -- JSX is a namespace; this merges into it
