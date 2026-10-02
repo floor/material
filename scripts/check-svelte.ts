@@ -70,6 +70,14 @@ const run = async (): Promise<void> => {
   assert.equal(tsc.exitCode, 0, tsc.stdout.toString() + tsc.stderr.toString());
   check("the generated declarations compile");
 
+  // FLO-383: TextField is the canonical name; Textfield stays, deprecated, until 1.0
+  for (const file of ["dist/svelte/index.js", "dist/svelte/index.d.ts"]) {
+    const index = await Bun.file(file).text();
+    assert.match(index, /export \{ default as TextField \} from "\.\/Textfield\.svelte";/, file);
+    assert.match(index, /\/\*\* @deprecated Use TextField: [^*]*\*\/\s*default as Textfield,/, file);
+  }
+  check("the text field is TextField, with Textfield deprecated (FLO-383)");
+
   // Server render in this process, no DOM.
   const server = await bundle("scripts/fixtures/svelte-server.ts", "bun");
   const serverPath = `${process.cwd()}/.check-svelte.js`;
