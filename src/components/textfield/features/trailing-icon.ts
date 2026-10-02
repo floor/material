@@ -16,7 +16,7 @@ interface InputElementComponent extends ElementComponent {
 }
 
 /** What an interactive trailing icon's `trailing` event carries (FLO-301) */
-export interface TextfieldTrailingPayload {
+export interface TextFieldTrailingPayload {
   /** The field's value when the icon was activated */
   value: string;
   /** The click (Enter and Space reach a button as one) */
@@ -42,7 +42,7 @@ export interface TrailingIconConfig {
   trailingIconLabel?: string;
 
   /** Called when the trailing icon button is activated, after `trailing` is emitted */
-  onTrailingClick?: (event: TextfieldTrailingPayload) => void;
+  onTrailingClick?: (event: TextFieldTrailingPayload) => void;
 
   /** Whether the field starts disabled; the trailing button is disabled with it */
   disabled?: boolean;
@@ -122,7 +122,7 @@ export const withTrailingIcon = <T extends TrailingIconConfig & object>(config: 
 
     const activate = (event: MouseEvent): void => {
       if (component.input?.disabled) return;
-      const detail: TextfieldTrailingPayload = { value: component.input?.value ?? '', event };
+      const detail: TextFieldTrailingPayload = { value: component.input?.value ?? '', event };
       component.emit?.('trailing', detail);
       config.onTrailingClick?.(detail);
     };

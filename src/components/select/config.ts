@@ -47,22 +47,22 @@ export const getApiConfig = (comp: BaseComponent): ApiOptions => ({
   },
   disabled: {
     enable: () => {
-      if (comp.textfield?.enable) {
-        comp.textfield.enable();
+      if (comp.textField?.enable) {
+        comp.textField.enable();
       }
       return comp;
     },
     disable: () => {
-      if (comp.textfield?.disable) {
-        comp.textfield.disable();
+      if (comp.textField?.disable) {
+        comp.textField.disable();
       }
       return comp;
     },
   },
   lifecycle: {
     destroy: () => {
-      if (comp.textfield?.destroy) {
-        comp.textfield.destroy();
+      if (comp.textField?.destroy) {
+        comp.textField.destroy();
       }
       if (comp.menu?.destroy) {
         comp.menu.destroy();

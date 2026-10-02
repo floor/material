@@ -23,7 +23,7 @@ import { fabElement, defineFab } from "./fab";
 import { extendedFabElement, defineExtendedFab } from "./extended-fab";
 import { checkboxElement, defineCheckbox } from "./checkbox";
 import { sliderElement, defineSlider } from "./slider";
-import { textfieldElement, defineTextfield } from "./textfield";
+import { textFieldElement, defineTextField } from "./textfield";
 import { radiosElement, radioDeclaration, defineRadios } from "./radios";
 import { navigationBarElement, navigationBarItemDeclaration, defineNavigationBar } from "./navigation-bar";
 import { navigationRailElement, navigationRailItemDeclaration, defineNavigationRail } from "./navigation-rail";
@@ -86,8 +86,12 @@ export { checkboxElement, defineCheckbox } from "./checkbox";
 export type { CheckboxSpec, CheckboxElement } from "./checkbox";
 export { sliderElement, defineSlider } from "./slider";
 export type { SliderSpec, SliderElement } from "./slider";
-export { textfieldElement, defineTextfield } from "./textfield";
-export type { TextfieldSpec, TextfieldElement, TextfieldElementComponent } from "./textfield";
+export { textFieldElement, defineTextField } from "./textfield";
+export type {
+  TextFieldSpec,
+  TextFieldElement,
+  TextFieldElementComponent,
+} from "./textfield";
 export { radiosElement, radioDeclaration, defineRadios } from "./radios";
 export type { RadiosSpec, RadiosElement, RadioAttributes } from "./radios";
 export { navigationBarElement, navigationBarItemDeclaration, defineNavigationBar } from "./navigation-bar";
@@ -154,7 +158,7 @@ export const elements = {
   extendedFab: extendedFabElement,
   checkbox: checkboxElement,
   slider: sliderElement,
-  textfield: textfieldElement,
+  textfield: textFieldElement,
   radios: radiosElement,
   navigationBar: navigationBarElement,
   navigationRail: navigationRailElement,
@@ -212,7 +216,7 @@ export const defineAll = (options?: DefineOptions): void => {
   defineExtendedFab(options);
   defineCheckbox(options);
   defineSlider(options);
-  defineTextfield(options);
+  defineTextField(options);
   defineRadios(options);
   defineNavigationBar(options);
   defineNavigationRail(options);

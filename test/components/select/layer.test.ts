@@ -177,7 +177,7 @@ describe("select layer: top", () => {
     const { select } = mount({ layer: "top" });
     await opened(select);
     const option = select.menu.element.querySelector('[data-id="a"]') as HTMLElement;
-    select.textfield.input.dispatchEvent(new dom.window.FocusEvent("blur", { relatedTarget: option }));
+    select.textField.input.dispatchEvent(new dom.window.FocusEvent("blur", { relatedTarget: option }));
     await after(100);
     expect(select.isOpen()).toBe(true);
   });

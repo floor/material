@@ -17,7 +17,7 @@ const setup = (config: TimePickerConfig) => {
   // Edits are a draft until OK (FLO-288): what they did shows in `input`.
   const changes: string[] = [];
   const picker = mount(createTimePicker({ value: "10:15", ...config }));
-  picker.on("input", ({ value }) => changes.push(value));
+  picker.on("input", ({ draftValue }) => changes.push(draftValue));
   const draft = () => changes.at(-1) ?? picker.getValue();
   const dialog = picker.dialogElement;
   const options = () => Array.from(dialog.querySelectorAll<HTMLElement>("[role=option]"));

@@ -51,10 +51,6 @@ export { default as createSwitch } from "./switch";
 export { default as createTabs } from "./tabs";
 export { createTab } from "./tabs/tab";
 export { default as createTextField } from "./textfield";
-export {
-  /** @deprecated Use createTextField: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
-  default as createTextfield,
-} from "./textfield";
 export { default as createTimePicker } from "./timepicker";
 export { default as createToolbar } from "./toolbar";
 export { default as createTopAppBar } from "./top-app-bar";
@@ -78,9 +74,7 @@ export type { BadgeConfig, BadgeComponent } from "./badge/types";
 // Bottom App Bar
 export type {
   BottomAppBarConfig,
-  BottomAppBar as BottomAppBarComponent,
-  /** @deprecated Use BottomAppBarComponent, the name every component type has. Removed in 1.0 (FLO-383). */
-  BottomAppBar,
+  BottomAppBarComponent,
 } from "./bottom-app-bar/types";
 export type {
   BottomSheetConfig,
@@ -119,9 +113,7 @@ export type {
 
 // Card
 export type {
-  CardSchema as CardConfig,
-  /** @deprecated Use CardConfig. Removed in 1.0 (FLO-383). */
-  CardSchema,
+  CardConfig,
 } from "./card/types";
 
 // Carousel
@@ -253,14 +245,10 @@ export type {
   TabComponent,
 } from "./tabs/types";
 
-// Textfield
+// TextField
 export type {
-  TextfieldConfig as TextFieldConfig,
-  TextfieldComponent as TextFieldComponent,
-  /** @deprecated Use TextFieldConfig: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
-  TextfieldConfig,
-  /** @deprecated Use TextFieldComponent: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
-  TextfieldComponent,
+  TextFieldConfig,
+  TextFieldComponent,
 } from "./textfield/types";
 
 // Timepicker
@@ -280,9 +268,7 @@ export type {
 // Top App Bar
 export type {
   TopAppBarConfig,
-  TopAppBar as TopAppBarComponent,
-  /** @deprecated Use TopAppBarComponent, the name every component type has. Removed in 1.0 (FLO-383). */
-  TopAppBar,
+  TopAppBarComponent,
 } from "./top-app-bar/types";
 
 // Tooltip

@@ -13,9 +13,11 @@ import { compile, type Warning } from "svelte/compiler";
 import type { BunPlugin } from "bun";
 import { declarations, elements } from "../src/elements";
 import { cases } from "./fixtures/preupgrade-cases";
+import { pascal } from "./element-modules";
+import { assertGlobalHost, GLOBAL_HOST_DOM, readGlobalHost } from "./fixtures/ssr-global-host";
 
 const OPT_OUT = new Set(["carousel", "fab-menu", "toolbar"]);
-const pascal = (name: string): string => name.replace(/(^|-)([a-z])/g, (_, __, c: string) => c.toUpperCase());
+// Component names as the adapters export them: textfield is TextField (FLO-383)
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
 interface SpecAttributes { attributes?: Record<string, { type?: string }> }
@@ -94,6 +96,7 @@ const SNIPPETS = [
 const SLOTTED = SNIPPETS.flatMap((item) => Object.entries(item.slots).map(([slot, id]) => ({ host: item.host, slot, id })));
 for (const name of ["Card", "TopAppBar", "Button"]) used.add(name);
 for (const item of SNIPPETS) pieces.push(item.markup);
+pieces.push(`<Button id="globals" label="Globals" popover="auto" inputmode="numeric" enterkeyhint="send" itemprop="name" nonce="abc"></Button>`);
 // The switch above is built before the checked binding is added. Add it on the host.
 const switchHost = `id=${expr("host-switch")}`;
 const app = `<script lang="ts">
@@ -183,6 +186,7 @@ try {
 } finally {
   await Bun.file(serverPath).delete();
 }
+assertGlobalHost(html);
 const client = await bundle(join(dir, "client.ts"), "browser");
 assert.equal(warnings.length, 0, warnings.join("\n"));
 
@@ -261,6 +265,7 @@ try {
     if (row.childShadow !== null) assert.equal(row.childShadow, true, "toolbar's icon button has a shadow root before script");
   }
   assert.deepEqual(await inert.evaluate(slotted, SLOTTED), expectedSlotted, "named snippets are slotted before script");
+  assert.deepEqual(await inert.evaluate(readGlobalHost), GLOBAL_HOST_DOM);
   await inert.close();
 
   const page = await browser.newPage();
@@ -296,6 +301,7 @@ try {
   });
   await page.waitForFunction(() => document.getElementById("checked")?.textContent === "false");
   assert.equal(await page.locator("#host-switch").getByRole("switch", { name: "Wi-Fi" }).isChecked(), false);
+  assert.deepEqual(await page.evaluate(readGlobalHost), GLOBAL_HOST_DOM);
   assert.deepEqual({ warnings: pageWarnings, errors: pageErrors }, { warnings: [], errors: [] });
   await page.close();
 } finally {

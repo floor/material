@@ -94,7 +94,7 @@ console.log(JSON.stringify(out));
   // 8,953 to 9,520 against 7cd57a6.
   // addClass from its subpath since 1.0.0 removed it from the root (FLO-351)
   for (const [name, symbol, budget, from] of [
-    ["addClass", "addClass", 1000, "mtrl/core/dom"], ["textfield", "createTextfield", 9700, "mtrl"], ["button", "createButton", 10000, "mtrl"],
+    ["addClass", "addClass", 1000, "mtrl/core/dom"], ["textfield", "createTextField", 9700, "mtrl"], ["button", "createButton", 10000, "mtrl"],
   ] as const) {
     const entry = join(directory, `${name}.ts`);
     await writeFile(entry, `export { ${symbol} } from '${from}';`);
@@ -278,6 +278,7 @@ console.log(JSON.stringify(out));
     }));
   }
   const failures: string[] = [];
+  const retaken: string[] = [];
   let comparisons = 0;
   // For chasing a flaky comparison: CONSUMER_SCENARIOS=split-button-open
   // compares only those scenarios, CONSUMER_ROUNDS=20 repeats the whole matrix.
@@ -298,11 +299,44 @@ console.log(JSON.stringify(out));
         await page.evaluate(() => document.fonts.ready);
         if (scenario.state === "hover") await page.getByRole("button").first().hover();
         if (scenario.state === "focus") await page.keyboard.press("Tab");
-        await page.screenshot({ path: join(artifacts, `${label}-${i === 0 ? "full" : "selective"}.png`), fullPage: true, animations: "disabled" });
       }));
+      const capture = async (): Promise<Buffer[]> => {
+        await Promise.all(pages.map((page, i) =>
+          page.screenshot({ path: join(artifacts, `${label}-${i === 0 ? "full" : "selective"}.png`), fullPage: true, animations: "disabled" })));
+        return Promise.all(["full", "selective"].map(style => readFile(join(artifacts, `${label}-${style}.png`))));
+      };
+      // The computed-style snapshot of both pages, before and after the capture: a
+      // page whose styles are still settling when it is captured shows as a change
+      // between the two.
+      const before = await Promise.all(pages.map(snapshot));
+      let [fullPNG, selectivePNG] = await capture();
       const [full, selective] = await Promise.all(pages.map(snapshot));
-      const fullPNG = await readFile(join(artifacts, `${label}-full.png`));
-      const selectivePNG = await readFile(join(artifacts, `${label}-selective.png`));
+      const settled = JSON.stringify(before[0]) === JSON.stringify(full) && JSON.stringify(before[1]) === JSON.stringify(selective);
+      // Twice in CI one capture of `split-button-open` matched a green run's image
+      // exactly and the other differed in 26 to 29 pixels, on the rows where the open
+      // menu's shadow falls on the buttons: the full build once, the selective build
+      // once, with the DOM and the computed styles identical. So it was a capture, not
+      // a difference between the builds. The cause found is how Chromium blends that
+      // shadow depending on the layers under it; test/browser/fixture.css pins the
+      // menu to a layer for that. This is the net under it, and it is kept narrow,
+      // because a second capture also gives a second chance to a real difference that
+      // comes and goes (a constant one is still there; an intermittent one may not be):
+      // - only a pair whose snapshots are equal across the two pages, and unchanged
+      //   from before the capture to after it, is captured again, once;
+      // - a retake that matches is a warning in the log and in the final line, the
+      //   first images are kept, and the report lists the pair;
+      // - more than one matched retake in a round fails the check: the glitch above is
+      //   one pair in a run, and a timing problem would hit several.
+      if (settled && JSON.stringify(full) === JSON.stringify(selective) && !fullPNG.equals(selectivePNG)) {
+        await writeFile(join(artifacts, `${label}-first-full.png`), fullPNG);
+        await writeFile(join(artifacts, `${label}-first-selective.png`), selectivePNG);
+        await pages[0].waitForTimeout(250);
+        [fullPNG, selectivePNG] = await capture();
+        if (fullPNG.equals(selectivePNG)) {
+          retaken.push(label);
+          console.log(`::warning::consumer:check captured ${label} a second time: the first pair differed in pixels only, the second matches. First images: analysis/browser/${label}-first-*.png`);
+        } else console.log(`Captured ${label} again: the first pair differed in pixels only; the second still differs`);
+      }
       if (JSON.stringify(full) !== JSON.stringify(selective) || !fullPNG.equals(selectivePNG)) {
         failures.push(label);
         await writeFile(join(artifacts, `${label}.json`), JSON.stringify({ full, selective }, null, 2));
@@ -326,11 +360,12 @@ console.log(JSON.stringify(out));
   await page.keyboard.press("Space");
   assert(await unchecked.isChecked(), "Keyboard checkbox interaction failed");
   await page.close();
-  const report = { vite: sizes, browser: await browser.version(), comparisons, failures, errors };
+  const report = { vite: sizes, browser: await browser.version(), comparisons, retaken, failures, errors };
   await writeFile(join(artifacts, "report.json"), JSON.stringify(report, null, 2));
   assert.deepEqual(errors, [], "Browser errors occurred");
   assert.deepEqual(failures, [], "Full/selective CSS mismatches (see analysis/browser)");
-  console.log(`Passed ${comparisons} full/selective screenshot and computed-style comparisons, interactions, and lazy network checks.`);
+  assert(retaken.length <= rounds, `${retaken.length} pairs only matched on a second capture (${retaken.join(", ")}): one per round is the known capture glitch, more is a timing problem`);
+  console.log(`Passed ${comparisons} full/selective screenshot and computed-style comparisons${retaken.length ? ` (${retaken.length} only on a second capture: ${retaken.join(", ")})` : ""}, interactions, and lazy network checks.`);
 } finally {
   await browser?.close();
   await new Promise<void>((resolve, reject) => {

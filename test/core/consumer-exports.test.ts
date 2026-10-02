@@ -40,7 +40,7 @@ const VALUES = [
   "createSelect",
   "createSwitch",
   "createTabs",
-  "createTextfield",
+  "createTextField",
 ] as const;
 
 /** What it imports from mtrl/core/compose. */

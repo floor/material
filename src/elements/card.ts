@@ -22,14 +22,14 @@
 
 import createCard from "../components/card";
 import { createCardActions, createCardContent, createCardHeader, createCardMedia } from "../components/card/content";
-import type { CardComponent, CardSchema } from "../components/card/types";
+import type { CardComponent, CardConfig } from "../components/card/types";
 import { PREFIX } from "../core/config";
 import { defineElement, type Config, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
 type Region = "media" | "avatar" | "headline" | "subhead" | "header-action" | "content" | "actions";
 const REGIONS: readonly Region[] = ["media", "avatar", "headline", "subhead", "header-action", "content", "actions"];
 
-interface CardElementConfig extends CardSchema {
+interface CardElementConfig extends CardConfig {
   regions?: Region[];
   headline?: string;
   subhead?: string;

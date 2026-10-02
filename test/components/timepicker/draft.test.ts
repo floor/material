@@ -15,9 +15,9 @@ const setup = (config: TimePickerConfig = {}) => {
   const log: string[] = [];
   const picker = mount(createTimePicker({ value: "09:30", ...config }));
   for (const name of ["input", "change", "confirm", "cancel", "open", "close"] as const) {
-    // change and input carry { value } (FLO-320); confirm, the string
-    picker.on(name, (payload?: string | { value: string }) => {
-      const value = typeof payload === "object" ? payload.value : payload;
+    // Input keeps the draft separate from the committed value.
+    picker.on(name, (payload?: { value: string; draftValue?: string }) => {
+      const value = name === "input" ? payload?.draftValue : payload?.value;
       log.push(`${name}${value ? `:${value}` : ""}${name === "confirm" || name === "cancel" ? `@${picker.isOpen ? "open" : "closed"}` : ""}`);
     });
   }

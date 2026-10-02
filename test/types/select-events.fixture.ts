@@ -109,8 +109,10 @@ host.on("changed", () => {});
 // --- what it still allows -------------------------------------------------
 
 select.on("change", (event) => {
-  const value: string = event.value;
+  const value: string | null = event.value;
   void value;
 });
+
+export const emptyIdIsNull: Equals<SelectChangeEvent["value"], string | null> = true;
 
 select.on("close", () => {});

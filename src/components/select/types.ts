@@ -1,6 +1,6 @@
 // src/components/select/types.ts
 import type { MenuColor, MenuComponent, MenuVariant } from "../menu/types";
-import type { TextfieldComponent } from "../textfield/types";
+import type { TextFieldComponent } from "../textfield/types";
 
 /**
  * Available Select variants
@@ -192,7 +192,7 @@ export interface SelectComponent {
   /**
    * The textfield component
    */
-  textfield: TextfieldComponent;
+  textField: TextFieldComponent;
 
   /**
    * The menu component
@@ -359,7 +359,7 @@ export interface SelectChangeEvent extends SelectEvent {
   /**
    * The selected option id
    */
-  value: string;
+  value: string | null;
 
   /**
    * The selected option text
@@ -435,7 +435,7 @@ export interface SelectController {
  */
 export interface BaseComponent {
   element: HTMLElement;
-  textfield?: TextfieldComponent;
+  textField?: TextFieldComponent;
   menu?: MenuComponent;
   select?: SelectController;
   // Narrowed to match the public signature above. `handler: Function` is a
