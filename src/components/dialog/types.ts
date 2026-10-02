@@ -404,7 +404,10 @@ export interface DialogComponent {
   
   /**
    * Opens the dialog
-   * Displays the dialog with animation
+   * Displays the dialog with animation. When it returns, `beforeopen` has run
+   * (a listener can cancel the opening there). With `layer: "top"`, `isOpen()`
+   * is true and `open` has been emitted too. The surface may be painted after
+   * `open()` returns.
    * @returns Dialog component for method chaining
    */
   open: () => DialogComponent;

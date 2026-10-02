@@ -25,6 +25,7 @@
 import createSplitButton from "../components/split-button";
 import type { SplitButtonComponent, SplitButtonConfig, SplitButtonEvent } from "../components/split-button/types";
 import type { MenuContent } from "../components/menu/types";
+import { innerMenu } from "../components/menu/inner";
 import { defineElement, type Config, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 import { declaredMenuItems, defineMenuItem } from "./menu";
 
@@ -59,13 +60,14 @@ const readSplitButton = (host: HTMLElement): Config => {
  */
 const updateSplitButton = (host: HTMLElement, c: SplitButtonComponent): boolean => {
   const items: MenuContent[] = declaredMenuItems(host, itemTag(host));
-  if (!items.length !== !c.menu) return false;
+  const menu = innerMenu(c);
+  if (!items.length !== !menu) return false;
   const label = labelOf(host);
   if (c.getText() !== label) c.setText(label);
   const key = JSON.stringify(items);
-  if (c.menu && applied.get(c) !== key) {
+  if (menu && applied.get(c) !== key) {
     applied.set(c, key);
-    c.menu.setItems(items);
+    c.setItems(items);
   }
   return true;
 };
