@@ -3139,8 +3139,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v0.10.6...HEAD
-[3.0.0-next.0]: https://github.com/floor/material/compare/v0.10.6...v3.0.0-next.0
+[Unreleased]: https://github.com/floor/material/compare/v3.0.0-next.0...HEAD
+[3.0.0-next.0]: https://github.com/floor/material/releases/tag/v3.0.0-next.0
 [0.10.6]: https://github.com/floor/mtrl/compare/v0.10.5...v0.10.6
 [0.10.5]: https://github.com/floor/mtrl/compare/v0.10.4...v0.10.5
 [0.10.4]: https://github.com/floor/mtrl/compare/v0.10.3...v0.10.4
