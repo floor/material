@@ -2,3 +2,10 @@
 main { max-width: 760px; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
 section { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
 *, *::before, *::after { animation: none !important; transition: none !important; caret-color: transparent !important; }
+/* An open menu stays on a compositor layer of its own. Where its shadow falls on
+   the content under it, Chromium blends it a few levels differently depending on how
+   that content has been layered, and the two pages of a comparison did not always
+   agree (split-button-open, 26 to 29 pixels). With the menu pinned to a layer the
+   blend no longer depends on that history. (Pinning `main` as well changes how
+   hover and focus states rasterize, and makes other pairs differ.) */
+.mtrl-menu { will-change: transform; }
