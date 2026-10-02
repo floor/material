@@ -2252,13 +2252,13 @@
       "name": "RADIO_LABEL_POSITIONS",
       "kind": "value",
       "status": "deprecated",
-      "note": "Read by nothing: the component builds its class names itself\nand has one size and variant (FLO-266)."
+      "note": "Read only by `RADIO_DEFAULTS`, which the component does not read:\nit builds its class names itself and has one size and variant (FLO-266)."
     },
     {
       "name": "RADIO_SIZES",
       "kind": "value",
       "status": "deprecated",
-      "note": "Read by nothing: the component builds its class names itself\nand has one size and variant (FLO-266)."
+      "note": "Read only by `RADIO_DEFAULTS`, which the component does not read:\nit builds its class names itself and has one size and variant (FLO-266)."
     },
     {
       "name": "RADIO_STATES",
@@ -2269,7 +2269,7 @@
       "name": "RADIO_VARIANTS",
       "kind": "value",
       "status": "deprecated",
-      "note": "Read by nothing: the component builds its class names itself\nand has one size and variant (FLO-266)."
+      "note": "Read only by `RADIO_DEFAULTS`, which the component does not read:\nit builds its class names itself and has one size and variant (FLO-266)."
     }
   ],
   "search": [
