@@ -1028,6 +1028,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Added
 
+- **`<m-text-field>` can render its trailing icon as a button (FLO-532).** The new
+  `trailing-icon-label` attribute is the element's spelling of the factory's `trailingIconLabel`:
+  the trailing icon becomes a `<button>` with that accessible name, which emits `trailing`, and
+  the React, Vue, Svelte and Solid components take it as the `trailingIconLabel` prop. Without
+  the attribute, or with an empty value, the icon stays decorative and hidden from assistive
+  technology.
 - **Every `material/components/<name>` entry exports its factory both ways:** as the default
   export and by its name (`import createButton from 'material/components/button'` and
   `import { createButton } from 'material/components/button'` are the same function, and the
