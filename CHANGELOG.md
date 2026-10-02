@@ -1041,6 +1041,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **Text field: the spacing follows the M3 measurements (FLO-299).** A field's layout shifts
+  by the amounts below; nothing in the API changes. Sources: the measurement tables on
+  m3.material.io's text fields page, and Compose's `TextFieldImpl.kt` for the positions the
+  site gives only as diagrams.
+  - **The label is not moved by a prefix** (Compose: "Prefix/suffix does not get applied to
+    label"). Resting, it starts 16px in, where it was 25.5px beside a "$" (the prefix is hidden
+    while the label rests). Floated in a filled field, 16px, where it was 12px.
 - **SSR docs: what the two style modes cost (FLO-554).** Inline styles stay the default. The
   README's server-rendering section and `RenderOptions`' TSDoc now say what inline costs (gzip
   cannot see a repeat further back than its 32 KB window, so serve brotli or use link mode
@@ -1078,11 +1085,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   script no longer writes `padding-left` and `padding-right` on the input or `left` on the
   label. It writes each affix's measured width on the field's root, as
   `--mtrl-text-field-prefix-width` and `--mtrl-text-field-suffix-width`, and the stylesheet
-  adds the icon's inset. What else moves, without an icon: the label no longer follows the
-  prefix, which is hidden while the label rests (it rests 16px in, where it was 25.5px
-  beside a "$"); a filled field's floated label is 16px in beside a prefix, where it was 12px;
-  the text ends 4px before a suffix, where it touched it; and an outlined field's text starts
-  1px sooner after a prefix (25.5px, as the filled field's).
+  adds the icon's inset. What else moves, without an icon: the text ends 4px before a suffix,
+  where it touched it; an outlined field's text starts 1px sooner after a prefix (25.5px, as
+  the filled field's); and the label no longer follows the prefix (under "Changed").
 - **A top-layer dialog that refuses Escape stays open, however often it is pressed
   (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
   listener that refused, the third Escape made the browser close the `<dialog>` while
