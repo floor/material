@@ -20,7 +20,8 @@ type Slide = CustomEvent<{ value: number; index: number }>;
 // The elements' details
 export const button: Equals<ElementEvents<ButtonSpec>["change"], Toggle> = true;
 export const iconButton: Equals<ElementEvents<IconButtonSpec>["change"], Toggle> = true;
-export const iconButtonToggle: Equals<ElementEvents<IconButtonSpec>["toggle"], Toggle> = true;
+// 1.0 removed the icon button's DOM toggle: change is its only model event
+export const iconButtonEvents: Equals<keyof ElementEvents<IconButtonSpec>, "change"> = true;
 export const carousel: Equals<ElementEvents<CarouselSpec>["change"], Slide> = true;
 
 // React and Solid: onChange
