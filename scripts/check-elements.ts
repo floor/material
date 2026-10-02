@@ -554,6 +554,12 @@ try {
             factory.element.dataset.size = size;
             host.append(factory.element);
           }
+          // iconPosition reaches withIcon through the button config and adds __icon--end.
+          const trailing = w.mtrl.createButton({ text: "Save", icon, variant, size: "s", iconPosition: "end" });
+          trailing.element.dataset.surface = "factory";
+          trailing.element.dataset.place = "end";
+          trailing.element.dataset.variant = variant;
+          host.append(trailing.element);
         }
       }
       await new Promise((r) => requestAnimationFrame(() => r(null)));
@@ -579,14 +585,34 @@ try {
           const button = element.shadowRoot?.querySelector("button") as HTMLElement;
           rows.push(read(button, "element", element.dataset.variant!, element.dataset.size!, dir));
         }
-        for (const button of host.querySelectorAll<HTMLElement>("[data-surface=factory]")) {
+        for (const button of host.querySelectorAll<HTMLElement>("[data-surface=factory]:not([data-place=end])")) {
           rows.push(read(button, "factory", button.dataset.variant!, button.dataset.size!, dir));
         }
       }
-      return rows;
+      const trailing: Inset[] = [];
+      for (const id of ["bi-ltr", "bi-rtl"]) {
+        const host = document.getElementById(id) as HTMLElement;
+        const dir = id === "bi-rtl" ? "rtl" : "ltr";
+        for (const button of host.querySelectorAll<HTMLElement>("[data-place=end]")) {
+          const iconBox = button.querySelector(".mtrl-button__icon--end")!.getBoundingClientRect();
+          const labelBox = button.querySelector(".mtrl-button__text")!.getBoundingClientRect();
+          const root = button.getBoundingClientRect();
+          const style = getComputedStyle(button);
+          const rtl = style.direction === "rtl";
+          const borderStart = parseFloat(rtl ? style.borderRightWidth : style.borderLeftWidth) || 0;
+          const borderEnd = parseFloat(rtl ? style.borderLeftWidth : style.borderRightWidth) || 0;
+          const start = (rtl ? root.right - labelBox.right : labelBox.left - root.left) - borderStart;
+          const end = (rtl ? iconBox.left - root.left : root.right - iconBox.right) - borderEnd;
+          trailing.push({
+            surface: "factory", variant: button.dataset.variant!, size: "s", dir,
+            start: px(start), end: px(end), gap: 0,
+          });
+        }
+      }
+      return { rows, trailing };
     }, ICON);
     const key = (row: Inset) => `${row.surface} ${row.variant} ${row.size} ${row.dir}`;
-    const byKey = new Map(insets.map((row) => [key(row), row]));
+    const byKey = new Map(insets.rows.map((row) => [key(row), row]));
     const failures: string[] = [];
     for (const surface of ["factory", "element"]) {
       for (const variant of variants) {
@@ -609,6 +635,11 @@ try {
             }
           }
         }
+      }
+    }
+    for (const row of insets.trailing) {
+      if (row.start !== 16 || row.end !== 12) {
+        failures.push(`button inset end: ${row.surface} ${row.variant} s ${row.dir} start ${row.start} end ${row.end} (expected start 16 end 12)`);
       }
     }
     for (const line of failures) console.log(line);
