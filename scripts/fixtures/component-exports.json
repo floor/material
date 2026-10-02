@@ -55,12 +55,6 @@
   ],
   "bottom-app-bar": [
     {
-      "name": "BottomAppBar",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Use BottomAppBarComponent, the name every component type has. Removed in 1.0 (FLO-383)."
-    },
-    {
       "name": "BottomAppBarComponent",
       "kind": "type",
       "status": "public"
@@ -487,12 +481,6 @@
       "status": "public"
     },
     {
-      "name": "CardSchema",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Use CardConfig. Removed in 1.0 (FLO-383)."
-    },
-    {
       "name": "CardVariant",
       "kind": "type",
       "status": "public"
@@ -661,11 +649,6 @@
       "status": "public"
     },
     {
-      "name": "CHECKBOX_VARIANTS",
-      "kind": "value",
-      "status": "public"
-    },
-    {
       "name": "CheckboxChangePayload",
       "kind": "type",
       "status": "public"
@@ -716,12 +699,6 @@
       "name": "CHECKBOX_STATES",
       "kind": "value",
       "status": "public"
-    },
-    {
-      "name": "CHECKBOX_VARIANTS",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "M3 has one checkbox style, and the `variant` option has no\neffect (FLO-94, FLO-265)."
     }
   ],
   "chips": [
@@ -2174,11 +2151,6 @@
       "status": "public"
     },
     {
-      "name": "RADIO_CLASSES",
-      "kind": "value",
-      "status": "public"
-    },
-    {
       "name": "RADIO_DEFAULTS",
       "kind": "value",
       "status": "public"
@@ -2194,22 +2166,7 @@
       "status": "public"
     },
     {
-      "name": "RADIO_LABEL_POSITIONS",
-      "kind": "value",
-      "status": "public"
-    },
-    {
-      "name": "RADIO_SIZES",
-      "kind": "value",
-      "status": "public"
-    },
-    {
       "name": "RADIO_STATES",
-      "kind": "value",
-      "status": "public"
-    },
-    {
-      "name": "RADIO_VARIANTS",
       "kind": "value",
       "status": "public"
     },
@@ -2241,12 +2198,6 @@
   ],
   "radios/constants": [
     {
-      "name": "RADIO_CLASSES",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Read by nothing: the component builds its class names itself\nand has one size and variant (FLO-266)."
-    },
-    {
       "name": "RADIO_DEFAULTS",
       "kind": "value",
       "status": "public"
@@ -2262,27 +2213,9 @@
       "status": "public"
     },
     {
-      "name": "RADIO_LABEL_POSITIONS",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Read by nothing: the component builds its class names itself\nand has one size and variant (FLO-266)."
-    },
-    {
-      "name": "RADIO_SIZES",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Read by nothing: the component builds its class names itself\nand has one size and variant (FLO-266)."
-    },
-    {
       "name": "RADIO_STATES",
       "kind": "value",
       "status": "public"
-    },
-    {
-      "name": "RADIO_VARIANTS",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Read by nothing: the component builds its class names itself\nand has one size and variant (FLO-266)."
     }
   ],
   "search": [
@@ -2975,6 +2908,11 @@
       "status": "public"
     },
     {
+      "name": "TabEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "tabIdFor",
       "kind": "value",
       "status": "public"
@@ -3011,6 +2949,11 @@
     },
     {
       "name": "TabsConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TabsEvents",
       "kind": "type",
       "status": "public"
     }
@@ -3074,21 +3017,9 @@
       "status": "public"
     },
     {
-      "name": "TextfieldComponent",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Use TextFieldComponent: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
-    },
-    {
       "name": "TextFieldComponent",
       "kind": "type",
       "status": "public"
-    },
-    {
-      "name": "TextfieldConfig",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Use TextFieldConfig: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "TextFieldConfig",
@@ -3096,64 +3027,64 @@
       "status": "public"
     },
     {
-      "name": "TextfieldDensity",
+      "name": "TextFieldDensity",
       "kind": "type",
       "status": "public"
     },
     {
-      "name": "TextfieldEvents",
+      "name": "TextFieldEvents",
       "kind": "type",
       "status": "public"
     },
     {
-      "name": "TextfieldFocusPayload",
+      "name": "TextFieldFocusPayload",
       "kind": "type",
       "status": "public"
     },
     {
-      "name": "TextfieldTrailingPayload",
+      "name": "TextFieldTrailingPayload",
       "kind": "type",
       "status": "public"
     },
     {
-      "name": "TextfieldValuePayload",
+      "name": "TextFieldValuePayload",
       "kind": "type",
       "status": "public"
     }
   ],
   "textfield/constants": [
     {
-      "name": "TEXTFIELD_CLASSES",
+      "name": "TEXT_FIELD_CLASSES",
       "kind": "value",
       "status": "public"
     },
     {
-      "name": "TEXTFIELD_DEFAULTS",
+      "name": "TEXT_FIELD_DEFAULTS",
       "kind": "value",
       "status": "public"
     },
     {
-      "name": "TEXTFIELD_DENSITY",
+      "name": "TEXT_FIELD_DENSITY",
       "kind": "value",
       "status": "public"
     },
     {
-      "name": "TEXTFIELD_EVENTS",
+      "name": "TEXT_FIELD_EVENTS",
       "kind": "value",
       "status": "public"
     },
     {
-      "name": "TEXTFIELD_STATES",
+      "name": "TEXT_FIELD_STATES",
       "kind": "value",
       "status": "public"
     },
     {
-      "name": "TEXTFIELD_TYPES",
+      "name": "TEXT_FIELD_TYPES",
       "kind": "value",
       "status": "public"
     },
     {
-      "name": "TEXTFIELD_VARIANTS",
+      "name": "TEXT_FIELD_VARIANTS",
       "kind": "value",
       "status": "public"
     }
@@ -3190,17 +3121,7 @@
       "status": "public"
     },
     {
-      "name": "TIMEPICKER_CLASSES",
-      "kind": "value",
-      "status": "public"
-    },
-    {
       "name": "TIMEPICKER_DEFAULTS",
-      "kind": "value",
-      "status": "public"
-    },
-    {
-      "name": "TIMEPICKER_DIAL",
       "kind": "value",
       "status": "public"
     },
@@ -3245,11 +3166,6 @@
       "status": "public"
     },
     {
-      "name": "TIMEPICKER_Z_INDEX",
-      "kind": "value",
-      "status": "public"
-    },
-    {
       "name": "TimePickerComponent",
       "kind": "type",
       "status": "public"
@@ -3261,6 +3177,11 @@
     },
     {
       "name": "TimePickerEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TimePickerInputEvent",
       "kind": "type",
       "status": "public"
     },
@@ -3297,21 +3218,9 @@
   ],
   "timepicker/constants": [
     {
-      "name": "TIMEPICKER_CLASSES",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Unused by the picker, and without the prefix: use\n`TIMEPICKER_SELECTORS`. Two values that named nothing now match the DOM\n(`DIAL_CENTER`, `PERIOD_ACTIVE`). Kept for compatibility (FLO-281)."
-    },
-    {
       "name": "TIMEPICKER_DEFAULTS",
       "kind": "value",
       "status": "public"
-    },
-    {
-      "name": "TIMEPICKER_DIAL",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Unused, and not the dial's geometry: the DOM dial (FLO-279) is\nsized in CSS, a 256dp face with numbers on 101dp and 69dp rings and a 48dp\nhandle. Kept for compatibility (FLO-281)."
     },
     {
       "name": "TIMEPICKER_EVENTS",
@@ -3352,12 +3261,6 @@
       "name": "TIMEPICKER_VALUES",
       "kind": "value",
       "status": "public"
-    },
-    {
-      "name": "TIMEPICKER_Z_INDEX",
-      "kind": "value",
-      "status": "deprecated",
-      "note": "Unused: the picker is a native modal `<dialog>` in the top layer\n(FLO-278), which needs no z-index. Kept for compatibility (FLO-281)."
     }
   ],
   "toolbar": [
@@ -3648,12 +3551,6 @@
       "name": "TOP_APP_BAR_TYPES",
       "kind": "value",
       "status": "public"
-    },
-    {
-      "name": "TopAppBar",
-      "kind": "type",
-      "status": "deprecated",
-      "note": "Use TopAppBarComponent, the name every component type has. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "TopAppBarComponent",

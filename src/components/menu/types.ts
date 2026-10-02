@@ -59,8 +59,9 @@ export interface MenuItem<TData = unknown> {
   text: string;
 
   /**
-   * Optional icon to display before the text
-   * Accepts HTML string (typically SVG)
+   * Optional icon to display before the text.
+   * Markup (HTML). Not sanitized by default: see Markup and sanitizing.
+   * Accepts an HTML string (typically SVG).
    */
   icon?: string;
 

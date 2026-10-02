@@ -9,19 +9,19 @@
  */
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
-import type createTextfield from "../src/components/textfield";
+import type createTextField from "../src/components/textfield";
 
 type FieldWindow = Window & {
-  inputs: { createTextfield: typeof createTextfield };
+  inputs: { createTextField: typeof createTextField };
   fields: { destroy: () => void }[];
 };
 
 export async function checkTextfield(page: Page): Promise<void> {
   const measured = await page.evaluate(() => {
     const state = window as unknown as FieldWindow;
-    const { createTextfield } = state.inputs;
+    const { createTextField } = state.inputs;
     const make = (variant: "filled" | "outlined") => {
-      const field = createTextfield({ label: "Name", variant });
+      const field = createTextField({ label: "Name", variant });
       field.element.style.width = "280px";
       document.body.append(field.element);
       return field;
@@ -72,10 +72,10 @@ type Probe = { element: HTMLElement; input: HTMLInputElement; setError: (e: bool
 export async function checkTextfieldTokens(page: Page): Promise<void> {
   await page.evaluate(() => {
     const state = window as unknown as FieldWindow & { probes: Record<string, Probe> };
-    const { createTextfield } = state.inputs;
+    const { createTextField } = state.inputs;
     const icon = '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>';
     const make = (config: Record<string, unknown>) => {
-      const field = createTextfield({ label: "Name", ...config } as never) as unknown as Probe;
+      const field = createTextField({ label: "Name", ...config } as never) as unknown as Probe;
       field.element.style.width = "280px";
       field.element.style.margin = "24px";
       document.body.append(field.element);
@@ -158,7 +158,7 @@ export async function checkTextfieldTokens(page: Page): Promise<void> {
 }
 
 type AnatomyWindow = Window & {
-  inputs: { createTextfield: typeof createTextfield };
+  inputs: { createTextField: typeof createTextField };
   core: { createButton: (config: Record<string, unknown>) => { element: HTMLElement; destroy: () => void } };
   createSelect: (config: Record<string, unknown>) => { element: HTMLElement; open: () => unknown; destroy: () => void };
   anatomy: { destroy: () => void }[];
@@ -183,12 +183,12 @@ export async function checkTextfieldAnatomy(page: Page): Promise<void> {
       stage.append(line);
       return line;
     };
-    const plain = w.inputs.createTextfield({ label: "Name" });
+    const plain = w.inputs.createTextField({ label: "Name" });
     const button = w.core.createButton({ text: "Save", variant: "filled" });
     row(plain.element, button.element);
-    const helped = w.inputs.createTextfield({ label: "Name", supportingText: "As on your passport", maxLength: 20 });
+    const helped = w.inputs.createTextField({ label: "Name", supportingText: "As on your passport", maxLength: 20 });
     row(helped.element);
-    const wrapped = w.inputs.createTextfield({ label: "Name", supportingText: "A helper long enough that it has to wrap onto a second line under the field" });
+    const wrapped = w.inputs.createTextField({ label: "Name", supportingText: "A helper long enough that it has to wrap onto a second line under the field" });
     wrapped.element.style.width = "280px";
     stage.append(wrapped.element);
     const after = document.createElement("p");
@@ -243,7 +243,7 @@ export async function checkTextfieldAnatomy(page: Page): Promise<void> {
  */
 export async function checkTextfieldPlaceholder(page: Page): Promise<void> {
   const cases = await page.evaluate(async () => {
-    const { createTextfield } = (window as unknown as FieldWindow).inputs;
+    const { createTextField } = (window as unknown as FieldWindow).inputs;
     const icon = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>';
     const rows: { name: string; painted: boolean; overlaps: boolean; affixes: number[] }[] = [];
     for (const variant of ["filled", "outlined"] as const) {
@@ -251,7 +251,7 @@ export async function checkTextfieldPlaceholder(page: Page): Promise<void> {
         for (const disabled of [false, true]) {
           for (const value of ["", "Ada"]) {
             for (const focus of disabled ? [false] : [false, true]) {
-              const field = createTextfield({
+              const field = createTextField({
                 variant, label: "Name", placeholder: "Enter your name", supportingText: "Helper", disabled, value,
                 prefixText: "$", suffixText: "USD",
                 ...(withIcon ? { leadingIcon: icon } : {}),
@@ -308,12 +308,12 @@ export async function checkTextfieldPlaceholder(page: Page): Promise<void> {
 export async function checkTextfieldA11y(page: Page): Promise<void> {
   const icon = '<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="8"/></svg>';
   const measured = await page.evaluate(async (icon) => {
-    const { createTextfield } = (window as unknown as FieldWindow).inputs;
+    const { createTextField } = (window as unknown as FieldWindow).inputs;
     const host = document.createElement("div");
     host.style.cssText = "padding: 24px; width: 320px";
     document.body.append(host);
     const make = (config: Record<string, unknown>) => {
-      const field = createTextfield({ label: "Email", ...config } as never);
+      const field = createTextField({ label: "Email", ...config } as never);
       host.append(field.element);
       return field;
     };
@@ -394,7 +394,7 @@ export async function checkTextfieldLatePlacement(page: Page): Promise<void> {
     ["outlined compact", { variant: "outlined", density: "compact" }, "setDensity"],
   ];
   const read = async () => page.evaluate(async ({ cases, icon }) => {
-    const { createTextfield } = (window as unknown as FieldWindow).inputs;
+    const { createTextField } = (window as unknown as FieldWindow).inputs;
     const settle = () => new Promise((resolve) => setTimeout(resolve, 350));
     const host = document.createElement("div");
     host.id = "late";
@@ -413,10 +413,10 @@ export async function checkTextfieldLatePlacement(page: Page): Promise<void> {
     };
     const rows: Record<string, unknown> = {};
     for (const [name, config, setter] of cases) {
-      const early = createTextfield({ label: "Amount", ...config } as never);
+      const early = createTextField({ label: "Amount", ...config } as never);
       // Late: the same field built plain (outlined when only the setter under test is late), then changed
       const base = setter === "setVariant" ? {} : Object.fromEntries(Object.entries(config).filter(([key]) => key === "variant"));
-      const late = createTextfield({ label: "Amount", ...base } as never);
+      const late = createTextField({ label: "Amount", ...base } as never);
       host.append(early.element, late.element);
       await settle();
       const call: Record<string, () => void> = {

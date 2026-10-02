@@ -93,6 +93,15 @@ const FLAT = [
   { id: "a", text: "Alpha" },
   { id: "c", text: "Charlie" },
 ];
+const THREE = [
+  { id: "a", text: "Alpha" },
+  { id: "b", text: "Beta" },
+  { id: "c", text: "Charlie" },
+];
+const tabStopIds = (root: ParentNode): string[] =>
+  Array.from(root.querySelectorAll<HTMLElement>(".mtrl-menu__item"))
+    .filter((item) => item.getAttribute("tabindex") === "0")
+    .map((item) => item.dataset.id ?? "");
 const make = (visible = false, items = NESTED) => {
   const menu = createMenu({ opener, visible, items });
   menus.push(menu);
@@ -164,6 +173,38 @@ test("initial focus does not pull focus out of an opened submenu", async () => {
   submenuItem.focus();
   tick(); // Root initial focus and submenu opening frame.
   expect(document.activeElement).toBe(submenuItem);
+});
+test("ArrowUp leaves one tab stop, and Enter after a close still does", () => {
+  const menu = make(false, THREE);
+  tick();
+  opener.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
+  tick(); // Place the menu; the opener's timer focuses the last item.
+  tick(); // Initial focus runs after that timer.
+  const items = () => Array.from(menu.element.querySelectorAll<HTMLElement>(".mtrl-menu__item"));
+  const afterArrowUp = {
+    focus: document.activeElement === items()[2] ? "last" : "other",
+    stops: tabStopIds(menu.element),
+  };
+
+  menu.close();
+  tick(); // The close timer returns focus to the opener.
+  opener.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  tick(); // Remove the closed menu and place it again.
+  tick(); // Initial focus of the Enter open.
+  expect({ afterArrowUp, afterEnter: { stops: tabStopIds(menu.element) } }).toEqual({
+    afterArrowUp: { focus: "last", stops: ["a"] },
+    afterEnter: { stops: ["a"] },
+  });
+});
+test("a keyboard open marks the first item when focus is on the menu itself", () => {
+  const menu = make(false, FLAT);
+  tick();
+  menu.open(new KeyboardEvent("keydown", { key: "Enter" }));
+  tick(); // Place the menu and schedule initial focus.
+  menu.element.focus();
+  expect(document.activeElement).toBe(menu.element);
+  tick();
+  expect(document.activeElement).toBe(menu.element.querySelector(".mtrl-menu__item"));
 });
 test("destroy releases document listeners and cancels Tab detection and typeahead", () => {
   const menu = make();

@@ -58,7 +58,7 @@ describe("datepicker event contract", () => {
     picker.open();
     picker.calendar.goToDate(start);
     const events: DatePickerChangePayload[] = [];
-    picker.on("change", payload => events.push(payload));
+    picker.on("change", payload => { expect(payload.value).toEqual(picker.getValue()); events.push(payload); });
     day(picker, end);
     expect(events).toEqual([]);
     day(picker, start);
@@ -71,7 +71,7 @@ describe("datepicker event contract", () => {
     picker.open();
     picker.calendar.goToDate(start);
     const events: DatePickerChangePayload[] = [];
-    picker.on("change", payload => events.push(payload));
+    picker.on("change", payload => { expect(payload.value).toEqual(picker.getValue()); events.push(payload); });
     day(picker, start);
     // `iso` is the <m-datepicker> element's value (FLO-320)
     expect(events).toEqual([{ value: start, rangeEndDate: null, formattedValue: "09/10/2026", iso: "2026-09-10" }]);

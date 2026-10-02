@@ -128,7 +128,8 @@ export interface FabConfig {
   disabled?: boolean;
 
   /**
-   * FAB icon HTML content
+   * FAB icon HTML content.
+   * Markup (HTML). Not sanitized by default: see Markup and sanitizing.
    *
    * The icon content can be any valid HTML, but typically contains an SVG icon
    * or a Material Icons ligature. Icons should follow Material Design sizing guidelines

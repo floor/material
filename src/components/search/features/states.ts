@@ -50,9 +50,7 @@ export const withStates =
   let isDisabled = config.disabled === true;
   const resources = getCleanup(component);
   let focusFrame: number | null = null;
-  let focusRequest = 0;
   const cancelPendingFocus = (): void => {
-    focusRequest++;
     if (focusFrame !== null) cancelAnimationFrame(focusFrame);
     focusFrame = null;
   };
@@ -172,11 +170,9 @@ export const withStates =
 
     // Focus input after transition
     if (structure?.input) {
-      const request = ++focusRequest;
       focusFrame = requestAnimationFrame(() => {
-        if (request !== focusRequest) return;
         focusFrame = null;
-        if (currentState === SEARCH_STATES.VIEW && !resources.destroyed) structure.input.focus();
+        structure.input.focus();
       });
     }
 

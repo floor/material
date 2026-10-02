@@ -73,30 +73,30 @@ export interface BottomAppBarConfig {
  * Bottom App Bar component interface
  * @category Components
  */
-export interface BottomAppBar extends ElementComponent {
+export interface BottomAppBarComponent extends ElementComponent {
   /**
    * Adds an action button to the bottom bar
    * @param {HTMLElement} button - Button element to add
-   * @returns {BottomAppBar} BottomAppBar instance for chaining
+   * @returns {BottomAppBarComponent} BottomAppBarComponent instance for chaining
    */
   addAction(button: HTMLElement): this;
   
   /**
    * Adds a floating action button to the bottom bar
    * @param {HTMLElement} fab - FAB element to add
-   * @returns {BottomAppBar} BottomAppBar instance for chaining
+   * @returns {BottomAppBarComponent} BottomAppBarComponent instance for chaining
    */
   addFab(fab: HTMLElement): this;
   
   /**
    * Shows the bottom bar
-   * @returns {BottomAppBar} BottomAppBar instance for chaining
+   * @returns {BottomAppBarComponent} BottomAppBarComponent instance for chaining
    */
   show(): this;
   
   /**
    * Hides the bottom bar
-   * @returns {BottomAppBar} BottomAppBar instance for chaining
+   * @returns {BottomAppBarComponent} BottomAppBarComponent instance for chaining
    */
   hide(): this;
   
