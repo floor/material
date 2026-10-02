@@ -19,9 +19,12 @@ export type RootExport = {
   name: string;
   /** class: a value and a type, so `new`, `instanceof` and type positions all need it */
   kind: "value" | "type" | "class";
-  status: "public" | "deprecated";
+  /** deprecated: moving to a subpath (FLO-351); renamed: the root exports it under a new name (FLO-383) */
+  status: "public" | "deprecated" | "renamed";
   /** Where to import a deprecated name from instead */
   path?: string;
+  /** The name a renamed export has now, from the same root */
+  to?: string;
 };
 
 const ROOT = join(import.meta.dir, "..");
@@ -75,11 +78,18 @@ export function readRootExports(): RootExport[] {
   }
   const core = new Map(exportsOf(join(ROOT, "src/core/index.ts")).map((symbol) => [symbol.name, resolve(symbol)]));
 
-  return exportsOf(entries[0]!)
+  const rootExports = exportsOf(entries[0]!);
+  const rootByName = new Map(rootExports.map((symbol) => [symbol.name, resolve(symbol)]));
+  return rootExports
     .map((symbol): RootExport => {
       const target = resolve(symbol);
       const note = deprecation(symbol);
       if (note === undefined) return { name: symbol.name, kind: kindOf(target), status: "public" };
+      // A rename: "Use <NewName>", where the root exports the same symbol as NewName
+      const to = /^Use (\w+)\b/.exec(note)?.[1];
+      if (to && to !== symbol.name && rootByName.get(to) === target) {
+        return { name: symbol.name, kind: kindOf(target), status: "renamed", to };
+      }
       const path = reach.get(target)?.get(symbol.name) ?? (core.get(symbol.name) === target ? "mtrl/core" : undefined);
       if (!path) throw new Error(`${symbol.name} is deprecated on the root but no subpath exports it`);
       if (!note.includes(`'${path}'`)) throw new Error(`${symbol.name}: the deprecation should name '${path}', it says: ${note}`);
@@ -92,7 +102,7 @@ export function readRootExports(): RootExport[] {
 export function diffRootExports(pinned: RootExport[], now: RootExport[]): string[] {
   const before = new Map(pinned.map((e) => [e.name, e]));
   const after = new Map(now.map((e) => [e.name, e]));
-  const describe = (e: RootExport) => `${e.name} (${e.kind}, ${e.status}${e.path ? ` → ${e.path}` : ""})`;
+  const describe = (e: RootExport) => `${e.name} (${e.kind}, ${e.status}${e.path ? ` → ${e.path}` : ""}${e.to ? ` → ${e.to}` : ""})`;
   return [
     ...now.filter((e) => !before.has(e.name)).map((e) => `added   ${describe(e)}`),
     ...pinned.filter((e) => !after.has(e.name)).map((e) => `removed ${describe(e)}`),
@@ -177,7 +187,8 @@ if (import.meta.main) {
     await Bun.write(FIXTURE, `${JSON.stringify(now, null, 2)}\n`);
     if (leaving) await Bun.write(TABLE, migrationTable(now));
     const moved = now.filter((e) => e.status === "deprecated").length;
-    console.log(`Wrote ${now.length} root exports (${now.length - moved} public, ${moved} deprecated)${leaving ? " and the migration table" : ""}.`);
+    const renamed = now.filter((e) => e.status === "renamed").length;
+    console.log(`Wrote ${now.length} root exports (${now.length - moved - renamed} public, ${moved} deprecated, ${renamed} renamed)${leaving ? " and the migration table" : ""}.`);
   } else {
     const changes = diffRootExports(await readPinned(), now);
     const text = await Bun.file(TABLE).text();

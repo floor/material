@@ -15,14 +15,14 @@ const COMMANDS = [
   "adapters:size",
   // the browser checks
   "elements:check", "shadow-styles:check",
-  "react:check", "react-ssr:check", "vue:check", "svelte:check", "svelte-ssr:check", "solid-ssr:check", "solid:check",
-  // A second Solid SSR run after installing the supported peer floor.
-  "solid-ssr:check",
+  "react:check", "react-ssr:check", "vue:check", "svelte:check", "svelte-ssr:check", "vue-ssr:check", "solid-ssr:check", "solid:check",
+  // the same SSR checks on the lowest peer version package.json allows
+  "solid-ssr:floor", "vue-ssr:floor",
   "consumer:check", "tabs:check", "slider:check", "drawer:check", "navigation-bar:check", "navigation-rail:check",
   "core:check", "preupgrade:check", "tokens:check", "ssr:check",
 ];
 
-interface Step { name?: string; run?: string; if?: string; "continue-on-error"?: unknown }
+interface Step { run?: string; if?: string; "continue-on-error"?: unknown }
 interface Job {
   needs?: string | string[];
   if?: string;
@@ -34,7 +34,8 @@ interface Job {
 // Bun parses YAML; the installed @types/bun does not declare it yet.
 const { YAML } = Bun as unknown as { YAML: { parse(text: string): unknown } };
 const workflow = YAML.parse(await Bun.file(".github/workflows/ci.yml").text()) as { jobs: Record<string, Job> };
-const scripts = (await Bun.file("package.json").json()).scripts as Record<string, string>;
+const manifest = await Bun.file("package.json").json() as { scripts: Record<string, string>; peerDependencies: Record<string, string> };
+const { scripts, peerDependencies: peers } = manifest;
 
 // The commands of one step: `bun test`, `bun run <script>`, and the scripts of a
 // `for script in …` loop, whose list is written out or comes from the matrix.
@@ -53,29 +54,25 @@ const commandsOf = (job: Job, step: Step): string[] => {
   return [...found];
 };
 
-// This version-specific run is intentionally scoped to one matrix group. Keep
-// the exception narrow: the test below pins its condition, install and ordering.
-const floorStep = workflow.jobs.browser.steps.find(step => step.name === "Solid SSR at the peer floor (1.8.0)");
 const ran = Object.values(workflow.jobs).flatMap(job => job.steps.flatMap(step => commandsOf(job, step)));
 
 describe("CI (.github/workflows/ci.yml)", () => {
-  test("runs every command of the list with its expected count", () => {
+  test("runs every command of the list, each once", () => {
     expect([...ran].sort()).toEqual([...COMMANDS].sort());
   });
 
-  test("runs Solid SSR at the peer floor after the adapters' current-version checks", () => {
-    const browser = workflow.jobs.browser;
-    expect(browser.strategy?.matrix?.include?.filter(entry => entry.group === "adapters")).toHaveLength(1);
-    const adapters = browser.strategy?.matrix?.include?.find(entry => entry.group === "adapters");
-    expect(adapters?.checks.split(/\s+/)).toContain("solid-ssr:check");
-    expect(floorStep).toBeDefined();
-    expect(floorStep?.if).toBe("matrix.group == 'adapters'");
-    expect(floorStep?.run?.trim()).toBe(
-      "bun add --no-save --ignore-scripts solid-js@1.8.0\nbun run solid-ssr:check",
-    );
-    const current = browser.steps.findIndex(step => step.run?.includes("for script in ${{ matrix.checks }}; do"));
-    expect(current).toBeGreaterThanOrEqual(0);
-    expect(browser.steps.indexOf(floorStep!)).toBeGreaterThan(current);
+  // A floor run is the check's own script on another version of the peer, by a
+  // script that restores the installed one: nothing a floor run could weaken.
+  test("runs each peer-floor check through check-at-peer-floor.ts, on a check CI also runs as installed", () => {
+    const floors = COMMANDS.filter(command => command.endsWith(":floor"));
+    expect(floors.length).toBeGreaterThan(0);
+    for (const floor of floors) {
+      const match = /^bun run scripts\/check-at-peer-floor\.ts (\S+)(?: \S+)* -- ([\w:-]+)$/.exec(scripts[floor] ?? "");
+      expect(match, `${floor} must run scripts/check-at-peer-floor.ts`).not.toBeNull();
+      expect(match![2]).toBe(floor.replace(/:floor$/, ":check"));
+      expect(COMMANDS).toContain(match![2]);
+      expect(Object.keys(peers)).toContain(match![1]);
+    }
   });
 
   test("runs only scripts that package.json defines", () => {
@@ -93,7 +90,7 @@ describe("CI (.github/workflows/ci.yml)", () => {
       if (job["continue-on-error"] !== undefined) loose.push(`${name}: continue-on-error`);
       for (const step of steps) {
         const command = commandsOf(job, step).join(" ");
-        if (step.if !== undefined && step !== floorStep) loose.push(`${name} (${command}): if`);
+        if (step.if !== undefined) loose.push(`${name} (${command}): if`);
         if (step["continue-on-error"] !== undefined) loose.push(`${name} (${command}): continue-on-error`);
       }
     }

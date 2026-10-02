@@ -17,7 +17,7 @@ const THEMES_DIR = "src/styles/themes";
 
 /** A theme file's colour roles, light and dark */
 const parse = (name: string): { light: Record<string, string>; dark: Record<string, string> } => {
-  const scss = readFileSync(`${THEMES_DIR}/_${name}.scss`, "utf8");
+  const scss = readFileSync(`${THEMES_DIR}/_${name}.scss`, "utf8").split("// contrast roles:")[0];
   const split = scss.indexOf('&[data-theme-mode="dark"]');
   const read = (text: string) => Object.fromEntries(
     [...text.matchAll(/--#\{\$prefix\}-sys-color-([a-z-]+?):\s*(#[0-9a-fA-F]{6})/g)].map(([, role, hex]) => [role, hex.toLowerCase()]),
@@ -134,6 +134,15 @@ describe("generated themes", () => {
       .map((file) => file.slice(1, -".scss".length));
     for (const name of files) expect({ name, lists: [themeStyles.includes(name), standaloneThemes.includes(name)].filter(Boolean).length }).toEqual({ name, lists: 1 });
     expect([...themeStyles, ...standaloneThemes].sort()).toEqual([...files].sort());
+  });
+
+  test("1.0.0 removed the deprecated themes: no file, manifest entry or forward (FLO-428)", () => {
+    const removed = ["material", "winter", "browngreen", "legacy"];
+    const files = readdirSync(THEMES_DIR).map((file) => file.slice(1, -".scss".length));
+    const index = readFileSync(`${THEMES_DIR}/_index.scss`, "utf8");
+    expect(removed.filter((name) => files.includes(name) || themeStyles.includes(name) || standaloneThemes.includes(name) || index.includes(`"${name}"`))).toEqual([]);
+    // The full stylesheet's themes, which md3.io's picker and the migration name
+    expect(themeStyles).toEqual(["baseline", "ocean", "desert", "forest", "sunset", "spring", "summer", "autumn", "brownbeige", "sageivory", "tealcaramel", "highcontrast"]);
   });
 
   test("the variants are standalone; the full stylesheet's set is unchanged", () => {
