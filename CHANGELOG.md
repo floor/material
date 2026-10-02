@@ -404,7 +404,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
-- Svelte SSR keeps rendering a page when a child needs context from a provider above an mtrl host. The host falls back to light DOM without a declarative shadow root, then upgrades normally in the browser (FLO-525).
+- Svelte SSR keeps rendering a page when a child needs context from a provider above an mtrl host. The host falls back to light DOM without a declarative shadow root, then upgrades normally in the browser. Development logs once per affected host in each response, including the child render error; production logs nothing (FLO-525).
 - The top-layer menu steps of `elements:check` no longer read focus before the menu has given it
   back. A menu returns focus to its opener in the animation frame after it closes; the check read
   the state after a fixed 450ms, and on a runner that produced no frame in that time it found

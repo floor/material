@@ -60,7 +60,6 @@ const childrenMarkup = (children: ServerSnippet | undefined, slots: Array<[strin
     renderer.component((target) => {
       props.children?.(target);
       for (const [slot, snippet] of props.slots) {
-        if (!SLOT.test(slot)) throw new TypeError(`Invalid slot: ${slot}`);
         target.push(`<span style="display: contents" slot="${slot}">`);
         snippet(target);
         target.push("</span>");
@@ -77,6 +76,7 @@ bridge.svelte = (tag, attributes, children, slots, prefix) => {
   // again would declare a shadow root twice, which the renderer rejects.
   if (serializingChildren) return "";
   if (!TAG.test(tag)) throw new TypeError(`Invalid tag: ${tag}`);
+  for (const [slot] of slots) if (!SLOT.test(slot)) throw new TypeError(`Invalid slot: ${slot}`);
   let light: string;
   serializingChildren = true;
   try {
@@ -84,10 +84,11 @@ bridge.svelte = (tag, attributes, children, slots, prefix) => {
     // page renders these snippets again in its own tree, where a real child
     // error still escapes through Svelte's normal server render.
     light = childrenMarkup(children, slots);
-  } catch {
+  } catch (error) {
     if (isDevelopment()) {
       const id = typeof attributes.id === "string" && attributes.id ? ` id=${JSON.stringify(attributes.id)}` : "";
-      console.warn(`[mtrl] <${tag}${id}> child snapshot failed, so this response has no shadow root for it.`);
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`[mtrl] <${tag}${id}> child snapshot failed, often because it needs ancestor context; this response has no shadow root for it: ${message}`);
     }
     return "";
   } finally {

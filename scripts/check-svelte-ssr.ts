@@ -341,7 +341,7 @@ for (const environment of ["development", "production"] as const) {
   const required = renderWithWarnings("required");
   assert.deepEqual(provided.warnings, [], `${label} default warnings`);
   assert.equal(required.warnings.length, environment === "development" ? 1 : 0, `${label} required warnings`);
-  if (environment === "development") assert.match(required.warnings[0] ?? "", /<m-tabs id="context-tabs">.*no shadow root/i, `${label} warning names the element`);
+  if (environment === "development") assert.match(required.warnings[0] ?? "", /<m-tabs id="context-tabs">.*no shadow root.*Required context is missing/i, `${label} warning names the element and error`);
   assert.throws(() => renderWithWarnings("error"), /Real child error/, `${label}: a real child error must surface`);
 
   const contextServer = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
@@ -355,12 +355,19 @@ for (const environment of ["development", "production"] as const) {
       for (const mode of ["default", "required"] as const) {
         const page = await inert.newPage({ javaScriptEnabled: false });
         try {
-          await page.goto(`${contextServer.url.href}?mode=${mode}`);
+          const response = await page.goto(`${contextServer.url.href}?mode=${mode}`);
+          const expected = mode === "required" ? "required provider" : "from provider";
+          try {
+            await page.waitForFunction((text) => document.getElementById("context-tabs")?.querySelector("#context-label")?.textContent === text,
+              expected, { timeout: 5000, polling: 50 });
+          } catch (cause) {
+            throw new Error(`${label} ${mode}: host and provider content did not appear within 5 seconds; response=${response?.status()} url=${page.url()} body=${(await page.locator("body").innerHTML()).slice(0, 700)} serverHTML=${(mode === "required" ? required.html : provided.html).slice(0, 700)}`, { cause });
+          }
           const state = await page.evaluate(() => {
             const host = document.getElementById("context-tabs");
             return { root: !!host?.shadowRoot, shadow: host?.shadowRoot?.textContent ?? null, light: host?.querySelector("#context-label")?.textContent ?? null };
           });
-          assert.equal(state.light, mode === "required" ? "required provider" : "from provider", `${label} ${mode}: light DOM provider`);
+          assert.equal(state.light, expected, `${label} ${mode}: light DOM provider`);
           if (mode === "default") {
             expectContextKnownLimit(`${label} default-valued context`, state.root && state.shadow?.includes("DEFAULT") === true,
               state.shadow?.includes("from provider") === true, "shadow contains DEFAULT");
@@ -377,9 +384,11 @@ for (const environment of ["development", "production"] as const) {
         await page.goto(`${contextServer.url.href}?mode=required`);
         await page.waitForFunction(() => (window as unknown as { svelteContextSSR?: { ready: boolean } }).svelteContextSSR?.ready);
         await page.waitForFunction(() => !!(document.getElementById("context-tabs") as HTMLElement & { component?: unknown }).component);
-        const hydrated = await page.evaluate(() => (window as unknown as { svelteContextSSR: { sameRoot: boolean } }).svelteContextSSR);
+        const hydrated = await page.evaluate(() => (window as unknown as { svelteContextSSR: { hadDeclarativeRoot: boolean } }).svelteContextSSR);
         assert.deepEqual({ warnings, errors }, { warnings: [], errors: [] }, `${label} required hydration`);
-        assert.equal(hydrated.sameRoot, true, `${label}: hydration kept absent root`);
+        assert.equal(hydrated.hadDeclarativeRoot, false, `${label}: no declarative root before upgrade`);
+        assert.equal(await page.evaluate(() => !!document.getElementById("context-tabs")?.shadowRoot), true,
+          `${label}: element attached a shadow root after upgrade`);
         assert.equal(await page.evaluate(() => !!(document.getElementById("context-tabs") as HTMLElement & { component?: unknown }).component), true,
           `${label}: host upgraded`);
         assert.equal(await page.locator("#context-label").textContent(), "required provider", `${label}: light DOM after hydration`);

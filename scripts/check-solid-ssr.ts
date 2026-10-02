@@ -405,6 +405,9 @@ await Bun.write(contextPath, await bundle(join(dir, "context-server.tsx"), "bun"
 const { renderContext } = await import(contextPath) as { renderContext: (required: boolean) => string };
 const contextClient = await bundle(join(dir, "context-client.tsx"), "browser");
 const contextHTML = { default: renderContext(false), required: renderContext(true) };
+for (const [name, markup] of Object.entries(contextHTML)) {
+  assert.match(markup, /id="context-tabs"/, `Solid ${name} context: server render has no host: ${markup.slice(0, 700)}`);
+}
 const contextServer = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   if (new URL(request.url).pathname === "/client.js") return new Response(contextClient, { headers: { "Content-Type": "text/javascript" } });
   const required = new URL(request.url).searchParams.get("required") === "true";
@@ -418,7 +421,12 @@ try {
     const url = `${contextServer.url.href}?required=${required}`;
     const inert = await contextBrowser.newPage({ javaScriptEnabled: false });
     try {
-      await inert.goto(url);
+      const response = await inert.goto(url);
+      try {
+        await inert.waitForFunction(() => !!document.getElementById("context-tabs")?.shadowRoot, undefined, { timeout: 5000, polling: 50 });
+      } catch (cause) {
+        throw new Error(`Solid ${label} context: host and declarative root did not appear within 5 seconds; response=${response?.status()} url=${inert.url()} body=${(await inert.locator("body").innerHTML()).slice(0, 700)} serverHTML=${contextHTML[required ? "required" : "default"].slice(0, 700)}`, { cause });
+      }
       const state = await inert.evaluate(() => {
         const host = document.getElementById("context-tabs");
         return { host: !!host, template: !!host?.querySelector("template[shadowrootmode]"), root: !!host?.shadowRoot,
