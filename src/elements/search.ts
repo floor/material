@@ -45,7 +45,7 @@ import {
   type ElementInstance, type ElementSpec,
 } from "./define";
 
-/** The factory's events, and the element's names for five of them. */
+/** The factory's events, and the element's own names for four of them. */
 export interface SearchElementEvents extends SearchEvents {
   change: SearchEvents["submit"];
   select: SearchEvents["suggestionSelect"];
