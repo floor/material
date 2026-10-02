@@ -50,14 +50,16 @@
   }
 
   // No slotted text, and no `label` attribute or an empty one (the element
-  // reads `label=""` as no label and builds none): the host is the 52 x 48
-  // track box itself, as components/_switch.scss has it — the 12px gap stands
-  // between a label and the track, and there is none. A whitespace-only text
-  // node is not matched here: CSS cannot see it, so `<m-switch> </m-switch>`
-  // (or the tag with a line break inside) keeps the labelled layout before
-  // upgrade although the element then builds no label. Write the tag with
-  // nothing between its tags.
-  &:empty:is(:not([label]), [label='']) {
+  // reads `label=""` as no label and builds none), and no supporting text
+  // (`supporting-text` absent or empty: the element builds no helper from an
+  // empty value): the host is the 52 x 48 track box itself, as
+  // components/_switch.scss has it — the 12px gap stands between text (a
+  // label or supporting text) and the track, and there is none. A
+  // whitespace-only text node is not matched here: CSS cannot see it, so
+  // `<m-switch> </m-switch>` (or the tag with a line break inside) keeps the
+  // labelled layout before upgrade although the element then builds no label.
+  // Write the tag with nothing between its tags.
+  &:empty:is(:not([label]), [label='']):is(:not([supporting-text]), [supporting-text='']) {
     column-gap: 0;
     min-height: 48px;
   }

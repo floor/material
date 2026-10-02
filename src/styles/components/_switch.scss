@@ -29,17 +29,19 @@ $component: '#{base.$prefix}-switch';
     column-gap: 12px;
   }
 
-  // An unlabelled switch is its own target: no gap (the 12px belongs between a
-  // label and the track and there is none), so the root is the 52px track's
-  // width and 48px tall with the 32px track centred. M3 "Switch" -> Specs ->
-  // Measurements: Track 32x52dp and "Target: Size 48dp", with no height for a
-  // label row; its Accessibility section: "Don't apply density to switches by
-  // default — this lowers their targets below our best practice of 48x48 CSS
-  // pixels." So the unlabelled row is 48 tall — the root's 4px above and below
-  // leave the container 40 — and a labelled switch keeps the 56px row. `:where`
-  // keeps this rule's weight level with `--dense`, which follows and so still
-  // wins: a switch that opts into the denser row keeps it.
-  &:where(:not(:has(.#{$component}__label))) {
+  // A switch with neither a label nor supporting text is its own target: no
+  // gap (the 12px belongs between text and the track, and there is none), so
+  // the root is the 52px track's width and 48px tall with the 32px track
+  // centred. M3 "Switch" -> Specs -> Measurements: Track 32x52dp and "Target:
+  // Size 48dp", with no height for a label row; its Accessibility section:
+  // "Don't apply density to switches by default — this lowers their targets
+  // below our best practice of 48x48 CSS pixels." So this row is 48 tall —
+  // the root's 4px above and below leave the container 40 — while a switch
+  // with a label, and one whose only text is its supporting text (`__helper`,
+  // which stands where the label would), keeps the 56px row and the gap.
+  // `:where` keeps this rule's weight level with `--dense`, which follows and
+  // so still wins: a switch that opts into the denser row keeps it.
+  &:where(:not(:has(.#{$component}__label, .#{$component}__helper))) {
     .#{$component}__container {
       column-gap: 0;
       min-height: 40px;
