@@ -1062,6 +1062,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **An `<m-icon-button>`'s icon keeps its size token.** The element's inner `<button>` kept Chrome's
+  default padding, `1px 6px`, because the page reset's `button { padding: 0 }` is not in the shadow
+  root's adopted stylesheets, while the factory, which the page's global stylesheet does reach,
+  computes `0px`. Where the container left no room for icon and padding, the icon, a shrinkable flex
+  item, was drawn under its token: outlined xs narrow 14 against 20, outlined s narrow 18 against 24,
+  filled, tonal and standard xs narrow 16 against 20 and their s narrow 20 against 24, outlined xs
+  default width 18 against 20. The component stylesheet the element adopts now repeats the reset.
 - **A top-layer dialog that refuses Escape stays open, however often it is pressed
   (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
   listener that refused, the third Escape made the browser close the `<dialog>` while
