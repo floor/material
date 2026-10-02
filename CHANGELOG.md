@@ -12,11 +12,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [0.10.6] - 2026-10-02
 
-The release that announces 1.0.0. Everything 1.0.0 removes, renames or changes that 0.10.x had
-not yet marked is now told in the code, as `@deprecated` or as an "In 1.0 …" note in the TSDoc:
-upgrade to 0.10.6 first, and your editor shows each one before you move to 1.0.0. None of
-those notes changes anything at run time. Also three fixes: reduced motion inside the elements
-(an accessibility fix), the button group's press, and the tooltip's placement.
+The release that announces 1.0.0. Everything decided for 1.0.0 as of this release that 0.10.x
+had not yet marked is now told in the code, as `@deprecated` or as an "In 1.0 …" note in the
+TSDoc, so your editor shows each one before you move to 1.0.0. Later decisions will be
+announced in a further 0.10.x release before 1.0.0: upgrade to the latest 0.10.x first. None
+of those notes changes anything at run time. Also three fixes: reduced motion inside the
+elements (an accessibility fix), the button group's press, and the tooltip's placement.
 
 ### Deprecated
 
