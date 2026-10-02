@@ -317,8 +317,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `getValueAttribute()` / `setValueAttribute()`. No `value` event is emitted.
 - **A trailing icon without `trailingIconLabel`** is hidden from screen readers and loses its
   pointer cursor; a click listener you added to it is out of their reach. The label is the
-  factory's (`trailingIconLabel`, or `setTrailingIcon(html, label)`); on `<m-text-field>` and in
-  the framework components a trailing icon is decorative.
+  factory's (`trailingIconLabel`, or `setTrailingIcon(html, label)`); on `<m-text-field>` the
+  `trailing-icon-label` attribute gives it, and the framework components take the same as the
+  `trailingIconLabel` prop. Without the label a trailing icon is decorative.
 - **The button group's `select(value)`** with a value no button carries clears the selection,
   with a warning in development and no event.
 - **`<m-button>`** dispatches `change` for a toggle button.
@@ -663,8 +664,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   built a clear or show-password control from that span with its own click listener lost it for
   screen-reader users. Migration: an interactive trailing icon needs `trailingIconLabel` (or
   `setTrailingIcon(html, label)`), which makes it a button and emits `trailing`. The label is a
-  factory option: `<m-text-field>` and the React, Vue, Svelte and Solid components have no label
-  attribute or prop, so a trailing icon there is decorative.
+  factory option, the `trailing-icon-label` attribute on `<m-text-field>` (FLO-532) and the
+  `trailingIconLabel` prop in the React, Vue, Svelte and Solid components; without it a trailing
+  icon is decorative.
 - **The dialog is open when `open()` returns, and closed when `close()` returns (FLO-548).**
   The rule, for the dialog first and for every overlay by material 3.0.0: when `open()` or `close()`
   returns, `isOpen()` has changed and the event has been emitted (the cancellable `beforeopen`
@@ -1232,8 +1234,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   physical offsets (`left: 50%`), as the icon button's own rule does, so the physical translate
   centres it in both directions; left-to-right measures the same as before. Only the trailing-icon
   target rule changes in the compiled sheet (2,744 rules before and after, one changed). The
-  mixin's only live user is the text field's trailing icon button, which only the factory renders
-  (the `<m-text-field>` element has no attribute for the label that makes the icon a button).
+  mixin's only live user is the text field's trailing icon button, on the factory and — through
+  `trailing-icon-label`, FLO-532 — on `<m-text-field>` itself.
 - **The side sheet's and the dialog's close buttons reach 48 x 48.** Both were hand-built 40px
   buttons with no expanded target, so a pointer 4px outside an edge — the outer band of the M3
   target — hit nothing, left-to-right and right-to-left alike. Each now carries the icon button's
