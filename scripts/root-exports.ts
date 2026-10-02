@@ -30,8 +30,13 @@ export type RootExport = {
 const ROOT = join(import.meta.dir, "..");
 const FIXTURE = join(ROOT, "scripts/fixtures/root-exports.json");
 const TABLE = join(ROOT, "scripts/fixtures/root-exports.md");
-/** The core subpaths, `material/core/<name>`, in the order a name's path is chosen */
-const SUBPATHS = ["dom", "compose", "theme", "state", "utils", "canvas", "shapes"];
+/**
+ * The core subpaths, `material/core/<name>`, in the order a name's path is
+ * chosen. These seven are the whole public set: package.json lists each one
+ * (no `./core/*` wildcard since 3.0.0, FLO-414), and test/core-exports.test.ts
+ * holds the two lists together.
+ */
+export const SUBPATHS = ["dom", "compose", "theme", "state", "utils", "canvas", "shapes"];
 
 const kindOf = (symbol: ts.Symbol): RootExport["kind"] =>
   symbol.flags & ts.SymbolFlags.Class ? "class" : symbol.flags & ts.SymbolFlags.Value ? "value" : "type";

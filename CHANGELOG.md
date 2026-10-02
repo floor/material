@@ -346,6 +346,17 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed (breaking)
 
+- **`material/core/<area>` is an explicit list: seven areas, no wildcard (FLO-414).** The export
+  map listed `./core/*`, and a `*` in an exports pattern crosses slashes: besides the areas
+  it made every folder inside one importable (`material/core/compose/features`), which was
+  never documented. The map now names `material/core` and its seven areas, the ones the
+  README and the migration table teach: `material/core/canvas`, `/compose`, `/dom`,
+  `/shapes`, `/state`, `/theme` and `/utils`. Any other path under `material/core` throws
+  `ERR_PACKAGE_PATH_NOT_EXPORTED`. Migration: import from the area. Everything
+  `material/core/compose/features` exported is exported by `material/core/compose` under the
+  same name, except `withBadge` and the types `BadgeComponent`, `BadgeConfig` and
+  `LabelManager` of that feature, which were reachable only through the nested path and
+  are internal: for a badge, use `createBadge` from `material`.
 - **Progress: `canvas`, `resize`, `track`, `indicator` and `buffer` are no longer on
   `ProgressComponent`.** They named how the indicator is drawn (one canvas; `track`,
   `indicator` and `buffer` were that same canvas under the names of an older SVG), which

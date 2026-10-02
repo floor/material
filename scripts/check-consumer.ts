@@ -85,6 +85,23 @@ console.log(JSON.stringify(out));
     "folders inside a component that still resolve (or fail for another reason)");
   console.log(`Component subpaths: ${componentSubpaths.length} resolve to files in the packed package, ${nestedSubpaths.length} nested ones do not`);
 
+  // The core subpaths are an explicit list too (FLO-414): `material/core` and
+  // its seven areas resolve, and what the old `./core/*` pattern also matched
+  // across slashes (a folder inside an area) or by accident does not.
+  const coreSubpaths = Object.keys((await Bun.file("package.json").json()).exports)
+    .filter(key => key === "./core" || key.startsWith("./core/")).map(key => `material${key.slice(1)}`);
+  const closedCorePaths = ["compose/features", "compose/utils", "config", "navigation", "dom/html", "nothing"].map(path => `material/core/${path}`);
+  const coreProbe = join(directory, "resolve-core.mjs");
+  await writeFile(coreProbe, (await readFile(probe, "utf8")).replace(/for \(const specifier of \[[^\n]*\]\) \{/,
+    `for (const specifier of ${JSON.stringify([...coreSubpaths, ...closedCorePaths])}) {`));
+  const core: Record<string, string> = JSON.parse(Bun.spawnSync(["node", coreProbe], { cwd: directory }).stdout.toString());
+  assert.equal(coreSubpaths.length, 8, "material/core and its seven areas");
+  assert.deepEqual(coreSubpaths.filter(specifier => core[specifier] !== "ok"), [],
+    "core subpaths that do not resolve to a file (and its .d.ts) in the packed package");
+  assert.deepEqual(closedCorePaths.filter(specifier => core[specifier] !== "ERR_PACKAGE_PATH_NOT_EXPORTED"), [],
+    "paths under material/core that still resolve (or fail for another reason)");
+  console.log(`Core subpaths: ${coreSubpaths.length} resolve to files in the packed package, ${closedCorePaths.length} others under material/core do not`);
+
   // Library mode retains exports for measurement; an HTML fixture below tests
   // actual application mode, CSS extraction, network loading, and rendering.
   const sizes: Record<string, { initialGzip: number; totalGzip: number }> = {};
