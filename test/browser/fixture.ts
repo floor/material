@@ -1,6 +1,6 @@
 // Loaded only by the packed Vite fixture, never by Bun's unit test runner.
 import {
-  createButton, createTextfield, createSelect, createCheckbox,
+  createButton, createTextField, createSelect, createCheckbox,
   createButtonGroup, createSplitButton, createTabs, createCard, createDialog, createSnackbar,
 } from "mtrl";
 
@@ -28,9 +28,9 @@ const cases: Record<string, () => unknown> = {
     return loading.showProgress?.();
   },
   textfield() {
-    add(createTextfield({ label: "Name", value: "Ada", variant: "outlined" }));
-    add(createTextfield({ label: "Email", value: "invalid", variant: "filled", error: true, supportingText: "Enter an email address" }));
-    add(createTextfield({ label: "Disabled", disabled: true, value: "Read only" }));
+    add(createTextField({ label: "Name", value: "Ada", variant: "outlined" }));
+    add(createTextField({ label: "Email", value: "invalid", variant: "filled", error: true, supportingText: "Enter an email address" }));
+    add(createTextField({ label: "Disabled", disabled: true, value: "Read only" }));
   },
   select() {
     const select = add(createSelect({ label: "Destination", variant: "outlined", options: [

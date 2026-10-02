@@ -94,7 +94,7 @@ console.log(JSON.stringify(out));
   // 8,953 to 9,520 against 7cd57a6.
   // addClass from its subpath since 1.0.0 removed it from the root (FLO-351)
   for (const [name, symbol, budget, from] of [
-    ["addClass", "addClass", 1000, "mtrl/core/dom"], ["textfield", "createTextfield", 9700, "mtrl"], ["button", "createButton", 10000, "mtrl"],
+    ["addClass", "addClass", 1000, "mtrl/core/dom"], ["textfield", "createTextField", 9700, "mtrl"], ["button", "createButton", 10000, "mtrl"],
   ] as const) {
     const entry = join(directory, `${name}.ts`);
     await writeFile(entry, `export { ${symbol} } from '${from}';`);

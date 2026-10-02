@@ -46,15 +46,15 @@ describe("the component subpaths' exports (FLO-381)", () => {
     expect(constants.DEFAULT_DATE_FORMAT).toBe("MM/DD/YYYY");
   });
 
-  test("the old names are deprecated toward the canonical ones, which are public (FLO-383)", () => {
-    const entry = (component: string, name: string) => now[component]?.find((e) => e.name === name);
+  test("only the canonical names: the old spellings are gone from their subpaths (FLO-383)", () => {
+    const names = (component: string) => now[component]?.map((e) => e.name) ?? [];
     for (const [component, old, to] of [["textfield", "TextfieldConfig", "TextFieldConfig"], ["textfield", "TextfieldComponent", "TextFieldComponent"],
-      ["card", "CardSchema", "CardConfig"], ["top-app-bar", "TopAppBar", "TopAppBarComponent"], ["bottom-app-bar", "BottomAppBar", "BottomAppBarComponent"]]) {
-      expect(entry(component!, to!)?.status).toBe("public");
-      expect(entry(component!, old!)).toMatchObject({ status: "deprecated" });
-      expect(entry(component!, old!)?.note).toStartWith(`Use ${to}`);
+      ["card", "CardSchema", "CardConfig"], ["top-app-bar", "TopAppBar", "TopAppBarComponent"], ["bottom-app-bar", "BottomAppBar", "BottomAppBarComponent"],
+      ["textfield/constants", "TEXTFIELD_CLASSES", "TEXT_FIELD_CLASSES"]]) {
+      expect(names(component!)).toContain(to);
+      expect(names(component!)).not.toContain(old);
     }
-    expect(entry("textfield", "createTextField")?.status).toBe("public");
+    expect(Object.values(now).flat().filter((e) => e.note?.includes("FLO-383")).map((e) => e.name)).toEqual([]);
   });
 
   test("every /constants subpath is pinned beside its index (FLO-384)", () => {

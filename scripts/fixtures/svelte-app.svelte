@@ -4,7 +4,7 @@
   import { onMount } from "svelte";
   import {
     Button, Checkbox, Chip, Chips, List, ListItem, NavigationRail, NavigationRailItem, Progress, Radio, Radios, Slider,
-    Switch, Tab, Tabs, Textfield,
+    Switch, Tab, Tabs, TextField,
   } from "../../dist/svelte/index.js";
   import { Select, SelectOption } from "../../dist/svelte/index.js";
   import { Dialog } from "../../dist/svelte/index.js";
@@ -85,7 +85,7 @@
   <output id="agreed">{String(agreed)}</output>
   <Slider id="sl" ariaLabel="Level" bind:value={level} />
   <output id="level">{String(level)}</output>
-  <Textfield id="tf" label="Name" bind:value={text} oninput={(e) => recordModel("string", e)} />
+  <TextField id="tf" label="Name" bind:value={text} oninput={(e) => recordModel("string", e)} />
   <output id="text">{text}</output>
   <Radios id="rd" ariaLabel="Size" bind:value={size}>
     <Radio value="s">Small</Radio>

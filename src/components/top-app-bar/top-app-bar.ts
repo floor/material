@@ -13,20 +13,20 @@ import {
 } from "../../core/compose";
 
 import { createConfig } from "./config";
-import type { TopAppBar, TopAppBarConfig, TopAppBarType } from "./types";
+import type { TopAppBarComponent, TopAppBarConfig, TopAppBarType } from "./types";
 import { TOP_APP_BAR_DEFAULTS } from "./constants";
 
-// The one TopAppBar declaration is the public one in types.ts (FLO-383); this
+// The one TopAppBarComponent declaration is the public one in types.ts (FLO-383); this
 // module re-exports it for the element, which imports it from here.
-export type { TopAppBar };
+export type { TopAppBarComponent };
 
 /**
  * Creates a top app bar component
  *
  * @param {TopAppBarConfig} config - Configuration options
- * @returns {TopAppBar} Top app bar component instance
+ * @returns {TopAppBarComponent} Top app bar component instance
  */
-export const createTopAppBar = (config: TopAppBarConfig = {}): TopAppBar => {
+export const createTopAppBar = (config: TopAppBarConfig = {}): TopAppBarComponent => {
   // Process configuration with defaults
   const componentConfig = createConfig(config);
 
@@ -218,7 +218,7 @@ export const createTopAppBar = (config: TopAppBarConfig = {}): TopAppBar => {
   };
 
   // Create the top app bar interface
-  const topAppBar: TopAppBar = {
+  const topAppBar: TopAppBarComponent = {
     ...withLifecycleComponent,
 
     // Spreading a component copies `addClass` but not the `this` it returns:

@@ -10,7 +10,7 @@ import createFab from "../../src/components/fab";
 import createExtendedFab from "../../src/components/extended-fab";
 import createCheckbox from "../../src/components/checkbox";
 import createSwitch from "../../src/components/switch";
-import createTextfield from "../../src/components/textfield";
+import createTextField from "../../src/components/textfield";
 import createSelect from "../../src/components/select";
 import createRadios from "../../src/components/radios";
 import createButtonGroup from "../../src/components/button-group";
@@ -28,7 +28,7 @@ const factories: Array<[string, (disabled: boolean) => Disableable]> = [
   ["extended FAB", (disabled) => createExtendedFab({ icon: ICON, text: "Compose", disabled })],
   ["checkbox", (disabled) => createCheckbox({ label: "Agree", disabled })],
   ["switch", (disabled) => createSwitch({ label: "Wi-Fi", disabled })],
-  ["text field", (disabled) => createTextfield({ label: "Name", disabled })],
+  ["text field", (disabled) => createTextField({ label: "Name", disabled })],
   ["select", (disabled) => createSelect({ label: "Size", options: [{ id: "s", text: "Small" }], disabled })],
   ["radios", (disabled) => createRadios({ name: "size", options: [{ value: "s", label: "Small" }], disabled })],
   ["button group", (disabled) => createButtonGroup({ buttons: [{ text: "A" }, { text: "B" }], disabled })],
