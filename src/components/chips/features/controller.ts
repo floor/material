@@ -212,25 +212,41 @@ export const withController =
     }
   };
 
-  // chip.destroy() outside removeChip used to leave the chip in this list, so
-  // the set still counted it and the arrows stopped on it (FLO-533). Drop it
-  // the way removeChip unwires a chip, without remove or change. removeChip
-  // and the set's own teardown destroy the chip themselves and must not take
-  // this path as well.
-  let managedDestroy = false;
-  const dropDestroyedChip = (chip: ChipComponent) => {
-    const index = component.chipInstances.indexOf(chip);
-    if (index < 0) return;
+  // Takes the chip at `index` out of the set: its listener, the list, the
+  // focused index and the tab stop. Focus that was on it moves to the chip
+  // that takes its place, or to the one before when it was the last (FLO-256);
+  // it used to fall to the page when the chip was destroyed directly (FLO-542).
+  // One shape for removeChip and for chip.destroy().
+  const unlist = (index: number) => {
+    const chips = component.chipInstances;
+    const chip = chips[index];
+    const hadFocus = chip.element.contains(activeElementOf(chip.element));
     chip.element.removeEventListener("keydown", handleKeyboardNavigation);
-    component.chipInstances.splice(index, 1);
+    chips.splice(index, 1);
     if (index === focusedChipIndex) focusedChipIndex = -1;
     else if (index < focusedChipIndex) focusedChipIndex--;
     syncTabStop();
+    if (!hadFocus) return;
+    let next = Math.min(index, chips.length - 1);
+    while (next >= 0 && chips[next].isDisabled()) next--;
+    if (next < 0) next = chips.findIndex(candidate => !candidate.isDisabled());
+    if (next >= 0) {
+      focusedChipIndex = next;
+      chips[next].focus();
+    }
   };
+
+  // chip.destroy() outside removeChip used to leave the chip in this list, so
+  // the set still counted it and the arrows stopped on it (FLO-533). It leaves
+  // the set first, without remove or change. removeChip has unlisted the chip
+  // by the time it destroys it; the set's own teardown destroys every chip and
+  // must not take this path.
+  let tearingDown = false;
   const watchChipDestroy = (chip: ChipComponent) => {
     const destroy = chip.destroy.bind(chip);
     chip.destroy = () => {
-      if (!managedDestroy) dropDestroyedChip(chip);
+      const index = tearingDown ? -1 : component.chipInstances.indexOf(chip);
+      if (index >= 0) unlist(index);
       destroy();
     };
   };
@@ -303,33 +319,9 @@ export const withController =
     if (index >= 0 && index < component.chipInstances.length) {
       const chip = component.chipInstances[index];
       const chipValue = chip.getValue();
-      const hadFocus = chip.element.contains(activeElementOf(chip.element));
-
-      chip.element.removeEventListener("keydown", handleKeyboardNavigation);
-      managedDestroy = true;
-      try { chip.destroy(); } finally { managedDestroy = false; }
-      component.chipInstances.splice(index, 1);
-
-      // Update focused index if needed
-      if (index === focusedChipIndex) {
-        focusedChipIndex = -1;
-      } else if (index < focusedChipIndex) {
-        focusedChipIndex--;
-      }
-
-      syncTabStop();
-      // Focus that was on the removed chip moves to the one that took its place, or
-      // to the one before when it was the last: it used to fall to the page. FLO-256.
-      if (hadFocus) {
-        const chips = component.chipInstances;
-        let next = Math.min(index, chips.length - 1);
-        while (next >= 0 && chips[next].isDisabled()) next--;
-        if (next < 0) next = chips.findIndex(candidate => !candidate.isDisabled());
-        if (next >= 0) {
-          focusedChipIndex = next;
-          chips[next].focus();
-        }
-      }
+      // Out of the set and focus handed on, then destroyed
+      unlist(index);
+      chip.destroy();
       dispatchEvent(CHIPS_EVENTS.REMOVE, { value: currentValue(), chip, chipValue });
     }
   };
@@ -463,7 +455,7 @@ export const withController =
 
   // Share the base resource scope; withLifecycle is composed after this feature.
   getCleanup(component).add(() => {
-    managedDestroy = true;
+    tearingDown = true;
     component.element.removeEventListener("keydown", handleKeyboardNavigation);
     component.element.removeEventListener("focusin", trackFocus);
     component.chipInstances.forEach(chip => {

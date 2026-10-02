@@ -934,6 +934,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **Chips: a chip destroyed while it has focus hands focus to its neighbour (FLO-542).**
+  `chip.destroy()` called directly on a focused chip of a set left focus on the page, so a
+  keyboard user lost their place. Focus now moves to the chip that takes its place, or to
+  the one before when it was the last, as it does when the set removes a chip.
 - **A dialog destroyed right after `open()` no longer locks the page's scroll (FLO-548).** The
   default-layer dialog shows its surface 10 ms after `open()`. `destroy()` in that window left
   the timer running: it then set `overflow: hidden` on the body for a dialog that was gone,
