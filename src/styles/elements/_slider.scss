@@ -1,12 +1,12 @@
 // src/styles/elements/_slider.scss
-// <m-slider> before upgrade: the 48px row of the default size, or the label's
-// line and the container's under it when the host carries a label (FLO-594).
+// <m-slider> before upgrade: the container's row at each size, with the label's
+// body-large line and its 4px gutter over it when the host carries a label.
 @use 'sass:map';
 @use '../abstract/functions' as f;
 @use 'config' as c;
 
 // The label's line: the typescale map's body-large line-height, the role
-// components/_slider.scss gives __label (typography('body-large'), FLO-587).
+// components/_slider.scss gives __label (typography('body-large')).
 $label-line: map.get(f.get-typography('body-large'), 'line-height');
 // The label's gutter: __label's 4px margin (components/_slider.scss), under the
 // label or, with `label-position='end'`, over it -- the same height either way.
@@ -26,14 +26,21 @@ $containers: ('xs': 48px, 's': 48px, 'm': 52px, 'l': 68px, 'xl': 108px);
 
   // A label builds its own element and takes a body-large line and the 4px
   // gutter over the container. `label=""` builds none (withTextLabel returns on
-  // a falsy label, as on the switch and checkbox), so that host keeps the 48px
-  // row of the unlabelled slider. The size names match in any case, as the
-  // element reads them.
+  // a falsy label, as on the switch and checkbox), so that host keeps the
+  // container's row, as the label-less rule below gives it.
   &[label]:not([label='']) {
     height: $label-line + $label-gap + map.get($containers, 'xs');
   }
 
   @each $size, $container in $containers {
+    // Without a label the host is the container's row itself: the factory lifts
+    // it above the 48px minimum from M up (the track plus its 12px handle
+    // offset). `label=""` takes this row too, as it builds no label. The size
+    // names match in any case, as the element reads them.
+    &:is(:not([label]), [label=''])[size='#{$size}' i] {
+      height: $container;
+    }
+
     &[label]:not([label=''])[size='#{$size}' i] {
       height: $label-line + $label-gap + $container;
     }
