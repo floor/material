@@ -105,8 +105,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **`rawClass`** is ignored: neither applied nor written as an attribute, with no warning.
 - **A FAB's `'surface'` or `'small'`** (the options take any string) renders as the default
   `primary-container`, or at the default 56dp.
-- **`data-theme="winter"`** (or `material`, `browngreen`, `legacy`) gets the light baseline
-  colours, and `data-theme-mode="dark"` and `data-theme-contrast` on that element are ignored.
+- **`data-theme="winter"`** (or `material`, `browngreen`, `legacy`) on the root element gets the
+  baseline colours in the OS's colour scheme, and `data-theme-mode` and `data-theme-contrast` on
+  that element are ignored.
 - **`getThemeColor('sys-color-primary-rgb')`** returns `''` (or the `fallback`), so
   `rgba(${…}, 0.12)` yields `rgba(, 0.12)`, a colour CSS and canvas drop silently.
 - **A removed constant key** reads `undefined` in JavaScript, with no error:
@@ -390,11 +391,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **The deprecated themes `material`, `winter`, `browngreen` and `legacy` are removed
   (FLO-428).** 0.10 deprecated them (FLO-308); their files, `mtrl/themes/<name>` entries and
   their rules in the full stylesheet are gone. A leftover `data-theme="winter"` (or any of the
-  four) gets the light baseline colours, and `data-theme-mode="dark"` and `data-theme-contrast`
-  on that element are ignored: an app with its own dark toggle shows the light baseline until
-  it renames the theme. Migration: `material` → `baseline`, `winter` → `ocean`,
-  `browngreen` → `brownbeige`; `legacy` has no replacement (pick any theme, or keep its
-  colours as custom properties of your own).
+  four) on the root element gets the baseline colours in the OS's colour scheme, and
+  `data-theme-mode` and `data-theme-contrast` on that element are ignored: an app with its own
+  dark toggle follows the OS until it renames the theme. Migration: `material` → `baseline`,
+  `winter` → `ocean`, `browngreen` → `brownbeige`; `legacy` has no replacement (pick any theme,
+  or keep its colours as custom properties of your own).
 - **The shape scale is M3's and nothing else (FLO-345).** The mtrl-only steps `extra-tiny` (1px),
   `tiny` (2px) and `pill` (100px) are removed from `$shape`, with their
   `--mtrl-sys-shape-corner-*` properties on `:root`. `v.shape('tiny')` and the rest now stop the
@@ -447,7 +448,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - `mtrl/ssr/react`: an opt-in, server-only entry. Imported in the server bootstrap, it makes the React adapters emit styled declarative shadow roots during SSR (React 18 and 19), with no server code in the client bundle. Without it, React output is unchanged (FLO-372). A `Suspense` boundary inside a component contributes its fallback to the server-rendered shadow root: a button has no label slot with an empty fallback but has one with a text fallback; a boundary around a tab leaves the root without that tab with either fallback. Put the boundary outside the component when the server root needs resolved content. The server-rendered shadow root is built in a separate render, without the context of providers above the component. The page's own render (the light DOM) sees the provided value. Until upgrade, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves this component without a declarative shadow root while the page still renders. Pass the resolved string as a prop or attribute, or accept client-rendered text until upgrade. A fix is planned for 1.1 (FLO-517). The Vue and Solid bridges see the provided value in both the shadow root and light DOM.
 - `mtrl/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Svelte output gains only the empty branch marker (FLO-375). Like React, its shadow root is built in a separate render without provider context; the page's light DOM sees the provided value. A child reading context with a default shows that default in the painted shadow root until upgrade. A child requiring context leaves that component without a declarative shadow root while the page still renders; a development-only warning names the element.
 - `mtrl/ssr/vue`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Vue component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Vue output is unchanged (FLO-373).
-- `mtrl/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Solid output is unchanged (FLO-374).
+- `mtrl/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Solid output is unchanged (FLO-374). Async and streaming SSR finish when a component inside a host creates a resource under an outer `Suspense`: the shadow bridge reuses the page's serialized children, preserving its resource ownership and hydration keys without rendering children twice.
 - Per-element SSR opt-out (FLO-370): specs accept `ssr: false` or a synchronous host
   predicate. Carousel, FAB menu and toolbar emit their host and light DOM without a
   declarative root; menu and split-button do the same for nested submenus. Async
@@ -500,10 +501,6 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - Vue SSR finishes when a host's child uses `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`. The shadow bridge serializes those children once (FLO-373).
 - Vue SSR renders a host whose `v-html` contains an unclosed `<template>`, instead of throwing, and `mtrl/ssr/vue` imports the server renderer from `vue/server-renderer` (FLO-373).
 - Prefilled multiline text fields render in SSR, including inside another custom element (FLO-416).
-- Solid async and streaming SSR finish when a component inside a host creates a resource
-  under an outer `Suspense`. The shadow bridge reuses the page's serialized children,
-  preserving its resource ownership and hydration keys without rendering children twice
-  (FLO-374).
 - `consumer:check` no longer fails on the open split button's screenshot pair. One of the two
   captures sometimes blended the menu's shadow a few levels lighter where it falls on the buttons
   (26 to 29 pixels, either build). The comparison fixture now keeps an open menu on a compositor
