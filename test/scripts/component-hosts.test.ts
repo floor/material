@@ -35,8 +35,10 @@ describe("comparableAttributes", () => {
     agree(host({ checked: "" }), host({}, { checked: true }));
     agree(host({ checked: "checked" }), host({}, { checked: true }));
     agree(host({}), host({}, { checked: false }));
+    agree(host({}, { checked: true }), host({}, { checked: true }));
     differ(host({ checked: "" }), host({}, { checked: false }));
     differ(host({}), host({}, { checked: true }));
+    differ(host({}, { checked: true }), host({}, { checked: false }));
   });
 
   test("compares a number property with the attribute text", () => {
