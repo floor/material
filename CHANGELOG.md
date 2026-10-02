@@ -1147,6 +1147,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **The slider's label takes Body Large, not 18px, a size on no type role (FLO-587).** It was
+  `font-size: 18px` with weight 400 — between body medium and body large, on none of the
+  typescale's sizes — where the checkbox, radio and switch labels are Body Large. It now takes
+  that role through the same mixin: 16px, a 24px line height, 0.5px tracking, Regular, and the
+  typeface token. The label is 2px smaller and the slider's height follows it.
 - **The side sheet's and the dialog's close buttons reach 48 x 48.** Both were hand-built 40px
   buttons with no expanded target, so a pointer 4px outside an edge — the outer band of the M3
   target — hit nothing, left-to-right and right-to-left alike. Each now carries the icon button's

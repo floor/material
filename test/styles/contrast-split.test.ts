@@ -116,13 +116,14 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_switch.scss), the close target of the side sheet and the
     // dialog (styles/components/_side-sheet.scss, styles/components/_dialog.scss),
     // a radio row that grows with its label
-    // with an unlabelled radio centred (styles/components/_radios.scss), the select
+    // with an unlabelled radio centred (styles/components/_radios.scss), the slider's
+    // label at Body Large, not 18px (styles/components/_slider.scss), the select
     // menu's width, mark and selected colours (styles/components/_select.scss,
     // styles/components/_menu.scss), and the chip's secondary-action floor
     // (styles/components/_chips.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("71418abd3442c9e74e886fd4cefd101b56f4d36074c7132acf74b053b6650e5e");
-    expect(css.length).toBe(524986);
+      .toBe("0b0ee5ff38de02517a5436da622ceb0da3c5a063c5ced85c6c58c4bdd920bc94");
+    expect(css.length).toBe(525086);
   });
 
   test("today's sheets still resolve to the fixture", () => {
