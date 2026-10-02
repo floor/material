@@ -194,16 +194,29 @@ try {
     Object.assign(window.bar.element.style, { position: "fixed", bottom: "0", left: "0", width: "400px" });
   });
   const state = () => page.evaluate(() => ({ hidden: window.bar.isHidden(), transform: getComputedStyle(window.bar.element).transform, transition: getComputedStyle(window.bar.element).transitionDuration }));
-  await page.evaluate(() => window.scrollTo(0, 50));
-  await page.waitForTimeout(50);
-  await page.evaluate(() => window.scrollTo(0, 400));
-  await page.waitForTimeout(500);
+  // The bar follows `scroll` events, which the browser sends in its next rendering
+  // step, not at the call, and it slides for 450ms. The fixed waits here (50, 500 and
+  // 100ms) were only long enough for that: 500ms for an event and a 450ms slide leaves
+  // little, and a late frame has the transform read mid-slide. `scrolled` returns once
+  // the page has sent the event (a listener added after the bar's, so the bar has seen
+  // it), and `until` then waits, 5s at most, for the state asserted right after.
+  const scrolled = (y: number): Promise<boolean> => page.evaluate(y => new Promise<boolean>(resolve => {
+    const timer = setTimeout(() => resolve(false), 5000);
+    window.addEventListener("scroll", () => { clearTimeout(timer); resolve(true); }, { once: true });
+    window.scrollTo(0, y);
+  }), y);
+  const until = async (ready: (now: Awaited<ReturnType<typeof state>>) => boolean): Promise<void> => {
+    for (const end = Date.now() + 5000; Date.now() < end && !ready(await state());) await page.waitForTimeout(20);
+  };
+  assert.equal(await scrolled(50), true, "the page sent a scroll event for the first scroll");
+  assert.equal(await scrolled(400), true, "and for the second");
+  await until(now => now.hidden && now.transform.endsWith(", 64)"));
   const down = await state();
   assert.equal(down.hidden, true, "hidden scrolling down");
   assert.ok(down.transform.endsWith(", 64)"), `slid down its height: ${down.transform}`);
   assert.notEqual(down.transition, "0s", "it slides");
-  await page.evaluate(() => window.scrollTo(0, 100));
-  await page.waitForTimeout(100);
+  assert.equal(await scrolled(100), true, "the page sent a scroll event scrolling up");
+  await until(now => !now.hidden);
   assert.equal((await state()).hidden, false, "shown scrolling up");
   await page.evaluate(() => window.bar.hide());
   await page.focus(".mtrl-navigation-bar__item[data-id='home']");
