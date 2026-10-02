@@ -45,6 +45,25 @@ export const cases: PreupgradeCase[] = [
   // An empty supporting-text builds no helper (the element reads it as none,
   // as with `label=""`), so this host is the track box too.
   c("switch", "supporting-text=''", `<m-switch aria-label="Switch" supporting-text=""></m-switch>`),
+  // The four track-box families again with the states and the one attribute
+  // (the handle icon) that changes the upgraded switch's structure. None of
+  // them changes the box: the thumb sits inside the track and the disabled and
+  // checked rules are colours and geometry there. `checked`, `disabled` and
+  // `icon` on the labelled row are the controls.
+  c("switch", "disabled", `<m-switch disabled>Wi-Fi</m-switch>`),
+  c("switch", "icon", `<m-switch icon="${ICON}">Wi-Fi</m-switch>`),
+  c("switch", "unlabelled checked", `<m-switch checked aria-label="Switch"></m-switch>`),
+  c("switch", "unlabelled disabled", `<m-switch disabled aria-label="Switch"></m-switch>`),
+  c("switch", "unlabelled icon", `<m-switch icon="${ICON}" aria-label="Switch"></m-switch>`),
+  c("switch", "label='' checked", `<m-switch checked aria-label="Switch" label=""></m-switch>`),
+  c("switch", "label='' disabled", `<m-switch disabled aria-label="Switch" label=""></m-switch>`),
+  c("switch", "label='' icon", `<m-switch icon="${ICON}" aria-label="Switch" label=""></m-switch>`),
+  c("switch", "supporting-text no label checked", `<m-switch checked aria-label="Switch" supporting-text="Helps"></m-switch>`),
+  c("switch", "supporting-text no label disabled", `<m-switch disabled aria-label="Switch" supporting-text="Helps"></m-switch>`),
+  c("switch", "supporting-text no label icon", `<m-switch icon="${ICON}" aria-label="Switch" supporting-text="Helps"></m-switch>`),
+  c("switch", "supporting-text='' checked", `<m-switch checked aria-label="Switch" supporting-text=""></m-switch>`),
+  c("switch", "supporting-text='' disabled", `<m-switch disabled aria-label="Switch" supporting-text=""></m-switch>`),
+  c("switch", "supporting-text='' icon", `<m-switch icon="${ICON}" aria-label="Switch" supporting-text=""></m-switch>`),
   c("tabs", "default", `<m-tabs value="a"><m-tab value="a">Flights</m-tab><m-tab value="b">Trips</m-tab><m-tab value="c">Explore</m-tab></m-tabs>`),
   c("tabs", "icon", `<m-tabs value="a"><m-tab value="a" icon="${ICON}">Flights</m-tab><m-tab value="b" icon="${ICON}">Trips</m-tab></m-tabs>`),
   c("progress", "default", `<m-progress value="40" aria-label="Upload"></m-progress>`),
