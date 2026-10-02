@@ -2,21 +2,14 @@
 /**
  * Enable declarative shadow DOM for mtrl/react in this server process.
  * The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup.
- * The server-rendered shadow root is built without the providers above the component.
- * The children see that context in the page's own render; this separate render for the declarative shadow root is built without those providers.
- * Until upgrade, the painted shadow root shows the context's default value, or there is no declarative shadow root when a child requires its provider.
+ * The server-rendered shadow root is built in a separate render, without the context of providers above the component.
+ * The page's own render (the light DOM) sees the provided value. Until upgrade, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves this component without a declarative shadow root while the page still renders.
+ * The Vue and Solid bridges see the provided value in both the shadow root and light DOM. Svelte has this same context limit and logs a development-only warning naming the element when required context leaves it without a shadow root.
  * Pass the resolved string as a prop or attribute, or accept client-rendered text until the upgrade. A fix is planned for 1.1 (FLO-517).
  * @module ssr/react
  */
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-/**
- * The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup.
- * The server-rendered shadow root is built without the providers above the component.
- * The children see that context in the page's own render; this separate render for the declarative shadow root is built without those providers.
- * Until upgrade, the painted shadow root shows the context's default value, or there is no declarative shadow root when a child requires its provider (FLO-517).
- * @module ssr/react
- */
 import "./index";
 
 const bridge = (globalThis as unknown as Record<symbol, {

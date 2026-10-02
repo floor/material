@@ -146,19 +146,28 @@ test("the README lists the attributes that take markup, and only those", () => {
   expect(readmeList()).toEqual(markupAttributes());
 }, 60_000);
 
-test("server rendering docs name the unsupported runtimes, where Suspense goes, and the React context limit", () => {
+test("server rendering docs name unsupported runtimes, Suspense fallbacks, and each bridge's context limit", () => {
   const readme = readFileSync("README.md", "utf8");
   const changelog = readFileSync("CHANGELOG.md", "utf8");
   const react = readFileSync("src/ssr/react.ts", "utf8");
+  const svelte = readFileSync("src/ssr/svelte.ts", "utf8");
   const unreleased = changelog.split("## [Unreleased]")[1]?.split("\n## [")[0] ?? "";
   for (const text of [readme, unreleased]) {
     expect(text).toContain("Worker and edge runtimes are unsupported in 1.0");
     expect(text).toContain("mtrl/ssr is server-only");
   }
   expect(readme).toContain("put a `Suspense` boundary outside the component");
-  expect(unreleased).toContain("Suspense");
-  const shadowRoot = "server-rendered shadow root is built without the providers above the component";
-  for (const text of [readme, unreleased, react]) {
+  expect(readme).toContain("a button with an empty fallback has no label slot, while a text fallback gives it a slot");
+  expect(readme).toContain("a boundary around a tab leaves the server-rendered root without that tab with either fallback");
+  expect(unreleased).toContain("a button has no label slot with an empty fallback but has one with a text fallback");
+  const shadowRoot = "server-rendered shadow root is built in a separate render, without the context of providers above the component";
+  for (const text of [readme, unreleased, react, svelte]) {
     expect(text).toContain(shadowRoot);
+    expect(text).toContain("The Vue and Solid bridges see the provided value in both the shadow root and light DOM.");
   }
+  expect(readme).toContain("With `mtrl/ssr/react` and `mtrl/ssr/svelte`");
+  expect(readme).toContain("a child requiring its context leaves that component without a declarative shadow root, while the page still renders");
+  expect(readme).toContain("Svelte logs a development-only warning naming the element");
+  expect(unreleased).toContain("The React and Svelte bridges build the server-rendered shadow root without the context");
+  expect(readme).not.toContain("The Solid, Vue and Svelte bridges are not affected.");
 });

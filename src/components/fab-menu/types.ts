@@ -77,7 +77,7 @@ export interface FabMenuConfig extends BaseComponentConfig {
    */
   placement?: FabMenuPlacement | string;
 
-  /** The icon of the close button, 20dp. Default: a close icon. */
+  /** The icon of the close button, 20dp. Default: a close icon. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   closeIcon?: string;
 
   /**
