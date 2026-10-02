@@ -37,8 +37,20 @@ describe("release.yml's material major guard", () => {
     expect(step, `release.yml has no step named "${STEP_NAME}"`).toBeDefined();
   });
 
+  // The guard is only a guard if it runs before anything can publish: its index
+  // in the job's steps is lower than that of the first step whose `run`
+  // contains `npm publish`, so moving it after "Publish" fails here.
+  test("the guard runs before anything that publishes", () => {
+    const steps = workflow.jobs.publish.steps;
+    const publishIndex = steps.findIndex(candidate => candidate.run?.includes("npm publish"));
+    expect(steps.findIndex(candidate => candidate.name === STEP_NAME)).toBeLessThan(publishIndex);
+  });
+
   // The package name decides: `mtrl` publishes any version, `material` only 3
-  // and later. 10.0.0 must pass too: only the majors 0, 1 and 2 are refused.
+  // and later. The step lists what is allowed and refuses everything else, so
+  // an odd spelling of a 1.x version (a `v` or `=` prefix, a leading zero or
+  // space) is refused too, as is an empty version. 10.0.0 must pass: the
+  // allowed majors are 3 and later, one or more digits.
   const CASES = [
     { name: "mtrl", version: "1.0.0", publishes: true },
     { name: "mtrl", version: "0.10.7", publishes: true },
@@ -48,6 +60,11 @@ describe("release.yml's material major guard", () => {
     { name: "material", version: "2.9.9", publishes: false },
     { name: "material", version: "0.1.0", publishes: false },
     { name: "material", version: "10.0.0", publishes: true },
+    { name: "material", version: "v1.0.5", publishes: false },
+    { name: "material", version: "01.0.0", publishes: false },
+    { name: "material", version: " 1.0.5", publishes: false },
+    { name: "material", version: "=1.0.5", publishes: false },
+    { name: "material", version: "", publishes: false },
   ];
 
   for (const { name, version, publishes } of CASES) {
