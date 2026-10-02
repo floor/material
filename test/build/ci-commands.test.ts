@@ -7,7 +7,7 @@ import { describe, expect, test } from "bun:test";
 // to this list in the same change.
 const COMMANDS = [
   // static
-  "ts:check", "lint", "test:naming", "test:types",
+  "ts:check", "lint", "test:naming", "test:types", "name:check",
   // tests
   "bun test",
   // build, and the checks that read the built package

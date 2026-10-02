@@ -33,7 +33,7 @@ for (const [size, container, icon, radius] of [
   });
 }
 
-// 1.0 removed the small FAB, deprecated since 0.8 (M3 Expressive)
+// 3.0.0 removed the small FAB, deprecated since 0.8 (M3 Expressive)
 test("no small FAB is left in the stylesheet or the sizes", () => {
   expect(css).not.toMatch(/\.mtrl-fab--small\b/);
   expect(Object.keys(FAB_SIZES)).not.toContain('SMALL');

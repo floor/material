@@ -19,8 +19,8 @@
 // is a breaking change for a consumer we can see, and should be a decision
 // rather than an accident.
 //
-// 1.0.0 made one (FLO-351): the composition core left the root for
-// mtrl/core/compose, and EventCallback for mtrl/core/state. mtrl-addons moves
+// 3.0.0 made one (FLO-351): the composition core left the root for
+// material/core/compose, and EventCallback for material/core/state. mtrl-addons moves
 // with its own 1.0 (floor/mtrl-addons#5), so the pins follow it there.
 
 import { describe, test, expect } from "bun:test";
@@ -43,7 +43,7 @@ const VALUES = [
   "createTextField",
 ] as const;
 
-/** What it imports from mtrl/core/compose. */
+/** What it imports from material/core/compose. */
 const COMPOSE = [
   "createBase",
   "hasEmit",
@@ -72,7 +72,7 @@ describe("the exports mtrl-addons depends on", () => {
     });
   }
   for (const name of COMPOSE) {
-    test(`${name} is exported by mtrl/core/compose and callable`, () => {
+    test(`${name} is exported by material/core/compose and callable`, () => {
       expect(typeof (compose as Record<string, unknown>)[name]).toBe("function");
     });
   }

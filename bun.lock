@@ -3,7 +3,7 @@
   "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "mtrl",
+      "name": "material",
       "devDependencies": {
         "@babel/core": "^7",
         "@babel/preset-typescript": "^7",

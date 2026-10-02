@@ -1,4 +1,4 @@
-// FLO-539. Typography leaves mtrl/styles/base. The build writes the moved
+// FLO-539. Typography leaves material/styles/base. The build writes the moved
 // rules to dist/styles/typography.css; these tests compile the same sources
 // the build emits (the tests job has no dist/).
 import { describe, expect, test } from "bun:test";
@@ -64,7 +64,7 @@ const census = (css: string): { selectors: string[]; properties: string[] } => {
 
 const typographySources = (await import("../../scripts/style-manifest") as { typographyStyles?: string[] }).typographyStyles;
 
-describe("mtrl/styles/typography", () => {
+describe("material/styles/typography", () => {
   test("the build emits dist/styles/typography.css in the base cascade layer", () => {
     const build = readFileSync("scripts/build-styles.ts", "utf8");
     expect(build).toContain('emit("styles/typography", typographyStyles, typographyDependencies)');

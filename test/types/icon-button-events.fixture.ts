@@ -62,7 +62,7 @@ button.off("click", (event: MouseEvent) => event.preventDefault());
 // @ts-expect-error focus does not forward a keyboard event
 button.on("focus", (_payload: ForwardedEventPayload<KeyboardEvent, HTMLButtonElement>) => {});
 
-// 1.0 has no toggle event: the emitter never had one, and the DOM one is gone.
+// 3.0.0 has no toggle event: the emitter never had one, and the DOM one is gone.
 // @ts-expect-error listen to change
 button.on("toggle", () => {});
 // @ts-expect-error off has the same event boundary

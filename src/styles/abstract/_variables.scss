@@ -395,7 +395,7 @@ $spacing-scale: (
 @function shape($size) {
   @if not map.has-key($shape, $size) {
     @error "No shape step '#{$size}'. M3's scale: #{map.keys($shape)}. "
-      + "extra-tiny, tiny and pill were removed in 1.0.0: write a literal radius, or use full (FLO-345).";
+      + "extra-tiny, tiny and pill were removed in material 3.0.0: write a literal radius, or use full (FLO-345).";
   }
   @return var(--#{$prefix}-sys-shape-corner-#{$size}, #{map.get($shape, $size)});
 }
@@ -444,13 +444,21 @@ $text-field: (
   'height': 56px,
   'height-small': 48px,
   'height-large': 64px,
-  // The textarea's box (components/_text-field.scss, &--multiline). Not an M3
-  // measure: TextFieldDefaults.MinHeight is the 56px line above. The
-  // padding-top is the first line a sibling on the field's line aligns to.
+  // The textarea's box (components/_text-field.scss, &--multiline). The height
+  // is not an M3 measure: TextFieldDefaults.MinHeight is the 56px line above,
+  // and m3.material.io gives a text area no number ("Text areas are taller
+  // than text fields", text fields guidelines, "Input text").
   'height-multiline': 100px,
-  'padding-top-multiline': 12px,
-  // Compact multiline keeps the compact field's 40px and pads the textarea 8px.
-  'padding-top-multiline-compact': 8px,
+  // Where the first line starts, which a sibling on the field's line aligns
+  // to: the single-line field's text (FLO-299). 16px, the content padding
+  // (TextFieldPadding), outlined or without a label; under a filled field's
+  // floated label, 8px and the label's 16px line.
+  'padding-top-multiline': 16px,
+  'padding-top-multiline-label': 24px,
+  // Compact multiline keeps the compact field's 40px, and its first line is
+  // the compact single-line field's (10.5px, and 13.5px under a filled label).
+  'padding-top-multiline-compact': 10px,
+  'padding-top-multiline-compact-label': 14px,
   'padding-horizontal': 16px,
   'padding-vertical': 16px,
   'border-radius': map.get($shape, 'extra-small'),
@@ -460,7 +468,7 @@ $text-field: (
 ) !default;
 
 /// A text field measurement: `v.text-field('height')`. 0.10's `$textfield` and
-/// `textfield()` are removed in 1.0 (FLO-383).
+/// `textfield()` are removed in material 3.0.0 (FLO-383).
 @function text-field($key) {
   @if $key == 'border-radius' { @return shape('extra-small'); }
   @return map.get($text-field, $key);

@@ -4,9 +4,9 @@
 @use 'config' as c;
 @use 'field';
 
-// As components/_select.scss: the 24px icon, 12px from the end, beside the text.
+// As components/_select.scss: the 24px icon, 12px from the end and 16px from the text.
 @include c.host('select') {
-  @include field.field(28px);
+  @include field.field(36px);
 
   // The value is an option's, shown on upgrade; the label floats above it.
   &::before {

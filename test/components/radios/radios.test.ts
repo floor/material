@@ -19,7 +19,7 @@
 //   went on reporting it.
 //
 // Deliberately not asserted: the variant and size options, which change
-// nothing (M3 defines neither; 1.0 removed RADIO_VARIANTS and RADIO_SIZES);
+// nothing (M3 defines neither; 3.0.0 removed RADIO_VARIANTS and RADIO_SIZES);
 // and that setValue() can select an option disabled on its own.
 import { describe, test, expect, beforeEach, mock } from 'bun:test';
 import { JSDOM } from 'jsdom';
@@ -215,7 +215,7 @@ describe('radios', () => {
     expect(mount({ direction: 'horizontal' }).element.classList.contains('mtrl-radios--horizontal')).toBe(true);
   });
 
-  // 1.0: an empty selection is null, as the select and <m-radios> report it
+  // 3.0.0: an empty selection is null, as the select and <m-radios> report it
   test('nothing selected reads null, from the getter and in the change payload', () => {
     const radios = mount({ value: undefined });
     expect(radios.getValue()).toBeNull();
@@ -234,7 +234,7 @@ describe('radios', () => {
     blank.destroy();
   });
 
-  // 1.0: the setter takes what the getter returns, so the two round-trip
+  // 3.0.0: the setter takes what the getter returns, so the two round-trip
   test('setValue(null) clears the selection, silently: no change and no warning', () => {
     const radios = mount({ value: 's' });
     const payloads: unknown[] = [];

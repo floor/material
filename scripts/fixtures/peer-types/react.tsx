@@ -1,4 +1,4 @@
-import { Button } from "mtrl/react";
+import { Button } from "material/react";
 
 export const ok = <Button disabled={false} onChange={(event) => { const value: string = event.detail.value; void value; }} />;
 

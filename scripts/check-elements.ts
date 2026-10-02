@@ -15,6 +15,7 @@ import { chromium, type Page } from "playwright";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
+import { checkTextFieldLayout, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
 // Runs against the build: `bun run build` first, as CI does.
@@ -221,7 +222,7 @@ try {
     assert.deepEqual(values.timeEmptyConfirm, values.timeEmptyChange);
     assert.deepEqual(values.selectFactory, [[null, null]]);
     assert.deepEqual(values.selectElement, [[null, null]]);
-    // 1.0: the factory reports null for the option without a value, as the element does
+    // 3.0.0: the factory reports null for the option without a value, as the element does
     assert.deepEqual(values.radiosFactory, [["a", "a"], [null, null]]);
     assert.deepEqual(values.radiosElement, [["a", "a"], [null, null]]);
     check("time input/confirm, select empty id and radio empty id match getters inside factory and element handlers");
@@ -635,7 +636,7 @@ try {
       w.events = [];
       w.clicks = 0;
       const ib = document.getElementById("ib");
-      // `change` (FLO-295). 1.0 dispatches no `toggle` beside it: the listener stays, to show it never fires.
+      // `change` (FLO-295). 3.0.0 dispatches no `toggle` beside it: the listener stays, to show it never fires.
       ib?.addEventListener("change", (e) => (w.events as unknown[]).push({ change: (e as CustomEvent).detail }));
       ib?.addEventListener("toggle", (e) => (w.events as unknown[]).push({ toggle: (e as CustomEvent).detail }));
       ib?.addEventListener("click", () => (w.clicks = (w.clicks as number) + 1));
@@ -1616,6 +1617,12 @@ try {
       assert.deepEqual([resting[`v-${variant}`]!.prefix, resting[`v-${variant}`]!.suffix], [1, 1], `v-${variant}: the floated label's affixes are hidden`);
     }
     check("text field: a resting label shows alone, enabled or disabled; the prefix and suffix appear as it floats");
+
+    // FLO-299: the layout against the M3 measurements, inside the shadow root
+    await checkTextFieldLayout(page, "element");
+    check("text field: the layout at the M3 measurements, 52 fields (FLO-299)");
+    await checkTextFieldReducedMotion(page, "element", null);
+    check("text field: the filled indicator's fade stops with reduced motion (FLO-299)");
 
     // FLO-301: the required attribute moves the input's required and the label's asterisk together
     const required = await page.evaluate(() => {
@@ -4568,7 +4575,7 @@ try {
     await photos.getByRole("group", { name: "2 of 5" }).focus();
     await page.keyboard.press("ArrowRight");
     let state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
-    // FLO-380: value is the model (the index). 1.0 dropped the doubled detail.index.
+    // FLO-380: value is the model (the index). 3.0.0 dropped the doubled detail.index.
     assert.deepEqual(state, { events: [{ detail: { value: 2 }, target: "r" }], index: 2 });
     check("carousel: an arrow key moves to the next item and dispatches change");
 

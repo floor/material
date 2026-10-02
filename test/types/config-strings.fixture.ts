@@ -3,7 +3,7 @@
 import { createButtonGroup, createDrawer } from "../../src";
 
 // A connected button group's selection and density as string values (the segmented
-// button this case covered was removed in 1.0.0, FLO-382).
+// button this case covered was removed in 3.0.0, FLO-382).
 export const connected = createButtonGroup({ kind: "connected", selection: "multi", density: "compact", buttons: [{ text: "A" }] });
 
 // The drawer's accessible name.

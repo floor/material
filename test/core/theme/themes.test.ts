@@ -4,7 +4,7 @@
 // md3.io, and the checks the brief asks for: the files match a fresh
 // generation, the role set is baseline's, baseline stays within ΔE00 2 of M3's
 // Tonal Spot, every text pair reaches 4.5:1 (7:1 for highcontrast), each
-// variant is Google's own output, and `mtrl/core` never pulls in the colour
+// variant is Google's own output, and `material/core` never pulls in the colour
 // library.
 import { describe, test, expect } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
@@ -136,7 +136,7 @@ describe("generated themes", () => {
     expect([...themeStyles, ...standaloneThemes].sort()).toEqual([...files].sort());
   });
 
-  test("1.0.0 removed the deprecated themes: no file, manifest entry or forward (FLO-428)", () => {
+  test("3.0.0 removed the deprecated themes: no file, manifest entry or forward (FLO-428)", () => {
     const removed = ["material", "winter", "browngreen", "legacy"];
     const files = readdirSync(THEMES_DIR).map((file) => file.slice(1, -".scss".length));
     const index = readFileSync(`${THEMES_DIR}/_index.scss`, "utf8");
@@ -256,7 +256,7 @@ describe("surface-variant", () => {
   });
 });
 
-describe("mtrl/core", () => {
+describe("material/core", () => {
   test("never pulls in material-color-utilities", async () => {
     const build = await Bun.build({ entrypoints: ["src/core/index.ts"], target: "browser" });
     expect(build.success).toBe(true);
