@@ -1124,6 +1124,18 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **An unlabelled switch is its 52 x 48 track box, not the label's row.** With no label the root
+  kept the label's 12px gap, so it was 64px wide (12 + the 52px track) and 56px tall: in a 48px
+  slot the track ran 16px past the end and the checked 40px state layer 20px past it. The gap
+  belongs between a label and the track, and with no label the root is now the track's width and
+  48px tall with the 32px track centred. M3 "Switch" -> Specs -> Measurements gives the track
+  32x52dp and "Target: Size 48dp", and no height for a label row; its Accessibility section:
+  "Don't apply density to switches by default — this lowers their targets below our best
+  practice of 48x48 CSS pixels." So the unlabelled row is 48 tall, and a labelled switch keeps
+  its 56px row, unchanged. Factory and element, left-to-right and right-to-left. Before upgrade,
+  write the tag with nothing between its tags: a whitespace-only text node (a space, a line
+  break) is not `:empty`, so such a host keeps the labelled layout although the element then
+  builds no label.
 - **An unlabelled checkbox centres its box in its 48px target, state layer inside.** The 18px
   box sat flush at the inline-start (start inset 0, end inset 30), so the 40px state layer
   (`::before`, centred on the box) spanned −11 to 29 — 11px outside the target — and the
