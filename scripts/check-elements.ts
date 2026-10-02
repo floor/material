@@ -15,6 +15,7 @@ import { chromium, type Page } from "playwright";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
+import { ICON_BUTTON_ICON_SIZES } from "../src/components/icon-button/constants";
 import { checkTextFieldLayout, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
@@ -729,6 +730,81 @@ try {
     }, ICON);
     assert.deepEqual(parity.element, parity.factory);
     check("icon button: renders as the factory does with the global stylesheet");
+  }
+
+  // A shadow root adopts the host's sheet, the ripple's and the
+  // component's; the page reset that zeroes a button's padding
+  // (src/styles/base/_reset.scss) is in none of them, so Chrome's user-agent
+  // padding (1px 6px) survives on the inner button and the icon, a shrinkable
+  // flex item, is drawn under its size token where the container has no room
+  // for both. Every variant, size and width, against the factory twin, which
+  // the page's global stylesheet does reach.
+  const iconButtonCases = ["standard", "filled", "tonal", "outlined"].flatMap((variant) =>
+    ["xs", "s", "m", "l", "xl"].flatMap((size) =>
+      ["narrow", "default", "wide"].map((width) => ({ variant, size, width }))));
+  await fresh(
+    page,
+    `${iconButtonCases
+      .map((c, i) => `<m-icon-button id="ip-${i}" aria-label="Icon" variant="${c.variant}" size="${c.size}" width="${c.width}" icon='${ICON}'></m-icon-button>`)
+      .join("")}<section id="factory"></section>`
+  );
+  {
+    const measured = await page.evaluate(
+      ({ cases, icon, tokens }) => {
+        type TwinWin = Window & { mtrl: { createIconButton: (c: object) => { element: HTMLElement } } };
+        const w = window as unknown as TwinWin;
+        const factory = document.getElementById("factory") as HTMLElement;
+        const tenth = (value: number): number => Math.round(value * 10) / 10;
+        const iconBox = (button: HTMLElement): { w: number; h: number } => {
+          const rect = (button.querySelector("svg") as SVGElement).getBoundingClientRect();
+          return { w: rect.width, h: rect.height };
+        };
+        const differences = new Set<string>();
+        const failures: string[] = [];
+        for (const [index, c] of cases.entries()) {
+          const host = document.getElementById(`ip-${index}`) as HTMLElement;
+          const element = host.shadowRoot?.querySelector("button") as HTMLElement;
+          const twin = w.mtrl.createIconButton({ icon, variant: c.variant, size: c.size, width: c.width, ariaLabel: "Icon" }).element;
+          factory.append(twin);
+          // Every standard property the element's button computes differently
+          // from the factory twin's: the page reset's work, which the shadow
+          // sheet has to repeat for the two to render alike.
+          const elementStyle = getComputedStyle(element);
+          const twinStyle = getComputedStyle(twin);
+          for (let i = 0; i < elementStyle.length; i++) {
+            const name = elementStyle[i];
+            if (name.startsWith("--")) continue;
+            if (elementStyle.getPropertyValue(name) !== twinStyle.getPropertyValue(name)) differences.add(name);
+          }
+          const token = (tokens as Record<string, number>)[c.size.toUpperCase()];
+          const elementIcon = iconBox(element);
+          const twinIcon = iconBox(twin);
+          const padding = `${elementStyle.paddingTop} ${elementStyle.paddingRight} ${elementStyle.paddingBottom} ${elementStyle.paddingLeft}`;
+          const noPadding =
+            elementStyle.paddingTop === "0px" &&
+            elementStyle.paddingRight === "0px" &&
+            elementStyle.paddingBottom === "0px" &&
+            elementStyle.paddingLeft === "0px";
+          const twinSized = Math.abs(elementIcon.w - twinIcon.w) <= 0.5 && Math.abs(elementIcon.h - twinIcon.h) <= 0.5;
+          const tokenSized = Math.abs(elementIcon.w - token) <= 0.5 && Math.abs(elementIcon.h - token) <= 0.5;
+          if (!noPadding || !twinSized || !tokenSized) {
+            failures.push(
+              `${c.variant} ${c.size} ${c.width}: element icon ${tenth(elementIcon.w)}x${tenth(elementIcon.h)} ` +
+                `(padding ${padding}), factory icon ${tenth(twinIcon.w)}x${tenth(twinIcon.h)}, token ${token}`
+            );
+          }
+        }
+        return { failures, differences: [...differences].sort() };
+      },
+      { cases: iconButtonCases, icon: ICON, tokens: ICON_BUTTON_ICON_SIZES }
+    );
+    if (measured.failures.length > 0) {
+      for (const line of measured.failures) console.log(`  FAIL ${line}`);
+      console.log(`  FAIL the inner button's computed properties that differ from the factory twin's: ${measured.differences.join(", ") || "none"}`);
+    }
+    assert.deepEqual(measured.failures, []);
+    assert.deepEqual(measured.differences, []);
+    check("icon button: every variant, size and width keeps the icon at its size token, as the factory does");
   }
 
   // ---------------------------------------------------------------- fab
