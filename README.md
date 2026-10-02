@@ -227,7 +227,7 @@ Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, 
 
 ## Server rendering
 
-`renderElement` from `mtrl/ssr` renders an element to declarative shadow DOM. Import `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` in the server bootstrap and that framework's components emit the same roots. Node and Bun are supported in 1.0.
+`renderElement` from `mtrl/ssr` renders an element to declarative shadow DOM. Import `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` in the server bootstrap and that framework's components emit the same roots. Node and Bun are supported in 1.0. Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one.
 
 Worker and edge runtimes are unsupported in 1.0. Each server entry lists the `browser` condition first. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers does) loads the browser stub: `renderElement` throws "mtrl/ssr is server-only", and importing a bridge does nothing, so the page renders with no declarative roots and no error.
 
