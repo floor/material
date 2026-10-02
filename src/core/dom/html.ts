@@ -35,7 +35,7 @@ let policy: HTMLPolicy | null = null;
  * configureHTML({ sanitize: (html) => DOMPurify.sanitize(html) });
  *
  * // Trusted Types: a policy the page's CSP allows
- * const trusted = window.trustedTypes.createPolicy('mtrl', { createHTML: (html) => DOMPurify.sanitize(html) });
+ * const trusted = window.trustedTypes.createPolicy('app', { createHTML: (html) => DOMPurify.sanitize(html) });
  * configureHTML({ sanitize: (html) => trusted.createHTML(html) });
  */
 export const configureHTML = (next: HTMLPolicy | null): void => {

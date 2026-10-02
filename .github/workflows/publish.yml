@@ -68,8 +68,16 @@ jobs:
       # npm publishes from the repository root, so the manifest it packs is the root
       # package.json: drop what only the repository uses. prepublishOnly goes with the
       # scripts, which is why the build runs as its own step above.
-      - name: The published manifest
-        run: npm pkg delete scripts eslintConfig typedocOptions
+      # The README it packs is the root README.md too: npm's page gets the short one,
+      # npm-readme.md, written over it in this job's checkout only (nothing is
+      # committed, and no package script rewrites a working tree).
+      # scripts/package-fixture.ts runs this step's commands, read from this file by
+      # the step's name, on a copy of the tree for every packed check, and size:check
+      # asserts the result: each pull request proves which manifest and README ship.
+      - name: The published manifest and README
+        run: |
+          npm pkg delete scripts eslintConfig typedocOptions
+          cp npm-readme.md README.md
 
       - name: Publish
         run: |

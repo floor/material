@@ -146,6 +146,9 @@ test("the README lists the attributes that take markup, and only those", () => {
   expect(readmeList()).toEqual(markupAttributes());
 }, 60_000);
 
+// The README keeps the two facts a reader must meet before choosing a runtime; the
+// bridges' limits (Suspense fallbacks, context) are in the changelog and the sources
+// here, and for readers on md3.io's server rendering guide, which the README links.
 test("server rendering docs name unsupported runtimes, Suspense fallbacks, and each bridge's context limit", () => {
   const readme = readFileSync("README.md", "utf8");
   const changelog = readFileSync("CHANGELOG.md", "utf8");
@@ -156,18 +159,13 @@ test("server rendering docs name unsupported runtimes, Suspense fallbacks, and e
     expect(text).toContain("Worker and edge runtimes are unsupported in `material` 3.0.0");
     expect(text).toContain("material/ssr is server-only");
   }
-  expect(readme).toContain("put a `Suspense` boundary outside the component");
-  expect(readme).toContain("a button with an empty fallback has no label slot, while a text fallback gives it a slot");
-  expect(readme).toContain("a boundary around a tab leaves the server-rendered root without that tab with either fallback");
+  expect(readme).toContain("https://md3.io/docs/server-rendering/");
   expect(unreleased).toContain("a button has no label slot with an empty fallback but has one with a text fallback");
   const shadowRoot = "server-rendered shadow root is built in a separate render, without the context of providers above the component";
-  for (const text of [readme, unreleased, react, svelte]) {
+  for (const text of [unreleased, react, svelte]) {
     expect(text).toContain(shadowRoot);
     expect(text).toContain("The Vue and Solid bridges see the provided value in both the shadow root and light DOM.");
   }
-  expect(readme).toContain("With `material/ssr/react` and `material/ssr/svelte`");
-  expect(readme).toContain("a child requiring its context leaves that component without a declarative shadow root, while the page still renders");
-  expect(readme).toContain("React and Svelte each log a development-only warning naming the element");
   expect(unreleased).toContain("The React and Svelte bridges build the server-rendered shadow root without the context");
   expect(readme).not.toContain("The Solid, Vue and Svelte bridges are not affected.");
 });

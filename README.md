@@ -1,14 +1,35 @@
 # material
 
-Material Design 3 components for the web: as plain JavaScript, as web components, and as React, Vue, Svelte and Solid components. Written in TypeScript, with zero dependencies.
+Material Design 3 components for the web: as web components, as React, Vue, Svelte and Solid components, and as plain JavaScript. Written in TypeScript, with zero dependencies.
 
-material implements the M3 Expressive update: component sizes, shapes, colours and spring motion follow the Material 3 tokens. One implementation serves every way of using it, so a button looks and behaves the same in each. The documentation site, [md3.io](https://md3.io), has a live playground and examples in every framework for each component.
+```html
+<form>
+  <m-text-field name="email" type="email" label="Email" required></m-text-field>
+  <m-switch name="news" checked>Newsletter</m-switch>
+  <m-button type="submit">Sign up</m-button>
+</form>
+```
+
+Once the elements are registered ([below](#use-it-your-way)), these controls take part in the form as native ones do: its value, reset and validation. Try every component in the playground on **[md3.io](https://md3.io)**, with examples in each framework.
+
+## Why material
+
+- **Material 3 Expressive.** Component sizes, shapes, colours and spring motion follow the Material 3 tokens.
+- **One implementation, every stack.** The same component is a custom element, a React, Vue, Svelte or Solid component, and a factory, so it looks and behaves the same in each.
+- **Measured sizes.** Every component has a gzip budget that CI enforces on each pull request, and bundlers keep only what you import. The numbers are under [Sizes](#sizes).
+- **Zero dependencies.** Installing `material` installs nothing else. React, Vue, Svelte and Solid are optional peers: material uses the one your app has.
+- **Server rendering.** Elements and framework components render to declarative shadow DOM on Node and Bun, styled at first paint, and hydrate. See [Server rendering](#server-rendering).
+- **Native behaviour.** Form controls are form-associated, and overlays open in the browser's top layer, trap focus and make the page inert where M3 says so.
 
 ## Install
 
+<!-- install -->
 ```bash
-npm install material
+npm install material@next
 ```
+
+3.0.0 is in pre-release, on the `next` tag. Until it is released, `npm install material` without the tag installs 1.0.4, an earlier and separate library (see [Where this came from](#where-this-came-from)).
+<!-- /install -->
 
 React, Vue, Svelte and Solid are optional peer dependencies: material uses the one your app has and installs none of them.
 
@@ -31,6 +52,7 @@ import 'material/styles/base';
 
 **Web components**: register them once, then write HTML.
 
+<!-- example: run, shows "Sign up" -->
 ```html
 <script type="module">
   import 'material/styles/base';
@@ -46,9 +68,13 @@ import 'material/styles/base';
 </form>
 ```
 
+The script imports bare specifiers and stylesheets, so the page goes through a bundler such as Vite. Opened straight from disk, the browser cannot resolve them and the form stays unstyled.
+
 **React** (Vue, Svelte and Solid work the same way, see [below](#react-vue-svelte-and-solid)):
 
+<!-- example: run, shows "Sign up" -->
 ```tsx
+import { createRoot } from 'react-dom/client';
 import 'material/styles/base';
 import { Button, Switch, TextField } from 'material/react';
 
@@ -61,10 +87,15 @@ export function Signup() {
     </form>
   );
 }
+
+createRoot(document.getElementById('root')!).render(<Signup />);
 ```
+
+React and React DOM are yours to install, and the page has a `<div id="root">`. In an app that already renders, leave out the first import and the last line, and use `<Signup />` where you need it.
 
 **Vanilla**: each component is a function that returns a DOM element and a small API.
 
+<!-- example: run, shows "Save" -->
 ```typescript
 import 'material/styles';
 import { createButton, createTextField } from 'material';
@@ -80,19 +111,29 @@ name.on('input', ({ value }: { value: string }) => {
 save.on('click', () => console.log('Saved', name.getValue()));
 
 document.body.append(name.element, save.element);
+```
 
-// When the view goes away, release listeners and DOM
+When the view goes away, release the listeners and the DOM:
+
+<!-- example: continues -->
+```typescript
 name.destroy();
 save.destroy();
 ```
 
-Two rules hold for every factory's events. A config `on*` option (`onChange`, `onOpen`, …) is the listener registered at creation: it gets the same argument as a listener passed to `on()`, and runs before one added later. And when `open()` or `close()` returns, the state has changed (`isOpen()`) and the event has been emitted, a cancellable `beforeopen` or `beforeclose` first where the component has one; the classes, the paint, focus and the animation may follow, so add an `open` listener before calling `open()`. Opening an open component, or closing a closed one, does nothing and emits nothing. Every overlay follows this second rule (the snackbar with `show()` and `hide()`, the split button with `expand()` and `collapse()`); a surface loaded on demand, such as the FAB menu's menu, may be painted after `open()` returns. The event that opened an overlay never dismisses it: it ignores exactly the event whose dispatch had begun when `open()` ran, and nothing later. Escape is a key press for every modal (the dialog, the modal sheets and drawer, the pickers, the full-screen search): only the topmost one answers, and a refusal (`closeOnEscape: false`, a `beforeclose` that refuses, a drawer that is not `dismissible`) holds for any number of presses; only a close request that is not a key press, such as a back gesture, can still be forced by the browser, on its third refusal. On the elements, the `open` attribute and property are applied at once and dispatch nothing; `open` and `close` are dispatched when a method or the user opens or closes. The tooltip is outside the second rule, by design: its `show()` and `hide()` wait for their delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`. The state getter is a method on every component that has one: `isOpen()` on the dialog, the menu, the select, the FAB menu, the sheets, the drawer, the snackbar and both pickers; `isExpanded()` on the search, the split button, the navigation rail and the card; `isVisible()` on the tooltip, the bottom app bar and the toolbar; `isHidden()` on the navigation bar.
+For hundreds of components created at once, such as a long editable table, use the factories: the elements style a shadow root each, which costs more on the first render. The [Web Components guide](https://md3.io/docs/web-components/#many-instances) has the measurement.
 
-The factories are the fastest way to render hundreds of components at once, such as a long editable table; the elements style a shadow root each. `material/styles` loads every component's styles; for a smaller bundle, import only what you use (see [Styles](#styles)).
+`material/styles` loads every component's styles; for a smaller bundle, import only what you use (see [Styles](#styles)).
+
+Events, methods and cleanup are in the [Vanilla guide](https://md3.io/docs/vanilla/).
 
 ## Components
 
-Every component comes three ways: a factory (`createButton`), an element (`<m-button>`) and a framework component (`Button`; `MButton` in Vue).
+Every component comes three ways:
+
+- a factory, `createButton`;
+- an element, `<m-button>`;
+- a framework component, `Button` (`MButton` in Vue).
 
 | Group | Components |
 |-------|------------|
@@ -102,11 +143,21 @@ Every component comes three ways: a factory (`createButton`), an element (`<m-bu
 | Containment | Card, Carousel, List, Divider, Dialog, Bottom sheet, Side sheet |
 | Communication | Badge, Progress, Loading indicator, Snackbar, Tooltip |
 
-The factories are exported from `material`: `createButton`, `createIconButton`, `createButtonGroup`, `createSplitButton`, `createFab`, `createExtendedFab`, `createFabMenu`, `createToolbar`, `createCheckbox`, `createSwitch`, `createRadios`, `createChips` (with `createAssistChip`, `createFilterChip`, `createInputChip` and `createSuggestionChip`), `createSlider`, `createTextField`, `createSelect`, `createSearch`, `createDatePicker`, `createTimePicker`, `createNavigationRail`, `createDrawer`, `createTabs` and `createTab`, `createMenu`, `createTopAppBar`, `createBottomAppBar`, `createCard` (with `createCardHeader`, `createCardContent`, `createCardMedia` and `createCardActions`), `createCarousel`, `createList`, `createDivider`, `createDialog`, `createBottomSheet`, `createSideSheet`, `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar` and `createTooltip`.
+Each component has a page on [md3.io](https://md3.io/components/) with a playground, its options, events and methods. The factories, all exported from `material`:
+
+| Group | Factories |
+|-------|-----------|
+| Actions | `createButton`, `createIconButton`, `createButtonGroup`, `createSplitButton`, `createFab`, `createExtendedFab`, `createFabMenu`, `createToolbar` |
+| Selection and input | `createCheckbox`, `createSwitch`, `createRadios`, `createChips`, `createSlider`, `createTextField`, `createSelect`, `createSearch`, `createDatePicker`, `createTimePicker` |
+| Chips, one at a time | `createAssistChip`, `createFilterChip`, `createInputChip`, `createSuggestionChip` |
+| Navigation | `createNavigationBar`, `createNavigationRail`, `createDrawer`, `createTabs`, `createTab`, `createMenu`, `createTopAppBar`, `createBottomAppBar` |
+| Containment | `createCard`, `createCarousel`, `createList`, `createDivider`, `createDialog`, `createBottomSheet`, `createSideSheet` |
+| Card parts | `createCardHeader`, `createCardContent`, `createCardMedia`, `createCardActions` |
+| Communication | `createBadge`, `createProgress`, `createLoadingIndicator`, `createSnackbar`, `createTooltip` |
 
 ## Styles
 
-The web components and the framework components carry their own styles in their shadow roots; they need only the base stylesheet, `material/styles/base`, for the theme and its tokens. The factories render in the page, so they use the page's stylesheets. Import the full stylesheet once:
+The elements and the framework components carry their own styles in their shadow roots. They need only the base stylesheet, for the theme and its tokens. The factories render in the page, so they use the page's stylesheets. Import the full stylesheet once:
 
 ```typescript
 import 'material/styles';
@@ -124,21 +175,24 @@ import 'material/themes/ocean';
 import 'material/styles/utilities';
 ```
 
-The base includes the baseline theme in light and dark, the colour, shape and typeface tokens, the three body-medium type tokens the page's text reads (`--mtrl-sys-typescale-body-medium-font`, `-font-size` and `-line-height`), a reset and the ripple. The type classes (`.mtrl-display-large` through `.mtrl-label-small`), the text utilities (`.mtrl-text-*`, `.mtrl-font-*`, `.mtrl-truncate*`), material's styles for `h1`–`h6` and `p`, and the rest of the type scale are a separate import:
+Choose one or the other, not both. Each selective entry imports what it depends on (the select brings the text field and the menu), so a CSS-capable bundler resolves and deduplicates them. These entries import CSS, so they do not load in plain Node.
 
-```typescript
-import 'material/styles/typography';
-```
+What each stylesheet holds:
 
-It has to load after the base: both sheets style `h1`–`h6` and `p`, and the later one wins. The import above takes care of it (the module imports `material/styles/base` first, in whatever order your own imports are). If your bundler splits the two into different chunks, make sure the base's CSS loads first: an import order is not a CSS order in every bundler. With `<link>` tags, put `dist/styles/typography.css` after `dist/styles/base.css`.
+| Import | Holds |
+|--------|-------|
+| `material/styles/base` | The baseline theme in light and dark, the colour, shape and typeface tokens, a reset and the ripple |
+| `material/styles/typography` | The type scale, the type classes (`.mtrl-display-large` to `.mtrl-label-small`), the text utilities, and the styles for headings and paragraphs |
+| `material/styles/<component>` | One component, with what it depends on |
+| `material/styles` | Every component, the typography, and the twelve themes with their contrast levels |
 
-Import it when the page uses those classes or utilities, when it relies on material's heading and paragraph styles, or when its own CSS reads a `--mtrl-sys-typescale-*` token. Without it a `.mtrl-headline-small` element keeps the body's font size, and a `var(--mtrl-sys-typescale-*)` with no fallback is invalid at computed-value time. Body text keeps its font. The full stylesheet includes typography, so `import 'material/styles'` is unchanged.
-
-Each selective entry imports what it depends on (the select brings the text field and the menu), so use a CSS-capable bundler to resolve and deduplicate them. Choose either the full stylesheet or selective imports, not both. The `material/styles/*` entries are bundler targets: they import CSS, so they do not load in plain Node.
+Import the typography stylesheet when the page uses the type classes, relies on material's heading styles, or reads a `--mtrl-sys-typescale-*` token in its own CSS. It has to load after the base; the import takes care of that.
 
 Library styles sit in ordered `mtrl.*` cascade layers, so unlayered application CSS overrides them without specificity battles.
 
 The Sass sources ship for reference; configuring them with `@use … with` is not a supported API in `material` 3.0.0. Theme with CSS custom properties.
+
+The [Theming guide](https://md3.io/docs/theming/) has the detail: load order, each token, and how to build a theme from a seed colour.
 
 ### Themes
 
@@ -153,9 +207,12 @@ document.documentElement.dataset.theme = 'ocean';
 document.documentElement.dataset.themeMode = 'dark';
 ```
 
-Available themes: `baseline`, `ocean`, `desert`, `forest`, `sunset`, `spring`, `summer`, `autumn`, `brownbeige`, `sageivory`, `tealcaramel` and `highcontrast`. With selective styles, import the theme's entry, for example `material/themes/ocean`.
+| Themes | Names | Where |
+|--------|-------|-------|
+| Baseline and the eleven others | `baseline`, `ocean`, `desert`, `forest`, `sunset`, `spring`, `summer`, `autumn`, `brownbeige`, `sageivory`, `tealcaramel`, `highcontrast` | In the full stylesheet, and each as `material/themes/<name>` |
+| M3's scheme variants | `neutral`, `vibrant`, `expressive`, `fidelity`, `content`, `monochrome`, `rainbow`, `fruit-salad` | As `material/themes/<name>` only |
 
-Every theme supports `data-theme-contrast="standard"`, `"medium"` and `"high"` on the same element as `data-theme` and `data-theme-mode`. The attribute is opt-in: the full stylesheet includes it, and selective styles add `material/styles/contrast` for the baseline theme, or `material/themes/<name>-contrast` beside `material/themes/<name>`. Without that import the attribute changes no colour. The OS preference does not need an import.
+Every theme has three contrast levels. Set one with `data-theme-contrast` on the element that carries the theme:
 
 ```html
 <html data-theme="desert" data-theme-mode="dark" data-theme-contrast="high">
@@ -168,13 +225,9 @@ import 'material/themes/desert';
 import 'material/themes/desert-contrast';
 ```
 
-Import `material/styles/contrast` after `material/styles/base`, as with `material/styles/typography`: the opt-in sheets share the base cascade layer, so their order inside it matters. Typography's heading margins depend on that order. The contrast sheet's colours do not: an explicit level is a more specific selector than the standard rule, and `prefers-contrast: more` is guarded by `:not([data-theme-contrast])`, so either load order resolves the same colours.
+The attribute is opt-in: the full stylesheet includes it, and selective styles add the two contrast imports above. Without the attribute, the system's `prefers-contrast: more` selects high contrast, with no import.
 
-Without `data-theme-contrast`, `prefers-contrast: more` selects high contrast on every themed element independently. An explicit `standard` opts out on that element; `medium` overrides the preference too. Contrast settings do not inherit from an ancestor across a nested theme: put `data-theme-contrast` on the same element as each `data-theme`, including nested sections. For example, opting out on the root does not opt out a nested theme without its own `data-theme-contrast="standard"`. `data-theme-contrast` is read on the element that carries `data-theme`, or on the root when the page has no `data-theme`; on any other element it does nothing (that element inherits its themed ancestor's level).
-
-The default baseline also supports this setting without `data-theme`. On that unthemed root, both standard and higher contrast follow the OS color scheme and `.dark-theme`, ignoring `data-theme-mode`. Medium and high use M3 contrast levels 0.5 and 1.0; hand-authored themes derive them with Tonal Spot from their documented seed (falling back to their light primary), preserving their light secondary and tertiary hues and chroma. Neutral palettes come from the seed, while standard colors stay unchanged. Success, warning and info keep their existing status colors. The `highcontrast` theme is a theme in its own right and supports all three contrast settings.
-
-M3's scheme variants, generated from the baseline seed, ship as their own entries only (not in the full stylesheet): `neutral`, `vibrant`, `expressive`, `fidelity`, `content`, `monochrome`, `rainbow` and `fruit-salad`, for example `material/themes/vibrant`. `schemeToTokens` (`material/core/theme`) turns any M3 scheme's role colours into these tokens.
+How contrast resolves on nested themes, and how each level is derived, is in the [Theming guide](https://md3.io/docs/theming/#contrast).
 
 ### Custom properties
 
@@ -187,7 +240,7 @@ Components read the theme's colour roles, so overriding a role restyles every co
 }
 ```
 
-The typefaces and the corner scale are custom properties on the base (`--mtrl-ref-typeface-brand`, `--mtrl-ref-typeface-plain`, `--mtrl-sys-shape-corner-*`): setting one on `:root` restyles every component that uses it. The type scale (`--mtrl-sys-typescale-*`) ships in `material/styles/typography` and in the full stylesheet; setting a role's size there restyles the type classes and the heading styles. Component hooks follow one convention, `--mtrl-<component>-<name>`:
+The typefaces and the corner scale are custom properties too, so setting one on `:root` restyles every component that uses it. Component hooks follow one convention, `--mtrl-<component>-<name>`:
 
 ```css
 .brand-slider {
@@ -196,9 +249,18 @@ The typefaces and the corner scale are custom properties on the base (`--mtrl-re
 }
 ```
 
+The [Theming guide](https://md3.io/docs/theming/#the-other-tokens) lists the type, shape and state tokens.
+
 ## Web components
 
-Overlays open in the browser's top layer (`showModal()` or `popover`) from inside their own shadow root, so they keep their styles, trap focus and make the page inert where M3 says so. Form controls are form-associated: `name`, the form value, reset, validation, `<label for>` and back-navigation restore work as on native controls.
+Overlays open in the browser's top layer from inside their own shadow root, so they keep their styles, trap focus and make the page inert where M3 says so.
+
+Form controls are form-associated. As on native controls, these work:
+
+- `name` and the form value;
+- reset and validation;
+- `<label for>`;
+- back-navigation restore.
 
 Declaration children describe a component's items, as native `<select>` and `<option>` do:
 
@@ -209,67 +271,77 @@ Declaration children describe a component's items, as native `<select>` and `<op
 </m-tabs>
 ```
 
-The page still loads material's base styles and a theme (see [Styles](#styles)); the elements render in shadow DOM and pick up the theme's tokens. Attributes are defaults and properties the live state, as on native controls: a `checked` or `value` attribute sets the state until the user or a script changes it, and `form.reset()` goes back to it. Form controls take part in forms (their host's `name`), reset, validation and back-navigation restore.
+Attributes are defaults and properties the live state, as on native controls. A `checked` attribute sets the state until the user or a script changes it, and `form.reset()` goes back to it.
 
-A server-rendered page sends each element as its tag and light DOM; the element takes its real look once its script defines it. Nothing reserves that box unless the pre-upgrade stylesheet is in `<head>`, after material's base styles and theme. It gives every element not defined yet the box it will have (and its label the final type style), hides what it declares (`<m-tab>`, `<m-menu-item>`, …) and overlays. Its rules match only `:not(:defined)`, in the `mtrl.preupgrade` cascade layer. Without the stylesheet, an element has no reserved box until it is defined.
+The page still loads material's base styles and a theme (see [Styles](#styles)); the elements pick up the theme's tokens.
+
+A server-rendered page sends each element as its tag and light DOM, and the element takes its real look once its script defines it. To reserve its box until then, put the pre-upgrade stylesheet in `<head>`, after the base styles and theme:
 
 ```html
 <link rel="stylesheet" href="/node_modules/material/dist/elements/preupgrade.css">
 ```
 
-A page that uses one element can load that element's file instead: `material/elements/preupgrade/<name>.css`, named by the spec (`text-field`, `select`, `icon-button`). Each file is that element's rules in the same `@layer mtrl.preupgrade`. With a bundler, `import 'material/elements/preupgrade.css'` or `import 'material/elements/preupgrade/button.css'`.
+With a bundler, import `material/elements/preupgrade.css`. What the stylesheet does, its per-element files and its limits are in the [Server rendering guide](https://md3.io/docs/server-rendering/#avoiding-layout-shift); attributes, events, slots and forms are in the [Web Components guide](https://md3.io/docs/web-components/).
 
-With another tag prefix, `preupgradeStyles('x')` from `material/elements/preupgrade` returns the whole stylesheet for `<x-*>`, to inline on the server. The element CSS modules do not apply these rules.
+The API for writing elements of your own is experimental and may change in a minor release. The elements material defines, and their attributes, properties and events, are not.
 
-The API for writing elements of your own (`defineElement`, `ElementSpec`, `registerStyles`, `hasStyles` and `SHADOW_BASE_STYLES`, from `material/elements`) is experimental: it is outside semantic versioning in 3.x and may change in a minor release. The elements material defines, and their attributes, properties and events, are not.
+| Status | Names, all from `material/elements` |
+|--------|-------------------------------------|
+| Experimental: outside semantic versioning in 3.x | `defineElement`, `ElementSpec`, `registerStyles`, `hasStyles`, `SHADOW_BASE_STYLES` |
 
 ## React, Vue, Svelte and Solid
 
-The framework components render the elements, so everything above holds: forms, the top layer, the styling. `material/react`, `material/vue`, `material/svelte` and `material/solid` load the elements' CSS and register each element the first time it mounts.
+The framework components render the elements, so everything above holds: forms, the top layer, the styling. Each entry loads the elements' CSS and registers each element the first time it mounts.
 
-| Framework | Import | Two-way binding |
-|-----------|--------|-----------------|
-| React 18 and 19 | `import { Switch } from 'material/react'` | `checked` + `onChange`, or `defaultChecked` |
-| Vue 3 | `import { MSwitch } from 'material/vue'` | `v-model` |
-| Svelte 5 | `import { Switch } from 'material/svelte'` | `bind:checked` |
-| Solid | `import { Switch } from 'material/solid'` | `checked` + `onChange` |
+| Framework | Import | Two-way binding | Guide |
+|-----------|--------|-----------------|-------|
+| React 18 and 19 | `import { Switch } from 'material/react'` | `checked` + `onChange`, or `defaultChecked` | [React](https://md3.io/docs/react/) |
+| Vue 3 | `import { MSwitch } from 'material/vue'` | `v-model` | [Vue](https://md3.io/docs/vue/) |
+| Svelte 5 | `import { Switch } from 'material/svelte'` | `bind:checked` | [Svelte](https://md3.io/docs/svelte/) |
+| Solid | `import { Switch } from 'material/solid'` | `checked` + `onChange` | [Solid](https://md3.io/docs/solid/) |
 
-The `material/svelte` entry is a bundler target too: it imports `.svelte` files, so it does not load in plain Node.
+Good to know:
 
-With `skipLibCheck: false`, use `@types/react` 18.2.71 or later.
+- Each framework is an optional peer dependency; material installs none of them.
+- All four render on the server and hydrate.
+- Angular apps use the elements directly, with `CUSTOM_ELEMENTS_SCHEMA`.
+- The Svelte entry imports `.svelte` files, so it needs a bundler and does not load in plain Node.
+- With `skipLibCheck: false`, use `@types/react` 18.2.71 or later.
 
-Each framework is an optional peer dependency; material installs none of them. All adapters render on the server and hydrate. Angular apps use the elements directly, with `CUSTOM_ELEMENTS_SCHEMA`.
+A component owns the `on…` props of its element's events and its `default…` props, typed with the element's own payloads. Any other HTML attribute passes to the host.
 
-A component owns the `on…` props of its element's events (`onChange`, `onInput`, `onSelect`, …) and its `default…` props, typed with the element's own payloads. Any other HTML attribute passes to the host; to spread a whole set of HTML attributes into a component, omit the props it owns (`Omit<React.HTMLAttributes<HTMLElement>, "onChange">`).
-
-Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, controlled and uncontrolled state, named slots, refs and server rendering.
+Each guide covers props and events, controlled and uncontrolled state, named slots, refs and server rendering.
 
 ## Server rendering
 
-`renderElement` from `material/ssr` renders an element to declarative shadow DOM. Import `material/ssr/react`, `material/ssr/vue`, `material/ssr/svelte` or `material/ssr/solid` in the server bootstrap and that framework's components emit the same roots. Node and Bun are supported in `material` 3.0.0. Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one.
+`renderElement` from `material/ssr` renders an element to declarative shadow DOM, so the first paint is the component. Each framework has a bridge that makes its components emit the same roots; import it in the server bootstrap:
 
-**Styles: inline by default.** Each root carries its whole CSS as a `<style>`, so it is styled at first paint in every engine with no extra request. That has two costs:
+| Framework | Bridge |
+|-----------|--------|
+| React | `material/ssr/react` |
+| Vue | `material/ssr/vue` |
+| Svelte | `material/ssr/svelte` |
+| Solid | `material/ssr/solid` |
 
-- **How well it compresses depends on the compressor.** gzip cannot see a repeat further back than its 32 KB window. A select's root is about 44 KB of style text, so gzip never finds the previous select: 30 selects measured 141.0 KB with gzip against 5.0 KB with brotli. Smaller roots compress well when the same element repeats (30 buttons, at 16 KB a root: 6.4 KB with gzip; 30 dialogs: 10.3 KB), and badly when large roots of different types alternate, because the previous copy of each is then out of the window: selects, text fields, dialogs and buttons in turn measured 83.9 KB with gzip against 8.1 KB with brotli. Serve brotli, or use link mode for pages with many selects, or that mix large roots (text fields, dialogs) in turn.
-- **Uncompressed it is large:** 0.5 to 0.9 MB for 30 to 44 roots (489 KB for 30 buttons, 671 KB for a list page of 44 roots, 878 KB for the 30 large roots). That matters for anything that stores or streams the HTML uncompressed.
+Each root carries its styles one of two ways:
 
-**Link mode** (`renderElement(tag, attributes, children, { styles: 'link', cssBase: '/css' })`, with `dist/elements/css` served at that base) writes `<link>` tags in place of the style text: the same pages are 15 to 40 KB of HTML, and the stylesheets are fetched once and cached. Its caveat: WebKit paints the roots unstyled until the stylesheets arrive (about 470 ms with each stylesheet 300 ms away; a preload in the head does not help), where Chromium and Firefox wait for them before painting.
+- **Inline, the default.** The root's whole CSS is in a `<style>`: styled at first paint in every engine, with no extra request. The HTML is large before compression, so serve it with brotli.
+- **Link mode.** The root has `<link>` tags in place of the style text: small HTML, and stylesheets fetched once and cached. WebKit paints the roots unstyled until they arrive.
 
-Measured on Playwright's engines (Chromium 153, Firefox 155, WebKit 26.6); sizes are of the HTML `renderElement` returns, gzip at level 9, brotli at its default.
+Node and Bun are supported. Worker and edge runtimes are unsupported in `material` 3.0.0: there `renderElement` throws "material/ssr is server-only".
 
-A framework page that server-renders without that bridge (Next.js, Nuxt, SvelteKit, SolidStart) does not reserve an element's box between the HTML and hydration. Put the `<link>` above in `<head>` (or import the stylesheet). The link reserves the box from the first paint, before any script. The overlap, a pre-upgrade rule painting over a host that already has a shadow root, shows only when that page also loads the stylesheet.
+The same HTML policy as [Markup and sanitizing](#markup-and-sanitizing) applies to the server entry and the four bridges.
 
-`renderElement`, and each bridge when it emits a shadow root, writes `data-mtrl-ssr` on that host. The stylesheet's last rule, in `mtrl.preupgrade`, matches that attribute and `:not(:defined)` (and the same for `::before`, `::after`, and a direct child that is not itself an element waiting to upgrade) at a higher specificity than any pre-upgrade selector of that subject, and sets `all: revert-layer`, so the stylesheet does not style a host the server already rendered, or those children. The attribute stays after upgrade. `:not(:defined)` no longer matches, so it does nothing. Carousel and the FAB menu opt out of the shadow root and do not carry the attribute: the stylesheet still reserves their box. A page without the bridge does not write the attribute. A Vue menu or split button that opts out of server rendering and has an async child shows its raw items until upgrade when the page also loads the pre-upgrade stylesheet.
+The [Server rendering guide](https://md3.io/docs/server-rendering/) has the rest: measured page sizes for each mode, the limits of the React and Svelte bridges (`Suspense`, context), and how a server-rendered host meets the pre-upgrade stylesheet.
 
-Worker and edge runtimes are unsupported in `material` 3.0.0. Each server entry lists the `browser` condition first. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers does) loads the browser stub: `renderElement` throws "material/ssr is server-only", and importing a bridge does nothing, so the page renders with no declarative roots and no error.
+## Events and overlays
 
-The React bridge suppresses React's hydration warning on a rendered host, because the server adds `data-mtrl-ssr`; a host attribute that differs between server and client is therefore not reported by React, and a direct text child that differs is kept as the server sent it.
+Two rules hold for every factory:
 
-With `material/ssr/react`, put a `Suspense` boundary outside the component when its server-rendered shadow root needs the resolved child. A boundary inside the component contributes its fallback to that root: a button with an empty fallback has no label slot, while a text fallback gives it a slot and shows the fallback text. In tabs, a boundary around a tab leaves the server-rendered root without that tab with either fallback; a boundary inside a tab label keeps the tab, with an empty or fallback-text label.
+- **A config `on*` option is the listener registered at creation.** It gets the same argument as a listener passed to `on()`, and runs before one added later.
+- **When `open()` or `close()` returns, the state has changed and the event has been emitted.** Opening an open component, or closing a closed one, does nothing and emits nothing.
 
-With `material/ssr/react` and `material/ssr/svelte`, the server-rendered shadow root is built in a separate render, without the context of providers above the component. The page's own render (the light DOM) sees the provided value. Until the component upgrades, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves that component without a declarative shadow root, while the page still renders. React and Svelte each log a development-only warning naming the element in the latter case. Keep context-dependent text outside material components: pass the resolved string as a prop or attribute, or accept client-rendered text until the upgrade. A fix is planned for a later 3.x release (FLO-517). The Vue and Solid bridges see the provided value in both the shadow root and light DOM.
-
-The same HTML policy as [Markup and sanitizing](#markup-and-sanitizing) applies to `material/ssr` and the four bridges.
+The full contract is on [md3.io](https://md3.io/docs/events-and-overlays/): cancellable events, Escape and stacked modals, the elements' `open` attribute, the tooltip's exception, and each component's state getter.
 
 ## Imports and tree-shaking
 
@@ -284,7 +356,9 @@ material publishes ESM only, with type declarations, so bundlers drop unused exp
 
 Constants are not exported from the root; import them from the component's `constants` entry:
 
+<!-- example: run, shows "Submit" -->
 ```typescript
+import 'material/styles';
 import { createButton } from 'material';
 import { BUTTON_VARIANTS, BUTTON_SIZES } from 'material/components/button/constants';
 
@@ -293,6 +367,8 @@ const button = createButton({
   variant: BUTTON_VARIANTS.FILLED,
   size: BUTTON_SIZES.L,
 });
+
+document.body.append(button.element);
 ```
 
 Some parts load on demand: a button's progress indicator, a card's action buttons, a menu's submenus and the FAB menu's desktop menu. Enable code splitting in your build to keep them out of the initial chunk.
@@ -301,6 +377,7 @@ Some parts load on demand: a button's progress indicator, a card's action button
 
 Components are composed from small features with `pipe`. The same building blocks are public:
 
+<!-- example: run, shows "Saved" -->
 ```typescript
 import { pipe, createBase, withEvents, withElement } from 'material/core/compose';
 
@@ -325,29 +402,36 @@ note.setText('Saved');
 document.body.append(note.element);
 ```
 
-The element gets the `mtrl-note` class, `withEvents` adds `on`, `off` and `emit`, and `destroy()` removes the element. Add `withLifecycle()` from `material/core/compose` when features need to register cleanup.
+What the pipe built:
+
+- the element has the `mtrl-note` class;
+- `withEvents` adds the three event methods, `on()` among them;
+- `destroy()` removes the element.
+
+Add `withLifecycle()` from `material/core/compose` when features need to register cleanup. The [Architecture guide](https://md3.io/docs/architecture/) explains the building blocks.
 
 ## Markup and sanitizing
 
 Icons and `content` options are markup strings, written with `innerHTML`. Every such write goes through one sink, so you can decide once how markup is treated. Set a policy when the strings can come from users or a CMS, or when your page enforces Trusted Types:
 
 ```typescript
+import DOMPurify from 'dompurify';
 import { configureHTML } from 'material';
 
-// A sanitizer
+// A sanitizer (DOMPurify here; any function from markup to markup)
 configureHTML({ sanitize: (html) => DOMPurify.sanitize(html) });
 
 // Trusted Types: under `require-trusted-types-for 'script'` a plain string
 // assignment throws, so return a TrustedHTML from a policy your CSP allows
-const policy = window.trustedTypes.createPolicy('mtrl', {
+const policy = window.trustedTypes.createPolicy('app', {
   createHTML: (html) => DOMPurify.sanitize(html),
 });
 configureHTML({ sanitize: (html) => policy.createHTML(html) });
 ```
 
-The policy sees every string, the library's own icons included; a `TrustedHTML` value passed as an icon or content skips it. With no policy set, markup is written as it is. Text options (`text`, a card's `text`) never go through `innerHTML`.
+The policy sees every string, the library's own icons included; a `TrustedHTML` value passed as an icon or content skips it. With no policy set, markup is written as it is. Text options, such as a button's `text`, never go through `innerHTML`.
 
-These attributes are markup. With no policy set they are written as HTML, in the browser and when `material/ssr` or one of the four bridges renders the element. `avatar` and `leading-avatar` are not a person's name or an image URL.
+These attributes are markup. With no policy set they are written as HTML, in the browser and when the server entry or one of the four bridges renders the element. An avatar attribute is not a person's name or an image URL.
 
 <!-- markup-attributes -->
 
@@ -391,9 +475,39 @@ On a declaration child:
 - `icon` on `<m-select-option>` — written into the menu
 - `icon` on `<m-tab>`
 
-`<m-fab-menu>` and `<m-fab-menu-item>` `icon` are markup too. The menu opts out of server rendering, so the server leaves those attributes escaped, and the same policy applies when the component upgrades.
+The `icon` of the FAB menu and of its items is markup too. The menu opts out of server rendering, so the server leaves those attributes escaped, and the same policy applies when the component upgrades.
 
 <!-- /markup-attributes -->
+
+## Sizes
+
+What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from the packed package by `bun run size:check`. The table is refreshed at each release, and CI keeps every figure within 2% of the current build:
+
+<!-- sizes -->
+| Import | gzip |
+|--------|-----:|
+| `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.4 kB |
+| `createButton`, without code splitting (the progress indicator included) | 13.7 kB |
+| `createButton`, `createTextField` and `createCheckbox`, without code splitting | 19.9 kB |
+| Everything the root exports (`export * from 'material'`), without code splitting | 126.9 kB |
+| `material/styles/base` | 2.9 kB |
+| `material/styles/base` and `material/styles/button` | 5.2 kB |
+| `material/styles`, the full stylesheet | 61.8 kB |
+<!-- /sizes -->
+
+`bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size.
+
+## Browser support
+
+Current Chrome, Edge, Firefox and Safari. The spring motion uses CSS `linear()` easing (Safari 17.2 or later); older browsers render every component but skip those transitions. The elements use form-associated custom elements and the top layer (`popover` and `<dialog>`), both available in every current browser.
+
+## Upgrading
+
+`material` 3.0.0 removes what `mtrl` 0.10 deprecated. Upgrade to the latest `mtrl` 0.10.x first: it has the 3.0.0 names beside the old ones and flags in your editor each name, option and constant 3.0.0 removes. Then change the package name to `material` and follow the migration guide. Each step is in the changelog:
+
+- `mtrl` 0.10: [Migrating from 0.10.x](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-010x), the 3.0.0 guide.
+- `mtrl` 0.9: [Migrating from 0.9.x](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-09x).
+- `mtrl` 0.7: [the 0.8.0 changes](https://github.com/floor/material/blob/main/CHANGELOG.md#080---2026-09-15).
 
 ## Where this came from
 
@@ -404,32 +518,12 @@ The package was published as `mtrl` up to 0.10.x. The history before 3.0.0 was d
 Versions of `material` up to 1.0.4 are an earlier, separate library (GPL-3). Its code is on the
 `v1` branch of this repository, and it stays installable with `npm install material@legacy`.
 
-What a page meets keeps the name: the `mtrl-` class prefix, the `--mtrl-` custom properties,
-the `m-` tags and the `mtrl.*` cascade layers are unchanged.
+What a page meets keeps the name:
 
-## Upgrading from `mtrl` 0.10
-
-`material` 3.0.0 removes what 0.10 deprecated. Upgrade to the latest `mtrl` 0.10.x first: it has the 3.0.0 names beside the old ones and flags in your editor each name, option and constant 3.0.0 removes. Then change the package name to `material` and follow the [3.0.0 migration guide](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-010x): `material` is ESM-only, the package root keeps the components (the internals move to their subpaths), "text field" is two words in every identifier, and a few leftovers fail silently instead of at compile time, such as a chip's `{ text }`, which renders an empty chip.
-
-## Upgrading from `mtrl` 0.9
-
-0.10.0 adds the elements and framework components; for factory users, most apps need nothing. The changes to check are listed in the [0.10.0 changelog's migration section](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-09x): setters no longer emit `change`, the time picker's events pass `{ value }`, the `--mtrl-sys-color-*-rgb` properties are gone, disabled non-form roots use `aria-disabled`, cards are `article`s, and the text field's DOM gained a `__field` wrapper.
-
-## Upgrading from `mtrl` 0.7
-
-0.8.0 aligns the components with Material 3 expressive, and some of that changes the API or the styles:
-
-- `createSheet` is removed; use `createBottomSheet` or `createSideSheet`.
-- FAB and extended FAB: `variant: 'primary'`, `'secondary'` and `'tertiary'` are now the tone styles; the former look is `'primary-container'` (the default), `'secondary-container'` and `'tertiary-container'`.
-- Component custom properties are renamed to `--mtrl-<component>-<name>`, for example `--drawer-width` to `--mtrl-drawer-width` and `--item-offset` to `--mtrl-list-item-offset`.
-- `title-large` uses weight 400, as M3 specifies.
-- The slider draws with DOM and CSS; styles for `.mtrl-slider-canvas` no longer apply.
-
-The full list, with every renamed property, is in the [0.8.0 changelog](https://github.com/floor/material/blob/main/CHANGELOG.md#080---2026-09-15).
-
-## Browser support
-
-Current Chrome, Edge, Firefox and Safari. The spring motion uses CSS `linear()` easing (Safari 17.2 or later); older browsers render every component but skip those transitions. The elements use form-associated custom elements and the top layer (`popover` and `<dialog>`), both available in every current browser.
+- the `mtrl-` class prefix;
+- the `--mtrl-` custom properties;
+- the `m-` tags;
+- the `mtrl.*` cascade layers.
 
 ## Contributing
 
