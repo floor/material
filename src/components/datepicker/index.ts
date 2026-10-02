@@ -1,5 +1,5 @@
 // src/components/datepicker/index.ts
-export { default } from "./datepicker";
+export { default, default as createDatePicker } from "./datepicker";
 export type {
   DatePickerConfig,
   DatePickerComponent,
