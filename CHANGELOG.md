@@ -108,7 +108,11 @@ the `on` map and `onExpand` / `onCollapse`: they were typed `SearchEvent`, so
 and a `TypeError` at run time, measured), `event.state` and `event.viewMode` compile, and
 a listener annotated `(event: SearchEvent) => void` on those two is an error. The
 `<m-search>` component's `on` and `off` take the same map with the element's names
-(`open` and `close` carry the `SearchStateEvent`), so a name outside it is an error too.
+(`open` and `close` carry the `SearchStateEvent`), so a name outside it is an error too. The
+`<m-timepicker>` component's `on` and `off` take the time picker's event map
+(`TimePickerEvents`) in place of any string and an untyped handler (FLO-547): a name outside
+it is an error, and each handler's argument is typed, so one annotated with another type, or
+an argument on `open`, `close` or `cancel`, is an error.
 
 **Changes your compiler won't catch**
 
