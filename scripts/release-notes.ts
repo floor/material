@@ -10,7 +10,13 @@
  * section that still holds an `### Also in <version>` block: those entries
  * shipped in an earlier release and are parked there until that release's own
  * section joins the file, so they must not go out as this release's notes.
+ * The block is recognised by its heading, however it is written: two to four
+ * `#`, any case and spacing, with or without emphasis, or a line that is only
+ * a bold "Also in …" label. A sentence that starts "Also in" is prose.
  */
+
+/** A line that opens a parked block: an "Also in" heading, or a bold label on a line of its own */
+const PARKED = /^\s*#{2,4}\s+[*_]{0,2}also in\b|^\s*(?:\*\*|__)also in\b[^*_]*(?:\*\*|__)\s*$/i;
 
 /** The version's section of the changelog, its `## [x.y.z]` heading left out */
 export function changelogSection(changelog: string, version: string): string {
@@ -21,8 +27,8 @@ export function changelogSection(changelog: string, version: string): string {
   const next = lines.findIndex((line, index) => index > start && line.startsWith("## ["));
   const body = lines.slice(start + 1, next === -1 ? undefined : next).join("\n").trim();
   if (!body) throw new Error(`CHANGELOG.md's section for ${version} is empty`);
-  const parked = body.split("\n").find((line) => line.startsWith("### Also in"));
-  if (parked) throw new Error(`CHANGELOG.md's section for ${version} still has "${parked}": replace that block with the earlier release's own section first`);
+  const parked = body.split("\n").find((line) => PARKED.test(line));
+  if (parked) throw new Error(`CHANGELOG.md's section for ${version} still has "${parked.trim()}": replace that block with the earlier release's own section first`);
   return body;
 }
 
