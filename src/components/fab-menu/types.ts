@@ -121,6 +121,13 @@ export interface FabMenuComponent extends ElementComponent {
    * presentation the surface is a module loaded on demand: it may be painted
    * after `open()` returns, and not at all when `close()` comes first. On an
    * open menu it does nothing and emits nothing.
+   *
+   * While that module loads for the first time: Escape and a click outside
+   * do not close the menu yet (they are the surface's own, once it is
+   * shown), and a second click on the FAB does; opened again, the surface
+   * opens as the last call asked; and if the module fails to load the menu
+   * closes again, with `close`. On `<m-fab-menu>` opened by its `open`
+   * attribute, which dispatches no `open`, that `close` is dispatched alone.
    */
   open(event?: Event): this;
 

@@ -164,6 +164,8 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
 
   let opened = false;
   let destroyed = false;
+  // What the last open() of the menu presentation was called with
+  let asked: [Event | undefined, "mouse" | "keyboard"] = [undefined, "keyboard"];
 
   const setOpened = (next: boolean) => {
     if (next === opened) return;
@@ -291,8 +293,10 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
       openList();
       return;
     }
-    // A key's click (detail 0) opens the baseline menu on its first item.
-    const interaction = event instanceof MouseEvent && event.detail > 0 ? "mouse" : "keyboard";
+    // A key's click (detail 0) opens the baseline menu on its first item. Kept
+    // outside the call: opened again while the menu loads, it opens as the
+    // last call asked.
+    asked = [event, event instanceof MouseEvent && event.detail > 0 ? "mouse" : "keyboard"];
     // Open from here on: the state and `open` are there when open() returns.
     // The menu is a lazy module, so its surface is shown when it has arrived.
     const loaded = loadMenu();
@@ -302,7 +306,7 @@ const createFabMenu = (config: FabMenuConfig): FabMenuComponent => {
       if (!surface) setOpened(false);
       // Closed, or destroyed, while it loaded: nothing is shown. Opened again
       // meanwhile: shown once.
-      else if (opened && !destroyed && !surface.isOpen()) surface.open(event, interaction);
+      else if (opened && !destroyed && !surface.isOpen()) surface.open(...asked);
     });
   };
 
