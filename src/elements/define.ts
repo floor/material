@@ -163,7 +163,8 @@ export { DEFAULT_PREFIX };
  */
 export const SHADOW_BASE_STYLES = ["ripple"] as const;
 
-const BASE_HOST_STYLES =
+/** The sheet every shadow root adopts first. @internal */
+export const BASE_HOST_STYLES =
   ":host{display:inline-block}:host([hidden]){display:none}*,*::before,*::after{box-sizing:border-box}";
 
 // ---------------------------------------------------------------------------

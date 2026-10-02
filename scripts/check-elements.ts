@@ -6035,6 +6035,32 @@ try {
     check("tooltip: motion-on placement, wrapped text, viewport clamps and top layer");
   }
 
+  // ---------------------------------------------------------------- reduced motion inside a shadow root (FLO-549)
+  // The document's reduced-motion reset does not reach a shadow tree. The
+  // button's corner morph and the group's width springs are not fades, so
+  // under the preference they must not be in the computed transition list.
+  {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await fresh(
+      page,
+      `<m-button id="rm">Save</m-button>
+       <m-button-group id="rmg" selection="single" value="a" aria-label="Alignment">
+         <m-button-group-item value="a">Left</m-button-group-item>
+         <m-button-group-item value="b">Right</m-button-group-item>
+       </m-button-group>`
+    );
+    const read = await page.evaluate(() =>
+      ["rm", "rmg"].map((id) => {
+        const button = (document.getElementById(id) as HTMLElement).shadowRoot?.querySelector("button");
+        return button ? getComputedStyle(button).transitionProperty : "no button";
+      })
+    );
+    await page.emulateMedia({ reducedMotion: null });
+    const fades = "opacity, color, background-color, border-color, outline-color, box-shadow, visibility";
+    assert.deepEqual(read, [fades, fades], "under reduced motion a shadow root's transitions are limited to the fades");
+    check("reduced motion: inside <m-button> and <m-button-group>, transitions are limited to the fades");
+  }
+
   // ---------------------------------------------------------------- tooltip and snackbar in the top layer
   // <m-tooltip> and <m-snackbar> render their surface in their own shadow
   // root, with its adopted CSS, and show it as a popover (`layer: "top"`):
