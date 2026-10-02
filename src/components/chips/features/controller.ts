@@ -64,9 +64,9 @@ export const withController =
     return config.multiSelect ? selected : (selected[0] ?? null);
   };
 
-  /** The `change` payload stays an array with named fields and a second positional argument. */
+  /** Build the chips set's change payload. */
   const changeEvent = (values: (string | null)[], changed: string | null): ChipsChangeEvent => {
-    return Object.assign([...values], { value: selectionValue(values), selected: values, changed });
+    return { value: selectionValue(values), selected: values, changed };
   };
 
   const currentValue = (): string | string[] | null => selectionValue(getSelectedValues());
@@ -97,11 +97,11 @@ export const withController =
     // Call onChange callback if provided
     const event = changeEvent(selectedValues, changedValue);
     if (typeof config.onChange === "function") {
-      config.onChange(event, changedValue);
+      config.onChange(event);
     }
 
     // Dispatch change event to all registered handlers
-    dispatchEvent(CHIPS_EVENTS.CHANGE, event, changedValue);
+    dispatchEvent(CHIPS_EVENTS.CHANGE, event);
   };
 
   // The set is an ARIA grid with one Tab stop (the m3.material.io chips' web roles,
@@ -384,7 +384,7 @@ export const withController =
     // Dispatch change event if any chip selection has changed AND if triggerEvent is true
     if (selectionChanged && triggerEvent) {
       const selectedValues = getSelectedValues();
-      dispatchEvent(CHIPS_EVENTS.CHANGE, changeEvent(selectedValues, null), null);
+      dispatchEvent(CHIPS_EVENTS.CHANGE, changeEvent(selectedValues, null));
     }
   };
 
@@ -402,7 +402,7 @@ export const withController =
 
     // Only dispatch if there were actually chips deselected AND triggerEvent is true
     if (hadSelectedChips && triggerEvent) {
-      dispatchEvent(CHIPS_EVENTS.CHANGE, changeEvent([], null), null);
+      dispatchEvent(CHIPS_EVENTS.CHANGE, changeEvent([], null));
     }
   };
 
