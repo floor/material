@@ -303,27 +303,179 @@ describe("a chip alone: on* options are the event listeners", () => {
   });
 });
 
-describe("a chip inside a set keeps today's item callbacks", () => {
-  test("the item onChange is still (selected, chip), the chip's change does not fire, and onSelect still receives the chip", () => {
-    const itemChange: unknown[][] = [];
-    const itemSelect: unknown[] = [];
-    const chipChange: unknown[] = [];
-    const setChange: ChipsChangeEvent[] = [];
+describe("a chip inside a set emits its own change", () => {
+  test("a click calls the item onChange once with the change payload, in order", () => {
+    const order: string[] = [];
+    const option: unknown[][] = [];
+    const listener: ChipChangePayload[] = [];
     const set = mountSet({
       chips: [{
         value: "a",
         ripple: false,
-        onChange: (...args: unknown[]) => { itemChange.push(args); },
-        onSelect: (chip) => { itemSelect.push(chip); },
+        onClick: () => order.push("item onClick"),
+        onChange: (...args: unknown[]) => {
+          order.push("item onChange");
+          option.push(args);
+        },
+        onSelect: () => order.push("item onSelect"),
+      }],
+      onChange: () => order.push("set onChange"),
+    });
+    const chip = set.getChips()[0]!;
+    set.on("change", () => order.push("set change"));
+    chip.on("click", () => order.push("chip click"));
+    chip.on("change", payload => {
+      order.push("chip change");
+      listener.push(payload);
+    });
+
+    chip.element.click();
+    chip.element.click();
+
+    const args = option.map((call, index) => {
+      const first = call[0];
+      if (typeof first === "object" && first && "selected" in first && "chip" in first && "value" in first) {
+        const payload = first as ChipChangePayload;
+        return {
+          length: call.length,
+          selected: payload.selected,
+          value: payload.value,
+          chip: payload.chip === chip,
+          listener: payload === listener[index],
+        };
+      }
+      return { length: call.length, first: typeof first, second: typeof call[1] };
+    });
+    const step = [
+      "item onClick",
+      "set onChange",
+      "set change",
+      "item onSelect",
+      "chip click",
+      "item onChange",
+      "chip change",
+    ];
+    expect({ order, args }).toEqual({
+      order: [...step, ...step],
+      args: [
+        { length: 1, selected: true, value: "a", chip: true, listener: true },
+        { length: 1, selected: false, value: "a", chip: true, listener: true },
+      ],
+    });
+  });
+
+  test("a leftover (selected, chip) handler receives the change payload as its first argument", () => {
+    const leftover: { length: number; selected: unknown; chip: unknown }[] = [];
+    const listener: ChipChangePayload[] = [];
+    const set = mountSet({
+      chips: [{
+        value: "old",
+        ripple: false,
+        onChange: function (selected: unknown, instance: unknown) {
+          leftover.push({ length: arguments.length, selected, chip: instance });
+        } as ChipEvents["change"],
       }],
     });
     const chip = set.getChips()[0]!;
-    chip.on("change", payload => chipChange.push(payload));
-    set.on("change", event => setChange.push(event));
+    chip.on("change", payload => listener.push(payload));
     chip.element.click();
+    chip.element.click();
+    const described = leftover.map((call, index) => {
+      const payload = call.selected;
+      const object = typeof payload === "object" && payload && "selected" in payload && "value" in payload
+        ? payload as ChipChangePayload
+        : undefined;
+      return {
+        length: call.length,
+        second: call.chip === undefined,
+        same: object !== undefined && object === listener[index],
+        selected: object ? object.selected : payload,
+        value: object ? object.value : undefined,
+        chip: object ? object.chip === chip : false,
+      };
+    });
+    expect(described).toEqual([
+      { length: 1, second: true, same: true, selected: true, value: "old", chip: true },
+      { length: 1, second: true, same: true, selected: false, value: "old", chip: true },
+    ]);
+  });
+
+  test("single-select emits change once on the clicked chip, not on the chip it replaces", () => {
+    const order: string[] = [];
+    const set = mountSet({
+      multiSelect: false,
+      chips: [
+        {
+          value: "a",
+          ripple: false,
+          selected: true,
+          onChange: () => order.push("a onChange"),
+        },
+        {
+          value: "b",
+          ripple: false,
+          onChange: () => order.push("b onChange"),
+        },
+      ],
+    });
+    const [replaced, clicked] = set.getChips();
+    replaced!.on("change", () => order.push("a change"));
+    clicked!.on("change", () => order.push("b change"));
+    clicked!.element.click();
+    expect(order).toEqual(["b onChange", "b change"]);
+    expect(replaced!.isSelected()).toBe(false);
+    expect(clicked!.isSelected()).toBe(true);
+    clicked!.element.click();
+    expect(order).toEqual(["b onChange", "b change", "b onChange", "b change"]);
+  });
+
+  test("selectByValue(value, true) and setSelected do not emit the chip's change", () => {
+    const chipChange: string[] = [];
+    const setChange: string[] = [];
+    const set = mountSet({
+      multiSelect: false,
+      chips: [
+        { value: "a", ripple: false, selected: true, onChange: () => chipChange.push("a option") },
+        { value: "b", ripple: false, onChange: () => chipChange.push("b option") },
+      ],
+      onChange: () => setChange.push("set"),
+    });
+    const [first, second] = set.getChips();
+    first!.on("change", () => chipChange.push("a listener"));
+    second!.on("change", () => chipChange.push("b listener"));
+
+    set.selectByValue("b", true);
     expect(chipChange).toEqual([]);
-    expect(itemChange).toEqual([[true, chip]]);
-    expect(itemSelect).toEqual([chip]);
-    expect(setChange.map(event => event.changed)).toEqual(["a"]);
+    expect(setChange).toEqual(["set"]);
+    expect(second!.isSelected()).toBe(true);
+    expect(first!.isSelected()).toBe(false);
+
+    chipChange.length = 0;
+    setChange.length = 0;
+    first!.setSelected(true);
+    expect(chipChange).toEqual([]);
+    expect(setChange).toEqual([]);
+    expect(first!.isSelected()).toBe(true);
+    expect(second!.isSelected()).toBe(false);
+  });
+
+  test("a refused deselect still emits the clicked chip's change once", () => {
+    const payloads: unknown[] = [];
+    const set = mountSet({
+      selectionRequired: true,
+      chips: [{
+        value: "a",
+        ripple: false,
+        selected: true,
+        onChange: (payload) => payloads.push(payload),
+      }],
+    });
+    const chip = set.getChips()[0]!;
+    chip.on("change", payload => payloads.push(payload));
+    chip.element.click();
+    expect(chip.isSelected()).toBe(true);
+    expect(payloads).toHaveLength(2);
+    expect(payloads[0]).toBe(payloads[1]);
+    expect(payloads[0]).toEqual({ selected: true, chip, value: "a" });
   });
 });
