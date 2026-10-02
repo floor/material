@@ -95,11 +95,13 @@ const textFieldSpec = {
       config: "suffixText",
       update: (c, v) => void (v ? c.setSuffixText(String(v)) : c.removeSuffixText()),
     },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     "leading-icon": {
       type: "string",
       config: "leadingIcon",
       update: (c, v) => void (v ? c.setLeadingIcon(String(v)) : c.removeLeadingIcon()),
     },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     "trailing-icon": {
       type: "string",
       config: "trailingIcon",
