@@ -5514,17 +5514,25 @@ try {
     // on the first item.
     await (async () => {
       await page.evaluate(() => {
-        const timeout = window.setTimeout;
-        const held: Array<() => void> = [];
-        // The menu's timers are 0, 20 and 100ms: only the focus one is held.
+        const timeout = window.setTimeout, clear = window.clearTimeout;
+        const held = new Map<number, () => void>();
+        let next = -1;
+        // Every 100ms timer the page sets during this case is held; the menu's own
+        // are 0, 20 and 100ms, and the 100ms one is its initial focus. A held timer
+        // has an id of its own and can be cleared, so a fix that cancels the
+        // initial focus is seen as one, like a fix that guards it.
         window.setTimeout = ((callback: () => void, delay?: number, ...rest: unknown[]) => {
           if (delay !== 100) return timeout(callback, delay, ...rest);
-          held.push(callback);
-          return 0;
+          held.set(next, callback);
+          return next--;
         }) as typeof window.setTimeout;
+        window.clearTimeout = ((id?: number) => { if (id === undefined || !held.delete(id)) clear(id); }) as typeof window.clearTimeout;
         Object.assign(window, { releaseTimers: () => {
           window.setTimeout = timeout;
-          for (const callback of held.splice(0)) callback();
+          window.clearTimeout = clear;
+          delete (window as unknown as { releaseTimers?: unknown }).releaseTimers;
+          for (const callback of [...held.values()]) callback();
+          held.clear();
         } });
       });
       let before: string | null;
@@ -5546,7 +5554,10 @@ try {
       await page.keyboard.press("Escape");
       await settle();
       await log();
-      assert.equal(after, before, "FLO-515: focus stays where the arrows put it once the menu's initial focus has run");
+      // The known bug is this one move, back to the first item. Any other change of
+      // focus is not FLO-515 and fails as usual.
+      assert(!(after === "Copy" && before !== "Copy"), "FLO-515: the menu's initial focus moved focus back to the first item, after arrows had moved it on");
+      assert.equal(after, before, "focus stays where the arrows put it once the menu's initial focus has run");
     })();
 
     await page.evaluate(() => (document.getElementById("mm") as Host & { show: () => void }).show());
