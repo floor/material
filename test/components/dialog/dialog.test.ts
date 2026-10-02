@@ -2,7 +2,8 @@
 //
 // The real component in a JSDOM document: what it renders, how it is named,
 // where focus goes, and what it does to the page behind it.
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach, jest } from 'bun:test';
+import { advanceTimersByTime } from '../../utils/fake-clock';
 import { JSDOM } from 'jsdom';
 
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
@@ -223,28 +224,55 @@ describe('dialog', () => {
     expect(seen).toEqual(['afterclose']);
   });
 
-  test('afteropen waits for the surface to finish growing', async () => {
-    const dialog = createDialog({ title: 'Delete file?', buttons });
-    const seen: string[] = [];
-    dialog.on('afteropen', () => seen.push('afteropen'));
-    dialog.open();
-    await after(400);
-    expect(seen).toEqual([]);
-    await after(160);
-    expect(seen).toEqual(['afteropen']);
-    dialog.close();
+  // `afteropen` is on a timer that starts only when the 10ms show timer has
+  // run. Waiting on the wall clock for it (400ms: not yet, 560ms: by now) failed
+  // on a busy runner: the show timer ran late and the 500ms started from there
+  // (FLO-569). The clock is the test's own here, so the rule is stated to the
+  // millisecond: the surface is shown 10ms after open(), and `afteropen`
+  // follows 500ms after that, the default spatial spring's settle.
+  test('afteropen waits for the surface to finish growing', () => {
+    jest.useFakeTimers();
+    try {
+      const dialog = createDialog({ title: 'Delete file?', buttons });
+      const seen: string[] = [];
+      dialog.on('afteropen', () => seen.push('afteropen'));
+      dialog.open();
+      advanceTimersByTime(9);
+      expect(dialog.element.classList.contains('mtrl-dialog--visible')).toBe(false);
+      advanceTimersByTime(1);
+      expect(dialog.element.classList.contains('mtrl-dialog--visible')).toBe(true);
+      advanceTimersByTime(499);
+      expect(seen).toEqual([]);
+      advanceTimersByTime(1);
+      expect(seen).toEqual(['afteropen']);
+      dialog.close();
+      advanceTimersByTime(150);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
-  test('a configured animationDuration still sets both waits', async () => {
-    const dialog = createDialog({ title: 'Delete file?', buttons, animationDuration: 40 });
-    const seen: string[] = [];
-    dialog.on('afteropen', () => seen.push('afteropen'));
-    dialog.on('afterclose', () => seen.push('afterclose'));
-    dialog.open();
-    await after(80);
-    dialog.close();
-    await after(60);
-    expect(seen).toEqual(['afteropen', 'afterclose']);
+  test('a configured animationDuration still sets both waits', () => {
+    jest.useFakeTimers();
+    try {
+      const dialog = createDialog({ title: 'Delete file?', buttons, animationDuration: 40 });
+      const seen: string[] = [];
+      dialog.on('afteropen', () => seen.push('afteropen'));
+      dialog.on('afterclose', () => seen.push('afterclose'));
+      dialog.open();
+      // 10ms to show, then the configured 40ms
+      advanceTimersByTime(49);
+      expect(seen).toEqual([]);
+      advanceTimersByTime(1);
+      expect(seen).toEqual(['afteropen']);
+      dialog.close();
+      advanceTimersByTime(39);
+      expect(seen).toEqual(['afteropen']);
+      advanceTimersByTime(1);
+      expect(seen).toEqual(['afteropen', 'afterclose']);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
 
