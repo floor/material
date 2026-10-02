@@ -211,7 +211,7 @@ const withOpener =
       return;
     }
 
-    // Case 3: Textfield component with focus/blur methods
+    // Case 3: TextField component with focus/blur methods
     if (
       state.openerComponent &&
       typeof state.openerComponent.focus === "function" &&

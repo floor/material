@@ -11,17 +11,17 @@ import {
 } from "./content";
 import type { ElementComponent } from "../../core/compose/component";
 import type { EventComponent } from "../../core/compose/features";
-import { CardComponent, CardComponentConfig, CardSchema } from "./types";
+import { CardComponent, CardComponentConfig, CardConfig } from "./types";
 import { CARD_VARIANTS, CARD_ELEVATIONS } from "./constants";
 
 /**
  * Default configuration for the Card component.
  * These values are used when no configuration is provided.
  *
- * @const {CardSchema}
+ * @const {CardConfig}
  * @category Components
  */
-export const defaultConfig: CardSchema = {
+export const defaultConfig: CardConfig = {
   variant: CARD_VARIANTS.ELEVATED,
   interactive: false,
   fullWidth: false,
@@ -33,8 +33,8 @@ export const defaultConfig: CardSchema = {
  * Processes inline configuration options into standard config format.
  * Maps shorthand properties to their proper config counterparts for ease of use.
  *
- * @param {CardSchema} config - Raw card configuration
- * @returns {CardSchema} Processed configuration
+ * @param {CardConfig} config - Raw card configuration
+ * @returns {CardConfig} Processed configuration
  * @category Components
  * @example
  * ```typescript
@@ -43,8 +43,8 @@ export const defaultConfig: CardSchema = {
  * { headerConfig: { title: 'Example' } }
  * ```
  */
-export const processInlineConfig = (config: CardSchema): CardSchema => {
-  const processedConfig: CardSchema = { ...config };
+export const processInlineConfig = (config: CardConfig): CardConfig => {
+  const processedConfig: CardConfig = { ...config };
 
   // Map inline properties to their *Config counterparts
   if (config.header) {
@@ -72,12 +72,12 @@ export const processInlineConfig = (config: CardSchema): CardSchema => {
  * Material Design layout guidelines. Handles media, header, content, and actions placement.
  *
  * @param {CardComponent} card - Card component to configure
- * @param {CardSchema} config - Processed configuration
+ * @param {CardConfig} config - Processed configuration
  * @category Components
  */
 export const applyInlineConfiguration = (
   card: CardComponent,
-  config: CardSchema
+  config: CardConfig
 ): void => {
   // Add media (top position) if configured
   if (
@@ -147,12 +147,12 @@ export const applyInlineConfiguration = (
  * Merges user-provided configuration with default values,
  * ensuring all required properties are set.
  *
- * @param {CardSchema} config - User provided configuration
- * @returns {CardSchema} Complete configuration with defaults applied
+ * @param {CardConfig} config - User provided configuration
+ * @returns {CardConfig} Complete configuration with defaults applied
  * @category Components
  *
  */
-export const createBaseConfig = (config: CardSchema = {}): CardComponentConfig =>
+export const createBaseConfig = (config: CardConfig = {}): CardComponentConfig =>
   createComponentConfig(defaultConfig, config, "card");
 
 /**
@@ -160,12 +160,12 @@ export const createBaseConfig = (config: CardSchema = {}): CardComponentConfig =
  * Sets up DOM attributes, accessibility features, and event forwarding
  * based on the card's configuration.
  *
- * @param {CardSchema} config - Card configuration
+ * @param {CardConfig} config - Card configuration
  * @returns {Object} Element configuration object for withElement
  * @category Components
  *
  */
-export const getElementConfig = (config: CardSchema) => {
+export const getElementConfig = (config: CardConfig) => {
   const isInteractive = config.interactive || config.clickable;
   // A clickable card is a button. Any other card is an article: self-contained
   // content its headline can name, which a region landmark per card is not
