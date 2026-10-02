@@ -221,6 +221,7 @@ export interface ModalEscape {
 }
 
 interface EscapeEntry extends ModalEscape {
+  element: HTMLElement;
   view: Window;
   escape: () => void;
   from: EventsFrom;
@@ -237,6 +238,15 @@ const onEscapeKey = (event: KeyboardEvent): void => {
   while (at-- && escapes[at].view !== event.currentTarget);
   const top = escapes[at];
   if (!top) return;
+  // Focus inside an open <dialog> that is not this modal: one shown above it
+  // that is not on the stack (another component's, the page's own). The
+  // browser has made the rest inert, and Escape is that dialog's `cancel`.
+  for (const node of event.composedPath() as Partial<Element>[]) {
+    if (node.localName === "dialog" && node.hasAttribute?.("open")) {
+      if (node !== top.element) return;
+      break;
+    }
+  }
   // Prevented, so the browser sends a modal <dialog> no `cancel`: it lets a
   // page refuse two of those in a row and forces the third
   event.preventDefault();
@@ -259,6 +269,7 @@ export const onModalEscape = (element: HTMLElement, escape: () => void): ModalEs
   const view = element.ownerDocument.defaultView as Window;
   const from = eventsFrom(element);
   const entry: EscapeEntry = {
+    element,
     view,
     escape,
     from,
