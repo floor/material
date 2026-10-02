@@ -3,7 +3,7 @@ name: Publish
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v1.*.*'
 
 permissions:
   contents: read
@@ -31,4 +31,15 @@ jobs:
             exit 1
           fi
 
-      - run: npm publish
+      - name: This branch publishes 1.x only
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          case "$VERSION" in
+            1.*) ;;
+            *)
+              echo "This branch publishes 1.x only, but package.json version is $VERSION. 3.x is published from the default branch." >&2
+              exit 1
+              ;;
+          esac
+
+      - run: npm publish --tag legacy
