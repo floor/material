@@ -39,8 +39,9 @@ import { elementModules, pascal } from "./element-modules";
 /**
  * The adapter's own runtime (create.ts or runtime.js) and wrapper, brotli
  * bytes, on top of the element: the largest measured, +1587, and headroom.
+ * The largest over is +1626 (Svelte switch + button), tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
  */
-const ADAPTER_MARGIN = 1700;
+const ADAPTER_MARGIN = 1650;
 
 const FRAMEWORKS = [
   { dir: "react", component: pascal },
