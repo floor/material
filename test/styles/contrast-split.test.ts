@@ -116,11 +116,12 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_switch.scss), a radio row that grows with its label
     // with an unlabelled radio centred (styles/components/_radios.scss), the select
     // menu's width, mark and selected colours (styles/components/_select.scss,
-    // styles/components/_menu.scss), and the chip's secondary-action floor
-    // (styles/components/_chips.scss).
+    // styles/components/_menu.scss), the chip's secondary-action floor
+    // (styles/components/_chips.scss), and the touch target centred physically
+    // (styles/abstract/_mixins.scss, FLO-592).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("578b42cc7849d7d54ffd684f8b0bc6c535b724d2d922ac01d3d75a2b2f0065e3");
-    expect(css.length).toBe(524701);
+      .toBe("b9d4f77ce9319184b2ba61c649108ecf68dc35c0bb0077c3fcc748fb120bcc5e");
+    expect(css.length).toBe(524687);
   });
 
   test("today's sheets still resolve to the fixture", () => {
