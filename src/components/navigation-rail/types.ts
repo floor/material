@@ -51,9 +51,12 @@ export interface NavigationRailConfig extends BaseComponentConfig {
     /** Optional application-owned header, such as a FAB. Its lifecycle stays with its owner. */
     header?: HTMLElement;
     ripple?: boolean;
-    onSelect?: (event: NavigationRailSelectEvent) => void;
-    onExpand?: () => void;
-    onCollapse?: () => void;
+    /** `select` listener registered at creation. */
+    onSelect?: (event: NavigationRailEvents["select"]) => void;
+    /** `expand` listener registered at creation. The argument is `{ expanded: true }`. */
+    onExpand?: (event: NavigationRailEvents["expand"]) => void;
+    /** `collapse` listener registered at creation. The argument is `{ expanded: false }`. */
+    onCollapse?: (event: NavigationRailEvents["collapse"]) => void;
 }
 export interface NavigationRailComponent {
     element: HTMLElement;

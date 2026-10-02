@@ -37,7 +37,7 @@
 
 import createSearch from "../components/search";
 import type {
-  SearchComponent, SearchConfig, SearchEvent, SearchEventType, SearchSuggestion, SearchTrailingItem,
+  SearchComponent, SearchConfig, SearchEvent, SearchEvents, SearchEventType, SearchSuggestion, SearchTrailingItem,
 } from "../components/search/types";
 import { PREFIX } from "../core/config";
 import {
@@ -45,13 +45,19 @@ import {
   type ElementInstance, type ElementSpec,
 } from "./define";
 
-type Handler = (event: SearchEvent) => void;
+/** The factory's events, and the element's names for five of them. */
+export interface SearchElementEvents extends SearchEvents {
+  change: SearchEvents["submit"];
+  select: SearchEvents["suggestionSelect"];
+  open: SearchEvents["expand"];
+  close: SearchEvents["collapse"];
+}
 
 /** The search, with the element's events, methods and input. */
 export interface SearchElementComponent extends Omit<SearchComponent, "on" | "off"> {
   /** Subscribes by the element's event names (`open`, `select`…) as well as the factory's. */
-  on: (event: string, handler: Handler) => SearchElementComponent;
-  off: (event: string, handler: Handler) => SearchElementComponent;
+  on: <K extends keyof SearchElementEvents>(event: K, handler: SearchElementEvents[K]) => SearchElementComponent;
+  off: <K extends keyof SearchElementEvents>(event: K, handler: SearchElementEvents[K]) => SearchElementComponent;
   /** Opens the view. */
   show: () => SearchElementComponent;
   /** Closes the view. */
@@ -109,7 +115,7 @@ const applied = new WeakMap<SearchElementComponent, string>();
  * property the factory's minWidth / maxWidth set (FLO-290). Removed, the
  * stylesheet's M3 360 and 720dp apply.
  */
-const setWidth = (c: SearchComponent, edge: "min" | "max", value: AttributeValue | undefined): void => {
+const setWidth = (c: Pick<SearchComponent, "element">, edge: "min" | "max", value: AttributeValue | undefined): void => {
   const name = `--${PREFIX}-search-${edge}-width`;
   if (value === null || value === undefined || value === "") c.element.style.removeProperty(name);
   else c.element.style.setProperty(name, /^\d+(\.\d+)?$/.test(String(value)) ? `${value}px` : String(value));
@@ -151,11 +157,11 @@ const create = (config: SearchElementConfig): SearchElementComponent => {
       search.collapse();
       return component;
     },
-    on: (event: string, handler: Handler) => {
+    on: <K extends keyof SearchElementEvents>(event: K, handler: SearchElementEvents[K]) => {
       for (const name of ALIASES[event] ?? [event]) on(name as SearchEventType, handler);
       return component;
     },
-    off: (event: string, handler: Handler) => {
+    off: <K extends keyof SearchElementEvents>(event: K, handler: SearchElementEvents[K]) => {
       for (const name of ALIASES[event] ?? [event]) off(name as SearchEventType, handler);
       return component;
     },
