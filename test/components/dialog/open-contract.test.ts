@@ -481,3 +481,115 @@ describe('dialog: open means it can be dismissed', () => {
     }
   });
 });
+
+// FLO-556 and family 6: Escape is handled as a key press, in both layers. The
+// key is prevented, so in the top layer the browser sends the <dialog> no
+// `cancel` and its allowance (it forces the third refused cancel in a row) is
+// never spent: closeOnEscape: false and a refusing beforeclose hold for any
+// number of presses. Only the topmost dialog answers, and a key something
+// inside has already used is left alone.
+describe('dialog: Escape is a key press, in both layers', () => {
+  const press = (target: EventTarget = document.body, init: KeyboardEventInit = {}) => {
+    const event = new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true, ...init });
+    target.dispatchEvent(event);
+    return event;
+  };
+
+  for (const layer of [undefined, 'top'] as const) {
+    const where = layer ? 'top layer' : 'default layer';
+
+    test(`${where}: Escape with focus on a child, then on the body, closes it and is prevented`, async () => {
+      const { dialog, seen } = make({ layer });
+      dialog.open();
+      await after(SETTLED);
+      expect(press(dialog.element.querySelector('button')!).defaultPrevented).toBe(true);
+      expect(dialog.isOpen()).toBe(false);
+      await after(SETTLED);
+      dialog.open();
+      await after(SETTLED);
+      expect(press(document.body).defaultPrevented).toBe(true);
+      expect(dialog.isOpen()).toBe(false);
+      expect(seen.filter((name) => name === 'close')).toHaveLength(2);
+    });
+
+    test(`${where}: closeOnEscape: false holds for any number of presses, each prevented`, async () => {
+      const { dialog, seen } = make({ layer, closeOnEscape: false });
+      dialog.open();
+      await after(SETTLED);
+      for (let i = 0; i < 5; i++) {
+        expect(press().defaultPrevented).toBe(true);
+        expect(dialog.isOpen()).toBe(true);
+      }
+      expect(seen).toEqual(['beforeopen', 'open', 'afteropen']);
+    });
+
+    test(`${where}: a beforeclose that refuses holds for any number of presses`, async () => {
+      const { dialog, seen } = make({ layer });
+      dialog.on('beforeclose', (event) => { event.preventDefault(); });
+      dialog.open();
+      await after(SETTLED);
+      for (let i = 0; i < 5; i++) {
+        expect(press().defaultPrevented).toBe(true);
+        expect(dialog.isOpen()).toBe(true);
+      }
+      expect(seen.filter((name) => name === 'beforeclose')).toHaveLength(5);
+      expect(seen).not.toContain('close');
+    });
+
+    test(`${where}: the Escape that opened it is prevented, so no cancel follows, and does not close it`, () => {
+      const { dialog } = make({ layer });
+      trigger.addEventListener('keydown', (event) => { if (event.key === 'Escape') dialog.open(); });
+      expect(press(trigger).defaultPrevented).toBe(true);
+      expect(dialog.isOpen()).toBe(true);
+    });
+
+    test(`${where}: a key something inside has used, and one that cancels a composition, are left alone`, async () => {
+      const { dialog } = make({ layer });
+      dialog.open();
+      await after(SETTLED);
+      const child = dialog.element.querySelector('button')!;
+      child.addEventListener('keydown', (event) => { event.preventDefault(); });
+      press(child);
+      expect(dialog.isOpen()).toBe(true);
+      expect(press(document.body, { isComposing: true }).defaultPrevented).toBe(false);
+      expect(dialog.isOpen()).toBe(true);
+    });
+
+    test(`${where}: only the topmost dialog answers`, async () => {
+      const under = make({ layer });
+      const over = make({ layer });
+      under.dialog.open();
+      await after(SETTLED);
+      over.dialog.open();
+      await after(SETTLED);
+      press();
+      expect([under.dialog.isOpen(), over.dialog.isOpen()]).toEqual([true, false]);
+      press();
+      expect([under.dialog.isOpen(), over.dialog.isOpen()]).toEqual([false, false]);
+    });
+  }
+
+  // What is not a key press still arrives as the dialog's cancel (a back
+  // gesture), and the browser forces the third one refused in a row: it closes
+  // the <dialog> without asking. The dialog's state follows whatever closed it.
+  test('top layer: a close the browser forces closes the dialog, though beforeclose refuses', async () => {
+    const { dialog, seen } = make({ layer: 'top' });
+    dialog.on('beforeclose', (event) => { event.preventDefault(); });
+    dialog.open();
+    await after(SETTLED);
+    expect(document.body.style.overflow).toBe('hidden');
+    // As the browser does it: the open attribute goes, then the close event
+    dialog.element.removeAttribute('open');
+    dialog.element.dispatchEvent(new dom.window.Event('close'));
+    expect(dialog.isOpen()).toBe(false);
+    expect(seen).toEqual(['beforeopen', 'open', 'afteropen', 'close']);
+    expect(document.body.style.overflow).toBe('');
+    expect(dialog.element.classList.contains(VISIBLE)).toBe(false);
+    await after(SETTLED);
+    expect(seen).toEqual(['beforeopen', 'open', 'afteropen', 'close', 'afterclose']);
+    // And it opens again
+    dialog.open();
+    expect(dialog.isOpen()).toBe(true);
+    expect(dialog.element.hasAttribute('open')).toBe(true);
+  });
+});
