@@ -18,10 +18,25 @@ const find = (identifier: string): string => {
   return module;
 };
 
+/**
+ * Identifiers that write a word boundary the element's name does not (FLO-383):
+ * the element `textfield` (tag `m-textfield`) is `TextField` in every exported
+ * identifier, as M3 writes "text field" as two words. Tags, module files and the
+ * registry key keep the element's name.
+ */
+const CANONICAL: Record<string, string> = { textfield: "TextField" };
+
+/** `navigationRail` → `NavigationRail`; `textfield` → `TextField` (FLO-383). */
+export const pascal = (name: string): string =>
+  CANONICAL[name] ?? name.replace(/(^|-)([a-z])/g, (_, __: string, c: string) => c.toUpperCase());
+
+/** `navigationRail` → `navigationRail`; `textfield` → `textField`, as the element's exports are named. */
+export const camel = (name: string): string => pascal(name).replace(/^[A-Z]/, (c) => c.toLowerCase());
+
 /** Each element: its registry name, its module in src/elements, and its CSS modules. */
 export const elementModules = Object.entries(elements).map(([name, element]) => ({
   name,
-  module: find(`${name}Element`),
+  module: find(`${camel(name)}Element`),
   styles: [...element.spec.styles],
 }));
 
@@ -30,3 +45,4 @@ export const declarationModules = Object.keys(declarations).map((name) => ({ nam
 
 /** `navigationRailItem` → `navigation-rail-item`: the file name of a generated adapter module. */
 export const kebab = (name: string): string => name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+

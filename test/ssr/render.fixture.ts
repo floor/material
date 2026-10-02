@@ -89,6 +89,10 @@ test("invalid inputs reject before mounting", () => {
   for (const tag of ["m-tab", "m-unknown", "button", "ui-button", "m-button>"]) expect(() => renderElement(tag)).toThrow(TypeError);
   expect(() => renderElement("m-button", {}, "", { prefix: "BAD" })).toThrow(TypeError);
   expect(() => renderElement("m-button", { tabindex: Infinity })).toThrow(TypeError);
+  for (const [name, value] of [["popover", "auto"], ["inputmode", "numeric"], ["enterkeyhint", "send"], ["itemprop", "name"], ["nonce", "abc"], ["is", "x-y"]] as const) {
+    expect(() => renderElement("m-button", { [name]: value })).toThrow(`Invalid host attribute: ${name}`);
+  }
+  expect(() => renderElement("m-card", {}, '<m-button popover="auto"></m-button>')).toThrow(/Invalid host attribute: popover/);
   expect(() => renderElement("m-button", {}, '<template shadowrootmode="open"></template>')).toThrow(TypeError);
   expect(() => renderElement("m-button", {}, '<m-button>'.repeat(64) + '</m-button>'.repeat(64))).toThrow(RangeError);
 });

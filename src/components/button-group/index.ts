@@ -26,6 +26,8 @@ export type {
   ButtonGroupOrientation,
   ButtonGroupDensity
 } from './types';
+// The kind, selection and change payload its config and events use (FLO-384)
+export type { ButtonGroupKind, ButtonGroupSelection, ButtonGroupChangeEvent } from './types';
 
 // Export constants
 export {

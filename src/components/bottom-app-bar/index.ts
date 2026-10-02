@@ -8,4 +8,7 @@ import { createBottomAppBar } from './bottom-app-bar';
 
 export default createBottomAppBar;
 export { createBottomAppBar };
-export type { BottomAppBarConfig, BottomAppBar } from './types';
+export type {
+  BottomAppBarConfig,
+  BottomAppBarComponent,
+} from './types';

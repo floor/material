@@ -232,6 +232,13 @@ export const withAPI =
         return iconButtonComponent;
       },
 
+      isDisabled() {
+
+        return disabled.isDisabled();
+
+      },
+
+
       disable() {
         disabled.disable();
         return iconButtonComponent;
