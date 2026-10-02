@@ -469,11 +469,23 @@ export interface CardComponent extends BaseComponent {
    */
   destroy: () => void;
   
-  /** Optional loading feature */
+  /**
+   * Optional loading feature
+   * @deprecated Never set by `createCard`: only the deprecated `withLoading` feature adds it.
+   * Removed in 1.0 with that feature (FLO-381).
+   */
   loading?: LoadingFeature;
-  /** Optional expandable feature */
+  /**
+   * Optional expandable feature
+   * @deprecated Never set by `createCard`: only the deprecated `withExpandable` feature adds it.
+   * Removed in 1.0 with that feature (FLO-381).
+   */
   expandable?: ExpandableFeature;
-  /** Optional swipeable feature */
+  /**
+   * Optional swipeable feature
+   * @deprecated Never set by `createCard`: only the deprecated `withSwipeable` feature adds it.
+   * Removed in 1.0 with that feature (FLO-381).
+   */
   swipeable?: SwipeableFeature;
 }
 

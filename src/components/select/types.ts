@@ -191,6 +191,8 @@ export interface SelectComponent {
 
   /**
    * The textfield component
+   * @deprecated Renamed `textField` in 1.0 (FLO-383); `textfield` remains as an alias through
+   * 1.x.
    */
   textfield: TextfieldComponent;
 
