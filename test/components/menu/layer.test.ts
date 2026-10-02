@@ -7,7 +7,8 @@
 // prototype, a flag per element and the toggle events the browser queues.
 // The browser half, stacking and styles, is in scripts/check-elements.ts.
 
-import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach, setDefaultTimeout } from "bun:test";
+import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach, jest } from "bun:test";
+import { advanceTimersByTime } from "../../utils/fake-clock";
 import { JSDOM } from "jsdom";
 import createMenu from "../../../src/components/menu";
 import { currentlyOpenMenu, menuClosed } from "../../../src/components/menu/features/registry";
@@ -33,6 +34,15 @@ const globals: Record<string, unknown> = {
   cancelAnimationFrame: () => {},
 };
 const previous: Record<string, unknown> = {};
+
+// `tasks.requestAnimationFrame` goes through `window.requestAnimationFrame`,
+// and jsdom's own keeps a counter of outstanding frames per window that
+// outlives a test: a frame left outstanding when the real clock comes back
+// stops the 60 Hz interval jsdom runs, and every later frame is never run.
+// The same stub on the window puts frames on the test's own clock, run by an
+// advance like every other wait; its cancel clears the fake timeout.
+dom.window.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0);
+dom.window.cancelAnimationFrame = (frame: number) => clearTimeout(frame);
 
 type Proto = Record<string, unknown>;
 const proto = dom.window.HTMLElement.prototype as unknown as Proto;
@@ -66,21 +76,44 @@ const removePopover = (): void => {
   dom.window.Element.prototype.matches = nativeMatches;
 };
 
-// Longer than two bounded waits in a row, so a wait that gives up reports itself
-// instead of the runner's own 5 s timeout cutting the test.
-setDefaultTimeout(15_000);
+// The clock is the tests' own (FLO-596). The menu is placed 20 ms after open()
+// and focuses itself 100 ms after that; a close hides at 50 ms and leaves the
+// document 300 ms later. Waiting for those on the wall clock raced a busy
+// runner: each timer starts only when the one before it has run, so a late
+// first timer moves everything after it.
+const after = async (ms: number): Promise<void> => {
+  advanceTimersByTime(ms);
+};
 
-const after = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 /**
- * Waits for a state the menu reaches on its own timers (20 ms to place, 100 ms to
- * focus, 50 ms to close, 300 ms more to leave the document), for 5 s at most. A fixed
- * wait only just longer than those timers ends first when the runner is busy (FLO-545).
+ * The submenu feature is a chunk of its own, loaded on first use (FLO-310,
+ * features/loader.ts). The fake clock drives timers, not module loading, and
+ * under it a real turn cannot be waited for either: Bun's fake timers fake
+ * Date, performance, hrtime, `Bun.sleep`, and even a `setTimeout` captured
+ * before the clock went fake. So a test that opens a submenu awaits the same
+ * module its loader does; reactions on one module record run in registration
+ * order, so when this returns the loader has installed the feature, and
+ * replayed anything a queued interaction left, before the test acts.
+ */
+const submenuFeatureLoaded = async (): Promise<void> => {
+  await import("../../../src/components/menu/features/submenu");
+};
+
+/**
+ * Advances the clock in 10 ms steps until the menu reaches a state it reaches
+ * on its own timers (20 ms to place, 100 ms to focus, 50 ms to close, 300 ms
+ * more to leave the document), for 5 s of clock time at most. A fixed wait
+ * only just longer than those timers ends first when the runner is busy
+ * (FLO-545); on the test's own clock the wait is exact and cannot race. The
+ * await also turns the loop over, so work a timer queued on a microtask runs
+ * between steps.
  */
 const until = async (what: string, ready: () => boolean, found: () => unknown = () => undefined): Promise<void> => {
-  for (const end = Date.now() + 5000; !ready();) {
-    if (Date.now() > end) throw new Error(`still waiting after 5s for ${what}; found ${JSON.stringify(found())}`);
+  for (let elapsed = 0; elapsed <= 5000; elapsed += 10) {
+    if (ready()) return;
     await after(10);
   }
+  throw new Error(`still waiting after 5s for ${what}; found ${JSON.stringify(found())}`);
 };
 const ITEMS = [
   { id: "share", text: "Share", hasSubmenu: true, submenu: [{ id: "link", text: "Copy link" }] },
@@ -99,6 +132,7 @@ afterAll(() => {
   for (const name of Object.keys(globals)) g[name] = previous[name];
 });
 beforeEach(() => {
+  jest.useFakeTimers();
   const open = currentlyOpenMenu();
   if (open) menuClosed(open);
   menus = [];
@@ -106,10 +140,16 @@ beforeEach(() => {
   installPopover();
 });
 afterEach(() => {
-  menus.forEach((menu) => menu.destroy());
-  removePopover();
-  document.body.replaceChildren();
-  Reflect.deleteProperty(dom.window, "pageYOffset");
+  // The real clock comes back even if a destroy() throws: a fake clock left
+  // installed makes the next file's real waits time out
+  try {
+    menus.forEach((menu) => menu.destroy());
+    removePopover();
+    document.body.replaceChildren();
+    Reflect.deleteProperty(dom.window, "pageYOffset");
+  } finally {
+    jest.useRealTimers();
+  }
 });
 
 /** An opener at a known place in a wrapper, the page scrolled by 500px. */
@@ -138,6 +178,7 @@ const make = (config: Record<string, unknown>) => {
  * focus last, 100 ms after it is placed.
  */
 const opened = async (menu: ReturnType<typeof createMenu>) => {
+  await submenuFeatureLoaded();
   menu.open();
   const active = () => (menu.element.getRootNode() as Document | ShadowRoot).activeElement;
   await until("the open menu to take focus", () => menu.element.contains(active()), () => ({ open: menu.isOpen(), connected: menu.element.isConnected, focus: active()?.tagName ?? null }));
