@@ -274,6 +274,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   one that measures the dialog or moves focus belongs on `afteropen`.
 - **An open dialog answers Escape as soon as `open()` returns,** except the key press that
   opened it. It ignored Escape and the scrim for its first 10 ms.
+- **An open dialog prevents every Escape key press that reaches the window,** even with
+  `closeOnEscape: false`: a `keydown` listener of the page on the window that runs after it
+  sees `event.defaultPrevented` true, and nothing else the browser does for Escape happens
+  while a dialog is open. A listener on the document, or inside the dialog, runs before it.
 - **`dialog.close()` on a closed dialog and `dialog.open()` on an open one** emit nothing. Code
   that counted on `close` or `afterclose` from a `close()` called "to be sure" no longer hears
   them.
@@ -592,6 +596,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     layers: a `layer: "top"` dialog and `<m-dialog>` opened that way used to close at once,
     on the `cancel` the browser sends for that same key press.
   - **`destroy()` right after `open()`** leaves nothing behind (see Fixed).
+  - **Escape is handled as a key press, in both layers (FLO-556).** The dialog listens on the
+    window and prevents the key, so the browser sends a `layer: "top"` dialog no `cancel` for
+    it. `closeOnEscape: false` and a `beforeclose` listener that refuses now hold for any
+    number of presses (see Fixed). Only the topmost open dialog answers; a key that something
+    open inside it has used (a menu, a select) is left to it, and so is an Escape that cancels
+    an IME composition. `<m-dialog>` still dispatches `cancel` for every Escape, and
+    `preventDefault()` on it still refuses. A page listener that saw the native `cancel` on
+    the factory's `<dialog>` for Escape sees one the dialog sends itself; a close request that
+    is not a key press (a back gesture) still arrives as the browser's.
 - **The menu is closed when `close()` returns (FLO-548).** The same rule as the dialog's, for
   the menu in both layers and for the two components that hold one, the select and the split
   button. `open()` already worked this way; `close()` set the state and emitted `close` on a
@@ -946,6 +959,16 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A top-layer dialog that refuses Escape stays open, however often it is pressed
+  (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
+  listener that refused, the third Escape made the browser close the `<dialog>` while
+  `isOpen()` stayed true and no `close` was emitted (measured in Chromium, Firefox and
+  WebKit: the browser lets a page refuse `cancel` twice in a row and forces the third). Escape
+  is now a key press the dialog prevents, so no `cancel` is sent. And when the browser does
+  close the `<dialog>` itself, the dialog's state follows: `isOpen()` is false and `close` is
+  emitted, without `beforeclose`. The defect is also in 0.10.x; the fix is in 1.0.
+- **Escape with a menu open inside a default-layer dialog closes the menu only (FLO-548).** It
+  closed the dialog as well, under the menu: the dialog's listener ran before the menu's.
 - **A dialog destroyed right after `open()` no longer locks the page's scroll (FLO-548).** The
   default-layer dialog shows its surface 10 ms after `open()`. `destroy()` in that window left
   the timer running: it then set `overflow: hidden` on the body for a dialog that was gone,

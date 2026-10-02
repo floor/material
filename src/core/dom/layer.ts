@@ -148,3 +148,71 @@ export const inertOutside = (keep: Element): (() => void) => {
     made.length = 0;
   };
 };
+
+/** A modal's place in the Escape stack: see onModalEscape. */
+export interface ModalEscape {
+  /**
+   * True for the rest of the task the modal opened in. The event that opened
+   * it is still being handled then: an Escape key press on its way up, or the
+   * `cancel` the browser sends the topmost modal `<dialog>` for it when the
+   * page stopped that key press before it reached the window.
+   */
+  opening: boolean;
+  /** Takes the modal off the stack. Harmless when called again. */
+  stop: () => void;
+}
+
+interface EscapeEntry extends ModalEscape {
+  view: Window;
+  escape: () => void;
+}
+
+// The open modals, in the order they opened: the last one is on top.
+const escapes: EscapeEntry[] = [];
+
+const onEscapeKey = (event: KeyboardEvent): void => {
+  // A key something inside the modal has used (a menu, a select, a field)
+  // and an Escape that cancels an IME composition are not the modal's
+  if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return;
+  let at = escapes.length;
+  while (at-- && escapes[at].view !== event.currentTarget);
+  const top = escapes[at];
+  if (!top) return;
+  // Prevented, so the browser sends a modal <dialog> no `cancel`: it lets a
+  // page refuse two of those in a row and forces the third
+  event.preventDefault();
+  if (!top.opening) top.escape();
+};
+
+/**
+ * Escape for a modal, handled as a key press. One bubble listener on the
+ * window serves every open modal: after the listeners on the document, so
+ * whatever is open inside the modal keeps a key it has used, and wherever
+ * focus is, the body included. Only the topmost modal is told, and never in
+ * the task it opened in: the key press that opened it does not dismiss it.
+ *
+ * @param element - The modal's element, which says which window it is in
+ * @param escape - Called for an Escape that is the modal's: it closes, or refuses
+ * @returns The modal's entry: `opening`, and `stop()` for when it closes
+ */
+export const onModalEscape = (element: HTMLElement, escape: () => void): ModalEscape => {
+  const view = element.ownerDocument.defaultView as Window;
+  const entry: EscapeEntry = {
+    view,
+    escape,
+    opening: true,
+    stop: () => {
+      const at = escapes.indexOf(entry);
+      if (at < 0) return;
+      escapes.splice(at, 1);
+      if (!escapes.some((other) => other.view === view)) view.removeEventListener("keydown", onEscapeKey);
+    },
+  };
+  escapes.push(entry);
+  // Adding the same listener again does nothing
+  view.addEventListener("keydown", onEscapeKey);
+  setTimeout(() => {
+    entry.opening = false;
+  }, 0);
+  return entry;
+};

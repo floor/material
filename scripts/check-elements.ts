@@ -4938,6 +4938,148 @@ try {
     );
     check("dialog: the Escape key press that opened it does not close it, and the next one does, in both layers");
 
+    // Escape is handled as a key press, in both layers (FLO-548 family 6,
+    // FLO-556): prevented, so the browser sends a top-layer dialog no `cancel`
+    // and never forces one closed. With focus on a child and on the body; a
+    // dialog that refuses, by option and by beforeclose, for five presses (the
+    // browser forced the third); a menu open inside it, which takes the key;
+    // and, in the top layer, a close the browser makes without asking, after
+    // which the page must be as a normal close leaves it. Both layers are read
+    // before the assertion.
+    const dialogEscapes = async (layer?: "top"): Promise<Record<string, unknown>> => {
+      await fresh(page, `<button id="opener" type="button">Open</button>`);
+      const build = (config: { closeOnEscape?: boolean }, refuses: boolean): Promise<void> =>
+        page.evaluate(({ config, refuses, layer }) => {
+          const w = window as unknown as Win & { mtrl: Factories };
+          (w.__overlay as { destroy?: () => void } | undefined)?.destroy?.();
+          const dialog = w.mtrl.createDialog({
+            title: "Discard draft?",
+            content: `<button id="inside" type="button">Inside</button>`,
+            ...config,
+            ...(layer ? { layer } : {}),
+          });
+          const counts = { beforeclose: 0, close: 0 };
+          dialog.on("beforeclose", (event: { preventDefault: () => void }) => {
+            counts.beforeclose++;
+            if (refuses) event.preventDefault();
+          });
+          dialog.on("close", () => { counts.close++; });
+          w.__overlay = dialog;
+          w.__counts = counts;
+        }, { config, refuses, layer });
+      const open = async (): Promise<void> => {
+        await page.focus("#opener");
+        await page.evaluate(() => void ((window as unknown as Win).__overlay as { open: () => unknown }).open());
+        await wait(500);
+      };
+      const read = (): Promise<{ open: boolean; visible: boolean; beforeclose: number; close: number }> =>
+        page.evaluate(() => {
+          const w = window as unknown as Win;
+          const dialog = w.__overlay as { isOpen: () => boolean; element: HTMLElement };
+          const counts = w.__counts as { beforeclose: number; close: number };
+          return { open: dialog.isOpen(), visible: dialog.element.classList.contains("mtrl-dialog--visible"), ...counts };
+        });
+      const escape = async (times = 1): Promise<void> => {
+        for (let i = 0; i < times; i++) {
+          await page.keyboard.press("Escape");
+          await wait(80);
+        }
+        await wait(400);
+      };
+      const result: Record<string, unknown> = {};
+
+      await build({}, false);
+      await open();
+      await page.focus("#inside");
+      await escape();
+      result.fromAChild = await read();
+      await open();
+      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+      result.focusOnBody = await page.evaluate(() => document.activeElement === document.body);
+      await escape();
+      result.fromTheBody = await read();
+
+      await build({ closeOnEscape: false }, false);
+      await open();
+      await escape(5);
+      result.refusedByOption = await read();
+
+      await build({}, true);
+      await open();
+      await escape(5);
+      result.refusedByBeforeclose = await read();
+
+      // Closed by the browser without asking: the native close(), as a forced
+      // close request ends. Only a <dialog> can be.
+      if (layer) {
+        await page.evaluate(() => ((window as unknown as Win).__overlay as { element: HTMLDialogElement }).element.close());
+        await wait(500);
+        result.forced = {
+          ...(await read()),
+          ...(await page.evaluate(() => ({
+            overflow: document.body.style.overflow,
+            inert: document.querySelectorAll("[inert]").length,
+            focus: (document.activeElement as HTMLElement | null)?.id ?? null,
+          }))),
+        };
+        result.opensAgain = await page.evaluate(async () => {
+          const dialog = (window as unknown as Win).__overlay as { open: () => unknown; isOpen: () => boolean; element: HTMLDialogElement };
+          dialog.open();
+          await new Promise((r) => setTimeout(r, 500));
+          return { open: dialog.isOpen(), native: dialog.element.open, modal: dialog.element.matches(":modal") };
+        });
+      }
+
+      await build({}, false);
+      await open();
+      await page.evaluate(() => {
+        const w = window as unknown as Win & { mtrl: Factories };
+        w.__menu = w.mtrl.createMenu({ opener: document.getElementById("inside") as HTMLElement, items: [{ id: "copy", text: "Copy" }] });
+      });
+      await wait(100);
+      await page.click("#inside");
+      await wait(500);
+      const withMenu = (): Promise<{ dialog: boolean; menu: boolean }> =>
+        page.evaluate(() => {
+          const w = window as unknown as Win;
+          return { dialog: (w.__overlay as { isOpen: () => boolean }).isOpen(), menu: (w.__menu as { isOpen: () => boolean }).isOpen() };
+        });
+      result.menuOpened = await withMenu();
+      await escape();
+      result.afterOneEscape = await withMenu();
+      await escape();
+      result.afterTwoEscapes = await withMenu();
+      await page.evaluate(() => {
+        const w = window as unknown as Win;
+        (w.__menu as { destroy: () => void }).destroy();
+        (w.__overlay as { destroy: () => void }).destroy();
+      });
+      return result;
+    };
+    const escapesExpected = {
+      fromAChild: { open: false, visible: false, beforeclose: 1, close: 1 },
+      focusOnBody: true,
+      fromTheBody: { open: false, visible: false, beforeclose: 2, close: 2 },
+      refusedByOption: { open: true, visible: true, beforeclose: 0, close: 0 },
+      refusedByBeforeclose: { open: true, visible: true, beforeclose: 5, close: 0 },
+      menuOpened: { dialog: true, menu: true },
+      afterOneEscape: { dialog: true, menu: false },
+      afterTwoEscapes: { dialog: false, menu: false },
+    };
+    assert.deepEqual(
+      { default: await dialogEscapes(), top: await dialogEscapes("top") },
+      {
+        default: escapesExpected,
+        top: {
+          ...escapesExpected,
+          forced: { open: false, visible: false, beforeclose: 5, close: 1, overflow: "", inert: 0, focus: "opener" },
+          opensAgain: { open: true, native: true, modal: true },
+        },
+      },
+      "a dialog's Escape as a key press: from a child and from the body, refused for five presses, a menu inside it first, a forced close, in both layers",
+    );
+    check("dialog: Escape closes it from a child and from the body, a refusal holds for five presses, a menu inside takes the key first, and a forced close leaves the page clean");
+
     // The same sentence for the menu (FLO-548): its click-outside and Escape
     // listeners are added inside open(). A button that is not the menu's
     // opener opens it by code, from a click and from an Escape keydown: that

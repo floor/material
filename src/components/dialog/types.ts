@@ -51,7 +51,9 @@ export type DialogFooterAlignment = 'right' | 'left' | 'center' | 'space-between
  * - afteropen: Fired later, never inside `open()`: the dialog is visible and
  *   focus is in it (`animationDuration` after it was shown). Not fired when
  *   the dialog closes first
- * - beforeclose: Fired inside `close()`, before anything changes (can be prevented)
+ * - beforeclose: Fired inside `close()`, before anything changes (can be prevented).
+ *   Not fired when the browser has closed a top-layer dialog itself: nothing
+ *   can refuse that
  * - close: Fired inside `close()`, once the dialog is closed: `isOpen()` is false
  * - afterclose: Fired later, never inside `close()`: the dialog is removed
  *   (`animationDuration` after it closed). Not fired when the dialog opens
@@ -152,11 +154,16 @@ export interface DialogConfig {
   /** 
    * Whether to close when Escape key is pressed
    *
-   * With `layer: "top"` Escape is the browser's `cancel`, which a page may
-   * refuse twice in a row; the browser closes the dialog itself on the third.
-   * A `beforeclose` listener that keeps the dialog open spends one each
-   * time, and so does the key press that opened the dialog when that was an
-   * Escape: the dialog is then closed on the second refused Escape.
+   * Escape is handled as a key press, in both layers, by the topmost open
+   * dialog only, and after whatever is open inside it (a menu, a select) has
+   * had the key. `false`, or a `beforeclose` listener that refuses, holds
+   * for any number of presses.
+   *
+   * The remaining limit, with `layer: "top"`: a close request that is not a
+   * key press (a back gesture) reaches the dialog as the browser's `cancel`,
+   * which a page may refuse twice in a row. The browser closes the dialog
+   * itself on the third: the dialog then closes with `close`, and
+   * `beforeclose` is not asked.
    * @default true
    */
   closeOnEscape?: boolean;
