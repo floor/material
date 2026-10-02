@@ -10,7 +10,7 @@
  * - every `typescript` and `tsx` block, and the module script of every `html`
  *   block, compiles under `--strict` against the package's own declarations;
  * - a block that follows `<!-- example: run -->` also runs, in Node with a JSDOM
- *   document, and must leave something in the page;
+ *   document: it must not throw, and what it appends to the page must arrive;
  * - every `material/…` specifier, in a block or in inline code, resolves through
  *   the package's `exports` to a file the package ships, and every `dist/…` path
  *   named in inline code exists;
@@ -303,15 +303,20 @@ try {
       }
       globalThis.requestAnimationFrame = dom.window.requestAnimationFrame.bind(dom.window);
       globalThis.cancelAnimationFrame = dom.window.cancelAnimationFrame.bind(dom.window);
+      // What the example puts in the page, counted as it is appended: an example may
+      // also take it out again (destroy()).
+      let appended = 0;
+      const append = document.body.append.bind(document.body);
+      document.body.append = (...nodes) => { appended += nodes.length; append(...nodes); };
       await import(${JSON.stringify(pathToFileURL(join(directory, `run-${index}-example.mjs`)).href)});
-      if (!document.body.children.length) throw new Error('the example left nothing in the page');
-      console.log(document.body.children.length + ' elements in the page');
+      if (${JSON.stringify(script.code.includes("document.body.append"))} && !appended) throw new Error('the example put nothing in the page');
+      console.log(appended + ' elements appended to the page');
       dom.window.close();
     `);
     await writeFile(join(directory, `run-${index}-example.mjs`), javascript);
     const child = Bun.spawnSync(["node", file], { cwd: directory, stdout: "pipe", stderr: "pipe" });
     if (child.exitCode !== 0) fail(`${where}: the example does not run:\n${child.stdout}${child.stderr}`);
-    else console.log(`${where}: ran, ${child.stdout.toString().trim()}`);
+    else console.log(`${where}: ran, ${child.stdout.toString().trim().split("\n").pop()}`);
   }
 
   console.log(`${FILES.join(" and ")}: ${scripts.length} scripts compiled, ${runnable.length} run, ${specifiers.size} specifiers resolved, ` +

@@ -86,6 +86,7 @@ export function Signup() {
 
 **Vanilla**: each component is a function that returns a DOM element and a small API.
 
+<!-- example: run -->
 ```typescript
 import 'material/styles';
 import { createButton, createTextField } from 'material';
@@ -167,6 +168,7 @@ The baseline theme applies by default and follows the system light or dark prefe
 <html data-theme="ocean" data-theme-mode="dark">
 ```
 
+<!-- example: run -->
 ```typescript
 document.documentElement.dataset.theme = 'ocean';
 document.documentElement.dataset.themeMode = 'dark';
@@ -321,6 +323,7 @@ material publishes ESM only, with type declarations, so bundlers drop unused exp
 
 Constants are not exported from the root; import them from the component's `constants` entry:
 
+<!-- example: run -->
 ```typescript
 import { createButton } from 'material';
 import { BUTTON_VARIANTS, BUTTON_SIZES } from 'material/components/button/constants';
@@ -338,6 +341,7 @@ Some parts load on demand: a button's progress indicator, a card's action button
 
 Components are composed from small features with `pipe`. The same building blocks are public:
 
+<!-- example: run -->
 ```typescript
 import { pipe, createBase, withEvents, withElement } from 'material/core/compose';
 
