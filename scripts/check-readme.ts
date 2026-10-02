@@ -47,12 +47,11 @@ import { FILES, headingSlugs, parse, type Block } from "./readme-blocks";
 
 const REPOSITORY = "https://github.com/floor/material";
 const online = process.argv.includes("--online");
-// md3.io pages that deploy with the site's move to `material` 3.0.0, before the
-// release: each is in data/published-urls.txt on md3.io's feat/material-3-move
-// branch, whose own test requires every listed URL to answer. Until that deploy
-// `--online` accepts a 404 for them, or a page without the anchor they name, and
-// says when one is live so the entry goes. A link is listed whole, anchor included.
-const PENDING = ["https://md3.io/docs/events-and-overlays/", "https://md3.io/docs/theming/#contrast"];
+// Links to md3.io pages that are written and not deployed yet, each listed whole,
+// anchor included: `--online` accepts a 404 for one, or a page without its anchor,
+// and says when it is live so the entry goes. Empty since md3.io's move to
+// `material` 3 deployed (2026-10-02): every link resolves for real.
+const PENDING: string[] = [];
 
 const docs = await Promise.all(FILES.map(parse));
 const failures: string[] = [];
