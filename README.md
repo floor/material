@@ -86,6 +86,8 @@ name.destroy();
 save.destroy();
 ```
 
+Two rules hold for every factory's events. A config `on*` option (`onChange`, `onOpen`, …) is the listener registered at creation: it gets the same argument as a listener passed to `on()`, and runs before one added later. And when `open()` or `close()` returns, the state has changed (`isOpen()`) and the event has been emitted, a cancellable `beforeopen` or `beforeclose` first where the component has one; the classes, the paint, focus and the animation may follow, so add an `open` listener before calling `open()`. Opening an open component, or closing a closed one, does nothing and emits nothing. As of this version the dialog follows the second rule; the other overlays join it before 1.0.
+
 The factories are the fastest way to render hundreds of components at once, such as a long editable table; the elements style a shadow root each. `mtrl/styles` loads every component's styles; for a smaller bundle, import only what you use (see [Styles](#styles)).
 
 ## Components

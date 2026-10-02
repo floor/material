@@ -274,6 +274,37 @@ describe('dialog open and close in one task: the last call wins, pending timers 
     expect(seen).toEqual(['beforeclose', 'close', 'beforeopen', 'open', 'afteropen']);
   });
 
+  test('a close listener that opens it again: it ends open, and stays in the document', async () => {
+    const { dialog, seen } = make();
+    dialog.open();
+    await after(SETTLED);
+    seen.length = 0;
+    let reopen = true;
+    dialog.on('close', () => { if (reopen) { reopen = false; dialog.open(); } });
+    dialog.close();
+    expect(dialog.isOpen()).toBe(true);
+    await after(SETTLED);
+    expect(dialog.isOpen()).toBe(true);
+    expect(dialog.overlay.isConnected).toBe(true);
+    expect(dialog.element.classList.contains(VISIBLE)).toBe(true);
+    expect(seen).toEqual(['beforeclose', 'close', 'beforeopen', 'open', 'afteropen']);
+  });
+
+  test('an open listener that closes it again: it ends closed, and is never shown', async () => {
+    for (const layer of [undefined, 'top'] as const) {
+      const { dialog, seen } = make({ layer });
+      let once = true;
+      dialog.on('open', () => { if (once) { once = false; dialog.close(); } });
+      dialog.open();
+      expect(dialog.isOpen()).toBe(false);
+      await after(SETTLED);
+      expect(dialog.isOpen()).toBe(false);
+      expect(dialog.element.classList.contains(VISIBLE)).toBe(false);
+      expect(document.body.style.overflow).toBe('');
+      expect(seen).toEqual(['beforeopen', 'open', 'beforeclose', 'close', 'afterclose']);
+    }
+  });
+
   test('destroy() right after open() leaves nothing behind: no scroll lock, no inert page', async () => {
     const { dialog, seen } = make();
     dialog.open();

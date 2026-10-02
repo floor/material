@@ -444,6 +444,15 @@ export const withVisibility =
   // Initial state
   const isOpen = component.config.open === true;
 
+  // The state open() and close() change before they return (FLO-548). What
+  // follows a call is on these timers: the surface made visible and focus
+  // trapped, `afteropen`, and the removal with `afterclose`. A call the other
+  // way, or destroy(), cancels what is still pending.
+  let opened = isOpen;
+  let showTimer: ReturnType<typeof setTimeout> | undefined;
+  let afterOpenTimer: ReturnType<typeof setTimeout> | undefined;
+  let afterCloseTimer: ReturnType<typeof setTimeout> | undefined;
+
   // How long the events after opening and closing wait, unless configured:
   // the stylesheet grows the surface over duration-long2 and closes it over
   // duration-short3 (material-web dialog/internal/animations.ts)
@@ -664,8 +673,8 @@ export const withVisibility =
   // Create visibility object with clean methods
   const visibility = {
     open() {
-      // Don't do anything if already open
-      if (this.isOpen()) return;
+      // An open dialog stays as it is, and emits nothing
+      if (opened) return;
 
       // Store the currently focused element
       previouslyFocusedElement = deepActiveElement() as HTMLElement;
@@ -686,6 +695,11 @@ export const withVisibility =
       // If event was prevented, don't open
       if (beforeOpenEvent.defaultPrevented) return;
 
+      // Open from here on. A close still on its way out is abandoned: the
+      // dialog stays in the document, and that close has no `afterclose`.
+      opened = true;
+      clearTimeout(afterCloseTimer);
+
       // In the top layer everything happens now: the dialog is styled in its
       // hidden state before it is made visible, which is what it animates from
       if (top) {
@@ -695,7 +709,9 @@ export const withVisibility =
         trapFocus();
         setupEvents();
         component.emit(DIALOG_EVENTS.OPEN, { dialog: getComponent() });
-        setTimeout(() => {
+        // An `open` listener may have closed it again
+        if (!opened) return;
+        afterOpenTimer = setTimeout(() => {
           component.emit(DIALOG_EVENTS.AFTER_OPEN, { dialog: getComponent() });
         }, openDuration);
         return;
@@ -707,10 +723,19 @@ export const withVisibility =
         container.appendChild(component.overlay);
       }
 
+      // The dialog is open: say so before returning. A listener runs before
+      // the surface is visible and before focus is in; `afteropen` is the
+      // event for those.
+      if (typeof component.emit === "function") {
+        component.emit(DIALOG_EVENTS.OPEN, { dialog: getComponent() });
+      }
+      // An `open` listener may have closed it again: nothing left to show
+      if (!opened) return;
+
       // Show the overlay and the dialog together, in a later task: an element
       // inserted and made visible in the same task has no state to animate
       // from, so the scrim appeared at once while it faded on the way out
-      setTimeout(() => {
+      showTimer = setTimeout(() => {
         addClass(
           component.overlay,
           `${component.getClass("dialog__overlay")}--visible`,
@@ -721,11 +746,8 @@ export const withVisibility =
         trapFocus();
         setupEvents();
 
-        // Trigger open event
         if (typeof component.emit === "function") {
-          component.emit(DIALOG_EVENTS.OPEN, { dialog: getComponent() });
-
-          setTimeout(() => {
+          afterOpenTimer = setTimeout(() => {
             component.emit(DIALOG_EVENTS.AFTER_OPEN, { dialog: getComponent() });
           }, openDuration);
         }
@@ -733,7 +755,8 @@ export const withVisibility =
     },
 
     close() {
-      // console.log("Dialog close method called");
+      // A closed dialog stays as it is, and emits nothing
+      if (!opened) return;
 
       // Trigger before close event
       const beforeCloseEvent = {
@@ -752,6 +775,12 @@ export const withVisibility =
       if (beforeCloseEvent.defaultPrevented) {
         return;
       }
+
+      // Closed from here on. An open that had not shown the surface yet never
+      // does, and has no `afteropen`.
+      opened = false;
+      clearTimeout(showTimer);
+      clearTimeout(afterOpenTimer);
 
       // Get class names
       const dialogVisibleClass = `${component.getClass("dialog")}--visible`;
@@ -778,10 +807,12 @@ export const withVisibility =
       if (typeof component.emit === "function") {
         component.emit(DIALOG_EVENTS.CLOSE, { dialog: getComponent() });
       }
+      // A `close` listener may have opened it again: it stays in the document
+      if (opened) return;
 
       // Remove from DOM after animation completes; a top-layer dialog stays
       // where it was rendered
-      setTimeout(() => {
+      afterCloseTimer = setTimeout(() => {
         if (!top && component.overlay && component.overlay.parentNode) {
           component.overlay.parentNode.removeChild(component.overlay);
         }
@@ -803,9 +834,15 @@ export const withVisibility =
     },
 
     isOpen() {
-      return component.element.classList.contains(
-        `${component.getClass("dialog")}--visible`,
-      );
+      return opened;
+    },
+
+    /** For destroy(): closed, with nothing left to run */
+    cancel() {
+      opened = false;
+      clearTimeout(showTimer);
+      clearTimeout(afterOpenTimer);
+      clearTimeout(afterCloseTimer);
     },
   };
 
