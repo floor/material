@@ -145,8 +145,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `{ selected: false, chip, value: "old" }`), and the second parameter is `undefined`.
   A leftover `onClick(chip)` is called with `{ event, originalEvent, element }`:
   `element` is the chip's root, and the value is not the chip (`focus` is `undefined`).
-  The set's `onChange` now hears `selectByValue(values, true)`. A chip's `onChange` inside
-  a set is still called as `(selected, chip)`, and that chip's `change` is not emitted.
+  The set's `onChange` now hears `selectByValue(values, true)`. A chip in a set emits
+  its own `change` when it is clicked, and the item's `onChange` receives that payload.
+  A leftover `onChange(selected, chip)` on that item is called with one object, as on a
+  chip alone: `selected` is `{ selected, chip, value }` (measured on a filter chip valued
+  `"old"`: selecting passes `{ selected: true, chip, value: "old" }`, deselecting passes
+  `{ selected: false, chip, value: "old" }`), and the second parameter is `undefined`.
+  `setSelected` and `selectByValue` do not emit the chip's `change`. A single-select click
+  emits `change` on the clicked chip only; the chip it replaces is updated with
+  `setSelected`, which stays silent.
 - **Chip-set `add` and `remove`** factory handlers receive `{ value, chip }` and
   `{ value, chip, chipValue }`, not the chip; `<m-chips>`'s `remove` detail `value` is the
   remaining selection, and the removed id is `chipValue`.
@@ -341,13 +348,19 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `on(event)`, so it runs with that listener's payload and at that listener's place: after
   a handler supplied in `on`, and before a listener added after the factory returns. It used
   to be called beside the emit, with its own arguments. `onSelect` has no matching event and
-  is unchanged. A chip's `onChange` inside a set is still called as `(selected, chip)`, and
-  that chip does not emit `change` (the set owns the selection).
+  is unchanged. A chip in a set emits its own `change` on a click, after the set has toggled
+  it, and the item's `onChange` receives that payload (`{ selected, chip, value }`). The calls
+  on that click run in this order: the item's `onClick`, the set's `onChange`, a set `change`
+  listener added after `createChips`, the item's `onSelect`, a chip `click` listener added
+  after the chip was created, the item's `onChange`, and a chip `change` listener added after
+  the chip was created. `setSelected` and `selectByValue` do not emit the chip's `change`. A
+  single-select click emits it on the clicked chip only.
 
   | Option | Old argument | New argument |
   |---|---|---|
   | Chip set `onChange` | `{ value, selected, changed }`, and only for a user's change | The same object as `on("change")`. The set's `onChange` now hears `selectByValue(values, true)`, with `changed: null`. `selectByValue(values)` and `clearSelection()` stay silent. |
   | Chip `onChange` (a chip alone) | `(selected, chip)` | `{ selected, chip, value }`, the `change` payload |
+  | Chip `onChange` (a chip in a set) | `(selected, chip)`, and the chip did not emit `change` | `{ selected, chip, value }`, the chip's `change` payload. A click emits that `change`. `setSelected` and `selectByValue` do not. |
   | Chip `onClick` | the chip | `{ event, originalEvent, element }`, the `click` payload |
   | Chip `onRemove` | the chip | the chip |
   | Chip `onTrailingClick` | the chip | the chip |
@@ -360,6 +373,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   |---|---|---|---|
   | Selecting | 1 | `{ selected: true, chip, value: "old" }` | `undefined` |
   | Deselecting | 1 | `{ selected: false, chip, value: "old" }` | `undefined` |
+
+  A leftover `onChange(selected, chip)` on a chip in a set gets the same object, measured
+  on a filter chip valued `"old"`: selecting passes `{ selected: true, chip, value: "old" }`
+  and deselecting passes `{ selected: false, chip, value: "old" }`, `arguments.length` is 1,
+  and the second parameter is `undefined`.
 
   The object is always truthy, so a leftover `if (selected)` stays true when the chip is
   deselected. The boolean is `selected.selected`. A leftover `onClick(chip)` receives one

@@ -270,12 +270,6 @@ export const withController =
         chipInstance.toggleSelected();
 
         handleSelection(chipInstance);
-        // The chip's own change is not emitted in a set (managedSelection).
-        // The item's onChange stays this call — (selected, chip) — until that
-        // choice is made. The type is the change listener's, for a chip alone.
-        const itemChange = chipConfig.onChange as unknown as
-          ((selected: boolean, chip: ChipComponent) => void) | undefined;
-        itemChange?.(chipInstance.isSelected(), chipInstance);
         chipConfig.onSelect?.(chipInstance);
 
         // Update focus tracking

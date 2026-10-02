@@ -206,6 +206,12 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
       options.onSelect?.(api);
     }
     base.emit("click", { event, originalEvent: event, element: root });
+    // A set toggles the chip from its click listener, then this change reports
+    // that result once. setSelected itself stays silent, so a chip replaced by
+    // a single-select click does not emit change.
+    if (selectable && options.managedSelection && !resources.destroyed) {
+      base.emit("change", { selected, chip: api, value: api.getValue() });
+    }
   });
   // Backspace and Delete remove a focused removable chip (m3.material.io chips
   // accessibility, keyboard table). FLO-256.

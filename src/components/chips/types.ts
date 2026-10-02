@@ -43,7 +43,17 @@ export interface ChipConfig {
   trailingMenu?: boolean;
   /** Same payload as a `click` listener. */
   onClick?: ChipEvents["click"];
-  /** Same payload as a `change` listener: `{ selected, chip, value }`. */
+  /**
+   * Same payload as a `change` listener: `{ selected, chip, value }`.
+   * On its own, a click emits `change` before `click`. In a set, the set
+   * toggles the chip during `click`, and the chip then emits `change` once.
+   * That click runs, in order: the item's `onClick`, the set's `onChange`,
+   * a set `change` listener added after `createChips`, the item's `onSelect`,
+   * a chip `click` listener added after the chip was created, the item's
+   * `onChange`, and a chip `change` listener added after the chip was created.
+   * `setSelected` does not emit `change`, and neither does the set's
+   * `selectByValue`.
+   */
   onChange?: ChipEvents["change"];
   /**
    * Called with the chip when the user toggles a selectable chip. No matching
