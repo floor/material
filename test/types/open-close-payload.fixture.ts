@@ -2,8 +2,8 @@
 //
 // FLO-548: a menu's and a select's `open` and `close` cannot be cancelled, so
 // their payloads no longer carry `preventDefault` / `defaultPrevented` (they
-// did nothing). A menu's `select` keeps both: preventing it keeps the menu
-// open.
+// did nothing), in the types and at run time. Nor does a select's `change`.
+// A menu's `select` keeps both: preventing it keeps the menu open.
 import type { MenuComponent } from "../../src/components/menu/types";
 import type { SelectComponent } from "../../src/components/select/types";
 
@@ -36,4 +36,9 @@ select.on("open", (event) => {
 select.on("close", (event) => {
   // @ts-expect-error close cannot be cancelled
   void event.defaultPrevented;
+});
+select.on("change", (event) => {
+  // @ts-expect-error a change cannot be cancelled: the value has changed
+  event.preventDefault();
+  void event.value;
 });

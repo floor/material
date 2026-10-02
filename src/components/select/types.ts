@@ -330,7 +330,8 @@ export interface SelectComponent {
 
 /**
  * What `open` and `close` carry. Neither can be cancelled: the select is
- * already open, or closed, when its listener runs.
+ * already open, or closed, when its listener runs. `change` cannot either:
+ * the value has changed. None carries `preventDefault`.
  */
 export interface SelectEvent {
   /**
@@ -362,16 +363,6 @@ export interface SelectChangeEvent extends SelectEvent {
    * The complete selected option object
    */
   option: SelectOption;
-
-  /**
-   * Function to prevent default behavior
-   */
-  preventDefault: () => void;
-
-  /**
-   * Whether default behavior was prevented
-   */
-  defaultPrevented: boolean;
 }
 
 /**

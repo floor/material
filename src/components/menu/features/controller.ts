@@ -559,8 +559,8 @@ const withController =
       window.addEventListener("scroll", handleWindowScroll, SCROLL_LISTENER);
     }, 20); // Short delay for browser to process
 
-    // Trigger event
-    eventHelpers.triggerEvent("open", {}, event);
+    // Trigger event. It cannot be cancelled: the menu is open.
+    component.emit("open", { menu: getComponent(), originalEvent: event });
   };
 
   /**
@@ -596,13 +596,11 @@ const withController =
 
     // The menu is closed: say so before returning. The class and the removal
     // follow.
-    eventHelpers.triggerEvent(
-      "close",
-      {
-        restoreFocus: restoreFocus,
-      },
-      event,
-    );
+    component.emit("close", {
+      menu: getComponent(),
+      restoreFocus,
+      originalEvent: event,
+    });
     // A `close` listener may have opened it again
     if (state.visible) return;
 

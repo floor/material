@@ -115,11 +115,11 @@ it is an error, and each handler's argument is typed, so one annotated with anot
 an argument on `open`, `close` or `cancel`, is an error. The time picker's `isOpen` is a
 method (FLO-548): `picker.isOpen === true` and assigning it to a `boolean` are errors.
 `SnackbarState` gains `"queued"`, so a `switch` over it that had to be exhaustive is not.
-The menu's and the select's `open`
-and `close` payloads (`MenuEvent`, `SelectEvent`) have no `preventDefault` and no
-`defaultPrevented` (FLO-548): neither event could ever be cancelled, so
-`event.preventDefault()` in an `open` or `close` listener is an error. The menu's `select`
-(where it keeps the menu open) and the select's `change` keep both.
+The menu's and the select's `open` and `close` payloads (`MenuEvent`, `SelectEvent`) and the
+select's `change` payload (`SelectChangeEvent`) have no `preventDefault` and no
+`defaultPrevented` (FLO-548): none of these events could ever be cancelled, so
+`event.preventDefault()` in such a listener is an error. The menu's `select`, where it keeps
+the menu open, keeps both.
 
 **Changes your compiler won't catch**
 
@@ -282,6 +282,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   menu gone must wait for the fade (350 ms). The same for a select's `close`, a split
   button's `collapse` when the user dismisses its menu, and a FAB menu's `close` in its
   `menu` presentation.
+- **`event.preventDefault()` in a menu's or a select's `open` or `close` listener, or in a
+  select's `change` listener,** throws a `TypeError` in JavaScript: the payload has no such
+  method any more. It never did anything there; remove the call.
 - **`menu.close(); menu.open()`** reopens the menu. The `open()` was ignored for the 50 ms
   the close took, so the menu ended closed.
 - **`menu.isOpen()` right after `close()`** is false. Code that waited 50 ms for it no
@@ -586,7 +589,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   button. `open()` already worked this way; `close()` set the state and emitted `close` on a
   50 ms timer. Migration: move out of a `close` listener anything that needs the menu gone
   from the document (it leaves 350 ms later), and drop `event.preventDefault()` from `open`
-  and `close` listeners.
+  and `close` listeners and from the select's `change` listeners.
 
   ```ts
   menu.close();
@@ -616,9 +619,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     button again).
   - **FAB menu, `menu` presentation:** `close()` sets `isOpen()` false and emits `close` in
     the call. Its `open()` is unchanged here.
-  - **`MenuEvent` and `SelectEvent`,** the payloads of `open` and `close`, lose
-    `preventDefault` and `defaultPrevented`: nothing read them, and neither event can be
-    cancelled. The objects passed at run time still carry both, as no-ops.
+  - **`MenuEvent` and `SelectEvent`,** the payloads of `open` and `close`, and
+    `SelectChangeEvent` lose `preventDefault` and `defaultPrevented`, in the types and on
+    the objects passed at run time: nothing read them, and none of these events can be
+    cancelled. A leftover call throws; it never did anything. The menu's `select` keeps
+    both: preventing it keeps a `closeOnSelect` menu open.
 - **A config `on*` option is the listener registered at creation.** It runs with the same
   argument, the same number of times, as a listener passed to `on(event)` at that point, and it
   runs before a listener added afterwards. Whether a method notifies is unchanged (a silent
