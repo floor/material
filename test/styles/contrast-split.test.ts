@@ -111,11 +111,12 @@ describe("explicit contrast levels are opt-in", () => {
     // `@use "main"` compressed, before the banner the build adds.
     // The hash is this sheet with the text field's layout at the M3 measurements (FLO-299),
     // its insets mirrored by one block (FLO-562), the unlabelled checkbox's centring
-    // (styles/components/_checkbox.scss), and the icon button's inner padding
-    // (styles/components/_icon-button.scss).
+    // (styles/components/_checkbox.scss), the icon button's inner padding
+    // (styles/components/_icon-button.scss), and the unlabelled switch's 52 x 48 box
+    // (styles/components/_switch.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("70c8b333d9d8de3653367714fe07c5ba94ca8fb870da3a18e3382d86d1823745");
-    expect(css.length).toBe(525109);
+      .toBe("d233a8d025b66dbd351838746f3f88457b051ed3fcb2a766e611d4d8e1c4a2e8");
+    expect(css.length).toBe(525214);
   });
 
   test("today's sheets still resolve to the fixture", () => {
