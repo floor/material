@@ -357,11 +357,14 @@ $sheet-overshoot-guard: 32px;
   &::after {
     content: '';
     position: absolute;
-    // Not `inset: 50%`: with width and height also set that box is over-constrained,
-    // and the ignored offset is the inline-start one under RTL, which anchors the
-    // target off-centre. Two offsets plus the translate say it unambiguously.
+    // Centred physically, as the icon button's own rule is (FLO-592). The
+    // translate is physical, so the offsets must be: a logical inline-start
+    // inset pinned the box's inline-start edge to the centre, and the translate
+    // then moved the whole box a further 24px past it — a full box-width off
+    // under RTL. Not `inset: 50%` either: over-constrained, and the offset CSS
+    // drops under RTL leaves the same wrong physical edge anchored.
     top: 50%;
-    inset-inline-start: 50%;
+    left: 50%;
     width: $size;
     height: $size;
     transform: translate(-50%, -50%);

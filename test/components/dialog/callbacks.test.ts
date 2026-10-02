@@ -1,18 +1,27 @@
-import { expect, test } from "bun:test";
+import { expect, jest, test } from "bun:test";
+import { advanceTimersByTime } from "../../utils/fake-clock";
 import createDialog from "../../../src/components/dialog";
 import type { DialogComponent, DialogEvent } from "../../../src/components/dialog/types";
 import { callbacksFixture, wait } from "../callbacks.fixture";
 
 const mount = callbacksFixture();
 
-test("all six dialog lifecycle events carry the finished dialog", async () => {
+// On the test's own clock (FLO-569): `afteropen` is on a timer that starts when
+// the 10ms show timer runs, so a real 30ms wait could end before it on a busy
+// runner. The fixture's own waits, after the test, stay on the real clock.
+test("all six dialog lifecycle events carry the finished dialog", () => {
   const events: DialogEvent[] = [];
   const dialog = mount(createDialog({ title: "Settings", animationDuration: 0, on: { beforeopen: event => { events.push(event); } } }));
   for (const name of ["open", "afteropen", "beforeclose", "close", "afterclose"] as const) dialog.on(name, event => { events.push(event); });
-  dialog.open();
-  await wait();
-  dialog.close();
-  await wait();
+  jest.useFakeTimers();
+  try {
+    dialog.open();
+    advanceTimersByTime(30);
+    dialog.close();
+    advanceTimersByTime(30);
+  } finally {
+    jest.useRealTimers();
+  }
   expect(events).toHaveLength(6);
   for (const event of events) expect(event.dialog === dialog).toBe(true);
   expect(events[0].dialog.getTitle()).toBe("Settings");
