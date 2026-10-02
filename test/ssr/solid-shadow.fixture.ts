@@ -16,6 +16,7 @@ test("an unregistered server returns no template; registration renders one and o
   const buttonProps = { variant: "filled", disabled: true, children: "Save", onClick: () => undefined };
   const plain = render(buttonElement.spec, buttonProps);
   expect(plain).not.toContain("shadowrootmode");
+  expect(plain).not.toContain("data-mtrl-ssr");
   expect(plain).toContain("disabled");
   expect(plain).toContain("Save");
 
@@ -26,6 +27,7 @@ test("an unregistered server returns no template; registration renders one and o
   expect(typeof bridge.solid).toBe("function");
 
   const html = render(buttonElement.spec, buttonProps);
+  expect(html).toContain('data-mtrl-ssr=""');
   expect(html).toContain('<template shadowrootmode="open" shadowrootdelegatesfocus="">');
   expect(html).toMatch(/<m-button[^>]*>\s*<template shadowrootmode="open"/);
   expect(html).toContain("mtrl-button");
@@ -71,6 +73,7 @@ test("an unregistered server returns no template; registration renders one and o
 
   const carousel = render(carouselElement.spec, { ariaLabel: "Photos", children: "Light content" });
   expect(carousel).not.toContain("shadowrootmode");
+  expect(carousel).not.toContain("data-mtrl-ssr");
   expect(carousel).toContain("Light content");
   expect(carousel).toContain("aria-label=\"Photos\"");
 

@@ -2,7 +2,7 @@
 import { DOMParser } from "linkedom";
 import { elements } from "../elements";
 import { createElementClass, type ElementSpec, type ElementComponent } from "../elements/define";
-import { isFallbackStyle } from "../elements/styles";
+import { isFallbackStyle, RENDERED_HOST_ATTRIBUTE } from "../elements/styles";
 import { getComponentDefaults } from "../core/config/global";
 import { setHTML } from "../core/dom/html";
 import { withServerScope } from "./server-dom";
@@ -106,7 +106,13 @@ const validateOptions = (options: RenderOptions): string => {
  * An opted-out element emits its authored host and light DOM without a
  * declarative root or shadow styles. Eligible light-DOM descendants still
  * render their own roots. Load mtrl/elements/preupgrade.css in the page to
- * preserve the host's box until normal browser upgrade.
+ * preserve an opted-out host's box until normal browser upgrade. A host this
+ * function renders with a shadow root carries `data-mtrl-ssr`. The pre-upgrade
+ * sheet's last rule rolls that layer back for the attribute, on the host, its
+ * `::before` and `::after`, and its direct children that are not themselves
+ * elements waiting to upgrade, so the stylesheet does not style a host the
+ * server already rendered or those children.
+ * An opted-out host does not carry it, and the link still reserves its box.
  *
  * Carousel and FAB menu opt out; menu and split-button opt out when
  * they declare nested submenus. Async button `showProgress` or card `buttons`
@@ -211,9 +217,14 @@ function render(tag: string, attributes: RenderAttributes, children: string, opt
         const authored = Array.from(element.attributes, a => [a.name, a.value] as const);
         const light = Array.from(element.childNodes, node => node.cloneNode(true));
         const ssr = !asyncDefaults && (typeof entry.ssr === "function" ? entry.ssr(element) : entry.ssr !== false);
+        // The sheet matches the attribute, not the shadow. An opted-out host
+        // keeps the reserved box; a rendered one must not be painted over.
+        const hostAttributes = ssr
+          ? [...authored.filter(([name]) => name !== RENDERED_HOST_ATTRIBUTE), [RENDERED_HOST_ATTRIBUTE, ""] as const]
+          : authored;
         if (!ssr) {
           const content = light.map(node => serializeNode(node, expand, depth + 1)).join("");
-          return `<${element.localName}${attributesText(authored)}>${content}</${element.localName}>`;
+          return `<${element.localName}${attributesText(hostAttributes)}>${content}</${element.localName}>`;
         }
         const styles = renderStyles(entry, options);
         scope.mount(element);
@@ -222,7 +233,7 @@ function render(tag: string, attributes: RenderAttributes, children: string, opt
           .map(node => serializeNode(node, expand, depth + 1)).join("");
         if (depth === 0) rootShadow = styles + shadow;
         const content = shadowOnly && depth === 0 ? "" : light.map(node => serializeNode(node, expand, depth + 1)).join("");
-        return `<${element.localName}${attributesText(authored)}><template shadowrootmode="open" shadowrootdelegatesfocus="">` +
+        return `<${element.localName}${attributesText(hostAttributes)}><template shadowrootmode="open" shadowrootdelegatesfocus="">` +
           `${styles}${shadow}</template>${content}</${element.localName}>`;
       };
       const html = expand(host, 0)!;

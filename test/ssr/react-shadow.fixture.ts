@@ -31,6 +31,7 @@ const nestedHostProps: React.ComponentProps<typeof Button> = {
 test("ordinary host attributes render through the React bridge and stay out of the shadow markup", async () => {
   const plain = renderToString(React.createElement(Button, hostProps));
   expect(plain).not.toContain("shadowrootmode");
+  expect(plain).not.toContain("data-mtrl-ssr");
   expect(plain).toContain('popover="auto"');
   expect(plain.toLowerCase()).toContain('inputmode="numeric"');
 
@@ -41,6 +42,7 @@ test("ordinary host attributes render through the React bridge and stay out of t
   expect(() => renderElement("m-card", {}, '<m-button nonce="abc"></m-button>')).toThrow(/Invalid host attribute: nonce/);
 
   const html = renderToString(React.createElement(Button, hostProps));
+  expect(html).toContain('data-mtrl-ssr=""');
   assertGlobalHost(html, GLOBAL_ATTRS_WITH_IS);
   expect(html).toContain("disabled");
 

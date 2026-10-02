@@ -23,7 +23,7 @@
 
 import { MOUNT, DISPOSE } from "./lifecycle";
 import { PREFIX } from "../core/config";
-import { applyStyles, DEFAULT_PREFIX, hasStyles, registerStyles, usePreupgradePrefix } from "./styles";
+import { applyStyles, DEFAULT_PREFIX, hasStyles, registerStyles } from "./styles";
 
 /** The part of a component the element relies on. */
 export interface ElementComponent {
@@ -808,8 +808,6 @@ export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>):
     },
     define(options: DefineOptions = {}) {
       const tag = `${options.prefix ?? DEFAULT_PREFIX}-${spec.name}`;
-      // Elements of this prefix not defined yet keep their box meanwhile.
-      if (options.prefix) usePreupgradePrefix(options.prefix);
       // Once per definition: framework adapters call define() on every mount,
       // and registering again would drop the shared host stylesheet.
       if (!prepared) {

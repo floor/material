@@ -56,6 +56,7 @@ import {
   type ModelOf,
   type RetiredEvents,
 } from "../elements/adapter";
+import { RENDERED_HOST_ATTRIBUTE } from "../elements/styles";
 import { shadow } from "./shadow";
 
 export { configure } from "../elements/adapter";
@@ -260,15 +261,26 @@ export const createComponent = <S, E extends HTMLElement>(
         // render one of its own. On the server the bridge has already rendered
         // `nodes` once; rendering them again would run an async child twice.
         const inner = isBrowser ? "" : shadow(tag(), shadowProps(), () => nodes);
+        const hostProps = host();
+        // Vue compares the client's props with the DOM and ignores a `data-*`
+        // the client does not render, and it does not strip that attribute.
+        // A promise resolves to the template after the opening tag is written,
+        // so a host that is not statically opted out is marked; carousel and
+        // the FAB menu (`ssr: false`) are not.
+        const staticallyOptedOut = (spec as { ssr?: boolean | ((host: HTMLElement) => boolean) }).ssr === false;
+        const rendered = typeof inner === "string"
+          ? inner.startsWith("<template shadowrootmode=")
+          : !staticallyOptedOut;
+        if (rendered) hostProps[RENDERED_HOST_ATTRIBUTE] = "";
         if (typeof inner !== "string") {
           // A promise is an object, and Vue would treat it as a slot. The
           // static vnode pushes its children straight into the SSR buffer.
           const held = createStaticVNode("", 1);
           held.children = inner as unknown as string;
-          return h(tag(), host(), [held]);
+          return h(tag(), hostProps, [held]);
         }
-        if (inner) return h(tag(), host(), [createStaticVNode(inner, 1)]);
-        return h(tag(), host(), nodes);
+        if (inner) return h(tag(), hostProps, [createStaticVNode(inner, 1)]);
+        return h(tag(), hostProps, nodes);
       };
     },
     { name, props, emits }

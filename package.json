@@ -360,6 +360,7 @@
       "types": "./dist/elements/preupgrade.d.ts",
       "import": "./dist/elements/preupgrade.js"
     },
+    "./elements/preupgrade/*.css": "./dist/elements/preupgrade/*.css",
     "./ssr": {
       "types": "./dist/ssr/index.d.ts",
       "browser": "./dist/ssr/browser.js",

@@ -37,6 +37,8 @@ test("an unregistered server returns no template; registration renders one and o
     onclick: "window.__xss=1",
     srcdoc: "<script>bad()</script>",
   };
+  expect(button.attributes(ordinary, {}, html)["data-mtrl-ssr"]).toBe("");
+  expect(button.attributes(ordinary, {}, "")["data-mtrl-ssr"]).toBeUndefined();
   const spread = button.attributes(ordinary, {});
   expect(spread.popover).toBe("auto");
   expect(spread.inputmode).toBe("numeric");
@@ -65,6 +67,7 @@ test("an unregistered server returns no template; registration renders one and o
   const light = (renderer: Push) => { renderer.push("<span>Light content</span>"); };
   const carousel = adapter(carouselElement.spec, () => "m-carousel");
   expect(shadowMarkup(carousel, { "aria-label": "Photos" }, light as never, {})).toBe("");
+  expect(carousel.attributes({ "aria-label": "Photos" }, {}, "")["data-mtrl-ssr"]).toBeUndefined();
 
   const tabs = adapter(tabsElement.spec, () => "m-tabs");
   const tabsLight = (renderer: Push) => {

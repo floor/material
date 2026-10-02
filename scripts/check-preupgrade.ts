@@ -19,8 +19,12 @@
 // The mutation check runs the same cases without the pre-upgrade stylesheet:
 // it must fail most elements, or the check is not measuring anything.
 // Then the same through the React adapter's server render, `renderToString`
-// and hydration, with and without the stylesheet; and the CSS modules
-// applying the rules themselves, for a prefix given to `configure()`.
+// and hydration, with and without the stylesheet. One element's file alone
+// must reserve that element's box, measured on that element, and must leave
+// another element on the page to shift. A phase-B page (declarative roots)
+// that loads the stylesheet, with the element script still held back, must
+// not paint the pre-upgrade rules over those roots, and a host on the same
+// page without a root must still keep its reserved box.
 //
 //   bun run build && bun run scripts/check-preupgrade.ts [element…]
 
@@ -28,6 +32,29 @@ import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import { cases, type PreupgradeCase } from "./fixtures/preupgrade-cases";
 import { elements } from "../src/elements";
+import { renderElement } from "../dist/ssr/index.js";
+
+const phaseB = [
+  renderElement("m-text-field", { label: "Name", value: "Ada" }),
+  renderElement("m-button", {}, "Save"),
+  renderElement("m-select", { label: "Pet", value: "Dog" }),
+  // The deep text-field rule (multiline, supporting text, outlined, compact)
+  // is one of the highest-specificity pre-upgrade selectors. The rollback has
+  // to beat it, not only `m-text-field:not(:defined)`.
+  renderElement("m-text-field", {
+    id: "variant", label: "Name", value: "Ada", type: "multiline", variant: "outlined",
+    density: "compact", "supporting-text": "Help",
+  }),
+  renderElement("m-navigation-rail", { id: "rail" }, '<div slot="header">Menu</div>'),
+  renderElement("m-card", { id: "card" }, '<span slot="headline">Title</span>'),
+  // The FAB menu opts out of the shadow and the mark. Inside a rendered
+  // toolbar it is still an undefined custom element, and its own rule reserves
+  // the 56px box. A bare twin beside it is that rule with no rendered parent.
+  renderElement("m-toolbar", { id: "toolbar" }, '<m-fab-menu slot="fab"></m-fab-menu>'),
+].join("") + '<m-text-field id="variant-bare" label="Name" value="Ada" type="multiline" variant="outlined" density="compact" supporting-text="Help"></m-text-field>'
+  + '<m-navigation-rail id="rail-bare"><div slot="header">Menu</div></m-navigation-rail>'
+  + '<m-card id="card-bare"><span slot="headline">Title</span></m-card>'
+  + '<m-fab-menu id="fab-bare"></m-fab-menu>';
 
 const THRESHOLD = 0.01;
 const STAGE_WIDTH = 360;
@@ -76,12 +103,17 @@ const server = Bun.serve({
         return new Response(Bun.file("dist/styles/base.css"));
       case "/preupgrade.css":
         return new Response(Bun.file("dist/elements/preupgrade.css"));
+      case "/preupgrade/button.css":
+        return new Response(Bun.file("dist/elements/preupgrade/button.css"));
+      case "/one":
+        return html(page(stage(`<div><m-button>Save</m-button></div><div><m-switch id="switch">Wi-Fi</m-switch></div>`), false)
+          .replace("</head>", '<link rel="stylesheet" href="/preupgrade/button.css"></head>'));
+      case "/phase-b":
+        return html(page(stage(`${phaseB}<m-button id="bare">Bare</m-button>`), true));
       case "/elements.js":
         return js(elementsJs);
       case "/react.js":
         return js(reactClientJs);
-      case "/modules":
-        return html(page(stage(`<x-button>Save</x-button>`), false));
       case "/react":
         return html(page(`<div id="stage"><div id="root">${reactHtml}</div><div id="block">Following text</div></div>`, preupgrade));
       default: {
@@ -179,9 +211,25 @@ const unionArea = (rects: Box[], frame: Box): number => {
   return area;
 };
 
+/** The rectangle that contains both boxes. */
+const span = (a: Box, b: Box): Box => {
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+  return {
+    x,
+    y,
+    w: Math.max(Math.max(a.x + a.w, b.x + b.w) - x, 1),
+    h: Math.max(Math.max(a.y + a.h, b.y + b.h) - y, 1),
+  };
+};
+
+/** How far a box moved or changed size, in px. Under 0.5 the score ignores it. */
+const shiftOf = (a: Box, b: Box): number =>
+  Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y), Math.abs(a.w - b.w), Math.abs(a.h - b.h));
+
 /** Impact fraction times distance fraction, over a frame that holds both states. */
-const score = (before: Snapshot, after: Snapshot): number => {
-  const frame = { x: before.frame.x, y: before.frame.y, w: STAGE_WIDTH, h: Math.max(before.frame.h, after.frame.h, 1) };
+const score = (before: Snapshot, after: Snapshot, bounds?: Box): number => {
+  const frame = bounds ?? { x: before.frame.x, y: before.frame.y, w: STAGE_WIDTH, h: Math.max(before.frame.h, after.frame.h, 1) };
   const impact: Box[] = [];
   let distance = 0;
   const shifted = (a: Box, b: Box, resized: boolean): void => {
@@ -281,41 +329,161 @@ try {
     console.log(`\nReact renderToString + hydration: ${react.withStyles.toFixed(4)} with, ${react.without.toFixed(4)} without.`);
   }
 
-  // Without the stylesheet in <head>: the CSS modules apply the rules
-  // themselves, for the prefix given to configure(), until define() runs.
-  let modules = 0;
+  // One element's file reserves that element only. The button and the switch
+  // are each in their own block. As inline siblings the unreserved switch
+  // grows, the line box gets taller, and the button's y moves with it, so
+  // scoring the button's rectangle still counts the neighbour. The switch's
+  // own shift is asserted separately. The script stays held back until the
+  // boxes are measured.
+  let one = 0;
+  let buttonMove = 0;
+  let switchMove = 0;
   if (!only.length) {
     const p = await browser.newPage({ viewport: { width: 400, height: 800 } });
     try {
-      await p.goto(`http://127.0.0.1:${server.port}/modules`);
-      await p.addScriptTag({
-        type: "module",
-        content: `import { configure } from "/dist/elements/index.js";
-configure({ prefix: "x" });
-await import("/dist/elements/css/index.js");
-window.modules = true;`,
-      });
-      await p.waitForFunction(() => (window as unknown as { modules?: boolean }).modules === true);
+      await p.goto(`http://127.0.0.1:${server.port}/one`);
       await settle(p);
-      const before = await snapshot(p, "#stage > :first-child", "#inline, #block");
-      await p.addScriptTag({
-        type: "module",
-        content: `import { defineAll } from "/dist/elements/index.js"; defineAll({ prefix: "x" }); window.ready = true;`,
+      const boxes = () => p.evaluate(() => {
+        const rect = (element: Element): Box => {
+          const r = element.getBoundingClientRect();
+          return { x: r.x, y: r.y, w: r.width, h: r.height };
+        };
+        const button = document.querySelector("m-button")!;
+        const sw = document.querySelector("m-switch")!;
+        const sheets = Array.from(document.styleSheets, (sheet) => {
+          try { return Array.from(sheet.cssRules, (rule) => rule.cssText).join(""); }
+          catch { return ""; }
+        }).join("");
+        return {
+          button: rect(button),
+          sw: rect(sw),
+          buttonRule: sheets.includes("m-button:not(:defined)"),
+          switchRule: sheets.includes("m-switch:not(:defined)"),
+        };
       });
+      const before = await boxes();
+      assert(before.button.h > 30, "button.css did not reserve the button");
+      assert(before.buttonRule, "button.css did not apply the button rule");
+      assert(!before.switchRule, "button.css included another element's rules");
+      await p.addScriptTag({ url: "/elements.js", type: "module" });
       await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true && !document.querySelector("#stage :not(:defined)"));
       await settle(p);
-      const after = await snapshot(p, "#stage > :first-child", "#inline, #block");
-      modules = score(before, after);
-      assert(before.hosts[0].h > 30, "The CSS modules did not apply the rules for the configured prefix");
-      console.log(`CSS modules, prefix "x", no stylesheet in <head>: ${modules.toFixed(4)} (${size(before.hosts[0])} -> ${size(after.hosts[0])})`);
+      const after = await boxes();
+      const buttonBox = span(before.button, after.button);
+      const region = (box: Box): Snapshot => ({ frame: buttonBox, hosts: [box], siblings: [] });
+      one = score(region(before.button), region(after.button), buttonBox);
+      buttonMove = shiftOf(before.button, after.button);
+      switchMove = shiftOf(before.sw, after.sw);
+      console.log(`One file, button.css: ${one.toFixed(4)} (button ${before.button.w.toFixed(1)}×${before.button.h.toFixed(1)} at y ${before.button.y.toFixed(1)} -> ${after.button.w.toFixed(1)}×${after.button.h.toFixed(1)} at y ${after.button.y.toFixed(1)}, moved ${buttonMove.toFixed(2)}; switch ${before.sw.h.toFixed(1)} -> ${after.sw.h.toFixed(1)}, moved ${switchMove.toFixed(2)})`);
+    } finally {
+      await p.close();
+    }
+  }
+
+  // Phase B: the stylesheet is loaded and the script is still held back.
+  // A rendered host must not take the pre-upgrade paint; a bare host must.
+  if (!only.length) {
+    const p = await browser.newPage({ viewport: { width: 400, height: 800 } });
+    try {
+      await p.goto(`http://127.0.0.1:${server.port}/phase-b`);
+      await settle(p);
+      const before = await p.evaluate(() => {
+        const field = document.querySelector("m-text-field")!;
+        const button = document.querySelector("m-button:not(#bare)")!;
+        const select = document.querySelector("m-select")!;
+        const bare = document.querySelector("#bare")!;
+        const variant = document.querySelector("#variant")!;
+        const variantBare = document.querySelector("#variant-bare")!;
+        const rail = document.querySelector("#rail")!;
+        const railBare = document.querySelector("#rail-bare")!;
+        const card = document.querySelector("#card")!;
+        const cardBare = document.querySelector("#card-bare")!;
+        const header = rail.querySelector("[slot=header]")!;
+        const headerBare = railBare.querySelector("[slot=header]")!;
+        const headline = card.querySelector("[slot=headline]")!;
+        const headlineBare = cardBare.querySelector("[slot=headline]")!;
+        const toolbar = document.querySelector("#toolbar")!;
+        const fab = toolbar.querySelector("m-fab-menu")!;
+        const fabBare = document.querySelector("#fab-bare")!;
+        const box = (element: Element): { w: number; h: number } => {
+          const r = element.getBoundingClientRect();
+          return { w: r.width, h: r.height };
+        };
+        const style = getComputedStyle(field);
+        return {
+          root: !!field.shadowRoot && !!button.shadowRoot && !!select.shadowRoot && !!variant.shadowRoot && !!rail.shadowRoot && !!card.shadowRoot && !!toolbar.shadowRoot && !bare.shadowRoot && !variantBare.shadowRoot && !railBare.shadowRoot && !cardBare.shadowRoot && !fab.shadowRoot && !fabBare.shadowRoot,
+          padding: style.padding,
+          background: style.backgroundColor,
+          before: getComputedStyle(field, "::before").content,
+          after: getComputedStyle(field, "::after").content,
+          button: button.getBoundingClientRect().width,
+          select: select.getBoundingClientRect().width,
+          bare: bare.getBoundingClientRect().height,
+          variantPadding: getComputedStyle(variant).padding,
+          variantBefore: getComputedStyle(variant, "::before").content,
+          barePadding: getComputedStyle(variantBare).padding,
+          bareBefore: getComputedStyle(variantBare, "::before").content,
+          header: { visibility: getComputedStyle(header).visibility, ...box(header) },
+          headerBare: { visibility: getComputedStyle(headerBare).visibility, ...box(headerBare) },
+          headline: { visibility: getComputedStyle(headline).visibility, order: getComputedStyle(headline).order, ...box(headline) },
+          headlineBare: { visibility: getComputedStyle(headlineBare).visibility, order: getComputedStyle(headlineBare).order, ...box(headlineBare) },
+          fab: box(fab),
+          fabBare: box(fabBare),
+        };
+      });
+      assert(before.root, "phase B hosts did not render the roots the page asked for");
+      assert(before.padding !== "22px 16px 0px", `text field still has pre-upgrade padding (${before.padding})`);
+      assert(before.before === "none", `text field ::before is pre-upgrade text (${before.before})`);
+      assert(before.after === "none", `text field ::after is pre-upgrade text (${before.after})`);
+      assert(before.bare > 30, "a host without a declarative root lost its reserved box");
+      assert(before.variantPadding !== before.barePadding, `outlined multiline text field still has pre-upgrade padding (${before.variantPadding})`);
+      assert(before.variantBefore === "none", `outlined multiline ::before is pre-upgrade text (${before.variantBefore})`);
+      assert(before.bareBefore !== "none", "the bare outlined multiline host lost its pre-upgrade ::before");
+      // The rail's header slot is a direct child. The pre-upgrade rule hides it
+      // and gives it a 64px box; the rendered host's child is neither.
+      assert.equal(before.headerBare.visibility, "hidden");
+      assert.equal(Math.round(before.headerBare.h), 64);
+      assert.equal(before.header.visibility, "visible");
+      assert.notEqual(Math.round(before.header.h), Math.round(before.headerBare.h));
+      // The card's headline is a direct child. The rule sets order (and the
+      // title type, which sizes the bare twin). The rendered headline keeps
+      // neither the hidden treatment nor that order.
+      assert.equal(before.headline.visibility, "visible");
+      assert.equal(before.headlineBare.visibility, "visible");
+      assert.equal(before.headlineBare.order, "-2");
+      assert.notEqual(before.headline.order, before.headlineBare.order);
+      assert(before.headline.h > 0 && before.headlineBare.h > 0, "a card headline has no box");
+      // The toolbar's FAB menu is an undefined custom element. Its pre-upgrade
+      // rule reserves 56px; the bare twin is the same rule. The rollback must
+      // not take that box away.
+      assert.equal(Math.round(before.fabBare.w), 56);
+      assert.equal(Math.round(before.fabBare.h), 56);
+      assert.equal(Math.round(before.fab.w), Math.round(before.fabBare.w));
+      assert.equal(Math.round(before.fab.h), Math.round(before.fabBare.h));
+      await p.addScriptTag({ url: "/elements.js", type: "module" });
+      await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true && !document.querySelector("#stage :not(:defined)"));
+      await p.waitForTimeout(300);
+      await settle(p);
+      const after = await p.evaluate(() => ({
+        button: document.querySelector("m-button:not(#bare)")!.getBoundingClientRect().width,
+        select: document.querySelector("m-select")!.getBoundingClientRect().width,
+        background: getComputedStyle(document.querySelector("m-text-field")!).backgroundColor,
+      }));
+      assert(Math.abs(before.button - after.button) < 0.5, `button width ${before.button} before the script, ${after.button} after`);
+      assert(Math.abs(before.select - after.select) < 0.5, `select width ${before.select} before the script, ${after.select} after`);
+      assert.equal(before.background, after.background, "text field background changed when the script ran");
+      console.log(`Phase B, stylesheet loaded, script held back: field padding ${before.padding}, button ${before.button.toFixed(1)}px, select ${before.select.toFixed(1)}px, bare ${before.bare.toFixed(1)}px, header ${before.header.visibility} ${before.header.h.toFixed(1)}px (bare ${before.headerBare.visibility} ${before.headerBare.h.toFixed(1)}px), headline ${before.headline.visibility} ${before.headline.h.toFixed(1)}px order ${before.headline.order} (bare ${before.headlineBare.visibility} ${before.headlineBare.h.toFixed(1)}px order ${before.headlineBare.order}), fab ${before.fab.w.toFixed(1)}×${before.fab.h.toFixed(1)} (bare ${before.fabBare.w.toFixed(1)}×${before.fabBare.h.toFixed(1)})`);
     } finally {
       await p.close();
     }
   }
 
   assert.deepEqual(failing.map((r) => r.name), [], "Cases that shift on upgrade");
-  assert(modules < THRESHOLD, "The CSS modules' rules shift on upgrade");
+  // The button's own box. A move of at least 0.5 px counts even when the
+  // region score stays under the threshold.
+  assert(buttonMove < 0.5 && one < THRESHOLD, "One element's pre-upgrade file shifts on upgrade");
   if (!only.length) {
+    assert(switchMove >= 0.5, "One element's pre-upgrade file reserved another element");
     // Most elements must shift without the styles, or the score measures nothing.
     assert(caught.length > defaults.length / 2, `Only ${caught.length} of ${defaults.length} elements shift without the styles`);
     assert(react && react.withStyles < THRESHOLD, "The React page shifts on upgrade");
