@@ -82,7 +82,10 @@ export const TOOLTIP_DEFAULTS = {
   SHOW_ON_FOCUS: true,
   /** Whether to show tooltip on hover by default */
   SHOW_ON_HOVER: true,
-  /** Whether to allow rich HTML content by default */
+  /**
+   * Whether to allow rich HTML content by default
+   * @deprecated The `rich` option has no effect and is removed in 1.0, and this default with it.
+   */
   RICH: false
 } as const;
 
