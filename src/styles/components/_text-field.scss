@@ -146,7 +146,8 @@ $component: "#{base.$prefix}-text-field";
         max-width: 40%; // Prevent extreme overflow
         overflow: hidden;
         text-overflow: ellipsis;
-        // top for the filled float; opacity as the label floats (FLO-355)
+        // opacity as the label floats (FLO-355); top where a label is added
+        // or removed
         transition:
             top v.motion("duration-short4") v.motion("easing-emphasized"),
             opacity v.motion("duration-short4") v.motion("easing-emphasized");
@@ -1112,10 +1113,10 @@ $component: "#{base.$prefix}-text-field";
 
     // ===== BESIDE A PREFIX OR A SUFFIX =====
     // The input's padding in a field with a prefix or a suffix, from the two
-    // insets set above. Last, and
-    // one class heavier, so it holds over the variants' and the densities'
-    // paddings. A selector list, not :is(): bundlers emit an :is() rule three
-    // times, with the -webkit-any() and -moz-any() forms.
+    // insets set above. Last, and one class heavier, so it holds over the
+    // variants' and the densities' paddings. A selector list, not :is():
+    // bundlers emit an :is() rule three times, with the -webkit-any() and
+    // -moz-any() forms.
     &.#{$component}--with-prefix,
     &.#{$component}--with-suffix {
         .#{$component}__input {
