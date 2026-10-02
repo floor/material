@@ -201,7 +201,8 @@ state.ready = true;
 // also under `solid-ssr:floor`, which lowers solid-js alone to the peer floor (1.8.0).
 // So a fixture must not use a construct the preset compiles to an import the floor
 // runtime lacks: a conditional `value` on a context provider compiles to `memo` from
-// solid-js/web, which 1.8.0 does not export (#431, f9524000); use literal values.
+// solid-js/web, which 1.8.0's server build does not export (#431, f9524000); use
+// literal values.
 const solid = (generate: "dom" | "ssr"): BunPlugin => ({
   name: "solid",
   setup(build) {
