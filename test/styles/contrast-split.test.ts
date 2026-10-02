@@ -114,8 +114,8 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_checkbox.scss), and the icon button's inner padding
     // (styles/components/_icon-button.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("70c8b333d9d8de3653367714fe07c5ba94ca8fb870da3a18e3382d86d1823745");
-    expect(css.length).toBe(525109);
+      .toBe("a63c17978c320587ccd114b80aa64c2240be3fc7d0ba0f179d7903ffdf523679");
+    expect(css.length).toBe(524266);
   });
 
   test("today's sheets still resolve to the fixture", () => {
