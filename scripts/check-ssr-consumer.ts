@@ -34,7 +34,7 @@ try {
   const smoke = join(directory, "server.mjs");
   await writeFile(smoke, String.raw`
     import assert from 'node:assert/strict';
-    import * as ssr from 'mtrl/ssr';
+    import * as ssr from 'material/ssr';
     assert.deepEqual(Object.keys(ssr), ['renderElement']);
     const html = ssr.renderElement('m-button', { variant: 'filled' }, 'Save');
     assert.match(html, /<template shadowrootmode="open"/);
@@ -59,7 +59,7 @@ try {
   assert.equal(ts.getPreEmitDiagnostics(program).length, 0, "SSR declarations must work without DOM or linkedom types");
   const types = join(directory, "types.ts");
   await writeFile(types, `
-    import { renderElement, type RenderAttributes, type RenderOptions } from 'mtrl/ssr';
+    import { renderElement, type RenderAttributes, type RenderOptions } from 'material/ssr';
     const attributes: RenderAttributes = { variant: 'filled' };
     const options: RenderOptions = { styles: 'inline' };
     const html: string = renderElement('m-button', attributes, 'Save', options);
@@ -76,19 +76,19 @@ try {
   const browserSmoke = join(directory, "browser.mjs");
   await writeFile(browserSmoke, `
     import assert from 'node:assert/strict';
-    import { renderElement } from 'mtrl/ssr';
-    assert.throws(() => renderElement('m-button'), { message: 'mtrl/ssr is server-only' });
+    import { renderElement } from 'material/ssr';
+    assert.throws(() => renderElement('m-button'), { message: 'material/ssr is server-only' });
   `);
   // Both browser and node conditions are active here: browser must win.
   await run(["node", "--conditions=browser", browserSmoke], directory);
 
   for (const [name, code, specifier] of [
-    ["side-effect", 'import "mtrl/ssr"; console.log("browser import is safe");', "mtrl/ssr"],
-    ["react-side-effect", 'import "mtrl/ssr/react"; console.log("browser import is safe");', "mtrl/ssr/react"],
-    ["solid-side-effect", 'import "mtrl/ssr/solid"; console.log("browser import is safe");', "mtrl/ssr/solid"],
-    ["svelte-side-effect", 'import "mtrl/ssr/svelte"; console.log("browser import is safe");', "mtrl/ssr/svelte"],
-    ["vue-side-effect", 'import "mtrl/ssr/vue"; console.log("browser import is safe");', "mtrl/ssr/vue"],
-    ["call", 'import { renderElement } from "mtrl/ssr"; export { renderElement };', "mtrl/ssr"],
+    ["side-effect", 'import "material/ssr"; console.log("browser import is safe");', "material/ssr"],
+    ["react-side-effect", 'import "material/ssr/react"; console.log("browser import is safe");', "material/ssr/react"],
+    ["solid-side-effect", 'import "material/ssr/solid"; console.log("browser import is safe");', "material/ssr/solid"],
+    ["svelte-side-effect", 'import "material/ssr/svelte"; console.log("browser import is safe");', "material/ssr/svelte"],
+    ["vue-side-effect", 'import "material/ssr/vue"; console.log("browser import is safe");', "material/ssr/vue"],
+    ["call", 'import { renderElement } from "material/ssr"; export { renderElement };', "material/ssr"],
   ]) {
     const entry = join(directory, `${name}.js`);
     await writeFile(entry, code);
@@ -124,9 +124,9 @@ try {
     const path = join(artifacts, `${name}.js`);
     await writeFile(path, output);
     if (name === "call") {
-      assert.match(output, /mtrl\/ssr is server-only/);
+      assert.match(output, /material\/ssr is server-only/);
       const stub = await import(path + `?check=${Date.now()}`);
-      assert.throws(() => stub.renderElement("m-button"), { message: "mtrl/ssr is server-only" });
+      assert.throws(() => stub.renderElement("m-button"), { message: "material/ssr is server-only" });
     }
     console.log(`Vite ${name}: ${specifier} -> ${resolved}; ${Buffer.byteLength(output)} bytes, no linkedom`);
   }

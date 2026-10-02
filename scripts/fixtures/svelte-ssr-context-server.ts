@@ -1,4 +1,4 @@
-import "mtrl/ssr/svelte";
+import "material/ssr/svelte";
 import { render } from "svelte/server";
 import App from "./svelte-ssr-context-app.svelte";
 

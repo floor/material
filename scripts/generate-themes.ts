@@ -61,7 +61,7 @@ export interface ThemeSpec {
   /** A custom tertiary colour: preserve its hue and chroma with M3's tones. */
   tertiary?: string;
   /**
-   * Shipped only as `mtrl/themes/<name>`, not in the full stylesheet: an app
+   * Shipped only as `material/themes/<name>`, not in the full stylesheet: an app
    * pays for it only by importing it
    */
   standalone?: boolean;

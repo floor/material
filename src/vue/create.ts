@@ -10,7 +10,7 @@
  * live property shadows is its `default*` prop. Element events are Vue events
  * of the same name. The element registers on mount, never at import.
  *
- * When `mtrl/ssr/vue` is loaded, a server render emits the declarative shadow
+ * When `material/ssr/vue` is loaded, a server render emits the declarative shadow
  * template and the light DOM from a single pass over the slots, including an
  * `async setup()` child under Suspense. The client renders the slots and not
  * the template: the HTML parser has already moved that template into the
@@ -107,9 +107,9 @@ type EventKeys<S> =
 /** Props of a generated component: the element's own, plus any HTML attribute for the host. */
 export type VueProps<S> = OwnProps<S> &
   Omit<VueHostAttributes, keyof OwnProps<S> | EventKeys<S> | RetiredProps<S>> &
-  { [K in RetiredProps<S>]?: `${K} was removed in 1.0: use onChange` };
+  { [K in RetiredProps<S>]?: `${K} was removed in material 3.0.0: use onChange` };
 
-/** The handler props of events 1.0 removed (`onToggle` on the icon button): refused, see `RetiredEvents`. */
+/** The handler props of events material 3.0.0 removed (`onToggle` on the icon button): refused, see `RetiredEvents`. */
 type RetiredProps<S> = `on${Capitalize<RetiredEvents<S>>}`;
 
 /** Its events: the element's, and `update:*` for two-way binding. */

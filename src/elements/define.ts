@@ -200,7 +200,7 @@ export type ElementAttributes<S> = {
 
 /**
  * Attributes as markup writes them (`supporting-text`), for a bare `m-*` tag
- * in JSX (`mtrl/react/jsx`, `mtrl/solid/jsx`, FLO-333).
+ * in JSX (`material/react/jsx`, `material/solid/jsx`, FLO-333).
  */
 export type ElementMarkup<S> = {
   [K in keyof Get<S, "attributes"> & string]?: Get<S, "attributes">[K] extends { type: infer T } ? ValueOf<T> : never;
@@ -815,7 +815,7 @@ export const defineElement = <C extends ElementComponent>(spec: ElementSpec<C>):
         registerStyles({ [`host:${spec.name}`]: hostStyleText(spec) });
         const missing = [...SHADOW_BASE_STYLES, ...spec.styles].filter((name) => !hasStyles(name));
         if (missing.length) {
-          console.warn(`<${tag}> has no CSS for ${missing.join(", ")}: import "mtrl/elements/css/${spec.name}" first.`);
+          console.warn(`<${tag}> has no CSS for ${missing.join(", ")}: import "material/elements/css/${spec.name}" first.`);
         }
       }
       const existing = customElements.get(tag);

@@ -2,7 +2,7 @@
 import {
   createButton, createTextField, createSelect, createCheckbox,
   createButtonGroup, createSplitButton, createTabs, createCard, createDialog, createSnackbar,
-} from "mtrl";
+} from "material";
 
 const root = document.querySelector("main")!;
 const add = <T extends { element: HTMLElement }>(component: T): T => { root.append(component.element); return component; };

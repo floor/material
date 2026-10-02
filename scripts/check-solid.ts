@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// mtrl/solid in a real browser.
+// material/solid in a real browser.
 //
 // The same app (scripts/fixtures/solid-app.tsx), in Solid JSX compiled by
 // babel-preset-solid as a Solid app's build compiles it, is rendered to a

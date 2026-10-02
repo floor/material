@@ -57,7 +57,7 @@ const sheetFor = (name: string, text: string): CSSStyleSheet => {
 // ---------------------------------------------------------------------------
 // Pre-upgrade styles (ssr.md, Phase A): `:not(:defined)` rules that give an
 // element its box before its script upgrades it. They ship as stylesheets
-// (`mtrl/elements/preupgrade.css` and `mtrl/elements/preupgrade/<name>.css`),
+// (`material/elements/preupgrade.css` and `material/elements/preupgrade/<name>.css`),
 // not from the element CSS modules. Built for the default prefix;
 // `preupgradeStyles(prefix)` retags them.
 

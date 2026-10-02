@@ -32,14 +32,21 @@ export function changelogSection(changelog: string, version: string): string {
   return body;
 }
 
-/** The section and the footer: npm, the docs, the full history */
+/**
+ * The section and the footer: npm, the docs, the full history, and where the
+ * history before 3.0.0 lives (the same sentence README.md's "Where this came
+ * from" carries).
+ */
 export function releaseNotes(changelog: string, version: string): string {
   const footer = [
-    `npm: [\`mtrl@${version}\`](https://www.npmjs.com/package/mtrl/v/${version})`,
+    `npm: [\`material@${version}\`](https://www.npmjs.com/package/material/v/${version})`,
     "Docs: [md3.io](https://md3.io)",
-    "Full history: [CHANGELOG.md](https://github.com/floor/mtrl/blob/main/CHANGELOG.md)",
+    "Full history: [CHANGELOG.md](https://github.com/floor/material/blob/main/CHANGELOG.md)",
   ].join(" · ");
-  return `${changelogSection(changelog, version)}\n\n---\n\n${footer}\n`;
+  const history =
+    "The history before 3.0.0 was developed in `floor/mtrl`; `#numbers` in commit subjects before 3.0.0 refer to " +
+    "[pull requests there](https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed).";
+  return `${changelogSection(changelog, version)}\n\n---\n\n${footer}\n\n${history}\n`;
 }
 
 if (import.meta.main) {

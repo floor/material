@@ -1,6 +1,6 @@
 <script lang="ts">
   import { setContext } from "svelte";
-  import { Tab, Tabs } from "mtrl/svelte";
+  import { Tab, Tabs } from "material/svelte";
   import ReadContext from "./svelte-ssr-context-child.svelte";
 
   let { mode = "default" }: { mode?: "default" | "required" | "error" } = $props();

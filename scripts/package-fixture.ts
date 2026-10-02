@@ -21,7 +21,7 @@ export async function createPackageFixture() {
       "npm", "pack", "--ignore-scripts", "--json", "--pack-destination", directory,
       "--cache", join(directory, "npm-cache"),
     ]));
-    const installed = join(directory, "node_modules/mtrl");
+    const installed = join(directory, "node_modules/material");
     await mkdir(installed, { recursive: true });
     await run(["tar", "-xzf", join(directory, pack.filename), "-C", installed, "--strip-components=1"]);
     await writeFile(join(directory, "package.json"), '{"type":"module"}');

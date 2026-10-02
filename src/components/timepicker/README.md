@@ -15,7 +15,7 @@ and keyboard input selection methods, 12-hour and 24-hour formats, and customiza
 ## Basic Usage
 
 ```javascript
-import { createTimePicker } from 'mtrl';
+import { createTimePicker } from 'material';
 
 // Create a basic time picker
 const timePicker = createTimePicker({
@@ -150,7 +150,7 @@ timePicker.destroy();
 ### 24-Hour Time Picker with Seconds
 
 ```javascript
-import { createTimePicker, TIME_FORMAT } from 'mtrl';
+import { createTimePicker, TIME_FORMAT } from 'material';
 
 const timePicker = createTimePicker({
   title: 'Select time',
@@ -166,7 +166,7 @@ const timePicker = createTimePicker({
 ### Office Hours, in Quarter Hours
 
 ```javascript
-import { createTimePicker } from 'mtrl';
+import { createTimePicker } from 'material';
 
 // Only 09:00 to 17:30 can be picked, on the quarter hour: earlier and later
 // hours, and minutes off the quarter, are disabled on the dial.
@@ -249,7 +249,7 @@ The TimePicker component supports all modern browsers:
 The `TimePicker` component includes comprehensive TypeScript definitions:
 
 ```typescript
-import { createTimePicker, TIME_PICKER_TYPE, TIME_FORMAT, TimePickerConfig } from 'mtrl';
+import { createTimePicker, TIME_PICKER_TYPE, TIME_FORMAT, TimePickerConfig } from 'material';
 
 // Configuration with TypeScript
 const config: TimePickerConfig = {

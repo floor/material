@@ -13,7 +13,7 @@ import { copyDestinations, createDestination, moveDestinationFocus, updateBadge 
 const copyItems = (items: NavigationRailItemConfig[]): NavigationRailItemConfig[] => copyDestinations(items, 'NavigationRail');
 /**
  * Creates an M3 Expressive navigation rail with stable destinations during expansion.
- * Import its styles separately with `mtrl/styles/navigation-rail`.
+ * Import its styles separately with `material/styles/navigation-rail`.
  * Links retain native browser navigation; onSelect can preventDefault for a router.
  */
 export default function createNavigationRail(config: NavigationRailConfig = {}): NavigationRailComponent {

@@ -1,4 +1,4 @@
-// With mtrl/react/jsx, the bare tags type-check in React's JSX (FLO-333).
+// With material/react/jsx, the bare tags type-check in React's JSX (FLO-333).
 import type {} from "../../../src/react/jsx";
 
 export const typed = <m-switch checked supporting-text="Help" className="x" />;

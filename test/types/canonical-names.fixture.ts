@@ -1,6 +1,6 @@
 // test/types/canonical-names.fixture.ts
 //
-// FLO-383 PR B: 1.0 has only the canonical names. 0.10.5 exported both
+// FLO-383 PR B: 3.0.0 has only the canonical names. 0.10.5 exported both
 // spellings (PR A, A2); the old ones are gone from every entry, and the
 // factory's TopAppBarComponent chains as it did.
 import {
@@ -8,15 +8,15 @@ import {
   type TextFieldConfig, type TextFieldComponent, type CardConfig,
   type TopAppBarComponent, type BottomAppBarComponent,
 } from "../../src";
-// @ts-expect-error createTextfield is createTextField in 1.0
+// @ts-expect-error createTextfield is createTextField in 3.0.0
 import { createTextfield } from "../../src";
-// @ts-expect-error TextfieldConfig is TextFieldConfig in 1.0
+// @ts-expect-error TextfieldConfig is TextFieldConfig in 3.0.0
 import type { TextfieldConfig } from "../../src";
-// @ts-expect-error CardSchema is CardConfig in 1.0
+// @ts-expect-error CardSchema is CardConfig in 3.0.0
 import type { CardSchema } from "../../src";
-// @ts-expect-error TopAppBar is TopAppBarComponent in 1.0
+// @ts-expect-error TopAppBar is TopAppBarComponent in 3.0.0
 import type { TopAppBar } from "../../src";
-// @ts-expect-error BottomAppBar is BottomAppBarComponent in 1.0
+// @ts-expect-error BottomAppBar is BottomAppBarComponent in 3.0.0
 import type { BottomAppBar } from "../../src";
 
 export const field: TextFieldComponent = createTextField({ label: "Name" } satisfies TextFieldConfig);
@@ -28,7 +28,7 @@ export type Gone = [typeof createTextfield, TextfieldConfig, CardSchema, TopAppB
 // The select's text field is a property a user reads (FLO-383): textField only
 const select = createSelect({ label: "Size", options: [] });
 export const selectField: TextFieldComponent = select.textField;
-// @ts-expect-error select.textfield is select.textField in 1.0, with no alias
+// @ts-expect-error select.textfield is select.textField in 3.0.0, with no alias
 export const oldSelectField = select.textfield;
 
 // Every public variant option's type is exported (FLO-383 follow-up)
@@ -41,5 +41,5 @@ export const selectWithVariant: SelectConfig = { variant: selectVariant, options
 // Constant keys are identifiers too: two words, and the class value is select__text-field (FLO-560)
 import { SELECT_CLASSES } from "../../src/components/select/constants";
 export const selectFieldClass: "select__text-field" = SELECT_CLASSES.TEXT_FIELD;
-// @ts-expect-error SELECT_CLASSES.TEXTFIELD is TEXT_FIELD in 1.0
+// @ts-expect-error SELECT_CLASSES.TEXTFIELD is TEXT_FIELD in 3.0.0
 export const oldSelectFieldKey = SELECT_CLASSES.TEXTFIELD;

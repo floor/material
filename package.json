@@ -1,6 +1,6 @@
 {
-  "name": "mtrl",
-  "version": "0.10.6",
+  "name": "material",
+  "version": "3.0.0-next.0",
   "description": "Material Design 3 components for the web: plain JavaScript, web components, and React, Vue, Svelte and Solid components. TypeScript, zero dependencies.",
   "author": "floor",
   "license": "MIT",
@@ -475,6 +475,7 @@
     "svelte:check": "bun run scripts/check-svelte.ts",
     "solid:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-solid.ts",
     "tooling:check": "tsc --project scripts/tsconfig.json --noEmit && tsc --project test/types/tsconfig.json --noEmit",
+    "name:check": "bun scripts/package-name.ts material --check",
     "themes:generate": "bun scripts/generate-themes.ts",
     "react-ssr:check": "bun run scripts/generate-adapters.ts --check && bun run scripts/check-react-ssr.ts",
     "svelte-ssr:check": "bun run scripts/check-svelte-ssr.ts",
@@ -493,11 +494,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/floor/mtrl.git"
+    "url": "git+https://github.com/floor/material.git"
   },
   "homepage": "https://md3.io",
   "bugs": {
-    "url": "https://github.com/floor/mtrl/issues"
+    "url": "https://github.com/floor/material/issues"
   },
   "peerDependencies": {
     "react": ">=18",
@@ -600,7 +601,7 @@
       "./src/index.ts"
     ],
     "out": "docs/api",
-    "name": "mtrl Documentation",
+    "name": "material Documentation",
     "exclude": [
       "**/node_modules/**",
       "**/*.test.ts",
@@ -626,7 +627,7 @@
       "alphabetical"
     ],
     "navigationLinks": {
-      "GitHub": "https://github.com/floor/mtrl"
+      "GitHub": "https://github.com/floor/material"
     },
     "skipErrorChecking": true,
     "disableSources": false,

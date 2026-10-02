@@ -12,7 +12,7 @@
  *
  * Written without JSX, so it compiles with the rest of the library.
  *
- * When `mtrl/ssr/solid` is loaded, a server render prepends the declarative
+ * When `material/ssr/solid` is loaded, a server render prepends the declarative
  * shadow template. The client renders nothing in its place: the HTML parser
  * has already moved that template into the shadow root. Without the import
  * the markup is unchanged (FLO-374).
@@ -87,11 +87,11 @@ export type SolidHostAttributes<E extends HTMLElement = HTMLElement> =
  */
 export type SolidProps<S, E extends HTMLElement> = OwnProps<S> &
   Omit<SolidHostAttributes, keyof OwnProps<S> | "ref" | RetiredProps<S>> &
-  { [K in RetiredProps<S>]?: `${K} was removed in 1.0: use onChange` } & {
+  { [K in RetiredProps<S>]?: `${K} was removed in material 3.0.0: use onChange` } & {
     ref?: E | ((element: E) => void);
   };
 
-/** The handler props of events 1.0 removed (`onToggle` on the icon button): refused, see `RetiredEvents`. */
+/** The handler props of events material 3.0.0 removed (`onToggle` on the icon button): refused, see `RetiredEvents`. */
 type RetiredProps<S> = `on${Pascal<RetiredEvents<S>>}`;
 
 export type DeclarationProps<A> = A & Omit<SolidHostAttributes, keyof A>;

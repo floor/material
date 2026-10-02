@@ -8,7 +8,7 @@
  * user or script changes it. A click dispatches `change` with `{ selected, value }`
  * from the host, as `<m-switch>` and `<m-checkbox>` do. The `toggle` event
  * 0.10 dispatched beside it, which clashed with the native ToggleEvent, is
- * gone in 1.0 (FLO-295).
+ * gone in material 3.0.0 (FLO-295).
  * `type="submit"` and `type="reset"` act on the host's form.
  *
  * Parts: `icon-button`, `icon`, `ripple`.

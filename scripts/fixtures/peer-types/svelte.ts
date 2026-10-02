@@ -1,5 +1,5 @@
 import type { ComponentProps } from "svelte";
-import { Button } from "mtrl/svelte";
+import { Button } from "material/svelte";
 
 const ok: ComponentProps<typeof Button> = { disabled: false, onchange: (event) => { const value: string = event.detail.value; void value; } };
 

@@ -30,7 +30,7 @@ export type {
 } from "./types";
 
 // Public and documented (md3.io tabs); a responsive option on createTabs
-// replaces it in 1.1 (FLO-381)
+// replaces it in a later 3.x release (FLO-381)
 export { setupResponsiveBehavior };
 // Public: a page that writes its own panels names them with the derived ids (FLO-430)
 export { tabIdFor, tabPanelIdFor };

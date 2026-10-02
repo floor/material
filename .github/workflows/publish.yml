@@ -1,4 +1,4 @@
-# Publishes mtrl to npm when a version tag is pushed, with npm trusted
+# Publishes material to npm when a version tag is pushed, with npm trusted
 # publishing: the workflow's identity is what npm trusts (configured on
 # npmjs.com for the package), no token is stored, and the release carries
 # provenance. A pre-release version (x.y.z-next.N) goes under the `next`
@@ -111,4 +111,4 @@ jobs:
             *-*) flags="--prerelease --latest=false" ;;
             *) flags="--latest" ;;
           esac
-          gh release create "$tag" --title "mtrl $version" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag $flags
+          gh release create "$tag" --title "material $version" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag $flags

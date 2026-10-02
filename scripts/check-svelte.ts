@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// mtrl/svelte in a real browser.
+// material/svelte in a real browser.
 //
 // The same app (scripts/fixtures/svelte-app.svelte) is compiled with the
 // Svelte compiler, rendered to a string with svelte/server and no DOM, then
@@ -71,7 +71,7 @@ const run = async (): Promise<void> => {
   assert.equal(tsc.exitCode, 0, tsc.stdout.toString() + tsc.stderr.toString());
   check("the generated declarations compile");
 
-  // FLO-383: the text field is TextField (and TextField.svelte); the old spelling is gone in 1.0
+  // FLO-383: the text field is TextField (and TextField.svelte); the old spelling is gone in 3.0.0
   for (const file of ["dist/svelte/index.js", "dist/svelte/index.d.ts"]) {
     const index = await Bun.file(file).text();
     assert.match(index, /export \{ default as TextField \} from "\.\/TextField\.svelte";/, file);

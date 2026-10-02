@@ -1,10 +1,10 @@
-# Contributing to mtrl
+# Contributing to material
 
-Thank you for your interest in contributing to mtrl! This document provides guidelines and instructions for contributing to this lightweight, TypeScript-focused UI component library.
+Thank you for your interest in contributing to material! This document provides guidelines and instructions for contributing to this lightweight, TypeScript-focused UI component library.
 
 ## Why Contribute?
 
-mtrl aims to be a modern, flexible UI component library with:
+material aims to be a modern, flexible UI component library with:
 
 - Zero dependencies (except Bun for development)
 - TypeScript-first codebase
@@ -12,7 +12,7 @@ mtrl aims to be a modern, flexible UI component library with:
 - Simple and extensible API
 - Excellent documentation
 
-By contributing to mtrl, you'll help create a lean alternative to heavier frameworks while gaining experience with modern TypeScript patterns and component design.
+By contributing to material, you'll help create a lean alternative to heavier frameworks while gaining experience with modern TypeScript patterns and component design.
 
 ## Getting Started
 
@@ -20,8 +20,8 @@ By contributing to mtrl, you'll help create a lean alternative to heavier framew
 
 1. **Fork and clone the repository**:
    ```bash
-   git clone https://github.com/YOUR-USERNAME/mtrl.git
-   cd mtrl
+   git clone https://github.com/YOUR-USERNAME/material.git
+   cd material
    ```
 
 2. **Install dependencies**:
@@ -31,15 +31,15 @@ By contributing to mtrl, you'll help create a lean alternative to heavier framew
 
 ### Testing Your Components with md3.io
 
-mtrl's documentation site, [md3.io](https://md3.io), is a separate repository ([floor/md3.io](https://github.com/floor/md3.io)) with a playground for every component. To see your changes there, clone it beside your mtrl checkout; it depends on `file:../mtrl`:
+material's documentation site, [md3.io](https://md3.io), is a separate repository ([floor/md3.io](https://github.com/floor/md3.io)) with a playground for every component. To see your changes there, clone it beside your material checkout; it depends on `file:../material`:
 
 ```bash
-# Next to the mtrl repository
+# Next to the material repository
 git clone https://github.com/floor/md3.io.git
 cd md3.io
 bun install
 
-# Serves http://localhost:4300 and rebuilds mtrl, then the site, when mtrl/src changes
+# Serves http://localhost:4300 and rebuilds material, then the site, when material/src changes
 bun run dev
 ```
 
@@ -101,10 +101,10 @@ Read an existing component of the same kind before starting (`src/components/div
 md3.io is the best place to develop and test your components (see "Testing Your Components with md3.io" above to run it):
 
 1. Its playgrounds are configured in `src/shared/components.ts` of the md3.io repository.
-2. Component documentation lives in its `docs/components/`, and `bun run docs:check` checks every example against your mtrl checkout.
-3. `bun run dev` rebuilds mtrl and the site whenever `mtrl/src` changes.
+2. Component documentation lives in its `docs/components/`, and `bun run docs:check` checks every example against your material checkout.
+3. `bun run dev` rebuilds material and the site whenever `material/src` changes.
 
-This separation of the library code (mtrl) and the documentation site (md3.io) keeps the main library clean while providing a rich development environment.
+This separation of the library code (material) and the documentation site (md3.io) keeps the main library clean while providing a rich development environment.
 
 ### TypeScript Standards
 
@@ -141,7 +141,7 @@ bun run build
 bun run size:check
 ```
 
-The size check packs and installs the local distribution in a temporary directory, checks Node ESM and TypeScript imports (and that `require('mtrl')` does not resolve: the package is ESM-only), and measures minified consumer bundles with gzip and Brotli. It enforces budgets for individual imports, a form, CSS, and the initial button chunks. Results are saved to `analysis/package-size.json`. It does not rebuild `dist`.
+The size check packs and installs the local distribution in a temporary directory, checks Node ESM and TypeScript imports (and that `require('material')` does not resolve: the package is ESM-only), and measures minified consumer bundles with gzip and Brotli. It enforces budgets for individual imports, a form, CSS, and the initial button chunks. Results are saved to `analysis/package-size.json`. It does not rebuild `dist`.
 
 For a second bundler and real-browser checks:
 
@@ -191,7 +191,7 @@ bun run test:coverage                      # with a coverage report
 
 - TypeDoc comments on every public function and type, with an `@example`.
 - The file path as a comment on the first line of each file.
-- User documentation lives in md3.io's `docs/components/<name>.md`, where `bun run docs:check` type-checks and runs every example against your mtrl checkout. Add or update the page with the change.
+- User documentation lives in md3.io's `docs/components/<name>.md`, where `bun run docs:check` type-checks and runs every example against your material checkout. Add or update the page with the change.
 
 ## Community and Communication
 
@@ -201,16 +201,20 @@ bun run test:coverage                      # with a coverage report
 
 ## License
 
-By contributing to mtrl, you agree that your contributions will be licensed under the project's MIT License.
+By contributing to material, you agree that your contributions will be licensed under the project's MIT License.
 
 ---
 
-Thank you for contributing to mtrl! Your efforts help make this library better for everyone.
+Thank you for contributing to material! Your efforts help make this library better for everyone.
 
 ## Releasing
 
 Releases are published by GitHub Actions with npm trusted publishing
-(`.github/workflows/release.yml`); no npm token is involved.
+(`.github/workflows/publish.yml`); no npm token is involved.
+
+Until 3.0.0 is `latest`, `npm install material` installs 1.0.4, the earlier
+1.x library that lived under this name; the 3.0.0 pre-releases are on the
+`next` tag (`npm install material@next`).
 
 1. Open a release pull request that bumps `package.json` (`x.y.z`, or
    `x.y.z-next.N` for a pre-release), turns `[Unreleased]` in `CHANGELOG.md`
@@ -225,4 +229,4 @@ Releases are published by GitHub Actions with npm trusted publishing
 
 3. The workflow checks that the tag matches the version, builds, and
    publishes: a pre-release under the `next` dist-tag, a release under
-   `latest`. `npm view mtrl dist-tags` confirms.
+   `latest`. `npm view material dist-tags` confirms.
