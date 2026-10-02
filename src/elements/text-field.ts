@@ -101,6 +101,12 @@ const textFieldSpec = {
       config: "trailingIcon",
       update: (c, v) => void (v ? c.setTrailingIcon(String(v)) : c.removeTrailingIcon()),
     },
+    /**
+     * The trailing icon button's accessible name (FLO-532): with it the icon
+     * is a button that emits `trailing`; without it, or with an empty value,
+     * the icon is decorative and hidden from assistive technology (FLO-301).
+     */
+    "trailing-icon-label": { type: "string", config: "trailingIconLabel" },
     maxlength: { type: "number", config: "maxLength", update: inputAttribute("maxlength") },
     pattern: { type: "string", config: "pattern", update: inputAttribute("pattern") },
     // The input's required and the label's asterisk together (FLO-301)
