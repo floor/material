@@ -103,7 +103,7 @@ pieces.push(`<Button id="globals" label="Globals" popover="auto" inputMode="nume
 // The switch above is built before the checked binding is added. Add it on the host.
 const switchHost = `id=${expr("host-switch")}`;
 const app = `import { createSignal } from "solid-js";
-import { ${[...used].sort().join(", ")} } from "mtrl/solid";
+import { ${[...used].sort().join(", ")} } from "material/solid";
 
 export const App = () => {
   const [clicks, setClicks] = createSignal(0);
@@ -117,7 +117,7 @@ ${pieces.join("\n").replace(switchHost, `${switchHost} checked={checked()} onCha
 const dir = join(process.cwd(), "analysis/solid-ssr");
 await mkdir(dir, { recursive: true });
 await Bun.write(join(dir, "App.tsx"), app);
-await Bun.write(join(dir, "server.tsx"), `import "mtrl/ssr/solid";
+await Bun.write(join(dir, "server.tsx"), `import "material/ssr/solid";
 import { generateHydrationScript, renderToString, renderToStringAsync, renderToStream } from "solid-js/web";
 import { AsyncApp, counts, type Shape } from "../../scripts/fixtures/solid-ssr-async";
 import { App } from "./App";
@@ -152,7 +152,7 @@ for (const id of ids) {
 state.ready = true;
 `);
 await Bun.write(join(dir, "Context.tsx"), `import { createContext, useContext } from "solid-js";
-import { Tab, Tabs } from "mtrl/solid";
+import { Tab, Tabs } from "material/solid";
 const DefaultContext = createContext("DEFAULT");
 const RequiredContext = createContext<string | undefined>(undefined);
 const ReadDefault = () => <span id="context-label">{useContext(DefaultContext)}</span>;
@@ -170,7 +170,7 @@ export const RequiredContextApp = () =>
     <Tabs id="context-tabs" value="a"><Tab value="a"><ReadRequired /></Tab></Tabs>
   </RequiredContext.Provider>;
 `);
-await Bun.write(join(dir, "context-server.tsx"), `import "mtrl/ssr/solid";
+await Bun.write(join(dir, "context-server.tsx"), `import "material/ssr/solid";
 import { renderToString } from "solid-js/web";
 import { DefaultContextApp, RequiredContextApp } from "./Context";
 export const renderContext = (required: boolean): string =>
@@ -234,7 +234,7 @@ const bundle = async (entry: string, target: "browser" | "bun"): Promise<string>
     assert(!loaded.some((path) => /\/(?:ssr|linkedom)\//.test(path)), `Client loaded server code:\n${loaded.filter((path) => /ssr|linkedom/.test(path)).join("\n")}`);
   }
   const code = await result.outputs[0].text();
-  if (target === "browser") assert.doesNotMatch(code, /linkedom|from"mtrl\/ssr"|from 'mtrl\/ssr'/);
+  if (target === "browser") assert.doesNotMatch(code, /linkedom|from"material\/ssr"|from 'material\/ssr'/);
   return code;
 };
 
@@ -411,7 +411,7 @@ for (const report of summary) {
   const root = report.sameRoot === null ? "n/a" : report.sameRoot ? "kept" : "replaced";
   console.log(`${report.element}: template=${report.template ? "yes" : "no"} shadow=${report.shadowBeforeScript ? "yes" : "no"} sameRoot=${root} warnings=${report.warnings} errors=${report.errors}`);
 }
-console.log(`solid-ssr: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no mtrl/ssr or linkedom`);
+console.log(`solid-ssr: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no material/ssr or linkedom`);
 
 // Keep the bundle distinct from context-server.tsx so Bun imports the compiled module.
 const contextPath = join(dir, "context-server.bundle.js");

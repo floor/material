@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 /**
  * Each component subpath's exports, pinned (FLO-381), and each
- * `mtrl/components/<name>/constants` subpath's (FLO-384).
+ * `material/components/<name>/constants` subpath's (FLO-384).
  *
- * `mtrl/components/<name>` is public API like the root (FLO-351): every name
+ * `material/components/<name>` is public API like the root (FLO-351): every name
  * its index exports is a 1.x promise. This reads every component index with
  * the type checker, values and types, records each export as public or
  * deprecated (an `@deprecated` tag on its re-export), and pins the result in
@@ -22,7 +22,7 @@ export type ComponentExports = Record<string, ComponentExport[]>;
 const ROOT = join(import.meta.dir, "..");
 const FIXTURE = join(ROOT, "scripts/fixtures/component-exports.json");
 
-/** The component folders `mtrl/components/<name>` resolves to */
+/** The component folders `material/components/<name>` resolves to */
 export const componentNames = (): string[] =>
   readdirSync(join(ROOT, "src/components"))
     .filter((name) => existsSync(join(ROOT, `src/components/${name}/index.ts`)))
@@ -40,7 +40,7 @@ const deprecation = (symbol: ts.Symbol): string | undefined => {
   return undefined;
 };
 
-/** The `mtrl/components/<name>/constants` subpaths, pinned beside the indexes (FLO-384) */
+/** The `material/components/<name>/constants` subpaths, pinned beside the indexes (FLO-384) */
 export const constantsNames = (): string[] =>
   componentNames().filter((name) => existsSync(join(ROOT, `src/components/${name}/constants.ts`))).map((name) => `${name}/constants`);
 
@@ -76,8 +76,8 @@ export function diffComponentExports(pinned: ComponentExports, now: ComponentExp
   for (const component of new Set([...Object.keys(pinned), ...Object.keys(now)])) {
     const before = new Map((pinned[component] ?? []).map((e) => [e.name, e]));
     const after = new Map((now[component] ?? []).map((e) => [e.name, e]));
-    if (!pinned[component]) changes.push(`added subpath mtrl/components/${component}`);
-    if (!now[component]) changes.push(`removed subpath mtrl/components/${component}`);
+    if (!pinned[component]) changes.push(`added subpath material/components/${component}`);
+    if (!now[component]) changes.push(`removed subpath material/components/${component}`);
     for (const [name, e] of after) if (!before.has(name)) changes.push(`${component}: added   ${describe(e)}`);
     for (const [name, e] of before) if (!after.has(name)) changes.push(`${component}: removed ${describe(e)}`);
     for (const [name, e] of after) {

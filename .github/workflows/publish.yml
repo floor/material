@@ -111,4 +111,4 @@ jobs:
             *-*) flags="--prerelease --latest=false" ;;
             *) flags="--latest" ;;
           esac
-          gh release create "$tag" --title "mtrl $version" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag $flags
+          gh release create "$tag" --title "material $version" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag $flags

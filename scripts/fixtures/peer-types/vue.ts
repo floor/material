@@ -1,5 +1,5 @@
 import { h } from "vue";
-import { MButton } from "mtrl/vue";
+import { MButton } from "material/vue";
 
 export const ok = h(MButton, { disabled: false, onChange: (event) => { const value: string = event.detail.value; void value; } });
 

@@ -1,6 +1,6 @@
 {
-  "name": "mtrl",
-  "version": "0.10.6",
+  "name": "material",
+  "version": "3.0.0-next.0",
   "description": "Material Design 3 components for the web: plain JavaScript, web components, and React, Vue, Svelte and Solid components. TypeScript, zero dependencies.",
   "author": "floor",
   "license": "MIT",
@@ -492,11 +492,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/floor/mtrl.git"
+    "url": "git+https://github.com/floor/material.git"
   },
   "homepage": "https://md3.io",
   "bugs": {
-    "url": "https://github.com/floor/mtrl/issues"
+    "url": "https://github.com/floor/material/issues"
   },
   "peerDependencies": {
     "react": ">=18",
@@ -625,7 +625,7 @@
       "alphabetical"
     ],
     "navigationLinks": {
-      "GitHub": "https://github.com/floor/mtrl"
+      "GitHub": "https://github.com/floor/material"
     },
     "skipErrorChecking": true,
     "disableSources": false,

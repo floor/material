@@ -6,17 +6,17 @@ In 0.10.4 these 137 names are deprecated on the package root, and in 1.0.0 they
 leave it. Each is the same export at the path given: change the import, nothing else.
 The component factories, `configureHTML`, the theme helpers and the global defaults stay.
 
-**The subpaths are ESM-only, and so is 1.0.0.** CommonJS (`require('mtrl')`) reaches only the
+**The subpaths are ESM-only, and so is 1.0.0.** CommonJS (`require('material')`) reaches only the
 root: on 0.10.x keep the root import there, and move to ESM `import` with these paths for 1.0.0.
 
 ```ts
 // Before
-import { pipe, createBase, withEvents } from 'mtrl';
+import { pipe, createBase, withEvents } from 'material';
 // After
-import { pipe, createBase, withEvents } from 'mtrl/core/compose';
+import { pipe, createBase, withEvents } from 'material/core/compose';
 ```
 
-## `mtrl/core/compose`
+## `material/core/compose`
 
 | Name | Kind |
 | --- | --- |
@@ -74,7 +74,7 @@ import { pipe, createBase, withEvents } from 'mtrl/core/compose';
 | `withTrack` | value |
 | `withVariant` | value |
 
-## `mtrl/core`
+## `material/core`
 
 | Name | Kind |
 | --- | --- |
@@ -94,7 +94,7 @@ import { pipe, createBase, withEvents } from 'mtrl/core/compose';
 | `ThemedComponentConfig` | type |
 | `VariantComponentConfig` | type |
 
-## `mtrl/core/canvas`
+## `material/core/canvas`
 
 | Name | Kind |
 | --- | --- |
@@ -116,7 +116,7 @@ import { pipe, createBase, withEvents } from 'mtrl/core/compose';
 | `observeCanvasResize` | value |
 | `updateCanvasDimensions` | value |
 
-## `mtrl/core/dom`
+## `material/core/dom`
 
 | Name | Kind |
 | --- | --- |
@@ -152,7 +152,7 @@ import { pipe, createBase, withEvents } from 'mtrl/core/compose';
 | `TopLayerKind` | type |
 | `TopLayerOptions` | type |
 
-## `mtrl/core/state`
+## `material/core/state`
 
 | Name | Kind |
 | --- | --- |
@@ -169,7 +169,7 @@ import { pipe, createBase, withEvents } from 'mtrl/core/compose';
 | `StoreOptions` | type |
 | `Updater` | type |
 
-## `mtrl/core/utils`
+## `material/core/utils`
 
 | Name | Kind |
 | --- | --- |

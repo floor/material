@@ -30,7 +30,7 @@ export type RootExport = {
 const ROOT = join(import.meta.dir, "..");
 const FIXTURE = join(ROOT, "scripts/fixtures/root-exports.json");
 const TABLE = join(ROOT, "scripts/fixtures/root-exports.md");
-/** The core subpaths, `mtrl/core/<name>`, in the order a name's path is chosen */
+/** The core subpaths, `material/core/<name>`, in the order a name's path is chosen */
 const SUBPATHS = ["dom", "compose", "theme", "state", "utils", "canvas", "shapes"];
 
 const kindOf = (symbol: ts.Symbol): RootExport["kind"] =>
@@ -45,7 +45,7 @@ const deprecation = (symbol: ts.Symbol): string | undefined => {
   return undefined;
 };
 
-/** The root, `mtrl/core` and each core subpath, read with the type checker */
+/** The root, `material/core` and each core subpath, read with the type checker */
 function loadModules() {
   const entries = [join(ROOT, "src/index.ts"), join(ROOT, "src/core/index.ts"), ...SUBPATHS.map((s) => join(ROOT, `src/core/${s}/index.ts`))];
   const program = ts.createProgram(entries, {
@@ -59,8 +59,8 @@ function loadModules() {
     if (!source) throw new Error(`${file} is not in the program`);
     return checker.getExportsOfModule(checker.getSymbolAtLocation(source)!);
   };
-  /** `mtrl/core` or `mtrl/core/<subpath>` to its source entry */
-  const fileOf = (path: string) => join(ROOT, path === "mtrl/core" ? "src/core/index.ts" : `src/core/${path.slice("mtrl/core/".length)}/index.ts`);
+  /** `material/core` or `material/core/<subpath>` to its source entry */
+  const fileOf = (path: string) => join(ROOT, path === "material/core" ? "src/core/index.ts" : `src/core/${path.slice("material/core/".length)}/index.ts`);
   return { entries, resolve, exportsOf, fileOf };
 }
 
@@ -72,7 +72,7 @@ export function readRootExports(): RootExport[] {
   for (const subpath of SUBPATHS) {
     for (const symbol of exportsOf(join(ROOT, `src/core/${subpath}/index.ts`))) {
       const names = reach.get(resolve(symbol)) ?? new Map<string, string>();
-      if (!names.has(symbol.name)) names.set(symbol.name, `mtrl/core/${subpath}`);
+      if (!names.has(symbol.name)) names.set(symbol.name, `material/core/${subpath}`);
       reach.set(resolve(symbol), names);
     }
   }
@@ -90,7 +90,7 @@ export function readRootExports(): RootExport[] {
       if (to && to !== symbol.name && rootByName.get(to) === target) {
         return { name: symbol.name, kind: kindOf(target), status: "renamed", to };
       }
-      const path = reach.get(target)?.get(symbol.name) ?? (core.get(symbol.name) === target ? "mtrl/core" : undefined);
+      const path = reach.get(target)?.get(symbol.name) ?? (core.get(symbol.name) === target ? "material/core" : undefined);
       if (!path) throw new Error(`${symbol.name} is deprecated on the root but no subpath exports it`);
       if (!note.includes(`'${path}'`)) throw new Error(`${symbol.name}: the deprecation should name '${path}', it says: ${note}`);
       return { name: symbol.name, kind: kindOf(target), status: "deprecated", path };
@@ -158,19 +158,19 @@ export function migrationTable(entries: RootExport[]): string {
     "leave it. Each is the same export at the path given: change the import, nothing else.",
     "The component factories, `configureHTML`, the theme helpers and the global defaults stay.",
     "",
-    "**The subpaths are ESM-only, and so is 1.0.0.** CommonJS (`require('mtrl')`) reaches only the",
+    "**The subpaths are ESM-only, and so is 1.0.0.** CommonJS (`require('material')`) reaches only the",
     "root: on 0.10.x keep the root import there, and move to ESM `import` with these paths for 1.0.0.",
     "",
     "```ts",
     "// Before",
-    "import { pipe, createBase, withEvents } from 'mtrl';",
+    "import { pipe, createBase, withEvents } from 'material';",
     "// After",
-    "import { pipe, createBase, withEvents } from 'mtrl/core/compose';",
+    "import { pipe, createBase, withEvents } from 'material/core/compose';",
     "```",
     "",
   ];
   // The composition core first: the group most users import
-  const order = (path: string) => (path === "mtrl/core/compose" ? "" : path);
+  const order = (path: string) => (path === "material/core/compose" ? "" : path);
   for (const [path, names] of [...groups].sort(([a], [b]) => order(a).localeCompare(order(b)))) {
     lines.push(`## \`${path}\``, "", "| Name | Kind |", "| --- | --- |");
     for (const e of names) lines.push(`| \`${e.name}\` | ${e.kind} |`);

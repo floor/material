@@ -10,7 +10,7 @@
  * live property shadows is its `default*` prop. Element events are Vue events
  * of the same name. The element registers on mount, never at import.
  *
- * When `mtrl/ssr/vue` is loaded, a server render emits the declarative shadow
+ * When `material/ssr/vue` is loaded, a server render emits the declarative shadow
  * template and the light DOM from a single pass over the slots, including an
  * `async setup()` child under Suspense. The client renders the slots and not
  * the template: the HTML parser has already moved that template into the

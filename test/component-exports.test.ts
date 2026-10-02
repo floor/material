@@ -1,6 +1,6 @@
 // test/component-exports.test.ts
 //
-// FLO-381: `mtrl/components/<name>` is public API like the root. Each index's
+// FLO-381: `material/components/<name>` is public API like the root. Each index's
 // export list is pinned, so a name joining or leaving a component subpath fails
 // here until the fixture is regenerated (`bun run component-exports:update`)
 // and the diff reviewed. 0.10.5 deprecated the internals the indexes leaked;

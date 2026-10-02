@@ -42,14 +42,14 @@ export const componentStyles: Record<string, { source: string; dependencies: str
 // All shipped components have selective CSS entries.
 export const fullOnlyStyles: string[] = [];
 
-// Themes in the full stylesheet, each also shipped as `mtrl/themes/<name>`.
+// Themes in the full stylesheet, each also shipped as `material/themes/<name>`.
 // 1.0.0 removed material, winter, browngreen and legacy (FLO-308, FLO-428).
 export const themeStyles = [
   "baseline", "ocean", "desert", "forest", "sunset", "spring", "summer",
   "autumn", "brownbeige", "sageivory", "tealcaramel", "highcontrast",
 ];
 
-// Themes shipped only as `mtrl/themes/<name>`, outside the full stylesheet, so
+// Themes shipped only as `material/themes/<name>`, outside the full stylesheet, so
 // an app pays for one only by importing it: the M3 scheme variants generated
 // by scripts/generate-themes.ts (FLO-308). Every theme file is in exactly one
 // of the two lists (test/core/theme).
@@ -63,9 +63,9 @@ export const baseStyles = [
   "utilities/ripple", "base/document",
 ];
 
-// Opt-in explicit contrast for the baseline theme (`mtrl/styles/contrast`).
+// Opt-in explicit contrast for the baseline theme (`material/styles/contrast`).
 // Emitted in the base cascade layer, beside typography. A theme's own file is
-// `mtrl/themes/<name>-contrast`.
+// `material/themes/<name>-contrast`.
 export const contrastStyle = "contrast";
 
 // The type classes, text utilities, heading styles and typescale tokens that
@@ -73,7 +73,7 @@ export const contrastStyle = "contrast";
 export const typographyStyles = [
   "base/typescale", "base/typography",
 ];
-// What `mtrl/styles/typography`'s module imports first, as a component's
+// What `material/styles/typography`'s module imports first, as a component's
 // imports its dependencies. The sheet has to come after the base: both are in
 // mtrl.base, and its `margin-bottom` on h1 to h6 and p has the specificity of
 // the reset's `margin: 0`, so the later one wins.

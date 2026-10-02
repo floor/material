@@ -1,6 +1,6 @@
 // test/build/release-major-guard.test.ts
 //
-// release.yml is also the release workflow of the `material` repository, whose
+// publish.yml is also the release workflow of the `material` repository, whose
 // npm package has an old 1.x line published from the v1 branch. npm's trusted
 // publisher cannot tell the two lines apart (it knows the repository and this
 // file's name, not the branch), so the file must refuse what is not its own:
@@ -15,7 +15,7 @@ const STEP_NAME = "A material release is 3.0.0 or later";
 
 interface Step { name?: string; run?: string }
 const { YAML } = Bun as unknown as { YAML: { parse(text: string): unknown } };
-const workflow = YAML.parse(await Bun.file(".github/workflows/release.yml").text()) as { jobs: { publish: { steps: Step[] } } };
+const workflow = YAML.parse(await Bun.file(".github/workflows/publish.yml").text()) as { jobs: { publish: { steps: Step[] } } };
 const step = workflow.jobs.publish.steps.find(candidate => candidate.name === STEP_NAME);
 
 /** Runs the step's text under `sh`, with `name` and `version` written to a package.json in a fresh directory. */
@@ -32,9 +32,9 @@ const runStep = async (name: string, version: string): Promise<{ code: number; s
   }
 };
 
-describe("release.yml's material major guard", () => {
+describe("publish.yml's material major guard", () => {
   test("the step is there", () => {
-    expect(step, `release.yml has no step named "${STEP_NAME}"`).toBeDefined();
+    expect(step, `publish.yml has no step named "${STEP_NAME}"`).toBeDefined();
   });
 
   // The guard is only a guard if it runs before anything can publish: its index

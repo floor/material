@@ -35,9 +35,9 @@ export function changelogSection(changelog: string, version: string): string {
 /** The section and the footer: npm, the docs, the full history */
 export function releaseNotes(changelog: string, version: string): string {
   const footer = [
-    `npm: [\`mtrl@${version}\`](https://www.npmjs.com/package/mtrl/v/${version})`,
+    `npm: [\`material@${version}\`](https://www.npmjs.com/package/material/v/${version})`,
     "Docs: [md3.io](https://md3.io)",
-    "Full history: [CHANGELOG.md](https://github.com/floor/mtrl/blob/main/CHANGELOG.md)",
+    "Full history: [CHANGELOG.md](https://github.com/floor/material/blob/main/CHANGELOG.md)",
   ].join(" · ");
   return `${changelogSection(changelog, version)}\n\n---\n\n${footer}\n`;
 }

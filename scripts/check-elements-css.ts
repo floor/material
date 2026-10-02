@@ -27,12 +27,12 @@ for (const name of names) {
     `${name}.css differs from the registered CSS string`,
   );
   assert.equal(
-    import.meta.resolve(`mtrl/elements/css/${name}.css`),
+    import.meta.resolve(`material/elements/css/${name}.css`),
     pathToFileURL(resolve(dir, `${name}.css`)).href,
     `${name}.css export must resolve to the CSS file`,
   );
   assert.equal(
-    import.meta.resolve(`mtrl/elements/css/${name}`),
+    import.meta.resolve(`material/elements/css/${name}`),
     pathToFileURL(resolve(dir, `${name}.js`)).href,
     `${name} must keep resolving to the JS registration module`,
   );
@@ -46,7 +46,7 @@ for (const { spec } of Object.values(elements)) {
     `${spec.name} host CSS differs from the browser's registered string`,
   );
   assert.equal(
-    import.meta.resolve(`mtrl/elements/css/hosts/${spec.name}.css`),
+    import.meta.resolve(`material/elements/css/hosts/${spec.name}.css`),
     pathToFileURL(resolve(file)).href,
     `${spec.name} host export must resolve to the CSS file`,
   );

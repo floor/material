@@ -12,7 +12,7 @@
  * registers when the action first runs, never at import.
  *
  * Each component can also emit a declarative shadow root on the server
- * (FLO-375). `shadowMarkup` reads the renderer `mtrl/ssr/svelte` installs on
+ * (FLO-375). `shadowMarkup` reads the renderer `material/ssr/svelte` installs on
  * `Symbol.for("mtrl.ssr")` — the same bridge as React — and returns the
  * `<template shadowrootmode>` string there, or `""` in the browser, when no
  * renderer is registered, and when the element opts out of SSR. The client
@@ -215,7 +215,7 @@ export const declaration = (
 };
 
 /**
- * Installed only by `mtrl/ssr/svelte` on `Symbol.for("mtrl.ssr")`. Returns the
+ * Installed only by `material/ssr/svelte` on `Symbol.for("mtrl.ssr")`. Returns the
  * `<template shadowrootmode>` for one host, or `""` when the host opts out.
  */
 export type SvelteShadowRenderer = (
@@ -228,7 +228,7 @@ export type SvelteShadowRenderer = (
 
 /**
  * The declarative shadow template for a host, or `""` in the browser, when
- * `mtrl/ssr/svelte` was not imported, and when the element opts out of SSR.
+ * `material/ssr/svelte` was not imported, and when the element opts out of SSR.
  * Generated components emit it with `{#if shadow}{@html shadow}{/if}`.
  */
 export const shadowMarkup = (

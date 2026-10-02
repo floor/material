@@ -45,7 +45,7 @@ const entry = `${root}/src/index.ts`;
 // ── Public components ─────────────────────────────────────────────
 //
 // One row per component folder. `imports` are the factories a consumer
-// actually names. The bundle is what `import { … } from "mtrl"` keeps.
+// actually names. The bundle is what `import { … } from "material"` keeps.
 
 export const COMPONENTS = [
   { name: "badge", imports: ["createBadge"] },
@@ -111,7 +111,7 @@ export const SCENARIO_DEFS = [
     name: "all",
     imports: COMPONENTS.flatMap((component) => component.imports),
   },
-  // mtrl/core/shapes (FLO-346), not the package root: every Material shape by
+  // material/core/shapes (FLO-346), not the package root: every Material shape by
   // name, and one shape alone, which must not carry the other 34
   { name: "shapes", imports: ["materialShapePath"] },
   { name: "shape-heart", imports: ["shapeHeart", "polygonPath"] },
@@ -183,7 +183,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   timepicker: kb(10.95), // the draft, input event, dialog in the component's tree and disabled (FLO-288): 10,639; Escape as a key press on the shared stack (FLO-548 family 6 C): core/dom/layer's stack and marker, paid once, and the open option applied when the factory returns: 10,628 to 11,099. kb(10.9) is 11,161 (62 above, short of 100); raised to kb(10.95) = 11,212 (113 above), Node 22.23.3 / npm 10.9.9
   "top-app-bar": kb(4.4),
   toolbar: kb(11.05), // FLO-304, with its icon buttons and buttons; the overflow menu is injected: 11,302; slotted items for <m-toolbar>: 11,374; the toggles' change value (FLO-380): 11,454 to 11,479; 11,166 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  // mtrl/core/shapes (FLO-346): every shape by name, and one shape alone
+  // material/core/shapes (FLO-346): every shape by name, and one shape alone
   shapes: kb(4.2), // materialShapePath, all 35: 4,190
   "shape-heart": kb(2.7), // shapeHeart and polygonPath: 2,623
   tooltip: kb(5.9), // layer: "top" and the core/dom top-layer helper: 5,562 to 5,952

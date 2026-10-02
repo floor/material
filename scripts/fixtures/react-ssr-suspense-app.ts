@@ -1,7 +1,7 @@
 // scripts/fixtures/react-ssr-suspense-app.ts
 // The six shapes from the SSR audit. React 19 suspends with use(); React 18 throws the promise.
 import * as React from "react";
-import { Button, Card } from "mtrl/react";
+import { Button, Card } from "material/react";
 
 const h = React.createElement;
 export const SUSPENSE_TEXT = "loaded 5";

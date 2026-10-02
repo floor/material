@@ -91,4 +91,4 @@ export {
 } from "./content";
 
 // NOTE: Constants are exported from './constants' directly
-// Import constants from 'mtrl/components/card/constants' for tree-shaking
+// Import constants from 'material/components/card/constants' for tree-shaking

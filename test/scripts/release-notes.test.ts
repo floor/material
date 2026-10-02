@@ -1,6 +1,6 @@
 // test/scripts/release-notes.test.ts
 //
-// The GitHub Release's notes come from CHANGELOG.md (release.yml): each
+// The GitHub Release's notes come from CHANGELOG.md (publish.yml): each
 // version's section, wherever it sits, and a loud failure when there is none.
 import { describe, expect, test } from "bun:test";
 import { changelogSection, releaseNotes } from "../../scripts/release-notes";
@@ -85,8 +85,8 @@ describe("changelogSection", () => {
 test("releaseNotes ends the section with the npm, docs and history footer", () => {
   expect(releaseNotes(CHANGELOG, "0.10.4")).toBe(
     "### Fixed\n\n- The range band.\n\n---\n\n" +
-      "npm: [`mtrl@0.10.4`](https://www.npmjs.com/package/mtrl/v/0.10.4) · Docs: [md3.io](https://md3.io) · " +
-      "Full history: [CHANGELOG.md](https://github.com/floor/mtrl/blob/main/CHANGELOG.md)\n",
+      "npm: [`material@0.10.4`](https://www.npmjs.com/package/material/v/0.10.4) · Docs: [md3.io](https://md3.io) · " +
+      "Full history: [CHANGELOG.md](https://github.com/floor/material/blob/main/CHANGELOG.md)\n",
   );
 });
 

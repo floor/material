@@ -99,13 +99,13 @@ const validateOptions = (options: RenderOptions): string => {
  * is listed in the README under Markup and sanitizing.
  *
  * Each call owns a temporary DOM realm (zero layout, 1024×768 viewport).
- * The published mtrl/ssr entry registers element CSS automatically.
+ * The published material/ssr entry registers element CSS automatically.
  * Hooks must be synchronous and must not reenter the renderer. Base/theme CSS belongs
  * in the page head. Every shadow root receives its own styles.
  * Specs may opt out with `ssr: false` or a synchronous `(host) => boolean`.
  * An opted-out element emits its authored host and light DOM without a
  * declarative root or shadow styles. Eligible light-DOM descendants still
- * render their own roots. Load mtrl/elements/preupgrade.css in the page to
+ * render their own roots. Load material/elements/preupgrade.css in the page to
  * preserve the host's box until normal browser upgrade.
  *
  * Carousel and FAB menu opt out; menu and split-button opt out when

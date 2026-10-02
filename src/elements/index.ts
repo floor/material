@@ -3,8 +3,8 @@
  * The web component layer: each component as a custom element.
  *
  * Importing registers nothing and touches no DOM, so this module is safe on a
- * server. In the browser, import the CSS (`mtrl/elements/css` or one
- * component's `mtrl/elements/css/<name>`), then call a `define*` function or
+ * server. In the browser, import the CSS (`material/elements/css` or one
+ * component's `material/elements/css/<name>`), then call a `define*` function or
  * `defineAll()`.
  *
  * @module elements

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// mtrl/svelte in a real browser.
+// material/svelte in a real browser.
 //
 // The same app (scripts/fixtures/svelte-app.svelte) is compiled with the
 // Svelte compiler, rendered to a string with svelte/server and no DOM, then

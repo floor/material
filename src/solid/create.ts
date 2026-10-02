@@ -12,7 +12,7 @@
  *
  * Written without JSX, so it compiles with the rest of the library.
  *
- * When `mtrl/ssr/solid` is loaded, a server render prepends the declarative
+ * When `material/ssr/solid` is loaded, a server render prepends the declarative
  * shadow template. The client renders nothing in its place: the HTML parser
  * has already moved that template into the shadow root. Without the import
  * the markup is unchanged (FLO-374).

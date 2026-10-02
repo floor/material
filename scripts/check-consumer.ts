@@ -44,25 +44,25 @@ try {
     ["solid", ["--jsx", "preserve", "--jsxImportSource", "solid-js"]],
   ] as const) {
     const file = join(directory, `jsx-${framework}.tsx`);
-    await writeFile(file, `import type {} from "mtrl/${framework}/jsx";\nexport const tag = <m-switch checked supporting-text="Help" />;\n`);
+    await writeFile(file, `import type {} from "material/${framework}/jsx";\nexport const tag = <m-switch checked supporting-text="Help" />;\n`);
     const tsc = Bun.spawnSync([
       resolve("node_modules/.bin/tsc"), "--noEmit", "--strict", "--skipLibCheck", "--moduleResolution", "bundler",
       "--module", "esnext", "--target", "es2022", "--lib", "es2022,dom", ...flags, file,
     ], { cwd: directory, stdout: "pipe", stderr: "pipe" });
-    assert.equal(tsc.exitCode, 0, `mtrl/${framework}/jsx from the packed package:\n${tsc.stdout}${tsc.stderr}`);
+    assert.equal(tsc.exitCode, 0, `material/${framework}/jsx from the packed package:\n${tsc.stdout}${tsc.stderr}`);
   }
-  console.log("JSX entries: mtrl/react/jsx and mtrl/solid/jsx type a bare tag from the packed package");
+  console.log("JSX entries: material/react/jsx and material/solid/jsx type a bare tag from the packed package");
 
   // The component subpaths are an explicit list since 1.0.0 (FLO-381): each one
   // resolves from the packed package, and the folders inside a component, which
   // the old `./components/*` pattern matched across slashes, do not.
   const componentSubpaths = Object.keys((await Bun.file("package.json").json()).exports)
-    .filter(key => key.startsWith("./components/")).map(key => `mtrl${key.slice(1)}`);
+    .filter(key => key.startsWith("./components/")).map(key => `material${key.slice(1)}`);
   const nestedSubpaths = [
     "bottom-sheet/features", "carousel/features", "chips/chip", "chips/chip/constants", "chips/features",
     "drawer/features", "list/features", "menu/features", "progress/features", "search/features",
     "side-sheet/features", "slider/features", "text-field/features",
-  ].map(path => `mtrl/components/${path}`);
+  ].map(path => `material/components/${path}`);
   const probe = join(directory, "resolve-components.mjs");
   // import.meta.resolve maps a specifier through exports without opening the
   // file, so the probe also checks that the module and its declarations exist.
@@ -96,7 +96,7 @@ console.log(JSON.stringify(out));
   // addClass 603 and button 8,447 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
   // addClass 603; 100 B floor, 750 against b9dab36e, Node 22.23.3 / npm 10.9.9.
   for (const [name, symbol, budget, from] of [
-    ["addClass", "addClass", 750, "mtrl/core/dom"], ["text-field", "createTextField", 9700, "mtrl"], ["button", "createButton", 8550, "mtrl"],
+    ["addClass", "addClass", 750, "material/core/dom"], ["text-field", "createTextField", 9700, "material"], ["button", "createButton", 8550, "material"],
   ] as const) {
     const entry = join(directory, `${name}.ts`);
     await writeFile(entry, `export { ${symbol} } from '${from}';`);
@@ -134,7 +134,7 @@ console.log(JSON.stringify(out));
   for (const scenario of scenarios) {
     for (const style of ["full", "selective"]) {
       const name = `${style}-${scenario.name}`;
-      const css = style === "full" ? ["mtrl/styles"] : ["mtrl/styles/base", `mtrl/styles/${scenario.component}`, "mtrl/themes/ocean"];
+      const css = style === "full" ? ["material/styles"] : ["material/styles/base", `material/styles/${scenario.component}`, "material/themes/ocean"];
       await writeFile(join(directory, `${name}.ts`), css.map(path => `import '${path}';`).join("\n") +
         '\nimport "./fixture.css";\nimport "./fixture.ts";');
       await writeFile(join(directory, `${name}.html`), `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>mtrl CSS comparison</title></head><body data-case="${scenario.component}"><main></main><script type="module" src="./${name}.ts"></script></body></html>`);
@@ -143,8 +143,8 @@ console.log(JSON.stringify(out));
   }
   // This independent entry must not statically import progress through a gallery.
   await writeFile(join(directory, "lazy.ts"), `
-    import button from 'mtrl/components/button';
-    import 'mtrl/styles/base'; import 'mtrl/styles/button';
+    import button from 'material/components/button';
+    import 'material/styles/base'; import 'material/styles/button';
     const b = button({ text: 'Load progress', progress: { value: 40, indeterminate: false } });
     document.body.append(b.element);
     b.element.addEventListener('click', async () => { await b.showProgress(); document.body.dataset.loaded = 'true'; });
@@ -155,8 +155,8 @@ console.log(JSON.stringify(out));
   // the menu nested items at creation; without it the items are flat, and
   // window.nest() gives it nested ones through setItems.
   await writeFile(join(directory, "menu.ts"), `
-    import { createMenu } from 'mtrl';
-    import 'mtrl/styles/base'; import 'mtrl/styles/menu';
+    import { createMenu } from 'material';
+    import 'material/styles/base'; import 'material/styles/menu';
     const opener = document.createElement('button');
     opener.textContent = 'Actions';
     document.body.append(opener);
@@ -170,10 +170,10 @@ console.log(JSON.stringify(out));
   await writeFile(join(directory, "menu.html"), '<!doctype html><html><body><script type="module" src="./menu.ts"></script></body></html>');
   input.menu = join(directory, "menu.html");
   // Exercise deduplication even when the app explicitly imports a dependency.
-  await writeFile(join(directory, "dedup.ts"), "import 'mtrl/styles/base'; import 'mtrl/styles/button-group'; import 'mtrl/styles/button'; document.body.dataset.ready = 'true';");
+  await writeFile(join(directory, "dedup.ts"), "import 'material/styles/base'; import 'material/styles/button-group'; import 'material/styles/button'; document.body.dataset.ready = 'true';");
   await writeFile(join(directory, "dedup.html"), '<!doctype html><html><body><script type="module" src="./dedup.ts"></script></body></html>');
   input.dedup = join(directory, "dedup.html");
-  await writeFile(join(directory, "dedup-reference.ts"), "import 'mtrl/styles/base'; import 'mtrl/styles/button-group'; document.body.dataset.ready = 'true';");
+  await writeFile(join(directory, "dedup-reference.ts"), "import 'material/styles/base'; import 'material/styles/button-group'; document.body.dataset.ready = 'true';");
   await writeFile(join(directory, "dedup-reference.html"), '<!doctype html><html><body><script type="module" src="./dedup-reference.ts"></script></body></html>');
   input["dedup-reference"] = join(directory, "dedup-reference.html");
   const outDir = join(directory, "site");

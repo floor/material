@@ -39,7 +39,7 @@ git clone https://github.com/floor/md3.io.git
 cd md3.io
 bun install
 
-# Serves http://localhost:4300 and rebuilds mtrl, then the site, when mtrl/src changes
+# Serves http://localhost:4300 and rebuilds mtrl, then the site, when material/src changes
 bun run dev
 ```
 
@@ -102,7 +102,7 @@ md3.io is the best place to develop and test your components (see "Testing Your 
 
 1. Its playgrounds are configured in `src/shared/components.ts` of the md3.io repository.
 2. Component documentation lives in its `docs/components/`, and `bun run docs:check` checks every example against your mtrl checkout.
-3. `bun run dev` rebuilds mtrl and the site whenever `mtrl/src` changes.
+3. `bun run dev` rebuilds mtrl and the site whenever `material/src` changes.
 
 This separation of the library code (mtrl) and the documentation site (md3.io) keeps the main library clean while providing a rich development environment.
 
@@ -141,7 +141,7 @@ bun run build
 bun run size:check
 ```
 
-The size check packs and installs the local distribution in a temporary directory, checks Node ESM and TypeScript imports (and that `require('mtrl')` does not resolve: the package is ESM-only), and measures minified consumer bundles with gzip and Brotli. It enforces budgets for individual imports, a form, CSS, and the initial button chunks. Results are saved to `analysis/package-size.json`. It does not rebuild `dist`.
+The size check packs and installs the local distribution in a temporary directory, checks Node ESM and TypeScript imports (and that `require('material')` does not resolve: the package is ESM-only), and measures minified consumer bundles with gzip and Brotli. It enforces budgets for individual imports, a form, CSS, and the initial button chunks. Results are saved to `analysis/package-size.json`. It does not rebuild `dist`.
 
 For a second bundler and real-browser checks:
 
@@ -210,7 +210,7 @@ Thank you for contributing to mtrl! Your efforts help make this library better f
 ## Releasing
 
 Releases are published by GitHub Actions with npm trusted publishing
-(`.github/workflows/release.yml`); no npm token is involved.
+(`.github/workflows/publish.yml`); no npm token is involved.
 
 1. Open a release pull request that bumps `package.json` (`x.y.z`, or
    `x.y.z-next.N` for a pre-release), turns `[Unreleased]` in `CHANGELOG.md`
@@ -225,4 +225,4 @@ Releases are published by GitHub Actions with npm trusted publishing
 
 3. The workflow checks that the tag matches the version, builds, and
    publishes: a pre-release under the `next` dist-tag, a release under
-   `latest`. `npm view mtrl dist-tags` confirms.
+   `latest`. `npm view material dist-tags` confirms.
