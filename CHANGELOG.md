@@ -1227,10 +1227,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **The outlined text field's notch leaves the floated label clear in forced colours.**
   Forced colours repaints a declared-`transparent` border in the line's own colour, so the notch's
   open top edge — the gap the floated label sits in — was drawn as part of the top line, straight
-  through the label: 31 of 31 pixels of the line's colour across the label's box, in the factory and
-  in `<m-text-field>`, left-to-right and right-to-left. Inside `@media (forced-colors: active)` an
-  open notch now has no top border at all; the leading and trailing segments still draw theirs, and
-  nothing outside the media query changes.
+  across the whole label, in the factory and in `<m-text-field>`, left-to-right and right-to-left,
+  and both when the script opened the notch and when the input's own state floated the label first
+  (a value set without an event, an autofilled field). Inside `@media (forced-colors: active)` an
+  open notch now has no top border at all, under the class the script sets and under the selectors
+  that read the input's own state; the leading and trailing segments still draw theirs, and nothing
+  outside the media query changes.
 - **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"` (FLO-592).**
   The `touch-target` mixin anchored its `::after` with `inset-inline-start: 50%` and then moved it
   with the physical `translate(-50%, -50%)`. Right-to-left, the logical inset pins the box's right
