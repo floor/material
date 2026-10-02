@@ -76,7 +76,10 @@ export const snapshot = (host: Element, authoredIds: string[]): Snapshot => {
       // Any subsequent factory/authored style remains in the node comparison.
       const first = root.firstElementChild;
       const inline = !root.adoptedStyleSheets.length && first?.localName === "style" ? first : null;
-      result[`${path}/shadow/css`] = inline ? css(inline.textContent ?? "") :
+      // The shadow's first rule undoes a document pre-upgrade sheet. The
+      // browser adopts the component sheets without it; drop it before comparing.
+      const text = (inline?.textContent ?? "").replace(/^:host,:host::before,:host::after\{all:unset\}\n/, "");
+      result[`${path}/shadow/css`] = inline ? css(text) :
         root.adoptedStyleSheets.map(sheet => Array.from(sheet.cssRules, rule => rule.cssText).join("\n")).join("\n");
       Array.from(root.childNodes).filter(child => child !== inline).forEach((child, index) => walk(child, `${path}/shadow/${index}`));
     }

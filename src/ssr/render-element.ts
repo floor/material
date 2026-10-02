@@ -90,7 +90,10 @@ const validateOptions = (options: RenderOptions): string => {
  * An opted-out element emits its authored host and light DOM without a
  * declarative root or shadow styles. Eligible light-DOM descendants still
  * render their own roots. Load mtrl/elements/preupgrade.css in the page to
- * preserve the host's box until normal browser upgrade.
+ * preserve an opted-out host's box until normal browser upgrade. A host this
+ * function renders with a shadow root starts its shadow style with a rule
+ * that undoes those pre-upgrade styles, so the same link does not paint over
+ * the rendered element.
  *
  * Carousel, FAB menu and toolbar opt out; menu and split-button opt out when
  * they declare nested submenus. Async button `showProgress` or card `buttons`
