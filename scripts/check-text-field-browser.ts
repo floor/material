@@ -476,8 +476,9 @@ type LayoutRow = {
  * from the container's start edge (its end edge for `…End`), so one expectation
  * covers both directions.
  *
- * Right to left is measured for the factory only: inside a shadow root the
- * filled rules' `[dir]` selectors do not match (FLO-562).
+ * Right to left is a `dir` on an ancestor of the field: for `<m-text-field>`
+ * that ancestor is outside the shadow root, where the stylesheet's `[dir]`
+ * selectors do not reach (FLO-562).
  */
 export async function checkTextFieldLayout(page: Page, api: "factory" | "element"): Promise<void> {
   const rows = await page.evaluate(async (api) => {
@@ -486,6 +487,7 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
       ["leading icon", { leadingIcon: icon }],
       ["leading icon, value", { leadingIcon: icon, value: "Ada" }],
       ["trailing icon, value", { trailingIcon: icon, value: "Ada" }],
+      ["both icons, value", { leadingIcon: icon, trailingIcon: icon, value: "Ada" }],
       ["prefix, value", { prefixText: "$", value: "12" }],
       ["suffix, value", { suffixText: "kg", value: "12" }],
       ["leading icon, prefix, value", { leadingIcon: icon, prefixText: "$", value: "12" }],
@@ -500,7 +502,7 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
     const stage = document.createElement("div");
     document.body.append(stage);
     const mounted: { name: string; root: HTMLElement; rtl: boolean; destroy?: () => void }[] = [];
-    for (const variant of ["filled", "outlined"]) for (const density of ["default", "compact"]) for (const dir of api === "factory" ? ["ltr", "rtl"] : ["ltr"]) {
+    for (const variant of ["filled", "outlined"]) for (const density of ["default", "compact"]) for (const dir of ["ltr", "rtl"]) {
       for (const [name, extra] of cases) {
         const cell = document.createElement("div");
         cell.dir = dir;
@@ -573,7 +575,7 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
   // Every failure is reported, not only the first
   const failures: string[] = [];
   const expect = (ok: boolean, message: string): void => { if (!ok) failures.push(message); };
-  assert.equal(rows.length, api === "factory" ? 104 : 52);
+  assert.equal(rows.length, 112);
   const named = new Map(rows.map((row) => [row.name, row]));
   for (const row of rows) {
     const { name } = row;
@@ -676,7 +678,7 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
     }
   }
   assert.deepEqual(failures, [], `${failures.length} of the layout assertions failed`);
-  console.log(`Passed text field layout (${api}): ${rows.length} fields, filled and outlined, default and compact${api === "factory" ? ", left to right and right to left" : ""} — icons 12dp in and 16dp from the content, an affix 2dp from the text, the label at the content's start; 8dp above the filled label's line and under the text, the outlined label on the edge; a multiline field's first line clear of its label.`);
+  console.log(`Passed text field layout (${api}): ${rows.length} fields, filled and outlined, default and compact, left to right and right to left — icons 12dp in and 16dp from the content, an affix 2dp from the text, the label at the content's start; 8dp above the filled label's line and under the text, the outlined label on the edge; a multiline field's first line clear of its label.`);
 }
 
 /**
