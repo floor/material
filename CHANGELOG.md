@@ -1052,6 +1052,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **The slider's label takes the Body Large role, and a labelled horizontal slider is 4px
+  taller (FLO-587).** The label on a slider is this library's — the specification puts no label
+  on a slider — so the form controls' label role decides, as it does for the checkbox, radio
+  and switch labels: the label's text is now 16px on a 24px line (was 18px on an inherited 20px
+  line). A horizontal slider with a label is 4px taller: 72 → 76px at XS and S, 76 → 80 at M,
+  92 → 96 at L, 132 → 136 at XL; a vertical slider's height is unchanged. A layout that
+  reserved the old height gains 4px per labelled slider.
 - **A short chip with a secondary action is wider, by the specification.** Material 3, Chips:
   "Secondary actions (such as a trailing icon button for Remove) must have a 48x48dp
   interaction target that doesn't interfere with the chip's primary action (such as Edit or
@@ -1147,11 +1154,6 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
-- **The slider's label takes Body Large, not 18px, a size on no type role (FLO-587).** It was
-  `font-size: 18px` with weight 400 — between body medium and body large, on none of the
-  typescale's sizes — where the checkbox, radio and switch labels are Body Large. It now takes
-  that role through the same mixin: 16px, a 24px line height, 0.5px tracking, Regular, and the
-  typeface token. The label is 2px smaller and the slider's height follows it.
 - **The side sheet's and the dialog's close buttons reach 48 x 48.** Both were hand-built 40px
   buttons with no expanded target, so a pointer 4px outside an edge — the outer band of the M3
   target — hit nothing, left-to-right and right-to-left alike. Each now carries the icon button's
