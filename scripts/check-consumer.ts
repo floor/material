@@ -278,6 +278,7 @@ console.log(JSON.stringify(out));
     }));
   }
   const failures: string[] = [];
+  const retaken: string[] = [];
   let comparisons = 0;
   // For chasing a flaky comparison: CONSUMER_SCENARIOS=split-button-open
   // compares only those scenarios, CONSUMER_ROUNDS=20 repeats the whole matrix.
@@ -298,11 +299,32 @@ console.log(JSON.stringify(out));
         await page.evaluate(() => document.fonts.ready);
         if (scenario.state === "hover") await page.getByRole("button").first().hover();
         if (scenario.state === "focus") await page.keyboard.press("Tab");
-        await page.screenshot({ path: join(artifacts, `${label}-${i === 0 ? "full" : "selective"}.png`), fullPage: true, animations: "disabled" });
       }));
+      const capture = async (): Promise<Buffer[]> => {
+        await Promise.all(pages.map((page, i) =>
+          page.screenshot({ path: join(artifacts, `${label}-${i === 0 ? "full" : "selective"}.png`), fullPage: true, animations: "disabled" })));
+        return Promise.all(["full", "selective"].map(style => readFile(join(artifacts, `${label}-${style}.png`))));
+      };
+      let [fullPNG, selectivePNG] = await capture();
       const [full, selective] = await Promise.all(pages.map(snapshot));
-      const fullPNG = await readFile(join(artifacts, `${label}-full.png`));
-      const selectivePNG = await readFile(join(artifacts, `${label}-selective.png`));
+      // Twice in CI one capture of `split-button-open` matched a green run's image
+      // exactly and the other differed in 26 to 29 pixels, on the rows where the open
+      // menu's shadow falls on the buttons: the full build once, the selective build
+      // once, with the DOM and the computed styles identical. So it was a capture, not
+      // a difference between the builds. The cause found is how Chromium blends that
+      // shadow depending on the layers under it; test/browser/fixture.css pins the
+      // menu to a layer for that. This is the net under it: a pair that differs in
+      // pixels only is captured again, once, after a pause. A real difference is still
+      // there the second time. The first images are kept beside the second, and the
+      // report lists the pair as retaken, so a retake that was needed is never silent.
+      if (JSON.stringify(full) === JSON.stringify(selective) && !fullPNG.equals(selectivePNG)) {
+        await writeFile(join(artifacts, `${label}-first-full.png`), fullPNG);
+        await writeFile(join(artifacts, `${label}-first-selective.png`), selectivePNG);
+        await pages[0].waitForTimeout(250);
+        [fullPNG, selectivePNG] = await capture();
+        retaken.push(label);
+        console.log(`Captured ${label} again: the first pair differed in pixels only; the second ${fullPNG.equals(selectivePNG) ? "matches" : "still differs"}`);
+      }
       if (JSON.stringify(full) !== JSON.stringify(selective) || !fullPNG.equals(selectivePNG)) {
         failures.push(label);
         await writeFile(join(artifacts, `${label}.json`), JSON.stringify({ full, selective }, null, 2));
@@ -326,7 +348,7 @@ console.log(JSON.stringify(out));
   await page.keyboard.press("Space");
   assert(await unchecked.isChecked(), "Keyboard checkbox interaction failed");
   await page.close();
-  const report = { vite: sizes, browser: await browser.version(), comparisons, failures, errors };
+  const report = { vite: sizes, browser: await browser.version(), comparisons, retaken, failures, errors };
   await writeFile(join(artifacts, "report.json"), JSON.stringify(report, null, 2));
   assert.deepEqual(errors, [], "Browser errors occurred");
   assert.deepEqual(failures, [], "Full/selective CSS mismatches (see analysis/browser)");
