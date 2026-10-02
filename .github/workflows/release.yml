@@ -53,7 +53,8 @@ jobs:
           version="$(node -p "require('./package.json').version")"
           if [ "$name" = "material" ]; then
             case "$version" in
-              0.*|1.*|2.*)
+              [3-9].*|[1-9][0-9]*.*) ;;
+              *)
                 echo "$name $version: a material release is 3.0.0 or later; the 1.x line is published from the v1 branch" >&2
                 exit 1
                 ;;
