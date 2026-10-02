@@ -37,6 +37,7 @@ g.CustomEvent = dom.window.CustomEvent;
 g.MutationObserver = dom.window.MutationObserver;
 
 import createRadios from '../../../src/components/radios';
+import { radiosElement } from '../../../src/elements/radios';
 
 beforeEach(() => { document.body.innerHTML = ''; });
 
@@ -231,6 +232,33 @@ describe('radios', () => {
     expect(payloads.map(payload => payload.value)).toEqual([null]);
     expect(blank.getValue()).toBeNull();
     blank.destroy();
+  });
+
+  // 1.0: the setter takes what the getter returns, so the two round-trip
+  test('setValue(null) clears the selection, silently: no change and no warning', () => {
+    const radios = mount({ value: 's' });
+    const payloads: unknown[] = [];
+    const warnings: string[] = [];
+    const warn = console.warn;
+    console.warn = (...args: unknown[]) => { warnings.push(args.join(' ')); };
+    try {
+      radios.on('change', payload => payloads.push(payload));
+      expect(radios.setValue(null)).toBe(radios);
+      expect(radios.getValue()).toBeNull();
+      expect(inputs(radios).some(input => input.checked)).toBe(false);
+      expect(radios.getSelected()).toBeNull();
+      // With nothing selected, setting what the getter returns changes nothing
+      radios.setValue(radios.getValue());
+      expect(radios.getValue()).toBeNull();
+      // The element clears through the same call
+      radiosElement.spec.properties.value.set(radios, null);
+      expect(radios.getValue()).toBeNull();
+      radios.setValue('m');
+      radiosElement.spec.properties.value.set(radios, null);
+      expect(radios.getValue()).toBeNull();
+      expect(payloads).toEqual([]);
+      expect(warnings).toEqual([]);
+    } finally { console.warn = warn; radios.destroy(); }
   });
 
   test('destroy removes the element', () => {

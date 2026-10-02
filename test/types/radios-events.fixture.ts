@@ -56,3 +56,8 @@ radios.on("mount", () => {});
 export const invalidValue: RadiosChangePayload = { value: 1, option: null, originalEvent: undefined };
 // @ts-expect-error the originalEvent property is always present, even when undefined
 export const missingOriginalEvent: RadiosChangePayload = { value: null, option: null };
+
+// 1.0: the setter takes what the getter returns (string | null), so they round-trip
+export const setterTakesNull: Equals<Parameters<RadiosComponent["setValue"]>[0], string | null> = true;
+radios.setValue(null);
+radios.setValue(radios.getValue());
