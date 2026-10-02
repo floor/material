@@ -61,6 +61,9 @@ Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
   names were reduced. Every element's shadow root now carries the same rule. The ripple and
   the motion driven from script (progress, loading indicator, carousel, date picker, FAB menu)
   already honoured the preference, and so did the factories outside a shadow root.
+- **Button group (FLO-537):** Pressing a button in a standard group briefly showed an ellipsis
+  on a neighbour's label. The neighbour's width and padding now ease together, and the width
+  returns to the label's own size when the press ends.
 - **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
   centre while animating in and be squeezed at the viewport edge. Placement now uses its full
   layout size; reduced-motion placement is unchanged.

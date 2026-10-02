@@ -164,11 +164,19 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
     // of its width and each neighbour gives up the same amount, limited to
     // the neighbour's padding on the facing side so its label never clips
     // (ButtonGroupDefaults.ExpandedRatio and the ButtonGroup measure policy;
-    // m3.material.io button group states)
+    // m3.material.io button group states). Compose animates those widths on
+    // the spatial spring (ButtonGroup.kt). A width written straight from
+    // `auto` to a length cannot: it jumps in one frame while the padding
+    // eases, and the label shows an ellipsis in between (FLO-537).
     const expandedRatio = baseConfig.expandedRatio ?? BUTTON_GROUP_EXPANDED_RATIO;
+    // Width and the facing padding go back to the stylesheet together. Width
+    // becomes auto in that same frame, so a later label or container change
+    // sizes the button again.
     const releasePress = () => {
       buttons.forEach(b => {
         b.element.style.width = '';
+        b.element.style.minWidth = '';
+        b.element.style.maxWidth = '';
         b.element.style.paddingLeft = '';
         b.element.style.paddingRight = '';
       });
@@ -182,6 +190,8 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       const view = component.element.ownerDocument.defaultView;
       const padding = (i: number, side: 'paddingLeft' | 'paddingRight') =>
         view ? parseFloat(view.getComputedStyle(buttons[i].element)[side]) || 0 : 0;
+      // In RTL the previous button sits on the right, so the facing side swaps.
+      const rtl = view?.getComputedStyle(component.element).direction === 'rtl';
       const previous = buttons[index - 1] ? index - 1 : -1;
       const next = buttons[index + 1] ? index + 1 : -1;
       const middle = previous >= 0 && next >= 0;
@@ -189,20 +199,42 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       // takes all of it from its only neighbour
       const share = expandedRatio * widths[index] / (middle ? 2 : 1);
       let growth = 0;
+      // Targets are applied after one layout read. Writing the measured width
+      // and the target in the same turn would leave the used value at `auto`,
+      // which cannot ease, so the width would jump while the padding eases
+      // (FLO-537). The read does not paint, and the measured length is the
+      // border box already on screen.
+      const apply: Array<() => void> = [];
       // A neighbour narrows by up to the compression limit, whatever its own
       // padding: an icon button has none and still gives way. Padding on the
-      // facing side shrinks with it where there is some.
+      // facing side shrinks with it where there is some. min-width at the
+      // target overrides the 58px minimum for the gesture and stops the
+      // spatial spring's overshoot short of the label.
       const compress = (i: number, side: 'paddingLeft' | 'paddingRight') => {
         const limit = Math.min(share, BUTTON_GROUP_COMPRESSION_LIMIT, widths[i]);
         if (limit <= 0) return;
-        buttons[i].element.style.width = `${widths[i] - limit}px`;
+        const el = buttons[i].element;
+        const to = widths[i] - limit;
+        el.style.minWidth = `${to}px`;
+        el.style.width = `${widths[i]}px`;
         const facing = padding(i, side);
-        if (facing > 0) buttons[i].element.style[side] = `${Math.max(0, facing - limit)}px`;
+        apply.push(() => {
+          el.style.width = `${to}px`;
+          if (facing > 0) el.style[side] = `${Math.max(0, facing - limit)}px`;
+        });
         growth += limit;
       };
-      if (previous >= 0) compress(previous, 'paddingRight');
-      if (next >= 0) compress(next, 'paddingLeft');
-      buttons[index].element.style.width = `${widths[index] + growth}px`;
+      if (previous >= 0) compress(previous, rtl ? 'paddingLeft' : 'paddingRight');
+      if (next >= 0) compress(next, rtl ? 'paddingRight' : 'paddingLeft');
+      const pressed = buttons[index].element;
+      const to = widths[index] + growth;
+      // The pressed button's max-width holds the same overshoot, so the group
+      // does not grow while the neighbours are held at their targets.
+      pressed.style.maxWidth = `${to}px`;
+      pressed.style.width = `${widths[index]}px`;
+      void pressed.offsetWidth;
+      apply.forEach(fn => fn());
+      pressed.style.width = `${to}px`;
       document.addEventListener('pointerup', releasePress);
       document.addEventListener('pointercancel', releasePress);
     };
