@@ -153,28 +153,35 @@ state.ready = true;
 `);
 await Bun.write(join(dir, "Context.tsx"), `import { createContext, useContext } from "solid-js";
 import { Tab, Tabs } from "mtrl/solid";
-const Context = createContext<string | undefined>(undefined);
-const Read = (props: { required: boolean }) => {
-  const value = useContext(Context);
-  if (props.required && value === undefined) throw new Error("Required context is missing");
-  return <span id="context-label">{value ?? "DEFAULT"}</span>;
+const DefaultContext = createContext("DEFAULT");
+const RequiredContext = createContext<string | undefined>(undefined);
+const ReadDefault = () => <span id="context-label">{useContext(DefaultContext)}</span>;
+const ReadRequired = () => {
+  const value = useContext(RequiredContext);
+  if (value === undefined) throw new Error("Required context is missing");
+  return <span id="context-label">{value}</span>;
 };
-export const ContextApp = (props: { required: boolean }) =>
-  <Context.Provider value={props.required ? "required provider" : "from provider"}>
-    <Tabs id="context-tabs" value="a"><Tab value="a"><Read required={props.required} /></Tab></Tabs>
-  </Context.Provider>;
+export const DefaultContextApp = () =>
+  <DefaultContext.Provider value="from provider">
+    <Tabs id="context-tabs" value="a"><Tab value="a"><ReadDefault /></Tab></Tabs>
+  </DefaultContext.Provider>;
+export const RequiredContextApp = () =>
+  <RequiredContext.Provider value="required provider">
+    <Tabs id="context-tabs" value="a"><Tab value="a"><ReadRequired /></Tab></Tabs>
+  </RequiredContext.Provider>;
 `);
 await Bun.write(join(dir, "context-server.tsx"), `import "mtrl/ssr/solid";
 import { renderToString } from "solid-js/web";
-import { ContextApp } from "./Context";
-export const renderContext = (required: boolean): string => renderToString(() => <ContextApp required={required} />);
+import { DefaultContextApp, RequiredContextApp } from "./Context";
+export const renderContext = (required: boolean): string =>
+  renderToString(() => required ? <RequiredContextApp /> : <DefaultContextApp />);
 `);
 await Bun.write(join(dir, "context-client.tsx"), `import { hydrate } from "solid-js/web";
-import { ContextApp } from "./Context";
+import { DefaultContextApp, RequiredContextApp } from "./Context";
 const required = new URLSearchParams(location.search).get("required") === "true";
 const host = document.getElementById("context-tabs");
 const before = host?.shadowRoot ?? null;
-hydrate(() => <ContextApp required={required} />, document.getElementById("root") as HTMLElement);
+hydrate(() => required ? <RequiredContextApp /> : <DefaultContextApp />, document.getElementById("root") as HTMLElement);
 Object.assign(window, { solidContextSSR: { ready: true, sameRoot: before === document.getElementById("context-tabs")?.shadowRoot } });
 `);
 
