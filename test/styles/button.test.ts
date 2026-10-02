@@ -182,12 +182,12 @@ describe('button stylesheet: colour styles', () => {
 
   test('text button padding', () => {
     expect(value('.mtrl-button--text', 'padding')).toBe('0 12px');
-    expect(value('.mtrl-button--text.mtrl-button--icon', 'padding')).toBe('0 16px 0 12px');
+    expect(value('.mtrl-button--text.mtrl-button--icon', 'padding-inline')).toBe('12px 16px');
     expect(value('.mtrl-button--text.mtrl-button--m', 'padding')).toBe('0 24px');
   });
 
   test('small button keeps 12dp on the icon side', () => {
-    expect(value('.mtrl-button--s.mtrl-button--icon', 'padding-left')).toBe('12px');
+    expect(value('.mtrl-button--s.mtrl-button--icon', 'padding-inline-start')).toBe('12px');
   });
 });
 
