@@ -11,7 +11,7 @@
  */
 
 // Main factory function
-export { default } from './checkbox';
+export { default, default as createCheckbox } from './checkbox';
 
 // TypeScript types and interfaces
 export type { 

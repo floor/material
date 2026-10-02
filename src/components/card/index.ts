@@ -62,7 +62,7 @@
  * Factory function to create a new Card component.
  * @see CardComponent for the full API reference
  */
-export { default } from "./card";
+export { default, default as createCard } from "./card";
 
 /**
  * Card component types and interfaces

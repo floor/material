@@ -212,6 +212,18 @@ try {
     assert.equal(esm.addClass, undefined);
     // 3.0.0 is ESM-only (FLO-358): no require condition, so require('material') does not resolve
     assert.throws(() => createRequire(import.meta.url)('material'), { code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });
+
+    const componentKeys = ${JSON.stringify(Object.keys(JSON.parse(await Bun.file("package.json").text()).exports).filter(k => k.startsWith("./components/") && k.split("/").length === 3 && !k.endsWith("constants")))};
+    for (const key of componentKeys) {
+      const name = key.slice(13); // remove "./components/"
+      const module = await import(\`material/components/\${name}\`);
+      assert.equal(typeof module.default, "function", \`\${key} default is not a function\`);
+      const namedExports = Object.keys(module).filter(k => k !== "default" && module[k] === module.default);
+      assert.equal(namedExports.length, 1, \`\${key} must have exactly one named export equal to default, found \${namedExports.join(',')}\`);
+      const k = namedExports[0];
+      assert.equal(esm[k], module.default, \`\${key} named export \${k} must match root export\`);
+    }
+
     const dom = new JSDOM('<!doctype html><html><body></body></html>', { pretendToBeVisual: true });
     for (const key of ['window', 'document', 'Node', 'Element', 'HTMLElement', 'HTMLInputElement', 'HTMLButtonElement', 'Event', 'CustomEvent', 'MutationObserver']) {
       globalThis[key] = dom.window[key];
@@ -247,6 +259,7 @@ try {
     card.destroy(); loading.destroy(); b.destroy(); field.destroy(); dom.window.close();
   `);
   await run(["node", smoke], temporary);
+  console.log("component entries: 37 default exports, each also exported by the root's name");
 
   // Check declaration resolution using strict NodeNext semantics.
   const typeFixture = join(temporary, "types.ts");

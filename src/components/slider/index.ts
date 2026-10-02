@@ -1,7 +1,7 @@
 // src/components/slider/index.ts
 
 // Export main component creator
-export { default } from "./slider";
+export { default, default as createSlider } from "./slider";
 
 // Export types
 export type {
