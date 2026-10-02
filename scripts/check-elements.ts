@@ -5414,11 +5414,11 @@ try {
       }
     };
     const focusIs = (label: string): Promise<void> => eventually(`focus on "${label}"`, async () => (await focused()) === label);
-    /** A menu opened with the pointer takes focus itself, and only then handles keys. */
+    /** An open menu takes focus (itself, or its first item when a key opened it), and only then handles keys. */
     const menuFocused = (): Promise<void> => eventually("the open menu to take focus", () => page.evaluate(() => {
       let active = document.activeElement;
       while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
-      return active?.getAttribute("role") === "menu";
+      return !!active?.closest('[role="menu"]');
     }));
     const COVER = `<div id="cover" style="position: relative; z-index: 9999; height: 300px; background: rgb(255, 0, 0)"></div>
       <button id="out" type="button">Outside</button>`;
@@ -5741,8 +5741,19 @@ try {
     // The input lets the pointer through to the field
     const combobox = page.getByRole("combobox", { name: "Fruit" });
     const field = page.locator("#ms");
+    // A listbox never takes focus; it is shown once it has its visible class, 20ms after opening.
+    const listboxShown = (): Promise<void> => eventually("<m-select>'s listbox to be shown", () => page.evaluate(() => {
+      const list = (document.getElementById("ms") as HTMLElement).shadowRoot?.querySelector(".mtrl-menu");
+      return !!list && list.matches(":popover-open") && /menu--visible/.test(list.className);
+    }), selectState);
+    const selectIs = (wanted: { open: boolean; closes: number }): Promise<void> =>
+      eventually(`<m-select> to be ${JSON.stringify(wanted)}`, async () => {
+        const now = await selectState();
+        return now.open === wanted.open && now.closes === wanted.closes;
+      }, selectState);
     await field.click();
     await settle();
+    await listboxShown();
     assert.deepEqual(await surface("ms", ".mtrl-menu"), OPEN, "select: the listbox");
     check("select: the listbox opens in its shadow root, :popover-open, styled, above z-index 9999");
 
@@ -5751,6 +5762,7 @@ try {
     assert.equal((await selectState()).open, true, "a click on a disabled option keeps it open");
     await outside();
     await settle();
+    await selectIs({ open: false, closes: 1 });
     assert.deepEqual(await selectState(), { value: "b", form: "b", text: "Banana", open: false, closes: 1 });
     check("select: a click inside the listbox keeps it open, a click outside closes it once");
 
@@ -5773,6 +5785,7 @@ try {
     assert.deepEqual(path, ["b", "d", "a", "d"], "the selected option, then Cherry skipped, typeahead, End");
     await page.keyboard.press("Enter");
     await settle();
+    await selectIs({ open: false, closes: 2 });
     assert.deepEqual(await log(), [{ type: "change", detail: { value: "d" } }]);
     assert.deepEqual(await selectState(), { value: "d", form: "d", text: "Date", open: false, closes: 2 });
     assert.equal(await focused(), "combobox", "focus stays on the combobox");
@@ -5780,14 +5793,17 @@ try {
     await settle();
     await page.keyboard.press("Escape");
     await settle();
+    await selectIs({ open: false, closes: 3 });
     assert.deepEqual(await selectState(), { value: "d", form: "d", text: "Date", open: false, closes: 3 });
     assert.deepEqual(await log(), []);
     check("select: arrows, typeahead and Enter change it once and close once; Escape closes; focus stays on the combobox");
 
     await field.click();
     await settle();
+    await listboxShown();
     await clickIn("ms", '[data-id="a"]');
     await settle();
+    await selectIs({ open: false, closes: 4 });
     assert.deepEqual(await log(), [{ type: "change", detail: { value: "a" } }]);
     assert.deepEqual(await selectState(), { value: "a", form: "a", text: "Apple", open: false, closes: 4 });
     assert.equal(await focused(), "combobox");
@@ -5902,6 +5918,11 @@ try {
         }
         opener.open();
         await wait(400);
+        // Placed 20ms after opening, then a 250ms transition: measured once both are over.
+        for (let i = 0; !(/menu--visible/.test(menu().className) && ["none", "matrix(1, 0, 0, 1, 0, 0)"].includes(getComputedStyle(menu()).transform)); i++) {
+          if (i === 250) throw new Error(`select: still waiting after 5s for the open list to be placed; found class "${menu().className}", transform ${getComputedStyle(menu()).transform}`);
+          await wait(20);
+        }
         const result = measure(menu(), field);
         opener.close();
         await wait(300);
@@ -5945,11 +5966,19 @@ try {
       select.open();
       await wait(400);
       const menu = document.body.querySelector(':scope > [class~="mtrl-menu"]') as HTMLElement;
+      // Placed 20ms after opening, then a 250ms transition: measured once both are over.
+      for (let i = 0; !(/menu--visible/.test(menu.className) && ["none", "matrix(1, 0, 0, 1, 0, 0)"].includes(getComputedStyle(menu).transform)); i++) {
+        if (i === 250) throw new Error(`select: still waiting after 5s for the open list to be placed; found class "${menu.className}", transform ${getComputedStyle(menu).transform}`);
+        await wait(20);
+      }
       const gap = (): number => Math.round(menu.getBoundingClientRect().top - select.element.getBoundingClientRect().bottom);
       const before = gap();
       const fieldBefore = select.element.getBoundingClientRect().top;
       panel.scrollTop = 30;
       await wait(100);
+      // The list follows its field in a frame after the scroll event; 5s for that
+      // frame, then the assertion below reports a gap that did not come back.
+      for (let i = 0; i < 250 && gap() !== before; i++) await wait(20);
       const afterPanel = gap();
       const fieldMoved = Math.round(fieldBefore - select.element.getBoundingClientRect().top);
       const list = [menu, ...menu.querySelectorAll<HTMLElement>("*")].find((n) => n.scrollHeight > n.clientHeight + 1) ?? menu;
@@ -6009,9 +6038,15 @@ try {
           closes: (window as unknown as { __closes: number }).__closes,
         };
       });
+    const splitIs = (wanted: { open: boolean; closes: number }): Promise<void> =>
+      eventually(`<m-split-button> to be ${JSON.stringify(wanted)}`, async () => {
+        const now = await splitState();
+        return now.open === wanted.open && now.closes === wanted.closes;
+      }, splitState);
     await page.getByRole("button", { name: "Save", exact: true }).click();
     await page.getByRole("button", { name: "More options", exact: true }).click();
     await settle();
+    await menuFocused();
     assert.deepEqual((await log()).map((e) => e.type), ["click"], "the leading button's click only");
     assert.deepEqual(await surface("sb", '[role="menu"]'), OPEN, "split button: the menu");
     check("split button: click is the leading action's; the trailing button opens the menu in its shadow root, above z-index 9999");
@@ -6021,23 +6056,31 @@ try {
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
     await settle();
+    await splitIs({ open: false, closes: 1 });
+    await focusIs("More options");
     assert.deepEqual(await log(), [{ type: "select", detail: { value: "pdf" } }]);
     assert.deepEqual(await splitState(), { open: false, closes: 1 });
     assert.equal(await focused(), "More options", "focus is back on the trailing button");
     await page.keyboard.press("Enter");
     await settle();
+    await menuFocused();
     await page.keyboard.press("Escape");
     await settle();
+    await splitIs({ open: false, closes: 2 });
+    await focusIs("More options");
     assert.deepEqual(await splitState(), { open: false, closes: 2 });
     assert.equal(await focused(), "More options");
     check("split button: arrows and Enter select once, close once and return focus; Escape closes");
 
     await page.getByRole("button", { name: "More options", exact: true }).click();
     await settle();
+    await menuFocused();
     await outside();
     await settle();
+    await splitIs({ open: false, closes: 3 });
     await page.getByRole("button", { name: "More options", exact: true }).click();
     await settle();
+    await menuFocused();
     await page.evaluate(() => {
       const w = window as unknown as Win & { __splitValues: unknown[] };
       w.__splitValues = [];
@@ -6046,6 +6089,7 @@ try {
     });
     await clickIn("sb", '[data-id="draft"]');
     await settle();
+    await splitIs({ open: false, closes: 4 });
     assert.deepEqual(await log(), [{ type: "select", detail: { value: "draft" } }], "no click event from the menu");
     assert.deepEqual(await page.evaluate(() => (window as unknown as Win).__splitValues), ["draft"], "a factory select handler reads the same value (FLO-320)");
     assert.deepEqual(await splitState(), { open: false, closes: 4 });
