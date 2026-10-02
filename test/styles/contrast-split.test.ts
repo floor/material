@@ -109,10 +109,10 @@ describe("explicit contrast levels are opt-in", () => {
       loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent,
     }).css;
     // `@use "main"` compressed, before the banner the build adds.
-    // The hash is this sheet after the text field strings are two words (FLO-560).
+    // The hash is this sheet with the text field's layout at the M3 measurements (FLO-299).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("ce3b499badf2c58204d0c797714fc2a7e77296897fdb47b7ce530a1cf851610e");
-    expect(css.length).toBe(530220);
+      .toBe("d16077bfba7b12318990ebed3c6d7a14fe3799484f9994c3c86edc4732098bb9");
+    expect(css.length).toBe(530128);
   });
 
   test("today's sheets still resolve to the fixture", () => {

@@ -8,6 +8,13 @@
 // Define the component once
 $component: "#{base.$prefix}-text-field";
 
+// Where the text starts or ends beside a prefix or a suffix: the affix's own
+// inset, its width, which placement.ts measures into a custom property (32px
+// until it has), and the 4px to the text.
+@function beside-affix($inset, $affix) {
+    @return calc(#{$inset} + var(--#{$component}-#{$affix}-width, 32px) + 4px);
+}
+
 // Autofill detection animations
 @keyframes onAutoFillStart {
     from {
@@ -211,29 +218,23 @@ $component: "#{base.$prefix}-text-field";
         }
     }
 
-    // Adjustments when prefix/suffix are present - base case styling
-    // JavaScript will handle dynamic sizing, these are fallbacks
+    // A field with a prefix or a suffix pads its input from --text-start and
+    // --text-end (the rules are last in this block): what stands on that side,
+    // an icon then the affix, each after the other (FLO-299). The label is
+    // not moved by a prefix: it starts where the content does (Compose
+    // TextFieldImpl, "Prefix/suffix does not get applied to label").
     &--with-prefix {
-        .#{$component}__label {
-            // Default value - will be overridden by JS for precise positioning
-            left: 48px;
-        }
-
-        .#{$component}__input {
-            // Default value - will be overridden by JS for precise padding
-            padding-left: 48px;
-        }
+        --#{$component}-text-start: #{beside-affix(12px, prefix)};
     }
 
     &--with-suffix {
-        .#{$component}__input {
-            // Default value - will be overridden by JS for precise padding
-            padding-right: 48px;
-        }
+        --#{$component}-text-end: #{beside-affix(16px, suffix)};
     }
 
     // Adjustments when icons are present
     &--with-leading-icon {
+        --#{$component}-text-start: 44px;
+
         .#{$component}__label {
             left: 44px;
         }
@@ -242,38 +243,29 @@ $component: "#{base.$prefix}-text-field";
             padding-left: 44px;
         }
 
-        // If there's also a prefix, adjust positions
+        // With a prefix too: the icon, the prefix, then the text
         &.#{$component}--with-prefix {
+            --#{$component}-text-start: #{beside-affix(44px, prefix)};
+
             .#{$component}__prefix {
                 left: 44px;
-            }
-
-            .#{$component}__label {
-                // Default value - will be overridden by JS for precise positioning
-                left: 76px;
-            }
-
-            .#{$component}__input {
-                // Default value - will be overridden by JS for precise padding
-                padding-left: 76px;
             }
         }
     }
 
     &--with-trailing-icon {
+        --#{$component}-text-end: 44px;
+
         .#{$component}__input {
             padding-right: 44px;
         }
 
-        // If there's also a suffix, adjust positions
+        // With a suffix too: the text, the suffix, then the icon
         &.#{$component}--with-suffix {
+            --#{$component}-text-end: #{beside-affix(44px, suffix)};
+
             .#{$component}__suffix {
                 right: 44px;
-            }
-
-            .#{$component}__input {
-                // Default value - will be overridden by JS for precise padding
-                padding-right: 76px;
             }
         }
     }
@@ -413,7 +405,7 @@ $component: "#{base.$prefix}-text-field";
 
         &__prefix {
             left: auto;
-            right: 16px;
+            right: 12px;
         }
 
         &__suffix {
@@ -429,28 +421,6 @@ $component: "#{base.$prefix}-text-field";
         &__trailing-icon {
             right: auto;
             left: 12px;
-        }
-
-        &--with-prefix {
-            .#{$component}__label {
-                left: auto;
-                // Default value - will be overridden by JS for precise positioning
-                right: 48px;
-            }
-
-            .#{$component}__input {
-                padding-left: 16px;
-                // Default value - will be overridden by JS for precise padding
-                padding-right: 48px;
-            }
-        }
-
-        &--with-suffix {
-            .#{$component}__input {
-                padding-right: 16px;
-                // Default value - will be overridden by JS for precise padding
-                padding-left: 48px;
-            }
         }
 
         &--with-leading-icon {
@@ -469,18 +439,6 @@ $component: "#{base.$prefix}-text-field";
                     left: auto;
                     right: 44px;
                 }
-
-                .#{$component}__label {
-                    left: auto;
-                    // Default value - will be overridden by JS for precise positioning
-                    right: 76px;
-                }
-
-                .#{$component}__input {
-                    padding-left: 16px;
-                    // Default value - will be overridden by JS for precise padding
-                    padding-right: 76px;
-                }
             }
         }
 
@@ -494,12 +452,6 @@ $component: "#{base.$prefix}-text-field";
                 .#{$component}__suffix {
                     right: auto;
                     left: 44px;
-                }
-
-                .#{$component}__input {
-                    padding-right: 16px;
-                    // Default value - will be overridden by JS for precise padding
-                    padding-left: 76px;
                 }
             }
         }
@@ -657,10 +609,7 @@ $component: "#{base.$prefix}-text-field";
         // Populated field (not empty) or focused field label position
         &:not(.#{$component}--empty) .#{$component}__label,
         &.#{$component}--focused .#{$component}__label {
-            // Important change: For outlined variant, when focused/populated
-            // we want to reset the left position back to default (or to JS calculated equivalent)
-            // to handle the label moving up above the field
-            // The JS will handle special positioning depending on if it's prefixed
+            // Floated, the label is back at the container's start
             left: 16px;
         }
 
@@ -752,6 +701,8 @@ $component: "#{base.$prefix}-text-field";
     &--outlined {
         --#{$component}-outline-color: #{t.color("outline")};
         --#{$component}-outline-width: 1px;
+        // The input's transparent border, which its padding beside an affix leaves out
+        --#{$component}-input-border: 1px;
         border-radius: f.get-shape("extra-small");
 
         .#{$component}__outline {
@@ -1059,6 +1010,8 @@ $component: "#{base.$prefix}-text-field";
 
         // Adjust element positions for compact with icons
         &.#{$component}--with-leading-icon {
+            --#{$component}-text-start: 40px;
+
             .#{$component}__label {
                 left: 40px; // Reduced from 44px
             }
@@ -1068,32 +1021,26 @@ $component: "#{base.$prefix}-text-field";
             }
 
             &.#{$component}--with-prefix {
+                --#{$component}-text-start: #{beside-affix(40px, prefix)};
+
                 .#{$component}__prefix {
                     left: 40px;
-                }
-
-                .#{$component}__label {
-                    left: 68px; // Adjusted for compact
-                }
-
-                .#{$component}__input {
-                    padding-left: 68px;
                 }
             }
         }
 
         &.#{$component}--with-trailing-icon {
+            --#{$component}-text-end: 40px;
+
             .#{$component}__input {
                 padding-right: 40px;
             }
 
             &.#{$component}--with-suffix {
+                --#{$component}-text-end: #{beside-affix(40px, suffix)};
+
                 .#{$component}__suffix {
                     right: 40px;
-                }
-
-                .#{$component}__input {
-                    padding-right: 68px;
                 }
             }
         }
@@ -1116,16 +1063,6 @@ $component: "#{base.$prefix}-text-field";
                         left: auto;
                         right: 40px;
                     }
-
-                    .#{$component}__label {
-                        left: auto;
-                        right: 68px;
-                    }
-
-                    .#{$component}__input {
-                        padding-left: 16px;
-                        padding-right: 68px;
-                    }
                 }
             }
 
@@ -1140,12 +1077,28 @@ $component: "#{base.$prefix}-text-field";
                         right: auto;
                         left: 40px;
                     }
-
-                    .#{$component}__input {
-                        padding-right: 16px;
-                        padding-left: 68px;
-                    }
                 }
+            }
+        }
+    }
+
+    // ===== BESIDE A PREFIX OR A SUFFIX =====
+    // The input's padding in a field with a prefix or a suffix, from the two
+    // insets set above, less the outlined input's own 1px border. Last, and
+    // one class heavier, so it holds over the variants' and the densities'
+    // paddings. A selector list, not :is(): bundlers emit an :is() rule three
+    // times, with the -webkit-any() and -moz-any() forms.
+    &.#{$component}--with-prefix,
+    &.#{$component}--with-suffix {
+        .#{$component}__input {
+            padding-left: calc(var(--#{$component}-text-start, 16px) - var(--#{$component}-input-border, 0px));
+            padding-right: calc(var(--#{$component}-text-end, 16px) - var(--#{$component}-input-border, 0px));
+        }
+
+        @include m.rtl {
+            .#{$component}__input {
+                padding-left: calc(var(--#{$component}-text-end, 16px) - var(--#{$component}-input-border, 0px));
+                padding-right: calc(var(--#{$component}-text-start, 16px) - var(--#{$component}-input-border, 0px));
             }
         }
     }

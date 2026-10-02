@@ -455,3 +455,131 @@ export async function checkTextFieldLatePlacement(page: Page): Promise<void> {
   if (before) await page.setViewportSize(before);
   console.log(`Passed text field late placement: ${cases.length} setters on a plain field place it as a field created with them, at rest and floated, and after a resize.`);
 }
+
+type LayoutBox = { start: number; end: number; top: number; bottom: number; width: number };
+type LayoutRow = {
+  name: string;
+  textStart: number;
+  textEnd: number;
+  label: LayoutBox | null;
+  leading: LayoutBox | null;
+  trailing: LayoutBox | null;
+  prefix: LayoutBox | null;
+  suffix: LayoutBox | null;
+};
+
+/**
+ * The text field's layout against the M3 measurements (FLO-299), rendered from
+ * the packed CSS: filled and outlined, default and compact, left to right and
+ * right to left, built by the factory or as `<m-text-field>`. Every distance is
+ * from the container's start edge (its end edge for `…End`), so one expectation
+ * covers both directions.
+ *
+ * Right to left is measured for the factory only: inside a shadow root the
+ * filled rules' `[dir]` selectors do not match (FLO-562).
+ */
+export async function checkTextFieldLayout(page: Page, api: "factory" | "element"): Promise<void> {
+  const rows = await page.evaluate(async (api) => {
+    const icon = '<svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/></svg>';
+    const cases: [string, Record<string, string>][] = [
+      ["leading icon", { leadingIcon: icon }],
+      ["leading icon, value", { leadingIcon: icon, value: "Ada" }],
+      ["trailing icon, value", { trailingIcon: icon, value: "Ada" }],
+      ["prefix, value", { prefixText: "$", value: "12" }],
+      ["suffix, value", { suffixText: "kg", value: "12" }],
+      ["leading icon, prefix, value", { leadingIcon: icon, prefixText: "$", value: "12" }],
+      ["trailing icon, suffix, value", { trailingIcon: icon, suffixText: "kg", value: "12" }],
+    ];
+    const stage = document.createElement("div");
+    document.body.append(stage);
+    const mounted: { name: string; root: HTMLElement; rtl: boolean; destroy?: () => void }[] = [];
+    for (const variant of ["filled", "outlined"]) for (const density of ["default", "compact"]) for (const dir of api === "factory" ? ["ltr", "rtl"] : ["ltr"]) {
+      for (const [name, extra] of cases) {
+        const cell = document.createElement("div");
+        cell.dir = dir;
+        cell.style.cssText = "width:280px;margin:0 0 8px";
+        stage.append(cell);
+        const config: Record<string, string> = { label: "Label", variant, density, ...extra };
+        let root: HTMLElement;
+        let destroy: (() => void) | undefined;
+        if (api === "factory") {
+          const field = (window as unknown as FieldWindow).inputs.createTextField(config as never);
+          field.element.style.width = "280px";
+          cell.append(field.element);
+          root = field.element;
+          destroy = () => field.destroy();
+        } else {
+          const host = document.createElement("m-text-field");
+          for (const [key, value] of Object.entries(config)) host.setAttribute(key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`), value);
+          host.style.cssText = "display:inline-block;width:280px";
+          cell.append(host);
+          root = host.shadowRoot?.firstElementChild as HTMLElement;
+        }
+        mounted.push({ name: `${variant}, ${density}, ${dir}, ${name}`, root, rtl: dir === "rtl", destroy });
+      }
+    }
+    // Past the label's float and the placement pass
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const px = (value: string) => parseFloat(value) || 0;
+    const round = (value: number) => Math.round(value * 100) / 100;
+    const rows = mounted.map(({ name, root, rtl }) => {
+      const part = (suffix: string) => root.querySelector<HTMLElement>(`.mtrl-text-field__${suffix}`);
+      const field = part("field")!.getBoundingClientRect();
+      const box = (el: HTMLElement | null) => {
+        if (!el) return null;
+        const b = el.getBoundingClientRect();
+        return {
+          start: round(rtl ? field.right - b.right : b.left - field.left),
+          end: round(rtl ? b.left - field.left : field.right - b.right),
+          top: round(b.top - field.top),
+          bottom: round(b.bottom - field.top),
+          width: round(b.width),
+        };
+      };
+      const input = part("input")!;
+      const style = getComputedStyle(input);
+      const inset = box(input)!;
+      const [left, right] = [px(style.paddingLeft) + px(style.borderLeftWidth), px(style.paddingRight) + px(style.borderRightWidth)];
+      return {
+        name,
+        textStart: round(inset.start + (rtl ? right : left)),
+        textEnd: round(inset.end + (rtl ? left : right)),
+        label: box(part("label")),
+        leading: box(part("leading-icon")),
+        trailing: box(part("trailing-icon")),
+        prefix: box(part("prefix")),
+        suffix: box(part("suffix")),
+      };
+    });
+    mounted.forEach((field) => field.destroy?.());
+    stage.remove();
+    return rows;
+  }, api) as LayoutRow[];
+
+  const round = (value: number) => Math.round(value * 100) / 100;
+  // Every failure is reported, not only the first
+  const failures: string[] = [];
+  const expect = (ok: boolean, message: string): void => { if (!ok) failures.push(message); };
+  assert.equal(rows.length, api === "factory" ? 56 : 28);
+  for (const row of rows) {
+    const { name } = row;
+    // An icon, then the prefix, then the text; mirrored at the end. The prefix
+    // follows the leading icon box and the text the prefix (Compose
+    // TextFieldImpl: `prefixPlaceable?.placeRelativeWithLayer(leadingPlaceable.widthOrZero, …)`,
+    // `textHorizontalPosition = leadingPlaceable.widthOrZero + prefixPlaceable.widthOrZero`).
+    // The text was sized from the affix alone, so beside an icon it began
+    // under the icon, before the prefix.
+    if (row.prefix) {
+      if (row.leading) expect(row.prefix.start >= row.leading.start + row.leading.width, `${name}: the prefix starts after the leading icon (${row.prefix.start})`);
+      const gap = round(row.textStart - (row.prefix.start + row.prefix.width));
+      expect(gap >= 0 && gap <= 4, `${name}: the text starts after the prefix, ${gap}px from it`);
+    }
+    if (row.suffix) {
+      if (row.trailing) expect(row.suffix.end >= row.trailing.end + row.trailing.width, `${name}: the suffix ends before the trailing icon (${row.suffix.end})`);
+      const gap = round(row.textEnd - (row.suffix.end + row.suffix.width));
+      expect(gap >= 0 && gap <= 4, `${name}: the text ends before the suffix, ${gap}px from it`);
+    }
+  }
+  assert.deepEqual(failures, [], `${failures.length} of the layout assertions failed`);
+  console.log(`Passed text field layout (${api}): ${rows.length} fields, filled and outlined, default and compact${api === "factory" ? ", left to right and right to left" : ""} — an icon, its affix, then the text.`);
+}

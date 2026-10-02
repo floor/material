@@ -153,6 +153,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `.mtrl-textfield…` or `::part(textfield)` matches nothing, a `classList` call with the old
   class changes nothing, and defaults set under `'textfield'` are ignored. Nothing warns.
   Search your CSS and your code for `textfield`.
+- **A text field with a prefix or a suffix has no inline padding (FLO-299).**
+  `field.input.style.paddingLeft` and `paddingRight` read `''`, and the label has no inline
+  `left`: the stylesheet pads the input from `--mtrl-text-field-prefix-width` and
+  `--mtrl-text-field-suffix-width`, which the field writes on its root. A page rule that set
+  the padding of `.mtrl-text-field__input` beside an affix was overridden by the inline value
+  and now competes with the stylesheet's rule.
 - **A FAB's `'surface'` or `'small'`** (the options take any string) renders as the default
   `primary-container`, or at the default 56dp.
 - **`data-theme="winter"`** (or `material`, `browngreen`, `legacy`) on the root element gets the
@@ -1062,6 +1068,21 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **Text field: beside an icon, a prefix or a suffix no longer leaves the value under the icon
+  (FLO-299).** The input's padding was sized from the affix alone. With a leading icon and a
+  prefix the value began 25.5px in, under the icon (12 to 36px) and before the prefix (44px);
+  a trailing icon with a suffix did the same at the other end; right to left, the padding was
+  on the wrong side. The text now starts 4px after the prefix and ends 4px before the suffix,
+  whatever stands outside them, in both variants, both densities and both directions
+  (measured: with the icon, the text starts at 57.5px, after a 9.5px prefix at 44px). The
+  script no longer writes `padding-left` and `padding-right` on the input or `left` on the
+  label. It writes each affix's measured width on the field's root, as
+  `--mtrl-text-field-prefix-width` and `--mtrl-text-field-suffix-width`, and the stylesheet
+  adds the icon's inset. What else moves, without an icon: the label no longer follows the
+  prefix, which is hidden while the label rests (it rests 16px in, where it was 25.5px
+  beside a "$"); a filled field's floated label is 16px in beside a prefix, where it was 12px;
+  the text ends 4px before a suffix, where it touched it; and an outlined field's text starts
+  1px sooner after a prefix (25.5px, as the filled field's).
 - **A top-layer dialog that refuses Escape stays open, however often it is pressed
   (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
   listener that refused, the third Escape made the browser close the `<dialog>` while
