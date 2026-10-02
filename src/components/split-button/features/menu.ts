@@ -7,6 +7,7 @@
 
 import createMenu from "../../menu";
 import type { MenuComponent, MenuContent } from "../../menu/types";
+import { MENU } from "../../menu/inner";
 import type { ElementComponent } from "../../../core/compose/component";
 import { ButtonsFeature, MenuFeature, SplitButtonConfig } from "../types";
 import { SPLIT_BUTTON_DEFAULTS } from "../constants";
@@ -38,6 +39,6 @@ export const withMenu =
 
     return {
       ...component,
-      menu,
+      [MENU]: menu,
     };
   };

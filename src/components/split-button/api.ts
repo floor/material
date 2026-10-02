@@ -7,6 +7,7 @@ import {
   SplitButtonEventType,
 } from "./types";
 import type { MenuContent } from "../menu/types";
+import { MENU, type MenuOwner } from "../menu/inner";
 import { SPLIT_BUTTON_CLASSES, SPLIT_BUTTON_EVENTS } from "./constants";
 
 interface ApiOptions {
@@ -24,7 +25,8 @@ export const withAPI =
   (component: BaseComponent): SplitButtonComponent => {
     const element = component.element;
     const prefix = config.prefix || "mtrl";
-    const { leading, trailing, menu } = component;
+    const { leading, trailing } = component;
+    const menu = component[MENU];
     const expandedClass = `${prefix}-${SPLIT_BUTTON_CLASSES.EXPANDED}`;
 
     let expanded = false;
@@ -57,11 +59,21 @@ export const withAPI =
       emit(SPLIT_BUTTON_EVENTS.CHANGE, { originalEvent });
     };
 
-    const api: SplitButtonComponent = {
+    const api: SplitButtonComponent & MenuOwner = {
       element,
       leadingElement: leading.element as HTMLButtonElement,
       trailingElement: trailing.element as HTMLButtonElement,
-      menu,
+      // Not a member (FLO-543): mtrl's own elements and tests reach it here
+      [MENU]: menu,
+
+      setItems(items: MenuContent[]): SplitButtonComponent {
+        menu?.setItems(items);
+        return this;
+      },
+
+      getItems(): MenuContent[] {
+        return menu ? menu.getItems() : [];
+      },
 
       setText(text: string): SplitButtonComponent {
         leading.setText(text);

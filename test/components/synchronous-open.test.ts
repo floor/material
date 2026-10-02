@@ -125,6 +125,9 @@ describe("dialog, date picker, time picker: what open() has done when it returns
     expect(cancelled.isOpen()).toBe(false);
   });
 
+  // The top-layer dialog (layer: "top") needs showModal(), which JSDOM lacks:
+  // modal-layer.test.ts stubs it and pins that open and isOpen() are there
+  // when open() returns.
   test("date picker: the open event is emitted during open()", async () => {
     const picker = mount(createDatePicker({ label: "Date" }));
     await wait();

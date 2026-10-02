@@ -88,6 +88,9 @@ timePicker.close();
 timePicker.toggle();
 ```
 
+When `open()` returns, `isOpen` is true and `open` has been emitted; the surface may be painted
+after `open()` returns.
+
 ### Get and Set Value
 
 ```javascript

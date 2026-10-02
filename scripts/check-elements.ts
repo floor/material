@@ -205,7 +205,7 @@ try {
       untouched.addEventListener("confirm", (e) => result.timeEmptyConfirm.push([(e as CustomEvent<{ value: string }>).detail.value, untouched.value]));
       untouched.component.picker.open();
       untouched.component.picker.dialogElement.querySelector<HTMLElement>('[class$="time-picker__confirm"]')!.click();
-      select.component.menu!.element.querySelector<HTMLElement>('[data-id=""]')!.click();
+      (select.component as unknown as Record<symbol, { element: HTMLElement }>)[Symbol.for("mtrl.menu")].element.querySelector<HTMLElement>('[data-id=""]')!.click();
       radios.component.radios![0].input.click();
       radios.component.radios![1].input.click();
       return result;
@@ -6209,14 +6209,15 @@ try {
       const el = document.getElementById("sb") as Host;
       const w = window as unknown as { __closes: number };
       w.__closes = 0;
-      const menu = (el.component as { menu: { on: (n: string, h: () => void) => void } }).menu;
+      // The inner menu is not a member (FLO-543): it is under mtrl's registry symbol
+      const menu = (el.component as unknown as Record<symbol, { on: (n: string, h: () => void) => void }>)[Symbol.for("mtrl.menu")];
       menu.on("close", () => void w.__closes++);
     });
     const splitState = (): Promise<{ open: boolean; closes: number }> =>
       page.evaluate(() => {
         const el = document.getElementById("sb") as Host;
         return {
-          open: (el.component as { menu: { isOpen: () => boolean } }).menu.isOpen(),
+          open: (el.component as unknown as Record<symbol, { isOpen: () => boolean }>)[Symbol.for("mtrl.menu")].isOpen(),
           closes: (window as unknown as { __closes: number }).__closes,
         };
       });
@@ -6266,7 +6267,7 @@ try {
       const el = document.getElementById("sb") as Host;
       const before = el.component;
       const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
-      const menu = (): { getItems: () => Array<{ text?: string }> } => (el.component as { menu: { getItems: () => Array<{ text?: string }> } }).menu;
+      const menu = (): { getItems: () => Array<{ text?: string }> } => el.component as { getItems: () => Array<{ text?: string }> };
       const added = document.createElement("m-menu-item");
       added.setAttribute("value", "png");
       added.textContent = "Export PNG";
