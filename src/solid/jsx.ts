@@ -98,6 +98,7 @@ declare module "solid-js" {
       "show": ElementEvents<import("../elements/toolbar").ToolbarSpec>["show"];
       "hide": ElementEvents<import("../elements/toolbar").ToolbarSpec>["hide"];
       "cancel": ElementEvents<import("../elements/dialog").DialogSpec>["cancel"];
+      "confirm": ElementEvents<import("../elements/timepicker").TimepickerSpec>["confirm"];
     }
   }
 }

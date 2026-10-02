@@ -387,7 +387,8 @@ describe('drawer event contract', () => {
   test('select reports the navigation index and original event; setters are silent', () => {
     const drawer = make({ open: true, ripple: false });
     const selected = mock((_payload: DrawerSelectEvent) => {});
-    drawer.on('select', selected);
+    const handler = (event: DrawerSelectEvent) => { expect(event.value).toEqual(drawer.getValue()); selected(event); };
+    drawer.on('select', handler);
     drawer.setActive('sent');
     expect(selected).not.toHaveBeenCalled();
     const click = new dom.window.MouseEvent('click', { bubbles: true });
@@ -397,7 +398,7 @@ describe('drawer event contract', () => {
     expect(drawer.getActive()).toBe('trash');
     item(drawer, 'spam').dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
     expect(selected).toHaveBeenCalledTimes(1);
-    expect(drawer.off('select', selected)).toBe(drawer);
+    expect(drawer.off('select', handler)).toBe(drawer);
     item(drawer, 'inbox').click();
     expect(selected).toHaveBeenCalledTimes(1);
   });

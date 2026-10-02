@@ -22,8 +22,10 @@ const FRUITS = ["Apple", "Apricot", "Banana"];
 const dataTest = { "data-test": "1" } as Omit<React.HTMLAttributes<HTMLElement>, "onChange">;
 
 type Log = Array<{ id: string; detail: unknown }>;
+type ModelLog = Array<{ id: string; detail: unknown; host: unknown }>;
 type Api = {
   log: Log;
+  modelLog: ModelLog;
   submits: number;
   setExtra: (v: boolean) => void;
   setOrder: (v: string[]) => void;
@@ -59,11 +61,15 @@ export const App = (): React.ReactElement => {
 
   React.useEffect(() => {
     const w = window as unknown as { api?: Api };
-    api.current = w.api ?? { log: [], submits: 0, setExtra, setOrder, setShow, setProgress, setDialog, setRail, switchRef };
+    api.current = w.api ?? { log: [], modelLog: [], submits: 0, setExtra, setOrder, setShow, setProgress, setDialog, setRail, switchRef };
     w.api = api.current;
   }, []);
   const log = (id: string) => (event: CustomEvent<unknown>): void => {
     api.current?.log.push({ id, detail: event.detail });
+  };
+  const model = (id: string, event: CustomEvent<{ value: unknown }>, field: "value" | "checked" = "value"): void => {
+    const host = event.target as HTMLElement & { value: unknown; checked: boolean };
+    api.current?.modelLog.push({ id, detail: structuredClone(event.detail.value), host: structuredClone(host[field]) });
   };
 
   return h(
@@ -78,7 +84,7 @@ export const App = (): React.ReactElement => {
           if (api.current) api.current.submits++;
         },
       },
-      h(Switch, { id: "u", name: "u", defaultChecked: true, onChange: log("u"), ref: switchRef }, "Uncontrolled"),
+      h(Switch, { id: "u", name: "u", defaultChecked: true, onChange: (e) => { log("u")(e); model("boolean", e, "checked"); }, ref: switchRef }, "Uncontrolled"),
       h(Switch, { id: "c", checked: controlled, onChange: (e) => setControlled(e.detail.checked) }, "Controlled"),
       h(Switch, { id: "l", checked: false, onChange: log("l") }, "Locked"),
       h(Switch, { id: "d", disabled: true, supportingText: "Unavailable" }, "Disabled"),
@@ -98,7 +104,7 @@ export const App = (): React.ReactElement => {
     h("output", { id: "agreed" }, String(agreed)),
     h(Slider, { id: "sl", ariaLabel: "Level", value: level, onChange: (e) => setLevel(e.detail.value) }),
     h("output", { id: "level" }, String(level)),
-    h(TextField, { id: "tf", label: "Name", value: text, onInput: (e) => setText(e.detail.value) }),
+    h(TextField, { id: "tf", label: "Name", value: text, onInput: (e) => { model("string", e); setText(e.detail.value); } }),
     h("output", { id: "text" }, text),
     h(
       Radios,
@@ -118,7 +124,7 @@ export const App = (): React.ReactElement => {
     h("output", { id: "destination" }, destination),
     h(
       Chips,
-      { id: "ck", ariaLabel: "Diet", value: diet, onChange: (e) => setDiet(e.detail.value) },
+      { id: "ck", ariaLabel: "Diet", value: diet, onChange: (e) => { model("array", e); setDiet(e.detail.value); } },
       h(Chip, { value: "veg" }, "Vegetarian"),
       h(Chip, { value: "gf" }, "Gluten free")
     ),

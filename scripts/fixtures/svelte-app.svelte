@@ -17,6 +17,7 @@
 
   type Log = Array<{ id: string; detail: unknown }>;
   const log: Log = [];
+  const modelLog: Array<{ id: string; detail: unknown; host: unknown }> = [];
   let submits = 0;
   let bound = $state(false);
   let agreed = $state(false);
@@ -42,10 +43,15 @@
   const callbacks = { onFoo: () => void renderCalls++ };
 
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
+  const recordModel = (id: string, event: CustomEvent<{ value: unknown }>, field: "value" | "checked" = "value") => {
+    const host = event.target as HTMLElement & { value: unknown; checked: boolean };
+    modelLog.push({ id, detail: structuredClone(event.detail.value), host: structuredClone(host[field]) });
+  };
 
   onMount(() => {
     (window as unknown as { api: unknown }).api = {
       log,
+      modelLog,
       get submits() { return submits; },
       setBound: (v: boolean) => (bound = v),
       setExtra: (v: boolean) => (extra = v),
@@ -62,7 +68,7 @@
 
 <main>
   <form id="f" onsubmit={(e) => { e.preventDefault(); submits++; }}>
-    <Switch id="u" name="u" defaultChecked onchange={record("u")}>Uncontrolled</Switch>
+    <Switch id="u" name="u" defaultChecked onchange={(e) => { record("u")(e); recordModel("boolean", e, "checked"); }}>Uncontrolled</Switch>
     <Switch id="m" bind:checked={bound}>Bound</Switch>
     <Switch id="d" disabled supportingText="Unavailable">Disabled</Switch>
     <Button id="b" type="submit" variant="filled" class="save" data-test="1">Save</Button>
@@ -79,7 +85,7 @@
   <output id="agreed">{String(agreed)}</output>
   <Slider id="sl" ariaLabel="Level" bind:value={level} />
   <output id="level">{String(level)}</output>
-  <TextField id="tf" label="Name" bind:value={text} />
+  <TextField id="tf" label="Name" bind:value={text} oninput={(e) => recordModel("string", e)} />
   <output id="text">{text}</output>
   <Radios id="rd" ariaLabel="Size" bind:value={size}>
     <Radio value="s">Small</Radio>
@@ -93,7 +99,7 @@
     <NavigationRailItem value="starred" icon={ICON}>Starred</NavigationRailItem>
   </NavigationRail>
   <output id="destination">{String(destination)}</output>
-  <Chips id="ck" ariaLabel="Diet" bind:value={diet}>
+  <Chips id="ck" ariaLabel="Diet" bind:value={diet} onchange={(e) => recordModel("array", e)}>
     <Chip value="veg">Vegetarian</Chip>
     <Chip value="gf">Gluten free</Chip>
   </Chips>

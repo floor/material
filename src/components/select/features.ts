@@ -452,7 +452,7 @@ export const withMenu =
       if (component.emit) {
         const changeEvent = {
           select: getComponent(),
-          value: option.id,
+          value: state.selectedOption?.id || null,
           text: option.text,
           option,
           originalEvent,
