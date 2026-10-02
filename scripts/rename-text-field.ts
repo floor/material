@@ -85,10 +85,17 @@ const run = (command: string, args: string[], inherit: boolean): string => {
   return result.stdout ?? "";
 };
 
-const tracked = (): string[] => run("git", ["ls-files", "-z"], false).split("\0").filter((file) => file.length > 0);
+const listed = (args: string[]): string[] =>
+  run("git", ["ls-files", "-z", ...args], false).split("\0").filter((file) => file.length > 0);
+
+const tracked = (): string[] => listed([]);
 
 const readText = (file: string): string | null => {
-  const raw = readFileSync(resolve(root, file));
+  const absolute = resolve(root, file);
+  // The adapter generator deletes a stale module with its own unlink. git ls-files
+  // still lists that path until the deletion is staged, so a missing file is a deletion.
+  if (!existsSync(absolute)) return null;
+  const raw = readFileSync(absolute);
   if (raw.includes(0)) return null;
   return raw.toString("utf8");
 };
@@ -413,7 +420,9 @@ const main = (): number => {
   run("bun", ["run", "tokens:check", "--update"], true);
   const after = new Map<string, string>();
   const generated: string[] = [];
-  for (const file of tracked()) {
+  // New adapter modules are untracked until the deletion of the stale module is staged.
+  const generatedCandidates = [...tracked(), ...listed(["--others", "--exclude-standard"])];
+  for (const file of generatedCandidates) {
     if (handEdited.includes(file) || exemptFiles.includes(file) || untouched.includes(file)) continue;
     const generatedFile = generatedFiles.includes(file) || generatedPrefixes.some((prefix) => file.startsWith(prefix));
     if (!generatedFile) continue;
