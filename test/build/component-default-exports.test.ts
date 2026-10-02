@@ -3,20 +3,19 @@ import { readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 const factories: Record<string, string> = {
-  'chips': 'createChips',
-  'divider': 'createDivider',
-  'fab': 'createFab',
-  'extended-fab': 'createExtendedFab',
-  'icon-button': 'createIconButton',
-  'bottom-sheet': 'createBottomSheet',
-  'side-sheet': 'createSideSheet',
-  'carousel': 'createCarousel',
-  'navigation-bar': 'createNavigationBar',
-  'navigation-rail': 'createNavigationRail',
-  'text-field': 'createTextField'
+  'datepicker': 'createDatePicker',
+  'timepicker': 'createTimePicker',
 };
 
 const componentsDir = join(import.meta.dir, "../../src/components");
+
+function getFactoryName(dirName: string) {
+  if (dirName in factories) {
+    return factories[dirName];
+  }
+  const pascalCase = dirName.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('');
+  return `create${pascalCase}`;
+}
 
 describe("component default exports", () => {
   const dirs = readdirSync(componentsDir, { withFileTypes: true })
@@ -28,16 +27,17 @@ describe("component default exports", () => {
       continue;
     }
 
-    test(`${name} has its factory as the default export`, async () => {
+    test(`${name} has its factory as the default export and by its name`, async () => {
       const mod = await import(`../../src/components/${name}/index.ts`);
 
       expect(mod.default).toBeDefined();
       expect(typeof mod.default).toBe("function");
 
-      if (name in factories) {
-        const namedExport = mod[factories[name]];
-        expect(mod.default).toBe(namedExport);
-      }
+      const factoryName = getFactoryName(name);
+      const namedExport = mod[factoryName];
+      
+      expect(namedExport).toBeDefined();
+      expect(mod.default).toBe(namedExport);
     });
   }
 });
