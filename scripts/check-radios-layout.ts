@@ -37,13 +37,7 @@ type CheckboxMeasure = {
   firstLineCenterY: number;
   deltaBlock: number;
   deltaFirst: number;
-  overlap: Hit | null;
-};
-
-type LayoutMeasure = {
-  groups: GroupMeasure[];
-  bare: BareMeasure[];
-  checkbox: CheckboxMeasure | null;
+  overlap: { x: number; y: number } | null;
 };
 
 const mount = (api: "factory" | "element") => {
