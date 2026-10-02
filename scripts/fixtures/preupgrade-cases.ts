@@ -53,6 +53,9 @@ export const cases: PreupgradeCase[] = [
   c("extended-fab", "size=large", `<m-extended-fab size="large" icon="${ICON}">Compose</m-extended-fab>`),
   c("checkbox", "default", `<m-checkbox>Agree</m-checkbox>`),
   c("checkbox", "checked label-position=start", `<m-checkbox checked label-position="start">Agree</m-checkbox>`),
+  // No slotted text and no label attribute: the host is the 48px target itself,
+  // as the upgraded root is.
+  c("checkbox", "unlabelled", `<m-checkbox aria-label="Agree"></m-checkbox>`),
   c("slider", "default", `<m-slider value="40" aria-label="Volume"></m-slider>`),
   c("text-field", "default", `<m-text-field label="Name"></m-text-field>`),
   c("text-field", "variant=outlined", `<m-text-field variant="outlined" label="Name"></m-text-field>`),

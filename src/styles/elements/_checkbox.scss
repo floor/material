@@ -35,4 +35,15 @@
     order: 1;
     margin-inline: 12px 0;
   }
+
+  // No slotted text and no `label` attribute: the host is its own 48px target,
+  // and the box sits in its centre, as components/_checkbox.scss has it.
+  &:empty:not([label]) {
+    min-width: 48px;
+    justify-content: center;
+
+    &::before {
+      margin-inline: 0;
+    }
+  }
 }
