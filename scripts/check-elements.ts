@@ -6841,6 +6841,38 @@ try {
     });
     check("snackbar: its text and message change in place, action recreates");
 
+    // FLO-548: a snackbar shown behind another is queued, not open. Its state
+    // turns visible and `open` is dispatched together, at its turn.
+    const queued = await page.evaluate(async () => {
+      type Bar = HTMLElement & { open: boolean; show: () => void; hide: () => void; component: { state: string } };
+      const make = (text: string): Bar => {
+        const bar = document.createElement("m-snackbar") as Bar;
+        bar.setAttribute("duration", "0");
+        bar.textContent = text;
+        document.body.append(bar);
+        return bar;
+      };
+      const first = make("First");
+      const second = make("Second");
+      const seen: string[] = [];
+      second.addEventListener("open", () => seen.push(`open ${second.component.state} ${second.open}`));
+      first.show();
+      second.show();
+      const waiting = { first: first.open, state: second.component.state, open: second.open, events: seen.length };
+      first.hide();
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      const turn = { state: second.component.state, open: second.open, seen: [...seen] };
+      second.hide();
+      first.remove();
+      second.remove();
+      return { waiting, turn };
+    });
+    assert.deepEqual(queued, {
+      waiting: { first: true, state: "queued", open: false, events: 0 },
+      turn: { state: "visible", open: true, seen: ["open visible true"] },
+    });
+    check("snackbar: one shown behind another is queued; visible and open come together at its turn");
+
     // The modals move while the snackbar shows. They are plain dialogs in
     // another element's open shadow root, as <m-dialog> renders one: the
     // snackbar is not their descendant, so it finds them by focus.
