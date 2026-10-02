@@ -1046,6 +1046,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **The package's README on npm is a short one.** `npm-readme.md` is packed as the package's
+  `README.md` (install, one example, the component list, and links to md3.io); the full
+  README stays on GitHub. Nothing in the API changes.
 - **Text field: the spacing follows the M3 measurements (FLO-299).** A field's layout shifts
   by the amounts below; nothing in the API changes. Sources: the measurement tables on
   m3.material.io's text fields page, and Compose's `TextFieldImpl.kt` for the positions the
