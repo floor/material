@@ -4,9 +4,11 @@
 // A second run finds the new names already in place and changes nothing.
 // textField and TextField are the two-word forms and are not the one-word spelling.
 
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import * as sass from "sass";
 import {
   changelogHistoryHeading,
   exemptFiles,
@@ -323,6 +325,52 @@ const printRemainder = (): void => {
   }
 };
 
+const SNAPSHOT = "test/styles/full-stylesheet.snapshot.json";
+const STYLESHEET_PIN = "test/styles/contrast-split.test.ts";
+
+/** The census test sorts selectors. A rename in place leaves the old order. */
+const resortSnapshot = (text: string): string => {
+  const parsed = JSON.parse(text) as { selectors: string[]; properties: string[] };
+  parsed.selectors.sort();
+  parsed.properties.sort();
+  const next = JSON.stringify(parsed);
+  return text.endsWith("\n") ? `${next}\n` : next;
+};
+
+const PIN_COMMENT_OLD = [
+  "    // `@use \"main\"` on origin/next 66444315, before the banner the build adds.",
+  "    // The contrast split leaves this compile byte-equal to that next (project Sass 1.85.1).",
+].join("\n");
+
+const PIN_COMMENT_NEW = [
+  "    // `@use \"main\"` compressed, before the banner the build adds.",
+  "    // The hash is this sheet after the text field strings are two words (FLO-560).",
+].join("\n");
+
+/** The full-sheet hash and length move, because every renamed class grows by one byte. */
+const refreshStylesheetPin = (text: string, problems: string[]): { text: string; changed: boolean; hash: string; length: number } => {
+  const css = sass.compileString('@use "main";', {
+    loadPaths: [resolve(root, "src/styles")],
+    style: "compressed",
+    logger: sass.Logger.silent,
+  }).css;
+  const hash = createHash("sha256").update(css).digest("hex");
+  const length = css.length;
+  const hashPattern = /createHash\("sha256"\)\.update\(css\)\.digest\("hex"\)\)\r?\n([ \t]*)\.toBe\("[0-9a-f]{64}"\)/;
+  const lengthPattern = /expect\(css\.length\)\.toBe\(\d+\)/;
+  if (!hashPattern.test(text) || !lengthPattern.test(text)) {
+    problems.push("full-stylesheet-pin: the hash or the length assertion is missing");
+    return { text, changed: false, hash, length };
+  }
+  let next = text;
+  if (next.includes(PIN_COMMENT_OLD)) next = next.replace(PIN_COMMENT_OLD, PIN_COMMENT_NEW);
+  else if (!next.includes(PIN_COMMENT_NEW)) problems.push("full-stylesheet-pin-comment: the recorded comment is missing");
+  next = next.replace(hashPattern, (_match, indent: string) =>
+    `createHash("sha256").update(css).digest("hex"))\n${indent}.toBe("${hash}")`);
+  next = next.replace(lengthPattern, `expect(css.length).toBe(${length})`);
+  return { text: next, changed: next !== text, hash, length };
+};
+
 const summary = (
   plan: MovePlan,
   counts: Map<string, PatternCount>,
@@ -374,11 +422,34 @@ const main = (): number => {
   }
   const tally: EntryTally = { applied: [], already: [], kept: [], missing: [] };
   applyEntries(contents, tally, problems);
+  const snapshotText = contents.get(SNAPSHOT);
+  let snapshotResorted = false;
+  if (snapshotText !== undefined) {
+    const sorted = resortSnapshot(snapshotText);
+    snapshotResorted = sorted !== snapshotText;
+    contents.set(SNAPSHOT, sorted);
+  }
+  const pinText = contents.get(STYLESHEET_PIN);
+  let pinUpdated = false;
+  let pinHash = "";
+  let pinLength = 0;
+  if (pinText !== undefined) {
+    const pin = refreshStylesheetPin(pinText, problems);
+    pinUpdated = pin.changed;
+    pinHash = pin.hash;
+    pinLength = pin.length;
+    contents.set(STYLESHEET_PIN, pin.text);
+  } else {
+    problems.push("full-stylesheet-pin: test/styles/contrast-split.test.ts is missing");
+  }
   const owned = [...contents.keys()];
   const hits = unexplained(contents, owned);
   const changedPatterns = [...counts.values()].some((count) => count.replacements > 0);
-  const changed = plan.pending.length > 0 || changedPatterns || tally.applied.length > 0;
+  const structural = plan.pending.length > 0 || changedPatterns || tally.applied.length > 0;
+  const changed = structural || snapshotResorted || pinUpdated;
   summary(plan, counts, tally);
+  console.log(`stylesheet snapshot resorted: ${snapshotResorted ? "yes" : "no"}`);
+  console.log(`full stylesheet pin updated: ${pinUpdated ? "yes" : "no"} ${pinHash} ${pinLength}`);
   if (hits.length > 0) {
     console.log(`unclassified one-word hits: ${hits.length}`);
     console.log(hits.slice(0, 40).join("\n"));
@@ -396,13 +467,21 @@ const main = (): number => {
   }
   if (dryRun) {
     console.log("dry-run: no files written");
-    console.log("a real run would run: adapters:generate, component-exports:update, root-exports:update, build, tokens:check --update");
+    if (structural) {
+      console.log("a real run would run: adapters:generate, component-exports:update, root-exports:update, build, tokens:check --update");
+    } else {
+      console.log("a real run would write the stylesheet snapshot order and the full-sheet pin, and skip the generators");
+    }
     return 0;
   }
   for (const [from, to] of plan.pending) run("git", ["mv", from, to], false);
   for (const [file, text] of contents) {
     const current = readText(file);
     if (current !== text) writeFileSync(resolve(root, file), text);
+  }
+  if (!structural) {
+    console.log("generators skipped: the rename was already applied");
+    return 0;
   }
   const generators: Array<[string, string[]]> = [
     ["bun", ["run", "adapters:generate"]],
