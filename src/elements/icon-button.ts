@@ -33,7 +33,9 @@ const iconButtonSpec = {
     shape: { type: "string", config: "shape", update: (c, v) => void c.setShape(String(v ?? "round")) },
     width: { type: "string", config: "width", update: (c, v) => void c.setWidth(String(v ?? "default")) },
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string", config: "icon", update: (c, v) => void c.setIcon(String(v ?? "")) },
+    /** Markup (HTML), shown while `toggle` and `selected`. Not sanitized by default: see Markup and sanitizing. */
     "selected-icon": {
       type: "string",
       config: "selectedIcon",

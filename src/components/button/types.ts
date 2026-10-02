@@ -58,7 +58,8 @@ export interface ButtonConfig extends BaseComponentConfig {
   text?: string | Node;
 
   /**
-   * Initial button icon HTML content
+   * Initial button icon HTML content.
+   * Markup (HTML). Not sanitized by default: see Markup and sanitizing.
    * @example '<svg>...</svg>'
    */
   icon?: string;
@@ -356,6 +357,9 @@ export interface ButtonComponent {
    * @returns The button component for chaining
    */
   disable: () => ButtonComponent;
+
+  /** Whether the button is disabled (FLO-384) */
+  isDisabled: () => boolean;
 
   /**
    * Sets the button's text content

@@ -1,42 +1,42 @@
 // src/components/textfield/types.ts
 import type { EventCallback } from "../../core/state/emitter";
-import type { TextfieldTrailingPayload } from "./features/trailing-icon";
+import type { TextFieldTrailingPayload } from "./features/trailing-icon";
 
-export type { TextfieldTrailingPayload };
+export type { TextFieldTrailingPayload };
 
 /**
- * Available Textfield variants
+ * Available TextField variants
  */
 export type TextfieldVariant = "filled" | "outlined";
 
 /**
- * Textfield variant constants
+ * TextField variant constants
  */
-export const TEXTFIELD_VARIANTS = {
+export const TEXT_FIELD_VARIANTS = {
   FILLED: "filled",
   OUTLINED: "outlined",
 } as const;
 
 /**
- * Available Textfield states
+ * Available TextField states
  */
 export type TextfieldStates = "active" | "inactive" | "disabled";
 
 /**
- * Available Textfield density levels
+ * Available TextField density levels
  */
-export type TextfieldDensity = "default" | "compact";
+export type TextFieldDensity = "default" | "compact";
 
 /**
- * Textfield density constants
+ * TextField density constants
  */
-export const TEXTFIELD_DENSITY = {
+export const TEXT_FIELD_DENSITY = {
   DEFAULT: "default",
   COMPACT: "compact",
 } as const;
 
 /**
- * Available Textfield types
+ * Available TextField types
  */
 export type TextfieldTypes =
   | "text"
@@ -49,9 +49,9 @@ export type TextfieldTypes =
   | "multiline";
 
 /**
- * Textfield type constants
+ * TextField type constants
  */
-export const TEXTFIELD_TYPES = {
+export const TEXT_FIELD_TYPES = {
   TEXT: "text",
   PASSWORD: "password",
   EMAIL: "email",
@@ -63,9 +63,9 @@ export const TEXTFIELD_TYPES = {
 } as const;
 
 /**
- * Configuration interface for the Textfield component
+ * Configuration interface for the TextField component
  */
-export interface TextfieldConfig {
+export interface TextFieldConfig {
   /** Input type (text, password, email, etc.) */
   type?: TextfieldTypes | string;
 
@@ -73,7 +73,7 @@ export interface TextfieldConfig {
   variant?: TextfieldVariant | string;
 
   /** Density level (default, compact) */
-  density?: TextfieldDensity | string;
+  density?: TextFieldDensity | string;
 
   /** Input name attribute */
   name?: string;
@@ -111,10 +111,10 @@ export interface TextfieldConfig {
   /** Autocomplete attribute */
   autocomplete?: string;
 
-  /** Leading icon HTML content */
+  /** Leading icon HTML content. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   leadingIcon?: string;
 
-  /** Trailing icon HTML content */
+  /** Trailing icon HTML content. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   trailingIcon?: string;
 
   /**
@@ -126,7 +126,7 @@ export interface TextfieldConfig {
   trailingIconLabel?: string;
 
   /** Called when the trailing icon button is activated, after `trailing` is emitted */
-  onTrailingClick?: (event: TextfieldTrailingPayload) => void;
+  onTrailingClick?: (event: TextFieldTrailingPayload) => void;
 
   /** Supporting text content */
   supportingText?: string;
@@ -151,31 +151,31 @@ export interface TextfieldConfig {
 }
 
 /** Payload emitted by native input/change and autofill detection. */
-export interface TextfieldValuePayload {
+export interface TextFieldValuePayload {
   value: string;
   isEmpty: boolean;
   isAutofilled: boolean;
 }
 
 /** Focus and blur report whether the input is empty, without a native event. */
-export interface TextfieldFocusPayload {
+export interface TextFieldFocusPayload {
   isEmpty: boolean;
 }
 
 /** Events emitted by the text input feature. setValue() is silent. */
-export interface TextfieldEvents {
+export interface TextFieldEvents {
   /** The trailing icon button was activated (`trailingIconLabel`; FLO-301) */
-  trailing: (payload: TextfieldTrailingPayload) => void;
-  input: (payload: TextfieldValuePayload) => void;
-  change: (payload: TextfieldValuePayload) => void;
-  focus: (payload: TextfieldFocusPayload) => void;
-  blur: (payload: TextfieldFocusPayload) => void;
+  trailing: (payload: TextFieldTrailingPayload) => void;
+  input: (payload: TextFieldValuePayload) => void;
+  change: (payload: TextFieldValuePayload) => void;
+  focus: (payload: TextFieldFocusPayload) => void;
+  blur: (payload: TextFieldFocusPayload) => void;
 }
 
 /**
- * Textfield component interface
+ * TextField component interface
  */
-export interface TextfieldComponent {
+export interface TextFieldComponent {
   /** The root element of the textfield */
   element: HTMLElement;
 
@@ -192,25 +192,25 @@ export interface TextfieldComponent {
   getValue: () => string;
 
   /** Sets the textfield's value */
-  setValue: (value: string) => TextfieldComponent;
+  setValue: (value: string) => TextFieldComponent;
 
   /** Sets an attribute on the input element */
-  setAttribute: (name: string, value: string) => TextfieldComponent;
+  setAttribute: (name: string, value: string) => TextFieldComponent;
 
   /** Gets an attribute from the input element */
   getAttribute: (name: string) => string | null;
 
   /** Removes an attribute from the input element */
-  removeAttribute: (name: string) => TextfieldComponent;
+  removeAttribute: (name: string) => TextFieldComponent;
 
   /** Sets the textfield's variant (filled or outlined) */
-  setVariant: (variant: TextfieldVariant) => TextfieldComponent;
+  setVariant: (variant: TextfieldVariant) => TextFieldComponent;
 
   /** Gets the textfield's current variant */
   getVariant: () => TextfieldVariant;
 
   /** Sets the textfield's label text */
-  setLabel: (text: string) => TextfieldComponent;
+  setLabel: (text: string) => TextFieldComponent;
 
   /** Gets the textfield's label text */
   getLabel: () => string;
@@ -219,10 +219,10 @@ export interface TextfieldComponent {
   leadingIcon: HTMLElement | null;
 
   /** Sets the leading icon HTML content */
-  setLeadingIcon: (html: string) => TextfieldComponent;
+  setLeadingIcon: (html: string) => TextFieldComponent;
 
   /** Removes the leading icon */
-  removeLeadingIcon: () => TextfieldComponent;
+  removeLeadingIcon: () => TextFieldComponent;
 
   /** Trailing icon element (if present) */
   trailingIcon: HTMLElement | null;
@@ -232,13 +232,13 @@ export interface TextfieldComponent {
    * Sets the trailing icon. `label` makes it a button with that accessible name,
    * an empty one makes it decorative; left out, the icon keeps what it is.
    */
-  setTrailingIcon: (html: string, label?: string) => TextfieldComponent;
+  setTrailingIcon: (html: string, label?: string) => TextFieldComponent;
 
   /** Removes the trailing icon */
-  removeTrailingIcon: () => TextfieldComponent;
+  removeTrailingIcon: () => TextFieldComponent;
 
   /** Makes the field required or optional, the label's asterisk with it (FLO-301) */
-  setRequired: (required: boolean) => TextfieldComponent;
+  setRequired: (required: boolean) => TextFieldComponent;
 
   /** Whether the field is required */
   isRequired: () => boolean;
@@ -247,55 +247,58 @@ export interface TextfieldComponent {
   supportingTextElement: HTMLElement | null;
 
   /** Sets the supporting text content */
-  setSupportingText: (text: string, isError?: boolean) => TextfieldComponent;
+  setSupportingText: (text: string, isError?: boolean) => TextFieldComponent;
 
   /** Removes the supporting text */
-  removeSupportingText: () => TextfieldComponent;
+  removeSupportingText: () => TextFieldComponent;
 
   /** Prefix text element (if present) */
   prefixTextElement: HTMLElement | null;
 
   /** Sets the prefix text content */
-  setPrefixText: (text: string) => TextfieldComponent;
+  setPrefixText: (text: string) => TextFieldComponent;
 
   /** Removes the prefix text */
-  removePrefixText: () => TextfieldComponent;
+  removePrefixText: () => TextFieldComponent;
 
   /** Suffix text element (if present) */
   suffixTextElement: HTMLElement | null;
 
   /** Sets the suffix text content */
-  setSuffixText: (text: string) => TextfieldComponent;
+  setSuffixText: (text: string) => TextFieldComponent;
 
   /** Removes the suffix text */
-  removeSuffixText: () => TextfieldComponent;
+  removeSuffixText: () => TextFieldComponent;
 
   /** Manually update element positions (useful after DOM changes) */
-  updatePositions: () => TextfieldComponent;
+  updatePositions: () => TextFieldComponent;
 
   /** Sets the error state of the textfield */
-  setError: (error: boolean, message?: string) => TextfieldComponent;
+  setError: (error: boolean, message?: string) => TextFieldComponent;
 
   /** Gets the current error state */
   isError: () => boolean;
 
   /** Sets the density of the textfield */
-  setDensity: (density: TextfieldDensity | string) => TextfieldComponent;
+  setDensity: (density: TextFieldDensity | string) => TextFieldComponent;
 
   /** Gets the current density setting */
   getDensity: () => string;
 
   /** Subscribes to input state events; keyboard events use input.addEventListener. */
-  on: <K extends keyof TextfieldEvents>(event: K, handler: TextfieldEvents[K]) => TextfieldComponent;
+  on: <K extends keyof TextFieldEvents>(event: K, handler: TextFieldEvents[K]) => TextFieldComponent;
 
   /** Removes event listener */
-  off: <K extends keyof TextfieldEvents>(event: K, handler: TextfieldEvents[K]) => TextfieldComponent;
+  off: <K extends keyof TextFieldEvents>(event: K, handler: TextFieldEvents[K]) => TextFieldComponent;
 
   /** Enables the textfield */
-  enable: () => TextfieldComponent;
+  enable: () => TextFieldComponent;
 
   /** Disables the textfield */
-  disable: () => TextfieldComponent;
+  disable: () => TextFieldComponent;
+
+  /** Whether the text field is disabled (FLO-384) */
+  isDisabled: () => boolean;
 
   /** Destroys the textfield component and cleans up resources */
   destroy: () => void;
@@ -308,6 +311,7 @@ export interface ApiOptions {
   disabled: {
     enable: () => void;
     disable: () => void;
+    isDisabled: () => boolean;
   };
   lifecycle: {
     destroy: () => void;
@@ -356,6 +360,7 @@ export interface BaseComponent {
   disabled?: {
     enable: () => void;
     disable: () => void;
+    isDisabled: () => boolean;
   };
   lifecycle?: {
     destroy: () => void;
@@ -367,12 +372,12 @@ export interface BaseComponent {
 
 
 /**
- * Registers TextfieldConfig with the global defaults map, so
+ * Registers TextFieldConfig with the global defaults map, so
  * `setComponentDefaults("textfield", ...)` is typed without core
  * importing anything from this component. FLO-115.
  */
 declare module "../../core/config/global" {
   interface ComponentConfigMap {
-    textfield?: Partial<TextfieldConfig>;
+    textfield?: Partial<TextFieldConfig>;
   }
 }

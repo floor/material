@@ -15,7 +15,7 @@
     "status": "public"
   },
   {
-    "name": "BottomAppBar",
+    "name": "BottomAppBarComponent",
     "kind": "type",
     "status": "public"
   },
@@ -110,7 +110,7 @@
     "status": "public"
   },
   {
-    "name": "CardSchema",
+    "name": "CardConfig",
     "kind": "type",
     "status": "public"
   },
@@ -395,7 +395,7 @@
     "status": "public"
   },
   {
-    "name": "createTextfield",
+    "name": "createTextField",
     "kind": "value",
     "status": "public"
   },
@@ -850,12 +850,12 @@
     "status": "public"
   },
   {
-    "name": "TextfieldComponent",
+    "name": "TextFieldComponent",
     "kind": "type",
     "status": "public"
   },
   {
-    "name": "TextfieldConfig",
+    "name": "TextFieldConfig",
     "kind": "type",
     "status": "public"
   },
@@ -915,7 +915,7 @@
     "status": "public"
   },
   {
-    "name": "TopAppBar",
+    "name": "TopAppBarComponent",
     "kind": "type",
     "status": "public"
   },

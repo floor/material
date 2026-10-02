@@ -114,7 +114,8 @@ export interface ExtendedFabConfig {
   disabled?: boolean;
 
   /**
-   * Extended FAB icon HTML content
+   * Extended FAB icon HTML content.
+   * Markup (HTML). Not sanitized by default: see Markup and sanitizing.
    *
    * The icon content can be any valid HTML, but typically contains an SVG icon
    * or a Material Icons ligature. Icons should be 24x24dp following Material guidelines.
@@ -574,6 +575,9 @@ export interface ExtendedFabComponent {
    * ```
    */
   disable: () => ExtendedFabComponent;
+
+  /** Whether the extended FAB is disabled (FLO-384) */
+  isDisabled: () => boolean;
 
   /**
    * Sets the Extended FAB's icon

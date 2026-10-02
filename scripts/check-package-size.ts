@@ -109,7 +109,7 @@ try {
     import assert from 'node:assert/strict';
     import { createRequire } from 'node:module';
     import * as esm from 'mtrl';
-    import { createButton, createTextfield, createCard } from 'mtrl';
+    import { createButton, createTextField, createCard } from 'mtrl';
     import button from 'mtrl/components/button';
     import rail from 'mtrl/components/navigation-rail';
     import { BUTTON_VARIANTS } from 'mtrl/components/button/constants';
@@ -141,7 +141,7 @@ try {
     assert(b.element.textContent.includes('Save'));
     const navigation = rail({ items: [{ id: 'home', label: 'Home', icon: '<svg></svg>' }] });
     document.body.append(navigation.element); navigation.expand(); assert(navigation.isExpanded()); navigation.destroy();
-    const field = createTextfield({ label: 'Name' });
+    const field = createTextField({ label: 'Name' });
     field.setValue('Ada');
     assert.equal(field.getValue(), 'Ada');
     const loading = button({ text: 'Upload', progress: { indeterminate: false } });
@@ -225,8 +225,8 @@ try {
     { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 7800 },
     // FLO-301 (the required asterisk, the live error, the trailing icon button): 8,456 to
     // 9,058 against 7cd57a6, Node 22 / npm 10.
-    { name: "textfield", code: "export { createTextfield } from 'mtrl';", gzip: 9200 },
-    { name: "form", code: "export { createButton, createTextfield, createCheckbox } from 'mtrl';", gzip: 22000 },
+    { name: "textfield", code: "export { createTextField } from 'mtrl';", gzip: 9200 },
+    { name: "form", code: "export { createButton, createTextField, createCheckbox } from 'mtrl';", gzip: 22000 },
     // The toolbar (FLO-304): 123,080 to 125,176, measured against b1dbf77.
     // The FAB menu (FLO-306): 125,245 to 127,714, measured against 1bd8343.
     // The Material shapes' geometry in the loading indicator (FLO-346): 127,894 to 128,195, measured against 5b314c5.
@@ -234,7 +234,9 @@ try {
     // The carousel's opt-in wheel scrolling with momentum (FLO-395): 128,896 to 129,565 against
     // 2ef11f0, Node 22 / npm 10.
     // FLO-406/main merge with FLO-403: 129,634 B measured under Node 22.23.3 / npm 10.9.9.
-    { name: "all-js", code: "export * from 'mtrl';", gzip: 129_700 },
+    // isDisabled() on eleven components and the type exports (FLO-384): 129,650 to 129,773
+    // against 3f9ca0c7, Node 22.23.3 / npm 10.9.9; the budget keeps the headroom it had.
+    { name: "all-js", code: "export * from 'mtrl';", gzip: 129850 },
     // FLO-406 contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 8,069 -> 7,542 gzip bytes (same packer).
     { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 7700 },

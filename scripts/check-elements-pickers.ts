@@ -465,7 +465,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     const cancelled = await state();
     assert.deepEqual({ ...cancelled, draft: (await dial()).draft }, {
       value: "09:30", open: false, modal: false, reflected: false, form: "09:30",
-      log: [["input", { value: "10:30" }], ["close", null]], focus: "opener", draft: "09:30",
+      log: [["input", { value: "09:30", draftValue: "10:30" }], ["close", null]], focus: "opener", draft: "09:30",
     });
     check("timepicker: Cancel commits nothing, dispatches no change, puts the dial back and returns focus to the opener");
 
@@ -478,7 +478,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     await wait(200);
     const escaped = await state();
     assert.deepEqual({ value: escaped.value, log: escaped.log, draft: (await dial()).draft }, {
-      value: "09:30", log: [["open", null], ["input", { value: "10:30" }], ["close", null]], draft: "09:30",
+      value: "09:30", log: [["open", null], ["input", { value: "09:30", draftValue: "10:30" }], ["close", null]], draft: "09:30",
     });
     check("timepicker: Escape commits nothing and puts the dial back");
 
@@ -489,9 +489,9 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     await page.keyboard.press("Enter");
     const drafted = await state();
     assert.deepEqual({ value: drafted.value, form: drafted.form, log: drafted.log }, {
-      value: "09:30", form: "09:30", log: [["open", null], ["input", { value: "10:30" }]],
+      value: "09:30", form: "09:30", log: [["open", null], ["input", { value: "09:30", draftValue: "10:30" }]],
     });
-    check("timepicker: input carries the draft as the dial moves; change waits for OK");
+    check("timepicker: input carries the committed value and draft as the dial moves; change waits for OK");
     await timeButton("confirm").click();
     await wait(200);
     const confirmed = await state();

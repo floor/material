@@ -72,7 +72,7 @@ export { default } from "./card";
 export type {
   CardVariant,
   CardElevationLevel,
-  CardSchema,
+  CardConfig,
   CardHeaderConfig,
   CardContentConfig,
   CardActionsConfig,

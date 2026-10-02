@@ -42,7 +42,11 @@ export type SearchEventType =
 export interface SearchTrailingItem {
   /** Unique identifier for the item */
   id: string;
-  /** HTML content (icon SVG or avatar image) */
+  /**
+   * HTML content (icon SVG or avatar image).
+   * Markup (HTML). Not sanitized by default: see Markup and sanitizing.
+   * An avatar is not a person's name or an image URL.
+   */
   content: string;
   /** Type of trailing content */
   type: "icon" | "avatar";
@@ -60,7 +64,7 @@ export interface SearchSuggestion {
   text: string;
   /** Value to use when selected (defaults to text) */
   value?: string;
-  /** Optional leading icon HTML */
+  /** Optional leading icon HTML. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   icon?: string;
   /** A second line under the text: a two-line list item (FLO-291) */
   supportingText?: string;
@@ -120,7 +124,7 @@ export interface SearchConfig {
    */
   name?: string;
 
-  /** Custom leading icon HTML (replaces default search icon) */
+  /** Custom leading icon HTML (replaces default search icon). Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   leadingIcon?: string;
 
   /** Trailing content items (icons, avatar) */

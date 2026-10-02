@@ -12,10 +12,8 @@
 
 import { readdirSync, unlinkSync } from "node:fs";
 import { elements } from "../src/elements";
-import { declarationModules, elementModules, kebab } from "./element-modules";
+import { camel, declarationModules, elementModules, kebab, pascal } from "./element-modules";
 
-const pascal = (name: string): string =>
-  name.replace(/(^|-)([a-z])/g, (_, __: string, c: string) => c.toUpperCase());
 
 interface Framework {
   dir: string;
@@ -66,9 +64,9 @@ ${body}
 const elementModule = (framework: Framework, { name, module: from, styles }: (typeof elementModules)[number]): string => {
   const P = pascal(name);
   const C = framework.component(name);
-  return module(framework, name, `export const ${C}: MComponent<${P}Spec, ${P}Element> = /*#__PURE__*/ createComponent(${name}Element.spec, define${P}, "${C}");`, [
+  return module(framework, name, `export const ${C}: MComponent<${P}Spec, ${P}Element> = /*#__PURE__*/ createComponent(${camel(name)}Element.spec, define${P}, "${C}");`, [
     ...styles.map((style) => `import "mtrl/elements/css/${style}";`),
-    `import { ${name}Element, define${P}, type ${P}Spec, type ${P}Element } from "../elements/${from}";`,
+    `import { ${camel(name)}Element, define${P}, type ${P}Spec, type ${P}Element } from "../elements/${from}";`,
     `import { createComponent, type MComponent } from "./create";`,
   ]);
 };
@@ -131,6 +129,7 @@ ${framework.directive ? `${framework.directive}\n` : ""}/**
   if (react) {
     return `${header}import type * as React from "react";
 import type { ElementEvents, ElementMarkup } from "../elements";
+import type { ReactHostAttributes } from "./create";
 
 /**
  * The element's events as React 19 listens to them on a custom element: an
@@ -144,7 +143,7 @@ type Events<S> = {
 
 /** A tag's props: its attributes as markup writes them, its events, and any HTML attribute. */
 type Tag<S, E extends HTMLElement> = Omit<
-  React.DetailedHTMLProps<React.HTMLAttributes<E>, E>,
+  React.DetailedHTMLProps<ReactHostAttributes<E>, E>,
   keyof ElementMarkup<S> | keyof Events<S>
 > &
   ElementMarkup<S> &
@@ -162,11 +161,11 @@ ${entries}
   }
   const union = (names: Map<string, string[]>, type: (spec: string, name: string) => string): string =>
     [...names].map(([name, specs]) => `      "${name}": ${specs.map((spec) => type(spec, name)).join(" | ")};`).join("\n");
-  return `${header}import type { JSX } from "solid-js";
-import type { ElementEvents, ElementMarkup, ElementProperties } from "../elements";
+  return `${header}import type { ElementEvents, ElementMarkup, ElementProperties } from "../elements";
+import type { SolidHostAttributes } from "./create";
 
 /** A tag's props: its attributes as markup writes them, and any HTML attribute. */
-type Tag<S, E extends HTMLElement> = Omit<JSX.HTMLAttributes<E>, keyof ElementMarkup<S>> & ElementMarkup<S>;
+type Tag<S, E extends HTMLElement> = Omit<SolidHostAttributes<E>, keyof ElementMarkup<S>> & ElementMarkup<S>;
 
 declare module "solid-js" {
   // eslint-disable-next-line @typescript-eslint/no-namespace -- JSX is a namespace; this merges into it

@@ -58,22 +58,28 @@ export const withController =
     }
   };
 
-  /** The `change` payload: the selected values, which old handlers read as an array, with the named fields. */
+  /** Convert selected chip values to the public getter's single or multi shape. */
+  const selectionValue = (values: (string | null)[]): string | string[] | null => {
+    const selected = values.filter((value): value is string => value !== null);
+    return config.multiSelect ? selected : (selected[0] ?? null);
+  };
+
+  /** The `change` payload stays an array with named fields and a second positional argument. */
   const changeEvent = (values: (string | null)[], changed: string | null): ChipsChangeEvent => {
-    const set = values.filter((value): value is string => value !== null);
-    const value = config.multiSelect ? set : (set[0] ?? null);
-    return Object.assign([...values], { value, selected: values, changed });
+    return Object.assign([...values], { value: selectionValue(values), selected: values, changed });
+  };
+
+  const currentValue = (): string | string[] | null => selectionValue(getSelectedValues());
+
+  const selectSingle = (selectedChip: ChipComponent) => {
+    if (config.multiSelect) return;
+    component.chipInstances.forEach((chip) => {
+      if (chip !== selectedChip && chip.isSelected()) chip.setSelected(false);
+    });
   };
 
   const handleSelection = (selectedChip: ChipComponent) => {
-    if (!config.multiSelect) {
-      // Single selection mode - deselect all other chips
-      component.chipInstances.forEach((chip: ChipComponent) => {
-        if (chip !== selectedChip && chip.isSelected()) {
-          chip.setSelected(false);
-        }
-      });
-    }
+    if (selectedChip.isSelected()) selectSingle(selectedChip);
 
     // With selectionRequired, deselecting the last selected chip is refused, in either
     // mode. It used to be forced on every single-select set. FLO-257.
@@ -218,6 +224,7 @@ export const withController =
     const chipInstance = createChip({
       ...chipConfig,
       managedSelection: true,
+      onSelected: selectSingle,
       cell: true,
       onRemove: chipConfig.type === "input" ? chip => {
         chipConfig.onRemove?.(chip);
@@ -234,6 +241,10 @@ export const withController =
     container.appendChild(fragment);
 
     component.chipInstances.push(chipInstance);
+
+    // A selected programmatic addition moves a single selection just as a
+    // click does. Finish the model update before the `add` handler reads it.
+    if (chipInstance.isSelected()) selectSingle(chipInstance);
 
     // This click handler is the ONLY path to handleSelection
     chipInstance.on("click", () => {
@@ -256,7 +267,7 @@ export const withController =
     syncTabStop();
 
     // Dispatch add event
-    dispatchEvent(CHIPS_EVENTS.ADD, chipInstance);
+    dispatchEvent(CHIPS_EVENTS.ADD, { value: currentValue(), chip: chipInstance });
 
     return chipInstance;
   };
@@ -273,10 +284,8 @@ export const withController =
 
     if (index >= 0 && index < component.chipInstances.length) {
       const chip = component.chipInstances[index];
+      const chipValue = chip.getValue();
       const hadFocus = chip.element.contains(activeElementOf(chip.element));
-
-      // Dispatch remove event before actual removal
-      dispatchEvent(CHIPS_EVENTS.REMOVE, chip);
 
       chip.element.removeEventListener("keydown", handleKeyboardNavigation);
       chip.destroy();
@@ -302,6 +311,7 @@ export const withController =
           chips[next].focus();
         }
       }
+      dispatchEvent(CHIPS_EVENTS.REMOVE, { value: currentValue(), chip, chipValue });
     }
   };
 

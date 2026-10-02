@@ -31,17 +31,117 @@ const mount = (config: ChipsConfig = {}) => {
 
 describe("chips container events", () => {
   test("config add handlers receive each initial chip and later additions after insertion", () => {
-    const added: ChipComponent[] = [];
+    const added: { chip: ChipComponent; value: string | string[] | null }[] = [];
     const parents: (HTMLElement | null)[] = [];
-    const chips = mount({ chips: [{ value: "a", ripple: false }], on: { add: chip => {
-      added.push(chip);
-      parents.push(chip.element.parentElement);
+    const chips = mount({ chips: [{ value: "a", selected: true, ripple: false }], on: { add: event => {
+      added.push({ chip: event.chip, value: event.value });
+      parents.push(event.chip.element.parentElement);
     } } });
-    expect(added).toEqual(chips.getChips());
+    expect(added).toEqual([{ chip: chips.getChips()[0], value: ["a"] }]);
     expect(chips.addChip({ value: "b", ripple: false })).toBe(chips);
-    expect(added).toEqual(chips.getChips());
-    expect(added.map(chip => chip.getValue())).toEqual(["a", "b"]);
+    expect(added).toEqual(chips.getChips().map(chip => ({ chip, value: ["a"] })));
+    expect(added.map(event => event.chip.getValue())).toEqual(["a", "b"]);
     for (const parent of parents) expect(chips.element.contains(parent)).toBe(true);
+  });
+
+  test("add value equals the getter inside the handler in single and multi sets", () => {
+    for (const multiSelect of [false, true]) {
+      const chips = mount({ multiSelect });
+      const values: unknown[] = [];
+      chips.on("add", event => {
+        expect(event.value).toEqual(chips.getValue());
+        expect(chips.getChips()).toContain(event.chip);
+        values.push(event.value);
+      });
+      chips.addChip({ value: "a", selected: true, ripple: false });
+      chips.addChip({ value: "b", selected: true, ripple: false });
+      expect(values).toEqual(multiSelect ? [["a"], ["a", "b"]] : ["a", "b"]);
+    }
+  });
+
+  test("adding a selected chip moves a single selection before add is dispatched", () => {
+    const chips = mount({ multiSelect: false });
+    const events: unknown[] = [];
+    chips.on("add", event => {
+      expect(event.value).toBe(chips.getValue());
+      events.push({ type: "add", value: event.value, chip: event.chip.getValue(), selected: chips.getSelectedValues() });
+    });
+    chips.on("change", event => events.push({ type: "change", value: event.value }));
+
+    chips.addChip({ value: "a", selected: true, ripple: false });
+    chips.addChip({ value: "b", selected: true, ripple: false });
+
+    expect(chips.getChips().map(chip => chip.isSelected())).toEqual([false, true]);
+    expect(chips.getValue()).toBe("b");
+    expect(events).toEqual([
+      { type: "add", value: "a", chip: "a", selected: ["a"] },
+      { type: "add", value: "b", chip: "b", selected: ["b"] },
+    ]);
+  });
+
+  test("initial selected chips in a single-select set leave the last declared selected", () => {
+    const events: unknown[] = [];
+    const chips = mount({ multiSelect: false, chips: [
+      { value: "a", selected: true, ripple: false },
+      { value: "b", selected: true, ripple: false },
+    ], on: {
+      add: event => events.push({ type: "add", value: event.value, selected: event.chip.isSelected() }),
+      change: event => events.push({ type: "change", value: event.value }),
+    } });
+    expect(chips.getChips().map(chip => chip.isSelected())).toEqual([false, true]);
+    expect(chips.getValue()).toBe("b");
+    expect(events).toEqual([
+      { type: "add", value: "a", selected: true },
+      { type: "add", value: "b", selected: true },
+    ]);
+  });
+
+  test("a chip's setter replaces the single selection silently", () => {
+    const events: string[] = [];
+    const chips = mount({ multiSelect: false, chips: [
+      { value: "a", selected: true, ripple: false },
+      { value: "b", ripple: false, onChange: () => events.push("chip change") },
+    ], onChange: () => events.push("set change") });
+    chips.on("change", () => events.push("change"));
+    const [a, b] = chips.getChips();
+
+    expect(b.setSelected(true)).toBe(b);
+    expect([a.isSelected(), b.isSelected()]).toEqual([false, true]);
+    expect(chips.getSelectedValues()).toEqual(["b"]);
+    expect(chips.getValue()).toBe("b");
+    expect(events).toEqual([]);
+
+    b.setSelected(false);
+    expect(chips.getSelectedValues()).toEqual([]);
+    expect(chips.getValue()).toBeNull();
+    expect(events).toEqual([]);
+  });
+
+  test("other programmatic selection paths keep the single-set invariant", () => {
+    const chips = mount({ multiSelect: false, chips: [
+      { value: "a", ripple: false }, { value: "b", ripple: false }, { value: "c", ripple: false },
+    ] });
+    const [a, b] = chips.getChips();
+    const changes: unknown[] = [];
+    chips.on("change", event => changes.push(event.value));
+
+    a.toggleSelected();
+    b.toggleSelected();
+    expect(chips.getSelectedValues()).toEqual(["b"]);
+    chips.selectByValue(["a", "c"]);
+    expect(chips.getSelectedValues()).toEqual(["c"]);
+    chips.setValue(["a", "b"]);
+    expect(chips.getSelectedValues()).toEqual(["b"]);
+    chips.clearSelection();
+    expect(chips.getSelectedValues()).toEqual([]);
+    expect(changes).toEqual([]);
+
+    const multi = mount({ multiSelect: true, chips: [
+      { value: "a", ripple: false }, { value: "b", ripple: false },
+    ] });
+    multi.getChips()[0].setSelected(true);
+    multi.getChips()[1].setSelected(true);
+    expect(multi.getSelectedValues()).toEqual(["a", "b"]);
   });
 
   test("click change passes both arguments, including valueless chips, and calls onChange", () => {
@@ -103,27 +203,92 @@ describe("chips container events", () => {
     expect(positional).toEqual([[["b"], "b"], [["a"], "a"], [["a", null], null]]);
   });
 
-  test("remove passes the live chip before destruction, by instance or index", () => {
-    const chips = mount({ chips: [{ value: "a", ripple: false }, { value: "b", ripple: false }] });
+  test("remove reports post-removal selection and the removed chip's value, by instance or index", () => {
+    const chips = mount({ chips: [{ value: "a", selected: true, ripple: false }, { value: "b", selected: true, ripple: false }] });
     const original = chips.getChips();
     const removed: ChipComponent[] = [];
-    chips.on("remove", chip => {
-      expect(chips.getChips()).toContain(chip);
-      expect(chips.element.contains(chip.element)).toBe(true);
-      removed.push(chip);
+    const values: unknown[] = [];
+    chips.on("remove", event => {
+      expect(event.value).toEqual(chips.getValue());
+      expect(chips.getChips()).not.toContain(event.chip);
+      expect(chips.element.contains(event.chip.element)).toBe(false);
+      values.push({ value: event.value, chipValue: event.chipValue });
+      removed.push(event.chip);
     });
     chips.removeChip(original[0]).removeChip(0).removeChip(0);
+    expect(values).toEqual([{ value: ["b"], chipValue: "a" }, { value: [], chipValue: "b" }]);
     expect(removed).toEqual(original);
     expect(chips.getChips()).toEqual([]);
     for (const chip of removed) expect(chip.element.isConnected).toBe(false);
+  });
+
+  test("setSelected on a chip removed from a single-select set leaves the set alone", () => {
+    const chips = mount({ multiSelect: false, chips: [
+      { value: "a", selected: true, ripple: false },
+      { value: "b", ripple: false },
+      { value: "c", ripple: false },
+    ] });
+    const [a, b] = chips.getChips();
+    const events: unknown[] = [];
+    chips.on("change", event => events.push(event));
+    chips.removeChip(b);
+    b.setSelected(true);
+    expect(a.isSelected()).toBe(true);
+    expect(chips.getValue()).toBe("a");
+    expect(events).toEqual([]);
+  });
+
+  test("setSelected on a chip destroyed while it is still in the set leaves the selection", () => {
+    const chips = mount({ multiSelect: false, chips: [
+      { value: "a", selected: true, ripple: false },
+      { value: "b", ripple: false },
+    ] });
+    const [a, b] = chips.getChips();
+    const events: unknown[] = [];
+    chips.on("change", event => events.push(event));
+    b.destroy();
+    b.setSelected(true);
+    expect(a.isSelected()).toBe(true);
+    expect(chips.getValue()).toBe("a");
+    expect(events).toEqual([]);
+  });
+
+  test("setSelected after the set is destroyed does not fire and leaves the last selection", () => {
+    const chips = mount({ multiSelect: false, chips: [
+      { value: "a", selected: true, ripple: false },
+      { value: "b", ripple: false },
+    ] });
+    const [a, b] = chips.getChips();
+    const events: unknown[] = [];
+    chips.on("change", event => events.push(event));
+    chips.destroy();
+    b.setSelected(true);
+    expect(a.isSelected()).toBe(true);
+    expect(events).toEqual([]);
+  });
+
+  test("remove preserves null chipValue and the single-select value shape", () => {
+    const single = mount({ multiSelect: false, chips: [{ value: "a", selected: true, ripple: false }] });
+    single.on("remove", event => {
+      expect(event.value).toEqual(single.getValue());
+      expect(event).toMatchObject({ value: null, chipValue: "a" });
+    });
+    single.removeChip(0);
+
+    const multi = mount({ chips: [{ ripple: false }] });
+    multi.on("remove", event => {
+      expect(event.value).toEqual(multi.getValue());
+      expect(event).toMatchObject({ value: [], chipValue: null });
+    });
+    multi.removeChip(0);
   });
 
   test("on/off preserve chaining and remove only the requested listener", () => {
     const chips = mount();
     const first: ChipComponent[] = [];
     const second: ChipComponent[] = [];
-    const handler: ChipsEvents["add"] = chip => first.push(chip);
-    expect(chips.on("add", handler).on("add", chip => second.push(chip))).toBe(chips);
+    const handler: ChipsEvents["add"] = event => first.push(event.chip);
+    expect(chips.on("add", handler).on("add", event => second.push(event.chip))).toBe(chips);
     chips.addChip({ value: "a", ripple: false });
     expect(chips.off("add", handler)).toBe(chips);
     chips.addChip({ value: "b", ripple: false });

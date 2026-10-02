@@ -82,6 +82,11 @@ export interface ListConfig<T = unknown> {
  */
 export interface ListSlot {
   type: "icon" | "avatar" | "image" | "video" | "text" | "control" | "custom";
+  /**
+   * For `icon` and `avatar`, a string is markup.
+   * Markup (HTML). Not sanitized by default: see Markup and sanitizing.
+   * An avatar string is not a person's name or an image URL. An `image` is a URL.
+   */
   content: string | HTMLElement;
 }
 

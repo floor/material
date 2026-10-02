@@ -98,7 +98,8 @@ interface ButtonGroupItemBase extends Omit<ButtonConfig, "variant"> {
   text?: string;
 
   /**
-   * Button icon HTML content
+   * Button icon HTML content.
+   * Markup (HTML). Not sanitized by default: see Markup and sanitizing.
    * @example '<svg>...</svg>'
    */
   icon?: string;
@@ -121,7 +122,7 @@ interface ButtonGroupItemBase extends Omit<ButtonConfig, "variant"> {
    * Value associated with this button
    */
   value?: string;
-  /** Icon shown while selected (toggle buttons) */
+  /** Icon shown while selected (toggle buttons). Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   selectedIcon?: string;
   /** Initially selected (selection groups only) */
   selected?: boolean;
@@ -337,6 +338,9 @@ export interface ButtonGroupComponent {
    * @returns The ButtonGroupComponent for chaining
    */
   disable: () => ButtonGroupComponent;
+
+  /** Whether the whole group is disabled (FLO-384) */
+  isDisabled: () => boolean;
 
   /**
    * Enables a specific button by index

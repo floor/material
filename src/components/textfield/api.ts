@@ -1,10 +1,10 @@
 // src/components/textfield/api.ts
 import type {
   BaseComponent,
-  TextfieldComponent,
+  TextFieldComponent,
   ApiOptions,
   TextfieldVariant,
-  TextfieldEvents,
+  TextFieldEvents,
 } from "./types";
 
 /**
@@ -34,7 +34,7 @@ type ComponentWithDensity = BaseComponent & {
  */
 export const withAPI =
   ({ disabled, lifecycle }: ApiOptions) =>
-  (component: ComponentWithDensity): TextfieldComponent => {
+  (component: ComponentWithDensity): TextFieldComponent => {
     // A trailing icon button is disabled with the field (FLO-301)
     const setTrailingDisabled = (off: boolean): void => {
       // By tag, not instanceof: no global HTMLButtonElement is assumed (a server DOM)
@@ -50,13 +50,13 @@ export const withAPI =
 
       // Value management
       getValue: component.getValue || (() => ""),
-      setValue(value: string): TextfieldComponent {
+      setValue(value: string): TextFieldComponent {
         component.setValue?.(value);
         return this;
       },
 
       // Attributes API
-      setAttribute(name: string, value: string): TextfieldComponent {
+      setAttribute(name: string, value: string): TextFieldComponent {
         component.setAttribute?.(name, value);
         return this;
       },
@@ -65,13 +65,13 @@ export const withAPI =
         return component.getAttribute?.(name) || null;
       },
 
-      removeAttribute(name: string): TextfieldComponent {
+      removeAttribute(name: string): TextFieldComponent {
         component.removeAttribute?.(name);
         return this;
       },
 
       // Variant management
-      setVariant(variant: TextfieldVariant): TextfieldComponent {
+      setVariant(variant: TextfieldVariant): TextFieldComponent {
         const PREFIX = component.config?.prefix || "mtrl";
         const COMPONENT = component.config?.componentName || "textfield";
 
@@ -106,7 +106,7 @@ export const withAPI =
       },
 
       // Label management
-      setLabel(text: string): TextfieldComponent {
+      setLabel(text: string): TextFieldComponent {
         component.label?.setText(text);
         // Update positions after changing label
         if (component.updateElementPositions) {
@@ -129,7 +129,7 @@ export const withAPI =
       get leadingIcon() {
         return component.leadingIcon ?? null;
       },
-      setLeadingIcon(html: string): TextfieldComponent {
+      setLeadingIcon(html: string): TextFieldComponent {
         if (component.setLeadingIcon) {
           component.setLeadingIcon(html);
           // Update positions after changing icon
@@ -140,7 +140,7 @@ export const withAPI =
         return this;
       },
 
-      removeLeadingIcon(): TextfieldComponent {
+      removeLeadingIcon(): TextFieldComponent {
         if (component.removeLeadingIcon) {
           component.removeLeadingIcon();
           // Update positions after removing icon
@@ -161,7 +161,7 @@ export const withAPI =
       get trailingIcon() {
         return component.trailingIcon ?? null;
       },
-      setTrailingIcon(html: string, label?: string): TextfieldComponent {
+      setTrailingIcon(html: string, label?: string): TextFieldComponent {
         if (component.setTrailingIcon) {
           component.setTrailingIcon(html, label);
           // Update positions after changing icon
@@ -172,7 +172,7 @@ export const withAPI =
         return this;
       },
 
-      removeTrailingIcon(): TextfieldComponent {
+      removeTrailingIcon(): TextFieldComponent {
         if (component.removeTrailingIcon) {
           component.removeTrailingIcon();
           // Update positions after removing icon
@@ -190,14 +190,14 @@ export const withAPI =
       get supportingTextElement(): HTMLElement | null {
         return component.element.querySelector<HTMLElement>(`.${component.getClass("textfield__helper")}`);
       },
-      setSupportingText(text: string, isError?: boolean): TextfieldComponent {
+      setSupportingText(text: string, isError?: boolean): TextFieldComponent {
         if (component.setSupportingText) {
           component.setSupportingText(text, isError);
         }
         return this;
       },
 
-      removeSupportingText(): TextfieldComponent {
+      removeSupportingText(): TextFieldComponent {
         if (component.removeSupportingText) {
           component.removeSupportingText();
         }
@@ -214,7 +214,7 @@ export const withAPI =
       get prefixTextElement() {
         return component.prefixTextElement ?? null;
       },
-      setPrefixText(text: string): TextfieldComponent {
+      setPrefixText(text: string): TextFieldComponent {
         if (component.setPrefixText) {
           component.setPrefixText(text);
           // Update positions after changing prefix
@@ -225,7 +225,7 @@ export const withAPI =
         return this;
       },
 
-      removePrefixText(): TextfieldComponent {
+      removePrefixText(): TextFieldComponent {
         if (component.removePrefixText) {
           component.removePrefixText();
           // Update positions after removing prefix
@@ -246,7 +246,7 @@ export const withAPI =
       get suffixTextElement() {
         return component.suffixTextElement ?? null;
       },
-      setSuffixText(text: string): TextfieldComponent {
+      setSuffixText(text: string): TextFieldComponent {
         if (component.setSuffixText) {
           component.setSuffixText(text);
           // Update positions after changing suffix
@@ -257,7 +257,7 @@ export const withAPI =
         return this;
       },
 
-      removeSuffixText(): TextfieldComponent {
+      removeSuffixText(): TextFieldComponent {
         if (component.removeSuffixText) {
           component.removeSuffixText();
           // Update positions after removing suffix
@@ -269,7 +269,7 @@ export const withAPI =
       },
 
       // Update positioning manually (useful after DOM updates)
-      updatePositions(): TextfieldComponent {
+      updatePositions(): TextFieldComponent {
         // Check for autofill before updating positions
         if (component.input && component.element) {
           const hasValue =
@@ -300,7 +300,7 @@ export const withAPI =
       },
 
       // Error state management
-      setError(error: boolean, message?: string): TextfieldComponent {
+      setError(error: boolean, message?: string): TextFieldComponent {
         if (component.setError) {
           component.setError(error, message);
         }
@@ -312,7 +312,7 @@ export const withAPI =
       },
 
       // Density management
-      setDensity(density: string): TextfieldComponent {
+      setDensity(density: string): TextFieldComponent {
         if (component.density?.set) {
           component.density.set(density);
         }
@@ -327,31 +327,38 @@ export const withAPI =
       },
 
       // Event handling
-      on<K extends keyof TextfieldEvents>(event: K, handler: TextfieldEvents[K]): TextfieldComponent {
+      on<K extends keyof TextFieldEvents>(event: K, handler: TextFieldEvents[K]): TextFieldComponent {
         component.on?.(event, handler);
         return this;
       },
 
-      off<K extends keyof TextfieldEvents>(event: K, handler: TextfieldEvents[K]): TextfieldComponent {
+      off<K extends keyof TextFieldEvents>(event: K, handler: TextFieldEvents[K]): TextFieldComponent {
         component.off?.(event, handler);
         return this;
       },
 
       // State management
-      enable(): TextfieldComponent {
+      enable(): TextFieldComponent {
         disabled.enable();
         setTrailingDisabled(false);
         return this;
       },
 
-      disable(): TextfieldComponent {
+      isDisabled(): boolean {
+
+        return disabled.isDisabled();
+
+      },
+
+
+      disable(): TextFieldComponent {
         disabled.disable();
         setTrailingDisabled(true);
         return this;
       },
 
       // Required, with the label's asterisk (FLO-301)
-      setRequired(required: boolean): TextfieldComponent {
+      setRequired(required: boolean): TextFieldComponent {
         component.setRequired?.(required);
         // The asterisk widens the label, and the outlined notch with it
         component.schedulePositionUpdate?.();

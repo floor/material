@@ -23,7 +23,7 @@
  */
 
 import createChips from "../components/chips/chips";
-import type { ChipComponent, ChipConfig, ChipType, ChipsChangeEvent, ChipsComponent, ChipsConfig } from "../components/chips/types";
+import type { ChipComponent, ChipConfig, ChipType, ChipsChangeEvent, ChipsRemoveEvent, ChipsComponent, ChipsConfig } from "../components/chips/types";
 import {
   createDeclarationClass, defineElement, DEFAULT_PREFIX, type Config, type DefineOptions, type ElementAttributes,
   type ElementHost, type ElementInstance, type ElementSpec,
@@ -85,7 +85,7 @@ const applied = new WeakMap<HTMLElement, Chip[]>();
 const defaultSelection = (host: HTMLElement, chips: Chip[]): string[] =>
   host.hasAttribute("value")
     ? parse(host.getAttribute("value"), isMulti(host))
-    : parse(chips.filter((chip) => chip.selected).map((chip) => chip.value), isMulti(host));
+    : parse(chips.filter((chip) => chip.selected).map((chip) => chip.value).slice(isMulti(host) ? 0 : -1), isMulti(host));
 
 const readChips = (host: HTMLElement): Config => {
   const chips = declaredChips(host);
@@ -231,18 +231,21 @@ const chipsSpec = {
       // The set's change carries the `value` property's shape (FLO-320).
       detail: (payload) => ({ value: (payload as ChipsChangeEvent).value }),
     },
-    // Not a state event: removing a selected chip changes the selection, and
-    // no `change` comes with it, so a user removal marks the set dirty.
+    // Removal changes the set model, so it marks the element dirty without a
+    // second `change` notification.
     remove: {
-      detail: (payload) => ({ value: (payload as ChipComponent).getValue() }),
+      detail: (payload) => {
+        const { chipValue, value } = payload as ChipsRemoveEvent;
+        return { chipValue, value };
+      },
     },
   },
   config: readChips,
   setup: (host, component) => {
     // The user removed an input chip; declarations removing chips are quiet.
-    const onRemove = (chip: ChipComponent): void => {
+    const onRemove = ({ chipValue }: ChipsRemoveEvent): void => {
       const set = removed.get(host) ?? new Set<string>();
-      set.add(chip.getValue() ?? "");
+      set.add(chipValue ?? "");
       removed.set(host, set);
     };
     component.on("remove", onRemove);
@@ -266,8 +269,11 @@ export const chipDeclaration = {
     value: { type: "string" },
     label: { type: "string" },
     variant: { type: "string" },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string" },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     "trailing-icon": { type: "string" },
+    /** Markup (HTML), not a person's name or an image URL. Not sanitized by default: see Markup and sanitizing. Input chips only; takes precedence over `icon`. */
     avatar: { type: "string" },
     "remove-label": { type: "string" },
     selected: { type: "boolean" },
