@@ -4877,10 +4877,16 @@ try {
     // 300ms after it opens. The fixed waits in this block were only long enough for
     // those; on a runner that paused, the read or the next key came first. Each fixed
     // wait stays (it also lets a second, unwanted close show), and `eventually` then
-    // waits for the state the next step depends on, for 5s at most.
+    // waits for the state the next step depends on, for 5s at most. When that state
+    // never comes, the failure says where, what was awaited and what was there
+    // instead, as the assertion's own diff would have.
+    let place = "";
     const eventually = async (what: string, ready: () => Promise<boolean>): Promise<void> => {
       for (const end = Date.now() + 5000; !(await ready());) {
-        if (Date.now() > end) throw new Error(`menu top layer: still waiting after 5s for ${what}`);
+        if (Date.now() > end) {
+          const found = { ...(await state()), item: await focusedItem(), submenus: await submenus() };
+          throw new Error(`menu top layer ${place}: still waiting after 5s for ${what}; found ${JSON.stringify(found)}`);
+        }
         await wait(20);
       }
     };
@@ -4926,6 +4932,7 @@ try {
 
     for (const shadow of [true, false]) {
       const where = shadow ? "in a shadow root" : "in light DOM";
+      place = where;
 
       // Where a menu without a layer opens, the global stylesheet on the body
       await stage(shadow);
