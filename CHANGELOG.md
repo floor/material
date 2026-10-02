@@ -107,6 +107,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `timing` and `opacity` were deprecated in 0.10.0. Removed in 1.0. Comments only; nothing changes at
   run time.
 
+- **The small FAB's class and icon size:** `FAB_CLASSES.SMALL` and `FAB_ICON_SIZES.SMALL`
+  (`mtrl/components/fab/constants`). The small size they belong to, `FAB_SIZES.SMALL`, is already
+  deprecated (M3 Expressive). Removed in 1.0. Comments only; nothing changes at run time.
+
 - **The text field's Sass map and function: `$textfield` and `textfield()` (FLO-383).** Use
   `$text-field` and `v.text-field()`, the same map: a theme may configure either name until 1.0
   removes the old one. The built CSS is unchanged.
