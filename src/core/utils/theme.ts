@@ -89,7 +89,7 @@ const readVar = (name: string, element?: Element | null): string => {
  * @param {ThemeChangeCallback} [options.onThemeChange] - Optional callback for theme changes
  * @returns {string} The color value (hex, rgb, or rgba)
  *
- * The themes declare no `--<prefix>-sys-color-*-rgb` twins (FLO-311), and 1.0
+ * The themes declare no `--<prefix>-sys-color-*-rgb` twins (FLO-311), and material 3.0.0
  * no longer derives them: read `sys-color-X`, with `alpha` for rgba().
  *
  * @example

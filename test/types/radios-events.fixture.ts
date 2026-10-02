@@ -16,7 +16,7 @@ export const callbackPayload: Equals<
   Parameters<Parameters<typeof radios.on<"change">>[1]>[0],
   RadiosChangePayload
 > = true;
-// 1.0: null, not "", when nothing is selected, as the select and <m-radios> report it
+// 3.0.0: null, not "", when nothing is selected, as the select and <m-radios> report it
 export const valueIsStringOrNull: Equals<RadiosChangePayload["value"], string | null> = true;
 export const getterIsStringOrNull: Equals<ReturnType<RadiosComponent["getValue"]>, string | null> = true;
 export const optionCanBeCleared: Equals<RadiosChangePayload["option"], RadioOptionConfig | null> = true;
@@ -57,7 +57,7 @@ export const invalidValue: RadiosChangePayload = { value: 1, option: null, origi
 // @ts-expect-error the originalEvent property is always present, even when undefined
 export const missingOriginalEvent: RadiosChangePayload = { value: null, option: null };
 
-// 1.0: the setter takes what the getter returns (string | null), so they round-trip
+// 3.0.0: the setter takes what the getter returns (string | null), so they round-trip
 export const setterTakesNull: Equals<Parameters<RadiosComponent["setValue"]>[0], string | null> = true;
 radios.setValue(null);
 radios.setValue(radios.getValue());

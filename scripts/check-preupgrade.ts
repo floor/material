@@ -4,7 +4,7 @@
 //
 // Each case is the server-style HTML of one element (the host and its light
 // DOM, as an adapter's server render emits it) in a page with the base styles
-// and `mtrl/elements/preupgrade.css`. The host's box and two siblings after it
+// and `material/elements/preupgrade.css`. The host's box and two siblings after it
 // (inline text on its line, a block below) are measured, then the elements
 // script loads, the element upgrades, and they are measured again.
 //

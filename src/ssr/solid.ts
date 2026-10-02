@@ -1,6 +1,6 @@
 // src/ssr/solid.ts
 /**
- * Enable declarative shadow DOM for mtrl/solid in this server process.
+ * Enable declarative shadow DOM for material/solid in this server process.
  * The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup.
  * @module ssr/solid
  */

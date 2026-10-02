@@ -65,6 +65,8 @@ jobs:
             [ "$status" = 0 ] || { echo "::error::$script failed"; failed=1; }
           done
           exit $failed
+      - name: Package name
+        run: bun run name:check
 
   tests:
     runs-on: ubuntu-latest

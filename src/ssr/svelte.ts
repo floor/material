@@ -1,11 +1,11 @@
 // src/ssr/svelte.ts
 /**
- * Enable declarative shadow DOM for mtrl/svelte in this server process.
+ * Enable declarative shadow DOM for material/svelte in this server process.
  * The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup.
  * The server-rendered shadow root is built in a separate render, without the context of providers above the component.
  * The page's own render (the light DOM) sees the provided value. Until upgrade, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves this component without a declarative shadow root while the page still renders. In development, a warning names the element.
  * The Vue and Solid bridges see the provided value in both the shadow root and light DOM. React has this same context limit.
- * Pass the resolved string as a prop or attribute, or accept client-rendered text until upgrade. A fix is planned for 1.1 (FLO-517).
+ * Pass the resolved string as a prop or attribute, or accept client-rendered text until upgrade. A fix is planned for a later 3.x release (FLO-517).
  * @module ssr/svelte
  */
 import type { Component } from "svelte";

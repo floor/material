@@ -10,8 +10,8 @@
 // element. Sizes come from the same tokens and variables the components use.
 //
 // The tag prefix is a module variable: with a custom prefix, configure it
-//   @use 'mtrl/src/styles/elements' with ($tag-prefix: 'x');
-// or, at runtime, use `preupgradeStyles('x')` from `mtrl/elements/preupgrade`.
+//   @use 'material/src/styles/elements' with ($tag-prefix: 'x');
+// or, at runtime, use `preupgradeStyles('x')` from `material/elements/preupgrade`.
 // =============================================================================
 
 $tag-prefix: 'm' !default;

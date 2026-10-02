@@ -105,7 +105,7 @@ used.add("MButton");
 pieces.push(`h(MButton, { id: "globals", label: "Globals", popover: "auto", inputmode: "numeric", enterkeyhint: "send", itemprop: "name", nonce: "abc" })`);
 
 const app = `import { defineComponent, h, ref } from "vue";
-import { ${[...used].sort().join(", ")} } from "mtrl/vue";
+import { ${[...used].sort().join(", ")} } from "material/vue";
 
 export const App = defineComponent(() => {
   const clicks = ref(0);
@@ -120,7 +120,7 @@ const dir = join(process.cwd(), "analysis/vue-ssr");
 await mkdir(dir, { recursive: true });
 await Bun.write(join(dir, "App.ts"), app);
 const asyncApp = `import { defineComponent, h, Suspense } from "vue";
-import { MButton } from "mtrl/vue";
+import { MButton } from "material/vue";
 
 const pending = new Promise<string>((resolve) => setTimeout(() => resolve("outside-loaded"), 20));
 
@@ -179,7 +179,7 @@ export const AsyncApp = defineComponent(() => {
 `;
 
 await Bun.write(join(dir, "AsyncApp.ts"), asyncApp);
-await Bun.write(join(dir, "server.ts"), `import "mtrl/ssr/vue";
+await Bun.write(join(dir, "server.ts"), `import "material/ssr/vue";
 import { createSSRApp } from "vue";
 import { pipeToNodeWritable, renderToString, renderToWebStream } from "@vue/server-renderer";
 import { PassThrough } from "node:stream";
@@ -270,7 +270,7 @@ const bundle = async (entry: string, target: "browser" | "bun"): Promise<string>
     assert(!loaded.some((path) => /\/(?:ssr|linkedom)\//.test(path)), `Client loaded server code:\n${loaded.filter((path) => /ssr|linkedom/.test(path)).join("\n")}`);
   }
   const code = await result.outputs[0].text();
-  if (target === "browser") assert.doesNotMatch(code, /linkedom|from"mtrl\/ssr"|from 'mtrl\/ssr'/);
+  if (target === "browser") assert.doesNotMatch(code, /linkedom|from"material\/ssr"|from 'material\/ssr'/);
   return code;
 };
 
@@ -441,5 +441,5 @@ for (const report of summary) {
   const root = report.sameRoot === null ? "n/a" : report.sameRoot ? "kept" : "replaced";
   console.log(`${report.element}: template=${report.template ? "yes" : "no"} shadow=${report.shadowBeforeScript ? "yes" : "no"} sameRoot=${root} warnings=${report.warnings} errors=${report.errors}`);
 }
-console.log(`vue-ssr, Vue ${version}: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no mtrl/ssr or linkedom`);
+console.log(`vue-ssr, Vue ${version}: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no material/ssr or linkedom`);
 console.log(`vue-ssr async, Vue ${version}: setup, outside read, web stream, and pipeToNodeWritable finished with content, the declarative template, the same shadow root, and 0 warnings`);

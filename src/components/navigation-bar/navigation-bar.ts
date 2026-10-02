@@ -19,7 +19,7 @@ const SCROLL_THRESHOLD = 10;
 /**
  * Creates an M3 Expressive navigation bar: three to five destinations along
  * the bottom of a compact or medium window (Compose `ShortNavigationBar`).
- * Import its styles separately with `mtrl/styles/navigation-bar`. Links keep
+ * Import its styles separately with `material/styles/navigation-bar`. Links keep
  * native browser navigation; `onSelect` can `preventDefault()` for a router.
  * Don't show it together with a toolbar (m3.material.io).
  */

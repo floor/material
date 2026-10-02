@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // scripts/check-react-ssr.ts
 // Built-package SSR, parser consumption, hydration and browser isolation on both React versions.
-// Known limit (FLO-517): mtrl/ssr/react children cannot see providers above their host until upgrade.
+// Known limit (FLO-517): material/ssr/react children cannot see providers above their host until upgrade.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";

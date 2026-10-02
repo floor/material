@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Tab, Tabs } from "mtrl/react";
+import { Tab, Tabs } from "material/react";
 
 const LabelContext = React.createContext("DEFAULT");
 const RequiredContext = React.createContext<string | null>(null);

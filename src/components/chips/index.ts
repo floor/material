@@ -20,4 +20,4 @@ export type {
 } from "./types";
 
 // NOTE: Constants are exported from './constants' directly
-// Import constants from 'mtrl/components/chips/constants' for tree-shaking
+// Import constants from 'material/components/chips/constants' for tree-shaking

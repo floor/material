@@ -40,7 +40,7 @@ test("standalone withInput is symmetric: change.value and getValue() are the che
   expect(c.getValue()).toBe(true);
   expect(c.getValueAttribute()).toBe("token");
   expect(seen).toEqual([{ checked: true, value: true, valueAttribute: "token", nativeEvent: native[0] }]);
-  // The setters are silent, as every setter is in 1.0: no change, and no value event
+  // The setters are silent, as every setter is in 3.0.0: no change, and no value event
   c.setValueAttribute("next");
   expect(c.getValueAttribute()).toBe("next");
   c.setValue(false);
