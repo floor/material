@@ -205,7 +205,7 @@ try {
       untouched.addEventListener("confirm", (e) => result.timeEmptyConfirm.push([(e as CustomEvent<{ value: string }>).detail.value, untouched.value]));
       untouched.component.picker.open();
       untouched.component.picker.dialogElement.querySelector<HTMLElement>('[class$="time-picker__confirm"]')!.click();
-      (select.component as unknown as Record<symbol, { element: HTMLElement }>)[Symbol.for("mtrl.menu")].element.querySelector<HTMLElement>('[data-id=""]')!.click();
+      (select.component as unknown as Record<symbol, { element: HTMLElement }>)[Object.getOwnPropertySymbols(select.component).find((key) => key.description === "mtrl.menu")!].element.querySelector<HTMLElement>('[data-id=""]')!.click();
       radios.component.radios![0].input.click();
       radios.component.radios![1].input.click();
       return result;
@@ -6022,11 +6022,11 @@ try {
     check("select: <label for> focuses the combobox");
 
     // FLO-543: the attribute reaches the select's menu, which has no public
-    // member for it; the menu is under mtrl's registry symbol.
+    // member for it; the menu is under mtrl's symbol, found by its description.
     const placed = await page.evaluate(() => {
       const el = document.getElementById("ms") as Host;
       const menu = (): { getPosition: () => string } =>
-        (el.component as unknown as Record<symbol, { getPosition: () => string }>)[Symbol.for("mtrl.menu")];
+        (el.component as unknown as Record<symbol, { getPosition: () => string }>)[Object.getOwnPropertySymbols(el.component).find((key) => key.description === "mtrl.menu")!];
       el.setAttribute("placement", "top-start");
       const set = { position: menu().getPosition(), member: "menu" in (el.component as object) };
       el.removeAttribute("placement");
@@ -6223,15 +6223,15 @@ try {
       const el = document.getElementById("sb") as Host;
       const w = window as unknown as { __closes: number };
       w.__closes = 0;
-      // The inner menu is not a member (FLO-543): it is under mtrl's registry symbol
-      const menu = (el.component as unknown as Record<symbol, { on: (n: string, h: () => void) => void }>)[Symbol.for("mtrl.menu")];
+      // The inner menu is not a member (FLO-543): it is under mtrl's symbol, found by its description
+      const menu = (el.component as unknown as Record<symbol, { on: (n: string, h: () => void) => void }>)[Object.getOwnPropertySymbols(el.component).find((key) => key.description === "mtrl.menu")!];
       menu.on("close", () => void w.__closes++);
     });
     const splitState = (): Promise<{ open: boolean; closes: number }> =>
       page.evaluate(() => {
         const el = document.getElementById("sb") as Host;
         return {
-          open: (el.component as unknown as Record<symbol, { isOpen: () => boolean }>)[Symbol.for("mtrl.menu")].isOpen(),
+          open: (el.component as unknown as Record<symbol, { isOpen: () => boolean }>)[Object.getOwnPropertySymbols(el.component).find((key) => key.description === "mtrl.menu")!].isOpen(),
           closes: (window as unknown as { __closes: number }).__closes,
         };
       });

@@ -21,6 +21,8 @@ test("select.menu and splitButton.menu are not there; the menu is behind the int
   expect("menu" in select).toBe(false);
   expect("menu" in split).toBe(false);
   expect(Object.keys(select)).not.toContain("menu");
+  // A plain symbol: nothing can spell the key
+  expect((select as unknown as Record<symbol, unknown>)[Symbol.for("mtrl.menu")]).toBeUndefined();
   expect(typeof innerMenu(select)?.setPosition).toBe("function");
   expect(typeof innerMenu(split)?.setItems).toBe("function");
   expect(innerMenu(plain)).toBeUndefined();

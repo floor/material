@@ -656,9 +656,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   select's `isOpen()` is true, its input has `aria-expanded="true"` and `open` has been emitted;
   a split button's `expand()` has set `isExpanded()` and emitted `expand` and `change`; a time
   picker's `isOpen` is true and `open` has been emitted; a date picker has emitted `open`; a
-  dialog has run `beforeopen`, and with `layer: "top"` it is open and has emitted `open`, while
-  without it `isOpen()` turns true and `open` is emitted in a later task. None of this changed
-  in 1.0. The first ArrowDown, ArrowUp, Enter, Space, Home, End or typed character on a closed
+  dialog has run `beforeopen`, and with `layer: "top"` it is open and has emitted `open`. None
+  of this changed in 1.0. The first ArrowDown, ArrowUp, Enter, Space, Home, End or typed character on a closed
   select opens it and is not lost.
 - **SSR docs (FLO-419).** The README names every attribute whose value is markup, including `avatar` and `leading-avatar`, which are not a person's name or an image URL; `FabMenuConfig.closeIcon` is markup too. The React and Svelte bridges build the server-rendered shadow root without the context of providers above the component (FLO-517).
 - CI's Solid and Vue SSR runs on the lowest supported peer version are ordinary commands,

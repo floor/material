@@ -35,7 +35,7 @@ describe("select: open() is synchronous", () => {
     expect(seen).toEqual(["open"]);
   });
 
-  for (const key of ["ArrowDown", "ArrowUp", "Enter", " ", "m"]) {
+  for (const key of ["ArrowDown", "ArrowUp", "Enter", " "]) {
     test(`the first ${JSON.stringify(key)} on a closed select opens it on the selected option and is not lost`, async () => {
       const component = select();
       await wait();
@@ -52,6 +52,23 @@ describe("select: open() is synchronous", () => {
       expect(input.getAttribute("aria-activedescendant")).toBe(optionIds(component)[1]);
     });
   }
+
+  test("the first typed character on a closed select opens it and is not lost: the typeahead lands on its option", async () => {
+    const component = select();
+    await wait();
+    const input = inputOf(component);
+    const event = new KeyboardEvent("keydown", { key: "m", bubbles: true, cancelable: true });
+    input.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    expect(component.isOpen()).toBe(true);
+    expect(input.getAttribute("aria-activedescendant")).toBe(optionIds(component)[1]);
+    // The typeahead runs a task after the opening (select/features.ts)
+    await wait();
+    const active = document.getElementById(input.getAttribute("aria-activedescendant") ?? "");
+    expect(input.getAttribute("aria-activedescendant")).toBe(optionIds(component)[2]);
+    expect(active?.textContent).toContain("Medium");
+    expect(component.getValue()).toBe("s");
+  });
 
   test("the first Home and End on a closed select open it on the first and the last option", async () => {
     for (const [key, index] of [["Home", 0], ["End", 2]] as const) {
@@ -103,7 +120,10 @@ describe("split button: expand() is synchronous", () => {
 });
 
 describe("dialog, date picker, time picker: what open() has done when it returns", () => {
-  test("dialog: beforeopen has run and can cancel; open and isOpen() follow on a timer", async () => {
+  // A record of what the default dialog does today, not a contract: isOpen()
+  // is false until a 10 ms timer, which FLO-548 is to change. Update this test
+  // with it.
+  test("dialog, today: beforeopen has run and can cancel; open and isOpen() follow on a timer", async () => {
     const dialog = mount(createDialog({ title: "Delete?" }));
     const seen: string[] = [];
     dialog.on("beforeopen", () => { seen.push("beforeopen"); });
@@ -128,13 +148,16 @@ describe("dialog, date picker, time picker: what open() has done when it returns
   // The top-layer dialog (layer: "top") needs showModal(), which JSDOM lacks:
   // modal-layer.test.ts stubs it and pins that open and isOpen() are there
   // when open() returns.
-  test("date picker: the open event is emitted during open()", async () => {
+  test("date picker: the open event and the trigger's aria-expanded are there when open() returns", async () => {
     const picker = mount(createDatePicker({ label: "Date" }));
     await wait();
     const seen: string[] = [];
     picker.on("open", () => { seen.push("open"); });
+    const trigger = picker.element.querySelector("[aria-expanded]")!;
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
     expect(picker.open()).toBe(picker);
     expect(seen).toEqual(["open"]);
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
   });
 
   test("time picker: isOpen and the open event are there when open() returns", async () => {
