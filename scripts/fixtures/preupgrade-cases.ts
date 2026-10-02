@@ -29,6 +29,15 @@ export const cases: PreupgradeCase[] = [
   c("button", "icon", `<m-button icon="${ICON}">Save</m-button>`),
   c("button", "size=m icon", `<m-button size="m" icon="${ICON}">Save</m-button>`),
   c("button", "variant=tonal", `<m-button variant="tonal">Save</m-button>`),
+  // A text button with a leading icon: the pre-upgrade sheet reserves the
+  // text button's 12/12, the component gives the icon-side 12/16.
+  c("button", "variant=text icon", `<m-button variant="text" icon="${ICON}">Save</m-button>`),
+  // The trailing icon on each variant the button rows above name (filled is
+  // the default): the pre-upgrade sheet does not know the icon moved.
+  c("button", "icon-position=end", `<m-button icon="${ICON}" icon-position="end">Save</m-button>`),
+  c("button", "variant=outlined icon-position=end", `<m-button variant="outlined" icon="${ICON}" icon-position="end">Save</m-button>`),
+  c("button", "variant=text icon-position=end", `<m-button variant="text" icon="${ICON}" icon-position="end">Save</m-button>`),
+  c("button", "variant=tonal icon-position=end", `<m-button variant="tonal" icon="${ICON}" icon-position="end">Save</m-button>`),
   c("switch", "default", `<m-switch>Wi-Fi</m-switch>`),
   c("switch", "supporting-text", `<m-switch supporting-text="Saves power">Wi-Fi</m-switch>`),
   c("switch", "checked", `<m-switch checked>Wi-Fi</m-switch>`),
