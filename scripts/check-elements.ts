@@ -547,7 +547,7 @@ try {
       w.events = [];
       w.clicks = 0;
       const ib = document.getElementById("ib");
-      // `change` (FLO-295), and the deprecated `toggle` beside it for one release.
+      // `change` (FLO-295). 1.0 dispatches no `toggle` beside it: the listener stays, to show it never fires.
       ib?.addEventListener("change", (e) => (w.events as unknown[]).push({ change: (e as CustomEvent).detail }));
       ib?.addEventListener("toggle", (e) => (w.events as unknown[]).push({ toggle: (e as CustomEvent).detail }));
       ib?.addEventListener("click", () => (w.clicks = (w.clicks as number) + 1));
@@ -558,10 +558,10 @@ try {
       const ib = document.getElementById("ib") as HTMLElement & { selected: boolean };
       return { events: w.events, clicks: w.clicks, selected: ib.selected };
     });
-    // FLO-380: both carry the button's value beside selected.
-    assert.deepEqual(state, { events: [{ change: { selected: true, value: "fav" } }, { toggle: { selected: true, value: "fav" } }], clicks: 1, selected: true });
+    // FLO-380: change carries the button's value beside selected.
+    assert.deepEqual(state, { events: [{ change: { selected: true, value: "fav" } }], clicks: 1, selected: true });
     assert.equal(await page.getByRole("button", { name: "Favorite", pressed: true }).count(), 1);
-    check("icon button: a click dispatches one change from the host with { selected, value }, and the deprecated toggle; click stays native");
+    check("icon button: a click dispatches one change from the host with { selected, value } and no toggle; click stays native");
 
     state = await page.evaluate(() => {
       const w = window as unknown as Win;

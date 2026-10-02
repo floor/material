@@ -152,9 +152,6 @@ const RESERVED_OPTIONS: Record<string, unknown> = {
   data: true,
   class: true,
   className: true,
-  // Removed in 1.0 (use class or className); still reserved, so a 0.10 caller's
-  // rawClass is ignored rather than written out as a rawclass attribute.
-  rawClass: true,
   attributes: true,
   forwardEvents: true,
   onCreate: true,
