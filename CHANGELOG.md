@@ -32,6 +32,9 @@ the new name exists only in 3.0.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `T
   (`import { pipe } from 'material/core/compose'`). The
   [migration table](https://github.com/floor/material/blob/main/scripts/fixtures/root-exports.md)
   gives every one.
+- **`material/core/<area>` only.** A path under an area no longer resolves:
+  `mtrl/core/compose/features` becomes `material/core/compose`, which exports the same names
+  (`withLifecycle` among them).
 - **Folders inside a component no longer resolve** (`mtrl/components/chips/chip`,
   `…/features`): they held internals, with no replacement.
 - **Vue 3.4.20 or newer.** With `skipLibCheck: false`, `@types/react` 18.2.71 or newer.
@@ -346,6 +349,33 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed (breaking)
 
+- **`material/core/<area>` is an explicit list: seven areas, and no path under them (FLO-414).**
+  The export map listed `./core/*`, and a `*` in an exports pattern crosses slashes: besides
+  the areas it resolved a folder inside one, `material/core/compose/features`, which the
+  README's "Building your own components" imported `withLifecycle()` from (in 0.10.x too).
+  The map now names `material/core` and its seven areas: `material/core/canvas`, `/compose`,
+  `/dom`, `/shapes`, `/state`, `/theme` and `/utils`. Any other path under `material/core`
+  throws `ERR_PACKAGE_PATH_NOT_EXPORTED`, and TypeScript reports the import (TS2307).
+  Migration:
+
+  | 0.10 | 3.0 |
+  |---|---|
+  | `import { withLifecycle } from 'mtrl/core/compose/features'` (and any other name from that path) | `import { withLifecycle } from 'material/core/compose'`: the same name, the same function |
+
+  Every name `material/core/compose/features` exported is an export of
+  `material/core/compose`, except `withBadge` and the types `BadgeComponent` and
+  `BadgeConfig` of that feature, which no document named: they are internal; for a badge,
+  use `createBadge` from `material`. `LabelManager`, the type of `LabelComponent`'s `label`,
+  was only in the nested path and is now exported from `material/core/compose`.
+- **Progress: `canvas`, `resize`, `track`, `indicator` and `buffer` are no longer on
+  `ProgressComponent`.** They named how the indicator is drawn (one canvas; `track`,
+  `indicator` and `buffer` were that same canvas under the names of an older SVG), which
+  tied the public type to one way of drawing it. The objects are unchanged at run time;
+  the type no longer promises them, and how the indicator is drawn may change in a later
+  release. Reading `progress.canvas` in TypeScript is now an error (TS2339). Migration:
+  for the canvas, `progress.element.querySelector('canvas')`; nothing replaces `resize()`,
+  as the component observes its own size; `setBuffer()` and `getBuffer()`, the buffer's
+  value, are unchanged.
 - **Explicit contrast levels are opt-in (FLO-540).** `material/styles/base` and `material/themes/<name>`
   keep standard contrast and `prefers-contrast: more`. `data-theme-contrast="medium"` and `"high"`
   (material-color-utilities contrast 0.5 and 1.0; the values are unchanged) move to
@@ -1052,6 +1082,26 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **The element authoring API is experimental.** `defineElement`, `ElementSpec`,
+  `registerStyles`, `hasStyles` and `SHADOW_BASE_STYLES` (from `material/elements`), the API
+  for writing custom elements of your own on material's machinery, are tagged
+  `@experimental` in their TSDoc and are outside semantic versioning in 3.x: they may change
+  in a minor release. Nothing about them changes in this release. The elements material
+  defines (`<m-button>`, `<m-text-field>` and the rest), their attributes, properties and
+  events, and the `define…()` functions are covered by semantic versioning as before. If
+  you build your own elements on this API, pin the minor version (`~3.0.0`).
+- **Slider: the `components` bag is internal.** The slider's controller reads an older
+  `components` object as a fallback for its elements; nothing in the library fills it, the
+  public `SliderComponent` never had it, and it is now marked internal and outside the
+  public contract: it may go in any release. Use the slider's own API (`setValue()`,
+  `getValue()` and the rest of `SliderComponent`) and `slider.element`.
+- **Tabs: `tab.badge` may be `undefined` until the badge is shown.** The type always allowed
+  it (`badge?: BadgeComponent`); it is now the documented contract, on `tab.badge` and on
+  `getBadgeComponent()`: a tab creates its badge no later than when it shows it, so a later
+  release can create it only then. Nothing changes at run time in this release: the badge
+  still exists from the first `setBadge()`, or from creation with the `badge` option. Use
+  `setBadge()`, `getBadge()`, `showBadge()` and `hideBadge()`, which work whether the badge
+  exists yet or not, and check `tab.badge` for `undefined` before reading it.
 - **A short chip with a secondary action is wider, by the specification.** Material 3, Chips:
   "Secondary actions (such as a trailing icon button for Remove) must have a 48x48dp
   interaction target that doesn't interfere with the chip's primary action (such as Edit or

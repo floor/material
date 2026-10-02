@@ -394,9 +394,33 @@
       "types": "./dist/core/index.d.ts",
       "import": "./dist/core/index.js"
     },
-    "./core/*": {
-      "types": "./dist/core/*/index.d.ts",
-      "import": "./dist/core/*/index.js"
+    "./core/canvas": {
+      "types": "./dist/core/canvas/index.d.ts",
+      "import": "./dist/core/canvas/index.js"
+    },
+    "./core/compose": {
+      "types": "./dist/core/compose/index.d.ts",
+      "import": "./dist/core/compose/index.js"
+    },
+    "./core/dom": {
+      "types": "./dist/core/dom/index.d.ts",
+      "import": "./dist/core/dom/index.js"
+    },
+    "./core/shapes": {
+      "types": "./dist/core/shapes/index.d.ts",
+      "import": "./dist/core/shapes/index.js"
+    },
+    "./core/state": {
+      "types": "./dist/core/state/index.d.ts",
+      "import": "./dist/core/state/index.js"
+    },
+    "./core/theme": {
+      "types": "./dist/core/theme/index.d.ts",
+      "import": "./dist/core/theme/index.js"
+    },
+    "./core/utils": {
+      "types": "./dist/core/utils/index.d.ts",
+      "import": "./dist/core/utils/index.js"
     },
     "./styles/*": {
       "types": "./dist/styles/*.d.ts",

@@ -334,8 +334,17 @@ export interface TabComponent {
   /** The button the tab is built on */
   button?: TabButton;
   
-  /** The tab's badge component (if any) */
-  badge?: BadgeComponent;
+  /**
+   * The tab's badge component, or `undefined`. **It may be undefined until
+   * the badge is shown**, whatever the `badge` option said: the contract
+   * (3.0.0) is that a tab creates its badge no later than when it shows it,
+   * so that a later release can create it only then. Today it exists from
+   * the first `setBadge()`, or from creation with the `badge` option. To set,
+   * read, show or hide the badge, use `setBadge()`, `getBadge()`,
+   * `showBadge()` and `hideBadge()`, which work whether it exists yet or not;
+   * check this for `undefined` before reading it.
+   */
+  badge?: BadgeComponent | undefined;
   
   /** Gets a class name with the component's prefix */
   getClass: (name: string) => string;
@@ -388,7 +397,10 @@ export interface TabComponent {
   /** Hides the tab's badge */
   hideBadge: () => TabComponent;
   
-  /** Gets the badge component instance */
+  /**
+   * Gets the badge component instance, or `undefined`: it may not exist
+   * until the badge is shown (see `badge`)
+   */
   getBadgeComponent: () => BadgeComponent | undefined;
   
   /** Updates the tab's layout style based on content */
