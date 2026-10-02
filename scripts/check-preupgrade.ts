@@ -20,10 +20,11 @@
 // it must fail most elements, or the check is not measuring anything.
 // Then the same through the React adapter's server render, `renderToString`
 // and hydration, with and without the stylesheet. One element's file alone
-// must reserve that element's box. A phase-B page (declarative roots) that
-// loads the stylesheet, with the element script still held back, must not
-// paint the pre-upgrade rules over those roots, and a host on the same page
-// without a root must still keep its reserved box.
+// must reserve that element's box, measured on that element, and must leave
+// another element on the page to shift. A phase-B page (declarative roots)
+// that loads the stylesheet, with the element script still held back, must
+// not paint the pre-upgrade rules over those roots, and a host on the same
+// page without a root must still keep its reserved box.
 //
 //   bun run build && bun run scripts/check-preupgrade.ts [element…]
 
@@ -201,9 +202,25 @@ const unionArea = (rects: Box[], frame: Box): number => {
   return area;
 };
 
+/** The rectangle that contains both boxes. */
+const span = (a: Box, b: Box): Box => {
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+  return {
+    x,
+    y,
+    w: Math.max(Math.max(a.x + a.w, b.x + b.w) - x, 1),
+    h: Math.max(Math.max(a.y + a.h, b.y + b.h) - y, 1),
+  };
+};
+
+/** How far a box moved or changed size, in px. Under 0.5 the score ignores it. */
+const shiftOf = (a: Box, b: Box): number =>
+  Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y), Math.abs(a.w - b.w), Math.abs(a.h - b.h));
+
 /** Impact fraction times distance fraction, over a frame that holds both states. */
-const score = (before: Snapshot, after: Snapshot): number => {
-  const frame = { x: before.frame.x, y: before.frame.y, w: STAGE_WIDTH, h: Math.max(before.frame.h, after.frame.h, 1) };
+const score = (before: Snapshot, after: Snapshot, bounds?: Box): number => {
+  const frame = bounds ?? { x: before.frame.x, y: before.frame.y, w: STAGE_WIDTH, h: Math.max(before.frame.h, after.frame.h, 1) };
   const impact: Box[] = [];
   let distance = 0;
   const shifted = (a: Box, b: Box, resized: boolean): void => {
@@ -303,16 +320,23 @@ try {
     console.log(`\nReact renderToString + hydration: ${react.withStyles.toFixed(4)} with, ${react.without.toFixed(4)} without.`);
   }
 
-  // One element's file, and nothing else, reserves that element's box.
-  // The script stays held back until the box is measured.
+  // One element's file reserves that element only. The score is the button's
+  // own box: the stage also holds a switch, and scoring the stage would count
+  // the switch pushing #inline and #block. That shift is asserted on its own.
+  // The script stays held back until the boxes are measured.
   let one = 0;
+  let buttonMove = 0;
+  let switchMove = 0;
   if (!only.length) {
     const p = await browser.newPage({ viewport: { width: 400, height: 800 } });
     try {
       await p.goto(`http://127.0.0.1:${server.port}/one`);
       await settle(p);
-      const before = await snapshot(p, "#stage > :first-child", "#inline, #block");
-      const reserved = await p.evaluate(() => {
+      const boxes = () => p.evaluate(() => {
+        const rect = (element: Element): Box => {
+          const r = element.getBoundingClientRect();
+          return { x: r.x, y: r.y, w: r.width, h: r.height };
+        };
         const button = document.querySelector("m-button")!;
         const sw = document.querySelector("m-switch")!;
         const sheets = Array.from(document.styleSheets, (sheet) => {
@@ -320,21 +344,26 @@ try {
           catch { return ""; }
         }).join("");
         return {
-          button: button.getBoundingClientRect().height,
-          sw: sw.getBoundingClientRect().height,
+          button: rect(button),
+          sw: rect(sw),
           buttonRule: sheets.includes("m-button:not(:defined)"),
           switchRule: sheets.includes("m-switch:not(:defined)"),
         };
       });
-      assert(reserved.button > 30, "button.css did not reserve the button");
-      assert(reserved.buttonRule, "button.css did not apply the button rule");
-      assert(!reserved.switchRule, "button.css included another element's rules");
+      const before = await boxes();
+      assert(before.button.h > 30, "button.css did not reserve the button");
+      assert(before.buttonRule, "button.css did not apply the button rule");
+      assert(!before.switchRule, "button.css included another element's rules");
       await p.addScriptTag({ url: "/elements.js", type: "module" });
       await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true && !document.querySelector("#stage :not(:defined)"));
       await settle(p);
-      const after = await snapshot(p, "#stage > :first-child", "#inline, #block");
-      one = score(before, after);
-      console.log(`One file, button.css: ${one.toFixed(4)} (button ${reserved.button.toFixed(1)}px, switch ${reserved.sw.toFixed(1)}px before the script)`);
+      const after = await boxes();
+      const buttonBox = span(before.button, after.button);
+      const region = (box: Box): Snapshot => ({ frame: buttonBox, hosts: [box], siblings: [] });
+      one = score(region(before.button), region(after.button), buttonBox);
+      buttonMove = shiftOf(before.button, after.button);
+      switchMove = shiftOf(before.sw, after.sw);
+      console.log(`One file, button.css: ${one.toFixed(4)} (button ${before.button.h.toFixed(1)}px, switch ${before.sw.h.toFixed(1)}px before the script)`);
     } finally {
       await p.close();
     }
@@ -397,8 +426,11 @@ try {
   }
 
   assert.deepEqual(failing.map((r) => r.name), [], "Cases that shift on upgrade");
-  assert(one < THRESHOLD, "One element's pre-upgrade file shifts on upgrade");
+  // The button's own box. A move of at least 0.5 px counts even when the
+  // region score stays under the threshold.
+  assert(buttonMove < 0.5 && one < THRESHOLD, "One element's pre-upgrade file shifts on upgrade");
   if (!only.length) {
+    assert(switchMove >= 0.5, "One element's pre-upgrade file reserved another element");
     // Most elements must shift without the styles, or the score measures nothing.
     assert(caught.length > defaults.length / 2, `Only ${caught.length} of ${defaults.length} elements shift without the styles`);
     assert(react && react.withStyles < THRESHOLD, "The React page shifts on upgrade");
