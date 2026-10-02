@@ -6,13 +6,38 @@
 // the fade and the removal follow. Open on an open menu and close on a closed
 // one do nothing and emit nothing; the later call wins. An open menu can be
 // dismissed at once, but never by the event that opened it.
-import { describe, expect, test } from "bun:test";
+import { beforeEach, describe, expect, test } from "bun:test";
 import createMenu from "../../../src/components/menu";
 import createSelect from "../../../src/components/select";
 import createSplitButton from "../../../src/components/split-button";
 import { callbacksFixture, wait } from "../callbacks.fixture";
 
 const mount = callbacksFixture();
+
+// JSDOM has no popovers, and without them `layer: "top"` falls back to the
+// default layer (menu/config.ts): stubbed on each test's window as in
+// layer.test.ts, a flag and a queued toggle event, so the top-layer tests
+// below run the top layer's code.
+beforeEach(() => {
+  const proto = HTMLElement.prototype as unknown as Record<string, unknown>;
+  const shown = new WeakSet<Element>();
+  const matches = Element.prototype.matches;
+  const toggle = (element: HTMLElement, newState: string) =>
+    setTimeout(() => element.dispatchEvent(Object.assign(new Event("toggle"), { newState })), 0);
+  proto.showPopover = function (this: HTMLElement) {
+    if (!this.isConnected) throw new Error("InvalidStateError: not connected");
+    shown.add(this);
+    toggle(this, "open");
+  };
+  proto.hidePopover = function (this: HTMLElement) {
+    shown.delete(this);
+    toggle(this, "closed");
+  };
+  // Removing a popover hides it, without an event
+  Element.prototype.matches = function (this: Element, selector: string) {
+    return selector === ":popover-open" ? shown.has(this) && this.isConnected : matches.call(this, selector);
+  };
+});
 
 const ITEMS = [{ id: "copy", text: "Copy" }, { id: "paste", text: "Paste" }];
 const VISIBLE = "mtrl-menu--visible";
@@ -46,6 +71,7 @@ for (const layer of LAYERS) {
       menu.open();
       await wait(SHOWN);
       expect(menu.isOpen()).toBe(true);
+      expect(menu.element.getAttribute("popover")).toBe(layer ? "manual" : null);
       expect(menu.close()).toBe(menu);
       expect(menu.isOpen()).toBe(false);
       expect(seen).toEqual(["open", "close"]);

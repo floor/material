@@ -62,10 +62,12 @@ const withController =
   let focusTimer: Timer = null;
   let hideTimer: Timer = null;
   let removeTimer: Timer = null;
-  // When open() last ran, on the clock events are stamped with. The click or
-  // the key press that opened the menu is still on its way up to the document
-  // when the listeners below are added: it is not a request to dismiss it.
-  let openedAt = 0;
+  // True for the rest of the task open() ran in. The click or the key press
+  // that opened the menu is still on its way up to the document in that task,
+  // when the dismiss listeners are added: it is not a request to dismiss the
+  // menu, nor a key for it to handle. An event made after open() is a later
+  // task.
+  let opening = false;
 
   // As the listbox of a combobox, options need ids the combobox can point at
   // with aria-activedescendant, and nothing inside may take focus from it
@@ -467,7 +469,10 @@ const withController =
 
     // An open menu can be dismissed: a click outside and Escape, from now. A
     // listbox's combobox handles every key, Escape included.
-    openedAt = new Event("open").timeStamp;
+    opening = true;
+    tasks.setTimeout(() => {
+      opening = false;
+    }, 0);
     if (config.closeOnClickOutside) {
       document.addEventListener("click", handleDocumentClick);
     }
@@ -645,7 +650,7 @@ const withController =
    */
   const handleDocumentClick = (e: MouseEvent): void => {
     // The click that opened the menu
-    if (e.timeStamp <= openedAt) return;
+    if (opening) return;
 
     // Don't close if clicked inside menu
     if (eventWithin(config, component.element, e)) {
@@ -676,7 +681,7 @@ const withController =
    */
   const handleDocumentKeydown = (e: KeyboardEvent): void => {
     // The key press that opened the menu
-    if (e.timeStamp <= openedAt) return;
+    if (opening) return;
 
     // Check if the event target is already inside the menu or submenu
     const isTargetInsideMenu = eventWithin(config, component.element, e);
