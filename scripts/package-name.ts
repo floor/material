@@ -549,7 +549,7 @@ interface Manifest {
   version?: string;
   repository?: { url?: string };
   bugs?: { url?: string };
-  typedocOptions?: { navigationLinks?: Record<string, string> };
+  typedocOptions?: { name?: string; navigationLinks?: Record<string, string> };
   scripts?: Record<string, string>;
 }
 
@@ -558,11 +558,12 @@ const MANIFEST_FIELDS = (spec: NameSpec): { find: string; what: string }[] => [
   { find: `"url": "git+https://github.com/${spec.repository}.git"`, what: "repository.url" },
   { find: `"url": "https://github.com/${spec.repository}/issues"`, what: "bugs.url" },
   { find: `"GitHub": "https://github.com/${spec.repository}"`, what: "typedocOptions.navigationLinks.GitHub" },
+  { find: `"name": "${spec.name} Documentation"`, what: "typedocOptions.name" },
   { find: `bun run scripts/package-name.ts ${spec.name} --check`, what: "scripts.name:check" },
 ];
 
-/** Every field of step 1, each unique in package.json, as text edits. */
-function manifestEdits(packageText: string, from: NameSpec, to: NameSpec, version: string | undefined): { edits: Edit[]; problems: Problem[] } {
+/** Every field of step 1, each unique in package.json, as text edits. Exported for the unit test. */
+export function manifestEdits(packageText: string, from: NameSpec, to: NameSpec, version: string | undefined): { edits: Edit[]; problems: Problem[] } {
   const edits: Edit[] = [];
   const problems: Problem[] = [];
   const starts = lineStartsOf(packageText);
@@ -743,6 +744,7 @@ export function check(target: string): number {
     ["repository.url", `git+https://github.com/${spec.repository}.git`, manifest.repository?.url ?? ""],
     ["bugs.url", `https://github.com/${spec.repository}/issues`, manifest.bugs?.url ?? ""],
     ["typedocOptions.navigationLinks.GitHub", `https://github.com/${spec.repository}`, manifest.typedocOptions?.navigationLinks?.["GitHub"] ?? ""],
+    ["typedocOptions.name", `${spec.name} Documentation`, manifest.typedocOptions?.name ?? ""],
   ];
   for (const [what, want, have] of fields) {
     if (have !== want) problems.push({ file: "package.json", line: 0, message: `${what} is \`${have}\`, not \`${want}\`` });
@@ -903,7 +905,7 @@ function rename(target: string, version: string, repository: string, dryRun: boo
   }
 
   console.log(`package-name: ${other.name} → ${spec.name} · ${version} · ${spec.repository}${dryRun ? " (dry run)" : ""}`);
-  const manifestIds = ["name", "version", "repository.url", "bugs.url", "typedocOptions.navigationLinks.GitHub", "scripts.name:check", "lockfile.name"];
+  const manifestIds = ["name", "version", "repository.url", "bugs.url", "typedocOptions.navigationLinks.GitHub", "typedocOptions.name", "scripts.name:check", "lockfile.name"];
   const workflowIds = ["release-title", "contributing-workflow-name", "release-notes-test-workflow-name"];
   const steps: [string, string[]][] = [
     ["step 1 manifests", manifestIds],

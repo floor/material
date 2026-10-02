@@ -13,7 +13,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { ENTRIES, keepSpans, pairFor, rewrite, scanText } from "../../scripts/package-name";
+import { ENTRIES, keepSpans, manifestEdits, pairFor, rewrite, scanText } from "../../scripts/package-name";
 import type { NameSpec, Pair, Span } from "../../scripts/package-name";
 
 const ROOT = join(import.meta.dir, "..", "..");
@@ -54,6 +54,19 @@ describe("the import forms", () => {
       expect(rename(expected, material, mtrl)).toBe(text);
     });
   }
+});
+
+// ---------------------------------------------------------------------------
+// The manifest fields: step 1, including the TypeDoc title.
+
+describe("the manifest fields", () => {
+  const title = (text: string, from: NameSpec, to: NameSpec): string | undefined =>
+    manifestEdits(text, from, to, undefined).edits.find((edit) => edit.id === "typedocOptions.name")?.to;
+
+  test("typedocOptions.name follows the package name", () => {
+    expect(title(`"name": "mtrl Documentation"`, mtrl, material)).toBe(`"name": "material Documentation"`);
+    expect(title(`"name": "material Documentation"`, material, mtrl)).toBe(`"name": "mtrl Documentation"`);
+  });
 });
 
 // ---------------------------------------------------------------------------
