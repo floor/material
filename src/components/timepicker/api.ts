@@ -66,9 +66,9 @@ export const createTimePickerAPI = (
   };
   // The draft changed: `input` and onInput, as a native input's.
   const notifyInput = () => {
-    const value = format(timeValue);
-    options.events.emit(EVENTS.INPUT, { value });
-    config.onInput?.({ value });
+    const event = { value: getValue(), draftValue: format(timeValue) };
+    options.events.emit(EVENTS.INPUT, event);
+    config.onInput?.(event);
   };
   const render = () => {
     renderTimePicker(dialogElement, timeValue, config, notifyInput);
@@ -111,7 +111,7 @@ export const createTimePickerAPI = (
   // while the picker is open; it emitted confirm after closing (FLO-288).
   const confirm = () => {
     commit();
-    options.events.emit(EVENTS.CONFIRM, getValue());
+    options.events.emit(EVENTS.CONFIRM, { value: getValue() });
     config.onConfirm?.(getValue());
     timePickerAPI.close();
   };

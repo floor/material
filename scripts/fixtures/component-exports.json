@@ -3265,6 +3265,11 @@
       "status": "public"
     },
     {
+      "name": "TimePickerInputEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "TimePickerOrientation",
       "kind": "type",
       "status": "public"
