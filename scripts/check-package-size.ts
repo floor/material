@@ -194,6 +194,14 @@ try {
   // so the ceiling stays.
   assert(pack.unpackedSize < 6_458_000, "Unpacked package exceeds 6,458,000 bytes");
 
+  // The component entries the probe imports, and how many package.json exports,
+  // counted another way: every "./components/<name>" key. Which keys those must
+  // be is test/component-exports.test.ts's check, so the number is read, not written here.
+  const exportKeys = Object.keys(JSON.parse(await Bun.file("package.json").text()).exports);
+  const componentKeys = exportKeys.filter(k => k.startsWith("./components/") && k.split("/").length === 3 && !k.endsWith("constants"));
+  const componentEntryCount = exportKeys.filter(k => /^\.\/components\/[^/]+$/.test(k)).length;
+  assert(componentEntryCount > 0, "package.json exports no component entry");
+
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
   const smoke = join(temporary, "smoke.mjs");
   await writeFile(smoke, `
@@ -213,7 +221,9 @@ try {
     // 3.0.0 is ESM-only (FLO-358): no require condition, so require('material') does not resolve
     assert.throws(() => createRequire(import.meta.url)('material'), { code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });
 
-    const componentKeys = ${JSON.stringify(Object.keys(JSON.parse(await Bun.file("package.json").text()).exports).filter(k => k.startsWith("./components/") && k.split("/").length === 3 && !k.endsWith("constants")))};
+    const componentKeys = ${JSON.stringify(componentKeys)};
+    // A filter that matches nothing would loop over nothing and pass (FLO-569)
+    assert.equal(componentKeys.length, ${componentEntryCount}, 'the component entries checked are not the component entries package.json exports');
     for (const key of componentKeys) {
       const name = key.slice(13); // remove "./components/"
       const module = await import(\`material/components/\${name}\`);
@@ -259,7 +269,7 @@ try {
     card.destroy(); loading.destroy(); b.destroy(); field.destroy(); dom.window.close();
   `);
   await run(["node", smoke], temporary);
-  console.log("component entries: 37 default exports, each also exported by the root's name");
+  console.log(`component entries: ${componentKeys.length} default exports, each also exported by the root's name`);
 
   // Check declaration resolution using strict NodeNext semantics.
   const typeFixture = join(temporary, "types.ts");
