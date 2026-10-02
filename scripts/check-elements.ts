@@ -16,6 +16,7 @@ import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
 import { checkTextFieldLayout, checkTextFieldReducedMotion } from "./check-text-field-browser";
+import { checkRadiosLayout } from "./check-radios-layout";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
 // Runs against the build: `bun run build` first, as CI does.
@@ -157,6 +158,7 @@ try {
   });
   await page.goto(`http://127.0.0.1:${server.port}`);
   await page.waitForFunction(() => (window as unknown as Win).ready === true);
+  await checkRadiosLayout(page, "element", check);
   await checkCheckableValues(page, "element");
   await checkRegistryEvents(page, fresh, check);
 
