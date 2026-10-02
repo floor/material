@@ -12,6 +12,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **The Vue peer dependency is `>=3.4.20` (FLO-527).** The Vue adapter's declarations
+  import `DefineSetupFnComponent`, which `@vue/runtime-core` first declared in 3.4.20.
+  On Vue below 3.4.20 a project with `skipLibCheck: false` fails to compile them
+  (TS2724); with `skipLibCheck: true` every Vue component is `any`. With
+  `skipLibCheck: false`, use `@types/react` 18.2.71 or later. Migration:
+  install Vue 3.4.20 or newer.
 - **Tabs `on` and `off` take a closed event map (FLO-523).** A group accepts
   `change` (`TabChangeEventData`). A single tab accepts `click` (the button's
   wrapped `{ event, element, originalEvent }` payload), `focus` and `blur`
@@ -438,6 +444,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 ### Fixed
 
 - Svelte SSR keeps rendering a page when a child needs context from a provider above an mtrl host. The host falls back to light DOM without a declarative shadow root, then upgrades normally in the browser. Development logs once per affected host in each response, including the child render error; production logs nothing (FLO-525).
+- Arrow keys used soon after opening a menu keep their selected focus when the initial-focus timer runs (FLO-515). A menu opened with ArrowUp on its opener now keeps focus on the last item (it was pulled back to the first; FLO-524).
+- A search view dismissed before its opening focus frame runs stays closed (FLO-514).
 - **Single-select chip sets keep one selected chip (FLO-518).** Adding a chip
   with `selected: true` selects it and deselects the previous chip, including
   initial factory config and `<m-chip selected>` declarations. The last selected
