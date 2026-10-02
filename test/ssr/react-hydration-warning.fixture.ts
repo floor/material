@@ -1,5 +1,6 @@
 // Client vnodes. Window is installed before any mtrl import, so `isBrowser`
 // is true and `shadow()` returns null: this is the client, not the server.
+import type { ButtonElement, ButtonSpec, CarouselElement, CarouselSpec, FabMenuElement, FabMenuSpec, MenuElement, MenuSpec } from "../../src/elements";
 import { JSDOM } from "jsdom";
 import { expect, test } from "bun:test";
 
@@ -27,7 +28,9 @@ const React = await import("react");
 const { createRoot } = await import("react-dom/client");
 const { act } = await import("react");
 const { createComponent } = await import("../../src/react/create");
-const { buttonElement, carouselElement, fabMenuElement, menuElement } = await import("../../src/elements");
+const {
+  buttonElement, carouselElement, fabMenuElement, menuElement,
+} = await import("../../src/elements");
 
 const propsOf = async (id: string, node: React.ReactElement): Promise<Record<string, unknown>> => {
   const root = createRoot(document.getElementById(id) as HTMLElement);
@@ -41,12 +44,12 @@ const propsOf = async (id: string, node: React.ReactElement): Promise<Record<str
 };
 
 test("a carousel client vnode has no suppressHydrationWarning; a button's has it", async () => {
-  const Button = createComponent(buttonElement.spec, () => "m-button", "MButton");
-  const Carousel = createComponent(carouselElement.spec, () => "m-carousel", "MCarousel");
-  const Menu = createComponent(menuElement.spec, () => "m-menu", "MMenu");
-  const FabMenu = createComponent(fabMenuElement.spec, () => "m-fab-menu", "MFabMenu");
+  const Button = createComponent<ButtonSpec, ButtonElement>(buttonElement.spec, () => "m-button", "MButton");
+  const Carousel = createComponent<CarouselSpec, CarouselElement>(carouselElement.spec, () => "m-carousel", "MCarousel");
+  const Menu = createComponent<MenuSpec, MenuElement>(menuElement.spec, () => "m-menu", "MMenu");
+  const FabMenu = createComponent<FabMenuSpec, FabMenuElement>(fabMenuElement.spec, () => "m-fab-menu", "MFabMenu");
   const button = await propsOf("button", React.createElement(Button, { label: "Save" }, "Save"));
-  const carousel = await propsOf("carousel", React.createElement(Carousel, { "aria-label": "Photos" }));
+  const carousel = await propsOf("carousel", React.createElement(Carousel, { ariaLabel: "Photos" }));
   const menu = await propsOf("menu", React.createElement(Menu));
   const fab = await propsOf("fab", React.createElement(FabMenu));
   expect(button.suppressHydrationWarning).toBe(true);
