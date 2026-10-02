@@ -14,9 +14,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 Upgrade to 0.10.5 first. It exports the 1.0 names beside the old ones, and marks deprecated the
 TypeScript names, options and constants that 1.0 removes, so your editor flags each use with its
-replacement. Not flagged there: `select.textfield` and `SELECT_CLASSES.TEXTFIELD`'s new key
-(below), and `CardComponent`'s `loading`, `expandable` and `swipeable`, which `createCard` never
-set. Clear those warnings, then upgrade. Each change's full entry follows this guide.
+replacement. Two of those warnings can't be cleared before you upgrade, because the new name
+exists only in 1.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
+`select.textfield` (which 1.0 keeps as a deprecated alias of `select.textField`). Clear the
+others, then upgrade. Each change's full entry follows this guide.
 
 **Packages and imports**
 
@@ -36,12 +37,12 @@ set. Clear those warnings, then upgrade. Each change's full entry follows this g
 | 0.10 | 1.0 |
 |---|---|
 | `createTextfield`, `TextfieldConfig`, `TextfieldComponent`, `TextfieldDensity`, `TextfieldEvents`, `TextfieldValuePayload`, `TextfieldFocusPayload`, `TextfieldTrailingPayload` | `createTextField`, `TextFieldConfig`, `TextFieldComponent`, `TextFieldDensity`, `TextFieldEvents`, `TextFieldValuePayload`, `TextFieldFocusPayload`, `TextFieldTrailingPayload` |
-| `TEXTFIELD_VARIANTS`, `_STATES`, `_TYPES`, `_EVENTS`, `_DENSITY`, `_DEFAULTS`, `_CLASSES` | `TEXT_FIELD_VARIANTS`, … `TEXT_FIELD_CLASSES` |
+| `TEXTFIELD_VARIANTS`, `TEXTFIELD_STATES`, `TEXTFIELD_TYPES`, `TEXTFIELD_EVENTS`, `TEXTFIELD_DENSITY`, `TEXTFIELD_DEFAULTS`, `TEXTFIELD_CLASSES` | `TEXT_FIELD_VARIANTS`, `TEXT_FIELD_STATES`, `TEXT_FIELD_TYPES`, `TEXT_FIELD_EVENTS`, `TEXT_FIELD_DENSITY`, `TEXT_FIELD_DEFAULTS`, `TEXT_FIELD_CLASSES` |
 | `textfieldElement`, `defineTextfield`, `TextfieldSpec`, `TextfieldElement`, `TextfieldElementComponent` (`mtrl/elements`) | `textFieldElement`, `defineTextField`, `TextFieldSpec`, `TextFieldElement`, `TextFieldElementComponent` |
 | `Textfield` (`mtrl/react`, `mtrl/solid`, `mtrl/svelte`), `MTextfield` (`mtrl/vue`) | `TextField`, `MTextField` |
 | Sass `$textfield`, `textfield()` | `$text-field`, `text-field()` |
-| `SELECT_CLASSES.TEXTFIELD` | `SELECT_CLASSES.TEXT_FIELD`, the same value. A recorded exception: 0.10.x deprecates the old key but has no new one, so change it when you upgrade. |
-| `select.textfield` | `select.textField`. Not flagged in 0.10.x, which has no `textField`. |
+| `SELECT_CLASSES.TEXTFIELD` | `SELECT_CLASSES.TEXT_FIELD`, the same value. A recorded exception: 0.10.x flags the old key but has no new one, so change it when you upgrade. In 1.0 the old key reads `undefined`. |
+| `select.textfield` | `select.textField`. `textfield` stays as a deprecated alias of the same text field through 1.x (removed in 2.0), so code reading it keeps working. 0.10.x has no `textField`: rename after you upgrade. |
 | `CardSchema` | `CardConfig` |
 | `TopAppBar`, `BottomAppBar` (the factory types) | `TopAppBarComponent`, `BottomAppBarComponent` |
 | a chip's `text` | `label` |
@@ -80,13 +81,26 @@ the card, tabs and switch internals on their subpaths, `ChipConfig`'s `managedSe
 `cell`, `CardComponent`'s `loading`, `expandable` and `swipeable`, and the list `scroll` payload's
 `component`, which was never sent.
 
+**Sass.** The two Sass rows above are for stylesheets that `@use` mtrl's sources. The Sass sources
+ship for reference; configuring them with `@use … with` is not a supported API in 1.0. Theme
+with CSS custom properties.
+
+**Kept through 1.x, deprecated.** `select.textfield` (use `textField`) and the icon button's DOM
+`toggle` event (listen to `change`) still work in 1.0. Both are removed in 2.0.
+
+**Type changes the compiler reports.** Besides renames and removals, three entries below change
+a type your code may rely on: tabs' `on` and `off` take a closed event map, and a tab's `click`
+payload is wrapped (FLO-523); React's and Solid's `Button` type their own `onChange`, so a
+spread of full `HTMLAttributes` must omit it (FLO-380); and `SelectChangeEvent["value"]` is
+`string | null` (FLO-380).
+
 **Changes your compiler won't catch**
 
 Check these by searching your code: they compile, or come from plain JavaScript, markup or CSS.
 
 - **A chip's `{ text }`** renders an empty chip, silently: no label, no error, no warning.
 - **Tabs `indicatorHeight` / `indicatorWidthStrategy`** are ignored: the indicator falls back to
-  its 3px height and automatic width.
+  its variant's height (3px on a primary row, 2px on a secondary one) and automatic width.
 - **`materialShape('cookie4')`** throws `TypeError: byName[name] is not a function`.
 - **`rawClass`** is ignored: neither applied nor written as an attribute, with no warning.
 - **A FAB's `'surface'` or `'small'`** (the options take any string) renders as the default
@@ -95,7 +109,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   colours, and `data-theme-mode="dark"` and `data-theme-contrast` on that element are ignored.
 - **`getThemeColor('sys-color-primary-rgb')`** returns `''` (or the `fallback`), so
   `rgba(${…}, 0.12)` yields `rgba(, 0.12)`, a colour CSS and canvas drop silently.
-- **`select.textfield`** in JavaScript is `undefined`.
+- **A removed constant key** reads `undefined` in JavaScript, with no error:
+  `SELECT_CLASSES.TEXTFIELD`, `FAB_SIZES.SMALL`, `TABS_DEFAULTS.INDICATOR_HEIGHT` and the other
+  keys in the tables above.
+- **Your own CSS reading `var(--mtrl-sys-shape-corner-pill)`** (or `-tiny`, `-extra-tiny`): the
+  property is no longer declared, so without a fallback `border-radius: var(…)` computes to no
+  radius, silently.
 - **Tab and panel ids** change for any value with a character outside `[A-Za-z0-9_-]`
   (`a.b` → `tabx-g-a_2e_b`); a hand-written panel with the old id is never linked. Build ids with
   `tabIdFor` and `tabPanelIdFor`.
@@ -109,7 +128,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **An empty option id** makes the select's and `<m-radios>`' `change` report `value: null`,
   not `""`.
 - **A trailing icon without `trailingIconLabel`** is hidden from screen readers and loses its
-  pointer cursor; a click listener you added to it is out of their reach. Give it a label.
+  pointer cursor; a click listener you added to it is out of their reach. The label is the
+  factory's (`trailingIconLabel`, or `setTrailingIcon(html, label)`); on `<m-textfield>` and in
+  the framework components a trailing icon is decorative.
 - **The button group's `select(value)`** with a value no button carries clears the selection,
   with a warning in development and no event.
 - **`<m-button>`** dispatches `change` for a toggle button.
@@ -157,7 +178,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | `TextfieldConfig`, `TextfieldComponent` | `TextFieldConfig`, `TextFieldComponent` | `mtrl`, `mtrl/components/textfield` |
   | `TextfieldDensity`, `TextfieldEvents` | `TextFieldDensity`, `TextFieldEvents` | `mtrl/components/textfield` |
   | `TextfieldValuePayload`, `TextfieldFocusPayload`, `TextfieldTrailingPayload` | `TextFieldValuePayload`, `TextFieldFocusPayload`, `TextFieldTrailingPayload` | `mtrl/components/textfield` |
-  | `TEXTFIELD_VARIANTS`, `_STATES`, `_TYPES`, `_EVENTS`, `_DENSITY`, `_DEFAULTS`, `_CLASSES` | `TEXT_FIELD_VARIANTS`, … `TEXT_FIELD_CLASSES` | `mtrl/components/textfield/constants` |
+  | `TEXTFIELD_VARIANTS`, `TEXTFIELD_STATES`, `TEXTFIELD_TYPES`, `TEXTFIELD_EVENTS`, `TEXTFIELD_DENSITY`, `TEXTFIELD_DEFAULTS`, `TEXTFIELD_CLASSES` | `TEXT_FIELD_VARIANTS`, `TEXT_FIELD_STATES`, `TEXT_FIELD_TYPES`, `TEXT_FIELD_EVENTS`, `TEXT_FIELD_DENSITY`, `TEXT_FIELD_DEFAULTS`, `TEXT_FIELD_CLASSES` | `mtrl/components/textfield/constants` |
   | `CardSchema` | `CardConfig` | `mtrl`, `mtrl/components/card` |
   | `TopAppBar` (type) | `TopAppBarComponent` | `mtrl`, `mtrl/components/top-app-bar` |
   | `BottomAppBar` (type) | `BottomAppBarComponent` | `mtrl`, `mtrl/components/bottom-app-bar` |
@@ -238,6 +259,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   Solid, `Button` now types its own `onChange` (the element's `change`): code that spreads a
   full `React.HTMLAttributes` (or Solid's `JSX.HTMLAttributes`) into `Button` must omit
   `onChange`.
+
+  The icon button's DOM `toggle` event is kept through 1.x for compatibility and removed in 2.0;
+  listen to `change`. This revises 0.10.0's notes, which said it would fire "until the next
+  minor". Its `detail` is `{ selected, value }`, from the factory's button and from
+  `<m-icon-button>`, so a listener reading `event.detail.selected` keeps working.
 - **Tabs `on` and `off` take a closed event map (FLO-523).** A group accepts
   `change` (`TabChangeEventData`). A single tab accepts `click` (the button's
   wrapped `{ event, element, originalEvent }` payload), `focus` and `blur`
@@ -271,7 +297,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   hidden from screen readers (`aria-hidden`) and no longer shows a pointer cursor. An app that
   built a clear or show-password control from that span with its own click listener lost it for
   screen-reader users. Migration: an interactive trailing icon needs `trailingIconLabel` (or
-  `setTrailingIcon(html, label)`), which makes it a button and emits `trailing`.
+  `setTrailingIcon(html, label)`), which makes it a button and emits `trailing`. The label is a
+  factory option: `<m-textfield>` and the React, Vue, Svelte and Solid components have no label
+  attribute or prop, so a trailing icon there is decorative.
 
 ### Removed
 
@@ -295,12 +323,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | FAB and extended FAB `variant: 'surface'`, `FAB_VARIANTS.SURFACE`, `EXTENDED_FAB_VARIANTS.SURFACE` (deprecated since 0.8) | a container or tone style (`'primary-container'`, `'primary'`, …). The `--surface` CSS is removed, so a leftover `'surface'` renders as the default `primary-container`. |
   | FAB `size: 'small'`, `FAB_SIZES.SMALL` (deprecated since 0.8); `FAB_CLASSES.SMALL`, `FAB_ICON_SIZES.SMALL` (deprecated in 0.10.5) | `'default'`, `'medium'` or `'large'`: M3 Expressive has no small FAB. The `--small` CSS is removed, so a leftover `'small'` renders at the default 56dp. The extended FAB's `small` size stays. |
   | a chip's `text` (`ChipConfig`, including a chip set's items) | `label`. A leftover `{ text }` now renders an empty chip, silently: no label and no error or warning. Search your chip configs and chip set items for `text:`. |
-  | tabs `indicatorHeight`, `indicatorWidthStrategy` | `indicator.height`, `indicator.widthStrategy` (since 0.3.2). A leftover is ignored: the indicator falls back to its 3px height and automatic width. |
+  | tabs `indicatorHeight`, `indicatorWidthStrategy` | `indicator.height`, `indicator.widthStrategy` (since 0.3.2). A leftover is ignored: the indicator falls back to its variant's height (3px on a primary row, 2px on a secondary one) and automatic width. |
   | shape names `'cookie4'`, `'cookie9'` (`materialShape`, the shapes) | `'cookie4Sided'`, `'cookie9Sided'`, Compose's names (since 0.10.2). `materialShape('cookie4')` now throws (`TypeError: byName[name] is not a function`). |
   | `rippleConfig.timing` and `rippleConfig.opacity` (button, icon button, FAB, extended FAB, button group, radios, tabs, and the core `RippleConfig`); their defaults `DEFAULT_RIPPLE_CONFIG.TIMING`, `.OPACITY` (button, icon button) and `BUTTON_GROUP_DEFAULTS.RIPPLE_TIMING`, `.RIPPLE_OPACITY` (deprecated in 0.10.5) | nothing: never applied; the stylesheet draws the wave's motion and opacity (FLO-260, FLO-268). `duration` stays. The core's `RIPPLE_CONFIG.timing`, `.opacity`, `RIPPLE_TIMING` and `RIPPLE_SCHEMA`, on no public entry, go with them. |
 
 - **1.0 exports nothing deprecated.** What 0.10.0 deprecated and 0.10.x already replaced (or
-  never used) is removed. Migration:
+  never used) is removed. That is true of exports: one deprecated member, `select.textfield`, and
+  one deprecated event, the icon button's DOM `toggle`, stay through 1.x. Migration:
 
   | 0.10 | 1.0 |
   |---|---|
