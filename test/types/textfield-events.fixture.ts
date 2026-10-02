@@ -6,7 +6,7 @@ import createTextfield, {
   type TextfieldFocusPayload,
   type TextfieldTrailingPayload,
 } from "../../src/components/textfield";
-import { TEXTFIELD_EVENTS } from "../../src/components/textfield/constants";
+import { TEXT_FIELD_EVENTS as TEXTFIELD_EVENTS } from "../../src/components/textfield/constants";
 
 type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;

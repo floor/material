@@ -30,3 +30,11 @@ export const declarationModules = Object.keys(declarations).map((name) => ({ nam
 
 /** `navigationRailItem` → `navigation-rail-item`: the file name of a generated adapter module. */
 export const kebab = (name: string): string => name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+
+/**
+ * Canonical component names that differ from the convention (FLO-383): M3
+ * writes "text field" as two words. The adapters export the canonical name and
+ * keep the convention's as a deprecated alias until 1.0; modules, element
+ * names and tags keep the element's name.
+ */
+export const CANONICAL: Record<string, string> = { textfield: "TextField" };

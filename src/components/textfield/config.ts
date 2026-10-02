@@ -6,14 +6,14 @@ import {
 import { TextfieldConfig, ApiOptions } from "./types";
 import type { DisabledComponent } from "../../core/compose/features/disabled";
 import type { LifecycleComponent } from "../../core/compose/features/lifecycle";
-import { TEXTFIELD_DEFAULTS } from "./constants";
+import { TEXT_FIELD_DEFAULTS } from "./constants";
 
 /**
  * Default configuration for the Textfield component
  */
 export const defaultConfig: TextfieldConfig = {
-  type: TEXTFIELD_DEFAULTS.TYPE,
-  variant: TEXTFIELD_DEFAULTS.VARIANT,
+  type: TEXT_FIELD_DEFAULTS.TYPE,
+  variant: TEXT_FIELD_DEFAULTS.VARIANT,
 };
 
 /**
