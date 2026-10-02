@@ -970,7 +970,7 @@ try {
     );
 
     const measured = await page.evaluate(
-      (dirs: string[]) => {
+      ({ dirs, states }: { dirs: string[]; states: string[] }) => {
         type Box = { left: number; top: number; right: number; bottom: number };
         type Cb = HTMLElement & { indeterminate: boolean };
         const w = window as unknown as Win & { mtrl: { createCheckbox: (c: object) => { element: HTMLElement } } };
@@ -1070,7 +1070,7 @@ try {
         }
         return { failures, layerFailures, labelFailures };
       },
-      [...dirs]
+      { dirs: [...dirs], states: [...states] }
     );
     for (const line of [...measured.failures, ...measured.layerFailures, ...measured.labelFailures]) console.log(`  FAIL ${line}`);
     assert.deepEqual(measured.failures, [], "the box must be centred in an unlabelled root");
