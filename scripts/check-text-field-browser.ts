@@ -576,21 +576,46 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
   const named = new Map(rows.map((row) => [row.name, row]));
   for (const row of rows) {
     const { name } = row;
-    // An icon, then the prefix, then the text; mirrored at the end. The prefix
-    // follows the leading icon box and the text the prefix (Compose
-    // TextFieldImpl: `prefixPlaceable?.placeRelativeWithLayer(leadingPlaceable.widthOrZero, …)`,
+    const outlined = name.startsWith("outlined");
+    const floated = name.endsWith("value");
+    // 1. Icons: 12dp in from the edge ("Left/right padding with icons 12dp"),
+    // then 16dp to what follows ("Padding between icons and text 16dp",
+    // m3.material.io text fields, measurements). With the 24dp icon that is
+    // 52dp in, as Compose's 48dp icon box plus 4dp is. Compact has no M3
+    // measure: its 20dp icon box keeps the 12dp and the 16dp.
+    const beside = (icon: LayoutBox | null, edge: "start" | "end"): number => (icon ? icon[edge] + icon.width + 16 : 16);
+    const content = { start: beside(row.leading, "start"), end: beside(row.trailing, "end") };
+    if (row.leading) {
+      expect(row.leading.start === 12, `${name}: the leading icon is 12dp in (${row.leading.start})`);
+      if (name.includes("default")) expect(content.start === 52, `${name}: a 24dp icon puts the content 52dp in (${content.start})`);
+    }
+    if (row.trailing) {
+      expect(row.trailing.end === 12, `${name}: the trailing icon is 12dp in (${row.trailing.end})`);
+      if (name.includes("default")) expect(content.end === 52, `${name}: a 24dp icon ends the content 52dp in (${content.end})`);
+    }
+    // 2. The content: a prefix, the text, a suffix. An affix starts where the
+    // content does (TextFieldPadding 16dp, or after the icon) and is 2dp from
+    // the text (PrefixSuffixTextPadding). The prefix follows the leading icon
+    // box and the text the prefix (Compose TextFieldImpl:
+    // `prefixPlaceable?.placeRelativeWithLayer(leadingPlaceable.widthOrZero, …)`,
     // `textHorizontalPosition = leadingPlaceable.widthOrZero + prefixPlaceable.widthOrZero`).
     // The text was sized from the affix alone, so beside an icon it began
     // under the icon, before the prefix.
-    if (row.prefix) {
-      if (row.leading) expect(row.prefix.start >= row.leading.start + row.leading.width, `${name}: the prefix starts after the leading icon (${row.prefix.start})`);
-      const gap = round(row.textStart - (row.prefix.start + row.prefix.width));
-      expect(gap >= 0 && gap <= 4, `${name}: the text starts after the prefix, ${gap}px from it`);
-    }
-    if (row.suffix) {
-      if (row.trailing) expect(row.suffix.end >= row.trailing.end + row.trailing.width, `${name}: the suffix ends before the trailing icon (${row.suffix.end})`);
-      const gap = round(row.textEnd - (row.suffix.end + row.suffix.width));
-      expect(gap >= 0 && gap <= 4, `${name}: the text ends before the suffix, ${gap}px from it`);
+    const near = (a: number, b: number): boolean => Math.abs(a - b) < 0.05;
+    if (row.prefix) expect(row.prefix.start === content.start, `${name}: the prefix starts ${content.start}dp in (${row.prefix.start})`);
+    if (row.suffix) expect(row.suffix.end === content.end, `${name}: the suffix ends ${content.end}dp in (${row.suffix.end})`);
+    const text = {
+      start: row.prefix ? row.prefix.start + row.prefix.width + 2 : content.start,
+      end: row.suffix ? row.suffix.end + row.suffix.width + 2 : content.end,
+    };
+    expect(near(row.textStart, text.start), `${name}: the text starts ${round(text.start)}dp in${row.prefix ? ", 2dp after the prefix" : ""} (${row.textStart})`);
+    expect(near(row.textEnd, text.end), `${name}: the text ends ${round(text.end)}dp in${row.suffix ? ", 2dp before the suffix" : ""} (${row.textEnd})`);
+    // The label starts where the content does, not after a prefix ("Prefix/suffix
+    // does not get applied to label"), resting and floated; the outlined one
+    // floats into the notch, 16dp in, whatever the icon (the outlined `endX`).
+    if (row.label) {
+      const label = floated && outlined ? 16 : content.start;
+      expect(row.label.start === label, `${name}: the label starts ${label}dp in (${row.label.start})`);
     }
 
     // 4. Multiline. The first line and the label are where a single-line
@@ -624,5 +649,5 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
     }
   }
   assert.deepEqual(failures, [], `${failures.length} of the layout assertions failed`);
-  console.log(`Passed text field layout (${api}): ${rows.length} fields, filled and outlined, default and compact${api === "factory" ? ", left to right and right to left" : ""} — an icon, its affix, then the text; a multiline field's first line clear of its label.`);
+  console.log(`Passed text field layout (${api}): ${rows.length} fields, filled and outlined, default and compact${api === "factory" ? ", left to right and right to left" : ""} — icons 12dp in and 16dp from the content, an affix 2dp from the text, the label at the content's start; a multiline field's first line clear of its label.`);
 }

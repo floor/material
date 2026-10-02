@@ -10,9 +10,9 @@ $component: "#{base.$prefix}-text-field";
 
 // Where the text starts or ends beside a prefix or a suffix: the affix's own
 // inset, its width, which placement.ts measures into a custom property (32px
-// until it has), and the 4px to the text.
+// until it has), and the 2dp to the text (PrefixSuffixTextPadding).
 @function beside-affix($inset, $affix) {
-    @return calc(#{$inset} + var(--#{$component}-#{$affix}-width, 32px) + 4px);
+    @return calc(#{$inset} + var(--#{$component}-#{$affix}-width, 32px) + 2px);
 }
 
 // Autofill detection animations
@@ -136,7 +136,7 @@ $component: "#{base.$prefix}-text-field";
     &__prefix {
         @include m.typography("body-large");
         position: absolute;
-        left: 12px;
+        left: 16px;
         top: 50%;
         transform: translateY(-50%);
         color: t.color("on-surface-variant");
@@ -224,48 +224,51 @@ $component: "#{base.$prefix}-text-field";
     // not moved by a prefix: it starts where the content does (Compose
     // TextFieldImpl, "Prefix/suffix does not get applied to label").
     &--with-prefix {
-        --#{$component}-text-start: #{beside-affix(12px, prefix)};
+        --#{$component}-text-start: #{beside-affix(16px, prefix)};
     }
 
     &--with-suffix {
         --#{$component}-text-end: #{beside-affix(16px, suffix)};
     }
 
-    // Adjustments when icons are present
+    // Adjustments when icons are present: an icon is 12dp in, and what
+    // follows it 16dp further ("Left/right padding with icons 12dp", "Padding
+    // between icons and text 16dp", m3.material.io text fields): 52dp with
+    // the 24dp icon, 48dp with compact's 20dp one
     &--with-leading-icon {
-        --#{$component}-text-start: 44px;
+        --#{$component}-text-start: 52px;
 
         .#{$component}__label {
-            left: 44px;
+            left: 52px;
         }
 
         .#{$component}__input {
-            padding-left: 44px;
+            padding-left: 52px;
         }
 
         // With a prefix too: the icon, the prefix, then the text
         &.#{$component}--with-prefix {
-            --#{$component}-text-start: #{beside-affix(44px, prefix)};
+            --#{$component}-text-start: #{beside-affix(52px, prefix)};
 
             .#{$component}__prefix {
-                left: 44px;
+                left: 52px;
             }
         }
     }
 
     &--with-trailing-icon {
-        --#{$component}-text-end: 44px;
+        --#{$component}-text-end: 52px;
 
         .#{$component}__input {
-            padding-right: 44px;
+            padding-right: 52px;
         }
 
         // With a suffix too: the text, the suffix, then the icon
         &.#{$component}--with-suffix {
-            --#{$component}-text-end: #{beside-affix(44px, suffix)};
+            --#{$component}-text-end: #{beside-affix(52px, suffix)};
 
             .#{$component}__suffix {
-                right: 44px;
+                right: 52px;
             }
         }
     }
@@ -405,7 +408,7 @@ $component: "#{base.$prefix}-text-field";
 
         &__prefix {
             left: auto;
-            right: 12px;
+            right: 16px;
         }
 
         &__suffix {
@@ -426,18 +429,18 @@ $component: "#{base.$prefix}-text-field";
         &--with-leading-icon {
             .#{$component}__label {
                 left: auto;
-                right: 44px;
+                right: 52px;
             }
 
             .#{$component}__input {
                 padding-left: 16px;
-                padding-right: 44px;
+                padding-right: 52px;
             }
 
             &.#{$component}--with-prefix {
                 .#{$component}__prefix {
                     left: auto;
-                    right: 44px;
+                    right: 52px;
                 }
             }
         }
@@ -445,13 +448,13 @@ $component: "#{base.$prefix}-text-field";
         &--with-trailing-icon {
             .#{$component}__input {
                 padding-right: 16px;
-                padding-left: 44px;
+                padding-left: 52px;
             }
 
             &.#{$component}--with-suffix {
                 .#{$component}__suffix {
                     right: auto;
-                    left: 44px;
+                    left: 52px;
                 }
             }
         }
@@ -594,11 +597,11 @@ $component: "#{base.$prefix}-text-field";
         // Icon adjustments for filled variant
         &.#{$component}--with-leading-icon {
             .#{$component}__input {
-                padding: 20px 16px 7px 44px;
+                padding: 20px 16px 7px 52px;
             }
 
             .#{$component}__label {
-                left: 44px;
+                left: 52px;
             }
 
             .#{$component}__leading-icon {
@@ -606,16 +609,9 @@ $component: "#{base.$prefix}-text-field";
             }
         }
 
-        // Populated field (not empty) or focused field label position
-        &:not(.#{$component}--empty) .#{$component}__label,
-        &.#{$component}--focused .#{$component}__label {
-            // Floated, the label is back at the container's start
-            left: 16px;
-        }
-
         &.#{$component}--with-trailing-icon {
             .#{$component}__input {
-                padding-right: 44px;
+                padding-right: 52px;
             }
 
             .#{$component}__trailing-icon {
@@ -632,19 +628,19 @@ $component: "#{base.$prefix}-text-field";
 
             &.#{$component}--with-leading-icon {
                 .#{$component}__input {
-                    padding: 20px 44px 7px 16px;
+                    padding: 20px 52px 7px 16px;
                 }
 
                 .#{$component}__label {
                     left: auto;
-                    right: 44px;
+                    right: 52px;
                 }
             }
 
             &.#{$component}--with-trailing-icon {
                 .#{$component}__input {
                     padding-right: 16px;
-                    padding-left: 44px;
+                    padding-left: 52px;
                 }
             }
         }
@@ -701,8 +697,6 @@ $component: "#{base.$prefix}-text-field";
     &--outlined {
         --#{$component}-outline-color: #{t.color("outline")};
         --#{$component}-outline-width: 1px;
-        // The input's transparent border, which its padding beside an affix leaves out
-        --#{$component}-input-border: 1px;
         border-radius: f.get-shape("extra-small");
 
         .#{$component}__outline {
@@ -724,10 +718,12 @@ $component: "#{base.$prefix}-text-field";
 
         .#{$component}__input {
             background-color: transparent;
-            padding: 12px 15px 13px;
+            padding: 12px 16px 13px;
             // transparent: the outline draws the edge, this keeps the text
-            // where the old input border put it
-            border: 1px solid transparent;
+            // where the old input border put it. Top and bottom only: the
+            // horizontal insets are the filled field's, to the pixel
+            border: solid transparent;
+            border-width: 1px 0;
             @include m.motion-transition(padding);
 
             // Autofill styles for outlined variant
@@ -818,11 +814,11 @@ $component: "#{base.$prefix}-text-field";
         // Icon adjustments for outlined variant
         &.#{$component}--with-leading-icon {
             .#{$component}__input {
-                padding-left: 44px;
+                padding-left: 52px;
             }
 
             .#{$component}__label {
-                left: 44px;
+                left: 52px;
             }
 
             &:not(.#{$component}--empty) .#{$component}__label,
@@ -833,7 +829,7 @@ $component: "#{base.$prefix}-text-field";
 
         &.#{$component}--with-trailing-icon {
             .#{$component}__input {
-                padding-right: 44px;
+                padding-right: 52px;
             }
         }
 
@@ -850,7 +846,7 @@ $component: "#{base.$prefix}-text-field";
 
             &.#{$component}--with-leading-icon .#{$component}__label {
                 left: auto;
-                right: 44px;
+                right: 52px;
             }
 
             &:not(.#{$component}--empty) .#{$component}__label,
@@ -876,14 +872,14 @@ $component: "#{base.$prefix}-text-field";
             &.#{$component}--with-leading-icon {
                 .#{$component}__input {
                     padding-left: 16px;
-                    padding-right: 44px;
+                    padding-right: 52px;
                 }
             }
 
             &.#{$component}--with-trailing-icon {
                 .#{$component}__input {
                     padding-right: 16px;
-                    padding-left: 44px;
+                    padding-left: 52px;
                 }
             }
         }
@@ -1006,7 +1002,7 @@ $component: "#{base.$prefix}-text-field";
         // Outlined variant with compact density
         &.#{$component}--outlined {
             .#{$component}__input {
-                padding: 9px 15px 8px;
+                padding: 9px 16px 8px;
             }
 
             // Focused/populated position
@@ -1039,37 +1035,37 @@ $component: "#{base.$prefix}-text-field";
 
         // Adjust element positions for compact with icons
         &.#{$component}--with-leading-icon {
-            --#{$component}-text-start: 40px;
+            --#{$component}-text-start: 48px;
 
             .#{$component}__label {
-                left: 40px; // Reduced from 44px
+                left: 48px;
             }
 
             .#{$component}__input {
-                padding-left: 40px;
+                padding-left: 48px;
             }
 
             &.#{$component}--with-prefix {
-                --#{$component}-text-start: #{beside-affix(40px, prefix)};
+                --#{$component}-text-start: #{beside-affix(48px, prefix)};
 
                 .#{$component}__prefix {
-                    left: 40px;
+                    left: 48px;
                 }
             }
         }
 
         &.#{$component}--with-trailing-icon {
-            --#{$component}-text-end: 40px;
+            --#{$component}-text-end: 48px;
 
             .#{$component}__input {
-                padding-right: 40px;
+                padding-right: 48px;
             }
 
             &.#{$component}--with-suffix {
-                --#{$component}-text-end: #{beside-affix(40px, suffix)};
+                --#{$component}-text-end: #{beside-affix(48px, suffix)};
 
                 .#{$component}__suffix {
-                    right: 40px;
+                    right: 48px;
                 }
             }
         }
@@ -1079,18 +1075,18 @@ $component: "#{base.$prefix}-text-field";
             &.#{$component}--with-leading-icon {
                 .#{$component}__label {
                     left: auto;
-                    right: 40px;
+                    right: 48px;
                 }
 
                 .#{$component}__input {
                     padding-left: 16px;
-                    padding-right: 40px;
+                    padding-right: 48px;
                 }
 
                 &.#{$component}--with-prefix {
                     .#{$component}__prefix {
                         left: auto;
-                        right: 40px;
+                        right: 48px;
                     }
                 }
             }
@@ -1098,13 +1094,13 @@ $component: "#{base.$prefix}-text-field";
             &.#{$component}--with-trailing-icon {
                 .#{$component}__input {
                     padding-right: 16px;
-                    padding-left: 40px;
+                    padding-left: 48px;
                 }
 
                 &.#{$component}--with-suffix {
                     .#{$component}__suffix {
                         right: auto;
-                        left: 40px;
+                        left: 48px;
                     }
                 }
             }
@@ -1113,21 +1109,21 @@ $component: "#{base.$prefix}-text-field";
 
     // ===== BESIDE A PREFIX OR A SUFFIX =====
     // The input's padding in a field with a prefix or a suffix, from the two
-    // insets set above, less the outlined input's own 1px border. Last, and
+    // insets set above. Last, and
     // one class heavier, so it holds over the variants' and the densities'
     // paddings. A selector list, not :is(): bundlers emit an :is() rule three
     // times, with the -webkit-any() and -moz-any() forms.
     &.#{$component}--with-prefix,
     &.#{$component}--with-suffix {
         .#{$component}__input {
-            padding-left: calc(var(--#{$component}-text-start, 16px) - var(--#{$component}-input-border, 0px));
-            padding-right: calc(var(--#{$component}-text-end, 16px) - var(--#{$component}-input-border, 0px));
+            padding-left: var(--#{$component}-text-start, 16px);
+            padding-right: var(--#{$component}-text-end, 16px);
         }
 
         @include m.rtl {
             .#{$component}__input {
-                padding-left: calc(var(--#{$component}-text-end, 16px) - var(--#{$component}-input-border, 0px));
-                padding-right: calc(var(--#{$component}-text-start, 16px) - var(--#{$component}-input-border, 0px));
+                padding-left: var(--#{$component}-text-end, 16px);
+                padding-right: var(--#{$component}-text-start, 16px);
             }
         }
     }

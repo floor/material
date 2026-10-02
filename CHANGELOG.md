@@ -1045,9 +1045,24 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   by the amounts below; nothing in the API changes. Sources: the measurement tables on
   m3.material.io's text fields page, and Compose's `TextFieldImpl.kt` for the positions the
   site gives only as diagrams.
+  - **An icon is 12px in and what follows it 16px further** ("Left/right padding with icons
+    12dp", "Padding between icons and text 16dp"): beside a leading icon the text and the
+    label start 52px in, and before a trailing icon the text ends 52px in. Both were 44px (the
+    outlined field's text 45px). At compact density, whose icon box is 20px, 48px (was 40px,
+    and 41px outlined). A select's text ends 52px before its end, as it has a trailing icon.
+  - **A filled field's floated label stays beside the leading icon,** 52px in, where the
+    resting label is (Compose places both with one expression). It moved to 16px. The outlined
+    field's floated label goes to the notch, 16px in, as before.
+  - **A prefix starts where the content does,** 16px in (`TextFieldPadding`), or 52px beside a
+    leading icon; it was 12px, and 44px. **An affix is 2px from the text**
+    (`PrefixSuffixTextPadding`): the prefix was 4px from it (5px outlined), and the text
+    touched the suffix.
   - **The label is not moved by a prefix** (Compose: "Prefix/suffix does not get applied to
     label"). Resting, it starts 16px in, where it was 25.5px beside a "$" (the prefix is hidden
     while the label rests). Floated in a filled field, 16px, where it was 12px.
+  - **The outlined input has no border at its sides:** its transparent border is top and
+    bottom only and its horizontal padding is 16px (was 15px beside a 1px border), so both
+    variants place the text at the same pixel. The outline itself is unchanged.
   - **A multiline field's first line and label are where a single-line field has them**
     (Compose places the text with no single-line branch). The first line starts 24px down in a
     filled field with a label (was 12px) and 16px down in an outlined field or without a label
@@ -1099,15 +1114,14 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   (FLO-299).** The input's padding was sized from the affix alone. With a leading icon and a
   prefix the value began 25.5px in, under the icon (12 to 36px) and before the prefix (44px);
   a trailing icon with a suffix did the same at the other end; right to left, the padding was
-  on the wrong side. The text now starts 4px after the prefix and ends 4px before the suffix,
+  on the wrong side. The text now starts 2px after the prefix and ends 2px before the suffix,
   whatever stands outside them, in both variants, both densities and both directions
-  (measured: with the icon, the text starts at 57.5px, after a 9.5px prefix at 44px). The
+  (measured: with the icon, the text starts at 63.5px, after a 9.5px prefix at 52px). The
   script no longer writes `padding-left` and `padding-right` on the input or `left` on the
   label. It writes each affix's measured width on the field's root, as
   `--mtrl-text-field-prefix-width` and `--mtrl-text-field-suffix-width`, and the stylesheet
-  adds the icon's inset. What else moves, without an icon: the text ends 4px before a suffix,
-  where it touched it; an outlined field's text starts 1px sooner after a prefix (25.5px, as
-  the filled field's); and the label no longer follows the prefix (under "Changed").
+  adds the icon's inset. The insets themselves, the gap to the text and the label, which no
+  longer follows the prefix, are under "Changed".
 - **A top-layer dialog that refuses Escape stays open, however often it is pressed
   (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
   listener that refused, the third Escape made the browser close the `<dialog>` while
