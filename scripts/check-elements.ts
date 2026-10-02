@@ -10,6 +10,7 @@
 //   bun run build && bun run scripts/check-elements.ts
 
 import { checkCheckableValues } from "./check-checkable-values";
+import { expectedFailure } from "./expected-failure";
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
@@ -1415,12 +1416,12 @@ try {
     check("textfield: type=multiline renders a textarea with the default value");
 
     const parity = await page.evaluate(async () => {
-      const w = window as unknown as Win & { mtrl: { createTextfield: (c: object) => { element: HTMLElement } } };
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement } } };
       const host = document.getElementById("factory") as HTMLElement;
       host.innerHTML = `<m-textfield id="pf" label="Name" value="Ada" supporting-text="Help"></m-textfield>
         <m-textfield id="po" variant="outlined" label="Name" supporting-text="Help"></m-textfield>`;
-      const filled = w.mtrl.createTextfield({ label: "Name", value: "Ada", supportingText: "Help" });
-      const outlined = w.mtrl.createTextfield({ variant: "outlined", label: "Name", supportingText: "Help" });
+      const filled = w.mtrl.createTextField({ label: "Name", value: "Ada", supportingText: "Help" });
+      const outlined = w.mtrl.createTextField({ variant: "outlined", label: "Name", supportingText: "Help" });
       host.append(filled.element, outlined.element);
       await new Promise((r) => setTimeout(r, 50));
       const measure = (root: HTMLElement): Record<string, string | number> => {
@@ -1554,7 +1555,7 @@ try {
     // found document.body from inside a shadow root and covered any surface
     // that is not one flat colour.
     await page.evaluate(() => {
-      const w = window as unknown as Win & { mtrl: { createTextfield: (c: object) => { element: HTMLElement } } };
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement } } };
       const host = document.getElementById("factory") as HTMLElement;
       host.innerHTML = `<div style="background: rgb(200, 230, 255); padding: 24px; display: grid; gap: 24px; width: 320px">
         <m-textfield id="na" variant="outlined" label="Element label" value="Ada"></m-textfield>
@@ -1562,7 +1563,7 @@ try {
         <m-textfield id="nc" variant="outlined" label="Empty"></m-textfield>
         <div dir="rtl"><m-textfield id="nd" variant="outlined" label="Right to left" value="Ada"></m-textfield></div>
       </div>`;
-      const factory = w.mtrl.createTextfield({ variant: "outlined", label: "Factory label", value: "Ada" });
+      const factory = w.mtrl.createTextField({ variant: "outlined", label: "Factory label", value: "Ada" });
       (document.getElementById("nb") as HTMLElement).append(factory.element);
     });
     // placement, the label's float and the border-colour transition
@@ -5627,6 +5628,59 @@ try {
     assert.deepEqual((await log()).map((e) => e.type), ["open", "close", "open", "close"]);
     assert.deepEqual(await menuState(), { open: false, attribute: false });
     check("menu: ArrowRight opens the submenu on its first item, ArrowLeft returns to Share, a hover opens it");
+
+    // FLO-515's acceptance: arrows pressed before the menu's initial focus are not
+    // undone by it. A menu opened with a key focuses its first item on a 100ms
+    // timer; here that timer is held until the arrows have been handled, the order
+    // fast keys (or a paused page) produce. Today the timer then puts focus back
+    // on the first item.
+    await expectedFailure("FLO-515", "the menu's initial focus undoes arrows pressed before it", async () => {
+      await page.evaluate(() => {
+        const timeout = window.setTimeout, clear = window.clearTimeout;
+        const held = new Map<number, () => void>();
+        let next = -1;
+        // Every 100ms timer the page sets during this case is held; the menu's own
+        // are 0, 20 and 100ms, and the 100ms one is its initial focus. A held timer
+        // has an id of its own and can be cleared, so a fix that cancels the
+        // initial focus is seen as one, like a fix that guards it.
+        window.setTimeout = ((callback: () => void, delay?: number, ...rest: unknown[]) => {
+          if (delay !== 100) return timeout(callback, delay, ...rest);
+          held.set(next, callback);
+          return next--;
+        }) as typeof window.setTimeout;
+        window.clearTimeout = ((id?: number) => { if (id === undefined || !held.delete(id)) clear(id); }) as typeof window.clearTimeout;
+        Object.assign(window, { releaseTimers: () => {
+          window.setTimeout = timeout;
+          window.clearTimeout = clear;
+          delete (window as unknown as { releaseTimers?: unknown }).releaseTimers;
+          for (const callback of [...held.values()]) callback();
+          held.clear();
+        } });
+      });
+      let before: string | null;
+      try {
+        await page.focus("#mb");
+        await page.keyboard.press("Enter");
+        // The menu is placed and shown 20ms after the key; its focus timer is held.
+        // (Not `wait(100)`: that is a 100ms timer in the page, and would be held too.)
+        await wait(60);
+        assert.equal((await menuState()).open, true, "the menu opened with Enter");
+        for (const key of ["ArrowDown", "ArrowDown"]) await page.keyboard.press(key);
+        before = await focused();
+        assert.notEqual(before, "mb", "the arrows moved focus into the menu");
+      } finally {
+        await page.evaluate(() => (window as unknown as { releaseTimers: () => void }).releaseTimers());
+      }
+      await wait(50);
+      const after = await focused();
+      await page.keyboard.press("Escape");
+      await settle();
+      await log();
+      // The known bug is this one move, back to the first item. Any other change of
+      // focus is not FLO-515 and fails as usual.
+      assert(!(after === "Copy" && before !== "Copy"), "FLO-515: the menu's initial focus moved focus back to the first item, after arrows had moved it on");
+      assert.equal(after, before, "focus stays where the arrows put it once the menu's initial focus has run");
+    });
 
     await page.evaluate(() => (document.getElementById("mm") as Host & { show: () => void }).show());
     await settle();

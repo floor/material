@@ -3,7 +3,7 @@
 import * as React from "react";
 import {
   Button, Card, Checkbox, Chip, Chips, Divider, List, ListItem, Progress, Radio, Radios, Select, SelectOption, Slider,
-  Switch, Tab, Tabs, Textfield, TopAppBar,
+  Switch, Tab, Tabs, TextField, TopAppBar,
 } from "../../dist/react/index.js";
 
 const h = React.createElement;
@@ -14,7 +14,7 @@ export const App = (): React.ReactElement =>
     null,
     h(TopAppBar, { headline: "Settings" }),
     h(Tabs, { defaultValue: "a" }, h(Tab, { value: "a" }, "General"), h(Tab, { value: "b" }, "Privacy")),
-    h(Textfield, { label: "Name" }),
+    h(TextField, { label: "Name" }),
     h(Select, { label: "Pet", defaultValue: "cat" }, h(SelectOption, { value: "cat" }, "Cat"), h(SelectOption, { value: "dog" }, "Dog")),
     h(Switch, { defaultChecked: true }, "Notifications"),
     h(Checkbox, null, "Agree"),

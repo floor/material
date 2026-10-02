@@ -4,7 +4,7 @@
 import { createSignal, For, onMount, Show } from "solid-js";
 import {
   Button, Checkbox, List, ListItem, NavigationRail, NavigationRailItem, Progress, Radio, Radios, Slider, Switch, Tab, Tabs,
-  Textfield,
+  TextField,
 } from "../../dist/solid/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 import { Chip, Chips } from "../../dist/solid/index.js";
@@ -77,7 +77,7 @@ export const App = () => {
       <output id="agreed">{String(agreed())}</output>
       <Slider id="sl" ariaLabel="Level" value={level()} onChange={(e) => setLevel(e.detail.value)} />
       <output id="level">{String(level())}</output>
-      <Textfield id="tf" label="Name" value={text()} onInput={(e) => { recordModel("string", e); setText(e.detail.value); }} />
+      <TextField id="tf" label="Name" value={text()} onInput={(e) => { recordModel("string", e); setText(e.detail.value); }} />
       <output id="text">{text()}</output>
       <Radios id="rd" ariaLabel="Size" value={size()} onChange={(e) => setSize(e.detail.value)}>
         <Radio value="s">Small</Radio>

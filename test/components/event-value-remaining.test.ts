@@ -2,7 +2,7 @@
 // FLO-380: snapshot the factory getter in each handler, before another handler
 // or a later activation can change the model.
 import { expect, test } from "bun:test";
-import createTextfield from "../../src/components/textfield";
+import createTextField from "../../src/components/textfield";
 import createSlider from "../../src/components/slider";
 import createSearch from "../../src/components/search";
 import createButtonGroup from "../../src/components/button-group";
@@ -13,7 +13,7 @@ import { callbacksFixture, wait } from "./callbacks.fixture";
 const mount = callbacksFixture();
 
 test("text field input and change carry the live string", () => {
-  const field = mount(createTextfield({ label: "Name" }));
+  const field = mount(createTextField({ label: "Name" }));
   const seen: Array<[string, string]> = [];
   for (const name of ["input", "change"] as const) {
     field.on(name, event => seen.push([event.value, field.getValue()]));
