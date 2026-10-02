@@ -39,7 +39,9 @@ export interface ChipConfig {
   trailingLabel?: string;
   /** The trailing button opens a menu: aria-haspopup="menu", and a drop-down arrow unless trailingIcon is set. */
   trailingMenu?: boolean;
+  /** In 1.0 a chip's `onClick` receives the `click` payload, `{ event, originalEvent, element }`, not the chip. */
   onClick?: (chip: ChipComponent) => void;
+  /** In 1.0 a chip's `onChange` receives one object, `{ selected, chip, value }`, the `change` payload. */
   onChange?: (selected: boolean, chip: ChipComponent) => void;
   onSelect?: (chip: ChipComponent) => void;
   class?: string;
@@ -162,7 +164,9 @@ export interface ChipsConfig {
   selectionRequired?: boolean;
 
   /**
-   * Callback function when chip selection changes
+   * Callback function when chip selection changes.
+   * In 1.0 it receives one object, `{ value, selected, changed }` (no array, no
+   * second argument), and also hears `selectByValue(values, true)`.
    */
   onChange?: (event: ChipsChangeEvent, changedValue: string | null) => void;
 

@@ -198,6 +198,8 @@ export interface SelectComponent {
 
   /**
    * The menu component
+   * @deprecated Removed in 1.0. Use the select's own methods and events: `open()`,
+   * `close()`, `isOpen()`, `getOptions()`, `setOptions()`, and `open`, `close` and `change`.
    */
   menu: MenuComponent;
 

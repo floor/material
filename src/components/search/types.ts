@@ -164,22 +164,22 @@ export interface SearchConfig {
 
   // === Event Handlers ===
 
-  /** Called when search is submitted */
+  /** Called when search is submitted. In 1.0 it receives the `SearchEvent` a `submit` listener receives: read `event.value`. */
   onSubmit?: (value: string) => void;
 
-  /** Called when input value changes */
+  /** Called when input value changes. In 1.0 it receives the `SearchEvent` an `input` listener receives: read `event.value`. */
   onInput?: (value: string) => void;
 
-  /** Called when search is cleared */
+  /** Called when search is cleared. In 1.0 it receives the `SearchEvent` a `clear` listener receives. */
   onClear?: () => void;
 
-  /** Called when view expands */
+  /** Called when view expands. In 1.0 it receives the object an `expand` listener receives. */
   onExpand?: () => void;
 
-  /** Called when view collapses */
+  /** Called when view collapses. In 1.0 it receives the object a `collapse` listener receives. */
   onCollapse?: () => void;
 
-  /** Called when a suggestion is selected */
+  /** Called when a suggestion is selected. In 1.0 it receives the `SearchEvent`: the suggestion is `event.suggestion`. */
   onSuggestionSelect?: (suggestion: SearchSuggestion) => void;
 
   /** Event handlers map */

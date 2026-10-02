@@ -163,13 +163,15 @@ export interface RadiosComponent {
   getClass: (name: string) => string;
   
   /**
-   * Gets the radios component name
+   * Gets the radios component name.
+   * In 1.0 it returns `null`, not an empty string, when nothing is selected.
    * @returns Selected radio value or empty string if none selected
    */
   getValue: () => string;
   
   /**
-   * Sets the radios component value (selects a radio)
+   * Sets the radios component value (selects a radio).
+   * In 1.0 it also accepts `null`, which clears the selection.
    * @param value - Value to select
    * @returns The radios component for chaining
    */
