@@ -18,6 +18,51 @@ export interface PreupgradeCase {
 
 const c = (element: string, variant: string, html: string): PreupgradeCase => ({ element, variant, html });
 
+/** Rows already written out below, so the matrix does not measure them twice. */
+const BUTTON_ICON_LISTED = new Set([
+  `<m-button icon="${ICON}">Save</m-button>`,
+  `<m-button size="m" icon="${ICON}">Save</m-button>`,
+  `<m-button variant="text" icon="${ICON}">Save</m-button>`,
+  `<m-button icon="${ICON}" icon-position="end">Save</m-button>`,
+  `<m-button variant="outlined" icon="${ICON}" icon-position="end">Save</m-button>`,
+  `<m-button variant="text" icon="${ICON}" icon-position="end">Save</m-button>`,
+  `<m-button variant="tonal" icon="${ICON}" icon-position="end">Save</m-button>`,
+  `<m-button icon="${ICON}" icon-position="top">Save</m-button>`,
+]);
+
+/**
+ * Every other button with an icon: leading and trailing, each variant, the
+ * default size and xs and s, left to right and right to left.
+ */
+const buttonIconRows = (): PreupgradeCase[] => {
+  const rows: PreupgradeCase[] = [];
+  for (const variant of ["", "elevated", "tonal", "outlined", "text"]) {
+    for (const size of ["", "xs", "s"]) {
+      for (const end of [false, true]) {
+        for (const rtl of [false, true]) {
+          const attrs = [
+            variant ? `variant="${variant}"` : "",
+            size ? `size="${size}"` : "",
+            `icon="${ICON}"`,
+            end ? `icon-position="end"` : "",
+            rtl ? `dir="rtl"` : "",
+          ].filter((attr) => attr !== "");
+          const html = `<m-button ${attrs.join(" ")}>Save</m-button>`;
+          if (BUTTON_ICON_LISTED.has(html)) continue;
+          const name = [
+            variant ? `variant=${variant}` : "",
+            size ? `size=${size}` : "",
+            end ? "icon-position=end" : "icon",
+            rtl ? "dir=rtl" : "dir=ltr",
+          ].filter((part) => part !== "").join(" ");
+          rows.push(c("button", name, html));
+        }
+      }
+    }
+  }
+  return rows;
+};
+
 export const cases: PreupgradeCase[] = [
   c("button", "default", `<m-button>Save</m-button>`),
   c("button", "size=xs", `<m-button size="xs">Save</m-button>`),
@@ -33,11 +78,16 @@ export const cases: PreupgradeCase[] = [
   // text button's 12/12, the component gives the icon-side 12/16.
   c("button", "variant=text icon", `<m-button variant="text" icon="${ICON}">Save</m-button>`),
   // The trailing icon on each variant the button rows above name (filled is
-  // the default): the pre-upgrade sheet does not know the icon moved.
+  // the default).
   c("button", "icon-position=end", `<m-button icon="${ICON}" icon-position="end">Save</m-button>`),
   c("button", "variant=outlined icon-position=end", `<m-button variant="outlined" icon="${ICON}" icon-position="end">Save</m-button>`),
   c("button", "variant=text icon-position=end", `<m-button variant="text" icon="${ICON}" icon-position="end">Save</m-button>`),
   c("button", "variant=tonal icon-position=end", `<m-button variant="tonal" icon="${ICON}" icon-position="end">Save</m-button>`),
+  // An unknown value is a leading icon, before and after upgrade.
+  c("button", "icon-position=top", `<m-button icon="${ICON}" icon-position="top">Save</m-button>`),
+  // Leading and trailing, each variant, at the default, xs and s, in both
+  // directions. Combinations already listed above are not repeated.
+  ...buttonIconRows(),
   c("switch", "default", `<m-switch>Wi-Fi</m-switch>`),
   c("switch", "supporting-text", `<m-switch supporting-text="Saves power">Wi-Fi</m-switch>`),
   c("switch", "checked", `<m-switch checked>Wi-Fi</m-switch>`),

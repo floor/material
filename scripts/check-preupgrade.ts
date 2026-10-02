@@ -16,6 +16,13 @@
 // its shadow root renders) moves or changes size, a sibling when it moves.
 // Every case must stay under 0.01.
 //
+// A button with an icon also compares its label, which can jump while the
+// host's box stays put. Before upgrade the position is a Range over the
+// host's text node; after upgrade it is the label element's box. The element's
+// box is the line and the range is the text, so their tops differ while the
+// text is in the same place. The check compares the text's start (x) and the
+// vertical centre. More than 0.5px is a failure.
+//
 // The mutation check runs the same cases without the pre-upgrade stylesheet:
 // it must fail most elements, or the check is not measuring anything.
 // Then the same through the React adapter's server render, `renderToString`
@@ -134,11 +141,22 @@ interface Box {
   w: number;
   h: number;
 }
+/** A box relative to the host's border box. `y` is the top, `h` its height. */
+interface Point {
+  x: number;
+  y: number;
+  h: number;
+}
 interface Snapshot {
   frame: Box;
   /** The host (or, for the React page, each rendered child), then the siblings that follow. */
   hosts: Box[];
   siblings: Box[];
+  /**
+   * Where each host's label text is, relative to that host. Set for a button
+   * with an icon: the light-DOM text before upgrade, the label element after.
+   */
+  labels: (Point | null)[];
 }
 
 const settle = (p: Page): Promise<unknown> =>
@@ -163,6 +181,23 @@ const snapshot = (p: Page, hosts: string, siblings: string): Promise<Snapshot> =
         element.checkVisibility({ opacityProperty: true, visibilityProperty: true }) &&
         getComputedStyle(element).position !== "fixed" &&
         !element.matches(":modal, :popover-open");
+      // Before upgrade the label is the host's text. After upgrade it is the
+      // label element (the part that holds the slot). The host's own box can
+      // stay still while this point moves.
+      const labelAt = (host: Element): Point | null => {
+        if (host.localName !== "m-button" || !host.hasAttribute("icon")) return null;
+        const origin = host.getBoundingClientRect();
+        const place = (rect: DOMRect): Point => ({ x: rect.x - origin.x, y: rect.y - origin.y, h: rect.height });
+        const painted = host.shadowRoot?.querySelector("[part~='label'], .mtrl-button__text");
+        if (painted) return place(painted.getBoundingClientRect());
+        const text = Array.from(host.childNodes).find(
+          (node) => node.nodeType === 3 && (node.textContent ?? "").trim() !== "",
+        );
+        if (!text) return null;
+        const range = document.createRange();
+        range.selectNodeContents(text);
+        return place(range.getBoundingClientRect());
+      };
       const visual = (host: Element): Box => {
         const boxes = [box(host), ...Array.from(host.shadowRoot?.children ?? []).filter(inPage).map(box)]
           .filter((b) => b.w > 0 && b.h > 0)
@@ -179,10 +214,12 @@ const snapshot = (p: Page, hosts: string, siblings: string): Promise<Snapshot> =
         const bottom = Math.max(...boxes.map((b) => b.y + b.h));
         return { x, y, w: right - x, h: bottom - y };
       };
+      const hostElements = Array.from(document.querySelectorAll(hostSelector));
       return {
         frame: box(document.getElementById("stage") as Element),
-        hosts: Array.from(document.querySelectorAll(hostSelector), visual),
+        hosts: hostElements.map(visual),
         siblings: Array.from(document.querySelectorAll(siblingSelector), box),
+        labels: hostElements.map(labelAt),
       };
     },
     [hosts, siblings] as const
@@ -254,7 +291,31 @@ interface Result {
   after: Box;
   /** How far each sibling moved, for the report. */
   moved: string;
+  /** Label position relative to the host, when this row is a button with an icon. */
+  labelBefore: Point | null;
+  labelAfter: Point | null;
 }
+
+/** The vertical centre of a label box, relative to the host. */
+const labelCentre = (point: Point): number => point.y + point.h / 2;
+
+/** How far the label moved, in px. Null when the row has no icon label to compare. */
+const labelShift = (before: Point | null, after: Point | null): number | null => {
+  if (!before && !after) return null;
+  if (!before || !after) return Number.POSITIVE_INFINITY;
+  return Math.max(Math.abs(before.x - after.x), Math.abs(labelCentre(before) - labelCentre(after)));
+};
+
+const LABEL_THRESHOLD = 0.5;
+
+const labelPlace = (result: Result): string => {
+  const before = result.labelBefore;
+  const after = result.labelAfter;
+  if (!before || !after) return "label was not measured";
+  const dx = after.x - before.x;
+  const dy = labelCentre(after) - labelCentre(before);
+  return `label x ${before.x.toFixed(1)} -> ${after.x.toFixed(1)} (${dx.toFixed(1)}), centre y ${labelCentre(before).toFixed(1)} -> ${labelCentre(after).toFixed(1)} (${dy.toFixed(1)})`;
+};
 
 const measure = async (path: string, preupgrade: boolean, hosts: string, script: string): Promise<[Snapshot, Snapshot]> => {
   const p = await browser.newPage({ viewport: { width: 400, height: 800 } });
@@ -287,7 +348,15 @@ const runCases = async (preupgrade: boolean): Promise<Result[]> => {
     const moved = before.siblings
       .map((b, i) => `${(after.siblings[i].x - b.x).toFixed(1)},${(after.siblings[i].y - b.y).toFixed(1)}`)
       .join(" ");
-    results.push({ name: label(item), score: score(before, after), before: before.hosts[0], after: after.hosts[0], moved });
+    results.push({
+      name: label(item),
+      score: score(before, after),
+      before: before.hosts[0],
+      after: after.hosts[0],
+      moved,
+      labelBefore: before.labels[0] ?? null,
+      labelAfter: after.labels[0] ?? null,
+    });
   }
   return results;
 };
@@ -297,7 +366,8 @@ const size = (b: Box): string => `${b.w.toFixed(1)}x${b.h.toFixed(1)}`;
 const report = (results: Result[]): void => {
   for (const r of results) {
     const mark = r.score < THRESHOLD ? "ok" : "FAIL";
-    console.log(`  ${mark.padEnd(4)} ${r.name.padEnd(34)} ${r.score.toFixed(4)}  ${size(r.before)} -> ${size(r.after)}  siblings moved ${r.moved}`);
+    const labelAt = r.labelBefore || r.labelAfter ? `  ${labelPlace(r)}` : "";
+    console.log(`  ${mark.padEnd(4)} ${r.name.padEnd(34)} ${r.score.toFixed(4)}  ${size(r.before)} -> ${size(r.after)}  siblings moved ${r.moved}${labelAt}`);
   }
 };
 
@@ -482,6 +552,15 @@ try {
     }
   }
 
+  const movedLabels = withStyles.filter((r) => {
+    const shift = labelShift(r.labelBefore, r.labelAfter);
+    return shift !== null && shift > LABEL_THRESHOLD;
+  });
+  if (movedLabels.length) {
+    console.log("\nButton labels that move on upgrade:");
+    for (const r of movedLabels) console.log(`  ${r.name}: ${labelPlace(r)}`);
+  }
+  assert.deepEqual(movedLabels.map((r) => `${r.name}: ${labelPlace(r)}`), [], "Button labels that move on upgrade");
   assert.deepEqual(failing.map((r) => r.name), [], "Cases that shift on upgrade");
   // The button's own box. A move of at least 0.5 px counts even when the
   // region score stays under the threshold.
