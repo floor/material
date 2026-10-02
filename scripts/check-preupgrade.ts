@@ -14,7 +14,8 @@
 // component is diluted; against its stage, a shift that moves what follows it
 // counts. The host counts as shifted when what it shows (its box, with what
 // its shadow root renders) moves or changes size, a sibling when it moves.
-// Every case must stay under 0.01.
+// Every case must stay under 0.01, and a case fails outright when a sibling
+// moves more than MOVE_LIMIT, whatever the score reads (see the constant).
 //
 // The mutation check runs the same cases without the pre-upgrade stylesheet:
 // it must fail most elements, or the check is not measuring anything.
@@ -59,6 +60,19 @@ const phaseB = [
 
 const THRESHOLD = 0.01;
 const STAGE_WIDTH = 360;
+
+// A case's siblings must not move on upgrade, whatever the score says. The
+// score's own 0.5px floor (`shiftOf`) is for sub-pixel rounding, and it let
+// the switch's unlabelled rows move an inline sibling 16.0px on a score of
+// 0.0017 and 11.0px on 0.0009, and the button group's 1.3px on 0.0001. Over
+// every row that moved a sibling at all, the moves were 16.0, 11.0 and 1.3px;
+// nothing measured between 0 and 1.3. 0.5px passes sub-pixel rounding and
+// fails a one-pixel move.
+const MOVE_LIMIT = 0.5;
+
+/** The siblings after each case's host, as `measure` selects them. */
+const SIBLINGS = ["#inline", "#block"] as const;
+
 const only = process.argv.slice(2);
 
 const build = async (entry: string, target: "browser" | "bun"): Promise<string> => {
@@ -254,6 +268,8 @@ interface Result {
   after: Box;
   /** How far each sibling moved, for the report. */
   moved: string;
+  /** The same per sibling, for the move limit: x and y in px. */
+  moves: { dx: number; dy: number }[];
 }
 
 const measure = async (path: string, preupgrade: boolean, hosts: string, script: string): Promise<[Snapshot, Snapshot]> => {
@@ -263,7 +279,7 @@ const measure = async (path: string, preupgrade: boolean, hosts: string, script:
   try {
     await p.goto(`http://127.0.0.1:${server.port}${path}?pre=${preupgrade ? 1 : 0}`);
     await settle(p);
-    const siblings = "#inline, #block";
+    const siblings = SIBLINGS.join(", ");
     const before = await snapshot(p, hosts, siblings);
     await p.addScriptTag({ url: script, type: "module" });
     await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
@@ -284,21 +300,50 @@ const runCases = async (preupgrade: boolean): Promise<Result[]> => {
   for (const [index, item] of cases.entries()) {
     if (only.length && !only.includes(item.element)) continue;
     const [before, after] = await measure(`/${index}`, preupgrade, "#stage > :first-child", "/elements.js");
-    const moved = before.siblings
-      .map((b, i) => `${(after.siblings[i].x - b.x).toFixed(1)},${(after.siblings[i].y - b.y).toFixed(1)}`)
-      .join(" ");
-    results.push({ name: label(item), score: score(before, after), before: before.hosts[0], after: after.hosts[0], moved });
+    const moves = before.siblings.map((b, i) => ({ dx: after.siblings[i].x - b.x, dy: after.siblings[i].y - b.y }));
+    const moved = moves.map(({ dx, dy }) => `${dx.toFixed(1)},${dy.toFixed(1)}`).join(" ");
+    results.push({ name: label(item), score: score(before, after), before: before.hosts[0], after: after.hosts[0], moved, moves });
   }
   return results;
 };
 
 const label = (item: PreupgradeCase): string => (item.variant === "default" ? item.element : `${item.element} [${item.variant}]`);
 const size = (b: Box): string => `${b.w.toFixed(1)}x${b.h.toFixed(1)}`;
-const report = (results: Result[]): void => {
+
+/** The largest move over a row's siblings, and which sibling and axis it is. */
+const largestMove = (moves: Result["moves"]): { sibling: string; axis: string; value: number } | null => {
+  let worst: { sibling: string; axis: string; value: number } | null = null;
+  moves.forEach(({ dx, dy }, i) => {
+    for (const [axis, value] of [["x", dx], ["y", dy]] as const) {
+      if (Math.abs(value) > (worst?.value ?? 0)) worst = { sibling: SIBLINGS[i] ?? `sibling ${i}`, axis, value: Math.abs(value) };
+    }
+  });
+  return worst;
+};
+
+/**
+ * A row's mark: the score's threshold, then the move limit, which the score
+ * cannot see. A move past the limit fails, whatever the score, and the failing
+ * line names the row, the sibling and the move.
+ */
+const markOf = (r: Result, checkMoves: boolean): { mark: "ok" | "FAIL"; note: string } => {
+  if (r.score >= THRESHOLD) return { mark: "FAIL", note: "" };
+  if (!checkMoves) return { mark: "ok", note: "" };
+  const worst = largestMove(r.moves);
+  if (!worst || worst.value <= MOVE_LIMIT) return { mark: "ok", note: "" };
+  const where = `${worst.sibling} moved ${worst.value.toFixed(1)}px on ${worst.axis}`;
+  return { mark: "FAIL", note: `  (${where}; over the ${MOVE_LIMIT}px limit, whatever the score)` };
+};
+
+/** Print the rows; return the names that failed. */
+const report = (results: Result[], checkMoves: boolean): string[] => {
+  const failed: string[] = [];
   for (const r of results) {
-    const mark = r.score < THRESHOLD ? "ok" : "FAIL";
-    console.log(`  ${mark.padEnd(4)} ${r.name.padEnd(34)} ${r.score.toFixed(4)}  ${size(r.before)} -> ${size(r.after)}  siblings moved ${r.moved}`);
+    const { mark, note } = markOf(r, checkMoves);
+    if (mark === "FAIL") failed.push(r.name);
+    console.log(`  ${mark.padEnd(5)} ${r.name.padEnd(34)} ${r.score.toFixed(4)}  ${size(r.before)} -> ${size(r.after)}  siblings moved ${r.moved}${note}`);
   }
+  return failed;
 };
 
 const browser = await chromium.launch({ headless: true });
@@ -308,15 +353,14 @@ try {
   const covered = new Set(cases.filter((item) => item.variant === "default").map((item) => item.element));
   assert.deepEqual(Object.keys(elements).map(kebab).filter((name) => !covered.has(name)), [], "Elements without a case");
 
-  console.log(`With the pre-upgrade styles (score < ${THRESHOLD}):`);
+  console.log(`With the pre-upgrade styles (score < ${THRESHOLD}, siblings within ${MOVE_LIMIT}px):`);
   const withStyles = await runCases(true);
-  report(withStyles);
+  const failing = report(withStyles, true);
 
   console.log("\nMutation: without the pre-upgrade styles:");
   const without = await runCases(false);
-  report(without);
+  report(without, false);
 
-  const failing = withStyles.filter((r) => r.score >= THRESHOLD);
   const defaults = without.filter((r) => !r.name.includes("["));
   const caught = defaults.filter((r) => r.score >= THRESHOLD);
   console.log(`\nMutation: ${caught.length} of ${defaults.length} elements shift without the pre-upgrade styles.`);
@@ -482,7 +526,7 @@ try {
     }
   }
 
-  assert.deepEqual(failing.map((r) => r.name), [], "Cases that shift on upgrade");
+  assert.deepEqual(failing, [], "Cases that shift on upgrade: score over the threshold, or a sibling over the move limit");
   // The button's own box. A move of at least 0.5 px counts even when the
   // region score stays under the threshold.
   assert(buttonMove < 0.5 && one < THRESHOLD, "One element's pre-upgrade file shifts on upgrade");
