@@ -62,6 +62,10 @@ export const baseStyles = [
   "themes/baseline", "base/tokens", "base/reset", "base/typography",
   "utilities/ripple", "base/document",
 ];
+
+// Opt-in explicit contrast for the baseline theme (`mtrl/styles/contrast`).
+// Emitted in the base cascade layer. A theme's own file is `mtrl/themes/<name>-contrast`.
+export const contrastStyle = "contrast";
 export const utilityStyles = [
   "utilities/spacing", "utilities/visibility", "utilities/colors",
   "utilities/flexbox", "utilities/typography", "utilities/layout",

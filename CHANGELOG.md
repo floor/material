@@ -117,6 +117,12 @@ an argument on `open`, `close` or `cancel`, is an error.
 
 Check these by searching your code: they compile, or come from plain JavaScript, markup or CSS.
 
+- **An app with its own contrast switch** adds `import 'mtrl/styles/contrast'` (and
+  `mtrl/themes/<name>-contrast` for a theme it imports on its own). Without that import,
+  `data-theme-contrast="medium"` or `"high"` changes no colour, and nothing warns (FLO-540).
+  Measured on the unthemed root: with the OS asking for more contrast, `data-theme-contrast="high"`
+  stays standard primary `#6750a4`, not high `#312259`. The OS preference (`prefers-contrast: more`)
+  still selects high contrast from `mtrl/styles/base`.
 - **A chip's `{ text }`** renders an empty chip, silently: no label, no error, no warning.
 - **Tabs `indicatorHeight` / `indicatorWidthStrategy`** are ignored: the indicator falls back to
   its variant's height (3px on a primary row, 2px on a secondary one) and automatic width.
@@ -205,6 +211,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed (breaking)
 
+- **Explicit contrast levels are opt-in (FLO-540).** `mtrl/styles/base` and `mtrl/themes/<name>`
+  keep standard contrast and `prefers-contrast: more`. `data-theme-contrast="medium"` and `"high"`
+  (material-color-utilities contrast 0.5 and 1.0; the values are unchanged) move to
+  `mtrl/styles/contrast` and `mtrl/themes/<name>-contrast`. The full stylesheet `mtrl/styles`
+  still includes them. Without the new import the attribute changes no colour and nothing warns.
 - **mtrl is ESM-only (FLO-358).** The CommonJS bundle (`dist/index.cjs`) and the root's `require`
   condition are gone; `main` is the ESM entry. Every subpath was already import-only, and with
   the internals off the root the bundle would have been a partial API. `require('mtrl')` no longer
