@@ -168,6 +168,19 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `setSelected` and `selectByValue` do not emit the chip's `change`. A single-select click
   emits `change` on the clicked chip only; the chip it replaces is updated with
   `setSelected`, which stays silent.
+- **A chip's `onClick` and `click` listeners run before the chip toggles**, alone or in a
+  set: `chip.isSelected()` inside them is the state before the click. A chip alone used to
+  toggle and emit `change` first. Read the new state in `onChange` or a `change` listener,
+  which follows.
+- **A chip's `change` is emitted only when the selection changed (FLO-550).** In a
+  `selectionRequired` set, a click on the last selected chip is refused: it used to emit
+  `change` on the chip and on the set, with the chip still selected, and call both `onChange`.
+  It now emits none, and `<m-chips>` dispatches no `change`; `click` and `onClick` still
+  report the press.
+- **A chip's `remove` listeners in a set run before the set removes the chip.** The item's
+  `onRemove` and a `chip.on("remove")` listener find the chip still in `getChips()` and on the
+  page; the set then destroys it and emits its own `remove`. A listener added with `on` used
+  to run after the set had destroyed and unlisted the chip.
 - **Chip-set `add` and `remove`** factory handlers receive `{ value, chip }` and
   `{ value, chip, chipValue }`, not the chip; `<m-chips>`'s `remove` detail `value` is the
   remaining selection, and the removed id is `chipValue`.

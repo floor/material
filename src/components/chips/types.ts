@@ -27,7 +27,8 @@ export interface ChipConfig {
    * Delete. Input chips are always removable (m3.material.io chips): on its own the
    * chip then leaves the page; in a set, the set removes it and emits `remove`. It
    * used to be a request the owner had to act on, and without it there was no
-   * remove button. FLO-257.
+   * remove button. FLO-257. It and every `remove` listener run first, with the chip
+   * still in the set and on the page; the removal follows.
    */
   onRemove?: ChipEvents["remove"];
   removeLabel?: string;
@@ -41,7 +42,11 @@ export interface ChipConfig {
   trailingLabel?: string;
   /** The trailing button opens a menu: aria-haspopup="menu", and a drop-down arrow unless trailingIcon is set. */
   trailingMenu?: boolean;
-  /** Same payload as a `click` listener. */
+  /**
+   * Same payload as a `click` listener. It runs before the chip toggles, alone or
+   * in a set: `isSelected()` here is the state before the click. Read the new
+   * state in `onChange`, which follows when the selection changed.
+   */
   onClick?: ChipEvents["click"];
   /**
    * Same payload as a `change` listener: `{ selected, chip, value }`.
@@ -75,6 +80,8 @@ export interface ChipOptions extends ChipConfig {
   managedSelection?: boolean;
   /** Notify the owning set when a chip becomes selected. */
   onSelected?: (chip: ChipComponent) => void;
+  /** The owning set removes the chip, once its `remove` listeners have run. */
+  onRemoved?: (chip: ChipComponent) => void;
   /**
    * The chip is a cell of a chip set's grid (FLO-261): the root is a
    * `gridcell`, and a one-action chip's cell is its focus target.
@@ -184,7 +191,8 @@ export interface ChipsConfig {
 
   /**
    * Whether the set keeps at least one chip selected: deselecting the last selected
-   * chip is refused. Off by default, as in Material; single-select sets used to
+   * chip is refused, and a refused click emits no `change`, on the chip or on the set.
+   * Off by default, as in Material; single-select sets used to
    * enforce it without a way to opt out. FLO-257.
    * @default false
    */

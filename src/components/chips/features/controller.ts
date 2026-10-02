@@ -83,8 +83,10 @@ export const withController =
 
     // With selectionRequired, deselecting the last selected chip is refused, in either
     // mode. It used to be forced on every single-select set. FLO-257.
+    // Nothing changed, so nothing is emitted, here or on the chip. FLO-550.
     if (config.selectionRequired && !selectedChip.isSelected() && getSelectedChips().length === 0) {
       selectedChip.setSelected(true);
+      return;
     }
 
     // Get all currently selected chips and their values
@@ -244,10 +246,7 @@ export const withController =
       managedSelection: true,
       onSelected: selectSingle,
       cell: true,
-      onRemove: chipConfig.type === "input" ? chip => {
-        chipConfig.onRemove?.(chip);
-        removeChip(chip);
-      } : undefined,
+      onRemoved: removeChip,
     });
 
     // Get the container element to append to
