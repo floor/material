@@ -1130,7 +1130,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   right-to-left. With no label the root is its own target, so the box now keeps 15px on both
   sides (M3 "Icon alignment Center-aligned", "Target size 48dp") and the state layer
   ("State-layer size 40dp") lies 4px inside the root on all sides. A labelled checkbox, whose
-  root hugs box, gap and label, is unchanged.
+  root hugs box, gap and label, is unchanged. Before upgrade, write the tag with nothing between
+  its tags: a whitespace-only text node (a space, a line break) is not `:empty`, so such a host
+  keeps the labelled layout although the element then builds no label.
 - **Text field: with reduced motion, the filled field's focus indicator no longer fades
   (FLO-299).** Its 0.2s transition was not in the field's reduced-motion rule, where the
   label, the outline, the icons and the affixes are. It also runs on the motion tokens now
