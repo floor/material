@@ -167,6 +167,10 @@ export const withAPI =
        * Disables the button, making it non-interactive
        * @returns Button component for method chaining
        */
+      isDisabled() {
+        return disabled.isDisabled();
+      },
+
       disable() {
         disabled.disable();
         return buttonComponent;

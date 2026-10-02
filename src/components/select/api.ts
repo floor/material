@@ -103,6 +103,10 @@ export const withAPI =
       return this;
     },
 
+    isDisabled(): boolean {
+      return component.textfield?.input?.disabled === true;
+    },
+
     setError(error: boolean, message?: string): SelectComponent {
       // Delegate to the textfield's setError method
       if (component.textfield?.setError) {

@@ -43,12 +43,10 @@ export const componentStyles: Record<string, { source: string; dependencies: str
 export const fullOnlyStyles: string[] = [];
 
 // Themes in the full stylesheet, each also shipped as `mtrl/themes/<name>`.
-// material, winter, browngreen and legacy are deprecated (FLO-308) and stay
-// here until 1.0.
+// 1.0.0 removed material, winter, browngreen and legacy (FLO-308, FLO-428).
 export const themeStyles = [
   "baseline", "ocean", "desert", "forest", "sunset", "spring", "summer",
-  "autumn", "winter", "brownbeige", "browngreen", "sageivory", "tealcaramel",
-  "legacy", "material", "highcontrast",
+  "autumn", "brownbeige", "sageivory", "tealcaramel", "highcontrast",
 ];
 
 // Themes shipped only as `mtrl/themes/<name>`, outside the full stylesheet, so
