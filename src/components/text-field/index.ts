@@ -1,7 +1,7 @@
-// src/components/textfield/index.ts
-export { default } from "./textfield";
+// src/components/text-field/index.ts
+export { default } from "./text-field";
 // The canonical name, as the root exports it (FLO-383)
-export { default as createTextField } from "./textfield";
+export { default as createTextField } from "./text-field";
 
 // Export types
 export type {

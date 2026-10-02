@@ -15,7 +15,7 @@ const checked: boolean | undefined = document.querySelector("m-switch")!.checked
 void checked;
 const found = document.querySelector("m-switch");
 assert<Equals<typeof found, SwitchElement | null>>();
-const created = document.createElement("m-textfield");
+const created = document.createElement("m-text-field");
 assert<Equals<typeof created, TextFieldElement>>();
 created.select();
 // @ts-expect-error -- the switch's `value` is a string

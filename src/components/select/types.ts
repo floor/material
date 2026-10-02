@@ -1,7 +1,7 @@
 // src/components/select/types.ts
 import type { MenuColor, MenuVariant } from "../menu/types";
 import type { MenuOwner } from "../menu/inner";
-import type { TextFieldComponent } from "../textfield/types";
+import type { TextFieldComponent } from "../text-field/types";
 
 /**
  * Available Select variants
@@ -142,7 +142,7 @@ export interface SelectConfig {
   error?: boolean;
 
   /**
-   * Menu placement relative to the textfield
+   * Menu placement relative to the text field
    */
   placement?: string;
 
@@ -192,7 +192,7 @@ export interface SelectComponent {
   element: HTMLElement;
 
   /**
-   * The textfield component
+   * The text field component
    */
   textField: TextFieldComponent;
 

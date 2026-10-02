@@ -1,4 +1,4 @@
-// src/components/textfield/features/prefix-text.ts
+// src/components/text-field/features/prefix-text.ts
 
 import { BaseComponent, ElementComponent } from '../../../core/compose/component';
 import { fieldOf } from './field';
@@ -70,7 +70,7 @@ export interface PrefixTextFeature {
 export interface PrefixTextComponent extends BaseComponent, PrefixTextFeature {}
 
 /**
- * Adds prefix text to a textfield component
+ * Adds prefix text to a text field component
  * @param config - Configuration with prefix text settings
  * @returns Function that enhances a component with prefix text
  */
@@ -82,7 +82,7 @@ export const withPrefixText = <T extends PrefixTextConfig & object>(config: T) =
     // prefix together, which the hardcoded 44px did not. `api.ts` already
     // schedules a placement update after every one of these calls.
     const PREFIX = config.prefix || 'mtrl';
-    const NAME = config.componentName || 'textfield';
+    const NAME = config.componentName || 'text-field';
 
     // The slot is created when it is first needed, not only when the option was
     // set at creation. The setters used to exist only on a component configured

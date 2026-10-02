@@ -1,4 +1,4 @@
-// src/components/textfield/features/index.ts
+// src/components/text-field/features/index.ts
 
 // Export features
 export { withLeadingIcon } from "./leading-icon";

@@ -1,4 +1,4 @@
-// src/components/textfield/config.ts
+// src/components/text-field/config.ts
 import {
   createComponentConfig,
   createElementConfig,
@@ -24,7 +24,7 @@ export const defaultConfig: TextFieldConfig = {
 export const createBaseConfig = (
   config: TextFieldConfig = {}
 ): TextFieldConfig =>
-  createComponentConfig(defaultConfig, config, "textfield") as TextFieldConfig;
+  createComponentConfig(defaultConfig, config, "text-field") as TextFieldConfig;
 
 /**
  * Generates element configuration for the TextField component

@@ -1,4 +1,4 @@
-// src/components/textfield/constants.ts
+// src/components/text-field/constants.ts
 
 /**
  * TextField variant constants
@@ -56,9 +56,9 @@ const TEXT_FIELD_EVENTS = {
   CHANGE: "change",
   /** Fired during input */
   INPUT: "input",
-  /** Fired when textfield receives focus */
+  /** Fired when text field receives focus */
   FOCUS: "focus",
-  /** Fired when textfield loses focus */
+  /** Fired when text field loses focus */
   BLUR: "blur",
   /** Fired when the trailing icon button is activated (`trailingIconLabel`; FLO-301) */
   TRAILING: "trailing",
@@ -82,7 +82,7 @@ const TEXT_FIELD_DENSITY = {
 } as const;
 
 /**
- * Default textfield configuration values
+ * Default text field configuration values
  * @category Components
  */
 const TEXT_FIELD_DEFAULTS = {
@@ -105,56 +105,56 @@ const TEXT_FIELD_DEFAULTS = {
 } as const;
 
 /**
- * CSS class names used by the textfield component
+ * CSS class names used by the text field component
  * @category Components
  */
 const TEXT_FIELD_CLASSES = {
   /** Root element class */
-  ROOT: "textfield",
+  ROOT: "text-field",
   /** Input element class */
-  INPUT: "textfield__input",
+  INPUT: "text-field__input",
   /** Label element class */
-  LABEL: "textfield__label",
+  LABEL: "text-field__label",
   /** Reserved slot; the current component has no separate container element. */
-  CONTAINER: "textfield__container",
+  CONTAINER: "text-field__container",
   /** Filled variant class */
-  FILLED: "textfield--filled",
+  FILLED: "text-field--filled",
   /** Outlined variant class */
-  OUTLINED: "textfield--outlined",
+  OUTLINED: "text-field--outlined",
   /** Focused state class */
-  FOCUSED: "textfield--focused",
+  FOCUSED: "text-field--focused",
   /** Disabled state class */
-  DISABLED: "textfield--disabled",
+  DISABLED: "text-field--disabled",
   /** Error state class */
-  ERROR: "textfield--error",
+  ERROR: "text-field--error",
   /** Required indicator class */
-  REQUIRED: "textfield--required",
+  REQUIRED: "text-field--required",
   /** Supporting text class */
-  SUPPORTING_TEXT: "textfield__helper",
+  SUPPORTING_TEXT: "text-field__helper",
   /** Supporting text error class */
-  SUPPORTING_TEXT_ERROR: "textfield__helper--error",
+  SUPPORTING_TEXT_ERROR: "text-field__helper--error",
   /** Leading icon class */
-  LEADING_ICON: "textfield__leading-icon",
+  LEADING_ICON: "text-field__leading-icon",
   /** Trailing icon class */
-  TRAILING_ICON: "textfield__trailing-icon",
+  TRAILING_ICON: "text-field__trailing-icon",
   /** Prefix text class */
-  PREFIX_TEXT: "textfield__prefix",
+  PREFIX_TEXT: "text-field__prefix",
   /** Suffix text class */
-  SUFFIX_TEXT: "textfield__suffix",
+  SUFFIX_TEXT: "text-field__suffix",
   /** Outline of the outlined variant, drawn in three segments */
-  OUTLINE: "textfield__outline",
+  OUTLINE: "text-field__outline",
   /** Outline segment before the label (start corner) */
-  OUTLINE_LEADING: "textfield__outline-leading",
+  OUTLINE_LEADING: "text-field__outline-leading",
   /** Outline segment the floating label sits in */
-  OUTLINE_NOTCH: "textfield__outline-notch",
+  OUTLINE_NOTCH: "text-field__outline-notch",
   /** Outline segment after the label */
-  OUTLINE_TRAILING: "textfield__outline-trailing",
+  OUTLINE_TRAILING: "text-field__outline-trailing",
   /** Outline whose notch is open around the floating label */
-  OUTLINE_NOTCHED: "textfield__outline--notched",
+  OUTLINE_NOTCHED: "text-field__outline--notched",
   /** Outlined field laid out right to left, from its computed direction */
-  RTL: "textfield--rtl",
+  RTL: "text-field--rtl",
   /** Multiline class */
-  MULTILINE: "textfield--multiline",
+  MULTILINE: "text-field--multiline",
 } as const;
 
 // Every exported identifier writes "text field" as two words (FLO-383); the

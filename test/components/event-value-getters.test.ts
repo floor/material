@@ -2,7 +2,7 @@
 // FLO-380: factory model events report the live getter during dispatch.
 // Snapshot in each handler before another activation changes the model.
 import { expect, test } from "bun:test";
-import createTextField from "../../src/components/textfield";
+import createTextField from "../../src/components/text-field";
 import createSlider from "../../src/components/slider";
 import createSearch from "../../src/components/search";
 import createButtonGroup from "../../src/components/button-group";

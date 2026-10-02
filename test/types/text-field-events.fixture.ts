@@ -1,12 +1,12 @@
-// FLO-114: public textfield event names and the payloads its input feature emits.
+// FLO-114: public text field event names and the payloads its input feature emits.
 import createTextField, {
   type TextFieldComponent,
   type TextFieldEvents,
   type TextFieldValuePayload,
   type TextFieldFocusPayload,
   type TextFieldTrailingPayload,
-} from "../../src/components/textfield";
-import { TEXT_FIELD_EVENTS } from "../../src/components/textfield/constants";
+} from "../../src/components/text-field";
+import { TEXT_FIELD_EVENTS } from "../../src/components/text-field/constants";
 
 type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;

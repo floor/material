@@ -1,4 +1,4 @@
-// test/components/textfield/anatomy.test.ts
+// test/components/text-field/anatomy.test.ts
 //
 // FLO-300: the root holds the field (the container every slot is drawn in)
 // and, under it, the supporting text row with the helper and the counter.
@@ -23,7 +23,7 @@ g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date
 g.cancelAnimationFrame = () => {};
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
-import createTextField from "../../../src/components/textfield";
+import createTextField from "../../../src/components/text-field";
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>';
 const mount = (config: Record<string, unknown> = {}) => {
@@ -31,7 +31,7 @@ const mount = (config: Record<string, unknown> = {}) => {
   document.body.append(field.element);
   return field;
 };
-const names = (el: Element) => [...el.children].map((child) => child.className.split(" ")[0].replace("mtrl-textfield__", ""));
+const names = (el: Element) => [...el.children].map((child) => child.className.split(" ")[0].replace("mtrl-text-field__", ""));
 const type = (input: HTMLInputElement, text: string) => {
   input.value = text;
   input.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
@@ -44,14 +44,14 @@ describe("text field anatomy (FLO-300)", () => {
   test("the root holds the field, then the supporting text row", () => {
     const field = mount({ variant: "outlined", leadingIcon: ICON, trailingIcon: ICON, prefixText: "$", supportingText: "Help" });
     expect(names(field.element)).toEqual(["field", "supporting"]);
-    expect(field.field.className).toBe("mtrl-textfield__field");
+    expect(field.field.className).toBe("mtrl-text-field__field");
     expect(names(field.field)).toEqual(["label", "input", "outline", "leading-icon", "trailing-icon", "prefix"]);
-    expect(names(field.element.querySelector(".mtrl-textfield__supporting")!)).toEqual(["helper"]);
+    expect(names(field.element.querySelector(".mtrl-text-field__supporting")!)).toEqual(["helper"]);
   });
 
   test("the public element and input are unchanged: the root and the input", () => {
     const field = mount();
-    expect(field.element.classList.contains("mtrl-textfield")).toBe(true);
+    expect(field.element.classList.contains("mtrl-text-field")).toBe(true);
     expect(field.input.parentElement).toBe(field.field);
     expect(field.field.parentElement).toBe(field.element);
   });
@@ -61,7 +61,7 @@ describe("text field anatomy (FLO-300)", () => {
     expect(names(field.element)).toEqual(["field"]);
     field.setSupportingText("Help");
     expect(names(field.element)).toEqual(["field", "supporting"]);
-    expect(field.supportingTextElement?.parentElement?.className).toBe("mtrl-textfield__supporting");
+    expect(field.supportingTextElement?.parentElement?.className).toBe("mtrl-text-field__supporting");
     field.removeSupportingText();
     expect(names(field.element)).toEqual(["field"]);
   });
@@ -69,13 +69,13 @@ describe("text field anatomy (FLO-300)", () => {
   test("slots set later go into the field", () => {
     const field = mount();
     field.setLeadingIcon(ICON).setSuffixText("kg");
-    expect(field.field.querySelector(".mtrl-textfield__leading-icon")).not.toBeNull();
-    expect(field.element.querySelector(":scope > .mtrl-textfield__leading-icon, :scope > .mtrl-textfield__suffix")).toBeNull();
+    expect(field.field.querySelector(".mtrl-text-field__leading-icon")).not.toBeNull();
+    expect(field.element.querySelector(":scope > .mtrl-text-field__leading-icon, :scope > .mtrl-text-field__suffix")).toBeNull();
   });
 });
 
 describe("text field character counter (FLO-300)", () => {
-  const counter = (field: { element: HTMLElement }) => field.element.querySelector<HTMLElement>(".mtrl-textfield__counter");
+  const counter = (field: { element: HTMLElement }) => field.element.querySelector<HTMLElement>(".mtrl-text-field__counter");
 
   test("no maxlength, no counter", () => {
     expect(counter(mount())).toBeNull();
@@ -83,11 +83,11 @@ describe("text field character counter (FLO-300)", () => {
 
   test("shows count/max at the end of the row, after the helper", () => {
     const field = mount({ maxLength: 20, value: "Ada", supportingText: "Help" });
-    expect(names(field.element.querySelector(".mtrl-textfield__supporting")!)).toEqual(["helper", "counter"]);
+    expect(names(field.element.querySelector(".mtrl-text-field__supporting")!)).toEqual(["helper", "counter"]);
     expect(counter(field)?.textContent).toBe("3/20");
     // A helper set after the counter still comes first.
     field.setSupportingText("Other");
-    expect(names(field.element.querySelector(".mtrl-textfield__supporting")!)).toEqual(["helper", "counter"]);
+    expect(names(field.element.querySelector(".mtrl-text-field__supporting")!)).toEqual(["helper", "counter"]);
   });
 
   test("follows typing and setValue", () => {
@@ -121,7 +121,7 @@ describe("text field character counter (FLO-300)", () => {
   test("error is the field's: the counter only follows the root class", () => {
     const field = mount({ maxLength: 10 });
     field.setError(true);
-    expect(counter(field)!.className).toBe("mtrl-textfield__counter");
-    expect(field.element.classList.contains("mtrl-textfield--error")).toBe(true);
+    expect(counter(field)!.className).toBe("mtrl-text-field__counter");
+    expect(field.element.classList.contains("mtrl-text-field--error")).toBe(true);
   });
 });

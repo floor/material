@@ -10,7 +10,7 @@ import createFab from "../../src/components/fab";
 import createExtendedFab from "../../src/components/extended-fab";
 import createCheckbox from "../../src/components/checkbox";
 import createSwitch from "../../src/components/switch";
-import createTextField from "../../src/components/textfield";
+import createTextField from "../../src/components/text-field";
 import createSelect from "../../src/components/select";
 import createRadios from "../../src/components/radios";
 import createButtonGroup from "../../src/components/button-group";

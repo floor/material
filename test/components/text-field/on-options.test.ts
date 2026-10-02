@@ -1,9 +1,9 @@
-// test/components/textfield/on-options.test.ts
+// test/components/text-field/on-options.test.ts
 //
 // onTrailingClick is the text field's trailing listener. The field has no
 // method that activates the icon; the button does.
 import { expect, test } from "bun:test";
-import createTextField from "../../../src/components/textfield";
+import createTextField from "../../../src/components/text-field";
 import { callbacksFixture } from "../callbacks.fixture";
 import { expectSameListener, optionPair } from "../on-option-pair";
 

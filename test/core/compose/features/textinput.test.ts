@@ -16,7 +16,7 @@ describe('withTextInput', () => {
     
     component = {
       element: document.createElement('div'),
-      componentName: 'textfield',
+      componentName: 'text-field',
       emit: function() { emitCalls.push(Array.from(arguments)); },
       getClass: (name) => `${PREFIX}-${name}`,
       lifecycle: {
@@ -42,7 +42,7 @@ describe('withTextInput', () => {
     
     expect(enhanced1.input.tagName).toBe('TEXTAREA');
     expect(enhanced1.input.getAttribute('data-type')).toBe('multiline');
-    expect(component.element.classList.contains(`${PREFIX}-textfield--multiline`)).toBe(true);
+    expect(component.element.classList.contains(`${PREFIX}-text-field--multiline`)).toBe(true);
     
     // Reset component
     document.body.innerHTML = '';
@@ -95,7 +95,7 @@ describe('withTextInput', () => {
     expect(emitCalls.length).toBe(1);
     expect(emitCalls[0][0]).toBe('focus');
     expect(emitCalls[0][1].isEmpty).toBe(true);
-    expect(component.element.classList.contains(`${PREFIX}-textfield--focused`)).toBe(true);
+    expect(component.element.classList.contains(`${PREFIX}-text-field--focused`)).toBe(true);
     
     // Trigger input event
     enhanced.input.value = 'test';
@@ -105,14 +105,14 @@ describe('withTextInput', () => {
     expect(emitCalls[1][1].value).toBe('test');
     expect(emitCalls[1][1].isEmpty).toBe(false);
     expect(emitCalls[1][1].isAutofilled).toBe(false);
-    expect(component.element.classList.contains(`${PREFIX}-textfield--empty`)).toBe(false);
+    expect(component.element.classList.contains(`${PREFIX}-text-field--empty`)).toBe(false);
     
     // Trigger blur event
     enhanced.input.dispatchEvent(new Event('blur'));
     expect(emitCalls.length).toBe(3);
     expect(emitCalls[2][0]).toBe('blur');
     expect(emitCalls[2][1].isEmpty).toBe(false);
-    expect(component.element.classList.contains(`${PREFIX}-textfield--focused`)).toBe(false);
+    expect(component.element.classList.contains(`${PREFIX}-text-field--focused`)).toBe(false);
   });
   
   test('setValue should update input value and state', () => {
@@ -121,12 +121,12 @@ describe('withTextInput', () => {
     enhanced.setValue('New value');
     
     expect(enhanced.input.value).toBe('New value');
-    expect(component.element.classList.contains(`${PREFIX}-textfield--empty`)).toBe(false);
+    expect(component.element.classList.contains(`${PREFIX}-text-field--empty`)).toBe(false);
     
     enhanced.setValue('');
     
     expect(enhanced.input.value).toBe('');
-    expect(component.element.classList.contains(`${PREFIX}-textfield--empty`)).toBe(true);
+    expect(component.element.classList.contains(`${PREFIX}-text-field--empty`)).toBe(true);
   });
   
   test('getValue should return input value', () => {
@@ -168,7 +168,7 @@ describe('withTextInput', () => {
   test('should update empty state on initialization', () => {
     // With empty value
     const enhanced1 = withTextInput({})(component);
-    expect(component.element.classList.contains(`${PREFIX}-textfield--empty`)).toBe(true);
+    expect(component.element.classList.contains(`${PREFIX}-text-field--empty`)).toBe(true);
     
     // Reset component
     document.body.innerHTML = '';
@@ -176,7 +176,7 @@ describe('withTextInput', () => {
     
     // With non-empty value
     const enhanced2 = withTextInput({ value: 'Initial' })(component);
-    expect(component.element.classList.contains(`${PREFIX}-textfield--empty`)).toBe(false);
+    expect(component.element.classList.contains(`${PREFIX}-text-field--empty`)).toBe(false);
   });
   
   test('should support method chaining', () => {

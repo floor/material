@@ -27,7 +27,7 @@ const cases: Record<string, () => unknown> = {
     // out-claim the type.
     return loading.showProgress?.();
   },
-  textfield() {
+  "text-field"() {
     add(createTextField({ label: "Name", value: "Ada", variant: "outlined" }));
     add(createTextField({ label: "Email", value: "invalid", variant: "filled", error: true, supportingText: "Enter an email address" }));
     add(createTextField({ label: "Disabled", disabled: true, value: "Read only" }));

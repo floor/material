@@ -1,4 +1,4 @@
-// test/components/textfield/behaviour.test.ts
+// test/components/text-field/behaviour.test.ts
 //
 // FLO-303: the supporting text and error state stayed in step only when the
 // error feature and the API happened to hold the same copy of the component,
@@ -24,15 +24,15 @@ g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date
 g.cancelAnimationFrame = () => {};
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
-import createTextField from "../../../src/components/textfield";
+import createTextField from "../../../src/components/text-field";
 
 const mount = (config: Record<string, unknown> = {}) => {
   const field = createTextField({ label: "Name", ...config } as never);
   document.body.append(field.element);
   return field;
 };
-const helper = (field: { element: HTMLElement }) => field.element.querySelector<HTMLElement>(".mtrl-textfield__helper");
-const hasError = (field: { element: HTMLElement }) => field.element.classList.contains("mtrl-textfield--error");
+const helper = (field: { element: HTMLElement }) => field.element.querySelector<HTMLElement>(".mtrl-text-field__helper");
+const hasError = (field: { element: HTMLElement }) => field.element.classList.contains("mtrl-text-field--error");
 
 beforeEach(() => { document.body.innerHTML = ""; });
 afterAll(() => dom.window.close());
@@ -45,7 +45,7 @@ describe("text field supporting text and error state (FLO-303)", () => {
     expect(helper(field)?.textContent).toBe("Bad");
     field.setError(false);
     expect(helper(field)?.textContent).toBe("Helper");
-    expect(helper(field)?.classList.contains("mtrl-textfield__helper--error")).toBe(false);
+    expect(helper(field)?.classList.contains("mtrl-text-field__helper--error")).toBe(false);
   });
 
   test("supportingTextElement is the element on screen, not a snapshot", () => {
@@ -73,14 +73,14 @@ describe("text field supporting text and error state (FLO-303)", () => {
   test("error text passed to setSupportingText colours the helper, not the field", () => {
     const field = mount();
     field.setSupportingText("Check this", true);
-    expect(helper(field)?.classList.contains("mtrl-textfield__helper--error")).toBe(true);
+    expect(helper(field)?.classList.contains("mtrl-text-field__helper--error")).toBe(true);
     expect(hasError(field)).toBe(false);
   });
 
   test("a configured error shows on the field and its helper", () => {
     const field = mount({ error: true, supportingText: "Required" });
     expect(hasError(field)).toBe(true);
-    expect(helper(field)?.classList.contains("mtrl-textfield__helper--error")).toBe(true);
+    expect(helper(field)?.classList.contains("mtrl-text-field__helper--error")).toBe(true);
   });
 });
 

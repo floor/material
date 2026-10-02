@@ -1,6 +1,6 @@
 // src/components/select/features.ts
 import { processClassNames, type BaseComponentConfig } from "../../core/config/component";
-import createTextField from "../textfield";
+import createTextField from "../text-field";
 import createMenu from "../menu";
 import { MenuComponent, MenuItem, MenuContent, MenuDivider, MenuPosition } from "../menu/types";
 import { MENU } from "../menu/inner";
@@ -9,9 +9,9 @@ import { warnUnknownValue } from "../../core/utils/warn";
 import { activeElementOf } from "../../core/dom/focus";
 
 /**
- * Creates a textfield for the select component
+ * Creates a text field for the select component
  * @param config - Select configuration
- * @returns Function that enhances a component with textfield functionality
+ * @returns Function that enhances a component with text field functionality
  */
 export const withTextField =
   (config: SelectConfig) =>
@@ -29,11 +29,11 @@ export const withTextField =
       }
     }
 
-    // Create dropdown icon for the textfield
+    // Create dropdown icon for the text field
     const dropdownIcon =
       '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7 10l5 5 5-5H7z"/></svg>';
 
-    // Create textfield component
+    // Create text field component
     const textField = createTextField({
       class: processClassNames((config as BaseComponentConfig).className || ""),
       label: config.label,
@@ -387,7 +387,7 @@ const setupCombobox = (
  */
 export const withMenu =
   (config: SelectConfig, getComponent: () => SelectComponent) =>
-  // Without a textfield the component comes back without menu and select
+  // Without a text field the component comes back without menu and select
   <C extends BaseComponent>(component: C): C & Pick<BaseComponent, typeof MENU | "select"> => {
     if (!component.textField) {
       console.warn("Cannot add menu: text field not found");
@@ -443,7 +443,7 @@ export const withMenu =
     const choose = (option: SelectOption, originalEvent?: Event) => {
       state.selectedOption = option;
 
-      // Update textfield
+      // Update text field
       textField.setValue(option.text);
 
       // Update the selected state in the menu
@@ -484,7 +484,7 @@ export const withMenu =
       setupCombobox(component, textField, menu, state, choose, config.prefix || "mtrl");
     }
 
-    // Add keyboard event listener for textfield (menu-button selects only)
+    // Add keyboard event listener for text field (menu-button selects only)
     if (!listbox) textField.element.addEventListener("keydown", (e) => {
       if (textField.input.disabled) return;
 
@@ -504,7 +504,7 @@ export const withMenu =
       }
     });
 
-    // Update textfield styling when menu opens/closes
+    // Update text field styling when menu opens/closes
     menu.on("open", () => {
       // open was emitted only on the keyboard path, so opening by click or by
       // open() reported nothing, while close fired for every path. Emit it here,
@@ -521,18 +521,18 @@ export const withMenu =
         `${config.prefix || "mtrl"}-select--open`,
       );
 
-      // Add focused class to the textfield
+      // Add focused class to the text field
       const PREFIX = config.prefix || "mtrl";
-      textField.element.classList.add(`${PREFIX}-textfield--focused`);
+      textField.element.classList.add(`${PREFIX}-text-field--focused`);
 
       // If using the filled variant, we need to add focus styles
       if (
         textField.element.classList.contains(
-          `${PREFIX}-textfield--filled`,
+          `${PREFIX}-text-field--filled`,
         )
       ) {
         textField.element.classList.add(
-          `${PREFIX}-textfield--filled-focused`,
+          `${PREFIX}-text-field--filled-focused`,
         );
       }
     });
@@ -554,28 +554,28 @@ export const withMenu =
         // Update styling based on actual focus state
         if (isFocused) {
           textField.element.classList.add(
-            `${PREFIX}-textfield--focused`,
+            `${PREFIX}-text-field--focused`,
           );
           if (
             textField.element.classList.contains(
-              `${PREFIX}-textfield--filled`,
+              `${PREFIX}-text-field--filled`,
             )
           ) {
             textField.element.classList.add(
-              `${PREFIX}-textfield--filled-focused`,
+              `${PREFIX}-text-field--filled-focused`,
             );
           }
         } else {
           textField.element.classList.remove(
-            `${PREFIX}-textfield--focused`,
+            `${PREFIX}-text-field--focused`,
           );
           if (
             textField.element.classList.contains(
-              `${PREFIX}-textfield--filled`,
+              `${PREFIX}-text-field--filled`,
             )
           ) {
             textField.element.classList.remove(
-              `${PREFIX}-textfield--filled-focused`,
+              `${PREFIX}-text-field--filled-focused`,
             );
           }
         }

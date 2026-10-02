@@ -1,4 +1,4 @@
-// test/components/textfield/accessibility.test.ts
+// test/components/text-field/accessibility.test.ts
 //
 // FLO-301: a required field's asterisk, the error read when it appears, the
 // leading icon hidden as decoration, and an interactive trailing icon as a
@@ -38,7 +38,7 @@ const flush = () => {
   for (const callback of due) callback(0);
 };
 
-import createTextField from "../../../src/components/textfield";
+import createTextField from "../../../src/components/text-field";
 
 const mount = (config: Record<string, unknown> = {}) => {
   const field = createTextField({ label: "Name", ...config } as never);
@@ -46,8 +46,8 @@ const mount = (config: Record<string, unknown> = {}) => {
   return field;
 };
 const label = (field: { element: HTMLElement }) => field.element.querySelector("label")!;
-const asterisk = (field: { element: HTMLElement }) => field.element.querySelector<HTMLElement>(".mtrl-textfield__required");
-const helper = (field: { element: HTMLElement }) => field.element.querySelector<HTMLElement>(".mtrl-textfield__helper");
+const asterisk = (field: { element: HTMLElement }) => field.element.querySelector<HTMLElement>(".mtrl-text-field__required");
+const helper = (field: { element: HTMLElement }) => field.element.querySelector<HTMLElement>(".mtrl-text-field__helper");
 const ICON = '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>';
 
 beforeEach(() => {
@@ -177,8 +177,8 @@ describe("an interactive trailing icon is a button (FLO-301)", () => {
     expect(button.tagName).toBe("BUTTON");
     expect(button.type).toBe("button");
     expect(button.getAttribute("aria-label")).toBe("Clear");
-    expect(button.classList.contains("mtrl-textfield__trailing-icon")).toBe(true);
-    expect(button.classList.contains("mtrl-textfield__trailing-icon--button")).toBe(true);
+    expect(button.classList.contains("mtrl-text-field__trailing-icon")).toBe(true);
+    expect(button.classList.contains("mtrl-text-field__trailing-icon--button")).toBe(true);
     expect(button.innerHTML).toContain("<svg");
   });
 
@@ -213,7 +213,7 @@ describe("an interactive trailing icon is a button (FLO-301)", () => {
     field.setTrailingIcon(ICON, "Show password");
     expect([field.trailingIcon?.tagName, field.trailingIcon?.getAttribute("aria-label")]).toEqual(["BUTTON", "Show password"]);
     expect(field.trailingIcon?.parentElement).toBe(parent);
-    expect(field.element.querySelectorAll(".mtrl-textfield__trailing-icon").length).toBe(1);
+    expect(field.element.querySelectorAll(".mtrl-text-field__trailing-icon").length).toBe(1);
     field.setTrailingIcon(ICON);
     expect(field.trailingIcon?.tagName).toBe("BUTTON");
     field.setTrailingIcon(ICON, "");

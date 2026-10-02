@@ -1,4 +1,4 @@
-// src/components/textfield/types.ts
+// src/components/text-field/types.ts
 import type { EventCallback } from "../../core/state/emitter";
 import type { TextFieldTrailingPayload } from "./features/trailing-icon";
 
@@ -96,10 +96,10 @@ export interface TextFieldConfig {
    */
   noAsterisk?: boolean;
 
-  /** Whether textfield is disabled */
+  /** Whether text field is disabled */
   disabled?: boolean;
 
-  /** Whether textfield is readonly */
+  /** Whether text field is readonly */
   readonly?: boolean;
 
   /** Maximum input length */
@@ -176,7 +176,7 @@ export interface TextFieldEvents {
  * TextField component interface
  */
 export interface TextFieldComponent {
-  /** The root element of the textfield */
+  /** The root element of the text field */
   element: HTMLElement;
 
   /**
@@ -188,10 +188,10 @@ export interface TextFieldComponent {
   /** The input element */
   input: HTMLInputElement | HTMLTextAreaElement;
 
-  /** Gets the textfield's value */
+  /** Gets the text field's value */
   getValue: () => string;
 
-  /** Sets the textfield's value */
+  /** Sets the text field's value */
   setValue: (value: string) => TextFieldComponent;
 
   /** Sets an attribute on the input element */
@@ -203,16 +203,16 @@ export interface TextFieldComponent {
   /** Removes an attribute from the input element */
   removeAttribute: (name: string) => TextFieldComponent;
 
-  /** Sets the textfield's variant (filled or outlined) */
+  /** Sets the text field's variant (filled or outlined) */
   setVariant: (variant: TextFieldVariant) => TextFieldComponent;
 
-  /** Gets the textfield's current variant */
+  /** Gets the text field's current variant */
   getVariant: () => TextFieldVariant;
 
-  /** Sets the textfield's label text */
+  /** Sets the text field's label text */
   setLabel: (text: string) => TextFieldComponent;
 
-  /** Gets the textfield's label text */
+  /** Gets the text field's label text */
   getLabel: () => string;
 
   /** Leading icon element (if present) */
@@ -273,13 +273,13 @@ export interface TextFieldComponent {
   /** Manually update element positions (useful after DOM changes) */
   updatePositions: () => TextFieldComponent;
 
-  /** Sets the error state of the textfield */
+  /** Sets the error state of the text field */
   setError: (error: boolean, message?: string) => TextFieldComponent;
 
   /** Gets the current error state */
   isError: () => boolean;
 
-  /** Sets the density of the textfield */
+  /** Sets the density of the text field */
   setDensity: (density: TextFieldDensity | string) => TextFieldComponent;
 
   /** Gets the current density setting */
@@ -291,16 +291,16 @@ export interface TextFieldComponent {
   /** Removes event listener */
   off: <K extends keyof TextFieldEvents>(event: K, handler: TextFieldEvents[K]) => TextFieldComponent;
 
-  /** Enables the textfield */
+  /** Enables the text field */
   enable: () => TextFieldComponent;
 
-  /** Disables the textfield */
+  /** Disables the text field */
   disable: () => TextFieldComponent;
 
   /** Whether the text field is disabled (FLO-384) */
   isDisabled: () => boolean;
 
-  /** Destroys the textfield component and cleans up resources */
+  /** Destroys the text field component and cleans up resources */
   destroy: () => void;
 }
 
@@ -373,11 +373,11 @@ export interface BaseComponent {
 
 /**
  * Registers TextFieldConfig with the global defaults map, so
- * `setComponentDefaults("textfield", ...)` is typed without core
+ * `setComponentDefaults("text-field", ...)` is typed without core
  * importing anything from this component. FLO-115.
  */
 declare module "../../core/config/global" {
   interface ComponentConfigMap {
-    textfield?: Partial<TextFieldConfig>;
+    "text-field"?: Partial<TextFieldConfig>;
   }
 }

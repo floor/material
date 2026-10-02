@@ -1,4 +1,4 @@
-// src/styles/components/_textfield.scss
+// src/styles/components/_text-field.scss
 @use "../../styles/abstract/base" as base;
 @use "../../styles/abstract/variables" as v;
 @use "../../styles/abstract/functions" as f;
@@ -6,7 +6,7 @@
 @use "../../styles/abstract/theme" as t;
 
 // Define the component once
-$component: "#{base.$prefix}-textfield";
+$component: "#{base.$prefix}-text-field";
 
 // Autofill detection animations
 @keyframes onAutoFillStart {
@@ -557,8 +557,8 @@ $component: "#{base.$prefix}-textfield";
         }
 
         // Position adjustments for prefix/suffix when in filled focused/populated state
-        &.mtrl-textfield--with-prefix,
-        &.mtrl-textfield--with-suffix {
+        &.mtrl-text-field--with-prefix,
+        &.mtrl-text-field--with-suffix {
             &:not(.#{$component}--empty),
             &.#{$component}--focused {
                 .#{$component}__prefix,
@@ -1018,8 +1018,8 @@ $component: "#{base.$prefix}-textfield";
             }
 
             // Adjust prefix/suffix position when focused/populated
-            &.mtrl-textfield--with-prefix,
-            &.mtrl-textfield--with-suffix {
+            &.mtrl-text-field--with-prefix,
+            &.mtrl-text-field--with-suffix {
                 &:not(.#{$component}--empty),
                 &.#{$component}--focused {
                     .#{$component}__prefix,

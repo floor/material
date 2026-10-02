@@ -1,4 +1,4 @@
-// src/components/textfield/features/leading-icon.ts
+// src/components/text-field/features/leading-icon.ts
 
 import { BaseComponent, ElementComponent } from '../../../core/compose/component';
 
@@ -72,7 +72,7 @@ export interface LeadingIconFeature {
 export interface LeadingIconComponent extends BaseComponent, LeadingIconFeature {}
 
 /**
- * Adds leading icon to a textfield component
+ * Adds leading icon to a text field component
  * @param config - Configuration with leading icon settings
  * @returns Function that enhances a component with leading icon
  */
@@ -84,7 +84,7 @@ export const withLeadingIcon = <T extends LeadingIconConfig & object>(config: T)
     // prefix together, which the hardcoded 44px did not. `api.ts` already
     // schedules a placement update after every one of these calls.
     const PREFIX = config.prefix || 'mtrl';
-    const NAME = config.componentName || 'textfield';
+    const NAME = config.componentName || 'text-field';
 
     // The slot is created when it is first needed, not only when the option was
     // set at creation. The setters used to exist only on a component that had

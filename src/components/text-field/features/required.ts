@@ -1,4 +1,4 @@
-// src/components/textfield/features/required.ts
+// src/components/text-field/features/required.ts
 
 import type { BaseComponent, ElementComponent } from "../../../core/compose/component";
 import type { LabelManager } from "../../../core/compose/features/textlabel";
@@ -40,7 +40,7 @@ export const withRequired =
   <T extends RequiredConfig & object>(config: T) =>
   <C extends LabelledInputComponent>(component: C): C & RequiredFeature & BaseComponent => {
     const PREFIX = config.prefix || "mtrl";
-    const NAME = config.componentName || "textfield";
+    const NAME = config.componentName || "text-field";
     const label = component.label;
     let required = Boolean(config.required);
 

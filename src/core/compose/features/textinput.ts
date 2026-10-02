@@ -142,7 +142,7 @@ export const withTextInput =
       | HTMLInputElement
       | HTMLTextAreaElement;
 
-    input.className = `${component.getClass("textfield")}__input`;
+    input.className = `${component.getClass("text-field")}__input`;
 
     // Set input attributes
     const attributes: Record<string, string | number | boolean | undefined> = {
@@ -182,7 +182,7 @@ export const withTextInput =
     const updateInputState = (): boolean => {
       const isEmpty = !input.value;
       component.element.classList.toggle(
-        `${component.getClass("textfield")}--empty`,
+        `${component.getClass("text-field")}--empty`,
         isEmpty
       );
       return isEmpty;
@@ -207,7 +207,7 @@ export const withTextInput =
       const autofilled = isAutofilled();
       if (input.value || autofilled) {
         component.element.classList.remove(
-          `${component.getClass("textfield")}--empty`
+          `${component.getClass("text-field")}--empty`
         );
         // An input event only for an autofill, not for a value already there
         if (shouldEmit && autofilled && hasEmit(component)) {
@@ -247,7 +247,7 @@ export const withTextInput =
     // Event listeners
     input.addEventListener("focus", () => {
       component.element.classList.add(
-        `${component.getClass("textfield")}--focused`
+        `${component.getClass("text-field")}--focused`
       );
       if (hasEmit(component)) {
         component.emit("focus", { isEmpty: updateInputState() });
@@ -258,7 +258,7 @@ export const withTextInput =
 
     input.addEventListener("blur", () => {
       component.element.classList.remove(
-        `${component.getClass("textfield")}--focused`
+        `${component.getClass("text-field")}--focused`
       );
       if (hasEmit(component)) {
         component.emit("blur", { isEmpty: updateInputState() });
@@ -319,7 +319,7 @@ export const withTextInput =
     // Add multiline class to the component if it's a textarea
     if (isMultiline) {
       component.element.classList.add(
-        `${component.getClass("textfield")}--multiline`
+        `${component.getClass("text-field")}--multiline`
       );
     }
 

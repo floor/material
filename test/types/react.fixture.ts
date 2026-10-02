@@ -38,11 +38,11 @@ assert<Equals<ButtonProps["variant"], string | undefined>>();
 assert<Equals<ButtonProps["className"], string | undefined>>();
 assert<Equals<ButtonProps["onClick"], React.MouseEventHandler<HTMLElement> | undefined>>();
 
-type TextfieldProps = ReactProps<typeof TextField>;
+type TextFieldProps = ReactProps<typeof TextField>;
 // `value` is the live text; the attribute it shadows is `defaultValue`.
-assert<Equals<TextfieldProps["value"], string | undefined>>();
-assert<Equals<TextfieldProps["defaultValue"], string | undefined>>();
-assert<Equals<TextfieldProps["onInput"], ((event: CustomEvent<{ value: string }>) => void) | undefined>>();
+assert<Equals<TextFieldProps["value"], string | undefined>>();
+assert<Equals<TextFieldProps["defaultValue"], string | undefined>>();
+assert<Equals<TextFieldProps["onInput"], ((event: CustomEvent<{ value: string }>) => void) | undefined>>();
 
 // @ts-expect-error -- a switch's checked is a boolean
 export const wrong: SwitchProps = { checked: "yes" };

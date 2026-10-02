@@ -1,6 +1,6 @@
-// src/elements/textfield.ts
+// src/elements/text-field.ts
 /**
- * `<m-textfield>`: the text field as a form-associated custom element.
+ * `<m-text-field>`: the text field as a form-associated custom element.
  *
  * The `value` attribute is the default value and the `value` property the
  * live one, as on a native input: the attribute moves the value until the
@@ -12,15 +12,15 @@
  * label element to update, and `type="multiline"` swaps the input for a
  * textarea.
  *
- * Parts: `textfield`, `field`, `label`, `input`, `leading-icon`, `trailing-icon`, `prefix`,
+ * Parts: `text-field`, `field`, `label`, `input`, `leading-icon`, `trailing-icon`, `prefix`,
  * `suffix`, `supporting`, `helper`, `counter`, `outline`, `outline-leading`, `outline-notch`,
  * `outline-trailing`.
  *
  * @module elements
  */
 
-import createTextField from "../components/textfield";
-import type { TextFieldComponent, TextFieldConfig } from "../components/textfield/types";
+import createTextField from "../components/text-field";
+import type { TextFieldComponent, TextFieldConfig } from "../components/text-field/types";
 import { defineElement, type AttributeValue, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
 /** The text field, with the methods the element adds to it. */
@@ -52,9 +52,9 @@ const inputAttribute =
   };
 
 const textFieldSpec = {
-  name: "textfield",
+  name: "text-field",
   create: (config) => create(config as TextFieldConfig),
-  styles: ["textfield"],
+  styles: ["text-field"],
   // The field fills a host given a width, as a native input does.
   hostStyles: ":host>*{width:100%}",
   attributes: {
@@ -146,15 +146,15 @@ const textFieldSpec = {
 
 export const textFieldElement = defineElement<TextFieldElementComponent>(textFieldSpec);
 export type TextFieldSpec = typeof textFieldSpec;
-/** `<m-textfield>` as a ref or a query returns it. */
+/** `<m-text-field>` as a ref or a query returns it. */
 export type TextFieldElement = ElementInstance<TextFieldSpec, TextFieldElementComponent>;
 
-/** Registers `<m-textfield>` (or `<prefix-textfield>`). */
+/** Registers `<m-text-field>` (or `<prefix-text-field>`). */
 export const defineTextField = (options?: DefineOptions): string => textFieldElement.define(options);
 
 declare global {
   /** `document.querySelector("m-…")` and `createElement` return the element's type (the default prefix). */
   interface HTMLElementTagNameMap {
-    "m-textfield": TextFieldElement;
+    "m-text-field": TextFieldElement;
   }
 }

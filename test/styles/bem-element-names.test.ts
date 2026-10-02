@@ -38,7 +38,7 @@ const MIGRATED: Record<string, string[]> = {
 
   // Wave 4.
   radios: ["item", "input", "label", "control", "circle", "ripple", "text"],
-  textfield: [
+  "text-field": [
     "input",
     "prefix",
     "suffix",

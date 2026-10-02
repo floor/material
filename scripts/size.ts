@@ -25,7 +25,7 @@
  * next multiple of 50, and never above the ceiling `next` had before this
  * PR. The SSR entry's raw ceiling, the npm tarball and the unpacked size
  * are measured plus 1%, rounded up to the next multiple of 1,000. Checkbox,
- * list, navigation-rail, select and switch, and the packed textfield gzip,
+ * list, navigation-rail, select and switch, and the packed text field gzip,
  * were raised to the rule once, not grown. The unpacked size stayed at
  * 6,393,000 until the 1.0 contract work filled it; it is 6,458,000 by the
  * same rule (scripts/check-package-size.ts), until FLO-546 tightens it.
@@ -80,7 +80,7 @@ export const COMPONENTS = [
   { name: "snackbar", imports: ["createSnackbar"] },
   { name: "switch", imports: ["createSwitch"] },
   { name: "tabs", imports: ["createTabs", "createTab"] },
-  { name: "textfield", imports: ["createTextField"] },
+  { name: "text-field", imports: ["createTextField"] },
   { name: "timepicker", imports: ["createTimePicker"] },
   { name: "top-app-bar", imports: ["createTopAppBar"] },
   { name: "tooltip", imports: ["createTooltip"] },
@@ -97,7 +97,7 @@ export const KNOWN_DEPS: Partial<Record<ComponentName, readonly ComponentName[]>
   "button-group": ["button", "icon-button"],
   dialog: ["button", "divider"],
   snackbar: ["button", "icon-button"],
-  select: ["textfield", "menu"],
+  select: ["text-field", "menu"],
   tabs: ["button", "badge"],
   "split-button": ["button", "menu"],
   toolbar: ["button", "icon-button"],
@@ -177,7 +177,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // the field, the supporting text row and the counter (FLO-300): 8,290. The required
   // asterisk, the live error and the trailing icon button (FLO-301): 8,314 to 8,926 against 7cd57a6.
   // main's placement on demand (FLO-378) met next's placement timer reset (FLO-363): next 8,948 to 9,021 on the forward merge.
-  textfield: kb(8.9),
+  "text-field": kb(8.9),
   timepicker: kb(10.95), // the draft, input event, dialog in the component's tree and disabled (FLO-288): 10,639; Escape as a key press on the shared stack (FLO-548 family 6 C): core/dom/layer's stack and marker, paid once, and the open option applied when the factory returns: 10,628 to 11,099. kb(10.9) is 11,161 (62 above, short of 100); raised to kb(10.95) = 11,212 (113 above), Node 22.23.3 / npm 10.9.9
   "top-app-bar": kb(4.4),
   toolbar: kb(11.05), // FLO-304, with its icon buttons and buttons; the overflow menu is injected: 11,302; slotted items for <m-toolbar>: 11,374; the toggles' change value (FLO-380): 11,454 to 11,479; 11,166 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9

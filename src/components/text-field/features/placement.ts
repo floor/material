@@ -1,4 +1,4 @@
-// src/components/textfield/features/placement.ts
+// src/components/text-field/features/placement.ts
 import {
   BaseComponent,
   ElementComponent,
@@ -53,7 +53,7 @@ interface InputElementComponent extends ElementComponent {
  */
 export interface PlacementComponent extends BaseComponent {
   /**
-   * Updates positions of all elements in the textfield
+   * Updates positions of all elements in the text field
    * @returns The component instance for chaining
    */
   updateElementPositions: () => PlacementComponent;
@@ -62,7 +62,7 @@ export interface PlacementComponent extends BaseComponent {
 }
 
 /**
- * Handles dynamic positioning of textfield elements (label, prefix, suffix)
+ * Handles dynamic positioning of text field elements (label, prefix, suffix)
  * This feature should be added last in the pipe to ensure all elements exist
  *
  * @returns Function that enhances a component with dynamic positioning
@@ -71,7 +71,7 @@ export const withPlacement =
   () =>
   <C extends InputElementComponent>(component: C): C & PlacementComponent => {
     const PREFIX = component.config.prefix || "mtrl";
-    const COMPONENT = component.config.componentName || "textfield";
+    const COMPONENT = component.config.componentName || "text-field";
 
     let destroyed = false;
     // The observers and the resize listener are installed on the first request

@@ -1,11 +1,11 @@
-// src/styles/elements/_textfield.scss
-// <m-textfield> before upgrade: the field's container, the label at rest and
+// src/styles/elements/_text-field.scss
+// <m-text-field> before upgrade: the field's container, the label at rest and
 // the value on the input's line.
 @use 'config' as c;
 @use 'field';
 @use '../abstract/variables' as v;
 
-@include c.host('textfield') {
+@include c.host('text-field') {
   @include field.field;
 
   // Multiline is the textarea's box, not the single-line 56px one (FLO-425).

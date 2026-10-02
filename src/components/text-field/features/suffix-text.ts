@@ -1,4 +1,4 @@
-// src/components/textfield/features/suffix-text.ts
+// src/components/text-field/features/suffix-text.ts
 
 import { BaseComponent, ElementComponent } from '../../../core/compose/component';
 import { fieldOf } from './field';
@@ -70,7 +70,7 @@ export interface SuffixTextFeature {
 export interface SuffixTextComponent extends BaseComponent, SuffixTextFeature {}
 
 /**
- * Adds suffix text to a textfield component
+ * Adds suffix text to a text field component
  * @param config - Configuration with suffix text settings
  * @returns Function that enhances a component with suffix text
  */
@@ -82,7 +82,7 @@ export const withSuffixText = <T extends SuffixTextConfig & object>(config: T) =
     // prefix together, which the hardcoded 44px did not. `api.ts` already
     // schedules a placement update after every one of these calls.
     const PREFIX = config.prefix || 'mtrl';
-    const NAME = config.componentName || 'textfield';
+    const NAME = config.componentName || 'text-field';
 
     // The slot is created when it is first needed, not only when the option was
     // set at creation. The setters used to exist only on a component configured

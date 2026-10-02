@@ -42,7 +42,7 @@ const server = Bun.serve({
         `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"></head>
 <body><form><m-switch id="r" name="r">Restored</m-switch>
 <m-checkbox id="rc" name="rc">Restored checkbox</m-checkbox>
-<m-textfield id="rt" name="rt" label="Restored text"></m-textfield></form><a id="go" href="/away">away</a>
+<m-text-field id="rt" name="rt" label="Restored text"></m-text-field></form><a id="go" href="/away">away</a>
 <script type="module" src="/elements.js"></script></body></html>`,
         { headers: { "Content-Type": "text/html", "Cache-Control": "no-store" } }
       );
@@ -1168,20 +1168,20 @@ try {
     check("slider: going back restores the value, and both ends of a range");
   }
 
-  // ---------------------------------------------------------------- textfield
+  // ---------------------------------------------------------------- text field
   await fresh(
     page,
-    `<form id="f"><m-textfield id="t" name="email" label="Email" value="a@b.c" required></m-textfield>
+    `<form id="f"><m-text-field id="t" name="email" label="Email" value="a@b.c" required></m-text-field>
      <label for="t" id="outer">Outer label</label>
-     <m-textfield id="p" name="plain" label="Plain" value="first"></m-textfield>
-     <m-textfield id="o" name="notes" label="Notes" variant="outlined" supporting-text="Optional"></m-textfield>
-     <fieldset id="fs"><m-textfield id="in" name="inner" label="Inner"></m-textfield></fieldset></form>
+     <m-text-field id="p" name="plain" label="Plain" value="first"></m-text-field>
+     <m-text-field id="o" name="notes" label="Notes" variant="outlined" supporting-text="Optional"></m-text-field>
+     <fieldset id="fs"><m-text-field id="in" name="inner" label="Inner"></m-text-field></fieldset></form>
      <section id="factory"></section>`
   );
   {
     const field = page.getByRole("textbox", { name: "Email", exact: true });
     assert.equal(await field.count(), 1, "the label attribute names the inner input");
-    check("textfield: the label attribute is the accessible name");
+    check("text field: the label attribute is the accessible name");
 
     type TextHost = HTMLElement & { value: string; component: unknown };
     let state = await page.evaluate(() => {
@@ -1199,7 +1199,7 @@ try {
       return { before, value: t.value, attribute: t.getAttribute("value"), email: form.get("email"), events: w.events };
     });
     assert.deepEqual(state, { before: "a@b.c", value: "live@b.c", attribute: "a@b.c", email: "live@b.c", events: [] });
-    check("textfield: the value attribute is the default, the value property the live value, set silently");
+    check("text field: the value attribute is the default, the value property the live value, set silently");
 
     await field.fill("");
     await page.evaluate(() => ((window as unknown as Win).events = []));
@@ -1217,7 +1217,7 @@ try {
       { type: "change", custom: true, detail: { value: "hi" } },
     ]);
     assert.equal(state.email, "hi");
-    check("textfield: typing dispatches one input per keystroke and change on commit, and the form sees the value");
+    check("text field: typing dispatches one input per keystroke and change on commit, and the form sees the value");
 
     const defaults = await page.evaluate(() => {
       const t = document.getElementById("t") as HTMLElement & { value: string };
@@ -1227,7 +1227,7 @@ try {
       return { t: t.value, p: p.value };
     });
     assert.deepEqual(defaults, { t: "hi", p: "second" });
-    check("textfield: a new value attribute moves the value until the field is edited, as natively");
+    check("text field: a new value attribute moves the value until the field is edited, as natively");
 
     const reset = await page.evaluate(() => {
       (document.getElementById("f") as HTMLFormElement).reset();
@@ -1235,7 +1235,7 @@ try {
       return { t: get("t"), p: get("p") };
     });
     assert.deepEqual(reset, { t: "new@b.c", p: "second" });
-    check("textfield: form.reset() restores the value attribute");
+    check("text field: form.reset() restores the value attribute");
 
     // FLO-335: an autofill fills the input without an input event and starts
     // the stylesheet's onAutoFillStart animation; the label then floats, as
@@ -1246,7 +1246,7 @@ try {
     // reports it (unit-tested); this guards the behaviour, whatever drives it.
     const autofill = await page.evaluate(async () => {
       const make = (value: string): HTMLElement => {
-        const host = document.createElement("m-textfield");
+        const host = document.createElement("m-text-field");
         host.setAttribute("label", "Autofill");
         if (value) host.setAttribute("value", value);
         document.body.append(host);
@@ -1257,7 +1257,7 @@ try {
       const filled = make("typed");
       await frame();
       const label = (host: HTMLElement): string => {
-        const el = host.shadowRoot?.querySelector('[class*="textfield__label"]') as HTMLElement;
+        const el = host.shadowRoot?.querySelector('[class*="text-field__label"]') as HTMLElement;
         const style = getComputedStyle(el);
         return `${style.transform} ${style.top}`;
       };
@@ -1273,7 +1273,7 @@ try {
       return result;
     });
     assert.deepEqual(autofill, { floated: true, likeTyped: true });
-    check("textfield: an autofill floats the label, as a typed value does");
+    check("text field: an autofill floats the label, as a typed value does");
 
     const validity = await page.evaluate(() => {
       const t = document.getElementById("t") as HTMLElement & { value: string };
@@ -1298,7 +1298,7 @@ try {
       return { invalid, type: input.type, value: t.value };
     });
     assert.deepEqual(typed, { invalid: false, type: "email", value: "nope" });
-    check("textfield: required and type constraints report validity to the form, and type recreates keeping the value");
+    check("text field: required and type constraints report validity to the form, and type recreates keeping the value");
 
     await page.evaluate(() => ((document.getElementById("t") as HTMLElement & { value: string }).value = ""));
     await page.click("#outer");
@@ -1309,7 +1309,7 @@ try {
     assert.deepEqual(focused, { host: true, input: true });
     await page.keyboard.type("ok");
     assert.equal(await page.evaluate(() => (document.getElementById("t") as HTMLElement & { value: string }).value), "ok");
-    check("textfield: an outer <label for> focuses the input");
+    check("text field: an outer <label for> focuses the input");
 
     const selected = await page.evaluate(() => {
       // Email inputs have no selection range: the plain field shows it.
@@ -1319,7 +1319,7 @@ try {
       return [input.selectionStart, input.selectionEnd];
     });
     assert.deepEqual(selected, [0, 6]);
-    check("textfield: select() selects the text");
+    check("text field: select() selects the text");
 
     await page.evaluate(() => {
       const p = document.getElementById("p") as HTMLElement;
@@ -1347,34 +1347,34 @@ try {
       return { off, on: input.disabled };
     });
     assert.deepEqual(fieldset, { off: true, on: false });
-    check("textfield: disabled, readonly and a disabled fieldset reach the inner input");
+    check("text field: disabled, readonly and a disabled fieldset reach the inner input");
 
     const error = await page.evaluate(() => {
       const o = document.getElementById("o") as HTMLElement & { setError: (e: boolean, m?: string) => void };
       const root = o.shadowRoot?.firstElementChild as HTMLElement;
       const input = root.querySelector("input") as HTMLInputElement;
-      const helper = (): string | null => root.querySelector('[class*="textfield__helper"]')?.className ?? null;
+      const helper = (): string | null => root.querySelector('[class*="text-field__helper"]')?.className ?? null;
       o.setAttribute("error", "");
       const on = { invalid: input.getAttribute("aria-invalid"), root: root.className.includes("--error"), helper: helper() };
       o.setAttribute("supporting-text", "Required field");
-      const text = { helper: helper(), content: root.querySelector('[class*="textfield__helper"]')?.textContent, root: root.className.includes("--error") };
+      const text = { helper: helper(), content: root.querySelector('[class*="text-field__helper"]')?.textContent, root: root.className.includes("--error") };
       o.removeAttribute("supporting-text");
       const noText = { helper: helper(), root: root.className.includes("--error") };
       o.removeAttribute("error");
       const off = { invalid: input.getAttribute("aria-invalid"), root: root.className.includes("--error") };
       o.setError(true, "Bad");
-      const message = root.querySelector('[class*="textfield__helper"]')?.textContent;
+      const message = root.querySelector('[class*="text-field__helper"]')?.textContent;
       o.setError(false);
       return { on, text, noText, off, message };
     });
     assert.deepEqual(error, {
-      on: { invalid: "true", root: true, helper: "mtrl-textfield__helper mtrl-textfield__helper--error" },
-      text: { helper: "mtrl-textfield__helper mtrl-textfield__helper--error", content: "Required field", root: true },
+      on: { invalid: "true", root: true, helper: "mtrl-text-field__helper mtrl-text-field__helper--error" },
+      text: { helper: "mtrl-text-field__helper mtrl-text-field__helper--error", content: "Required field", root: true },
       noText: { helper: null, root: true },
       off: { invalid: null, root: false },
       message: "Bad",
     });
-    check("textfield: the error attribute and setError() show the error state");
+    check("text field: the error attribute and setError() show the error state");
 
     const inPlace = await page.evaluate(async () => {
       const o = document.getElementById("o") as TextHost;
@@ -1388,9 +1388,9 @@ try {
       const input = root.querySelector("input") as HTMLInputElement;
       const updated = {
         kept: o.component === before,
-        filled: root.className.includes("textfield--filled"),
-        prefix: root.querySelector('[class*="textfield__prefix"]')?.textContent,
-        icon: !!root.querySelector('[class*="textfield__leading-icon"] svg'),
+        filled: root.className.includes("text-field--filled"),
+        prefix: root.querySelector('[class*="text-field__prefix"]')?.textContent,
+        icon: !!root.querySelector('[class*="text-field__leading-icon"] svg'),
         placeholder: input.placeholder,
         maxLength: input.maxLength,
       };
@@ -1402,11 +1402,11 @@ try {
       kept: true, filled: true, prefix: "$", icon: true, placeholder: "Write", maxLength: 5, recreated: true, value: "typed",
     });
     assert.equal(await page.getByRole("textbox", { name: "Remarks", exact: true }).count(), 1);
-    check("textfield: attributes with a setter update in place; label recreates keeping the value");
+    check("text field: attributes with a setter update in place; label recreates keeping the value");
 
     const multiline = await page.evaluate(async () => {
       const host = document.getElementById("factory") as HTMLElement;
-      host.innerHTML = `<m-textfield id="m" type="multiline" label="Bio" value="Hello"></m-textfield>`;
+      host.innerHTML = `<m-text-field id="m" type="multiline" label="Bio" value="Hello"></m-text-field>`;
       const m = document.getElementById("m") as HTMLElement & { value: string };
       const area = m.shadowRoot?.querySelector("textarea") as HTMLTextAreaElement;
       const result = { value: m.value, area: area.value };
@@ -1414,13 +1414,13 @@ try {
       return result;
     });
     assert.deepEqual(multiline, { value: "Hello", area: "Hello" });
-    check("textfield: type=multiline renders a textarea with the default value");
+    check("text field: type=multiline renders a textarea with the default value");
 
     const parity = await page.evaluate(async () => {
       const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement } } };
       const host = document.getElementById("factory") as HTMLElement;
-      host.innerHTML = `<m-textfield id="pf" label="Name" value="Ada" supporting-text="Help"></m-textfield>
-        <m-textfield id="po" variant="outlined" label="Name" supporting-text="Help"></m-textfield>`;
+      host.innerHTML = `<m-text-field id="pf" label="Name" value="Ada" supporting-text="Help"></m-text-field>
+        <m-text-field id="po" variant="outlined" label="Name" supporting-text="Help"></m-text-field>`;
       const filled = w.mtrl.createTextField({ label: "Name", value: "Ada", supportingText: "Help" });
       const outlined = w.mtrl.createTextField({ variant: "outlined", label: "Name", supportingText: "Help" });
       host.append(filled.element, outlined.element);
@@ -1428,7 +1428,7 @@ try {
       const measure = (root: HTMLElement): Record<string, string | number> => {
         const input = root.querySelector("input") as HTMLElement;
         const label = root.querySelector("label") as HTMLElement;
-        const helper = root.querySelector('[class*="textfield__helper"]') as HTMLElement;
+        const helper = root.querySelector('[class*="text-field__helper"]') as HTMLElement;
         const r = root.getBoundingClientRect();
         const i = input.getBoundingClientRect();
         const l = label.getBoundingClientRect();
@@ -1450,7 +1450,7 @@ try {
     });
     assert.deepEqual(parity.filled.element, parity.filled.factory);
     assert.deepEqual(parity.outlined.element, parity.outlined.factory);
-    check("textfield: renders as the factory does with the global stylesheet, filled and outlined");
+    check("text field: renders as the factory does with the global stylesheet, filled and outlined");
 
     // FLO-305: <m-navigation-bar> renders as the factory does with the global
     // stylesheet, and a click on a destination dispatches change once with its value
@@ -1506,15 +1506,15 @@ try {
       const host = document.getElementById("factory") as HTMLElement;
       const attrs = 'label="Name" placeholder="Enter your name" prefix-text="$" suffix-text="USD" supporting-text="Help"';
       host.innerHTML = ["filled", "outlined"].flatMap((variant) => [
-        `<m-textfield id="r-${variant}" variant="${variant}" ${attrs}></m-textfield>`,
-        `<m-textfield id="d-${variant}" variant="${variant}" ${attrs} disabled></m-textfield>`,
-        `<m-textfield id="v-${variant}" variant="${variant}" ${attrs} value="12"></m-textfield>`,
+        `<m-text-field id="r-${variant}" variant="${variant}" ${attrs}></m-text-field>`,
+        `<m-text-field id="d-${variant}" variant="${variant}" ${attrs} disabled></m-text-field>`,
+        `<m-text-field id="v-${variant}" variant="${variant}" ${attrs} value="12"></m-text-field>`,
       ]).join("");
       await new Promise((r) => setTimeout(r, 300));
       const read = (id: string) => {
         const root = (document.getElementById(id) as HTMLElement).shadowRoot?.firstElementChild as HTMLElement;
         const input = root.querySelector("input") as HTMLInputElement;
-        const opacity = (part: string) => Number(getComputedStyle(root.querySelector(`[class*="textfield__${part}"]`) as HTMLElement).opacity);
+        const opacity = (part: string) => Number(getComputedStyle(root.querySelector(`[class*="text-field__${part}"]`) as HTMLElement).opacity);
         return { placeholder: getComputedStyle(input, "::placeholder").webkitTextFillColor, prefix: opacity("prefix"), suffix: opacity("suffix") };
       };
       const ids = ["filled", "outlined"].flatMap((v) => [`r-${v}`, `d-${v}`, `v-${v}`]);
@@ -1529,16 +1529,16 @@ try {
       }
       assert.deepEqual([resting[`v-${variant}`]!.prefix, resting[`v-${variant}`]!.suffix], [1, 1], `v-${variant}: the floated label's affixes are hidden`);
     }
-    check("textfield: a resting label shows alone, enabled or disabled; the prefix and suffix appear as it floats");
+    check("text field: a resting label shows alone, enabled or disabled; the prefix and suffix appear as it floats");
 
     // FLO-301: the required attribute moves the input's required and the label's asterisk together
     const required = await page.evaluate(() => {
       const host = document.getElementById("factory") as HTMLElement;
-      host.innerHTML = '<m-textfield id="rq" label="Email"></m-textfield>';
+      host.innerHTML = '<m-text-field id="rq" label="Email"></m-text-field>';
       const element = document.getElementById("rq") as HTMLElement;
       const read = () => {
         const root = element.shadowRoot?.firstElementChild as HTMLElement;
-        return [root.querySelector("input")!.required, !!root.querySelector('label [class*="textfield__required"]')];
+        return [root.querySelector("input")!.required, !!root.querySelector('label [class*="text-field__required"]')];
       };
       const states = [read()];
       element.setAttribute("required", "");
@@ -1549,7 +1549,7 @@ try {
       return states;
     });
     assert.deepEqual(required, [[false, false], [true, true], [false, false]]);
-    check("textfield: required toggles the input's required and the label's asterisk");
+    check("text field: required toggles the input's required and the label's asterisk");
 
     // #234: the outline leaves a notch for the floated label. The label used
     // to be painted with a background copied from the nearest ancestor, which
@@ -1559,10 +1559,10 @@ try {
       const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement } } };
       const host = document.getElementById("factory") as HTMLElement;
       host.innerHTML = `<div style="background: rgb(200, 230, 255); padding: 24px; display: grid; gap: 24px; width: 320px">
-        <m-textfield id="na" variant="outlined" label="Element label" value="Ada"></m-textfield>
+        <m-text-field id="na" variant="outlined" label="Element label" value="Ada"></m-text-field>
         <div id="nb"></div>
-        <m-textfield id="nc" variant="outlined" label="Empty"></m-textfield>
-        <div dir="rtl"><m-textfield id="nd" variant="outlined" label="Right to left" value="Ada"></m-textfield></div>
+        <m-text-field id="nc" variant="outlined" label="Empty"></m-text-field>
+        <div dir="rtl"><m-text-field id="nd" variant="outlined" label="Right to left" value="Ada"></m-text-field></div>
       </div>`;
       const factory = w.mtrl.createTextField({ variant: "outlined", label: "Factory label", value: "Ada" });
       (document.getElementById("nb") as HTMLElement).append(factory.element);
@@ -1578,7 +1578,7 @@ try {
       };
       const measure = (root: HTMLElement) => {
         const label = root.querySelector("label") as HTMLElement;
-        const part = (name: string): HTMLElement | null => root.querySelector(`[class*="textfield__outline-${name}"]`);
+        const part = (name: string): HTMLElement | null => root.querySelector(`[class*="text-field__outline-${name}"]`);
         const color = (el: HTMLElement | null, side: "Top" | "Bottom"): string =>
           el ? getComputedStyle(el)[`border${side}Color`] : "missing";
         const notch = part("notch");
@@ -1640,12 +1640,12 @@ try {
     assert.equal(notches.empty.notchTop, notches.empty.trailingTop, "empty and unfocused: the top edge is one colour");
     assert.deepEqual(pixels.slice(0, 6).map((p) => p === CARD), [true, false, true, false, true, false], `top-edge pixels ${pixels}`);
     assert.notEqual(pixels[6], CARD, "empty and unfocused: the top edge is drawn where the label would float");
-    check("textfield: outlined leaves a notch for the floated label on a coloured card, in shadow DOM, light DOM and rtl, closed at rest");
+    check("text field: outlined leaves a notch for the floated label on a coloured card, in shadow DOM, light DOM and rtl, closed at rest");
 
     const focusNotch = await page.evaluate(async () => {
       const c = document.getElementById("nc") as HTMLElement;
       const root = c.shadowRoot?.firstElementChild as HTMLElement;
-      const notch = root.querySelector('[class*="textfield__outline-notch"]') as HTMLElement;
+      const notch = root.querySelector('[class*="text-field__outline-notch"]') as HTMLElement;
       const label = root.querySelector("label") as HTMLElement;
       c.focus();
       await new Promise((r) => setTimeout(r, 400));
@@ -1658,11 +1658,11 @@ try {
     assert(focusNotch.focused.width >= focusNotch.focused.label, "the notch fits the focused label");
     assert.notEqual(focusNotch.blurred, TRANSPARENT, "blur on an empty field closes it");
     await page.evaluate(() => ((document.getElementById("factory") as HTMLElement).innerHTML = ""));
-    check("textfield: focus opens the notch of an empty outlined field and blur closes it");
+    check("text field: focus opens the notch of an empty outlined field and blur closes it");
 
     const layout = await page.evaluate(() => {
       const host = document.getElementById("factory") as HTMLElement;
-      host.innerHTML = `<m-textfield id="w" label="Wide" style="width:400px"></m-textfield>`;
+      host.innerHTML = `<m-text-field id="w" label="Wide" style="width:400px"></m-text-field>`;
       const w = document.getElementById("w") as HTMLElement;
       const inline = getComputedStyle(w).display;
       const width = (w.shadowRoot?.firstElementChild as HTMLElement).getBoundingClientRect().width;
@@ -1674,7 +1674,7 @@ try {
       return { inline, width, focused, blurred };
     });
     assert.deepEqual(layout, { inline: "inline-block", width: 400, focused: "INPUT", blurred: null });
-    check("textfield: an inline-block host whose width the field fills; focus() and blur() reach the input");
+    check("text field: an inline-block host whose width the field fills; focus() and blur() reach the input");
   }
 
   // ---------------------------------------------------------------- tabs
@@ -4494,8 +4494,8 @@ try {
         },
       },
       {
-        name: "textfield",
-        markup: `<m-textfield id="x" name="x" label="Dirty"></m-textfield>`,
+        name: "text-field",
+        markup: `<m-text-field id="x" name="x" label="Dirty"></m-text-field>`,
         attribute: "value",
         property: "value",
         a: "a", b: "b", c: "c", set: "p", after: "d",
@@ -4564,8 +4564,8 @@ try {
     }
 
     // A recreation (label has no setter) keeps both the live value and the flag.
-    const field = cases.find((spec) => spec.name === "textfield") as DefaultCase;
-    await fresh(page, `<form id="df"><m-textfield id="x" name="x" label="Dirty" value="a"></m-textfield></form>`);
+    const field = cases.find((spec) => spec.name === "text-field") as DefaultCase;
+    await fresh(page, `<form id="df"><m-text-field id="x" name="x" label="Dirty" value="a"></m-text-field></form>`);
     const relabel = (label: string): Promise<void> =>
       page.evaluate((text) => document.getElementById("x")?.setAttribute("label", text), label);
     await relabel("Clean");
@@ -4575,7 +4575,7 @@ try {
     await relabel("Dirty");
     assert.equal(await live(field), "bz");
     assert.equal(await attribute(field, "c"), "bz", "still dirty after a recreation");
-    check("textfield: a recreation keeps the live value and whether it is dirty");
+    check("text field: a recreation keeps the live value and whether it is dirty");
   }
 
   // ---------------------------------------------------------------- lifecycle
@@ -4865,7 +4865,7 @@ try {
       return {
         value: s.getValue(),
         focused: s.element.contains(root.activeElement),
-        styled: [...s.element.querySelectorAll("*"), s.element].some((el) => [...el.classList].some((c) => c.endsWith("textfield--focused"))),
+        styled: [...s.element.querySelectorAll("*"), s.element].some((el) => [...el.classList].some((c) => c.endsWith("text-field--focused"))),
       };
     });
     assert.deepEqual(select, { value: "b", focused: true, styled: true });
@@ -6768,7 +6768,7 @@ try {
       const read = (field: HTMLElement): Record<string, unknown> => {
         const r = field.getBoundingClientRect();
         const input = field.querySelector("input") as HTMLInputElement;
-        const label = field.querySelector('[class*="textfield__label"]') as HTMLElement;
+        const label = field.querySelector('[class*="text-field__label"]') as HTMLElement;
         const icon = field.querySelector('[class*="trailing-icon"]') as HTMLElement;
         return {
           width: Math.round(r.width), height: Math.round(r.height),

@@ -1,4 +1,4 @@
-// test/components/textfield/icons-and-affixes.test.ts
+// test/components/text-field/icons-and-affixes.test.ts
 //
 // The four decorating features — leading icon, trailing icon, prefix text and
 // suffix text — had no real coverage at all. They came up because each
@@ -32,7 +32,7 @@ g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date
 g.cancelAnimationFrame = () => {};
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
-import createTextField from "../../../src/components/textfield";
+import createTextField from "../../../src/components/text-field";
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>';
 
@@ -47,8 +47,8 @@ afterAll(() => { dom.window.close(); });
 
 describe("a decoration given in the config is there at creation", () => {
   const cases: Array<[string, string, string]> = [
-    ["leadingIcon", "leadingIcon", "textfield__leading-icon"],
-    ["trailingIcon", "trailingIcon", "textfield__trailing-icon"],
+    ["leadingIcon", "leadingIcon", "text-field__leading-icon"],
+    ["trailingIcon", "trailingIcon", "text-field__trailing-icon"],
   ];
 
   for (const [option, member, className] of cases) {
@@ -142,7 +142,7 @@ describe("placement is batched (FLO-335)", () => {
     const log: string[] = [];
     const fields = [0, 1, 2].map((i) => {
       const field = mount({ prefixText: "$", suffixText: "kg", variant: "outlined" });
-      const prefix = field.element.querySelector<HTMLElement>(".mtrl-textfield__prefix")!;
+      const prefix = field.element.querySelector<HTMLElement>(".mtrl-text-field__prefix")!;
       prefix.getBoundingClientRect = () => { log.push(`read ${i}`); return { width: 10 } as DOMRect; };
       const style = field.input.style;
       Object.defineProperty(style, "paddingLeft", { configurable: true, set: () => void log.push(`write ${i}`), get: () => "" });
@@ -156,7 +156,7 @@ describe("placement is batched (FLO-335)", () => {
   test("a field destroyed before the batch runs is neither measured nor written", async () => {
     const log: string[] = [];
     const field = mount({ prefixText: "$" });
-    const prefix = field.element.querySelector<HTMLElement>(".mtrl-textfield__prefix")!;
+    const prefix = field.element.querySelector<HTMLElement>(".mtrl-text-field__prefix")!;
     prefix.getBoundingClientRect = () => { log.push("read"); return { width: 10 } as DOMRect; };
     field.destroy();
     await new Promise((r) => setTimeout(r, 0));

@@ -9,14 +9,14 @@
  */
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
-import type createTextField from "../src/components/textfield";
+import type createTextField from "../src/components/text-field";
 
 type FieldWindow = Window & {
   inputs: { createTextField: typeof createTextField };
   fields: { destroy: () => void }[];
 };
 
-export async function checkTextfield(page: Page): Promise<void> {
+export async function checkTextField(page: Page): Promise<void> {
   const measured = await page.evaluate(() => {
     const state = window as unknown as FieldWindow;
     const { createTextField } = state.inputs;
@@ -38,7 +38,7 @@ export async function checkTextfield(page: Page): Promise<void> {
     disabled.input.disabled = true;
     const top = (field: { element: HTMLElement }) => label(field).getBoundingClientRect().top - field.element.getBoundingClientRect().top;
     return {
-      stillEmpty: filled.element.classList.contains("mtrl-textfield--empty") && outlined.element.classList.contains("mtrl-textfield--empty"),
+      stillEmpty: filled.element.classList.contains("mtrl-text-field--empty") && outlined.element.classList.contains("mtrl-text-field--empty"),
       filledRose: rest.filled - label(filled).getBoundingClientRect().top,
       filledTop: top(filled),
       outlinedRose: rest.outlined - label(outlined).getBoundingClientRect().top,
@@ -69,7 +69,7 @@ type Probe = { element: HTMLElement; input: HTMLInputElement; setError: (e: bool
  * from the packed CSS (FLO-298). Each expected colour is the theme role
  * resolved in the same page, so the check follows the theme, not a hex.
  */
-export async function checkTextfieldTokens(page: Page): Promise<void> {
+export async function checkTextFieldTokens(page: Page): Promise<void> {
   await page.evaluate(() => {
     const state = window as unknown as FieldWindow & { probes: Record<string, Probe> };
     const { createTextField } = state.inputs;
@@ -106,7 +106,7 @@ export async function checkTextfieldTokens(page: Page): Promise<void> {
     const style = (name: string, selector: string, pseudo?: string) => getComputedStyle(q(name, selector), pseudo);
     return new Function("probes", "role", "q", "style", code)(probes, role, q, style);
   }, script);
-  const hover = async (name: string) => page.locator(`.mtrl-textfield >> nth=${await page.evaluate((n) => [...document.querySelectorAll(".mtrl-textfield")].indexOf((window as unknown as { probes: Record<string, Probe> }).probes[n].element), name)}`).hover().then(() => page.waitForTimeout(400)); // past the colour transitions
+  const hover = async (name: string) => page.locator(`.mtrl-text-field >> nth=${await page.evaluate((n) => [...document.querySelectorAll(".mtrl-text-field")].indexOf((window as unknown as { probes: Record<string, Probe> }).probes[n].element), name)}`).hover().then(() => page.waitForTimeout(400)); // past the colour transitions
 
   const rest = await read(`return {
     indicator: style("filled", "input").borderBottomColor === role("on-surface-variant"),
@@ -114,15 +114,15 @@ export async function checkTextfieldTokens(page: Page): Promise<void> {
     placeholderUnderLabel: style("filled", "input", "::placeholder").color === "rgba(0, 0, 0, 0)",
     placeholderNoLabel: style("bare", "input", "::placeholder").color === role("on-surface-variant"),
     outlinedLabel: [style("outlined", "label").opacity, style("outlined", "label").color === role("on-surface-variant")],
-    errorLeading: style("error", ".mtrl-textfield__leading-icon").color === role("on-surface-variant"),
-    errorTrailing: style("error", ".mtrl-textfield__trailing-icon").color === role("error"),
-    errorPrefix: style("error", ".mtrl-textfield__prefix").color === role("on-surface-variant"),
+    errorLeading: style("error", ".mtrl-text-field__leading-icon").color === role("on-surface-variant"),
+    errorTrailing: style("error", ".mtrl-text-field__trailing-icon").color === role("error"),
+    errorPrefix: style("error", ".mtrl-text-field__prefix").color === role("on-surface-variant"),
     errorCaret: style("error", "input").caretColor === role("error"),
-    errorIndicator: [style("error", "input").borderBottomColor === role("error"), getComputedStyle(q("error", ".mtrl-textfield__field"), "::before").opacity],
-    icons: [style("error", ".mtrl-textfield__leading-icon").opacity, style("error", ".mtrl-textfield__leading-icon svg").width],
+    errorIndicator: [style("error", "input").borderBottomColor === role("error"), getComputedStyle(q("error", ".mtrl-text-field__field"), "::before").opacity],
+    icons: [style("error", ".mtrl-text-field__leading-icon").opacity, style("error", ".mtrl-text-field__leading-icon svg").width],
     disabledFill: [style("disabled", "input").opacity, style("disabled", "input").backgroundColor === role("on-surface", 0.04), style("disabled", "input").borderBottomColor === role("on-surface", 0.38)],
     disabledText: style("disabled", "input").color === role("on-surface", 0.38),
-    disabledHelper: style("disabled", ".mtrl-textfield__supporting").opacity,
+    disabledHelper: style("disabled", ".mtrl-text-field__supporting").opacity,
     outlinedDisabledFill: style("outlinedDisabled", "input").backgroundColor,
   };`);
   assert.deepEqual(rest, {
@@ -134,10 +134,10 @@ export async function checkTextfieldTokens(page: Page): Promise<void> {
     outlinedDisabledFill: "rgba(0, 0, 0, 0)",
   });
 
-  await page.locator(".mtrl-textfield__input").first().focus();
+  await page.locator(".mtrl-text-field__input").first().focus();
   const focused = await read(`return style("filled", "input", "::placeholder").color === role("on-surface-variant");`);
   assert.equal(focused, true, "the placeholder shows while the field is focused");
-  await page.locator(".mtrl-textfield__input").first().blur();
+  await page.locator(".mtrl-text-field__input").first().blur();
 
   await hover("filled");
   const filledHover = await read(`return [style("filled", "input").borderBottomColor === role("on-surface"), style("filled", "input").backgroundImage.startsWith("linear-gradient"), style("filled", "label").color === role("on-surface-variant")];`);
@@ -146,10 +146,10 @@ export async function checkTextfieldTokens(page: Page): Promise<void> {
   const outlinedHover = await read(`return style("outlined", "label").color === role("on-surface");`);
   assert.equal(outlinedHover, true, "outlined hover label is on-surface");
   await hover("error");
-  const errorHover = await read(`return [style("error", "input").borderBottomColor, style("error", "label").color, style("error", ".mtrl-textfield__trailing-icon").color].every(c => c === role("on-error-container"));`);
+  const errorHover = await read(`return [style("error", "input").borderBottomColor, style("error", "label").color, style("error", ".mtrl-text-field__trailing-icon").color].every(c => c === role("on-error-container"));`);
   assert.equal(errorHover, true, "filled error hover is on-error-container");
   await hover("outlinedError");
-  const outlinedErrorHover = await read(`return [style("outlinedError", "label").color, style("outlinedError", ".mtrl-textfield__trailing-icon").color].every(c => c === role("on-error-container"));`);
+  const outlinedErrorHover = await read(`return [style("outlinedError", "label").color, style("outlinedError", ".mtrl-text-field__trailing-icon").color].every(c => c === role("on-error-container"));`);
   assert.equal(outlinedErrorHover, true, "outlined error hover is on-error-container");
   await page.mouse.move(0, 0);
 
@@ -170,7 +170,7 @@ type AnatomyWindow = Window & {
  * long helper wraps and pushes what follows; a select's menu opens against
  * the field, not under its helper.
  */
-export async function checkTextfieldAnatomy(page: Page): Promise<void> {
+export async function checkTextFieldAnatomy(page: Page): Promise<void> {
   const measured = await page.evaluate(async () => {
     const w = window as unknown as AnatomyWindow;
     const stage = document.createElement("div");
@@ -204,7 +204,7 @@ export async function checkTextfieldAnatomy(page: Page): Promise<void> {
     w.anatomy = [plain, button, helped, wrapped, select];
     const box = (el: Element) => el.getBoundingClientRect();
     const centre = (el: Element) => box(el).top + box(el).height / 2;
-    const field = (el: HTMLElement) => el.querySelector(".mtrl-textfield__field") as HTMLElement;
+    const field = (el: HTMLElement) => el.querySelector(".mtrl-text-field__field") as HTMLElement;
     select.open();
     await new Promise((resolve) => setTimeout(resolve, 400));
     const menu = document.querySelector(".mtrl-select__menu") as HTMLElement;
@@ -213,7 +213,7 @@ export async function checkTextfieldAnatomy(page: Page): Promise<void> {
       centred: Math.abs(centre(plain.element) - centre(button.element)) < 0.5,
       helpedField: box(field(helped.element)).height,
       helpedRow: box(helped.element).height - box(field(helped.element)).height,
-      counterAtEnd: Math.abs(box(helped.element.querySelector(".mtrl-textfield__counter")!).right - (box(helped.element).right - 16)) < 0.5,
+      counterAtEnd: Math.abs(box(helped.element.querySelector(".mtrl-text-field__counter")!).right - (box(helped.element).right - 16)) < 0.5,
       wrappedRow: box(wrapped.element).height - 56,
       afterBelow: box(after).top >= box(wrapped.element).bottom - 0.5,
       menuGap: box(menu).top - box(field(select.element)).bottom,
@@ -241,7 +241,7 @@ export async function checkTextfieldAnatomy(page: Page): Promise<void> {
  * disabled input's -webkit-text-fill-color is inherited by the placeholder and
  * paints over its color, so the paint is read from the fill.
  */
-export async function checkTextfieldPlaceholder(page: Page): Promise<void> {
+export async function checkTextFieldPlaceholder(page: Page): Promise<void> {
   const cases = await page.evaluate(async () => {
     const { createTextField } = (window as unknown as FieldWindow).inputs;
     const icon = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>';
@@ -274,7 +274,7 @@ export async function checkTextfieldPlaceholder(page: Page): Promise<void> {
               const text = range.getBoundingClientRect();
               const overlaps = text.top < mid + em / 2 && text.bottom > mid - em / 2
                 && text.left < box.right - parseFloat(s.paddingRight) && text.right > box.left + parseFloat(s.paddingLeft);
-              const affixes = [".mtrl-textfield__prefix", ".mtrl-textfield__suffix"]
+              const affixes = [".mtrl-text-field__prefix", ".mtrl-text-field__suffix"]
                 .map((selector) => Number(getComputedStyle(field.element.querySelector(selector) as HTMLElement).opacity));
               rows.push({ name: `${variant} icon=${withIcon} disabled=${disabled} value=${value !== ""} focused=${focus}`, painted, overlaps, affixes });
               field.destroy();
@@ -305,7 +305,7 @@ export async function checkTextfieldPlaceholder(page: Page): Promise<void> {
  * from the keyboard; decorative icons take no focus; and a required outlined
  * field's notch opens wide enough for the label and its asterisk.
  */
-export async function checkTextfieldA11y(page: Page): Promise<void> {
+export async function checkTextFieldA11y(page: Page): Promise<void> {
   const icon = '<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="8"/></svg>';
   const measured = await page.evaluate(async (icon) => {
     const { createTextField } = (window as unknown as FieldWindow).inputs;
@@ -328,9 +328,9 @@ export async function checkTextfieldA11y(page: Page): Promise<void> {
     const iconBox = button.querySelector("svg")!.getBoundingClientRect();
     const field = interactive.field.getBoundingClientRect();
 
-    const notch = required.element.querySelector<HTMLElement>(".mtrl-textfield__outline-notch")!;
+    const notch = required.element.querySelector<HTMLElement>(".mtrl-text-field__outline-notch")!;
     const label = required.element.querySelector("label")!;
-    const asterisk = required.element.querySelector<HTMLElement>(".mtrl-textfield__required")!;
+    const asterisk = required.element.querySelector<HTMLElement>(".mtrl-text-field__required")!;
 
     const result = {
       tag: button.tagName,
@@ -356,23 +356,23 @@ export async function checkTextfieldA11y(page: Page): Promise<void> {
   assert.equal(measured.asteriskInLabel, true, "the asterisk is in the label, in its colour");
 
   // Tab: the input, then the button; a focus ring from the keyboard only
-  const input = page.locator(".mtrl-textfield--outlined input").first();
+  const input = page.locator(".mtrl-text-field--outlined input").first();
   await input.focus();
   await page.keyboard.press("Tab");
   const keyboard = await page.evaluate(() => {
     const active = document.activeElement as HTMLElement;
-    return { isButton: active.matches(".mtrl-textfield__trailing-icon--button"), outline: getComputedStyle(active).outlineStyle };
+    return { isButton: active.matches(".mtrl-text-field__trailing-icon--button"), outline: getComputedStyle(active).outlineStyle };
   });
   assert.deepEqual(keyboard, { isButton: true, outline: "solid" }, "Tab reaches the trailing button, with a focus ring");
   const clicked = await page.evaluate(() => {
-    const button = document.querySelector<HTMLButtonElement>(".mtrl-textfield__trailing-icon--button")!;
+    const button = document.querySelector<HTMLButtonElement>(".mtrl-text-field__trailing-icon--button")!;
     button.blur();
     button.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     button.focus({ focusVisible: false } as FocusOptions);
     return getComputedStyle(button).outlineStyle;
   });
   assert.equal(clicked, "none", "no focus ring from a pointer");
-  await page.evaluate(() => document.querySelectorAll(".mtrl-textfield").forEach((el) => el.closest("div")?.remove()));
+  await page.evaluate(() => document.querySelectorAll(".mtrl-text-field").forEach((el) => el.closest("div")?.remove()));
   console.log("Passed text field accessibility: trailing icon button (40dp layer, 48dp target, tab order, keyboard focus ring), decorative icons unfocusable, the notch round the asterisk.");
 }
 
@@ -383,7 +383,7 @@ export async function checkTextfieldA11y(page: Page): Promise<void> {
  * a field created with that config: notch, input padding, label place and
  * scale, at rest and floated, and again after the window resizes.
  */
-export async function checkTextfieldLatePlacement(page: Page): Promise<void> {
+export async function checkTextFieldLatePlacement(page: Page): Promise<void> {
   const icon = '<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="8"/></svg>';
   const cases: Array<[string, Record<string, unknown>, string]> = [
     ["outlined", { variant: "outlined" }, "setVariant"],
@@ -403,12 +403,12 @@ export async function checkTextfieldLatePlacement(page: Page): Promise<void> {
     const shape = (field: { element: HTMLElement }) => {
       const input = field.element.querySelector("input") as HTMLInputElement;
       const label = field.element.querySelector("label") as HTMLElement;
-      const notch = field.element.querySelector<HTMLElement>(".mtrl-textfield__outline-notch");
+      const notch = field.element.querySelector<HTMLElement>(".mtrl-text-field__outline-notch");
       const s = getComputedStyle(input);
       return {
         padding: [s.paddingLeft, s.paddingRight],
         label: [getComputedStyle(label).left, getComputedStyle(label).transform],
-        notch: notch ? [Math.round(notch.getBoundingClientRect().width), field.element.querySelector(".mtrl-textfield__outline--notched") !== null] : null,
+        notch: notch ? [Math.round(notch.getBoundingClientRect().width), field.element.querySelector(".mtrl-text-field__outline--notched") !== null] : null,
       };
     };
     const rows: Record<string, unknown> = {};

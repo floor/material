@@ -1,4 +1,4 @@
-// src/components/textfield/features/supporting-text.ts
+// src/components/text-field/features/supporting-text.ts
 
 import {
   BaseComponent,
@@ -70,7 +70,7 @@ export interface SupportingTextComponent extends BaseComponent {
 }
 
 /**
- * Adds supporting text to a textfield component
+ * Adds supporting text to a text field component
  * @param config - Configuration with supporting text settings
  * @returns Function that enhances a component with supporting text
  */
@@ -81,7 +81,7 @@ export const withSupportingText =
     component: C
   ): C & SupportingTextComponent => {
     const PREFIX = config.prefix || "mtrl";
-    const COMPONENT = config.componentName || "textfield";
+    const COMPONENT = config.componentName || "text-field";
     let supportingElement: HTMLElement | null = null;
     // The helper sits in the supporting text row under the field, before the
     // counter when there is one (FLO-300)

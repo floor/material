@@ -1,4 +1,4 @@
-// src/components/textfield/features/counter.ts
+// src/components/text-field/features/counter.ts
 
 import type { ElementComponent } from "../../../core/compose/component";
 import { addIdRef, removeIdRef, supportingRow } from "./field";
@@ -9,7 +9,7 @@ import { addIdRef, removeIdRef, supportingRow } from "./field";
  * `count/max`. It describes the input, so a screen reader hears it with the
  * field when it is focused rather than on every keystroke. It follows the
  * input's `maxlength` attribute, so a limit set or removed later (by
- * `<m-textfield maxlength>`, say) adds or removes it.
+ * `<m-text-field maxlength>`, say) adds or removes it.
  *
  * It owns no state of the field: in error it takes the error colour from the
  * root's --error class, as the helper does.
@@ -37,7 +37,7 @@ export const withCounter =
     const input = component.input;
     if (!input) return { ...component, updateCounter: () => {} };
     const PREFIX = config.prefix || "mtrl";
-    const NAME = config.componentName || "textfield";
+    const NAME = config.componentName || "text-field";
     const row = supportingRow(component.element, PREFIX, NAME);
     const id = `${PREFIX}-${NAME}-counter-${Math.random().toString(36).slice(2, 9)}`;
     let counter: HTMLElement | null = null;

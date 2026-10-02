@@ -51,7 +51,7 @@ bun run dev
    ```bash
    git checkout -b feature/button-improvements
    # or
-   git checkout -b fix/textfield-validation
+   git checkout -b fix/text-field-validation
    ```
 
 3. **Make your changes** - Follow the coding standards and guidelines below.

@@ -14,7 +14,7 @@ import createFab from "../../dist/components/fab/index.js";
 import createExtendedFab from "../../dist/components/extended-fab/index.js";
 import createCheckbox from "../../dist/components/checkbox/index.js";
 import createSlider from "../../dist/components/slider/index.js";
-import createTextField from "../../dist/components/textfield/index.js";
+import createTextField from "../../dist/components/text-field/index.js";
 import createRadios from "../../dist/components/radios/index.js";
 import createNavigationRail from "../../dist/components/navigation-rail/index.js";
 import createDrawer from "../../dist/components/drawer/index.js";

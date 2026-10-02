@@ -1,4 +1,4 @@
-// src/components/textfield/api.ts
+// src/components/text-field/api.ts
 import type {
   BaseComponent,
   TextFieldComponent,
@@ -28,7 +28,7 @@ type ComponentWithDensity = BaseComponent & {
 };
 
 /**
- * Enhances textfield component with API methods
+ * Enhances text field component with API methods
  * @param {ApiOptions} options - API configuration
  * @returns {Function} Higher-order function that adds API methods to component
  */
@@ -73,7 +73,7 @@ export const withAPI =
       // Variant management
       setVariant(variant: TextFieldVariant): TextFieldComponent {
         const PREFIX = component.config?.prefix || "mtrl";
-        const COMPONENT = component.config?.componentName || "textfield";
+        const COMPONENT = component.config?.componentName || "text-field";
 
         // Remove existing variant classes
         component.element.classList.remove(
@@ -94,7 +94,7 @@ export const withAPI =
 
       getVariant(): TextFieldVariant {
         const PREFIX = component.config?.prefix || "mtrl";
-        const COMPONENT = component.config?.componentName || "textfield";
+        const COMPONENT = component.config?.componentName || "text-field";
 
         if (
           component.element.classList.contains(`${PREFIX}-${COMPONENT}--outlined`)
@@ -188,7 +188,7 @@ export const withAPI =
       // component, so its supportingTextElement is a copy from when it was
       // spread; the element in the field is the one to report (FLO-303).
       get supportingTextElement(): HTMLElement | null {
-        return component.element.querySelector<HTMLElement>(`.${component.getClass("textfield__helper")}`);
+        return component.element.querySelector<HTMLElement>(`.${component.getClass("text-field__helper")}`);
       },
       setSupportingText(text: string, isError?: boolean): TextFieldComponent {
         if (component.setSupportingText) {
@@ -284,11 +284,11 @@ export const withAPI =
           // Update empty state based on value or autofill
           if (hasValue || isAutofilled) {
             component.element.classList.remove(
-              `${component.config?.prefix || "mtrl"}-textfield--empty`
+              `${component.config?.prefix || "mtrl"}-text-field--empty`
             );
           } else {
             component.element.classList.add(
-              `${component.config?.prefix || "mtrl"}-textfield--empty`
+              `${component.config?.prefix || "mtrl"}-text-field--empty`
             );
           }
         }

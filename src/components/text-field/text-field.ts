@@ -1,4 +1,4 @@
-// src/components/textfield/textfield.ts
+// src/components/text-field/text-field.ts
 import { pipe } from "../../core/compose";
 import { createBase, withElement } from "../../core/compose/component";
 import {
@@ -30,20 +30,20 @@ import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
  * Creates a new TextField component
  *
  * Text fields allow users to enter text into a UI. They typically appear in forms and dialogs.
- * This implementation follows Material Design 3 guidelines for accessible, customizable textfields.
+ * This implementation follows Material Design 3 guidelines for accessible, customizable text fields.
  *
  * @param {TextFieldConfig} config - TextField configuration options
- * @returns {TextFieldComponent} A fully configured textfield component instance
- * @throws {Error} Throws an error if textfield creation fails
+ * @returns {TextFieldComponent} A fully configured text field component instance
+ * @throws {Error} Throws an error if text field creation fails
  *
  * @example
  * // Create a basic text field
- * const textfield = createTextField({
+ * const textField = createTextField({
  *   label: 'Username',
  *   name: 'username'
  * });
  *
- * document.querySelector('.form').appendChild(textfield.element);
+ * document.querySelector('.form').appendChild(textField.element);
  *
  * @example
  * // Create a text field with prefix and suffix
@@ -63,9 +63,9 @@ const createTextField = (config: TextFieldConfig = {}): TextFieldComponent => {
   const baseConfig = createBaseConfig(config);
 
   try {
-    // Build textfield through functional composition
+    // Build text field through functional composition
     // Each function in the pipe adds specific capabilities
-    const textfield = pipe(
+    const textField = pipe(
       createBase, // Base component structure
       withEvents(), // Event handling system
       withElement(getElementConfig(baseConfig)), // Create DOM element
@@ -92,16 +92,16 @@ const createTextField = (config: TextFieldConfig = {}): TextFieldComponent => {
 
     // A config option is the listener registered at creation, ahead of any
     // listener the caller adds afterwards.
-    if (baseConfig.onTrailingClick) textfield.on("trailing", baseConfig.onTrailingClick);
+    if (baseConfig.onTrailingClick) textField.on("trailing", baseConfig.onTrailingClick);
 
-    return textfield;
+    return textField;
   } catch (error) {
     console.error(
       "TextField creation error:",
       error instanceof Error ? error.message : String(error)
     );
     throw new Error(
-      `Failed to create textfield: ${
+      `Failed to create text field: ${
         error instanceof Error ? error.message : String(error)
       }`
     );

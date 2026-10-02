@@ -71,7 +71,7 @@ export const withInput =
   (config: SearchConfig, getComponent: () => SearchComponent) =>
   // Generic, so the accumulated pipeline type survives to the features after
   // this one. A concrete parameter type would erase it — the defect fixed in
-  // textfield's withDensity (#109).
+  // text field's withDensity (#109).
   <C extends InputHost>(component: C) => {
   // Initialize state
   let currentValue = config.value || "";

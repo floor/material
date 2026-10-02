@@ -1,4 +1,4 @@
-// src/components/textfield/features/trailing-icon.ts
+// src/components/text-field/features/trailing-icon.ts
 
 import { BaseComponent, ElementComponent } from '../../../core/compose/component';
 
@@ -98,7 +98,7 @@ export interface TrailingIconFeature {
 export interface TrailingIconComponent extends BaseComponent, TrailingIconFeature {}
 
 /**
- * Adds trailing icon to a textfield component
+ * Adds trailing icon to a text field component
  * @param config - Configuration with trailing icon settings
  * @returns Function that enhances a component with trailing icon
  */
@@ -110,7 +110,7 @@ export const withTrailingIcon = <T extends TrailingIconConfig & object>(config: 
     // prefix together, which the hardcoded 44px did not. `api.ts` already
     // schedules a placement update after every one of these calls.
     const PREFIX = config.prefix || 'mtrl';
-    const NAME = config.componentName || 'textfield';
+    const NAME = config.componentName || 'text-field';
 
     // The slot is created when it is first needed, not only when the option was
     // set at creation. The setters used to exist only on a component configured

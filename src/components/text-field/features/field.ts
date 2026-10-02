@@ -1,4 +1,4 @@
-// src/components/textfield/features/field.ts
+// src/components/text-field/features/field.ts
 
 import type { ElementComponent } from "../../../core/compose/component";
 
@@ -27,7 +27,7 @@ export const withField =
   <T extends FieldConfig & object>(config: T) =>
   <C extends ElementComponent>(component: C): C & FieldComponent => {
     const field = document.createElement("div");
-    field.className = `${config.prefix || "mtrl"}-${config.componentName || "textfield"}__field`;
+    field.className = `${config.prefix || "mtrl"}-${config.componentName || "text-field"}__field`;
     component.element.appendChild(field);
     return { ...component, field };
   };

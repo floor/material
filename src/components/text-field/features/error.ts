@@ -67,7 +67,7 @@ export const withError =
   <T extends ErrorConfig & object>(config: T) =>
   <C extends ComponentWithSupportingText>(component: C): C & ErrorComponent => {
     const PREFIX = config.prefix || "mtrl";
-    const COMPONENT = config.componentName || "textfield";
+    const COMPONENT = config.componentName || "text-field";
 
     // Track error state
     let errorState = config.error || false;

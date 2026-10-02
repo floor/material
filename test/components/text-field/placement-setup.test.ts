@@ -1,4 +1,4 @@
-// test/components/textfield/placement-setup.test.ts
+// test/components/text-field/placement-setup.test.ts
 //
 // FLO-378: a filled field with nothing to place installs no observers and no
 // resize listener, and schedules no measure. The first request for placement,
@@ -24,7 +24,7 @@ let timers = 0;
 // ResizeObserver (the input's autofill and the counter observe other things)
 g.MutationObserver = class {
   observe(target: Element, options?: MutationObserverInit) {
-    if (target.classList?.contains("mtrl-textfield") && options?.attributeFilter?.includes("class")) observed++;
+    if (target.classList?.contains("mtrl-text-field") && options?.attributeFilter?.includes("class")) observed++;
   }
   disconnect() {}
   takeRecords() { return []; }
@@ -39,7 +39,7 @@ const realSetTimeout = setTimeout;
 // Placement's batch: the shared flush the first measure is scheduled in
 g.setTimeout = ((fn: () => void, ms?: number) => { if (fn.name === "flush") timers++; return realSetTimeout(fn, ms); }) as typeof setTimeout;
 
-import createTextField from "../../../src/components/textfield";
+import createTextField from "../../../src/components/text-field";
 
 const ICON = '<svg viewBox="0 0 24 24"></svg>';
 const mount = (config: Record<string, unknown> = {}) => {

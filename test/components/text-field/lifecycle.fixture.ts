@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test } from "bun:test";
 import { JSDOM } from "jsdom";
-import createTextField from "../../../src/components/textfield";
+import createTextField from "../../../src/components/text-field";
 
 let dom: JSDOM;
 let restore: (() => void)[];

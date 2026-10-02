@@ -23,7 +23,7 @@ interface DensityComponent {
 }
 
 /**
- * Adds density support to textfield component
+ * Adds density support to text field component
  * @param {DensityConfig} config - Configuration with density option
  * @returns {Function} Higher-order function that adds density capabilities
  */
@@ -36,7 +36,7 @@ export const withDensity =
   // what it was already doing.
   <C extends DensityComponent>(component: C): C => {
     const PREFIX = config.prefix || "mtrl";
-    const COMPONENT = config.componentName || "textfield";
+    const COMPONENT = config.componentName || "text-field";
     const density = config.density || "default";
 
     // Apply initial density class

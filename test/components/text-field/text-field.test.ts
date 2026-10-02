@@ -1,11 +1,11 @@
-// test/components/textfield/textfield.test.ts
+// test/components/text-field/text-field.test.ts
 //
-// The real textfield in a JSDOM document: its labelled input and attributes,
+// The real text field in a JSDOM document: its labelled input and attributes,
 // value and events, variant and density, supporting text and error state, the
 // icon, prefix and suffix slots, and disabled state. The spawned lifecycle
 // fixture beside this file covers observers and teardown.
 //
-// This replaces test/components/textfield.test.ts, which asserted against a
+// This replaces test/components/text-field.test.ts, which asserted against a
 // mock defined in its own file. Porting it found two defects fixed here:
 // readonly was documented and never applied to the input, and setError(false)
 // left the error message on screen as ordinary helper text instead of restoring
@@ -38,7 +38,7 @@ g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date
 g.cancelAnimationFrame = () => {};
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
-import createTextField, { type TextFieldValuePayload, type TextFieldFocusPayload } from '../../../src/components/textfield';
+import createTextField, { type TextFieldValuePayload, type TextFieldFocusPayload } from '../../../src/components/text-field';
 
 const ICON = '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>';
 
@@ -49,13 +49,13 @@ const mount = (config: Parameters<typeof createTextField>[0] = {}) => {
   document.body.append(field.element);
   return field;
 };
-const helper = (field: { element: HTMLElement }) => field.element.querySelector('.mtrl-textfield__helper');
+const helper = (field: { element: HTMLElement }) => field.element.querySelector('.mtrl-text-field__helper');
 const type = (field: { input: HTMLInputElement | HTMLTextAreaElement }, text: string) => {
   field.input.value = text;
   field.input.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
 };
 
-describe('textfield', () => {
+describe('text-field', () => {
   test('its label is associated with the input', () => {
     const field = mount({ label: 'Email' });
     const label = field.element.querySelector('label')!;
@@ -89,9 +89,9 @@ describe('textfield', () => {
 
   test('an empty field is marked empty, and a value clears the mark', () => {
     const field = mount({ label: 'Name' });
-    expect(field.element.classList.contains('mtrl-textfield--empty')).toBe(true);
+    expect(field.element.classList.contains('mtrl-text-field--empty')).toBe(true);
     type(field, 'x');
-    expect(field.element.classList.contains('mtrl-textfield--empty')).toBe(false);
+    expect(field.element.classList.contains('mtrl-text-field--empty')).toBe(false);
   });
 
   test('setLabel replaces the label', () => {
@@ -104,10 +104,10 @@ describe('textfield', () => {
   test('filled by default, outlined by config or setVariant', () => {
     const field = mount({ label: 'x' });
     expect(field.getVariant()).toBe('filled');
-    expect(field.element.classList.contains('mtrl-textfield--filled')).toBe(true);
+    expect(field.element.classList.contains('mtrl-text-field--filled')).toBe(true);
     field.setVariant('outlined');
-    expect(field.element.classList.contains('mtrl-textfield--outlined')).toBe(true);
-    expect(field.element.classList.contains('mtrl-textfield--filled')).toBe(false);
+    expect(field.element.classList.contains('mtrl-text-field--outlined')).toBe(true);
+    expect(field.element.classList.contains('mtrl-text-field--filled')).toBe(false);
     expect(mount({ label: 'x', variant: 'outlined' }).getVariant()).toBe('outlined');
     expect(field.getDensity()).toBe('default');
   });
@@ -134,15 +134,15 @@ describe('textfield', () => {
     const field = mount({ label: 'Email', supportingText: 'We never share it' });
     field.setError(true, 'Invalid email');
     expect(field.isError()).toBe(true);
-    expect(field.element.classList.contains('mtrl-textfield--error')).toBe(true);
+    expect(field.element.classList.contains('mtrl-text-field--error')).toBe(true);
     expect(helper(field)?.textContent).toBe('Invalid email');
-    expect(helper(field)?.classList.contains('mtrl-textfield__helper--error')).toBe(true);
+    expect(helper(field)?.classList.contains('mtrl-text-field__helper--error')).toBe(true);
 
     field.setError(false);
     expect(field.isError()).toBe(false);
-    expect(field.element.classList.contains('mtrl-textfield--error')).toBe(false);
+    expect(field.element.classList.contains('mtrl-text-field--error')).toBe(false);
     expect(helper(field)?.textContent).toBe('We never share it');
-    expect(helper(field)?.classList.contains('mtrl-textfield__helper--error')).toBe(false);
+    expect(helper(field)?.classList.contains('mtrl-text-field__helper--error')).toBe(false);
   });
 
   test('ending an error on a field that had no helper text removes the message', () => {
@@ -155,7 +155,7 @@ describe('textfield', () => {
   test('an error from config is applied', () => {
     const field = mount({ label: 'x', error: true, supportingText: 'Required' });
     expect(field.isError()).toBe(true);
-    expect(field.element.classList.contains('mtrl-textfield--error')).toBe(true);
+    expect(field.element.classList.contains('mtrl-text-field--error')).toBe(true);
   });
 
   // F8: the supporting text and the error were only seen. Nothing tied the
@@ -212,12 +212,12 @@ describe('textfield', () => {
 
   test('icon, prefix and suffix slots from config render, and can be removed', () => {
     const field = mount({ label: 'Price', leadingIcon: ICON, trailingIcon: ICON, prefixText: '$', suffixText: 'kg' });
-    const slot = (name: string) => field.element.querySelector(`.mtrl-textfield__${name}`);
+    const slot = (name: string) => field.element.querySelector(`.mtrl-text-field__${name}`);
     expect(slot('leading-icon')).not.toBeNull();
     expect(slot('trailing-icon')).not.toBeNull();
     expect(slot('prefix')?.textContent).toBe('$');
     expect(slot('suffix')?.textContent).toBe('kg');
-    expect(field.element.classList.contains('mtrl-textfield--with-leading-icon')).toBe(true);
+    expect(field.element.classList.contains('mtrl-text-field--with-leading-icon')).toBe(true);
 
     field.setPrefixText('€');
     expect(slot('prefix')?.textContent).toBe('€');
@@ -227,7 +227,7 @@ describe('textfield', () => {
     field.removePrefixText();
     field.removeSuffixText();
     expect([slot('leading-icon'), slot('trailing-icon'), slot('prefix'), slot('suffix')]).toEqual([null, null, null, null]);
-    expect(field.element.classList.contains('mtrl-textfield--with-leading-icon')).toBe(false);
+    expect(field.element.classList.contains('mtrl-text-field--with-leading-icon')).toBe(false);
   });
 
   test('disabled from config, and disable and enable, reach the input', () => {
@@ -235,7 +235,7 @@ describe('textfield', () => {
     const field = mount({ label: 'x' });
     field.disable();
     expect(field.input.disabled).toBe(true);
-    expect(field.element.classList.contains('mtrl-textfield--disabled')).toBe(true);
+    expect(field.element.classList.contains('mtrl-text-field--disabled')).toBe(true);
     field.enable();
     expect(field.input.disabled).toBe(false);
   });
@@ -335,14 +335,14 @@ describe('textfield', () => {
 // notch for the floated label, instead of painting the label with a copied
 // background. JSDOM has no layout, so the label's width is stubbed; the
 // browser check in scripts/check-elements.ts proves the geometry.
-describe('textfield outline notch', () => {
+describe('text field outline notch', () => {
   const settle = () => new Promise((resolve) => setTimeout(resolve, 30));
   const part = (field: { element: HTMLElement }, name: string) =>
-    field.element.querySelector(`.mtrl-textfield__outline-${name}`) as HTMLElement | null;
+    field.element.querySelector(`.mtrl-text-field__outline-${name}`) as HTMLElement | null;
   const outline = (field: { element: HTMLElement }) =>
-    field.element.querySelector('.mtrl-textfield__outline') as HTMLElement | null;
+    field.element.querySelector('.mtrl-text-field__outline') as HTMLElement | null;
   const notched = (field: { element: HTMLElement }) =>
-    outline(field)?.classList.contains('mtrl-textfield__outline--notched');
+    outline(field)?.classList.contains('mtrl-text-field__outline--notched');
   // 10px per character, the label's untransformed width
   const measureLabel = (field: { element: HTMLElement }) => {
     const label = field.element.querySelector('label') as HTMLElement;
@@ -355,9 +355,9 @@ describe('textfield outline notch', () => {
     expect(el).not.toBeNull();
     expect(el.getAttribute('aria-hidden')).toBe('true');
     expect(Array.from(el.children).map((child) => child.className)).toEqual([
-      'mtrl-textfield__outline-leading',
-      'mtrl-textfield__outline-notch',
-      'mtrl-textfield__outline-trailing',
+      'mtrl-text-field__outline-leading',
+      'mtrl-text-field__outline-notch',
+      'mtrl-text-field__outline-trailing',
     ]);
     expect(field.input.nextElementSibling).toBe(el);
     expect(outline(mount({ label: 'Name' }))).toBeNull();
@@ -434,7 +434,7 @@ describe('textfield outline notch', () => {
 
 // FLO-114: exercise the actual emitter for both input elements supported by the factory.
 for (const inputType of ['text', 'multiline'] as const) {
-  describe(`textfield ${inputType} event contract`, () => {
+  describe(`text field ${inputType} event contract`, () => {
     test('native input and change report the value, empty state and autofill flag', () => {
       const field = mount({ type: inputType });
       const inputs = mock((_payload: TextFieldValuePayload) => {});

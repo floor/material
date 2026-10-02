@@ -4,7 +4,7 @@
  * Select Component Module
  * 
  * The Select component provides a dropdown select control,
- * combining a textfield and menu for a complete selection interface.
+ * combining a text field and menu for a complete selection interface.
  * 
  * @module components/select
  * @category Components
