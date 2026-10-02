@@ -5350,6 +5350,46 @@ try {
     assert.deepEqual(openOption, { atCreation: true, shown: { open: true, modal: true, where: true } });
     check("time picker: open: true is open when the factory returns, and its modal is shown where the picker was put");
 
+    // The docked date picker (the default variant), with real clicks: open() from
+    // a click on a button outside it. That click must leave it open, the next
+    // click outside must close it, once. Then open() by script and a real click
+    // outside at once. The test engineer's case from the three-engine probe of #492.
+    await fresh(page, `<button id="opener" type="button">Open</button><button id="other" type="button">Other</button><div id="place"></div>`);
+    await page.evaluate(() => {
+      const w = window as unknown as Win & { mtrl: Factories };
+      const picker = w.mtrl.createDatePicker({ label: "Date" });
+      (document.getElementById("place") as HTMLElement).append(picker.element);
+      w.__picker = picker;
+      w.__closes = 0;
+      (picker.on as (name: string, handler: () => void) => void)("close", () => { (w.__closes as number)++; });
+      (document.getElementById("opener") as HTMLElement).addEventListener("click", () => void (picker.open as () => unknown)());
+    });
+    const docked = (): Promise<{ open: boolean; closes: number }> =>
+      page.evaluate(() => {
+        const w = window as unknown as Win;
+        return { open: (w.__picker as { isOpen: () => boolean }).isOpen(), closes: w.__closes as number };
+      });
+    const dockedSteps: Record<string, unknown> = {};
+    await page.click("#opener");
+    dockedSteps.afterTheClickThatOpenedIt = await docked();
+    await wait(400);
+    dockedSteps.stillOpenLater = await docked();
+    await page.click("#other");
+    await wait(400);
+    dockedSteps.afterTheNextClickOutside = await docked();
+    await page.evaluate(() => void ((window as unknown as Win).__picker as { open: () => unknown }).open());
+    await page.click("#other");
+    await wait(400);
+    dockedSteps.openedByScriptThenAClickOutsideAtOnce = await docked();
+    await page.evaluate(() => ((window as unknown as Win).__picker as { destroy: () => void }).destroy());
+    assert.deepEqual(dockedSteps, {
+      afterTheClickThatOpenedIt: { open: true, closes: 0 },
+      stillOpenLater: { open: true, closes: 0 },
+      afterTheNextClickOutside: { open: false, closes: 1 },
+      openedByScriptThenAClickOutsideAtOnce: { open: false, closes: 2 },
+    });
+    check("date picker, docked: the click that opened it leaves it open, and the next click outside closes it once");
+
     // The same sentence for the menu (FLO-548): its click-outside and Escape
     // listeners are added inside open(). A button that is not the menu's
     // opener opens it by code, from a click and from an Escape keydown: that
