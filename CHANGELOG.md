@@ -1145,7 +1145,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   32x52dp and "Target: Size 48dp", and no height for a label row; its Accessibility section:
   "Don't apply density to switches by default — this lowers their targets below our best
   practice of 48x48 CSS pixels." So the unlabelled row is 48 tall, and a labelled switch keeps
-  its 56px row, unchanged. Factory and element, left-to-right and right-to-left. Before upgrade,
+  its 56px row, unchanged. A switch with supporting text and no label is not unlabelled: its
+  helper stands where the label would, keeping the 12px gap and the 56px row. A label made only
+  of spaces is not empty, so the factory still treats `label: " "` as a labelled switch (the
+  element trims its text, so this is the factory only). Factory and element, left-to-right and
+  right-to-left. Before upgrade,
   write the tag with nothing between its tags: a whitespace-only text node (a space, a line
   break) is not `:empty`, so such a host keeps the labelled layout although the element then
   builds no label.
