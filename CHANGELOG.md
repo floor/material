@@ -1147,6 +1147,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A multiline text field uses the value it was created with (FLO-577).** `createTextField({ type: 'multiline', value })` wrote that string as a `value` attribute. A textarea does not take its value from that attribute, so `getValue()` was empty, the label stayed down, and a reset restored nothing. The value is now the textarea's default value, which is its text: the field shows it, the label floats, and a reset restores it. A single-line field still uses the `value` attribute. `<m-text-field>` no longer sets the default a second time.
 - **An unlabelled switch is its 52 x 48 track box, not the label's row.** With no label the root
   kept the label's 12px gap, so it was 64px wide (12 + the 52px track) and 56px tall: in a 48px
   slot the track ran 16px past the end and the checked 40px state layer 20px past it. The gap
