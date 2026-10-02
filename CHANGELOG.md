@@ -82,6 +82,7 @@ the new name exists only in 3.0.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `T
 | Sass `$mtrl-sys-shape` | `v.shape(<step>)` |
 | `select.menu` (the menu inside a select) | the select's own `open()`, `close()`, `isOpen()`, `getOptions()`, `setOptions()` and its `open`, `close` and `change` events. The `menu` config option (`container`, `maxHeight`, …) stays |
 | `splitButton.menu` (the menu inside a split button) | `expand()`, `collapse()`, `isExpanded()`, the `expand`, `collapse` and `select` events, and the new `setItems()` and `getItems()` |
+| `progress.canvas`, `progress.track`, `progress.indicator`, `progress.buffer` (the element), `progress.resize()` | for the canvas, `progress.element.querySelector('canvas')`; nothing for `resize()`, the component observes its own size. `setBuffer()` and `getBuffer()` are unchanged |
 
 Removed with nothing in their place, because nothing read them or they had no effect: a dialog
 button's `color`, `TOOLTIP_DEFAULTS.RICH`, the checkbox's `variant`, `CheckboxVariant` and
@@ -95,6 +96,13 @@ picker's `closeOnSelect` and `TIMEPICKER_DEFAULTS.CLOSE_ON_SELECT`, `TIMEPICKER_
 the card, tabs and switch internals on their subpaths, `ChipConfig`'s `managedSelection` and
 `cell`, `CardComponent`'s `loading`, `expandable` and `swipeable`, and the list `scroll` payload's
 `component`, which was never sent.
+
+**Reserved before 3.0.0.** `mtrl` 0.10.7 marks these deprecated too, so your editor flags each
+use: the five progress members in the table above; `mtrl/core/compose/features`, whose names
+are imported from `material/core/compose`; the slider's `components` object, which is internal
+in 3.0.0 (use the slider's own API and `slider.element`); and `tab.badge` read without a
+check, since it may be `undefined` until the badge is shown (`setBadge()`, `getBadge()`,
+`showBadge()` and `hideBadge()` work either way).
 
 **Sass.** The two Sass rows above are for stylesheets that `@use` material's sources. The Sass sources
 ship for reference; configuring them with `@use … with` is not a supported API in material 3.0.0. Theme
@@ -130,7 +138,9 @@ The menu's and the select's `open` and `close` payloads (`MenuEvent`, `SelectEve
 select's `change` payload (`SelectChangeEvent`) have no `preventDefault` and no
 `defaultPrevented` (FLO-548): none of these events could ever be cancelled, so
 `event.preventDefault()` in such a listener is an error. The menu's `select`, where it keeps
-the menu open, keeps both.
+the menu open, keeps both. `ProgressComponent` has no `canvas`, `resize`, `track`, `indicator`
+or `buffer`: reading one is an error (TS2339). An import from a path under a core area,
+`material/core/compose/features`, is an error too (TS2307).
 
 **Changes your compiler won't catch**
 
@@ -1014,8 +1024,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `v.shape(<step>)`.
 
 ### Added
-- `material/components/chips` and `material/components/divider` now have their factory as the default export, as the other component entries do. Every `material/components/<name>` entry exports its factory as the default export and by its name.
 
+- **Every `material/components/<name>` entry exports its factory both ways:** as the default
+  export and by its name (`import createButton from 'material/components/button'` and
+  `import { createButton } from 'material/components/button'` are the same function, and the
+  same one the root exports). 21 entries had only the default and gain the name; `chips` and
+  `divider` had only the name and gain the default. Nothing is removed.
 - **`isOpen()` on the snackbar and the date picker (FLO-548)**, as on every other overlay.
 - **Split button `setItems(items)` and `getItems()` (FLO-543).** `setItems` replaces the menu's
   items and returns the split button; `getItems` returns them. A split button created without
@@ -1394,6 +1408,51 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - Source SSR reads the element CSS registry without resolving built package exports; source tests register real Sass output without mocking the CSS import (FLO-363).
 
 `material` 3.0.0 is MIT; `material` 1.x was GPL-3.
+
+## [3.0.0-next.1] - 2026-10-03
+
+The second prerelease of 3.0.0, on the npm `next` tag (`npm install material@next`). Its full
+entries are under Unreleased; this is what changed since `3.0.0-next.0`.
+
+**Breaking since next.0**
+
+- `material/core/<area>` is an explicit list: `material/core` and its seven areas (`canvas`,
+  `compose`, `dom`, `shapes`, `state`, `theme`, `utils`). `material/core/compose/features` no
+  longer resolves: import the same names from `material/core/compose`.
+- `ProgressComponent` no longer has `canvas`, `resize`, `track`, `indicator` and `buffer`
+  (TS2339). For the canvas: `progress.element.querySelector('canvas')`.
+
+**Layout changes since next.0: check your pages**
+
+- A select made with `createSelect()` is 280px wide unless you size it; it filled its
+  container. To keep that: `.mtrl-select { width: 100%; }`.
+- A select's menu is as wide as its field in both layers (it stopped at 280px in the default
+  layer).
+- A chip with a remove or trailing button is at least 88px wide, its label at least 42px
+  ("OK": 64.5 → 88px).
+- A labelled horizontal slider is 4px taller (72 → 76px at XS and S, 76 → 80 at M, 92 → 96
+  at L, 132 → 136 at XL); its label is 16px on a 24px line (was 18px).
+- An unlabelled switch is 52 x 48 (was 64 x 56).
+- An unlabelled checkbox's box is centred in its 48px target (15px on each side; it sat at
+  the start). An unlabelled radio is centred the same way.
+- A radio row grows with a wrapping label (it was a fixed 48px, and the text overflowed it);
+  a one-line row stays 48px.
+- An extra-small button has 4px between its icon and its label (was 8px).
+- Right to left: a small button's icon padding, the text field's trailing icon button's
+  target, a selected menu item's check mark and `<m-text-field>` are mirrored.
+
+**Also since next.0**
+
+- Every `material/components/<name>` entry exports its factory as the default export and by
+  its name.
+- The element authoring API (`defineElement`, `ElementSpec`, `registerStyles`, `hasStyles`,
+  `SHADOW_BASE_STYLES`) is experimental: outside semantic versioning in 3.x.
+- `tab.badge` may be `undefined` until the badge is shown; the slider's `components` object is
+  internal.
+- The side sheet's and the dialog's close buttons reach a 48 x 48 target; an
+  `<m-icon-button>`'s icon keeps its size; a multiline text field uses the value it was
+  created with; a select's selected option has one look in both layers; the package no
+  longer carries a second README and licence under `dist/`.
 
 ## [3.0.0-next.0] - 2026-10-02
 
@@ -3391,7 +3450,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.0.0-next.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.0.0-next.1...HEAD
+[3.0.0-next.1]: https://github.com/floor/material/compare/v3.0.0-next.0...v3.0.0-next.1
 [3.0.0-next.0]: https://github.com/floor/material/releases/tag/v3.0.0-next.0
 [0.10.6]: https://github.com/floor/mtrl/compare/v0.10.5...v0.10.6
 [0.10.5]: https://github.com/floor/mtrl/compare/v0.10.4...v0.10.5
