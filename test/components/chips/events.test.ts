@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { JSDOM } from "jsdom";
-import { createChips, type ChipsConfig, type ChipsComponent, type ChipsEvents, type ChipComponent } from "../../../src/components/chips";
+import { createChips, type ChipsConfig, type ChipsComponent, type ChipsEvents, type ChipsChangeEvent, type ChipComponent } from "../../../src/components/chips";
 
 let dom: JSDOM;
 let instances: ChipsComponent[];
@@ -30,6 +30,34 @@ const mount = (config: ChipsConfig = {}) => {
 };
 
 describe("chips container events", () => {
+  test("single and multi change listeners receive one plain object for user and method changes", () => {
+    for (const multiSelect of [false, true]) {
+      const callbacks: { event: ChipsChangeEvent; count: number }[] = [];
+      const listeners: { event: ChipsChangeEvent; count: number }[] = [];
+      const chips = mount({ multiSelect, chips: [
+        { value: "a", ripple: false }, { value: "b", ripple: false },
+      ], onChange: function (event) { callbacks.push({ event, count: arguments.length }); } });
+      chips.on("change", function (event) { listeners.push({ event, count: arguments.length }); });
+
+      chips.getChips()[0].element.click();
+      chips.selectByValue("b", true);
+
+      expect(listeners).toHaveLength(2);
+      expect(callbacks).toHaveLength(1);
+      for (const { event, count } of [...listeners, ...callbacks]) {
+        expect(count).toBe(1);
+        expect(Array.isArray(event)).toBe(false);
+        expect(Object.getPrototypeOf(event)).toBe(Object.prototype);
+        expect(Object.keys(event).sort()).toEqual(["changed", "selected", "value"]);
+      }
+      expect(listeners.map(({ event }) => ({ ...event }))).toEqual([
+        { value: multiSelect ? ["a"] : "a", selected: ["a"], changed: "a" },
+        { value: multiSelect ? ["b"] : "b", selected: ["b"], changed: null },
+      ]);
+      expect(callbacks[0].event).toBe(listeners[0].event);
+    }
+  });
+
   test("config add handlers receive each initial chip and later additions after insertion", () => {
     const added: { chip: ChipComponent; value: string | string[] | null }[] = [];
     const parents: (HTMLElement | null)[] = [];

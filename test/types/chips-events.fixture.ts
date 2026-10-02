@@ -27,6 +27,14 @@ export const chained: ChipsComponent = chips.on(CHIPS_EVENTS.CHANGE, handler).of
 chips.on("add", event => event.chip.setSelected(true));
 chips.off("remove", event => event.chip.getValue());
 chips.on("change", () => {});
+// @ts-expect-error change no longer supplies the deprecated second argument
+chips.on("change", (_event, changed: string | null) => { void changed; });
+// @ts-expect-error config onChange also takes only the payload
+createChips({ onChange: (_event, changed: string | null) => { void changed; } });
+// @ts-expect-error the payload is not indexable as an array
+chips.on("change", event => event[0]);
+// @ts-expect-error the payload is not iterable as an array
+chips.on("change", event => [...event]);
 // @ts-expect-error change carries two positional values, not a DOM event
 chips.on("change", (event: Event) => event.preventDefault());
 // @ts-expect-error off checks the same contract
