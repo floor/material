@@ -229,6 +229,12 @@
       "file": "scripts/check-consumer.ts",
       "text": "<title>mtrl CSS comparison</title>",
       "reason": "the harness page's own title, not a specifier"
+    },
+    {
+      "id": "readme-history-link",
+      "file": "README.md",
+      "text": "https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed",
+      "reason": "the pulls URL in \"Where this came from\" names the repository the history was developed in, not a specifier"
     }
   ]
 }

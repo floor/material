@@ -1,8 +1,8 @@
-# mtrl
+# material
 
 Material Design 3 components for the web: as plain JavaScript, as web components, and as React, Vue, Svelte and Solid components. Written in TypeScript, with zero dependencies.
 
-mtrl implements the M3 Expressive update: component sizes, shapes, colours and spring motion follow the Material 3 tokens. One implementation serves every way of using it, so a button looks and behaves the same in each. The documentation site, [md3.io](https://md3.io), has a live playground and examples in every framework for each component.
+material implements the M3 Expressive update: component sizes, shapes, colours and spring motion follow the Material 3 tokens. One implementation serves every way of using it, so a button looks and behaves the same in each. The documentation site, [md3.io](https://md3.io), has a live playground and examples in every framework for each component.
 
 ## Install
 
@@ -10,7 +10,7 @@ mtrl implements the M3 Expressive update: component sizes, shapes, colours and s
 npm install material
 ```
 
-React, Vue, Svelte and Solid are optional peer dependencies: mtrl uses the one your app has and installs none of them.
+React, Vue, Svelte and Solid are optional peer dependencies: material uses the one your app has and installs none of them.
 
 ## Use it your way
 
@@ -21,7 +21,7 @@ React, Vue, Svelte and Solid are optional peer dependencies: mtrl uses the one y
 | Vue | `material/vue` | Vue 3, Nuxt |
 | Svelte | `material/svelte` | Svelte 5, SvelteKit |
 | Solid | `material/solid` | SolidJS, SolidStart |
-| Vanilla factories | `mtrl` | The smallest bundles and full control |
+| Vanilla factories | `material` | The smallest bundles and full control |
 
 Every app imports the base stylesheet once: the theme, the tokens a component reads, and the ripple. Type classes and the type scale are `material/styles/typography` (see [Styles](#styles)).
 
@@ -124,7 +124,7 @@ import 'material/themes/ocean';
 import 'material/styles/utilities';
 ```
 
-The base includes the baseline theme in light and dark, the colour, shape and typeface tokens, the three body-medium type tokens the page's text reads (`--mtrl-sys-typescale-body-medium-font`, `-font-size` and `-line-height`), a reset and the ripple. The type classes (`.mtrl-display-large` through `.mtrl-label-small`), the text utilities (`.mtrl-text-*`, `.mtrl-font-*`, `.mtrl-truncate*`), mtrl's styles for `h1`–`h6` and `p`, and the rest of the type scale are a separate import:
+The base includes the baseline theme in light and dark, the colour, shape and typeface tokens, the three body-medium type tokens the page's text reads (`--mtrl-sys-typescale-body-medium-font`, `-font-size` and `-line-height`), a reset and the ripple. The type classes (`.mtrl-display-large` through `.mtrl-label-small`), the text utilities (`.mtrl-text-*`, `.mtrl-font-*`, `.mtrl-truncate*`), material's styles for `h1`–`h6` and `p`, and the rest of the type scale are a separate import:
 
 ```typescript
 import 'material/styles/typography';
@@ -132,13 +132,13 @@ import 'material/styles/typography';
 
 It has to load after the base: both sheets style `h1`–`h6` and `p`, and the later one wins. The import above takes care of it (the module imports `material/styles/base` first, in whatever order your own imports are). If your bundler splits the two into different chunks, make sure the base's CSS loads first: an import order is not a CSS order in every bundler. With `<link>` tags, put `dist/styles/typography.css` after `dist/styles/base.css`.
 
-Import it when the page uses those classes or utilities, when it relies on mtrl's heading and paragraph styles, or when its own CSS reads a `--mtrl-sys-typescale-*` token. Without it a `.mtrl-headline-small` element keeps the body's font size, and a `var(--mtrl-sys-typescale-*)` with no fallback is invalid at computed-value time. Body text keeps its font. The full stylesheet includes typography, so `import 'material/styles'` is unchanged.
+Import it when the page uses those classes or utilities, when it relies on material's heading and paragraph styles, or when its own CSS reads a `--mtrl-sys-typescale-*` token. Without it a `.mtrl-headline-small` element keeps the body's font size, and a `var(--mtrl-sys-typescale-*)` with no fallback is invalid at computed-value time. Body text keeps its font. The full stylesheet includes typography, so `import 'material/styles'` is unchanged.
 
 Each selective entry imports what it depends on (the select brings the text field and the menu), so use a CSS-capable bundler to resolve and deduplicate them. Choose either the full stylesheet or selective imports, not both.
 
-Library styles sit in ordered `mtrl` cascade layers, so unlayered application CSS overrides them without specificity battles.
+Library styles sit in ordered `mtrl.*` cascade layers, so unlayered application CSS overrides them without specificity battles.
 
-The Sass sources ship for reference; configuring them with `@use … with` is not a supported API in 1.0. Theme with CSS custom properties.
+The Sass sources ship for reference; configuring them with `@use … with` is not a supported API in `material` 3.0.0. Theme with CSS custom properties.
 
 ### Themes
 
@@ -209,7 +209,7 @@ Declaration children describe a component's items, as native `<select>` and `<op
 </m-tabs>
 ```
 
-The page still loads mtrl's base styles and a theme (see [Styles](#styles)); the elements render in shadow DOM and pick up the theme's tokens. Attributes are defaults and properties the live state, as on native controls: a `checked` or `value` attribute sets the state until the user or a script changes it, and `form.reset()` goes back to it. Form controls take part in forms (their host's `name`), reset, validation and back-navigation restore.
+The page still loads material's base styles and a theme (see [Styles](#styles)); the elements render in shadow DOM and pick up the theme's tokens. Attributes are defaults and properties the live state, as on native controls: a `checked` or `value` attribute sets the state until the user or a script changes it, and `form.reset()` goes back to it. Form controls take part in forms (their host's `name`), reset, validation and back-navigation restore.
 
 A server-rendered page sends each element as its tag and light DOM; the element takes its real look once its script defines it. So that nothing moves meanwhile, put the pre-upgrade stylesheet in `<head>`: it gives every element not defined yet the box it will have (and its label the final type style), hides what it declares (`<m-tab>`, `<m-menu-item>`, …) and overlays. Its rules match only `:not(:defined)`, in the `mtrl.preupgrade` cascade layer.
 
@@ -232,7 +232,7 @@ The framework components render the elements, so everything above holds: forms, 
 
 With `skipLibCheck: false`, use `@types/react` 18.2.71 or later.
 
-Each framework is an optional peer dependency; mtrl installs none of them. All adapters render on the server and hydrate. Angular apps use the elements directly, with `CUSTOM_ELEMENTS_SCHEMA`.
+Each framework is an optional peer dependency; material installs none of them. All adapters render on the server and hydrate. Angular apps use the elements directly, with `CUSTOM_ELEMENTS_SCHEMA`.
 
 A component owns the `on…` props of its element's events (`onChange`, `onInput`, `onSelect`, …) and its `default…` props, typed with the element's own payloads. Any other HTML attribute passes to the host; to spread a whole set of HTML attributes into a component, omit the props it owns (`Omit<React.HTMLAttributes<HTMLElement>, "onChange">`).
 
@@ -240,7 +240,7 @@ Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, 
 
 ## Server rendering
 
-`renderElement` from `material/ssr` renders an element to declarative shadow DOM. Import `material/ssr/react`, `material/ssr/vue`, `material/ssr/svelte` or `material/ssr/solid` in the server bootstrap and that framework's components emit the same roots. Node and Bun are supported in 1.0. Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one.
+`renderElement` from `material/ssr` renders an element to declarative shadow DOM. Import `material/ssr/react`, `material/ssr/vue`, `material/ssr/svelte` or `material/ssr/solid` in the server bootstrap and that framework's components emit the same roots. Node and Bun are supported in `material` 3.0.0. Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one.
 
 **Styles: inline by default.** Each root carries its whole CSS as a `<style>`, so it is styled at first paint in every engine with no extra request. That has two costs:
 
@@ -251,17 +251,17 @@ Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, 
 
 Measured on Playwright's engines (Chromium 153, Firefox 155, WebKit 26.6); sizes are of the HTML `renderElement` returns, gzip at level 9, brotli at its default.
 
-Worker and edge runtimes are unsupported in 1.0. Each server entry lists the `browser` condition first. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers does) loads the browser stub: `renderElement` throws "material/ssr is server-only", and importing a bridge does nothing, so the page renders with no declarative roots and no error.
+Worker and edge runtimes are unsupported in `material` 3.0.0. Each server entry lists the `browser` condition first. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers does) loads the browser stub: `renderElement` throws "material/ssr is server-only", and importing a bridge does nothing, so the page renders with no declarative roots and no error.
 
 With `material/ssr/react`, put a `Suspense` boundary outside the component when its server-rendered shadow root needs the resolved child. A boundary inside the component contributes its fallback to that root: a button with an empty fallback has no label slot, while a text fallback gives it a slot and shows the fallback text. In tabs, a boundary around a tab leaves the server-rendered root without that tab with either fallback; a boundary inside a tab label keeps the tab, with an empty or fallback-text label.
 
-With `material/ssr/react` and `material/ssr/svelte`, the server-rendered shadow root is built in a separate render, without the context of providers above the component. The page's own render (the light DOM) sees the provided value. Until the component upgrades, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves that component without a declarative shadow root, while the page still renders. React and Svelte each log a development-only warning naming the element in the latter case. Keep context-dependent text outside mtrl components: pass the resolved string as a prop or attribute, or accept client-rendered text until the upgrade. A fix is planned for 1.1 (FLO-517). The Vue and Solid bridges see the provided value in both the shadow root and light DOM.
+With `material/ssr/react` and `material/ssr/svelte`, the server-rendered shadow root is built in a separate render, without the context of providers above the component. The page's own render (the light DOM) sees the provided value. Until the component upgrades, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves that component without a declarative shadow root, while the page still renders. React and Svelte each log a development-only warning naming the element in the latter case. Keep context-dependent text outside material components: pass the resolved string as a prop or attribute, or accept client-rendered text until the upgrade. A fix is planned for 1.1 (FLO-517). The Vue and Solid bridges see the provided value in both the shadow root and light DOM.
 
 The same HTML policy as [Markup and sanitizing](#markup-and-sanitizing) applies to `material/ssr` and the four bridges.
 
 ## Imports and tree-shaking
 
-mtrl publishes ESM only, with type declarations, so bundlers drop unused exports and split dynamic imports. From CommonJS, load it with a dynamic `import('material')`.
+material publishes ESM only, with type declarations, so bundlers drop unused exports and split dynamic imports. From CommonJS, load it with a dynamic `import('material')`.
 
 | Import | Path |
 |--------|------|
@@ -383,9 +383,18 @@ On a declaration child:
 
 <!-- /markup-attributes -->
 
+## Where this came from
+
+The package was published as `mtrl` up to 0.10.x. The history before 3.0.0 was developed in
+`floor/mtrl`; `#numbers` in commit subjects before 3.0.0 refer to
+[pull requests there](https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed).
+
+What a page meets keeps the name: the `mtrl-` class prefix, the `--mtrl-` custom properties,
+the `m-` tags and the `mtrl.*` cascade layers are unchanged.
+
 ## Upgrading from 0.10
 
-1.0.0 removes what 0.10 deprecated. Upgrade to 0.10.6 first: it has the 1.0 names beside the old ones and flags in your editor each name, option and constant 1.0 removes. Then follow the [1.0 migration guide](CHANGELOG.md#migrating-from-010x): mtrl is ESM-only, the package root keeps the components (the internals move to their subpaths), "text field" is two words in every identifier, and a few leftovers fail silently instead of at compile time, such as a chip's `{ text }`, which renders an empty chip.
+`material` 3.0.0 removes what 0.10 deprecated. Upgrade to the latest `mtrl` 0.10.x first: it has the 3.0.0 names beside the old ones and flags in your editor each name, option and constant 3.0.0 removes. Then change the package name to `material` and follow the [3.0.0 migration guide](CHANGELOG.md#migrating-from-010x): `material` is ESM-only, the package root keeps the components (the internals move to their subpaths), "text field" is two words in every identifier, and a few leftovers fail silently instead of at compile time, such as a chip's `{ text }`, which renders an empty chip.
 
 ## Upgrading from 0.9
 
