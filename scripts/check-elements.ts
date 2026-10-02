@@ -440,9 +440,12 @@ try {
   // height for a label row; its accessibility section (m3-switch.txt:130) calls
   // 48x48 CSS pixels "our best practice". A labelled root keeps the 56px row
   // (the root's 4px above and below the 48px container) and hugs label + 12px +
-  // track, so its measured layout below must not move. The sweep at 1dc3bc72
-  // measured the unlabelled root at 64 = 12 + 52 and the labelled one at
-  // 105.19 = 41.19 + 64 (analysis/sweep/switch/measure.json).
+  // track, so its measured layout below must not move. A switch whose only text
+  // is its supporting text is not unlabelled: its helper stands where the label
+  // would, so the 12px gap and the 56px row stay — what origin/main gave it
+  // before the unlabelled fix. The sweep at 1dc3bc72 measured the unlabelled
+  // root at 64 = 12 + 52 and the labelled one at 105.19 = 41.19 + 64
+  // (analysis/sweep/switch/measure.json).
   {
     const dirs = ["ltr", "rtl"] as const;
     const states = ["unchecked", "checked", "disabled"] as const;
@@ -452,7 +455,8 @@ try {
       return (
         states.map((state) => sw(`u-${dir}-${state}`, state)).join("") +
         states.map((state) => `<div style="width:52px">${sw(`s-${dir}-${state}`, state)}</div>`).join("") +
-        `<m-switch id="l-${dir}">Label</m-switch>`
+        `<m-switch id="l-${dir}">Label</m-switch>` +
+        `<m-switch id="h-${dir}" aria-label="Switch" supporting-text="Helps"></m-switch>`
       );
     };
     await fresh(
@@ -472,6 +476,7 @@ try {
         const trackOf = (root: HTMLElement): HTMLElement => root.querySelector('[class*="switch__track"]') as HTMLElement;
         const failures: string[] = [];
         const labelFailures: string[] = [];
+        const supportFailures: string[] = [];
 
         /** The unlabelled contract: a 52 x 48 root, the track flush with it
             horizontally and centred vertically, and — with a slot — the track
@@ -543,6 +548,55 @@ try {
           }
         };
 
+        /** A switch whose only text is its supporting text: the helper takes
+            the label's place, so the labelled row and its 12px gap must hold
+            — origin/main's layout for this switch before the unlabelled fix,
+            which the guard must not reach. As the labelled rows: every
+            expectation is derived from the helper's own rendered width in
+            this run, so no font is pinned. */
+        const supporting = (root: HTMLElement, what: string): void => {
+          const rootRect = root.getBoundingClientRect();
+          const rtl = getComputedStyle(root).direction === "rtl";
+          const trackRect = trackOf(root).getBoundingClientRect();
+          const helperRect = (root.querySelector(".mtrl-switch__helper") as HTMLElement).getBoundingClientRect();
+          const helperW = r2(helperRect.width);
+          /** A rect edge's inset from the root's, on the inline axis. */
+          const inset = (rect: Box, side: "start" | "end"): number => {
+            if (side === "start") return rtl ? rootRect.right - rect.right : rect.left - rootRect.left;
+            return rtl ? rect.left - rootRect.left : rootRect.right - rect.right;
+          };
+          const got = {
+            rootW: r2(rootRect.width),
+            rootH: r2(rootRect.height),
+            helperStart: r2(inset(helperRect, "start")),
+            helperEnd: r2(inset(helperRect, "end")),
+            trackStart: r2(inset(trackRect, "start")),
+            trackEnd: r2(inset(trackRect, "end")),
+            trackTop: r2(trackRect.top - rootRect.top),
+            gap: r2(rtl ? helperRect.left - trackRect.right : trackRect.left - helperRect.right),
+          };
+          // The labelled row with the helper standing where the label would:
+          // root = helper + 64 (the 12px gap and the 52px track), 56 tall, the
+          // track 12 in.
+          const want = {
+            rootW: helperW + 64, rootH: 56, helperStart: 0, helperEnd: 64,
+            trackStart: helperW + 12, trackEnd: 0, trackTop: 12, gap: 12,
+          };
+          const off = (a: number, b: number): boolean => Math.abs(a - b) > 0.5;
+          if (
+            off(got.rootW, want.rootW) || off(got.rootH, want.rootH) ||
+            off(got.helperStart, want.helperStart) || off(got.helperEnd, want.helperEnd) ||
+            off(got.trackStart, want.trackStart) || off(got.trackEnd, want.trackEnd) ||
+            off(got.trackTop, want.trackTop) || off(got.gap, want.gap)
+          ) {
+            supportFailures.push(
+              `${what}: root ${got.rootW}x${got.rootH} (want ${want.rootW}x${want.rootH}), ` +
+                `helper start ${got.helperStart} / end ${got.helperEnd} (want 0 / 64), gap ${got.gap} (want 12), ` +
+                `track start ${got.trackStart} / end ${got.trackEnd} / top ${got.trackTop} (want ${want.trackStart} / 0 / 12)`
+            );
+          }
+        };
+
         /** A shrink-to-fit holder, as the sweep's page: the root's width:100%
             must resolve to its content, not to a block's width. */
         const hold = (dir: string, child: HTMLElement): HTMLElement => {
@@ -578,15 +632,19 @@ try {
           labelled(inner(document.getElementById(`l-${dir}`) as HTMLElement), "start", `element ${dir} labelled`);
           labelled(hold(dir, w.mtrl.createSwitch({ label: "Label" }).element), "start", `factory ${dir} labelled`);
           labelled(hold(dir, w.mtrl.createSwitch({ label: "Label", labelPosition: "end" }).element), "end", `factory ${dir} labelled-end`);
+          supporting(inner(document.getElementById(`h-${dir}`) as HTMLElement), `element ${dir} with supporting text`);
+          supporting(hold(dir, w.mtrl.createSwitch({ supportingText: "Helps" }).element), `factory ${dir} with supporting text`);
         }
-        return { failures, labelFailures };
+        return { failures, labelFailures, supportFailures };
       },
       { dirs: [...dirs], states: [...states] }
     );
-    for (const line of [...measured.failures, ...measured.labelFailures]) console.log(`  FAIL ${line}`);
+    for (const line of [...measured.failures, ...measured.labelFailures, ...measured.supportFailures]) console.log(`  FAIL ${line}`);
     assert.deepEqual(measured.failures, [], "the unlabelled switch must be the 52px track wide and 48px tall, the track inside a 52px slot");
     assert.deepEqual(measured.labelFailures, [], "the labelled layout must not move");
+    assert.deepEqual(measured.supportFailures, [], "a switch with supporting text and no label keeps the gap to the track and the labelled row");
     check("switch: an unlabelled switch is its 52 x 48 track box, the track inside a 52px slot, and the labelled layout is unchanged");
+    check("switch: a switch with supporting text and no label keeps its 12px gap and the labelled row");
   }
 
   // ---------------------------------------------------------------- button
