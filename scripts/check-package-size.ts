@@ -144,7 +144,13 @@ try {
   // 5,716,236 -> 6,272,030 there. On next, with the forward merge: 5,931,197 ->
   // 6,483,417 against 294100fe, same packer; the budget keeps next's headroom.
   // FLO-428 removed four themes: 6,483,417 -> 6,334,330, same packer; lowered with the headroom.
-  assert(pack.unpackedSize < 6_393_000, "Unpacked package exceeds 6,393,000 bytes");
+  // The 1.0 contract work filled the headroom: 6,389,493 on next 66444315 (3,507 left), mostly
+  // README and declaration text. The SSR style-modes docs (FLO-554) add 4,458 (the README is
+  // packed twice, at the root and in dist/: 3,600; RenderOptions' TSDoc in the .d.ts: 858), to
+  // 6,393,951 against b06e5ae1, Node 22.23.3 / npm 10.9.9. Raised by the rule for explicit
+  // ceilings (measured plus 1%, up to the next 1,000), decided by the main coordinator;
+  // FLO-546 tightens it back to measured plus headroom.
+  assert(pack.unpackedSize < 6_458_000, "Unpacked package exceeds 6,458,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
   const smoke = join(temporary, "smoke.mjs");

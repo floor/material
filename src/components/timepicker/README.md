@@ -61,7 +61,7 @@ The `createTimePicker` function accepts a configuration object with the followin
 | `secondStep` | `number` | `1` | As `minuteStep`, for seconds |
 | `cancelText` | `string` | `'Cancel'` | Custom text for cancel button |
 | `confirmText` | `string` | `'OK'` | Custom text for confirm button |
-| `isOpen` | `boolean` | `false` | Whether the time picker is initially visible |
+| `open` | `boolean` | `false` | Whether the time picker opens once it is created |
 | `container` | `string \| HTMLElement` | `document.body` | CSS selector or element to append the time picker to |
 | `clockIcon` | `string` | Default SVG | Custom icon for the clock button |
 | `keyboardIcon` | `string` | Default SVG | Custom icon for the keyboard button |

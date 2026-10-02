@@ -144,10 +144,16 @@ export const createSnackbarQueue = (
     },
 
     /**
-     * Takes a waiting snackbar out of the queue: it gave up its turn
+     * Takes a snackbar out of the queue. A waiting one gave up its turn; the
+     * one on screen was destroyed, which emits no dismiss, so the queue moves
+     * on to the next as it does after one.
      * @param {QueuedSnackbar} snackbar - The entry passed to add
      */
     remove(snackbar: QueuedSnackbar): void {
+      if (snackbar === current) {
+        currentDismiss?.();
+        return;
+      }
       const index = pending.indexOf(snackbar);
       if (index >= 0) pending.splice(index, 1);
     },
