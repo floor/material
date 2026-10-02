@@ -13,6 +13,7 @@ import { chromium, type Page } from "playwright";
 import type { BunPlugin } from "bun";
 import { declarations, elements } from "../src/elements";
 import { cases } from "./fixtures/preupgrade-cases";
+import { assertGlobalHost, GLOBAL_HOST_DOM, readGlobalHost } from "./fixtures/ssr-global-host";
 import type { Shape } from "./fixtures/solid-ssr-async";
 
 const version = (await Bun.file("node_modules/solid-js/package.json").json() as { version: string }).version;
@@ -96,6 +97,8 @@ for (const item of defaults) {
   if (item.element === "switch") markup += `\n<output id="checked">{checked() ? "true" : "false"}</output>`;
   pieces.push(markup);
 }
+used.add("Button");
+pieces.push(`<Button id="globals" label="Globals" popover="auto" inputMode="numeric" enterKeyHint="send" itemProp="name" nonce="abc" />`);
 // The switch above is built before the checked binding is added. Add it on the host.
 const switchHost = `id=${expr("host-switch")}`;
 const app = `import { createSignal } from "solid-js";
@@ -207,6 +210,7 @@ try {
   renderScenario = loaded.renderScenario;
   html = (loaded as { renderBody: () => string }).renderBody();
   head = (loaded as { hydrationScript: () => string }).hydrationScript();
+  assertGlobalHost(html);
 } finally {
   await Bun.file(serverPath).delete();
 }
@@ -267,6 +271,7 @@ try {
     assert.equal(row.shadow, !OPT_OUT.has(element), `${element} shadow root before script`);
     if (row.childShadow !== null) assert.equal(row.childShadow, true, "toolbar's icon button has a shadow root before script");
   }
+  assert.deepEqual(await inert.evaluate(readGlobalHost), GLOBAL_HOST_DOM);
   await inert.close();
 
   const page = await browser.newPage();
@@ -296,6 +301,7 @@ try {
   });
   await page.waitForFunction(() => document.getElementById("checked")?.textContent === "false");
   assert.equal(await page.locator("#host-switch").getByRole("switch", { name: "Wi-Fi" }).isChecked(), false);
+  assert.deepEqual(await page.evaluate(readGlobalHost), GLOBAL_HOST_DOM);
   assert.deepEqual({ warnings: pageWarnings, errors: pageErrors }, { warnings: [], errors: [] });
   await page.close();
 
