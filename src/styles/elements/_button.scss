@@ -25,8 +25,11 @@ $containers: (
   border-radius: v.button('shape-round-#{$size}');
   @include m.typography(map.get($label-typescale, $size));
 
-  // The leading icon's place (its markup is an attribute, drawn on upgrade).
-  &[icon]::before {
+  // The icon's place (its markup is an attribute, drawn on upgrade). A
+  // trailing icon is reserved after the label, at the same size, so the
+  // label stays where upgrade draws it.
+  &[icon]::before,
+  &[icon][icon-position='end']::after {
     width: v.button('icon-size-#{$size}');
     height: v.button('icon-size-#{$size}');
   }
@@ -66,16 +69,30 @@ $containers: (
     padding: 0 v.button('padding-horizontal-small');
   }
 
-  &[icon]::before {
+  &[icon]::before,
+  &[icon][icon-position='end']::after {
     content: '';
     flex: none;
   }
 
+  // The trailing placeholder is ::after. A leading one beside it would
+  // push the label to where the icon sits after upgrade.
+  &[icon][icon-position='end']::before {
+    content: none;
+  }
+
   // Same 12dp icon-side inset as the component, logical so the reserved box
-  // follows direction. The host is in light DOM until upgrade.
+  // follows direction. With the icon at the end the inset swaps to that
+  // side, as the component's small icon rule does. The host is in light DOM
+  // until upgrade.
   &[icon]:not([size]),
   &[icon][size='s'] {
     padding-inline-start: v.button('padding-icon');
+
+    &[icon-position='end'] {
+      padding-inline-start: v.button('padding-s');
+      padding-inline-end: v.button('padding-icon');
+    }
   }
 
   // The text button beside its icon: the component's 12/16
