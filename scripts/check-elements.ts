@@ -1013,17 +1013,21 @@ try {
           }
         };
 
-        // The labelled layout as measured today, from the sweep at 1dc3bc72
-        // (analysis/sweep/checkbox/measure.json, case "label": identical for
-        // the factory and the element and in both directions; the commits to
-        // 47a3ebcd are rename, docs and CI only). These are measured values
-        // and stand as the contract the fix must keep.
-        const LABELLED = { rootW: 71.19, boxStart: 0, boxEnd: 53.19, labelStart: 30, labelEnd: 0 };
+        // The labelled layout the fix must keep, as the sweep at 1dc3bc72 measured it
+        // (analysis/sweep/checkbox/measure.json, case "label": identical for the
+        // factory and the element and in both directions; the commits to 47a3ebcd are
+        // rename, docs and CI only). The pinned pixels carry no font: the box at the
+        // start, the label 30px in (the 18px box + the 12px gap), nothing after the
+        // label. The root's width and the box's end inset are derived from the label's
+        // own rendered width in this run (root = 30 + width, end = width + 12), so the
+        // check holds on any machine's sans-serif. The word "Label" rendered 41.19px
+        // here; that number is not asserted.
         const labelled = (root: HTMLElement, what: string): void => {
           const rootRect = root.getBoundingClientRect();
           const rtl = getComputedStyle(root).direction === "rtl";
           const iconRect = (root.querySelector(".mtrl-checkbox__icon") as HTMLElement).getBoundingClientRect();
           const labelRect = (root.querySelector(".mtrl-checkbox__label") as HTMLElement).getBoundingClientRect();
+          const labelW = r2(labelRect.width);
           const got = {
             rootW: r2(rootRect.width),
             boxStart: r2(rtl ? rootRect.right - iconRect.right : iconRect.left - rootRect.left),
@@ -1031,14 +1035,15 @@ try {
             labelStart: r2(rtl ? rootRect.right - labelRect.right : labelRect.left - rootRect.left),
             labelEnd: r2(rtl ? labelRect.left - rootRect.left : rootRect.right - labelRect.right),
           };
+          const want = { rootW: 30 + labelW, boxStart: 0, boxEnd: labelW + 12, labelStart: 30, labelEnd: 0 };
           const off = (a: number, b: number): boolean => Math.abs(a - b) > 0.5;
           if (
-            off(got.rootW, LABELLED.rootW) || off(got.boxStart, LABELLED.boxStart) || off(got.boxEnd, LABELLED.boxEnd) ||
-            off(got.labelStart, LABELLED.labelStart) || off(got.labelEnd, LABELLED.labelEnd)
+            off(got.rootW, want.rootW) || off(got.boxStart, want.boxStart) || off(got.boxEnd, want.boxEnd) ||
+            off(got.labelStart, want.labelStart) || off(got.labelEnd, want.labelEnd)
           ) {
             labelFailures.push(
-              `${what}: root ${got.rootW} (today ${LABELLED.rootW}), box start ${got.boxStart} / end ${got.boxEnd} (today ${LABELLED.boxStart} / ${LABELLED.boxEnd}), ` +
-                `label start ${got.labelStart} / end ${got.labelEnd} (today ${LABELLED.labelStart} / ${LABELLED.labelEnd})`
+              `${what}: root ${got.rootW} (want 30 + label ${labelW}), box start ${got.boxStart} / end ${got.boxEnd} (want 0 / ${want.boxEnd}), ` +
+                `label start ${got.labelStart} / end ${got.labelEnd} (want 30 / 0)`
             );
           }
         };
