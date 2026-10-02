@@ -16,7 +16,13 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `change` (`TabChangeEventData`). A single tab accepts `click` (the button's
   wrapped `{ event, element, originalEvent }` payload), `focus` and `blur`
   (the native `FocusEvent`). `TabsConfig.on` accepts that same `change` handler.
-  Migration: a group takes `change`; a tab takes `click`, `focus` and `blur`.
+  Migration, what stops compiling:
+  - `tab.on("click", (event: MouseEvent) => …)`: the payload is the wrapped
+    `{ event, element, originalEvent }`, so read `payload.originalEvent`.
+  - `createTabs({ on: { … } })` with a key other than `change`: `TabsConfig.on` no longer has an
+    index signature.
+  - `tabs.on("custom", …)` for an event name of your own needs a cast.
+  - `on` and `off` return the concrete component (`TabsComponent`, `TabComponent`), not `this`.
 
 - **Time picker, select and radio events agree with their getters (FLO-380).**
 
