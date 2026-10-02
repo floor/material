@@ -31,6 +31,7 @@ const buttonSpec = {
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
     /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string", config: "icon" },
+    "icon-position": { type: "string", config: "iconPosition" },
     value: { type: "string", config: "value", update: (c, v) => void c.setValue(String(v ?? "")) },
     type: typeAttribute,
     "aria-label": { type: "string", config: "ariaLabel", update: (c, v) => void c.setAriaLabel(String(v ?? "")) },
