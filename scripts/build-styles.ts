@@ -7,6 +7,30 @@ import {
   componentStyles, fullOnlyStyles, themeStyles, standaloneThemes, baseStyles, utilityStyles,
   resolveStyleDependencies,
 } from "./style-manifest";
+import { preupgradeSheet } from "../src/elements/styles";
+
+/**
+ * Cascade order repeated at the top of every selective stylesheet. Pre-upgrade
+ * is first: a file that only opens `@layer mtrl.preupgrade` and is parsed
+ * earlier stays first, because this statement appends the names it does not
+ * yet know. The same string in whichever asset loads first locks the order.
+ */
+export function cascadeLayerOrder(): string {
+  const layers = ["preupgrade", "base", "utilities", ...resolveStyleDependencies(Object.keys(componentStyles))];
+  return `@layer ${layers.map(layer => `mtrl.${layer}`).join(",")};`;
+}
+
+/** JS module for one element stylesheet. It registers shadow CSS and nothing else. */
+export function elementStyleModule(name: string, css: string, imports: string[]): string {
+  return imports.map(dependency => `import "./${dependency}.js";`).join("\n") +
+    `\nimport { registerStyles } from "../styles.js";\n` +
+    `registerStyles({ ${JSON.stringify(name)}: ${JSON.stringify(css)} });\n`;
+}
+
+/** One pre-upgrade file: the banner and the rules in `@layer mtrl.preupgrade`. */
+export function preupgradeStylesheet(rules: string, banner: string): string {
+  return `${banner}\n${preupgradeSheet(rules)}\n`;
+}
 
 /** Verify CSS dependencies against the emitted JS, including lazy imports. */
 async function validateRuntimeDependencies(outdir: string) {
@@ -59,8 +83,10 @@ export async function buildStyles(outdir: string, banner: string) {
       // Vite can hoist shared CSS ahead of (or after) its consumer. Declare the
       // same cascade order in EVERY asset so the first loaded asset establishes
       // it, even when the base asset is loaded later. App CSS stays unlayered.
-      const layers = ["base", "utilities", ...resolveStyleDependencies(Object.keys(componentStyles))];
-      const order = `@layer ${layers.map(layer => `mtrl.${layer}`).join(",")};`;
+      // `preupgrade` is first, so a pre-upgrade file parsed before this asset
+      // (it only opens `@layer mtrl.preupgrade`) stays first when this statement
+      // appends the rest. Import order against base.css does not reorder it.
+      const order = cascadeLayerOrder();
       await writeFile(`${outdir}/${path}.css`, `${banner}\n${order}@layer mtrl.${name}{${css}}\n`);
       // JS module edges are deduplicated across entries. Nested CSS @imports
       // can be independently inlined by Vite and duplicate shared styles.
@@ -100,29 +126,22 @@ export async function buildStyles(outdir: string, banner: string) {
  * `resolveStyleDependencies` order, then `<component>.css`. The resolver visits
  * dependencies before their component, matching the generated JS imports.
  *
- * Each element's module also registers its pre-upgrade rules
- * (src/styles/elements), which apply to the page until the element is
- * defined. The same rules for every element are `elements/preupgrade.css`,
- * for a server-rendered page's <head>, and `preupgradeStyles(prefix)` in
- * `elements/preupgrade.js` builds them for another tag prefix.
+ * Pre-upgrade rules (src/styles/elements) are not registered here. They ship
+ * as `elements/preupgrade.css` and one `elements/preupgrade/<name>.css` per
+ * spec name, each wrapped in `@layer mtrl.preupgrade`. `preupgradeStyles(prefix)`
+ * in `elements/preupgrade.js` builds the whole sheet for another tag prefix.
  */
 async function emitElementStyles(outdir: string, options: sass.StringOptions<"sync">, banner: string) {
   const dir = `${outdir}/elements/css`;
   await mkdir(dir, { recursive: true });
   await mkdir(`${dir}/hosts`, { recursive: true });
   const { elements } = await import("../src/elements");
-  const { preupgradeSheet } = await import("../src/elements/styles");
   const definition = await import("../src/elements/define");
   const { hostStyleText } = definition;
   const preupgrade = await preupgradeStyles(Object.values(elements).map(element => element.spec.name), options);
   const write = async (name: string, source: string, imports: string[]) => {
     const css = sass.compileString(`@use "${source}";`, options).css;
-    const rules = preupgrade.get(name);
-    await writeFile(`${dir}/${name}.js`,
-      imports.map(dependency => `import "./${dependency}.js";`).join("\n") +
-      `\nimport { registerStyles${rules ? ", registerPreupgrade" : ""} } from "../styles.js";` +
-      `\nregisterStyles({ ${JSON.stringify(name)}: ${JSON.stringify(css)} });\n` +
-      (rules ? `registerPreupgrade({ ${JSON.stringify(name)}: ${JSON.stringify(rules)} });\n` : ""));
+    await writeFile(`${dir}/${name}.js`, elementStyleModule(name, css, imports));
     await writeFile(`${dir}/${name}.css`, css);
     await writeFile(`${dir}/${name}.d.ts`, "export {};\n");
   };
@@ -141,7 +160,11 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   }
 
   const all = [...preupgrade.values()].join("");
-  await writeFile(`${outdir}/elements/preupgrade.css`, `${banner}\n${preupgradeSheet(all)}\n`);
+  await mkdir(`${outdir}/elements/preupgrade`, { recursive: true });
+  for (const [name, rules] of preupgrade) {
+    await writeFile(`${outdir}/elements/preupgrade/${name}.css`, preupgradeStylesheet(rules, banner));
+  }
+  await writeFile(`${outdir}/elements/preupgrade.css`, preupgradeStylesheet(all, banner));
   // `import 'mtrl/elements/preupgrade.css'` resolves through the types condition, as `mtrl/styles` does
   await writeFile(`${outdir}/elements/preupgrade.css.d.ts`, "export {};\n");
   await writeFile(`${outdir}/elements/preupgrade.js`,

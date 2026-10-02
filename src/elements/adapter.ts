@@ -15,8 +15,6 @@ import {
   type ElementAttributes,
   type ElementProperties,
 } from "./define";
-import { usePreupgradePrefix } from "./styles";
-
 /** The runtime parts of an element spec an adapter reads. */
 export interface ComponentSpec {
   name: string;
@@ -172,7 +170,6 @@ export const getPrefix = (): string => prefix;
 /** Sets the tag prefix every adapter renders. Call before the first render. */
 export const configure = (options: DefineOptions): void => {
   prefix = options.prefix ?? DEFAULT_PREFIX;
-  usePreupgradePrefix(prefix);
 };
 
 export const isBrowser = typeof window !== "undefined";

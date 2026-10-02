@@ -55,15 +55,13 @@ const sheetFor = (name: string, text: string): CSSStyleSheet => {
 };
 
 // ---------------------------------------------------------------------------
-// Pre-upgrade styles (ssr.md, Phase A): `:not(:defined)` rules in the page
-// that give an element its box before its script upgrades it. Built for the
-// default prefix; the CSS module of each element registers its own.
+// Pre-upgrade styles (ssr.md, Phase A): `:not(:defined)` rules that give an
+// element its box before its script upgrades it. They ship as stylesheets
+// (`mtrl/elements/preupgrade.css` and `mtrl/elements/preupgrade/<name>.css`),
+// not from the element CSS modules. Built for the default prefix;
+// `preupgradeStyles(prefix)` retags them.
 
 const PREUPGRADE_LAYER = "mtrl.preupgrade";
-const preupgrade = new Map<string, string>();
-const preupgradePrefixes = new Set<string>();
-/** Where each document's rules go: an adopted sheet, or a `<style>` where sheets cannot be adopted. */
-const preupgradeTargets = new WeakMap<Document, { sheet: CSSStyleSheet } | { style: HTMLStyleElement }>();
 
 /**
  * Pre-upgrade CSS, built for the default prefix, for another one: every tag
@@ -76,45 +74,6 @@ export const retagPreupgrade = (css: string, prefix: string): string =>
 /** The rules as one layered stylesheet, for each prefix. */
 export const preupgradeSheet = (css: string, prefixes: Iterable<string> = [DEFAULT_PREFIX]): string =>
   `@layer ${PREUPGRADE_LAYER}{${Array.from(prefixes, (prefix) => retagPreupgrade(css, prefix)).join("")}}`;
-
-const applyPreupgrade = (): void => {
-  if (typeof document === "undefined" || !preupgradePrefixes.size) return;
-  const doc = document;
-  const text = preupgradeSheet(Array.from(preupgrade.values()).join(""), preupgradePrefixes);
-  let target = preupgradeTargets.get(doc);
-  if (!target) {
-    if (typeof CSSStyleSheet === "function" && "replaceSync" in CSSStyleSheet.prototype && "adoptedStyleSheets" in doc) {
-      const sheet = new CSSStyleSheet();
-      doc.adoptedStyleSheets = [...doc.adoptedStyleSheets, sheet];
-      target = { sheet };
-    } else {
-      const style = doc.createElement("style");
-      doc.head.append(style);
-      target = { style };
-    }
-    preupgradeTargets.set(doc, target);
-  }
-  if ("sheet" in target) target.sheet.replaceSync(text);
-  else target.style.textContent = text;
-};
-
-/**
- * Registers pre-upgrade rules by entry, and applies them to the document in a
- * browser, for the default prefix and those `usePreupgradePrefix` added. On a
- * server it only records them.
- */
-export const registerPreupgrade = (css: Record<string, string>): void => {
-  for (const [name, text] of Object.entries(css)) preupgrade.set(name, text);
-  preupgradePrefixes.add(DEFAULT_PREFIX);
-  applyPreupgrade();
-};
-
-/** Applies the registered pre-upgrade rules for another tag prefix too. */
-export const usePreupgradePrefix = (prefix: string): void => {
-  if (preupgradePrefixes.has(prefix)) return;
-  preupgradePrefixes.add(prefix);
-  if (preupgrade.size) applyPreupgrade();
-};
 
 /**
  * Applies the registered entries to a shadow root, in the given order.

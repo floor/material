@@ -1,17 +1,19 @@
 // Pre-upgrade styles (src/styles/elements): the rules scripts/build-styles.ts
-// emits with each element's CSS module and as elements/preupgrade.css.
+// emits as elements/preupgrade.css and elements/preupgrade/<name>.css.
+// The element CSS modules do not register them.
 import { describe, expect, test } from "bun:test";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { JSDOM } from "jsdom";
 import * as sass from "sass";
-import { preupgradeStyles } from "../../scripts/build-styles";
-import { elements } from "../../src/elements";
 import {
-  preupgradeSheet,
-  registerPreupgrade,
-  retagPreupgrade,
-  usePreupgradePrefix,
-} from "../../src/elements/styles";
+  cascadeLayerOrder,
+  elementStyleModule,
+  preupgradeStyles,
+  preupgradeStylesheet,
+} from "../../scripts/build-styles";
+import { elements } from "../../src/elements";
+import { preupgradeSheet, retagPreupgrade } from "../../src/elements/styles";
 
 const options: sass.StringOptions<"sync"> = {
   loadPaths: [resolve("src/styles")], style: "compressed", logger: sass.Logger.silent,
@@ -58,49 +60,81 @@ describe("pre-upgrade styles", () => {
     );
   });
 
-  test("registering records the rules on a server and applies them in a page, per prefix", () => {
-    // Other test files may have left a DOM behind: this one sets its own.
-    const global = globalThis as { document?: Document };
-    const previous = global.document;
-    delete global.document;
-    const { window } = new JSDOM("<!doctype html><html><head></head><body></body></html>");
-    try {
-      // No DOM: recorded only, as when an adapter imports the CSS modules on a server.
-      registerPreupgrade({ switch: rules.get("switch") as string });
-
-      global.document = window.document;
-      const text = (): string => Array.from(window.document.querySelectorAll("style"), (style) => style.textContent).join("");
-      usePreupgradePrefix("x");
-      expect(text()).toContain("@layer mtrl.preupgrade{m-switch:not(:defined)");
-      expect(text()).toContain("x-switch:not(:defined)");
-      registerPreupgrade({ tabs: rules.get("tabs") as string });
-      expect(text()).toContain("x-tabs:not(:defined)");
-      expect(window.document.querySelectorAll("style").length).toBe(1);
-    } finally {
-      if (previous) global.document = previous;
-      else delete global.document;
-      window.close();
-    }
+  test("no element CSS module registers pre-upgrade rules", () => {
+    const failures = names.filter((name) => elementStyleModule(name, "a{}", ["ripple"]).includes("registerPreupgrade"));
+    expect(failures).toEqual([]);
   });
 
-  test("pre-upgrade rules are installed in each document", () => {
-    const global = globalThis as { document?: Document };
-    const previous = global.document;
-    const first = new JSDOM("<!doctype html><html><head></head><body></body></html>");
-    const second = new JSDOM("<!doctype html><html><head></head><body></body></html>");
-    try {
-      global.document = first.window.document;
-      registerPreupgrade({ switch: rules.get("switch") as string });
-      expect(first.window.document.head.querySelector("style")?.textContent).toContain("m-switch:not(:defined)");
-
-      global.document = second.window.document;
-      registerPreupgrade({ switch: rules.get("switch") as string });
-      expect(second.window.document.head.querySelector("style")?.textContent).toContain("m-switch:not(:defined)");
-    } finally {
-      if (previous) global.document = previous;
-      else delete global.document;
-      first.window.close();
-      second.window.close();
+  test("each spec name has a layered file, and together they are the whole sheet", () => {
+    const banner = "/*! t */";
+    const files = new Map(names.map((name) => [name, preupgradeStylesheet(rules.get(name) as string, banner)]));
+    expect([...files.keys()].sort()).toEqual([...names].sort());
+    const inner = (sheet: string): string => {
+      const start = sheet.indexOf("@layer mtrl.preupgrade{");
+      expect(start).toBeGreaterThan(-1);
+      expect(sheet.endsWith("}\n")).toBe(true);
+      return sheet.slice(start + "@layer mtrl.preupgrade{".length, -2);
+    };
+    for (const [name, sheet] of files) {
+      expect(sheet.startsWith(`${banner}\n@layer mtrl.preupgrade{`), name).toBe(true);
+      expect(inner(sheet), name).toBe(rules.get(name));
     }
+    const whole = preupgradeStylesheet([...rules.values()].join(""), banner);
+    expect(names.map((name) => inner(files.get(name) as string)).join("")).toBe(inner(whole));
+  });
+
+  test("the layer order names pre-upgrade first, and a per-element file does not redeclare it", () => {
+    const order = cascadeLayerOrder();
+    expect(order.startsWith("@layer mtrl.preupgrade,mtrl.base,")).toBe(true);
+    const button = preupgradeStylesheet(rules.get("button") as string, "/*! t */");
+    expect(button).not.toContain("@layer mtrl.preupgrade,mtrl.base");
+    expect(button).toContain("@layer mtrl.preupgrade{");
+  });
+});
+
+describe("pre-upgrade export keys", () => {
+  const specifiers = [
+    "mtrl/elements/preupgrade/button.css",
+    "mtrl/elements/preupgrade.css",
+    "mtrl/elements/preupgrade",
+  ];
+  const targets = [
+    "dist/elements/preupgrade/button.css",
+    "dist/elements/preupgrade.css",
+    "dist/elements/preupgrade.js",
+  ];
+
+  // A copy of this package's exports, with the three target files present, so
+  // the test does not read the repo's dist (the CI tests job does not build).
+  // Vite's resolution of the same keys is elements-css:check, after the build.
+  const consumer = (): { dir: string, expected: string[] } => {
+    const dir = mkdtempSync(resolve(tmpdir(), "mtrl-preupgrade-"));
+    const pkg = JSON.parse(readFileSync("package.json", "utf8")) as { name: string, exports: unknown };
+    const installed = resolve(dir, "node_modules/mtrl");
+    mkdirSync(installed, { recursive: true });
+    writeFileSync(resolve(installed, "package.json"), JSON.stringify({ name: pkg.name, exports: pkg.exports }));
+    for (const target of targets) {
+      const file = resolve(installed, target);
+      mkdirSync(resolve(file, ".."), { recursive: true });
+      writeFileSync(file, "");
+    }
+    writeFileSync(resolve(dir, "package.json"), JSON.stringify({ name: "app", private: true }));
+    writeFileSync(resolve(dir, "app.js"), "");
+    return { dir, expected: targets.map(target => resolve(installed, target)) };
+  };
+
+  test("Node resolves the wildcard without taking the exact preupgrade keys", () => {
+    const { dir, expected } = consumer();
+    const probe = resolve(dir, "resolve.mjs");
+    writeFileSync(probe, `import { fileURLToPath } from "node:url";
+const specifiers = ${JSON.stringify(specifiers)};
+const out = {};
+for (const specifier of specifiers) out[specifier] = fileURLToPath(import.meta.resolve(specifier));
+console.log(JSON.stringify(out));
+`);
+    const ran = Bun.spawnSync(["node", probe], { cwd: dir });
+    expect(ran.exitCode, `${ran.stderr ?? ""}`).toBe(0);
+    const out = JSON.parse(String(ran.stdout ?? "")) as Record<string, string>;
+    specifiers.forEach((specifier, index) => expect(realpathSync(out[specifier]!), specifier).toBe(realpathSync(expected[index]!)));
   });
 });
