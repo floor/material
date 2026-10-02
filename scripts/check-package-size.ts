@@ -347,7 +347,10 @@ try {
     // 10,602 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // FLO-539 typography leaves the base: 10,602 -> 9,589. Ceiling was 9,700.
     // FLO-540 merged tree: 8,440. 8,440 + 100 = 8,540, rounded up to 8,550. Node 22.23.3 / npm 10.9.9.
-    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 8550 },
+    // The filled text field mirrors inside a shadow root: its right-to-left rules also follow
+    // the --rtl class (FLO-562), so select-css carries both selector forms. 9,012 -> 8,931 written
+    // once; 8,931 + 100 = 9,031, rounded up to 9,050. Node 22.23.3 / npm 10.9.9.
+    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 9050 },
     // FLO-406 contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 7,639 -> 7,111 gzip bytes (same packer).
     // 6,918 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
