@@ -34,12 +34,11 @@ export const createPositioner = (
     if (!menuElement || !openerElement) return;
 
     // [dir=rtl] does not cross a shadow boundary. The sheet also matches
-    // menu--rtl, from the computed direction, which does. A DOM
-    // with no computed style reads as left to right. Set before measuring:
-    // the mirror changes the submenu item's padding.
+    // menu--rtl, from the computed direction, which does. Set before
+    // measuring: the mirror changes the submenu item's padding.
     menuElement.classList.toggle(
       component.getClass("menu--rtl"),
-      globalThis.getComputedStyle?.(menuElement)?.direction === "rtl",
+      getComputedStyle(menuElement).direction === "rtl",
     );
 
     // In the top layer the menu is fixed to the viewport: its coordinates are
