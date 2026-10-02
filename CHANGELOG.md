@@ -10,6 +10,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+### Fixed
+
+- **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
+  centre while animating in and be squeezed at the viewport edge. Placement now uses its full
+  layout size; reduced-motion placement is unchanged.
+
 ## [0.10.5] - 2026-10-02
 
 Preparing for 1.0.0, continued: every exported identifier writes "text field" as two words

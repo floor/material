@@ -5951,16 +5951,28 @@ try {
         w.__geometryTip = tip;
         let naturalWidth = tip.element.offsetWidth;
         const rect = tip.element.getBoundingClientRect.bind(tip.element);
+        const offsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth")?.get;
+        if (!offsetWidth) throw new Error("HTMLElement.offsetWidth is unavailable");
+        Object.defineProperty(tip.element, "offsetWidth", {
+          configurable: true,
+          get() {
+            const measured = offsetWidth.call(tip.element) as number;
+            w.__geometryWidthRead = measured;
+            return measured;
+          },
+        });
         tip.element.getBoundingClientRect = () => {
           const measured = rect();
           w.__geometryWidthRead = measured.width;
           return measured;
         };
         tip.show(true);
+        const widthReadWhenPlaced = w.__geometryWidthRead;
+        Reflect.deleteProperty(tip.element, "offsetWidth");
         // A closed top-layer popover has no layout box until show() opens it.
         if (!naturalWidth) naturalWidth = tip.element.offsetWidth;
         tip.element.getBoundingClientRect = rect;
-        return { widthReadWhenPlaced: w.__geometryWidthRead, naturalWidth, reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches };
+        return { widthReadWhenPlaced, naturalWidth, reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches };
       }, scenario);
       await page.waitForFunction(() => {
         const tip = (window as unknown as { __geometryTip: { element: HTMLElement } }).__geometryTip;
@@ -6016,7 +6028,7 @@ try {
       if (scenario.wrapped && Math.abs(measured.lineCount - 3) > 0.1) failures.push(`${scenario.name}: ${measured.lineCount} lines, expected 3`);
       if (scenario.layer && !measured.popoverOpen) failures.push(`${scenario.name}: popover is closed`);
       if (measured.reducedMotion || !measured.transitionDuration.includes("0.15s")) failures.push(`${scenario.name}: entrance motion is disabled`);
-      if (measured.widthReadWhenPlaced >= measured.naturalWidth - 1) failures.push(`${scenario.name}: placement did not read the scaled box`);
+      if (Math.abs(measured.widthReadWhenPlaced - measured.naturalWidth) > 1) failures.push(`${scenario.name}: placement width ${measured.widthReadWhenPlaced.toFixed(2)} differs from layout width ${measured.naturalWidth}`);
     }
     await page.emulateMedia({ reducedMotion: null });
     assert.equal(failures.length, 0, `tooltip placement (FLO-535):\n${failures.join("\n")}`);
