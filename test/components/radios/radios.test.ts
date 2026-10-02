@@ -19,8 +19,8 @@
 //   went on reporting it.
 //
 // Deliberately not asserted: the variant and size options, which change
-// nothing although RADIO_VARIANTS and RADIO_SIZES are exported and M3 defines
-// neither; and that setValue() can select an option disabled on its own.
+// nothing (M3 defines neither; 1.0 removed RADIO_VARIANTS and RADIO_SIZES);
+// and that setValue() can select an option disabled on its own.
 import { describe, test, expect, beforeEach, mock } from 'bun:test';
 import { JSDOM } from 'jsdom';
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
