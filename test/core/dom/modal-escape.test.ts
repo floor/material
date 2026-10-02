@@ -141,6 +141,37 @@ describe('onModalEscape', () => {
     expect(told).toEqual([]);
   });
 
+  // A modal that is not on the stack, shown above one that is: another
+  // component's (a picker in a dialog, until it joins the stack) or the
+  // page's own <dialog>. The browser makes everything else inert, so focus is
+  // inside it, and Escape is its to handle: through the browser's `cancel`.
+  test('a key from inside another open <dialog> is left to that dialog', async () => {
+    const { told } = modal();
+    await task();
+    const other = document.body.appendChild(document.createElement('dialog'));
+    other.setAttribute('open', '');
+    const field = other.appendChild(document.createElement('button'));
+    expect(press(field).defaultPrevented).toBe(false);
+    expect(told).toEqual([]);
+    other.removeAttribute('open');
+    expect(press(field).defaultPrevented).toBe(true);
+    expect(told).toEqual([1]);
+    other.remove();
+  });
+
+  test('a key from inside the modal\'s own <dialog> is the modal\'s', async () => {
+    const own = document.body.appendChild(document.createElement('dialog'));
+    own.setAttribute('open', '');
+    const field = own.appendChild(document.createElement('button'));
+    const told: number[] = [];
+    const entry = onModalEscape(own, () => { told.push(1); });
+    stops.push(entry.stop);
+    await task();
+    expect(press(field).defaultPrevented).toBe(true);
+    expect(told).toEqual([1]);
+    own.remove();
+  });
+
   test('once stopped, Escape is the page\'s again; stopping twice is harmless', async () => {
     const { entry, told } = modal();
     await task();
