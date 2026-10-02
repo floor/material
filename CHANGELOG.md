@@ -158,6 +158,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `.mtrl-textfield…` or `::part(textfield)` matches nothing, a `classList` call with the old
   class changes nothing, and defaults set under `'textfield'` are ignored. Nothing warns.
   Search your CSS and your code for `textfield`.
+- **A select made with `createSelect()` no longer fills its container.** Unsized, it is
+  280px wide, as a text field is; it was as wide as what held it. Nothing warns: a form
+  whose selects spanned their column now shows them 280px wide. Search for `createSelect(`
+  and give each select that should fill its container a width
+  (`.mtrl-select { width: 100%; }`).
 - **A text field with a prefix or a suffix has no inline padding (FLO-299).**
   `field.input.style.paddingLeft` and `paddingRight` read `''`, and the label has no inline
   `left`: the stylesheet pads the input from `--mtrl-text-field-prefix-width` and
@@ -1050,8 +1055,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **An unsized select is 280px wide, as an unsized text field is.** `createSelect()` made a
   select that took its container's whole width (200px in a 200px container, 400px in a
   400px one), where the text field, on both paths, and `<m-select>` are 280px whatever holds
-  them. The factory's select now sizes as they do. Migration, to keep a select filling its
-  container: give it the width, `select.element.style.width = '100%'` or the rule
+  them. The factory's select now sizes as they do. Migration: to keep a select filling its
+  container, give it the width: `select.element.style.width = '100%'` or the rule
   `.mtrl-select { width: 100%; }`; for the element, `m-select { width: 100%; }`. There is
   no option for it.
 - **Text field: the spacing follows the M3 measurements (FLO-299).** A field's layout shifts
