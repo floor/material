@@ -400,13 +400,16 @@ for (const report of summary) {
 }
 console.log(`solid-ssr: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no mtrl/ssr or linkedom`);
 
-const contextPath = join(dir, "context-server.js");
+// Keep the bundle distinct from context-server.tsx so Bun imports the compiled module.
+const contextPath = join(dir, "context-server.bundle.js");
 await Bun.write(contextPath, await bundle(join(dir, "context-server.tsx"), "bun"));
 const { renderContext } = await import(contextPath) as { renderContext: (required: boolean) => string };
 const contextClient = await bundle(join(dir, "context-client.tsx"), "browser");
 const contextHTML = { default: renderContext(false), required: renderContext(true) };
 for (const [name, markup] of Object.entries(contextHTML)) {
-  assert.match(markup, /id="context-tabs"/, `Solid ${name} context: server render has no host: ${markup.slice(0, 700)}`);
+  const returned = typeof markup === "string" ? markup.slice(0, 700) : String(markup);
+  assert.ok(typeof markup === "string" && /id="context-tabs"/.test(markup),
+    `Solid ${name} context: server render has no host; returned: ${returned}`);
 }
 const contextServer = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
   if (new URL(request.url).pathname === "/client.js") return new Response(contextClient, { headers: { "Content-Type": "text/javascript" } });
