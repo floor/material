@@ -1222,6 +1222,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A menu in a shadow root mirrors its submenu arrow under `dir="rtl"`.**
+  The arrow, the submenu item's padding and the menu's transform origin followed an ancestor
+  `dir`. That selector does not cross a shadow boundary, so `<m-menu>` kept the arrow on the
+  right. The same declarations now also match `mtrl-menu--rtl`, which the menu sets from the
+  computed direction.
+- **A top-layer menu wider than its field keeps the field's right edge in right-to-left.**
+  Under a field narrower than the menu's 112px minimum, placement kept the field's left edge in
+  both directions. Right-to-left, a menu wider than the field now meets the field's right edge.
+  A menu as wide as the field still meets both edges, and a submenu still opens on its own side.
 - **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"` (FLO-592).**
   The `touch-target` mixin anchored its `::after` with `inset-inline-start: 50%` and then moved it
   with the physical `translate(-50%, -50%)`. Right-to-left, the logical inset pins the box's right
