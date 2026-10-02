@@ -50,7 +50,7 @@ export const tabsMax: ResponsiveConfig = { smallScreen: { layout: "icon-only", m
 // Constant properties nothing read (deprecated in v0.10.0)
 import { SLIDER_MEASUREMENTS } from "../../src/components/slider/constants";
 import { TABS_DEFAULTS } from "../../src/components/tabs/constants";
-import { TEXT_FIELD_CLASSES } from "../../src/components/textfield/constants";
+import { TEXT_FIELD_CLASSES } from "../../src/components/text-field/constants";
 import { TIMEPICKER_SELECTORS } from "../../src/components/timepicker/constants";
 // @ts-expect-error the stylesheet draws the track's corners (FLO-250)
 export const sliderRadius = SLIDER_MEASUREMENTS.TRACK_RADIUS;

@@ -108,11 +108,11 @@ describe("explicit contrast levels are opt-in", () => {
     const css = sass.compileString('@use "main";', {
       loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent,
     }).css;
-    // `@use "main"` on origin/next 66444315, before the banner the build adds.
-    // The contrast split leaves this compile byte-equal to that next (project Sass 1.85.1).
+    // `@use "main"` compressed, before the banner the build adds.
+    // The hash is this sheet after the text field strings are two words (FLO-560).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("39d240798df8718bdb222998abdcaa96eb01583a504db5c15f5cd4d8f0510c56");
-    expect(css.length).toBe(529615);
+      .toBe("ce3b499badf2c58204d0c797714fc2a7e77296897fdb47b7ce530a1cf851610e");
+    expect(css.length).toBe(530220);
   });
 
   test("today's sheets still resolve to the fixture", () => {

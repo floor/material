@@ -49,9 +49,9 @@ describe("the component subpaths' exports (FLO-381)", () => {
 
   test("only the canonical names: the old spellings are gone from their subpaths (FLO-383)", () => {
     const names = (component: string) => now[component]?.map((e) => e.name) ?? [];
-    for (const [component, old, to] of [["textfield", "TextfieldConfig", "TextFieldConfig"], ["textfield", "TextfieldComponent", "TextFieldComponent"],
+    for (const [component, old, to] of [["text-field", "TextfieldConfig", "TextFieldConfig"], ["text-field", "TextfieldComponent", "TextFieldComponent"],
       ["card", "CardSchema", "CardConfig"], ["top-app-bar", "TopAppBar", "TopAppBarComponent"], ["bottom-app-bar", "BottomAppBar", "BottomAppBarComponent"],
-      ["textfield/constants", "TEXTFIELD_CLASSES", "TEXT_FIELD_CLASSES"]]) {
+      ["text-field/constants", "TEXTFIELD_CLASSES", "TEXT_FIELD_CLASSES"]]) {
       expect(names(component!)).toContain(to);
       expect(names(component!)).not.toContain(old);
     }

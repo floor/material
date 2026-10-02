@@ -24,7 +24,7 @@ assert.deepEqual(defaults.map(c => c.element).sort(), Object.values(elements).ma
 const ICON = "<svg viewBox='0 0 24 24'><path d='M4 4h16v16H4z'/></svg>";
 const fixtures = [
   ...defaults,
-  { element: "textfield", variant: "multiline value", html: '<m-textfield label="Name" type="multiline" value="Ada"></m-textfield>' },
+  { element: "text-field", variant: "multiline value", html: '<m-text-field label="Name" type="multiline" value="Ada"></m-text-field>' },
   // FLO-555: the toolbar's shadow root holds the overflow button, which the
   // factory's roving sync reaches at creation on both sides.
   { element: "toolbar", variant: "overflow", html: `<m-toolbar aria-label="Actions"><m-icon-button icon="${ICON}" aria-label="Archive"></m-icon-button><m-icon-button icon="${ICON}" aria-label="Delete"></m-icon-button><m-menu slot="overflow"><m-menu-item value="copy">Copy</m-menu-item><m-menu-item value="paste">Paste</m-menu-item></m-menu></m-toolbar>` },

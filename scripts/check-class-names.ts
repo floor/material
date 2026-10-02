@@ -10,7 +10,7 @@
 //   - `bun test` asserts class names in JSDOM, which has no stylesheet, so a
 //     component with no matching CSS passes every test.
 //   - `consumer:check` renders real pages in Chromium, but only builds a
-//     button and a textfield. It reports 128 comparisons, which is 128 for
+//     button and a text field. It reports 128 comparisons, which is 128 for
 //     those two components across themes and viewports -- not coverage of the
 //     library. A dialog rename passes it untouched, which is how this check
 //     came to be written.

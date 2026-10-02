@@ -24,7 +24,7 @@ describe('components read the typeface tokens', () => {
   });
 
   test('no component compiles a bare family', () => {
-    for (const component of ['button', 'textfield', 'menu', 'dialog', 'chips', 'list', 'tabs', 'snackbar']) {
+    for (const component of ['button', 'text-field', 'menu', 'dialog', 'chips', 'list', 'tabs', 'snackbar']) {
       const bare = families(compile(`@use 'components/${component}';`)).filter(value => !value.startsWith('var(--mtrl-'));
       expect({ component, bare }).toEqual({ component, bare: [] });
     }

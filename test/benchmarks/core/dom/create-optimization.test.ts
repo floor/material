@@ -250,7 +250,7 @@ benchmark("createElement Optimization Benchmarks", () => {
         {
           tag: "input",
           attributes: { type: "text", placeholder: "Enter text" },
-          class: "textfield",
+          class: "text-field",
         },
         {
           tag: "div",

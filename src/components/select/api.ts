@@ -13,7 +13,7 @@ export const withAPI =
   (component: BaseComponent): SelectComponent => ({
     ...component,
     element: component.element,
-    // withMenu warns and returns early without a textfield, so a select that
+    // withMenu warns and returns early without a text field, so a select that
     // reaches the API has it. The menu stays under its symbol, which the
     // spread above carries: it is not a member (FLO-543).
     textField: component.textField!,
@@ -62,7 +62,7 @@ export const withAPI =
     isOpen: options.select.isOpen,
 
     setDensity(density: string): SelectComponent {
-      // Delegate to the textfield's setDensity method
+      // Delegate to the text field's setDensity method
       if (component.textField?.setDensity) {
         component.textField.setDensity(density);
       }
@@ -70,7 +70,7 @@ export const withAPI =
     },
 
     getDensity(): string {
-      // Delegate to the textfield's getDensity method
+      // Delegate to the text field's getDensity method
       if (component.textField?.getDensity) {
         return component.textField.getDensity();
       }
@@ -110,7 +110,7 @@ export const withAPI =
     },
 
     setError(error: boolean, message?: string): SelectComponent {
-      // Delegate to the textfield's setError method
+      // Delegate to the text field's setError method
       if (component.textField?.setError) {
         component.textField.setError(error, message);
       }
@@ -118,7 +118,7 @@ export const withAPI =
     },
 
     clearError(): SelectComponent {
-      // Clear error state on textfield
+      // Clear error state on text field
       if (component.textField?.setError) {
         component.textField.setError(false);
       }

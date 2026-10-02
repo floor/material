@@ -3030,7 +3030,7 @@
       "status": "public"
     }
   ],
-  "textfield": [
+  "text-field": [
     {
       "name": "createTextField",
       "kind": "value",
@@ -3082,7 +3082,7 @@
       "status": "public"
     }
   ],
-  "textfield/constants": [
+  "text-field/constants": [
     {
       "name": "TEXT_FIELD_CLASSES",
       "kind": "value",

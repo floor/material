@@ -48,9 +48,9 @@ button.variant = "outlined";
 button.disabled = "yes";
 
 // The text field's live value is a string; input and change carry it.
-type TextfieldProps = ElementProps<TextFieldSpec>;
-assert<Equals<TextfieldProps["value"], string | undefined>>();
-assert<Equals<TextfieldProps["maxlength"], number | undefined>>();
+type TextFieldProps = ElementProps<TextFieldSpec>;
+assert<Equals<TextFieldProps["value"], string | undefined>>();
+assert<Equals<TextFieldProps["maxlength"], number | undefined>>();
 assert<Equals<keyof ElementEvents<TextFieldSpec>, "input" | "change">>();
 assert<Equals<ElementEvents<TextFieldSpec>["input"], CustomEvent<{ value: string }>>>();
 declare const field: TextFieldElement;

@@ -10,7 +10,7 @@
 //
 // Nothing could catch it. `bun test` runs in JSDOM, which has no stylesheet,
 // so every tabs test passed with the component rendering as a vertical list.
-// `consumer:check` renders a button and a textfield only. This is the
+// `consumer:check` renders a button and a text field only. This is the
 // component's first browser check, and it exists because a layout bug needs a
 // layout engine.
 //
