@@ -134,7 +134,7 @@ It has to load after the base: both sheets style `h1`–`h6` and `p`, and the la
 
 Import it when the page uses those classes or utilities, when it relies on material's heading and paragraph styles, or when its own CSS reads a `--mtrl-sys-typescale-*` token. Without it a `.mtrl-headline-small` element keeps the body's font size, and a `var(--mtrl-sys-typescale-*)` with no fallback is invalid at computed-value time. Body text keeps its font. The full stylesheet includes typography, so `import 'material/styles'` is unchanged.
 
-Each selective entry imports what it depends on (the select brings the text field and the menu), so use a CSS-capable bundler to resolve and deduplicate them. Choose either the full stylesheet or selective imports, not both.
+Each selective entry imports what it depends on (the select brings the text field and the menu), so use a CSS-capable bundler to resolve and deduplicate them. Choose either the full stylesheet or selective imports, not both. The `material/styles/*` entries are bundler targets: they import CSS, so they do not load in plain Node.
 
 Library styles sit in ordered `mtrl.*` cascade layers, so unlayered application CSS overrides them without specificity battles.
 
@@ -231,6 +231,8 @@ The framework components render the elements, so everything above holds: forms, 
 | Vue 3 | `import { MSwitch } from 'material/vue'` | `v-model` |
 | Svelte 5 | `import { Switch } from 'material/svelte'` | `bind:checked` |
 | Solid | `import { Switch } from 'material/solid'` | `checked` + `onChange` |
+
+The `material/svelte` entry is a bundler target too: it imports `.svelte` files, so it does not load in plain Node.
 
 With `skipLibCheck: false`, use `@types/react` 18.2.71 or later.
 
@@ -402,11 +404,11 @@ the `m-` tags and the `mtrl.*` cascade layers are unchanged.
 
 ## Upgrading from 0.10
 
-`material` 3.0.0 removes what 0.10 deprecated. Upgrade to the latest `mtrl` 0.10.x first: it has the 3.0.0 names beside the old ones and flags in your editor each name, option and constant 3.0.0 removes. Then change the package name to `material` and follow the [3.0.0 migration guide](CHANGELOG.md#migrating-from-010x): `material` is ESM-only, the package root keeps the components (the internals move to their subpaths), "text field" is two words in every identifier, and a few leftovers fail silently instead of at compile time, such as a chip's `{ text }`, which renders an empty chip.
+`material` 3.0.0 removes what 0.10 deprecated. Upgrade to the latest `mtrl` 0.10.x first: it has the 3.0.0 names beside the old ones and flags in your editor each name, option and constant 3.0.0 removes. Then change the package name to `material` and follow the [3.0.0 migration guide](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-010x): `material` is ESM-only, the package root keeps the components (the internals move to their subpaths), "text field" is two words in every identifier, and a few leftovers fail silently instead of at compile time, such as a chip's `{ text }`, which renders an empty chip.
 
 ## Upgrading from 0.9
 
-0.10.0 adds the elements and framework components; for factory users, most apps need nothing. The changes to check are listed in the [0.10.0 changelog's migration section](CHANGELOG.md#migrating-from-09x): setters no longer emit `change`, the time picker's events pass `{ value }`, the `--mtrl-sys-color-*-rgb` properties are gone, disabled non-form roots use `aria-disabled`, cards are `article`s, and the text field's DOM gained a `__field` wrapper.
+0.10.0 adds the elements and framework components; for factory users, most apps need nothing. The changes to check are listed in the [0.10.0 changelog's migration section](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-09x): setters no longer emit `change`, the time picker's events pass `{ value }`, the `--mtrl-sys-color-*-rgb` properties are gone, disabled non-form roots use `aria-disabled`, cards are `article`s, and the text field's DOM gained a `__field` wrapper.
 
 ## Upgrading from 0.7
 
@@ -418,7 +420,7 @@ the `m-` tags and the `mtrl.*` cascade layers are unchanged.
 - `title-large` uses weight 400, as M3 specifies.
 - The slider draws with DOM and CSS; styles for `.mtrl-slider-canvas` no longer apply.
 
-The full list, with every renamed property, is in the [0.8.0 changelog](CHANGELOG.md#080---2026-09-15).
+The full list, with every renamed property, is in the [0.8.0 changelog](https://github.com/floor/material/blob/main/CHANGELOG.md#080---2026-09-15).
 
 ## Browser support
 
