@@ -27,7 +27,7 @@ for (const [name, create] of [["checkbox", createCheckbox], ["switch", createSwi
     expect(c.getValueAttribute()).toBe("no");
   });
 }
-test("standalone withInput keeps string change and value notifications even with a checkable component name", () => {
+test("standalone withInput reports the checked boolean in change, as checkbox and switch do; its value API stays the input's string", () => {
   const base = withEvents()(withElement({ tag: "div" })(createBase({ componentName: "checkbox" })));
   const c = withInput({ value: "token" })(base);
   document.body.append(c.element);
@@ -38,7 +38,7 @@ test("standalone withInput keeps string change and value notifications even with
   c.input.addEventListener("change", event => native.push(event));
   c.input.click();
   expect(c.getValue()).toBe("token");
-  expect(seen).toEqual([{ checked: true, value: "token", nativeEvent: native[0] }]);
+  expect(seen).toEqual([{ checked: true, value: true, valueAttribute: "token", nativeEvent: native[0] }]);
   c.setValue("next");
   expect(c.getValue()).toBe("next");
   expect(seen[1]).toEqual({ value: "next" });
