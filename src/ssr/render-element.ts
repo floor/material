@@ -22,15 +22,23 @@ const specs = new Map<string, ElementSpec<ElementComponent>>(
 const globals = new Set(("id class style title slot part exportparts role tabindex hidden inert lang dir draggable " +
   "accesskey contenteditable spellcheck translate autocapitalize autofocus name form").split(" "));
 
-const validateAttributes = (attributes: RenderAttributes, spec: ElementSpec<ElementComponent>): Map<string, string> => {
+const validateAttributes = (attributes: RenderAttributes, spec: ElementSpec<ElementComponent>, skipUnknown = false): Map<string, string> => {
   if (!attributes || typeof attributes !== "object" || Array.isArray(attributes)) throw new TypeError("Attributes must be a record");
   const result = new Map<string, string>();
   const seen = new Set<string>();
   for (const key of Reflect.ownKeys(attributes)) {
     if (typeof key !== "string") throw new TypeError("Attribute names must be strings");
     const name = key.toLowerCase();
-    if (!/^[a-z][a-z0-9_.:-]*$/.test(name) || /^on/.test(name) || name === "srcdoc" || seen.has(name) ||
-        !(globals.has(name) || /^(data|aria)-[a-z0-9_.:-]+$/.test(name) || Object.prototype.hasOwnProperty.call(spec.attributes ?? {}, name) || spec.slot?.attribute === name)) {
+    const allowed = /^[a-z][a-z0-9_.:-]*$/.test(name) && !/^on/.test(name) && name !== "srcdoc" &&
+      (globals.has(name) || /^(data|aria)-[a-z0-9_.:-]+$/.test(name) ||
+        Object.prototype.hasOwnProperty.call(spec.attributes ?? {}, name) || spec.slot?.attribute === name);
+    // A bridge host is the framework's element, which already emits every
+    // attribute. Names this factory does not read stay off this detached copy
+    // so they cannot be serialized into the shadow markup. Duplicates of a
+    // name the factory does read, and bad values of those names, still throw.
+    // renderElement (skipUnknown false) rejects the unknown name itself.
+    if (seen.has(name) || !allowed) {
+      if (skipUnknown && !seen.has(name)) continue;
       throw new TypeError(`Invalid host attribute: ${key}`);
     }
     seen.add(name);
@@ -103,9 +111,9 @@ export function renderElement(
 /** Internal adapter entry: returns just the root shadow, before serializing light DOM. */
 function renderShadow(tag: string, markup: string, prefix: string, renderedChildren = false): string {
   const host = new DOMParser().parseFromString(markup, "text/html").querySelector(tag) as unknown as Element;
-  // Solid reuses the page's rendered children, including nested adapters'
-  // templates. Remove those only from this detached copy before the regular
-  // renderer audits it. Public renderElement still rejects authored roots.
+  // Solid and Vue reuse the page's rendered children, including nested
+  // adapters' templates. Remove those only from this detached copy before the
+  // regular renderer audits it. Public renderElement still rejects authored roots.
   if (renderedChildren) {
     for (const template of Array.from(host.querySelectorAll("template[shadowrootmode]"))) template.remove();
   }
@@ -125,7 +133,7 @@ function render(tag: string, attributes: RenderAttributes, children: string, opt
     name.startsWith(`${prefix}-`) ? specs.get(name.slice(prefix.length + 1)) : undefined;
   const spec = typeof tag === "string" ? resolve(tag) : undefined;
   if (!spec) throw new TypeError(`Unknown renderable tag: ${String(tag)}`);
-  const attrs = validateAttributes(attributes, spec);
+  const attrs = validateAttributes(attributes, spec, shadowOnly);
   if (typeof children !== "string") throw new TypeError("Children must be an HTML string");
   try {
     return withServerScope(scope => {
@@ -159,7 +167,13 @@ function render(tag: string, attributes: RenderAttributes, children: string, opt
         const entry = resolve(element.localName);
         if (entry) {
           if (depth >= 64) throw new RangeError("SSR element nesting exceeds 64 levels");
-          validateAttributes(Object.fromEntries(Array.from(element.attributes, a => [a.name, a.value])), entry);
+          const raw = Object.fromEntries(Array.from(element.attributes, a => [a.name, a.value]));
+          const kept = validateAttributes(raw, entry, shadowOnly);
+          if (shadowOnly) {
+            for (const attr of Array.from(element.attributes)) {
+              if (!kept.has(attr.name.toLowerCase())) element.removeAttribute(attr.name);
+            }
+          }
           if (Array.from(element.children).some(child => child.localName === "template" && child.hasAttribute("shadowrootmode"))) {
             throw new TypeError("SSR host already declares a shadow root");
           }

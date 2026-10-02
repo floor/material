@@ -40,7 +40,7 @@ g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date
 g.cancelAnimationFrame = () => {};
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
-import createTabs from '../../../src/components/tabs';
+import createTabs, { tabIdFor, tabPanelIdFor } from '../../../src/components/tabs';
 
 beforeEach(() => { document.body.innerHTML = ''; });
 
@@ -525,6 +525,68 @@ describe('tabs panel linking', () => {
     document.body.append(el);
     return el;
   };
+
+  // FLO-430: a value outside [A-Za-z0-9_-] gets a derived id with no whitespace
+  // and no other character, in its own namespace; the panel lookup reads the
+  // tab's data-value and group, not its id.
+  for (const value of ['a"b', 'a\\b', 'a]b', 'a b', 'a\nb']) {
+    test(`a tab value ${JSON.stringify(value)} gets a derived id and finds its labelled panel`, () => {
+      const id = tabIdFor(GROUP, value);
+      expect(id).toMatch(/^tabx-g-[A-Za-z0-9_-]+$/);
+      const labelled = document.createElement('div');
+      labelled.id = `custom-panel-${encodeURIComponent(value).replace(/%/g, '_')}`;
+      labelled.setAttribute('role', 'tabpanel');
+      labelled.setAttribute('aria-labelledby', id);
+      document.body.append(labelled);
+
+      const tabs = mountGrouped({ tabs: [
+        { text: 'Other', value: 'other', state: 'active' },
+        { text: 'Special', value },
+      ] });
+      const special = byValue(tabs, value);
+      expect(special.element.id).toBe(id);
+      expect(special.element.getAttribute('data-value')).toBe(value);
+      expect(document.getElementById(special.element.id)).toBe(special.element);
+      expect(special.element.getAttribute('aria-controls')).toBe(labelled.id);
+
+      tabs.setActiveTab(value);
+      expect(tabs.getActiveTab()).toBe(special);
+      expect(special.element.getAttribute('aria-selected')).toBe('true');
+      expect(labelled.hasAttribute('hidden')).toBe(false);
+      expect(document.getElementById(special.element.getAttribute('aria-controls')!)).toBe(labelled);
+
+      tabs.setActiveTab('other');
+      expect(labelled.hasAttribute('hidden')).toBe(true);
+    });
+  }
+
+  test('a quoted value also finds a panel by its derived conventional id after setValue', () => {
+    const value = 'a"b';
+    const tabs = mountGrouped({ tabs: [{ text: 'Special', value: 'initial' }] });
+    const special = tabs.getTabs()[0];
+    const conventional = document.createElement('div');
+    conventional.id = tabPanelIdFor(GROUP, value);
+    conventional.setAttribute('role', 'tabpanel');
+    document.body.append(conventional);
+
+    special.setValue(value);
+    expect(conventional.id).toBe('tabpanelx-g-a_22_b');
+    expect(special.element.id).toBe('tabx-g-a_22_b');
+    expect(special.element.getAttribute('aria-controls')).toBe(conventional.id);
+  });
+
+  test('the derived ids: [A-Za-z0-9_-] values keep today\'s; others are encoded, collision-free (FLO-430)', () => {
+    expect([tabIdFor(GROUP, 'trips'), tabPanelIdFor(GROUP, 'trips')]).toEqual(['tab-g-trips', 'tabpanel-g-trips']);
+    expect([tabIdFor(GROUP, 'a_b-C9'), tabIdFor(GROUP, '')]).toEqual(['tab-g-a_b-C9', 'tab-g-']);
+    expect(['a b', 'a\nb', 'a"b', 'a\\b', 'a]b', 'é', '😀'].map(value => tabIdFor(GROUP, value)))
+      .toEqual(['tabx-g-a_20_b', 'tabx-g-a_a_b', 'tabx-g-a_22_b', 'tabx-g-a_5c_b', 'tabx-g-a_5d_b', 'tabx-g-_e9_', 'tabx-g-_1f600_']);
+    // An encoded value never meets a plain one or another encoded one: the
+    // namespaces differ, and _ itself is escaped inside the encoded one.
+    const values = ['a b', 'a_20_b', 'a_ b', 'a__20_b', 'a\tb', 'a  b', ' ', '_ '];
+    const ids = values.map(value => tabIdFor(GROUP, value));
+    expect(new Set(ids).size).toBe(values.length);
+    for (const id of ids) expect(id).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
 
   test('a tab with no panel carries no aria-controls', () => {
     const tabs = mountGrouped();

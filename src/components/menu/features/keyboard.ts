@@ -79,20 +79,20 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     // tree, so they are found from this submenu's root — but only this menu's. Matching on level alone returned the first submenu at
     // that level on the page, which with two menus open is the wrong one.
     const owner = component.element.id;
-    const ownerFilter = owner ? `[data-owner="${owner}"]` : "";
     const scope =
       level <= 1
         ? component.element
-        : (menuElement.getRootNode() as ParentNode).querySelector(
-            `.${component.getClass(
-              "menu--submenu"
-            )}${ownerFilter}[data-level="${level - 1}"]`
+        : Array.from((menuElement.getRootNode() as ParentNode).querySelectorAll<HTMLElement>(
+            `.${component.getClass("menu--submenu")}`
+          )).find((candidate) =>
+            (!owner || candidate.getAttribute("data-owner") === owner) &&
+            candidate.getAttribute("data-level") === String(level - 1)
           );
     // Falling back to `document` was the same defect in miniature: it searched
     // every menu on the page for the parent item.
-    return ((scope ?? component.element).querySelector(
-      `.${component.getClass("menu__item")}[data-id="${parentId}"]`
-    ) ?? null) as HTMLElement | null;
+    return Array.from((scope ?? component.element).querySelectorAll<HTMLElement>(
+      `.${component.getClass("menu__item")}`
+    )).find((candidate) => candidate.getAttribute("data-id") === parentId) ?? null;
   };
 
   /**

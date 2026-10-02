@@ -3011,8 +3011,8 @@ try {
       }));
     });
     assert.deepEqual(status, {
-      success: { bg: "rgb(0, 123, 90)", color: "rgb(255, 255, 255)" },
-      warning: { bg: "rgb(221, 109, 6)", color: "rgb(255, 255, 255)" },
+      success: { bg: "rgb(0, 108, 78)", color: "rgb(255, 255, 255)" },
+      warning: { bg: "rgb(151, 72, 0)", color: "rgb(255, 255, 255)" },
       info: { bg: "rgb(0, 97, 164)", color: "rgb(255, 255, 255)" },
     });
     check("badge: the success, warning and info colours have their background under baseline");
@@ -5142,6 +5142,21 @@ try {
       await page.mouse.move(0, 0);
       check(`menu top layer ${where}: ArrowRight opens the submenu on its first item, ArrowLeft returns to Share, a hover opens it`);
 
+      // An item id is data, including characters with meaning in CSS selectors.
+      ITEMS[0].id = 'share"quoted';
+      await mount("top");
+      await page.evaluate(() => void (window as unknown as TopWin).__tl.menu.open(new KeyboardEvent("keydown")));
+      await wait(450);
+      assert.equal(await focusedItem(), ITEMS[0].id, `${where}: quoted parent id has focus`);
+      await page.keyboard.press("ArrowRight");
+      await wait(450);
+      assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 1, focus: "link" }, `${where}: quoted id opens its submenu`);
+      await page.keyboard.press("ArrowLeft");
+      await wait(300);
+      assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 0, focus: ITEMS[0].id }, `${where}: ArrowLeft returns to the quoted id`);
+      check(`menu top layer ${where}: quoted item id survives ArrowRight and ArrowLeft`);
+      ITEMS[0].id = "share";
+
       await page.evaluate(() => (window as unknown as TopWin).__tl.menu.destroy());
     }
   }
@@ -5491,9 +5506,16 @@ try {
     assert.equal(await focused(), "mb", "focus is back on the anchor");
     check("menu: arrows, typeahead and Enter select once, close once, and return focus to the anchor");
 
+    // A menu opened with a key puts focus on its first item on a timer, about 120ms
+    // after the key. A fixed wait is not that moment: on a runner whose main thread
+    // paused for a third of a second, the keys below got there first, were handled
+    // with no item focused, and focus ended one item short (FLO-423).
+    const focusOn = async (label: string): Promise<void> => {
+      for (const end = Date.now() + 5000; Date.now() < end && (await focused()) !== label;) await wait(20);
+    };
     await page.focus("#mb");
     await page.keyboard.press("Enter");
-    await settle();
+    await focusOn("Copy");
     assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
     await page.keyboard.press("Escape");
     await settle();
@@ -5536,7 +5558,8 @@ try {
         ((document.getElementById("mm") as HTMLElement).shadowRoot as ShadowRoot).querySelectorAll('[class*="menu--submenu"]').length);
     await page.focus("#mb");
     await page.keyboard.press("Enter");
-    await settle();
+    await focusOn("Copy");
+    assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
     for (const key of ["ArrowDown", "ArrowDown"]) await page.keyboard.press(key);
     assert.equal(await focused(), "Share", "Copy, Cut (disabled, focusable), then Share");
     await page.keyboard.press("ArrowRight");

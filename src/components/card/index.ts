@@ -72,6 +72,8 @@ export { default } from "./card";
 export type {
   CardVariant,
   CardElevationLevel,
+  CardSchema as CardConfig,
+  /** @deprecated Use CardConfig. Removed in 1.0 (FLO-383). */
   CardSchema,
   CardHeaderConfig,
   CardContentConfig,
