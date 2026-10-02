@@ -808,7 +808,7 @@ try {
       for (const id of ["bi-ltr", "bi-rtl"]) {
         const host = document.getElementById(id) as HTMLElement;
         const dir = id === "bi-rtl" ? "rtl" : "ltr";
-        for (const element of host.querySelectorAll("m-button:not([data-place=end])")) {
+        for (const element of host.querySelectorAll<HTMLElement>("m-button:not([data-place=end])")) {
           const button = element.shadowRoot?.querySelector("button") as HTMLElement;
           rows.push(read(button, "element", element.dataset.variant!, element.dataset.size!, dir));
         }
