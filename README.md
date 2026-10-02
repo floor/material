@@ -121,7 +121,9 @@ name.destroy();
 save.destroy();
 ```
 
-The factories are the fastest way to render hundreds of components at once, such as a long editable table; the elements style a shadow root each. `material/styles` loads every component's styles; for a smaller bundle, import only what you use (see [Styles](#styles)).
+For hundreds of components created at once, such as a long editable table, use the factories: the elements style a shadow root each, which costs more on the first render. The [Web Components guide](https://md3.io/docs/web-components/#many-instances) has the measurement.
+
+`material/styles` loads every component's styles; for a smaller bundle, import only what you use (see [Styles](#styles)).
 
 Events, methods and cleanup are in the [Vanilla guide](https://md3.io/docs/vanilla/).
 

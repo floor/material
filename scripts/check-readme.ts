@@ -30,8 +30,9 @@
  *   to this repository's CHANGELOG.md on GitHub names one of its headings.
  *
  * With `--online` it also fetches every external link and fails on anything but
- * a 200. CI does not pass the flag: a pull request must not fail because another
- * site is down. Run it by hand when a link changes.
+ * a 200, and on an md3.io anchor the fetched page has no heading for. CI does not
+ * pass the flag: a pull request must not fail because another site is down. Run
+ * it by hand when a link changes.
  *
  * Not checked here: `css` and `bash` blocks other than the install line, and the
  * prose. A reviewer reads those.
@@ -49,8 +50,9 @@ const online = process.argv.includes("--online");
 // md3.io pages that deploy with the site's move to `material` 3.0.0, before the
 // release: each is in data/published-urls.txt on md3.io's feat/material-3-move
 // branch, whose own test requires every listed URL to answer. Until that deploy
-// `--online` accepts a 404 for them, and says when one is live so the entry goes.
-const PENDING = ["https://md3.io/docs/events-and-overlays/"];
+// `--online` accepts a 404 for them, or a page without the anchor they name, and
+// says when one is live so the entry goes. A link is listed whole, anchor included.
+const PENDING = ["https://md3.io/docs/events-and-overlays/", "https://md3.io/docs/theming/#contrast"];
 
 const docs = await Promise.all(FILES.map(parse));
 const failures: string[] = [];
@@ -169,10 +171,18 @@ if (online) {
       response = await fetch(link, { redirect: "manual" }).catch((error: Error) => error);
     }
     const status = response instanceof Error ? response.message : String(response.status);
-    console.log(`${status}  ${link}`);
-    const pending = PENDING.some(prefix => link.startsWith(prefix));
-    if (status !== "200" && !(pending && status === "404")) fail(`${link} answered ${status}`);
-    if (pending) console.log(`      ${status === "200" ? "now live: remove it from PENDING" : "not deployed yet, as PENDING says"}`);
+    const pending = PENDING.includes(link);
+    const anchor = link.startsWith("https://md3.io/") ? link.split("#")[1] : undefined;
+    // An md3.io link with an anchor names a heading of the page it fetched.
+    const found = anchor === undefined || response instanceof Error || status !== "200"
+      || (await response.text()).includes(`id="${anchor}"`);
+    console.log(`${status}  ${link}${found ? "" : "  (no such anchor in the page)"}`);
+    if (pending) {
+      const live = status === "200" && found;
+      console.log(`      ${live ? "now live: remove it from PENDING" : "not deployed yet, as PENDING says"}`);
+      if (!live && status !== "404" && status !== "200") fail(`${link} answered ${status}`);
+    } else if (status !== "200") fail(`${link} answered ${status}`);
+    else if (!found) fail(`${link}: the page has no heading with the anchor #${anchor}`);
   }
 }
 
