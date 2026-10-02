@@ -2366,6 +2366,271 @@ try {
     check("button group: a change handler reading value reads the same on the factory and the element (FLO-320)");
   }
 
+  // ---------------------------------------------------------------- button group press, labels stay whole (FLO-537)
+  // Motion on: a width that starts at `auto` cannot ride the spatial spring,
+  // so a neighbour's width used to jump while its padding was still easing and
+  // the truncated label showed an ellipsis. Sample every frame from pointer
+  // down until the release animation has finished.
+  {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    try {
+      const sizes = ["xs", "s", "m", "l", "xl"] as const;
+      const labels = ["Bold", "Italic", "Underline"] as const;
+      type Sample = { scroll: number; client: number; width: number; paddingLeft: number; paddingRight: number };
+      type Frame = { phase: "press" | "release"; groupWidth: number; buttons: Sample[] };
+      const failures: string[] = [];
+      const worst = new Map<string, string>();
+
+      const markup = (options: { size: string; kind?: string; icon?: boolean }): string => {
+        const items = labels.map((label) => {
+          const icon = options.icon ? ` icon='${ICON}'` : "";
+          return `<m-button-group-item value="${label.toLowerCase()}"${icon}>${label}</m-button-group-item>`;
+        }).join("");
+        const kind = options.kind ? ` kind="${options.kind}"` : "";
+        return `<m-button-group id="press" variant="outlined" size="${options.size}"${kind} aria-label="Format">${items}</m-button-group>`;
+      };
+
+      const install = (hold: "one" | "two" = "one"): Promise<void> => page.evaluate((hold) => {
+        const host = document.getElementById("press") as HTMLElement;
+        const buttons = [...(host.shadowRoot?.querySelectorAll("button") ?? [])] as HTMLButtonElement[];
+        const group = buttons[0]?.parentElement as HTMLElement;
+        const state = { frames: [] as Array<{ phase: "press" | "release"; groupWidth: number; buttons: Array<{ scroll: number; client: number; width: number; paddingLeft: number; paddingRight: number }> }>, phase: "press" as "press" | "release", pressSettled: false, done: false, presses: 0 };
+        (window as unknown as { __flo537: typeof state }).__flo537 = state;
+        const sample = (): void => {
+          state.frames.push({
+            phase: state.phase,
+            groupWidth: group.getBoundingClientRect().width,
+            buttons: buttons.map((button) => {
+              const label = (button.querySelector('[class*="__text"]') as HTMLElement | null) ?? button;
+              const style = getComputedStyle(button);
+              return {
+                scroll: label.scrollWidth,
+                client: label.clientWidth,
+                width: button.getBoundingClientRect().width,
+                paddingLeft: parseFloat(style.paddingLeft),
+                paddingRight: parseFloat(style.paddingRight),
+              };
+            }),
+          });
+        };
+        const active = (): boolean => buttons.some((button) => button.getAnimations().some((animation) => {
+          const playState = animation.playState as string;
+          return playState === "running" || playState === "pending";
+        }));
+        const loop = (): void => {
+          sample();
+          const going = active();
+          // A second press has to land before the first release spring ends, so
+          // that gesture stays open until both presses have been released.
+          const held = hold === "one" || state.presses >= 2;
+          if (state.phase === "press" && !going && held) state.pressSettled = true;
+          if (state.phase === "release" && !going && held) {
+            state.done = true;
+            return;
+          }
+          requestAnimationFrame(loop);
+        };
+        const release = (): void => {
+          state.phase = "release";
+        };
+        group.addEventListener("pointerdown", () => {
+          state.presses += 1;
+          state.phase = "press";
+          state.pressSettled = false;
+          if (state.presses === 1) requestAnimationFrame(loop);
+        });
+        document.addEventListener("pointerup", release);
+        document.addEventListener("pointercancel", release);
+      }, hold);
+
+      const buttonBox = async (name: string): Promise<{ x: number; y: number }> => {
+        const button = page.locator("#press").getByRole("button", { name, exact: true });
+        await button.scrollIntoViewIfNeeded();
+        const box = await button.boundingBox();
+        if (!box) throw new Error(`no box for ${name}`);
+        return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+      };
+      const framesOf = (): Promise<Frame[]> =>
+        page.evaluate(() => (window as unknown as { __flo537: { frames: Frame[] } }).__flo537.frames);
+      const settled = (): Promise<unknown> =>
+        page.waitForFunction(() => (window as unknown as { __flo537: { pressSettled: boolean } }).__flo537.pressSettled);
+      const finished = (): Promise<unknown> =>
+        page.waitForFunction(() => (window as unknown as { __flo537: { done: boolean } }).__flo537.done);
+
+      const press = async (name: string): Promise<Frame[]> => {
+        await install();
+        const box = await buttonBox(name);
+        await page.mouse.move(box.x, box.y);
+        await page.mouse.down();
+        try {
+          await settled();
+        } finally {
+          await page.mouse.up();
+        }
+        await finished();
+        return framesOf();
+      };
+
+      const judge = (id: string, name: string, frames: Frame[]): void => {
+        const base = frames.find((frame) => frame.phase === "press")?.groupWidth ?? 0;
+        let worstShort = 0;
+        let worstButton = "";
+        let worstFrame = 0;
+        let shortFrames = 0;
+        let groupDrift = 0;
+        frames.forEach((frame, index) => {
+          frame.buttons.forEach((sample, indexButton) => {
+            const short = sample.scroll - sample.client;
+            if (short > worstShort) {
+              worstShort = short;
+              worstButton = labels[indexButton] ?? "";
+              worstFrame = index;
+            }
+            if (short > 0) shortFrames += 1;
+          });
+          if (frame.phase === "press") groupDrift = Math.max(groupDrift, Math.abs(frame.groupWidth - base));
+        });
+        const pressFrames = frames.filter((frame) => frame.phase === "press").length;
+        console.log(`  flo537 ${id} press ${name}: worst ${worstShort}px (${worstButton || "none"} frame ${worstFrame}), ${pressFrames} press frames, ${frames.length - pressFrames} release frames, group drift ${groupDrift.toFixed(2)}px`);
+        const previous = worst.get(id);
+        const previousPx = previous ? Number.parseInt(previous, 10) : 0;
+        if (worstShort > previousPx) worst.set(id, `${worstShort}px ${worstButton} while ${name} pressed, frame ${worstFrame}, ${shortFrames} frames`);
+        else if (!previous) worst.set(id, "0");
+        if (worstShort > 0) failures.push(`${id} press ${name}: ${worstButton} short by ${worstShort}px at frame ${worstFrame} (${shortFrames} frames)`);
+        if (groupDrift > 1) failures.push(`${id} press ${name}: group width moved ${groupDrift.toFixed(2)}px during the press`);
+        if (id === "l" && name === "Bold") {
+          const last = [...frames].reverse().find((frame) => frame.phase === "press");
+          const neighbour = last?.buttons[1];
+          if (!neighbour || !(neighbour.paddingLeft < neighbour.paddingRight - 0.5)) {
+            failures.push(`l press Bold: facing padding did not shrink on the left (${neighbour?.paddingLeft} / ${neighbour?.paddingRight})`);
+          }
+        }
+      };
+
+      const runCase = async (id: string, html: string): Promise<void> => {
+        await fresh(page, html);
+        for (const name of labels) judge(id, name, await press(name));
+      };
+
+      const inlineCleared = (): Promise<unknown> => page.waitForFunction(() => {
+        const host = document.getElementById("press") as HTMLElement;
+        const buttons = [...(host.shadowRoot?.querySelectorAll("button") ?? [])] as HTMLElement[];
+        return buttons.length > 0 && buttons.every((button) => button.style.width === "" && button.style.minWidth === "");
+      });
+
+      for (const size of sizes) await runCase(size, markup({ size }));
+      await runCase("l icon", markup({ size: "l", icon: true }));
+      await runCase("l connected", markup({ size: "l", kind: "connected" }));
+
+      await fresh(page, markup({ size: "l" }));
+      judge("l relabel", "Bold", await press("Bold"));
+      await inlineCleared();
+      const beforeRelabel = await page.evaluate(() => {
+        const host = document.getElementById("press") as HTMLElement;
+        const button = host.shadowRoot?.querySelector("button") as HTMLElement;
+        return button.getBoundingClientRect().width;
+      });
+      await page.evaluate(() => {
+        const item = document.querySelector("#press m-button-group-item") as HTMLElement;
+        item.textContent = "ExtraBold";
+      });
+      await page.waitForFunction(() => {
+        const host = document.getElementById("press") as HTMLElement;
+        return host.shadowRoot?.querySelector("button")?.textContent?.includes("ExtraBold") === true;
+      });
+      const afterRelabel = await page.evaluate(() => {
+        const host = document.getElementById("press") as HTMLElement;
+        const button = host.shadowRoot?.querySelector("button") as HTMLElement;
+        return { width: button.getBoundingClientRect().width, inline: button.style.width };
+      });
+      console.log(`  flo537 relabel: ${beforeRelabel.toFixed(2)}px -> ${afterRelabel.width.toFixed(2)}px inline "${afterRelabel.inline}"`);
+      if (afterRelabel.inline !== "") failures.push(`relabel: inline width stayed "${afterRelabel.inline}"`);
+      if (afterRelabel.width <= beforeRelabel + 1) failures.push(`relabel: width ${afterRelabel.width.toFixed(2)} did not grow from ${beforeRelabel.toFixed(2)}`);
+      judge("l relabel", "ExtraBold", await press("ExtraBold"));
+
+      await fresh(page, markup({ size: "l" }));
+      await install("two");
+      const bold = await buttonBox("Bold");
+      await page.mouse.move(bold.x, bold.y);
+      await page.mouse.down();
+      await page.waitForFunction(() => (window as unknown as { __flo537: { frames: unknown[] } }).__flo537.frames.length >= 3);
+      await page.mouse.up();
+      const italic = await buttonBox("Italic");
+      await page.mouse.move(italic.x, italic.y);
+      await page.mouse.down();
+      try {
+        await settled();
+      } finally {
+        await page.mouse.up();
+      }
+      await finished();
+      judge("l second press", "Italic", await framesOf());
+
+      await fresh(page, markup({ size: "l" }));
+      await install();
+      const cancelAt = await buttonBox("Bold");
+      await page.mouse.move(cancelAt.x, cancelAt.y);
+      await page.mouse.down();
+      await settled();
+      await page.evaluate(() => document.dispatchEvent(new PointerEvent("pointercancel", { bubbles: true })));
+      await page.mouse.up();
+      await finished();
+      judge("l pointercancel", "Bold", await framesOf());
+
+      await fresh(page, markup({ size: "l" }));
+      await install();
+      const outsideAt = await buttonBox("Underline");
+      await page.mouse.move(outsideAt.x, outsideAt.y);
+      await page.mouse.down();
+      await settled();
+      await page.mouse.move(8, 8);
+      await page.mouse.up();
+      await finished();
+      judge("l outside", "Underline", await framesOf());
+
+      await fresh(page, markup({ size: "l" }).replace("value=\"bold\"", "value=\"bold\" disabled"));
+      // A disabled button does not receive a real pointer, so dispatch one.
+      // pressExpand must ignore it: the button's width stays put.
+      await install();
+      await page.evaluate(() => {
+        const host = document.getElementById("press") as HTMLElement;
+        const button = host.shadowRoot?.querySelector("button") as HTMLElement;
+        button.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      });
+      await settled();
+      await page.evaluate(() => document.dispatchEvent(new PointerEvent("pointerup", { bubbles: true })));
+      await finished();
+      const disabledFrames = await framesOf();
+      judge("l disabled", "Bold", disabledFrames);
+      const disabledDrift = disabledFrames.filter((frame) => frame.phase === "press").reduce((drift, frame, index, all) => {
+        const first = all[0]?.buttons[0]?.width ?? frame.buttons[0]?.width ?? 0;
+        return Math.max(drift, Math.abs((frame.buttons[0]?.width ?? first) - first));
+      }, 0);
+      if (disabledDrift > 1) failures.push(`l disabled: pressed button width moved ${disabledDrift.toFixed(2)}px`);
+
+      await fresh(page, `<div dir="rtl">${markup({ size: "l" })}</div>`);
+      const rtlFrames = await press("Bold");
+      judge("l rtl", "Bold", rtlFrames);
+      const rtlLast = [...rtlFrames].reverse().find((frame) => frame.phase === "press");
+      const rtlNeighbour = rtlLast?.buttons[1];
+      if (!rtlNeighbour || !(rtlNeighbour.paddingRight < rtlNeighbour.paddingLeft - 0.5)) {
+        failures.push(`l rtl: facing padding did not shrink on the right (${rtlNeighbour?.paddingLeft} / ${rtlNeighbour?.paddingRight})`);
+      }
+      for (const name of ["Italic", "Underline"] as const) judge("l rtl", name, await press(name));
+
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await runCase("l reduced", markup({ size: "l" }));
+      await inlineCleared();
+      await page.emulateMedia({ reducedMotion: "no-preference" });
+
+      console.log(`  flo537 worst: ${[...worst.entries()].map(([id, detail]) => `${id} ${detail}`).join("; ")}`);
+      assert.equal(failures.length, 0, `button group press (FLO-537):\n${failures.join("\n")}`);
+      check("button group: a press never ellipsizes a label, at every size, with motion on (FLO-537)");
+    } finally {
+      await page.emulateMedia({ reducedMotion: null });
+    }
+  }
+
   // ---------------------------------------------------------------- chips
   await fresh(
     page,
@@ -7169,6 +7434,32 @@ try {
     await page.emulateMedia({ reducedMotion: null });
     assert.equal(failures.length, 0, `tooltip placement (FLO-535):\n${failures.join("\n")}`);
     check("tooltip: motion-on placement, wrapped text, viewport clamps and top layer");
+  }
+
+  // ---------------------------------------------------------------- reduced motion inside a shadow root (FLO-549)
+  // The document's reduced-motion reset does not reach a shadow tree. The
+  // button's corner morph and the group's width springs are not fades, so
+  // under the preference they must not be in the computed transition list.
+  {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await fresh(
+      page,
+      `<m-button id="rm">Save</m-button>
+       <m-button-group id="rmg" selection="single" value="a" aria-label="Alignment">
+         <m-button-group-item value="a">Left</m-button-group-item>
+         <m-button-group-item value="b">Right</m-button-group-item>
+       </m-button-group>`
+    );
+    const read = await page.evaluate(() =>
+      ["rm", "rmg"].map((id) => {
+        const button = (document.getElementById(id) as HTMLElement).shadowRoot?.querySelector("button");
+        return button ? getComputedStyle(button).transitionProperty : "no button";
+      })
+    );
+    await page.emulateMedia({ reducedMotion: null });
+    const fades = "opacity, color, background-color, border-color, outline-color, box-shadow, visibility";
+    assert.deepEqual(read, [fades, fades], "under reduced motion a shadow root's transitions are limited to the fades");
+    check("reduced motion: inside <m-button> and <m-button-group>, transitions are limited to the fades");
   }
 
   // ---------------------------------------------------------------- tooltip and snackbar in the top layer

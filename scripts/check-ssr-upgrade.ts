@@ -132,6 +132,13 @@ try {
       style.sheet!.disabled = true;
       const styled = before !== signature();
       style.sheet!.disabled = false;
+      // Turning the sheet back on restyles the root from its unstyled values, which starts
+      // every transition the root allows. Under reduced motion the host rule lets colours
+      // fade (FLO-549), so an extended FAB's label was still fading when WebKit took the
+      // "before" screenshot (422 pixels). The probe is this check's own doing: resolve the
+      // style again and finish what it started, so the screenshot shows the settled root.
+      signature();
+      for (const animation of root.getAnimations()) animation.finish();
       return { root: true, rules, styled };
     });
     if (FALLBACK.includes(fixture.element)) {

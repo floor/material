@@ -170,8 +170,16 @@ export { DEFAULT_PREFIX };
  */
 export const SHADOW_BASE_STYLES = ["ripple"] as const;
 
-const BASE_HOST_STYLES =
-  ":host{display:inline-block}:host([hidden]){display:none}*,*::before,*::after{box-sizing:border-box}";
+/**
+ * The sheet every shadow root adopts first. The reduced-motion rule is the
+ * document reset's (styles/base/_reset.scss), which does not match inside a
+ * shadow tree: transitions are limited to the fades, animations end at once
+ * (FLO-549). test/styles/reduced-motion.test.ts keeps the two copies equal.
+ * @internal
+ */
+export const BASE_HOST_STYLES =
+  ":host{display:inline-block}:host([hidden]){display:none}*,*::before,*::after{box-sizing:border-box}" +
+  "@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-property:opacity,color,background-color,border-color,outline-color,box-shadow,visibility!important;scroll-behavior:auto!important}}";
 
 /** Internal shared host CSS, in browser cascade order. */
 export const hostStyleText = (spec: { hostStyles?: string }): string => BASE_HOST_STYLES + (spec.hostStyles ?? "");
