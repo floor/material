@@ -1082,6 +1082,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **The slider's label takes the Body Large role, and a labelled horizontal slider is 4px
+  taller (FLO-587).** The label on a slider is this library's — the specification puts no label
+  on a slider — so the form controls' label role decides, as it does for the checkbox, radio
+  and switch labels: the label's text is now 16px on a 24px line (was 18px on an inherited 20px
+  line). A horizontal slider with a label is 4px taller: 72 → 76px at XS and S, 76 → 80 at M,
+  92 → 96 at L, 132 → 136 at XL; a vertical slider's height is unchanged. A layout that
+  reserved the old height gains 4px per labelled slider.
 - **The element authoring API is experimental.** `defineElement`, `ElementSpec`,
   `registerStyles`, `hasStyles` and `SHADOW_BASE_STYLES` (from `material/elements`), the API
   for writing custom elements of your own on material's machinery, are tagged
@@ -1197,6 +1204,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **The side sheet's and the dialog's close buttons reach 48 x 48.** Both were hand-built 40px
+  buttons with no expanded target, so a pointer 4px outside an edge — the outer band of the M3
+  target — hit nothing, left-to-right and right-to-left alike. Each now carries the icon button's
+  own mechanism: a `::after` box 48 x 48 centred on it, so the reachable target is 48 x 48 while
+  the button still paints 40 x 40, in place. M3 "Density": "The default target size should be at
+  least 48x48 CSS pixels."
 - **A multiline text field uses the value it was created with (FLO-577).** `createTextField({ type: 'multiline', value })` wrote that string as a `value` attribute. A textarea does not take its value from that attribute, so `getValue()` was empty, the label stayed down, and a reset restored nothing. The value is now the textarea's default value, which is its text: the field shows it, the label floats, and a reset restores it. A single-line field still uses the `value` attribute. `<m-text-field>` no longer sets the default a second time.
 - **An unlabelled switch is its 52 x 48 track box, not the label's row.** With no label the root
   kept the label's 12px gap, so it was 64px wide (12 + the 52px track) and 56px tall: in a 48px
