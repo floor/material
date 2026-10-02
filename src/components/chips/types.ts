@@ -61,8 +61,9 @@ export interface ChipConfig {
    */
   onChange?: ChipEvents["change"];
   /**
-   * Called with the chip when the user toggles a selectable chip. No matching
-   * event: this is not an `on(event)` listener.
+   * Called with the chip when the user toggles a selectable chip, not when a
+   * `selectionRequired` set refuses the click. No matching event: this is not
+   * an `on(event)` listener.
    */
   onSelect?: (chip: ChipComponent) => void;
   class?: string;

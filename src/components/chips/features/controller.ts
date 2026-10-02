@@ -78,15 +78,17 @@ export const withController =
     });
   };
 
-  const handleSelection = (selectedChip: ChipComponent) => {
+  /** Applies a click's toggle to the set. True when the set refused it. */
+  const handleSelection = (selectedChip: ChipComponent): boolean | void => {
     if (selectedChip.isSelected()) selectSingle(selectedChip);
 
     // With selectionRequired, deselecting the last selected chip is refused, in either
     // mode. It used to be forced on every single-select set. FLO-257.
-    // Nothing changed, so nothing is emitted, here or on the chip. FLO-550.
+    // Nothing changed, so nothing is emitted, here or on the chip, and no
+    // onSelect is called. FLO-550.
     if (config.selectionRequired && !selectedChip.isSelected() && getSelectedChips().length === 0) {
       selectedChip.setSelected(true);
-      return;
+      return true;
     }
 
     // Get all currently selected chips and their values
@@ -268,8 +270,7 @@ export const withController =
       if (!chipInstance.isDisabled() && ["filter", "input"].includes(chipInstance.getType())) {
         chipInstance.toggleSelected();
 
-        handleSelection(chipInstance);
-        chipConfig.onSelect?.(chipInstance);
+        if (!handleSelection(chipInstance)) chipConfig.onSelect?.(chipInstance);
 
         // Update focus tracking
         focusedChipIndex = component.chipInstances.indexOf(chipInstance);

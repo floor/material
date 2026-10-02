@@ -175,8 +175,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **A chip's `change` is emitted only when the selection changed (FLO-550).** In a
   `selectionRequired` set, a click on the last selected chip is refused: it used to emit
   `change` on the chip and on the set, with the chip still selected, and call both `onChange`.
-  It now emits none, and `<m-chips>` dispatches no `change`; `click` and `onClick` still
-  report the press.
+  It now emits none, the item's `onSelect` is not called, and `<m-chips>` dispatches no
+  `change`; `click` and `onClick` still report the press.
 - **A chip's `remove` listeners in a set run before the set removes the chip.** The item's
   `onRemove` and a `chip.on("remove")` listener find the chip still in `getChips()` and on the
   page; the set then destroys it and emits its own `remove`. A listener added with `on` used
