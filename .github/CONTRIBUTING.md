@@ -192,6 +192,11 @@ bun run test:coverage                      # with a coverage report
 - TypeDoc comments on every public function and type, with an `@example`.
 - The file path as a comment on the first line of each file.
 - `README.md` is the GitHub page and `npm-readme.md` the npm page; a change to what one says usually belongs in both. Two checks hold them to the packed package. `bun run readme:check` (after `bun run build` and `bun run size:check`) compiles every TypeScript example, resolves every `material/…` specifier, and checks the `<m-…>` tags and attributes, the install line, the size table and the links; with `--online` it also fetches the external links. `bun run readme-browser:check` runs the examples as a reader would: a fence under `<!-- example: run, shows "…" -->` is built with Vite exactly as written, opened in Chromium, and must show that text with its elements upgraded and no error. A whole example carries that mark; a fence that goes on from the previous one carries `<!-- example: continues -->`; a fence with no mark is a fragment, and the text beside it should read that way.
+- Both READMEs are written to be read, not consulted. Four rules, the first two held by `readme:check`:
+  - no paragraph or list item over about four rendered lines (440 characters as rendered);
+  - no sentence with more than two inline code spans (tables and fences apart);
+  - three or more parallel items are a list or a table;
+  - what reads as a specification (a contract, its exceptions, measurements) lives on md3.io, and the README says the rule in a line or two and links the page.
 - User documentation lives in md3.io's `docs/components/<name>.md`, where `bun run docs:check` type-checks and runs every example against your material checkout. Add or update the page with the change.
 
 ## Community and Communication

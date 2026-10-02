@@ -47,11 +47,13 @@ document.body.append(name.element, save.element);
 | Containment | Card, Carousel, List, Divider, Dialog, Bottom sheet, Side sheet |
 | Communication | Badge, Progress, Loading indicator, Snackbar, Tooltip |
 
-Every component comes three ways: a factory (`createButton`), an element (`<m-button>`) and a framework component (`Button`; `MButton` in Vue). Each has a page with a playground on [md3.io/components](https://md3.io/components/).
+Every component comes three ways: a factory, a custom element and a framework component. Each has a page with a playground on [md3.io/components](https://md3.io/components/).
 
 ## Web components
 
-A page imports `material/styles/base` and `material/elements/css` once, and `defineAll()` from `material/elements` registers `<m-button>`, `<m-text-field>` and the rest, for plain HTML, server templates and any framework. The elements render in shadow DOM and read the page's theme. Form controls are form-associated: `name`, the form value, reset and validation work as on native controls. Overlays open in the browser's top layer. Guide: [md3.io/docs/web-components](https://md3.io/docs/web-components/).
+A page imports the base stylesheet and the elements' CSS once, then registers the elements with `defineAll()`. After that `<m-button>` and the rest are HTML, in plain pages, server templates and any framework.
+
+Form controls are form-associated: the form value, reset and validation work as on native controls. Overlays open in the browser's top layer. Guide: [md3.io/docs/web-components](https://md3.io/docs/web-components/).
 
 ## React, Vue, Svelte and Solid
 
@@ -66,7 +68,9 @@ The framework components render the elements, load their CSS and register each o
 
 ## Server rendering
 
-`renderElement` from `material/ssr` renders an element to declarative shadow DOM. Import `material/ssr/react`, `material/ssr/vue`, `material/ssr/svelte` or `material/ssr/solid` in the server bootstrap and that framework's components emit the same roots, then hydrate. Node and Bun are supported; worker and edge runtimes are not supported in `material` 3.0.0. Guide: [md3.io/docs/server-rendering](https://md3.io/docs/server-rendering/).
+`renderElement` from `material/ssr` renders an element to declarative shadow DOM. Each framework has a bridge, such as `material/ssr/react`, that makes its components emit the same roots and hydrate.
+
+Node and Bun are supported; worker and edge runtimes are not supported in `material` 3.0.0. Guide: [md3.io/docs/server-rendering](https://md3.io/docs/server-rendering/).
 
 ## Themes
 
@@ -106,7 +110,7 @@ Upgrade to the latest `mtrl` 0.10.x first, then change the package name to `mate
 
 ## Where this came from
 
-The package was published as `mtrl` up to 0.10.x, and its history before 3.0.0 was developed in `floor/mtrl`. The `mtrl-` class prefix, the `--mtrl-` custom properties, the `m-` tags and the `mtrl.*` cascade layers keep their names.
+The package was published as `mtrl` up to 0.10.x, and its history before 3.0.0 was developed in `floor/mtrl`. The class prefix (`mtrl-`), the custom properties, the `m-` tags and the cascade layers keep their names.
 
 Versions of `material` up to 1.0.4 are an earlier, separate library (GPL-3), still installable with `npm install material@legacy`.
 

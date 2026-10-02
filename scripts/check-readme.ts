@@ -23,6 +23,8 @@
  *   sets 3.0.0 fails here until both files are changed);
  * - the numbers between the `sizes` markers are within 2% of what size:check
  *   measured (the release pull request refreshes them);
+ * - readability: no paragraph or list item over about four rendered lines, no
+ *   sentence with more than two inline code spans (tables and fences apart);
  * - links: an anchor names a heading of the same file, a relative link names a
  *   file of the repository (README.md only: npm-readme.md has none), and a link
  *   to this repository's CHANGELOG.md on GitHub names one of its headings.
@@ -44,6 +46,11 @@ import { FILES, headingSlugs, parse, type Block } from "./readme-blocks";
 
 const REPOSITORY = "https://github.com/floor/material";
 const online = process.argv.includes("--online");
+// md3.io pages that deploy with the site's move to `material` 3.0.0, before the
+// release: each is in data/published-urls.txt on md3.io's feat/material-3-move
+// branch, whose own test requires every listed URL to answer. Until that deploy
+// `--online` accepts a 404 for them, and says when one is live so the entry goes.
+const PENDING = ["https://md3.io/docs/events-and-overlays/"];
 
 const docs = await Promise.all(FILES.map(parse));
 const failures: string[] = [];
@@ -104,6 +111,35 @@ if (docs[0].text.split("<!-- sizes -->")[1]?.split("<!-- /sizes -->")[0] !== doc
   fail("README.md and npm-readme.md have different sizes tables");
 }
 
+// ── Readability ───────────────────────────────────────────────────
+// Two rules a script can hold, of the four the READMEs follow (the other two are
+// a reviewer's: what reads as a specification lives on md3.io with a link, and
+// three or more parallel items are a list or a table):
+//
+// - a paragraph or a list item is at most about four rendered lines: 440
+//   characters of the text as rendered (GitHub's README column holds about 110);
+// - a sentence has at most two inline code spans.
+//
+// Tables, fences, headings and comments are not prose. The list between the
+// markup-attributes markers is left out: test/ssr/markup-attributes.test.ts
+// holds its lines to one form, `attribute` on `<m-element>`, with a condition.
+const MAX_PARAGRAPH = 440;
+const MAX_SPANS = 2;
+for (const doc of docs) {
+  const prose = doc.prose.replace(/<!-- markup-attributes -->[\s\S]*?<!-- \/markup-attributes -->/, "");
+  const units = prose.split(/\n{2,}/).flatMap(paragraph => /^- /m.test(paragraph) ? paragraph.split(/\n(?=- )/) : [paragraph])
+    .map(unit => unit.trim()).filter(unit => unit && !/^(?:#|\||<!--)/.test(unit));
+  for (const unit of units) {
+    const rendered = unit.replace(/\]\([^)]*\)/g, "]").replace(/[`*[\]]/g, "").replace(/\s+/g, " ");
+    const start = `${doc.file}: "${rendered.slice(0, 50)}…"`;
+    if (rendered.length > MAX_PARAGRAPH) fail(`${start} is ${rendered.length} characters as rendered: over ${MAX_PARAGRAPH}, about four lines`);
+    for (const sentence of unit.split(/(?<=[.:;?!])\s+/)) {
+      const spans = sentence.match(/`[^`\n]+`/g)?.length ?? 0;
+      if (spans > MAX_SPANS) fail(`${start} has a sentence with ${spans} code spans, more than ${MAX_SPANS}: "${sentence.slice(0, 70)}…"`);
+    }
+  }
+}
+
 // ── Links ─────────────────────────────────────────────────────────
 const changelogSlugs = headingSlugs(await Bun.file("CHANGELOG.md").text());
 const external = new Set<string>();
@@ -129,7 +165,9 @@ if (online) {
     const response = await fetch(link, { redirect: "manual" }).catch((error: Error) => error);
     const status = response instanceof Error ? response.message : String(response.status);
     console.log(`${status}  ${link}`);
-    if (status !== "200") fail(`${link} answered ${status}`);
+    const pending = PENDING.some(prefix => link.startsWith(prefix));
+    if (status !== "200" && !(pending && status === "404")) fail(`${link} answered ${status}`);
+    if (pending) console.log(`      ${status === "200" ? "now live: remove it from PENDING" : "not deployed yet, as PENDING says"}`);
   }
 }
 
