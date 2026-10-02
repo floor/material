@@ -5403,19 +5403,21 @@ try {
     // "close" event 50ms after a dismissal, focus back on the anchor a frame later, a
     // submenu's focus a frame and 300ms after it opens), and on a runner that paused
     // the fixed wait ended first. `eventually` waits for that state, after the fixed
-    // wait, for 5s at most. When it never comes, the failure says what was awaited
-    // and what was found instead: the focused element, and whatever `found` adds.
-    const eventually = async (what: string, ready: () => Promise<boolean>, found: () => Promise<object> = async () => ({})): Promise<void> => {
+    // wait, for 5s at most. When it never comes, the failure says at which step,
+    // what was awaited and what was found instead: the focused element, and whatever
+    // `found` adds. The helpers are called at many steps; `step` is what tells them
+    // apart in a CI log.
+    const eventually = async (step: string, what: string, ready: () => Promise<boolean>, found: () => Promise<object> = async () => ({})): Promise<void> => {
       for (const end = Date.now() + 5000; !(await ready());) {
         if (Date.now() > end) {
-          throw new Error(`menus: still waiting after 5s for ${what}; found ${JSON.stringify({ focus: await focused(), ...(await found()) })}`);
+          throw new Error(`menus, ${step}: still waiting after 5s for ${what}; found ${JSON.stringify({ focus: await focused(), ...(await found()) })}`);
         }
         await wait(20);
       }
     };
-    const focusIs = (label: string): Promise<void> => eventually(`focus on "${label}"`, async () => (await focused()) === label);
+    const focusIs = (step: string, label: string): Promise<void> => eventually(step, `focus on "${label}"`, async () => (await focused()) === label);
     /** A menu opened with the pointer takes focus itself, and only then handles keys. */
-    const menuFocused = (): Promise<void> => eventually("the open menu to take focus", () => page.evaluate(() => {
+    const menuFocused = (step: string): Promise<void> => eventually(step, "the open menu to take focus", () => page.evaluate(() => {
       let active = document.activeElement;
       while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
       return active?.getAttribute("role") === "menu";
@@ -5437,7 +5439,7 @@ try {
        </m-menu>`
     );
     await listen("mm", ["open", "close", "select"]);
-    const closed = (): Promise<void> => eventually("<m-menu> to close", async () => {
+    const closed = (step: string): Promise<void> => eventually(step, "<m-menu> to close", async () => {
       const now = await menuState();
       return !now.open && !now.attribute;
     }, menuState);
@@ -5449,7 +5451,7 @@ try {
 
     await page.click("#mb");
     await settle();
-    await menuFocused();
+    await menuFocused("opened with the pointer");
     assert.deepEqual(await surface("mm", '[role="menu"]'), OPEN, "menu: the surface");
     assert.deepEqual(await menuState(), { open: true, attribute: true });
     assert.deepEqual(await log(), [{ type: "open", detail: {} }]);
@@ -5466,8 +5468,8 @@ try {
     assert.deepEqual(moves, ["Copy", "Cut", "PasteCtrl+V"]);
     await page.keyboard.press("Enter");
     await settle();
-    await closed();
-    await focusIs("mb");
+    await closed("Enter on an item");
+    await focusIs("Enter on an item", "mb");
     assert.deepEqual(await log(), [{ type: "select", detail: { value: "paste" } }, { type: "close", detail: {} }]);
     assert.deepEqual(await menuState(), { open: false, attribute: false });
     assert.equal(await focused(), "mb", "focus is back on the anchor");
@@ -5486,8 +5488,8 @@ try {
     assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
     await page.keyboard.press("Escape");
     await settle();
-    await closed();
-    await focusIs("mb");
+    await closed("Escape, opened with Enter");
+    await focusIs("Escape, opened with Enter", "mb");
     assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
     assert.equal(await focused(), "mb");
     check("menu: Enter on the anchor focuses the first item; Escape closes once and returns focus");
@@ -5503,8 +5505,8 @@ try {
     assert.equal(await focused(), "PasteCtrl+V", "opened with ArrowUp, the last item has focus, and keeps it");
     await page.keyboard.press("Escape");
     await settle();
-    await closed();
-    await focusIs("mb");
+    await closed("Escape, opened with ArrowUp");
+    await focusIs("Escape, opened with ArrowUp", "mb");
     assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
     assert.equal(await focused(), "mb");
     check("menu: ArrowUp on the anchor opens it on the last item");
@@ -5516,7 +5518,7 @@ try {
     assert.equal((await menuState()).open, true, "a click inside the surface, on a disabled item, keeps it open");
     await outside();
     await settle();
-    await closed();
+    await closed("a click outside");
     assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
     assert.deepEqual(await menuState(), { open: false, attribute: false });
     check("menu: a click in the surface keeps it open, a click outside closes it once");
@@ -5533,7 +5535,7 @@ try {
     assert.deepEqual(submenu, { open: true, items: ["link", "mail"] }, "nested items are the submenu, in the shadow root");
     await clickIn("mm", '[data-id="link"]');
     await settle();
-    await closed();
+    await closed("a click on a submenu item");
     assert.deepEqual(await log(), [
       { type: "open", detail: {} }, { type: "select", detail: { value: "link" } }, { type: "close", detail: {} },
     ]);
@@ -5552,26 +5554,26 @@ try {
     assert.equal(await focused(), "Share", "Copy, Cut (disabled, focusable), then Share");
     await page.keyboard.press("ArrowRight");
     await settle();
-    await focusIs("Copy link");
+    await focusIs("ArrowRight on Share", "Copy link");
     assert.deepEqual({ submenus: await openSubmenus(), focus: await focused() }, { submenus: 1, focus: "Copy link" }, "ArrowRight");
     await page.keyboard.press("ArrowLeft");
     await wait(300);
-    await eventually("<m-menu>'s submenu to close and focus to return to Share", async () => (await openSubmenus()) === 0 && (await focused()) === "Share", async () => ({ submenus: await openSubmenus() }));
+    await eventually("ArrowLeft in the submenu", "<m-menu>'s submenu to close and focus to return to Share", async () => (await openSubmenus()) === 0 && (await focused()) === "Share", async () => ({ submenus: await openSubmenus() }));
     assert.deepEqual({ submenus: await openSubmenus(), focus: await focused() }, { submenus: 0, focus: "Share" }, "ArrowLeft");
     await page.keyboard.press("Escape");
     await settle();
-    await closed();
+    await closed("Escape after the submenu");
     await page.click("#mb");
     await settle();
     const share = await center("mm", '[data-id="share"]');
     await page.mouse.move(share.x, share.y);
     // The hover intent, then the transition
     await wait(550);
-    await eventually("<m-menu>'s submenu under the hovered item", async () => (await openSubmenus()) === 1, async () => ({ submenus: await openSubmenus() }));
+    await eventually("a hover on Share", "<m-menu>'s submenu under the hovered item", async () => (await openSubmenus()) === 1, async () => ({ submenus: await openSubmenus() }));
     assert.equal(await openSubmenus(), 1, "a hover on Share opens its submenu");
     await page.keyboard.press("Escape");
     await settle();
-    await closed();
+    await closed("Escape after the hover");
     await page.mouse.move(0, 0);
     assert.deepEqual((await log()).map((e) => e.type), ["open", "close", "open", "close"]);
     assert.deepEqual(await menuState(), { open: false, attribute: false });
@@ -5624,19 +5626,19 @@ try {
     assert.deepEqual(await menuState(), { open: true, attribute: true });
     await page.evaluate(() => (document.getElementById("mm") as Host & { hide: () => void }).hide());
     await settle();
-    await closed();
+    await closed("hide()");
     await page.evaluate(() => document.getElementById("mm")?.setAttribute("open", ""));
     await settle();
     assert.deepEqual(await menuState(), { open: true, attribute: true });
     await page.evaluate(() => document.getElementById("mm")?.removeAttribute("open"));
     await settle();
-    await closed();
+    await closed("the open attribute removed");
     assert.deepEqual(await menuState(), { open: false, attribute: false });
     await page.evaluate(() => (document.getElementById("mm") as Host & { toggle: () => void }).toggle());
     await settle();
     await page.evaluate(() => (document.getElementById("mm") as Host & { toggle: () => void }).toggle());
     await settle();
-    await closed();
+    await closed("toggle(), the second");
     assert.deepEqual((await log()).map((e) => e.type), ["open", "close", "open", "close", "open", "close"]);
     check("menu: show(), hide(), toggle() and the open attribute open and close it, each with its event");
 
@@ -5678,12 +5680,12 @@ try {
     });
     await page.click("#mb2");
     await settle();
-    await menuFocused();
+    await menuFocused("opened from an anchor set as a property");
     const byProperty = await menuState();
     await page.keyboard.press("Escape");
     await settle();
-    await closed();
-    await focusIs("mb2");
+    await closed("Escape, anchor as a property");
+    await focusIs("Escape, anchor as a property", "mb2");
     assert.equal(await focused(), "mb2");
     await page.evaluate(() => {
       const shadow = document.createElement("div");
