@@ -5573,6 +5573,48 @@ try {
     assert.deepEqual(picked, { seen: ["sheet"], open: false });
     check("FAB menu: presentation=menu loads the baseline menu into its shadow root, 4px above the FAB");
 
+    // FLO-548: `open` by attribute or property is applied in the attribute
+    // callback and dispatches nothing; show() and hide() dispatch one event
+    // each, and the state and the attribute are there when they return. In the
+    // menu presentation too, where the surface comes from a module of its own.
+    const openState = await page.evaluate(async () => {
+      type Opens = HTMLElement & { open: boolean; show: () => void; hide: () => void; component: { isOpen: () => boolean } };
+      const pause = (): Promise<unknown> => new Promise((r) => setTimeout(r, 400));
+      const result: Record<string, unknown> = {};
+      for (const id of ["fm", "fm2"]) {
+        const fm = document.getElementById(id) as Opens;
+        const events: string[] = [];
+        const note = (e: Event): void => void events.push(e.type);
+        fm.addEventListener("open", note);
+        fm.addEventListener("close", note);
+        fm.setAttribute("open", "");
+        const set = fm.component.isOpen();
+        fm.removeAttribute("open");
+        const removed = fm.component.isOpen();
+        fm.open = true;
+        const property = fm.component.isOpen();
+        fm.open = false;
+        await pause();
+        const quiet = [...events];
+        fm.show();
+        const shown = { open: fm.component.isOpen(), attribute: fm.hasAttribute("open") };
+        await pause();
+        fm.hide();
+        const hidden = { open: fm.component.isOpen(), attribute: fm.hasAttribute("open") };
+        await pause();
+        fm.removeEventListener("open", note);
+        fm.removeEventListener("close", note);
+        result[id] = { set, removed, property, quiet, shown, hidden, events };
+      }
+      return result;
+    });
+    const openExpected = {
+      set: true, removed: false, property: true, quiet: [],
+      shown: { open: true, attribute: true }, hidden: { open: false, attribute: false }, events: ["open", "close"],
+    };
+    assert.deepEqual(openState, { fm: openExpected, fm2: openExpected });
+    check("FAB menu: the open attribute and property open and close it at once, with no event; show() and hide() with one each, in both presentations");
+
     const parity = await page.evaluate((icon) => {
       const w = window as unknown as Win & { mtrl: { createFabMenu: (c: object) => { element: HTMLElement; fab: HTMLElement } } };
       const factory = w.mtrl.createFabMenu({ icon, ariaLabel: "Compose", presentation: "list", items: [{ id: "a", text: "A" }, { id: "b", text: "B" }] });
@@ -6004,7 +6046,21 @@ try {
     await page.evaluate(() => (document.getElementById("mm") as Host & { hide: () => void }).hide());
     await settle();
     await closed("hide()");
-    await page.evaluate(() => document.getElementById("mm")?.setAttribute("open", ""));
+    // The attribute, and the property that reflects it, are applied in the
+    // attribute callback (FLO-548): the menu is open, or closed, on the next
+    // line, and nothing is dispatched. It was applied a microtask later, and
+    // dispatched `open` and `close`.
+    const byAttribute = await page.evaluate(() => {
+      const el = document.getElementById("mm") as Host & { open: boolean };
+      const isOpen = (): boolean => (el.component?.isOpen as () => boolean)();
+      el.setAttribute("open", "");
+      const set = isOpen();
+      el.removeAttribute("open");
+      const removed = isOpen();
+      el.open = true;
+      return { set, removed, property: isOpen(), attribute: el.hasAttribute("open") };
+    });
+    assert.deepEqual(byAttribute, { set: true, removed: false, property: true, attribute: true });
     await settle();
     assert.deepEqual(await menuState(), { open: true, attribute: true });
     await page.evaluate(() => document.getElementById("mm")?.removeAttribute("open"));
@@ -6016,8 +6072,10 @@ try {
     await page.evaluate(() => (document.getElementById("mm") as Host & { toggle: () => void }).toggle());
     await settle();
     await closed("toggle(), the second");
-    assert.deepEqual((await log()).map((e) => e.type), ["open", "close", "open", "close", "open", "close"]);
-    check("menu: show(), hide(), toggle() and the open attribute open and close it, each with its event");
+    // show() and hide(), then toggle() twice: one event each. The attribute and the
+    // property in between dispatched none.
+    assert.deepEqual((await log()).map((e) => e.type), ["open", "close", "open", "close"]);
+    check("menu: show(), hide() and toggle() open and close it, each with its event; the open attribute and property do it at once, with none");
 
     const declared = await page.evaluate(async () => {
       const el = document.getElementById("mm") as Host;
