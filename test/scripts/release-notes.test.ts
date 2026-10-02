@@ -55,6 +55,15 @@ describe("changelogSection", () => {
     expect(() => changelogSection("## [1.0.0]\n\n## [0.9.0]\n\n- x\n", "1.0.0")).toThrow("is empty");
     expect(() => changelogSection(CHANGELOG, "0.10")).toThrow("no section");
   });
+
+  test("a section that still parks an earlier release's entries fails: they are not this release's notes", () => {
+    const parked = "## [1.0.0] - 2026-10-09\n\n### Added\n\n- New.\n\n### Also in 0.10.5\n\n- Shipped before.\n\n## [0.10.4]\n\n- x\n";
+    expect(() => changelogSection(parked, "1.0.0")).toThrow('still has "### Also in 0.10.5"');
+    expect(() => releaseNotes(parked, "1.0.0")).toThrow("replace that block");
+    // Only a heading counts: a sentence that mentions the block does not
+    expect(changelogSection("## [1.0.0]\n\nSee ### Also in 0.10.5 below.\n", "1.0.0")).toBe("See ### Also in 0.10.5 below.");
+    expect(changelogSection(parked, "0.10.4")).toBe("- x");
+  });
 });
 
 test("releaseNotes ends the section with the npm, docs and history footer", () => {

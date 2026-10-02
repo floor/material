@@ -6,7 +6,10 @@
  *   bun scripts/release-notes.ts 0.10.5 > notes.md
  *
  * A version with no section, or an empty one, fails: a release without notes
- * is a CHANGELOG that was not updated, which is worth stopping for.
+ * is a CHANGELOG that was not updated, which is worth stopping for. So does a
+ * section that still holds an `### Also in <version>` block: those entries
+ * shipped in an earlier release and are parked there until that release's own
+ * section joins the file, so they must not go out as this release's notes.
  */
 
 /** The version's section of the changelog, its `## [x.y.z]` heading left out */
@@ -18,6 +21,8 @@ export function changelogSection(changelog: string, version: string): string {
   const next = lines.findIndex((line, index) => index > start && line.startsWith("## ["));
   const body = lines.slice(start + 1, next === -1 ? undefined : next).join("\n").trim();
   if (!body) throw new Error(`CHANGELOG.md's section for ${version} is empty`);
+  const parked = body.split("\n").find((line) => line.startsWith("### Also in"));
+  if (parked) throw new Error(`CHANGELOG.md's section for ${version} still has "${parked}": replace that block with the earlier release's own section first`);
   return body;
 }
 
