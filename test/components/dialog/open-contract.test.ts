@@ -316,3 +316,103 @@ describe('dialog open and close in one task: the last call wins, pending timers 
     expect(seen).toEqual(['beforeopen', 'open']);
   });
 });
+
+// An open dialog can be dismissed: Escape and the scrim answer from the moment
+// open() returns, not from the 10ms the surface waits for. One exception, the
+// same for every overlay: the event that opened it never dismisses it.
+describe('dialog: open means it can be dismissed', () => {
+  const escape = () => new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+
+  /** The document's listeners, by type, while `run` is watched */
+  const watchDocument = () => {
+    const held = new Map<string, Set<unknown>>();
+    const add = document.addEventListener.bind(document);
+    const remove = document.removeEventListener.bind(document);
+    document.addEventListener = ((type: string, listener: EventListener, options?: unknown) => {
+      if (!held.has(type)) held.set(type, new Set());
+      held.get(type)!.add(listener);
+      add(type, listener, options as AddEventListenerOptions);
+    }) as typeof document.addEventListener;
+    document.removeEventListener = ((type: string, listener: EventListener, options?: unknown) => {
+      held.get(type)?.delete(listener);
+      remove(type, listener, options as EventListenerOptions);
+    }) as typeof document.removeEventListener;
+    return {
+      count: (type: string) => held.get(type)?.size ?? 0,
+      stop: () => { document.addEventListener = add; document.removeEventListener = remove; },
+    };
+  };
+
+  test('Escape before the surface is shown closes it: one beforeclose, one close, never shown, no afteropen', async () => {
+    const { dialog, seen } = make();
+    dialog.open();
+    // A later key press: events are stamped in milliseconds here
+    await after(3);
+    expect(dialog.element.classList.contains(VISIBLE)).toBe(false);
+    document.dispatchEvent(escape());
+    expect(dialog.isOpen()).toBe(false);
+    expect(seen).toEqual(['beforeopen', 'open', 'beforeclose', 'close']);
+    await after(SETTLED);
+    expect(dialog.element.classList.contains(VISIBLE)).toBe(false);
+    expect(dialog.overlay.isConnected).toBe(false);
+    expect(seen).toEqual(['beforeopen', 'open', 'beforeclose', 'close', 'afterclose']);
+  });
+
+  test('the key press that opened it does not close it; the next one does', async () => {
+    const { dialog, seen } = make();
+    trigger.addEventListener('keydown', (event) => { if (event.key === 'Escape') dialog.open(); });
+    // One Escape, on its way from the button up to the document
+    trigger.dispatchEvent(escape());
+    expect(dialog.isOpen()).toBe(true);
+    expect(seen).toEqual(['beforeopen', 'open']);
+    await after(SETTLED);
+    expect(dialog.isOpen()).toBe(true);
+    expect(dialog.element.classList.contains(VISIBLE)).toBe(true);
+    document.dispatchEvent(escape());
+    expect(dialog.isOpen()).toBe(false);
+    expect(seen).toEqual(['beforeopen', 'open', 'afteropen', 'beforeclose', 'close']);
+  });
+
+  test('closeOnEscape: false is still honoured in that window', async () => {
+    const { dialog, seen } = make({ closeOnEscape: false });
+    dialog.open();
+    await after(3);
+    document.dispatchEvent(escape());
+    expect(dialog.isOpen()).toBe(true);
+    expect(seen).toEqual(['beforeopen', 'open']);
+  });
+
+  test('the scrim answers at once too: a press and release on it closes the dialog', async () => {
+    const { dialog, seen } = make();
+    dialog.open();
+    dialog.overlay.dispatchEvent(new dom.window.MouseEvent('mousedown', { bubbles: true }));
+    dialog.overlay.dispatchEvent(new dom.window.MouseEvent('mouseup', { bubbles: true }));
+    expect(dialog.isOpen()).toBe(false);
+    expect(seen).toEqual(['beforeopen', 'open', 'beforeclose', 'close']);
+  });
+
+  test('close() and destroy() in that window leave no document listener behind', async () => {
+    const watched = watchDocument();
+    try {
+      const closed = make().dialog;
+      closed.open();
+      expect(watched.count('keydown')).toBe(1);
+      expect(watched.count('mouseup')).toBe(1);
+      closed.close();
+      expect(watched.count('keydown')).toBe(0);
+      expect(watched.count('mouseup')).toBe(0);
+
+      const destroyed = make().dialog;
+      destroyed.open();
+      expect(watched.count('keydown')).toBe(1);
+      destroyed.destroy();
+      expect(watched.count('keydown')).toBe(0);
+      expect(watched.count('mouseup')).toBe(0);
+      await after(SETTLED);
+      expect(watched.count('keydown')).toBe(0);
+      expect(watched.count('mouseup')).toBe(0);
+    } finally {
+      watched.stop();
+    }
+  });
+});
