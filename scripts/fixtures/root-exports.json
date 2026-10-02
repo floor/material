@@ -610,6 +610,11 @@
     "status": "public"
   },
   {
+    "name": "MenuVariant",
+    "kind": "type",
+    "status": "public"
+  },
+  {
     "name": "NavigationBarComponent",
     "kind": "type",
     "status": "public"
@@ -676,6 +681,11 @@
   },
   {
     "name": "ProgressShape",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "ProgressVariant",
     "kind": "type",
     "status": "public"
   },
@@ -855,6 +865,11 @@
     "status": "public"
   },
   {
+    "name": "TabsVariant",
+    "kind": "type",
+    "status": "public"
+  },
+  {
     "name": "TextFieldComponent",
     "kind": "type",
     "status": "public"
@@ -921,6 +936,11 @@
   },
   {
     "name": "TooltipConfig",
+    "kind": "type",
+    "status": "public"
+  },
+  {
+    "name": "TooltipVariant",
     "kind": "type",
     "status": "public"
   },

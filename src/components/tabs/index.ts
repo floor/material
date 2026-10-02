@@ -18,6 +18,7 @@ export {
 export type {
   // Types
   TabsConfig,
+  TabsVariant,
   TabsComponent,
   TabComponent,
   TabConfig,

@@ -183,7 +183,7 @@ export type {
 } from "./list/types";
 
 // Menu
-export type { MenuConfig, MenuComponent, MenuItem } from "./menu/types";
+export type { MenuConfig, MenuVariant, MenuComponent, MenuItem } from "./menu/types";
 
 // Split button
 export type {
@@ -200,6 +200,7 @@ export type {
 // Progress
 export type {
   ProgressConfig,
+  ProgressVariant,
   ProgressComponent,
   ProgressShape,
 } from "./progress/types";
@@ -241,6 +242,7 @@ export type { SwitchConfig, SwitchComponent } from "./switch/types";
 // Tabs
 export type {
   TabsConfig,
+  TabsVariant,
   TabsComponent,
   TabConfig,
   TabComponent,
@@ -274,4 +276,4 @@ export type {
 } from "./top-app-bar/types";
 
 // Tooltip
-export type { TooltipConfig, TooltipComponent } from "./tooltip/types";
+export type { TooltipConfig, TooltipVariant, TooltipComponent } from "./tooltip/types";

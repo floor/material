@@ -7,7 +7,7 @@
 // 1.0.0 removes them, and the manifest lists each component subpath by name
 // instead of a wildcard that also exposed the folders inside a component.
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { componentNames, diffComponentExports, readComponentExports, readPinned } from "../scripts/component-exports";
 
@@ -66,6 +66,16 @@ describe("the component subpaths' exports (FLO-381)", () => {
     });
     expect(present).toEqual([]);
     expect(Object.entries(now).flatMap(([key, exports]) => exports.filter((e) => e.status === "deprecated").map((e) => `${key}:${e.name}`))).toEqual([]);
+  });
+
+  test("every component's variant type is exported from its subpath, as a public variant option's type", () => {
+    const missing = componentNames().flatMap((component) => {
+      const file = join(ROOT, `src/components/${component}/types.ts`);
+      if (!existsSync(file)) return [];
+      return [...readFileSync(file, "utf8").matchAll(/^export type ([A-Z][A-Za-z]*Variant)\b/gm)]
+        .map((m) => m[1]!).filter((name) => !now[component]?.some((e) => e.name === name)).map((name) => `${component}:${name}`);
+    });
+    expect(missing).toEqual([]);
   });
 
   test("every /constants subpath is pinned beside its index (FLO-384)", () => {
