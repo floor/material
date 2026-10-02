@@ -97,12 +97,13 @@ the card, tabs and switch internals on their subpaths, `ChipConfig`'s `managedSe
 `cell`, `CardComponent`'s `loading`, `expandable` and `swipeable`, and the list `scroll` payload's
 `component`, which was never sent.
 
-**Reserved before 3.0.0.** `mtrl` 0.10.7 marks these deprecated too, so your editor flags each
-use: the five progress members in the table above; `mtrl/core/compose/features`, whose names
-are imported from `material/core/compose`; the slider's `components` object, which is internal
-in 3.0.0 (use the slider's own API and `slider.element`); and `tab.badge` read without a
-check, since it may be `undefined` until the badge is shown (`setBadge()`, `getBadge()`,
-`showBadge()` and `hideBadge()` work either way).
+**Reserved before 3.0.0.** `mtrl` 0.10.7 marks deprecated, so your editor flags each use,
+`ProgressComponent`'s `canvas`, `resize`, `track`, `indicator` and `buffer` (the table above)
+and the slider's `components`, which is internal in 3.0.0 (use the slider's own API and
+`slider.element`). Nothing flags the other two, so search for them: an import from
+`mtrl/core/compose/features`, whose names are imported from `material/core/compose`, and a
+read of `tab.badge` without a guard, since it may be `undefined` until the badge is shown
+(`setBadge()`, `getBadge()`, `showBadge()` and `hideBadge()` work either way).
 
 **Sass.** The two Sass rows above are for stylesheets that `@use` material's sources. The Sass sources
 ship for reference; configuring them with `@use … with` is not a supported API in material 3.0.0. Theme
