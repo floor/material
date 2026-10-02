@@ -783,6 +783,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **Snackbar: a queued snackbar dropped from the queue can be shown again (FLO-548).** One
+  waiting behind another and then dropped by a `queueBehavior: 'replace'` snackbar or by
+  `clearSnackbars()` kept `state` `"visible"` without ever being shown, and `show()` on it
+  did nothing from then on. It is now hidden when dropped. Also on 0.10.x.
+- **Date picker: `open()` called from a click outside a docked picker opens it (FLO-548).**
+  The same click then reached the picker's outside-click listener and closed it at once. A
+  click in the task that called `open()` no longer closes it. Also on 0.10.x.
 - **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
   centre while animating in and be squeezed at the viewport edge. Placement now uses its full
   layout size; reduced-motion placement is unchanged.
