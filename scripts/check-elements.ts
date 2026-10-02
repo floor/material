@@ -5158,6 +5158,92 @@ try {
     );
     check("dialog: only the event in flight when open() ran is ignored: from a child, the body, the window's listeners, a shadow root, after a promise, and with other dialogs open");
 
+    // The same for the modal sheets and the modal drawer (FLO-548 family 6 B):
+    // Escape as a key press, from wherever focus is; a refusal held for five
+    // presses; the key press that opened it; and, in the top layer, a close
+    // the browser makes without asking, after which it opens again. Every
+    // kind and layer is read before the assertion.
+    const modalEscapes = async (kind: "createBottomSheet" | "createSideSheet" | "createDrawer", layer?: "top"): Promise<Record<string, unknown>> => {
+      await fresh(page, `<button id="opener" type="button">Open</button>`);
+      const build = (refuses: boolean): Promise<void> =>
+        page.evaluate(({ kind, layer, refuses }) => {
+          const w = window as unknown as Win & { mtrl: Factories };
+          (w.__overlay as { destroy?: () => void } | undefined)?.destroy?.();
+          const refusal = kind === "createDrawer" ? { dismissible: false } : { closeOnEscape: false };
+          const modal = w.mtrl[kind]({
+            ...(kind === "createDrawer" ? { variant: "modal", items: [{ id: "a", label: "Inbox" }] } : { title: "Share" }),
+            ...(layer ? { layer } : {}),
+            ...(refuses ? refusal : {}),
+          });
+          if (!modal.element.isConnected) document.body.append(modal.element);
+          w.__overlay = modal;
+        }, { kind, layer, refuses });
+      const isOpen = (): Promise<boolean> =>
+        page.evaluate(() => ((window as unknown as Win).__overlay as { isOpen: () => boolean }).isOpen());
+      const open = async (): Promise<void> => {
+        await page.focus("#opener");
+        await page.evaluate(() => void ((window as unknown as Win).__overlay as { open: () => unknown }).open());
+        await wait(500);
+      };
+      const escape = async (times = 1): Promise<void> => {
+        for (let i = 0; i < times; i++) {
+          await page.keyboard.press("Escape");
+          await wait(80);
+        }
+        await wait(400);
+      };
+      const result: Record<string, unknown> = {};
+
+      await build(false);
+      await open();
+      await escape();
+      result.whereFocusLanded = await isOpen();
+      await open();
+      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+      await escape();
+      result.fromTheBody = await isOpen();
+
+      await build(true);
+      await open();
+      await escape(5);
+      result.refusedFiveTimes = await isOpen();
+
+      if (layer) {
+        await page.evaluate(() => ((window as unknown as Win).__overlay as { element: HTMLDialogElement }).element.close());
+        await wait(500);
+        result.forced = { open: await isOpen(), overflow: await page.evaluate(() => document.body.style.overflow) };
+        await open();
+        result.opensAgain = await isOpen();
+      }
+
+      await build(false);
+      await page.evaluate(() => {
+        const modal = (window as unknown as Win).__overlay as { open: () => unknown };
+        (document.getElementById("opener") as HTMLElement).addEventListener("keydown", (event) => {
+          if (event.key === "Escape") modal.open();
+        }, { once: true });
+      });
+      await page.focus("#opener");
+      await escape();
+      result.afterTheKeyThatOpenedIt = await isOpen();
+      await escape();
+      result.afterTheNextEscape = await isOpen();
+      await page.evaluate(() => void ((window as unknown as Win).__overlay as { destroy: () => unknown }).destroy());
+      return result;
+    };
+    const modalExpected = { whereFocusLanded: false, fromTheBody: false, refusedFiveTimes: true, afterTheKeyThatOpenedIt: true, afterTheNextEscape: false };
+    const modalTopExpected = { ...modalExpected, forced: { open: false, overflow: "" }, opensAgain: true };
+    const modalResults: Record<string, unknown> = {};
+    const modalWanted: Record<string, unknown> = {};
+    for (const kind of ["createBottomSheet", "createSideSheet", "createDrawer"] as const) {
+      modalResults[kind] = await modalEscapes(kind);
+      modalResults[`${kind}, top`] = await modalEscapes(kind, "top");
+      modalWanted[kind] = modalExpected;
+      modalWanted[`${kind}, top`] = modalTopExpected;
+    }
+    assert.deepEqual(modalResults, modalWanted, "Escape as a key press for the modal sheets and the modal drawer, in both layers");
+    check("sheets and drawer: Escape closes a modal one from wherever focus is, a refusal holds for five presses, the key press that opened it does not close it, and a forced close is followed");
+
     // The same sentence for the menu (FLO-548): its click-outside and Escape
     // listeners are added inside open(). A button that is not the menu's
     // opener opens it by code, from a click and from an Escape keydown: that

@@ -695,6 +695,24 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     the sheets. It used to be applied a microtask later and to dispatch both. `show()`,
     `hide()`, `toggle()`, the anchor and the user still dispatch one event per opening and
     per closing.
+- **The modal sheets and the modal drawer handle Escape as a key press (FLO-548, FLO-556).**
+  The bottom sheet, the side sheet and the drawer, when modal, join the dialog on one stack,
+  in both layers. Migration: nothing, unless a page listener relied on what follows.
+  - **A refusal holds.** With `layer: "top"`, a sheet with `closeOnEscape: false` and a
+    drawer with `dismissible: false` were closed by the browser on the third Escape (it forces
+    the third `cancel` refused in a row; measured on the dialog, the same `<dialog>` path).
+    The key is now prevented, so no `cancel` is sent.
+  - **Only the topmost modal answers,** and after whatever is open inside it has used the
+    key. A dialog opened above a sheet takes Escape first.
+  - **The event that opened it never dismisses it:** a sheet or a drawer opened from an Escape
+    `keydown` handler stays open through that key press. In the top layer it used to close at
+    once, on the `cancel` the browser sends for that key press.
+  - **Outside the top layer** the listener moves from the document to the window: a menu or a
+    select open inside the sheet or the drawer takes Escape first. Every Escape that reaches
+    the window while one is open is prevented, a refusing one included.
+  - **`<m-drawer>`** still refuses Escape with `no-close-on-escape`: the key press is sent on
+    as a `cancel` event on its `<dialog>`, where it listens.
+  - A standard (not modal) sheet is unchanged: Escape closes it when pressed inside it.
 - **A config `on*` option is the listener registered at creation.** It runs with the same
   argument, the same number of times, as a listener passed to `on(event)` at that point, and it
   runs before a listener added afterwards. Whether a method notifies is unchanged (a silent
