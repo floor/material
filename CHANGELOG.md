@@ -12,12 +12,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Migrating from 0.10.x
 
-Upgrade to 0.10.5 first. It exports the 1.0 names beside the old ones, and marks deprecated the
+Upgrade to 0.10.6 first. It exports the 1.0 names beside the old ones, and marks deprecated the
 TypeScript names, options and constants that 1.0 removes, so your editor flags each use with its
 replacement. Two of those warnings can't be cleared before you upgrade, because the new name
 exists only in 1.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
-`select.textfield` (which 1.0 keeps as a deprecated alias of `select.textField`). Clear the
-others, then upgrade. Each change's full entry follows this guide.
+`select.textfield` (1.0 has `select.textField`). Clear the others, then upgrade. Each change's full entry follows this guide.
 
 **Packages and imports**
 
@@ -42,7 +41,7 @@ others, then upgrade. Each change's full entry follows this guide.
 | `Textfield` (`mtrl/react`, `mtrl/solid`, `mtrl/svelte`), `MTextfield` (`mtrl/vue`) | `TextField`, `MTextField` |
 | Sass `$textfield`, `textfield()` | `$text-field`, `text-field()` |
 | `SELECT_CLASSES.TEXTFIELD` | `SELECT_CLASSES.TEXT_FIELD`, the same value. A recorded exception: 0.10.x flags the old key but has no new one, so change it when you upgrade. In 1.0 the old key reads `undefined`. |
-| `select.textfield` | `select.textField`. `textfield` stays as a deprecated alias of the same text field through 1.x (removed in 2.0), so code reading it keeps working. 0.10.x has no `textField`: rename after you upgrade. |
+| `select.textfield` | `select.textField`. A recorded exception, like the key above: 0.10.x flags the old name but has no `textField`, so rename it when you upgrade. In 1.0 `select.textfield` reads `undefined`. |
 | `CardSchema` | `CardConfig` |
 | `TopAppBar`, `BottomAppBar` (the factory types) | `TopAppBarComponent`, `BottomAppBarComponent` |
 | a chip's `text` | `label` |
@@ -50,6 +49,7 @@ others, then upgrade. Each change's full entry follows this guide.
 | shapes `'cookie4'`, `'cookie9'` | `'cookie4Sided'`, `'cookie9Sided'` |
 | `createElement({ rawClass })` | `class` or `className` |
 | the tooltip's `rich` | `variant: 'rich'` |
+| `onToggle` on the icon button (`mtrl/react`, `mtrl/vue`, `mtrl/solid`; `ontoggle` in `mtrl/svelte`) | `onChange` (`onchange`), whose `event.detail` is `{ selected, value }`. A leftover is a type error: `… is not assignable to type '"onToggle was removed in 1.0: use onChange"'`. |
 
 The text field's tag, element name, CSS classes, event names and constant values keep
 `textfield`.
@@ -58,6 +58,7 @@ The text field's tag, element name, CSS classes, event names and constant values
 
 | 0.10 | 1.0 |
 |---|---|
+| the icon button's DOM `toggle` event | `change`, on the factory's button (`button.on('change', …)`) and on `<m-icon-button>` |
 | segmented buttons (`createSegmentedButton`, `createSegment`) | `createButtonGroup({ kind: 'connected' })`: see its entry for the option mapping |
 | the themes `material`, `winter`, `browngreen`, `legacy` | `baseline`, `ocean`, `brownbeige`; `legacy` has none |
 | FAB and extended FAB `variant: 'surface'`, `FAB_VARIANTS.SURFACE`, `EXTENDED_FAB_VARIANTS.SURFACE` | a container or tone style (`'primary-container'`, `'primary'`, …) |
@@ -72,7 +73,8 @@ The text field's tag, element name, CSS classes, event names and constant values
 Removed with nothing in their place, because nothing read them or they had no effect: a dialog
 button's `color`, `TOOLTIP_DEFAULTS.RICH`, the checkbox's `variant`, `CheckboxVariant` and
 `CHECKBOX_VARIANTS`, the list's `prefix`, the radios' `rippleConfig` and `RADIO_VARIANTS`,
-`RADIO_LABEL_POSITIONS`, `RADIO_SIZES`, `RADIO_CLASSES`, tabs' `maxVisibleTabs`, the time
+`RADIO_LABEL_POSITIONS`, `RADIO_SIZES`, `RADIO_CLASSES`, `RADIO_DEFAULTS.VARIANT`,
+`.LABEL_POSITION` and `.SIZE`, tabs' `maxVisibleTabs`, the time
 picker's `closeOnSelect` and `TIMEPICKER_DEFAULTS.CLOSE_ON_SELECT`, `TIMEPICKER_DIAL`,
 `TIMEPICKER_Z_INDEX`, `TIMEPICKER_SELECTORS.MODAL`, `DIAL_CANVAS` and `DIAL_HAND`, six
 `SLIDER_MEASUREMENTS` keys, `TABS_DEFAULTS.INDICATOR_ANIMATION_TIMING` and `ICON_SIZE`,
@@ -85,16 +87,14 @@ the card, tabs and switch internals on their subpaths, `ChipConfig`'s `managedSe
 ship for reference; configuring them with `@use … with` is not a supported API in 1.0. Theme
 with CSS custom properties.
 
-**Kept through 1.x, deprecated.** `select.textfield` (use `textField`) and the icon button's DOM
-`toggle` event (listen to `change`) still work in 1.0. Both are removed in 2.0.
-
-**Type changes the compiler reports.** Besides renames and removals, five entries below change
+**Type changes the compiler reports.** Besides renames and removals, six entries below change
 a type your code may rely on: tabs' `on` and `off` take a closed event map, and a tab's `click`
 payload is wrapped (FLO-523); React's and Solid's `Button` type their own `onChange`, so a
 spread of full `HTMLAttributes` must omit it (FLO-380); `SelectChangeEvent["value"]` is
 `string | null` (FLO-380); the chip set's `change` listener takes one object, not an array
-and a second argument (FLO-530); and a standalone chip's `onChange` and `onClick` take their
-event's payload.
+and a second argument (FLO-530); a standalone chip's `onChange` and `onClick` take their
+event's payload; and `emit` on the card and the tabs takes only the
+component's own events, with their payloads.
 
 **Changes your compiler won't catch**
 
@@ -104,7 +104,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **Tabs `indicatorHeight` / `indicatorWidthStrategy`** are ignored: the indicator falls back to
   its variant's height (3px on a primary row, 2px on a secondary one) and automatic width.
 - **`materialShape('cookie4')`** throws `TypeError: byName[name] is not a function`.
-- **`rawClass`** is ignored: neither applied nor written as an attribute, with no warning.
+- **`createElement({ rawClass })`** applies no class and writes the value out as an attribute:
+  `<div rawclass="legacy-a legacy-b">`. On a component's config a leftover `rawClass` does
+  nothing.
+- **A listener on the icon button's `toggle` event** never fires: no error, and the button still
+  toggles. Listen to `change`. In the React, Vue, Svelte and Solid components the compiler does
+  catch it: `onToggle` (Svelte: `ontoggle`) on the icon button is a type error.
+- **`select.textfield`** in JavaScript is `undefined`.
 - **A FAB's `'surface'` or `'small'`** (the options take any string) renders as the default
   `primary-container`, or at the default 56dp.
 - **`data-theme="winter"`** (or `material`, `browngreen`, `legacy`) on the root element gets the
@@ -146,8 +152,16 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   remaining selection, and the removed id is `chipValue`.
 - **The time picker's `input`** carries the committed time in `value` while the picker is open;
   the live draft is `draftValue`. Factory `confirm` listeners receive `{ value }`.
-- **An empty option id** makes the select's and `<m-radios>`' `change` report `value: null`,
-  not `""`.
+- **An empty selection is `null`, not `""`,** in the select and the radios, factory and element:
+  the `change` payload's `value`, and the radio factory's `getValue()`. A comparison with `""`
+  is never true.
+- **The carousel's `change`** carries `value` alone: `event.index` (and `event.detail.index` on
+  `<m-carousel>`) is `undefined`. Read `value`.
+- **A `withInput` you compose yourself** (`mtrl/core/compose`) works on the checked boolean,
+  like the checkbox and the switch: `change.value` and `getValue()` are booleans, and
+  a leftover `setValue('x')` checks the input and leaves its string unchanged (`setValue('')`
+  unchecks it), with no error. The string is `valueAttribute` in the payload, and
+  `getValueAttribute()` / `setValueAttribute()`. No `value` event is emitted.
 - **A trailing icon without `trailingIconLabel`** is hidden from screen readers and loses its
   pointer cursor; a click listener you added to it is out of their reach. The label is the
   factory's (`trailingIconLabel`, or `setTrailingIcon(html, label)`); on `<m-textfield>` and in
@@ -187,8 +201,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `scheduler/tracing`, which the current `@types/scheduler` no longer declares, so they fail to
   compile with `skipLibCheck: false`, with or without mtrl.
 - **Only the canonical names (FLO-383).** For every row below but the last two, 0.10.5 exported
-  both spellings, the old ones deprecated; 1.0 has only the canonical ones, except
-  `select.textfield`, which 1.0 keeps as a deprecated alias. Every exported identifier writes "text field" as
+  both spellings, the old ones deprecated; 1.0 has only the canonical ones. Every exported identifier writes "text field" as
   two words; string values are unchanged (the `<m-textfield>` tag, the `textfield` element name,
   CSS classes, event strings and the constants' values). The declarations are renamed too, so the
   types read the same in an editor. Svelte's component file is `TextField.svelte`. Migration:
@@ -209,7 +222,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | `MTextfield` | `MTextField` | `mtrl/vue` |
   | Sass `$textfield`, `textfield()` (`abstract/variables`) | `$text-field`, `v.text-field()`, the same map (both names in 0.10.5); the built CSS is unchanged |
   | `SELECT_CLASSES.TEXTFIELD` (deprecated in 0.10.5) | `SELECT_CLASSES.TEXT_FIELD`, the same value `"select__textfield"`: no overlap, the key is new in 1.0. A recorded exception to the rule that 0.10.x carries the replacement: a class-name key users rarely type, where an alias on 0.10.x would cost the select's last bytes. |
-  | `select.textfield` | `select.textField` | the select's property: `textField` is new in 1.0, and `textfield` stays as a deprecated alias of the same text field through 1.x (removed in 2.0), so code reading it keeps working |
+  | `select.textfield` (deprecated in 0.10.5) | `select.textField` | the select's property: no overlap, `textField` is new in 1.0, and reading `select.textfield` in JavaScript now gives `undefined` rather than an error. The same recorded exception as the row above. |
 
   Each is a rename of the import; the values and types are the same. The React, Solid and
   Svelte `TopAppBar` and `BottomAppBar` components keep their names: only the factory's types
@@ -225,6 +238,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | Factory select `change` on empty ID | `{ value: "", ... }` | `{ value: null, ... }` |
   | `<m-select>` `change` on empty ID | `{ value: "" }` | `{ value: null }` |
   | `<m-radios>` `change` on empty ID | `{ value: "" }` | `{ value: null }` |
+  | Factory radios `change` on empty ID | `{ value: "", ... }` | `{ value: null, ... }` |
+  | Factory radios `getValue()` with nothing selected | `""` | `null` |
 
   While the time picker is open, `input.value` no longer moves with the dial:
   it is the committed time. Read `draftValue` for live edits. The factory's
@@ -232,8 +247,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   described by the newly exported `TimePickerInputEvent` type. `onConfirm(string)`
   in the time picker config still receives a string; factory `confirm` listeners
   now destructure `{ value }`. `SelectChangeEvent["value"]` is now `string | null`
-  for an empty option ID. The radio factory still reports its string getter,
-  including `""`; handle `null` for empty select or radio element selections.
+  for an empty option ID. The radio factory reports `null` too: `getValue()` returns
+  `string | null`, and `RadiosChangePayload["value"]` is `string | null`. Handle `null`
+  for an empty selection in the select and the radios, factory and element alike. The radio
+  factory's `setValue` accepts `null` too, so the getter and the setter round-trip:
+  `setValue(null)` clears the selection, silently. `<m-radios>`'s `value = null`, which the
+  React, Solid, Vue and Svelte `value` props drive, clears through it; in 0.10 that cleared
+  with a development warning (`no option with value ""`).
 - **Chip-set `add` and `remove` report the live selection (FLO-380).** Factory
   callbacks receive one object instead of a bare chip:
 
@@ -257,7 +277,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   and custom-element details now carry `{ checked, value, valueAttribute, nativeEvent }`;
   `value` matches the checked model, and `valueAttribute` holds the HTML string token.
   Native forms still submit that token only while checked; setters remain silent and
-  element/framework bindings remain `checked`-based. Standalone `withInput` keeps strings.
+  element/framework bindings remain `checked`-based. A standalone `withInput`
+  (`mtrl/core/compose`) emits the same payload (0.10 sent `{ checked, value: <the input's
+  string>, nativeEvent }`), and its methods match it: `getValue()` and `setValue()` work on
+  the checked boolean, and the input's string is `getValueAttribute()` / `setValueAttribute()`,
+  the names the checkbox and the switch use. Both setters are silent: the `value` event
+  `setValue(string)` emitted in 0.10 is gone.
   Migration: read checked state from `value` (or `checked`), and replace reads of the
   old string `value` with `valueAttribute`, including `event.detail` in adapters.
 - **List event types match native forwarding (FLO-380).** `scroll` carries
@@ -269,22 +294,21 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | Component | `change` payload, 0.10 → 1.0 |
   |---|---|
   | button, icon button (toggle) | `{ selected }` → `{ selected, value: string }` (the button's value) |
-  | icon button, deprecated DOM `toggle` | `{ selected }` → `{ selected, value: string }` |
   | selectable chips (filter and input) | `{ selected, chip }` → `{ selected, chip, value: string \| null }` |
-  | carousel | `{ index }` → `{ value: number, index }` |
+  | carousel | `{ index }` → `{ value: number }`: `value` is the index, and `index` is gone |
 
   The custom elements' `event.detail` carries the same fields, and `<m-button>` now dispatches
   `change` for a toggle button. `ButtonChangePayload` and `IconButtonChangePayload` are
-  exported. Migration: keep reading `selected` for the toggled state and `index` for the
-  carousel; code that builds these payloads (mocks, test doubles) adds `value`. In React and
+  exported. Migration: keep reading `selected` for the toggled state; in a carousel handler
+  read `value` where you read `index` (`event.index`, or `event.detail.index` on
+  `<m-carousel>`, is now `undefined`); code that builds these payloads (mocks, test doubles)
+  adds `value`. In React and
   Solid, `Button` now types its own `onChange` (the element's `change`): code that spreads a
   full `React.HTMLAttributes` (or Solid's `JSX.HTMLAttributes`) into `Button` must omit
   `onChange`.
 
-  The icon button's DOM `toggle` event is kept through 1.x for compatibility and removed in 2.0;
-  listen to `change`. This revises 0.10.0's notes, which said it would fire "until the next
-  minor". Its `detail` is `{ selected, value }`, from the factory's button and from
-  `<m-icon-button>`, so a listener reading `event.detail.selected` keeps working.
+  The icon button's DOM `toggle` event, deprecated in 0.10.0, is removed (below): `change`
+  carries `{ selected, value }`.
 
 - **The chips set's `change` payload is a plain object and has one argument (FLO-530).**
   `chips.on("change", handler)` listeners and the config's `onChange` are passed
@@ -357,6 +381,21 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     index signature.
   - `tabs.on("custom", …)` for an event name of your own needs a cast.
   - `on` and `off` return the concrete component (`TabsComponent`, `TabComponent`), not `this`.
+- **`emit` on the card and the tabs takes the component's own events.** `CardComponent.emit` and
+  `TabsComponent.emit` accepted any event name and any data. They now take the names in
+  `CardEvents` and `TabsEvents`, each with the payload `on` and `off` declare for it. They are
+  the only two public component types that declare `emit`. Migration, what stops compiling:
+
+  ```ts
+  card.emit?.('custom', data);                          // 0.10
+  tabs.emit?.('change', { value: 'two' });              // 0.10: a partial payload
+  tabs.emit?.('change', { tab, value: 'two' });         // 1.0: the event's whole payload
+  ```
+
+  - An event name of your own is a type error. At run time nothing changed: the emitter is
+    the same, so untyped code that emits `'custom'` still reaches a listener registered for
+    it. Keep your own events on an emitter of your own.
+  - A component you build with `withEvents` keeps its open `emit(event: string, data)`.
 - **Tab and panel ids are derived from the value with a safe encoding (FLO-430).** A value of
   `[A-Za-z0-9_-]` only keeps its ids, `tab-<group>-<value>` and `tabpanel-<group>-<value>`. Any
   other value gets `tabx-<group>-<encoded>` and
@@ -389,7 +428,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
   | 0.10 | 1.0 |
   |---|---|
-  | `createElement({ rawClass })` (`mtrl/core/dom`) | `class` or `className`, unprefixed since 0.10 (FLO-117). `rawClass` was applied on 0.10.x and is now ignored: neither applied nor written as an attribute, with no warning. The seven component configs that typed it (those extending `BaseComponentConfig`) never applied it, so for them only the type changes. |
+  | `createElement({ rawClass })` (`mtrl/core/dom`) | `class` or `className`, unprefixed since 0.10 (FLO-117). `rawClass` was applied on 0.10.x. In 1.0 `createElement` applies no class for it and, as for any option it does not know, writes it out as an attribute: `<div rawclass="legacy-a legacy-b">` (an array becomes `rawclass="a,b"`). The seven component configs that typed it (those extending `BaseComponentConfig`) never applied it, and a leftover there still does nothing, so for them only the type changes. |
   | a dialog button's `color` | nothing: it had no effect; M3's dialog actions are text buttons in the dialog's colours (FLO-324) |
   | the tooltip's `rich` option | `variant: 'rich'`; `rich` was never read (FLO-324) |
   | `TOOLTIP_DEFAULTS.RICH` (deprecated in 0.10.5) | nothing: it was the default of the removed `rich` option |
@@ -410,13 +449,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | `rippleConfig.timing` and `rippleConfig.opacity` (button, icon button, FAB, extended FAB, button group, radios, tabs, and the core `RippleConfig`); their defaults `DEFAULT_RIPPLE_CONFIG.TIMING`, `.OPACITY` (button, icon button) and `BUTTON_GROUP_DEFAULTS.RIPPLE_TIMING`, `.RIPPLE_OPACITY` (deprecated in 0.10.5) | nothing: never applied; the stylesheet draws the wave's motion and opacity (FLO-260, FLO-268). `duration` stays. The core's `RIPPLE_CONFIG.timing`, `.opacity`, `RIPPLE_TIMING` and `RIPPLE_SCHEMA`, on no public entry, go with them. |
 
 - **1.0 exports nothing deprecated.** What 0.10.0 deprecated and 0.10.x already replaced (or
-  never used) is removed. That is true of exports: one deprecated member, `select.textfield`, and
-  one deprecated event, the icon button's DOM `toggle`, stay through 1.x. Migration:
+  never used) is removed, and so is what was kept only for compatibility: 1.0 has no deprecated
+  export, member or event. Migration:
 
   | 0.10 | 1.0 |
   |---|---|
   | `CHECKBOX_VARIANTS` (`mtrl/components/checkbox`, `/constants`) | nothing: M3 has one checkbox style, and `variant` had no effect (FLO-94, FLO-265) |
-  | `RADIO_VARIANTS`, `RADIO_LABEL_POSITIONS`, `RADIO_SIZES`, `RADIO_CLASSES` (`mtrl/components/radios`, `/constants`) | nothing: no component read them (FLO-266). `RADIO_DEFAULTS` keeps its values. |
+  | `RADIO_VARIANTS`, `RADIO_LABEL_POSITIONS`, `RADIO_SIZES`, `RADIO_CLASSES` (`mtrl/components/radios`, `/constants`) | nothing: no component read them (FLO-266) |
+  | `RADIO_DEFAULTS.VARIANT`, `.LABEL_POSITION`, `.SIZE` (deprecated in 0.10.6) | nothing: the radios have no such options, and nothing read the keys. `RADIO_DEFAULTS.DIRECTION` stays. In JavaScript a removed key reads `undefined`. |
+  | the icon button's DOM `toggle` event, from the factory's button and from `<m-icon-button>` (deprecated in 0.10.0, FLO-295) | `change`, which carries `{ selected, value }`. A leftover `toggle` listener never fires, with no error. In the React, Vue, Svelte and Solid components the icon button refuses `onToggle` (Svelte: `ontoggle`), and the compiler's error says what to do: `Type '() => void' is not assignable to type '"onToggle was removed in 1.0: use onChange"'`. Without that guard the name would fall through to the host's native `toggle` handler, compile, and never fire. |
   | `TIMEPICKER_DIAL`, `TIMEPICKER_Z_INDEX` (`mtrl/components/timepicker`, `/constants`) | nothing: the dial is sized in CSS and the picker is a modal `<dialog>` in the top layer (FLO-278, FLO-279, FLO-281) |
   | `TIMEPICKER_CLASSES` | `TIMEPICKER_SELECTORS` (public since 0.9.0), which is not a like-for-like swap: its values are prefixed selectors (`".mtrl-time-picker__dial"`) where the old were bare class names (`"time-picker__dial"`), and 13 of the 33 old keys have no selector of the same name (`ROOT`, `OPEN`, the six `DIALOG_*`, `DIAL_NUMBER_ACTIVE`, `PERIOD_ACTIVE`, `TOGGLE_TYPE`, `CANCEL`, `CONFIRM`) |
   | `getThemeColor('sys-color-X-rgb')` (`mtrl/core/utils`): the `'r, g, b'` triplet, derived | `getThemeColor('sys-color-X', { alpha })`. The `-rgb` name now returns `''` (or the `fallback`), as any undeclared variable does, so `rgba(${getThemeColor('sys-color-primary-rgb')}, 0.12)` now yields `rgba(, 0.12)`, an invalid colour that CSS and canvas drop silently: a missing colour, not an error. Use `getThemeColor('sys-color-primary', { alpha: 0.12 })`. A theme that declares its own `-rgb` properties is unaffected (FLO-311). |
@@ -516,10 +557,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   React, Vue, Svelte and Solid props take that framework's `HTMLAttributes` as well
   as the component's own props. Where a name is both, the component's type wins, so
   a switch's `checked` stays a boolean and a button's `type` stays a string. The same
-  rule covers events. A component's `change`, `input`, `select` or `toggle` handler stays
+  rule covers events. A component's `change`, `input` or `select` handler stays
   the element's `CustomEvent`, including in Vue, where those handlers come from emits and
-  would otherwise be intersected with the host's `onChange` / `onInput` / `onSelect` /
-  `onToggle`. A global a supported release leaves off that interface is accepted too
+  would otherwise be intersected with the host's `onChange` / `onInput` / `onSelect`. A global a supported release leaves off that interface is accepted too
   (`popover` on React 18 through 18.3.31 and on Vue through 3.5, `enterKeyHint` on React 18
   before 18.3.31, `nonce` on React 18.0.0, Vue and Svelte);
   a release that already declares the key keeps its own type. Vue spells `inputmode`
@@ -562,6 +602,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
+  centre while animating in and be squeezed at the viewport edge. Placement now uses its full
+  layout size; reduced-motion placement is unchanged.
 - **A chip destroyed on its own leaves its chip set (FLO-533).** Calling `destroy()` on a chip, rather than removing it through the set, used to leave that chip in the set. The set could then count it as selected beside another chip, including two selected chips in a single-select set, and the arrow keys stopped on it. The set now drops that chip. Dropping it does not emit `remove` or `change`. Removing a chip through the set is unchanged.
 - Checkboxes keep their check icon, and pre-upgrade element styles appear, when one process uses multiple documents (FLO-528).
 - A multiline text field reserves its textarea box before it upgrades, so the field and the line beside it no longer jump when the element is defined (FLO-425).

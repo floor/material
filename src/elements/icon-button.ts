@@ -6,9 +6,9 @@
  * With `toggle`, the `selected` attribute is the default state and the
  * `selected` property the live one: the attribute moves the state until the
  * user or script changes it. A click dispatches `change` with `{ selected, value }`
- * from the host, as `<m-switch>` and `<m-checkbox>` do; `toggle`, which
- * clashed with the native ToggleEvent, is dispatched as well through 1.x and
- * removed in 2.0 (deprecated, FLO-295).
+ * from the host, as `<m-switch>` and `<m-checkbox>` do. The `toggle` event
+ * 0.10 dispatched beside it, which clashed with the native ToggleEvent, is
+ * gone in 1.0 (FLO-295).
  * `type="submit"` and `type="reset"` act on the host's form.
  *
  * Parts: `icon-button`, `icon`, `ripple`.
@@ -64,27 +64,9 @@ const iconButtonSpec = {
         return { selected, value };
       },
     },
-    // Deprecated: dispatched by `setup` beside `change`, through 1.x; removed in 2.0.
-    toggle: {
-      detail: (payload) => {
-        const { selected, value } = payload as IconButtonChangePayload;
-        return { selected, value };
-      },
-    },
   },
   form: buttonForm<IconButtonComponent>(),
-  setup: (host, component) => {
-    // The deprecated `toggle`, beside the `change` the element dispatches.
-    const onChange = ({ selected, value }: IconButtonChangePayload): void => {
-      host.dispatchEvent(new CustomEvent("toggle", { detail: { selected, value }, bubbles: true, composed: true }));
-    };
-    component.on("change", onChange);
-    const cleanup = submitOnClick(host);
-    return () => {
-      component.off("change", onChange);
-      cleanup();
-    };
-  },
+  setup: submitOnClick,
 } satisfies ElementSpec<IconButtonComponent>;
 
 export const iconButtonElement = defineElement<IconButtonComponent>(iconButtonSpec);

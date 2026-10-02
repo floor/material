@@ -83,9 +83,10 @@ describe('select', () => {
   });
 });
 
-test('select.textfield is the same text field as select.textField, the 0.10 name kept through 1.x (FLO-383)', () => {
+test('select.textField is the text field; 1.0 keeps no textfield alias, which reads undefined (FLO-383)', () => {
   const select = createSelect({ label: 'Fruit', options });
   expect(select.textField).toBeDefined();
-  expect(select.textfield).toBe(select.textField);
+  expect((select as unknown as Record<string, unknown>).textfield).toBeUndefined();
+  expect('textfield' in select).toBe(false);
   select.destroy();
 });

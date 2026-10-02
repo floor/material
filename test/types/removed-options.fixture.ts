@@ -108,3 +108,13 @@ export const fabSmallIcon = FAB_ICON_SIZES.SMALL;
 // @ts-expect-error CheckboxVariant was the type of the removed variant option
 import type { CheckboxVariant } from "../../src/components/checkbox";
 export type OldCheckboxVariant = CheckboxVariant;
+
+// RADIO_DEFAULTS described options the radios never had (deprecated on 0.10.x, #454)
+import { RADIO_DEFAULTS } from "../../src/components/radios/constants";
+// @ts-expect-error RADIO_DEFAULTS.VARIANT: the radios have no variant option
+export const radioDefaultVariant = RADIO_DEFAULTS.VARIANT;
+// @ts-expect-error RADIO_DEFAULTS.LABEL_POSITION: the radios have no label position option
+export const radioDefaultLabel = RADIO_DEFAULTS.LABEL_POSITION;
+// @ts-expect-error RADIO_DEFAULTS.SIZE: the radios have no size option
+export const radioDefaultSize = RADIO_DEFAULTS.SIZE;
+export const radioDefaultDirection: "vertical" = RADIO_DEFAULTS.DIRECTION;

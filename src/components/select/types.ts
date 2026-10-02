@@ -196,12 +196,6 @@ export interface SelectComponent {
   textField: TextFieldComponent;
 
   /**
-   * The same text field, under its 0.10 name.
-   * @deprecated Use `textField`; removed in 2.0.
-   */
-  readonly textfield: TextFieldComponent;
-
-  /**
    * The menu component
    */
   menu: MenuComponent;

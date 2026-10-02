@@ -298,8 +298,8 @@ export interface ApiOptions {
 export interface BaseComponent {
   element: HTMLElement;
   input?: HTMLInputElement;
-  getValue?: () => string;
-  setValue?: (value: string) => void;
+  getValue?: () => boolean;
+  setValue?: (value: boolean) => void;
   setIndeterminate?: (state: boolean) => void;
   setError?: (error: boolean) => void;
   label?: {

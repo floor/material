@@ -15,6 +15,7 @@ import { chromium, type Page } from "playwright";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
+import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
 // Runs against the build: `bun run build` first, as CI does.
 const bundle = await Bun.build({
@@ -220,7 +221,8 @@ try {
     assert.deepEqual(values.timeEmptyConfirm, values.timeEmptyChange);
     assert.deepEqual(values.selectFactory, [[null, null]]);
     assert.deepEqual(values.selectElement, [[null, null]]);
-    assert.deepEqual(values.radiosFactory, [["a", "a"], ["", ""]]);
+    // 1.0: the factory reports null for the option without a value, as the element does
+    assert.deepEqual(values.radiosFactory, [["a", "a"], [null, null]]);
     assert.deepEqual(values.radiosElement, [["a", "a"], [null, null]]);
     check("time input/confirm, select empty id and radio empty id match getters inside factory and element handlers");
   }
@@ -547,7 +549,7 @@ try {
       w.events = [];
       w.clicks = 0;
       const ib = document.getElementById("ib");
-      // `change` (FLO-295), and the deprecated `toggle` beside it for one release.
+      // `change` (FLO-295). 1.0 dispatches no `toggle` beside it: the listener stays, to show it never fires.
       ib?.addEventListener("change", (e) => (w.events as unknown[]).push({ change: (e as CustomEvent).detail }));
       ib?.addEventListener("toggle", (e) => (w.events as unknown[]).push({ toggle: (e as CustomEvent).detail }));
       ib?.addEventListener("click", () => (w.clicks = (w.clicks as number) + 1));
@@ -558,10 +560,10 @@ try {
       const ib = document.getElementById("ib") as HTMLElement & { selected: boolean };
       return { events: w.events, clicks: w.clicks, selected: ib.selected };
     });
-    // FLO-380: both carry the button's value beside selected.
-    assert.deepEqual(state, { events: [{ change: { selected: true, value: "fav" } }, { toggle: { selected: true, value: "fav" } }], clicks: 1, selected: true });
+    // FLO-380: change carries the button's value beside selected.
+    assert.deepEqual(state, { events: [{ change: { selected: true, value: "fav" } }], clicks: 1, selected: true });
     assert.equal(await page.getByRole("button", { name: "Favorite", pressed: true }).count(), 1);
-    check("icon button: a click dispatches one change from the host with { selected, value }, and the deprecated toggle; click stays native");
+    check("icon button: a click dispatches one change from the host with { selected, value } and no toggle; click stays native");
 
     state = await page.evaluate(() => {
       const w = window as unknown as Win;
@@ -4156,14 +4158,14 @@ try {
     await photos.getByRole("group", { name: "2 of 5" }).focus();
     await page.keyboard.press("ArrowRight");
     let state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
-    // FLO-380: value is the model (the index), beside index.
-    assert.deepEqual(state, { events: [{ detail: { value: 2, index: 2 }, target: "r" }], index: 2 });
+    // FLO-380: value is the model (the index). 1.0 dropped the doubled detail.index.
+    assert.deepEqual(state, { events: [{ detail: { value: 2 }, target: "r" }], index: 2 });
     check("carousel: an arrow key moves to the next item and dispatches change");
 
     await page.evaluate(() => ((window as unknown as Win).events = []));
     await photos.getByRole("group", { name: "4 of 5" }).click();
     state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
-    assert.deepEqual(state, { events: [{ detail: { value: 3, index: 3 }, target: "r" }], index: 3 });
+    assert.deepEqual(state, { events: [{ detail: { value: 3 }, target: "r" }], index: 3 });
     check("carousel: a click on an item makes it current and dispatches change");
 
     state = await page.evaluate(() => {
@@ -6310,6 +6312,127 @@ try {
     });
     assert.deepEqual(splitParity.element, splitParity.factory);
     check("split button: the closed button renders as the factory's in light DOM");
+  }
+
+  // ---------------------------------------------------------------- tooltip placement during the entrance transition (FLO-535)
+  {
+    type Direction = "top" | "bottom" | "left" | "right";
+    type Case = { name: string; position: Direction; x: number; y: number; text: string; layer?: "top"; edge?: boolean; wrapped?: boolean };
+    const cases: Case[] = [
+      { name: "top", position: "top", x: 430, y: 330, text: "A tooltip with enough content to measure" },
+      { name: "bottom", position: "bottom", x: 430, y: 330, text: "A tooltip with enough content to measure" },
+      { name: "left", position: "left", x: 430, y: 330, text: "A tooltip with enough content to measure" },
+      { name: "right", position: "right", x: 430, y: 330, text: "A tooltip with enough content to measure" },
+      { name: "left edge", position: "bottom", x: 2, y: 330, text: "A tooltip with enough content to measure", edge: true },
+      { name: "right edge", position: "bottom", x: 858, y: 330, text: "A tooltip with enough content to measure", edge: true },
+      { name: "wrapped", position: "bottom", x: 430, y: 330, text: "This tooltip has enough words to wrap across three lines near its target", wrapped: true },
+      { name: "top layer", position: "bottom", x: 430, y: 330, text: "A tooltip with enough content to measure", layer: "top" },
+    ];
+    type Measurement = {
+      targetCenter: { x: number; y: number }; tooltipCenter: { x: number; y: number };
+      target: { top: number; bottom: number; left: number; right: number };
+      tooltip: { top: number; bottom: number; left: number; right: number };
+      arrowCenter: { x: number; y: number }; widthShown: number; widthReadWhenPlaced: number;
+      layoutWidth: number; naturalWidth: number; lineCount: number; margin: number; reducedMotion: boolean; transitionDuration: string;
+      popoverOpen: boolean;
+    };
+    const failures: string[] = [];
+    // This block explicitly enables motion; the rest of the check retains its
+    // normal media setting. A layout read before show() starts the real scale
+    // transition, even when the fixture was created in the same task.
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    for (const scenario of cases) {
+      await fresh(page, `<button id="tooltip-geometry-target" type="button" style="position:fixed;left:${scenario.x}px;top:${scenario.y}px;width:40px;height:40px">Target</button>`);
+      const setup = await page.evaluate(({ text, position, layer }) => {
+        type Tip = { element: HTMLElement; show: (immediate?: boolean) => void; destroy: () => void };
+        const w = window as unknown as Win & { mtrl: { createTooltip: (config: object) => Tip }; __geometryTip: Tip; __geometryWidthRead: number };
+        const target = document.getElementById("tooltip-geometry-target") as HTMLElement;
+        const tip = w.mtrl.createTooltip({ target, text, position, layer });
+        w.__geometryTip = tip;
+        let naturalWidth = tip.element.offsetWidth;
+        const rect = tip.element.getBoundingClientRect.bind(tip.element);
+        const offsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth")?.get;
+        if (!offsetWidth) throw new Error("HTMLElement.offsetWidth is unavailable");
+        Object.defineProperty(tip.element, "offsetWidth", {
+          configurable: true,
+          get() {
+            const measured = offsetWidth.call(tip.element) as number;
+            w.__geometryWidthRead = measured;
+            return measured;
+          },
+        });
+        tip.element.getBoundingClientRect = () => {
+          const measured = rect();
+          w.__geometryWidthRead = measured.width;
+          return measured;
+        };
+        tip.show(true);
+        const widthReadWhenPlaced = w.__geometryWidthRead;
+        Reflect.deleteProperty(tip.element, "offsetWidth");
+        // A closed top-layer popover has no layout box until show() opens it.
+        if (!naturalWidth) naturalWidth = tip.element.offsetWidth;
+        tip.element.getBoundingClientRect = rect;
+        return { widthReadWhenPlaced, naturalWidth, reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches };
+      }, scenario);
+      await page.waitForFunction(() => {
+        const tip = (window as unknown as { __geometryTip: { element: HTMLElement } }).__geometryTip;
+        const surface = tip.element;
+        const style = getComputedStyle(surface);
+        return surface.classList.contains("mtrl-tooltip--visible") &&
+          surface.getAnimations().every((animation) => animation.playState === "finished") &&
+          Math.abs(surface.getBoundingClientRect().width - surface.offsetWidth) < 0.01 &&
+          style.opacity === "1";
+      });
+      const measured: Measurement = await page.evaluate(({ widthReadWhenPlaced, naturalWidth, reducedMotion, position }) => {
+        const w = window as unknown as { __geometryTip: { element: HTMLElement; destroy: () => void } };
+        const surface = w.__geometryTip.element;
+        const target = document.getElementById("tooltip-geometry-target") as HTMLElement;
+        const t = target.getBoundingClientRect();
+        const r = surface.getBoundingClientRect();
+        const arrow = (surface.querySelector('[class*="__arrow"]') as HTMLElement).getBoundingClientRect();
+        const style = getComputedStyle(surface);
+        const lineCount = (surface.offsetHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom)) / parseFloat(style.lineHeight);
+        const marginName = ({ top: "marginBottom", bottom: "marginTop", left: "marginRight", right: "marginLeft" } as const)[position];
+        const result = {
+          targetCenter: { x: t.left + t.width / 2, y: t.top + t.height / 2 },
+          tooltipCenter: { x: r.left + r.width / 2, y: r.top + r.height / 2 },
+          target: { top: t.top, bottom: t.bottom, left: t.left, right: t.right },
+          tooltip: { top: r.top, bottom: r.bottom, left: r.left, right: r.right },
+          arrowCenter: { x: arrow.left + arrow.width / 2, y: arrow.top + arrow.height / 2 },
+          widthShown: r.width, widthReadWhenPlaced, layoutWidth: surface.offsetWidth, naturalWidth,
+          lineCount, margin: parseFloat(style[marginName]),
+          reducedMotion, transitionDuration: style.transitionDuration, popoverOpen: surface.matches(":popover-open"),
+        };
+        w.__geometryTip.destroy();
+        return result;
+      }, { ...setup, position: scenario.position });
+      console.log(`  tooltip geometry ${scenario.name}: ${JSON.stringify(measured)}`);
+      const cross = scenario.position === "top" || scenario.position === "bottom" ? "x" : "y";
+      if (!scenario.edge) {
+        const delta = measured.tooltipCenter[cross] - measured.targetCenter[cross];
+        if (Math.abs(delta) > 1) failures.push(`${scenario.name}: cross-axis centre delta ${delta.toFixed(2)} px`);
+        const arrowDelta = measured.arrowCenter[cross] - measured.targetCenter[cross];
+        if (Math.abs(arrowDelta) > 1) failures.push(`${scenario.name}: arrow delta ${arrowDelta.toFixed(2)} px`);
+        const gap = ({
+          top: measured.target.top - measured.tooltip.bottom,
+          bottom: measured.tooltip.top - measured.target.bottom,
+          left: measured.target.left - measured.tooltip.right,
+          right: measured.tooltip.left - measured.target.right,
+        } as const)[scenario.position];
+        const expectedGap = DEFAULT_OFFSET + ((scenario.position === "bottom" || scenario.position === "right") ? measured.margin : 0);
+        if (Math.abs(gap - expectedGap) > 1) failures.push(`${scenario.name}: main-axis gap ${gap.toFixed(2)} px, expected ${expectedGap} px`);
+      }
+      if (scenario.edge && (measured.tooltip.left < -1 || measured.tooltip.right > 901 || Math.abs(measured.widthShown - measured.naturalWidth) > 1 || Math.abs(measured.widthShown - measured.layoutWidth) > 1)) {
+        failures.push(`${scenario.name}: viewport bounds ${measured.tooltip.left.toFixed(2)}..${measured.tooltip.right.toFixed(2)}, shown/initial layout/current layout width ${measured.widthShown.toFixed(2)}/${measured.naturalWidth}/${measured.layoutWidth} px`);
+      }
+      if (scenario.wrapped && Math.abs(measured.lineCount - 3) > 0.1) failures.push(`${scenario.name}: ${measured.lineCount} lines, expected 3`);
+      if (scenario.layer && !measured.popoverOpen) failures.push(`${scenario.name}: popover is closed`);
+      if (measured.reducedMotion || !measured.transitionDuration.includes("0.15s")) failures.push(`${scenario.name}: entrance motion is disabled`);
+      if (Math.abs(measured.widthReadWhenPlaced - measured.naturalWidth) > 1) failures.push(`${scenario.name}: placement width ${measured.widthReadWhenPlaced.toFixed(2)} differs from layout width ${measured.naturalWidth}`);
+    }
+    await page.emulateMedia({ reducedMotion: null });
+    assert.equal(failures.length, 0, `tooltip placement (FLO-535):\n${failures.join("\n")}`);
+    check("tooltip: motion-on placement, wrapped text, viewport clamps and top layer");
   }
 
   // ---------------------------------------------------------------- tooltip and snackbar in the top layer
