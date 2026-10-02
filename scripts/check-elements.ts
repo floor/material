@@ -205,7 +205,7 @@ try {
       untouched.addEventListener("confirm", (e) => result.timeEmptyConfirm.push([(e as CustomEvent<{ value: string }>).detail.value, untouched.value]));
       untouched.component.picker.open();
       untouched.component.picker.dialogElement.querySelector<HTMLElement>('[class$="time-picker__confirm"]')!.click();
-      select.component.menu!.element.querySelector<HTMLElement>('[data-id=""]')!.click();
+      (select.component as unknown as Record<symbol, { element: HTMLElement }>)[Object.getOwnPropertySymbols(select.component).find((key) => key.description === "mtrl.menu")!].element.querySelector<HTMLElement>('[data-id=""]')!.click();
       radios.component.radios![0].input.click();
       radios.component.radios![1].input.click();
       return result;
@@ -6021,6 +6021,20 @@ try {
     assert.equal(await focused(), "combobox", "a <label for> focuses the combobox");
     check("select: <label for> focuses the combobox");
 
+    // FLO-543: the attribute reaches the select's menu, which has no public
+    // member for it; the menu is under mtrl's symbol, found by its description.
+    const placed = await page.evaluate(() => {
+      const el = document.getElementById("ms") as Host;
+      const menu = (): { getPosition: () => string } =>
+        (el.component as unknown as Record<symbol, { getPosition: () => string }>)[Object.getOwnPropertySymbols(el.component).find((key) => key.description === "mtrl.menu")!];
+      el.setAttribute("placement", "top-start");
+      const set = { position: menu().getPosition(), member: "menu" in (el.component as object) };
+      el.removeAttribute("placement");
+      return { set, removed: menu().getPosition() };
+    });
+    assert.deepEqual(placed, { set: { position: "top-start", member: false }, removed: "bottom-start" });
+    check("select: placement set after creation reaches its menu, which is not a member");
+
     const options = await page.evaluate(async () => {
       const el = document.getElementById("ms") as Host & { value: string | null };
       const before = el.component;
@@ -6209,14 +6223,15 @@ try {
       const el = document.getElementById("sb") as Host;
       const w = window as unknown as { __closes: number };
       w.__closes = 0;
-      const menu = (el.component as { menu: { on: (n: string, h: () => void) => void } }).menu;
+      // The inner menu is not a member (FLO-543): it is under mtrl's symbol, found by its description
+      const menu = (el.component as unknown as Record<symbol, { on: (n: string, h: () => void) => void }>)[Object.getOwnPropertySymbols(el.component).find((key) => key.description === "mtrl.menu")!];
       menu.on("close", () => void w.__closes++);
     });
     const splitState = (): Promise<{ open: boolean; closes: number }> =>
       page.evaluate(() => {
         const el = document.getElementById("sb") as Host;
         return {
-          open: (el.component as { menu: { isOpen: () => boolean } }).menu.isOpen(),
+          open: (el.component as unknown as Record<symbol, { isOpen: () => boolean }>)[Object.getOwnPropertySymbols(el.component).find((key) => key.description === "mtrl.menu")!].isOpen(),
           closes: (window as unknown as { __closes: number }).__closes,
         };
       });
@@ -6266,7 +6281,7 @@ try {
       const el = document.getElementById("sb") as Host;
       const before = el.component;
       const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
-      const menu = (): { getItems: () => Array<{ text?: string }> } => (el.component as { menu: { getItems: () => Array<{ text?: string }> } }).menu;
+      const menu = (): { getItems: () => Array<{ text?: string }> } => el.component as { getItems: () => Array<{ text?: string }> };
       const added = document.createElement("m-menu-item");
       added.setAttribute("value", "png");
       added.textContent = "Export PNG";

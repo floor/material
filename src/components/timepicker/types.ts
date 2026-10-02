@@ -334,7 +334,8 @@ export interface TimePickerComponent {
   isOpen: boolean;
 
   /**
-   * Opens the time picker
+   * Opens the time picker. When it returns, `isOpen` is true and `open` has
+   * been emitted; the surface may be painted after `open()` returns.
    * @returns The time picker component for chaining
    */
   open: () => TimePickerComponent;
