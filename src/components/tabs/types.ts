@@ -103,8 +103,9 @@ export interface TabConfig {
    */
   text?: string;
   
-  /** 
-   * Initial tab icon HTML content
+  /**
+   * Initial tab icon HTML content.
+   * Markup (HTML). Not sanitized by default: see Markup and sanitizing.
    * @example '<svg>...</svg>'
    */
   icon?: string;

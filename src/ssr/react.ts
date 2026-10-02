@@ -1,7 +1,15 @@
 // src/ssr/react.ts
-/** Enable declarative shadow DOM for mtrl/react in this server process. @module ssr/react */
+/**
+ * Enable declarative shadow DOM for mtrl/react in this server process.
+ * The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup.
+ * @module ssr/react
+ */
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+/**
+ * The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup.
+ * @module ssr/react
+ */
 import "./index";
 
 const bridge = (globalThis as unknown as Record<symbol, {

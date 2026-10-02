@@ -15,10 +15,13 @@ export interface ChipConfig {
   selected?: boolean;
   /** Elevated styling is supported by assist, filter and suggestion chips. */
   elevated?: boolean;
+  /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   leadingIcon?: string;
+  /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. Same sink as `leadingIcon`. */
   icon?: string;
+  /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   trailingIcon?: string;
-  /** Decorative avatar HTML for an input chip; takes precedence over leadingIcon. */
+  /** Decorative avatar for an input chip; takes precedence over leadingIcon. Markup (HTML), not a person's name or an image URL. Not sanitized by default: see Markup and sanitizing. */
   avatar?: string;
   /**
    * Called when an input chip is removed, from its remove button or with Backspace or

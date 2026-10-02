@@ -266,8 +266,11 @@ export const chipDeclaration = {
     value: { type: "string" },
     label: { type: "string" },
     variant: { type: "string" },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string" },
+    /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     "trailing-icon": { type: "string" },
+    /** Markup (HTML), not a person's name or an image URL. Not sanitized by default: see Markup and sanitizing. Input chips only; takes precedence over `icon`. */
     avatar: { type: "string" },
     "remove-label": { type: "string" },
     selected: { type: "boolean" },

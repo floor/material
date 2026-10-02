@@ -35,7 +35,8 @@ export interface SelectOption {
   disabled?: boolean;
 
   /**
-   * Optional icon to display with the option
+   * Optional icon to display with the option.
+   * Markup (HTML). Not sanitized by default: see Markup and sanitizing.
    */
   icon?: string;
 

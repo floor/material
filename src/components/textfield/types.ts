@@ -111,10 +111,10 @@ export interface TextfieldConfig {
   /** Autocomplete attribute */
   autocomplete?: string;
 
-  /** Leading icon HTML content */
+  /** Leading icon HTML content. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   leadingIcon?: string;
 
-  /** Trailing icon HTML content */
+  /** Trailing icon HTML content. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   trailingIcon?: string;
 
   /**

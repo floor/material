@@ -1,7 +1,15 @@
 // src/ssr/svelte.ts
-/** Enable declarative shadow DOM for mtrl/svelte in this server process. @module ssr/svelte */
+/**
+ * Enable declarative shadow DOM for mtrl/svelte in this server process.
+ * The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup.
+ * @module ssr/svelte
+ */
 import type { Component } from "svelte";
 import { render } from "svelte/server";
+/**
+ * The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup.
+ * @module ssr/svelte
+ */
 import "./index";
 
 /** What a compiled Svelte 5 server snippet pushes into. The real object is Svelte's renderer. */

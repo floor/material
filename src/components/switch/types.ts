@@ -49,7 +49,7 @@ export interface SwitchConfig {
   /** Component name */
   componentName?: string;
 
-  /** Icon HTML in the selected handle; 'none' for no icon */
+  /** Icon HTML in the selected handle; 'none' for no icon. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   icon?: string;
 
   /**
