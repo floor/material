@@ -120,17 +120,18 @@ describe("split button: expand() is synchronous", () => {
 });
 
 describe("dialog, date picker, time picker: what open() has done when it returns", () => {
-  // A record of what the default dialog does today, not a contract: isOpen()
-  // is false until a 10 ms timer, which FLO-548 is to change. Update this test
-  // with it.
-  test("dialog, today: beforeopen has run and can cancel; open and isOpen() follow on a timer", async () => {
+  // The contract (FLO-548): the state and the event are there when open()
+  // returns. Until then the default dialog set both on a 10 ms timer. The
+  // rest of it is in dialog/open-contract.test.ts.
+  test("dialog: isOpen() and the open event are there when open() returns; beforeopen runs first and can cancel", async () => {
     const dialog = mount(createDialog({ title: "Delete?" }));
     const seen: string[] = [];
     dialog.on("beforeopen", () => { seen.push("beforeopen"); });
     dialog.on("open", () => { seen.push("open"); });
-    expect(dialog.open()).toBe(dialog);
-    expect(seen).toEqual(["beforeopen"]);
     expect(dialog.isOpen()).toBe(false);
+    expect(dialog.open()).toBe(dialog);
+    expect(seen).toEqual(["beforeopen", "open"]);
+    expect(dialog.isOpen()).toBe(true);
     await wait();
     expect(seen).toEqual(["beforeopen", "open"]);
     expect(dialog.isOpen()).toBe(true);
@@ -139,7 +140,9 @@ describe("dialog, date picker, time picker: what open() has done when it returns
     const opened: string[] = [];
     cancelled.on("beforeopen", event => { event.preventDefault(); });
     cancelled.on("open", () => { opened.push("open"); });
-    cancelled.open();
+    expect(cancelled.open()).toBe(cancelled);
+    expect(opened).toEqual([]);
+    expect(cancelled.isOpen()).toBe(false);
     await wait();
     expect(opened).toEqual([]);
     expect(cancelled.isOpen()).toBe(false);
