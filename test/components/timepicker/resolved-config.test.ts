@@ -25,7 +25,6 @@ const PROMISED = [
   "format",
   "orientation",
   "showSeconds",
-  "closeOnSelect",
   "minuteStep",
   "secondStep",
   "cancelText",

@@ -12,7 +12,7 @@ import { activeElementOf } from "../../core/dom/focus";
  * @param config - Select configuration
  * @returns Function that enhances a component with textfield functionality
  */
-export const withTextfield =
+export const withTextField =
   (config: SelectConfig) =>
   <C extends object>(
     component: C,
