@@ -4,7 +4,7 @@
 import { defineComponent, h, ref, onMounted, type Ref } from "vue";
 import {
   MButton, MCheckbox, MList, MListItem, MNavigationRail, MNavigationRailItem, MProgress, MRadio, MRadios, MSlider, MSwitch,
-  MTab, MTabs, MTextfield, type Exposed,
+  MTab, MTabs, MTextField, type Exposed,
 } from "../../dist/vue/index.js";
 import type { SwitchElement } from "../../dist/elements/index.js";
 import { MChip, MChips } from "../../dist/vue/index.js";
@@ -101,7 +101,7 @@ export const App = defineComponent(() => {
       h("output", { id: "agreed" }, String(agreed.value)),
       h(MSlider, { id: "sl", ariaLabel: "Level", modelValue: level.value, "onUpdate:modelValue": (v: number) => (level.value = v) }),
       h("output", { id: "level" }, String(level.value)),
-      h(MTextfield, { id: "tf", label: "Name", modelValue: text.value, onInput: (e: CustomEvent<{ value: string }>) => recordModel("string", e), "onUpdate:modelValue": (v: string) => (text.value = v) }),
+      h(MTextField, { id: "tf", label: "Name", modelValue: text.value, onInput: (e: CustomEvent<{ value: string }>) => recordModel("string", e), "onUpdate:modelValue": (v: string) => (text.value = v) }),
       h("output", { id: "text" }, text.value),
       h(MRadios, { id: "rd", ariaLabel: "Size", modelValue: size.value, "onUpdate:modelValue": (v: string) => (size.value = v) }, () => [
         h(MRadio, { value: "s" }, () => "Small"),

@@ -1,10 +1,10 @@
-import { TextfieldConfig, TextfieldDensity } from "../types";
+import { TextFieldConfig, TextFieldDensity } from "../types";
 
 /**
  * Configuration for density feature
  */
-interface DensityConfig extends TextfieldConfig {
-  density?: TextfieldDensity | string;
+interface DensityConfig extends TextFieldConfig {
+  density?: TextFieldDensity | string;
   prefix?: string;
   componentName?: string;
 }
