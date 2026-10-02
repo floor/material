@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { copyFile, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { buildModules, buildSSR } from "./build-modules";
 import { buildStyles } from "./build-styles";
 import { emitSvelte } from "./svelte-package";
@@ -37,8 +37,6 @@ try {
       main: relocate(pkg.main), module: relocate(pkg.module), types: relocate(pkg.types),
       exports: relocate(pkg.exports),
     }, null, 2) + "\n");
-    await copyFile("README.md", `${staging}/README.md`);
-    await copyFile("LICENSE", `${staging}/LICENSE`);
 
     await rm(outdir, { recursive: true, force: true });
     await rename(staging, outdir);

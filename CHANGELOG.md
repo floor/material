@@ -1127,6 +1127,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- The package no longer contains a second copy of the README and licence under `dist/`.
 - **A button's asymmetric icon padding mirrors in right-to-left.** A size `s` button with a leading icon, and a text button at `xs` or `s` with a leading icon, keep 12px before the icon and 16px after the label in both directions. Under `dir="rtl"` those insets had stayed physical, so the start side was 16px and the end side 12px. The insets are logical and follow the direction the icon already follows, including into a shadow root whose `dir` ancestor is outside it.
 - **`<m-text-field>` in a right-to-left page is mirrored (FLO-562).** A `dir="rtl"` on an
   ancestor is outside the element's shadow root, where the stylesheet's `[dir]` selectors do
