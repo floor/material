@@ -111,10 +111,10 @@ $component: "#{base.$prefix}-side-sheet";
 
         // FLO-579: the 40px button carries a 48px target, the icon button's own
         // mechanism (its --xs/--s ::after): the box reaches 4px past each edge.
+        // The state layer above already positions the button, so the box anchors
+        // to it without a second declaration.
         // m3.material.io, Density: "The default target size should be at least
         // 48x48 CSS pixels".
-        position: relative;
-
         &::after {
             content: "";
             position: absolute;
