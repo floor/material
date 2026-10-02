@@ -20,6 +20,7 @@ const FRUITS = ["Apple", "Apricot", "Banana"];
 type Log = Array<{ id: string; detail: unknown }>;
 export interface Api {
   log: Log;
+  modelLog: Array<{ id: string; detail: unknown; host: unknown }>;
   submits: number;
   model: Ref<boolean>;
   extra: Ref<boolean>;
@@ -53,7 +54,7 @@ export const App = defineComponent(() => {
   const query = ref("ap");
   const switchRef = ref<Exposed<SwitchElement> | null>(null);
   const api: Api = {
-    log: [], submits: 0, model, extra, order, show, progress, switchRef,
+    log: [], modelLog: [], submits: 0, model, extra, order, show, progress, switchRef,
     setDialog: (v: boolean) => void (dialog.value = v),
     setRail: (v: boolean) => void (rail.value = v),
   };
@@ -62,6 +63,10 @@ export const App = defineComponent(() => {
   });
   const log = (id: string) => (event: CustomEvent<unknown>): void => {
     api.log.push({ id, detail: event.detail });
+  };
+  const recordModel = (id: string, event: CustomEvent<{ value: unknown }>, field: "value" | "checked" = "value"): void => {
+    const host = event.target as HTMLElement & { value: unknown; checked: boolean };
+    api.modelLog.push({ id, detail: structuredClone(event.detail.value), host: structuredClone(host[field]) });
   };
 
   return () =>
@@ -76,7 +81,7 @@ export const App = defineComponent(() => {
           },
         },
         [
-          h(MSwitch, { id: "u", name: "u", defaultChecked: true, onChange: log("u"), ref: switchRef }, () => "Uncontrolled"),
+          h(MSwitch, { id: "u", name: "u", defaultChecked: true, onChange: (e: CustomEvent<{ value: boolean }>) => { log("u")(e); recordModel("boolean", e, "checked"); }, ref: switchRef }, () => "Uncontrolled"),
           h(MSwitch, { id: "m", modelValue: model.value, "onUpdate:modelValue": (v: boolean) => (model.value = v) }, () => "Model"),
           h(MSwitch, { id: "n", checked: named.value, "onUpdate:checked": (v: boolean) => (named.value = v) }, () => "Named"),
           h(MSwitch, { id: "d", disabled: true, supportingText: "Unavailable" }, () => "Disabled"),
@@ -96,7 +101,7 @@ export const App = defineComponent(() => {
       h("output", { id: "agreed" }, String(agreed.value)),
       h(MSlider, { id: "sl", ariaLabel: "Level", modelValue: level.value, "onUpdate:modelValue": (v: number) => (level.value = v) }),
       h("output", { id: "level" }, String(level.value)),
-      h(MTextfield, { id: "tf", label: "Name", modelValue: text.value, "onUpdate:modelValue": (v: string) => (text.value = v) }),
+      h(MTextfield, { id: "tf", label: "Name", modelValue: text.value, onInput: (e: CustomEvent<{ value: string }>) => recordModel("string", e), "onUpdate:modelValue": (v: string) => (text.value = v) }),
       h("output", { id: "text" }, text.value),
       h(MRadios, { id: "rd", ariaLabel: "Size", modelValue: size.value, "onUpdate:modelValue": (v: string) => (size.value = v) }, () => [
         h(MRadio, { value: "s" }, () => "Small"),
@@ -114,7 +119,7 @@ export const App = defineComponent(() => {
         ]
       ),
       h("output", { id: "destination" }, String(destination.value)),
-      h(MChips, { id: "ck", ariaLabel: "Diet", modelValue: diet.value, "onUpdate:modelValue": (v: string | string[]) => (diet.value = v) }, () => [
+      h(MChips, { id: "ck", ariaLabel: "Diet", modelValue: diet.value, onChange: (e: CustomEvent<{ value: string | string[] | null }>) => recordModel("array", e), "onUpdate:modelValue": (v: string | string[]) => (diet.value = v) }, () => [
         h(MChip, { value: "veg" }, () => "Vegetarian"),
         h(MChip, { value: "gf" }, () => "Gluten free"),
       ]),

@@ -12,6 +12,27 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **Time picker, select and radio events agree with their getters (FLO-380).**
+
+  | Event | 0.10 payload | 1.0 payload |
+  |---|---|---|
+  | Factory time picker `input` | `{ value: draft }` | `{ value: committed, draftValue: draft }` |
+  | `<m-timepicker>` `input` detail | `{ value: draft }` | `{ value: committedOrEmpty, draftValue: draft }` |
+  | Factory time picker `confirm` | time string | `{ value: time }` |
+  | `<m-timepicker>` `confirm` detail | no event | `{ value: time }` |
+  | Factory select `change` on empty ID | `{ value: "", ... }` | `{ value: null, ... }` |
+  | `<m-select>` `change` on empty ID | `{ value: "" }` | `{ value: null }` |
+  | `<m-radios>` `change` on empty ID | `{ value: "" }` | `{ value: null }` |
+
+  While the time picker is open, `input.value` no longer moves with the dial:
+  it is the committed time. Read `draftValue` for live edits. The factory's
+  `onInput` callback also receives the new `{ value, draftValue }` object,
+  described by the newly exported `TimePickerInputEvent` type. `onConfirm(string)`
+  in the time picker config still receives a string; factory `confirm` listeners
+  now destructure `{ value }`. `SelectChangeEvent["value"]` is now `string | null`
+  for an empty option ID. The radio factory still reports its string getter,
+  including `""`; handle `null` for empty select or radio element selections.
+
 - **Chip-set `add` and `remove` report the live selection (FLO-380).** Factory
   callbacks receive one object instead of a bare chip:
 
@@ -22,6 +43,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   | `<m-chips>` `remove` detail | `{ value: removedId }` | `{ value: remainingSelection, chipValue: removedId }` |
 
   `value` matches `getValue()` inside the callback, including for selected chips.
+  Inside a factory `remove` handler, `event.chip` is already destroyed and out
+  of the set. Its getters still answer, but `getChips().indexOf(event.chip)` is
+  `-1` and its element is disconnected.
   The element continues to emit one `remove` and no separate `change` for user
   removal; declaration edits remain silent. Migration: read the chip from
   `event.chip` in factory handlers and the removed identifier from
@@ -200,6 +224,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 - `mtrl/ssr`: `renderElement` renders elements as declarative shadow DOM on a server (Node, Bun); server-only, with no runtime dependencies (FLO-363, FLO-364).
 - `mtrl/ssr/react`: an opt-in, server-only entry. Imported in the server bootstrap, it makes the React adapters emit styled declarative shadow roots during SSR (React 18 and 19), with no server code in the client bundle. Without it, React output is unchanged (FLO-372).
+  Known limit (FLO-517): the declarative shadow root is rendered without the React context of
+  providers above the component. Until the component upgrades in the browser, shadow content that
+  depends on such a context shows the context's default value, and a child that requires the
+  provider leaves the component without a declarative shadow root.
 - `mtrl/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Svelte output gains only the empty branch marker (FLO-375).
 - `mtrl/ssr/vue`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Vue component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Vue output is unchanged (FLO-373).
 - `mtrl/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Solid output is unchanged (FLO-374).
@@ -228,6 +256,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   `BottomAppBarComponent`, from `mtrl` and from each component's subpath. They are the same
   factory and types as the old names. `createTopAppBar` now returns the one public `TopAppBar`
   declaration (`top-app-bar.ts` had a second); assignability is unchanged.
+- **"Text field" in two words everywhere in the API (FLO-383):** `TextFieldDensity`,
+  `TextFieldEvents`, `TextFieldValuePayload`, `TextFieldFocusPayload` and
+  `TextFieldTrailingPayload` (`mtrl/components/textfield`); `TEXT_FIELD_VARIANTS`, `_STATES`,
+  `_TYPES`, `_EVENTS`, `_DENSITY`, `_DEFAULTS` and `_CLASSES`
+  (`mtrl/components/textfield/constants`); `textFieldElement`, `defineTextField`,
+  `TextFieldSpec`, `TextFieldElement` and `TextFieldElementComponent` (`mtrl/elements`); and the
+  `TextField` component in `mtrl/react`, `mtrl/solid` and `mtrl/svelte`, `MTextField` in
+  `mtrl/vue`. Each is the same binding as the old spelling. Every exported identifier is two
+  words; string values are unchanged: the `<m-textfield>` tag, CSS classes, event strings and
+  the constants' values, as are folders.
 - **API gaps from the 1.0 audit (FLO-384).**
   - `isDisabled()` on every component that can be disabled and lacked it: button, icon button,
     FAB, extended FAB, checkbox, switch, text field, select, radios, button group and a tab.
@@ -307,7 +345,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 - **The old names, renamed (FLO-383):** `createTextfield` → `createTextField`, `TextfieldConfig` →
   `TextFieldConfig`, `TextfieldComponent` → `TextFieldComponent`, `CardSchema` → `CardConfig`,
-  `TopAppBar` → `TopAppBarComponent`, `BottomAppBar` → `BottomAppBarComponent`. Each is flagged
+  `TopAppBar` → `TopAppBarComponent`, `BottomAppBar` → `BottomAppBarComponent`; and the
+  rest of the old text field spelling: `TextfieldDensity`, `TextfieldEvents`, the three
+  `Textfield*Payload` types, the seven `TEXTFIELD_*` constants, `textfieldElement`,
+  `defineTextfield`, `TextfieldSpec`, `TextfieldElement`, `TextfieldElementComponent`, the
+  `Textfield` adapter component and Vue's `MTextfield`. Each is flagged
   where it is imported and removed in 1.0. Tags, CSS classes, folders and events keep their
   names.
 - **Component internals on their subpaths (FLO-381).** `mtrl/components/<name>` is public API, and
@@ -341,6 +383,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   back. A menu returns focus to its opener in the animation frame after it closes; the check read
   the state after a fixed 450ms, and on a runner that produced no frame in that time it found
   focus nowhere. It now waits for the opener's focus, after the same 450ms.
+- React SSR keeps a host's child on the server when that child suspends. `mtrl/ssr/react` rendered the host's children with `renderToStaticMarkup`, which has no Suspense boundary, so the throw left the page's boundary client-rendered, or aborted a host with no boundary above it. The static pass retries the host only when that render suspended, and the shadow root is built from the children once they can render (FLO-415). A child that throws is not retried: the page render reaches it, so the error is reported as it is without the bridge. Retries wait on a backoff (doubling to 250ms) and stop after 40 attempts, about eight seconds; past that the host has no shadow root and the page keeps streaming, so a slower child still arrives. The suspension is recognised from the throw site of whichever React build this process loaded, not from the error text, so a production build that minifies the message still retries. At the cap, development logs one warning naming the element; production logs nothing. A Suspense boundary already inside the host still contributes its own fallback to that snapshot.
+- SSR bridges for React, Svelte, Solid and Vue render ordinary host attributes (`popover`, `inputmode`, `enterkeyhint`, `itemprop`, `nonce`, `is`, and the rest of the host's HTML attributes) instead of rejecting the request. The framework still emits those attributes on the host. The shared renderer skips names outside its allowlist, including event-handler names and `srcdoc`, so they never enter the shadow markup. Calling `renderElement` directly still rejects an unknown host attribute (FLO-418).
 - The menu keyboard step of `elements:check` no longer ends one item short when a runner pauses
   (FLO-423). It waited a fixed 450ms after opening the menu with a key, then sent the arrows; it
   now waits for the first item to take focus, which is what the arrows depend on.
@@ -379,10 +423,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   last pending field is destroyed, allowing the next lifecycle to schedule again (FLO-363).
 - **Text field: the leading icon is hidden from screen readers (FLO-301).** It is decorative; the
   label names the field.
+- **ArrowLeft and Escape work in a submenu whose parent item's id holds a quote or a backslash
+  (FLO-429).** They threw, or did nothing, because the id was put into a CSS selector.
+- CI's `static` job prints the output of a failing check again. Under the job's shell a failing
+  check ended before its status was recorded, and the step stopped with "exit code 1" and nothing
+  else, so the failure could not be read from CI.
 - The checkbox and switch change payload docs said setters emit `change`; they are silent, as
   they have been since FLO-328 (FLO-384).
-- **Menu item ids containing selector syntax keep submenu keyboard navigation working (FLO-429).**
-  Parent lookup compares `data-id`, `data-owner`, and `data-level` as strings.
+
 - **Search keeps custom root classes (FLO-421).** Both contained and divided
   search variants apply the `class` option, including space-separated classes.
 - **Tabs with quotes or backslashes in their value no longer fail to link panels (FLO-417).**

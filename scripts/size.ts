@@ -128,7 +128,8 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   button: kb(7.6),
   "button-group": kb(12.0), // FLO-382 select(unknown) clears with a dev warning: 11,912 → 12,094
   // main's root class option (FLO-403) on the forward merge: next 12,107 to 12,148.
-  // main's isDisabled() (FLO-384) on the forward merge: next e8adc013 12,170 to 12,202.
+  // main's isDisabled() (FLO-384) on the forward merge: next e8adc013 12,170 to 12,202; 12,208 on
+  // #406's final head (re-measured on the FLO-383 A2 forward merge).
   card: kb(7.0),
   carousel: kb(11.2), // opt-in wheel scrolling with momentum (FLO-395): 10.3 to 10.9 KB against 2ef11f0
   checkbox: kb(5.6), // FLO-380: boolean change value plus the HTML valueAttribute token; main's isDisabled() (FLO-384) on the forward merge: next 5,644 to 5,658.
@@ -151,12 +152,12 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "split-button": kb(17.9), // the menu's top layer: 17,644 to 18,122; the menu's positionTarget (FLO-300): 18,228
   radios: kb(5.1),
   search: kb(10.3), // the open view in the top layer (FLO-285): 9,759; combobox, contained and divided (FLO-286, FLO-287): 10,114; minWidth and maxWidth (FLO-290): 10,161; trailing items, avatar, supporting text, reopening (FLO-291): 10,477
-  select: kb(20.35), // the menu's top layer: 19,600 to 20,115; the field, the supporting text row and the counter (FLO-300): 20,608; main's root class option (FLO-403) on the forward merge: next 20,743 to 20,790
+  select: kb(20.35), // the menu's top layer: 19,600 to 20,115; the field, the supporting text row and the counter (FLO-300): 20,608; main's root class option (FLO-403) on the forward merge: next 20,743 to 20,790; 20,821 on the FLO-383 A2 forward merge (17 B left)
   slider: kb(13.1), // FLO-249..255 slider conformance; FLO-331 the track corner token (12,918 measured); track, stops and the inset icon as a percentage of the value (FLO-369): 13,276
   // layer: "top", the core/dom top-layer helper and the modal-dialog placement, which
   // follows modals opening and closing: 11,533 to 12,320
   snackbar: kb(12.1),
-  switch: kb(6.1), // #214 conformance; #218 node labels
+  switch: kb(6.1), // #214 conformance; #218 node labels; 6,221 on the FLO-383 A2 forward merge (25 B left)
   tabs: kb(13.5), // the indicator anchors to the active label instead of measuring it (FLO-369): 13,467; derived ids and the data-value panel lookup (FLO-430): 13,542 to 13,685
   // the field, the supporting text row and the counter (FLO-300): 8,290. The required
   // asterisk, the live error and the trailing icon button (FLO-301): 8,314 to 8,926 against 7cd57a6.

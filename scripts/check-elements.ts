@@ -14,6 +14,7 @@ import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
+import { checkRegistryEvents } from "./check-elements-registry";
 
 // Runs against the build: `bun run build` first, as CI does.
 const bundle = await Bun.build({
@@ -155,6 +156,74 @@ try {
   await page.goto(`http://127.0.0.1:${server.port}`);
   await page.waitForFunction(() => (window as unknown as Win).ready === true);
   await checkCheckableValues(page, "element");
+  await checkRegistryEvents(page, fresh, check);
+
+  // FLO-380: each model payload agrees with the public getter during dispatch.
+  await fresh(page, `<m-timepicker id="event-time"></m-timepicker>
+    <m-select id="event-select" value="a"><m-select-option value="a">Alpha</m-select-option><m-select-option value="">None</m-select-option></m-select>
+    <m-radios id="event-radios"><m-radio value="a">Alpha</m-radio><m-radio value="">None</m-radio></m-radios>`);
+  {
+    const values = await page.evaluate(() => {
+      type TimeHost = HTMLElement & { value: string; component: {
+        getValue: () => string;
+        on: (name: string, handler: (event: { value: string; draftValue?: string }) => void) => void;
+        picker: { getValue: () => string; setType: (type: string) => void; open: () => void; dialogElement: HTMLElement;
+          on: (name: string, handler: (event: { value: string; draftValue?: string }) => void) => void };
+      } };
+      type ChoiceHost = HTMLElement & { value: string | null; component: {
+        getValue: () => string | null; on: (name: string, handler: (event: { value: string | null }) => void) => void;
+        menu?: { element: HTMLElement }; radios?: Array<{ input: HTMLInputElement }>;
+      } };
+      const time = document.getElementById("event-time") as TimeHost;
+      const select = document.getElementById("event-select") as ChoiceHost;
+      const radios = document.getElementById("event-radios") as ChoiceHost;
+      const result = { timeFactoryInput: [] as Array<[unknown, unknown, unknown]>, timeInput: [] as Array<[unknown, unknown, unknown]>,
+        timeConfirm: [] as Array<[unknown, unknown]>, timeEmptyConfirm: [] as Array<[unknown, unknown]>,
+        timeEmptyChange: [] as Array<[unknown, unknown]>, selectFactory: [] as Array<[unknown, unknown]>,
+        selectElement: [] as Array<[unknown, unknown]>, radiosFactory: [] as Array<[unknown, unknown]>,
+        radiosElement: [] as Array<[unknown, unknown]> };
+      const p = time.component.picker;
+      p.on("input", (e) => result.timeFactoryInput.push([e.value, p.getValue(), e.draftValue]));
+      time.addEventListener("input", (e) => { const d = (e as CustomEvent<{ value: string; draftValue: string }>).detail;
+        result.timeInput.push([d.value, time.value, d.draftValue]); });
+      time.addEventListener("confirm", (e) => { const d = (e as CustomEvent<{ value: string }>).detail;
+        result.timeConfirm.push([d.value, time.value]); });
+      select.component.on("change", (e) => result.selectFactory.push([e.value, select.component.getValue()]));
+      select.addEventListener("change", (e) => result.selectElement.push([(e as CustomEvent<{ value: string | null }>).detail.value, select.value]));
+      radios.component.on("change", (e) => result.radiosFactory.push([e.value, radios.component.getValue()]));
+      radios.addEventListener("change", (e) => result.radiosElement.push([(e as CustomEvent<{ value: string | null }>).detail.value, radios.value]));
+      p.setType("input");
+      p.open();
+      const hour = p.dialogElement.querySelector<HTMLInputElement>('[data-type="hour"]')!;
+      hour.value = String((Number(hour.value) + 1) % 24);
+      hour.dispatchEvent(new Event("change", { bubbles: true }));
+      p.dialogElement.querySelector<HTMLElement>('[class$="time-picker__confirm"]')!.click();
+      const untouched = document.createElement("m-timepicker") as TimeHost;
+      document.getElementById("host")!.append(untouched);
+      untouched.addEventListener("change", (e) => result.timeEmptyChange.push([(e as CustomEvent<{ value: string }>).detail.value, untouched.value]));
+      untouched.addEventListener("confirm", (e) => result.timeEmptyConfirm.push([(e as CustomEvent<{ value: string }>).detail.value, untouched.value]));
+      untouched.component.picker.open();
+      untouched.component.picker.dialogElement.querySelector<HTMLElement>('[class$="time-picker__confirm"]')!.click();
+      select.component.menu!.element.querySelector<HTMLElement>('[data-id=""]')!.click();
+      radios.component.radios![0].input.click();
+      radios.component.radios![1].input.click();
+      return result;
+    });
+    assert.equal(values.timeFactoryInput.length, 1);
+    assert.equal(values.timeFactoryInput[0][0], values.timeFactoryInput[0][1]);
+    assert.notEqual(values.timeFactoryInput[0][2], values.timeFactoryInput[0][0]);
+    assert.deepEqual(values.timeInput, [["", "", values.timeFactoryInput[0][2]]]);
+    assert.equal(values.timeConfirm.length, 1);
+    assert.equal(values.timeConfirm[0][0], values.timeConfirm[0][1]);
+    assert.equal(values.timeEmptyChange.length, 1);
+    assert.equal(values.timeEmptyChange[0][0], values.timeEmptyChange[0][1]);
+    assert.deepEqual(values.timeEmptyConfirm, values.timeEmptyChange);
+    assert.deepEqual(values.selectFactory, [[null, null]]);
+    assert.deepEqual(values.selectElement, [[null, null]]);
+    assert.deepEqual(values.radiosFactory, [["a", "a"], ["", ""]]);
+    assert.deepEqual(values.radiosElement, [["a", "a"], [null, null]]);
+    check("time input/confirm, select empty id and radio empty id match getters inside factory and element handlers");
+  }
 
   // ---------------------------------------------------------------- registration
   {
@@ -4859,7 +4928,7 @@ try {
     ];
 
     /** Mounts a menu on the stage's opener; the top layer when asked. */
-    const mount = (layer: "top" | undefined): Promise<void> =>
+    const mount = (layer: "top" | undefined, items = ITEMS): Promise<void> =>
       page.evaluate(({ layer, items }) => {
         const w = window as unknown as TopWin;
         const host = document.getElementById("tl") as HTMLElement;
@@ -4869,7 +4938,7 @@ try {
         const menu = w.mtrl.createMenu({ opener, items, ...(layer ? { layer } : {}) });
         w.__tl = { menu, closes: 0, root };
         menu.on("close", () => void w.__tl.closes++);
-      }, { layer, items: ITEMS });
+      }, { layer, items });
 
     // The menu finishes what it starts on timers and frames of its own: it takes focus
     // 120ms after it opens, gives it back to the opener in the frame after "close",
@@ -5113,22 +5182,21 @@ try {
       check(`menu top layer ${where}: ArrowRight opens the submenu on its first item, ArrowLeft returns to Share, a hover opens it`);
 
       // An item id is data, including characters with meaning in CSS selectors.
-      ITEMS[0].id = 'share"quoted';
-      await mount("top");
+      const quoted = 'share"quoted';
+      await mount("top", [{ ...ITEMS[0], id: quoted }, ...ITEMS.slice(1)]);
       await page.evaluate(() => void (window as unknown as TopWin).__tl.menu.open(new KeyboardEvent("keydown")));
       await wait(450);
-      await eventually("focus on the quoted id, the first item", async () => (await focusedItem()) === ITEMS[0].id);
-      assert.equal(await focusedItem(), ITEMS[0].id, `${where}: quoted parent id has focus`);
+      await eventually("focus on the quoted id, the first item", async () => (await focusedItem()) === quoted);
+      assert.equal(await focusedItem(), quoted, `${where}: quoted parent id has focus`);
       await page.keyboard.press("ArrowRight");
       await wait(450);
       await eventually("focus on the submenu's first item", async () => (await focusedItem()) === "link");
       assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 1, focus: "link" }, `${where}: quoted id opens its submenu`);
       await page.keyboard.press("ArrowLeft");
       await wait(300);
-      await eventually("the submenu to close and focus to return to the quoted id", async () => (await submenus()) === 0 && (await focusedItem()) === ITEMS[0].id);
-      assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 0, focus: ITEMS[0].id }, `${where}: ArrowLeft returns to the quoted id`);
+      await eventually("the submenu to close and focus to return to the quoted id", async () => (await submenus()) === 0 && (await focusedItem()) === quoted);
+      assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 0, focus: quoted }, `${where}: ArrowLeft returns to the quoted id`);
       check(`menu top layer ${where}: quoted item id survives ArrowRight and ArrowLeft`);
-      ITEMS[0].id = "share";
 
       await page.evaluate(() => (window as unknown as TopWin).__tl.menu.destroy());
     }

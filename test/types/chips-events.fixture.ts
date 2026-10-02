@@ -33,7 +33,7 @@ chips.on("change", (event: Event) => event.preventDefault());
 chips.off("change", (value: string) => value.toUpperCase());
 // @ts-expect-error add receives a wrapped payload, not a bare chip
 chips.on("add", chip => chip.getValue());
-// @ts-expect-error remove receives a chip, not an index
+// @ts-expect-error remove receives a payload object, not an index
 chips.off("remove", (index: number) => index.toFixed());
 // @ts-expect-error misspelled names are rejected
 chips.on("chnage", () => {});

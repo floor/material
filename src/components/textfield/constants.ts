@@ -4,7 +4,7 @@
  * Textfield variant constants
  * @category Components
  */
-export const TEXTFIELD_VARIANTS = {
+const TEXTFIELD_VARIANTS = {
   /** Filled variant with background and animated label */
   FILLED: "filled",
   /** Outlined variant with border and animated label */
@@ -15,7 +15,7 @@ export const TEXTFIELD_VARIANTS = {
  * Textfield state constants
  * @category Components
  */
-export const TEXTFIELD_STATES = {
+const TEXTFIELD_STATES = {
   /** Textfield is active (focused) */
   ACTIVE: "active",
   /** Textfield is inactive (not focused) */
@@ -28,7 +28,7 @@ export const TEXTFIELD_STATES = {
  * Textfield type constants
  * @category Components
  */
-export const TEXTFIELD_TYPES = {
+const TEXTFIELD_TYPES = {
   /** Standard text input */
   TEXT: "text",
   /** Password input with obscured characters */
@@ -51,7 +51,7 @@ export const TEXTFIELD_TYPES = {
  * Textfield event constants
  * @category Components
  */
-export const TEXTFIELD_EVENTS = {
+const TEXTFIELD_EVENTS = {
   /** Emitted on native input change; setValue() is silent */
   CHANGE: "change",
   /** Fired during input */
@@ -74,7 +74,7 @@ export const TEXTFIELD_EVENTS = {
  * Textfield density constants
  * @category Components
  */
-export const TEXTFIELD_DENSITY = {
+const TEXTFIELD_DENSITY = {
   /** Default density (56px height) */
   DEFAULT: "default",
   /** Compact density (40px height) */
@@ -85,7 +85,7 @@ export const TEXTFIELD_DENSITY = {
  * Default textfield configuration values
  * @category Components
  */
-export const TEXTFIELD_DEFAULTS = {
+const TEXTFIELD_DEFAULTS = {
   /** Default input type */
   TYPE: TEXTFIELD_TYPES.TEXT,
   /** Default visual variant */
@@ -108,7 +108,7 @@ export const TEXTFIELD_DEFAULTS = {
  * CSS class names used by the textfield component
  * @category Components
  */
-export const TEXTFIELD_CLASSES = {
+const TEXTFIELD_CLASSES = {
   /** Root element class */
   ROOT: "textfield",
   /** Input element class */
@@ -162,3 +162,29 @@ export const TEXTFIELD_CLASSES = {
   /** Multiline class */
   MULTILINE: "textfield--multiline",
 } as const;
+
+// Every exported identifier writes "text field" as two words (FLO-383); the
+// values (class names, event strings) are unchanged.
+export {
+  TEXTFIELD_VARIANTS as TEXT_FIELD_VARIANTS,
+  TEXTFIELD_STATES as TEXT_FIELD_STATES,
+  TEXTFIELD_TYPES as TEXT_FIELD_TYPES,
+  TEXTFIELD_EVENTS as TEXT_FIELD_EVENTS,
+  TEXTFIELD_DENSITY as TEXT_FIELD_DENSITY,
+  TEXTFIELD_DEFAULTS as TEXT_FIELD_DEFAULTS,
+  TEXTFIELD_CLASSES as TEXT_FIELD_CLASSES,
+  /** @deprecated Use TEXT_FIELD_VARIANTS: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
+  TEXTFIELD_VARIANTS,
+  /** @deprecated Use TEXT_FIELD_STATES: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
+  TEXTFIELD_STATES,
+  /** @deprecated Use TEXT_FIELD_TYPES: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
+  TEXTFIELD_TYPES,
+  /** @deprecated Use TEXT_FIELD_EVENTS: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
+  TEXTFIELD_EVENTS,
+  /** @deprecated Use TEXT_FIELD_DENSITY: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
+  TEXTFIELD_DENSITY,
+  /** @deprecated Use TEXT_FIELD_DEFAULTS: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
+  TEXTFIELD_DEFAULTS,
+  /** @deprecated Use TEXT_FIELD_CLASSES: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
+  TEXTFIELD_CLASSES,
+};

@@ -17,7 +17,7 @@ const setup = (config: TimePickerConfig = {}) => {
   const picker = mount(createTimePicker({
     value: "09:30", name: "appointment", type: TIME_PICKER_TYPE.INPUT, ...config,
     onChange: ({ value }) => callbacks.push(value),
-    onInput: ({ value }) => inputCallbacks.push(value),
+    onInput: ({ draftValue }) => inputCallbacks.push(draftValue),
     onConfirm: value => confirmCallbacks.push(value),
   }));
   const form = document.createElement("form");
@@ -28,8 +28,8 @@ const setup = (config: TimePickerConfig = {}) => {
     expect(submitted()).toBe(value);
     changes.push(value);
   });
-  picker.on("confirm", value => confirms.push(value));
-  picker.on("input", ({ value }) => drafts.push(value));
+  picker.on("confirm", ({ value }) => confirms.push(value));
+  picker.on("input", ({ draftValue }) => drafts.push(draftValue));
   const draft = () => drafts.at(-1) ?? picker.getValue();
   const submitted = () => new window.FormData(form).get("appointment");
   const field = (unit: string) => picker.dialogElement.querySelector<HTMLInputElement>(`[data-type="${unit}"]`)!;
