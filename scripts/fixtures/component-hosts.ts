@@ -3,11 +3,14 @@
 // `suppressHydrationWarning` would hide.
 //
 // A live property (`value`, `checked`, and the other names in `liveAttributes`)
-// is an attribute on the server, the markup's default, and a property in the
-// browser. Hydration leaves the attribute in the DOM; a client render never
-// writes it. The reader records the property, and the comparison is that
-// attribute against it: text against text, or a boolean attribute's presence
-// against `true` / `false`. An element that does not have the property keeps
+// is an attribute on the server when that prop was set, and a property in the
+// browser. A present hydrated attribute compares with the client element's
+// property: text against `String(property)`, or a boolean attribute's presence
+// against `true`. An absent attribute compares the two elements' properties.
+// The reader records each property on both, so two defaults (or the same value
+// set as a property) pass and two different properties fail. A boolean that is
+// absent passes against `false`, and fails against `true` unless the hydrated
+// property is also `true`. An element that does not have the property keeps
 // the attribute, so a shared name does not hide a real attribute.
 //
 // `style` differs only by serialization, and React 19's `nonce` is a property
@@ -71,6 +74,9 @@ const propertyText = (value: string | number | boolean | null | undefined): stri
   return String(value);
 };
 
+const hasOwn = (record: object, key: string): boolean =>
+  Object.prototype.hasOwnProperty.call(record, key);
+
 /** Text the live value contributes. A boolean is `""` when on and absent when off. */
 const liveText = (item: LiveAttribute, attribute: string | undefined, property: string | number | boolean | null | undefined, fromProperty: boolean): string | undefined => {
   if (item.presence) return (fromProperty ? property === true : attribute !== undefined) ? "" : undefined;
@@ -78,15 +84,29 @@ const liveText = (item: LiveAttribute, attribute: string | undefined, property: 
 };
 
 /**
- * Drops each recorded live attribute and puts back the side being compared:
- * the hydrated attribute, or the client property. Names with no recorded
- * property stay as attributes.
+ * Drops each recorded live attribute and puts back the side being compared.
+ * A present hydrated attribute is that attribute. An absent one is the
+ * hydrated element's own property (`ownProps`). The client side is its
+ * property. A name neither element records as a property stays an attribute.
  */
-const project = (attrs: Record<string, string>, props: ComponentHost["props"], fromProperty: boolean): Record<string, string> => {
+const project = (
+  attrs: Record<string, string>,
+  props: ComponentHost["props"],
+  fromProperty: boolean,
+  ownProps?: ComponentHost["props"],
+): Record<string, string> => {
   const next = { ...attrs };
   for (const item of liveAttributes) {
-    if (!Object.prototype.hasOwnProperty.call(props, item.property)) continue;
-    const attribute = Object.prototype.hasOwnProperty.call(attrs, item.attribute) ? attrs[item.attribute] : undefined;
+    const present = hasOwn(attrs, item.attribute);
+    const attribute = present ? attrs[item.attribute] : undefined;
+    // No attribute on the hydrated element: compare the two properties.
+    if (!fromProperty && !present) {
+      if (!ownProps || !hasOwn(ownProps, item.property)) continue;
+      const text = liveText(item, undefined, ownProps[item.property], true);
+      if (text !== undefined) next[item.attribute] = text;
+      continue;
+    }
+    if (!hasOwn(props, item.property)) continue;
     delete next[item.attribute];
     const text = liveText(item, attribute, props[item.property], fromProperty);
     if (text !== undefined) next[item.attribute] = text;
@@ -94,9 +114,9 @@ const project = (attrs: Record<string, string>, props: ComponentHost["props"], f
   return next;
 };
 
-/** Hydrated attributes, each recorded live property compared with the client element's property. */
+/** Hydrated attributes. A present one compares with the client property; an absent one compares the two properties. */
 export const comparableAttributes = (hydrated: ComponentHost, client: ComponentHost): Record<string, string> =>
-  normalize(project(hydrated.attrs, client.props, false));
+  normalize(project(hydrated.attrs, client.props, false, hydrated.props));
 
 /** Client-render attributes, with recorded live properties in the same form as the hydrated attribute. */
 export const clientAttributes = (client: ComponentHost): Record<string, string> =>
@@ -116,6 +136,9 @@ export const readComponentHosts = (query: { prefix: string; live: readonly LiveA
     }
     const props: ComponentHost["props"] = {};
     const target = el as unknown as Record<string, unknown>;
+    // Record the property on this element even when the attribute is absent.
+    // The same reader runs on the hydrated page and the client page, and an
+    // absent attribute is compared from these two properties.
     for (const item of query.live) {
       if (!(item.property in el)) continue;
       const value = target[item.property];
