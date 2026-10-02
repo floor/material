@@ -69,13 +69,8 @@ export const createSnackbarQueue = (
    * it is no longer queued and can be shown again.
    */
   const dropPending = (): void => {
-    for (const snackbar of pending.splice(0)) {
-      try {
-        snackbar._hide?.();
-      } catch {
-        /* its page is gone */
-      }
-    }
+    // A waiting snackbar is not on a page: telling it touches no DOM
+    for (const snackbar of pending.splice(0)) snackbar._hide?.();
   };
 
   const showNext = (): void => {

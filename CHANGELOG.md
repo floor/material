@@ -112,7 +112,9 @@ a listener annotated `(event: SearchEvent) => void` on those two is an error. Th
 `<m-timepicker>` component's `on` and `off` take the time picker's event map
 (`TimePickerEvents`) in place of any string and an untyped handler (FLO-547): a name outside
 it is an error, and each handler's argument is typed, so one annotated with another type, or
-an argument on `open`, `close` or `cancel`, is an error.
+an argument on `open`, `close` or `cancel`, is an error. The time picker's `isOpen` is a
+method (FLO-548): `picker.isOpen === true` and assigning it to a `boolean` are errors.
+`SnackbarState` gains `"queued"`, so a `switch` over it that had to be exhaustive is not.
 
 **Changes your compiler won't catch**
 
@@ -185,6 +187,19 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `onRemove` and a `chip.on("remove")` listener find the chip still in `getChips()` and on the
   page; the set then destroys it and emits its own `remove`. A listener added with `on` used
   to run after the set had destroyed and unlisted the chip.
+- **The time picker's `isOpen` is a method, `isOpen()` (FLO-548).** A leftover
+  `if (picker.isOpen)` compiles in JavaScript and is always true: `picker.isOpen` is now a
+  function. Call it.
+- **A snackbar waiting behind another is `"queued"`, not `"visible"` (FLO-548).** Right after
+  `show()`, `snackbar.state === "visible"` is true only if nothing else was on screen; it was
+  true at once. Use `snackbar.isOpen()`, or listen to `open`, which is emitted together with
+  the state turning `"visible"`.
+- **A snackbar hidden while it is queued emits no `close` and no `dismiss` (FLO-548).** It
+  was never open. It used to emit both, and was then shown anyway at its turn, with
+  `state` `"hidden"` and no way to hide it (measured). It now leaves the queue.
+- **A docked date picker opened with `open()` from a click outside it stays open.** That
+  click used to count as a click outside and closed it in the same task (measured: `open`,
+  then `close`). The next click outside closes it.
 - **Chip-set `add` and `remove`** factory handlers receive `{ value, chip }` and
   `{ value, chip, chipValue }`, not the chip; `<m-chips>`'s `remove` detail `value` is the
   remaining selection, and the removed id is `chipValue`.
@@ -236,6 +251,24 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **`<m-button>`** dispatches `change` for a toggle button.
 
 ### Changed (breaking)
+
+- **Snackbar, time picker and date picker follow the overlays' one open and close rule
+  (FLO-548).** When `open()` or `close()` (the snackbar's `show()` or `hide()`) returns, the
+  state getter has changed and the event has been emitted; opening an open one and closing a
+  closed one do nothing and emit nothing; `isOpen()` is a method on every overlay.
+  - **Snackbar:** `state` is `"queued"` between `show()` and its turn on screen, then
+    `"visible"`, with `open` emitted at that moment; it said `"visible"` while waiting. New
+    `isOpen()`, true only while visible; `state` stays. `hide()` on a queued snackbar gives up
+    its turn and emits nothing. A queued snackbar dropped by a `queueBehavior: 'replace'`
+    snackbar or by `clearSnackbars()` is `"hidden"` and can be shown again; it used to stay
+    `"visible"` for good, and `show()` on it did nothing. After `destroy()` the state is
+    `"hidden"` (it was left as it was), and a queued snackbar that is destroyed is not shown
+    at its turn.
+  - **Time picker:** the `isOpen` property is the method `isOpen()`.
+  - **Date picker:** new `isOpen()`. The click that calls `open()` no longer closes a docked
+    picker: the event that opened an overlay never dismisses it.
+  - **The tooltip is outside the rule, by design:** `show()` and `hide()` wait for their
+    delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`.
 
 - **mtrl is ESM-only (FLO-358).** The CommonJS bundle (`dist/index.cjs`) and the root's `require`
   condition are gone; `main` is the ESM entry. Every subpath was already import-only, and with
@@ -663,11 +696,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Added
 
+- **`isOpen()` on the snackbar and the date picker (FLO-548)**, as on every other overlay.
 - **Split button `setItems(items)` and `getItems()` (FLO-543).** `setItems` replaces the menu's
   items and returns the split button; `getItems` returns them. A split button created without
   `items` has no menu and `getItems` returns `[]`: the first non-empty `setItems` creates the
   menu, which then works as one created with items (and opens at once if the split button is
-  expanded). `setItems([])` empties the menu and keeps it.
+  expanded). `setItems([])` empties the menu and keeps it. After `destroy()` it does nothing.
 - **The navigation bar (FLO-305).** `createNavigationBar` and `<m-navigation-bar>` (with
   `<m-navigation-bar-item>`), and the React, Vue, Svelte and Solid components: M3 Expressive's bar
   for compact and medium windows, three to five destinations, from Compose's `ShortNavigationBar`.
