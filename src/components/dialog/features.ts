@@ -449,6 +449,8 @@ export const withVisibility =
   // trapped, `afteropen`, and the removal with `afterclose`. A call the other
   // way, or destroy(), cancels what is still pending.
   let opened = isOpen;
+  // When open() last ran, on the clock events are stamped with
+  let openedAt = 0;
   let showTimer: ReturnType<typeof setTimeout> | undefined;
   let afterOpenTimer: ReturnType<typeof setTimeout> | undefined;
   let afterCloseTimer: ReturnType<typeof setTimeout> | undefined;
@@ -651,7 +653,9 @@ export const withVisibility =
   };
 
   function handleEscKey(e: KeyboardEvent) {
-    if (e.key === "Escape" && visibility.isOpen()) {
+    // The key press that opened the dialog is still on its way up to the
+    // document: it is not a request to close what it has just opened
+    if (e.key === "Escape" && e.timeStamp > openedAt && visibility.isOpen()) {
       visibility.close();
     }
   }
@@ -723,6 +727,10 @@ export const withVisibility =
         container.appendChild(component.overlay);
       }
 
+      // An open dialog can be dismissed: Escape and the scrim, from now
+      openedAt = new Event("open").timeStamp;
+      setupEvents();
+
       // The dialog is open: say so before returning. A listener runs before
       // the surface is visible and before focus is in; `afteropen` is the
       // event for those.
@@ -742,9 +750,8 @@ export const withVisibility =
         );
         addClass(component.element, `${component.getClass("dialog")}--visible`);
 
-        // Setup focus trap and events
+        // Focus moves in once the surface is visible
         trapFocus();
-        setupEvents();
 
         if (typeof component.emit === "function") {
           afterOpenTimer = setTimeout(() => {
@@ -843,6 +850,7 @@ export const withVisibility =
       clearTimeout(showTimer);
       clearTimeout(afterOpenTimer);
       clearTimeout(afterCloseTimer);
+      cleanupEvents();
     },
   };
 

@@ -418,6 +418,10 @@ export interface DialogComponent {
    * with no `open`). The surface is shown, focus moves in and the animation
    * runs after that; `afteropen` is emitted once they have, never inside this
    * call. On an open dialog it does nothing and emits nothing.
+   *
+   * From then on Escape and a click on the scrim close it (`closeOnEscape`,
+   * `closeOnOverlayClick`). The event that opened it never does: a dialog
+   * opened from an Escape `keydown` stays open through that key press.
    * @returns Dialog component for method chaining
    * @example
    * // An `open` listener must be added before the call to hear it

@@ -207,6 +207,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   error. Add the listener before `open()`, or listen to `afteropen`.
 - **A dialog's `open` listener** runs before the surface is visible and before focus is in it:
   one that measures the dialog or moves focus belongs on `afteropen`.
+- **An open dialog answers Escape as soon as `open()` returns,** except the key press that
+  opened it. It ignored Escape and the scrim for its first 10 ms.
 - **`dialog.close()` on a closed dialog and `dialog.open()` on an open one** emit nothing. Code
   that counted on `close` or `afterclose` from a `close()` called "to be sure" no longer hears
   them.
@@ -435,45 +437,6 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `setValue`, `setActive`, `clear()` or button-group `select` stays silent). Chips are not part
   of this change. The bottom app bar's `onVisibilityChange` and the top app bar's `onScroll`
   have no matching event, so they stay callbacks and are not in the table.
-- **The dialog is open when `open()` returns, and closed when `close()` returns (FLO-548).**
-  The rule, for the dialog first and for every overlay by 1.0: when `open()` or `close()`
-  returns, `isOpen()` has changed and the event has been emitted (the cancellable `beforeopen`
-  or `beforeclose` first). The classes, the paint, the focus trap and the animation may follow.
-  A dialog created with `layer: "top"` and `<m-dialog>` already worked this way and are
-  unchanged; this is the factory dialog without `layer`, which emitted `open` and turned
-  `isOpen()` true 10 ms after the call. Migration: add every `open` listener before calling
-  `open()` (or pass it in the config's `on`), and move to `afteropen` what needs the dialog
-  visible or focus inside it.
-
-  ```ts
-  // 0.10: the listener was added in time, because `open` came 10 ms later
-  dialog.open();
-  dialog.on('open', build); // 1.0: never runs, so the dialog opens empty
-
-  // 1.0: add it before the call
-  dialog.on('open', build);
-  dialog.open();
-  ```
-
-  - **`open` is emitted inside `open()`.** A listener added after the call does not hear it:
-    add it before, or listen to `afteropen`. It runs before the surface is visible and before
-    focus is trapped; `afteropen` is the "visible, and focus is in" event.
-  - **`isOpen()` is the dialog's own state,** true on the line after `open()`. It no longer
-    reads the `--visible` class, which is still added 10 ms later so the surface has a state to
-    animate from.
-  - **`afteropen` and `afterclose` are unchanged in timing and are never emitted inside the
-    call,** even with `animationDuration: 0`: `afteropen` when the dialog is visible and focus
-    is in it, `afterclose` when it is removed. A listener added right after `open()` still
-    hears `afteropen`.
-  - **Repeat calls do nothing and emit nothing,** in both layers. `close()` on a closed dialog
-    emitted `beforeclose`, `close` and `afterclose` each time, and a second `open()` within
-    the 10 ms emitted `beforeopen` and `open` again.
-  - **The later call wins.** `open()` then `close()` at once ends closed and the surface is
-    never shown (it was shown 10 ms later, on a dialog that had emitted `close`); `close()`
-    then `open()` at once ends open and stays in the document (the pending removal took it
-    out). The call that lost emits no `afteropen` or `afterclose`.
-  - **`destroy()` right after `open()`** leaves nothing behind. The pending 10 ms timer used to
-    lock the page's scroll for a dialog that no longer existed.
 
   | Component | Option | Old argument | New argument |
   |---|---|---|---|
@@ -517,6 +480,48 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   Search `onClear`'s `.length` is `undefined`; the query is `event.value`. Search
   `suggestion.text` is `undefined`; the text is `event.suggestion.text`. The navigation rail's
   expand and collapse templates were `"undefined"` when the option was called with no argument.
+- **The dialog is open when `open()` returns, and closed when `close()` returns (FLO-548).**
+  The rule, for the dialog first and for every overlay by 1.0: when `open()` or `close()`
+  returns, `isOpen()` has changed and the event has been emitted (the cancellable `beforeopen`
+  or `beforeclose` first). The classes, the paint, the focus trap and the animation may follow.
+  A dialog created with `layer: "top"` and `<m-dialog>` already worked this way and are
+  unchanged; this is the factory dialog without `layer`, which emitted `open` and turned
+  `isOpen()` true 10 ms after the call. Migration: add every `open` listener before calling
+  `open()` (or pass it in the config's `on`), and move to `afteropen` what needs the dialog
+  visible or focus inside it.
+
+  ```ts
+  // 0.10: the listener was added in time, because `open` came 10 ms later
+  dialog.open();
+  dialog.on('open', build); // 1.0: never runs, so the dialog opens empty
+
+  // 1.0: add it before the call
+  dialog.on('open', build);
+  dialog.open();
+  ```
+
+  - **`open` is emitted inside `open()`.** A listener added after the call does not hear it:
+    add it before, or listen to `afteropen`. It runs before the surface is visible and before
+    focus is trapped; `afteropen` is the "visible, and focus is in" event.
+  - **`isOpen()` is the dialog's own state,** true on the line after `open()`. It no longer
+    reads the `--visible` class, which is still added 10 ms later so the surface has a state to
+    animate from.
+  - **`afteropen` and `afterclose` are unchanged in timing and are never emitted inside the
+    call,** even with `animationDuration: 0`: `afteropen` when the dialog is visible and focus
+    is in it, `afterclose` when it is removed. A listener added right after `open()` still
+    hears `afteropen`.
+  - **Repeat calls do nothing and emit nothing,** in both layers. `close()` on a closed dialog
+    emitted `beforeclose`, `close` and `afterclose` each time, and a second `open()` within
+    the 10 ms emitted `beforeopen` and `open` again.
+  - **The later call wins.** `open()` then `close()` at once ends closed and the surface is
+    never shown (it was shown 10 ms later, on a dialog that had emitted `close`); `close()`
+    then `open()` at once ends open and stays in the document (the pending removal took it
+    out). The call that lost emits no `afteropen` or `afterclose`.
+  - **An open dialog can be dismissed as soon as `open()` returns:** Escape and a click on the
+    scrim close it from then, not 10 ms later. One exception, the same for every overlay: the
+    event that opened it never dismisses it. A dialog opened from an Escape `keydown` handler
+    stays open through that key press, and the next Escape closes it.
+  - **`destroy()` right after `open()`** leaves nothing behind (see Fixed).
 
 ### Removed
 
@@ -723,6 +728,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A dialog destroyed right after `open()` no longer locks the page's scroll (FLO-548).** The
+  default-layer dialog shows its surface 10 ms after `open()`. `destroy()` in that window left
+  the timer running: it then set `overflow: hidden` on the body for a dialog that was gone,
+  with nothing left to undo it. `destroy()` now cancels what `open()` and
+  `close()` left pending, and removes the dialog's document listeners.
 - **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
   centre while animating in and be squeezed at the viewport edge. Placement now uses its full
   layout size; reduced-motion placement is unchanged.
