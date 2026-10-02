@@ -346,6 +346,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed (breaking)
 
+- **Progress: `canvas`, `resize`, `track`, `indicator` and `buffer` are no longer on
+  `ProgressComponent`.** They named how the indicator is drawn (one canvas; `track`,
+  `indicator` and `buffer` were that same canvas under the names of an older SVG), which
+  tied the public type to one way of drawing it. The objects are unchanged at run time;
+  the type no longer promises them, and how the indicator is drawn may change in a later
+  release. Reading `progress.canvas` in TypeScript is now an error (TS2339). Migration:
+  for the canvas, `progress.element.querySelector('canvas')`; nothing replaces `resize()`,
+  as the component observes its own size; `setBuffer()` and `getBuffer()`, the buffer's
+  value, are unchanged.
 - **Explicit contrast levels are opt-in (FLO-540).** `material/styles/base` and `material/themes/<name>`
   keep standard contrast and `prefers-contrast: more`. `data-theme-contrast="medium"` and `"high"`
   (material-color-utilities contrast 0.5 and 1.0; the values are unchanged) move to
