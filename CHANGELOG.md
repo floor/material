@@ -1126,7 +1126,43 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 - **A radio row grows with a wrapping label, and the circle stays centred on the label block.** The row was a fixed 48px, so a three-line label painted 12px above and below it, and two adjacent wrapping labels overlapped. The row is now at least 48px (`min-height`) with 4px of vertical padding, so it grows with the text and a one-line row stays 48px (circle 14px from the top and 10px from the inline start, text 12px from the top, 8px gap). The circle stays centred on the label block, as a labelled checkbox's box is. A horizontal group keeps `align-items: flex-start` and sets no `align-self`: options on one line share the start edge, and the next line starts after the tallest row. The pre-upgrade `<m-radio>` reserves the same minimum (`min-height: 48px`); a short label stays 48px.
 - **An unlabelled radio is centred in its 48px target.** The factory always appends `.mtrl-radios__text`, and an empty label still took the 8px inline-start margin, so the 40px control sat flush at the start: the 20px circle's centre was at 20 rather than 24 (inset 10/18) and the state layer's inset was 0/8. An empty text span now takes no space. The row would then be 40px wide, so the unlabelled row sets `min-width: 48px` and centres the control. The circle's inset is 14/14 and the state layer's inset is 4/4, in both directions. A label made only of spaces is not empty, so the factory still treats `label: " "` as a labelled option (the element trims its text, so this is the factory only). Material 3 radio button, Specs, Measurements: icon size 20dp, state layer size 40dp, target size 48dp.
+- **An unlabelled checkbox centres its box in its 48px target, state layer inside.** The 18px
+  box sat flush at the inline-start (start inset 0, end inset 30), so the 40px state layer
+  (`::before`, centred on the box) spanned −11 to 29 — 11px outside the target — and the
+  focus ring reached 16px before the root's edge. Factory and element, left-to-right and
+  right-to-left. With no label the root is its own target, so the box now keeps 15px on both
+  sides (M3 "Icon alignment Center-aligned", "Target size 48dp") and the state layer
+  ("State-layer size 40dp") lies 4px inside the root on all sides. A labelled checkbox, whose
+  root hugs box, gap and label, is unchanged. Before upgrade, write the tag with nothing between
+  its tags: a whitespace-only text node (a space, a line break) is not `:empty`, so such a host
+  keeps the labelled layout although the element then builds no label.
+- **An `<m-icon-button>`'s icon keeps its size token.** The element's inner `<button>` kept Chrome's
+  default padding, `1px 6px`, because the page reset's `button { padding: 0 }` is not in the shadow
+  root's adopted stylesheets, while the factory, which the page's global stylesheet does reach,
+  computes `0px`. Where the container left no room for icon and padding, the icon, a shrinkable flex
+  item, was drawn under its token: outlined xs narrow 14 against 20, outlined s narrow 18 against 24,
+  filled, tonal and standard xs narrow 16 against 20 and their s narrow 20 against 24, outlined xs
+  default width 18 against 20. The component stylesheet the element adopts now repeats the reset.
+- The package no longer contains a second copy of the README and licence under `dist/`.
 - **A button's asymmetric icon padding mirrors in right-to-left.** A size `s` button with a leading icon, and a text button at `xs` or `s` with a leading icon, keep 12px before the icon and 16px after the label in both directions. Under `dir="rtl"` those insets had stayed physical, so the start side was 16px and the end side 12px. The insets are logical and follow the direction the icon already follows, including into a shadow root whose `dir` ancestor is outside it.
+- **`<m-text-field>` in a right-to-left page is mirrored (FLO-562).** A `dir="rtl"` on an
+  ancestor is outside the element's shadow root, where the stylesheet's `[dir]` selectors do
+  not reach, and the class that stands in for it was set for the outlined variant only: a
+  filled `<m-text-field>` kept its left-to-right layout (label, icons, prefix and suffix on
+  the wrong side, the text's padding unswapped), and an outlined one mirrored its label and
+  its outline's corners only. A field now takes the `mtrl-text-field--rtl` class from its
+  computed direction in both variants, and the stylesheet mirrors on that class or on an
+  ancestor's `dir`. The same holds for a text field built by the factory inside a shadow
+  root of your own. In the light DOM a plain filled field is still mirrored by the
+  stylesheet alone, with no style read: it reads its direction only inside a shadow root,
+  once, in the task that created it. **A plain filled field that is attached to a shadow
+  root in a later task than the one that created it, or whose host is not yet connected
+  when that task ends, is not mirrored until you call `updatePositions()`.** A direction
+  changed afterwards is likewise picked up only by the field's next placement
+  (`updatePositions()`, or a setter that places), as it was for the outlined variant; the
+  field does not watch for either. Also fixed, in the light DOM too: **right to left, a
+  field with both a leading and a trailing icon** padded its text 16px on the leading icon's
+  side, under the icon; it is 52px on both.
 - **Text field: with reduced motion, the filled field's focus indicator no longer fades
   (FLO-299).** Its 0.2s transition was not in the field's reduced-motion rule, where the
   label, the outline, the icons and the affixes are. It also runs on the motion tokens now

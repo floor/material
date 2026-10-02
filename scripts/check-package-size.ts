@@ -155,11 +155,12 @@ try {
   // is 1,085,000, above 1,078,000, so it stays.
   // The text-field rename merged in: 1,073,789. Measured + 1%, up to 1,000,
   // is 1,085,000, above 1,078,000, so it stays.
-  // Name wording, Node 22.23.3 / npm 10.9.9: 1,084,820. The README (packed at
-  // the root and in dist/), the name:check script and the React SSR module
-  // comment. The same tree without those edits packed to 1,074,305, under
-  // 1,078,000. Measured + 1%, up to 1,000, is 1,096,000.
-  assert(pack.size < 1_096_000, "npm tarball exceeds 1,096,000 bytes");
+  // README and LICENSE are packed once (the build no longer copies them into dist);
+  // measured 1,075,142 (Node 22.23.3 / npm 10.9.9); measured + 1 %, rounded up to
+  // 1,000, is 1,086,000, above 1,078,000, so the ceiling returns to 1,078,000 and
+  // stays (this file's convention, stated in the comments above it: the rule's figure
+  // caps a raise; it does not move a ceiling the measurement is under).
+  assert(pack.size < 1_078_000, "npm tarball exceeds 1,078,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
@@ -186,6 +187,11 @@ try {
   // is 6,500,000, above 6,458,000, so it stays.
   // The text-field rename merged in: 6,438,071. Measured + 1%, up to 1,000,
   // is 6,503,000, above 6,458,000, so it stays.
+  // Duplicate README and LICENSE removed from dist, Node 22.23.3 / npm 10.9.9:
+  // 6,411,348. The README and LICENSE are packed once. Measured + 1%, up to
+  // 1,000, is 6,476,000, above 6,458,000, so the ceiling stays.
+  // Merged with FLO-299 (a8c24f7f), same packer: 6,410,644. Under 6,458,000,
+  // so the ceiling stays.
   assert(pack.unpackedSize < 6_458_000, "Unpacked package exceeds 6,458,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
@@ -359,7 +365,10 @@ try {
     // with the affix's place no longer a rule per state: 8,499.
     // The filled indicator's reduced-motion rule: 8,511. With main's package name taken in
     // (47a3ebcd): 8,528. 8,528 + 100 = 8,628, rounded up to 8,650.
-    { name: "select-css", code: "import 'material/styles/base'; import 'material/styles/select';", gzip: 8650 },
+    // FLO-562 the text field's insets as custom properties, mirrored by one block for both
+    // directions in place of a rule per case: 8,528 -> 8,268 against a8c24f7f.
+    // 8,268 + 100 = 8,368, rounded up to 8,400.
+    { name: "select-css", code: "import 'material/styles/base'; import 'material/styles/select';", gzip: 8400 },
     // FLO-406 contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 7,639 -> 7,111 gzip bytes (same packer).
     // 6,918 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.

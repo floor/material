@@ -15,6 +15,7 @@ import { chromium, type Page } from "playwright";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
+import { ICON_BUTTON_ICON_SIZES } from "../src/components/icon-button/constants";
 import { checkTextFieldLayout, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkRadiosLayout } from "./check-radios-layout";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
@@ -733,6 +734,81 @@ try {
     check("icon button: renders as the factory does with the global stylesheet");
   }
 
+  // A shadow root adopts the host's sheet, the ripple's and the
+  // component's; the page reset that zeroes a button's padding
+  // (src/styles/base/_reset.scss) is in none of them, so Chrome's user-agent
+  // padding (1px 6px) survives on the inner button and the icon, a shrinkable
+  // flex item, is drawn under its size token where the container has no room
+  // for both. Every variant, size and width, against the factory twin, which
+  // the page's global stylesheet does reach.
+  const iconButtonCases = ["standard", "filled", "tonal", "outlined"].flatMap((variant) =>
+    ["xs", "s", "m", "l", "xl"].flatMap((size) =>
+      ["narrow", "default", "wide"].map((width) => ({ variant, size, width }))));
+  await fresh(
+    page,
+    `${iconButtonCases
+      .map((c, i) => `<m-icon-button id="ip-${i}" aria-label="Icon" variant="${c.variant}" size="${c.size}" width="${c.width}" icon='${ICON}'></m-icon-button>`)
+      .join("")}<section id="factory"></section>`
+  );
+  {
+    const measured = await page.evaluate(
+      ({ cases, icon, tokens }) => {
+        type TwinWin = Window & { mtrl: { createIconButton: (c: object) => { element: HTMLElement } } };
+        const w = window as unknown as TwinWin;
+        const factory = document.getElementById("factory") as HTMLElement;
+        const tenth = (value: number): number => Math.round(value * 10) / 10;
+        const iconBox = (button: HTMLElement): { w: number; h: number } => {
+          const rect = (button.querySelector("svg") as SVGElement).getBoundingClientRect();
+          return { w: rect.width, h: rect.height };
+        };
+        const differences = new Set<string>();
+        const failures: string[] = [];
+        for (const [index, c] of cases.entries()) {
+          const host = document.getElementById(`ip-${index}`) as HTMLElement;
+          const element = host.shadowRoot?.querySelector("button") as HTMLElement;
+          const twin = w.mtrl.createIconButton({ icon, variant: c.variant, size: c.size, width: c.width, ariaLabel: "Icon" }).element;
+          factory.append(twin);
+          // Every standard property the element's button computes differently
+          // from the factory twin's: the page reset's work, which the shadow
+          // sheet has to repeat for the two to render alike.
+          const elementStyle = getComputedStyle(element);
+          const twinStyle = getComputedStyle(twin);
+          for (let i = 0; i < elementStyle.length; i++) {
+            const name = elementStyle[i];
+            if (name.startsWith("--")) continue;
+            if (elementStyle.getPropertyValue(name) !== twinStyle.getPropertyValue(name)) differences.add(name);
+          }
+          const token = (tokens as Record<string, number>)[c.size.toUpperCase()];
+          const elementIcon = iconBox(element);
+          const twinIcon = iconBox(twin);
+          const padding = `${elementStyle.paddingTop} ${elementStyle.paddingRight} ${elementStyle.paddingBottom} ${elementStyle.paddingLeft}`;
+          const noPadding =
+            elementStyle.paddingTop === "0px" &&
+            elementStyle.paddingRight === "0px" &&
+            elementStyle.paddingBottom === "0px" &&
+            elementStyle.paddingLeft === "0px";
+          const twinSized = Math.abs(elementIcon.w - twinIcon.w) <= 0.5 && Math.abs(elementIcon.h - twinIcon.h) <= 0.5;
+          const tokenSized = Math.abs(elementIcon.w - token) <= 0.5 && Math.abs(elementIcon.h - token) <= 0.5;
+          if (!noPadding || !twinSized || !tokenSized) {
+            failures.push(
+              `${c.variant} ${c.size} ${c.width}: element icon ${tenth(elementIcon.w)}x${tenth(elementIcon.h)} ` +
+                `(padding ${padding}), factory icon ${tenth(twinIcon.w)}x${tenth(twinIcon.h)}, token ${token}`
+            );
+          }
+        }
+        return { failures, differences: [...differences].sort() };
+      },
+      { cases: iconButtonCases, icon: ICON, tokens: ICON_BUTTON_ICON_SIZES }
+    );
+    if (measured.failures.length > 0) {
+      for (const line of measured.failures) console.log(`  FAIL ${line}`);
+      console.log(`  FAIL the inner button's computed properties that differ from the factory twin's: ${measured.differences.join(", ") || "none"}`);
+    }
+    assert.deepEqual(measured.failures, []);
+    assert.deepEqual(measured.differences, []);
+    check("icon button: every variant, size and width keeps the icon at its size token, as the factory does");
+  }
+
   // ---------------------------------------------------------------- fab
   await fresh(
     page,
@@ -1066,6 +1142,142 @@ try {
       [true, true, "on", null],
     ]);
     check("checkbox: a set leaves validity and FormData exact at once, and a valid one skips setting it again");
+  }
+
+  // A checkbox with no label is its own 48x48 target (M3 "Checkbox" -> Specs
+  // -> Measurements: "Target size 48dp", "Icon alignment Center-aligned",
+  // "State-layer size 40dp"; Compose centres the 18dp box in the 48dp minimum
+  // interactive size). A labelled root instead hugs box + 12px + label, so it
+  // has no free space and keeps the box at the inline-start: its measured
+  // layout below must not move.
+  {
+    const dirs = ["ltr", "rtl"] as const;
+    const states = ["unchecked", "checked", "indeterminate", "disabled"] as const;
+    const elements = (dir: string): string =>
+      states
+        .map(
+          (state) =>
+            `<m-checkbox id="u-${dir}-${state}" aria-label="Check"${state === "checked" ? " checked" : ""}${state === "disabled" ? " disabled" : ""}></m-checkbox>`
+        )
+        .join("") + `<m-checkbox id="l-${dir}">Label</m-checkbox>`;
+    await fresh(
+      page,
+      `${dirs.map((dir) => `<div dir="${dir}">${elements(dir)}</div>`).join("")}<section id="factory"></section>`
+    );
+
+    const measured = await page.evaluate(
+      ({ dirs, states }: { dirs: string[]; states: string[] }) => {
+        type Box = { left: number; top: number; right: number; bottom: number };
+        type Cb = HTMLElement & { indeterminate: boolean };
+        const w = window as unknown as Win & { mtrl: { createCheckbox: (c: object) => { element: HTMLElement } } };
+        const factory = document.getElementById("factory") as HTMLElement;
+        const r2 = (n: number): number => Math.round(n * 100) / 100;
+        const show = (r: Box): string => `[${r2(r.left)}, ${r2(r.top)}, ${r2(r.right)}, ${r2(r.bottom)}]`;
+        /** The element's component root inside its shadow root (the host is what the page holds). */
+        const inner = (host: HTMLElement): HTMLElement => (host.shadowRoot?.firstElementChild as HTMLElement) ?? host;
+        /** The state layer is the icon's ::before: inset -13px on the icon's padding box (2px border), 40x40. */
+        const layerRect = (icon: HTMLElement): Box => {
+          const iconRect = icon.getBoundingClientRect();
+          const outer = getComputedStyle(icon);
+          const layer = getComputedStyle(icon, "::before");
+          return {
+            left: iconRect.left + parseFloat(outer.borderLeftWidth) + parseFloat(layer.left),
+            top: iconRect.top + parseFloat(outer.borderTopWidth) + parseFloat(layer.top),
+            right: iconRect.left + parseFloat(outer.borderLeftWidth) + parseFloat(layer.left) + parseFloat(layer.width),
+            bottom: iconRect.top + parseFloat(outer.borderTopWidth) + parseFloat(layer.top) + parseFloat(layer.height),
+          };
+        };
+        const failures: string[] = [];
+        const layerFailures: string[] = [];
+        const labelFailures: string[] = [];
+
+        const centred = (root: HTMLElement, what: string): void => {
+          const rootRect = root.getBoundingClientRect();
+          const icon = root.querySelector(".mtrl-checkbox__icon") as HTMLElement;
+          const iconRect = icon.getBoundingClientRect();
+          const dx = Math.abs((iconRect.left + iconRect.right - rootRect.left - rootRect.right) / 2);
+          const dy = Math.abs((iconRect.top + iconRect.bottom - rootRect.top - rootRect.bottom) / 2);
+          if (dx > 0.5 || dy > 0.5) {
+            failures.push(
+              `${what}: box ${show(iconRect)} is off the root ${show(rootRect)} (centre by ${r2(dx)}px, ${r2(dy)}px)`
+            );
+          }
+          const layer = layerRect(icon);
+          if (layer.left < rootRect.left - 0.5 || layer.right > rootRect.right + 0.5 || layer.top < rootRect.top - 0.5 || layer.bottom > rootRect.bottom + 0.5) {
+            layerFailures.push(`${what}: state layer ${show(layer)} is not inside the root ${show(rootRect)}`);
+          }
+        };
+
+        // The labelled layout the fix must keep, as the sweep at 1dc3bc72 measured it
+        // (analysis/sweep/checkbox/measure.json, case "label": identical for the
+        // factory and the element and in both directions; the commits to 47a3ebcd are
+        // rename, docs and CI only). The pinned pixels carry no font: the box at the
+        // start, the label 30px in (the 18px box + the 12px gap), nothing after the
+        // label. The root's width and the box's end inset are derived from the label's
+        // own rendered width in this run (root = 30 + width, end = width + 12), so the
+        // check holds on any machine's sans-serif. The word "Label" rendered 41.19px
+        // here; that number is not asserted.
+        const labelled = (root: HTMLElement, what: string): void => {
+          const rootRect = root.getBoundingClientRect();
+          const rtl = getComputedStyle(root).direction === "rtl";
+          const iconRect = (root.querySelector(".mtrl-checkbox__icon") as HTMLElement).getBoundingClientRect();
+          const labelRect = (root.querySelector(".mtrl-checkbox__label") as HTMLElement).getBoundingClientRect();
+          const labelW = r2(labelRect.width);
+          const got = {
+            rootW: r2(rootRect.width),
+            boxStart: r2(rtl ? rootRect.right - iconRect.right : iconRect.left - rootRect.left),
+            boxEnd: r2(rtl ? iconRect.left - rootRect.left : rootRect.right - iconRect.right),
+            labelStart: r2(rtl ? rootRect.right - labelRect.right : labelRect.left - rootRect.left),
+            labelEnd: r2(rtl ? labelRect.left - rootRect.left : rootRect.right - labelRect.right),
+          };
+          const want = { rootW: 30 + labelW, boxStart: 0, boxEnd: labelW + 12, labelStart: 30, labelEnd: 0 };
+          const off = (a: number, b: number): boolean => Math.abs(a - b) > 0.5;
+          if (
+            off(got.rootW, want.rootW) || off(got.boxStart, want.boxStart) || off(got.boxEnd, want.boxEnd) ||
+            off(got.labelStart, want.labelStart) || off(got.labelEnd, want.labelEnd)
+          ) {
+            labelFailures.push(
+              `${what}: root ${got.rootW} (want 30 + label ${labelW}), box start ${got.boxStart} / end ${got.boxEnd} (want 0 / ${want.boxEnd}), ` +
+                `label start ${got.labelStart} / end ${got.labelEnd} (want 30 / 0)`
+            );
+          }
+        };
+
+        const hold = (dir: string, child: HTMLElement): HTMLElement => {
+          const holder = document.createElement("div");
+          holder.dir = dir;
+          holder.append(child);
+          factory.append(holder);
+          return child;
+        };
+        for (const dir of dirs) {
+          for (const state of states) {
+            const host = document.getElementById(`u-${dir}-${state}`) as Cb;
+            if (state === "indeterminate") host.indeterminate = true;
+            centred(inner(host), `element ${dir} ${state}`);
+            const twin = hold(
+              dir,
+              w.mtrl.createCheckbox({
+                ariaLabel: "Check",
+                checked: state === "checked",
+                indeterminate: state === "indeterminate",
+                disabled: state === "disabled",
+              }).element
+            );
+            centred(twin, `factory ${dir} ${state}`);
+          }
+          labelled(inner(document.getElementById(`l-${dir}`) as HTMLElement), `element ${dir} labelled`);
+          labelled(hold(dir, w.mtrl.createCheckbox({ label: "Label" }).element), `factory ${dir} labelled`);
+        }
+        return { failures, layerFailures, labelFailures };
+      },
+      { dirs: [...dirs], states: [...states] }
+    );
+    for (const line of [...measured.failures, ...measured.layerFailures, ...measured.labelFailures]) console.log(`  FAIL ${line}`);
+    assert.deepEqual(measured.failures, [], "the box must be centred in an unlabelled root");
+    assert.deepEqual(measured.layerFailures, [], "the state layer must lie inside an unlabelled root");
+    assert.deepEqual(measured.labelFailures, [], "the labelled layout must not move");
+    check("checkbox: an unlabelled box is centred in its 48px target, its state layer inside it, and the labelled layout is unchanged");
   }
 
   // ---------------------------------------------------------------- slider
@@ -1653,7 +1865,7 @@ try {
 
     // FLO-299: the layout against the M3 measurements, inside the shadow root
     await checkTextFieldLayout(page, "element");
-    check("text field: the layout at the M3 measurements, 52 fields (FLO-299)");
+    check("text field: the layout at the M3 measurements, 112 fields, in both directions (FLO-299, FLO-562)");
     await checkTextFieldReducedMotion(page, "element", null);
     check("text field: the filled indicator's fade stops with reduced motion (FLO-299)");
 
@@ -1785,6 +1997,118 @@ try {
     assert.notEqual(focusNotch.blurred, TRANSPARENT, "blur on an empty field closes it");
     await page.evaluate(() => ((document.getElementById("factory") as HTMLElement).innerHTML = ""));
     check("text field: focus opens the notch of an empty outlined field and blur closes it");
+
+    // FLO-562. A [dir='rtl'] ancestor outside a shadow root is invisible to the
+    // stylesheet inside it, so the mirroring must follow the --rtl class
+    // placement.ts sets from the computed direction. Four fields under
+    // <div dir="rtl"> — filled and outlined, each a factory in the light DOM
+    // and an <m-text-field> — each with a label, a value and both icons, and a
+    // filled element carrying a prefix and a suffix besides, and one with a
+    // leading icon and a prefix. Each of those two has a twin without the
+    // ancestor, as the mirror to swap with.
+    const mirror = await page.evaluate(async (icon) => {
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement } } };
+      const host = document.getElementById("factory") as HTMLElement;
+      const attrs = `label="Right to left" value="Ada" leading-icon='${icon}' trailing-icon='${icon}'`;
+      host.innerHTML = `<div dir="rtl" style="display:grid;gap:24px;width:320px">
+        <div id="m-filled-factory"></div>
+        <div id="m-outlined-factory"></div>
+        <m-text-field id="m-filled-element" variant="filled" ${attrs}></m-text-field>
+        <m-text-field id="m-outlined-element" variant="outlined" ${attrs}></m-text-field>
+        <m-text-field id="m-affix-element" variant="filled" label="Amount" value="12" prefix-text="$" suffix-text="USD"></m-text-field>
+        <m-text-field id="m-icon-prefix-element" variant="filled" label="Amount" value="12" prefix-text="$" leading-icon='${icon}'></m-text-field>
+      </div>
+      <div style="display:grid;gap:24px;width:320px">
+        <m-text-field id="m-affix-twin" variant="filled" label="Amount" value="12" prefix-text="$" suffix-text="USD"></m-text-field>
+        <m-text-field id="m-icon-prefix-twin" variant="filled" label="Amount" value="12" prefix-text="$" leading-icon='${icon}'></m-text-field>
+      </div>`;
+      (document.getElementById("m-filled-factory") as HTMLElement).append(
+        w.mtrl.createTextField({ variant: "filled", label: "Right to left", value: "Ada", leadingIcon: icon, trailingIcon: icon }).element,
+      );
+      (document.getElementById("m-outlined-factory") as HTMLElement).append(
+        w.mtrl.createTextField({ variant: "outlined", label: "Right to left", value: "Ada", leadingIcon: icon, trailingIcon: icon }).element,
+      );
+      // placement, the class toggle and the label's transition
+      await new Promise((r) => setTimeout(r, 500));
+      const round = (n: number): number => Math.round(n * 100) / 100;
+      const box = (el: Element | null): { left: number; right: number; width: number } => {
+        const { left, right, width } = el?.getBoundingClientRect() ?? new DOMRect();
+        return { left: round(left), right: round(right), width: round(width) };
+      };
+      const measure = (id: string) => {
+        const wrapper = document.getElementById(id) as HTMLElement;
+        const root = (wrapper.shadowRoot?.firstElementChild as HTMLElement | null) ?? (wrapper.firstElementChild as HTMLElement);
+        const part = (name: string): HTMLElement | null => root.querySelector(`[class*="text-field__${name}"]`);
+        const input = root.querySelector("input") as HTMLInputElement;
+        const style = getComputedStyle(input);
+        return {
+          field: box(root), label: box(root.querySelector("label")),
+          leading: box(part("leading-icon")), trailing: box(part("trailing-icon")),
+          prefix: box(part("prefix")), suffix: box(part("suffix")),
+          direction: style.direction,
+          paddingLeft: round(parseFloat(style.paddingLeft)), paddingRight: round(parseFloat(style.paddingRight)),
+        };
+      };
+      return {
+        "filled factory": measure("m-filled-factory"), "outlined factory": measure("m-outlined-factory"),
+        "filled element": measure("m-filled-element"), "outlined element": measure("m-outlined-element"),
+        "filled element, prefix and suffix": measure("m-affix-element"), affixTwin: measure("m-affix-twin"),
+        "filled element, leading icon and prefix": measure("m-icon-prefix-element"), iconPrefixTwin: measure("m-icon-prefix-twin"),
+      };
+    }, ICON);
+    type Measured = (typeof mirror)[keyof typeof mirror];
+    const line = (name: string, m: Measured): string =>
+      `${name}: label [${m.label.left}, ${m.label.right}], leading [${m.leading.left}, ${m.leading.right}], ` +
+      `trailing [${m.trailing.left}, ${m.trailing.right}], ${m.direction}, padding ${m.paddingLeft}/${m.paddingRight}` +
+      (m.prefix.width ? `, prefix [${m.prefix.left}, ${m.prefix.right}]` : "") + (m.suffix.width ? `, suffix [${m.suffix.left}, ${m.suffix.right}]` : "");
+    const rtlFailures: string[] = [];
+    const mirrorFailure = (name: string, m: Measured, withIcons: boolean): void => {
+      const middle = m.field.left + m.field.width / 2;
+      const inside = (edge: number, ref: number): boolean => Math.abs(edge - ref) <= 1.5;
+      if (!(m.label.left > middle))
+        rtlFailures.push(`${name}: the label's left edge ${m.label.left} is not in the right half (past ${middle})`);
+      if (withIcons) {
+        if (m.leading.left <= middle || !inside(m.leading.right, m.field.right - 12))
+          rtlFailures.push(`${name}: the leading icon [${m.leading.left}, ${m.leading.right}] is not at the right edge (12 from ${m.field.right})`);
+        if (m.trailing.right >= middle || !inside(m.trailing.left, m.field.left + 12))
+          rtlFailures.push(`${name}: the trailing icon [${m.trailing.left}, ${m.trailing.right}] is not at the left edge (12 from ${m.field.left})`);
+      }
+      if (m.direction !== "rtl") rtlFailures.push(`${name}: the input's computed direction is ${m.direction}`);
+    };
+    for (const [name, m, withIcons] of [
+      ["filled factory", mirror["filled factory"], true],
+      ["outlined factory", mirror["outlined factory"], true],
+      ["filled element", mirror["filled element"], true],
+      ["outlined element", mirror["outlined element"], true],
+      ["filled element, prefix and suffix", mirror["filled element, prefix and suffix"], false],
+      ["filled element, leading icon and prefix", mirror["filled element, leading icon and prefix"], false],
+    ] as const) {
+      console.log(`  rtl ${line(name, m)}`);
+      mirrorFailure(name, m, withIcons);
+      // Both icons inset the text by 52 on their sides (12dp, the 24dp icon,
+      // 16dp): mirrored, the pair is still 52/52.
+      if (withIcons && (m.paddingLeft !== 52 || m.paddingRight !== 52))
+        rtlFailures.push(`${name}: the input's padding ${m.paddingLeft}/${m.paddingRight} is not the icons' 52/52`);
+    }
+    const affix = mirror["filled element, prefix and suffix"];
+    if (affix.prefix.left <= affix.field.left + affix.field.width / 2 || !(Math.abs(affix.field.right - affix.prefix.right - 16) <= 1.5))
+      rtlFailures.push(`filled element, prefix and suffix: the prefix [${affix.prefix.left}, ${affix.prefix.right}] is not at the right edge`);
+    if (affix.suffix.right >= affix.field.left + affix.field.width / 2 || !(Math.abs(affix.suffix.left - affix.field.left - 16) <= 1.5))
+      rtlFailures.push(`filled element, prefix and suffix: the suffix [${affix.suffix.left}, ${affix.suffix.right}] is not at the left edge`);
+    if (Math.abs(affix.paddingRight - mirror.affixTwin.paddingLeft) > 0.5 || Math.abs(affix.paddingLeft - mirror.affixTwin.paddingRight) > 0.5)
+      rtlFailures.push(`filled element, prefix and suffix: the input's padding ${affix.paddingLeft}/${affix.paddingRight} is not the twin's ${mirror.affixTwin.paddingRight}/${mirror.affixTwin.paddingLeft} swapped`);
+    // The icon, the prefix, then the text, from the right: the prefix 52dp
+    // in, and the input's padding the left-to-right twin's, swapped
+    const iconPrefix = mirror["filled element, leading icon and prefix"];
+    if (Math.abs(iconPrefix.field.right - iconPrefix.leading.right - 12) > 0.5)
+      rtlFailures.push(`filled element, leading icon and prefix: the leading icon [${iconPrefix.leading.left}, ${iconPrefix.leading.right}] is not 12 from the right edge`);
+    if (Math.abs(iconPrefix.field.right - iconPrefix.prefix.right - 52) > 0.5)
+      rtlFailures.push(`filled element, leading icon and prefix: the prefix [${iconPrefix.prefix.left}, ${iconPrefix.prefix.right}] is not 52 from the right edge`);
+    if (Math.abs(iconPrefix.paddingRight - mirror.iconPrefixTwin.paddingLeft) > 0.5 || Math.abs(iconPrefix.paddingLeft - mirror.iconPrefixTwin.paddingRight) > 0.5)
+      rtlFailures.push(`filled element, leading icon and prefix: the input's padding ${iconPrefix.paddingLeft}/${iconPrefix.paddingRight} is not the twin's ${mirror.iconPrefixTwin.paddingRight}/${mirror.iconPrefixTwin.paddingLeft} swapped`);
+    assert.deepEqual(rtlFailures, [], rtlFailures.join("\n"));
+    await page.evaluate(() => ((document.getElementById("factory") as HTMLElement).innerHTML = ""));
+    check("text field: mirrors under dir=rtl in the light DOM and across the shadow boundary, filled and outlined (FLO-562)");
 
     const layout = await page.evaluate(() => {
       const host = document.getElementById("factory") as HTMLElement;
