@@ -5242,6 +5242,169 @@ try {
     check("list: rows match the factory's size and colours, selected and not");
   }
 
+  // Expressive list shape (m3.material.io/components/lists/specs, 2026-10-02).
+  // An unselected row is 4px where it meets another row and 16px on the outer
+  // corners of a run; hover is 12px; focus and press are 16px. A selected row
+  // is 16px on every corner, including hover, focus and press. The state layer
+  // and the focus ring take that same radius. Factory and element, both directions.
+  {
+    const items = ["Network", "Connected", "Sound", "Privacy"] as const;
+    const rest = {
+      Network: "16px 16px 4px 4px",
+      Connected: "4px 4px 4px 4px",
+      Sound: "16px 16px 16px 16px",
+      Privacy: "4px 4px 16px 16px",
+    };
+    const markup = (dir: string): string =>
+      `<div dir="${dir}"><m-list id="shape-${dir}" aria-label="Element ${dir}" value="c">${
+        items.map((label, i) => `<m-list-item value="${"abcd"[i]}">${label}</m-list-item>`).join("")
+      }</m-list></div>`;
+    type RowShape = {
+      headline: string; row: string; action: string; layer: string;
+      opacity: string; inset: string; outlineWidth: string; outlineStyle: string;
+      focusVisible: boolean; boxDelta: number;
+    };
+    const read = (listName: string): Promise<RowShape[]> => page.evaluate((listName) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`);
+      const root = (list?.shadowRoot ?? list) as ParentNode;
+      const four = (style: CSSStyleDeclaration): string => [
+        style.borderTopLeftRadius, style.borderTopRightRadius,
+        style.borderBottomRightRadius, style.borderBottomLeftRadius,
+      ].join(" ");
+      return [...root.querySelectorAll('[role="listitem"]')].map((row) => {
+        const action = row.querySelector("button") as HTMLElement;
+        const layer = getComputedStyle(action, "::before");
+        const actionStyle = getComputedStyle(action);
+        const rowBox = row.getBoundingClientRect();
+        const actionBox = action.getBoundingClientRect();
+        return {
+          headline: row.querySelector('[class*="headline"]')?.textContent ?? "",
+          row: four(getComputedStyle(row)),
+          action: four(actionStyle),
+          layer: four(layer),
+          opacity: layer.opacity,
+          inset: [layer.top, layer.right, layer.bottom, layer.left].join(" "),
+          outlineWidth: actionStyle.outlineWidth,
+          outlineStyle: actionStyle.outlineStyle,
+          focusVisible: action.matches(":focus-visible"),
+          boxDelta: Math.max(
+            Math.abs(rowBox.left - actionBox.left), Math.abs(rowBox.top - actionBox.top),
+            Math.abs(rowBox.width - actionBox.width), Math.abs(rowBox.height - actionBox.height),
+          ),
+        };
+      });
+    }, listName);
+    const away = (): Promise<void> => page.mouse.move(880, 680);
+    const button = (listName: string, item: string) =>
+      page.getByRole("list", { name: listName }).getByRole("button", { name: item, exact: true });
+    const focusItem = async (listName: string, item: string): Promise<void> => {
+      await page.evaluate(() => {
+        const active = document.activeElement as HTMLElement | null;
+        (active?.shadowRoot?.activeElement as HTMLElement | null)?.blur();
+        active?.blur();
+      });
+      for (let i = 0; i < 8; i++) {
+        await page.keyboard.press("Tab");
+        const hit = await page.evaluate(({ listName, item }) => {
+          const list = document.querySelector(`[aria-label="${listName}"]`);
+          const light = document.activeElement as HTMLElement | null;
+          const button = (list?.shadowRoot?.activeElement ?? (list?.contains(light) ? light : null)) as HTMLElement | null;
+          const headline = button?.closest('[role="listitem"]')?.querySelector('[class*="headline"]')?.textContent;
+          return button?.matches(":focus-visible") === true && headline === item;
+        }, { listName, item });
+        if (hit) return;
+      }
+      throw new Error(`no focus-visible on ${listName} / ${item}`);
+    };
+    const hold = async (listName: string, item: string): Promise<void> => {
+      const box = await button(listName, item).boundingBox();
+      if (!box) throw new Error(`no box for ${listName} / ${item}`);
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+    };
+
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const kind of ["element", "factory"] as const) {
+        const listName = kind === "element" ? `Element ${dir}` : `Factory ${dir}`;
+        await fresh(page, `${markup(dir)}<section id="factory"></section>`);
+        if (kind === "factory") {
+          await page.evaluate(({ dir, items }) => {
+            const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+            const list = w.mtrl.createList({
+              ariaLabel: `Factory ${dir}`,
+              trackSelection: true,
+              items: items.map((headline, i) => ({ id: "abcd"[i], headline })),
+              initialSelection: ["c"],
+            });
+            document.getElementById("factory")?.append(list.element);
+            document.getElementById(`shape-${dir}`)?.remove();
+          }, { dir, items: [...items] });
+          await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+        }
+        const where = `${kind} ${dir}`;
+        const failures: string[] = [];
+        const expectRows = (rows: RowShape[], want: Record<string, string>, interactive?: string): void => {
+          for (const row of rows) {
+            const radius = want[row.headline];
+            if (!radius) { failures.push(`${where}: unexpected row ${row.headline}`); continue; }
+            if (row.row !== radius) failures.push(`${where} ${row.headline} row ${row.row} != ${radius}`);
+            if (row.action !== radius) failures.push(`${where} ${row.headline} action ${row.action} != ${radius}`);
+            if (row.layer !== radius) failures.push(`${where} ${row.headline} layer ${row.layer} != ${radius}`);
+            if (row.inset !== "0px 0px 0px 0px") failures.push(`${where} ${row.headline} layer inset ${row.inset}`);
+            if (row.boxDelta > 0.5) failures.push(`${where} ${row.headline} layer box is ${row.boxDelta}px off the row`);
+            if (interactive === row.headline) {
+              if (!(Number(row.opacity) > 0)) failures.push(`${where} ${row.headline} layer opacity ${row.opacity}`);
+            }
+          }
+        };
+        await away();
+        expectRows(await read(listName), rest);
+
+        await button(listName, "Connected").hover();
+        expectRows(await read(listName), { ...rest, Connected: "12px 12px 12px 12px" }, "Connected");
+        await away();
+        await button(listName, "Sound").hover();
+        expectRows(await read(listName), rest, "Sound");
+        await away();
+
+        await focusItem(listName, "Connected");
+        const focused = await read(listName);
+        expectRows(focused, { ...rest, Connected: "16px 16px 16px 16px" }, "Connected");
+        const connected = focused.find((row) => row.headline === "Connected");
+        if (!connected?.focusVisible || connected.outlineWidth !== "2px" || connected.outlineStyle !== "solid") {
+          failures.push(`${where} Connected focus ring ${connected?.outlineWidth} ${connected?.outlineStyle} visible=${connected?.focusVisible}`);
+        }
+        await focusItem(listName, "Sound");
+        const focusedSelected = await read(listName);
+        expectRows(focusedSelected, rest, "Sound");
+        const sound = focusedSelected.find((row) => row.headline === "Sound");
+        if (!sound?.focusVisible || sound.outlineWidth !== "2px" || sound.outlineStyle !== "solid") {
+          failures.push(`${where} Sound focus ring ${sound?.outlineWidth} ${sound?.outlineStyle} visible=${sound?.focusVisible}`);
+        }
+        await page.evaluate(() => {
+          const active = document.activeElement as HTMLElement | null;
+          (active?.shadowRoot?.activeElement as HTMLElement | null)?.blur();
+          active?.blur();
+        });
+
+        await hold(listName, "Sound");
+        expectRows(await read(listName), rest, "Sound");
+        await page.mouse.up();
+        await hold(listName, "Connected");
+        const pressed = await read(listName);
+        const pressedRow = pressed.find((row) => row.headline === "Connected");
+        if (pressedRow?.row !== "16px 16px 16px 16px" || pressedRow.layer !== pressedRow.row || pressedRow.action !== pressedRow.row) {
+          failures.push(`${where} Connected pressed row ${pressedRow?.row} action ${pressedRow?.action} layer ${pressedRow?.layer}`);
+        }
+        if (!(Number(pressedRow?.opacity) > 0)) failures.push(`${where} Connected pressed opacity ${pressedRow?.opacity}`);
+        await page.mouse.up();
+
+        assert.deepEqual(failures, [], `${where}: the state layer must take the row's expressive shape`);
+        check(`list: ${where}, the state layer takes the row's expressive shape`);
+      }
+    }
+  }
+
   // ---------------------------------------------------------------- list defaults
   {
     type List = HTMLElement & { value: string | null; values: string[]; component: unknown };
