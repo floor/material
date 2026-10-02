@@ -69,6 +69,8 @@ The text field's tag, element name, CSS classes, event names and constant values
 | `DEFAULT_DATE_FORMAT` from `mtrl/components/datepicker` | the same from `mtrl/components/datepicker/constants` |
 | the shape steps `extra-tiny`, `tiny`, `pill` | literal `1px`, `2px`; `full` for `pill` |
 | Sass `$mtrl-sys-shape` | `v.shape(<step>)` |
+| `select.menu` (the menu inside a select) | the select's own `open()`, `close()`, `isOpen()`, `getOptions()`, `setOptions()` and its `open`, `close` and `change` events. The `menu` config option (`container`, `maxHeight`, …) stays |
+| `splitButton.menu` (the menu inside a split button) | `expand()`, `collapse()`, `isExpanded()`, the `expand`, `collapse` and `select` events, and the new `setItems()` and `getItems()` |
 
 Removed with nothing in their place, because nothing read them or they had no effect: a dialog
 button's `color`, `TOOLTIP_DEFAULTS.RICH`, the checkbox's `variant`, `CheckboxVariant` and
@@ -471,6 +473,14 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Removed
 
+- **`select.menu` and `splitButton.menu` (FLO-543).** The menu inside a select or a split button
+  is no longer a member of either: a public handle on an inner component is what would stop the
+  menu from being loaded on demand later. Both were marked `@deprecated` in 0.10.6. A leftover
+  `.menu` is a compile error in TypeScript; in JavaScript it reads `undefined` (measured), so a
+  call through it throws a `TypeError`. Use the component's own methods and events (the
+  migration table lists them). Changing a split button's items after creation, which only
+  `splitButton.menu.setItems()` did, is `splitButton.setItems()`. The select has no public way
+  to change its `placement` after creation; `<m-select>`'s `placement` attribute still does.
 - **The options 0.10 deprecated are removed**, first those it promised to remove in 1.0. Migration:
 
   | 0.10 | 1.0 |
@@ -581,6 +591,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Added
 
+- **Split button `setItems(items)` and `getItems()` (FLO-543).** `setItems` replaces the menu's
+  items and returns the split button; `getItems` returns them. A split button created without
+  `items` has no menu and `getItems` returns `[]`: the first non-empty `setItems` creates the
+  menu, which then works as one created with items (and opens at once if the split button is
+  expanded). `setItems([])` empties the menu and keeps it.
 - **The navigation bar (FLO-305).** `createNavigationBar` and `<m-navigation-bar>` (with
   `<m-navigation-bar-item>`), and the React, Vue, Svelte and Solid components: M3 Expressive's bar
   for compact and medium windows, three to five destinations, from Compose's `ShortNavigationBar`.
@@ -640,6 +655,14 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **What `open()` has done when it returns is documented and pinned by tests (FLO-543).** The
+  surface may be painted after `open()` returns; the state is not deferred. On return: a
+  select's `isOpen()` is true, its input has `aria-expanded="true"` and `open` has been emitted;
+  a split button's `expand()` has set `isExpanded()` and emitted `expand` and `change`; a time
+  picker's `isOpen` is true and `open` has been emitted; a date picker has emitted `open`; a
+  dialog has run `beforeopen`, and with `layer: "top"` it is open and has emitted `open`. None
+  of this changed in 1.0. The first ArrowDown, ArrowUp, Enter, Space, Home, End or typed character on a closed
+  select opens it and is not lost.
 - **SSR docs (FLO-419).** The README names every attribute whose value is markup, including `avatar` and `leading-avatar`, which are not a person's name or an image URL; `FabMenuConfig.closeIcon` is markup too. The React and Svelte bridges build the server-rendered shadow root without the context of providers above the component (FLO-517).
 - CI's Solid and Vue SSR runs on the lowest supported peer version are ordinary commands,
   `solid-ssr:floor` and `vue-ssr:floor` (FLO-426). Each reads the floor from `peerDependencies`,

@@ -354,7 +354,8 @@ export interface DatePickerComponent<V = DatePickerValue> {
   getClass: (name: string) => string;
   
   /**
-   * Opens the datepicker dropdown/modal
+   * Opens the datepicker dropdown/modal. When it returns, `open` has been
+   * emitted; the surface may be painted after `open()` returns.
    * @returns The datepicker component for chaining
    */
   open: () => DatePickerComponent<V>;

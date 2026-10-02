@@ -1,5 +1,6 @@
 // src/components/select/types.ts
-import type { MenuColor, MenuComponent, MenuVariant } from "../menu/types";
+import type { MenuColor, MenuVariant } from "../menu/types";
+import type { MenuOwner } from "../menu/inner";
 import type { TextFieldComponent } from "../textfield/types";
 
 /**
@@ -196,11 +197,6 @@ export interface SelectComponent {
   textField: TextFieldComponent;
 
   /**
-   * The menu component
-   */
-  menu: MenuComponent;
-
-  /**
    * Gets the select's current value (selected option id)
    */
   getValue: () => string | null;
@@ -241,7 +237,9 @@ export interface SelectComponent {
   setOptions: (options: SelectOption[]) => SelectComponent;
 
   /**
-   * Opens the select menu
+   * Opens the select menu. When it returns, `isOpen()` is true, the input has
+   * `aria-expanded="true"` and `open` has been emitted; the surface may be
+   * painted after `open()` returns.
    * @param interactionType - The type of interaction ('mouse' or 'keyboard')
    * @returns Select component for chaining
    */
@@ -434,10 +432,9 @@ export interface SelectController {
  * Base component interface
  * @internal
  */
-export interface BaseComponent {
+export interface BaseComponent extends MenuOwner {
   element: HTMLElement;
   textField?: TextFieldComponent;
-  menu?: MenuComponent;
   select?: SelectController;
   // Narrowed to match the public signature above. `handler: Function` is a
   // wider supertype of what the component actually accepts, and under
