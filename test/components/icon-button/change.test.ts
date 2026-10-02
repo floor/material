@@ -20,7 +20,7 @@ test("a click emits change with { selected, value }, each way; value is getValue
   expect(seen).toEqual([[{ selected: true, value: "fav" }, "fav"], [{ selected: false, value: "fav" }, "fav"]]);
 });
 
-test("1.0 dispatches no DOM toggle: a click emits change, and a leftover toggle listener never fires", () => {
+test("3.0.0 dispatches no DOM toggle: a click emits change, and a leftover toggle listener never fires", () => {
   const button = mount(createIconButton({ toggle: true, icon: "<svg></svg>", ariaLabel: "Favorite" }));
   const toggles: unknown[] = [];
   const changes: unknown[] = [];

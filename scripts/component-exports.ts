@@ -4,7 +4,7 @@
  * `material/components/<name>/constants` subpath's (FLO-384).
  *
  * `material/components/<name>` is public API like the root (FLO-351): every name
- * its index exports is a 1.x promise. This reads every component index with
+ * its index exports is a 3.x promise. This reads every component index with
  * the type checker, values and types, records each export as public or
  * deprecated (an `@deprecated` tag on its re-export), and pins the result in
  * scripts/fixtures/component-exports.json.

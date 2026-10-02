@@ -136,7 +136,7 @@ describe("generated themes", () => {
     expect([...themeStyles, ...standaloneThemes].sort()).toEqual([...files].sort());
   });
 
-  test("1.0.0 removed the deprecated themes: no file, manifest entry or forward (FLO-428)", () => {
+  test("3.0.0 removed the deprecated themes: no file, manifest entry or forward (FLO-428)", () => {
     const removed = ["material", "winter", "browngreen", "legacy"];
     const files = readdirSync(THEMES_DIR).map((file) => file.slice(1, -".scss".length));
     const index = readFileSync(`${THEMES_DIR}/_index.scss`, "utf8");

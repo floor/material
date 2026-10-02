@@ -87,7 +87,7 @@ test('toggle clicks flip aria-pressed and the selected class, and emit change', 
   const button = make({ toggle: true });
   const states: boolean[] = [];
   let emitterToggles = 0;
-  // 1.0 has no toggle event, on the emitter or on the element: change reports the state.
+  // 3.0.0 has no toggle event, on the emitter or on the element: change reports the state.
   Reflect.apply(Reflect.get(button, 'on'), button, ['toggle', () => emitterToggles++]);
   button.element.addEventListener('toggle', () => emitterToggles++);
   button.on('change', payload => states.push(payload.selected));

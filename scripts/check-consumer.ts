@@ -53,7 +53,7 @@ try {
   }
   console.log("JSX entries: material/react/jsx and material/solid/jsx type a bare tag from the packed package");
 
-  // The component subpaths are an explicit list since 1.0.0 (FLO-381): each one
+  // The component subpaths are an explicit list since 3.0.0 (FLO-381): each one
   // resolves from the packed package, and the folders inside a component, which
   // the old `./components/*` pattern matched across slashes, do not.
   const componentSubpaths = Object.keys((await Bun.file("package.json").json()).exports)
@@ -92,8 +92,8 @@ console.log(JSON.stringify(out));
   // (FLO-416's multiline SSR fix), the forward merge 9,603; CI read just under 9,600.
   // text field 9,000 to 9,600 for FLO-301 (the asterisk, the live error, the trailing button):
   // 8,953 to 9,520 against 7cd57a6.
-  // addClass from its subpath since 1.0.0 removed it from the root (FLO-351)
-  // addClass 603 and button 8,447 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+  // addClass from its subpath since 3.0.0 removed it from the root (FLO-351)
+  // addClass 603 and button 8,447 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
   // addClass 603; 100 B floor, 750 against b9dab36e, Node 22.23.3 / npm 10.9.9.
   for (const [name, symbol, budget, from] of [
     ["addClass", "addClass", 750, "material/core/dom"], ["text-field", "createTextField", 9700, "material"], ["button", "createButton", 8550, "material"],

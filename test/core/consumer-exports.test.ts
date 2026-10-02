@@ -19,7 +19,7 @@
 // is a breaking change for a consumer we can see, and should be a decision
 // rather than an accident.
 //
-// 1.0.0 made one (FLO-351): the composition core left the root for
+// 3.0.0 made one (FLO-351): the composition core left the root for
 // material/core/compose, and EventCallback for material/core/state. mtrl-addons moves
 // with its own 1.0 (floor/mtrl-addons#5), so the pins follow it there.
 

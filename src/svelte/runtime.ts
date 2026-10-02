@@ -84,9 +84,9 @@ type SvelteHostAttributes = HTMLAttributes<HTMLElement> & Missing<HTMLAttributes
  */
 export type SvelteProps<S> = OwnProps<S> &
   Omit<SvelteHostAttributes, keyof OwnProps<S> | "children" | RetiredProps<S>> &
-  { [K in RetiredProps<S>]?: `${K} was removed in 1.0: use onchange` } & { children?: Snippet };
+  { [K in RetiredProps<S>]?: `${K} was removed in material 3.0.0: use onchange` } & { children?: Snippet };
 
-/** The handler props of events 1.0 removed (`ontoggle` on the icon button): refused, see `RetiredEvents`. */
+/** The handler props of events material 3.0.0 removed (`ontoggle` on the icon button): refused, see `RetiredEvents`. */
 type RetiredProps<S> = `on${RetiredEvents<S>}`;
 
 /** The live properties a generated component binds (`bind:checked`). */

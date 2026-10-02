@@ -4,7 +4,7 @@
 // export list is pinned, so a name joining or leaving a component subpath fails
 // here until the fixture is regenerated (`bun run component-exports:update`)
 // and the diff reviewed. 0.10.5 deprecated the internals the indexes leaked;
-// 1.0.0 removes them, and the manifest lists each component subpath by name
+// 3.0.0 removes them, and the manifest lists each component subpath by name
 // instead of a wildcard that also exposed the folders inside a component.
 import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
@@ -58,7 +58,7 @@ describe("the component subpaths' exports (FLO-381)", () => {
     expect(Object.values(now).flat().filter((e) => e.note?.includes("FLO-383")).map((e) => e.name)).toEqual([]);
   });
 
-  test("1.0 exports nothing deprecated: the constants 0.10.0 deprecated are gone from every subpath", () => {
+  test("3.0.0 exports nothing deprecated: the constants 0.10.0 deprecated are gone from every subpath", () => {
     const gone = ["checkbox:CHECKBOX_VARIANTS", "radios:RADIO_VARIANTS", "radios:RADIO_LABEL_POSITIONS", "radios:RADIO_SIZES",
       "radios:RADIO_CLASSES", "timepicker:TIMEPICKER_DIAL", "timepicker:TIMEPICKER_Z_INDEX", "timepicker:TIMEPICKER_CLASSES"];
     const present = gone.flatMap((entry) => {

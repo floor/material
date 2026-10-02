@@ -156,7 +156,7 @@ describe("decorative icons are hidden (FLO-301)", () => {
     expect(field.leadingIcon?.getAttribute("aria-hidden")).toBe("true");
   });
 
-  test("a trailing icon without a label is a decorative span, hidden from screen readers (1.0)", () => {
+  test("a trailing icon without a label is a decorative span, hidden from screen readers (3.0.0)", () => {
     const field = mount({ trailingIcon: ICON });
     expect(field.trailingIcon?.tagName).toBe("SPAN");
     expect(field.trailingIcon?.getAttribute("aria-hidden")).toBe("true");

@@ -2,7 +2,7 @@
 //
 // FLO-351: every root export is public API. The list is pinned, so a name added
 // to or dropped from `material` fails here until the fixture is regenerated
-// (`bun run root-exports:update`) and the diff reviewed. 1.0.0 removed the
+// (`bun run root-exports:update`) and the diff reviewed. 3.0.0 removed the
 // internals from the root; the migration table 0.10.4 published is frozen, and
 // every name it lists must import from the path it gives, and not from `material`.
 import { describe, expect, test } from "bun:test";

@@ -4,7 +4,7 @@
  *
  * The root is the components and the few helpers an app configures them with.
  * The rest of core is at its subpath (`material/core/compose`, `material/core/dom`, ...):
- * 1.0.0 removed it from the root (FLO-351), and scripts/fixtures/root-exports.md
+ * material 3.0.0 removed it from the root (FLO-351), and scripts/fixtures/root-exports.md
  * says where each name went. The list is pinned by scripts/fixtures/root-exports.json:
  * `bun run root-exports:update`.
  *

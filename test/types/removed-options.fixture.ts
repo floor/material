@@ -1,6 +1,6 @@
 // test/types/removed-options.fixture.ts
 //
-// PR D: the deprecated members 0.10 promised to remove in 1.0 are gone from
+// PR D: the deprecated members 0.10 promised to remove in 3.0.0 are gone from
 // the types, so a 0.10 option is a compile error where it is written.
 import type { CreateElementOptions } from "../../src/core/dom";
 import type { BaseComponentConfig } from "../../src/core/config/component";

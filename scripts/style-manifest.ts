@@ -43,7 +43,7 @@ export const componentStyles: Record<string, { source: string; dependencies: str
 export const fullOnlyStyles: string[] = [];
 
 // Themes in the full stylesheet, each also shipped as `material/themes/<name>`.
-// 1.0.0 removed material, winter, browngreen and legacy (FLO-308, FLO-428).
+// 3.0.0 removed the material, winter, browngreen and legacy themes (FLO-308, FLO-428).
 export const themeStyles = [
   "baseline", "ocean", "desert", "forest", "sunset", "spring", "summer",
   "autumn", "brownbeige", "sageivory", "tealcaramel", "highcontrast",

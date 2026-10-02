@@ -177,7 +177,7 @@ describe('carousel', () => {
 
 // FLO-114: the real emitter behind the public event map.
 describe('carousel event contract', () => {
-  test('navigation emits only index changes, as value alone (1.0 dropped the doubled index), clamps boundaries and supports off', () => {
+  test('navigation emits only index changes, as value alone (3.0.0 dropped the doubled index), clamps boundaries and supports off', () => {
     const carousel = createCarousel({ slides });
     const changed = mock((_payload: CarouselChangePayload) => {});
     try {

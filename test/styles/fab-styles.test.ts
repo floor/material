@@ -82,7 +82,7 @@ test('no fabricated dark roles, duplicate disabled scheme, or important override
   expect(css).not.toContain('!important');
 });
 
-// 1.0 removed the surface style, deprecated since 0.8 (use a container or tone style)
+// 3.0.0 removed the surface style, deprecated since 0.8 (use a container or tone style)
 test("no FAB or extended FAB surface style is left in the stylesheet", () => {
   expect(css).not.toMatch(/fab--surface/);
 });

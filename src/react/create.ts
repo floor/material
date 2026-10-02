@@ -85,9 +85,9 @@ export type ReactHostAttributes<E extends HTMLElement = HTMLElement> =
 export type ComponentProps<S> = OwnProps<S> &
   FormProps<S> &
   Omit<ReactHostAttributes, keyof OwnProps<S> | RetiredProps<S>> &
-  { [K in RetiredProps<S>]?: `${K} was removed in 1.0: use onChange` } & { children?: React.ReactNode };
+  { [K in RetiredProps<S>]?: `${K} was removed in material 3.0.0: use onChange` } & { children?: React.ReactNode };
 
-/** The handler props of events 1.0 removed (`onToggle` on the icon button): refused, see `RetiredEvents`. */
+/** The handler props of events material 3.0.0 removed (`onToggle` on the icon button): refused, see `RetiredEvents`. */
 type RetiredProps<S> = `on${Pascal<RetiredEvents<S>>}`;
 
 /** A generated component; named so declarations stay short. */

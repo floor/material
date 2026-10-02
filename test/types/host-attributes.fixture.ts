@@ -143,7 +143,7 @@ export const reactInput: ReactProps<typeof TextField> = {
     return value;
   },
 };
-// 1.0 removed the icon button's own `toggle` event, and its onToggle is refused:
+// 3.0.0 removed the icon button's own `toggle` event, and its onToggle is refused:
 // it would otherwise fall through to the host's native handler, compile, and
 // never fire for a toggle. The selected state comes with change. On a
 // component that never had the event, onToggle stays the host's native one.
@@ -203,7 +203,7 @@ export const solidInput: SolidProps<typeof SolidTextField> = {
     return value;
   },
 };
-// 1.0 removed the icon button's own `toggle` event, and its onToggle is refused:
+// 3.0.0 removed the icon button's own `toggle` event, and its onToggle is refused:
 // it would otherwise fall through to the host's native handler, compile, and
 // never fire for a toggle. The selected state comes with change. On a
 // component that never had the event, onToggle stays the host's native one.
@@ -263,7 +263,7 @@ export const svelteInput: SvelteProps<TextFieldSpec> = {
     return value;
   },
 };
-// 1.0 removed the icon button's own `toggle` event, and its ontoggle is refused:
+// 3.0.0 removed the icon button's own `toggle` event, and its ontoggle is refused:
 // it would otherwise fall through to the host's native handler, compile, and
 // never fire for a toggle. The selected state comes with change. On a
 // component that never had the event, ontoggle stays the host's native one.
@@ -323,7 +323,7 @@ export const vueInput: InstanceType<typeof MTextField>["$props"] = {
     return value;
   },
 };
-// 1.0 removed the icon button's own `toggle` event, and its onToggle is refused:
+// 3.0.0 removed the icon button's own `toggle` event, and its onToggle is refused:
 // it would otherwise fall through to the host's native handler, compile, and
 // never fire for a toggle. The selected state comes with change. On a
 // component that never had the event, onToggle stays the host's native one.
