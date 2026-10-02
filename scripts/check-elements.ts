@@ -17,6 +17,7 @@ import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
 import { ICON_BUTTON_ICON_SIZES } from "../src/components/icon-button/constants";
 import { checkTextFieldLayout, checkTextFieldReducedMotion } from "./check-text-field-browser";
+import { checkRadiosLayout } from "./check-radios-layout";
 import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
@@ -159,6 +160,7 @@ try {
   });
   await page.goto(`http://127.0.0.1:${server.port}`);
   await page.waitForFunction(() => (window as unknown as Win).ready === true);
+  await checkRadiosLayout(page, "element", check);
   await checkCheckableValues(page, "element");
   await checkRegistryEvents(page, fresh, check);
 
