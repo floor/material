@@ -25,6 +25,7 @@
 
 import createSelect from "../components/select";
 import type { MenuPosition } from "../components/menu/types";
+import { innerMenu } from "../components/menu/inner";
 import type { SelectComponent, SelectConfig, SelectOption } from "../components/select/types";
 import type { TextFieldVariant } from "../components/textfield/types";
 import {
@@ -128,7 +129,7 @@ const selectSpec = {
     placement: {
       type: "string",
       config: "placement",
-      update: (c, v) => void c.menu.setPosition((v ?? "bottom-start") as MenuPosition),
+      update: (c, v) => void innerMenu(c)?.setPosition((v ?? "bottom-start") as MenuPosition),
     },
     "supporting-text": {
       type: "string",

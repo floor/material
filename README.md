@@ -23,7 +23,7 @@ React, Vue, Svelte and Solid are optional peer dependencies: mtrl uses the one y
 | Solid | `mtrl/solid` | SolidJS, SolidStart |
 | Vanilla factories | `mtrl` | The smallest bundles and full control |
 
-Every app imports the base stylesheet once: the theme, the tokens and the ripple.
+Every app imports the base stylesheet once: the theme, the tokens a component reads, and the ripple. Type classes and the type scale are `mtrl/styles/typography` (see [Styles](#styles)).
 
 ```typescript
 import 'mtrl/styles/base';
@@ -86,6 +86,8 @@ name.destroy();
 save.destroy();
 ```
 
+Two rules hold for every factory's events. A config `on*` option (`onChange`, `onOpen`, …) is the listener registered at creation: it gets the same argument as a listener passed to `on()`, and runs before one added later. And when `open()` or `close()` returns, the state has changed (`isOpen()`) and the event has been emitted, a cancellable `beforeopen` or `beforeclose` first where the component has one; the classes, the paint, focus and the animation may follow, so add an `open` listener before calling `open()`. Opening an open component, or closing a closed one, does nothing and emits nothing, and the event that opened it never dismisses it. The dialog, the menu, the select, the split button, the snackbar (`show()` and `hide()`), the date picker and the time picker follow the second rule; the other overlays join them before 1.0. The tooltip is outside it, by design: its `show()` and `hide()` wait for their delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`.
+
 The factories are the fastest way to render hundreds of components at once, such as a long editable table; the elements style a shadow root each. `mtrl/styles` loads every component's styles; for a smaller bundle, import only what you use (see [Styles](#styles)).
 
 ## Components
@@ -122,7 +124,15 @@ import 'mtrl/themes/ocean';
 import 'mtrl/styles/utilities';
 ```
 
-The base includes the baseline theme in light and dark, the tokens, a reset, typography and the ripple. Each selective entry imports what it depends on (the select brings the text field and the menu), so use a CSS-capable bundler to resolve and deduplicate them. Choose either the full stylesheet or selective imports, not both.
+The base includes the baseline theme in light and dark, the colour, shape and typeface tokens, the three body-medium type tokens the page's text reads (`--mtrl-sys-typescale-body-medium-font`, `-font-size` and `-line-height`), a reset and the ripple. The type classes (`.mtrl-display-large` through `.mtrl-label-small`), the text utilities (`.mtrl-text-*`, `.mtrl-font-*`, `.mtrl-truncate*`), mtrl's styles for `h1`–`h6` and `p`, and the rest of the type scale are a separate import:
+
+```typescript
+import 'mtrl/styles/typography';
+```
+
+Import it when the page uses those classes or utilities, when it relies on mtrl's heading and paragraph styles, or when its own CSS reads a `--mtrl-sys-typescale-*` token. Without it a `.mtrl-headline-small` element keeps the body's font size, and a `var(--mtrl-sys-typescale-*)` with no fallback is invalid at computed-value time. Body text keeps its font. The full stylesheet includes typography, so `import 'mtrl/styles'` is unchanged.
+
+Each selective entry imports what it depends on (the select brings the text field and the menu), so use a CSS-capable bundler to resolve and deduplicate them. Choose either the full stylesheet or selective imports, not both.
 
 Library styles sit in ordered `mtrl` cascade layers, so unlayered application CSS overrides them without specificity battles.
 
@@ -166,7 +176,7 @@ Components read the theme's colour roles, so overriding a role restyles every co
 }
 ```
 
-The type scale, the typefaces and the corner scale are custom properties too (`--mtrl-sys-typescale-*`, `--mtrl-ref-typeface-brand` and `--mtrl-ref-typeface-plain`, `--mtrl-sys-shape-corner-*`): setting a typeface or a corner step on `:root` restyles every component that uses it. Component hooks follow one convention, `--mtrl-<component>-<name>`:
+The typefaces and the corner scale are custom properties on the base (`--mtrl-ref-typeface-brand`, `--mtrl-ref-typeface-plain`, `--mtrl-sys-shape-corner-*`): setting one on `:root` restyles every component that uses it. The type scale (`--mtrl-sys-typescale-*`) ships in `mtrl/styles/typography` and in the full stylesheet; setting a role's size there restyles the type classes and the heading styles. Component hooks follow one convention, `--mtrl-<component>-<name>`:
 
 ```css
 .brand-slider {
@@ -219,7 +229,7 @@ Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, 
 
 ## Server rendering
 
-`renderElement` from `mtrl/ssr` renders an element to declarative shadow DOM. Import `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` in the server bootstrap and that framework's components emit the same roots. Node and Bun are supported in 1.0.
+`renderElement` from `mtrl/ssr` renders an element to declarative shadow DOM. Import `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` in the server bootstrap and that framework's components emit the same roots. Node and Bun are supported in 1.0. Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one.
 
 Worker and edge runtimes are unsupported in 1.0. Each server entry lists the `browser` condition first. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers does) loads the browser stub: `renderElement` throws "mtrl/ssr is server-only", and importing a bridge does nothing, so the page renders with no declarative roots and no error.
 
@@ -355,7 +365,7 @@ On a declaration child:
 
 ## Upgrading from 0.10
 
-1.0.0 removes what 0.10 deprecated. Upgrade to 0.10.5 first: it has the 1.0 names beside the old ones and flags in your editor each name, option and constant 1.0 removes. Then follow the [1.0 migration guide](CHANGELOG.md#migrating-from-010x): mtrl is ESM-only, the package root keeps the components (the internals move to their subpaths), "text field" is two words in every identifier, and a few leftovers fail silently instead of at compile time, such as a chip's `{ text }`, which renders an empty chip.
+1.0.0 removes what 0.10 deprecated. Upgrade to 0.10.6 first: it has the 1.0 names beside the old ones and flags in your editor each name, option and constant 1.0 removes. Then follow the [1.0 migration guide](CHANGELOG.md#migrating-from-010x): mtrl is ESM-only, the package root keeps the components (the internals move to their subpaths), "text field" is two words in every identifier, and a few leftovers fail silently instead of at compile time, such as a chip's `{ text }`, which renders an empty chip.
 
 ## Upgrading from 0.9
 

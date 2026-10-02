@@ -236,35 +236,37 @@ export interface TimePickerConfig {
   keyboardIcon?: string;
 
   /**
-   * Callback when the user commits a new time (on OK; setValue is silent); receives
-   * HH:MM or HH:MM:SS in 24-hour format
+   * `change` listener registered at creation. The user commits a new time on
+   * OK; setValue is silent. The argument is `{ value }` (HH:MM, or HH:MM:SS).
    */
-  onChange?: (event: TimePickerValueEvent) => void;
+  onChange?: TimePickerEvents["change"];
 
   /**
-   * Callback as the draft changes while the picker is open (FLO-288)
+   * `input` listener registered at creation, as the draft changes while the
+   * picker is open (FLO-288).
    */
-  onInput?: (event: TimePickerInputEvent) => void;
+  onInput?: TimePickerEvents["input"];
 
   /**
-   * Callback when time picker is opened
+   * `open` listener registered at creation.
    */
-  onOpen?: () => void;
+  onOpen?: TimePickerEvents["open"];
 
   /**
-   * Callback when time picker is closed
+   * `close` listener registered at creation.
    */
-  onClose?: () => void;
+  onClose?: TimePickerEvents["close"];
 
   /**
-   * Callback when time is confirmed; receives the same 24-hour value as getValue()
+   * `confirm` listener registered at creation. The argument is `{ value }`,
+   * the same 24-hour string `getValue()` returns.
    */
-  onConfirm?: (time: string) => void;
+  onConfirm?: TimePickerEvents["confirm"];
 
   /**
-   * Callback when time picker is canceled
+   * `cancel` listener registered at creation.
    */
-  onCancel?: () => void;
+  onCancel?: TimePickerEvents["cancel"];
 }
 
 /**
@@ -329,10 +331,12 @@ export interface TimePickerComponent {
   dialogElement: HTMLElement;
 
   /** Whether the time picker is currently open */
-  isOpen: boolean;
+  isOpen: () => boolean;
 
   /**
-   * Opens the time picker
+   * Opens the time picker. When it returns, `isOpen()` is true and `open` has
+   * been emitted; the surface may be painted after `open()` returns. On an
+   * open or disabled picker it does nothing.
    * @returns The time picker component for chaining
    */
   open: () => TimePickerComponent;

@@ -178,20 +178,14 @@ export interface DrawerConfig extends BaseComponentConfig {
    */
   componentName?: string;
 
-  /**
-   * Callback when a navigation item is selected
-   */
-  onSelect?: (event: DrawerSelectEvent) => void;
+  /** `select` listener registered at creation. */
+  onSelect?: DrawerEvents["select"];
 
-  /**
-   * Callback when the drawer opens
-   */
-  onOpen?: () => void;
+  /** `open` listener registered at creation. */
+  onOpen?: DrawerEvents["open"];
 
-  /**
-   * Callback when the drawer closes
-   */
-  onClose?: () => void;
+  /** `close` listener registered at creation. */
+  onClose?: DrawerEvents["close"];
 }
 
 /**

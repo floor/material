@@ -143,10 +143,22 @@ export const reactInput: ReactProps<typeof TextField> = {
     return value;
   },
 };
+// 1.0 removed the icon button's own `toggle` event, and its onToggle is refused:
+// it would otherwise fall through to the host's native handler, compile, and
+// never fire for a toggle. The selected state comes with change. On a
+// component that never had the event, onToggle stays the host's native one.
 export const reactToggle: ReactProps<typeof IconButton> = {
-  onToggle: (event) => {
+  // @ts-expect-error -- onToggle is gone from the icon button: use onChange
+  onToggle: () => {},
+  onChange: (event) => {
     const selected: boolean = event.detail.selected;
     return selected;
+  },
+};
+export const reactPlain: ReactProps<typeof Button> = {
+  onToggle: (event) => {
+    const state: string = event.newState;
+    return state;
   },
 };
 export const reactSelect: ReactProps<typeof Menu> = {
@@ -191,10 +203,22 @@ export const solidInput: SolidProps<typeof SolidTextField> = {
     return value;
   },
 };
+// 1.0 removed the icon button's own `toggle` event, and its onToggle is refused:
+// it would otherwise fall through to the host's native handler, compile, and
+// never fire for a toggle. The selected state comes with change. On a
+// component that never had the event, onToggle stays the host's native one.
 export const solidToggle: SolidProps<typeof SolidIconButton> = {
-  onToggle: (event) => {
+  // @ts-expect-error -- onToggle is gone from the icon button: use onChange
+  onToggle: () => {},
+  onChange: (event) => {
     const selected: boolean = event.detail.selected;
     return selected;
+  },
+};
+export const solidPlain: SolidProps<typeof SolidButton> = {
+  onToggle: (event) => {
+    const state: string = event.newState;
+    return state;
   },
 };
 export const solidSelect: SolidProps<typeof SolidMenu> = {
@@ -239,10 +263,22 @@ export const svelteInput: SvelteProps<TextFieldSpec> = {
     return value;
   },
 };
+// 1.0 removed the icon button's own `toggle` event, and its ontoggle is refused:
+// it would otherwise fall through to the host's native handler, compile, and
+// never fire for a toggle. The selected state comes with change. On a
+// component that never had the event, ontoggle stays the host's native one.
 export const svelteToggle: SvelteProps<IconButtonSpec> = {
-  ontoggle: (event) => {
+  // @ts-expect-error -- ontoggle is gone from the icon button: use onchange
+  ontoggle: () => {},
+  onchange: (event) => {
     const selected: boolean = event.detail.selected;
     return selected;
+  },
+};
+export const sveltePlain: SvelteProps<ButtonSpec> = {
+  ontoggle: (event) => {
+    const state: string = event.newState;
+    return state;
   },
 };
 export const svelteSelect: SvelteProps<MenuSpec> = {
@@ -287,10 +323,22 @@ export const vueInput: InstanceType<typeof MTextField>["$props"] = {
     return value;
   },
 };
+// 1.0 removed the icon button's own `toggle` event, and its onToggle is refused:
+// it would otherwise fall through to the host's native handler, compile, and
+// never fire for a toggle. The selected state comes with change. On a
+// component that never had the event, onToggle stays the host's native one.
 export const vueToggle: InstanceType<typeof MIconButton>["$props"] = {
-  onToggle: (event) => {
+  // @ts-expect-error -- onToggle is gone from the icon button: use onChange
+  onToggle: () => {},
+  onChange: (event) => {
     const selected: boolean = event.detail.selected;
     return selected;
+  },
+};
+export const vuePlain: InstanceType<typeof MButton>["$props"] = {
+  onToggle: (event) => {
+    const state: string = event.newState;
+    return state;
   },
 };
 export const vueSelect: InstanceType<typeof MMenu>["$props"] = {

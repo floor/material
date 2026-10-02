@@ -15,6 +15,7 @@ import { chromium, type Page } from "playwright";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
+import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
 // Runs against the build: `bun run build` first, as CI does.
 const bundle = await Bun.build({
@@ -204,7 +205,7 @@ try {
       untouched.addEventListener("confirm", (e) => result.timeEmptyConfirm.push([(e as CustomEvent<{ value: string }>).detail.value, untouched.value]));
       untouched.component.picker.open();
       untouched.component.picker.dialogElement.querySelector<HTMLElement>('[class$="time-picker__confirm"]')!.click();
-      select.component.menu!.element.querySelector<HTMLElement>('[data-id=""]')!.click();
+      (select.component as unknown as Record<symbol, { element: HTMLElement }>)[Object.getOwnPropertySymbols(select.component).find((key) => key.description === "mtrl.menu")!].element.querySelector<HTMLElement>('[data-id=""]')!.click();
       radios.component.radios![0].input.click();
       radios.component.radios![1].input.click();
       return result;
@@ -220,7 +221,8 @@ try {
     assert.deepEqual(values.timeEmptyConfirm, values.timeEmptyChange);
     assert.deepEqual(values.selectFactory, [[null, null]]);
     assert.deepEqual(values.selectElement, [[null, null]]);
-    assert.deepEqual(values.radiosFactory, [["a", "a"], ["", ""]]);
+    // 1.0: the factory reports null for the option without a value, as the element does
+    assert.deepEqual(values.radiosFactory, [["a", "a"], [null, null]]);
     assert.deepEqual(values.radiosElement, [["a", "a"], [null, null]]);
     check("time input/confirm, select empty id and radio empty id match getters inside factory and element handlers");
   }
@@ -547,7 +549,7 @@ try {
       w.events = [];
       w.clicks = 0;
       const ib = document.getElementById("ib");
-      // `change` (FLO-295), and the deprecated `toggle` beside it for one release.
+      // `change` (FLO-295). 1.0 dispatches no `toggle` beside it: the listener stays, to show it never fires.
       ib?.addEventListener("change", (e) => (w.events as unknown[]).push({ change: (e as CustomEvent).detail }));
       ib?.addEventListener("toggle", (e) => (w.events as unknown[]).push({ toggle: (e as CustomEvent).detail }));
       ib?.addEventListener("click", () => (w.clicks = (w.clicks as number) + 1));
@@ -558,10 +560,10 @@ try {
       const ib = document.getElementById("ib") as HTMLElement & { selected: boolean };
       return { events: w.events, clicks: w.clicks, selected: ib.selected };
     });
-    // FLO-380: both carry the button's value beside selected.
-    assert.deepEqual(state, { events: [{ change: { selected: true, value: "fav" } }, { toggle: { selected: true, value: "fav" } }], clicks: 1, selected: true });
+    // FLO-380: change carries the button's value beside selected.
+    assert.deepEqual(state, { events: [{ change: { selected: true, value: "fav" } }], clicks: 1, selected: true });
     assert.equal(await page.getByRole("button", { name: "Favorite", pressed: true }).count(), 1);
-    check("icon button: a click dispatches one change from the host with { selected, value }, and the deprecated toggle; click stays native");
+    check("icon button: a click dispatches one change from the host with { selected, value } and no toggle; click stays native");
 
     state = await page.evaluate(() => {
       const w = window as unknown as Win;
@@ -2598,6 +2600,26 @@ try {
     assert.deepEqual(layout, { classes: [true, true], labelled: true, same: true });
     check("chips: scrollable, label and aria-label update the set in place");
 
+    // FLO-550: a refused deselect changes nothing, so the host dispatches nothing.
+    const refusedDeselect = await page.evaluate(async () => {
+      const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
+      const host = document.createElement("m-chips") as Chips;
+      host.setAttribute("selection-required", "");
+      host.setAttribute("aria-label", "Required");
+      host.innerHTML = `<m-chip value="only" selected>Only</m-chip>`;
+      const seen: string[] = [];
+      for (const type of ["change", "click"]) host.addEventListener(type, () => seen.push(type));
+      document.body.append(host);
+      await frame();
+      (host.shadowRoot?.querySelector('[role="gridcell"]') as HTMLElement).click();
+      await frame();
+      const result = { seen, value: host.value };
+      host.remove();
+      return result;
+    });
+    assert.deepEqual(refusedDeselect, { seen: ["click"], value: ["only"] });
+    check("chips: a refused deselect in a selection-required set dispatches no change");
+
     const dirty = await page.evaluate(async () => {
       const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
       const host = document.getElementById("host") as HTMLElement;
@@ -3739,6 +3761,45 @@ try {
     check("toolbar: renders as the factory does with the global stylesheet");
   }
 
+  // FLO-387: the rows the roving rule must get right. Read in the same turn as
+  // connect, before the browser's own slotchange microtask.
+  {
+    const roving = await page.evaluate((icon) => {
+      const host = document.getElementById("host")!;
+      host.replaceChildren();
+      const tb = document.createElement("m-toolbar") as HTMLElement & {
+        component: { overflowButton: HTMLElement | null } | null;
+      };
+      tb.id = "roving";
+      tb.setAttribute("aria-label", "Roving");
+      tb.innerHTML =
+        `<m-menu id="overflow" slot="overflow"><m-menu-item value="a">Align</m-menu-item></m-menu>` +
+        `<m-icon-button id="disabled" aria-label="First" icon='${icon}' disabled></m-icon-button>` +
+        `<div id="wrap"><button id="inner" type="button">Inner</button></div>` +
+        `<span id="plain">Note</span>`;
+      host.append(tb);
+      const attr = (id: string): string | null => document.getElementById(id)?.getAttribute("tabindex") ?? null;
+      const seen = [tb, ...Array.from(tb.querySelectorAll("*")), ...Array.from(tb.shadowRoot?.querySelectorAll("*") ?? [])];
+      return {
+        menu: attr("overflow"),
+        disabled: attr("disabled"),
+        wrap: attr("wrap"),
+        inner: attr("inner"),
+        plain: attr("plain"),
+        overflowButton: tb.component?.overflowButton?.getAttribute("tabindex") ?? null,
+        zeros: seen.filter((node) => node.getAttribute("tabindex") === "0").map((node) => node.id || node.localName),
+      };
+    }, ICON);
+    assert.equal(roving.menu, null, "the overflow menu carries no tabindex the toolbar wrote");
+    assert.equal(roving.wrap, null, "the wrapper carries no tabindex the toolbar wrote");
+    assert.equal(roving.plain, null, "the span carries no tabindex the toolbar wrote");
+    assert.equal(roving.disabled, "-1", "the disabled item is -1");
+    assert.equal(roving.inner, "0", "the first enabled control is the tab stop");
+    assert.equal(roving.overflowButton, "-1", "the overflow button is a target and not the tab stop");
+    assert.deepEqual(roving.zeros, ["inner"], "exactly one tab stop");
+    check("toolbar: one tab stop on the first enabled control; overflow, wrapper and text are not targets");
+  }
+
   // ---------------------------------------------------------------- list
   await fresh(
     page,
@@ -4156,14 +4217,14 @@ try {
     await photos.getByRole("group", { name: "2 of 5" }).focus();
     await page.keyboard.press("ArrowRight");
     let state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
-    // FLO-380: value is the model (the index), beside index.
-    assert.deepEqual(state, { events: [{ detail: { value: 2, index: 2 }, target: "r" }], index: 2 });
+    // FLO-380: value is the model (the index). 1.0 dropped the doubled detail.index.
+    assert.deepEqual(state, { events: [{ detail: { value: 2 }, target: "r" }], index: 2 });
     check("carousel: an arrow key moves to the next item and dispatches change");
 
     await page.evaluate(() => ((window as unknown as Win).events = []));
     await photos.getByRole("group", { name: "4 of 5" }).click();
     state = await page.evaluate(() => ({ events: (window as unknown as Win).events, index: (document.getElementById("r") as Carousel).index }));
-    assert.deepEqual(state, { events: [{ detail: { value: 3, index: 3 }, target: "r" }], index: 3 });
+    assert.deepEqual(state, { events: [{ detail: { value: 3 }, target: "r" }], index: 3 });
     check("carousel: a click on an item makes it current and dispatches change");
 
     state = await page.evaluate(() => {
@@ -4792,9 +4853,9 @@ try {
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
     await wait(350);
-    // The menu's "close" comes 50ms after Enter, and the select looks at its focused
-    // styling again 10ms after that: read once the menu has closed and that turn has
-    // passed, or the class read is the one left from the open menu.
+    // The menu's "close" comes with Enter (FLO-548; it came 50ms after), and the select
+    // looks at its focused styling again 10ms after that: read once the menu has closed
+    // and that turn has passed, or the class read is the one left from the open menu.
     await until(() => page.evaluate(() =>
       ((window as unknown as Win).__select as { element: HTMLElement }).element.querySelector("[aria-expanded]")?.getAttribute("aria-expanded") === "false"));
     await wait(50);
@@ -4833,6 +4894,98 @@ try {
     };
     await returnsFocus("dialog", "createDialog");
     check("factories in a shadow root: a dialog returns focus to its opener inside the shadow root");
+
+    // The event that opened an overlay never dismisses it (FLO-548). A dialog
+    // opened from an Escape keydown gets its Escape listener (or, in the top
+    // layer, becomes the browser's topmost modal) while that key press is
+    // still being handled. Both layers are read before the assertion, so a
+    // failure shows whether they agree; each with the page never touched (the
+    // button focused by script) and after a real click on it, which gives the
+    // page a user activation.
+    const opensOnEscape = async (layer: "top" | undefined, clicked: boolean): Promise<{ afterTheKeyThatOpenedIt: boolean; afterTheNextEscape: boolean }> => {
+      await fresh(page, `<button id="opener" type="button">Discard</button>`);
+      await page.evaluate((layer) => {
+        const mtrl = (window as unknown as { mtrl: Factories }).mtrl;
+        const dialog = mtrl.createDialog({ title: "Discard draft?", content: "Your changes will be lost.", closeOnEscape: true, ...(layer ? { layer } : {}) });
+        (window as unknown as Win).__overlay = dialog;
+        (document.getElementById("opener") as HTMLElement).addEventListener("keydown", (event) => {
+          if (event.key === "Escape") dialog.open();
+        });
+      }, layer);
+      const isOpen = (): Promise<boolean> =>
+        page.evaluate(() => ((window as unknown as Win).__overlay as { isOpen: () => boolean }).isOpen());
+      if (clicked) await page.click("#opener");
+      await page.focus("#opener");
+      await page.keyboard.press("Escape");
+      await wait(400);
+      const afterTheKeyThatOpenedIt = await isOpen();
+      await page.keyboard.press("Escape");
+      await until(async () => !(await isOpen()));
+      const afterTheNextEscape = await isOpen();
+      await page.evaluate(() => void ((window as unknown as Win).__overlay as { destroy: () => unknown }).destroy());
+      return { afterTheKeyThatOpenedIt, afterTheNextEscape };
+    };
+    const held = { afterTheKeyThatOpenedIt: true, afterTheNextEscape: false };
+    assert.deepEqual(
+      {
+        default: await opensOnEscape(undefined, false),
+        top: await opensOnEscape("top", false),
+        defaultAfterAClick: await opensOnEscape(undefined, true),
+        topAfterAClick: await opensOnEscape("top", true),
+      },
+      { default: held, top: held, defaultAfterAClick: held, topAfterAClick: held },
+      "a dialog opened from an Escape keydown: open after that key press, closed by the next one, in both layers",
+    );
+    check("dialog: the Escape key press that opened it does not close it, and the next one does, in both layers");
+
+    // The same sentence for the menu (FLO-548): its click-outside and Escape
+    // listeners are added inside open(). A button that is not the menu's
+    // opener opens it by code, from a click and from an Escape keydown: that
+    // event is still on its way up to the document. Every form is read before
+    // the assertion, so a failure shows which ones disagree.
+    const menuOpenedBy = async (how: "click" | "Escape", layer?: "top"): Promise<{ afterTheEventThatOpenedIt: boolean; afterTheNextOne: boolean }> => {
+      await fresh(page, `<button id="opener" type="button">More</button><button id="other" type="button">Other</button>`);
+      await page.evaluate(({ how, layer }) => {
+        const mtrl = (window as unknown as { mtrl: Factories }).mtrl;
+        const menu = mtrl.createMenu({
+          opener: document.getElementById("opener") as HTMLElement,
+          items: [{ id: "copy", text: "Copy" }, { id: "paste", text: "Paste" }],
+          ...(layer ? { layer } : {}),
+        });
+        (window as unknown as Win).__overlay = menu;
+        const other = document.getElementById("other") as HTMLElement;
+        if (how === "click") other.addEventListener("click", () => void menu.open());
+        else other.addEventListener("keydown", (event) => { if (event.key === "Escape") menu.open(event); });
+      }, { how, layer });
+      const isOpen = (): Promise<boolean> =>
+        page.evaluate(() => ((window as unknown as Win).__overlay as { isOpen: () => boolean }).isOpen());
+      if (how === "click") await page.click("#other");
+      else {
+        await page.focus("#other");
+        await page.keyboard.press("Escape");
+      }
+      await wait(400);
+      const afterTheEventThatOpenedIt = await isOpen();
+      // The next one: a click on the page beside the menu, or Escape again
+      if (how === "click") await page.mouse.click(700, 600);
+      else await page.keyboard.press("Escape");
+      await until(async () => !(await isOpen()));
+      const afterTheNextOne = await isOpen();
+      await page.evaluate(() => void ((window as unknown as Win).__overlay as { destroy: () => unknown }).destroy());
+      return { afterTheEventThatOpenedIt, afterTheNextOne };
+    };
+    const stayed = { afterTheEventThatOpenedIt: true, afterTheNextOne: false };
+    assert.deepEqual(
+      {
+        click: await menuOpenedBy("click"),
+        clickTop: await menuOpenedBy("click", "top"),
+        escape: await menuOpenedBy("Escape"),
+        escapeTop: await menuOpenedBy("Escape", "top"),
+      },
+      { click: stayed, clickTop: stayed, escape: stayed, escapeTop: stayed },
+      "a menu opened by code from a click or an Escape keydown: open after that event, closed by the next one, in both layers",
+    );
+    check("menu: the click or the key press that opened it does not dismiss it, and the next one does, in both layers");
     await returnsFocus("bottom sheet", "createBottomSheet");
     check("factories in a shadow root: a modal bottom sheet returns focus to its opener inside the shadow root");
     await returnsFocus("side sheet", "createSideSheet");
@@ -5029,7 +5182,23 @@ try {
       for (const end = Date.now() + 5000; !(await ready());) {
         if (Date.now() > end) {
           const found = { ...(await state()), item: await focusedItem(), submenus: await submenus() };
-          throw new Error(`menu top layer ${place}: still waiting after 5s for ${what}; found ${JSON.stringify(found)}`);
+          // What the state above cannot tell (FLO-551: open and connected, with no focus):
+          // whether the surface is shown and focusable, and whether the page reported errors.
+          const surface = await page.evaluate(() => {
+            const element = (window as unknown as TopWin).__tl.menu.element;
+            const style = getComputedStyle(element);
+            let inert: string | null = null;
+            for (let node: Element | null = element; node && !inert; node = node.parentElement ?? (node.getRootNode() as Partial<ShadowRoot>).host ?? null) {
+              if (node.hasAttribute("inert")) inert = node.id || node.localName;
+            }
+            return {
+              popoverOpen: element.matches(":popover-open"), visibleClass: element.classList.contains("mtrl-menu--visible"),
+              ariaHidden: element.getAttribute("aria-hidden"), inline: element.style.cssText, tabindex: element.getAttribute("tabindex"),
+              display: style.display, visibility: style.visibility, opacity: style.opacity, inert,
+              documentHasFocus: document.hasFocus(), active: document.activeElement?.localName ?? null,
+            };
+          });
+          throw new Error(`menu top layer ${place}: still waiting after 5s for ${what}; found ${JSON.stringify(found)}; surface ${JSON.stringify(surface)}; page errors ${JSON.stringify(errors)}`);
         }
         await wait(20);
       }
@@ -5395,8 +5564,9 @@ try {
       fm.addEventListener("select", (e) => seen.push((e as CustomEvent<{ value: string }>).detail.value));
       (fm.shadowRoot?.querySelectorAll(".mtrl-menu__item")[1] as HTMLElement).click();
       await new Promise((r) => setTimeout(r, 400));
-      // The menu's "close" comes on a 50ms timer of its own: after the fixed wait,
-      // give it 5s more to arrive. The assertion below reports an `open` that stayed.
+      // The menu's "close" comes with the click since FLO-548 (it came on a 50ms timer),
+      // so this loop should find the attribute gone at once; it stays as the guard it
+      // was. The assertion below reports an `open` that stayed.
       for (const end = Date.now() + 5000; fm.hasAttribute("open") && Date.now() < end;) await new Promise((r) => setTimeout(r, 20));
       return { seen, open: fm.hasAttribute("open") };
     });
@@ -5596,7 +5766,7 @@ try {
     const settle = (): Promise<unknown> => wait(450);
     // `settle()` is the menu's open or close transition. What the next step needs
     // comes on the menu's own timers and frames (focus 120ms after opening, the
-    // "close" event 50ms after a dismissal, focus back on the anchor a frame later, a
+    // "close" event with a dismissal since FLO-548, focus back on the anchor a frame later, a
     // submenu's focus a frame and 300ms after it opens), and on a runner that paused
     // the fixed wait ended first. `eventually` waits for that state, after the fixed
     // wait, for 5s at most. When it never comes, the failure says at which step,
@@ -6036,6 +6206,20 @@ try {
     assert.equal(await focused(), "combobox", "a <label for> focuses the combobox");
     check("select: <label for> focuses the combobox");
 
+    // FLO-543: the attribute reaches the select's menu, which has no public
+    // member for it; the menu is under mtrl's symbol, found by its description.
+    const placed = await page.evaluate(() => {
+      const el = document.getElementById("ms") as Host;
+      const menu = (): { getPosition: () => string } =>
+        (el.component as unknown as Record<symbol, { getPosition: () => string }>)[Object.getOwnPropertySymbols(el.component).find((key) => key.description === "mtrl.menu")!];
+      el.setAttribute("placement", "top-start");
+      const set = { position: menu().getPosition(), member: "menu" in (el.component as object) };
+      el.removeAttribute("placement");
+      return { set, removed: menu().getPosition() };
+    });
+    assert.deepEqual(placed, { set: { position: "top-start", member: false }, removed: "bottom-start" });
+    check("select: placement set after creation reaches its menu, which is not a member");
+
     const options = await page.evaluate(async () => {
       const el = document.getElementById("ms") as Host & { value: string | null };
       const before = el.component;
@@ -6237,14 +6421,15 @@ try {
       const el = document.getElementById("sb") as Host;
       const w = window as unknown as { __closes: number };
       w.__closes = 0;
-      const menu = (el.component as { menu: { on: (n: string, h: () => void) => void } }).menu;
+      // The inner menu is not a member (FLO-543): it is under mtrl's symbol, found by its description
+      const menu = (el.component as unknown as Record<symbol, { on: (n: string, h: () => void) => void }>)[Object.getOwnPropertySymbols(el.component).find((key) => key.description === "mtrl.menu")!];
       menu.on("close", () => void w.__closes++);
     });
     const splitState = (): Promise<{ open: boolean; closes: number }> =>
       page.evaluate(() => {
         const el = document.getElementById("sb") as Host;
         return {
-          open: (el.component as { menu: { isOpen: () => boolean } }).menu.isOpen(),
+          open: (el.component as unknown as Record<symbol, { isOpen: () => boolean }>)[Object.getOwnPropertySymbols(el.component).find((key) => key.description === "mtrl.menu")!].isOpen(),
           closes: (window as unknown as { __closes: number }).__closes,
         };
       });
@@ -6309,7 +6494,7 @@ try {
       const el = document.getElementById("sb") as Host;
       const before = el.component;
       const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
-      const menu = (): { getItems: () => Array<{ text?: string }> } => (el.component as { menu: { getItems: () => Array<{ text?: string }> } }).menu;
+      const menu = (): { getItems: () => Array<{ text?: string }> } => el.component as { getItems: () => Array<{ text?: string }> };
       const added = document.createElement("m-menu-item");
       added.setAttribute("value", "png");
       added.textContent = "Export PNG";
@@ -6355,6 +6540,127 @@ try {
     });
     assert.deepEqual(splitParity.element, splitParity.factory);
     check("split button: the closed button renders as the factory's in light DOM");
+  }
+
+  // ---------------------------------------------------------------- tooltip placement during the entrance transition (FLO-535)
+  {
+    type Direction = "top" | "bottom" | "left" | "right";
+    type Case = { name: string; position: Direction; x: number; y: number; text: string; layer?: "top"; edge?: boolean; wrapped?: boolean };
+    const cases: Case[] = [
+      { name: "top", position: "top", x: 430, y: 330, text: "A tooltip with enough content to measure" },
+      { name: "bottom", position: "bottom", x: 430, y: 330, text: "A tooltip with enough content to measure" },
+      { name: "left", position: "left", x: 430, y: 330, text: "A tooltip with enough content to measure" },
+      { name: "right", position: "right", x: 430, y: 330, text: "A tooltip with enough content to measure" },
+      { name: "left edge", position: "bottom", x: 2, y: 330, text: "A tooltip with enough content to measure", edge: true },
+      { name: "right edge", position: "bottom", x: 858, y: 330, text: "A tooltip with enough content to measure", edge: true },
+      { name: "wrapped", position: "bottom", x: 430, y: 330, text: "This tooltip has enough words to wrap across three lines near its target", wrapped: true },
+      { name: "top layer", position: "bottom", x: 430, y: 330, text: "A tooltip with enough content to measure", layer: "top" },
+    ];
+    type Measurement = {
+      targetCenter: { x: number; y: number }; tooltipCenter: { x: number; y: number };
+      target: { top: number; bottom: number; left: number; right: number };
+      tooltip: { top: number; bottom: number; left: number; right: number };
+      arrowCenter: { x: number; y: number }; widthShown: number; widthReadWhenPlaced: number;
+      layoutWidth: number; naturalWidth: number; lineCount: number; margin: number; reducedMotion: boolean; transitionDuration: string;
+      popoverOpen: boolean;
+    };
+    const failures: string[] = [];
+    // This block explicitly enables motion; the rest of the check retains its
+    // normal media setting. A layout read before show() starts the real scale
+    // transition, even when the fixture was created in the same task.
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    for (const scenario of cases) {
+      await fresh(page, `<button id="tooltip-geometry-target" type="button" style="position:fixed;left:${scenario.x}px;top:${scenario.y}px;width:40px;height:40px">Target</button>`);
+      const setup = await page.evaluate(({ text, position, layer }) => {
+        type Tip = { element: HTMLElement; show: (immediate?: boolean) => void; destroy: () => void };
+        const w = window as unknown as Win & { mtrl: { createTooltip: (config: object) => Tip }; __geometryTip: Tip; __geometryWidthRead: number };
+        const target = document.getElementById("tooltip-geometry-target") as HTMLElement;
+        const tip = w.mtrl.createTooltip({ target, text, position, layer });
+        w.__geometryTip = tip;
+        let naturalWidth = tip.element.offsetWidth;
+        const rect = tip.element.getBoundingClientRect.bind(tip.element);
+        const offsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth")?.get;
+        if (!offsetWidth) throw new Error("HTMLElement.offsetWidth is unavailable");
+        Object.defineProperty(tip.element, "offsetWidth", {
+          configurable: true,
+          get() {
+            const measured = offsetWidth.call(tip.element) as number;
+            w.__geometryWidthRead = measured;
+            return measured;
+          },
+        });
+        tip.element.getBoundingClientRect = () => {
+          const measured = rect();
+          w.__geometryWidthRead = measured.width;
+          return measured;
+        };
+        tip.show(true);
+        const widthReadWhenPlaced = w.__geometryWidthRead;
+        Reflect.deleteProperty(tip.element, "offsetWidth");
+        // A closed top-layer popover has no layout box until show() opens it.
+        if (!naturalWidth) naturalWidth = tip.element.offsetWidth;
+        tip.element.getBoundingClientRect = rect;
+        return { widthReadWhenPlaced, naturalWidth, reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches };
+      }, scenario);
+      await page.waitForFunction(() => {
+        const tip = (window as unknown as { __geometryTip: { element: HTMLElement } }).__geometryTip;
+        const surface = tip.element;
+        const style = getComputedStyle(surface);
+        return surface.classList.contains("mtrl-tooltip--visible") &&
+          surface.getAnimations().every((animation) => animation.playState === "finished") &&
+          Math.abs(surface.getBoundingClientRect().width - surface.offsetWidth) < 0.01 &&
+          style.opacity === "1";
+      });
+      const measured: Measurement = await page.evaluate(({ widthReadWhenPlaced, naturalWidth, reducedMotion, position }) => {
+        const w = window as unknown as { __geometryTip: { element: HTMLElement; destroy: () => void } };
+        const surface = w.__geometryTip.element;
+        const target = document.getElementById("tooltip-geometry-target") as HTMLElement;
+        const t = target.getBoundingClientRect();
+        const r = surface.getBoundingClientRect();
+        const arrow = (surface.querySelector('[class*="__arrow"]') as HTMLElement).getBoundingClientRect();
+        const style = getComputedStyle(surface);
+        const lineCount = (surface.offsetHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom)) / parseFloat(style.lineHeight);
+        const marginName = ({ top: "marginBottom", bottom: "marginTop", left: "marginRight", right: "marginLeft" } as const)[position];
+        const result = {
+          targetCenter: { x: t.left + t.width / 2, y: t.top + t.height / 2 },
+          tooltipCenter: { x: r.left + r.width / 2, y: r.top + r.height / 2 },
+          target: { top: t.top, bottom: t.bottom, left: t.left, right: t.right },
+          tooltip: { top: r.top, bottom: r.bottom, left: r.left, right: r.right },
+          arrowCenter: { x: arrow.left + arrow.width / 2, y: arrow.top + arrow.height / 2 },
+          widthShown: r.width, widthReadWhenPlaced, layoutWidth: surface.offsetWidth, naturalWidth,
+          lineCount, margin: parseFloat(style[marginName]),
+          reducedMotion, transitionDuration: style.transitionDuration, popoverOpen: surface.matches(":popover-open"),
+        };
+        w.__geometryTip.destroy();
+        return result;
+      }, { ...setup, position: scenario.position });
+      console.log(`  tooltip geometry ${scenario.name}: ${JSON.stringify(measured)}`);
+      const cross = scenario.position === "top" || scenario.position === "bottom" ? "x" : "y";
+      if (!scenario.edge) {
+        const delta = measured.tooltipCenter[cross] - measured.targetCenter[cross];
+        if (Math.abs(delta) > 1) failures.push(`${scenario.name}: cross-axis centre delta ${delta.toFixed(2)} px`);
+        const arrowDelta = measured.arrowCenter[cross] - measured.targetCenter[cross];
+        if (Math.abs(arrowDelta) > 1) failures.push(`${scenario.name}: arrow delta ${arrowDelta.toFixed(2)} px`);
+        const gap = ({
+          top: measured.target.top - measured.tooltip.bottom,
+          bottom: measured.tooltip.top - measured.target.bottom,
+          left: measured.target.left - measured.tooltip.right,
+          right: measured.tooltip.left - measured.target.right,
+        } as const)[scenario.position];
+        const expectedGap = DEFAULT_OFFSET + ((scenario.position === "bottom" || scenario.position === "right") ? measured.margin : 0);
+        if (Math.abs(gap - expectedGap) > 1) failures.push(`${scenario.name}: main-axis gap ${gap.toFixed(2)} px, expected ${expectedGap} px`);
+      }
+      if (scenario.edge && (measured.tooltip.left < -1 || measured.tooltip.right > 901 || Math.abs(measured.widthShown - measured.naturalWidth) > 1 || Math.abs(measured.widthShown - measured.layoutWidth) > 1)) {
+        failures.push(`${scenario.name}: viewport bounds ${measured.tooltip.left.toFixed(2)}..${measured.tooltip.right.toFixed(2)}, shown/initial layout/current layout width ${measured.widthShown.toFixed(2)}/${measured.naturalWidth}/${measured.layoutWidth} px`);
+      }
+      if (scenario.wrapped && Math.abs(measured.lineCount - 3) > 0.1) failures.push(`${scenario.name}: ${measured.lineCount} lines, expected 3`);
+      if (scenario.layer && !measured.popoverOpen) failures.push(`${scenario.name}: popover is closed`);
+      if (measured.reducedMotion || !measured.transitionDuration.includes("0.15s")) failures.push(`${scenario.name}: entrance motion is disabled`);
+      if (Math.abs(measured.widthReadWhenPlaced - measured.naturalWidth) > 1) failures.push(`${scenario.name}: placement width ${measured.widthReadWhenPlaced.toFixed(2)} differs from layout width ${measured.naturalWidth}`);
+    }
+    await page.emulateMedia({ reducedMotion: null });
+    assert.equal(failures.length, 0, `tooltip placement (FLO-535):\n${failures.join("\n")}`);
+    check("tooltip: motion-on placement, wrapped text, viewport clamps and top layer");
   }
 
   // ---------------------------------------------------------------- tooltip and snackbar in the top layer

@@ -249,7 +249,7 @@ export interface ButtonGroupConfig {
   ariaLabel?: string;
 
   /**
-   * Event handlers for button group events
+   * Listeners registered at creation, ahead of any listener added afterwards.
    */
   on?: {
     click?: (event: ButtonGroupEvent) => void;

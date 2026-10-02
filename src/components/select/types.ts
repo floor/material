@@ -1,5 +1,6 @@
 // src/components/select/types.ts
-import type { MenuColor, MenuComponent, MenuVariant } from "../menu/types";
+import type { MenuColor, MenuVariant } from "../menu/types";
+import type { MenuOwner } from "../menu/inner";
 import type { TextFieldComponent } from "../textfield/types";
 
 /**
@@ -196,17 +197,6 @@ export interface SelectComponent {
   textField: TextFieldComponent;
 
   /**
-   * The same text field, under its 0.10 name.
-   * @deprecated Use `textField`; removed in 2.0.
-   */
-  readonly textfield: TextFieldComponent;
-
-  /**
-   * The menu component
-   */
-  menu: MenuComponent;
-
-  /**
    * Gets the select's current value (selected option id)
    */
   getValue: () => string | null;
@@ -247,14 +237,18 @@ export interface SelectComponent {
   setOptions: (options: SelectOption[]) => SelectComponent;
 
   /**
-   * Opens the select menu
+   * Opens the select menu. When it returns, `isOpen()` is true, the input has
+   * `aria-expanded="true"` and `open` has been emitted; the surface may be
+   * painted after `open()` returns.
    * @param interactionType - The type of interaction ('mouse' or 'keyboard')
    * @returns Select component for chaining
    */
   open: (interactionType?: "mouse" | "keyboard") => SelectComponent;
 
   /**
-   * Closes the select menu
+   * Closes the select menu. When it returns, `isOpen()` is false, the input
+   * has `aria-expanded="false"` and `close` has been emitted; the surface
+   * fades after that. `close()` then `open()` at once reopens it.
    * @returns Select component for chaining
    */
   close: () => SelectComponent;
@@ -335,7 +329,9 @@ export interface SelectComponent {
 }
 
 /**
- * Select event interface
+ * What `open` and `close` carry. Neither can be cancelled: the select is
+ * already open, or closed, when its listener runs. `change` cannot either:
+ * the value has changed. None carries `preventDefault`.
  */
 export interface SelectEvent {
   /**
@@ -347,16 +343,6 @@ export interface SelectEvent {
    * Original DOM event if available
    */
   originalEvent?: Event;
-
-  /**
-   * Function to prevent default behavior
-   */
-  preventDefault: () => void;
-
-  /**
-   * Whether default behavior was prevented
-   */
-  defaultPrevented: boolean;
 }
 
 /**
@@ -440,10 +426,9 @@ export interface SelectController {
  * Base component interface
  * @internal
  */
-export interface BaseComponent {
+export interface BaseComponent extends MenuOwner {
   element: HTMLElement;
   textField?: TextFieldComponent;
-  menu?: MenuComponent;
   select?: SelectController;
   // Narrowed to match the public signature above. `handler: Function` is a
   // wider supertype of what the component actually accepts, and under

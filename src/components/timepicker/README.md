@@ -21,10 +21,10 @@ import { createTimePicker } from 'mtrl';
 const timePicker = createTimePicker({
   title: 'Select time',
   value: '14:30', // Initial time (2:30 PM)
-  onConfirm: (time) => {
-    console.log('Selected time:', time);
+  onConfirm: ({ value }) => {
+    console.log('Selected time:', value);
     // Update UI with selected time
-    document.getElementById('time-input').value = time;
+    document.getElementById('time-input').value = value;
   }
 });
 
@@ -68,7 +68,7 @@ The `createTimePicker` function accepts a configuration object with the followin
 | `onChange` | `({ value }) => void` | `undefined` | Callback when the committed time changes |
 | `onOpen` | `function` | `undefined` | Callback when time picker is opened |
 | `onClose` | `function` | `undefined` | Callback when time picker is closed |
-| `onConfirm` | `function` | `undefined` | Callback when time is confirmed |
+| `onConfirm` | `({ value }) => void` | `undefined` | `confirm` listener; `value` is the 24-hour string |
 | `onCancel` | `function` | `undefined` | Callback when time picker is canceled |
 
 ## API Methods
@@ -87,6 +87,9 @@ timePicker.close();
 // Toggle the time picker open/closed state
 timePicker.toggle();
 ```
+
+When `open()` returns, `isOpen()` is true and `open` has been emitted; the surface may be painted
+after `open()` returns.
 
 ### Get and Set Value
 
@@ -154,8 +157,8 @@ const timePicker = createTimePicker({
   value: '18:30:45',
   format: TIME_FORMAT.MILITARY,
   showSeconds: true,
-  onConfirm: (time) => {
-    console.log('Selected time with seconds:', time);
+  onConfirm: ({ value }) => {
+    console.log('Selected time with seconds:', value);
   }
 });
 ```
@@ -173,8 +176,8 @@ const meetingPicker = createTimePicker({
   minTime: '09:00',
   maxTime: '17:30',
   minuteStep: 15,
-  onConfirm: (time) => {
-    meetingInput.value = time;
+  onConfirm: ({ value }) => {
+    meetingInput.value = value;
   }
 });
 ```
