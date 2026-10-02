@@ -14,6 +14,9 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+### Added
+- `material/components/chips` and `material/components/divider` now have their factory as the default export, as the other component entries do.
+
 ### Migrating from 0.10.x
 
 Upgrade to the latest `mtrl` 0.10.x first, then change the package name to `material` (version 3) and
