@@ -86,12 +86,13 @@ the card, tabs and switch internals on their subpaths, `ChipConfig`'s `managedSe
 ship for reference; configuring them with `@use … with` is not a supported API in 1.0. Theme
 with CSS custom properties.
 
-**Type changes the compiler reports.** Besides renames and removals, four entries below change
+**Type changes the compiler reports.** Besides renames and removals, five entries below change
 a type your code may rely on: tabs' `on` and `off` take a closed event map, and a tab's `click`
 payload is wrapped (FLO-523); React's and Solid's `Button` type their own `onChange`, so a
 spread of full `HTMLAttributes` must omit it (FLO-380); `SelectChangeEvent["value"]` is
-`string | null` (FLO-380); and the chip set's `change` listener takes one object, not an array
-and a second argument (FLO-530).
+`string | null` (FLO-380); the chip set's `change` listener takes one object, not an array
+and a second argument (FLO-530); and `emit` on the card and the tabs takes only the
+component's own events, with their payloads.
 
 **Changes your compiler won't catch**
 
@@ -313,6 +314,21 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     index signature.
   - `tabs.on("custom", …)` for an event name of your own needs a cast.
   - `on` and `off` return the concrete component (`TabsComponent`, `TabComponent`), not `this`.
+- **`emit` on the card and the tabs takes the component's own events.** `CardComponent.emit` and
+  `TabsComponent.emit` accepted any event name and any data. They now take the names in
+  `CardEvents` and `TabsEvents`, each with the payload `on` and `off` declare for it. They are
+  the only two public component types that declare `emit`. Migration, what stops compiling:
+
+  ```ts
+  card.emit?.('custom', data);                          // 0.10
+  tabs.emit?.('change', { value: 'two' });              // 0.10: a partial payload
+  tabs.emit?.('change', { tab, value: 'two' });         // 1.0: the event's whole payload
+  ```
+
+  - An event name of your own is a type error. At run time nothing changed: the emitter is
+    the same, so untyped code that emits `'custom'` still reaches a listener registered for
+    it. Keep your own events on an emitter of your own.
+  - A component you build with `withEvents` keeps its open `emit(event: string, data)`.
 - **Tab and panel ids are derived from the value with a safe encoding (FLO-430).** A value of
   `[A-Za-z0-9_-]` only keeps its ids, `tab-<group>-<value>` and `tabpanel-<group>-<value>`. Any
   other value gets `tabx-<group>-<encoded>` and
