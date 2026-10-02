@@ -56,6 +56,8 @@ export interface ChipConfig {
 export interface ChipOptions extends ChipConfig {
   /** Selection belongs to the chips container. */
   managedSelection?: boolean;
+  /** Notify the owning set when a chip becomes selected. */
+  onSelected?: (chip: ChipComponent) => void;
   /**
    * The chip is a cell of a chip set's grid (FLO-261): the root is a
    * `gridcell`, and a one-action chip's cell is its focus target.
@@ -113,6 +115,7 @@ export interface ChipComponent {
   setLeadingIcon: (icon: string) => ChipComponent;
   setTrailingIcon: (icon: string) => ChipComponent;
   isSelected: () => boolean;
+  /** Selects or deselects this chip silently. In a single-select set, selecting it deselects the previous chip. */
   setSelected: (selected: boolean) => ChipComponent;
   toggleSelected: () => ChipComponent;
   focus: () => ChipComponent;

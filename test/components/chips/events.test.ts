@@ -96,6 +96,54 @@ describe("chips container events", () => {
     ]);
   });
 
+  test("a chip's setter replaces the single selection silently", () => {
+    const events: string[] = [];
+    const chips = mount({ multiSelect: false, chips: [
+      { value: "a", selected: true, ripple: false },
+      { value: "b", ripple: false, onChange: () => events.push("chip change") },
+    ], onChange: () => events.push("set change") });
+    chips.on("change", () => events.push("change"));
+    const [a, b] = chips.getChips();
+
+    expect(b.setSelected(true)).toBe(b);
+    expect([a.isSelected(), b.isSelected()]).toEqual([false, true]);
+    expect(chips.getSelectedValues()).toEqual(["b"]);
+    expect(chips.getValue()).toBe("b");
+    expect(events).toEqual([]);
+
+    b.setSelected(false);
+    expect(chips.getSelectedValues()).toEqual([]);
+    expect(chips.getValue()).toBeNull();
+    expect(events).toEqual([]);
+  });
+
+  test("other programmatic selection paths keep the single-set invariant", () => {
+    const chips = mount({ multiSelect: false, chips: [
+      { value: "a", ripple: false }, { value: "b", ripple: false }, { value: "c", ripple: false },
+    ] });
+    const [a, b] = chips.getChips();
+    const changes: unknown[] = [];
+    chips.on("change", event => changes.push(event.value));
+
+    a.toggleSelected();
+    b.toggleSelected();
+    expect(chips.getSelectedValues()).toEqual(["b"]);
+    chips.selectByValue(["a", "c"]);
+    expect(chips.getSelectedValues()).toEqual(["c"]);
+    chips.setValue(["a", "b"]);
+    expect(chips.getSelectedValues()).toEqual(["b"]);
+    chips.clearSelection();
+    expect(chips.getSelectedValues()).toEqual([]);
+    expect(changes).toEqual([]);
+
+    const multi = mount({ multiSelect: true, chips: [
+      { value: "a", ripple: false }, { value: "b", ripple: false },
+    ] });
+    multi.getChips()[0].setSelected(true);
+    multi.getChips()[1].setSelected(true);
+    expect(multi.getSelectedValues()).toEqual(["a", "b"]);
+  });
+
   test("click change passes both arguments, including valueless chips, and calls onChange", () => {
     const events: [(string | null)[], string | null][] = [];
     const callbacks: [(string | null)[], string | null][] = [];

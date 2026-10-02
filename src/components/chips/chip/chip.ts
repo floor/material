@@ -171,7 +171,13 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
       return api;
     },
     isSelected: () => selected,
-    setSelected(next) { animateChanges(); selected = selectable && next; render(); return api; },
+    setSelected(next) {
+      animateChanges();
+      selected = selectable && next;
+      render();
+      if (selected) options.onSelected?.(api);
+      return api;
+    },
     toggleSelected() { return api.setSelected(!selected); },
     focus() { (oneActionCell ? root : action).focus(); return api; },
     destroy: () => base.lifecycle.destroy(),

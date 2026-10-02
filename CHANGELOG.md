@@ -303,7 +303,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   with `selected: true` selects it and deselects the previous chip, including
   initial factory config and `<m-chip selected>` declarations. The last selected
   chip wins; `add.value` reports the resulting selection. Programmatic additions
-  emit `add` and no `change`.
+  emit `add` and no `change`. Selecting a chip through its `setSelected(true)`
+  also replaces the previous selection silently.
 
 - Prefilled multiline text fields render in SSR, including inside another custom element (FLO-416).
 - Solid async and streaming SSR finish when a component inside a host creates a resource
