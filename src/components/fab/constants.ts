@@ -15,17 +15,13 @@ export const FAB_VARIANTS = {
   /** Secondary tone colour */
   SECONDARY: 'secondary',
   /** Tertiary tone colour */
-  TERTIARY: 'tertiary',
-  /** @deprecated Use a container or tone style instead. */
-  SURFACE: 'surface'
+  TERTIARY: 'tertiary'
 } as const;
 
 /**
  * FAB size variants
  */
 export const FAB_SIZES = {
-  /** @deprecated Small FABs are no longer recommended in M3 Expressive. */
-  SMALL: 'small',
   /** 56px diameter, for standard primary actions (default) */
   DEFAULT: 'default',
   /** 80px diameter with a 28px icon */

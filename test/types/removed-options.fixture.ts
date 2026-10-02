@@ -64,3 +64,16 @@ export const tabsIconSize = TABS_DEFAULTS.ICON_SIZE;
 export const labelFloating = TEXT_FIELD_CLASSES.LABEL_FLOATING;
 // @ts-expect-error the dial is DOM, not a canvas (FLO-279)
 export const dialCanvas = TIMEPICKER_SELECTORS.DIAL_CANVAS;
+
+// The FAB's surface style and small size, deprecated since 0.8 (M3 Expressive)
+import type { FabVariant, FabSize } from "../../src/components/fab/types";
+import type { ExtendedFabVariant } from "../../src/components/extended-fab/types";
+import { FAB_SIZES, FAB_VARIANTS } from "../../src/components/fab/constants";
+// The options take any string; their named unions no longer list the removed values
+type Equals<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
+export const noSurface: Equals<Extract<FabVariant | ExtendedFabVariant, "surface">, never> = true;
+export const noSmall: Equals<Extract<FabSize, "small">, never> = true;
+// @ts-expect-error FAB_SIZES.SMALL is gone with the size
+export const fabSmallKey = FAB_SIZES.SMALL;
+// @ts-expect-error FAB_VARIANTS.SURFACE is gone with the style
+export const fabSurfaceKey = FAB_VARIANTS.SURFACE;

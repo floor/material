@@ -23,8 +23,7 @@ export type ExtendedFabVariant =
   | "tertiary-container"
   | "primary"
   | "secondary"
-  | "tertiary"
-  | "surface";
+  | "tertiary";
 
 /**
  * Expressive extended FAB size: small 56dp, medium 80dp, large 96dp.
