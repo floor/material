@@ -150,12 +150,12 @@ export const BUTTON_GROUP_DEFAULTS = {
   RIPPLE_DURATION: 300,
   /**
    * Default ripple animation timing function
-   * @deprecated Read by nothing: the ripple option it was the default of is never applied (FLO-268). Removed in 1.0.
+   * @deprecated Has no effect: the option it is the default of is never applied (FLO-268). Removed in 1.0.
    */
   RIPPLE_TIMING: 'cubic-bezier(0.4, 0, 0.2, 1)',
   /**
    * Default ripple opacity values [start, end]
-   * @deprecated Read by nothing: the ripple option it was the default of is never applied (FLO-268). Removed in 1.0.
+   * @deprecated Has no effect: the option it is the default of is never applied (FLO-268). Removed in 1.0.
    */
   RIPPLE_OPACITY: ['0.2', '0'] as [string, string]
 } as const;

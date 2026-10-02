@@ -103,8 +103,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 - **The ripple defaults of options never applied (FLO-268):** `DEFAULT_RIPPLE_CONFIG.TIMING` and
   `.OPACITY` (`mtrl/components/button/constants`, `mtrl/components/icon-button/constants`) and
-  `BUTTON_GROUP_DEFAULTS.RIPPLE_TIMING` and `.RIPPLE_OPACITY`. Nothing reads them: `rippleConfig`'s
-  `timing` and `opacity` were deprecated in 0.10.0. Removed in 1.0. Comments only; nothing changes at
+  `BUTTON_GROUP_DEFAULTS.RIPPLE_TIMING` and `.RIPPLE_OPACITY`. They have no effect: the options they
+  are the defaults of, `rippleConfig`'s `timing` and `opacity`, are never applied (deprecated in 0.10.0). Removed in 1.0. Comments only; nothing changes at
   run time.
 
 - **The small FAB's class and icon size:** `FAB_CLASSES.SMALL` and `FAB_ICON_SIZES.SMALL`
