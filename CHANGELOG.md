@@ -12,6 +12,27 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **Time picker, select and radio events agree with their getters (FLO-380).**
+
+  | Event | 0.10 payload | 1.0 payload |
+  |---|---|---|
+  | Factory time picker `input` | `{ value: draft }` | `{ value: committed, draftValue: draft }` |
+  | `<m-timepicker>` `input` detail | `{ value: draft }` | `{ value: committedOrEmpty, draftValue: draft }` |
+  | Factory time picker `confirm` | time string | `{ value: time }` |
+  | `<m-timepicker>` `confirm` detail | no event | `{ value: time }` |
+  | Factory select `change` on empty ID | `{ value: "", ... }` | `{ value: null, ... }` |
+  | `<m-select>` `change` on empty ID | `{ value: "" }` | `{ value: null }` |
+  | `<m-radios>` `change` on empty ID | `{ value: "" }` | `{ value: null }` |
+
+  While the time picker is open, `input.value` no longer moves with the dial:
+  it is the committed time. Read `draftValue` for live edits. The factory's
+  `onInput` callback also receives the new `{ value, draftValue }` object,
+  described by the newly exported `TimePickerInputEvent` type. `onConfirm(string)`
+  in the time picker config still receives a string; factory `confirm` listeners
+  now destructure `{ value }`. `SelectChangeEvent["value"]` is now `string | null`
+  for an empty option ID. The radio factory still reports its string getter,
+  including `""`; handle `null` for empty select or radio element selections.
+
 - **Chip-set `add` and `remove` report the live selection (FLO-380).** Factory
   callbacks receive one object instead of a bare chip:
 
@@ -22,6 +43,9 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   | `<m-chips>` `remove` detail | `{ value: removedId }` | `{ value: remainingSelection, chipValue: removedId }` |
 
   `value` matches `getValue()` inside the callback, including for selected chips.
+  Inside a factory `remove` handler, `event.chip` is already destroyed and out
+  of the set. Its getters still answer, but `getChips().indexOf(event.chip)` is
+  `-1` and its element is disconnected.
   The element continues to emit one `remove` and no separate `change` for user
   removal; declaration edits remain silent. Migration: read the chip from
   `event.chip` in factory handlers and the removed identifier from
@@ -351,6 +375,8 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- React SSR keeps a host's child on the server when that child suspends. `mtrl/ssr/react` rendered the host's children with `renderToStaticMarkup`, which has no Suspense boundary, so the throw left the page's boundary client-rendered, or aborted a host with no boundary above it. The static pass retries the host only when that render suspended, and the shadow root is built from the children once they can render (FLO-415). A child that throws is not retried: the page render reaches it, so the error is reported as it is without the bridge. Retries wait on a backoff (doubling to 250ms) and stop after 40 attempts, about eight seconds; past that the host has no shadow root and the page keeps streaming, so a slower child still arrives. The suspension is recognised from the throw site of whichever React build this process loaded, not from the error text, so a production build that minifies the message still retries. At the cap, development logs one warning naming the element; production logs nothing. A Suspense boundary already inside the host still contributes its own fallback to that snapshot.
+- SSR bridges for React, Svelte, Solid and Vue render ordinary host attributes (`popover`, `inputmode`, `enterkeyhint`, `itemprop`, `nonce`, `is`, and the rest of the host's HTML attributes) instead of rejecting the request. The framework still emits those attributes on the host. The shared renderer skips names outside its allowlist, including event-handler names and `srcdoc`, so they never enter the shadow markup. Calling `renderElement` directly still rejects an unknown host attribute (FLO-418).
 - The menu keyboard step of `elements:check` no longer ends one item short when a runner pauses
   (FLO-423). It waited a fixed 450ms after opening the menu with a key, then sent the arrows; it
   now waits for the first item to take focus, which is what the arrows depend on.

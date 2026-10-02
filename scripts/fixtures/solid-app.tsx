@@ -41,10 +41,16 @@ export const App = () => {
   const [query, setQuery] = createSignal("ap");
   let switchRef: SwitchElement | undefined;
   const record = (id: string) => (event: CustomEvent<unknown>) => log.push({ id, detail: event.detail });
+  const modelLog: Array<{ id: string; detail: unknown; host: unknown }> = [];
+  const recordModel = (id: string, event: CustomEvent<{ value: unknown }>, field: "value" | "checked" = "value") => {
+    const host = event.target as HTMLElement & { value: unknown; checked: boolean };
+    modelLog.push({ id, detail: structuredClone(event.detail.value), host: structuredClone(host[field]) });
+  };
 
   onMount(() => {
     (window as unknown as { api: unknown }).api = {
       log,
+      modelLog,
       get submits() { return submits; },
       setControlled, setExtra, setOrder, setShow, setProgress, setDialog, setRail, setDialogText,
       element: () => switchRef,
@@ -54,7 +60,7 @@ export const App = () => {
   return (
     <main>
       <form id="f" onSubmit={(e) => { e.preventDefault(); submits++; }}>
-        <Switch id="u" name="u" defaultChecked onChange={record("u")} ref={switchRef}>Uncontrolled</Switch>
+        <Switch id="u" name="u" defaultChecked onChange={(e) => { record("u")(e); recordModel("boolean", e, "checked"); }} ref={switchRef}>Uncontrolled</Switch>
         <Switch id="c" checked={controlled()} onChange={(e) => setControlled(e.detail.checked)}>Controlled</Switch>
         <Switch id="d" disabled supportingText="Unavailable">Disabled</Switch>
         <Button id="b" type="submit" variant="filled" class="save" data-test="1">Save</Button>
@@ -71,7 +77,7 @@ export const App = () => {
       <output id="agreed">{String(agreed())}</output>
       <Slider id="sl" ariaLabel="Level" value={level()} onChange={(e) => setLevel(e.detail.value)} />
       <output id="level">{String(level())}</output>
-      <Textfield id="tf" label="Name" value={text()} onInput={(e) => setText(e.detail.value)} />
+      <Textfield id="tf" label="Name" value={text()} onInput={(e) => { recordModel("string", e); setText(e.detail.value); }} />
       <output id="text">{text()}</output>
       <Radios id="rd" ariaLabel="Size" value={size()} onChange={(e) => setSize(e.detail.value)}>
         <Radio value="s">Small</Radio>
@@ -85,7 +91,7 @@ export const App = () => {
         <NavigationRailItem value="starred" icon={ICON}>Starred</NavigationRailItem>
       </NavigationRail>
       <output id="destination">{String(destination())}</output>
-      <Chips id="ck" ariaLabel="Diet" value={diet()} onChange={(e) => setDiet(e.detail.value)}>
+      <Chips id="ck" ariaLabel="Diet" value={diet()} onChange={(e) => { recordModel("array", e); setDiet(e.detail.value); }}>
         <Chip value="veg">Vegetarian</Chip>
         <Chip value="gf">Gluten free</Chip>
       </Chips>

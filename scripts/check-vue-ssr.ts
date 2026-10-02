@@ -11,6 +11,7 @@ import { parseHTML } from "linkedom";
 import { chromium } from "playwright";
 import { declarations, elements } from "../src/elements";
 import { cases } from "./fixtures/preupgrade-cases";
+import { assertGlobalHost, GLOBAL_HOST_DOM, readGlobalHost } from "./fixtures/ssr-global-host";
 
 // CI runs this twice, on the installed Vue and on the peer floor: the log says which.
 const version = (await Bun.file("node_modules/vue/package.json").json() as { version: string }).version;
@@ -99,6 +100,8 @@ for (const item of defaults) {
   }
   pieces.push(renderNode(host, extra));
 }
+used.add("MButton");
+pieces.push(`h(MButton, { id: "globals", label: "Globals", popover: "auto", inputmode: "numeric", enterkeyhint: "send", itemprop: "name", nonce: "abc" })`);
 
 const app = `import { defineComponent, h, ref } from "vue";
 import { ${[...used].sort().join(", ")} } from "mtrl/vue";
@@ -298,6 +301,7 @@ try {
 } finally {
   await Bun.file(serverPath).delete();
 }
+assertGlobalHost(html);
 assert.equal(asyncStream, asyncHtml, "renderToWebStream did not match renderToString");
 assert.match(asyncHtml, /<i id="async-setup">async-loaded<\/i>/);
 assert.match(asyncHtml, /<i id="outside">outside-loaded<\/i>/);
@@ -362,6 +366,7 @@ try {
     assert.equal(row.shadow, !OPT_OUT.has(element), `${element} shadow root before script`);
     if (row.childShadow !== null) assert.equal(row.childShadow, true, "toolbar's icon button has a shadow root before script");
   }
+  assert.deepEqual(await inert.evaluate(readGlobalHost), GLOBAL_HOST_DOM);
   await inert.close();
 
   const page = await browser.newPage();
@@ -391,6 +396,7 @@ try {
   });
   await page.waitForFunction(() => document.getElementById("checked")?.textContent === "false");
   assert.equal(await page.locator("#host-switch").getByRole("switch", { name: "Wi-Fi" }).isChecked(), false);
+  assert.deepEqual(await page.evaluate(readGlobalHost), GLOBAL_HOST_DOM);
   assert.deepEqual({ warnings: pageWarnings, errors: pageErrors }, { warnings: [], errors: [] });
   await page.close();
 
