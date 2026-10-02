@@ -54,8 +54,6 @@ export const FAB_CLASSES = {
   ICON: 'fab__icon',
   /** Applied when FAB is lowered (pressed state) */
   LOWERED: 'fab--lowered',
-  /** Applied to small FABs */
-  SMALL: 'fab--small',
   /** Applied to medium FABs */
   MEDIUM: 'fab--medium',
   /** Applied to large FABs */
@@ -75,7 +73,6 @@ export const FAB_TYPES = {
  * Default icon sizes based on FAB size
  */
 export const FAB_ICON_SIZES = {
-  SMALL: '24px',
   DEFAULT: '24px',
   MEDIUM: '28px',
   LARGE: '32px'

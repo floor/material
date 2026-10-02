@@ -674,11 +674,6 @@
       "status": "public"
     },
     {
-      "name": "CheckboxVariant",
-      "kind": "type",
-      "status": "public"
-    },
-    {
       "name": "default",
       "kind": "value",
       "status": "public"

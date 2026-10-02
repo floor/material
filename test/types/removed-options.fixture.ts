@@ -87,3 +87,24 @@ export const chipText: ChipConfig = { text: "Veg" };
 export const tabsHeight: TabsConfig = { indicatorHeight: 3 };
 // @ts-expect-error indicatorWidthStrategy is indicator.widthStrategy
 export const tabsWidth: TabsConfig = { indicatorWidthStrategy: "fixed" };
+
+// Deprecated in 0.10.5 (#439): constants no option reads, and a removed option's type
+import { DEFAULT_RIPPLE_CONFIG } from "../../src/components/button/constants";
+import { DEFAULT_RIPPLE_CONFIG as ICON_BUTTON_RIPPLE } from "../../src/components/icon-button/constants";
+import { BUTTON_GROUP_DEFAULTS } from "../../src/components/button-group/constants";
+import { FAB_CLASSES, FAB_ICON_SIZES } from "../../src/components/fab/constants";
+// @ts-expect-error DEFAULT_RIPPLE_CONFIG.TIMING: rippleConfig.timing is gone
+export const buttonRippleTiming = DEFAULT_RIPPLE_CONFIG.TIMING;
+// @ts-expect-error DEFAULT_RIPPLE_CONFIG.OPACITY: rippleConfig.opacity is gone
+export const iconButtonRippleOpacity = ICON_BUTTON_RIPPLE.OPACITY;
+// @ts-expect-error BUTTON_GROUP_DEFAULTS.RIPPLE_TIMING: rippleConfig.timing is gone
+export const groupRippleTiming = BUTTON_GROUP_DEFAULTS.RIPPLE_TIMING;
+// @ts-expect-error BUTTON_GROUP_DEFAULTS.RIPPLE_OPACITY: rippleConfig.opacity is gone
+export const groupRippleOpacity = BUTTON_GROUP_DEFAULTS.RIPPLE_OPACITY;
+// @ts-expect-error FAB_CLASSES.SMALL is gone with the small size
+export const fabSmallClass = FAB_CLASSES.SMALL;
+// @ts-expect-error FAB_ICON_SIZES.SMALL is gone with the small size
+export const fabSmallIcon = FAB_ICON_SIZES.SMALL;
+// @ts-expect-error CheckboxVariant was the type of the removed variant option
+import type { CheckboxVariant } from "../../src/components/checkbox";
+export type OldCheckboxVariant = CheckboxVariant;

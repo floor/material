@@ -1,7 +1,7 @@
 import { beforeAll, expect, test } from 'bun:test';
 import { compileString } from 'sass';
 import { corner } from '../utils/corner';
-import { FAB_SIZES, FAB_ICON_SIZES } from '../../src/components/fab/constants';
+import { FAB_SIZES, FAB_ICON_SIZES, FAB_CLASSES } from '../../src/components/fab/constants';
 import { createBaseConfig, getElementConfig } from '../../src/components/fab/config';
 
 // FabSmallTokens.kt, FabBaselineTokens.kt, FabMediumTokens.kt, FabLargeTokens.kt.
@@ -36,4 +36,7 @@ for (const [size, container, icon, radius] of [
 // 1.0 removed the small FAB, deprecated since 0.8 (M3 Expressive)
 test("no small FAB is left in the stylesheet or the sizes", () => {
   expect(css).not.toMatch(/\.mtrl-fab--small\b/);
+  expect(Object.keys(FAB_SIZES)).not.toContain('SMALL');
+  expect(Object.keys(FAB_ICON_SIZES)).not.toContain('SMALL');
+  expect(Object.keys(FAB_CLASSES)).not.toContain('SMALL');
 });
