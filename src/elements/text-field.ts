@@ -5,12 +5,14 @@
  * The `value` attribute is the default value and the `value` property the
  * live one, as on a native input: the attribute moves the value until the
  * user or script changes it. The `label` attribute is the floating
- * label, which the factory renders; there is no slot.
+ * label, which the factory renders; there is no slot. The `trailing-icon`
+ * attribute is the trailing icon's markup and `trailing-icon-label` its
+ * button's accessible name: without the label the icon is decorative.
  *
- * `label` and `type` have no setter on the text field: changing one
- * recreates it, keeping the value. A field created without a label has no
- * label element to update, and `type="multiline"` swaps the input for a
- * textarea.
+ * `label`, `type` and `trailing-icon-label` have no setter on the text field:
+ * changing one recreates it, keeping the value. A field created without a
+ * label has no label element to update, and `type="multiline"` swaps the
+ * input for a textarea.
  *
  * Parts: `text-field`, `field`, `label`, `input`, `leading-icon`, `trailing-icon`, `prefix`,
  * `suffix`, `supporting`, `helper`, `counter`, `outline`, `outline-leading`, `outline-notch`,
