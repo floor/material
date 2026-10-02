@@ -100,7 +100,9 @@ try {
     ].join("\n"));
     const budgets = {
       // Measured against b475ea5d: 688,073 raw, 10,981 gzip.
-      inline: { options: {}, raw: [681_150, 695_000], gzip: [10_850, 11_100] },
+      // main's reduced-motion rule in every root's host sheet (FLO-549, 0.10.6), on the
+      // forward merge: 700,173 raw, 11,154 gzip against 42c1a111 plus main 23c03a2f.
+      inline: { options: {}, raw: [693_150, 707_200], gzip: [11_000, 11_300] },
       // Measured against b475ea5d: 41,993 raw, 1,026 gzip.
       link: { options: { styles: "link", cssBase: "/css" }, raw: [41_550, 42_450], gzip: [900, 1_150] },
     } as const;
