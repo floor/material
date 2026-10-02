@@ -6,7 +6,7 @@ import { emitSvelte } from "./svelte-package";
 
 const outdir = "./dist";
 const pkg = await Bun.file("package.json").json();
-const banner = `/*! mtrl v${pkg.version} | MIT */`;
+const banner = `/*! ${pkg.name} v${pkg.version} | MIT */`;
 
 try {
   // Type-check before removing the previous distribution.
