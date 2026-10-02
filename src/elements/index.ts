@@ -85,8 +85,10 @@ export { checkboxElement, defineCheckbox } from "./checkbox";
 export type { CheckboxSpec, CheckboxElement } from "./checkbox";
 export { sliderElement, defineSlider } from "./slider";
 export type { SliderSpec, SliderElement } from "./slider";
-export { textfieldElement, defineTextfield as defineTextField } from "./textfield";
+export { textfieldElement as textFieldElement, defineTextfield as defineTextField } from "./textfield";
 export {
+  /** @deprecated Use textFieldElement: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
+  textfieldElement,
   /** @deprecated Use defineTextField: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
   defineTextfield,
 } from "./textfield";

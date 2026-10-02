@@ -3302,39 +3302,81 @@
   ],
   "textfield/constants": [
     {
-      "name": "TEXTFIELD_CLASSES",
+      "name": "TEXT_FIELD_CLASSES",
       "kind": "value",
       "status": "public"
+    },
+    {
+      "name": "TEXT_FIELD_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXT_FIELD_DENSITY",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXT_FIELD_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXT_FIELD_STATES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXT_FIELD_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXT_FIELD_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXTFIELD_CLASSES",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Use TEXT_FIELD_CLASSES: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "TEXTFIELD_DEFAULTS",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated",
+      "note": "Use TEXT_FIELD_DEFAULTS: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "TEXTFIELD_DENSITY",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated",
+      "note": "Use TEXT_FIELD_DENSITY: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "TEXTFIELD_EVENTS",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated",
+      "note": "Use TEXT_FIELD_EVENTS: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "TEXTFIELD_STATES",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated",
+      "note": "Use TEXT_FIELD_STATES: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "TEXTFIELD_TYPES",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated",
+      "note": "Use TEXT_FIELD_TYPES: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "TEXTFIELD_VARIANTS",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated",
+      "note": "Use TEXT_FIELD_VARIANTS: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     }
   ],
   "timepicker": [
