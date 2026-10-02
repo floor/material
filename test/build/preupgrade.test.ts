@@ -5,6 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
+import { JSDOM } from "jsdom";
 import * as sass from "sass";
 import {
   cascadeLayerOrder,
@@ -25,6 +26,111 @@ const rules = await preupgradeStyles(names, options);
 /** The selectors of compressed CSS without nested at-rules. */
 const selectors = (css: string): string[] =>
   Array.from(css.matchAll(/([^{}]+)\{[^{}]*\}/g), (match) => match[1].split(",")).flat();
+
+// jsdom's engine (nwsapi) does not implement `:defined`. This applies the
+// child selector the sheet emits: the parent compound, then `>`, then the
+// subject. A built-in element is defined; a custom element is defined only
+// after `customElements.define`.
+const definedElement = (element: Element): boolean => {
+  const name = element.localName;
+  if (!name.includes("-")) return true;
+  return element.ownerDocument.defaultView?.customElements.get(name) !== undefined;
+};
+
+const readIdent = (text: string, start: number): { value: string; index: number } => {
+  let i = start;
+  let value = "";
+  const consume = (): string => {
+    if (text[i] !== "\\") {
+      const char = text[i] ?? "";
+      i += 1;
+      return char;
+    }
+    i += 1;
+    const hex = /^[0-9a-fA-F]{1,6}/.exec(text.slice(i));
+    if (!hex) {
+      const char = text[i] ?? "";
+      i += 1;
+      return char;
+    }
+    i += hex[0].length;
+    if (text[i] === " " || text[i] === "\t" || text[i] === "\n" || text[i] === "\r" || text[i] === "\f") i += 1;
+    return String.fromCodePoint(Number.parseInt(hex[0], 16));
+  };
+  if (text[i] === "-") value += consume();
+  if (i >= text.length) throw new Error(`bad ident in ${text}`);
+  value += consume();
+  while (i < text.length && (text[i] === "\\" || /[A-Za-z0-9_-]/.test(text[i] ?? "") || (text.codePointAt(i) ?? 0) > 127)) value += consume();
+  return { value, index: i };
+};
+
+const matchesCompound = (element: Element, compound: string): boolean => {
+  let i = 0;
+  if (!compound) throw new Error("empty compound");
+  while (i < compound.length) {
+    const char = compound[i];
+    if (char === "*") { i += 1; continue; }
+    if (char === "#") {
+      const ident = readIdent(compound, i + 1);
+      if (element.id !== ident.value) return false;
+      i = ident.index;
+      continue;
+    }
+    if (char === "[") {
+      const end = compound.indexOf("]", i);
+      if (end < 0) throw new Error(`unclosed attribute in ${compound}`);
+      const body = compound.slice(i + 1, end);
+      if (body.includes("=") || body.includes(" ")) throw new Error(`unsupported attribute ${body}`);
+      if (!element.hasAttribute(body)) return false;
+      i = end + 1;
+      continue;
+    }
+    if (char === ":") {
+      const ident = readIdent(compound, i + 1);
+      i = ident.index;
+      if (compound[i] === "(") {
+        let depth = 0;
+        const argStart = i + 1;
+        while (i < compound.length) {
+          if (compound[i] === "(") depth += 1;
+          else if (compound[i] === ")") {
+            depth -= 1;
+            if (depth === 0) break;
+          }
+          i += 1;
+        }
+        if (depth !== 0) throw new Error(`unclosed function in ${compound}`);
+        const arg = compound.slice(argStart, i);
+        i += 1;
+        if (ident.value !== "not") throw new Error(`unsupported pseudo :${ident.value}()`);
+        if (matchesCompound(element, arg)) return false;
+        continue;
+      }
+      if (ident.value === "defined") {
+        if (!definedElement(element)) return false;
+        continue;
+      }
+      throw new Error(`unsupported pseudo :${ident.value}`);
+    }
+    if (/[A-Za-z]/.test(char ?? "")) {
+      const ident = readIdent(compound, i);
+      if (element.localName !== ident.value.toLowerCase()) return false;
+      i = ident.index;
+      continue;
+    }
+    throw new Error(`unparsed ${JSON.stringify(compound.slice(i))} in ${compound}`);
+  }
+  return true;
+};
+
+/** Whether `element` is the subject of a sheet selector whose only combinator is `>`. */
+const matchesChildSelector = (element: Element, selector: string): boolean => {
+  const index = selector.lastIndexOf(">");
+  if (index < 0) throw new Error(`not a child selector: ${selector}`);
+  const parent = element.parentElement;
+  if (!parent) return false;
+  return matchesCompound(parent, selector.slice(0, index).trim()) && matchesCompound(element, selector.slice(index + 1).trim());
+};
 
 describe("pre-upgrade styles", () => {
   test("every element has rules", () => {
@@ -69,6 +175,18 @@ describe("pre-upgrade styles", () => {
     expect(subjectShape("m-tabs:not(:defined):has(>[icon])")).toBe("host");
     expect(subjectShape("m-textfield:not(:defined)::before")).toBe("host::before");
     expect(subjectShape("[data-mtrl-ssr]:not(:defined):not(#\\0) > *")).toBe("child");
+  });
+
+  test("the rollback's child selector matches a div or span and not an undefined custom element", () => {
+    const child = preupgradeRollback().slice(0, preupgradeRollback().indexOf("{")).split(",").find((selector) => selector.includes(">"));
+    expect(child).toBeDefined();
+    const dom = new JSDOM("<!doctype html><m-toolbar data-mtrl-ssr><div></div><span></span><m-fab-menu></m-fab-menu></m-toolbar>");
+    const host = dom.window.document.querySelector("m-toolbar");
+    expect(host).not.toBeNull();
+    const match = (tag: string): boolean => matchesChildSelector(host?.querySelector(tag) as Element, child as string);
+    expect(match("div")).toBe(true);
+    expect(match("span")).toBe(true);
+    expect(match("m-fab-menu")).toBe(false);
   });
 
   test("no element CSS module registers pre-upgrade rules", () => {

@@ -47,9 +47,14 @@ const phaseB = [
   }),
   renderElement("m-navigation-rail", { id: "rail" }, '<div slot="header">Menu</div>'),
   renderElement("m-card", { id: "card" }, '<span slot="headline">Title</span>'),
+  // The FAB menu opts out of the shadow and the mark. Inside a rendered
+  // toolbar it is still an undefined custom element, and its own rule reserves
+  // the 56px box. A bare twin beside it is that rule with no rendered parent.
+  renderElement("m-toolbar", { id: "toolbar" }, '<m-fab-menu slot="fab"></m-fab-menu>'),
 ].join("") + '<m-textfield id="variant-bare" label="Name" value="Ada" type="multiline" variant="outlined" density="compact" supporting-text="Help"></m-textfield>'
   + '<m-navigation-rail id="rail-bare"><div slot="header">Menu</div></m-navigation-rail>'
-  + '<m-card id="card-bare"><span slot="headline">Title</span></m-card>';
+  + '<m-card id="card-bare"><span slot="headline">Title</span></m-card>'
+  + '<m-fab-menu id="fab-bare"></m-fab-menu>';
 
 const THRESHOLD = 0.01;
 const STAGE_WIDTH = 360;
@@ -395,13 +400,16 @@ try {
         const headerBare = railBare.querySelector("[slot=header]")!;
         const headline = card.querySelector("[slot=headline]")!;
         const headlineBare = cardBare.querySelector("[slot=headline]")!;
+        const toolbar = document.querySelector("#toolbar")!;
+        const fab = toolbar.querySelector("m-fab-menu")!;
+        const fabBare = document.querySelector("#fab-bare")!;
         const box = (element: Element): { w: number; h: number } => {
           const r = element.getBoundingClientRect();
           return { w: r.width, h: r.height };
         };
         const style = getComputedStyle(field);
         return {
-          root: !!field.shadowRoot && !!button.shadowRoot && !!select.shadowRoot && !!variant.shadowRoot && !!rail.shadowRoot && !!card.shadowRoot && !bare.shadowRoot && !variantBare.shadowRoot && !railBare.shadowRoot && !cardBare.shadowRoot,
+          root: !!field.shadowRoot && !!button.shadowRoot && !!select.shadowRoot && !!variant.shadowRoot && !!rail.shadowRoot && !!card.shadowRoot && !!toolbar.shadowRoot && !bare.shadowRoot && !variantBare.shadowRoot && !railBare.shadowRoot && !cardBare.shadowRoot && !fab.shadowRoot && !fabBare.shadowRoot,
           padding: style.padding,
           background: style.backgroundColor,
           before: getComputedStyle(field, "::before").content,
@@ -417,6 +425,8 @@ try {
           headerBare: { visibility: getComputedStyle(headerBare).visibility, ...box(headerBare) },
           headline: { visibility: getComputedStyle(headline).visibility, order: getComputedStyle(headline).order, ...box(headline) },
           headlineBare: { visibility: getComputedStyle(headlineBare).visibility, order: getComputedStyle(headlineBare).order, ...box(headlineBare) },
+          fab: box(fab),
+          fabBare: box(fabBare),
         };
       });
       assert(before.root, "phase B hosts did not render the roots the page asked for");
@@ -441,6 +451,13 @@ try {
       assert.equal(before.headlineBare.order, "-2");
       assert.notEqual(before.headline.order, before.headlineBare.order);
       assert(before.headline.h > 0 && before.headlineBare.h > 0, "a card headline has no box");
+      // The toolbar's FAB menu is an undefined custom element. Its pre-upgrade
+      // rule reserves 56px; the bare twin is the same rule. The rollback must
+      // not take that box away.
+      assert.equal(Math.round(before.fabBare.w), 56);
+      assert.equal(Math.round(before.fabBare.h), 56);
+      assert.equal(Math.round(before.fab.w), Math.round(before.fabBare.w));
+      assert.equal(Math.round(before.fab.h), Math.round(before.fabBare.h));
       await p.addScriptTag({ url: "/elements.js", type: "module" });
       await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true && !document.querySelector("#stage :not(:defined)"));
       await p.waitForTimeout(300);
@@ -453,7 +470,7 @@ try {
       assert(Math.abs(before.button - after.button) < 0.5, `button width ${before.button} before the script, ${after.button} after`);
       assert(Math.abs(before.select - after.select) < 0.5, `select width ${before.select} before the script, ${after.select} after`);
       assert.equal(before.background, after.background, "text field background changed when the script ran");
-      console.log(`Phase B, stylesheet loaded, script held back: field padding ${before.padding}, button ${before.button.toFixed(1)}px, select ${before.select.toFixed(1)}px, bare ${before.bare.toFixed(1)}px, header ${before.header.visibility} ${before.header.h.toFixed(1)}px (bare ${before.headerBare.visibility} ${before.headerBare.h.toFixed(1)}px), headline ${before.headline.visibility} ${before.headline.h.toFixed(1)}px order ${before.headline.order} (bare ${before.headlineBare.visibility} ${before.headlineBare.h.toFixed(1)}px order ${before.headlineBare.order})`);
+      console.log(`Phase B, stylesheet loaded, script held back: field padding ${before.padding}, button ${before.button.toFixed(1)}px, select ${before.select.toFixed(1)}px, bare ${before.bare.toFixed(1)}px, header ${before.header.visibility} ${before.header.h.toFixed(1)}px (bare ${before.headerBare.visibility} ${before.headerBare.h.toFixed(1)}px), headline ${before.headline.visibility} ${before.headline.h.toFixed(1)}px order ${before.headline.order} (bare ${before.headlineBare.visibility} ${before.headlineBare.h.toFixed(1)}px order ${before.headlineBare.order}), fab ${before.fab.w.toFixed(1)}×${before.fab.h.toFixed(1)} (bare ${before.fabBare.w.toFixed(1)}×${before.fabBare.h.toFixed(1)})`);
     } finally {
       await p.close();
     }
