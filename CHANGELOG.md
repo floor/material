@@ -12,7 +12,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [0.10.5] - 2026-10-02
 
-Preparing for 1.0.0, continued: every identifier writes "text field" as two words
+Preparing for 1.0.0, continued: every exported identifier writes "text field" as two words
 (`createTextField`, `TextFieldConfig`, …), beside the old names, which are deprecated with the
 other names and members 1.0.0 removes. Also contrast levels on every theme, opt-in wheel
 scrolling on the carousel, and the text field's required asterisk, announced errors and trailing
@@ -51,7 +51,7 @@ icon button.
   and `"high"` select M3 contrast levels in light and dark. Put the attribute on the
   same element as `data-theme`, including each nested theme. With no contrast attribute,
   `prefers-contrast: more` selects high on every themed element independently; explicit
-  `standard` opts out on that element. In 1.0, a nested theme does not inherit an ancestor's
+  `standard` opts out on that element. A nested theme does not inherit an ancestor's
   contrast setting or opt-out. The unthemed root follows the OS color scheme and
   `.dark-theme` at every contrast level, ignoring `data-theme-mode`.
   Hand-authored medium and high palettes use each theme's documented seed, falling back
