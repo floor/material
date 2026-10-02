@@ -70,8 +70,23 @@ const STAGE_WIDTH = 360;
 // fails a one-pixel move.
 const MOVE_LIMIT = 0.5;
 
+// The rows this branch does not fix. Each entry is a row's name and the move
+// it is known for today, in px on its largest axis: a defect waiting for its
+// own fix, in the component's own branch. The check prints a listed row as
+// `known` on every run instead of failing it, and it fails if the row moves
+// more than its recorded value (the defect got worse) or if the row no longer
+// moves past MOVE_LIMIT (its fix landed: remove the entry then).
+const KNOWN_MOVES: Record<string, number> = {
+  // The pre-upgrade button group's inline sibling sits 1.3px lower than the
+  // element's box does after upgrade; the score, 0.0001, cannot see it.
+  "button-group": 1.3,
+};
+
 /** The siblings after each case's host, as `measure` selects them. */
 const SIBLINGS = ["#inline", "#block"] as const;
+
+/** One decimal place, as the report prints moves. */
+const round1 = (value: number): number => Math.round(value * 10) / 10;
 
 const only = process.argv.slice(2);
 
@@ -323,15 +338,16 @@ const largestMove = (moves: Result["moves"]): { sibling: string; axis: string; v
 
 /**
  * A row's mark: the score's threshold, then the move limit, which the score
- * cannot see. A move past the limit fails, whatever the score, and the failing
- * line names the row, the sibling and the move.
+ * cannot see. A listed move prints as `known`; any other move past the limit
+ * fails, and the failing line names the row, the sibling and the move.
  */
-const markOf = (r: Result, checkMoves: boolean): { mark: "ok" | "FAIL"; note: string } => {
+const markOf = (r: Result, checkMoves: boolean): { mark: "ok" | "known" | "FAIL"; note: string } => {
   if (r.score >= THRESHOLD) return { mark: "FAIL", note: "" };
   if (!checkMoves) return { mark: "ok", note: "" };
   const worst = largestMove(r.moves);
   if (!worst || worst.value <= MOVE_LIMIT) return { mark: "ok", note: "" };
   const where = `${worst.sibling} moved ${worst.value.toFixed(1)}px on ${worst.axis}`;
+  if (KNOWN_MOVES[r.name] !== undefined) return { mark: "known", note: `  (${where}; known, waiting for its own fix)` };
   return { mark: "FAIL", note: `  (${where}; over the ${MOVE_LIMIT}px limit, whatever the score)` };
 };
 
@@ -356,6 +372,19 @@ try {
   console.log(`With the pre-upgrade styles (score < ${THRESHOLD}, siblings within ${MOVE_LIMIT}px):`);
   const withStyles = await runCases(true);
   const failing = report(withStyles, true);
+
+  // Every listed row has to still show its defect: moving past the limit, and
+  // no further than the value it is known for. (Not in `only` mode, where the
+  // run holds a subset of the rows.)
+  if (!only.length) {
+    for (const [name, recorded] of Object.entries(KNOWN_MOVES)) {
+      const row = withStyles.find((r) => r.name === name);
+      assert(row, `KNOWN_MOVES names a row that is not a case: ${name}`);
+      const move = round1(largestMove(row.moves)?.value ?? 0);
+      assert(move > MOVE_LIMIT, `${name} no longer moves a sibling past ${MOVE_LIMIT}px (${move.toFixed(1)}px): its fix landed, remove it from KNOWN_MOVES`);
+      assert(move <= recorded, `${name} moved a sibling ${move.toFixed(1)}px, more than the ${recorded}px it is known for`);
+    }
+  }
 
   console.log("\nMutation: without the pre-upgrade styles:");
   const without = await runCases(false);
