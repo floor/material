@@ -21,6 +21,20 @@ const factories = { assist: createAssistChip, filter: createFilterChip, input: c
 const ICON = '<svg viewBox="0 0 24 24"><path d="M1 1h10v10z"/></svg>';
 
 describe("Material chip factories", () => {
+  test("a caller-supplied onSelected on a public factory is never called", () => {
+    const calls: string[] = [];
+    const filter = createFilterChip({ label: "Filter", ripple: false, onSelected() { calls.push("filter"); } });
+    const input = createInputChip({ label: "Input", ripple: false, onSelected() { calls.push("input"); } });
+    const assist = createAssistChip({ label: "Assist", ripple: false, onSelected() { calls.push("assist"); } });
+    const suggestion = createSuggestionChip({ label: "Suggestion", ripple: false, onSelected() { calls.push("suggestion"); } });
+    filter.setSelected(true);
+    input.setSelected(true);
+    assist.setSelected(true);
+    suggestion.setSelected(true);
+    expect(calls).toEqual([]);
+    for (const chip of [filter, input, assist, suggestion]) chip.destroy();
+  });
+
   test("the four factories are exported; the generic factory and legacy variants are gone", () => {
     for (const [name, factory] of Object.entries(factories)) expect(publicAPI[`create${name[0].toUpperCase()}${name.slice(1)}Chip` as keyof typeof publicAPI]).toBe(factory);
     expect("createChip" in publicAPI).toBe(false);

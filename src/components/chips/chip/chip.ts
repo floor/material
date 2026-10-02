@@ -19,6 +19,10 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
   const base = pipe(createBase, withEvents(), withElement(createElementConfig(options, { tag: "div" })), withLifecycle())(options);
   const root = base.element;
   const resources = getCleanup(base);
+  // The set's selection hook. removeChip and the set's teardown both destroy
+  // the chip, which is what drops the hook: a later setSelected cannot reach
+  // a set that no longer has this chip. FLO-518.
+  resources.add(() => { options.onSelected = undefined; });
   root.classList.add(base.getClass(`chip--${type}`));
   if (options.elevated && type !== "input") root.classList.add(base.getClass("chip--elevated"));
   const action = document.createElement("button");
