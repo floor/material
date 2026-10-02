@@ -752,13 +752,19 @@ try {
   // (12 and 16 at size s; size xs keeps whatever left-to-right measures), and
   // the extra-small icon-to-label gap is 4. The icon already follows direction
   // into the shadow root; these numbers are the paddings and the gap.
+  // Trailing icon: the element's icon-position="end" (the factory's
+  // iconPosition) puts the icon after the label with __icon--end, and its
+  // insets equal the factory twin's, at every size and direction here.
   {
     const variants = ["filled", "elevated", "tonal", "outlined", "text"];
     const button = (variant: string, size: string) =>
       `<m-button variant="${variant}" size="${size}" icon='${ICON}' data-variant="${variant}" data-size="${size}">Save</m-button>`;
-    const row = variants.flatMap((variant) => ["xs", "s"].map((size) => button(variant, size))).join("");
+    const trailing = (variant: string, size: string) =>
+      `<m-button variant="${variant}" size="${size}" icon='${ICON}' icon-position="end" data-variant="${variant}" data-size="${size}" data-place="end">Save</m-button>`;
+    const row = variants.flatMap((variant) => ["xs", "s"].map((size) => button(variant, size) + trailing(variant, size))).join("");
     await fresh(page, `<div id="bi-ltr">${row}</div><div id="bi-rtl" dir="rtl">${row}</div>`);
     type Inset = { surface: string; variant: string; size: string; dir: string; start: number; end: number; gap: number };
+    type Trailing = Inset & { found: boolean; after: boolean; endClass: boolean };
     const insets = await page.evaluate(async (icon) => {
       const w = window as unknown as Win & { mtrl: { createButton: (c: object) => { element: HTMLElement } } };
       const variants = ["filled", "elevated", "tonal", "outlined", "text"];
@@ -773,11 +779,14 @@ try {
             host.append(factory.element);
           }
           // iconPosition reaches withIcon through the button config and adds __icon--end.
-          const trailing = w.mtrl.createButton({ text: "Save", icon, variant, size: "s", iconPosition: "end" });
-          trailing.element.dataset.surface = "factory";
-          trailing.element.dataset.place = "end";
-          trailing.element.dataset.variant = variant;
-          host.append(trailing.element);
+          for (const size of ["xs", "s"]) {
+            const trailing = w.mtrl.createButton({ text: "Save", icon, variant, size, iconPosition: "end" });
+            trailing.element.dataset.surface = "factory";
+            trailing.element.dataset.place = "end";
+            trailing.element.dataset.variant = variant;
+            trailing.element.dataset.size = size;
+            host.append(trailing.element);
+          }
         }
       }
       await new Promise((r) => requestAnimationFrame(() => r(null)));
@@ -799,7 +808,7 @@ try {
       for (const id of ["bi-ltr", "bi-rtl"]) {
         const host = document.getElementById(id) as HTMLElement;
         const dir = id === "bi-rtl" ? "rtl" : "ltr";
-        for (const element of host.querySelectorAll("m-button")) {
+        for (const element of host.querySelectorAll("m-button:not([data-place=end])")) {
           const button = element.shadowRoot?.querySelector("button") as HTMLElement;
           rows.push(read(button, "element", element.dataset.variant!, element.dataset.size!, dir));
         }
@@ -807,23 +816,41 @@ try {
           rows.push(read(button, "factory", button.dataset.variant!, button.dataset.size!, dir));
         }
       }
-      const trailing: Inset[] = [];
+      const trailing: Trailing[] = [];
+      const readTrailing = (root: HTMLElement | null, iconEl: HTMLElement | null, labelEl: HTMLElement | null) => {
+        if (!root || !iconEl || !labelEl) return { start: -1, end: -1, gap: -1, found: false, after: false, endClass: false };
+        const iconBox = iconEl.getBoundingClientRect();
+        const labelBox = labelEl.getBoundingClientRect();
+        const rootBox = root.getBoundingClientRect();
+        const style = getComputedStyle(root);
+        const rtl = style.direction === "rtl";
+        const borderStart = parseFloat(rtl ? style.borderRightWidth : style.borderLeftWidth) || 0;
+        const borderEnd = parseFloat(rtl ? style.borderLeftWidth : style.borderRightWidth) || 0;
+        const start = (rtl ? rootBox.right - labelBox.right : labelBox.left - rootBox.left) - borderStart;
+        const end = (rtl ? iconBox.left - rootBox.left : rootBox.right - iconBox.right) - borderEnd;
+        // The label's start inset and the icon's end inset, as the leading read
+        // takes them with the roles swapped; the label-to-icon gap is not one of
+        // the insets the case compares.
+        return {
+          start: px(start), end: px(end), gap: -1, found: true,
+          after: (labelEl.compareDocumentPosition(iconEl) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0,
+          endClass: iconEl.classList.contains("mtrl-button__icon--end"),
+        };
+      };
       for (const id of ["bi-ltr", "bi-rtl"]) {
         const host = document.getElementById(id) as HTMLElement;
         const dir = id === "bi-rtl" ? "rtl" : "ltr";
-        for (const button of host.querySelectorAll<HTMLElement>("[data-place=end]")) {
-          const iconBox = button.querySelector(".mtrl-button__icon--end")!.getBoundingClientRect();
-          const labelBox = button.querySelector(".mtrl-button__text")!.getBoundingClientRect();
-          const root = button.getBoundingClientRect();
-          const style = getComputedStyle(button);
-          const rtl = style.direction === "rtl";
-          const borderStart = parseFloat(rtl ? style.borderRightWidth : style.borderLeftWidth) || 0;
-          const borderEnd = parseFloat(rtl ? style.borderLeftWidth : style.borderRightWidth) || 0;
-          const start = (rtl ? root.right - labelBox.right : labelBox.left - root.left) - borderStart;
-          const end = (rtl ? iconBox.left - root.left : root.right - iconBox.right) - borderEnd;
+        for (const element of host.querySelectorAll<HTMLElement>("m-button[data-place=end]")) {
+          const button = element.shadowRoot?.querySelector("button") as HTMLElement | null;
           trailing.push({
-            surface: "factory", variant: button.dataset.variant!, size: "s", dir,
-            start: px(start), end: px(end), gap: 0,
+            surface: "element", variant: element.dataset.variant!, size: element.dataset.size!, dir,
+            ...readTrailing(button, button?.querySelector(".mtrl-button__icon--end") ?? null, button?.querySelector(".mtrl-button__text") ?? null),
+          });
+        }
+        for (const button of host.querySelectorAll<HTMLElement>("[data-surface=factory][data-place=end]")) {
+          trailing.push({
+            surface: "factory", variant: button.dataset.variant!, size: button.dataset.size!, dir,
+            ...readTrailing(button, button.querySelector(".mtrl-button__icon--end"), button.querySelector(".mtrl-button__text")),
           });
         }
       }
@@ -855,14 +882,43 @@ try {
         }
       }
     }
-    for (const row of insets.trailing) {
-      if (row.start !== 16 || row.end !== 12) {
-        failures.push(`button inset end: ${row.surface} ${row.variant} s ${row.dir} start ${row.start} end ${row.end} (expected start 16 end 12)`);
+    const trailingByKey = new Map(insets.trailing.map((row) => [key(row), row]));
+    for (const variant of variants) {
+      for (const size of ["xs", "s"]) {
+        for (const surface of ["factory", "element"]) {
+          const ltr = trailingByKey.get(`${surface} ${variant} ${size} ltr`);
+          const rtl = trailingByKey.get(`${surface} ${variant} ${size} rtl`);
+          assert.ok(ltr && rtl, `missing trailing row for ${surface} ${variant} ${size}`);
+          for (const row of [ltr, rtl]) {
+            if (!row.found) failures.push(`button inset end: ${surface} ${variant} ${size} ${row.dir} has no trailing icon`);
+            else if (!row.endClass) failures.push(`button inset end: ${surface} ${variant} ${size} ${row.dir} icon lacks mtrl-button__icon--end`);
+            else if (!row.after) failures.push(`button inset end: ${surface} ${variant} ${size} ${row.dir} icon does not follow the label`);
+          }
+          if (ltr.found && rtl.found && (ltr.start !== rtl.start || ltr.end !== rtl.end)) {
+            failures.push(`button inset end: ${surface} ${variant} ${size} ltr start ${ltr.start} end ${ltr.end}; rtl start ${rtl.start} end ${rtl.end}`);
+          }
+          if (surface === "factory" && size === "s") {
+            for (const row of [ltr, rtl]) {
+              if (row.found && (row.start !== 16 || row.end !== 12)) {
+                failures.push(`button inset end: factory ${variant} s ${row.dir} start ${row.start} end ${row.end} (expected start 16 end 12)`);
+              }
+            }
+          }
+        }
+        // The element's insets equal its factory twin's, in both directions.
+        for (const dir of ["ltr", "rtl"]) {
+          const factory = trailingByKey.get(`factory ${variant} ${size} ${dir}`);
+          const element = trailingByKey.get(`element ${variant} ${size} ${dir}`);
+          assert.ok(factory && element, `missing trailing rows for ${variant} ${size} ${dir}`);
+          if (factory.found && element.found && (element.start !== factory.start || element.end !== factory.end)) {
+            failures.push(`button inset end: element ${variant} ${size} ${dir} start ${element.start} end ${element.end} vs factory ${factory.start} ${factory.end}`);
+          }
+        }
       }
     }
     for (const line of failures) console.log(line);
     assert.deepEqual(failures, []);
-    check("button: icon insets match in both directions, and the extra-small icon gap is 4");
+    check("button: icon insets match in both directions, leading and trailing, and the extra-small icon gap is 4");
   }
 
   // ---------------------------------------------------------------- icon button
