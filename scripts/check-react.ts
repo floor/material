@@ -12,7 +12,7 @@ import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import type { BunPlugin } from "bun";
 import { checkAdapterEventValues } from "./check-adapter-event-values";
-import { clientAttributes, comparableAttributes, readComponentHosts, type ComponentHost } from "./fixtures/component-hosts";
+import { clientAttributes, comparableAttributes, liveAttributes, readComponentHosts, type ComponentHost } from "./fixtures/component-hosts";
 
 // React 18 is installed as react-18 and react-dom-18; this points every import
 // of react and react-dom, including react-dom's own, at them.
@@ -140,7 +140,7 @@ const run = async (version: 18 | 19): Promise<void> => {
     // A live property's attribute is server markup only. Everything else
     // must agree, which is what `suppressHydrationWarning` would hide.
     // A marked host is hydrated in react-ssr:check.
-    const readHosts = (target: Page): Promise<ComponentHost[]> => target.evaluate(readComponentHosts, "m");
+    const readHosts = (target: Page): Promise<ComponentHost[]> => target.evaluate(readComponentHosts, { prefix: "m", live: liveAttributes });
     const clientPage = await browser.newPage();
     let hydratedHosts: ComponentHost[] = [];
     let clientHosts: ComponentHost[] = [];

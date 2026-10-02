@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
 import type { BunPlugin } from "bun";
-import { clientAttributes, comparableAttributes, readComponentHosts, type ComponentHost } from "./fixtures/component-hosts";
+import { clientAttributes, comparableAttributes, liveAttributes, readComponentHosts, type ComponentHost } from "./fixtures/component-hosts";
 import { assertGlobalHost, GLOBAL_HOST_DOM, readGlobalHost } from "./fixtures/ssr-global-host";
 declare global {
   interface Window {
@@ -257,7 +257,7 @@ try {
       // The bridge marked the hosts it rendered. A client render of the same
       // app writes no mark. Every other attribute must agree: that is what
       // suppressHydrationWarning would hide. The app's prefix is `demo`.
-      const readHosts = (target: typeof page): Promise<ComponentHost[]> => target.evaluate(readComponentHosts, "demo");
+      const readHosts = (target: typeof page): Promise<ComponentHost[]> => target.evaluate(readComponentHosts, { prefix: "demo", live: liveAttributes });
       const clientPage = await browser.newPage();
       let hydratedHosts: ComponentHost[] = [];
       let clientHosts: ComponentHost[] = [];

@@ -15,6 +15,7 @@ import { chromium, type Page } from "playwright";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
+import { checkTextFieldLayout, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
 // Runs against the build: `bun run build` first, as CI does.
@@ -1661,6 +1662,12 @@ try {
       assert.deepEqual([resting[`v-${variant}`]!.prefix, resting[`v-${variant}`]!.suffix], [1, 1], `v-${variant}: the floated label's affixes are hidden`);
     }
     check("text field: a resting label shows alone, enabled or disabled; the prefix and suffix appear as it floats");
+
+    // FLO-299: the layout against the M3 measurements, inside the shadow root
+    await checkTextFieldLayout(page, "element");
+    check("text field: the layout at the M3 measurements, 52 fields (FLO-299)");
+    await checkTextFieldReducedMotion(page, "element", null);
+    check("text field: the filled indicator's fade stops with reduced motion (FLO-299)");
 
     // FLO-301: the required attribute moves the input's required and the label's asterisk together
     const required = await page.evaluate(() => {
