@@ -37,3 +37,9 @@ export const fieldVariant: TextFieldVariant = "outlined";
 export const selectVariant: SelectVariant = "filled";
 export const fieldWithVariant: FieldConfig = { variant: fieldVariant };
 export const selectWithVariant: SelectConfig = { variant: selectVariant, options: [] };
+
+// Constant keys are identifiers too: two words; the class value is unchanged
+import { SELECT_CLASSES } from "../../src/components/select/constants";
+export const selectFieldClass: "select__textfield" = SELECT_CLASSES.TEXT_FIELD;
+// @ts-expect-error SELECT_CLASSES.TEXTFIELD is TEXT_FIELD in 1.0
+export const oldSelectFieldKey = SELECT_CLASSES.TEXTFIELD;
