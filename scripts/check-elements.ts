@@ -6799,10 +6799,12 @@ try {
   // A [dir=rtl] ancestor outside a shadow root does not reach the
   // menu sheet. The arrow sits at the item's inline end, as the factory
   // already does: 12px from the right left-to-right, 16px from the left
-  // right-to-left. The submenu's side is the placement script's, the physical
-  // right at the first level, in both directions; the element matches the
-  // factory. A top-layer select under a field narrower than 112px keeps the
-  // edge the 200px field's menu keeps in that direction.
+  // right-to-left. The item is clicked before the submenu's side is read.
+  // That side is the placement script's physical right at the first level,
+  // in both directions, including the factory under dir="rtl"; the element
+  // matches the factory. The inline end would be a new side. A top-layer
+  // select under a field narrower than 112px keeps the edge the 200px
+  // field's menu keeps in that direction.
   {
     type ArrowRow = { name: string; dir: "ltr" | "rtl"; side: string; inset: number; submenuSide: string; paddingLeft: string; paddingRight: string };
     type FieldRow = { name: string; dir: "ltr" | "rtl"; width: number; leftDelta: number; rightDelta: number; menuWidth: number; fieldWidth: number };
@@ -6836,19 +6838,19 @@ try {
           fromRight = parseFloat(after.right);
           fromLeft = box.width - fromRight - width;
         }
-        const root = item.getRootNode() as ParentNode;
-        const submenu = root.querySelector(".mtrl-menu--submenu");
-        const itemBox = item.getBoundingClientRect();
-        const sub = submenu?.getBoundingClientRect();
-        const submenuSide = !sub ? "missing" : sub.left >= itemBox.right - 2 ? "right" : sub.right <= itemBox.left + 2 ? "left" : "overlap";
         const style = getComputedStyle(item);
         return {
           side: fromRight < fromLeft - 0.5 ? "right" : "left",
           inset: round(Math.min(fromLeft, fromRight)),
-          submenuSide,
           paddingLeft: style.paddingLeft,
           paddingRight: style.paddingRight,
         };
+      };
+      const submenuSideOf = (item: HTMLElement) => {
+        const submenu = (item.getRootNode() as ParentNode).querySelector(".mtrl-menu--submenu");
+        const itemBox = item.getBoundingClientRect();
+        const sub = submenu?.getBoundingClientRect();
+        return !sub ? "missing" : sub.left >= itemBox.right - 2 ? "right" : sub.right <= itemBox.left + 2 ? "left" : "overlap";
       };
       const arrows: ArrowRow[] = [];
       const clear = () => { host.replaceChildren(); };
@@ -6896,7 +6898,10 @@ try {
           await sleep(400);
           item = menu.element.querySelector(".mtrl-menu__item--submenu") as HTMLElement;
         }
-        arrows.push({ name: spec.name, dir: spec.dir, ...arrowOf(item) });
+        const arrow = arrowOf(item);
+        item.click();
+        for (let i = 0; i < 20 && submenuSideOf(item) === "missing"; i++) await sleep(50);
+        arrows.push({ name: spec.name, dir: spec.dir, ...arrow, submenuSide: submenuSideOf(item) });
         destroy();
       }
       const fields: FieldRow[] = [];
@@ -6964,7 +6969,9 @@ try {
       const inset = row.dir === "rtl" ? 16 : 12;
       if (row.side !== end || Math.abs(row.inset - inset) > 1)
         menuFailures.push(`${row.name}: arrow ${row.inset}px from the ${row.side}, expected ${inset}px from the ${end}`);
-      if (row.submenuSide !== factorySide[row.dir])
+      if (row.submenuSide === "missing")
+        menuFailures.push(`${row.name}: submenu did not open`);
+      else if (row.submenuSide !== factorySide[row.dir])
         menuFailures.push(`${row.name}: submenu opens on the ${row.submenuSide}, the factory opens on the ${factorySide[row.dir]}`);
     }
     const wide = (name: string, dir: "ltr" | "rtl") => menuRtl.fields.find((row) => row.name === `select ${name} 200 ${dir}`)!;
