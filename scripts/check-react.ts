@@ -12,6 +12,7 @@ import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import type { BunPlugin } from "bun";
 import { checkAdapterEventValues } from "./check-adapter-event-values";
+import { clientAttributes, comparableAttributes, readComponentHosts, type ComponentHost } from "./fixtures/component-hosts";
 
 // React 18 is installed as react-18 and react-dom-18; this points every import
 // of react and react-dom, including react-dom's own, at them.
@@ -94,6 +95,7 @@ const run = async (version: 18 | 19): Promise<void> => {
   assert.match(html, /<m-search [^>]*value="ap"[^>]*>.*?<m-search-suggestion [^>]*value="apple"[^>]*>(<!---->)?Apple<.*?<m-search-suggestion [^>]*value="apricot"[^>]*>(<!---->)?Apricot</s);
   assert.doesNotMatch(html, /<m-search-suggestion [^>]*value="banana"/);
   assert.match(html, /<m-button id="b" type="submit" variant="filled" class="save" data-test="1">Save<\/m-button>/);
+  assert.doesNotMatch(html, /data-mtrl-ssr/, "renderToString without the SSR bridge marked a host");
   assert.match(html, /<m-dialog [^>]*id="dg"[^>]*>/);
   assert.doesNotMatch(html, /<m-dialog [^>]*open/);
   check("renders on a server without a DOM, attributes in the markup");
@@ -134,24 +136,14 @@ const run = async (version: 18 | 19): Promise<void> => {
     await page.waitForFunction(() => !!(document.getElementById("t") as HTMLElement & { component?: unknown }).component);
 
     // Host attributes after hydration, against a client render of the same
-    // app. `data-mtrl-ssr` is the server's mark; everything else must agree,
-    // which is what `suppressHydrationWarning` would otherwise hide.
-    const readHosts = (target: Page): Promise<Array<{ tag: string; ssr: boolean; attrs: Record<string, string> }>> =>
-      target.evaluate(() => {
-        const root = document.getElementById("root") as HTMLElement;
-        return [...root.querySelectorAll("*")].flatMap((el) => {
-          if (!el.localName.startsWith("m-")) return [];
-          const attrs: Record<string, string> = {};
-          for (const attr of el.attributes) {
-            if (attr.name === "data-mtrl-ssr") continue;
-            attrs[attr.name] = attr.value;
-          }
-          return [{ tag: el.localName, ssr: el.hasAttribute("data-mtrl-ssr"), attrs }];
-        });
-      });
+    // app. This server render has no SSR bridge, so no host is marked.
+    // A live property's attribute is server markup only. Everything else
+    // must agree, which is what `suppressHydrationWarning` would hide.
+    // A marked host is hydrated in react-ssr:check.
+    const readHosts = (target: Page): Promise<ComponentHost[]> => target.evaluate(readComponentHosts, "m");
     const clientPage = await browser.newPage();
-    let hydratedHosts: Array<{ tag: string; ssr: boolean; attrs: Record<string, string> }> = [];
-    let clientHosts: Array<{ tag: string; ssr: boolean; attrs: Record<string, string> }> = [];
+    let hydratedHosts: ComponentHost[] = [];
+    let clientHosts: ComponentHost[] = [];
     try {
       await clientPage.goto(`http://127.0.0.1:${http.port}/client-render`);
       await clientPage.waitForFunction(() => (window as unknown as { rendered?: boolean }).rendered === true && !!(document.getElementById("t") as HTMLElement & { component?: unknown }).component);
@@ -412,11 +404,11 @@ const run = async (version: 18 | 19): Promise<void> => {
     check("unmounting destroys the component");
 
     assert(hydratedHosts.length > 0 && hydratedHosts.length === clientHosts.length, "hydrated hosts and the client render differ in count");
-    assert(hydratedHosts.some((host) => host.ssr), "a hydrated host is missing data-mtrl-ssr");
+    assert(hydratedHosts.every((host) => !host.ssr), "a host is marked, and this page has no SSR bridge");
     assert(clientHosts.every((host) => !host.ssr), "the client render wrote data-mtrl-ssr");
     assert.deepEqual(
-      hydratedHosts.map(({ tag, attrs }) => ({ tag, attrs })),
-      clientHosts.map(({ tag, attrs }) => ({ tag, attrs })),
+      hydratedHosts.map((host, index) => ({ tag: host.tag, attrs: comparableAttributes(host, clientHosts[index]!) })),
+      clientHosts.map((host) => ({ tag: host.tag, attrs: clientAttributes(host) })),
       "a hydrated host's attributes differ from the client render, other than data-mtrl-ssr",
     );
     assert.deepEqual(problems, [], "no errors, hydration warnings or React warnings");

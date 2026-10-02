@@ -106,7 +106,7 @@ const server = Bun.serve({
       case "/preupgrade/button.css":
         return new Response(Bun.file("dist/elements/preupgrade/button.css"));
       case "/one":
-        return html(page(stage(`<m-button>Save</m-button><m-switch id="switch">Wi-Fi</m-switch>`), false)
+        return html(page(stage(`<div><m-button>Save</m-button></div><div><m-switch id="switch">Wi-Fi</m-switch></div>`), false)
           .replace("</head>", '<link rel="stylesheet" href="/preupgrade/button.css"></head>'));
       case "/phase-b":
         return html(page(stage(`${phaseB}<m-button id="bare">Bare</m-button>`), true));
@@ -329,10 +329,12 @@ try {
     console.log(`\nReact renderToString + hydration: ${react.withStyles.toFixed(4)} with, ${react.without.toFixed(4)} without.`);
   }
 
-  // One element's file reserves that element only. The score is the button's
-  // own box: the stage also holds a switch, and scoring the stage would count
-  // the switch pushing #inline and #block. That shift is asserted on its own.
-  // The script stays held back until the boxes are measured.
+  // One element's file reserves that element only. The button and the switch
+  // are each in their own block. As inline siblings the unreserved switch
+  // grows, the line box gets taller, and the button's y moves with it, so
+  // scoring the button's rectangle still counts the neighbour. The switch's
+  // own shift is asserted separately. The script stays held back until the
+  // boxes are measured.
   let one = 0;
   let buttonMove = 0;
   let switchMove = 0;
@@ -372,7 +374,7 @@ try {
       one = score(region(before.button), region(after.button), buttonBox);
       buttonMove = shiftOf(before.button, after.button);
       switchMove = shiftOf(before.sw, after.sw);
-      console.log(`One file, button.css: ${one.toFixed(4)} (button ${before.button.h.toFixed(1)}px, switch ${before.sw.h.toFixed(1)}px before the script)`);
+      console.log(`One file, button.css: ${one.toFixed(4)} (button ${before.button.w.toFixed(1)}×${before.button.h.toFixed(1)} at y ${before.button.y.toFixed(1)} -> ${after.button.w.toFixed(1)}×${after.button.h.toFixed(1)} at y ${after.button.y.toFixed(1)}, moved ${buttonMove.toFixed(2)}; switch ${before.sw.h.toFixed(1)} -> ${after.sw.h.toFixed(1)}, moved ${switchMove.toFixed(2)})`);
     } finally {
       await p.close();
     }
