@@ -414,7 +414,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
-- Arrow keys used soon after opening a menu keep their selected focus when the initial-focus timer runs (FLO-515).
+- Arrow keys used soon after opening a menu keep their selected focus when the initial-focus timer runs (FLO-515). A menu opened with ArrowUp on its opener now keeps focus on the last item (it was pulled back to the first; FLO-524).
 - A search view dismissed before its opening focus frame runs stays closed (FLO-514).
 - `consumer:check` no longer fails on the open split button's screenshot pair. One of the two
   captures sometimes blended the menu's shadow a few levels lighter where it falls on the buttons
