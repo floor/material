@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
 import type { BunPlugin } from "bun";
+import { assertGlobalHost, GLOBAL_HOST_DOM, readGlobalHost } from "./fixtures/ssr-global-host";
 declare global { interface Window { reactSSR: { ready: boolean; recoverable: string[] } } }
 const browser = await chromium.launch();
 const summaries: object[] = [];
@@ -31,6 +32,7 @@ try {
     await Bun.write(path, await bundle("scripts/fixtures/react-ssr-server.ts", "bun"));
     const { render } = await import(path);
     const html: string = render();
+    assertGlobalHost(html);
     assert.match(html, /<template shadowrootmode="open"/);
     assert.match(html, /<style>[\s\S]*?\.mtrl-button/);
     const client = await bundle("scripts/fixtures/react-ssr-client.ts", "browser");
@@ -47,6 +49,7 @@ try {
         const host = document.getElementById(`fallback-${index}`)!;
         return { root: !!host.shadowRoot, template: !!host.querySelector("template"), light: host.innerHTML };
       })), [0, 1, 2].map(() => ({ root: false, template: false, light: "<span>Light content</span>" })), "React SSR respects element opt-out");
+      assert.deepEqual(await inert.evaluate(readGlobalHost), GLOBAL_HOST_DOM);
       assert.equal(await inert.getByRole("tab", { name: "Trips", selected: true }).count(), 1, "Declaration children reach the renderer");
       assert.equal(await inert.getByRole("switch", { name: "Wi-Fi" }).isChecked(), true);
       await inert.close();
@@ -62,6 +65,7 @@ try {
       await page.waitForFunction(() => document.getElementById("checked")?.textContent === "false");
       assert.equal(await page.getByRole("switch", { name: "Wi-Fi" }).isChecked(), false);
       const recoverable = await page.evaluate(() => window.reactSSR.recoverable);
+      assert.deepEqual(await page.evaluate(readGlobalHost), GLOBAL_HOST_DOM);
       assert.deepEqual({ warnings, errors, recoverable }, { warnings: [], errors: [], recoverable: [] });
       await page.goto(`${server.url}?mismatch`);
       await page.waitForFunction(() => window.reactSSR?.ready && window.reactSSR.recoverable.length > 0);

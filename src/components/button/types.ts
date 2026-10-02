@@ -357,6 +357,9 @@ export interface ButtonComponent {
    */
   disable: () => ButtonComponent;
 
+  /** Whether the button is disabled (FLO-384) */
+  isDisabled: () => boolean;
+
   /**
    * Sets the button's text content
    * @param content - Text content

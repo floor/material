@@ -227,12 +227,14 @@ try {
   checks += 3;
 
   // FLO-417: a tab value is data, so quotes in its id must not enter a CSS selector.
+  // FLO-430: the id is derived, a"b -> tabx-special-a_22_b, with no character
+  // an id reference cannot carry.
   const quotedValue = await page.evaluate(() => {
     const value = 'a"b';
     const panel = document.createElement("div");
     panel.id = "quoted-tab-panel";
     panel.setAttribute("role", "tabpanel");
-    panel.setAttribute("aria-labelledby", `tab-special-${value}`);
+    panel.setAttribute("aria-labelledby", "tabx-special-a_22_b");
     document.body.append(panel);
     (window as unknown as { mount: (c: unknown) => void }).mount({
       groupId: "special",
@@ -241,7 +243,7 @@ try {
         { text: "Quoted", value, state: "active" },
       ],
     });
-    const tab = document.getElementById(`tab-special-${value}`)!;
+    const tab = document.getElementById("tabx-special-a_22_b")!;
     return {
       id: tab.id,
       selected: tab.getAttribute("aria-selected"),
@@ -250,7 +252,7 @@ try {
     };
   });
   assert.deepEqual(quotedValue, {
-    id: 'tab-special-a"b', selected: "true", controls: "quoted-tab-panel", visible: true,
+    id: "tabx-special-a_22_b", selected: "true", controls: "quoted-tab-panel", visible: true,
   }, "quoted tab value links to its selected panel");
   checks++;
 

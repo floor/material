@@ -304,6 +304,9 @@ export interface SelectComponent {
    */
   disable: () => SelectComponent;
 
+  /** Whether the select is disabled (FLO-384) */
+  isDisabled: () => boolean;
+
   /**
    * Sets the error state on the select
    * @param error - Whether to show error state
@@ -356,7 +359,7 @@ export interface SelectChangeEvent extends SelectEvent {
   /**
    * The selected option id
    */
-  value: string;
+  value: string | null;
 
   /**
    * The selected option text

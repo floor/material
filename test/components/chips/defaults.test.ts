@@ -89,7 +89,7 @@ describe("input chips are always removable", () => {
     const calls: string[] = [];
     const chips = mount({ chips: [{ type: "input", label: "Ada", value: "ada", onRemove: chip => calls.push(chip.getLabel()) }] });
     const removed: ChipComponent[] = [];
-    chips.on("remove", chip => removed.push(chip));
+    chips.on("remove", event => removed.push(event.chip));
     chips.getChips()[0]!.element.querySelector<HTMLButtonElement>(".mtrl-chip__remove")!.click();
     expect(calls).toEqual(["Ada"]);
     expect(removed).toHaveLength(1);
