@@ -713,6 +713,23 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   - **`<m-drawer>`** still refuses Escape with `no-close-on-escape`: the key press is sent on
     as a `cancel` event on its `<dialog>`, where it listens.
   - A standard (not modal) sheet is unchanged: Escape closes it when pressed inside it.
+- **The pickers and the full-screen search handle Escape as a key press, and the time picker
+  is open when its factory returns (FLO-548).** The last modals to join the dialog's stack.
+  Migration: read `timePicker.isOpen()` right after creating it with `open: true` instead of
+  waiting a task.
+  - **Time picker, modal date picker, full-screen search:** Escape is prevented and answered
+    by the topmost modal only, after whatever inside it has used the key, and never for the
+    key press that opened it. Opened from an Escape `keydown` handler, each used to close at
+    once on the `cancel` the browser sends for that key press. A picker opened above a dialog
+    takes Escape first, as before.
+  - **Time picker, `open: true`:** `isOpen()` is true and `open` has been emitted (to
+    `onOpen`) when `createTimePicker()` returns; it used to open on a 0 ms timer. The surface
+    is still shown a task later, where the picker has been put by then: a modal `<dialog>`
+    must not be moved once it is shown. `close()` before that task leaves it closed, with
+    nothing shown.
+  - **Docked date picker:** the click that opened it is the only one it ignores. It ignored
+    every click in the task `open()` ran in, so a second click delivered before a timer had
+    run was lost.
 - **A config `on*` option is the listener registered at creation.** It runs with the same
   argument, the same number of times, as a listener passed to `on(event)` at that point, and it
   runs before a listener added afterwards. Whether a method notifies is unchanged (a silent

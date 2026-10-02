@@ -131,7 +131,11 @@ try {
   // On next, with the forward merge: 1,006,369 -> 1,063,466 against
   // 294100fe, Node 22.23.3 / npm 10.9.9; the budget keeps next's headroom.
   // FLO-428 removed four themes: 1,063,466 -> 1,048,224, same packer; lowered with the headroom.
-  assert(pack.size < 1_067_000, "npm tarball exceeds 1,067,000 bytes");
+  // The overlays' open / close contract and Escape as a key press for every modal (FLO-548,
+  // FLO-556: core/dom/layer's stack and marker, in each modal's bundle and each element's):
+  // 1,066,924 measured, 76 under the ceiling, Node 22.23.3 / npm 10.9.9. Raised by the rule
+  // (measured plus 1%, up to the next 1,000).
+  assert(pack.size < 1_078_000, "npm tarball exceeds 1,078,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
