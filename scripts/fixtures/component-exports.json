@@ -1753,6 +1753,11 @@
       "status": "public"
     },
     {
+      "name": "TabEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "TabIndicator",
       "kind": "type",
       "status": "public"
@@ -1779,6 +1784,11 @@
     },
     {
       "name": "TabsConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TabsEvents",
       "kind": "type",
       "status": "public"
     }

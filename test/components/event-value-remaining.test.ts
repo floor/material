@@ -74,7 +74,7 @@ test("single and multi button groups emit the shape returned by getValue", () =>
 test("tab selection reports the active getter value", () => {
   const tabs = mount(createTabs({ tabs: [{ text: "Alpha", value: "a" }, { text: "Beta", value: "b" }] }));
   const seen: Array<[string, string | null]> = [];
-  tabs.on("change", (event: { value: string }) => seen.push([event.value, tabs.getValue()]));
+  tabs.on("change", event => seen.push([event.value, tabs.getValue()]));
   tabs.getTabs()[1].element.click();
   expect(seen).toEqual([["b", "b"]]);
 });

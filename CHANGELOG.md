@@ -12,6 +12,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **Tabs `on` and `off` take a closed event map (FLO-523).** A group accepts
+  `change` (`TabChangeEventData`). A single tab accepts `click` (the button's
+  wrapped `{ event, element, originalEvent }` payload), `focus` and `blur`
+  (the native `FocusEvent`). `TabsConfig.on` accepts that same `change` handler.
+  Migration: a group takes `change`; a tab takes `click`, `focus` and `blur`.
+
 - **Time picker, select and radio events agree with their getters (FLO-380).**
 
   | Event | 0.10 payload | 1.0 payload |
