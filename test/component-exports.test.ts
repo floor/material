@@ -57,6 +57,17 @@ describe("the component subpaths' exports (FLO-381)", () => {
     expect(Object.values(now).flat().filter((e) => e.note?.includes("FLO-383")).map((e) => e.name)).toEqual([]);
   });
 
+  test("1.0 exports nothing deprecated: the constants 0.10.0 deprecated are gone from every subpath", () => {
+    const gone = ["checkbox:CHECKBOX_VARIANTS", "radios:RADIO_VARIANTS", "radios:RADIO_LABEL_POSITIONS", "radios:RADIO_SIZES",
+      "radios:RADIO_CLASSES", "timepicker:TIMEPICKER_DIAL", "timepicker:TIMEPICKER_Z_INDEX", "timepicker:TIMEPICKER_CLASSES"];
+    const present = gone.flatMap((entry) => {
+      const [component, name] = entry.split(":");
+      return [component!, `${component}/constants`].filter((key) => now[key]?.some((e) => e.name === name)).map((key) => `${key}:${name}`);
+    });
+    expect(present).toEqual([]);
+    expect(Object.entries(now).flatMap(([key, exports]) => exports.filter((e) => e.status === "deprecated").map((e) => `${key}:${e.name}`))).toEqual([]);
+  });
+
   test("every /constants subpath is pinned beside its index (FLO-384)", () => {
     const constants = Object.keys(now).filter((key) => key.endsWith("/constants"));
     expect(constants.length).toBeGreaterThan(30);
