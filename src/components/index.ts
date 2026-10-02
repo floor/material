@@ -69,7 +69,7 @@ export {
 // ============================================================================
 
 // Badge
-export type { BadgeConfig, BadgeComponent } from "./badge/types";
+export type { BadgeConfig, BadgeComponent, BadgeVariant } from "./badge/types";
 
 // Bottom App Bar
 export type {
@@ -114,10 +114,11 @@ export type {
 // Card
 export type {
   CardConfig,
+  CardVariant,
 } from "./card/types";
 
 // Carousel
-export type { CarouselConfig, CarouselComponent } from "./carousel/types";
+export type { CarouselConfig, CarouselComponent, CarouselVariant } from "./carousel/types";
 
 // Checkbox
 export type { CheckboxConfig, CheckboxComponent } from "./checkbox/types";
@@ -138,7 +139,7 @@ export type {
 } from "./chips/types";
 
 // Datepicker
-export type { DatePickerConfig, DatePickerComponent } from "./datepicker/types";
+export type { DatePickerConfig, DatePickerComponent, DatePickerVariant } from "./datepicker/types";
 
 // Dialog
 export type { DialogConfig, DialogComponent } from "./dialog/types";
@@ -158,12 +159,13 @@ export type { DividerConfig } from "./divider/config";
 export type { DividerComponent } from "./divider/types";
 
 // FAB
-export type { FabConfig, FabComponent } from "./fab/types";
+export type { FabConfig, FabComponent, FabVariant } from "./fab/types";
 
 // Extended FAB
 export type {
   ExtendedFabConfig,
   ExtendedFabComponent,
+  ExtendedFabVariant,
 } from "./extended-fab/types";
 
 // Icon Button
@@ -171,6 +173,7 @@ export type {
   IconButtonConfig,
   IconButtonComponent,
 } from "./icon-button/types";
+export type { IconButtonVariant } from "./icon-button/constants";
 
 // List
 export type {
@@ -189,6 +192,7 @@ export type { MenuConfig, MenuVariant, MenuComponent, MenuItem } from "./menu/ty
 export type {
   SplitButtonConfig,
   SplitButtonComponent,
+  SplitButtonVariant,
 } from "./split-button/types";
 
 // Loading indicator
@@ -213,7 +217,7 @@ export type {
 } from "./radios/types";
 
 // Search
-export type { SearchConfig, SearchComponent } from "./search/types";
+export type { SearchConfig, SearchComponent, SearchVariant } from "./search/types";
 
 // Select
 export type {
@@ -268,6 +272,7 @@ export type {
   ToolbarEvents,
   ToolbarItem,
 } from "./toolbar/types";
+export type { ToolbarVariant } from "./toolbar/constants";
 
 // Top App Bar
 export type {

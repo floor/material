@@ -10,6 +10,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { componentNames, diffComponentExports, readComponentExports, readPinned } from "../scripts/component-exports";
+import { readRootExports } from "../scripts/root-exports";
 
 const ROOT = join(import.meta.dir, "..");
 const now = readComponentExports();
@@ -68,15 +69,19 @@ describe("the component subpaths' exports (FLO-381)", () => {
     expect(Object.entries(now).flatMap(([key, exports]) => exports.filter((e) => e.status === "deprecated").map((e) => `${key}:${e.name}`))).toEqual([]);
   });
 
-  test("every component's variant type is exported from its subpath, as a public variant option's type", () => {
-    const missing = componentNames().flatMap((component) => {
-      const file = join(ROOT, `src/components/${component}/types.ts`);
+  test("every component's variant type is exported from its subpath and from the root, as a public variant option's type", () => {
+    // CheckboxVariant: the checkbox's variant option is gone in 1.0, so its type is not advertised on the root
+    const notOnRoot = ["CheckboxVariant"];
+    const root = new Set(readRootExports().map((e) => e.name));
+    const declared = componentNames().flatMap((component) => ["types", "constants"].flatMap((module) => {
+      const file = join(ROOT, `src/components/${component}/${module}.ts`);
       if (!existsSync(file)) return [];
-      return [...readFileSync(file, "utf8").matchAll(/^export type ([A-Z][A-Za-z]*Variant)\b/gm)]
-        .map((m) => m[1]!).filter((name) => !now[component]?.some((e) => e.name === name)).map((name) => `${component}:${name}`);
-    });
-    expect(missing).toEqual([]);
-  });
+      return [...readFileSync(file, "utf8").matchAll(/^export type ([A-Z][A-Za-z]*Variant)\b/gm)].map((m) => [component, m[1]!] as const);
+    }));
+    expect(declared.length).toBe(22);
+    expect(declared.filter(([component, name]) => !now[component]?.some((e) => e.name === name)).map(([c, n]) => `${c}:${n}`)).toEqual([]);
+    expect(declared.filter(([, name]) => !notOnRoot.includes(name) && !root.has(name)).map(([, n]) => `root:${n}`)).toEqual([]);
+  }, 60_000);
 
   test("every /constants subpath is pinned beside its index (FLO-384)", () => {
     const constants = Object.keys(now).filter((key) => key.endsWith("/constants"));
