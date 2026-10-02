@@ -57,10 +57,33 @@ type SlotProps<S> = { [K in ElementSlotProp<S>]?: React.ReactNode };
 
 type OwnProps<S> = Omit<BaseProps<S>, ElementSlotProp<S>> & SlotProps<S>;
 
-/** Props of a generated component: the element's own, plus any HTML attribute for the host. */
+/**
+ * `@types/react` 18's `HTMLAttributes` has no `popover` through 18.3.31.
+ * `enterKeyHint` joins that interface in 18.3.31; earlier 18 types it on inputs.
+ * `nonce` is absent on 18.0.0 and present by 18.0.28.
+ * A release that already declares a key keeps its own type.
+ */
+type ReactHostGaps = {
+  popover?: "" | "auto" | "manual" | "hint";
+  enterKeyHint?: "enter" | "done" | "go" | "next" | "previous" | "search" | "send";
+  nonce?: string;
+};
+
+type Missing<Base, Extra> = {
+  [K in Exclude<keyof Extra, keyof Base>]?: K extends keyof Extra ? Extra[K] : never;
+};
+
+/** `HTMLAttributes` for the host, plus globals a supported React 18 type omits. */
+export type ReactHostAttributes<E extends HTMLElement = HTMLElement> =
+  React.HTMLAttributes<E> & Missing<React.HTMLAttributes<E>, ReactHostGaps>;
+
+/**
+ * Props of a generated component: the element's own, plus any HTML attribute for the host.
+ * `OwnProps` includes the element's `on*` handlers, so those names keep the component's event.
+ */
 export type ComponentProps<S> = OwnProps<S> &
   FormProps<S> &
-  Omit<React.HTMLAttributes<HTMLElement>, keyof OwnProps<S>> & { children?: React.ReactNode };
+  Omit<ReactHostAttributes, keyof OwnProps<S>> & { children?: React.ReactNode };
 
 /** A generated component; named so declarations stay short. */
 export type MComponent<S, E extends HTMLElement> = React.ForwardRefExoticComponent<
@@ -190,7 +213,7 @@ export const createComponent = <S, E extends HTMLElement>(
   return Component as MComponent<S, E>;
 };
 
-export type DeclarationProps<A> = A & Omit<React.HTMLAttributes<HTMLElement>, keyof A> & { children?: React.ReactNode };
+export type DeclarationProps<A> = A & Omit<ReactHostAttributes, keyof A> & { children?: React.ReactNode };
 
 /** A generated declaration component. */
 export type MDeclaration<A> = React.ForwardRefExoticComponent<
