@@ -26,7 +26,7 @@ describe("the root exports (FLO-351)", () => {
 
   test("the root keeps the components and the app-level helpers; the composition core is gone", () => {
     const names = new Set(now.map((e) => e.name));
-    for (const name of ["createButton", "createTextfield", "clearSnackbars", "configureHTML", "schemeToTokens", "THEME_ROLES", "setComponentDefaults", "ComponentConfigMap"]) {
+    for (const name of ["createButton", "createTextField", "clearSnackbars", "configureHTML", "schemeToTokens", "THEME_ROLES", "setComponentDefaults", "ComponentConfigMap"]) {
       expect(names.has(name)).toBe(true);
     }
     for (const name of ["pipe", "createBase", "withEvents", "throttle", "loggingMiddleware", "CleanupManager", "addClass"]) {
@@ -37,6 +37,14 @@ describe("the root exports (FLO-351)", () => {
   test("the migration table, frozen as 0.10.4 published it, still holds: each name is gone from the root and at its path", () => {
     expect(table.length).toBe(137);
     expect(verifyMigrationTable(table, now)).toEqual([]);
+  });
+
+  test("only the canonical names: the old spellings 0.10.5 renamed are gone (FLO-383)", () => {
+    const names = new Set(now.map((e) => e.name));
+    const renames = [["createTextfield", "createTextField"], ["TextfieldConfig", "TextFieldConfig"],
+      ["TextfieldComponent", "TextFieldComponent"], ["CardSchema", "CardConfig"],
+      ["TopAppBar", "TopAppBarComponent"], ["BottomAppBar", "BottomAppBarComponent"]];
+    expect(renames.filter(([old, to]) => names.has(old!) || !names.has(to!))).toEqual([]);
   });
 });
 

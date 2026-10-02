@@ -13,6 +13,7 @@ import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import { compile } from "svelte/compiler";
 import type { BunPlugin } from "bun";
+import { checkAdapterEventValues } from "./check-adapter-event-values";
 
 const svelte = (generate: "client" | "server"): BunPlugin => ({
   name: "svelte",
@@ -69,6 +70,14 @@ const run = async (): Promise<void> => {
   ], { stdout: "pipe", stderr: "pipe" });
   assert.equal(tsc.exitCode, 0, tsc.stdout.toString() + tsc.stderr.toString());
   check("the generated declarations compile");
+
+  // FLO-383: the text field is TextField (and TextField.svelte); the old spelling is gone in 1.0
+  for (const file of ["dist/svelte/index.js", "dist/svelte/index.d.ts"]) {
+    const index = await Bun.file(file).text();
+    assert.match(index, /export \{ default as TextField \} from "\.\/TextField\.svelte";/, file);
+    assert.doesNotMatch(index, /Textfield/, file);
+  }
+  check("the text field is TextField, and only TextField (FLO-383)");
 
   // Server render in this process, no DOM.
   const server = await bundle("scripts/fixtures/svelte-server.ts", "bun");
@@ -206,6 +215,8 @@ const run = async (): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("diet")?.textContent === "veg,gf");
     assert.equal(await diet.getByRole("gridcell", { name: "Gluten free", exact: true, selected: true }).count(), 1);
     check("chips: bind:value");
+    await checkAdapterEventValues(page);
+    check("change/input handlers read boolean, string and array detail.value equal to the host model");
 
     // ------------------------------------------------------------- navigation rail
     const rail = page.getByRole("navigation", { name: "Main" });

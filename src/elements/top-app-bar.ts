@@ -19,7 +19,7 @@
  */
 
 import createTopAppBar from "../components/top-app-bar";
-import type { TopAppBar } from "../components/top-app-bar/top-app-bar";
+import type { TopAppBarComponent } from "../components/top-app-bar/top-app-bar";
 import type { TopAppBarConfig, TopAppBarType } from "../components/top-app-bar/types";
 import { TOP_APP_BAR_DEFAULTS } from "../components/top-app-bar/constants";
 import { defineElement, type Config, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
@@ -35,7 +35,7 @@ const namedSlot = (name: string): HTMLSlotElement => {
  * the text after it (see `headlineFallback`). Slots go in the leading and
  * trailing containers the factory appends elements to.
  */
-const create = (config: TopAppBarConfig): TopAppBar => {
+const create = (config: TopAppBarConfig): TopAppBarComponent => {
   const bar = createTopAppBar(config);
   const headline = bar.getHeadlineElement();
   const text = document.createElement("span");
@@ -46,7 +46,7 @@ const create = (config: TopAppBarConfig): TopAppBar => {
   return bar;
 };
 
-const headlineText = (component: TopAppBar): HTMLElement | null =>
+const headlineText = (component: TopAppBarComponent): HTMLElement | null =>
   component.getHeadlineElement().querySelector("span");
 
 /**
@@ -54,7 +54,7 @@ const headlineText = (component: TopAppBar): HTMLElement | null =>
  * slot's own fallback: the whitespace between the slotted buttons is
  * assigned to the default slot, which would hide it.
  */
-const headlineFallback = (component: TopAppBar): (() => void) => {
+const headlineFallback = (component: TopAppBarComponent): (() => void) => {
   const slot = component.getHeadlineElement().querySelector("slot") as HTMLSlotElement;
   const sync = (): void => {
     const text = headlineText(component);
@@ -85,7 +85,7 @@ const threshold = (host: HTMLElement): number => {
  * Follows the element whose id `scroll-target` names. Listening at the
  * document, in the capture phase, finds a target rendered after the bar.
  */
-const followScrollTarget = (host: HTMLElement, component: TopAppBar): (() => void) => {
+const followScrollTarget = (host: HTMLElement, component: TopAppBarComponent): (() => void) => {
   const id = host.getAttribute("scroll-target");
   if (!id || host.hasAttribute("no-scroll")) return () => undefined;
   const update = (target: Element): void => void component.setScrollState(target.scrollTop > threshold(host));
@@ -133,12 +133,12 @@ const topAppBarSpec = {
     const cleanups = [headlineFallback(component), followScrollTarget(host, component)];
     return () => cleanups.forEach((cleanup) => cleanup());
   },
-} satisfies ElementSpec<TopAppBar>;
+} satisfies ElementSpec<TopAppBarComponent>;
 
-export const topAppBarElement = defineElement<TopAppBar>(topAppBarSpec);
+export const topAppBarElement = defineElement<TopAppBarComponent>(topAppBarSpec);
 export type TopAppBarSpec = typeof topAppBarSpec;
 /** `<m-top-app-bar>` as a ref or a query returns it. */
-export type TopAppBarElement = ElementInstance<TopAppBarSpec, TopAppBar>;
+export type TopAppBarElement = ElementInstance<TopAppBarSpec, TopAppBarComponent>;
 
 /** Registers `<m-top-app-bar>` (or `<prefix-top-app-bar>`). */
 export const defineTopAppBar = (options?: DefineOptions): string => topAppBarElement.define(options);

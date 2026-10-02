@@ -50,7 +50,7 @@ export { clearSnackbars } from "./snackbar";
 export { default as createSwitch } from "./switch";
 export { default as createTabs } from "./tabs";
 export { createTab } from "./tabs/tab";
-export { default as createTextfield } from "./textfield";
+export { default as createTextField } from "./textfield";
 export { default as createTimePicker } from "./timepicker";
 export { default as createToolbar } from "./toolbar";
 export { default as createTopAppBar } from "./top-app-bar";
@@ -72,7 +72,10 @@ export {
 export type { BadgeConfig, BadgeComponent } from "./badge/types";
 
 // Bottom App Bar
-export type { BottomAppBarConfig, BottomAppBar } from "./bottom-app-bar/types";
+export type {
+  BottomAppBarConfig,
+  BottomAppBarComponent,
+} from "./bottom-app-bar/types";
 export type {
   BottomSheetConfig,
   BottomSheetComponent,
@@ -109,7 +112,9 @@ export type {
 } from "./button-group/types";
 
 // Card
-export type { CardSchema } from "./card/types";
+export type {
+  CardConfig,
+} from "./card/types";
 
 // Carousel
 export type { CarouselConfig, CarouselComponent } from "./carousel/types";
@@ -240,8 +245,11 @@ export type {
   TabComponent,
 } from "./tabs/types";
 
-// Textfield
-export type { TextfieldConfig, TextfieldComponent } from "./textfield/types";
+// TextField
+export type {
+  TextFieldConfig,
+  TextFieldComponent,
+} from "./textfield/types";
 
 // Timepicker
 export type { TimePickerConfig, TimePickerComponent } from "./timepicker/types";
@@ -258,7 +266,10 @@ export type {
 } from "./toolbar/types";
 
 // Top App Bar
-export type { TopAppBarConfig, TopAppBar } from "./top-app-bar/types";
+export type {
+  TopAppBarConfig,
+  TopAppBarComponent,
+} from "./top-app-bar/types";
 
 // Tooltip
 export type { TooltipConfig, TooltipComponent } from "./tooltip/types";

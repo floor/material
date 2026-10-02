@@ -154,6 +154,7 @@ export const getApiConfig = (
   disabled: {
     enable: () => comp.disabled.enable(),
     disable: () => comp.disabled.disable(),
+    isDisabled: () => comp.disabled.isDisabled(),
   },
   lifecycle: {
     destroy: () => comp.lifecycle.destroy(),

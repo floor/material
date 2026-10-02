@@ -17,4 +17,7 @@ export {
 // Export main component and types
 export default createTopAppBar;
 export { createTopAppBar };
-export type { TopAppBarConfig, TopAppBar } from './types';
+export type {
+  TopAppBarConfig,
+  TopAppBarComponent,
+} from './types';

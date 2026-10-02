@@ -132,7 +132,7 @@ const radiosSpec = {
   model: "value" as const,
   events: {
     change: {
-      detail: (payload) => ({ value: (payload as { value: string }).value }),
+      detail: (payload) => ({ value: (payload as { value: string }).value || null }),
     },
   },
   form: {

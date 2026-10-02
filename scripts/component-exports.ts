@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /**
- * Each component subpath's exports, pinned (FLO-381).
+ * Each component subpath's exports, pinned (FLO-381), and each
+ * `mtrl/components/<name>/constants` subpath's (FLO-384).
  *
  * `mtrl/components/<name>` is public API like the root (FLO-351): every name
  * its index exports is a 1.x promise. This reads every component index with
@@ -39,9 +40,13 @@ const deprecation = (symbol: ts.Symbol): string | undefined => {
   return undefined;
 };
 
+/** The `mtrl/components/<name>/constants` subpaths, pinned beside the indexes (FLO-384) */
+export const constantsNames = (): string[] =>
+  componentNames().filter((name) => existsSync(join(ROOT, `src/components/${name}/constants.ts`))).map((name) => `${name}/constants`);
+
 export function readComponentExports(): ComponentExports {
-  const names = componentNames();
-  const files = names.map((name) => join(ROOT, `src/components/${name}/index.ts`));
+  const names = [...componentNames(), ...constantsNames()].sort();
+  const files = names.map((name) => join(ROOT, `src/components/${name.endsWith("/constants") ? `${name}.ts` : `${name}/index.ts`}`));
   const program = ts.createProgram(files, {
     strict: true, skipLibCheck: true, noEmit: true,
     target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,

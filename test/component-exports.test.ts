@@ -46,6 +46,35 @@ describe("the component subpaths' exports (FLO-381)", () => {
     expect(constants.DEFAULT_DATE_FORMAT).toBe("MM/DD/YYYY");
   });
 
+  test("only the canonical names: the old spellings are gone from their subpaths (FLO-383)", () => {
+    const names = (component: string) => now[component]?.map((e) => e.name) ?? [];
+    for (const [component, old, to] of [["textfield", "TextfieldConfig", "TextFieldConfig"], ["textfield", "TextfieldComponent", "TextFieldComponent"],
+      ["card", "CardSchema", "CardConfig"], ["top-app-bar", "TopAppBar", "TopAppBarComponent"], ["bottom-app-bar", "BottomAppBar", "BottomAppBarComponent"],
+      ["textfield/constants", "TEXTFIELD_CLASSES", "TEXT_FIELD_CLASSES"]]) {
+      expect(names(component!)).toContain(to);
+      expect(names(component!)).not.toContain(old);
+    }
+    expect(Object.values(now).flat().filter((e) => e.note?.includes("FLO-383")).map((e) => e.name)).toEqual([]);
+  });
+
+  test("1.0 exports nothing deprecated: the constants 0.10.0 deprecated are gone from every subpath", () => {
+    const gone = ["checkbox:CHECKBOX_VARIANTS", "radios:RADIO_VARIANTS", "radios:RADIO_LABEL_POSITIONS", "radios:RADIO_SIZES",
+      "radios:RADIO_CLASSES", "timepicker:TIMEPICKER_DIAL", "timepicker:TIMEPICKER_Z_INDEX", "timepicker:TIMEPICKER_CLASSES"];
+    const present = gone.flatMap((entry) => {
+      const [component, name] = entry.split(":");
+      return [component!, `${component}/constants`].filter((key) => now[key]?.some((e) => e.name === name)).map((key) => `${key}:${name}`);
+    });
+    expect(present).toEqual([]);
+    expect(Object.entries(now).flatMap(([key, exports]) => exports.filter((e) => e.status === "deprecated").map((e) => `${key}:${e.name}`))).toEqual([]);
+  });
+
+  test("every /constants subpath is pinned beside its index (FLO-384)", () => {
+    const constants = Object.keys(now).filter((key) => key.endsWith("/constants"));
+    expect(constants.length).toBeGreaterThan(30);
+    for (const key of constants) expect(Object.keys(now)).toContain(key.slice(0, -"/constants".length));
+    expect(now["button/constants"]?.map((e) => e.name)).toContain("BUTTON_VARIANTS");
+  });
+
   test("the types public members are typed with, and the documented tabs helper, stay public", () => {
     const status = (component: string, name: string) => now[component]?.find((e) => e.name === name)?.status;
     expect([

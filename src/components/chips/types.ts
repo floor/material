@@ -261,6 +261,20 @@ export interface ChipsChangeEvent extends Array<string | null> {
   changed: string | null;
 }
 
+/** A chip joined the set; `value` is the selection after insertion. */
+export interface ChipsAddEvent {
+  value: string | string[] | null;
+  chip: ChipComponent;
+}
+
+/** A chip left the set; `value` is the remaining selection. */
+export interface ChipsRemoveEvent extends ChipsAddEvent {
+  /** The selection after removal, in the same shape as the set's `getValue()`. */
+  value: string | string[] | null;
+  /** The removed chip's value, captured before destruction. */
+  chipValue: string | null;
+}
+
 /** Events emitted by the chips container's controller. */
 export interface ChipsEvents {
   /**
@@ -268,10 +282,10 @@ export interface ChipsEvents {
    * `<m-chips>` element's `change` carries.
    */
   change: (event: ChipsChangeEvent, changedValue: string | null) => void;
-  /** The newly created chip, after it is inserted into the container. */
-  add: (chip: ChipComponent) => void;
-  /** The chip being removed, before it is destroyed. */
-  remove: (chip: ChipComponent) => void;
+  /** The newly created chip and the selection after insertion. */
+  add: (event: ChipsAddEvent) => void;
+  /** The removed chip and the selection after removal. */
+  remove: (event: ChipsRemoveEvent) => void;
 }
 
 export interface ChipsComponent {

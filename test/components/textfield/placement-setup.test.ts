@@ -39,11 +39,11 @@ const realSetTimeout = setTimeout;
 // Placement's batch: the shared flush the first measure is scheduled in
 g.setTimeout = ((fn: () => void, ms?: number) => { if (fn.name === "flush") timers++; return realSetTimeout(fn, ms); }) as typeof setTimeout;
 
-import createTextfield from "../../../src/components/textfield";
+import createTextField from "../../../src/components/textfield";
 
 const ICON = '<svg viewBox="0 0 24 24"></svg>';
 const mount = (config: Record<string, unknown> = {}) => {
-  const field = createTextfield({ label: "Name", ...config } as never);
+  const field = createTextField({ label: "Name", ...config } as never);
   document.body.append(field.element);
   return field;
 };

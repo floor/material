@@ -376,7 +376,7 @@ describe("typed event payloads (FLO-114)", () => {
     const picker = mount({ type: TIME_PICKER_TYPE.INPUT, value: "14:30" });
     const opened = mock((..._args: unknown[]) => {});
     const closed = mock((..._args: unknown[]) => {});
-    const confirmed = mock((_value: string) => {});
+    const confirmed = mock((_event: TimePickerValueEvent) => {});
     try {
       picker.on("open", opened).on("close", closed).on("confirm", confirmed);
       picker.open().open();
@@ -384,7 +384,7 @@ describe("typed event payloads (FLO-114)", () => {
       picker.close();
       expect(opened.mock.calls).toEqual([[undefined]]);
       expect(closed.mock.calls).toEqual([[undefined]]);
-      expect(confirmed.mock.calls).toEqual([["14:30"]]);
+      expect(confirmed.mock.calls).toEqual([[{ value: "14:30" }]]);
       picker.off("open", opened).off("close", closed).off("confirm", confirmed);
       picker.open();
       picker.dialogElement.querySelector<HTMLButtonElement>(TIMEPICKER_SELECTORS.CONFIRM_BUTTON)!.click();
@@ -518,7 +518,7 @@ describe("BEM element names (FLO-120)", () => {
       const names = [picker.modalElement, picker.dialogElement, ...picker.dialogElement.querySelectorAll("*")]
         .flatMap(element => [...element.classList]);
       expect(names.some(name => name.startsWith(`${prefix}-time-picker-`))).toBe(false);
-      const confirmed = mock((_value: string) => {});
+      const confirmed = mock((_event: TimePickerValueEvent) => {});
       picker.on("confirm", confirmed);
       find<HTMLButtonElement>("confirm").click();
       expect(confirmed).toHaveBeenCalledTimes(1);
