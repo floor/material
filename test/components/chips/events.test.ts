@@ -43,7 +43,7 @@ describe("chips container events", () => {
       chips.selectByValue("b", true);
 
       expect(listeners).toHaveLength(2);
-      expect(callbacks).toHaveLength(1);
+      expect(callbacks).toHaveLength(2);
       for (const { event, count } of [...listeners, ...callbacks]) {
         expect(count).toBe(1);
         expect(Array.isArray(event)).toBe(false);
@@ -54,7 +54,9 @@ describe("chips container events", () => {
         { value: multiSelect ? ["a"] : "a", selected: ["a"], changed: "a" },
         { value: multiSelect ? ["a", "b"] : "b", selected: multiSelect ? ["a", "b"] : ["b"], changed: null },
       ]);
-      expect(callbacks[0].event).toBe(listeners[0].event);
+      expect(callbacks.map(({ event }) => ({ ...event }))).toEqual(listeners.map(({ event }) => ({ ...event })));
+      expect(callbacks[0]!.event).toBe(listeners[0]!.event);
+      expect(callbacks[1]!.event).toBe(listeners[1]!.event);
     }
   });
 
