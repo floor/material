@@ -1142,6 +1142,142 @@ try {
     check("checkbox: a set leaves validity and FormData exact at once, and a valid one skips setting it again");
   }
 
+  // A checkbox with no label is its own 48x48 target (M3 "Checkbox" -> Specs
+  // -> Measurements: "Target size 48dp", "Icon alignment Center-aligned",
+  // "State-layer size 40dp"; Compose centres the 18dp box in the 48dp minimum
+  // interactive size). A labelled root instead hugs box + 12px + label, so it
+  // has no free space and keeps the box at the inline-start: its measured
+  // layout below must not move.
+  {
+    const dirs = ["ltr", "rtl"] as const;
+    const states = ["unchecked", "checked", "indeterminate", "disabled"] as const;
+    const elements = (dir: string): string =>
+      states
+        .map(
+          (state) =>
+            `<m-checkbox id="u-${dir}-${state}" aria-label="Check"${state === "checked" ? " checked" : ""}${state === "disabled" ? " disabled" : ""}></m-checkbox>`
+        )
+        .join("") + `<m-checkbox id="l-${dir}">Label</m-checkbox>`;
+    await fresh(
+      page,
+      `${dirs.map((dir) => `<div dir="${dir}">${elements(dir)}</div>`).join("")}<section id="factory"></section>`
+    );
+
+    const measured = await page.evaluate(
+      ({ dirs, states }: { dirs: string[]; states: string[] }) => {
+        type Box = { left: number; top: number; right: number; bottom: number };
+        type Cb = HTMLElement & { indeterminate: boolean };
+        const w = window as unknown as Win & { mtrl: { createCheckbox: (c: object) => { element: HTMLElement } } };
+        const factory = document.getElementById("factory") as HTMLElement;
+        const r2 = (n: number): number => Math.round(n * 100) / 100;
+        const show = (r: Box): string => `[${r2(r.left)}, ${r2(r.top)}, ${r2(r.right)}, ${r2(r.bottom)}]`;
+        /** The element's component root inside its shadow root (the host is what the page holds). */
+        const inner = (host: HTMLElement): HTMLElement => (host.shadowRoot?.firstElementChild as HTMLElement) ?? host;
+        /** The state layer is the icon's ::before: inset -13px on the icon's padding box (2px border), 40x40. */
+        const layerRect = (icon: HTMLElement): Box => {
+          const iconRect = icon.getBoundingClientRect();
+          const outer = getComputedStyle(icon);
+          const layer = getComputedStyle(icon, "::before");
+          return {
+            left: iconRect.left + parseFloat(outer.borderLeftWidth) + parseFloat(layer.left),
+            top: iconRect.top + parseFloat(outer.borderTopWidth) + parseFloat(layer.top),
+            right: iconRect.left + parseFloat(outer.borderLeftWidth) + parseFloat(layer.left) + parseFloat(layer.width),
+            bottom: iconRect.top + parseFloat(outer.borderTopWidth) + parseFloat(layer.top) + parseFloat(layer.height),
+          };
+        };
+        const failures: string[] = [];
+        const layerFailures: string[] = [];
+        const labelFailures: string[] = [];
+
+        const centred = (root: HTMLElement, what: string): void => {
+          const rootRect = root.getBoundingClientRect();
+          const icon = root.querySelector(".mtrl-checkbox__icon") as HTMLElement;
+          const iconRect = icon.getBoundingClientRect();
+          const dx = Math.abs((iconRect.left + iconRect.right - rootRect.left - rootRect.right) / 2);
+          const dy = Math.abs((iconRect.top + iconRect.bottom - rootRect.top - rootRect.bottom) / 2);
+          if (dx > 0.5 || dy > 0.5) {
+            failures.push(
+              `${what}: box ${show(iconRect)} is off the root ${show(rootRect)} (centre by ${r2(dx)}px, ${r2(dy)}px)`
+            );
+          }
+          const layer = layerRect(icon);
+          if (layer.left < rootRect.left - 0.5 || layer.right > rootRect.right + 0.5 || layer.top < rootRect.top - 0.5 || layer.bottom > rootRect.bottom + 0.5) {
+            layerFailures.push(`${what}: state layer ${show(layer)} is not inside the root ${show(rootRect)}`);
+          }
+        };
+
+        // The labelled layout the fix must keep, as the sweep at 1dc3bc72 measured it
+        // (analysis/sweep/checkbox/measure.json, case "label": identical for the
+        // factory and the element and in both directions; the commits to 47a3ebcd are
+        // rename, docs and CI only). The pinned pixels carry no font: the box at the
+        // start, the label 30px in (the 18px box + the 12px gap), nothing after the
+        // label. The root's width and the box's end inset are derived from the label's
+        // own rendered width in this run (root = 30 + width, end = width + 12), so the
+        // check holds on any machine's sans-serif. The word "Label" rendered 41.19px
+        // here; that number is not asserted.
+        const labelled = (root: HTMLElement, what: string): void => {
+          const rootRect = root.getBoundingClientRect();
+          const rtl = getComputedStyle(root).direction === "rtl";
+          const iconRect = (root.querySelector(".mtrl-checkbox__icon") as HTMLElement).getBoundingClientRect();
+          const labelRect = (root.querySelector(".mtrl-checkbox__label") as HTMLElement).getBoundingClientRect();
+          const labelW = r2(labelRect.width);
+          const got = {
+            rootW: r2(rootRect.width),
+            boxStart: r2(rtl ? rootRect.right - iconRect.right : iconRect.left - rootRect.left),
+            boxEnd: r2(rtl ? iconRect.left - rootRect.left : rootRect.right - iconRect.right),
+            labelStart: r2(rtl ? rootRect.right - labelRect.right : labelRect.left - rootRect.left),
+            labelEnd: r2(rtl ? labelRect.left - rootRect.left : rootRect.right - labelRect.right),
+          };
+          const want = { rootW: 30 + labelW, boxStart: 0, boxEnd: labelW + 12, labelStart: 30, labelEnd: 0 };
+          const off = (a: number, b: number): boolean => Math.abs(a - b) > 0.5;
+          if (
+            off(got.rootW, want.rootW) || off(got.boxStart, want.boxStart) || off(got.boxEnd, want.boxEnd) ||
+            off(got.labelStart, want.labelStart) || off(got.labelEnd, want.labelEnd)
+          ) {
+            labelFailures.push(
+              `${what}: root ${got.rootW} (want 30 + label ${labelW}), box start ${got.boxStart} / end ${got.boxEnd} (want 0 / ${want.boxEnd}), ` +
+                `label start ${got.labelStart} / end ${got.labelEnd} (want 30 / 0)`
+            );
+          }
+        };
+
+        const hold = (dir: string, child: HTMLElement): HTMLElement => {
+          const holder = document.createElement("div");
+          holder.dir = dir;
+          holder.append(child);
+          factory.append(holder);
+          return child;
+        };
+        for (const dir of dirs) {
+          for (const state of states) {
+            const host = document.getElementById(`u-${dir}-${state}`) as Cb;
+            if (state === "indeterminate") host.indeterminate = true;
+            centred(inner(host), `element ${dir} ${state}`);
+            const twin = hold(
+              dir,
+              w.mtrl.createCheckbox({
+                ariaLabel: "Check",
+                checked: state === "checked",
+                indeterminate: state === "indeterminate",
+                disabled: state === "disabled",
+              }).element
+            );
+            centred(twin, `factory ${dir} ${state}`);
+          }
+          labelled(inner(document.getElementById(`l-${dir}`) as HTMLElement), `element ${dir} labelled`);
+          labelled(hold(dir, w.mtrl.createCheckbox({ label: "Label" }).element), `factory ${dir} labelled`);
+        }
+        return { failures, layerFailures, labelFailures };
+      },
+      { dirs: [...dirs], states: [...states] }
+    );
+    for (const line of [...measured.failures, ...measured.layerFailures, ...measured.labelFailures]) console.log(`  FAIL ${line}`);
+    assert.deepEqual(measured.failures, [], "the box must be centred in an unlabelled root");
+    assert.deepEqual(measured.layerFailures, [], "the state layer must lie inside an unlabelled root");
+    assert.deepEqual(measured.labelFailures, [], "the labelled layout must not move");
+    check("checkbox: an unlabelled box is centred in its 48px target, its state layer inside it, and the labelled layout is unchanged");
+  }
+
   // ---------------------------------------------------------------- slider
   await fresh(
     page,
