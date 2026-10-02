@@ -121,6 +121,12 @@ $widths: (
     align-items: center;
     justify-content: center;
     border: none;
+    // The page reset's `button{padding:0}` (styles/base/_reset.scss) does not
+    // reach a shadow root, so the sheet the element adopts has to repeat it:
+    // Chrome's user-agent padding (1px 6px) leaves the narrow containers no
+    // room for the icon, a shrinkable flex item, and it is drawn under its
+    // size token.
+    padding: 0;
     background-color: transparent;
     color: t.color("on-surface-variant");
     font: inherit;
