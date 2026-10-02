@@ -437,7 +437,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   or `beforeclose` first). The classes, the paint, the focus trap and the animation may follow.
   A dialog created with `layer: "top"` and `<m-dialog>` already worked this way and are
   unchanged; this is the factory dialog without `layer`, which emitted `open` and turned
-  `isOpen()` true 10 ms after the call.
+  `isOpen()` true 10 ms after the call. Migration: add every `open` listener before calling
+  `open()` (or pass it in the config's `on`), and move to `afteropen` what needs the dialog
+  visible or focus inside it.
 
   ```ts
   // 0.10: the listener was added in time, because `open` came 10 ms later
