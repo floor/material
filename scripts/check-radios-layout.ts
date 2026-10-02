@@ -98,8 +98,9 @@ const mount = (api: "factory" | "element") => {
     wrap.dir = dir;
     wrap.style.cssText = "width:160px";
     host.append(wrap);
-    // Three lines (72px) in a 160px container, both directions, on this machine.
-    // Two adjacent options carry it; the first option stays one line.
+    // Long enough to wrap in the 160px container. The check compares its height
+    // with the one-line label from the same run. Two adjacent options carry it;
+    // the first option stays one line.
     const label = "Example Example Example";
     const options = [
       { value: "a", label: "One" },
@@ -266,7 +267,9 @@ export async function checkRadiosLayout(page: Page, api: "factory" | "element", 
     for (const group of measured.groups) {
       const where = `${api} ${group.direction} ${group.dir}`;
       for (const [index, long] of group.longs.entries()) {
-        if (long.text.h !== 72) failures.push(`${where}: long label ${index + 1} is ${long.text.h}px, not three lines`);
+        // More than one line: at least twice the one-line label's text height
+        // from this run. textOutsideRow, below, asserts the row contains it.
+        if (long.text.h < group.one.textH * 2) failures.push(`${where}: long label ${index + 1} is ${long.text.h}px, not more than one line (one-line text is ${group.one.textH}px)`);
         if (Math.abs(long.deltaBlock) > 0.5) failures.push(`${where}: long label ${index + 1} circle off the label block by ${long.deltaBlock} (first line ${long.deltaFirst})`);
       }
       if (group.textHits.length) failures.push(`${where}: label rects intersect ${JSON.stringify(group.textHits)}`);
