@@ -5080,6 +5080,84 @@ try {
     );
     check("dialog: Escape closes it from a child and from the body, a refusal holds for five presses, a menu inside takes the key first, and a forced close leaves the page clean");
 
+    // Which event is "the one that opened it" (FLO-548): the one whose dispatch
+    // had begun when open() ran, told by a capture listener on the window that
+    // numbers events, not by time or by the task. Each form opens a dialog from
+    // an Escape keydown and then sends a second one in the same task: the first
+    // must leave it open, the second must close it. From a child, from the
+    // body, from the page's own window listener in both phases, from inside a
+    // shadow root; after a promise (nothing is in flight: the first key closes);
+    // and a second and a third dialog opened while another is open. The keys
+    // are dispatched by script, which follows the same dispatch as a real one;
+    // real key presses are the case above and the adapters' checks.
+    const openingEvent = (layer?: "top"): Promise<Record<string, unknown>> =>
+      page.evaluate(async (layer) => {
+        const w = window as unknown as Win & { mtrl: Factories };
+        type Dialog = { open: () => unknown; isOpen: () => boolean; destroy: () => void; element: HTMLElement };
+        const key = (): KeyboardEvent => new KeyboardEvent("keydown", { key: "Escape", bubbles: true, composed: true, cancelable: true });
+        const make = (): Dialog =>
+          w.mtrl.createDialog({ title: "Discard draft?", content: `<button type="button">Inside</button>`, ...(layer ? { layer } : {}) }) as unknown as Dialog;
+        const opener = document.getElementById("opener") as HTMLElement;
+        const result: Record<string, unknown> = {};
+        const from = (name: string, arrange: (open: () => void) => EventTarget): void => {
+          const dialog = make();
+          arrange(() => void dialog.open()).dispatchEvent(key());
+          const afterTheKeyThatOpenedIt = dialog.isOpen();
+          document.body.dispatchEvent(key());
+          result[name] = { afterTheKeyThatOpenedIt, afterAKeyInTheSameTask: dialog.isOpen() };
+          dialog.destroy();
+        };
+        from("aChild", (open) => { opener.addEventListener("keydown", open, { once: true }); return opener; });
+        from("theBody", (open) => { document.body.addEventListener("keydown", open, { once: true }); return document.body; });
+        from("theWindowInCapture", (open) => { window.addEventListener("keydown", open, { once: true, capture: true }); return opener; });
+        from("theWindowInBubble", (open) => { window.addEventListener("keydown", open, { once: true }); return opener; });
+        const host = document.body.appendChild(document.createElement("div"));
+        const inner = host.attachShadow({ mode: "open" }).appendChild(document.createElement("button"));
+        from("aShadowRoot", (open) => { inner.addEventListener("keydown", open, { once: true }); return inner; });
+        host.remove();
+
+        // Opened late: the key press is over when the dialog opens
+        const late = make();
+        opener.addEventListener("keydown", () => void Promise.resolve().then(() => new Promise((r) => setTimeout(r, 0))).then(() => late.open()), { once: true });
+        opener.dispatchEvent(key());
+        await new Promise((r) => setTimeout(r, 50));
+        const lateOpened = late.isOpen();
+        document.body.dispatchEvent(key());
+        result.afterAPromise = { opened: lateOpened, afterTheFirstKey: late.isOpen() };
+        late.destroy();
+
+        // A second and a third, each opened by a key while the others are open
+        const stack = [make(), make(), make()];
+        const states = (): boolean[] => stack.map((dialog) => dialog.isOpen());
+        stack[0].open();
+        const steps: boolean[][] = [];
+        for (const next of [stack[1], stack[2]]) {
+          opener.addEventListener("keydown", () => void next.open(), { once: true });
+          opener.dispatchEvent(key());
+          steps.push(states());
+        }
+        for (let i = 0; i < 3; i++) {
+          document.body.dispatchEvent(key());
+          steps.push(states());
+        }
+        result.stacked = steps;
+        stack.forEach((dialog) => dialog.destroy());
+        return result;
+      }, layer);
+    const opened = { afterTheKeyThatOpenedIt: true, afterAKeyInTheSameTask: false };
+    const openingExpected = {
+      aChild: opened, theBody: opened, theWindowInCapture: opened, theWindowInBubble: opened, aShadowRoot: opened,
+      afterAPromise: { opened: true, afterTheFirstKey: false },
+      stacked: [[true, true, false], [true, true, true], [true, true, false], [true, false, false], [false, false, false]],
+    };
+    await fresh(page, `<button id="opener" type="button">Open</button>`);
+    assert.deepEqual(
+      { default: await openingEvent(), top: await openingEvent("top") },
+      { default: openingExpected, top: openingExpected },
+      "the event that opened a dialog is the only one it ignores, in both layers",
+    );
+    check("dialog: only the event in flight when open() ran is ignored: from a child, the body, the window's listeners, a shadow root, after a promise, and with other dialogs open");
+
     // The same sentence for the menu (FLO-548): its click-outside and Escape
     // listeners are added inside open(). A button that is not the menu's
     // opener opens it by code, from a click and from an Escape keydown: that

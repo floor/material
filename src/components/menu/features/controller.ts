@@ -14,7 +14,7 @@ import {
 import { menuOpened, menuClosed } from "./registry";
 import { eventWithin } from "./layer";
 import { createSubmenuLoader, hasNestedItems, MenuSubmenuApi } from "./loader";
-import { onTopLayerClose, showInTopLayer } from "../../../core/dom/layer";
+import { eventsFrom, onTopLayerClose, showInTopLayer, type EventsFrom } from "../../../core/dom/layer";
 
 import { setHTML } from "../../../core/dom/html";
 
@@ -62,12 +62,11 @@ const withController =
   let focusTimer: Timer = null;
   let hideTimer: Timer = null;
   let removeTimer: Timer = null;
-  // True for the rest of the task open() ran in. The click or the key press
-  // that opened the menu is still on its way up to the document in that task,
-  // when the dismiss listeners are added: it is not a request to dismiss the
-  // menu, nor a key for it to handle. An event made after open() is a later
-  // task.
-  let opening = false;
+  // Which events came after open(). The click or the key press that opened
+  // the menu is still on its way up to the document when the dismiss
+  // listeners are added: it is not a request to dismiss the menu, nor a key
+  // for it to handle. Every later one is, the first task's included.
+  let from: EventsFrom | undefined;
 
   // As the listbox of a combobox, options need ids the combobox can point at
   // with aria-activedescendant, and nothing inside may take focus from it
@@ -469,10 +468,8 @@ const withController =
 
     // An open menu can be dismissed: a click outside and Escape, from now. A
     // listbox's combobox handles every key, Escape included.
-    opening = true;
-    tasks.setTimeout(() => {
-      opening = false;
-    }, 0);
+    from?.stop();
+    from = eventsFrom(component.element);
     if (config.closeOnClickOutside) {
       document.addEventListener("click", handleDocumentClick);
     }
@@ -589,6 +586,7 @@ const withController =
     submenu.closeAllSubmenus();
 
     // Remove document events
+    from?.stop();
     document.removeEventListener("click", handleDocumentClick);
     document.removeEventListener("keydown", handleDocumentKeydown);
     window.removeEventListener("resize", handleWindowResize);
@@ -648,7 +646,7 @@ const withController =
    */
   const handleDocumentClick = (e: MouseEvent): void => {
     // The click that opened the menu
-    if (opening) return;
+    if (from && !from.after(e)) return;
 
     // Don't close if clicked inside menu
     if (eventWithin(config, component.element, e)) {
@@ -679,7 +677,7 @@ const withController =
    */
   const handleDocumentKeydown = (e: KeyboardEvent): void => {
     // The key press that opened the menu
-    if (opening) return;
+    if (from && !from.after(e)) return;
 
     // Check if the event target is already inside the menu or submenu
     const isTargetInsideMenu = eventWithin(config, component.element, e);
@@ -853,6 +851,7 @@ const withController =
       menuClosed(registryEntry);
 
       // Clean up document events
+      from?.stop();
       document.removeEventListener("click", handleDocumentClick);
       document.removeEventListener("keydown", handleDocumentKeydown);
       window.removeEventListener("resize", handleWindowResize);

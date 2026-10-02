@@ -455,9 +455,11 @@ describe('dialog: open means it can be dismissed', () => {
   test('close() and destroy() in that window leave no document or window listener behind', async () => {
     const watched = watchDocument();
     try {
+      // keydown: the Escape listener and the marker that numbers events, both
+      // on the window
       const closed = make().dialog;
       closed.open();
-      expect(watched.count('keydown')).toBe(1);
+      expect(watched.count('keydown')).toBe(2);
       expect(watched.count('mouseup')).toBe(1);
       closed.close();
       expect(watched.count('keydown')).toBe(0);
@@ -465,7 +467,7 @@ describe('dialog: open means it can be dismissed', () => {
 
       const destroyed = make().dialog;
       destroyed.open();
-      expect(watched.count('keydown')).toBe(1);
+      expect(watched.count('keydown')).toBe(2);
       destroyed.destroy();
       expect(watched.count('keydown')).toBe(0);
       expect(watched.count('mouseup')).toBe(0);
@@ -479,10 +481,11 @@ describe('dialog: open means it can be dismissed', () => {
       shown.open();
       await after(SETTLED);
       expect(shown.element.classList.contains(VISIBLE)).toBe(true);
-      expect(watched.count('keydown')).toBe(1);
+      expect(watched.count('keydown')).toBe(2);
       expect(watched.count('mouseup')).toBe(1);
       shown.destroy();
       expect(watched.count('keydown')).toBe(0);
+      expect(watched.count('click')).toBe(0);
       expect(watched.count('mouseup')).toBe(0);
     } finally {
       watched.stop();

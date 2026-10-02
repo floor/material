@@ -149,13 +149,71 @@ export const inertOutside = (keep: Element): (() => void) => {
   };
 };
 
+/** What eventsFrom returns: see there. */
+export interface EventsFrom {
+  /** Whether the event's dispatch began after the call */
+  after: (event: Event) => boolean;
+  /** Releases the marker. Harmless when called again. */
+  stop: () => void;
+}
+
+// The order in which key presses and clicks began their dispatch, kept while
+// an overlay is open: one capture listener on the window numbers each event
+// before it reaches anything else.
+const MARKED = ["keydown", "click"];
+const order = new WeakMap<Event, number>();
+const marking = new WeakMap<Window, number>();
+let clock = 0;
+const mark = (event: Event): void => {
+  order.set(event, ++clock);
+};
+
+/**
+ * Tells the events that came after this call from the one that was already
+ * on its way: "the event that opened an overlay never dismisses it".
+ *
+ * An overlay adds its dismiss listeners in `open()`, and the click or the key
+ * press that called `open()` then reaches them, on its way up. It is not
+ * told apart by time (event times are whole milliseconds in some browsers,
+ * and equal times cannot be ordered) nor by the task (a real key press can
+ * be delivered before any timer has run), but by the dispatch itself: every
+ * event passes the window's capture phase first, where one listener numbers
+ * it. An event numbered after the call came after it; the one in flight has
+ * an earlier number, or none.
+ *
+ * The browser's own `cancel` for a modal `<dialog>` is not covered: it is a
+ * new event, created after `open()` (see `ModalEscape.opening`).
+ *
+ * @param element - An element of the overlay, which says which window it is in
+ * @returns `after(event)`, and `stop()` for when the overlay closes
+ */
+export const eventsFrom = (element: HTMLElement): EventsFrom => {
+  const view = element.ownerDocument.defaultView as Window;
+  const users = marking.get(view) ?? 0;
+  // One marker for every open overlay of the window
+  if (!users) MARKED.forEach((type) => view.addEventListener(type, mark, true));
+  marking.set(view, users + 1);
+  const since = clock;
+  let live = true;
+  return {
+    after: (event) => (order.get(event) ?? 0) > since,
+    stop: () => {
+      if (!live) return;
+      live = false;
+      const left = (marking.get(view) as number) - 1;
+      marking.set(view, left);
+      if (!left) MARKED.forEach((type) => view.removeEventListener(type, mark, true));
+    },
+  };
+};
+
 /** A modal's place in the Escape stack: see onModalEscape. */
 export interface ModalEscape {
   /**
-   * True for the rest of the task the modal opened in. The event that opened
-   * it is still being handled then: an Escape key press on its way up, or the
-   * `cancel` the browser sends the topmost modal `<dialog>` for it when the
-   * page stopped that key press before it reached the window.
+   * True for the rest of the task the modal opened in, for the one event the
+   * marker cannot number: the `cancel` the browser sends the topmost modal
+   * `<dialog>` for the key press that opened it, when the page stopped that
+   * key press before it reached the window.
    */
   opening: boolean;
   /** Takes the modal off the stack. Harmless when called again. */
@@ -165,6 +223,7 @@ export interface ModalEscape {
 interface EscapeEntry extends ModalEscape {
   view: Window;
   escape: () => void;
+  from: EventsFrom;
 }
 
 // The open modals, in the order they opened: the last one is on top.
@@ -181,15 +240,16 @@ const onEscapeKey = (event: KeyboardEvent): void => {
   // Prevented, so the browser sends a modal <dialog> no `cancel`: it lets a
   // page refuse two of those in a row and forces the third
   event.preventDefault();
-  if (!top.opening) top.escape();
+  // The key press that opened the modal is prevented too, and goes no further
+  if (top.from.after(event)) top.escape();
 };
 
 /**
  * Escape for a modal, handled as a key press. One bubble listener on the
  * window serves every open modal: after the listeners on the document, so
  * whatever is open inside the modal keeps a key it has used, and wherever
- * focus is, the body included. Only the topmost modal is told, and never in
- * the task it opened in: the key press that opened it does not dismiss it.
+ * focus is, the body included. Only the topmost modal is told, and never for
+ * the key press that opened it (see eventsFrom).
  *
  * @param element - The modal's element, which says which window it is in
  * @param escape - Called for an Escape that is the modal's: it closes, or refuses
@@ -197,14 +257,17 @@ const onEscapeKey = (event: KeyboardEvent): void => {
  */
 export const onModalEscape = (element: HTMLElement, escape: () => void): ModalEscape => {
   const view = element.ownerDocument.defaultView as Window;
+  const from = eventsFrom(element);
   const entry: EscapeEntry = {
     view,
     escape,
+    from,
     opening: true,
     stop: () => {
       const at = escapes.indexOf(entry);
       if (at < 0) return;
       escapes.splice(at, 1);
+      from.stop();
       if (!escapes.some((other) => other.view === view)) view.removeEventListener("keydown", onEscapeKey);
     },
   };

@@ -605,7 +605,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   - **An open dialog can be dismissed as soon as `open()` returns:** Escape and a click on the
     scrim close it from then, not 10 ms later. One exception, the same for every overlay: the
     event that opened it never dismisses it. A dialog opened from an Escape `keydown` handler
-    stays open through that key press, and the next Escape closes it. This holds in both
+    stays open through that key press, and the next Escape closes it. "The event that opened
+    it" is exactly the one whose dispatch had begun when `open()` ran: any other, in the same
+    task or the next, counts. This holds in both
     layers: a `layer: "top"` dialog and `<m-dialog>` opened that way used to close at once,
     on the `cancel` the browser sends for that same key press.
   - **`destroy()` right after `open()`** leaves nothing behind (see Fixed).
@@ -613,8 +615,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     window and prevents the key, so the browser sends a `layer: "top"` dialog no `cancel` for
     it. `closeOnEscape: false` and a `beforeclose` listener that refuses now hold for any
     number of presses (see Fixed). Only the topmost open dialog answers; a key that something
-    open inside it has used (a menu, a select) is left to it, and so is an Escape that cancels
-    an IME composition. `<m-dialog>` still dispatches `cancel` for every Escape, and
+    open inside it has used (a menu, a select) is left to it. An Escape that cancels an IME
+    composition is left to the IME: a default-layer dialog no longer closes on it (a
+    top-layer one is the browser's to decide, as before). `<m-dialog>` still dispatches `cancel` for every Escape, and
     `preventDefault()` on it still refuses. A page listener that saw the native `cancel` on
     the factory's `<dialog>` for Escape sees one the dialog sends itself; a close request that
     is not a key press (a back gesture) still arrives as the browser's.
