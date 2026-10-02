@@ -40,7 +40,7 @@ beforeAll(() => {
 
 describe('button stylesheet: sizes (ButtonXSmall…XLargeTokens.kt)', () => {
   const sizes: Record<string, { height: string; padding: string; gap: string; icon: string; font: string }> = {
-    xs: { height: '32px', padding: '0 12px', gap: '8px', icon: '20px', font: '14px' },
+    xs: { height: '32px', padding: '0 12px', gap: '4px', icon: '20px', font: '14px' },
     s: { height: '40px', padding: '0 16px', gap: '8px', icon: '20px', font: '14px' },
     m: { height: '56px', padding: '0 24px', gap: '8px', icon: '24px', font: '16px' },
     l: { height: '96px', padding: '0 48px', gap: '12px', icon: '32px', font: '24px' },

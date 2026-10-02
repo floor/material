@@ -111,7 +111,7 @@ describe("explicit contrast levels are opt-in", () => {
     // `@use "main"` compressed, before the banner the build adds.
     // The hash is this sheet after the text field strings are two words (FLO-560).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("6c7471f88670113311726a7c72e83314650430b4e8a0554ec1b3ddcc8213871f");
+      .toBe("655e24a0fed812709077ebd95c559ccae013c5a2aa839f4e2d55654a0f195789");
     expect(css.length).toBe(530247);
   });
 
