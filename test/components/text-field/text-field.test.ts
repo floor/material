@@ -76,6 +76,60 @@ describe('text-field', () => {
     expect(mount({ label: 'Notes', type: 'multiline' }).input.tagName).toBe('TEXTAREA');
   });
 
+  // A text input strips newlines, so the live value of 'a\nb' is 'ab' while
+  // the default stays 'a\nb'. A textarea keeps the newline. Both reset to
+  // the value they had at creation.
+  const configured = 'a\nb';
+  const classesExceptMultiline = (element: HTMLElement) =>
+    [...element.classList].filter((name) => name !== 'mtrl-text-field--multiline').sort();
+
+  test('a single-line field keeps a configured value as its default', () => {
+    const field = mount({ label: 'Edit', value: configured });
+    expect(field.getValue()).toBe('ab');
+    expect(field.input.value).toBe('ab');
+    expect(field.input.defaultValue).toBe(configured);
+    expect(field.input.getAttribute('value')).toBe(configured);
+    expect(field.element.classList.contains('mtrl-text-field--empty')).toBe(false);
+    const form = document.createElement('form');
+    form.append(field.element);
+    field.input.value = 'changed';
+    form.reset();
+    expect(field.getValue()).toBe('ab');
+    expect(field.input.defaultValue).toBe(configured);
+  });
+
+  test('a multiline field returns its configured value', () => {
+    const field = mount({ label: 'Edit', type: 'multiline', value: configured });
+    expect(field.getValue()).toBe(configured);
+    expect(field.input.value).toBe(configured);
+  });
+
+  test('a multiline field does not carry a value attribute', () => {
+    const field = mount({ label: 'Edit', type: 'multiline', value: configured });
+    expect(field.input.hasAttribute('value')).toBe(false);
+  });
+
+  test('a multiline field with a value is populated as a single-line field is', () => {
+    const single = mount({ label: 'Edit', value: configured });
+    const field = mount({ label: 'Edit', type: 'multiline', value: configured });
+    expect(field.element.classList.contains('mtrl-text-field--empty')).toBe(false);
+    expect(classesExceptMultiline(field.element)).toEqual(classesExceptMultiline(single.element));
+  });
+
+  test('a multiline field defaults and resets as a single-line field does', () => {
+    const single = mount({ label: 'Edit', value: configured });
+    const field = mount({ label: 'Edit', type: 'multiline', value: configured });
+    expect(field.input.defaultValue).toBe(single.input.defaultValue);
+    const form = document.createElement('form');
+    form.append(single.element, field.element);
+    single.input.value = 'changed';
+    field.input.value = 'changed';
+    form.reset();
+    expect(single.getValue()).toBe('ab');
+    expect(field.getValue()).toBe(configured);
+    expect(field.input.value).toBe(configured);
+  });
+
   test('typing updates the value and emits input; setValue updates the input', () => {
     const field = mount({ label: 'Name' });
     const inputs = mock((_event: unknown) => {});
