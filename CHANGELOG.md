@@ -1224,15 +1224,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
-- **Text beside an unlabelled `<m-switch>` in inline flow no longer moves when the element
-  upgrades.** The track-box host — no label (`label` absent or empty, or an empty
-  `supporting-text`) — took its baseline from the track's bottom edge, 40px from the host's top,
-  where the element's own 40px container carries the 24px centre; the line's text moved 16px at
-  upgrade. A supporting text with no label had the track spanning its first row, so the host's
-  baseline was the track's bottom, 44px, 11px below the helper's own 33px. A zero-height item
-  centred with the track now carries that centre as the pre-upgrade baseline, and the track moves
-  into the supporting text's row when there is no label above it. The host's box, the track's box
-  and the line height are unchanged; the labelled rows already matched.
+- **Text beside an unlabelled `<m-switch>` no longer moves when the element upgrades.**
+  Its pre-upgrade baseline now matches the control's center; a supporting-text-only switch
+  uses its text baseline. The upgraded switch host uses the control's box directly, so
+  12px or 24px surrounding text with line-height 1 or 2 cannot add an extra host line box.
+  Inline and baseline/center flex layouts are checked in both text directions. Button and
+  text-field upgrade shifts are tracked separately; their styles are unchanged here.
 - **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"` (FLO-592).**
   The `touch-target` mixin anchored its `::after` with `inset-inline-start: 50%` and then moved it
   with the physical `translate(-50%, -50%)`. Right-to-left, the logical inset pins the box's right
@@ -1415,12 +1412,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   when it captures. The fixture sat there, under a new page's resting pointer, and CI captured a
   button group hovered before the upgrade and not after. The stage now starts 32px down, and both
   passes assert that no control of the fixture is under the pointer.
-- `preupgrade:check` fails a row when a sibling moves more than 0.5px on either axis, whatever the
-  layout-shift score says. The score's own 0.5px floor is for sub-pixel rounding, and it let the
-  switch's unlabelled rows move an inline sibling 16px on a score of 0.0017; of every row that
-  moved a sibling at all the moves were 16.0, 11.0 and 1.3px, so 0.5px passes sub-pixel rounding
-  and fails a one-pixel move. The failing line names the row, the sibling and the move. The button
-  group's 1.3px move is another component's: it is recorded as known until its own fix.
+- `preupgrade:check` fails a row when a sibling moves more than 0.5px on either axis,
+  regardless of its layout-shift score. Known movements name the sibling, axis and signed
+  measured value with a 0.5px tolerance; other movements in that row still fail. Filtered
+  runs enforce the same checks, and a disappeared defect requires removing its exception.
+  Consumer-typography switch cases also reject host movement or resizing over 0.5px.
 - SSR parity now requires exact Chromium matches for progress, sliders, tabs and loading
   indicators after FLO-368/FLO-369; their 22 resolved exceptions are removed (FLO-363).
 - Element CSS file and export checks run after the CI build, so unit tests pass without `dist/` (FLO-365).

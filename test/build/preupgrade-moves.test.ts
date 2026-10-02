@@ -49,6 +49,15 @@ describe("preupgrade sibling exceptions", () => {
     expect(markOf({ ...row(.5), name: "switch" }, true).mark).toBe("ok");
     expect(markOf({ ...row(.515625), name: "switch" }, true).mark).toBe("FAIL");
   });
+  test("negative expected moves keep their sign and tolerance", () => {
+    const knownMoves = [{ sibling: "#inline", axis: "y" as const, value: -7, reason: "button baseline" }];
+    expect(markOf({ ...row(-7.5), knownMoves }, true).mark).toBe("known");
+    expect(markOf({ ...row(-7.515625), knownMoves }, true).mark).toBe("FAIL");
+    expect(markOf({ ...row(7), knownMoves }, true).mark).toBe("FAIL");
+  });
+  test("a known sibling cannot silently disappear from the measurement", () => {
+    expect(markOf({ ...row(), siblings: ["#renamed", "#block"] }, true).mark).toBe("FAIL");
+  });
   test("the missing-styles mutation does not enforce exceptions", () => {
     expect(markOf(row(-16), false).mark).toBe("ok");
   });

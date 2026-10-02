@@ -197,7 +197,10 @@ for (const dir of ["ltr", "rtl"]) {
     cases.push({
       element: "switch", variant: `peer upgrades; ${dir}; baseline; ${typography}`,
       html: `<div dir="${dir}" style="display:flex;gap:16px;align-items:baseline"><m-switch id="subject" aria-label="Switch"></m-switch><m-button id="button">Save</m-button><m-text-field id="field" label="Name" value="Ada"></m-text-field></div>`,
-      style, width: 850, host: "#subject", siblings: ["#button", "#field", "#block"],
+      style, width: 850, host: "#subject", strictBox: true, siblings: ["#button", "#field", "#block"],
+      knownMoves: [{ sibling: "#button", axis: "y",
+        value: ({ default: 1.296875, "12/1": 1.828125, "12/2": 1.828125, "24/1": -1.34375, "24/2": -7 } as Record<string, number>)[typography],
+        reason: "Button pre-upgrade baseline under consumer typography; fix in the button's own change." }],
     });
   }
   // State-specific controls at the typography that exposed the host line box.
@@ -209,7 +212,10 @@ for (const dir of ["ltr", "rtl"]) {
   for (const element of ["button", "text-field"]) {
     const row = cases.find(row => row.element === element && row.variant === "default")!;
     cases.push({ ...row, variant: `${dir}; 24/2`,
-      html: row.html.replace(`<m-${element}`, `<m-${element} dir="${dir}"`),
-      style: "font-size:24px;line-height:2" });
+      html: `<div style="display:flex">${row.html.replace(`<m-${element}`, `<m-${element} id="subject" dir="${dir}"`)}</div>`,
+      host: "#subject", width: 850, style: "font-size:24px;line-height:2",
+      knownMoves: ["#inline", "#block"].map(sibling => ({ sibling, axis: "y" as const,
+        value: element === "button" ? 8 : 1.5,
+        reason: `${element} host line box grows at 24px/2; fix in that element's own change.` })) });
   }
 }
