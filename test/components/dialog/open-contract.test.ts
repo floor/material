@@ -85,11 +85,16 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-  for (const dialog of dialogs) dialog.destroy();
-  await after(SETTLED);
-  document.body.innerHTML = '';
-  document.body.style.overflow = '';
-  jest.useRealTimers();
+  // The real clock comes back even when a destroy() throws: a fake clock left
+  // installed makes the next file's real waits time out
+  try {
+    for (const dialog of dialogs) dialog.destroy();
+    await after(SETTLED);
+    document.body.innerHTML = '';
+    document.body.style.overflow = '';
+  } finally {
+    jest.useRealTimers();
+  }
 });
 
 describe('dialog open(): the state and the event are there when it returns', () => {
