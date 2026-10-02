@@ -282,6 +282,14 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   menu gone must wait for the fade (350 ms). The same for a select's `close`, a split
   button's `collapse` when the user dismisses its menu, and a FAB menu's `close` in its
   `menu` presentation.
+- **A listener for `open` or `close` on `<m-menu>` or `<m-fab-menu>`** no longer hears an
+  opening or a closing made by setting or removing the `open` attribute (or the property):
+  that is applied at once and dispatches nothing, as on `<m-dialog>`. Code that set the
+  attribute and waited for the event waits for ever; read the state on the next line, or call
+  `show()` / `hide()`, which dispatch.
+- **`fabMenu.isOpen()` right after `open()`** is true in the `menu` presentation too, before
+  its surface exists. An `open` listener that reads the menu's surface must wait for it; a
+  second click on the FAB before the surface has arrived now closes the menu.
 - **`event.preventDefault()` in a menu's or a select's `open` or `close` listener, or in a
   select's `change` listener,** throws a `TypeError` in JavaScript: the payload has no such
   method any more. It never did anything there; remove the call.
@@ -624,6 +632,23 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     the objects passed at run time: nothing read them, and none of these events can be
     cancelled. A leftover call throws; it never did anything. The menu's `select` keeps
     both: preventing it keeps a `closeOnSelect` menu open.
+- **The FAB menu is open when `open()` returns, and `open` on `<m-menu>` and
+  `<m-fab-menu>` is applied at once (FLO-548).** The last two parts of the overlays' rule.
+  Migration: read the state on the line after setting `open` on either element instead of
+  waiting for its event, or call `show()` / `hide()`.
+  - **FAB menu, `menu` presentation:** `open()` sets `isOpen()` and `aria-expanded` and
+    emits `open` in the call. It used to do so after the menu's module had loaded: a
+    microtask later once loaded, a network round trip the first time. The surface is shown
+    when the module has arrived. `close()` before that ends closed, with one `open` and one
+    `close`, and nothing is shown; it used to be ignored, and the menu then opened. If the
+    module fails to load, the FAB menu closes again (`close` is emitted). The `list`
+    presentation already worked this way.
+  - **`<m-menu>` and `<m-fab-menu>`, the `open` attribute and property:** applied inside
+    the attribute callback, so the element is open, or closed, on the next line. Applied
+    that way it dispatches no `open` and no `close`, as on `<m-dialog>`, the drawer and
+    the sheets. It used to be applied a microtask later and to dispatch both. `show()`,
+    `hide()`, `toggle()`, the anchor and the user still dispatch one event per opening and
+    per closing.
 - **A config `on*` option is the listener registered at creation.** It runs with the same
   argument, the same number of times, as a listener passed to `on(event)` at that point, and it
   runs before a listener added afterwards. Whether a method notifies is unchanged (a silent

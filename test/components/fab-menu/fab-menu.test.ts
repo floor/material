@@ -390,7 +390,9 @@ describe("fab menu presentation", () => {
     const m = make({ presentation: "menu" });
     m.open(new dom.window.MouseEvent("click", { detail: 1 }));
     // The chunk's first import can take a while in a busy run: wait up to 2s
-    for (let i = 0; i < 200 && !m.isOpen(); i++) await new Promise((r) => setTimeout(r, 10));
+    // for its surface. The state is there at once (FLO-548).
+    expect(m.isOpen()).toBe(true);
+    for (let i = 0; i < 200 && !document.querySelector(".mtrl-menu"); i++) await new Promise((r) => setTimeout(r, 10));
     expect(m.isOpen()).toBe(true);
     const surface = document.querySelector(".mtrl-menu") as HTMLElement;
     expect(surface).not.toBeNull();
