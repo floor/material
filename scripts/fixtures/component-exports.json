@@ -3098,64 +3098,136 @@
     {
       "name": "TextfieldDensity",
       "kind": "type",
+      "status": "deprecated",
+      "note": "Use TextFieldDensity: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TextFieldDensity",
+      "kind": "type",
       "status": "public"
     },
     {
       "name": "TextfieldEvents",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Use TextFieldEvents: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TextFieldEvents",
       "kind": "type",
       "status": "public"
     },
     {
       "name": "TextfieldFocusPayload",
       "kind": "type",
+      "status": "deprecated",
+      "note": "Use TextFieldFocusPayload: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TextFieldFocusPayload",
+      "kind": "type",
       "status": "public"
     },
     {
       "name": "TextfieldTrailingPayload",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Use TextFieldTrailingPayload: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TextFieldTrailingPayload",
       "kind": "type",
       "status": "public"
     },
     {
       "name": "TextfieldValuePayload",
       "kind": "type",
+      "status": "deprecated",
+      "note": "Use TextFieldValuePayload: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TextFieldValuePayload",
+      "kind": "type",
       "status": "public"
     }
   ],
   "textfield/constants": [
     {
-      "name": "TEXTFIELD_CLASSES",
+      "name": "TEXT_FIELD_CLASSES",
       "kind": "value",
       "status": "public"
+    },
+    {
+      "name": "TEXT_FIELD_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXT_FIELD_DENSITY",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXT_FIELD_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXT_FIELD_STATES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXT_FIELD_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXT_FIELD_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXTFIELD_CLASSES",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Use TEXT_FIELD_CLASSES: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "TEXTFIELD_DEFAULTS",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated",
+      "note": "Use TEXT_FIELD_DEFAULTS: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "TEXTFIELD_DENSITY",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated",
+      "note": "Use TEXT_FIELD_DENSITY: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "TEXTFIELD_EVENTS",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated",
+      "note": "Use TEXT_FIELD_EVENTS: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "TEXTFIELD_STATES",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated",
+      "note": "Use TEXT_FIELD_STATES: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "TEXTFIELD_TYPES",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated",
+      "note": "Use TEXT_FIELD_TYPES: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "TEXTFIELD_VARIANTS",
       "kind": "value",
-      "status": "public"
+      "status": "deprecated",
+      "note": "Use TEXT_FIELD_VARIANTS: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
     }
   ],
   "timepicker": [
@@ -3261,6 +3333,11 @@
     },
     {
       "name": "TimePickerEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "TimePickerInputEvent",
       "kind": "type",
       "status": "public"
     },

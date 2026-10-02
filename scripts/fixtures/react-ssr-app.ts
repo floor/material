@@ -11,6 +11,10 @@ export const App = ({ mismatch = false }: { mismatch?: boolean }) => {
     React.createElement(Toolbar, { id: "fallback-2" }, React.createElement("span", null, "Light content")),
     React.createElement("p", { id: "text" }, mismatch ? "Client mismatch" : "Server text"),
     React.createElement(Button, { id: "button", onClick: () => setClicks(n => n + 1), style: { marginTop: 4 }, className: "save", "aria-label": "Save" }, "Save"),
+    React.createElement(Button, {
+      id: "globals", label: "Globals", popover: "auto", inputMode: "numeric",
+      enterKeyHint: "send", itemProp: "name", nonce: "abc",
+    }),
     React.createElement("output", { id: "clicks" }, clicks),
     React.createElement(Switch, { id: "switch", checked, onChange: e => setChecked(e.detail.checked) }, "Wi-Fi"),
     React.createElement("output", { id: "checked" }, String(checked)),

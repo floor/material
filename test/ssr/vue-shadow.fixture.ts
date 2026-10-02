@@ -7,6 +7,7 @@ import { pipeToNodeWritable, renderToString, renderToWebStream } from "@vue/serv
 import { buttonElement, cardElement, carouselElement, tabsElement } from "../../src/elements";
 import { createComponent } from "../../src/vue/create";
 import type { ComponentSpec } from "../../src/elements/adapter";
+import { assertGlobalHost, GLOBAL_ATTRS_WITH_IS } from "../../scripts/fixtures/ssr-global-host";
 
 const readStream = async (app: App): Promise<string> => {
   const stream = renderToWebStream(app);
@@ -68,6 +69,26 @@ test("an unregistered server returns no template; registration renders one and o
   expect(html).toContain("Save");
   expect(html).not.toContain("onclick");
 
+  const ordinary = await render(buttonElement.spec, {
+    id: "globals",
+    label: "Save",
+    disabled: true,
+    popover: "auto",
+    inputmode: "numeric",
+    enterkeyhint: "send",
+    itemprop: "name",
+    nonce: "abc",
+    is: "x-y",
+    onclick: "window.__xss=1",
+  }, () => "Save");
+  assertGlobalHost(ordinary, GLOBAL_ATTRS_WITH_IS);
+  expect(ordinary).toContain("disabled");
+  // The framework still emits a string handler on the host. The shadow copy must not.
+  expect(ordinary).toContain('onclick="window.__xss=1"');
+  const shadow = ordinary.slice(ordinary.indexOf('<template shadowrootmode="open"'), ordinary.indexOf("</template>"));
+  expect(shadow).not.toContain("onclick");
+  expect(shadow).not.toContain("__xss");
+
   const carousel = await render(carouselElement.spec, { ariaLabel: "Photos" }, () => "Light content");
   expect(carousel).not.toContain("shadowrootmode");
   expect(carousel).toContain("Light content");
@@ -89,6 +110,17 @@ test("an unregistered server returns no template; registration renders one and o
   expect(nested).toMatch(/<m-card[^>]*>\s*<template shadowrootmode="open"/);
   expect(nested).toMatch(/<m-button[^>]*>\s*<template shadowrootmode="open"/);
   expect(nested).toContain("Nested");
+
+  const withPopover = await renderToString(createSSRApp({
+    render: () => h(Card, { id: "card" }, () => h(Button, { id: "inner", popover: "auto", label: "Nested" })),
+  }));
+  const innerAt = withPopover.indexOf('id="inner"');
+  expect(innerAt).toBeGreaterThan(-1);
+  const innerTemplate = withPopover.slice(innerAt).match(/<template shadowrootmode="open"[^>]*>([\s\S]*?)<\/template>/);
+  expect(innerTemplate).not.toBeNull();
+  expect(innerTemplate![1]).toContain("mtrl-button");
+  expect(innerTemplate![1]).not.toContain("popover");
+  expect(withPopover.slice(withPopover.lastIndexOf("<", innerAt), withPopover.indexOf("<template", innerAt))).toMatch(/popover="auto"/);
 
   // v-html can emit an unclosed declarative template. The string scanner
   // threw on that; the renderer's detached copy tolerates it, and the page
