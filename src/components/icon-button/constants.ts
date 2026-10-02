@@ -127,7 +127,9 @@ export const ICON_BUTTON_CLASSES = {
  */
 export const DEFAULT_RIPPLE_CONFIG = {
   DURATION: 450,
+  /** @deprecated Read by nothing: the ripple option it was the default of is never applied (FLO-268). Removed in 1.0. */
   TIMING: 'cubic-bezier(0.4, 0.0, 0.2, 1)',
+  /** @deprecated Read by nothing: the ripple option it was the default of is never applied (FLO-268). Removed in 1.0. */
   OPACITY: ['0.7', '0'] as [string, string]
 } as const;
 

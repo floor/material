@@ -101,6 +101,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Deprecated
 
+- **The ripple defaults of options never applied (FLO-268):** `DEFAULT_RIPPLE_CONFIG.TIMING` and
+  `.OPACITY` (`mtrl/components/button/constants`, `mtrl/components/icon-button/constants`) and
+  `BUTTON_GROUP_DEFAULTS.RIPPLE_TIMING` and `.RIPPLE_OPACITY`. Nothing reads them: `rippleConfig`'s
+  `timing` and `opacity` were deprecated in 0.10.0. Removed in 1.0. Comments only; nothing changes at
+  run time.
+
 - **The text field's Sass map and function: `$textfield` and `textfield()` (FLO-383).** Use
   `$text-field` and `v.text-field()`, the same map: a theme may configure either name until 1.0
   removes the old one. The built CSS is unchanged.
