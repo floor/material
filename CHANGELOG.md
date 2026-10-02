@@ -773,6 +773,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **Accessibility: `scrollToChip` honours reduced motion (FLO-553).** It asked for a smooth
+  scroll explicitly, which overrides the stylesheet, so a chip set glided to the chip with the
+  reduced-motion preference on. It now names no behaviour: a scrollable set still scrolls
+  smoothly, from its stylesheet, and jumps at once under reduced motion. Also on 0.10.x.
 - **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
   centre while animating in and be squeezed at the viewport edge. Placement now uses its full
   layout size; reduced-motion placement is unchanged.
