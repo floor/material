@@ -100,13 +100,17 @@ try {
     ].join("\n"));
     const budgets = {
       // Measured against b475ea5d: 688,073 raw, 10,981 gzip.
-      // The shadow guard is gone. Each of the 44 roots carries data-mtrl-ssr=""
-      // (17 B): 688,821 raw, 10,994 gzip. Both ceilings stay under the ceiling
-      // next had (695,000 / 11,100). Floors follow the new measurement.
-      inline: { options: {}, raw: [681_900, 695_000], gzip: [10_850, 11_100] },
+      // main's reduced-motion rule in every root's host sheet (FLO-549, 0.10.6), on the
+      // forward merge: 700,173 raw, 11,154 gzip against 42c1a111 plus main 23c03a2f.
+      // This merge: that block (275 B) plus data-mtrl-ssr="" (17 B), and no guard.
+      // 700,921 raw, 11,166 gzip. Raw fits under 707,200; the formula's 707,950
+      // would pass it. Gzip's formula is 11,300, the ceiling next had. Floors
+      // follow the measurement.
+      inline: { options: {}, raw: [693_900, 707_200], gzip: [11_050, 11_300] },
       // Measured against b475ea5d: 41,993 raw, 1,026 gzip.
-      // The same attribute, and no guard <style>: 42,741 raw, 1,038 gzip.
-      // Raw crosses 42,450, so its ceiling follows the rule (measured + 1%,
+      // The attribute, and no guard <style>: 42,741 raw, 1,038 gzip. The reduced-motion
+      // block is in the linked host sheet, so this HTML does not grow for it.
+      // Raw crosses next's 42,450, so its ceiling follows the rule (measured + 1%,
       // up to 50): 43,200. Gzip stays under 1,150. Floors follow the measurement.
       link: { options: { styles: "link", cssBase: "/css" }, raw: [42_300, 43_200], gzip: [900, 1_150] },
     } as const;
@@ -143,6 +147,8 @@ try {
   // (measured plus 1%, up to the next 1,000).
   // FLO-546 merged tree, Node 22.23.3 / npm 10.9.9: 1,071,606. Measured + 1%,
   // up to 1,000, is 1,083,000, above next's 1,078,000, so the ceiling stays.
+  // Merged again with next (reduced motion, the child selector): 1,073,438.
+  // Measured + 1%, up to 1,000, is 1,085,000, above 1,078,000, so it stays.
   assert(pack.size < 1_078_000, "npm tarball exceeds 1,078,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
@@ -164,6 +170,8 @@ try {
   // FLO-546 merged tree, Node 22.23.3 / npm 10.9.9: 6,420,252. The pre-upgrade
   // rules left the element modules. Measured + 1%, up to 1,000, is 6,485,000,
   // above next's 6,458,000, so the ceiling stays.
+  // Merged again with next: 6,434,514. The child selector is in the 38 pre-upgrade
+  // files. Measured + 1%, up to 1,000, is 6,499,000, above 6,458,000, so it stays.
   assert(pack.unpackedSize < 6_458_000, "Unpacked package exceeds 6,458,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.

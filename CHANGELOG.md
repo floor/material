@@ -12,7 +12,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Migrating from 0.10.x
 
-Upgrade to 0.10.6 first. It exports the 1.0 names beside the old ones, and marks deprecated the
+Upgrade to the latest 0.10.x first. It exports the 1.0 names beside the old ones, and marks deprecated the
 TypeScript names, options and constants that 1.0 removes, so your editor flags each use with its
 replacement. Two of those warnings can't be cleared before you upgrade, because the new name
 exists only in 1.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
@@ -1079,9 +1079,6 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   new on the tabs' scroller and the suggestion list), and jumps at once under reduced motion.
   A script of yours that scrolls the tabs' scroller or the suggestion list now scrolls it
   smoothly too.
-- **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
-  centre while animating in and be squeezed at the viewport edge. Placement now uses its full
-  layout size; reduced-motion placement is unchanged.
 - **A chip destroyed on its own leaves its chip set (FLO-533).** Calling `destroy()` on a chip, rather than removing it through the set, used to leave that chip in the set. The set could then count it as selected beside another chip, including two selected chips in a single-select set, and the arrow keys stopped on it. The set now drops that chip. Dropping it does not emit `remove` or `change`. Removing a chip through the set is unchanged.
 - Checkboxes keep their check icon, and pre-upgrade element styles appear, when one process uses multiple documents (FLO-528).
 - A multiline text field reserves its textarea box before it upgrades, so the field and the line beside it no longer jump when the element is defined (FLO-425).
@@ -1115,6 +1112,78 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - SSR security reparsing runs in the Chromium CI job while unit tests remain browser-free;
   SSR parity and benchmark tooling load the source renderer and source CSS registry (FLO-363).
 - Source SSR reads the element CSS registry without resolving built package exports; source tests register real Sass output without mocking the CSS import (FLO-363).
+
+## [0.10.6] - 2026-10-02
+
+The release that announces 1.0.0. Everything decided for 1.0.0 as of this release that 0.10.x
+had not yet marked is now told in the code, as `@deprecated` or as an "In 1.0 …" note in the
+TSDoc, so your editor shows each one before you move to 1.0.0. Later decisions will be
+announced in a further 0.10.x release before 1.0.0: upgrade to the latest 0.10.x first. None
+of those notes changes anything at run time. Also three fixes: reduced motion inside the
+elements (an accessibility fix), the button group's press, and the tooltip's placement.
+
+### Deprecated
+
+Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
+
+- **`select.textfield`: 1.0 renames it `textField` and keeps no alias.** This corrects 0.10.5's
+  note, which said `textfield` "remains as an alias through 1.x": in 1.0 `select.textfield` is
+  `undefined`. 0.10.x has no `textField`, so rename it when you upgrade, as with
+  `SELECT_CLASSES.TEXTFIELD` (FLO-383).
+- **The icon button's DOM `toggle` event** is removed in 1.0: listen to `change`, which the
+  factory's button and `<m-icon-button>` have emitted since 0.10.0 (FLO-295). The deprecation,
+  until now only in 0.10.0's notes, is on the `toggle` option and on the element's event.
+- **`RADIO_DEFAULTS.VARIANT`, `.LABEL_POSITION` and `.SIZE`** (`mtrl/components/radios/constants`):
+  the radios have no such options, and nothing reads the keys. `DIRECTION` stays.
+- **Told in the TSDoc, for 1.0:** `emit` on the card and the tabs accepts only the component's
+  own events; the radio factory's `change` reports `null`, not `""`, when nothing is selected;
+  `withInput`'s `change` reports the checked boolean as `value`, with the input's string value
+  as `valueAttribute`.
+- **`select.menu` and `splitButton.menu`** (the inner menu component) are removed in 1.0. Use
+  the component's own methods and events: on the select `open()`, `close()`, `isOpen()`,
+  `getOptions()`, `setOptions()` and `open`, `close`, `change`; on the split button `expand()`,
+  `collapse()`, `isExpanded()` and `expand`, `collapse`, `select` (FLO-543).
+- **Told in the TSDoc, for 1.0, values and payloads:**
+  - the radio factory's `getValue()` returns `null` when nothing is selected, and `setValue`
+    accepts `null` to clear;
+  - `withInput`'s `getValue()` and `setValue()` work on the checked boolean, the string is
+    `getValueAttribute()` / `setValueAttribute()`, and `setValue` emits no `value` event;
+  - the carousel's `change` carries the index as `value`, and `index` is gone.
+- **Told in the TSDoc, for 1.0, the `on*` options that become their event's listener:** each
+  receives what a listener passed to `on(event)` receives.
+  - Time picker `onConfirm`: `{ value }`, not the time string.
+  - Search `onSubmit` and `onInput`: the `SearchEvent` (the query is `event.value`), not the
+    string. `onClear`: the `SearchEvent`. `onSuggestionSelect`: the `SearchEvent` (the
+    suggestion is `event.suggestion`). `onExpand` and `onCollapse`: the event's object.
+  - Navigation rail `onExpand` and `onCollapse`: `{ expanded: true }` and `{ expanded: false }`.
+  - A chip's `onChange`: one object, `{ selected, chip, value }`, not `(selected, chip)`. A
+    chip's `onClick`: `{ event, originalEvent, element }`, not the chip. The chip set's
+    `onChange`: one object, `{ value, selected, changed }`, and it also hears
+    `selectByValue(values, true)`.
+- **Told in the TSDoc, for 1.0, the button group's `on` map** (`click`, `focus`, `blur`,
+  `change`): on 0.10.x it is accepted and never called, so subscribe with
+  `on(event, handler)` on the group. In 1.0 those handlers run, with the listener's argument.
+
+### Fixed
+
+- **Accessibility: reduced motion is honoured inside the elements (FLO-549).** With the system's
+  reduced-motion preference on, mtrl limits transitions to fades and ends animations at once,
+  from a rule in the page's stylesheet. That rule did not reach an element's shadow root, so
+  inside `<m-button>`, `<m-button-group>`, `<m-icon-button>`, `<m-fab>`, `<m-extended-fab>`,
+  `<m-card>`, `<m-chips>`, `<m-tabs>`, `<m-slider>`, `<m-radios>`, `<m-tooltip>` and `<m-badge>`
+  movement ran as if the preference were off (the button's corner morph, the button group's
+  width and corner springs), and in the other elements only the parts their own stylesheet
+  names were reduced. Every element's shadow root now carries the same rule. The ripple and
+  the motion driven from script (progress, loading indicator, carousel, date picker, FAB menu)
+  already honoured the preference, and so did the factories outside a shadow root.
+- **Button group (FLO-537):** Pressing a button in a standard group briefly showed an ellipsis
+  on a neighbour's label. The neighbour's width and padding now ease together, and the width
+  returns to the label's own size when the press ends. In a right-to-left page the
+  neighbour's padding now gives way on the side facing the pressed button; it was the
+  opposite side.
+- **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
+  centre while animating in and be squeezed at the viewport edge. Placement now uses its full
+  layout size; the first placement under reduced motion is unchanged.
 
 ## [0.10.5] - 2026-10-02
 
@@ -3033,7 +3102,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.5...HEAD
+[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.6...HEAD
+[0.10.6]: https://github.com/floor/mtrl/compare/v0.10.5...v0.10.6
 [0.10.5]: https://github.com/floor/mtrl/compare/v0.10.4...v0.10.5
 [0.10.4]: https://github.com/floor/mtrl/compare/v0.10.3...v0.10.4
 [0.10.3]: https://github.com/floor/mtrl/compare/v0.10.2...v0.10.3

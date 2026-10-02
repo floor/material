@@ -7,7 +7,7 @@
 // prototype, a flag per element and the toggle events the browser queues.
 // The browser half, stacking and styles, is in scripts/check-elements.ts.
 
-import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach, setDefaultTimeout } from "bun:test";
 import { JSDOM } from "jsdom";
 import createMenu from "../../../src/components/menu";
 import { currentlyOpenMenu, menuClosed } from "../../../src/components/menu/features/registry";
@@ -66,7 +66,22 @@ const removePopover = (): void => {
   dom.window.Element.prototype.matches = nativeMatches;
 };
 
+// Longer than two bounded waits in a row, so a wait that gives up reports itself
+// instead of the runner's own 5 s timeout cutting the test.
+setDefaultTimeout(15_000);
+
 const after = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+/**
+ * Waits for a state the menu reaches on its own timers (20 ms to place, 100 ms to
+ * focus, 50 ms to close, 300 ms more to leave the document), for 5 s at most. A fixed
+ * wait only just longer than those timers ends first when the runner is busy (FLO-545).
+ */
+const until = async (what: string, ready: () => boolean, found: () => unknown = () => undefined): Promise<void> => {
+  for (const end = Date.now() + 5000; !ready();) {
+    if (Date.now() > end) throw new Error(`still waiting after 5s for ${what}; found ${JSON.stringify(found())}`);
+    await after(10);
+  }
+};
 const ITEMS = [
   { id: "share", text: "Share", hasSubmenu: true, submenu: [{ id: "link", text: "Copy link" }] },
   { id: "copy", text: "Copy" },
@@ -118,11 +133,18 @@ const make = (config: Record<string, unknown>) => {
   return { menu, closes };
 };
 
-/** Opens and waits for positioning, focus and the document listeners. */
+/**
+ * Opens and waits for positioning, the document listeners and focus: the menu takes
+ * focus last, 100 ms after it is placed.
+ */
 const opened = async (menu: ReturnType<typeof createMenu>) => {
   menu.open();
-  await after(150);
+  const active = () => (menu.element.getRootNode() as Document | ShadowRoot).activeElement;
+  await until("the open menu to take focus", () => menu.element.contains(active()), () => ({ open: menu.isOpen(), connected: menu.element.isConnected, focus: active()?.tagName ?? null }));
 };
+/** The menu closed and out of the document: 350 ms after its dismissal when nothing is late. */
+const gone = (menu: ReturnType<typeof createMenu>, step: string) =>
+  until(`${step}: the menu to close and leave the document`, () => !menu.isOpen() && !menu.element.isConnected, () => ({ open: menu.isOpen(), connected: menu.element.isConnected }));
 
 describe("menu layer: top", () => {
   test("without a layer the menu is appended to the body, with no popover, at document coordinates", async () => {
@@ -171,7 +193,9 @@ describe("menu layer: top", () => {
     opener.dispatchEvent(new dom.window.FocusEvent("blur", { relatedTarget: outside }));
     await after(60);
     outside.click();
+    // The fixed wait is what would show a second close; then the state itself
     await after(400);
+    await gone(menu, "a click outside");
     expect(closes.length).toBe(1);
     expect(menu.isOpen()).toBe(false);
     expect(menu.element.isConnected).toBe(false);
@@ -197,6 +221,7 @@ describe("menu layer: top", () => {
     await opened(menu);
     menu.element.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     await after(400);
+    await gone(menu, "Escape");
     expect(closes.length).toBe(1);
     expect(menu.isOpen()).toBe(false);
   });
@@ -209,6 +234,7 @@ describe("menu layer: top", () => {
     await opened(menu);
     (menu.element.querySelector('[data-id="copy"]') as HTMLElement).click();
     await after(400);
+    await gone(menu, "an item chosen");
     expect({ selected, closes: closes.length }).toEqual({ selected: ["copy"], closes: 1 });
   });
 
@@ -218,6 +244,7 @@ describe("menu layer: top", () => {
     await opened(menu);
     (menu.element as HTMLElement & { hidePopover: () => void }).hidePopover();
     await after(400);
+    await gone(menu, "hidePopover()");
     expect(closes.length).toBe(1);
     expect(menu.isOpen()).toBe(false);
   });
@@ -228,6 +255,7 @@ describe("menu layer: top", () => {
     await opened(menu);
     menu.close();
     await after(400);
+    await gone(menu, "close()");
     await opened(menu);
     expect(closes.length).toBe(1);
     expect(menu.isOpen()).toBe(true);
@@ -242,7 +270,8 @@ describe("menu layer: top", () => {
     const { menu, closes } = make({ opener, layer: "top" });
     await opened(menu);
     (menu.element.querySelector('[data-id="share"]') as HTMLElement).click();
-    await after(50);
+    // The submenu is a module of its own, loaded on first use
+    await until("the submenu to open in the top layer", () => !!root.querySelector(".mtrl-menu--submenu")?.matches(":popover-open"), () => ({ submenu: !!root.querySelector(".mtrl-menu--submenu") }));
     const submenu = root.querySelector(".mtrl-menu--submenu") as HTMLElement;
     expect(submenu).not.toBeNull();
     expect(menu.element.nextElementSibling).toBe(submenu);
@@ -252,6 +281,7 @@ describe("menu layer: top", () => {
     // Its item selects and closes both
     (submenu.querySelector('[data-id="link"]') as HTMLElement).click();
     await after(400);
+    await until("a submenu item chosen: the menu and its submenu to leave the shadow root", () => !root.querySelector(".mtrl-menu"), () => ({ open: menu.isOpen(), closes: closes.length, left: root.querySelectorAll(".mtrl-menu").length }));
     expect(closes.length).toBe(1);
     expect(root.querySelector(".mtrl-menu")).toBeNull();
   });
@@ -271,6 +301,7 @@ describe("menu layer: top", () => {
     expect(menu.isOpen()).toBe(true);
     opener.dispatchEvent(new dom.window.FocusEvent("blur", { relatedTarget: document.body }));
     await after(400);
+    await gone(menu, "focus leaving the opener");
     expect(closes.length).toBe(1);
   });
 
