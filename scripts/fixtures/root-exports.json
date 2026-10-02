@@ -15,12 +15,6 @@
     "status": "public"
   },
   {
-    "name": "BottomAppBar",
-    "kind": "type",
-    "status": "renamed",
-    "to": "BottomAppBarComponent"
-  },
-  {
     "name": "BottomAppBarComponent",
     "kind": "type",
     "status": "public"
@@ -119,12 +113,6 @@
     "name": "CardConfig",
     "kind": "type",
     "status": "public"
-  },
-  {
-    "name": "CardSchema",
-    "kind": "type",
-    "status": "renamed",
-    "to": "CardConfig"
   },
   {
     "name": "CarouselComponent",
@@ -405,12 +393,6 @@
     "name": "createTabs",
     "kind": "value",
     "status": "public"
-  },
-  {
-    "name": "createTextfield",
-    "kind": "value",
-    "status": "renamed",
-    "to": "createTextField"
   },
   {
     "name": "createTextField",
@@ -868,21 +850,9 @@
     "status": "public"
   },
   {
-    "name": "TextfieldComponent",
-    "kind": "type",
-    "status": "renamed",
-    "to": "TextFieldComponent"
-  },
-  {
     "name": "TextFieldComponent",
     "kind": "type",
     "status": "public"
-  },
-  {
-    "name": "TextfieldConfig",
-    "kind": "type",
-    "status": "renamed",
-    "to": "TextFieldConfig"
   },
   {
     "name": "TextFieldConfig",
@@ -943,12 +913,6 @@
     "name": "TooltipConfig",
     "kind": "type",
     "status": "public"
-  },
-  {
-    "name": "TopAppBar",
-    "kind": "type",
-    "status": "renamed",
-    "to": "TopAppBarComponent"
   },
   {
     "name": "TopAppBarComponent",

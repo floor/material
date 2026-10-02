@@ -13,17 +13,17 @@
  */
 
 import createBottomAppBar from "../components/bottom-app-bar";
-import type { BottomAppBar, BottomAppBarConfig } from "../components/bottom-app-bar/types";
+import type { BottomAppBarComponent, BottomAppBarConfig } from "../components/bottom-app-bar/types";
 import { defineElement, type Config, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
 
-const fabClass = (component: BottomAppBar): string => `${component.getClass("bottom-app-bar")}--with-fab`;
+const fabClass = (component: BottomAppBarComponent): string => `${component.getClass("bottom-app-bar")}--with-fab`;
 
 /**
  * Slots in the containers the factory appends actions and the FAB to. The
  * factory's addFab() marks the bar as having a FAB for good: the element
  * places the FAB slot itself and follows what is assigned to it (`setup`).
  */
-const create = (config: BottomAppBarConfig): BottomAppBar => {
+const create = (config: BottomAppBarConfig): BottomAppBarComponent => {
   const bar = createBottomAppBar(config);
   bar.addAction(document.createElement("slot"));
   const fab = document.createElement("slot");
@@ -64,12 +64,12 @@ const bottomAppBarSpec = {
     slot?.addEventListener("slotchange", onSlotChange);
     return () => slot?.removeEventListener("slotchange", onSlotChange);
   },
-} satisfies ElementSpec<BottomAppBar>;
+} satisfies ElementSpec<BottomAppBarComponent>;
 
-export const bottomAppBarElement = defineElement<BottomAppBar>(bottomAppBarSpec);
+export const bottomAppBarElement = defineElement<BottomAppBarComponent>(bottomAppBarSpec);
 export type BottomAppBarSpec = typeof bottomAppBarSpec;
 /** `<m-bottom-app-bar>` as a ref or a query returns it. */
-export type BottomAppBarElement = ElementInstance<BottomAppBarSpec, BottomAppBar>;
+export type BottomAppBarElement = ElementInstance<BottomAppBarSpec, BottomAppBarComponent>;
 
 /** Registers `<m-bottom-app-bar>` (or `<prefix-bottom-app-bar>`). */
 export const defineBottomAppBar = (options?: DefineOptions): string => bottomAppBarElement.define(options);

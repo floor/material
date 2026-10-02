@@ -12,11 +12,8 @@
 
 import { readdirSync, unlinkSync } from "node:fs";
 import { elements } from "../src/elements";
-import { CANONICAL, declarationModules, elementModules, kebab } from "./element-modules";
+import { camel, declarationModules, elementModules, kebab, pascal } from "./element-modules";
 
-const pascal = (name: string): string =>
-  name.replace(/(^|-)([a-z])/g, (_, __: string, c: string) => c.toUpperCase());
-const DEPRECATED_NOTE = (to: string) => `Use ${to}: M3 writes "text field" as two words. Removed in 1.0 (FLO-383).`;
 
 interface Framework {
   dir: string;
@@ -67,9 +64,9 @@ ${body}
 const elementModule = (framework: Framework, { name, module: from, styles }: (typeof elementModules)[number]): string => {
   const P = pascal(name);
   const C = framework.component(name);
-  return module(framework, name, `export const ${C}: MComponent<${P}Spec, ${P}Element> = /*#__PURE__*/ createComponent(${name}Element.spec, define${P}, "${C}");`, [
+  return module(framework, name, `export const ${C}: MComponent<${P}Spec, ${P}Element> = /*#__PURE__*/ createComponent(${camel(name)}Element.spec, define${P}, "${C}");`, [
     ...styles.map((style) => `import "mtrl/elements/css/${style}";`),
-    `import { ${name}Element, define${P}, type ${P}Spec, type ${P}Element } from "../elements/${from}";`,
+    `import { ${camel(name)}Element, define${P}, type ${P}Spec, type ${P}Element } from "../elements/${from}";`,
     `import { createComponent, type MComponent } from "./create";`,
   ]);
 };
@@ -93,12 +90,7 @@ ${framework.directive ? `${framework.directive}\n` : ""}/**
 
 ${framework.exports}
 
-${[...elementModules, ...declarationModules].map(({ name }) => {
-  const C = framework.component(name);
-  if (!CANONICAL[name]) return `export { ${C} } from "./${kebab(name)}";`;
-  const to = framework.component(name).replace(pascal(name), CANONICAL[name]);
-  return `export { ${C} as ${to} } from "./${kebab(name)}";\nexport {\n  /** @deprecated ${DEPRECATED_NOTE(to)} */\n  ${C},\n} from "./${kebab(name)}";`;
-}).join("\n")}
+${[...elementModules, ...declarationModules].map(({ name }) => `export { ${framework.component(name)} } from "./${kebab(name)}";`).join("\n")}
 `;
 
 // The bare tags in the framework's JSX, an opt-in types entry (FLO-333):

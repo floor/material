@@ -1415,12 +1415,12 @@ try {
     check("textfield: type=multiline renders a textarea with the default value");
 
     const parity = await page.evaluate(async () => {
-      const w = window as unknown as Win & { mtrl: { createTextfield: (c: object) => { element: HTMLElement } } };
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement } } };
       const host = document.getElementById("factory") as HTMLElement;
       host.innerHTML = `<m-textfield id="pf" label="Name" value="Ada" supporting-text="Help"></m-textfield>
         <m-textfield id="po" variant="outlined" label="Name" supporting-text="Help"></m-textfield>`;
-      const filled = w.mtrl.createTextfield({ label: "Name", value: "Ada", supportingText: "Help" });
-      const outlined = w.mtrl.createTextfield({ variant: "outlined", label: "Name", supportingText: "Help" });
+      const filled = w.mtrl.createTextField({ label: "Name", value: "Ada", supportingText: "Help" });
+      const outlined = w.mtrl.createTextField({ variant: "outlined", label: "Name", supportingText: "Help" });
       host.append(filled.element, outlined.element);
       await new Promise((r) => setTimeout(r, 50));
       const measure = (root: HTMLElement): Record<string, string | number> => {
@@ -1554,7 +1554,7 @@ try {
     // found document.body from inside a shadow root and covered any surface
     // that is not one flat colour.
     await page.evaluate(() => {
-      const w = window as unknown as Win & { mtrl: { createTextfield: (c: object) => { element: HTMLElement } } };
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement } } };
       const host = document.getElementById("factory") as HTMLElement;
       host.innerHTML = `<div style="background: rgb(200, 230, 255); padding: 24px; display: grid; gap: 24px; width: 320px">
         <m-textfield id="na" variant="outlined" label="Element label" value="Ada"></m-textfield>
@@ -1562,7 +1562,7 @@ try {
         <m-textfield id="nc" variant="outlined" label="Empty"></m-textfield>
         <div dir="rtl"><m-textfield id="nd" variant="outlined" label="Right to left" value="Ada"></m-textfield></div>
       </div>`;
-      const factory = w.mtrl.createTextfield({ variant: "outlined", label: "Factory label", value: "Ada" });
+      const factory = w.mtrl.createTextField({ variant: "outlined", label: "Factory label", value: "Ada" });
       (document.getElementById("nb") as HTMLElement).append(factory.element);
     });
     // placement, the label's float and the border-colour transition
