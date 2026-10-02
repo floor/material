@@ -36,13 +36,14 @@
     margin-inline: 12px 0;
   }
 
-  // No slotted text and no `label` attribute: the host is its own 48px target,
-  // and the box sits in its centre, as components/_checkbox.scss has it.
+  // No slotted text, and no `label` attribute or an empty one (the element
+  // reads `label=""` as no label and builds none): the host is its own 48px
+  // target, and the box sits in its centre, as components/_checkbox.scss has it.
   // A whitespace-only text node is not matched here: CSS cannot see it, so
   // `<m-checkbox> </m-checkbox>` (or the tag with a line break inside) keeps
   // the labelled layout before upgrade although the element then builds no
   // label. Write the tag with nothing between its tags.
-  &:empty:not([label]) {
+  &:empty:is(:not([label]), [label='']) {
     min-width: 48px;
     justify-content: center;
 
