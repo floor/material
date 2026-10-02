@@ -146,7 +146,7 @@ export const readComponentHosts = (query: { prefix: string; live: readonly LiveA
       else if (typeof value === "number") props[item.property] = Number.isFinite(value) ? value : null;
       else if (typeof value === "string") props[item.property] = value;
       else if (value === null || value === undefined) props[item.property] = null;
-      else props[item.property] = String(value);
+      else props[item.property] = value instanceof Element ? value.id : String(value);
     }
     return [{ tag: el.localName, ssr: el.hasAttribute("data-mtrl-ssr"), attrs, props }];
   });
