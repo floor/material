@@ -59,8 +59,13 @@ export const standaloneThemes = [
 ];
 
 export const baseStyles = [
-  "themes/baseline", "base/tokens", "base/reset", "base/typography",
+  "themes/baseline", "base/foundation", "base/reset",
   "utilities/ripple", "base/document",
+];
+// The type classes, text utilities, heading styles and typescale tokens that
+// left the base (FLO-539). Emitted in the base cascade layer: see build-styles.
+export const typographyStyles = [
+  "base/typescale", "base/typography",
 ];
 export const utilityStyles = [
   "utilities/spacing", "utilities/visibility", "utilities/colors",
