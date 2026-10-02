@@ -19,6 +19,7 @@ import { setHTML } from "../../../core/dom/html";
 import { PREFIX } from "../../../core/config";
 import { hideFromTopLayer, showInTopLayer } from "../../../core/dom/layer";
 import { activeElementOf } from "../../../core/dom/focus";
+import { getCleanup, type CleanupScope } from "../../../core/compose/cleanup";
 /**
  * Adds state management features to the search component
  * Handles bar ↔ view transitions per MD3 specifications
@@ -30,6 +31,7 @@ import { activeElementOf } from "../../../core/dom/focus";
 interface StatesHost {
   element: HTMLElement;
   getClass: (name: string) => string;
+  resources?: CleanupScope;
   structure?: SearchStructure;
   emit?: (event: string, data: unknown) => unknown;
 }
@@ -46,6 +48,15 @@ export const withStates =
     config.viewMode || SEARCH_VIEW_MODES.DOCKED;
   let currentVariant: SearchVariant = config.variant === "divided" ? "divided" : "contained";
   let isDisabled = config.disabled === true;
+  const resources = getCleanup(component);
+  let focusFrame: number | null = null;
+  let focusRequest = 0;
+  const cancelPendingFocus = (): void => {
+    focusRequest++;
+    if (focusFrame !== null) cancelAnimationFrame(focusFrame);
+    focusFrame = null;
+  };
+  resources.add(cancelPendingFocus);
 
   // Helper to get prefixed class names
   const getClass = (className: string): string => {
@@ -161,8 +172,11 @@ export const withStates =
 
     // Focus input after transition
     if (structure?.input) {
-      requestAnimationFrame(() => {
-        structure.input.focus();
+      const request = ++focusRequest;
+      focusFrame = requestAnimationFrame(() => {
+        if (request !== focusRequest) return;
+        focusFrame = null;
+        if (currentState === SEARCH_STATES.VIEW && !resources.destroyed) structure.input.focus();
       });
     }
 
@@ -192,6 +206,7 @@ export const withStates =
 
     // Update state
     currentState = SEARCH_STATES.BAR;
+    cancelPendingFocus();
 
     // Update classes
     element.classList.remove(getClass(SEARCH_CLASSES.STATE_VIEW));
