@@ -164,7 +164,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   at `32px` computed `32px`: the custom property is undefined, so the declaration is invalid
   at computed-value time and `font-size` inherits (with the import the property is `22px`
   and the element computes `22px`). Body text keeps its font: `body` stayed `14px`
-  `Roboto, sans-serif`. `import 'mtrl/styles'` is unchanged.
+  `Roboto, sans-serif`. `import 'mtrl/styles'` is unchanged. The typography sheet has to
+  load after the base (both style `h1`–`h6` and `p`; loaded first, it loses its bottom
+  margins to the reset): `import 'mtrl/styles/typography'` imports the base first itself, and
+  a page using `<link>` tags puts `styles/typography.css` after `styles/base.css`.
 - **Tab and panel ids** change for any value with a character outside `[A-Za-z0-9_-]`
   (`a.b` → `tabx-g-a_2e_b`); a hand-written panel with the old id is never linked. Build ids with
   `tabIdFor` and `tabPanelIdFor`.
@@ -949,6 +952,14 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `destroy()` on the visible snackbar left the queue waiting for it, so snackbars shown behind
   it stayed queued until some other snackbar was shown. The queue now moves on, after its
   usual gap.
+- **Accessibility: scrolling from script honours reduced motion in the chips, the tabs and the
+  search (FLO-553).** The chip set's `scrollToChip`, the tabs' scroll buttons and the search's
+  arrow keys through the suggestions each asked for a smooth scroll explicitly, which overrides
+  the stylesheet, so they glided with the reduced-motion preference on. They now name no
+  behaviour: each scroller scrolls smoothly from its stylesheet (`scroll-behavior: smooth`,
+  new on the tabs' scroller and the suggestion list), and jumps at once under reduced motion.
+  A script of yours that scrolls the tabs' scroller or the suggestion list now scrolls it
+  smoothly too.
 - **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
   centre while animating in and be squeezed at the viewport edge. Placement now uses its full
   layout size; reduced-motion placement is unchanged.
