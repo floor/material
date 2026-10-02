@@ -71,8 +71,10 @@ $containers: (
     flex: none;
   }
 
+  // Same 12dp icon-side inset as the component, logical so the reserved box
+  // follows direction. The host is in light DOM until upgrade.
   &[icon]:not([size]),
   &[icon][size='s'] {
-    padding-left: v.button('padding-icon');
+    padding-inline-start: v.button('padding-icon');
   }
 }
