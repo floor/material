@@ -185,7 +185,7 @@ try {
 
   const fixtures = [
     // From its subpath since 1.0.0 removed it from the root (FLO-351)
-    { name: "addClass", code: "export { addClass } from 'mtrl/core/dom';", gzip: 450 }, // 428 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
+    { name: "addClass", code: "export { addClass } from 'mtrl/core/dom';", gzip: 550 }, // 428 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9; 428, 100 B floor, 550 against b9dab36e, Node 22.23.3 / npm 10.9.9
     { name: "button", code: "export { createButton } from 'mtrl';", gzip: 13900 }, // 13,744 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // The URL scheme allowlist is reached through core/dom, so every bundle that builds
     // an element carries it: +260 here, +256 button, +267 rail, +260 textfield, +243 form,
@@ -229,7 +229,8 @@ try {
     { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 7550 },
     // FLO-301 (the required asterisk, the live error, the trailing icon button): 8,456 to
     // 9,058 against 7cd57a6, Node 22 / npm 10.
-    { name: "textfield", code: "export { createTextField } from 'mtrl';", gzip: 9200 },
+    // 9,138 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
+    { name: "textfield", code: "export { createTextField } from 'mtrl';", gzip: 9250 },
     { name: "form", code: "export { createButton, createTextField, createCheckbox } from 'mtrl';", gzip: 20100 }, // 19,865 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // The toolbar (FLO-304): 123,080 to 125,176, measured against b1dbf77.
     // The FAB menu (FLO-306): 125,245 to 127,714, measured against 1bd8343.
@@ -259,7 +260,8 @@ try {
     // FLO-406 contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 7,639 -> 7,111 gzip bytes (same packer).
     // 6,918 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    { name: "slider-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/slider';", gzip: 7000 },
+    // 6,918; 100 B floor, 7,050 against b9dab36e, Node 22.23.3 / npm 10.9.9.
+    { name: "slider-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/slider';", gzip: 7050 },
     // The .43 rail-motion baseline is 47,117 bytes; core ripple adds about 20 bytes.
     // The tooltip stylesheet adds 486 (measured): it was authored but registered in no
     // bundle, so every budget before this one was set with its CSS missing, not excluded.

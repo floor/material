@@ -94,8 +94,9 @@ console.log(JSON.stringify(out));
   // 8,953 to 9,520 against 7cd57a6.
   // addClass from its subpath since 1.0.0 removed it from the root (FLO-351)
   // addClass 603 and button 8,447 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+  // addClass 603; 100 B floor, 750 against b9dab36e, Node 22.23.3 / npm 10.9.9.
   for (const [name, symbol, budget, from] of [
-    ["addClass", "addClass", 650, "mtrl/core/dom"], ["textfield", "createTextField", 9700, "mtrl"], ["button", "createButton", 8550, "mtrl"],
+    ["addClass", "addClass", 750, "mtrl/core/dom"], ["textfield", "createTextField", 9700, "mtrl"], ["button", "createButton", 8550, "mtrl"],
   ] as const) {
     const entry = join(directory, `${name}.ts`);
     await writeFile(entry, `export { ${symbol} } from '${from}';`);

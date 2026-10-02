@@ -17,12 +17,17 @@
  *
  * How a ceiling is set when budgets are tightened. `kb(n)` in both tables,
  * including `all`: the smallest multiple of 0.05 such that `kb(n)` is at
- * least 100 bytes above the measured gzip. The +1% rules apply in
- * check-package-size.ts (bundle gzip and the SSR entry's gzip, rounded up to
- * the next multiple of 50; the SSR entry's raw ceiling, the npm tarball and
- * the unpacked size, rounded up to the next multiple of 1,000) and in
- * check-adapter-size.ts (the brotli margin, the same +1% and multiple of 50).
- * A ceiling never rises.
+ * least 100 bytes above the measured gzip. Explicit byte ceilings for a
+ * bundle (the `gzip:` scenarios, `full-css` and the other `*-css` ones, the
+ * SSR entry's gzip, `button-initial`, the adapters' brotli margin, the Vite
+ * ceilings in check-consumer.ts, and the slider entry in check-slider.ts)
+ * are measured plus 1% or 100 bytes, whichever is more, rounded up to the
+ * next multiple of 50, and never above the ceiling `next` had before this
+ * PR. The SSR entry's raw ceiling, the npm tarball and the unpacked size
+ * are measured plus 1%, rounded up to the next multiple of 1,000. Checkbox,
+ * list, navigation-rail, select and switch, and the packed textfield gzip,
+ * were raised to the rule once, not grown. The unpacked size stays at
+ * 6,393,000.
  *
  * Usage:
  *   bun run size
@@ -141,7 +146,7 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   // #406's final head (re-measured on the FLO-383 A2 forward merge); 11,796 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
   card: kb(6.6), // 6,653 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
   carousel: kb(10.95), // opt-in wheel scrolling with momentum (FLO-395): 10.3 to 10.9 KB against 2ef11f0; 11,106 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  checkbox: kb(5.6), // FLO-380: boolean change value plus the HTML valueAttribute token; main's isDisabled() (FLO-384) on the forward merge: next 5,644 to 5,658.
+  checkbox: kb(5.65), // FLO-380: boolean change value plus the HTML valueAttribute token; main's isDisabled() (FLO-384) on the forward merge: next 5,644 to 5,658. 5,645 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
   chips: kb(9.05), // FLO-256..261 chips conformance; #221 pointer focus; keyboard.disable() and :dir(rtl) (FLO-343 follow-up): 9,305 to 9,319; 9,159 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
   datepicker: kb(12.2), // FLO-238 conformance; FLO-274 swiping; FLO-275 year list; FLO-276 full screen; read-only, required, one change shape (FLO-289, FLO-295): 12,332; FLO-119 aria-disabled: 12,412
   dialog: kb(12.55), // layer: "top", as the sheets: 12,047 to 12,870; the navigation bar's cascade layer name in every sheet (FLO-305): 12,999 to 13,005; 12,722 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
@@ -151,22 +156,22 @@ export const BUDGET_BYTES: Record<ScenarioName, number> = {
   "fab-menu": kb(8.1), // FLO-306, with the FAB; the menu presentation's menu is a chunk (DEFERRED_BUDGET_BYTES): 8,304; the width reveal and the clamped colour easing (FLO-348): 8,381; 8,177 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
   "extended-fab": kb(5.9), // 5,929 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
   "icon-button": kb(6.35), // 6,374 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  list: kb(6.5), // FLO-100 full list anatomy
+  list: kb(6.55), // FLO-100 full list anatomy. 6,578 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
   // layer: "top" and the core/dom top-layer helper add 485 (12,519 to 13,004)
   menu: kb(12.3), // 12,453 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
   "navigation-bar": kb(5.8), // FLO-305: 5,848, its destinations shared with the rail
-  "navigation-rail": kb(6.6),
+  "navigation-rail": kb(6.65), // 6,693 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9
   progress: kb(10.4),
   "loading-indicator": kb(9.3), // the Compose-exact shapes (FLO-346): 9,138 to 9,447, the first-arc split 149 B of it
   "split-button": kb(16.9), // the menu's top layer: 17,644 to 18,122; the menu's positionTarget (FLO-300): 18,228; 17,167 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
   radios: kb(5.1),
   search: kb(10.4), // the open view in the top layer (FLO-285): 9,759; combobox, contained and divided (FLO-286, FLO-287): 10,114; minWidth and maxWidth (FLO-290): 10,161; trailing items, avatar, supporting text, reopening (FLO-291): 10,477; FLO-514 cancels the deferred opening focus: 10,509 to 10,566. kb(10.3) is 10,547, which does not fit
-  select: kb(20.4), // the menu's top layer: 19,600 to 20,115; the field, the supporting text row and the counter (FLO-300): 20,608; main's root class option (FLO-403) on the forward merge: next 20,743 to 20,790; 20,821 on the FLO-383 A2 forward merge (17 B left); the menu's tabindex reset (FLO-515): 20,867, which does not fit kb(20.35)
+  select: kb(20.5), // the menu's top layer: 19,600 to 20,115; the field, the supporting text row and the counter (FLO-300): 20,608; main's root class option (FLO-403) on the forward merge: next 20,743 to 20,790; 20,821 on the FLO-383 A2 forward merge (17 B left); the menu's tabindex reset (FLO-515): 20,867, which does not fit kb(20.35). 20,853 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9
   slider: kb(12.95), // FLO-249..255 slider conformance; FLO-331 the track corner token (12,918 measured); track, stops and the inset icon as a percentage of the value (FLO-369): 13,276; 13,158 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
   // layer: "top", the core/dom top-layer helper and the modal-dialog placement, which
   // follows modals opening and closing: 11,533 to 12,320
   snackbar: kb(11.9), // 12,046 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
-  switch: kb(6.1), // #214 conformance; #218 node labels; 6,221 on the FLO-383 A2 forward merge (25 B left)
+  switch: kb(6.15), // #214 conformance; #218 node labels; 6,221 on the FLO-383 A2 forward merge (25 B left). 6,188 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9
   tabs: kb(13.15), // the indicator anchors to the active label instead of measuring it (FLO-369): 13,467; derived ids and the data-value panel lookup (FLO-430): 13,542 to 13,685; 13,359 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
   // the field, the supporting text row and the counter (FLO-300): 8,290. The required
   // asterisk, the live error and the trailing icon button (FLO-301): 8,314 to 8,926 against 7cd57a6.
