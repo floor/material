@@ -49,9 +49,60 @@ test("split button setItems replaces the menu's items and getItems reads them", 
   expect(selected).toEqual(["json"]);
 });
 
-test("a split button created without items has no menu: setItems does nothing and getItems is empty", () => {
+test("setItems on a split button created without items creates its menu, which then works as one created with items", async () => {
   const split = mount(createSplitButton({ text: "Export" }));
+  const made = mount(createSplitButton({ text: "Export", items: [{ id: "csv", text: "CSV" }] }));
+  await wait();
   expect(split.getItems()).toEqual([]);
-  expect(split.setItems([{ id: "csv", text: "CSV" }])).toBe(split);
+  expect(innerMenu(split)).toBeUndefined();
+  expect(split.setItems([{ id: "csv", text: "CSV" }, { id: "json", text: "JSON" }])).toBe(split);
+  expect(split.getItems().map(item => "id" in item ? item.id : null)).toEqual(["csv", "json"]);
+  expect(split.trailingElement.getAttribute("aria-haspopup")).toBe(made.trailingElement.getAttribute("aria-haspopup"));
+  expect(split.trailingElement.getAttribute("aria-haspopup")).toBe("menu");
+  expect(split.isExpanded()).toBe(false);
+
+  const selected: unknown[] = [];
+  const seen: string[] = [];
+  split.on("select", event => { selected.push(event.value); });
+  for (const name of ["expand", "collapse"] as const) split.on(name, () => { seen.push(name); });
+  split.expand();
+  made.expand();
+  await wait();
+  const menu = innerMenu(split)!;
+  expect(menu.isOpen()).toBe(true);
+  expect(split.trailingElement.getAttribute("aria-controls")).not.toBeNull();
+  expect(split.trailingElement.hasAttribute("aria-controls")).toBe(made.trailingElement.hasAttribute("aria-controls"));
+  expect([...menu.element.querySelectorAll<HTMLElement>("[data-id]")].map(item => item.dataset.id)).toEqual(["csv", "json"]);
+  menu.element.querySelector<HTMLElement>('[data-id="json"]')!.click();
+  await wait(250);
+  expect(selected).toEqual(["json"]);
+  // The menu closing brings the split button back with it, as for one created with items
+  expect(split.isExpanded()).toBe(false);
+  expect(seen).toEqual(["expand", "collapse"]);
+});
+
+test("setItems on an expanded split button without a menu opens the menu it creates", async () => {
+  const split = mount(createSplitButton({ text: "Export" }));
+  await wait();
+  split.expand();
+  expect(split.isExpanded()).toBe(true);
+  split.setItems([{ id: "csv", text: "CSV" }]);
+  expect(innerMenu(split)!.isOpen()).toBe(true);
+});
+
+test("setItems([]) empties the menu and keeps it; on a split button without a menu it creates none", async () => {
+  const split = mount(createSplitButton({ text: "Export" }));
+  await wait();
+  split.setItems([]);
+  expect(innerMenu(split)).toBeUndefined();
   expect(split.getItems()).toEqual([]);
+  split.setItems([{ id: "csv", text: "CSV" }]);
+  const menu = innerMenu(split);
+  split.setItems([]);
+  expect(split.getItems()).toEqual([]);
+  expect(innerMenu(split)).toBe(menu);
+  expect(split.trailingElement.getAttribute("aria-haspopup")).toBe("menu");
+  split.setItems([{ id: "json", text: "JSON" }]);
+  expect(innerMenu(split)).toBe(menu);
+  expect(split.getItems().map(item => "id" in item ? item.id : null)).toEqual(["json"]);
 });
