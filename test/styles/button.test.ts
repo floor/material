@@ -40,7 +40,7 @@ beforeAll(() => {
 
 describe('button stylesheet: sizes (ButtonXSmall…XLargeTokens.kt)', () => {
   const sizes: Record<string, { height: string; padding: string; gap: string; icon: string; font: string }> = {
-    xs: { height: '32px', padding: '0 12px', gap: '8px', icon: '20px', font: '14px' },
+    xs: { height: '32px', padding: '0 12px', gap: '4px', icon: '20px', font: '14px' },
     s: { height: '40px', padding: '0 16px', gap: '8px', icon: '20px', font: '14px' },
     m: { height: '56px', padding: '0 24px', gap: '8px', icon: '24px', font: '16px' },
     l: { height: '96px', padding: '0 48px', gap: '12px', icon: '32px', font: '24px' },
@@ -182,12 +182,12 @@ describe('button stylesheet: colour styles', () => {
 
   test('text button padding', () => {
     expect(value('.mtrl-button--text', 'padding')).toBe('0 12px');
-    expect(value('.mtrl-button--text.mtrl-button--icon', 'padding')).toBe('0 16px 0 12px');
+    expect(value('.mtrl-button--text.mtrl-button--icon', 'padding-inline')).toBe('12px 16px');
     expect(value('.mtrl-button--text.mtrl-button--m', 'padding')).toBe('0 24px');
   });
 
   test('small button keeps 12dp on the icon side', () => {
-    expect(value('.mtrl-button--s.mtrl-button--icon', 'padding-left')).toBe('12px');
+    expect(value('.mtrl-button--s.mtrl-button--icon', 'padding-inline-start')).toBe('12px');
   });
 });
 
