@@ -32,6 +32,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   | `TextfieldSpec`, `TextfieldElement`, `TextfieldElementComponent` | `TextFieldSpec`, `TextFieldElement`, `TextFieldElementComponent` | `mtrl/elements` |
   | `Textfield` (component) | `TextField` | `mtrl/react`, `mtrl/solid`, `mtrl/svelte` |
   | `MTextfield` | `MTextField` | `mtrl/vue` |
+  | `select.textfield` | `select.textField` | the select's property |
 
   Each is a rename of the import; the values and types are the same. The React, Solid and
   Svelte `TopAppBar` and `BottomAppBar` components keep their names: only the factory's types
@@ -420,8 +421,6 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   else, so the failure could not be read from CI.
 - The checkbox and switch change payload docs said setters emit `change`; they are silent, as
   they have been since FLO-328 (FLO-384).
-- **Menu item ids containing selector syntax keep submenu keyboard navigation working (FLO-429).**
-  Parent lookup compares `data-id`, `data-owner`, and `data-level` as strings.
 - **Search keeps custom root classes (FLO-421).** Both contained and divided
   search variants apply the `class` option, including space-separated classes.
 - **Tabs with quotes or backslashes in their value no longer fail to link panels (FLO-417).**

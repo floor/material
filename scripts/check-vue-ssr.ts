@@ -11,6 +11,7 @@ import { parseHTML } from "linkedom";
 import { chromium } from "playwright";
 import { declarations, elements } from "../src/elements";
 import { cases } from "./fixtures/preupgrade-cases";
+import { pascal as componentName } from "./element-modules";
 
 // CI runs this twice, on the installed Vue and on the peer floor: the log says which.
 const version = (await Bun.file("node_modules/vue/package.json").json() as { version: string }).version;
@@ -54,7 +55,7 @@ const renderNode = (element: DomElement, extra: Array<[string, string]> = []): s
   const name = element.localName.slice(2);
   const spec = specs.get(name);
   assert(spec, `no Vue component for <${element.localName}>`);
-  const component = `M${pascal(name)}`;
+  const component = `M${componentName(name)}`; // MTextField (FLO-383)
   used.add(component);
   const props = new Map<string, string>(extra);
   for (const attribute of element.attributes) {

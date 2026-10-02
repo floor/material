@@ -14,6 +14,7 @@ import type { BunPlugin } from "bun";
 import { declarations, elements } from "../src/elements";
 import { cases } from "./fixtures/preupgrade-cases";
 import type { Shape } from "./fixtures/solid-ssr-async";
+import { pascal } from "./element-modules";
 
 const version = (await Bun.file("node_modules/solid-js/package.json").json() as { version: string }).version;
 // Include the original browser error when hydration cannot reach its ready flag.
@@ -36,7 +37,7 @@ const within = async <T>(work: Promise<T>, name: string): Promise<T> => {
 };
 
 const OPT_OUT = new Set(["carousel", "fab-menu", "toolbar"]);
-const pascal = (name: string): string => name.replace(/(^|-)([a-z])/g, (_, __, c: string) => c.toUpperCase());
+// Component names as the adapters export them: textfield is TextField (FLO-383)
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
 interface SpecAttributes { attributes?: Record<string, { type?: string }> }

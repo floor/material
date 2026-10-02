@@ -4,7 +4,7 @@
 // spellings (PR A, A2); the old ones are gone from every entry, and the
 // factory's TopAppBarComponent chains as it did.
 import {
-  createTextField, createTopAppBar,
+  createTextField, createTopAppBar, createSelect,
   type TextFieldConfig, type TextFieldComponent, type CardConfig,
   type TopAppBarComponent, type BottomAppBarComponent,
 } from "../../src";
@@ -24,3 +24,9 @@ export const card: CardConfig = { variant: "outlined" };
 export const chained: TopAppBarComponent = createTopAppBar().setTitle("Inbox").setType("medium");
 export type Bottom = BottomAppBarComponent;
 export type Gone = [typeof createTextfield, TextfieldConfig, CardSchema, TopAppBar, BottomAppBar];
+
+// The select's text field is a property a user reads (FLO-383): textField only
+const select = createSelect({ label: "Size", options: [] });
+export const selectField: TextFieldComponent = select.textField;
+// @ts-expect-error select.textfield is select.textField in 1.0
+export const oldSelectField = select.textfield;
