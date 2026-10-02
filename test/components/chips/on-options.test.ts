@@ -416,23 +416,84 @@ describe("a chip inside a set emits its own change", () => {
     expect(second!.isSelected()).toBe(false);
   });
 
-  test("a refused deselect still emits the clicked chip's change once", () => {
-    const payloads: unknown[] = [];
+  // FLO-550: "emit only when something changed" is part of the contract.
+  test("a refused deselect emits no change, on the chip or on the set; the click is still reported", () => {
+    for (const multiSelect of [false, true]) {
+      const calls: string[] = [];
+      const set = mountSet({
+        multiSelect,
+        selectionRequired: true,
+        chips: [{
+          value: "a",
+          ripple: false,
+          selected: true,
+          onChange: () => calls.push("item onChange"),
+          onClick: () => calls.push("item onClick"),
+        }],
+        onChange: () => calls.push("set onChange"),
+      });
+      const chip = set.getChips()[0]!;
+      chip.on("change", () => calls.push("chip change"));
+      chip.on("click", () => calls.push("chip click"));
+      set.on("change", () => calls.push("set change"));
+      chip.element.click();
+      expect(chip.isSelected()).toBe(true);
+      expect(set.getSelectedValues()).toEqual(["a"]);
+      expect(calls).toEqual(["item onClick", "chip click"]);
+    }
+  });
+});
+
+describe("click, then change: one order, alone and in a set", () => {
+  test("a chip alone: onClick and click run before the toggle, onChange and change after it", () => {
+    const seen: string[] = [];
+    const chip: ChipComponent = mountChip(createFilterChip({
+      label: "Filter",
+      ripple: false,
+      onClick: () => seen.push(`onClick ${chip.isSelected()}`),
+      onChange: payload => seen.push(`onChange ${chip.isSelected()} ${payload.selected}`),
+    }));
+    chip.on("click", () => seen.push(`click ${chip.isSelected()}`));
+    chip.on("change", () => seen.push(`change ${chip.isSelected()}`));
+    chip.element.click();
+    chip.element.click();
+    expect(seen).toEqual([
+      "onClick false", "click false", "onChange true true", "change true",
+      "onClick true", "click true", "onChange false false", "change false",
+    ]);
+  });
+
+  test("a chip in a set: the item's onClick reads the state before the click, its onChange the new one", () => {
+    const seen: string[] = [];
     const set = mountSet({
-      selectionRequired: true,
       chips: [{
         value: "a",
         ripple: false,
-        selected: true,
-        onChange: (payload) => payloads.push(payload),
+        onClick: () => seen.push(`onClick ${set.getChips()[0]!.isSelected()}`),
+        onChange: payload => seen.push(`onChange ${set.getChips()[0]!.isSelected()} ${payload.selected}`),
       }],
     });
+    set.getChips()[0]!.element.click();
+    set.getChips()[0]!.element.click();
+    expect(seen).toEqual(["onClick false", "onChange true true", "onClick true", "onChange false false"]);
+  });
+});
+
+describe("removing a chip in a set", () => {
+  test("remove listeners and onRemove run once, with the chip still listed and connected; the set removes it after", () => {
+    const seen: string[] = [];
+    const set = mountSet({
+      chips: [
+        { type: "input", value: "a", label: "A", ripple: false, onRemove: chip => seen.push(`onRemove ${set.getChips().includes(chip)} ${chip.element.isConnected}`) },
+        { type: "input", value: "b", label: "B", ripple: false },
+      ],
+    });
     const chip = set.getChips()[0]!;
-    chip.on("change", payload => payloads.push(payload));
-    chip.element.click();
-    expect(chip.isSelected()).toBe(true);
-    expect(payloads).toHaveLength(2);
-    expect(payloads[0]).toBe(payloads[1]);
-    expect(payloads[0]).toEqual({ selected: true, chip, value: "a" });
+    chip.on("remove", instance => seen.push(`remove ${instance === chip} ${set.getChips().includes(instance)} ${instance.element.isConnected}`));
+    set.on("remove", () => seen.push(`set remove ${set.getChips().includes(chip)} ${chip.element.isConnected}`));
+    chip.element.querySelector<HTMLButtonElement>(".mtrl-chip__remove")!.click();
+    expect(seen).toEqual(["onRemove true true", "remove true true true", "set remove false false"]);
+    expect(set.getChips().map(item => item.getValue())).toEqual(["b"]);
+    expect(chip.element.isConnected).toBe(false);
   });
 });
