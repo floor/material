@@ -65,18 +65,25 @@ const opened = async (page: Page): Promise<void> => {
  */
 const dismissedBeforeItsOpeningFrame = async (page: Page): Promise<void> => {
   await mount(page, { placeholder: "Search messages", suggestions: ["Apple", "Banana", "Cherry"] });
-  // Frames the page asks for while a view is open wait for `releaseFrames()`.
+  // Frames the page asks for while a view is open wait for `releaseFrames()`. A held
+  // frame has an id of its own and can be cancelled, so a fix that cancels the
+  // deferred focus is seen as one, like a fix that guards it.
   await page.evaluate(() => {
-    const raf = window.requestAnimationFrame;
-    const held: FrameRequestCallback[] = [];
+    const raf = window.requestAnimationFrame, cancel = window.cancelAnimationFrame;
+    const held = new Map<number, FrameRequestCallback>();
+    let next = -1;
     window.requestAnimationFrame = callback => {
       if (!document.querySelector(".mtrl-search--view")) return raf.call(window, callback);
-      held.push(callback);
-      return 0;
+      held.set(next, callback);
+      return next--;
     };
+    window.cancelAnimationFrame = id => { if (!held.delete(id)) cancel.call(window, id); };
     Object.assign(window, { releaseFrames: () => {
       window.requestAnimationFrame = raf;
-      for (const callback of held.splice(0)) callback(performance.now());
+      window.cancelAnimationFrame = cancel;
+      delete (window as unknown as { releaseFrames?: unknown }).releaseFrames;
+      for (const callback of [...held.values()]) callback(performance.now());
+      held.clear();
     } });
   });
   try {
