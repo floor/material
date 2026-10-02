@@ -2242,11 +2242,11 @@ try {
         return `<m-button-group id="press" variant="outlined" size="${options.size}"${kind} aria-label="Format">${items}</m-button-group>`;
       };
 
-      const install = (): Promise<void> => page.evaluate(() => {
+      const install = (hold: "one" | "two" = "one"): Promise<void> => page.evaluate((hold) => {
         const host = document.getElementById("press") as HTMLElement;
         const buttons = [...(host.shadowRoot?.querySelectorAll("button") ?? [])] as HTMLButtonElement[];
         const group = buttons[0]?.parentElement as HTMLElement;
-        const state = { frames: [] as Array<{ phase: "press" | "release"; groupWidth: number; buttons: Array<{ scroll: number; client: number; width: number; paddingLeft: number; paddingRight: number }> }>, phase: "press" as "press" | "release", pressSettled: false, done: false };
+        const state = { frames: [] as Array<{ phase: "press" | "release"; groupWidth: number; buttons: Array<{ scroll: number; client: number; width: number; paddingLeft: number; paddingRight: number }> }>, phase: "press" as "press" | "release", pressSettled: false, done: false, presses: 0 };
         (window as unknown as { __flo537: typeof state }).__flo537 = state;
         const sample = (): void => {
           state.frames.push({
@@ -2265,13 +2265,18 @@ try {
             }),
           });
         };
-        const active = (): boolean => buttons.some((button) => button.getAnimations().some((animation) =>
-          animation.playState === "running" || animation.playState === "pending"));
+        const active = (): boolean => buttons.some((button) => button.getAnimations().some((animation) => {
+          const playState = animation.playState as string;
+          return playState === "running" || playState === "pending";
+        }));
         const loop = (): void => {
           sample();
           const going = active();
-          if (state.phase === "press" && !going) state.pressSettled = true;
-          if (state.phase === "release" && !going) {
+          // A second press has to land before the first release spring ends, so
+          // that gesture stays open until both presses have been released.
+          const held = hold === "one" || state.presses >= 2;
+          if (state.phase === "press" && !going && held) state.pressSettled = true;
+          if (state.phase === "release" && !going && held) {
             state.done = true;
             return;
           }
@@ -2281,69 +2286,195 @@ try {
           state.phase = "release";
         };
         group.addEventListener("pointerdown", () => {
-          requestAnimationFrame(loop);
-        }, { once: true });
+          state.presses += 1;
+          state.phase = "press";
+          state.pressSettled = false;
+          if (state.presses === 1) requestAnimationFrame(loop);
+        });
         document.addEventListener("pointerup", release);
         document.addEventListener("pointercancel", release);
-      });
+      }, hold);
 
-      const press = async (name: string): Promise<Frame[]> => {
-        await install();
+      const buttonBox = async (name: string): Promise<{ x: number; y: number }> => {
         const button = page.locator("#press").getByRole("button", { name, exact: true });
         await button.scrollIntoViewIfNeeded();
         const box = await button.boundingBox();
         if (!box) throw new Error(`no box for ${name}`);
-        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+      };
+      const framesOf = (): Promise<Frame[]> =>
+        page.evaluate(() => (window as unknown as { __flo537: { frames: Frame[] } }).__flo537.frames);
+      const settled = (): Promise<unknown> =>
+        page.waitForFunction(() => (window as unknown as { __flo537: { pressSettled: boolean } }).__flo537.pressSettled);
+      const finished = (): Promise<unknown> =>
+        page.waitForFunction(() => (window as unknown as { __flo537: { done: boolean } }).__flo537.done);
+
+      const press = async (name: string): Promise<Frame[]> => {
+        await install();
+        const box = await buttonBox(name);
+        await page.mouse.move(box.x, box.y);
         await page.mouse.down();
         try {
-          await page.waitForFunction(() => (window as unknown as { __flo537: { pressSettled: boolean } }).__flo537.pressSettled);
+          await settled();
         } finally {
           await page.mouse.up();
         }
-        await page.waitForFunction(() => (window as unknown as { __flo537: { done: boolean } }).__flo537.done);
-        return page.evaluate(() => (window as unknown as { __flo537: { frames: Frame[] } }).__flo537.frames);
+        await finished();
+        return framesOf();
+      };
+
+      const judge = (id: string, name: string, frames: Frame[]): void => {
+        const base = frames.find((frame) => frame.phase === "press")?.groupWidth ?? 0;
+        let worstShort = 0;
+        let worstButton = "";
+        let worstFrame = 0;
+        let shortFrames = 0;
+        let groupDrift = 0;
+        frames.forEach((frame, index) => {
+          frame.buttons.forEach((sample, indexButton) => {
+            const short = sample.scroll - sample.client;
+            if (short > worstShort) {
+              worstShort = short;
+              worstButton = labels[indexButton] ?? "";
+              worstFrame = index;
+            }
+            if (short > 0) shortFrames += 1;
+          });
+          if (frame.phase === "press") groupDrift = Math.max(groupDrift, Math.abs(frame.groupWidth - base));
+        });
+        const pressFrames = frames.filter((frame) => frame.phase === "press").length;
+        console.log(`  flo537 ${id} press ${name}: worst ${worstShort}px (${worstButton || "none"} frame ${worstFrame}), ${pressFrames} press frames, ${frames.length - pressFrames} release frames, group drift ${groupDrift.toFixed(2)}px`);
+        const previous = worst.get(id);
+        const previousPx = previous ? Number.parseInt(previous, 10) : 0;
+        if (worstShort > previousPx) worst.set(id, `${worstShort}px ${worstButton} while ${name} pressed, frame ${worstFrame}, ${shortFrames} frames`);
+        else if (!previous) worst.set(id, "0");
+        if (worstShort > 0) failures.push(`${id} press ${name}: ${worstButton} short by ${worstShort}px at frame ${worstFrame} (${shortFrames} frames)`);
+        if (groupDrift > 1) failures.push(`${id} press ${name}: group width moved ${groupDrift.toFixed(2)}px during the press`);
+        if (id === "l" && name === "Bold") {
+          const last = [...frames].reverse().find((frame) => frame.phase === "press");
+          const neighbour = last?.buttons[1];
+          if (!neighbour || !(neighbour.paddingLeft < neighbour.paddingRight - 0.5)) {
+            failures.push(`l press Bold: facing padding did not shrink on the left (${neighbour?.paddingLeft} / ${neighbour?.paddingRight})`);
+          }
+        }
       };
 
       const runCase = async (id: string, html: string): Promise<void> => {
         await fresh(page, html);
-        let caseWorst = 0;
-        let caseDetail = "0";
-        for (const name of labels) {
-          const frames = await press(name);
-          const base = frames.find((frame) => frame.phase === "press")?.groupWidth ?? 0;
-          let worstShort = 0;
-          let worstButton = "";
-          let worstFrame = 0;
-          let shortFrames = 0;
-          let groupDrift = 0;
-          frames.forEach((frame, index) => {
-            frame.buttons.forEach((sample, indexButton) => {
-              const short = sample.scroll - sample.client;
-              if (short > worstShort) {
-                worstShort = short;
-                worstButton = labels[indexButton] ?? "";
-                worstFrame = index;
-              }
-              if (short > 0) shortFrames += 1;
-            });
-            if (frame.phase === "press") groupDrift = Math.max(groupDrift, Math.abs(frame.groupWidth - base));
-          });
-          const pressFrames = frames.filter((frame) => frame.phase === "press").length;
-          const releaseFrames = frames.length - pressFrames;
-          console.log(`  flo537 ${id} press ${name}: worst ${worstShort}px (${worstButton || "none"} frame ${worstFrame}), ${pressFrames} press frames, ${releaseFrames} release frames, group drift ${groupDrift.toFixed(2)}px`);
-          if (worstShort > caseWorst) {
-            caseWorst = worstShort;
-            caseDetail = `${worstShort}px ${worstButton} while ${name} pressed, frame ${worstFrame}, ${shortFrames} frames`;
-          }
-          if (worstShort > 0) failures.push(`${id} press ${name}: ${worstButton} short by ${worstShort}px at frame ${worstFrame} (${shortFrames} frames)`);
-          if (groupDrift > 1) failures.push(`${id} press ${name}: group width moved ${groupDrift.toFixed(2)}px during the press`);
-        }
-        worst.set(id, caseDetail);
+        for (const name of labels) judge(id, name, await press(name));
       };
+
+      const inlineCleared = (): Promise<unknown> => page.waitForFunction(() => {
+        const host = document.getElementById("press") as HTMLElement;
+        const buttons = [...(host.shadowRoot?.querySelectorAll("button") ?? [])] as HTMLElement[];
+        return buttons.length > 0 && buttons.every((button) => button.style.width === "" && button.style.minWidth === "");
+      });
 
       for (const size of sizes) await runCase(size, markup({ size }));
       await runCase("l icon", markup({ size: "l", icon: true }));
       await runCase("l connected", markup({ size: "l", kind: "connected" }));
+
+      await fresh(page, markup({ size: "l" }));
+      judge("l relabel", "Bold", await press("Bold"));
+      await inlineCleared();
+      const beforeRelabel = await page.evaluate(() => {
+        const host = document.getElementById("press") as HTMLElement;
+        const button = host.shadowRoot?.querySelector("button") as HTMLElement;
+        return button.getBoundingClientRect().width;
+      });
+      await page.evaluate(() => {
+        const item = document.querySelector("#press m-button-group-item") as HTMLElement;
+        item.textContent = "ExtraBold";
+      });
+      await page.waitForFunction(() => {
+        const host = document.getElementById("press") as HTMLElement;
+        return host.shadowRoot?.querySelector("button")?.textContent?.includes("ExtraBold") === true;
+      });
+      const afterRelabel = await page.evaluate(() => {
+        const host = document.getElementById("press") as HTMLElement;
+        const button = host.shadowRoot?.querySelector("button") as HTMLElement;
+        return { width: button.getBoundingClientRect().width, inline: button.style.width };
+      });
+      console.log(`  flo537 relabel: ${beforeRelabel.toFixed(2)}px -> ${afterRelabel.width.toFixed(2)}px inline "${afterRelabel.inline}"`);
+      if (afterRelabel.inline !== "") failures.push(`relabel: inline width stayed "${afterRelabel.inline}"`);
+      if (afterRelabel.width <= beforeRelabel + 1) failures.push(`relabel: width ${afterRelabel.width.toFixed(2)} did not grow from ${beforeRelabel.toFixed(2)}`);
+      judge("l relabel", "ExtraBold", await press("ExtraBold"));
+
+      await fresh(page, markup({ size: "l" }));
+      await install("two");
+      const bold = await buttonBox("Bold");
+      await page.mouse.move(bold.x, bold.y);
+      await page.mouse.down();
+      await page.waitForFunction(() => (window as unknown as { __flo537: { frames: unknown[] } }).__flo537.frames.length >= 3);
+      await page.mouse.up();
+      const italic = await buttonBox("Italic");
+      await page.mouse.move(italic.x, italic.y);
+      await page.mouse.down();
+      try {
+        await settled();
+      } finally {
+        await page.mouse.up();
+      }
+      await finished();
+      judge("l second press", "Italic", await framesOf());
+
+      await fresh(page, markup({ size: "l" }));
+      await install();
+      const cancelAt = await buttonBox("Bold");
+      await page.mouse.move(cancelAt.x, cancelAt.y);
+      await page.mouse.down();
+      await settled();
+      await page.evaluate(() => document.dispatchEvent(new PointerEvent("pointercancel", { bubbles: true })));
+      await page.mouse.up();
+      await finished();
+      judge("l pointercancel", "Bold", await framesOf());
+
+      await fresh(page, markup({ size: "l" }));
+      await install();
+      const outsideAt = await buttonBox("Underline");
+      await page.mouse.move(outsideAt.x, outsideAt.y);
+      await page.mouse.down();
+      await settled();
+      await page.mouse.move(8, 8);
+      await page.mouse.up();
+      await finished();
+      judge("l outside", "Underline", await framesOf());
+
+      await fresh(page, markup({ size: "l" }).replace("value=\"bold\"", "value=\"bold\" disabled"));
+      // A disabled button does not receive a real pointer, so dispatch one.
+      // pressExpand must ignore it: the button's width stays put.
+      await install();
+      await page.evaluate(() => {
+        const host = document.getElementById("press") as HTMLElement;
+        const button = host.shadowRoot?.querySelector("button") as HTMLElement;
+        button.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      });
+      await settled();
+      await page.evaluate(() => document.dispatchEvent(new PointerEvent("pointerup", { bubbles: true })));
+      await finished();
+      const disabledFrames = await framesOf();
+      judge("l disabled", "Bold", disabledFrames);
+      const disabledDrift = disabledFrames.filter((frame) => frame.phase === "press").reduce((drift, frame, index, all) => {
+        const first = all[0]?.buttons[0]?.width ?? frame.buttons[0]?.width ?? 0;
+        return Math.max(drift, Math.abs((frame.buttons[0]?.width ?? first) - first));
+      }, 0);
+      if (disabledDrift > 1) failures.push(`l disabled: pressed button width moved ${disabledDrift.toFixed(2)}px`);
+
+      await fresh(page, `<div dir="rtl">${markup({ size: "l" })}</div>`);
+      const rtlFrames = await press("Bold");
+      judge("l rtl", "Bold", rtlFrames);
+      const rtlLast = [...rtlFrames].reverse().find((frame) => frame.phase === "press");
+      const rtlNeighbour = rtlLast?.buttons[1];
+      if (!rtlNeighbour || !(rtlNeighbour.paddingRight < rtlNeighbour.paddingLeft - 0.5)) {
+        failures.push(`l rtl: facing padding did not shrink on the right (${rtlNeighbour?.paddingLeft} / ${rtlNeighbour?.paddingRight})`);
+      }
+      for (const name of ["Italic", "Underline"] as const) judge("l rtl", name, await press(name));
+
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await runCase("l reduced", markup({ size: "l" }));
+      await inlineCleared();
+      await page.emulateMedia({ reducedMotion: "no-preference" });
+
       console.log(`  flo537 worst: ${[...worst.entries()].map(([id, detail]) => `${id} ${detail}`).join("; ")}`);
       assert.equal(failures.length, 0, `button group press (FLO-537):\n${failures.join("\n")}`);
       check("button group: a press never ellipsizes a label, at every size, with motion on (FLO-537)");
