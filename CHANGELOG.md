@@ -1147,6 +1147,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **The side sheet's and the dialog's close buttons reach 48 x 48.** Both were hand-built 40px
+  buttons with no expanded target, so a pointer 4px outside an edge — the outer band of the M3
+  target — hit nothing, left-to-right and right-to-left alike. Each now carries the icon button's
+  own mechanism: a `::after` box 48 x 48 centred on it, so the reachable target is 48 x 48 while
+  the button still paints 40 x 40, in place. M3 "Density": "The default target size should be at
+  least 48x48 CSS pixels."
 - **An unlabelled switch is its 52 x 48 track box, not the label's row.** With no label the root
   kept the label's 12px gap, so it was 64px wide (12 + the 52px track) and 56px tall: in a 48px
   slot the track ran 16px past the end and the checked 40px state layer 20px past it. The gap
