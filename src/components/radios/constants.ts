@@ -25,8 +25,8 @@ export const RADIO_DIRECTIONS = {
 } as const;
 
 /**
- * @deprecated Read by nothing: the component builds its class names itself
- * and has one size and variant (FLO-266).
+ * @deprecated Read only by `RADIO_DEFAULTS`, which the component does not read:
+ * it builds its class names itself and has one size and variant (FLO-266).
  */
 export const RADIO_VARIANTS = {
   /** Standard radio button */
@@ -38,8 +38,8 @@ export const RADIO_VARIANTS = {
 } as const;
 
 /**
- * @deprecated Read by nothing: the component builds its class names itself
- * and has one size and variant (FLO-266).
+ * @deprecated Read only by `RADIO_DEFAULTS`, which the component does not read:
+ * it builds its class names itself and has one size and variant (FLO-266).
  */
 export const RADIO_LABEL_POSITIONS = {
   /** Label to the right of the radio (default) */
@@ -49,8 +49,8 @@ export const RADIO_LABEL_POSITIONS = {
 } as const;
 
 /**
- * @deprecated Read by nothing: the component builds its class names itself
- * and has one size and variant (FLO-266).
+ * @deprecated Read only by `RADIO_DEFAULTS`, which the component does not read:
+ * it builds its class names itself and has one size and variant (FLO-266).
  */
 export const RADIO_SIZES = {
   /** Small radio button */

@@ -101,6 +101,24 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Deprecated
 
+- **The ripple defaults of options never applied (FLO-268):** `DEFAULT_RIPPLE_CONFIG.TIMING` and
+  `.OPACITY` (`mtrl/components/button/constants`, `mtrl/components/icon-button/constants`) and
+  `BUTTON_GROUP_DEFAULTS.RIPPLE_TIMING` and `.RIPPLE_OPACITY`. They have no effect: the options they
+  are the defaults of, `rippleConfig`'s `timing` and `opacity`, are never applied (deprecated in 0.10.0). Removed in 1.0. Comments only; nothing changes at
+  run time.
+
+- **The small FAB's class and icon size:** `FAB_CLASSES.SMALL` and `FAB_ICON_SIZES.SMALL`
+  (`mtrl/components/fab/constants`). The small size they belong to, `FAB_SIZES.SMALL`, is already
+  deprecated (M3 Expressive). Removed in 1.0. Comments only; nothing changes at run time.
+
+- **`CheckboxVariant`** (`mtrl/components/checkbox`): the type of the checkbox's `variant` option,
+  deprecated in 0.10.0, which has no effect (M3 has one checkbox style). Removed in 1.0. Comments
+  only.
+
+- **`SELECT_CLASSES.TEXTFIELD`** (`mtrl/components/select/constants`): 1.0 renames the key
+  `TEXT_FIELD`, as every text field name (FLO-383). The class string, `select__textfield`, stays.
+  Comments only; the new key is not on 0.10.x.
+
 - **The text field's Sass map and function: `$textfield` and `textfield()` (FLO-383).** Use
   `$text-field` and `v.text-field()`, the same map: a theme may configure either name until 1.0
   removes the old one. The built CSS is unchanged.
