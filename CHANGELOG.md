@@ -12,6 +12,14 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **The options 0.10 promised to remove in 1.0 are removed.** Migration:
+
+  | 0.10 | 1.0 |
+  |---|---|
+  | `rawClass` (every component config, and `createElement` in `mtrl/core/dom`) | `class` or `className`, which have been unprefixed since 0.10 (FLO-117). A `rawClass` still passed is ignored: neither applied nor written as an attribute. |
+  | a dialog button's `color` | nothing: it had no effect; M3's dialog actions are text buttons in the dialog's colours (FLO-324) |
+  | the tooltip's `rich` option, and `TOOLTIP_DEFAULTS.RICH` | `variant: 'rich'`; `rich` was never read (FLO-324) |
+  | card `withElevation` (internal since FLO-381) | nothing: a no-op; the variant sets the elevation (FLO-323) |
 - **1.0 exports nothing deprecated.** What 0.10.0 deprecated and 0.10.x already replaced (or
   never used) is removed. Migration:
 
