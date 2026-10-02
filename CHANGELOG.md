@@ -146,8 +146,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   is never true.
 - **The carousel's `change`** carries `value` alone: `event.index` (and `event.detail.index` on
   `<m-carousel>`) is `undefined`. Read `value`.
-- **A `withInput` you compose yourself** (`mtrl/core/compose`) reports the checked boolean as
-  `change.value`, like the checkbox and the switch; the input's string is `valueAttribute`.
+- **A `withInput` you compose yourself** (`mtrl/core/compose`) works on the checked boolean,
+  like the checkbox and the switch: `change.value` and `getValue()` are booleans, and
+  a leftover `setValue('x')` checks the input and leaves its string unchanged (`setValue('')`
+  unchecks it), with no error. The string is `valueAttribute` in the payload, and
+  `getValueAttribute()` / `setValueAttribute()`. No `value` event is emitted.
 - **A trailing icon without `trailingIconLabel`** is hidden from screen readers and loses its
   pointer cursor; a click listener you added to it is out of their reach. The label is the
   factory's (`trailingIconLabel`, or `setTrailingIcon(html, label)`); on `<m-textfield>` and in
@@ -235,7 +238,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   now destructure `{ value }`. `SelectChangeEvent["value"]` is now `string | null`
   for an empty option ID. The radio factory reports `null` too: `getValue()` returns
   `string | null`, and `RadiosChangePayload["value"]` is `string | null`. Handle `null`
-  for an empty selection in the select and the radios, factory and element alike.
+  for an empty selection in the select and the radios, factory and element alike. The radio
+  factory's `setValue` accepts `null` too, so the getter and the setter round-trip:
+  `setValue(null)` clears the selection, silently. `<m-radios>`'s `value = null`, which the
+  React, Solid, Vue and Svelte `value` props drive, clears through it; in 0.10 that cleared
+  with a development warning (`no option with value ""`).
 - **Chip-set `add` and `remove` report the live selection (FLO-380).** Factory
   callbacks receive one object instead of a bare chip:
 
@@ -260,8 +267,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `value` matches the checked model, and `valueAttribute` holds the HTML string token.
   Native forms still submit that token only while checked; setters remain silent and
   element/framework bindings remain `checked`-based. A standalone `withInput`
-  (`mtrl/core/compose`) emits the same payload: 0.10 sent `{ checked, value: <the input's string>,
-  nativeEvent }`.
+  (`mtrl/core/compose`) emits the same payload (0.10 sent `{ checked, value: <the input's
+  string>, nativeEvent }`), and its methods match it: `getValue()` and `setValue()` work on
+  the checked boolean, and the input's string is `getValueAttribute()` / `setValueAttribute()`,
+  the names the checkbox and the switch use. Both setters are silent: the `value` event
+  `setValue(string)` emitted in 0.10 is gone.
   Migration: read checked state from `value` (or `checked`), and replace reads of the
   old string `value` with `valueAttribute`, including `event.detail` in adapters.
 - **List event types match native forwarding (FLO-380).** `scroll` carries
