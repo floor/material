@@ -273,6 +273,9 @@ export interface CheckboxComponent {
    */
   disable: () => CheckboxComponent;
 
+  /** Whether the checkbox is disabled (FLO-384) */
+  isDisabled: () => boolean;
+
   /**
    * Destroys the checkbox component and cleans up resources
    * Removes event listeners and DOM references
@@ -289,6 +292,7 @@ export interface ApiOptions {
   disabled: {
     enable: () => void;
     disable: () => void;
+    isDisabled: () => boolean;
   };
   lifecycle: {
     destroy: () => void;
@@ -322,6 +326,7 @@ export interface BaseComponent {
   disabled?: {
     enable: () => void;
     disable: () => void;
+    isDisabled: () => boolean;
   };
   lifecycle?: {
     destroy: () => void;

@@ -50,7 +50,11 @@ export { clearSnackbars } from "./snackbar";
 export { default as createSwitch } from "./switch";
 export { default as createTabs } from "./tabs";
 export { createTab } from "./tabs/tab";
-export { default as createTextfield } from "./textfield";
+export { default as createTextField } from "./textfield";
+export {
+  /** @deprecated Use createTextField: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
+  default as createTextfield,
+} from "./textfield";
 export { default as createTimePicker } from "./timepicker";
 export { default as createToolbar } from "./toolbar";
 export { default as createTopAppBar } from "./top-app-bar";
@@ -72,7 +76,12 @@ export {
 export type { BadgeConfig, BadgeComponent } from "./badge/types";
 
 // Bottom App Bar
-export type { BottomAppBarConfig, BottomAppBar } from "./bottom-app-bar/types";
+export type {
+  BottomAppBarConfig,
+  BottomAppBar as BottomAppBarComponent,
+  /** @deprecated Use BottomAppBarComponent, the name every component type has. Removed in 1.0 (FLO-383). */
+  BottomAppBar,
+} from "./bottom-app-bar/types";
 export type {
   BottomSheetConfig,
   BottomSheetComponent,
@@ -109,7 +118,11 @@ export type {
 } from "./button-group/types";
 
 // Card
-export type { CardSchema } from "./card/types";
+export type {
+  CardSchema as CardConfig,
+  /** @deprecated Use CardConfig. Removed in 1.0 (FLO-383). */
+  CardSchema,
+} from "./card/types";
 
 // Carousel
 export type { CarouselConfig, CarouselComponent } from "./carousel/types";
@@ -241,7 +254,14 @@ export type {
 } from "./tabs/types";
 
 // Textfield
-export type { TextfieldConfig, TextfieldComponent } from "./textfield/types";
+export type {
+  TextfieldConfig as TextFieldConfig,
+  TextfieldComponent as TextFieldComponent,
+  /** @deprecated Use TextFieldConfig: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
+  TextfieldConfig,
+  /** @deprecated Use TextFieldComponent: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */
+  TextfieldComponent,
+} from "./textfield/types";
 
 // Timepicker
 export type { TimePickerConfig, TimePickerComponent } from "./timepicker/types";
@@ -258,7 +278,12 @@ export type {
 } from "./toolbar/types";
 
 // Top App Bar
-export type { TopAppBarConfig, TopAppBar } from "./top-app-bar/types";
+export type {
+  TopAppBarConfig,
+  TopAppBar as TopAppBarComponent,
+  /** @deprecated Use TopAppBarComponent, the name every component type has. Removed in 1.0 (FLO-383). */
+  TopAppBar,
+} from "./top-app-bar/types";
 
 // Tooltip
 export type { TooltipConfig, TooltipComponent } from "./tooltip/types";

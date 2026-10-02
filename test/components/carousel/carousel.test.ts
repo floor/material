@@ -121,7 +121,10 @@ describe('carousel', () => {
     expect(carousel.getCurrentSlide()).toBe(1);
 
     const changes: number[] = [];
-    carousel.on('change', ({ index }: { index: number }) => changes.push(index));
+    carousel.on('change', ({ index, value }: CarouselChangePayload) => {
+      expect(value).toBe(carousel.getValue());
+      changes.push(index);
+    });
     carousel.next();
     expect(changes).toEqual([2]);
     expect(scrollTo).toHaveBeenLastCalledWith({ left: expect.any(Number), behavior: 'smooth' });

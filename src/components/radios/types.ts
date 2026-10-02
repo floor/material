@@ -203,6 +203,9 @@ export interface RadiosComponent {
    * @returns The radios component for chaining
    */
   disable: () => RadiosComponent;
+
+  /** Whether the whole group is disabled (FLO-384) */
+  isDisabled: () => boolean;
   
   /**
    * Enables a specific radio option

@@ -11,7 +11,10 @@ import { parseHTML } from "linkedom";
 import { chromium } from "playwright";
 import { declarations, elements } from "../src/elements";
 import { cases } from "./fixtures/preupgrade-cases";
+import { assertGlobalHost, GLOBAL_HOST_DOM, readGlobalHost } from "./fixtures/ssr-global-host";
 
+// CI runs this twice, on the installed Vue and on the peer floor: the log says which.
+const version = (await Bun.file("node_modules/vue/package.json").json() as { version: string }).version;
 const OPT_OUT = new Set(["carousel", "fab-menu", "toolbar"]);
 const pascal = (name: string): string => name.replace(/(^|-)([a-z])/g, (_, __, c: string) => c.toUpperCase());
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
@@ -97,6 +100,8 @@ for (const item of defaults) {
   }
   pieces.push(renderNode(host, extra));
 }
+used.add("MButton");
+pieces.push(`h(MButton, { id: "globals", label: "Globals", popover: "auto", inputmode: "numeric", enterkeyhint: "send", itemprop: "name", nonce: "abc" })`);
 
 const app = `import { defineComponent, h, ref } from "vue";
 import { ${[...used].sort().join(", ")} } from "mtrl/vue";
@@ -296,6 +301,7 @@ try {
 } finally {
   await Bun.file(serverPath).delete();
 }
+assertGlobalHost(html);
 assert.equal(asyncStream, asyncHtml, "renderToWebStream did not match renderToString");
 assert.match(asyncHtml, /<i id="async-setup">async-loaded<\/i>/);
 assert.match(asyncHtml, /<i id="outside">outside-loaded<\/i>/);
@@ -360,6 +366,7 @@ try {
     assert.equal(row.shadow, !OPT_OUT.has(element), `${element} shadow root before script`);
     if (row.childShadow !== null) assert.equal(row.childShadow, true, "toolbar's icon button has a shadow root before script");
   }
+  assert.deepEqual(await inert.evaluate(readGlobalHost), GLOBAL_HOST_DOM);
   await inert.close();
 
   const page = await browser.newPage();
@@ -389,6 +396,7 @@ try {
   });
   await page.waitForFunction(() => document.getElementById("checked")?.textContent === "false");
   assert.equal(await page.locator("#host-switch").getByRole("switch", { name: "Wi-Fi" }).isChecked(), false);
+  assert.deepEqual(await page.evaluate(readGlobalHost), GLOBAL_HOST_DOM);
   assert.deepEqual({ warnings: pageWarnings, errors: pageErrors }, { warnings: [], errors: [] });
   await page.close();
 
@@ -432,5 +440,5 @@ for (const report of summary) {
   const root = report.sameRoot === null ? "n/a" : report.sameRoot ? "kept" : "replaced";
   console.log(`${report.element}: template=${report.template ? "yes" : "no"} shadow=${report.shadowBeforeScript ? "yes" : "no"} sameRoot=${root} warnings=${report.warnings} errors=${report.errors}`);
 }
-console.log(`vue-ssr: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no mtrl/ssr or linkedom`);
-console.log("vue-ssr async: setup, outside read, web stream, and pipeToNodeWritable finished with content, the declarative template, the same shadow root, and 0 warnings");
+console.log(`vue-ssr, Vue ${version}: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no mtrl/ssr or linkedom`);
+console.log(`vue-ssr async, Vue ${version}: setup, outside read, web stream, and pipeToNodeWritable finished with content, the declarative template, the same shadow root, and 0 warnings`);
