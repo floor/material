@@ -73,6 +73,22 @@ export const cases: PreupgradeCase[] = [
   // label, so the pre-upgrade rule must centre this host too.
   c("checkbox", "label=''", `<m-checkbox aria-label="Agree" label=""></m-checkbox>`),
   c("slider", "default", `<m-slider value="40" aria-label="Volume"></m-slider>`),
+  // FLO-594: a label builds a body-large line and a 4px gutter over the
+  // container, so the 48px row the pre-upgrade rule reserves is short. The
+  // element reads a size name in any case (`xs` to `xl`) or a pixel height, and
+  // `label-position` start (the default) or end. An icon adds a 40px column,
+  // which the container's row already covers. An empty `label=""` builds no
+  // label, as `supporting-text=""` builds none on the switch.
+  c("slider", "label", `<m-slider label="Volume" value="40"></m-slider>`),
+  c("slider", "label label-position=start", `<m-slider label="Volume" label-position="start" value="40"></m-slider>`),
+  c("slider", "label label-position=end", `<m-slider label="Volume" label-position="end" value="40"></m-slider>`),
+  c("slider", "label size=xs", `<m-slider label="Volume" size="xs" value="40"></m-slider>`),
+  c("slider", "label size=s", `<m-slider label="Volume" size="s" value="40"></m-slider>`),
+  c("slider", "label size=m", `<m-slider label="Volume" size="m" value="40"></m-slider>`),
+  c("slider", "label size=l", `<m-slider label="Volume" size="l" value="40"></m-slider>`),
+  c("slider", "label size=xl", `<m-slider label="Volume" size="xl" value="40"></m-slider>`),
+  c("slider", "label icon", `<m-slider label="Volume" icon="${ICON}" value="40"></m-slider>`),
+  c("slider", "label=''", `<m-slider aria-label="Volume" label="" value="40"></m-slider>`),
   c("text-field", "default", `<m-text-field label="Name"></m-text-field>`),
   c("text-field", "variant=outlined", `<m-text-field variant="outlined" label="Name"></m-text-field>`),
   c("text-field", "supporting-text", `<m-text-field label="Name" supporting-text="As on your passport"></m-text-field>`),
