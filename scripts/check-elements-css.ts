@@ -11,6 +11,8 @@ import { createServer } from "vite";
 import { elements } from "../src/elements";
 import { hostStyleText } from "../src/elements/define";
 import { cascadeLayerOrder } from "./build-styles";
+import { assertRollbackBeats, repeatedAttributeBytes, specificityText, type Specificity } from "./preupgrade-specificity";
+import { preupgradeRollback } from "../src/elements/styles";
 import { componentStyles, resolveStyleDependencies, typographyDependencies } from "./style-manifest";
 
 const dir = "dist/elements/css";
@@ -65,12 +67,21 @@ const inner = (sheet: string): string => {
   return sheet.slice(start + marker.length, -2);
 };
 const pieces: string[] = [];
+const rollback = preupgradeRollback();
+let highest: { selector: string; specificity: Specificity } = { selector: "", specificity: [0, 0, 0] };
 for (const name of specs) {
   const file = join("dist/elements/preupgrade", `${name}.css`);
   const sheet = await readFile(file, "utf8");
   assert(sheet.includes("@layer mtrl.preupgrade{"), `${name} is not wrapped in the pre-upgrade layer`);
   assert(!sheet.includes("registerPreupgrade"), `${name} file is a script`);
-  pieces.push(inner(sheet));
+  const body = inner(sheet);
+  assert(body.endsWith(rollback), `${name} does not end with the rollback rule`);
+  const rules = body.slice(0, -rollback.length);
+  const max = assertRollbackBeats(rules);
+  const rank = max.specificity;
+  const current = highest.specificity;
+  if (rank[0] > current[0] || (rank[0] === current[0] && (rank[1] > current[1] || (rank[1] === current[1] && rank[2] > current[2])))) highest = max;
+  pieces.push(rules);
   assert.equal(
     import.meta.resolve(`mtrl/elements/preupgrade/${name}.css`),
     pathToFileURL(resolve(file)).href,
@@ -78,7 +89,12 @@ for (const name of specs) {
   );
 }
 const whole = await readFile("dist/elements/preupgrade.css", "utf8");
-assert.equal(pieces.join(""), inner(whole), "Per-element rules differ from preupgrade.css");
+const wholeInner = inner(whole);
+assert(wholeInner.endsWith(rollback), "preupgrade.css does not end with the rollback rule");
+assert.equal(pieces.join("") + rollback, wholeInner, "Per-element rules differ from preupgrade.css");
+assertRollbackBeats(pieces.join(""));
+assert(rollback.length < repeatedAttributeBytes(highest.specificity[1]), "the repeated-attribute form is smaller");
+console.log(`pre-upgrade rollback: ${rollback.length} B; highest selector (${specificityText(highest.specificity)}) ${highest.selector}; repeated-attribute form ${repeatedAttributeBytes(highest.specificity[1])} B`);
 const order = cascadeLayerOrder();
 const base = await readFile("dist/styles/base.css", "utf8");
 assert(base.includes(order), "base.css does not declare the shared layer order");

@@ -13,7 +13,8 @@ import {
   preupgradeStylesheet,
 } from "../../scripts/build-styles";
 import { elements } from "../../src/elements";
-import { preupgradeSheet, retagPreupgrade } from "../../src/elements/styles";
+import { preupgradeRollback, preupgradeSheet, retagPreupgrade } from "../../src/elements/styles";
+import { assertRollbackBeats, repeatedAttributeBytes, selectorSpecificity } from "../../scripts/preupgrade-specificity";
 
 const options: sass.StringOptions<"sync"> = {
   loadPaths: [resolve("src/styles")], style: "compressed", logger: sass.Logger.silent,
@@ -54,10 +55,14 @@ describe("pre-upgrade styles", () => {
     expect(css).not.toMatch(/(^|[\s,>+~(}])m-[a-z]/);
   });
 
-  test("the sheet is one cascade layer, per prefix", () => {
+  test("the sheet is one cascade layer, per prefix, and the rollback is once after the rules", () => {
+    const rollback = preupgradeRollback();
     expect(preupgradeSheet("m-a:not(:defined){display:block}", ["m", "x"])).toBe(
-      "@layer mtrl.preupgrade{m-a:not(:defined){display:block}x-a:not(:defined){display:block}}"
+      `@layer mtrl.preupgrade{m-a:not(:defined){display:block}x-a:not(:defined){display:block}${rollback}}`
     );
+    expect(retagPreupgrade(rollback, "x-y")).toBe(rollback);
+    expect(selectorSpecificity("[data-mtrl-ssr]:not(:defined):not(#\\0)")).toEqual([1, 2, 0]);
+    expect(selectorSpecificity("m-textfield:not(:defined)[type=multiline][supporting-text]:not([supporting-text=''])[variant=outlined]")).toEqual([0, 5, 1]);
   });
 
   test("no element CSS module registers pre-upgrade rules", () => {
@@ -75,12 +80,18 @@ describe("pre-upgrade styles", () => {
       expect(sheet.endsWith("}\n")).toBe(true);
       return sheet.slice(start + "@layer mtrl.preupgrade{".length, -2);
     };
+    const rollback = preupgradeRollback();
     for (const [name, sheet] of files) {
       expect(sheet.startsWith(`${banner}\n@layer mtrl.preupgrade{`), name).toBe(true);
-      expect(inner(sheet), name).toBe(rules.get(name));
+      expect(inner(sheet), name).toBe(`${rules.get(name)}${rollback}`);
+      assertRollbackBeats(rules.get(name) as string);
     }
-    const whole = preupgradeStylesheet([...rules.values()].join(""), banner);
-    expect(names.map((name) => inner(files.get(name) as string)).join("")).toBe(inner(whole));
+    const joined = [...rules.values()].join("");
+    const whole = preupgradeStylesheet(joined, banner);
+    expect(inner(whole)).toBe(`${joined}${rollback}`);
+    const max = assertRollbackBeats(joined);
+    expect(rollback.length).toBeLessThan(repeatedAttributeBytes(max.specificity[1]));
+    expect(joined).not.toMatch(/(?:^|[{;}])\s*--[A-Za-z0-9-]+\s*:/);
   });
 
   test("the layer order names pre-upgrade first, and a per-element file does not redeclare it", () => {

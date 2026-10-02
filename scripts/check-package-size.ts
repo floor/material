@@ -100,16 +100,15 @@ try {
     ].join("\n"));
     const budgets = {
       // Measured against b475ea5d: 688,073 raw, 10,981 gzip.
-      // The pre-upgrade guard adds 44 B inside each root's style (43 B plus a
-      // newline): 690,009 raw, 11,013 gzip. Both ceilings stay; the formula
-      // would pass the ceiling next had (695,000 / 11,100). Floors follow the
-      // new measurement.
-      inline: { options: {}, raw: [683_100, 695_000], gzip: [10_900, 11_100] },
+      // The shadow guard is gone. Each of the 44 roots carries data-mtrl-ssr=""
+      // (17 B): 688,821 raw, 10,994 gzip. Both ceilings stay under the ceiling
+      // next had (695,000 / 11,100). Floors follow the new measurement.
+      inline: { options: {}, raw: [681_900, 695_000], gzip: [10_850, 11_100] },
       // Measured against b475ea5d: 41,993 raw, 1,026 gzip.
-      // Link mode adds a <style> around the same 43 B on each root (58 B):
-      // 44,545 raw, 1,077 gzip. Raw crosses 42,450, so its ceiling follows the
-      // rule (measured + 1%, up to 50). Gzip stays under 1,150.
-      link: { options: { styles: "link", cssBase: "/css" }, raw: [44_050, 45_000], gzip: [950, 1_150] },
+      // The same attribute, and no guard <style>: 42,741 raw, 1,038 gzip.
+      // Raw crosses 42,450, so its ceiling follows the rule (measured + 1%,
+      // up to 50): 43,200. Gzip stays under 1,150. Floors follow the measurement.
+      link: { options: { styles: "link", cssBase: "/css" }, raw: [42_300, 43_200], gzip: [900, 1_150] },
     } as const;
     for (const [mode, budget] of Object.entries(budgets)) {
       const size = measure(page(budget.options));
@@ -151,7 +150,10 @@ try {
   // 5,716,236 -> 6,272,030 there. On next, with the forward merge: 5,931,197 ->
   // 6,483,417 against 294100fe, same packer; the budget keeps next's headroom.
   // FLO-428 removed four themes: 6,483,417 -> 6,334,330, same packer; lowered with the headroom.
-  assert(pack.unpackedSize < 6_393_000, "Unpacked package exceeds 6,393,000 bytes");
+  // The pre-upgrade rollback is copied into preupgrade.css and each of the 37
+  // per-element files (149 B × 38). Unpacked 6,399,721 crosses 6,393,000, so the
+  // ceiling follows the rule: measured + 1%, up to 1,000.
+  assert(pack.unpackedSize < 6_464_000, "Unpacked package exceeds 6,464,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
   const smoke = join(temporary, "smoke.mjs");

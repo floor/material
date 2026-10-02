@@ -39,6 +39,7 @@ import {
   type Pascal,
   type RetiredEvents,
 } from "../elements/adapter";
+import { RENDERED_HOST_ATTRIBUTE } from "../elements/styles";
 import { shadow } from "./shadow";
 
 export { configure } from "../elements/adapter";
@@ -190,6 +191,12 @@ export const createComponent = <S, E extends HTMLElement>(
       return snapshot;
     };
     const tag = `${getPrefix()}-${spec.name}`;
+    // Solid writes the opening tag's attributes before it appends children, and
+    // `children` is defined above this property, so the getter below runs
+    // first and this one then sees whether a template was emitted. On the
+    // client the key is absent: hydration of a custom element does not remove
+    // an attribute the client render never sets.
+    let rendered = false;
     Object.defineProperty(host, "children", {
       enumerable: true,
       get: () => {
@@ -197,9 +204,19 @@ export const createComponent = <S, E extends HTMLElement>(
         const body = (named.length ? [props.children, ...named] : props.children) as JSX.Element;
         // Render children once in the page's owner and hydration context. The
         // server hook serializes this same body for both light and shadow DOM.
-        return isServer ? shadow(tag, shadowAttributes(), body) : body;
+        if (!isServer) return body;
+        const inner = shadow(tag, shadowAttributes(), body);
+        const text = typeof inner === "object" && inner !== null && "t" in inner ? String((inner as { t: unknown }).t) : "";
+        rendered = text.startsWith("<template shadowrootmode=");
+        return inner;
       },
     });
+    if (isServer) {
+      Object.defineProperty(host, RENDERED_HOST_ATTRIBUTE, {
+        enumerable: true,
+        get: () => rendered ? "" : undefined,
+      });
+    }
 
     const ref = (node: E): void => {
       element = node;

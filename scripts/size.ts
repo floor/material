@@ -26,8 +26,8 @@
  * PR. The SSR entry's raw ceiling, the npm tarball and the unpacked size
  * are measured plus 1%, rounded up to the next multiple of 1,000. Checkbox,
  * list, navigation-rail, select and switch, and the packed textfield gzip,
- * were raised to the rule once, not grown. The unpacked size stays at
- * 6,393,000.
+ * were raised to the rule once, not grown. The unpacked ceiling was 6,393,000
+ * until the pre-upgrade rollback was copied into each CSS file.
  *
  * Usage:
  *   bun run size

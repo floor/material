@@ -37,7 +37,14 @@ const phaseB = [
   renderElement("m-textfield", { label: "Name", value: "Ada" }),
   renderElement("m-button", {}, "Save"),
   renderElement("m-select", { label: "Pet", value: "Dog" }),
-].join("");
+  // The deep text-field rule (multiline, supporting text, outlined, compact)
+  // is one of the highest-specificity pre-upgrade selectors. The rollback has
+  // to beat it, not only `m-textfield:not(:defined)`.
+  renderElement("m-textfield", {
+    id: "variant", label: "Name", value: "Ada", type: "multiline", variant: "outlined",
+    density: "compact", "supporting-text": "Help",
+  }),
+].join("") + '<m-textfield id="variant-bare" label="Name" value="Ada" type="multiline" variant="outlined" density="compact" supporting-text="Help"></m-textfield>';
 
 const THRESHOLD = 0.01;
 const STAGE_WIDTH = 360;
@@ -345,9 +352,11 @@ try {
         const button = document.querySelector("m-button:not(#bare)")!;
         const select = document.querySelector("m-select")!;
         const bare = document.querySelector("#bare")!;
+        const variant = document.querySelector("#variant")!;
+        const variantBare = document.querySelector("#variant-bare")!;
         const style = getComputedStyle(field);
         return {
-          root: !!field.shadowRoot && !!button.shadowRoot && !!select.shadowRoot && !bare.shadowRoot,
+          root: !!field.shadowRoot && !!button.shadowRoot && !!select.shadowRoot && !!variant.shadowRoot && !bare.shadowRoot && !variantBare.shadowRoot,
           padding: style.padding,
           background: style.backgroundColor,
           before: getComputedStyle(field, "::before").content,
@@ -355,6 +364,10 @@ try {
           button: button.getBoundingClientRect().width,
           select: select.getBoundingClientRect().width,
           bare: bare.getBoundingClientRect().height,
+          variantPadding: getComputedStyle(variant).padding,
+          variantBefore: getComputedStyle(variant, "::before").content,
+          barePadding: getComputedStyle(variantBare).padding,
+          bareBefore: getComputedStyle(variantBare, "::before").content,
         };
       });
       assert(before.root, "phase B hosts did not render the roots the page asked for");
@@ -362,6 +375,9 @@ try {
       assert(before.before === "none", `text field ::before is pre-upgrade text (${before.before})`);
       assert(before.after === "none", `text field ::after is pre-upgrade text (${before.after})`);
       assert(before.bare > 30, "a host without a declarative root lost its reserved box");
+      assert(before.variantPadding !== before.barePadding, `outlined multiline text field still has pre-upgrade padding (${before.variantPadding})`);
+      assert(before.variantBefore === "none", `outlined multiline ::before is pre-upgrade text (${before.variantBefore})`);
+      assert(before.bareBefore !== "none", "the bare outlined multiline host lost its pre-upgrade ::before");
       await p.addScriptTag({ url: "/elements.js", type: "module" });
       await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true && !document.querySelector("#stage :not(:defined)"));
       await p.waitForTimeout(300);

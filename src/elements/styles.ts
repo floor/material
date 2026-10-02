@@ -64,6 +64,27 @@ const sheetFor = (name: string, text: string): CSSStyleSheet => {
 const PREUPGRADE_LAYER = "mtrl.preupgrade";
 
 /**
+ * On a host the server rendered with a declarative shadow root.
+ * No `data-mtrl-*` name is used anywhere else: component `data-*` names
+ * (`data-id`, `data-density`, `data-theme`) are that component's own state,
+ * and a page's `data-ssr` must not be this contract. Inert after upgrade,
+ * because the rollback rule is `:not(:defined)`.
+ */
+export const RENDERED_HOST_ATTRIBUTE = "data-mtrl-ssr";
+
+/**
+ * Last rule of every pre-upgrade sheet, inside `mtrl.preupgrade`.
+ * `:not(#\0)` is an id selector (specificity 1,0,0) that matches every element,
+ * so the rule outranks every pre-upgrade selector, none of which has an id.
+ * `all` does not reset custom properties; the element rules set none.
+ * Not tag-specific, so retagging for another prefix leaves it as it is.
+ */
+export const preupgradeRollback = (): string => {
+  const selector = `[${RENDERED_HOST_ATTRIBUTE}]:not(:defined):not(#\\0)`;
+  return `${selector},${selector}::before,${selector}::after{all:revert-layer}`;
+};
+
+/**
  * Pre-upgrade CSS, built for the default prefix, for another one: every tag
  * selector `m-*` becomes `<prefix>-*`. The rules name tags only in selectors
  * (`m-tabs:not(:defined)>*`), and no value starts a word with `m-`.
@@ -71,9 +92,9 @@ const PREUPGRADE_LAYER = "mtrl.preupgrade";
 export const retagPreupgrade = (css: string, prefix: string): string =>
   prefix === DEFAULT_PREFIX ? css : css.replace(/(^|[\s,>+~({}])m-(?=[a-z])/g, `$1${prefix}-`);
 
-/** The rules as one layered stylesheet, for each prefix. */
+/** The rules as one layered stylesheet, for each prefix. The rollback is once, after them. */
 export const preupgradeSheet = (css: string, prefixes: Iterable<string> = [DEFAULT_PREFIX]): string =>
-  `@layer ${PREUPGRADE_LAYER}{${Array.from(prefixes, (prefix) => retagPreupgrade(css, prefix)).join("")}}`;
+  `@layer ${PREUPGRADE_LAYER}{${Array.from(prefixes, (prefix) => retagPreupgrade(css, prefix)).join("")}${preupgradeRollback()}}`;
 
 /**
  * Applies the registered entries to a shadow root, in the given order.
