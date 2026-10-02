@@ -472,6 +472,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- Checkboxes keep their check icon, and pre-upgrade element styles appear, when one process uses multiple documents (FLO-528).
 - Svelte SSR keeps rendering a page when a child needs context from a provider above an mtrl host. The host falls back to light DOM without a declarative shadow root, then upgrades normally in the browser. Development logs once per affected host in each response, including the child render error; production logs nothing (FLO-525).
 - Arrow keys used soon after opening a menu keep their selected focus when the initial-focus timer runs (FLO-515). A menu opened with ArrowUp on its opener now keeps focus on the last item (it was pulled back to the first; FLO-524).
 - A search view dismissed before its opening focus frame runs stays closed (FLO-514).
