@@ -135,6 +135,8 @@ jobs:
         run: bun run ssr-consumer:check
       - name: Packed imports and size budgets
         run: bun run size:check
+      - name: README examples, specifiers, sizes and links against the packed package
+        run: bun run readme:check
       - name: Per-component gzip budgets
         run: bun run size
       - name: One adapter component ships only its element
@@ -165,7 +167,7 @@ jobs:
             checks: react:check react-ssr:check vue:check svelte:check svelte-ssr:check vue-ssr:check solid-ssr:check solid:check solid-ssr:floor vue-ssr:floor react-types:check vue-types:check solid-types:check svelte-types:check react-types:floor vue-types:floor solid-types:floor svelte-types:floor
           - group: components
             browsers: chromium
-            checks: consumer:check tabs:check slider:check drawer:check navigation-bar:check navigation-rail:check core:check
+            checks: consumer:check tabs:check slider:check drawer:check navigation-bar:check navigation-rail:check core:check readme-browser:check
           - group: styles
             browsers: chromium
             checks: preupgrade:check tokens:check

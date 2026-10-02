@@ -237,24 +237,6 @@
       "reason": "the pulls URL in \"Where this came from\" names the repository the history was developed in, not a specifier"
     },
     {
-      "id": "readme-upgrade-from-010",
-      "file": "README.md",
-      "text": "## Upgrading from `mtrl` 0.10",
-      "reason": "the heading names which mtrl release a page upgrades from, not an import specifier. The word from before a quoted name matches the import-form rule"
-    },
-    {
-      "id": "readme-upgrade-from-09",
-      "file": "README.md",
-      "text": "## Upgrading from `mtrl` 0.9",
-      "reason": "the heading names which mtrl release a page upgrades from, not an import specifier. The word from before a quoted name matches the import-form rule"
-    },
-    {
-      "id": "readme-upgrade-from-07",
-      "file": "README.md",
-      "text": "## Upgrading from `mtrl` 0.7",
-      "reason": "the heading names which mtrl release a page upgrades from, not an import specifier. The word from before a quoted name matches the import-form rule"
-    },
-    {
       "id": "release-notes-history-link",
       "file": "scripts/release-notes.ts",
       "text": "https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed",

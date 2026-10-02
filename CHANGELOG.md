@@ -1096,6 +1096,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **The package's README on npm is a short one.** `npm-readme.md` is packed as the package's
+  `README.md` (install, one example, the component list, and links to md3.io); the full
+  README stays on GitHub. Nothing in the API changes.
 - **The slider's label takes the Body Large role, and a labelled horizontal slider is 4px
   taller (FLO-587).** The label on a slider is this library's — the specification puts no label
   on a slider — so the form controls' label role decides, as it does for the checkbox, radio
