@@ -3707,7 +3707,10 @@ try {
         const issues: string[] = [];
         // (a) the 88 px floor: the target's 48 px leave the action at least 40.
         if (width < 88) issues.push(`${round(width)} px wide (the floor is 88; the action's share ${round(width - 48)} < 40)`);
-        // (b) the secondary control's 48 x 48 target.
+        // (b) the secondary control's 48 x 48 target, and the box the
+        // stylesheet claims: the ::before is 48 px wide with an inset of 0 on
+        // the reading end and the button sits flush at the chip's end, so the
+        // box is exactly [W - 48, W] along the reading direction.
         const secondary = root.querySelector(".mtrl-chip__remove, .mtrl-chip__trailing-action") as HTMLElement | null;
         if (secondary) {
           const target = getComputedStyle(secondary, "::before");
@@ -3716,16 +3719,27 @@ try {
           if (Math.round(targetWidth) !== 48 || Math.round(targetHeight) !== 48) {
             issues.push(`the secondary target is ${targetWidth} x ${targetHeight} (expected 48 x 48)`);
           }
+          const endInset = parseFloat(target.getPropertyValue("inset-inline-end"));
+          const button = secondary.getBoundingClientRect();
+          const chipEnd = dir === "ltr" ? rect.right : rect.left;
+          const buttonEnd = dir === "ltr" ? button.right : button.left;
+          const flush = Math.abs(chipEnd - buttonEnd);
+          if (Math.abs(targetWidth - 48) > 0.01 || Math.abs(endInset) > 0.01 || flush > 0.01) {
+            issues.push(`the target's box is not [${round(width - 48)}, ${round(width)}] along the reading direction: ${round(targetWidth)} px wide, inset-inline-end ${round(endInset)}, the button's end ${round(flush)} px from the chip's end`);
+          }
         } else {
           issues.push("the chip is missing its remove or trailing button");
         }
         // (c) the two regions tile the centre line; (d) neither takes hits inside
-        // the other. The boundary between them is where the target's 48 px begin,
-        // at W - 48. Walk the centre line in 0.25 px steps from 8 px before it to
-        // 8 px after it (in the direction of reading), take the x where the hit
-        // changes from the chip's own action to the secondary control, and assert
-        // it is within 1 px of 48 from the chip's end. The probes then sample the
-        // regions clear of the boundary, the scan every half pixel of the line.
+        // the other. Find the boundary between them: walk the centre line in
+        // 0.05 px steps from 8 px before the box's edge (W - 48) to 8 px after it,
+        // in the direction of reading, and take b, the last point the chip's own
+        // action still answers. The target's hit region begins at b, and
+        // 0 <= (W - 48) - b <= 1: the box's edge, or at most the one pixel
+        // Chromium adds to the box's left (measured 2026-10-02; the stylesheet
+        // places the box exactly, (b)) -- never past the box's edge, and a target
+        // that grows fails. The probes then sample the regions clear of the
+        // boundary, the scan every half pixel of the line.
         const boundary = width - 48;
         const x = (fromStart: number): number => (dir === "ltr" ? rect.left + fromStart : rect.right - fromStart);
         const hit = (fromStart: number): string => {
@@ -3744,29 +3758,51 @@ try {
         expect(boundary / 2, "the primary action");
         expect(width - 24, "the secondary control");
         expect(width - 4, "the secondary control");
-        // The boundary, found rather than skipped: the first sample on the walk
-        // that returns the secondary control, every earlier one the action.
+        // The boundary, found rather than skipped: b is the walk's last sample
+        // returning the action, every later one the secondary control.
+        const step = 0.05;
         const walkFrom = boundary - 8;
         const walkTo = boundary + 8;
-        let change: number | null = null;
+        const samples = Math.round((walkTo - walkFrom) / step);
+        let b: number | null = null;
         let walkIssue: string | null = null;
-        for (let at = walkFrom; at <= walkTo + 1e-9; at += 0.25) {
+        for (let i = 0; i <= samples; i++) {
+          const at = walkFrom + i * step;
           const got = hit(at);
           if (got === "the primary action") continue;
-          if (got === "the secondary control") change = at;
-          else walkIssue = `a hit ${round(at)} px from the start (${round(width - at)} from the end) in the boundary walk returns ${got}`;
+          if (got !== "the secondary control") {
+            walkIssue = `a hit ${round(at)} px from the start (${round(width - at)} from the end) in the boundary walk returns ${got}`;
+          } else if (i === 0) {
+            walkIssue = `the walk starts on the secondary control at ${round(at)} px from the start, before the action's region has ended`;
+          } else {
+            // Floating-point dust off the 0.05 grid, no more: b is placed
+            // within the step.
+            b = Math.round((at - step) * 1e6) / 1e6;
+          }
           break;
         }
         if (walkIssue !== null) issues.push(walkIssue);
-        else if (change === null) issues.push(`no hit between ${round(walkFrom)} and ${round(walkTo)} px from the start returns the secondary control`);
+        else if (b === null) issues.push(`no hit between ${round(walkFrom)} and ${round(walkTo)} px from the start returns the secondary control`);
         else {
-          const fromEnd = width - change;
-          boundaries.push(`  chips ${where}: the boundary is ${round(fromEnd)} px from the chip's end`);
-          if (Math.abs(fromEnd - 48) > 1) issues.push(`the boundary is ${round(fromEnd)} px from the chip's end (expected within 1 px of 48)`);
+          // Rounded off the 0.05 grid: fractional chip widths leave
+          // floating-point dust, no more.
+          const off = Math.round((boundary - b) * 1e6) / 1e6;
+          if (off < 0 || off > 1) issues.push(`the hit boundary is ${round(b)} px from the start, ${round(off)} px before the box's edge (0 to 1 expected)`);
         }
+        boundaries.push(`  chips ${where}: the box is [${round(boundary)}, ${round(width)}], the hit boundary is ${b === null ? "not found" : `${round(b)} px from the start`}`);
+        // (e) the half-pixel scan, which excludes only the one physical pixel
+        // Chromium's hit testing adds on the left of the target's box (measured
+        // 2026-10-02: the hit region is one pixel wider than the 48 px box on its
+        // left; the stylesheet places the box exactly). Left to right that pixel
+        // is (W - 49, W - 48] from the start; right to left it lies just outside
+        // the chip's end, past where this scan stops. Skipping exactly it keeps a
+        // later engine that drops the pixel passing (0 is in range) and fails a
+        // target that grows.
+        const boxLeft = x(dir === "ltr" ? width - 48 : width);
         for (let px = 0; px + 0.5 < width; px++) {
           const at = px + 0.5;
           if (at < 1 || at > width - 1) continue; // the chip's own ends
+          if (x(at) > boxLeft - 1 && x(at) <= boxLeft) continue; // the one extra pixel
           const got = hit(at);
           const wanted = at < boundary ? "the primary action" : "the secondary control";
           if (got !== wanted) issues.push(`the centre line at ${round(at)} px from the start is ${got}, inside the ${wanted === "the primary action" ? "secondary control's" : "primary action's"} region`);
