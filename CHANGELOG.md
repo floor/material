@@ -337,6 +337,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- The top-layer menu steps of `elements:check` no longer read focus before the menu has given it
+  back. A menu returns focus to its opener in the animation frame after it closes; the check read
+  the state after a fixed 450ms, and on a runner that produced no frame in that time it found
+  focus nowhere. It now waits for the opener's focus, after the same 450ms.
 - The menu keyboard step of `elements:check` no longer ends one item short when a runner pauses
   (FLO-423). It waited a fixed 450ms after opening the menu with a key, then sent the arrows; it
   now waits for the first item to take focus, which is what the arrows depend on.
