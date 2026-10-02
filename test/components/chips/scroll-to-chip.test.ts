@@ -48,9 +48,14 @@ describe("scrollToChip", () => {
     expect(Object.keys(calls[0]!)).toEqual(["top"]);
   });
 
-  test("the stylesheet scrolls a scrollable set smoothly, and the reset stops it under reduced motion", () => {
+  test("the stylesheets scroll the chips, the tabs and the search suggestions smoothly, and the reset stops it under reduced motion", () => {
     const chips = compileString(`@use 'components/chips';`, { loadPaths: ["src/styles"], style: "compressed" }).css;
     expect(chips).toMatch(/\.mtrl-chips--scrollable \.mtrl-chips__container\{[^}]*scroll-behavior:smooth/);
+    // The tabs' and the search's scrollers, whose scripts name no behaviour either
+    const tabs = compileString(`@use 'components/tabs';`, { loadPaths: ["src/styles"], style: "compressed" }).css;
+    expect(tabs).toMatch(/\.mtrl-tabs__scroll\{[^}]*scroll-behavior:smooth/);
+    const search = compileString(`@use 'components/search';`, { loadPaths: ["src/styles"], style: "compressed" }).css;
+    expect(search).toMatch(/\.mtrl-search__suggestions\{[^}]*scroll-behavior:smooth/);
     const reset = compileString(`@use 'base/reset';`, { loadPaths: ["src/styles"], style: "compressed" }).css;
     expect(reset).toMatch(/@media\(prefers-reduced-motion: reduce\)\{.*?\*,\*::before,\*::after\{[^}]*scroll-behavior:auto !important/);
   });
