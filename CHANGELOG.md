@@ -548,6 +548,44 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     layers: a `layer: "top"` dialog and `<m-dialog>` opened that way used to close at once,
     on the `cancel` the browser sends for that same key press.
   - **`destroy()` right after `open()`** leaves nothing behind (see Fixed).
+- **The menu is closed when `close()` returns (FLO-548).** The same rule as the dialog's, for
+  the menu in both layers and for the two components that hold one, the select and the split
+  button. `open()` already worked this way; `close()` set the state and emitted `close` on a
+  50 ms timer. Migration: move out of a `close` listener anything that needs the menu gone
+  from the document (it leaves 350 ms later), and drop `event.preventDefault()` from `open`
+  and `close` listeners.
+
+  ```ts
+  menu.close();
+  menu.isOpen(); // 0.10: true for another 50 ms. 1.0: false
+  menu.open();   // 0.10: ignored, the menu ended closed. 1.0: it reopens
+  ```
+
+  - **`close` is emitted inside `close()`,** and `isOpen()` is false on the next line. The
+    listener runs while the menu is still in the document with its visible class: the class
+    and `aria-hidden` follow 50 ms later, the removal 300 ms after that, as before.
+  - **Repeat calls do nothing and emit nothing.** Two `close()` calls within 50 ms emitted
+    `close` twice outside the top layer.
+  - **The later call wins.** `close()` then `open()` at once reopens the menu, with one
+    `close` and one `open`; `open()` then `close()` at once ends closed and the surface
+    is never shown.
+  - **One menu at a time, in the call:** opening a menu closes the one that was open before
+    its own `open` is emitted. The other's `close` used to come 50 ms after.
+  - **An open menu can be dismissed as soon as `open()` returns:** a click outside and
+    Escape close it from then, not 20 ms later. The event that opened it never dismisses it:
+    a menu opened by code from a click or a key press on another element ignores that click
+    or key press, and the next one counts.
+  - **Select:** `close()`, Escape and a chosen option set `isOpen()` false, emit `close` and
+    set `aria-expanded="false"` in that call or event.
+  - **Split button:** when the user dismisses the menu, `isExpanded()` turns false and
+    `collapse` and `change` are emitted in that event, not 50 ms later; `collapse()` then
+    `expand()` at once ends expanded (the menu ignored the reopening and collapsed the
+    button again).
+  - **FAB menu, `menu` presentation:** `close()` sets `isOpen()` false and emits `close` in
+    the call. Its `open()` is unchanged here.
+  - **`MenuEvent` and `SelectEvent`,** the payloads of `open` and `close`, lose
+    `preventDefault` and `defaultPrevented`: nothing read them, and neither event can be
+    cancelled. The objects passed at run time still carry both, as no-ops.
 - **A config `on*` option is the listener registered at creation.** It runs with the same
   argument, the same number of times, as a listener passed to `on(event)` at that point, and it
   runs before a listener added afterwards. Whether a method notifies is unchanged (a silent
@@ -638,44 +676,6 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   value runs twice — the change that was not that value, then the move onto it — and then
   stops, because `selectByValue` emits only when the selection changed.
 
-- **The menu is closed when `close()` returns (FLO-548).** The same rule as the dialog's, for
-  the menu in both layers and for the two components that hold one, the select and the split
-  button. `open()` already worked this way; `close()` set the state and emitted `close` on a
-  50 ms timer. Migration: move out of a `close` listener anything that needs the menu gone
-  from the document (it leaves 350 ms later), and drop `event.preventDefault()` from `open`
-  and `close` listeners.
-
-  ```ts
-  menu.close();
-  menu.isOpen(); // 0.10: true for another 50 ms. 1.0: false
-  menu.open();   // 0.10: ignored, the menu ended closed. 1.0: it reopens
-  ```
-
-  - **`close` is emitted inside `close()`,** and `isOpen()` is false on the next line. The
-    listener runs while the menu is still in the document with its visible class: the class
-    and `aria-hidden` follow 50 ms later, the removal 300 ms after that, as before.
-  - **Repeat calls do nothing and emit nothing.** Two `close()` calls within 50 ms emitted
-    `close` twice outside the top layer.
-  - **The later call wins.** `close()` then `open()` at once reopens the menu, with one
-    `close` and one `open`; `open()` then `close()` at once ends closed and the surface
-    is never shown.
-  - **One menu at a time, in the call:** opening a menu closes the one that was open before
-    its own `open` is emitted. The other's `close` used to come 50 ms after.
-  - **An open menu can be dismissed as soon as `open()` returns:** a click outside and
-    Escape close it from then, not 20 ms later. The event that opened it never dismisses it:
-    a menu opened by code from a click or a key press on another element ignores that click
-    or key press, and the next one counts.
-  - **Select:** `close()`, Escape and a chosen option set `isOpen()` false, emit `close` and
-    set `aria-expanded="false"` in that call or event.
-  - **Split button:** when the user dismisses the menu, `isExpanded()` turns false and
-    `collapse` and `change` are emitted in that event, not 50 ms later; `collapse()` then
-    `expand()` at once ends expanded (the menu ignored the reopening and collapsed the
-    button again).
-  - **FAB menu, `menu` presentation:** `close()` sets `isOpen()` false and emits `close` in
-    the call. Its `open()` is unchanged here.
-  - **`MenuEvent` and `SelectEvent`,** the payloads of `open` and `close`, lose
-    `preventDefault` and `defaultPrevented`: nothing read them, and neither event can be
-    cancelled. The objects passed at run time still carry both, as no-ops.
 ### Removed
 
 - **`select.menu` and `splitButton.menu` (FLO-543).** The menu inside a select or a split button
