@@ -115,10 +115,26 @@ export interface FabMenuComponent extends ElementComponent {
   /** The list of the list presentation: `role="menu"` */
   list: HTMLElement;
 
-  /** Opens the menu */
+  /**
+   * Opens the menu. When it returns, `isOpen()` is true, the FAB has
+   * `aria-expanded="true"` and `open` has been emitted. In the `menu`
+   * presentation the surface is a module loaded on demand: it may be painted
+   * after `open()` returns, and not at all when `close()` comes first. On an
+   * open menu it does nothing and emits nothing.
+   *
+   * While that module loads for the first time: Escape and a click outside
+   * do not close the menu yet (they are the surface's own, once it is
+   * shown), and a second click on the FAB does; opened again, the surface
+   * opens as the last call asked; and if the module fails to load the menu
+   * closes again, with `close`. On `<m-fab-menu>` opened by its `open`
+   * attribute, which dispatches no `open`, that `close` is dispatched alone.
+   */
   open(event?: Event): this;
 
-  /** Closes the menu */
+  /**
+   * Closes the menu. When it returns, `isOpen()` is false and `close` has
+   * been emitted. On a closed menu it does nothing and emits nothing.
+   */
   close(): this;
 
   /** Opens or closes the menu */
