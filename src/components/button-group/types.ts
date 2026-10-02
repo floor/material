@@ -252,7 +252,9 @@ export interface ButtonGroupConfig {
   ariaLabel?: string;
 
   /**
-   * Event handlers for button group events
+   * Event handlers for button group events. On 0.10.x this map is accepted
+   * and never called: subscribe with `on(event, handler)` on the group. In 1.0
+   * the handlers run, with the listener's argument.
    */
   on?: {
     click?: (event: ButtonGroupEvent) => void;

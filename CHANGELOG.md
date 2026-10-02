@@ -48,6 +48,9 @@ Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
     chip's `onClick`: `{ event, originalEvent, element }`, not the chip. The chip set's
     `onChange`: one object, `{ value, selected, changed }`, and it also hears
     `selectByValue(values, true)`.
+- **Told in the TSDoc, for 1.0, the button group's `on` map** (`click`, `focus`, `blur`,
+  `change`): on 0.10.x it is accepted and never called, so subscribe with
+  `on(event, handler)` on the group. In 1.0 those handlers run, with the listener's argument.
 
 ### Fixed
 
