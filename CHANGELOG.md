@@ -26,6 +26,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
   | radios `rippleConfig` | nothing: never applied; the stylesheet draws the state layer (FLO-266) |
   | tabs `ResponsiveConfig.smallScreen.maxVisibleTabs` | nothing: it never had an effect; for more than four tabs, use a scrollable row (FLO-232) |
   | time picker `closeOnSelect`, `TIMEPICKER_DEFAULTS.CLOSE_ON_SELECT` | nothing: never applied; the picker is confirmed with OK, as M3 specifies (FLO-281) |
+  | `SLIDER_MEASUREMENTS.TRACK_RADIUS`, `SMALL_TRACK_EXTERNAL_RADIUS`, `LARGE_TRACK_RADIUS_RATIO`, `HANDLE_GAP_PRESSED_REDUCTION`, `CENTER_GAP`, `EDGE_PADDING` | nothing: not read since FLO-250; the stylesheet and `getExternalTrackRadius` give the geometry |
+  | `TABS_DEFAULTS.INDICATOR_HEIGHT`, `INDICATOR_ANIMATION_DURATION`, `INDICATOR_ANIMATION_TIMING`, `ICON_SIZE` | `indicator.height` and `indicator.animationDuration` to override; nothing read these (FLO-262) |
+  | `TEXT_FIELD_CLASSES.LABEL_FLOATING` | nothing: a floating label is the field's `--populated` or `--focused` state (FLO-295) |
+  | `TIMEPICKER_SELECTORS.MODAL`, `DIAL_CANVAS`, `DIAL_HAND` | nothing: they matched no element (the dialog's `::backdrop`, the DOM dial, `__dial-track` and `__dial-handle`; FLO-278, FLO-279) |
   | `rippleConfig.timing` and `rippleConfig.opacity` (button, icon button, FAB, extended FAB, button group, radios, tabs, and the core `RippleConfig`) | nothing: never applied; the stylesheet draws the wave's motion and opacity (FLO-260, FLO-268). `duration` stays. |
 - **1.0 exports nothing deprecated.** What 0.10.0 deprecated and 0.10.x already replaced (or
   never used) is removed. Migration:

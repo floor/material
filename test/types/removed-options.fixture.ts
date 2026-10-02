@@ -46,3 +46,21 @@ export const timeCloseDefault = TIMEPICKER_DEFAULTS.CLOSE_ON_SELECT;
 import type { ResponsiveConfig } from "../../src/components/tabs";
 // @ts-expect-error maxVisibleTabs: never had an effect (FLO-232)
 export const tabsMax: ResponsiveConfig = { smallScreen: { layout: "icon-only", maxVisibleTabs: 4 } };
+
+// Constant properties nothing read (deprecated in v0.10.0)
+import { SLIDER_MEASUREMENTS } from "../../src/components/slider/constants";
+import { TABS_DEFAULTS } from "../../src/components/tabs/constants";
+import { TEXT_FIELD_CLASSES } from "../../src/components/textfield/constants";
+import { TIMEPICKER_SELECTORS } from "../../src/components/timepicker/constants";
+// @ts-expect-error the stylesheet draws the track's corners (FLO-250)
+export const sliderRadius = SLIDER_MEASUREMENTS.TRACK_RADIUS;
+// @ts-expect-error the gap does not shrink (FLO-250)
+export const sliderGap = SLIDER_MEASUREMENTS.HANDLE_GAP_PRESSED_REDUCTION;
+// @ts-expect-error the indicator height follows the variant (FLO-262)
+export const tabsIndicatorHeight = TABS_DEFAULTS.INDICATOR_HEIGHT;
+// @ts-expect-error the stylesheet sets the icon size
+export const tabsIconSize = TABS_DEFAULTS.ICON_SIZE;
+// @ts-expect-error a floating label is the field's populated or focused state (FLO-295)
+export const labelFloating = TEXT_FIELD_CLASSES.LABEL_FLOATING;
+// @ts-expect-error the dial is DOM, not a canvas (FLO-279)
+export const dialCanvas = TIMEPICKER_SELECTORS.DIAL_CANVAS;
