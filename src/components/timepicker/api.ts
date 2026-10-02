@@ -175,7 +175,7 @@ export const createTimePickerAPI = (
       baseComponent.element.classList.add(`${config.prefix}-time-picker--open`);
       escape?.stop();
       escape = onModalEscape(dialog, cancel);
-      if (later) setTimeout(show, 0);
+      if (later === true) setTimeout(show, 0);
       else show();
       
       options.events.emit(EVENTS.OPEN);
