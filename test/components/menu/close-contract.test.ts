@@ -326,6 +326,48 @@ describe("a menu with a submenu open", () => {
   }
 });
 
+// open and close cannot be cancelled, and their payloads no longer pretend
+// otherwise: no preventDefault, no defaultPrevented. They did nothing. A
+// leftover call throws, where it used to do nothing in silence.
+describe("payloads: only what can be cancelled carries preventDefault", () => {
+  const cancellers = (payload: object): string[] =>
+    ["preventDefault", "defaultPrevented"].filter(name => name in payload);
+
+  test("the menu's open and close carry neither; its select carries both, and preventing it keeps the menu open", async () => {
+    const { menu } = make();
+    await wait();
+    const payloads: Record<string, object> = {};
+    for (const name of ["open", "close"] as const) menu.on(name, (event) => { payloads[name] = event; });
+    menu.on("select", (event) => { payloads.select = event; event.preventDefault(); });
+    menu.open();
+    await wait(SHOWN);
+    menu.element.querySelector<HTMLElement>('[data-id="copy"]')!.click();
+    expect(menu.isOpen()).toBe(true);
+    menu.close();
+    expect(cancellers(payloads.open)).toEqual([]);
+    expect(cancellers(payloads.close)).toEqual([]);
+    expect(cancellers(payloads.select)).toEqual(["preventDefault", "defaultPrevented"]);
+    expect("menu" in payloads.open && "menu" in payloads.close).toBe(true);
+  });
+
+  test("the select's open, close and change carry neither", async () => {
+    const component = mount(createSelect({ label: "Size", options: [{ id: "s", text: "Small" }, { id: "m", text: "Medium" }], value: "s" }));
+    await wait();
+    const payloads: Record<string, object> = {};
+    for (const name of ["open", "close", "change"] as const) component.on(name, (event) => { payloads[name] = event; });
+    component.open();
+    await wait(SHOWN);
+    document.querySelector<HTMLElement>('[data-id="m"]')!.click();
+    expect(component.getValue()).toBe("m");
+    expect(component.isOpen()).toBe(false);
+    expect(Object.keys(payloads).sort()).toEqual(["change", "close", "open"]);
+    expect(cancellers(payloads.open)).toEqual([]);
+    expect(cancellers(payloads.close)).toEqual([]);
+    expect(cancellers(payloads.change)).toEqual([]);
+    expect("select" in payloads.open && "select" in payloads.close && "select" in payloads.change).toBe(true);
+  });
+});
+
 describe("one menu open at a time", () => {
   test("opening a second menu closes the first in that call: its close comes before the second's open", async () => {
     const first = make();
