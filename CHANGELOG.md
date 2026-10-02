@@ -12,6 +12,11 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **The Vue peer dependency is `>=3.4.20` (FLO-527).** The Vue adapter's declarations
+  import `DefineSetupFnComponent`, which `@vue/runtime-core` first declared in 3.4.20.
+  On Vue 3.3 and 3.4.0 a project with `skipLibCheck: false` fails to compile them
+  (TS2724); with `skipLibCheck: true` every Vue component is `any`. Migration:
+  install Vue 3.4.20 or newer.
 - **Tab and panel ids are derived from the value with a safe encoding (FLO-430).** A value of
   `[A-Za-z0-9_-]` only keeps its ids, `tab-<group>-<value>` and `tabpanel-<group>-<value>`. Any
   other value gets `tabx-<group>-<encoded>` and

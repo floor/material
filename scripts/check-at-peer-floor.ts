@@ -7,7 +7,7 @@
  *   bun run scripts/check-at-peer-floor.ts <peer> [companion…] -- <script>
  *   bun run scripts/check-at-peer-floor.ts vue @vue/server-renderer -- vue-ssr:check
  *
- * The floor is read from `peerDependencies` (`>=3.3` is 3.3.0), so the check
+ * The floor is read from `peerDependencies` (`>=3.4.20` is 3.4.20), so the check
  * follows the range when it changes. Companions are packages that must match the
  * peer's version. Nothing is saved: package.json and the lockfile are not touched.
  *
