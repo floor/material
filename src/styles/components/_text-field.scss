@@ -890,6 +890,10 @@ $component: "#{base.$prefix}-text-field";
     }
 
     // Multiline styles
+    // The first line and the label are where a single-line field has them
+    // (FLO-299): Compose places the text with no singleLine branch,
+    // `textPosition = topPaddingValue + labelPlaceable.height`. The textarea's
+    // own 12px put the first line under the filled field's floated label.
     &--multiline {
         .#{$component}__input {
             min-height: v.text-field('height-multiline');
@@ -898,13 +902,25 @@ $component: "#{base.$prefix}-text-field";
             padding-top: v.text-field('padding-top-multiline');
         }
 
+        // Under the floated label: 8dp, then its 16dp line
+        // (TextFieldWithLabelVerticalPadding, MinFocusedLabelLineHeight)
+        &.#{$component}--filled:has(> .#{$component}__field > .#{$component}__label) .#{$component}__input {
+            padding-top: v.text-field('padding-top-multiline-label');
+        }
+
+        // The input's own border is the rest of the 16dp
+        &.#{$component}--outlined .#{$component}__input {
+            padding-top: calc(#{v.text-field('padding-top-multiline')} - #{v.text-field('border-width')});
+        }
+
         .#{$component}__prefix,
         .#{$component}__suffix {
             top: 28px;
         }
 
+        // The single-line field's centre: its 56px box, halved
         .#{$component}__label {
-            top: 24px;
+            top: 28px;
         }
     }
 
@@ -1000,11 +1016,24 @@ $component: "#{base.$prefix}-text-field";
             }
         }
 
-        // Multiline with compact density
+        // Multiline with compact density: no M3 measure, so the first line
+        // and the label are the compact single-line field's
         &.#{$component}--multiline {
             .#{$component}__input {
                 min-height: 40px;
-                padding: v.text-field('padding-top-multiline-compact') v.text-field('padding-horizontal');
+                padding: v.text-field('padding-top-multiline-compact') v.text-field('padding-horizontal') 8px;
+            }
+
+            &.#{$component}--filled:has(> .#{$component}__field > .#{$component}__label) .#{$component}__input {
+                padding-top: v.text-field('padding-top-multiline-compact-label');
+            }
+
+            &.#{$component}--outlined .#{$component}__input {
+                padding-top: calc(#{v.text-field('padding-top-multiline-compact')} - #{v.text-field('border-width')});
+            }
+
+            .#{$component}__label {
+                top: 20px;
             }
         }
 

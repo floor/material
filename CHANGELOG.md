@@ -1048,6 +1048,20 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   - **The label is not moved by a prefix** (Compose: "Prefix/suffix does not get applied to
     label"). Resting, it starts 16px in, where it was 25.5px beside a "$" (the prefix is hidden
     while the label rests). Floated in a filled field, 16px, where it was 12px.
+  - **A multiline field's first line and label are where a single-line field has them**
+    (Compose places the text with no single-line branch). The first line starts 24px down in a
+    filled field with a label (was 12px) and 16px down in an outlined field or without a label
+    (was 13px and 12px); the resting label is 16px down (was 12px), and the floated label is
+    the single-line field's (4px lower than it was). Compact, which M3 does not measure, takes
+    the compact single-line field's: the first line 14px down under a filled label (was 8px),
+    10px otherwise (was 8px and 9px). The Sass map's `padding-top-multiline` is 16px (was
+    12px) and `padding-top-multiline-compact` 10px (was 8px), with two new keys for the filled
+    field's label, `padding-top-multiline-label` (24px) and
+    `padding-top-multiline-compact-label` (14px). **The 100px minimum height stays:** M3 gives a
+    text area no height ("Text areas are taller than text fields and wrap overflow text onto a
+    new line … These should be used instead of multi-line fields on the web",
+    m3.material.io/components/text-fields/guidelines, "Input text"); Compose's 56dp is its
+    multi-line field, which starts as one line and grows.
 - **SSR docs: what the two style modes cost (FLO-554).** Inline styles stay the default. The
   README's server-rendering section and `RenderOptions`' TSDoc now say what inline costs (gzip
   cannot see a repeat further back than its 32 KB window, so serve brotli or use link mode
@@ -1075,6 +1089,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A filled multiline text field's first line no longer runs under its floated label
+  (FLO-299).** The textarea padded its text 12px from the top whatever the variant, and the
+  floated label's box ends 19.2px down: they overlapped by 7.2px (13px at compact density).
+  The first line now starts under the label, at the single-line field's text (the values are
+  under "Changed"). `<m-text-field type="multiline">` reserves the same first line before it
+  upgrades, so a sibling on its line does not move when the element is defined.
 - **Text field: beside an icon, a prefix or a suffix no longer leaves the value under the icon
   (FLO-299).** The input's padding was sized from the affix alone. With a leading icon and a
   prefix the value began 25.5px in, under the icon (12 to 36px) and before the prefix (44px);

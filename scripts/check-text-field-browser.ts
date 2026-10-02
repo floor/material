@@ -461,6 +461,7 @@ type LayoutRow = {
   name: string;
   textStart: number;
   textEnd: number;
+  textTop: number;
   label: LayoutBox | null;
   leading: LayoutBox | null;
   trailing: LayoutBox | null;
@@ -489,6 +490,11 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
       ["suffix, value", { suffixText: "kg", value: "12" }],
       ["leading icon, prefix, value", { leadingIcon: icon, prefixText: "$", value: "12" }],
       ["trailing icon, suffix, value", { trailingIcon: icon, suffixText: "kg", value: "12" }],
+      ["label", {}],
+      ["label, value", { value: "Ada" }],
+      ["multiline", { type: "multiline" }],
+      ["multiline, value", { type: "multiline", value: "Ada" }],
+      ["multiline, no label, value", { type: "multiline", label: "", value: "Ada" }],
     ];
     const stage = document.createElement("div");
     document.body.append(stage);
@@ -506,11 +512,13 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
           const field = (window as unknown as FieldWindow).inputs.createTextField(config as never);
           field.element.style.width = "280px";
           cell.append(field.element);
+          // A textarea ignores the value attribute the factory writes
+          if (config.type === "multiline" && config.value) field.setValue(config.value);
           root = field.element;
           destroy = () => field.destroy();
         } else {
           const host = document.createElement("m-text-field");
-          for (const [key, value] of Object.entries(config)) host.setAttribute(key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`), value);
+          for (const [key, value] of Object.entries(config)) if (value !== "") host.setAttribute(key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`), value);
           host.style.cssText = "display:inline-block;width:280px";
           cell.append(host);
           root = host.shadowRoot?.firstElementChild as HTMLElement;
@@ -540,10 +548,14 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
       const style = getComputedStyle(input);
       const inset = box(input)!;
       const [left, right] = [px(style.paddingLeft) + px(style.borderLeftWidth), px(style.paddingRight) + px(style.borderRightWidth)];
+      // The first line's box: at the padding edge in a textarea, centred in an input
+      const content = input.getBoundingClientRect().height - px(style.borderTopWidth) - px(style.borderBottomWidth) - px(style.paddingTop) - px(style.paddingBottom);
+      const lead = input.tagName === "TEXTAREA" ? 0 : (content - px(style.lineHeight)) / 2;
       return {
         name,
         textStart: round(inset.start + (rtl ? right : left)),
         textEnd: round(inset.end + (rtl ? left : right)),
+        textTop: round(inset.top + px(style.borderTopWidth) + px(style.paddingTop) + lead),
         label: box(part("label")),
         leading: box(part("leading-icon")),
         trailing: box(part("trailing-icon")),
@@ -560,7 +572,8 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
   // Every failure is reported, not only the first
   const failures: string[] = [];
   const expect = (ok: boolean, message: string): void => { if (!ok) failures.push(message); };
-  assert.equal(rows.length, api === "factory" ? 56 : 28);
+  assert.equal(rows.length, api === "factory" ? 96 : 48);
+  const named = new Map(rows.map((row) => [row.name, row]));
   for (const row of rows) {
     const { name } = row;
     // An icon, then the prefix, then the text; mirrored at the end. The prefix
@@ -579,7 +592,37 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
       const gap = round(row.textEnd - (row.suffix.end + row.suffix.width));
       expect(gap >= 0 && gap <= 4, `${name}: the text ends before the suffix, ${gap}px from it`);
     }
+
+    // 4. Multiline. The first line and the label are where a single-line
+    // field has them: Compose places the text with no singleLine branch
+    // (`textPosition = topPaddingValue + labelPlaceable.height`: 8 + 16 = 24dp
+    // filled; outlined and an unlabelled field at the 16dp padding). The
+    // textarea's own 12dp put the first line under the floated label.
+    if (name.includes("multiline")) {
+      const [group] = name.split(", multiline");
+      const single = named.get(`${group}, label${name.endsWith("value") ? ", value" : ""}`)!;
+      const labelled = !name.includes("no label");
+      if (name.includes("default")) {
+        const top = name.startsWith("filled") && labelled ? 24 : 16;
+        expect(row.textTop === top, `${name}: the first line starts ${top}dp down (${row.textTop})`);
+        if (labelled && !name.endsWith("value")) expect(row.label!.top === 16, `${name}: the resting label is on the first line, 16dp down (${row.label!.top})`);
+      } else if (labelled) {
+        // Compact has no M3 measure: the first line is the single-line field's, to the pixel
+        expect(Math.abs(row.textTop - single.textTop) <= 0.5, `${name}: the first line is where the single-line field's text is (${row.textTop} against ${single.textTop})`);
+      } else {
+        // Without a label, where one 20px line is centred in the 40px box
+        expect(row.textTop === 10, `${name}: the first line starts 10px down (${row.textTop})`);
+      }
+      if (labelled) {
+        expect(row.label!.top === single.label!.top, `${name}: the label is where the single-line field's is (${row.label!.top} against ${single.label!.top})`);
+        if (name.endsWith("value") && name.startsWith("filled")) {
+          const overlap = round(row.label!.bottom - row.textTop);
+          const allowed = round(single.label!.bottom - single.textTop);
+          expect(overlap <= Math.max(0, allowed), `${name}: the floated label's box ends ${overlap}px into the first line (a single-line field: ${allowed}px)`);
+        }
+      }
+    }
   }
   assert.deepEqual(failures, [], `${failures.length} of the layout assertions failed`);
-  console.log(`Passed text field layout (${api}): ${rows.length} fields, filled and outlined, default and compact${api === "factory" ? ", left to right and right to left" : ""} — an icon, its affix, then the text.`);
+  console.log(`Passed text field layout (${api}): ${rows.length} fields, filled and outlined, default and compact${api === "factory" ? ", left to right and right to left" : ""} — an icon, its affix, then the text; a multiline field's first line clear of its label.`);
 }
