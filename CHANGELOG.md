@@ -43,6 +43,7 @@ exists only in 1.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
 | `SELECT_CLASSES.TEXTFIELD` | `SELECT_CLASSES.TEXT_FIELD`, the same value. A recorded exception: 0.10.x flags the old key but has no new one, so change it when you upgrade. In 1.0 the old key reads `undefined`. |
 | `select.textfield` | `select.textField`. A recorded exception, like the key above: 0.10.x flags the old name but has no `textField`, so rename it when you upgrade. In 1.0 `select.textfield` reads `undefined`. |
 | `CardSchema` | `CardConfig` |
+| the time picker's config option `isOpen` | `open`, as on the dialog and the drawer. `isOpen()` is the method that reads the state |
 | `TopAppBar`, `BottomAppBar` (the factory types) | `TopAppBarComponent`, `BottomAppBarComponent` |
 | a chip's `text` | `label` |
 | tabs `indicatorHeight`, `indicatorWidthStrategy` | `indicator.height`, `indicator.widthStrategy` |
@@ -203,6 +204,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **The time picker's `isOpen` is a method, `isOpen()` (FLO-548).** A leftover
   `if (picker.isOpen)` compiles in JavaScript and is always true: `picker.isOpen` is now a
   function. Call it.
+- **The time picker's config option `isOpen` is `open` (FLO-548).** TypeScript reports a
+  leftover in an object literal. In JavaScript `createTimePicker({ isOpen: true })` is
+  ignored: the picker stays closed (measured).
 - **A snackbar waiting behind another is `"queued"`, not `"visible"` (FLO-548).** Right after
   `show()`, `snackbar.state === "visible"` is true only if nothing else was on screen; it was
   true at once. Use `snackbar.isOpen()`, or listen to `open`, which is emitted together with
@@ -288,7 +292,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     `"visible"` for good, and `show()` on it did nothing. After `destroy()` the state is
     `"hidden"` (it was left as it was), and a queued snackbar that is destroyed is not shown
     at its turn.
-  - **Time picker:** the `isOpen` property is the method `isOpen()`.
+  - **Time picker:** the `isOpen` property is the method `isOpen()`, and the config option
+    that opens the picker at creation is `open`, not `isOpen`: one name was a config key and
+    a method on the same component.
+  - **`<m-snackbar>`:** its `open` property is `false` while the snackbar waits behind
+    another, and `true` from its `open` event; it was `true` as soon as `show()` was called.
   - **Date picker:** new `isOpen()`. The click that calls `open()` no longer closes a docked
     picker: the event that opened an overlay never dismisses it.
   - **The tooltip is outside the rule, by design:** `show()` and `hide()` wait for their
@@ -809,10 +817,16 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **Snackbar: a queued snackbar dropped from the queue can be shown again (FLO-548).** One
   waiting behind another and then dropped by a `queueBehavior: 'replace'` snackbar or by
   `clearSnackbars()` kept `state` `"visible"` without ever being shown, and `show()` on it
-  did nothing from then on. It is now hidden when dropped. Also on 0.10.x.
+  did nothing from then on. It is now hidden when dropped. The defect is also in 0.10.x; the
+  fix is in 1.0.
 - **Date picker: `open()` called from a click outside a docked picker opens it (FLO-548).**
   The same click then reached the picker's outside-click listener and closed it at once. A
-  click in the task that called `open()` no longer closes it. Also on 0.10.x.
+  click in the task that called `open()` no longer closes it. The defect is also in 0.10.x;
+  the fix is in 1.0.
+- **Snackbar: destroying the one on screen lets the next take its turn (FLO-548).**
+  `destroy()` on the visible snackbar left the queue waiting for it, so snackbars shown behind
+  it stayed queued until some other snackbar was shown. The queue now moves on, after its
+  usual gap.
 - **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
   centre while animating in and be squeezed at the viewport edge. Placement now uses its full
   layout size; reduced-motion placement is unchanged.

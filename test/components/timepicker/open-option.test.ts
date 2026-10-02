@@ -10,7 +10,7 @@ const mount = callbacksFixture();
 
 test("open: true opens the picker once it is created, and emits open", async () => {
   const seen: string[] = [];
-  const picker = mount(createTimePicker({ value: "09:30", open: true, on: { open: () => { seen.push("open"); } } }));
+  const picker = mount(createTimePicker({ value: "09:30", open: true, onOpen: () => { seen.push("open"); } }));
   await wait();
   expect(picker.isOpen()).toBe(true);
   expect(seen).toEqual(["open"]);

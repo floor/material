@@ -305,7 +305,7 @@ export interface SnackbarQueueAddOptions {
 export interface SnackbarQueue {
   add: (snackbar: QueuedSnackbar, options?: SnackbarQueueAddOptions) => void;
   clear: () => void;
-  /** Takes a waiting snackbar out of the queue */
+  /** Takes a snackbar out of the queue: a waiting one, or the one on screen when it is destroyed */
   remove: (snackbar: QueuedSnackbar) => void;
   getLength: () => number;
 }
