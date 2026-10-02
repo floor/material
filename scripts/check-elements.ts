@@ -3484,6 +3484,7 @@ try {
 
       const round = (value: number): string => value.toFixed(2);
       const failures: string[] = [];
+      const boundaries: string[] = [];
       for (const { api, dir, kind, root, area } of cases) {
         const label = root.querySelector('[class~="mtrl-chip__label"]')?.textContent ?? "";
         const where = `${api} ${dir} ${kind} "${label}"`;
@@ -3505,11 +3506,12 @@ try {
           issues.push("the chip is missing its remove or trailing button");
         }
         // (c) the two regions tile the centre line; (d) neither takes hits inside
-        // the other: the specification's six probes, then every pixel. The two
-        // regions meet where the target's 48 px begin, at W - 48. Chromium
-        // hit-tests pixel-snapped boxes, so a point within half a pixel of an edge
-        // can land on it: the probes keep 2 px clear of the boundary (the site's
-        // W - 49 and W - 47, one px further in) and 1 px clear of the chip's ends.
+        // the other. The boundary between them is where the target's 48 px begin,
+        // at W - 48. Walk the centre line in 0.25 px steps from 8 px before it to
+        // 8 px after it (in the direction of reading), take the x where the hit
+        // changes from the chip's own action to the secondary control, and assert
+        // it is within 1 px of 48 from the chip's end. The probes then sample the
+        // regions clear of the boundary, the scan every half pixel of the line.
         const boundary = width - 48;
         const x = (fromStart: number): number => (dir === "ltr" ? rect.left + fromStart : rect.right - fromStart);
         const hit = (fromStart: number): string => {
@@ -3526,23 +3528,41 @@ try {
         };
         expect(4, "the primary action");
         expect(boundary / 2, "the primary action");
-        expect(boundary - 2, "the primary action");
-        expect(boundary + 2, "the secondary control");
         expect(width - 24, "the secondary control");
         expect(width - 4, "the secondary control");
+        // The boundary, found rather than skipped: the first sample on the walk
+        // that returns the secondary control, every earlier one the action.
+        const walkFrom = boundary - 8;
+        const walkTo = boundary + 8;
+        let change: number | null = null;
+        let walkIssue: string | null = null;
+        for (let at = walkFrom; at <= walkTo + 1e-9; at += 0.25) {
+          const got = hit(at);
+          if (got === "the primary action") continue;
+          if (got === "the secondary control") change = at;
+          else walkIssue = `a hit ${round(at)} px from the start (${round(width - at)} from the end) in the boundary walk returns ${got}`;
+          break;
+        }
+        if (walkIssue !== null) issues.push(walkIssue);
+        else if (change === null) issues.push(`no hit between ${round(walkFrom)} and ${round(walkTo)} px from the start returns the secondary control`);
+        else {
+          const fromEnd = width - change;
+          boundaries.push(`  chips ${where}: the boundary is ${round(fromEnd)} px from the chip's end`);
+          if (Math.abs(fromEnd - 48) > 1) issues.push(`the boundary is ${round(fromEnd)} px from the chip's end (expected within 1 px of 48)`);
+        }
         for (let px = 0; px + 0.5 < width; px++) {
           const at = px + 0.5;
           if (at < 1 || at > width - 1) continue; // the chip's own ends
-          if (Math.abs(at - boundary) <= 2) continue; // where the two regions meet
           const got = hit(at);
           const wanted = at < boundary ? "the primary action" : "the secondary control";
           if (got !== wanted) issues.push(`the centre line at ${round(at)} px from the start is ${got}, inside the ${wanted === "the primary action" ? "secondary control's" : "primary action's"} region`);
         }
         if (issues.length > 0) failures.push(`chips ${where}: ${issues.join("; ")}`);
       }
-      return { failures, cases: cases.length };
+      return { failures, cases: cases.length, boundaries };
     });
     assert.equal(measured.cases, 18, "the chips under test");
+    for (const line of measured.boundaries) console.log(line);
     for (const line of measured.failures) console.log(`  FAIL ${line}`);
     assert.deepEqual(measured.failures, []);
     check("chips: a chip with a secondary action keeps the 88 px floor, its 48 x 48 target, and the two regions tile");
