@@ -112,7 +112,9 @@ a listener annotated `(event: SearchEvent) => void` on those two is an error. Th
 `<m-timepicker>` component's `on` and `off` take the time picker's event map
 (`TimePickerEvents`) in place of any string and an untyped handler (FLO-547): a name outside
 it is an error, and each handler's argument is typed, so one annotated with another type, or
-an argument on `open`, `close` or `cancel`, is an error.
+an argument on `open`, `close` or `cancel`, is an error. The time picker's `isOpen` is a
+method (FLO-548): `picker.isOpen === true` and assigning it to a `boolean` are errors.
+`SnackbarState` gains `"queued"`, so a `switch` over it that had to be exhaustive is not.
 
 **Changes your compiler won't catch**
 
@@ -144,6 +146,19 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **Your own CSS reading `var(--mtrl-sys-shape-corner-pill)`** (or `-tiny`, `-extra-tiny`): mtrl's
   stylesheet no longer declares the property, and a `var()` of an undeclared property without a
   fallback gives no value, so the radius is lost silently.
+- **`mtrl/styles/base` no longer carries typography (FLO-539).** Without
+  `import 'mtrl/styles/typography'`, `.mtrl-display-large` … `.mtrl-label-small`,
+  `.mtrl-text-center` / `left` / `right`, `.mtrl-font-thin` / `light` / `regular` /
+  `medium` / `bold`, and `.mtrl-truncate`, `-2` and `-3` do nothing, and `h1`–`h6` and `p`
+  lose mtrl's type styles. Measured in Chromium with only the base stylesheet: a
+  `<div class="mtrl-headline-small">` computed `font-size: 14px`, inherited from `body`
+  (with the import it is `24px`).
+  `getPropertyValue('--mtrl-sys-typescale-title-large-font-size')` returned `""`, and an
+  element styled `font-size: var(--mtrl-sys-typescale-title-large-font-size)` inside a parent
+  at `32px` computed `32px`: the custom property is undefined, so the declaration is invalid
+  at computed-value time and `font-size` inherits (with the import the property is `22px`
+  and the element computes `22px`). Body text keeps its font: `body` stayed `14px`
+  `Roboto, sans-serif`. `import 'mtrl/styles'` is unchanged.
 - **Tab and panel ids** change for any value with a character outside `[A-Za-z0-9_-]`
   (`a.b` → `tabx-g-a_2e_b`); a hand-written panel with the old id is never linked. Build ids with
   `tabIdFor` and `tabPanelIdFor`.
@@ -185,6 +200,19 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `onRemove` and a `chip.on("remove")` listener find the chip still in `getChips()` and on the
   page; the set then destroys it and emits its own `remove`. A listener added with `on` used
   to run after the set had destroyed and unlisted the chip.
+- **The time picker's `isOpen` is a method, `isOpen()` (FLO-548).** A leftover
+  `if (picker.isOpen)` compiles in JavaScript and is always true: `picker.isOpen` is now a
+  function. Call it.
+- **A snackbar waiting behind another is `"queued"`, not `"visible"` (FLO-548).** Right after
+  `show()`, `snackbar.state === "visible"` is true only if nothing else was on screen; it was
+  true at once. Use `snackbar.isOpen()`, or listen to `open`, which is emitted together with
+  the state turning `"visible"`.
+- **A snackbar hidden while it is queued emits no `close` and no `dismiss` (FLO-548).** It
+  was never open. It used to emit both, and was then shown anyway at its turn, with
+  `state` `"hidden"` and no way to hide it (measured). It now leaves the queue.
+- **A docked date picker opened with `open()` from a click outside it stays open.** That
+  click used to count as a click outside and closed it in the same task (measured: `open`,
+  then `close`). The next click outside closes it.
 - **Chip-set `add` and `remove`** factory handlers receive `{ value, chip }` and
   `{ value, chip, chipValue }`, not the chip; `<m-chips>`'s `remove` detail `value` is the
   remaining selection, and the removed id is `chipValue`.
@@ -237,6 +265,34 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed (breaking)
 
+- **Typography leaves `mtrl/styles/base` (FLO-539).** The base no longer carries the type
+  classes (`.mtrl-display-large` … `.mtrl-label-small`), the text utilities (`.mtrl-text-*`,
+  `.mtrl-font-*`, `.mtrl-truncate*`), mtrl's styles for `h1`–`h6` and `p`, or the
+  `--mtrl-sys-typescale-*` tokens, except the three the `body` rule reads
+  (`--mtrl-sys-typescale-body-medium-font`, `-font-size` and `-line-height`).
+  `import 'mtrl/styles/typography'` restores what left. The full stylesheet `mtrl/styles`
+  is unchanged. Migration: without the import, a `<div class="mtrl-headline-small">`
+  computed `font-size: 14px` (inherited from `body`; `24px` with the import), and
+  `font-size: var(--mtrl-sys-typescale-title-large-font-size)` computed the parent's `32px`
+  because the property is undefined and the declaration is invalid at computed-value time
+  (`22px` with the import). Body text keeps its font (`14px`, `Roboto, sans-serif`).
+- **Snackbar, time picker and date picker follow the overlays' one open and close rule
+  (FLO-548).** When `open()` or `close()` (the snackbar's `show()` or `hide()`) returns, the
+  state getter has changed and the event has been emitted; opening an open one and closing a
+  closed one do nothing and emit nothing; `isOpen()` is a method on every overlay.
+  - **Snackbar:** `state` is `"queued"` between `show()` and its turn on screen, then
+    `"visible"`, with `open` emitted at that moment; it said `"visible"` while waiting. New
+    `isOpen()`, true only while visible; `state` stays. `hide()` on a queued snackbar gives up
+    its turn and emits nothing. A queued snackbar dropped by a `queueBehavior: 'replace'`
+    snackbar or by `clearSnackbars()` is `"hidden"` and can be shown again; it used to stay
+    `"visible"` for good, and `show()` on it did nothing. After `destroy()` the state is
+    `"hidden"` (it was left as it was), and a queued snackbar that is destroyed is not shown
+    at its turn.
+  - **Time picker:** the `isOpen` property is the method `isOpen()`.
+  - **Date picker:** new `isOpen()`. The click that calls `open()` no longer closes a docked
+    picker: the event that opened an overlay never dismisses it.
+  - **The tooltip is outside the rule, by design:** `show()` and `hide()` wait for their
+    delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`.
 - **mtrl is ESM-only (FLO-358).** The CommonJS bundle (`dist/index.cjs`) and the root's `require`
   condition are gone; `main` is the ESM entry. Every subpath was already import-only, and with
   the internals off the root the bundle would have been a partial API. `require('mtrl')` no longer
@@ -663,11 +719,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Added
 
+- **`isOpen()` on the snackbar and the date picker (FLO-548)**, as on every other overlay.
 - **Split button `setItems(items)` and `getItems()` (FLO-543).** `setItems` replaces the menu's
   items and returns the split button; `getItems` returns them. A split button created without
   `items` has no menu and `getItems` returns `[]`: the first non-empty `setItems` creates the
   menu, which then works as one created with items (and opens at once if the split button is
-  expanded). `setItems([])` empties the menu and keeps it.
+  expanded). `setItems([])` empties the menu and keeps it. After `destroy()` it does nothing.
 - **The navigation bar (FLO-305).** `createNavigationBar` and `<m-navigation-bar>` (with
   `<m-navigation-bar-item>`), and the React, Vue, Svelte and Solid components: M3 Expressive's bar
   for compact and medium windows, three to five destinations, from Compose's `ShortNavigationBar`.
@@ -706,14 +763,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   button group (FLO-380); existing accessors remain. Button toggle `change`, card
   `expandedChanged`, list `keydown`, and interactive touch events now have their
   actual payload types, including both slider touch delivery shapes.
-- `mtrl/ssr`: `renderElement` renders elements as declarative shadow DOM on Node or Bun; server-only, with no runtime dependencies (FLO-363, FLO-364). It inlines the CSS by default, or links the stylesheets in the same order as the browser and the inline styles (without adding build-manifest dependencies), renders nested elements, and applies the shared HTML policy; each call defines only the host tags it meets, including nested authored and factory-generated elements, instead of recreating all 36 classes. Asynchronous FAB-menu and submenu configurations use the host-only fallback (FLO-370). The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup. The React, Svelte, Solid and Vue bridges render a host that carries ordinary HTML attributes (`popover`, `inputmode`, `enterkeyhint`, `itemprop`, `nonce`, `is`, and the rest of the host's HTML attributes): the framework emits those attributes on the host, and the shared renderer skips names outside its allowlist, including event-handler names and `srcdoc`, so they never enter the shadow markup. Calling `renderElement` directly rejects an unknown host attribute (FLO-418). Underneath are an internal detached element lifecycle, style registry seams, and a synchronous server DOM scope with inert scheduling and complete resource teardown. Worker and edge runtimes are unsupported in 1.0. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers) loads the browser stub: `renderElement` throws "mtrl/ssr is server-only", and importing `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` does nothing, so the page has no declarative roots and no error.
+- `mtrl/ssr`: `renderElement` renders elements as declarative shadow DOM on Node or Bun; server-only, with no runtime dependencies (FLO-363, FLO-364). `<m-toolbar>` renders a declarative shadow root like the other elements (FLO-387). Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one. Carousel and FAB menu stay opted out. It inlines the CSS by default, or links the stylesheets in the same order as the browser and the inline styles (without adding build-manifest dependencies), renders nested elements, and applies the shared HTML policy; each call defines only the host tags it meets, including nested authored and factory-generated elements, instead of recreating all 36 classes. Asynchronous FAB-menu and submenu configurations use the host-only fallback (FLO-370). The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup. The React, Svelte, Solid and Vue bridges render a host that carries ordinary HTML attributes (`popover`, `inputmode`, `enterkeyhint`, `itemprop`, `nonce`, `is`, and the rest of the host's HTML attributes): the framework emits those attributes on the host, and the shared renderer skips names outside its allowlist, including event-handler names and `srcdoc`, so they never enter the shadow markup. Calling `renderElement` directly rejects an unknown host attribute (FLO-418). Underneath are an internal detached element lifecycle, style registry seams, and a synchronous server DOM scope with inert scheduling and complete resource teardown. Worker and edge runtimes are unsupported in 1.0. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers) loads the browser stub: `renderElement` throws "mtrl/ssr is server-only", and importing `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` does nothing, so the page has no declarative roots and no error.
 - `mtrl/ssr/react`: an opt-in, server-only entry. Imported in the server bootstrap, it makes the React adapters emit styled declarative shadow roots during SSR (React 18 and 19), with no server code in the client bundle. Without it, React output is unchanged (FLO-372). A `Suspense` boundary inside a component contributes its fallback to the server-rendered shadow root: a button has no label slot with an empty fallback but has one with a text fallback; a boundary around a tab leaves the root without that tab with either fallback. Put the boundary outside the component when the server root needs resolved content. A child that suspends stays on the server: the static pass retries the host only when that render suspended, and the shadow root is built from the children once they can render (FLO-415). A child that throws is not retried: the page render reaches it, so the error is reported as it is without the bridge. When that separate render throws something other than a suspension, development logs one warning per host in the response, naming the element and the error; production logs nothing. Retries wait on a backoff (doubling to 250ms) and stop after 40 attempts, about eight seconds; past that the host has no shadow root and the page keeps streaming, so a slower child still arrives. The suspension is recognised from the throw site of whichever React build this process loaded, not from the error text, so a production build that minifies the message still retries. At the cap, development logs one warning naming the element; production logs nothing. When no stack frame can be read, development logs one warning that suspending children render without a server shadow root; production logs nothing. The server-rendered shadow root is built in a separate render, without the context of providers above the component. The page's own render (the light DOM) sees the provided value. Until upgrade, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves this component without a declarative shadow root while the page still renders. Pass the resolved string as a prop or attribute, or accept client-rendered text until upgrade. A fix is planned for 1.1 (FLO-517). The Vue and Solid bridges see the provided value in both the shadow root and light DOM.
-- `mtrl/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Svelte output gains only the empty branch marker (FLO-375). Like React, its shadow root is built in a separate render without provider context; the page's light DOM sees the provided value. A child reading context with a default shows that default in the painted shadow root until upgrade. A child requiring context leaves that component without a declarative shadow root while the page still renders: the host falls back to light DOM, then upgrades normally in the browser. Development logs once per affected host in each response, naming the element and including the child render error; production logs nothing (FLO-525).
-- `mtrl/ssr/vue`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Vue component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Vue output is unchanged (FLO-373). A host's child may use `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`: the shadow bridge serializes those children once. A host whose `v-html` contains an unclosed `<template>` renders, and `mtrl/ssr/vue` imports the server renderer from `vue/server-renderer`.
-- `mtrl/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Solid output is unchanged (FLO-374). Async and streaming SSR finish when a component inside a host creates a resource under an outer `Suspense`: the shadow bridge reuses the page's serialized children, preserving its resource ownership and hydration keys without rendering children twice.
+- `mtrl/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Svelte output gains only the empty branch marker (FLO-375). Like React, its shadow root is built in a separate render without provider context; the page's light DOM sees the provided value. A child reading context with a default shows that default in the painted shadow root until upgrade. A child requiring context leaves that component without a declarative shadow root while the page still renders: the host falls back to light DOM, then upgrades normally in the browser. Development logs once per affected host in each response, naming the element and including the child render error; production logs nothing (FLO-525).
+- `mtrl/ssr/vue`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Vue component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Vue output is unchanged (FLO-373). A host's child may use `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`: the shadow bridge serializes those children once. A host whose `v-html` contains an unclosed `<template>` renders, and `mtrl/ssr/vue` imports the server renderer from `vue/server-renderer`.
+- `mtrl/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Solid output is unchanged (FLO-374). Async and streaming SSR finish when a component inside a host creates a resource under an outer `Suspense`: the shadow bridge reuses the page's serialized children, preserving its resource ownership and hydration keys without rendering children twice.
 - Per-element SSR opt-out (FLO-370): specs accept `ssr: false` or a synchronous host
-  predicate. Carousel, FAB menu and toolbar emit their host and light DOM without a
-  declarative root; menu and split-button do the same for nested submenus. Async
+  predicate. Carousel and FAB menu emit their host and light DOM without a
+  declarative root; menu and split-button do the same for nested submenus. `<m-toolbar>`
+  renders a declarative shadow root (FLO-387). Async
   button/card global defaults conservatively use this fallback for the whole render.
   Eligible light-DOM descendants still render their own roots. Pre-upgrade CSS keeps
   the host's box until browser upgrade, and these paths no longer throw. React SSR
@@ -748,6 +806,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **Snackbar: a queued snackbar dropped from the queue can be shown again (FLO-548).** One
+  waiting behind another and then dropped by a `queueBehavior: 'replace'` snackbar or by
+  `clearSnackbars()` kept `state` `"visible"` without ever being shown, and `show()` on it
+  did nothing from then on. It is now hidden when dropped. Also on 0.10.x.
+- **Date picker: `open()` called from a click outside a docked picker opens it (FLO-548).**
+  The same click then reached the picker's outside-click listener and closed it at once. A
+  click in the task that called `open()` no longer closes it. Also on 0.10.x.
 - **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
   centre while animating in and be squeezed at the viewport edge. Placement now uses its full
   layout size; reduced-motion placement is unchanged.

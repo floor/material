@@ -37,7 +37,7 @@ const within = async <T>(work: Promise<T>, name: string): Promise<T> => {
   } finally { clearTimeout(timer); }
 };
 
-const OPT_OUT = new Set(["carousel", "fab-menu", "toolbar"]);
+const OPT_OUT = new Set(["carousel", "fab-menu"]);
 // Component names as the adapters export them: textfield is TextField (FLO-383)
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 

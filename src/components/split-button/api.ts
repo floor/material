@@ -32,6 +32,7 @@ export const withAPI =
     const expandedClass = `${prefix}-${SPLIT_BUTTON_CLASSES.EXPANDED}`;
 
     let expanded = false;
+    let destroyed = false;
 
     const emit = (type: SplitButtonEventType, extra: Partial<SplitButtonEvent> = {}): void => {
       component.emit?.(type, {
@@ -65,6 +66,8 @@ export const withAPI =
       [MENU]: menu,
 
       setItems(items: MenuContent[]): SplitButtonComponent {
+        // Destroyed, it must not create a menu nobody would destroy
+        if (destroyed) return this;
         if (menu) menu.setItems(items);
         else if (items.length) {
           wire((api[MENU] = menu = makeMenu(config, trailing.element, items)));
@@ -132,6 +135,7 @@ export const withAPI =
       },
 
       destroy(): void {
+        destroyed = true;
         menu?.destroy?.();
         leading.destroy();
         trailing.destroy();
