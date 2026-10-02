@@ -280,7 +280,7 @@ A framework page that server-renders without that bridge (Next.js, Nuxt, SvelteK
 
 Worker and edge runtimes are unsupported in `material` 3.0.0. Each server entry lists the `browser` condition first. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers does) loads the browser stub: `renderElement` throws "material/ssr is server-only", and importing a bridge does nothing, so the page renders with no declarative roots and no error.
 
-The React bridge suppresses React's hydration warning on a rendered host, because the server adds `data-mtrl-ssr`; a host attribute that differs between server and client is therefore not reported by React.
+The React bridge suppresses React's hydration warning on a rendered host, because the server adds `data-mtrl-ssr`; a host attribute that differs between server and client is therefore not reported by React, and a direct text child that differs is kept as the server sent it.
 
 With `material/ssr/react`, put a `Suspense` boundary outside the component when its server-rendered shadow root needs the resolved child. A boundary inside the component contributes its fallback to that root: a button with an empty fallback has no label slot, while a text fallback gives it a slot and shows the fallback text. In tabs, a boundary around a tab leaves the server-rendered root without that tab with either fallback; a boundary inside a tab label keeps the tab, with an empty or fallback-text label.
 

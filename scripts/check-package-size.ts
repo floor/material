@@ -168,15 +168,15 @@ try {
   // is 1,085,000, above 1,078,000, so it stays.
   // The text-field rename merged in: 1,073,789. Measured + 1%, up to 1,000,
   // is 1,085,000, above 1,078,000, so it stays.
-  // Duplicate README and LICENSE removed from dist, Node 22.23.3 / npm 10.9.9:
-  // 1,074,039. The README and LICENSE are packed once, at the package root.
-  // Measured + 1%, up to 1,000, is 1,085,000, above 1,078,000.
-  // Merged with FLO-299 (a8c24f7f), same packer: 1,075,142. The README and
-  // LICENSE are packed once. Measured + 1%, up to 1,000, is 1,086,000.
+  // README and LICENSE are packed once (the build no longer copies them into dist);
+  // measured 1,075,142 (Node 22.23.3 / npm 10.9.9); measured + 1 %, rounded up to
+  // 1,000, is 1,086,000, above 1,078,000, so the ceiling returns to 1,078,000 and
+  // stays (this file's convention, stated in the comments above it: the rule's figure
+  // caps a raise; it does not move a ceiling the measurement is under).
   // The fixture packs what publish.yml publishes, the short npm-readme.md as README.md
-  // and the manifest without its repository-only fields: 1,065,352, same packer.
-  // Measured + 1%, up to 1,000, is 1,077,000; the ceiling stays until it is set again.
-  assert(pack.size < 1_086_000, "npm tarball exceeds 1,086,000 bytes");
+  // and the manifest without its repository-only fields: 1,065,466, same packer.
+  // Under 1,078,000, so the ceiling stays.
+  assert(pack.size < 1_078_000, "npm tarball exceeds 1,078,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
