@@ -5182,7 +5182,23 @@ try {
       for (const end = Date.now() + 5000; !(await ready());) {
         if (Date.now() > end) {
           const found = { ...(await state()), item: await focusedItem(), submenus: await submenus() };
-          throw new Error(`menu top layer ${place}: still waiting after 5s for ${what}; found ${JSON.stringify(found)}`);
+          // What the state above cannot tell (FLO-551: open and connected, with no focus):
+          // whether the surface is shown and focusable, and whether the page reported errors.
+          const surface = await page.evaluate(() => {
+            const element = (window as unknown as TopWin).__tl.menu.element;
+            const style = getComputedStyle(element);
+            let inert: string | null = null;
+            for (let node: Element | null = element; node && !inert; node = node.parentElement ?? (node.getRootNode() as Partial<ShadowRoot>).host ?? null) {
+              if (node.hasAttribute("inert")) inert = node.id || node.localName;
+            }
+            return {
+              popoverOpen: element.matches(":popover-open"), visibleClass: element.classList.contains("mtrl-menu--visible"),
+              ariaHidden: element.getAttribute("aria-hidden"), inline: element.style.cssText, tabindex: element.getAttribute("tabindex"),
+              display: style.display, visibility: style.visibility, opacity: style.opacity, inert,
+              documentHasFocus: document.hasFocus(), active: document.activeElement?.localName ?? null,
+            };
+          });
+          throw new Error(`menu top layer ${place}: still waiting after 5s for ${what}; found ${JSON.stringify(found)}; surface ${JSON.stringify(surface)}; page errors ${JSON.stringify(errors)}`);
         }
         await wait(20);
       }
