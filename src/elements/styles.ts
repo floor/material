@@ -83,7 +83,7 @@ const applyPreupgrade = (): void => {
   const text = preupgradeSheet(Array.from(preupgrade.values()).join(""), preupgradePrefixes);
   let target = preupgradeTargets.get(doc);
   if (!target) {
-    if (typeof CSSStyleSheet === "function" && "replaceSync" in CSSStyleSheet.prototype && "adoptedStyleSheets" in document) {
+    if (typeof CSSStyleSheet === "function" && "replaceSync" in CSSStyleSheet.prototype && "adoptedStyleSheets" in doc) {
       const sheet = new CSSStyleSheet();
       doc.adoptedStyleSheets = [...doc.adoptedStyleSheets, sheet];
       target = { sheet };
