@@ -146,6 +146,19 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **Your own CSS reading `var(--mtrl-sys-shape-corner-pill)`** (or `-tiny`, `-extra-tiny`): mtrl's
   stylesheet no longer declares the property, and a `var()` of an undeclared property without a
   fallback gives no value, so the radius is lost silently.
+- **`mtrl/styles/base` no longer carries typography (FLO-539).** Without
+  `import 'mtrl/styles/typography'`, `.mtrl-display-large` … `.mtrl-label-small`,
+  `.mtrl-text-center` / `left` / `right`, `.mtrl-font-thin` / `light` / `regular` /
+  `medium` / `bold`, and `.mtrl-truncate`, `-2` and `-3` do nothing, and `h1`–`h6` and `p`
+  lose mtrl's type styles. Measured in Chromium with only the base stylesheet: a
+  `<div class="mtrl-headline-small">` computed `font-size: 14px`, inherited from `body`
+  (with the import it is `24px`).
+  `getPropertyValue('--mtrl-sys-typescale-title-large-font-size')` returned `""`, and an
+  element styled `font-size: var(--mtrl-sys-typescale-title-large-font-size)` inside a parent
+  at `32px` computed `32px`: the custom property is undefined, so the declaration is invalid
+  at computed-value time and `font-size` inherits (with the import the property is `22px`
+  and the element computes `22px`). Body text keeps its font: `body` stayed `14px`
+  `Roboto, sans-serif`. `import 'mtrl/styles'` is unchanged.
 - **Tab and panel ids** change for any value with a character outside `[A-Za-z0-9_-]`
   (`a.b` → `tabx-g-a_2e_b`); a hand-written panel with the old id is never linked. Build ids with
   `tabIdFor` and `tabPanelIdFor`.
@@ -252,6 +265,17 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed (breaking)
 
+- **Typography leaves `mtrl/styles/base` (FLO-539).** The base no longer carries the type
+  classes (`.mtrl-display-large` … `.mtrl-label-small`), the text utilities (`.mtrl-text-*`,
+  `.mtrl-font-*`, `.mtrl-truncate*`), mtrl's styles for `h1`–`h6` and `p`, or the
+  `--mtrl-sys-typescale-*` tokens, except the three the `body` rule reads
+  (`--mtrl-sys-typescale-body-medium-font`, `-font-size` and `-line-height`).
+  `import 'mtrl/styles/typography'` restores what left. The full stylesheet `mtrl/styles`
+  is unchanged. Migration: without the import, a `<div class="mtrl-headline-small">`
+  computed `font-size: 14px` (inherited from `body`; `24px` with the import), and
+  `font-size: var(--mtrl-sys-typescale-title-large-font-size)` computed the parent's `32px`
+  because the property is undefined and the declaration is invalid at computed-value time
+  (`22px` with the import). Body text keeps its font (`14px`, `Roboto, sans-serif`).
 - **Snackbar, time picker and date picker follow the overlays' one open and close rule
   (FLO-548).** When `open()` or `close()` (the snackbar's `show()` or `hide()`) returns, the
   state getter has changed and the event has been emitted; opening an open one and closing a
@@ -269,7 +293,6 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     picker: the event that opened an overlay never dismisses it.
   - **The tooltip is outside the rule, by design:** `show()` and `hide()` wait for their
     delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`.
-
 - **mtrl is ESM-only (FLO-358).** The CommonJS bundle (`dist/index.cjs`) and the root's `require`
   condition are gone; `main` is the ESM entry. Every subpath was already import-only, and with
   the internals off the root the bundle would have been a partial API. `require('mtrl')` no longer
