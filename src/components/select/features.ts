@@ -451,18 +451,13 @@ export const withMenu =
 
       // Emit change event
       if (component.emit) {
-        const changeEvent = {
+        component.emit("change", {
           select: getComponent(),
           value: state.selectedOption?.id || null,
           text: option.text,
           option,
           originalEvent,
-          preventDefault: () => {
-            changeEvent.defaultPrevented = true;
-          },
-          defaultPrevented: false,
-        };
-        component.emit("change", changeEvent);
+        });
       }
     };
 
@@ -518,8 +513,6 @@ export const withMenu =
         component.emit("open", {
           select: getComponent(),
           originalEvent: null,
-          preventDefault: () => {},
-          defaultPrevented: false,
         });
       }
 
@@ -593,8 +586,6 @@ export const withMenu =
         component.emit("close", {
           select: getComponent(),
           originalEvent: event.originalEvent,
-          preventDefault: () => {},
-          defaultPrevented: false,
         });
       }
     });

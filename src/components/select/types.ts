@@ -246,7 +246,9 @@ export interface SelectComponent {
   open: (interactionType?: "mouse" | "keyboard") => SelectComponent;
 
   /**
-   * Closes the select menu
+   * Closes the select menu. When it returns, `isOpen()` is false, the input
+   * has `aria-expanded="false"` and `close` has been emitted; the surface
+   * fades after that. `close()` then `open()` at once reopens it.
    * @returns Select component for chaining
    */
   close: () => SelectComponent;
@@ -327,7 +329,9 @@ export interface SelectComponent {
 }
 
 /**
- * Select event interface
+ * What `open` and `close` carry. Neither can be cancelled: the select is
+ * already open, or closed, when its listener runs. `change` cannot either:
+ * the value has changed. None carries `preventDefault`.
  */
 export interface SelectEvent {
   /**
@@ -339,16 +343,6 @@ export interface SelectEvent {
    * Original DOM event if available
    */
   originalEvent?: Event;
-
-  /**
-   * Function to prevent default behavior
-   */
-  preventDefault: () => void;
-
-  /**
-   * Whether default behavior was prevented
-   */
-  defaultPrevented: boolean;
 }
 
 /**

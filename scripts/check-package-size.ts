@@ -74,6 +74,54 @@ try {
   assert(sizes.ssr.raw < 311_000, "SSR entry exceeds 311,000 raw bytes");
   // 111,838 gzip tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
   assert(sizes.ssr.gzip < 113_000, "SSR entry exceeds 113,000 gzip bytes");
+  // What a server-rendered page weighs, by style mode. No other check asserts it.
+  // The page: 30 buttons, 10 icon buttons and 4 chip sets of 5 chips, 44 roots, the
+  // scenario whose size moves most with the number of elements.
+  // - inline (the default): each root carries its whole CSS as text in a <style>:
+  //   the host rules, the ripple, the element's stylesheet and its dependencies'
+  //   (16,345 B for a button, 11,383 for an icon button, 12,277 for a chip set).
+  //   Nothing is shared between roots, so the raw size is the sum over the roots.
+  // - link: each root carries one <link> per stylesheet and no CSS text.
+  // A ceiling fails when a root's CSS grows, or when link mode starts to carry CSS.
+  // A floor fails when the page shrinks by more than the headroom: deduplication
+  // gained, or a stylesheet lost, is then looked at and the budget set again.
+  // Ceilings by the rule at the top of scripts/size.ts (measured plus 1% or 100
+  // bytes, whichever is more, rounded up to 50); floors mirror it.
+  {
+    const { renderElement } = await import(pathToFileURL(join(fixture.installed, "dist/ssr/index.js")).href) as {
+      renderElement: (tag: string, attributes?: Record<string, string>, content?: string, options?: object) => unknown;
+    };
+    const icon = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 21 3 12l9-9 9 9z"/></svg>';
+    const chips = Array.from({ length: 5 }, () => '<m-chip value="v">Vegetarian</m-chip>').join("");
+    const page = (options: object): Uint8Array => new TextEncoder().encode([
+      ...Array.from({ length: 30 }, () => String(renderElement("m-button", {}, "Save", options))),
+      ...Array.from({ length: 10 }, () => String(renderElement("m-icon-button", { icon, "aria-label": "Favourite" }, "", options))),
+      ...Array.from({ length: 4 }, () => String(renderElement("m-chips", { "aria-label": "Diet" }, chips, options))),
+    ].join("\n"));
+    const budgets = {
+      // Measured against b475ea5d: 688,073 raw, 10,981 gzip.
+      // The pre-upgrade guard adds 44 B inside each root's style (43 B plus a
+      // newline): 690,009 raw, 11,013 gzip. Both ceilings stay; the formula
+      // would pass the ceiling next had (695,000 / 11,100). Floors follow the
+      // new measurement.
+      inline: { options: {}, raw: [683_100, 695_000], gzip: [10_900, 11_100] },
+      // Measured against b475ea5d: 41,993 raw, 1,026 gzip.
+      // Link mode adds a <style> around the same 43 B on each root (58 B):
+      // 44,545 raw, 1,077 gzip. Raw crosses 42,450, so its ceiling follows the
+      // rule (measured + 1%, up to 50). Gzip stays under 1,150.
+      link: { options: { styles: "link", cssBase: "/css" }, raw: [44_050, 45_000], gzip: [950, 1_150] },
+    } as const;
+    for (const [mode, budget] of Object.entries(budgets)) {
+      const size = measure(page(budget.options));
+      sizes[`ssr-page-${mode}`] = size;
+      console.log(`SSR page, ${mode}: ${size.raw} bytes raw, ${size.gzip} gzip, ${size.brotli} brotli (44 roots)`);
+      for (const unit of ["raw", "gzip"] as const) {
+        const [floor, ceiling] = budget[unit];
+        assert(size[unit] < ceiling, `SSR page (${mode}) exceeds ${ceiling.toLocaleString("en-US")} ${unit} bytes: ${size[unit]}`);
+        assert(size[unit] > floor, `SSR page (${mode}) is under ${floor.toLocaleString("en-US")} ${unit} bytes: ${size[unit]}. Smaller is welcome: set the budget again`);
+      }
+    }
+  }
   // What an install downloads. Raised from 900,000 on 2026-09-29 (Dr Jones) for the
   // overlay elements of wave 2; 830,286 measured after wave 1 (#245). Raised to
   // 1,010,000 for the 35 public Material shapes (FLO-346): 994,762 to 1,000,150,
@@ -226,7 +274,8 @@ try {
     // FLO-406 contrast CSS: 5,266 -> 7,189 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 8,156 -> 7,631 gzip bytes (same packer).
     // 7,429 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 7550 },
+    // FLO-539 typography leaves the base: 7,429 -> 6,409. 6,409 + 100 = 6,550.
+    { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 6550 },
     // FLO-301 (the required asterisk, the live error, the trailing icon button): 8,456 to
     // 9,058 against 7cd57a6, Node 22 / npm 10.
     // 9,138 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
@@ -246,7 +295,10 @@ try {
     // FLO-406 contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 8,069 -> 7,542 gzip bytes (same packer).
     // 7,338 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 7450 },
+    // FLO-539 the base stylesheet alone, once typography has left: 4,075. 4,075 + 100 = 4,200.
+    { name: "base-css", code: "import 'mtrl/styles/base';", gzip: 4200 },
+    // FLO-539 typography leaves the base: 7,338 -> 6,329. 6,329 + 100 = 6,450.
+    { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 6450 },
     // The outlined text field's notched outline (#234) adds 202, 7,863 to 8,065: three
     // segments with their corners each way round, and the outline colour and width per
     // state, in place of an input border and a focus overlay. The resting label shown
@@ -256,12 +308,14 @@ try {
     // FLO-406 contrast CSS: 8,426 -> 10,377 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 11,342 -> 10,811 gzip bytes (same packer).
     // 10,602 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 10750 },
+    // FLO-539 typography leaves the base: 10,602 -> 9,589. 9,589 + 100 = 9,700.
+    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 9700 },
     // FLO-406 contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 7,639 -> 7,111 gzip bytes (same packer).
     // 6,918 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // 6,918; 100 B floor, 7,050 against b9dab36e, Node 22.23.3 / npm 10.9.9.
-    { name: "slider-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/slider';", gzip: 7050 },
+    // FLO-539 typography leaves the base: 6,918 -> 5,894. 5,894 + 100 = 6,000.
+    { name: "slider-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/slider';", gzip: 6000 },
     // The .43 rail-motion baseline is 47,117 bytes; core ripple adds about 20 bytes.
     // The tooltip stylesheet adds 486 (measured): it was authored but registered in no
     // bundle, so every budget before this one was set with its CSS missing, not excluded.

@@ -11,7 +11,7 @@ import { createServer } from "vite";
 import { elements } from "../src/elements";
 import { hostStyleText } from "../src/elements/define";
 import { cascadeLayerOrder } from "./build-styles";
-import { resolveStyleDependencies } from "./style-manifest";
+import { componentStyles, resolveStyleDependencies, typographyDependencies } from "./style-manifest";
 
 const dir = "dist/elements/css";
 const names = ["ripple", ...resolveStyleDependencies(Object.values(elements).flatMap(element => [...element.spec.styles]))];
@@ -83,6 +83,10 @@ const order = cascadeLayerOrder();
 const base = await readFile("dist/styles/base.css", "utf8");
 assert(base.includes(order), "base.css does not declare the shared layer order");
 assert(order.startsWith("@layer mtrl.preupgrade,mtrl.base,"), "pre-upgrade is not first in the layer order");
+const typography = await readFile("dist/styles/typography.css", "utf8");
+assert(typography.includes(order), "typography.css does not declare the shared layer order");
+assert(typography.includes("@layer mtrl.base{"), "typography rules left mtrl.base");
+assert(!typography.includes("@layer mtrl.typography"), "typography opened its own layer");
 const button = await readFile("dist/elements/preupgrade/button.css", "utf8");
 assert(!button.includes("@layer mtrl.preupgrade,mtrl.base"), "a per-element file redeclares the layer order");
 assert.equal(
@@ -120,4 +124,20 @@ try {
   await server.close();
 }
 
-console.log(`elements-css:check: ${names.length} CSS modules, ${specs.length} host files and ${specs.length} pre-upgrade files; Node and Vite exports resolve`);
+// The selective style modules import their dependencies before their own CSS.
+// For typography it is the fix itself: its sheet shares the mtrl.base layer
+// with the reset, at the same specificity, so the base has to load first
+// (test/styles/typography-order.test.ts measures both orders).
+const styleModules: Array<[string, string[]]> = [
+  ["typography", typographyDependencies],
+  ...Object.entries(componentStyles).map(([name, entry]): [string, string[]] => [name, entry.dependencies]),
+];
+for (const [name, dependencies] of styleModules) {
+  assert.equal(
+    await readFile(`dist/styles/${name}.js`, "utf8"),
+    dependencies.map(dependency => `import "./${dependency}.js";`).join("\n") + `\nimport "./${name}.css";\n`,
+    `dist/styles/${name}.js must import its dependencies, then its own CSS`,
+  );
+}
+
+console.log(`elements-css:check: ${names.length} CSS modules, ${specs.length} host files and ${specs.length} pre-upgrade files; Node and Vite exports resolve; ${styleModules.length} style modules import their dependencies first`);
