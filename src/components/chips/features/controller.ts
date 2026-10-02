@@ -71,15 +71,15 @@ export const withController =
 
   const currentValue = (): string | string[] | null => selectionValue(getSelectedValues());
 
+  const selectSingle = (selectedChip: ChipComponent) => {
+    if (config.multiSelect) return;
+    component.chipInstances.forEach((chip) => {
+      if (chip !== selectedChip && chip.isSelected()) chip.setSelected(false);
+    });
+  };
+
   const handleSelection = (selectedChip: ChipComponent) => {
-    if (!config.multiSelect) {
-      // Single selection mode - deselect all other chips
-      component.chipInstances.forEach((chip: ChipComponent) => {
-        if (chip !== selectedChip && chip.isSelected()) {
-          chip.setSelected(false);
-        }
-      });
-    }
+    if (selectedChip.isSelected()) selectSingle(selectedChip);
 
     // With selectionRequired, deselecting the last selected chip is refused, in either
     // mode. It used to be forced on every single-select set. FLO-257.
@@ -224,6 +224,7 @@ export const withController =
     const chipInstance = createChip({
       ...chipConfig,
       managedSelection: true,
+      onSelected: selectSingle,
       cell: true,
       onRemove: chipConfig.type === "input" ? chip => {
         chipConfig.onRemove?.(chip);
@@ -240,6 +241,10 @@ export const withController =
     container.appendChild(fragment);
 
     component.chipInstances.push(chipInstance);
+
+    // A selected programmatic addition moves a single selection just as a
+    // click does. Finish the model update before the `add` handler reads it.
+    if (chipInstance.isSelected()) selectSingle(chipInstance);
 
     // This click handler is the ONLY path to handleSelection
     chipInstance.on("click", () => {

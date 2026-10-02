@@ -12,6 +12,33 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **The Vue peer dependency is `>=3.4.20` (FLO-527).** The Vue adapter's declarations
+  import `DefineSetupFnComponent`, which `@vue/runtime-core` first declared in 3.4.20.
+  On Vue below 3.4.20 a project with `skipLibCheck: false` fails to compile them
+  (TS2724); with `skipLibCheck: true` every Vue component is `any`. With
+  `skipLibCheck: false`, use `@types/react` 18.2.71 or later. Migration:
+  install Vue 3.4.20 or newer.
+- **Tabs `on` and `off` take a closed event map (FLO-523).** A group accepts
+  `change` (`TabChangeEventData`). A single tab accepts `click` (the button's
+  wrapped `{ event, element, originalEvent }` payload), `focus` and `blur`
+  (the native `FocusEvent`). `TabsConfig.on` accepts that same `change` handler.
+  Migration, what stops compiling:
+  - `tab.on("click", (event: MouseEvent) => …)`: the payload is the wrapped
+    `{ event, element, originalEvent }`, so read `payload.originalEvent`.
+  - `createTabs({ on: { … } })` with a key other than `change`: `TabsConfig.on` no longer has an
+    index signature.
+  - `tabs.on("custom", …)` for an event name of your own needs a cast.
+  - `on` and `off` return the concrete component (`TabsComponent`, `TabComponent`), not `this`.
+- **1.0 exports nothing deprecated.** What 0.10.0 deprecated and 0.10.x already replaced (or
+  never used) is removed. Migration:
+
+  | 0.10 | 1.0 |
+  |---|---|
+  | `CHECKBOX_VARIANTS` (`mtrl/components/checkbox`, `/constants`) | nothing: M3 has one checkbox style, and `variant` had no effect (FLO-94, FLO-265) |
+  | `RADIO_VARIANTS`, `RADIO_LABEL_POSITIONS`, `RADIO_SIZES`, `RADIO_CLASSES` (`mtrl/components/radios`, `/constants`) | nothing: no component read them (FLO-266). `RADIO_DEFAULTS` keeps its values. |
+  | `TIMEPICKER_DIAL`, `TIMEPICKER_Z_INDEX` (`mtrl/components/timepicker`, `/constants`) | nothing: the dial is sized in CSS and the picker is a modal `<dialog>` in the top layer (FLO-278, FLO-279, FLO-281) |
+  | `TIMEPICKER_CLASSES` | `TIMEPICKER_SELECTORS` (public since 0.9.0), which is not a like-for-like swap: its values are prefixed selectors (`".mtrl-time-picker__dial"`) where the old were bare class names (`"time-picker__dial"`), and 13 of the 33 old keys have no selector of the same name (`ROOT`, `OPEN`, the six `DIALOG_*`, `DIAL_NUMBER_ACTIVE`, `PERIOD_ACTIVE`, `TOGGLE_TYPE`, `CANCEL`, `CONFIRM`) |
+  | `getThemeColor('sys-color-X-rgb')` (`mtrl/core/utils`): the `'r, g, b'` triplet, derived | `getThemeColor('sys-color-X', { alpha })`. The `-rgb` name now returns `''` (or the `fallback`), as any undeclared variable does, so `rgba(${getThemeColor('sys-color-primary-rgb')}, 0.12)` now yields `rgba(, 0.12)`, an invalid colour that CSS and canvas drop silently: a missing colour, not an error. Use `getThemeColor('sys-color-primary', { alpha: 0.12 })`. A theme that declares its own `-rgb` properties is unaffected (FLO-311). |
 - **Only the canonical names (FLO-383).** For every row below but the last, 0.10.5 exported
   both spellings, the old ones deprecated; 1.0 has only the canonical ones. Every exported identifier writes "text field" as
   two words; string values are unchanged (the `<m-textfield>` tag, the `textfield` element name,
@@ -221,6 +248,18 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Added
 
+- **Framework components accept the host element's HTML attributes (FLO-519).**
+  React, Vue, Svelte and Solid props take that framework's `HTMLAttributes` as well
+  as the component's own props. Where a name is both, the component's type wins, so
+  a switch's `checked` stays a boolean and a button's `type` stays a string. The same
+  rule covers events. A component's `change`, `input`, `select` or `toggle` handler stays
+  the element's `CustomEvent`, including in Vue, where those handlers come from emits and
+  would otherwise be intersected with the host's `onChange` / `onInput` / `onSelect` /
+  `onToggle`. A global a supported release leaves off that interface is accepted too
+  (`popover` on React 18 through 18.3.31 and on Vue through 3.5, `enterKeyHint` on React 18
+  before 18.3.31, `nonce` on React 18.0.0, Vue and Svelte);
+  a release that already declares the key keeps its own type. Vue spells `inputmode`
+  and `itemprop`, and Solid and Svelte spell `enterkeyhint`.
 - Read-only `getValue()` aliases on carousel, tabs, drawer, navigation rail and
   button group (FLO-380); existing accessors remain. Button toggle `change`, card
   `expandedChanged`, list `keydown`, and interactive touch events now have their
@@ -401,11 +440,26 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- Svelte SSR keeps rendering a page when a child needs context from a provider above an mtrl host. The host falls back to light DOM without a declarative shadow root, then upgrades normally in the browser. Development logs once per affected host in each response, including the child render error; production logs nothing (FLO-525).
+- Arrow keys used soon after opening a menu keep their selected focus when the initial-focus timer runs (FLO-515). A menu opened with ArrowUp on its opener now keeps focus on the last item (it was pulled back to the first; FLO-524).
+- A search view dismissed before its opening focus frame runs stays closed (FLO-514).
+- **Single-select chip sets keep one selected chip (FLO-518).** Adding a chip
+  with `selected: true` selects it and deselects the previous chip, including
+  initial factory config and `<m-chip selected>` declarations. The last selected
+  chip wins; `add.value` reports the resulting selection. Programmatic additions
+  emit `add` and no `change`. Selecting a chip through its `setSelected(true)`
+  also replaces the previous selection silently. A chip the set has removed or
+  destroyed no longer clears that selection: destroying the chip drops the set's
+  hook. The public chip factories ignore a caller-supplied `onSelected`.
+- `consumer:check` no longer fails on the open split button's screenshot pair. One of the two
+  captures sometimes blended the menu's shadow a few levels lighter where it falls on the buttons
+  (26 to 29 pixels, either build). The comparison fixture now keeps an open menu on a compositor
+  layer of its own, and a pair that differs in pixels only is captured once more before it counts.
 - The top-layer menu steps of `elements:check` no longer read focus before the menu has given it
   back. A menu returns focus to its opener in the animation frame after it closes; the check read
   the state after a fixed 450ms, and on a runner that produced no frame in that time it found
   focus nowhere. It now waits for the opener's focus, after the same 450ms.
-- React SSR keeps a host's child on the server when that child suspends. `mtrl/ssr/react` rendered the host's children with `renderToStaticMarkup`, which has no Suspense boundary, so the throw left the page's boundary client-rendered, or aborted a host with no boundary above it. The static pass retries the host only when that render suspended, and the shadow root is built from the children once they can render (FLO-415). A child that throws is not retried: the page render reaches it, so the error is reported as it is without the bridge. Retries wait on a backoff (doubling to 250ms) and stop after 40 attempts, about eight seconds; past that the host has no shadow root and the page keeps streaming, so a slower child still arrives. The suspension is recognised from the throw site of whichever React build this process loaded, not from the error text, so a production build that minifies the message still retries. At the cap, development logs one warning naming the element; production logs nothing. A Suspense boundary already inside the host still contributes its own fallback to that snapshot.
+- React SSR keeps a host's child on the server when that child suspends. `mtrl/ssr/react` rendered the host's children with `renderToStaticMarkup`, which has no Suspense boundary, so the throw left the page's boundary client-rendered, or aborted a host with no boundary above it. The static pass retries the host only when that render suspended, and the shadow root is built from the children once they can render (FLO-415). A child that throws is not retried: the page render reaches it, so the error is reported as it is without the bridge. Retries wait on a backoff (doubling to 250ms) and stop after 40 attempts, about eight seconds; past that the host has no shadow root and the page keeps streaming, so a slower child still arrives. The suspension is recognised from the throw site of whichever React build this process loaded, not from the error text, so a production build that minifies the message still retries. At the cap, development logs one warning naming the element; production logs nothing. When no stack frame can be read, development logs one warning that suspending children render without a server shadow root; production logs nothing. A Suspense boundary already inside the host still contributes its own fallback to that snapshot.
 - SSR bridges for React, Svelte, Solid and Vue render ordinary host attributes (`popover`, `inputmode`, `enterkeyhint`, `itemprop`, `nonce`, `is`, and the rest of the host's HTML attributes) instead of rejecting the request. The framework still emits those attributes on the host. The shared renderer skips names outside its allowlist, including event-handler names and `srcdoc`, so they never enter the shadow markup. Calling `renderElement` directly still rejects an unknown host attribute (FLO-418).
 - The menu keyboard step of `elements:check` no longer ends one item short when a runner pauses
   (FLO-423). It waited a fixed 450ms after opening the menu with a key, then sent the arrows; it

@@ -46,6 +46,9 @@ const attempts = new WeakMap<object, Attempt>();
  * not the signal: the header is skipped and the first call frame is compared
  * with a frame sampled from this process's own React. A child's error is
  * thrown from the child, including one whose text copies React's message.
+ * A frame is a V8 line starting with `at `, or a JavaScriptCore or SpiderMonkey
+ * `name@file:line:col` line. Anything else is not a frame, so the error is not
+ * a suspension.
  */
 const firstFrame = (error: unknown): string | undefined => {
   if (!(error instanceof Error) || typeof error.stack !== "string") return undefined;
@@ -73,6 +76,10 @@ const suspendFrame = (): string | undefined => {
   } finally {
     console.error = errorLog;
     console.warn = warnLog;
+  }
+  // Once per process: the sample is cached, and a second host does not sample again.
+  if (sampledFrame === undefined && isDevelopment()) {
+    console.warn("[mtrl] Suspending children of mtrl components will render without a server shadow root because no stack frame is available. Error.stackTraceLimit is 0, or Error.prepareStackTrace is custom.");
   }
   return sampledFrame;
 };
