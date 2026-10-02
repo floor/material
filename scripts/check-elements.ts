@@ -9907,14 +9907,17 @@ try {
             side === "left" ? r.left - d : side === "right" ? r.right + d : side === "top" ? r.top - d : r.bottom + d;
           const [x3, y3] = at(3);
           if (!reaches(x3, y3)) failures.push(`${where}: the hit 3 px past the ${side} edge (${axis} ${round(coordinateOf(3))}) does not reach the button`);
-          let reach = 0;
+          // Walk outward and assert where the hit changes, not the last integer
+          // that hits: a 48 box centred on the 40 px button spans
+          // [edge - 4, edge + 4], Chromium covers integer points only up to
+          // edge + 3 on a box whose right edge falls on an integer, and the
+          // change on that side sits exactly 4 px out.
           let change: number | null = null;
           for (let d = 1; d <= 64; d++) {
             const [x, y] = at(d);
             if (!reaches(x, y)) { change = d; break; }
-            reach = d;
           }
-          if (reach < 4) failures.push(`${where}: the target reaches ${reach} px past the ${side} edge (the hit changes at ${axis} ${round(coordinateOf(change ?? 65))}), under the 4 px a 48 box needs`);
+          if (change !== null && change < 4) failures.push(`${where}: the hit changes ${change} px past the ${side} edge (${axis} ${round(coordinateOf(change))}), under the 4 px a 48 box needs`);
         }
       };
       for (const dir of ["ltr", "rtl"] as const) {
