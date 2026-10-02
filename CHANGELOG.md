@@ -51,6 +51,16 @@ Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
 
 ### Fixed
 
+- **Accessibility: reduced motion is honoured inside the elements (FLO-549).** With the system's
+  reduced-motion preference on, mtrl limits transitions to fades and ends animations at once,
+  from a rule in the page's stylesheet. That rule did not reach an element's shadow root, so
+  inside `<m-button>`, `<m-button-group>`, `<m-icon-button>`, `<m-fab>`, `<m-extended-fab>`,
+  `<m-card>`, `<m-chips>`, `<m-tabs>`, `<m-slider>`, `<m-radios>`, `<m-tooltip>` and `<m-badge>`
+  movement ran as if the preference were off (the button's corner morph, the button group's
+  width and corner springs), and in the other elements only the parts their own stylesheet
+  names were reduced. Every element's shadow root now carries the same rule. The ripple and
+  the motion driven from script (progress, loading indicator, carousel, date picker, FAB menu)
+  already honoured the preference, and so did the factories outside a shadow root.
 - **Button group (FLO-537):** Pressing a button in a standard group briefly showed an ellipsis
   on a neighbour's label. The neighbour's width and padding now ease together, and the width
   returns to the label's own size when the press ends.
