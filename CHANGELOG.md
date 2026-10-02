@@ -43,7 +43,7 @@ exists only in 1.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
 | `SELECT_CLASSES.TEXTFIELD` | `SELECT_CLASSES.TEXT_FIELD`, the same value. A recorded exception: 0.10.x flags the old key but has no new one, so change it when you upgrade. In 1.0 the old key reads `undefined`. |
 | `select.textfield` | `select.textField`. A recorded exception, like the key above: 0.10.x flags the old name but has no `textField`, so rename it when you upgrade. In 1.0 `select.textfield` reads `undefined`. |
 | `CardSchema` | `CardConfig` |
-| the time picker's config option `isOpen` | `open`, as on the dialog and the drawer. `isOpen()` is the method that reads the state |
+| the time picker's config option `isOpen`, and its default `TIMEPICKER_DEFAULTS.IS_OPEN` | `open` and `TIMEPICKER_DEFAULTS.OPEN`, as on the dialog and the drawer. `isOpen()` is the method that reads the state |
 | `TopAppBar`, `BottomAppBar` (the factory types) | `TopAppBarComponent`, `BottomAppBarComponent` |
 | a chip's `text` | `label` |
 | tabs `indicatorHeight`, `indicatorWidthStrategy` | `indicator.height`, `indicator.widthStrategy` |
@@ -206,7 +206,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   function. Call it.
 - **The time picker's config option `isOpen` is `open` (FLO-548).** TypeScript reports a
   leftover in an object literal. In JavaScript `createTimePicker({ isOpen: true })` is
-  ignored: the picker stays closed (measured).
+  ignored: the picker stays closed (measured). `TIMEPICKER_DEFAULTS.IS_OPEN` is
+  `TIMEPICKER_DEFAULTS.OPEN`; a leftover reads `undefined`.
 - **A snackbar waiting behind another is `"queued"`, not `"visible"` (FLO-548).** Right after
   `show()`, `snackbar.state === "visible"` is true only if nothing else was on screen; it was
   true at once. Use `snackbar.isOpen()`, or listen to `open`, which is emitted together with
@@ -303,8 +304,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
     `"hidden"` (it was left as it was), and a queued snackbar that is destroyed is not shown
     at its turn.
   - **Time picker:** the `isOpen` property is the method `isOpen()`, and the config option
-    that opens the picker at creation is `open`, not `isOpen`: one name was a config key and
-    a method on the same component.
+    that opens the picker at creation is `open`, not `isOpen` (its default is
+    `TIMEPICKER_DEFAULTS.OPEN`, not `IS_OPEN`): one name was a config key and a method on the
+    same component.
   - **`<m-snackbar>`:** its `open` property is `false` while the snackbar waits behind
     another, and `true` from its `open` event; it was `true` as soon as `show()` was called.
   - **Date picker:** new `isOpen()`. The click that calls `open()` no longer closes a docked
