@@ -55,8 +55,45 @@ describe("chips container events", () => {
       });
       chips.addChip({ value: "a", selected: true, ripple: false });
       chips.addChip({ value: "b", selected: true, ripple: false });
-      expect(values).toEqual(multiSelect ? [["a"], ["a", "b"]] : ["a", "a"]);
+      expect(values).toEqual(multiSelect ? [["a"], ["a", "b"]] : ["a", "b"]);
     }
+  });
+
+  test("adding a selected chip moves a single selection before add is dispatched", () => {
+    const chips = mount({ multiSelect: false });
+    const events: unknown[] = [];
+    chips.on("add", event => {
+      expect(event.value).toBe(chips.getValue());
+      events.push({ type: "add", value: event.value, chip: event.chip.getValue(), selected: chips.getSelectedValues() });
+    });
+    chips.on("change", event => events.push({ type: "change", value: event.value }));
+
+    chips.addChip({ value: "a", selected: true, ripple: false });
+    chips.addChip({ value: "b", selected: true, ripple: false });
+
+    expect(chips.getChips().map(chip => chip.isSelected())).toEqual([false, true]);
+    expect(chips.getValue()).toBe("b");
+    expect(events).toEqual([
+      { type: "add", value: "a", chip: "a", selected: ["a"] },
+      { type: "add", value: "b", chip: "b", selected: ["b"] },
+    ]);
+  });
+
+  test("initial selected chips in a single-select set leave the last declared selected", () => {
+    const events: unknown[] = [];
+    const chips = mount({ multiSelect: false, chips: [
+      { value: "a", selected: true, ripple: false },
+      { value: "b", selected: true, ripple: false },
+    ], on: {
+      add: event => events.push({ type: "add", value: event.value, selected: event.chip.isSelected() }),
+      change: event => events.push({ type: "change", value: event.value }),
+    } });
+    expect(chips.getChips().map(chip => chip.isSelected())).toEqual([false, true]);
+    expect(chips.getValue()).toBe("b");
+    expect(events).toEqual([
+      { type: "add", value: "a", selected: true },
+      { type: "add", value: "b", selected: true },
+    ]);
   });
 
   test("click change passes both arguments, including valueless chips, and calls onChange", () => {

@@ -299,6 +299,12 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- **Single-select chip sets keep one selected chip (FLO-518).** Adding a chip
+  with `selected: true` selects it and deselects the previous chip, including
+  initial factory config and `<m-chip selected>` declarations. The last selected
+  chip wins; `add.value` reports the resulting selection. Programmatic additions
+  emit `add` and no `change`.
+
 - Prefilled multiline text fields render in SSR, including inside another custom element (FLO-416).
 - Solid async and streaming SSR finish when a component inside a host creates a resource
   under an outer `Suspense`. The shadow bridge reuses the page's serialized children,

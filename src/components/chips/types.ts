@@ -12,6 +12,7 @@ export interface ChipConfig {
   text?: string;
   value?: string;
   disabled?: boolean;
+  /** In a single-select set, selecting this chip replaces the previous selection; the last selected config wins. */
   selected?: boolean;
   /** Elevated styling is supported by assist, filter and suggestion chips. */
   elevated?: boolean;
@@ -293,7 +294,9 @@ export interface ChipsComponent {
   element: HTMLElement;
 
   /**
-   * Adds a new chip to the chips container
+   * Adds a new chip to the chips container. In a single-select set, a selected
+   * chip replaces the previous selection before `add` fires; `add.value`
+   * reads the new selection. Programmatic additions do not emit `change`.
    * @param chipConfig - Configuration for the chip
    * @returns The chips instance for chaining
    */

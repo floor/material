@@ -241,6 +241,14 @@ export const withController =
 
     component.chipInstances.push(chipInstance);
 
+    // A selected programmatic addition moves a single selection just as a
+    // click does. Finish the model update before the `add` handler reads it.
+    if (!config.multiSelect && chipInstance.isSelected()) {
+      component.chipInstances.forEach((chip) => {
+        if (chip !== chipInstance && chip.isSelected()) chip.setSelected(false);
+      });
+    }
+
     // This click handler is the ONLY path to handleSelection
     chipInstance.on("click", () => {
       if (!chipInstance.isDisabled() && ["filter", "input"].includes(chipInstance.getType())) {
