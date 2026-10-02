@@ -10,6 +10,15 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ## [Unreleased]
 
+## [0.10.6] - 2026-10-02
+
+The release that announces 1.0.0. Everything decided for 1.0.0 as of this release that 0.10.x
+had not yet marked is now told in the code, as `@deprecated` or as an "In 1.0 …" note in the
+TSDoc, so your editor shows each one before you move to 1.0.0. Later decisions will be
+announced in a further 0.10.x release before 1.0.0: upgrade to the latest 0.10.x first. None
+of those notes changes anything at run time. Also three fixes: reduced motion inside the
+elements (an accessibility fix), the button group's press, and the tooltip's placement.
+
 ### Deprecated
 
 Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
@@ -48,6 +57,9 @@ Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
     chip's `onClick`: `{ event, originalEvent, element }`, not the chip. The chip set's
     `onChange`: one object, `{ value, selected, changed }`, and it also hears
     `selectByValue(values, true)`.
+- **Told in the TSDoc, for 1.0, the button group's `on` map** (`click`, `focus`, `blur`,
+  `change`): on 0.10.x it is accepted and never called, so subscribe with
+  `on(event, handler)` on the group. In 1.0 those handlers run, with the listener's argument.
 
 ### Fixed
 
@@ -63,10 +75,12 @@ Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
   already honoured the preference, and so did the factories outside a shadow root.
 - **Button group (FLO-537):** Pressing a button in a standard group briefly showed an ellipsis
   on a neighbour's label. The neighbour's width and padding now ease together, and the width
-  returns to the label's own size when the press ends.
+  returns to the label's own size when the press ends. In a right-to-left page the
+  neighbour's padding now gives way on the side facing the pressed button; it was the
+  opposite side.
 - **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
   centre while animating in and be squeezed at the viewport edge. Placement now uses its full
-  layout size; reduced-motion placement is unchanged.
+  layout size; the first placement under reduced motion is unchanged.
 
 ## [0.10.5] - 2026-10-02
 
@@ -1985,7 +1999,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.5...HEAD
+[Unreleased]: https://github.com/floor/mtrl/compare/v0.10.6...HEAD
+[0.10.6]: https://github.com/floor/mtrl/compare/v0.10.5...v0.10.6
 [0.10.5]: https://github.com/floor/mtrl/compare/v0.10.4...v0.10.5
 [0.10.4]: https://github.com/floor/mtrl/compare/v0.10.3...v0.10.4
 [0.10.3]: https://github.com/floor/mtrl/compare/v0.10.2...v0.10.3
