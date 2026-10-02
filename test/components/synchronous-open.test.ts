@@ -199,6 +199,7 @@ describe("dialog, date picker, time picker: what open() has done when it returns
     await wait();
     const seen: string[] = [];
     picker.on("open", () => { seen.push("open"); });
+    picker.on("close", () => { seen.push("close"); });
     expect(picker.isOpen()).toBe(false);
     expect(picker.open()).toBe(picker);
     expect(picker.isOpen()).toBe(true);

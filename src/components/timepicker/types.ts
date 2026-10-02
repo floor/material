@@ -331,11 +331,12 @@ export interface TimePickerComponent {
   dialogElement: HTMLElement;
 
   /** Whether the time picker is currently open */
-  isOpen: boolean;
+  isOpen: () => boolean;
 
   /**
-   * Opens the time picker. When it returns, `isOpen` is true and `open` has
-   * been emitted; the surface may be painted after `open()` returns.
+   * Opens the time picker. When it returns, `isOpen()` is true and `open` has
+   * been emitted; the surface may be painted after `open()` returns. On an
+   * open or disabled picker it does nothing.
    * @returns The time picker component for chaining
    */
   open: () => TimePickerComponent;
