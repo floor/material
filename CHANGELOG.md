@@ -573,7 +573,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   - **An open dialog can be dismissed as soon as `open()` returns:** Escape and a click on the
     scrim close it from then, not 10 ms later. One exception, the same for every overlay: the
     event that opened it never dismisses it. A dialog opened from an Escape `keydown` handler
-    stays open through that key press, and the next Escape closes it.
+    stays open through that key press, and the next Escape closes it. This holds in both
+    layers: a `layer: "top"` dialog and `<m-dialog>` opened that way used to close at once,
+    on the `cancel` the browser sends for that same key press.
   - **`destroy()` right after `open()`** leaves nothing behind (see Fixed).
 
   A leftover chip `onChange(selected, chip)` receives one object, measured on a filter chip

@@ -151,6 +151,12 @@ export interface DialogConfig {
   
   /** 
    * Whether to close when Escape key is pressed
+   *
+   * With `layer: "top"` Escape is the browser's `cancel`, which a page may
+   * refuse twice in a row; the browser closes the dialog itself on the third.
+   * A `beforeclose` listener that keeps the dialog open spends one each
+   * time, and so does the key press that opened the dialog when that was an
+   * Escape: the dialog is then closed on the second refused Escape.
    * @default true
    */
   closeOnEscape?: boolean;
@@ -421,7 +427,8 @@ export interface DialogComponent {
    *
    * From then on Escape and a click on the scrim close it (`closeOnEscape`,
    * `closeOnOverlayClick`). The event that opened it never does: a dialog
-   * opened from an Escape `keydown` stays open through that key press.
+   * opened from an Escape `keydown` stays open through that key press, in
+   * both layers. A held key repeats, and its first repeat is a new key press.
    * @returns Dialog component for method chaining
    * @example
    * // An `open` listener must be added before the call to hear it

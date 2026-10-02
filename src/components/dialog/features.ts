@@ -449,8 +449,14 @@ export const withVisibility =
   // trapped, `afteropen`, and the removal with `afterclose`. A call the other
   // way, or destroy(), cancels what is still pending.
   let opened = isOpen;
-  // When open() last ran, on the clock events are stamped with
-  let openedAt = 0;
+  // True for the rest of the task open() ran in. The event that opened the
+  // dialog is still being handled in that task: an Escape key press on its
+  // way up to the document, or the `cancel` the browser sends the topmost
+  // modal for it (before the next timer task in Chromium, Firefox and WebKit).
+  // It is not a request to close what it has just opened. A key pressed after
+  // open() is a later task; should the browser deliver one before the timer
+  // below, that one press is ignored and the next closes.
+  let opening = false;
   let showTimer: ReturnType<typeof setTimeout> | undefined;
   let afterOpenTimer: ReturnType<typeof setTimeout> | undefined;
   let afterCloseTimer: ReturnType<typeof setTimeout> | undefined;
@@ -637,7 +643,7 @@ export const withVisibility =
   // close(), so the close event comes once and beforeclose can keep it open
   function handleCancel(e: Event) {
     e.preventDefault();
-    if (component.config.closeOnEscape !== false && visibility.isOpen()) {
+    if (!opening && component.config.closeOnEscape !== false && visibility.isOpen()) {
       visibility.close();
     }
   }
@@ -653,9 +659,7 @@ export const withVisibility =
   };
 
   function handleEscKey(e: KeyboardEvent) {
-    // The key press that opened the dialog is still on its way up to the
-    // document: it is not a request to close what it has just opened
-    if (e.key === "Escape" && e.timeStamp > openedAt && visibility.isOpen()) {
+    if (e.key === "Escape" && !opening && visibility.isOpen()) {
       visibility.close();
     }
   }
@@ -703,6 +707,10 @@ export const withVisibility =
       // dialog stays in the document, and that close has no `afterclose`.
       opened = true;
       clearTimeout(afterCloseTimer);
+      opening = true;
+      setTimeout(() => {
+        opening = false;
+      }, 0);
 
       // In the top layer everything happens now: the dialog is styled in its
       // hidden state before it is made visible, which is what it animates from
@@ -728,7 +736,6 @@ export const withVisibility =
       }
 
       // An open dialog can be dismissed: Escape and the scrim, from now
-      openedAt = new Event("open").timeStamp;
       setupEvents();
 
       // The dialog is open: say so before returning. A listener runs before

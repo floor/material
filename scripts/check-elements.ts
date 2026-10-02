@@ -4860,8 +4860,10 @@ try {
     // opened from an Escape keydown gets its Escape listener (or, in the top
     // layer, becomes the browser's topmost modal) while that key press is
     // still being handled. Both layers are read before the assertion, so a
-    // failure shows whether they agree.
-    const opensOnEscape = async (layer?: "top"): Promise<{ afterTheKeyThatOpenedIt: boolean; afterTheNextEscape: boolean }> => {
+    // failure shows whether they agree; each with the page never touched (the
+    // button focused by script) and after a real click on it, which gives the
+    // page a user activation.
+    const opensOnEscape = async (layer: "top" | undefined, clicked: boolean): Promise<{ afterTheKeyThatOpenedIt: boolean; afterTheNextEscape: boolean }> => {
       await fresh(page, `<button id="opener" type="button">Discard</button>`);
       await page.evaluate((layer) => {
         const mtrl = (window as unknown as { mtrl: Factories }).mtrl;
@@ -4873,6 +4875,7 @@ try {
       }, layer);
       const isOpen = (): Promise<boolean> =>
         page.evaluate(() => ((window as unknown as Win).__overlay as { isOpen: () => boolean }).isOpen());
+      if (clicked) await page.click("#opener");
       await page.focus("#opener");
       await page.keyboard.press("Escape");
       await wait(400);
@@ -4883,12 +4886,15 @@ try {
       await page.evaluate(() => void ((window as unknown as Win).__overlay as { destroy: () => unknown }).destroy());
       return { afterTheKeyThatOpenedIt, afterTheNextEscape };
     };
+    const held = { afterTheKeyThatOpenedIt: true, afterTheNextEscape: false };
     assert.deepEqual(
-      { default: await opensOnEscape(), top: await opensOnEscape("top") },
       {
-        default: { afterTheKeyThatOpenedIt: true, afterTheNextEscape: false },
-        top: { afterTheKeyThatOpenedIt: true, afterTheNextEscape: false },
+        default: await opensOnEscape(undefined, false),
+        top: await opensOnEscape("top", false),
+        defaultAfterAClick: await opensOnEscape(undefined, true),
+        topAfterAClick: await opensOnEscape("top", true),
       },
+      { default: held, top: held, defaultAfterAClick: held, topAfterAClick: held },
       "a dialog opened from an Escape keydown: open after that key press, closed by the next one, in both layers",
     );
     check("dialog: the Escape key press that opened it does not close it, and the next one does, in both layers");
