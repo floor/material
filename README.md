@@ -155,11 +155,20 @@ document.documentElement.dataset.themeMode = 'dark';
 
 Available themes: `baseline`, `ocean`, `desert`, `forest`, `sunset`, `spring`, `summer`, `autumn`, `brownbeige`, `sageivory`, `tealcaramel` and `highcontrast`. With selective styles, import the theme's entry, for example `mtrl/themes/ocean`.
 
-Every theme supports `data-theme-contrast="standard"`, `"medium"` and `"high"` on the same element as `data-theme` and `data-theme-mode`:
+Every theme supports `data-theme-contrast="standard"`, `"medium"` and `"high"` on the same element as `data-theme` and `data-theme-mode`. The attribute is opt-in: the full stylesheet includes it, and selective styles add `mtrl/styles/contrast` for the baseline theme, or `mtrl/themes/<name>-contrast` beside `mtrl/themes/<name>`. Without that import the attribute changes no colour. The OS preference does not need an import.
 
 ```html
 <html data-theme="desert" data-theme-mode="dark" data-theme-contrast="high">
 ```
+
+```typescript
+import 'mtrl/styles/base';
+import 'mtrl/styles/contrast';
+import 'mtrl/themes/desert';
+import 'mtrl/themes/desert-contrast';
+```
+
+Import `mtrl/styles/contrast` after `mtrl/styles/base`, as with `mtrl/styles/typography`: the opt-in sheets share the base cascade layer, so their order inside it matters. Typography's heading margins depend on that order. The contrast sheet's colours do not: an explicit level is a more specific selector than the standard rule, and `prefers-contrast: more` is guarded by `:not([data-theme-contrast])`, so either load order resolves the same colours.
 
 Without `data-theme-contrast`, `prefers-contrast: more` selects high contrast on every themed element independently. An explicit `standard` opts out on that element; `medium` overrides the preference too. Contrast settings do not inherit from an ancestor across a nested theme: put `data-theme-contrast` on the same element as each `data-theme`, including nested sections. For example, opting out on the root does not opt out a nested theme without its own `data-theme-contrast="standard"`.
 
