@@ -529,6 +529,92 @@ try {
     check("button: a toggle button's change reaches the host with { selected, value }, value as getValue() reads it (FLO-380)");
   }
 
+  // Leading icon: the start inset and the end inset match in both directions
+  // (12 and 16 at size s; size xs keeps whatever left-to-right measures), and
+  // the extra-small icon-to-label gap is 4. The icon already follows direction
+  // into the shadow root; these numbers are the paddings and the gap.
+  {
+    const variants = ["filled", "elevated", "tonal", "outlined", "text"];
+    const button = (variant: string, size: string) =>
+      `<m-button variant="${variant}" size="${size}" icon='${ICON}' data-variant="${variant}" data-size="${size}">Save</m-button>`;
+    const row = variants.flatMap((variant) => ["xs", "s"].map((size) => button(variant, size))).join("");
+    await fresh(page, `<div id="bi-ltr">${row}</div><div id="bi-rtl" dir="rtl">${row}</div>`);
+    type Inset = { surface: string; variant: string; size: string; dir: string; start: number; end: number; gap: number };
+    const insets = await page.evaluate(async (icon) => {
+      const w = window as unknown as Win & { mtrl: { createButton: (c: object) => { element: HTMLElement } } };
+      const variants = ["filled", "elevated", "tonal", "outlined", "text"];
+      for (const id of ["bi-ltr", "bi-rtl"]) {
+        const host = document.getElementById(id) as HTMLElement;
+        for (const variant of variants) {
+          for (const size of ["xs", "s"]) {
+            const factory = w.mtrl.createButton({ text: "Save", icon, variant, size });
+            factory.element.dataset.surface = "factory";
+            factory.element.dataset.variant = variant;
+            factory.element.dataset.size = size;
+            host.append(factory.element);
+          }
+        }
+      }
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const px = (n: number): number => Math.round(n);
+      const read = (button: HTMLElement, surface: string, variant: string, size: string, dir: string) => {
+        const iconBox = button.querySelector(".mtrl-button__icon")!.getBoundingClientRect();
+        const labelBox = button.querySelector(".mtrl-button__text")!.getBoundingClientRect();
+        const root = button.getBoundingClientRect();
+        const style = getComputedStyle(button);
+        const rtl = style.direction === "rtl";
+        const borderStart = parseFloat(rtl ? style.borderRightWidth : style.borderLeftWidth) || 0;
+        const borderEnd = parseFloat(rtl ? style.borderLeftWidth : style.borderRightWidth) || 0;
+        const start = (rtl ? root.right - iconBox.right : iconBox.left - root.left) - borderStart;
+        const end = (rtl ? labelBox.left - root.left : root.right - labelBox.right) - borderEnd;
+        const gap = rtl ? iconBox.left - labelBox.right : labelBox.left - iconBox.right;
+        return { surface, variant, size, dir, start: px(start), end: px(end), gap: px(gap) };
+      };
+      const rows: Inset[] = [];
+      for (const id of ["bi-ltr", "bi-rtl"]) {
+        const host = document.getElementById(id) as HTMLElement;
+        const dir = id === "bi-rtl" ? "rtl" : "ltr";
+        for (const element of host.querySelectorAll("m-button")) {
+          const button = element.shadowRoot?.querySelector("button") as HTMLElement;
+          rows.push(read(button, "element", element.dataset.variant!, element.dataset.size!, dir));
+        }
+        for (const button of host.querySelectorAll<HTMLElement>("[data-surface=factory]")) {
+          rows.push(read(button, "factory", button.dataset.variant!, button.dataset.size!, dir));
+        }
+      }
+      return rows;
+    }, ICON);
+    const key = (row: Inset) => `${row.surface} ${row.variant} ${row.size} ${row.dir}`;
+    const byKey = new Map(insets.map((row) => [key(row), row]));
+    const failures: string[] = [];
+    for (const surface of ["factory", "element"]) {
+      for (const variant of variants) {
+        for (const size of ["xs", "s"]) {
+          const ltr = byKey.get(`${surface} ${variant} ${size} ltr`);
+          const rtl = byKey.get(`${surface} ${variant} ${size} rtl`);
+          assert.ok(ltr && rtl, `missing inset for ${surface} ${variant} ${size}`);
+          if (size === "s") {
+            for (const row of [ltr, rtl]) {
+              if (row.start !== 12 || row.end !== 16) {
+                failures.push(`button inset A: ${surface} ${variant} s ${row.dir} start ${row.start} end ${row.end} (expected start 12 end 16)`);
+              }
+            }
+          } else if (rtl.start !== ltr.start || rtl.end !== ltr.end) {
+            failures.push(`button inset A: ${surface} ${variant} xs ltr start ${ltr.start} end ${ltr.end}; rtl start ${rtl.start} end ${rtl.end}`);
+          }
+          if (size === "xs") {
+            for (const row of [ltr, rtl]) {
+              if (row.gap !== 4) failures.push(`button inset B: ${surface} ${variant} xs ${row.dir} gap ${row.gap} (expected 4)`);
+            }
+          }
+        }
+      }
+    }
+    for (const line of failures) console.log(line);
+    assert.deepEqual(failures, []);
+    check("button: icon insets match in both directions, and the extra-small icon gap is 4");
+  }
+
   // ---------------------------------------------------------------- icon button
   await fresh(
     page,
