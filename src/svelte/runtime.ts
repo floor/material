@@ -26,6 +26,7 @@ import type { Snippet } from "svelte";
 import type { Action } from "svelte/action";
 import type { HTMLAttributes } from "svelte/elements";
 import type { DefineOptions, ElementEvents, ElementProperties, ElementProps, ElementSlotProp } from "../elements";
+import { RENDERED_HOST_ATTRIBUTE } from "../elements/styles";
 import {
   camel,
   describe,
@@ -106,8 +107,8 @@ export interface Binding {
 
 export interface Adapter {
   tag: string;
-  /** What to spread on the element. */
-  attributes: (props: Record<string, unknown>, live: Record<string, unknown>) => Record<string, unknown>;
+  /** What to spread on the element. `shadow` is the server template, or "". */
+  attributes: (props: Record<string, unknown>, live: Record<string, unknown>, shadow?: string) => Record<string, unknown>;
   /** The named snippets, each with the slot it renders into (`headerAction` → `header-action`). */
   snippets: (props: Record<string, unknown>) => Array<[slot: string, snippet: Snippet]>;
   action: Action<HTMLElement, Binding>;
@@ -128,7 +129,7 @@ export const adapter = (spec: ComponentSpec, define: (options?: DefineOptions) =
   const slots = new Map(described.slots.map((slot) => [camel(slot), slot]));
   const isSnippet = (key: string, value: unknown): boolean => typeof value === "function" && slots.has(key);
 
-  const hostAttributes = (props: Record<string, unknown>, live: Record<string, unknown>): Record<string, unknown> => {
+  const hostAttributes = (props: Record<string, unknown>, live: Record<string, unknown>, shadow = ""): Record<string, unknown> => {
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(props)) {
       const attribute = attributes.get(key);
@@ -145,6 +146,9 @@ export const adapter = (spec: ComponentSpec, define: (options?: DefineOptions) =
       }
     }
     if (!isBrowser) for (const [name, value] of serverDefaults(described, (p) => live[p])) result[name] ??= value;
+    // The spread is the opening tag. Svelte does not remove an attribute the
+    // client spread omits, so the server-only value stays through hydration.
+    if (shadow) result[RENDERED_HOST_ATTRIBUTE] = "";
     // Attachments (`{@attach}`) are symbol-keyed props: Svelte applies them
     // from the spread, which `Object.entries` does not see (FLO-325).
     for (const symbol of Object.getOwnPropertySymbols(props)) result[symbol as unknown as string] = props[symbol as unknown as string];

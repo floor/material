@@ -55,15 +55,42 @@ const sheetFor = (name: string, text: string): CSSStyleSheet => {
 };
 
 // ---------------------------------------------------------------------------
-// Pre-upgrade styles (ssr.md, Phase A): `:not(:defined)` rules in the page
-// that give an element its box before its script upgrades it. Built for the
-// default prefix; the CSS module of each element registers its own.
+// Pre-upgrade styles (ssr.md, Phase A): `:not(:defined)` rules that give an
+// element its box before its script upgrades it. They ship as stylesheets
+// (`mtrl/elements/preupgrade.css` and `mtrl/elements/preupgrade/<name>.css`),
+// not from the element CSS modules. Built for the default prefix;
+// `preupgradeStyles(prefix)` retags them.
 
 const PREUPGRADE_LAYER = "mtrl.preupgrade";
-const preupgrade = new Map<string, string>();
-const preupgradePrefixes = new Set<string>();
-/** Where each document's rules go: an adopted sheet, or a `<style>` where sheets cannot be adopted. */
-const preupgradeTargets = new WeakMap<Document, { sheet: CSSStyleSheet } | { style: HTMLStyleElement }>();
+
+/**
+ * On a host the server rendered with a declarative shadow root.
+ * No `data-mtrl-*` name is used anywhere else: component `data-*` names
+ * (`data-id`, `data-density`, `data-theme`) are that component's own state,
+ * and a page's `data-ssr` must not be this contract. Inert after upgrade,
+ * because the rollback rule is `:not(:defined)`.
+ */
+export const RENDERED_HOST_ATTRIBUTE = "data-mtrl-ssr";
+
+/**
+ * Last rule of every pre-upgrade sheet, inside `mtrl.preupgrade`.
+ * `:not(#\0)` is an id selector (specificity 1,0,0) that matches every element,
+ * so each selector outranks every pre-upgrade selector of the same subject
+ * (the host, its `::before` and `::after`, and a direct child), none of which
+ * has an id. The child subject is `:defined` (specificity 1,3,0). Every
+ * built-in element is defined, so a slotted `div` or `span` is rolled back.
+ * An undefined custom element is not: a carousel, a FAB menu, or a menu that
+ * opted out keeps its own pre-upgrade rule. A rendered mtrl child carries
+ * this attribute and is covered by the host selector. The deepest pre-upgrade
+ * subject is a direct child, including a following sibling of one (`> * + *`);
+ * none styles a grandchild or a child's pseudo-element. `all` does not reset
+ * custom properties; the element rules set none. Not tag-specific, so
+ * retagging for another prefix leaves it as it is.
+ */
+export const preupgradeRollback = (): string => {
+  const selector = `[${RENDERED_HOST_ATTRIBUTE}]:not(:defined):not(#\\0)`;
+  return `${selector},${selector}::before,${selector}::after,${selector} > :defined{all:revert-layer}`;
+};
 
 /**
  * Pre-upgrade CSS, built for the default prefix, for another one: every tag
@@ -73,48 +100,9 @@ const preupgradeTargets = new WeakMap<Document, { sheet: CSSStyleSheet } | { sty
 export const retagPreupgrade = (css: string, prefix: string): string =>
   prefix === DEFAULT_PREFIX ? css : css.replace(/(^|[\s,>+~({}])m-(?=[a-z])/g, `$1${prefix}-`);
 
-/** The rules as one layered stylesheet, for each prefix. */
+/** The rules as one layered stylesheet, for each prefix. The rollback is once, after them. */
 export const preupgradeSheet = (css: string, prefixes: Iterable<string> = [DEFAULT_PREFIX]): string =>
-  `@layer ${PREUPGRADE_LAYER}{${Array.from(prefixes, (prefix) => retagPreupgrade(css, prefix)).join("")}}`;
-
-const applyPreupgrade = (): void => {
-  if (typeof document === "undefined" || !preupgradePrefixes.size) return;
-  const doc = document;
-  const text = preupgradeSheet(Array.from(preupgrade.values()).join(""), preupgradePrefixes);
-  let target = preupgradeTargets.get(doc);
-  if (!target) {
-    if (typeof CSSStyleSheet === "function" && "replaceSync" in CSSStyleSheet.prototype && "adoptedStyleSheets" in doc) {
-      const sheet = new CSSStyleSheet();
-      doc.adoptedStyleSheets = [...doc.adoptedStyleSheets, sheet];
-      target = { sheet };
-    } else {
-      const style = doc.createElement("style");
-      doc.head.append(style);
-      target = { style };
-    }
-    preupgradeTargets.set(doc, target);
-  }
-  if ("sheet" in target) target.sheet.replaceSync(text);
-  else target.style.textContent = text;
-};
-
-/**
- * Registers pre-upgrade rules by entry, and applies them to the document in a
- * browser, for the default prefix and those `usePreupgradePrefix` added. On a
- * server it only records them.
- */
-export const registerPreupgrade = (css: Record<string, string>): void => {
-  for (const [name, text] of Object.entries(css)) preupgrade.set(name, text);
-  preupgradePrefixes.add(DEFAULT_PREFIX);
-  applyPreupgrade();
-};
-
-/** Applies the registered pre-upgrade rules for another tag prefix too. */
-export const usePreupgradePrefix = (prefix: string): void => {
-  if (preupgradePrefixes.has(prefix)) return;
-  preupgradePrefixes.add(prefix);
-  if (preupgrade.size) applyPreupgrade();
-};
+  `@layer ${PREUPGRADE_LAYER}{${Array.from(prefixes, (prefix) => retagPreupgrade(css, prefix)).join("")}${preupgradeRollback()}}`;
 
 /**
  * Applies the registered entries to a shadow root, in the given order.

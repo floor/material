@@ -50,6 +50,10 @@ export const snapshot = (host: Element, authoredIds: string[]): Snapshot => {
       if (node.checked) attributes.set("checked", ""); else attributes.delete("checked");
     }
     for (const [name, value] of [...attributes].sort(([a], [b]) => a.localeCompare(b))) {
+      // Server-only, and inert once the element is defined. The browser path
+      // does not write it. Same treatment as other server-only markup: leave
+      // it out of the comparison.
+      if (name === "data-mtrl-ssr") continue;
       const attribute = { name, value };
       if (attribute.name === "style") {
         const style = (node as HTMLElement).style;
@@ -76,7 +80,8 @@ export const snapshot = (host: Element, authoredIds: string[]): Snapshot => {
       // Any subsequent factory/authored style remains in the node comparison.
       const first = root.firstElementChild;
       const inline = !root.adoptedStyleSheets.length && first?.localName === "style" ? first : null;
-      result[`${path}/shadow/css`] = inline ? css(inline.textContent ?? "") :
+      const text = inline?.textContent ?? "";
+      result[`${path}/shadow/css`] = inline ? css(text) :
         root.adoptedStyleSheets.map(sheet => Array.from(sheet.cssRules, rule => rule.cssText).join("\n")).join("\n");
       Array.from(root.childNodes).filter(child => child !== inline).forEach((child, index) => walk(child, `${path}/shadow/${index}`));
     }

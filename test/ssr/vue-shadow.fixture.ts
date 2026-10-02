@@ -52,6 +52,7 @@ test("an unregistered server returns no template; registration renders one and o
   const buttonProps = { variant: "filled", disabled: true, onclick: () => undefined };
   const plain = await render(buttonElement.spec, buttonProps, () => "Save");
   expect(plain).not.toContain("shadowrootmode");
+  expect(plain).not.toContain("data-mtrl-ssr");
   expect(plain).toContain("disabled");
   expect(plain).toContain("Save");
 
@@ -62,6 +63,8 @@ test("an unregistered server returns no template; registration renders one and o
   expect(typeof bridge.vue).toBe("function");
 
   const html = await render(buttonElement.spec, buttonProps, () => "Save");
+  // Vue serializes an empty attribute as the name alone. The selector matches either form.
+  expect(html).toMatch(/<m-button\b[^>]*\sdata-mtrl-ssr(?:=""|(?=[\s>]))/);
   expect(html).toContain('<template shadowrootmode="open" shadowrootdelegatesfocus="">');
   expect(html).toMatch(/<m-button[^>]*>\s*<template shadowrootmode="open"/);
   expect(html).toContain("mtrl-button");
@@ -91,6 +94,7 @@ test("an unregistered server returns no template; registration renders one and o
 
   const carousel = await render(carouselElement.spec, { ariaLabel: "Photos" }, () => "Light content");
   expect(carousel).not.toContain("shadowrootmode");
+  expect(carousel).not.toContain("data-mtrl-ssr");
   expect(carousel).toContain("Light content");
   expect(carousel).toContain('aria-label="Photos"');
 

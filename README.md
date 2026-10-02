@@ -211,13 +211,15 @@ Declaration children describe a component's items, as native `<select>` and `<op
 
 The page still loads material's base styles and a theme (see [Styles](#styles)); the elements render in shadow DOM and pick up the theme's tokens. Attributes are defaults and properties the live state, as on native controls: a `checked` or `value` attribute sets the state until the user or a script changes it, and `form.reset()` goes back to it. Form controls take part in forms (their host's `name`), reset, validation and back-navigation restore.
 
-A server-rendered page sends each element as its tag and light DOM; the element takes its real look once its script defines it. So that nothing moves meanwhile, put the pre-upgrade stylesheet in `<head>`: it gives every element not defined yet the box it will have (and its label the final type style), hides what it declares (`<m-tab>`, `<m-menu-item>`, …) and overlays. Its rules match only `:not(:defined)`, in the `mtrl.preupgrade` cascade layer.
+A server-rendered page sends each element as its tag and light DOM; the element takes its real look once its script defines it. Nothing reserves that box unless the pre-upgrade stylesheet is in `<head>`, after material's base styles and theme. It gives every element not defined yet the box it will have (and its label the final type style), hides what it declares (`<m-tab>`, `<m-menu-item>`, …) and overlays. Its rules match only `:not(:defined)`, in the `mtrl.preupgrade` cascade layer. Without the stylesheet, an element has no reserved box until it is defined.
 
 ```html
 <link rel="stylesheet" href="/node_modules/material/dist/elements/preupgrade.css">
 ```
 
-With another tag prefix, `preupgradeStyles('x')` from `material/elements/preupgrade` returns the same stylesheet for `<x-*>`, to inline on the server. The CSS modules (`material/elements/css`) also apply these rules until the elements are defined, for the default prefix and the one given to `configure()` or `define()`.
+A page that uses one element can load that element's file instead: `material/elements/preupgrade/<name>.css`, named by the spec (`text-field`, `select`, `icon-button`). Each file is that element's rules in the same `@layer mtrl.preupgrade`. With a bundler, `import 'material/elements/preupgrade.css'` or `import 'material/elements/preupgrade/button.css'`.
+
+With another tag prefix, `preupgradeStyles('x')` from `material/elements/preupgrade` returns the whole stylesheet for `<x-*>`, to inline on the server. The element CSS modules do not apply these rules.
 
 ## React, Vue, Svelte and Solid
 
@@ -251,7 +253,13 @@ Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, 
 
 Measured on Playwright's engines (Chromium 153, Firefox 155, WebKit 26.6); sizes are of the HTML `renderElement` returns, gzip at level 9, brotli at its default.
 
+A framework page that server-renders without that bridge (Next.js, Nuxt, SvelteKit, SolidStart) does not reserve an element's box between the HTML and hydration. Put the `<link>` above in `<head>` (or import the stylesheet). The link reserves the box from the first paint, before any script. The overlap, a pre-upgrade rule painting over a host that already has a shadow root, shows only when that page also loads the stylesheet.
+
+`renderElement`, and each bridge when it emits a shadow root, writes `data-mtrl-ssr` on that host. The stylesheet's last rule, in `mtrl.preupgrade`, matches that attribute and `:not(:defined)` (and the same for `::before`, `::after`, and a direct child that is not itself an element waiting to upgrade) at a higher specificity than any pre-upgrade selector of that subject, and sets `all: revert-layer`, so the stylesheet does not style a host the server already rendered, or those children. The attribute stays after upgrade. `:not(:defined)` no longer matches, so it does nothing. Carousel and the FAB menu opt out of the shadow root and do not carry the attribute: the stylesheet still reserves their box. A page without the bridge does not write the attribute. A Vue menu or split button that opts out of server rendering and has an async child shows its raw items until upgrade when the page also loads the pre-upgrade stylesheet.
+
 Worker and edge runtimes are unsupported in `material` 3.0.0. Each server entry lists the `browser` condition first. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers does) loads the browser stub: `renderElement` throws "material/ssr is server-only", and importing a bridge does nothing, so the page renders with no declarative roots and no error.
+
+The React bridge suppresses React's hydration warning on a rendered host, because the server adds `data-mtrl-ssr`; a host attribute that differs between server and client is therefore not reported by React.
 
 With `material/ssr/react`, put a `Suspense` boundary outside the component when its server-rendered shadow root needs the resolved child. A boundary inside the component contributes its fallback to that root: a button with an empty fallback has no label slot, while a text fallback gives it a slot and shows the fallback text. In tabs, a boundary around a tab leaves the server-rendered root without that tab with either fallback; a boundary inside a tab label keeps the tab, with an empty or fallback-text label.
 

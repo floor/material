@@ -4,7 +4,7 @@ import "./css.fixture";
 import { parseHTML } from "linkedom";
 import { cases } from "../../scripts/fixtures/preupgrade-cases";
 import { elements, cardElement, buttonElement } from "../../src/elements";
-import { registerStyles, styleText } from "../../src/elements/styles";
+import { registerStyles, RENDERED_HOST_ATTRIBUTE, styleText } from "../../src/elements/styles";
 import { SHADOW_BASE_STYLES, hostStyleText, type ElementSpec, type ElementComponent } from "../../src/elements/define";
 import { configureHTML } from "../../src/core/dom/html";
 const { renderElement } = await import("../../src/ssr");
@@ -44,6 +44,18 @@ test("attributes, slot fallbacks, prefix, setup and nested roots", () => {
   expect(html).toContain('disabled=""');
   expect(html).toContain('mtrl-card');
   expect(html.match(/aria-label="Tools"/g)).toHaveLength(2);
+  expect(html.match(new RegExp(`${RENDERED_HOST_ATTRIBUTE}=""`, "g"))).toHaveLength(2);
+});
+test("a rendered host carries the pre-upgrade attribute; an opted-out host does not", () => {
+  const button = renderElement("m-button", {}, "Save");
+  expect(button).toContain(` ${RENDERED_HOST_ATTRIBUTE}=""`);
+  expect(button).toContain(`<style>${hostStyleText(buttonElement.spec)}\n`);
+  expect(button).not.toContain("all:unset");
+  const carousel = renderElement("m-carousel", { "aria-label": "Photos" }, "");
+  expect(carousel).not.toContain(RENDERED_HOST_ATTRIBUTE);
+  const links = renderElement("m-button", {}, "", { styles: "link", cssBase: "/css" });
+  expect(links).toContain(` ${RENDERED_HOST_ATTRIBUTE}=""`);
+  expect(links).not.toContain("<style>");
 });
 test("a prefilled multiline text field renders alone", () => {
   const field = renderElement("m-text-field", { label: "Name", type: "multiline", value: "Ada" });
@@ -146,6 +158,7 @@ test("eligible link and inline sequences match browser adoption names", () => {
     const urls = [...html.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
     expect(urls, spec.name).toEqual([`hosts/${spec.name}`, ...names].map(name => `/css/${name}.css`));
     const inline = renderElement(`m-${spec.name}`);
+    expect(inline, spec.name).toContain(` ${RENDERED_HOST_ATTRIBUTE}=""`);
     expect(inline, spec.name).toContain(`<style>${[styleText(`host:${spec.name}`) ?? hostStyleText(spec), ...names.map(styleText)].join("\n")}</style>`);
   }
 });

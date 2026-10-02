@@ -13,6 +13,7 @@ test("every generated Svelte element emits the server shadow branch, and declara
     const source = componentSource(name, live, module, styles);
     expect(source, name).toContain(branch);
     expect(source, name).toContain("shadowMarkup");
+    expect(source, name).toContain(", shadow)}");
   }
   for (const { name, module } of declarationModules) {
     const source = declarationSource(name, module);

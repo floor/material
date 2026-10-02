@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
 import type { BunPlugin } from "bun";
+import { clientAttributes, comparableAttributes, readComponentHosts, type ComponentHost } from "./fixtures/component-hosts";
 import { assertGlobalHost, GLOBAL_HOST_DOM, readGlobalHost } from "./fixtures/ssr-global-host";
 declare global {
   interface Window {
@@ -131,6 +132,8 @@ try {
     assert.match(html, /<style>[\s\S]*?\.mtrl-button/);
     const client = await bundle("scripts/fixtures/react-ssr-client.ts", "browser");
     assert.doesNotMatch(client, /linkedom|DOMParser|SSR element nesting/);
+    const clientRender = await bundle("scripts/fixtures/react-ssr-client-render.ts", "browser");
+    assert.doesNotMatch(clientRender, /linkedom|DOMParser|SSR element nesting/);
     const suspenseServer = `${process.cwd()}/analysis/react-ssr/suspense-server-${version}.js`;
     await Bun.write(suspenseServer, await bundle("scripts/fixtures/react-ssr-suspense-server.ts", "bun"));
     const { renderShapes, renderHydration, renderRejection, renderMislabelled, renderAborted, renderCeiling, renderGiveUp } = await import(suspenseServer) as SuspenseServer;
@@ -223,7 +226,11 @@ try {
     const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
       const pathname = new URL(request.url).pathname;
       if (pathname === "/client.js") return new Response(client, { headers: { "Content-Type": "text/javascript" } });
+      if (pathname === "/client-render.js") return new Response(clientRender, { headers: { "Content-Type": "text/javascript" } });
       if (pathname === "/suspense-client.js") return new Response(suspenseClient, { headers: { "Content-Type": "text/javascript" } });
+      if (pathname === "/client-render") {
+        return new Response(`<!doctype html><div id="root"></div><script type="module" src="/client-render.js"></script>`, { headers: { "Content-Type": "text/html" } });
+      }
       if (pathname === "/suspense") {
         return new Response(`<!doctype html><div id="root">${suspenseHtml}</div><script>window.__ssrRoots={late:document.getElementById("late").shadowRoot,sync:document.getElementById("sync").shadowRoot}</script><script type="module" src="/suspense-client.js"></script>`, { headers: { "Content-Type": "text/html" } });
       }
@@ -247,6 +254,29 @@ try {
       page.on("pageerror", error => errors.push(error.message));
       await page.goto(server.url.href);
       await page.waitForFunction(() => window.reactSSR?.ready);
+      // The bridge marked the hosts it rendered. A client render of the same
+      // app writes no mark. Every other attribute must agree: that is what
+      // suppressHydrationWarning would hide. The app's prefix is `demo`.
+      const readHosts = (target: typeof page): Promise<ComponentHost[]> => target.evaluate(readComponentHosts, "demo");
+      const clientPage = await browser.newPage();
+      let hydratedHosts: ComponentHost[] = [];
+      let clientHosts: ComponentHost[] = [];
+      try {
+        await clientPage.goto(`${server.url}client-render`);
+        await clientPage.waitForFunction(() => (window as unknown as { rendered?: boolean }).rendered === true && !!(document.getElementById("button") as HTMLElement & { component?: unknown }).component);
+        hydratedHosts = await readHosts(page);
+        clientHosts = await readHosts(clientPage);
+      } finally {
+        await clientPage.close();
+      }
+      assert(hydratedHosts.length > 0 && hydratedHosts.length === clientHosts.length, `React ${version}: hydrated hosts and the client render differ in count`);
+      assert(hydratedHosts.some((host) => host.ssr), `React ${version}: a hydrated host is missing data-mtrl-ssr`);
+      assert(clientHosts.every((host) => !host.ssr), `React ${version}: the client render wrote data-mtrl-ssr`);
+      assert.deepEqual(
+        hydratedHosts.map((host, index) => ({ tag: host.tag, attrs: comparableAttributes(host, clientHosts[index]!) })),
+        clientHosts.map((host) => ({ tag: host.tag, attrs: clientAttributes(host) })),
+        `React ${version}: a hydrated host's attributes differ from the client render, other than data-mtrl-ssr`,
+      );
       await page.getByRole("button", { name: "Save", exact: true }).click();
       await page.waitForFunction(() => document.getElementById("clicks")?.textContent === "1");
       await page.getByRole("switch", { name: "Wi-Fi" }).click();

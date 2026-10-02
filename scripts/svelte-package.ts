@@ -53,7 +53,7 @@ ${bindable}    children,
 <svelte:element
   this={runtime.tag}
   bind:this={node}
-  {...runtime.attributes(props, ${liveObject})}
+  {...runtime.attributes(props, ${liveObject}, shadow)}
   use:action={{ props, live: ${liveObject}, set: ${setters} }}
 >{#if shadow}{@html shadow}{/if}{@render children?.()}{#each runtime.snippets(props) as [slot, snippet] (slot)}<span style="display: contents" {...{ slot }}>{@render snippet()}</span>{/each}</svelte:element>
 `;

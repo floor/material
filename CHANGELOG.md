@@ -189,6 +189,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   load after the base (both style `h1`–`h6` and `p`; loaded first, it loses its bottom
   margins to the reset): `import 'material/styles/typography'` imports the base first itself, and
   a page using `<link>` tags puts `styles/typography.css` after `styles/base.css`.
+- **A bundle that evaluates an element CSS module (`mtrl/elements/css/…`) in an earlier task than `define…()`** (a lazy route, a deferred hydration) no longer reserves that element's box in between. On a framework SSR page that does not load the `mtrl/ssr` bridge (Next.js, Nuxt, SvelteKit, SolidStart), the hosts arrive with no shadow root, and the reserved box between the server HTML and hydration is gone. Put `<link rel="stylesheet" href="…/mtrl/elements/preupgrade.css">` in `<head>`, or `import 'mtrl/elements/preupgrade.css'` (one element: `mtrl/elements/preupgrade/<name>.css`). The link also reserves the box from the first paint, before any script. With the bridge loaded, the hosts already have their shadow roots and nothing is lost.
 - **Tab and panel ids** change for any value with a character outside `[A-Za-z0-9_-]`
   (`a.b` → `tabx-g-a_2e_b`); a hand-written panel with the old id is never linked. Build ids with
   `tabIdFor` and `tabPanelIdFor`.
@@ -354,6 +355,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `font-size: var(--mtrl-sys-typescale-title-large-font-size)` computed the parent's `32px`
   because the property is undefined and the declaration is invalid at computed-value time
   (`22px` with the import). Body text keeps its font (`14px`, `Roboto, sans-serif`).
+- **Pre-upgrade rules leave the element CSS modules (FLO-546).** `mtrl/elements/css/<name>` no longer applies `:not(:defined)` rules when the module is evaluated. The reserved box comes from `mtrl/elements/preupgrade.css` or `mtrl/elements/preupgrade/<name>.css` (the element's spec name), in `<head>` or as an import. A host `renderElement` or a bridge renders with a shadow root carries `data-mtrl-ssr`. The stylesheet's last rule, in `mtrl.preupgrade`, rolls that layer back for the attribute, on the host, its `::before` and `::after`, and its direct children that are not themselves elements waiting to upgrade, so the stylesheet does not style a host the server already rendered or those children. Without the stylesheet, an element has no reserved box until it is defined.
+
+  **Migration:** a bundle that evaluates the element CSS module in an earlier task than `define…()` (a lazy route, a deferred hydration), including a framework SSR page that does not load the `mtrl/ssr` bridge, loads `mtrl/elements/preupgrade.css` in `<head>`.
 - **Snackbar, time picker and date picker follow the overlays' one open and close rule
   (FLO-548).** When `open()` or `close()` (the snackbar's `show()` or `hide()`) returns, the
   state getter has changed and the event has been emitted; opening an open one and closing a

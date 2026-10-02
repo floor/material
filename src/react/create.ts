@@ -18,6 +18,7 @@
  */
 
 import * as React from "react";
+import { RENDERED_HOST_ATTRIBUTE } from "../elements/styles";
 import { shadow } from "./shadow";
 import type { DefineOptions, ElementEvents, ElementProps, ElementSlotProp } from "../elements";
 import {
@@ -210,9 +211,17 @@ export const createComponent = <S, E extends HTMLElement>(
     // `children` to the default slot, then each named slot's wrapper.
     const { children, ...attributesAndProps } = host;
     const tag = `${getPrefix()}-${spec.name}`;
-    return React.createElement(tag, { ...attributesAndProps, ref },
-      shadow(tag, attributesAndProps, React.createElement(React.Fragment, null, children as React.ReactNode, ...named)),
-      children as React.ReactNode, ...named);
+    const template = shadow(tag, attributesAndProps, React.createElement(React.Fragment, null, children as React.ReactNode, ...named));
+    const hostProps: Record<string, unknown> = { ...attributesAndProps, ref };
+    if (template != null) hostProps[RENDERED_HOST_ATTRIBUTE] = "";
+    // The attribute is server HTML. React records an extra attribute as a
+    // hydration difference and does not remove it. `suppressHydrationWarning`
+    // is on the client vnode of a host the server can mark (`ssr` is not
+    // `false`: carousel and the FAB menu never are; menu and split button,
+    // whose `ssr` is a function, still can be). It keeps that difference off
+    // the warning, and it also silences every other mismatch on this host.
+    if (isBrowser && spec.ssr !== false) hostProps.suppressHydrationWarning = true;
+    return React.createElement(tag, hostProps, template, children as React.ReactNode, ...named);
   });
   Component.displayName = displayName;
   return Component as MComponent<S, E>;
