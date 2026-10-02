@@ -1148,6 +1148,22 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 ### Fixed
 
 - **A multiline text field uses the value it was created with (FLO-577).** `createTextField({ type: 'multiline', value })` wrote that string as a `value` attribute. A textarea does not take its value from that attribute, so `getValue()` was empty, the label stayed down, and a reset restored nothing. The value is now the textarea's default value, which is its text: the field shows it, the label floats, and a reset restores it. A single-line field still uses the `value` attribute. `<m-text-field>` no longer sets the default a second time.
+- **An unlabelled switch is its 52 x 48 track box, not the label's row.** With no label the root
+  kept the label's 12px gap, so it was 64px wide (12 + the 52px track) and 56px tall: in a 48px
+  slot the track ran 16px past the end and the checked 40px state layer 20px past it. The gap
+  belongs between a label and the track, and with no label the root is now the track's width and
+  48px tall with the 32px track centred. M3 "Switch" -> Specs -> Measurements gives the track
+  32x52dp and "Target: Size 48dp", and no height for a label row; its Accessibility section:
+  "Don't apply density to switches by default — this lowers their targets below our best
+  practice of 48x48 CSS pixels." So the unlabelled row is 48 tall, and a labelled switch keeps
+  its 56px row, unchanged. A switch with supporting text and no label is not unlabelled: its
+  helper stands where the label would, keeping the 12px gap and the 56px row. A label made only
+  of spaces is not empty, so the factory still treats `label: " "` as a labelled switch (the
+  element trims its text, so this is the factory only). Factory and element, left-to-right and
+  right-to-left. Before upgrade,
+  write the tag with nothing between its tags: a whitespace-only text node (a space, a line
+  break) is not `:empty`, so such a host keeps the labelled layout although the element then
+  builds no label.
 - **A radio row grows with a wrapping label, and the circle stays centred on the label block.** The row was a fixed 48px, so a three-line label painted 12px above and below it, and two adjacent wrapping labels overlapped. The row is now at least 48px (`min-height`) with 4px of vertical padding, so it grows with the text and a one-line row stays 48px (circle 14px from the top and 10px from the inline start, text 12px from the top, 8px gap). The circle stays centred on the label block, as a labelled checkbox's box is. A horizontal group keeps `align-items: flex-start` and sets no `align-self`: options on one line share the start edge, and the next line starts after the tallest row. The pre-upgrade `<m-radio>` reserves the same minimum (`min-height: 48px`); a short label stays 48px.
 - **An unlabelled radio is centred in its 48px target.** The factory always appends `.mtrl-radios__text`, and an empty label still took the 8px inline-start margin, so the 40px control sat flush at the start: the 20px circle's centre was at 20 rather than 24 (inset 10/18) and the state layer's inset was 0/8. An empty text span now takes no space. The row would then be 40px wide, so the unlabelled row sets `min-width: 48px` and centres the control. The circle's inset is 14/14 and the state layer's inset is 4/4, in both directions. A label made only of spaces is not empty, so the factory still treats `label: " "` as a labelled option (the element trims its text, so this is the factory only). Material 3 radio button, Specs, Measurements: icon size 20dp, state layer size 40dp, target size 48dp.
 - **An unlabelled checkbox centres its box in its 48px target, state layer inside.** The 18px
