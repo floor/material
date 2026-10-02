@@ -76,7 +76,7 @@ const removePopover = (): void => {
   dom.window.Element.prototype.matches = nativeMatches;
 };
 
-// The clock is the tests' own (FLO-596). The menu is placed 20 ms after open()
+// The clock is the tests' own. The menu is placed 20 ms after open()
 // and focuses itself 100 ms after that; a close hides at 50 ms and leaves the
 // document 300 ms later. Waiting for those on the wall clock raced a busy
 // runner: each timer starts only when the one before it has run, so a late
@@ -86,8 +86,8 @@ const after = async (ms: number): Promise<void> => {
 };
 
 /**
- * The submenu feature is a chunk of its own, loaded on first use (FLO-310,
- * features/loader.ts). The fake clock drives timers, not module loading, and
+ * The submenu feature is a chunk of its own, loaded on first use
+ * (features/loader.ts). The fake clock drives timers, not module loading, and
  * under it a real turn cannot be waited for either: Bun's fake timers fake
  * Date, performance, hrtime, `Bun.sleep`, and even a `setTimeout` captured
  * before the clock went fake. So a test that opens a submenu awaits the same
@@ -103,8 +103,8 @@ const submenuFeatureLoaded = async (): Promise<void> => {
  * Advances the clock in 10 ms steps until the menu reaches a state it reaches
  * on its own timers (20 ms to place, 100 ms to focus, 50 ms to close, 300 ms
  * more to leave the document), for 5 s of clock time at most. A fixed wait
- * only just longer than those timers ends first when the runner is busy
- * (FLO-545); on the test's own clock the wait is exact and cannot race. The
+ * only just longer than those timers ends first when the runner is busy;
+ * on the test's own clock the wait is exact and cannot race. The
  * await also turns the loop over, so work a timer queued on a microtask runs
  * between steps.
  */

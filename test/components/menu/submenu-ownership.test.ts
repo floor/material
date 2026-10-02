@@ -44,7 +44,7 @@ g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
 import createMenu from "../../../src/components/menu";
 
-// The clock is the tests' own (FLO-596). A menu is placed 20 ms after open()
+// The clock is the tests' own. A menu is placed 20 ms after open()
 // and focuses itself 100 ms after that; a submenu opens on a frame and focuses
 // itself 300 ms later. Waiting for those on the wall clock raced a busy
 // runner: each timer starts only when the one before it has run, so a late
@@ -54,8 +54,8 @@ const after = async (ms: number): Promise<void> => {
 };
 
 /**
- * The submenu feature is a chunk of its own, loaded on first use (FLO-310,
- * features/loader.ts). The fake clock drives timers, not module loading, and
+ * The submenu feature is a chunk of its own, loaded on first use
+ * (features/loader.ts). The fake clock drives timers, not module loading, and
  * under it a real turn cannot be waited for either: Bun's fake timers fake
  * Date, performance, hrtime, `Bun.sleep`, and even a `setTimeout` captured
  * before the clock went fake. So a test that opens a submenu awaits the same
