@@ -305,25 +305,37 @@ console.log(JSON.stringify(out));
           page.screenshot({ path: join(artifacts, `${label}-${i === 0 ? "full" : "selective"}.png`), fullPage: true, animations: "disabled" })));
         return Promise.all(["full", "selective"].map(style => readFile(join(artifacts, `${label}-${style}.png`))));
       };
+      // The computed-style snapshot of both pages, before and after the capture: a
+      // page whose styles are still settling when it is captured shows as a change
+      // between the two.
+      const before = await Promise.all(pages.map(snapshot));
       let [fullPNG, selectivePNG] = await capture();
       const [full, selective] = await Promise.all(pages.map(snapshot));
+      const settled = JSON.stringify(before[0]) === JSON.stringify(full) && JSON.stringify(before[1]) === JSON.stringify(selective);
       // Twice in CI one capture of `split-button-open` matched a green run's image
       // exactly and the other differed in 26 to 29 pixels, on the rows where the open
       // menu's shadow falls on the buttons: the full build once, the selective build
       // once, with the DOM and the computed styles identical. So it was a capture, not
       // a difference between the builds. The cause found is how Chromium blends that
       // shadow depending on the layers under it; test/browser/fixture.css pins the
-      // menu to a layer for that. This is the net under it: a pair that differs in
-      // pixels only is captured again, once, after a pause. A real difference is still
-      // there the second time. The first images are kept beside the second, and the
-      // report lists the pair as retaken, so a retake that was needed is never silent.
-      if (JSON.stringify(full) === JSON.stringify(selective) && !fullPNG.equals(selectivePNG)) {
+      // menu to a layer for that. This is the net under it, and it is kept narrow,
+      // because a second capture also gives a second chance to a real difference that
+      // comes and goes (a constant one is still there; an intermittent one may not be):
+      // - only a pair whose snapshots are equal across the two pages, and unchanged
+      //   from before the capture to after it, is captured again, once;
+      // - a retake that matches is a warning in the log and in the final line, the
+      //   first images are kept, and the report lists the pair;
+      // - more than one matched retake in a round fails the check: the glitch above is
+      //   one pair in a run, and a timing problem would hit several.
+      if (settled && JSON.stringify(full) === JSON.stringify(selective) && !fullPNG.equals(selectivePNG)) {
         await writeFile(join(artifacts, `${label}-first-full.png`), fullPNG);
         await writeFile(join(artifacts, `${label}-first-selective.png`), selectivePNG);
         await pages[0].waitForTimeout(250);
         [fullPNG, selectivePNG] = await capture();
-        retaken.push(label);
-        console.log(`Captured ${label} again: the first pair differed in pixels only; the second ${fullPNG.equals(selectivePNG) ? "matches" : "still differs"}`);
+        if (fullPNG.equals(selectivePNG)) {
+          retaken.push(label);
+          console.log(`::warning::consumer:check captured ${label} a second time: the first pair differed in pixels only, the second matches. First images: analysis/browser/${label}-first-*.png`);
+        } else console.log(`Captured ${label} again: the first pair differed in pixels only; the second still differs`);
       }
       if (JSON.stringify(full) !== JSON.stringify(selective) || !fullPNG.equals(selectivePNG)) {
         failures.push(label);
@@ -352,7 +364,8 @@ console.log(JSON.stringify(out));
   await writeFile(join(artifacts, "report.json"), JSON.stringify(report, null, 2));
   assert.deepEqual(errors, [], "Browser errors occurred");
   assert.deepEqual(failures, [], "Full/selective CSS mismatches (see analysis/browser)");
-  console.log(`Passed ${comparisons} full/selective screenshot and computed-style comparisons, interactions, and lazy network checks.`);
+  assert(retaken.length <= rounds, `${retaken.length} pairs only matched on a second capture (${retaken.join(", ")}): one per round is the known capture glitch, more is a timing problem`);
+  console.log(`Passed ${comparisons} full/selective screenshot and computed-style comparisons${retaken.length ? ` (${retaken.length} only on a second capture: ${retaken.join(", ")})` : ""}, interactions, and lazy network checks.`);
 } finally {
   await browser?.close();
   await new Promise<void>((resolve, reject) => {
