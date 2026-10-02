@@ -417,7 +417,7 @@ describe("a chip inside a set emits its own change", () => {
   });
 
   // FLO-550: "emit only when something changed" is part of the contract.
-  test("a refused deselect emits no change, on the chip or on the set; the click is still reported", () => {
+  test("a refused deselect emits no change, on the chip or on the set, and calls no onSelect; the click is still reported", () => {
     for (const multiSelect of [false, true]) {
       const calls: string[] = [];
       const set = mountSet({
@@ -429,6 +429,7 @@ describe("a chip inside a set emits its own change", () => {
           selected: true,
           onChange: () => calls.push("item onChange"),
           onClick: () => calls.push("item onClick"),
+          onSelect: () => calls.push("item onSelect"),
         }],
         onChange: () => calls.push("set onChange"),
       });
