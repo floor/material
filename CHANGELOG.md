@@ -363,7 +363,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   (`22px` with the import). Body text keeps its font (`14px`, `Roboto, sans-serif`).
 - **Pre-upgrade rules leave the element CSS modules (FLO-546).** `material/elements/css/<name>` no longer applies `:not(:defined)` rules when the module is evaluated. The reserved box comes from `material/elements/preupgrade.css` or `material/elements/preupgrade/<name>.css` (the element's spec name), in `<head>` or as an import. A host `renderElement` or a bridge renders with a shadow root carries `data-mtrl-ssr`. The stylesheet's last rule, in `mtrl.preupgrade`, rolls that layer back for the attribute, on the host, its `::before` and `::after`, and its direct children that are not themselves elements waiting to upgrade, so the stylesheet does not style a host the server already rendered or those children. Without the stylesheet, an element has no reserved box until it is defined.
 
-  **Migration:** a bundle that evaluates the element CSS module in an earlier task than `define…()` (a lazy route, a deferred hydration), including a framework SSR page that does not load the `material/ssr` bridge, loads `material/elements/preupgrade.css` in `<head>`.
+  **Migration:** a bundle that evaluates the element CSS module in an earlier task than `define…()` (a lazy route, a deferred hydration), including a framework SSR page that does not load the `material/ssr` bridge, loads `material/elements/preupgrade.css` in `<head>`. With another tag prefix, a page that set it with `configure({ prefix })` inlines `preupgradeStyles(prefix)` from `material/elements/preupgrade`; the element CSS modules no longer apply these rules.
 - **Snackbar, time picker and date picker follow the overlays' one open and close rule
   (FLO-548).** When `open()` or `close()` (the snackbar's `show()` or `hide()`) returns, the
   state getter has changed and the event has been emitted; opening an open one and closing a
@@ -1046,6 +1046,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **An extra-small button's space between its icon and its label is 4px.** It was 8px. Material 3's token `md.comp.button.xsmall.icon-label-space` is 4, and Compose's `ButtonDefaults.ExtraSmallIconSpacing` is 4.
 - **Text field: the spacing follows the M3 measurements (FLO-299).** A field's layout shifts
   by the amounts below; nothing in the API changes. Sources: the measurement tables on
   m3.material.io's text fields page, and Compose's `TextFieldImpl.kt` for the positions the
@@ -1123,6 +1124,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A button's asymmetric icon padding mirrors in right-to-left.** A size `s` button with a leading icon, and a text button at `xs` or `s` with a leading icon, keep 12px before the icon and 16px after the label in both directions. Under `dir="rtl"` those insets had stayed physical, so the start side was 16px and the end side 12px. The insets are logical and follow the direction the icon already follows, including into a shadow root whose `dir` ancestor is outside it.
 - **Text field: with reduced motion, the filled field's focus indicator no longer fades
   (FLO-299).** Its 0.2s transition was not in the field's reduced-motion rule, where the
   label, the outline, the icons and the affixes are. It also runs on the motion tokens now
