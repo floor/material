@@ -157,9 +157,10 @@ try {
   // is 1,085,000, above 1,078,000, so it stays.
   // Duplicate README and LICENSE removed from dist, Node 22.23.3 / npm 10.9.9:
   // 1,074,039. The README and LICENSE are packed once, at the package root.
-  // Measured + 1%, up to 1,000, is 1,085,000, above 1,078,000, so the ceiling
-  // is that number.
-  assert(pack.size < 1_085_000, "npm tarball exceeds 1,085,000 bytes");
+  // Measured + 1%, up to 1,000, is 1,085,000, above 1,078,000.
+  // Merged with FLO-299 (a8c24f7f), same packer: 1,075,142. The README and
+  // LICENSE are packed once. Measured + 1%, up to 1,000, is 1,086,000.
+  assert(pack.size < 1_086_000, "npm tarball exceeds 1,086,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
@@ -189,6 +190,8 @@ try {
   // Duplicate README and LICENSE removed from dist, Node 22.23.3 / npm 10.9.9:
   // 6,411,348. The README and LICENSE are packed once. Measured + 1%, up to
   // 1,000, is 6,476,000, above 6,458,000, so the ceiling stays.
+  // Merged with FLO-299 (a8c24f7f), same packer: 6,410,644. Under 6,458,000,
+  // so the ceiling stays.
   assert(pack.unpackedSize < 6_458_000, "Unpacked package exceeds 6,458,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
