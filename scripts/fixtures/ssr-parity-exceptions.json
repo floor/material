@@ -46,5 +46,53 @@
     "server": null,
     "browser": "-1",
     "issue": "FLO-387: the server writes no tabindex on the toolbar's default-slot roving targets. At connect the other targets are -1."
+  },
+  {
+    "element": "toolbar",
+    "phase": "immediate",
+    "property": "host/shadow/0/0/1/@aria-haspopup",
+    "server": "menu",
+    "browser": "true",
+    "issue": "FLO-555: the overflow button keeps the toolbar factory's aria-haspopup=\"menu\" in the server markup; the menu's opener feature rewrites it to \"true\" when the slotted menu is mounted at upgrade."
+  },
+  {
+    "element": "toolbar",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/@aria-haspopup",
+    "server": "menu",
+    "browser": "true",
+    "issue": "FLO-555: the overflow button keeps the toolbar factory's aria-haspopup=\"menu\" in the server markup; the menu's opener feature rewrites it to \"true\" when the slotted menu is mounted at upgrade."
+  },
+  {
+    "element": "toolbar",
+    "phase": "immediate",
+    "property": "host/shadow/0/0/1/@aria-controls",
+    "server": null,
+    "browser": "@id0",
+    "issue": "FLO-555: the menu's opener feature points the overflow button at the menu's generated id (aria-controls) when the slotted menu is mounted at upgrade; the server markup has no reference."
+  },
+  {
+    "element": "toolbar",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/@aria-controls",
+    "server": null,
+    "browser": "@id0",
+    "issue": "FLO-555: the menu's opener feature points the overflow button at the menu's generated id (aria-controls) when the slotted menu is mounted at upgrade; the server markup has no reference."
+  },
+  {
+    "element": "toolbar",
+    "phase": "immediate",
+    "property": "host/shadow/0/0/1/@aria-expanded",
+    "server": null,
+    "browser": "false",
+    "issue": "FLO-555: the menu's opener feature writes aria-expanded=\"false\" on the overflow button when the slotted menu is mounted at upgrade; the server markup has none."
+  },
+  {
+    "element": "toolbar",
+    "phase": "settled",
+    "property": "host/shadow/0/0/1/@aria-expanded",
+    "server": null,
+    "browser": "false",
+    "issue": "FLO-555: the menu's opener feature writes aria-expanded=\"false\" on the overflow button when the slotted menu is mounted at upgrade; the server markup has none."
   }
 ]
