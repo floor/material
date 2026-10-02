@@ -684,8 +684,12 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
  * runs on the motion tokens, and with `prefers-reduced-motion: reduce` it does
  * not run, as the label, the outline, the icons and the affixes already do not.
  * No M3 source gives a number here: the tokens are the library's.
+ *
+ * The check sets the preference for both readings and hands the page back
+ * with `restore`, the value its caller runs under (`"reduce"` in check-core
+ * from the ripple case on, none in check-elements).
  */
-export async function checkTextFieldReducedMotion(page: Page, api: "factory" | "element"): Promise<void> {
+export async function checkTextFieldReducedMotion(page: Page, api: "factory" | "element", restore: "reduce" | "no-preference" | null): Promise<void> {
   const read = () => page.evaluate((api) => {
     let root: HTMLElement;
     let destroy: () => void;
@@ -706,12 +710,13 @@ export async function checkTextFieldReducedMotion(page: Page, api: "factory" | "
     destroy();
     return result;
   }, api);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   const moving = await read();
   assert.deepEqual(moving, { property: "opacity", duration: "0.2s", easing: "cubic-bezier(0.2, 0, 0, 1)" },
     "the indicator fades on the motion tokens: duration-short4, easing-standard");
   await page.emulateMedia({ reducedMotion: "reduce" });
   const reduced = await read();
-  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.emulateMedia({ reducedMotion: restore });
   assert.equal(reduced.duration, "0s", `with reduced motion the indicator has no transition (${reduced.property} ${reduced.duration})`);
   console.log(`Passed text field reduced motion (${api}): the filled indicator fades on the motion tokens, and not at all with reduced motion.`);
 }

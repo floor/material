@@ -1535,7 +1535,7 @@ try {
     // FLO-299: the layout against the M3 measurements, inside the shadow root
     await checkTextFieldLayout(page, "element");
     check("text field: the layout at the M3 measurements, 52 fields (FLO-299)");
-    await checkTextFieldReducedMotion(page, "element");
+    await checkTextFieldReducedMotion(page, "element", null);
     check("text field: the filled indicator's fade stops with reduced motion (FLO-299)");
 
     // FLO-301: the required attribute moves the input's required and the label's asterisk together

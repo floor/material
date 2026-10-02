@@ -52,6 +52,7 @@ const phaseB = [
   // the 56px box. A bare twin beside it is that rule with no rendered parent.
   renderElement("m-toolbar", { id: "toolbar" }, '<m-fab-menu slot="fab"></m-fab-menu>'),
 ].join("") + '<m-text-field id="variant-bare" label="Name" value="Ada" type="multiline" variant="outlined" density="compact" supporting-text="Help"></m-text-field>'
+  + '<m-text-field id="field-bare" label="Name" value="Ada"></m-text-field>'
   + '<m-navigation-rail id="rail-bare"><div slot="header">Menu</div></m-navigation-rail>'
   + '<m-card id="card-bare"><span slot="headline">Title</span></m-card>'
   + '<m-fab-menu id="fab-bare"></m-fab-menu>';
@@ -394,6 +395,7 @@ try {
         const bare = document.querySelector("#bare")!;
         const variant = document.querySelector("#variant")!;
         const variantBare = document.querySelector("#variant-bare")!;
+        const fieldBare = document.querySelector("#field-bare")!;
         const rail = document.querySelector("#rail")!;
         const railBare = document.querySelector("#rail-bare")!;
         const card = document.querySelector("#card")!;
@@ -411,8 +413,9 @@ try {
         };
         const style = getComputedStyle(field);
         return {
-          root: !!field.shadowRoot && !!button.shadowRoot && !!select.shadowRoot && !!variant.shadowRoot && !!rail.shadowRoot && !!card.shadowRoot && !!toolbar.shadowRoot && !bare.shadowRoot && !variantBare.shadowRoot && !railBare.shadowRoot && !cardBare.shadowRoot && !fab.shadowRoot && !fabBare.shadowRoot,
+          root: !!field.shadowRoot && !!button.shadowRoot && !!select.shadowRoot && !!variant.shadowRoot && !!rail.shadowRoot && !!card.shadowRoot && !!toolbar.shadowRoot && !bare.shadowRoot && !variantBare.shadowRoot && !fieldBare.shadowRoot && !railBare.shadowRoot && !cardBare.shadowRoot && !fab.shadowRoot && !fabBare.shadowRoot,
           padding: style.padding,
+          fieldBarePadding: getComputedStyle(fieldBare).padding,
           background: style.backgroundColor,
           before: getComputedStyle(field, "::before").content,
           after: getComputedStyle(field, "::after").content,
@@ -432,7 +435,8 @@ try {
         };
       });
       assert(before.root, "phase B hosts did not render the roots the page asked for");
-      assert(before.padding !== "24.5px 16px 0px", `text field still has pre-upgrade padding (${before.padding})`);
+      // Against a bare twin's padding, not a pinned value: a pin passes on anything once the padding changes (FLO-299)
+      assert(before.padding !== before.fieldBarePadding, `text field still has pre-upgrade padding (${before.padding})`);
       assert(before.before === "none", `text field ::before is pre-upgrade text (${before.before})`);
       assert(before.after === "none", `text field ::after is pre-upgrade text (${before.after})`);
       assert(before.bare > 30, "a host without a declarative root lost its reserved box");

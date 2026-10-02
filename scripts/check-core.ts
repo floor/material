@@ -111,7 +111,7 @@ try {
   await checkTextFieldA11y(page);
   await checkTextFieldLatePlacement(page);
   await checkTextFieldLayout(page, "factory");
-  await checkTextFieldReducedMotion(page, "factory");
+  await checkTextFieldReducedMotion(page, "factory", "reduce");
   await checkMenuOpeners(page);
   await checkControls(page);
   await checkMenu(page);
