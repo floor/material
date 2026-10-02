@@ -9,7 +9,7 @@ import {
   withLifecycle
 } from '../../core/compose/features';
 import { withAPI } from './api';
-import { CardComponent, CardSchema } from './types';
+import { CardComponent, CardConfig } from './types';
 import { 
   createBaseConfig, 
   getElementConfig, 
@@ -26,7 +26,7 @@ import {
  * Cards can contain text, media, and UI controls. They provide entry points to more 
  * detailed information and can include interactive elements.
  * 
- * @param {CardSchema} config - Card configuration object
+ * @param {CardConfig} config - Card configuration object
  * @returns {CardComponent} Card component instance with the following API methods:
  * - `addContent(contentElement)`: Adds content to the card
  * - `setHeader(headerElement)`: Sets the card header
@@ -83,7 +83,7 @@ import {
  * card.makeDraggable();
  * ```
  */
-const createCard = (config: CardSchema = {}): CardComponent => {
+const createCard = (config: CardConfig = {}): CardComponent => {
   // Process inline configuration (map shorthand properties)
   const processedConfig = processInlineConfig(config);
   const baseConfig = createBaseConfig(processedConfig);

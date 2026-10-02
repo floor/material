@@ -23,22 +23,22 @@ import {
   withCounter,
   withRequired,
 } from "./features";
-import { TextfieldConfig, TextfieldComponent } from "./types";
+import { TextFieldConfig, TextFieldComponent } from "./types";
 import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
 
 /**
- * Creates a new Textfield component
+ * Creates a new TextField component
  *
- * Textfields allow users to enter text into a UI. They typically appear in forms and dialogs.
+ * Text fields allow users to enter text into a UI. They typically appear in forms and dialogs.
  * This implementation follows Material Design 3 guidelines for accessible, customizable textfields.
  *
- * @param {TextfieldConfig} config - Textfield configuration options
- * @returns {TextfieldComponent} A fully configured textfield component instance
+ * @param {TextFieldConfig} config - TextField configuration options
+ * @returns {TextFieldComponent} A fully configured textfield component instance
  * @throws {Error} Throws an error if textfield creation fails
  *
  * @example
  * // Create a basic text field
- * const textfield = createTextfield({
+ * const textfield = createTextField({
  *   label: 'Username',
  *   name: 'username'
  * });
@@ -47,7 +47,7 @@ import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
  *
  * @example
  * // Create a text field with prefix and suffix
- * const currencyField = createTextfield({
+ * const currencyField = createTextField({
  *   label: 'Amount',
  *   type: 'number',
  *   prefixText: '$',
@@ -59,7 +59,7 @@ import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
  *   console.log('Amount entered:', value);
  * });
  */
-const createTextfield = (config: TextfieldConfig = {}): TextfieldComponent => {
+const createTextField = (config: TextFieldConfig = {}): TextFieldComponent => {
   const baseConfig = createBaseConfig(config);
 
   try {
@@ -90,10 +90,10 @@ const createTextfield = (config: TextfieldConfig = {}): TextfieldComponent => {
       (comp) => withAPI(getApiConfig(comp))(comp) // Add public API
     )(baseConfig);
 
-    return textfield as TextfieldComponent;
+    return textfield as TextFieldComponent;
   } catch (error) {
     console.error(
-      "Textfield creation error:",
+      "TextField creation error:",
       error instanceof Error ? error.message : String(error)
     );
     throw new Error(
@@ -104,4 +104,4 @@ const createTextfield = (config: TextfieldConfig = {}): TextfieldComponent => {
   }
 };
 
-export default createTextfield;
+export default createTextField;

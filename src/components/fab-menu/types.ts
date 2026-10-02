@@ -15,7 +15,7 @@ export interface FabMenuItem {
   id: string;
   /** The label: always shown (m3.material.io FAB menu guidelines) */
   text: string;
-  /** Icon HTML, 24dp */
+  /** Icon HTML, 24dp. Markup (HTML). Not sanitized by default: see Markup and sanitizing. The menu opts out of server rendering, so the server leaves this escaped until the component upgrades. */
   icon?: string;
 }
 
@@ -38,7 +38,7 @@ export interface FabMenuMenu {
  * @see https://m3.material.io/components/fab-menu/overview
  */
 export interface FabMenuConfig extends BaseComponentConfig {
-  /** The FAB's icon HTML */
+  /** The FAB's icon HTML. Markup (HTML). Not sanitized by default: see Markup and sanitizing. The menu opts out of server rendering, so the server leaves this escaped until the component upgrades. */
   icon: string;
 
   /** The FAB's accessible name: it describes the menu the FAB opens */
@@ -77,7 +77,7 @@ export interface FabMenuConfig extends BaseComponentConfig {
    */
   placement?: FabMenuPlacement | string;
 
-  /** The icon of the close button, 20dp. Default: a close icon. */
+  /** The icon of the close button, 20dp. Default: a close icon. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   closeIcon?: string;
 
   /**

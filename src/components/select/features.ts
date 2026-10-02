@@ -1,6 +1,6 @@
 // src/components/select/features.ts
 import { processClassNames, type BaseComponentConfig } from "../../core/config/component";
-import createTextfield from "../textfield";
+import createTextField from "../textfield";
 import createMenu from "../menu";
 import { MenuItem, MenuContent, MenuDivider, MenuPosition } from "../menu/types";
 import { SelectOption, SelectConfig, SelectComponent, BaseComponent } from "./types";
@@ -12,11 +12,11 @@ import { activeElementOf } from "../../core/dom/focus";
  * @param config - Select configuration
  * @returns Function that enhances a component with textfield functionality
  */
-export const withTextfield =
+export const withTextField =
   (config: SelectConfig) =>
   <C extends object>(
     component: C,
-  ): C & Required<Pick<BaseComponent, "element" | "textfield">> => {
+  ): C & Required<Pick<BaseComponent, "element" | "textField">> => {
     // Get option text from value if provided
     let initialText = "";
     if (config.value) {
@@ -33,7 +33,7 @@ export const withTextfield =
       '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M7 10l5 5 5-5H7z"/></svg>';
 
     // Create textfield component
-    const textfield = createTextfield({
+    const textField = createTextField({
       class: processClassNames((config as BaseComponentConfig).className || ""),
       label: config.label,
       variant: config.variant || "filled",
@@ -49,10 +49,10 @@ export const withTextfield =
     });
 
     // Add select-specific class
-    textfield.element.classList.add(`${config.prefix || "mtrl"}-select`);
+    textField.element.classList.add(`${config.prefix || "mtrl"}-select`);
 
     // Prevent typing in the input while keeping normal focus/visual behavior
-    if (textfield.input) {
+    if (textField.input) {
       // `input` is HTMLInputElement | HTMLTextAreaElement, and
       // addEventListener over a union falls back to the EventTarget
       // signature, which types the event as a plain Event. Annotating the
@@ -61,7 +61,7 @@ export const withTextfield =
       // cannot be registered where any Event may arrive. Narrowing the
       // receiver to their common HTMLElement picks the typed overload
       // instead, so `e` is a KeyboardEvent because the event name says so.
-      const input: HTMLElement = textfield.input;
+      const input: HTMLElement = textField.input;
       input.addEventListener("keydown", (e) => {
         // Allow navigation keys to propagate (they're handled by the menu)
         const allowedKeys = [
@@ -82,20 +82,20 @@ export const withTextfield =
       });
 
       // Prevent paste
-      textfield.input.addEventListener("paste", (e) => {
+      textField.input.addEventListener("paste", (e) => {
         e.preventDefault();
       });
 
       // Prevent cut
-      textfield.input.addEventListener("cut", (e) => {
+      textField.input.addEventListener("cut", (e) => {
         e.preventDefault();
       });
     }
 
     return {
       ...component,
-      element: textfield.element,
-      textfield,
+      element: textField.element,
+      textField,
     };
   };
 
@@ -158,14 +158,14 @@ const processMenuItems = (
  */
 const setupCombobox = (
   component: BaseComponent,
-  textfield: NonNullable<BaseComponent["textfield"]>,
+  textField: NonNullable<BaseComponent["textField"]>,
   menu: NonNullable<BaseComponent["menu"]>,
   state: { options: SelectOption[]; selectedOption: SelectOption | null },
   choose: (option: SelectOption, originalEvent?: Event) => void,
   prefix: string,
 ): void => {
-  const input = textfield.input as HTMLInputElement;
-  const field = textfield.element;
+  const input = textField.input as HTMLInputElement;
+  const field = textField.element;
   const activeClass = `${prefix}-menu__item--active`;
   const TYPEAHEAD_DELAY = 500;
   const PAGE = 10;
@@ -388,11 +388,11 @@ export const withMenu =
   (config: SelectConfig, getComponent: () => SelectComponent) =>
   // Without a textfield the component comes back without menu and select
   <C extends BaseComponent>(component: C): C & Pick<BaseComponent, "menu" | "select"> => {
-    if (!component.textfield) {
-      console.warn("Cannot add menu: textfield not found");
+    if (!component.textField) {
+      console.warn("Cannot add menu: text field not found");
       return component;
     }
-    const textfield = component.textfield;
+    const textField = component.textField;
 
     // Initialize state
     const state = {
@@ -417,10 +417,10 @@ export const withMenu =
     const listbox = !state.options.some((option) => option && option.hasSubmenu);
 
     const menu = createMenu({
-      opener: component.textfield,
+      opener: component.textField,
       // Placed against the field, not the root: the supporting text row sits
       // under it (FLO-300)
-      positionTarget: component.textfield.field,
+      positionTarget: component.textField.field,
       items: menuItems,
       position: (config.placement || "bottom-start") as MenuPosition,
       width: "100%",
@@ -443,7 +443,7 @@ export const withMenu =
       state.selectedOption = option;
 
       // Update textfield
-      textfield.setValue(option.text);
+      textField.setValue(option.text);
 
       // Update the selected state in the menu
       menu.setSelected(option.id);
@@ -485,12 +485,12 @@ export const withMenu =
     });
 
     if (listbox) {
-      setupCombobox(component, textfield, menu, state, choose, config.prefix || "mtrl");
+      setupCombobox(component, textField, menu, state, choose, config.prefix || "mtrl");
     }
 
     // Add keyboard event listener for textfield (menu-button selects only)
-    if (!listbox) textfield.element.addEventListener("keydown", (e) => {
-      if (textfield.input.disabled) return;
+    if (!listbox) textField.element.addEventListener("keydown", (e) => {
+      if (textField.input.disabled) return;
 
       // Handle keyboard-based open
       if (
@@ -523,21 +523,21 @@ export const withMenu =
       }
 
       // Add open class to the select component
-      textfield.element.classList.add(
+      textField.element.classList.add(
         `${config.prefix || "mtrl"}-select--open`,
       );
 
       // Add focused class to the textfield
       const PREFIX = config.prefix || "mtrl";
-      textfield.element.classList.add(`${PREFIX}-textfield--focused`);
+      textField.element.classList.add(`${PREFIX}-textfield--focused`);
 
       // If using the filled variant, we need to add focus styles
       if (
-        textfield.element.classList.contains(
+        textField.element.classList.contains(
           `${PREFIX}-textfield--filled`,
         )
       ) {
-        textfield.element.classList.add(
+        textField.element.classList.add(
           `${PREFIX}-textfield--filled-focused`,
         );
       }
@@ -545,7 +545,7 @@ export const withMenu =
 
     menu.on("close", (event) => {
       // Remove open class from the select component
-      textfield.element.classList.remove(
+      textField.element.classList.remove(
         `${config.prefix || "mtrl"}-select--open`,
       );
 
@@ -553,34 +553,34 @@ export const withMenu =
       // Just update styling based on actual focus state with a small delay
       setTimeout(() => {
         const PREFIX = config.prefix || "mtrl";
-        const active = activeElementOf(textfield.element);
+        const active = activeElementOf(textField.element);
         const isFocused =
-          active === textfield.input || textfield.element.contains(active);
+          active === textField.input || textField.element.contains(active);
 
         // Update styling based on actual focus state
         if (isFocused) {
-          textfield.element.classList.add(
+          textField.element.classList.add(
             `${PREFIX}-textfield--focused`,
           );
           if (
-            textfield.element.classList.contains(
+            textField.element.classList.contains(
               `${PREFIX}-textfield--filled`,
             )
           ) {
-            textfield.element.classList.add(
+            textField.element.classList.add(
               `${PREFIX}-textfield--filled-focused`,
             );
           }
         } else {
-          textfield.element.classList.remove(
+          textField.element.classList.remove(
             `${PREFIX}-textfield--focused`,
           );
           if (
-            textfield.element.classList.contains(
+            textField.element.classList.contains(
               `${PREFIX}-textfield--filled`,
             )
           ) {
-            textfield.element.classList.remove(
+            textField.element.classList.remove(
               `${PREFIX}-textfield--filled-focused`,
             );
           }
@@ -622,7 +622,7 @@ export const withMenu =
           // Handle null/undefined/empty string as clear
           if (value === null || value === undefined || value === "") {
             state.selectedOption = null;
-            textfield.setValue("");
+            textField.setValue("");
             menu.setSelected(null);
             return component;
           }
@@ -632,7 +632,7 @@ export const withMenu =
           );
           if (option && "text" in option) {
             state.selectedOption = option;
-            textfield.setValue(option.text);
+            textField.setValue(option.text);
             menu.setSelected(option.id);
             return component;
           }
@@ -643,7 +643,7 @@ export const withMenu =
           // showing a value the caller had not asked for. FLO-106. Silently,
           // as native `<select>`: a programmatic change emits no `change` (FLO-328).
           state.selectedOption = null;
-          textfield.setValue("");
+          textField.setValue("");
           menu.setSelected(null);
           warnUnknownValue("select", value);
           return component;
@@ -651,7 +651,7 @@ export const withMenu =
 
         clear: () => {
           state.selectedOption = null;
-          textfield.setValue("");
+          textField.setValue("");
           menu.setSelected(null);
           return component;
         },
@@ -675,7 +675,7 @@ export const withMenu =
             !options.find((opt) => "id" in opt && opt.id === selected.id)
           ) {
             state.selectedOption = null;
-            textfield.setValue("");
+            textField.setValue("");
           }
 
           return component;

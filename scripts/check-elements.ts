@@ -1415,12 +1415,12 @@ try {
     check("textfield: type=multiline renders a textarea with the default value");
 
     const parity = await page.evaluate(async () => {
-      const w = window as unknown as Win & { mtrl: { createTextfield: (c: object) => { element: HTMLElement } } };
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement } } };
       const host = document.getElementById("factory") as HTMLElement;
       host.innerHTML = `<m-textfield id="pf" label="Name" value="Ada" supporting-text="Help"></m-textfield>
         <m-textfield id="po" variant="outlined" label="Name" supporting-text="Help"></m-textfield>`;
-      const filled = w.mtrl.createTextfield({ label: "Name", value: "Ada", supportingText: "Help" });
-      const outlined = w.mtrl.createTextfield({ variant: "outlined", label: "Name", supportingText: "Help" });
+      const filled = w.mtrl.createTextField({ label: "Name", value: "Ada", supportingText: "Help" });
+      const outlined = w.mtrl.createTextField({ variant: "outlined", label: "Name", supportingText: "Help" });
       host.append(filled.element, outlined.element);
       await new Promise((r) => setTimeout(r, 50));
       const measure = (root: HTMLElement): Record<string, string | number> => {
@@ -1554,7 +1554,7 @@ try {
     // found document.body from inside a shadow root and covered any surface
     // that is not one flat colour.
     await page.evaluate(() => {
-      const w = window as unknown as Win & { mtrl: { createTextfield: (c: object) => { element: HTMLElement } } };
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement } } };
       const host = document.getElementById("factory") as HTMLElement;
       host.innerHTML = `<div style="background: rgb(200, 230, 255); padding: 24px; display: grid; gap: 24px; width: 320px">
         <m-textfield id="na" variant="outlined" label="Element label" value="Ada"></m-textfield>
@@ -1562,7 +1562,7 @@ try {
         <m-textfield id="nc" variant="outlined" label="Empty"></m-textfield>
         <div dir="rtl"><m-textfield id="nd" variant="outlined" label="Right to left" value="Ada"></m-textfield></div>
       </div>`;
-      const factory = w.mtrl.createTextfield({ variant: "outlined", label: "Factory label", value: "Ada" });
+      const factory = w.mtrl.createTextField({ variant: "outlined", label: "Factory label", value: "Ada" });
       (document.getElementById("nb") as HTMLElement).append(factory.element);
     });
     // placement, the label's float and the border-colour transition
@@ -2378,6 +2378,9 @@ try {
      <m-chips id="so" selection="single" aria-label="Sort">
        <m-chip value="new" selected>Newest</m-chip><m-chip value="old">Oldest</m-chip>
      </m-chips>
+     <m-chips id="ss" selection="single" aria-label="Single selection">
+       <m-chip value="first" selected>First</m-chip><m-chip value="last" selected>Last</m-chip>
+     </m-chips>
      <m-chips id="to" aria-label="Recipients" value="ada,bob">
        <m-chip variant="input" value="ada">Ada</m-chip><m-chip variant="input" value="bob">Bob</m-chip>
      </m-chips>
@@ -2393,6 +2396,11 @@ try {
     }
     const sort = page.getByRole("grid", { name: "Sort" });
     assert.equal(await sort.getByRole("gridcell", { name: "Newest", selected: true }).count(), 1);
+    const single = page.getByRole("grid", { name: "Single selection" });
+    assert.equal(await single.getByRole("gridcell", { name: "First", selected: false }).count(), 1);
+    assert.equal(await single.getByRole("gridcell", { name: "Last", selected: true }).count(), 1);
+    assert.equal(await page.evaluate(() => (document.getElementById("ss") as Chips).value), "last");
+    check("chips: the last selected declaration wins in a single-select set (FLO-518)");
     check("chips: a grid named by aria-label; chips declare the cells, value and selected select them");
 
     await page.evaluate(() => {
@@ -2747,6 +2755,7 @@ try {
       await new Promise((r) => setTimeout(r, 300));
       const pixels = (canvas: HTMLCanvasElement): Uint8ClampedArray =>
         (canvas.getContext("2d") as CanvasRenderingContext2D).getImageData(0, 0, canvas.width, canvas.height).data;
+      const read = (): { trackColor: string; factory: number; element: number } => {
       // The most frequent opaque colour of the empty ring is its track
       const counts = new Map<string, number>();
       const ring = pixels(empty.element.querySelector("canvas") as HTMLCanvasElement);
@@ -2766,7 +2775,17 @@ try {
       };
       const inShadow = (id: string): HTMLCanvasElement =>
         (document.getElementById(id) as HTMLElement).shadowRoot?.querySelector("canvas") as HTMLCanvasElement;
-      const result = { trackColor, factory: count(spinning.element.querySelector("canvas") as HTMLCanvasElement), element: count(inShadow("pc")) };
+      return { trackColor, factory: count(spinning.element.querySelector("canvas") as HTMLCanvasElement), element: count(inShadow("pc")) };
+      };
+      // A detached factory keeps its fallback colours until a ResizeObserver reports
+      // it, and the canvas is drawn in a frame after that: 300ms was only long
+      // enough for both. Read again, for 5s at most, until the track is drawn; the
+      // assertion below reports the last reading.
+      let result = read();
+      for (let i = 0; i < 100 && !(result.trackColor !== "" && result.factory > 20 && result.element > 20); i++) {
+        await new Promise((r) => setTimeout(r, 50));
+        result = read();
+      }
       empty.element.remove();
       spinning.element.remove();
       return result;
@@ -2918,8 +2937,20 @@ try {
         assert.equal(counts[not.track] ?? 0, 0, `${what} draws no ${not.track}`);
       }
     };
-    const dark = await sample();
-    expectPalette(dark, light, "dark section");
+    // The factories were appended just before: their colours arrive from a
+    // ResizeObserver and their pixels in a frame after it. Sample again, for 5s at
+    // most, until the section's colours are drawn; the last failure is the one reported.
+    const dark = await (async (): Promise<Palette> => {
+      for (const end = Date.now() + 5000; ;) {
+        const palette = await sample();
+        try {
+          expectPalette(palette, light, "dark section");
+          return palette;
+        } catch (error) {
+          if (Date.now() > end) throw error;
+        }
+      }
+    })();
     check("canvas theme: progress (linear, circular, determinate, indeterminate) and loading indicator draw a dark section's colours with :root light, factory and element");
 
     await page.evaluate(() => document.getElementById("themed")?.setAttribute("data-theme-mode", "light"));
@@ -3427,11 +3458,17 @@ try {
       const is = (): boolean => root().className.includes("top-app-bar--scrolled");
       const before = is();
       const scroller = document.getElementById("scroller") as HTMLElement;
+      // The bar follows the `scroll` event, which the browser sends in its next
+      // rendering step, not at the assignment: 5s at most for it, then the reading
+      // is asserted below.
+      const until = async (ready: () => boolean): Promise<void> => {
+        for (let i = 0; i < 250 && !ready(); i++) await new Promise((r) => setTimeout(r, 20));
+      };
       scroller.scrollTop = 100;
-      await new Promise((r) => setTimeout(r, 50));
+      await until(() => is());
       const down = is();
       scroller.scrollTop = 0;
-      await new Promise((r) => setTimeout(r, 50));
+      await until(() => !is());
       const up = is();
       bar.setScrollState(true);
       return { before, down, up, manual: is() };
@@ -3613,8 +3650,21 @@ try {
       return { anchored, popup: popup === "true" || popup === "menu", open: menu.hasAttribute("open") };
     });
     assert.deepEqual(overflow, { anchored: true, popup: true, open: true });
+    // The menu handles keys once it has taken focus, about 120ms after it opens,
+    // later than the 100ms above. Escape used to be sent regardless, with nothing
+    // asserted, and a menu left open reached the checks that follow.
+    // (Focus is read in the menu's shadow root: its host does not match :focus-within
+    // while the surface is in the top layer.)
+    const overflowMenu = (): Promise<{ focused: boolean; open: boolean }> => page.evaluate(() => {
+      const menu = (document.getElementById("tb") as HTMLElement).querySelector("m-menu") as HTMLElement;
+      return { focused: !!menu.shadowRoot?.activeElement?.closest('[role="menu"]'), open: menu.hasAttribute("open") };
+    });
+    for (const end = Date.now() + 5000; Date.now() < end && !(await overflowMenu()).focused;) await settle();
+    assert.equal((await overflowMenu()).focused, true, "toolbar: the open overflow menu takes focus");
     await page.keyboard.press("Escape");
-    check("toolbar: slot=overflow's <m-menu> is anchored to the overflow button and opens from it");
+    for (const end = Date.now() + 5000; Date.now() < end && (await overflowMenu()).open;) await settle();
+    assert.equal((await overflowMenu()).open, false, "toolbar: Escape closes the overflow menu");
+    check("toolbar: slot=overflow's <m-menu> is anchored to the overflow button, opens from it and closes on Escape");
 
     const colours = await page.evaluate(() => {
       const tb = document.getElementById("tb") as Tb;
@@ -4693,6 +4743,14 @@ try {
       });
     const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
 
+    // Menus, dialogs, the search and the drawer move focus, or close, on timers and
+    // frames of their own. The fixed waits of this section were only long enough for
+    // them; `until` then waits, 5s at most, for the state the next step reads or
+    // sends keys to. It does not fail by itself: the assertion that follows names
+    // the step and reports what was found.
+    const until = async (ready: () => Promise<boolean>): Promise<void> => {
+      for (const end = Date.now() + 5000; Date.now() < end && !(await ready());) await wait(20);
+    };
     await stage();
     await page.evaluate(() => {
       const root = document.getElementById("shadow")?.shadowRoot as ShadowRoot;
@@ -4707,6 +4765,7 @@ try {
     await page.evaluate(() => (document.getElementById("shadow")?.shadowRoot?.getElementById("opener") as HTMLElement).focus());
     await page.keyboard.press("ArrowDown");
     await wait(350);
+    await until(async () => (await inShadow()) === "Cut");
     const menu: unknown[] = [await inShadow()];
     for (const key of ["ArrowDown", "ArrowDown", "ArrowDown", "ArrowUp"]) {
       await page.keyboard.press(key);
@@ -4733,6 +4792,12 @@ try {
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
     await wait(350);
+    // The menu's "close" comes 50ms after Enter, and the select looks at its focused
+    // styling again 10ms after that: read once the menu has closed and that turn has
+    // passed, or the class read is the one left from the open menu.
+    await until(() => page.evaluate(() =>
+      ((window as unknown as Win).__select as { element: HTMLElement }).element.querySelector("[aria-expanded]")?.getAttribute("aria-expanded") === "false"));
+    await wait(50);
     const select = await page.evaluate(() => {
       const s = (window as unknown as Win).__select as { element: HTMLElement; getValue: () => unknown };
       const root = document.getElementById("shadow")?.shadowRoot as ShadowRoot;
@@ -4759,9 +4824,11 @@ try {
       }, create);
       await page.locator("#shadow").getByRole("button", { name: "Open", exact: true }).click();
       await wait(400);
+      await until(async () => (await inShadow()) === null);
       const moved = await inShadow();
       await page.evaluate(() => void ((window as unknown as Win).__overlay as { close: () => unknown }).close());
       await wait(400);
+      await until(async () => (await inShadow()) === "opener");
       assert.deepEqual({ moved, back: await inShadow() }, { moved: null, back: "opener" }, `${name}: focus returns to the opener`);
     };
     await returnsFocus("dialog", "createDialog");
@@ -4780,8 +4847,13 @@ try {
       (window as unknown as Win).__search = search;
     });
     const input = page.locator("#shadow input:not(#first)").first();
+    const isExpanded = (): Promise<boolean> => page.evaluate(() => ((window as unknown as Win).__search as { isExpanded: () => boolean }).isExpanded());
     await input.focus();
     await wait(50);
+    // Expanding puts focus back on the input in the next frame: let that frame run
+    // before focus is moved away on purpose.
+    await until(isExpanded);
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     // Focus leaves and comes back within the collapse delay: still expanded.
     await page.locator("#shadow #first").focus();
     await input.focus();
@@ -4789,6 +4861,7 @@ try {
     const expanded = await page.evaluate(() => ((window as unknown as Win).__search as { isExpanded: () => boolean }).isExpanded());
     await page.locator("#shadow #first").focus();
     await wait(300);
+    await until(async () => !(await isExpanded()));
     const collapsed = await page.evaluate(() => !((window as unknown as Win).__search as { isExpanded: () => boolean }).isExpanded());
     assert.deepEqual({ expanded, collapsed }, { expanded: true, collapsed: true });
     check("factories in a shadow root: search stays expanded when focus comes back in time, and collapses when it leaves");
@@ -4822,9 +4895,11 @@ try {
     });
     await page.locator("#shadow").getByRole("button", { name: "Open", exact: true }).click();
     await wait(100);
+    await until(async () => (await landed()) === "a");
     const drawerTabs = [await landed(), ...(await tabs(["Tab", "Tab", "Tab", "Shift+Tab", "Shift+Tab"]))];
     await page.evaluate(() => void ((window as unknown as Win).__overlay as { close: () => unknown }).close());
     await wait(100);
+    await until(async () => (await landed()) === "opener");
     assert.deepEqual({ drawerTabs, back: await landed() }, { drawerTabs: ["a", "b", "c", "a", "c", "b"], back: "opener" });
     check("factories in a shadow root: a modal drawer keeps Tab inside and returns focus to its opener");
 
@@ -4940,10 +5015,35 @@ try {
         menu.on("close", () => void w.__tl.closes++);
       }, { layer, items });
 
+    // The menu finishes what it starts on timers and frames of its own: it takes focus
+    // 120ms after it opens, gives it back to the opener in the frame after "close",
+    // leaves the document 350ms after closing, and a submenu takes focus a frame and
+    // 300ms after it opens. The fixed waits in this block were only long enough for
+    // those; on a runner that paused, the read or the next key came first. Each fixed
+    // wait stays (it also lets a second, unwanted close show), and `eventually` then
+    // waits for the state the next step depends on, for 5s at most. When that state
+    // never comes, the failure says where, what was awaited and what was there
+    // instead, as the assertion's own diff would have.
+    let place = "";
+    const eventually = async (what: string, ready: () => Promise<boolean>): Promise<void> => {
+      for (const end = Date.now() + 5000; !(await ready());) {
+        if (Date.now() > end) {
+          const found = { ...(await state()), item: await focusedItem(), submenus: await submenus() };
+          throw new Error(`menu top layer ${place}: still waiting after 5s for ${what}; found ${JSON.stringify(found)}`);
+        }
+        await wait(20);
+      }
+    };
     const openMenu = async (): Promise<void> => {
       await page.evaluate(() => void (window as unknown as TopWin).__tl.menu.open());
       // Positioned on a timer, then the 300ms open transition
       await wait(450);
+      await eventually("the open menu to take focus", () => page.evaluate(() => {
+        const { element } = (window as unknown as TopWin).__tl.menu;
+        let active = document.activeElement;
+        while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+        return !!active && element.contains(active);
+      }));
     };
     const state = (): Promise<{ open: boolean; closes: number; connected: boolean; focus: string | null }> =>
       page.evaluate(() => {
@@ -4952,13 +5052,20 @@ try {
         while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
         return { open: menu.isOpen(), closes, connected: menu.element.isConnected, focus: active?.id || null };
       });
-    // A menu gives focus back to its opener in the animation frame after it closes.
-    // The fixed waits below are for the close itself, and long enough to see a second
-    // close; a page that got no frame in that time has not moved focus yet, and the
-    // read came back with `focus: null`. This waits for the frame, after the fixed wait.
-    const focusBack = async (): Promise<void> => {
-      for (const end = Date.now() + 5000; Date.now() < end && (await state()).focus !== "tl-opener";) await wait(20);
-    };
+    const focusedItem = (): Promise<string | null> =>
+      page.evaluate(() => {
+        let active = document.activeElement;
+        while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+        return active?.getAttribute("data-id") ?? null;
+      });
+    const submenus = (): Promise<number> =>
+      page.evaluate(() => (window as unknown as TopWin).__tl.root.querySelectorAll('[class*="menu--submenu"]').length);
+    /** The closed state a step expects, once the menu's own timers and frame have run. */
+    const settled = (wanted: Partial<Awaited<ReturnType<typeof state>>>): Promise<void> =>
+      eventually(`the menu to settle as ${JSON.stringify(wanted)}`, async () => {
+        const now = await state();
+        return (Object.keys(wanted) as (keyof typeof wanted)[]).every(key => now[key] === wanted[key]);
+      });
     const center = (selector: string): Promise<{ x: number; y: number }> =>
       page.evaluate((selector) => {
         const { root, menu } = (window as unknown as TopWin).__tl;
@@ -4969,6 +5076,7 @@ try {
 
     for (const shadow of [true, false]) {
       const where = shadow ? "in a shadow root" : "in light DOM";
+      place = where;
 
       // Where a menu without a layer opens, the global stylesheet on the body
       await stage(shadow);
@@ -5029,13 +5137,14 @@ try {
       });
       await page.mouse.click(cover.x, cover.y);
       await wait(450);
+      await settled({ closes: 1, connected: false });
       assert.deepEqual(await state(), { open: false, closes: 1, connected: false, focus: null }, `${where}: a click outside`);
 
       // Escape, focus back on the opener
       await openMenu();
       await page.keyboard.press("Escape");
       await wait(450);
-      await focusBack();
+      await settled({ connected: false, focus: "tl-opener" });
       assert.deepEqual(await state(), { open: false, closes: 2, connected: false, focus: "tl-opener" }, `${where}: Escape`);
 
       // An item
@@ -5043,7 +5152,7 @@ try {
       const copy = await center('[data-id="copy"]');
       await page.mouse.click(copy.x, copy.y);
       await wait(450);
-      await focusBack();
+      await settled({ connected: false, focus: "tl-opener" });
       assert.deepEqual(await state(), { open: false, closes: 3, connected: false, focus: "tl-opener" }, `${where}: an item`);
 
       // Two dismissals at once: the opener has focus when the pointer goes
@@ -5056,12 +5165,14 @@ try {
       const outside = await center("#tl-outside");
       await page.mouse.click(outside.x, outside.y, { delay: 70 });
       await wait(450);
+      await settled({ closes: 4, connected: false });
       assert.deepEqual(await state(), { open: false, closes: 4, connected: false, focus: "tl-outside" }, `${where}: blur and click`);
 
       // Taken out of the top layer by something else
       await openMenu();
       await page.evaluate(() => (window as unknown as TopWin).__tl.menu.element.hidePopover());
       await wait(450);
+      await settled({ closes: 5, open: false });
       assert.deepEqual((await state()).closes, 5, `${where}: hidePopover from outside`);
       assert.equal((await state()).open, false);
       check(`menu top layer ${where}: a click outside, Escape, an item, blur with a click and hidePopover each close it once`);
@@ -5072,6 +5183,8 @@ try {
       const share = await center('[data-id="share"]');
       await page.mouse.click(share.x, share.y);
       await wait(450);
+      // Escape below goes to whatever has focus: the submenu's first item, once it has it.
+      await eventually("the submenu to take focus", async () => (await focusedItem()) === "link");
       const nested = await page.evaluate(() => {
         const { menu, root } = (window as unknown as TopWin).__tl;
         const submenu = root.querySelector('[class*="menu--submenu"]') as HTMLElement | null;
@@ -5090,6 +5203,7 @@ try {
       assert.deepEqual(nested, { inRoot: true, open: [true, true], above: true, styled: true, beside: true }, `${where}: the submenu`);
       await page.keyboard.press("Escape");
       await wait(300);
+      await eventually("the submenu to close", async () => (await submenus()) === 0);
       const afterOne = await page.evaluate(() => {
         const { menu, root } = (window as unknown as TopWin).__tl;
         return { menu: menu.isOpen(), submenus: root.querySelectorAll('[class*="menu--submenu"]').length };
@@ -5097,7 +5211,7 @@ try {
       assert.deepEqual(afterOne, { menu: true, submenus: 0 }, `${where}: Escape closes the submenu only`);
       await page.keyboard.press("Escape");
       await wait(450);
-      await focusBack();
+      await settled({ connected: false, focus: "tl-opener" });
       assert.deepEqual(await state(), { open: false, closes: 6, connected: false, focus: "tl-opener" }, `${where}: then the menu`);
 
       // An item of the submenu closes both, once
@@ -5107,7 +5221,7 @@ try {
       const link = await center('[data-id="link"]');
       await page.mouse.click(link.x, link.y);
       await wait(450);
-      await focusBack();
+      await settled({ connected: false, focus: "tl-opener" });
       const both = await page.evaluate(() => (window as unknown as TopWin).__tl.root.querySelectorAll('[class*="mtrl-menu"]').length);
       assert.deepEqual({ ...(await state()), both }, { open: false, closes: 7, connected: false, focus: "tl-opener", both: 0 }, `${where}: a submenu item`);
       check(`menu top layer ${where}: a submenu opens above it, Escape closes it then the menu, and its item closes both once`);
@@ -5116,31 +5230,28 @@ try {
       // demand (FLO-310); each way in must reach it. Opened by key, Share
       // has focus: ArrowRight opens its submenu on the first item, ArrowLeft
       // closes it and goes back to Share. Resting the pointer on Share opens it.
-      const focusedItem = (): Promise<string | null> =>
-        page.evaluate(() => {
-          let active = document.activeElement;
-          while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
-          return active?.getAttribute("data-id") ?? null;
-        });
-      const submenus = (): Promise<number> =>
-        page.evaluate(() => (window as unknown as TopWin).__tl.root.querySelectorAll('[class*="menu--submenu"]').length);
       await page.evaluate(() => void (window as unknown as TopWin).__tl.menu.open(new KeyboardEvent("keydown")));
       await wait(450);
+      await eventually("focus on Share, the first item", async () => (await focusedItem()) === "share");
       assert.equal(await focusedItem(), "share", `${where}: opened by key, Share has focus`);
       await page.keyboard.press("ArrowRight");
       await wait(450);
+      await eventually("focus on the submenu's first item", async () => (await focusedItem()) === "link");
       assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 1, focus: "link" }, `${where}: ArrowRight`);
       await page.keyboard.press("ArrowLeft");
       await wait(300);
+      await eventually("the submenu to close and focus to return to Share", async () => (await submenus()) === 0 && (await focusedItem()) === "share");
       assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 0, focus: "share" }, `${where}: ArrowLeft`);
       await page.keyboard.press("Escape");
       await wait(450);
+      await settled({ open: false, connected: false });
       assert.equal((await state()).open, false, `${where}: Escape closes the menu`);
       await openMenu();
       const hovered = await center('[data-id="share"]');
       await page.mouse.move(hovered.x, hovered.y);
       // The hover intent, then the transition
       await wait(550);
+      await eventually("the hovered item's submenu", async () => (await submenus()) === 1);
       assert.equal(await submenus(), 1, `${where}: a hover on Share opens its submenu`);
       await page.mouse.move(0, 0);
       check(`menu top layer ${where}: ArrowRight opens the submenu on its first item, ArrowLeft returns to Share, a hover opens it`);
@@ -5150,14 +5261,32 @@ try {
       await mount("top", [{ ...ITEMS[0], id: quoted }, ...ITEMS.slice(1)]);
       await page.evaluate(() => void (window as unknown as TopWin).__tl.menu.open(new KeyboardEvent("keydown")));
       await wait(450);
+      await eventually("focus on the quoted id, the first item", async () => (await focusedItem()) === quoted);
       assert.equal(await focusedItem(), quoted, `${where}: quoted parent id has focus`);
       await page.keyboard.press("ArrowRight");
       await wait(450);
+      await eventually("focus on the submenu's first item", async () => (await focusedItem()) === "link");
       assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 1, focus: "link" }, `${where}: quoted id opens its submenu`);
       await page.keyboard.press("ArrowLeft");
       await wait(300);
+      await eventually("the submenu to close and focus to return to the quoted id", async () => (await submenus()) === 0 && (await focusedItem()) === quoted);
       assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 0, focus: quoted }, `${where}: ArrowLeft returns to the quoted id`);
       check(`menu top layer ${where}: quoted item id survives ArrowRight and ArrowLeft`);
+
+      // ArrowUp on the opener opens the menu on its last item (FLO-524), for the
+      // factory, in a shadow root and in light DOM. The opener puts focus there
+      // 100ms after the key; the menu's own initial focus, 20ms later, used to move
+      // it to the first item. The fixed wait is the assertion: focus is still on the
+      // last item once every opening timer has run.
+      await mount("top");
+      await page.evaluate(() => ((window as unknown as TopWin).__tl.root.querySelector("#tl-opener") as HTMLElement).focus());
+      await page.keyboard.press("ArrowUp");
+      await wait(450);
+      assert.deepEqual({ open: (await state()).open, focus: await focusedItem() }, { open: true, focus: "paste" }, `${where}: ArrowUp on the opener opens on the last item, and focus stays there`);
+      await page.keyboard.press("Escape");
+      await wait(450);
+      assert.equal((await state()).open, false, `${where}: Escape closes the menu opened with ArrowUp`);
+      check(`menu top layer ${where}: ArrowUp on the opener opens it on the last item`);
 
       await page.evaluate(() => (window as unknown as TopWin).__tl.menu.destroy());
     }
@@ -5266,6 +5395,9 @@ try {
       fm.addEventListener("select", (e) => seen.push((e as CustomEvent<{ value: string }>).detail.value));
       (fm.shadowRoot?.querySelectorAll(".mtrl-menu__item")[1] as HTMLElement).click();
       await new Promise((r) => setTimeout(r, 400));
+      // The menu's "close" comes on a 50ms timer of its own: after the fixed wait,
+      // give it 5s more to arrive. The assertion below reports an `open` that stayed.
+      for (const end = Date.now() + 5000; fm.hasAttribute("open") && Date.now() < end;) await new Promise((r) => setTimeout(r, 20));
       return { seen, open: fm.hasAttribute("open") };
     });
     assert.deepEqual(picked, { seen: ["sheet"], open: false });
@@ -5525,6 +5657,21 @@ try {
     assert.equal(await focused(), "mb");
     check("menu: Enter on the anchor focuses the first item; Escape closes once and returns focus");
 
+    // ArrowUp on the anchor opens the menu on its last item (FLO-524). The anchor puts
+    // focus there 100ms after the key, and the menu's own initial focus, which runs
+    // 20ms later, used to move it to the first item. The fixed wait is the assertion:
+    // focus is still on the last item once every opening timer has run.
+    await page.focus("#mb");
+    await page.keyboard.press("ArrowUp");
+    await focusOn("PasteCtrl+V");
+    await settle();
+    assert.equal(await focused(), "PasteCtrl+V", "opened with ArrowUp, the last item has focus, and keeps it");
+    await page.keyboard.press("Escape");
+    await settle();
+    assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
+    assert.equal(await focused(), "mb");
+    check("menu: ArrowUp on the anchor opens it on the last item");
+
     await page.click("#mb");
     await settle();
     await clickIn("mm", '[data-id="cut"]');
@@ -5585,6 +5732,59 @@ try {
     assert.deepEqual((await log()).map((e) => e.type), ["open", "close", "open", "close"]);
     assert.deepEqual(await menuState(), { open: false, attribute: false });
     check("menu: ArrowRight opens the submenu on its first item, ArrowLeft returns to Share, a hover opens it");
+
+    // FLO-515's acceptance: arrows pressed before the menu's initial focus are not
+    // undone by it. A menu opened with a key focuses its first item on a 100ms
+    // timer; here that timer is held until the arrows have been handled, the order
+    // fast keys (or a paused page) produce. Today the timer then puts focus back
+    // on the first item.
+    await (async () => {
+      await page.evaluate(() => {
+        const timeout = window.setTimeout, clear = window.clearTimeout;
+        const held = new Map<number, () => void>();
+        let next = -1;
+        // Every 100ms timer the page sets during this case is held; the menu's own
+        // are 0, 20 and 100ms, and the 100ms one is its initial focus. A held timer
+        // has an id of its own and can be cleared, so a fix that cancels the
+        // initial focus is seen as one, like a fix that guards it.
+        window.setTimeout = ((callback: () => void, delay?: number, ...rest: unknown[]) => {
+          if (delay !== 100) return timeout(callback, delay, ...rest);
+          held.set(next, callback);
+          return next--;
+        }) as typeof window.setTimeout;
+        window.clearTimeout = ((id?: number) => { if (id === undefined || !held.delete(id)) clear(id); }) as typeof window.clearTimeout;
+        Object.assign(window, { releaseTimers: () => {
+          window.setTimeout = timeout;
+          window.clearTimeout = clear;
+          delete (window as unknown as { releaseTimers?: unknown }).releaseTimers;
+          for (const callback of [...held.values()]) callback();
+          held.clear();
+        } });
+      });
+      let before: string | null;
+      try {
+        await page.focus("#mb");
+        await page.keyboard.press("Enter");
+        // The menu is placed and shown 20ms after the key; its focus timer is held.
+        // (Not `wait(100)`: that is a 100ms timer in the page, and would be held too.)
+        await wait(60);
+        assert.equal((await menuState()).open, true, "the menu opened with Enter");
+        for (const key of ["ArrowDown", "ArrowDown"]) await page.keyboard.press(key);
+        before = await focused();
+        assert.notEqual(before, "mb", "the arrows moved focus into the menu");
+      } finally {
+        await page.evaluate(() => (window as unknown as { releaseTimers: () => void }).releaseTimers());
+      }
+      await wait(50);
+      const after = await focused();
+      await page.keyboard.press("Escape");
+      await settle();
+      await log();
+      // The known bug is this one move, back to the first item. Any other change of
+      // focus is not FLO-515 and fails as usual.
+      assert(!(after === "Copy" && before !== "Copy"), "FLO-515: the menu's initial focus moved focus back to the first item, after arrows had moved it on");
+      assert.equal(after, before, "focus stays where the arrows put it once the menu's initial focus has run");
+    })();
 
     await page.evaluate(() => (document.getElementById("mm") as Host & { show: () => void }).show());
     await settle();

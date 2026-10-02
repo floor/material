@@ -167,14 +167,6 @@ export interface TimePickerConfig {
   componentName?: string;
 
   /**
-   * Whether to close the picker when time is selected
-   * @default true
-   * @deprecated Never applied, and has no effect: the time picker is confirmed
-   * with OK, as M3 specifies (FLO-281).
-   */
-  closeOnSelect?: boolean;
-
-  /**
    * Earliest selectable time, 24-hour `HH:MM` or `HH:MM:SS`. Dial numbers and
    * AM/PM that cannot reach it are disabled, and a picked or typed time before
    * it moves up to it. `setValue` is not held to it.
@@ -293,7 +285,6 @@ export type ResolvedTimePickerConfig = TimePickerConfig &
       | "format"
       | "orientation"
       | "showSeconds"
-      | "closeOnSelect"
       | "minuteStep"
       | "secondStep"
       | "cancelText"
