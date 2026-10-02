@@ -600,7 +600,7 @@
       "./src/index.ts"
     ],
     "out": "docs/api",
-    "name": "mtrl Documentation",
+    "name": "material Documentation",
     "exclude": [
       "**/node_modules/**",
       "**/*.test.ts",

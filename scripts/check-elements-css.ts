@@ -83,7 +83,7 @@ for (const name of specs) {
   if (rank[0] > current[0] || (rank[0] === current[0] && (rank[1] > current[1] || (rank[1] === current[1] && rank[2] > current[2])))) highest = max;
   pieces.push(rules);
   assert.equal(
-    import.meta.resolve(`mtrl/elements/preupgrade/${name}.css`),
+    import.meta.resolve(`material/elements/preupgrade/${name}.css`),
     pathToFileURL(resolve(file)).href,
     `${name} pre-upgrade export must resolve to its CSS file`,
   );
@@ -111,11 +111,11 @@ assert(!themeContrast.includes("@layer"), "a -contrast theme file declares a lay
 const button = await readFile("dist/elements/preupgrade/button.css", "utf8");
 assert(!button.includes("@layer mtrl.preupgrade,mtrl.base"), "a per-element file redeclares the layer order");
 assert.equal(
-  import.meta.resolve("mtrl/elements/preupgrade.css"),
+  import.meta.resolve("material/elements/preupgrade.css"),
   pathToFileURL(resolve("dist/elements/preupgrade.css")).href,
 );
 assert.equal(
-  import.meta.resolve("mtrl/elements/preupgrade"),
+  import.meta.resolve("material/elements/preupgrade"),
   pathToFileURL(resolve("dist/elements/preupgrade.js")).href,
 );
 
@@ -124,7 +124,7 @@ assert.equal(
 // which reads the export map the production build reads.
 const consumer = mkdtempSync(join(tmpdir(), "mtrl-preupgrade-"));
 mkdirSync(join(consumer, "node_modules"));
-symlinkSync(resolve("."), join(consumer, "node_modules/mtrl"));
+symlinkSync(resolve("."), join(consumer, "node_modules/material"));
 writeFileSync(join(consumer, "package.json"), JSON.stringify({ name: "app", private: true }));
 writeFileSync(join(consumer, "app.js"), "");
 const server = await createServer({
@@ -133,9 +133,9 @@ const server = await createServer({
 try {
   const importer = join(consumer, "app.js");
   const specifiers = [
-    ["mtrl/elements/preupgrade/button.css", "dist/elements/preupgrade/button.css"],
-    ["mtrl/elements/preupgrade.css", "dist/elements/preupgrade.css"],
-    ["mtrl/elements/preupgrade", "dist/elements/preupgrade.js"],
+    ["material/elements/preupgrade/button.css", "dist/elements/preupgrade/button.css"],
+    ["material/elements/preupgrade.css", "dist/elements/preupgrade.css"],
+    ["material/elements/preupgrade", "dist/elements/preupgrade.js"],
   ] as const;
   for (const [specifier, target] of specifiers) {
     const resolved = await server.pluginContainer.resolveId(specifier, importer, { ssr: true });
