@@ -202,3 +202,83 @@ describe("what already holds when a chip is destroyed directly", () => {
     expect(removed).toEqual(["b"]);
   });
 });
+
+// FLO-542: removeChip hands focus to the neighbour; the direct path unlisted
+// the chip and left focus to fall to the page.
+describe("a chip destroyed directly while it has focus", () => {
+  test("focus moves to the chip that takes its place, or to the one before when it was the last", () => {
+    for (const multiSelect of [false, true]) {
+      const chips = mount(three(multiSelect));
+      const [a, b, c] = chips.getChips();
+      b!.focus();
+      expect(focusedValue()).toBe("b");
+      b!.destroy();
+      expect(focusedValue()).toBe("c");
+      c!.destroy();
+      expect(focusedValue()).toBe("a");
+      a!.destroy();
+      expect(document.activeElement).toBe(document.body);
+      expect(chips.getChips()).toEqual([]);
+    }
+  });
+
+  test("destroyed from its own onClick, the clicked chip hands focus to its neighbour", () => {
+    const chips = createChips({
+      chips: ["a", "b", "c"].map(value => ({
+        label: value.toUpperCase(), value, ripple: false,
+        onClick: () => { chips.getChips().find(chip => chip.getValue() === "b")?.destroy(); },
+      })),
+    });
+    instances.push(chips);
+    document.body.append(chips.element);
+    const b = chips.getChips()[1]!;
+    b.focus();
+    expect(() => b.element.click()).not.toThrow();
+    expect(values(chips)).toEqual(["a", "c"]);
+    expect(focusedValue()).toBe("c");
+  });
+
+  test("a disabled neighbour is skipped", () => {
+    const chips = mount({ chips: [
+      { label: "A", value: "a", ripple: false },
+      { label: "B", value: "b", ripple: false },
+      { label: "C", value: "c", ripple: false, disabled: true },
+    ] });
+    const b = chips.getChips()[1]!;
+    b.focus();
+    b.destroy();
+    expect(focusedValue()).toBe("a");
+  });
+
+  test("a chip destroyed while focus is elsewhere leaves focus where it is", () => {
+    const chips = mount(three(false));
+    const [a, b] = chips.getChips();
+    a!.focus();
+    b!.destroy();
+    expect(focusedValue()).toBe("a");
+    const outside = document.createElement("button");
+    document.body.append(outside);
+    outside.focus();
+    chips.getChips()[1]!.destroy();
+    expect(document.activeElement).toBe(outside);
+  });
+
+  // What already holds, pinned: a destroy from inside the set's own callbacks
+  test("a chip destroyed inside onChange or onSelect leaves the set consistent", () => {
+    for (const hook of ["onChange", "onSelect"] as const) {
+      const chips = createChips({
+        chips: ["a", "b", "c"].map(value => ({
+          label: value.toUpperCase(), value, ripple: false,
+          [hook]: () => { chips.getChips().find(chip => chip.getValue() === value)?.destroy(); },
+        })),
+      });
+      instances.push(chips);
+      document.body.append(chips.element);
+      const b = chips.getChips()[1]!;
+      b.focus();
+      expect(() => b.element.click()).not.toThrow();
+      expect([hook, values(chips)]).toEqual([hook, ["a", "c"]]);
+      expect([hook, focusedValue()]).toEqual([hook, "c"]);
+    }
+  });
+});

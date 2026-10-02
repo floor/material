@@ -82,8 +82,14 @@ export async function checkThemeContrast(page: Page): Promise<void> {
   console.log(`Unthemed baseline: ${rootCases} states follow the OS and .dark-theme, ignoring data-theme-mode`);
   // Exercise every role: sparse light deltas must never bleed into dark, and
   // custom-property preference switches must reset across theme boundaries.
-  const extras = await page.addStyleTag({ content: standaloneThemes.map(name =>
-    readFileSync(`dist/themes/${name}.css`, 'utf8')).join('\n') });
+  // The full stylesheet (loaded by check-core) carries explicit contrast for the
+  // themes it includes. Standalone themes are only their own files: after FLO-540
+  // the attribute rules are `themes/<name>-contrast.css`, and the OS preference
+  // stays in `themes/<name>.css`. Load both.
+  const extras = await page.addStyleTag({ content: standaloneThemes.flatMap(name => [
+    readFileSync(`dist/themes/${name}.css`, 'utf8'),
+    readFileSync(`dist/themes/${name}-contrast.css`, 'utf8'),
+  ]).join('\n') });
   for (const name of [...themeStyles, ...standaloneThemes]) {
     const spec = THEMES.find(theme => theme.name === name) ??
       handThemeSpec(name, readFileSync(`src/styles/themes/_${name}.scss`, 'utf8'));

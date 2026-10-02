@@ -126,6 +126,14 @@ the menu open, keeps both.
 
 Check these by searching your code: they compile, or come from plain JavaScript, markup or CSS.
 
+- **An app with its own contrast switch** adds `import 'mtrl/styles/contrast'` (and
+  `mtrl/themes/<name>-contrast` for a theme it imports on its own). Without that import,
+  `data-theme-contrast="medium"` or `"high"` changes no colour, and nothing warns (FLO-540).
+  Measured on the unthemed root: with the OS asking for more contrast, `data-theme-contrast="high"`
+  stays standard primary `#6750a4`, not high `#312259`. The OS preference (`prefers-contrast: more`)
+  still selects high contrast from `mtrl/styles/base`. Import `mtrl/styles/contrast` after
+  `mtrl/styles/base`, as with `mtrl/styles/typography`: the opt-in sheets share that cascade
+  layer. The contrast colours are the same in either order.
 - **A chip's `{ text }`** renders an empty chip, silently: no label, no error, no warning.
 - **Tabs `indicatorHeight` / `indicatorWidthStrategy`** are ignored: the indicator falls back to
   its variant's height (3px on a primary row, 2px on a secondary one) and automatic width.
@@ -313,6 +321,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed (breaking)
 
+- **Explicit contrast levels are opt-in (FLO-540).** `mtrl/styles/base` and `mtrl/themes/<name>`
+  keep standard contrast and `prefers-contrast: more`. `data-theme-contrast="medium"` and `"high"`
+  (material-color-utilities contrast 0.5 and 1.0; the values are unchanged) move to
+  `mtrl/styles/contrast` and `mtrl/themes/<name>-contrast`. The full stylesheet `mtrl/styles`
+  still includes them. Without the new import the attribute changes no colour and nothing warns.
+  Import `mtrl/styles/contrast` after `mtrl/styles/base`, as with `mtrl/styles/typography`:
+  the opt-in sheets share that cascade layer. The contrast colours are the same in either
+  order (an explicit level is more specific than the standard rule, and the preference rule
+  does not match once the attribute is set).
 - **Typography leaves `mtrl/styles/base` (FLO-539).** The base no longer carries the type
   classes (`.mtrl-display-large` … `.mtrl-label-small`), the text utilities (`.mtrl-text-*`,
   `.mtrl-font-*`, `.mtrl-truncate*`), mtrl's styles for `h1`–`h6` and `p`, or the
@@ -991,6 +1008,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   emitted, without `beforeclose`. The defect is also in 0.10.x; the fix is in 1.0.
 - **Escape with a menu open inside a default-layer dialog closes the menu only (FLO-548).** It
   closed the dialog as well, under the menu: the dialog's listener ran before the menu's.
+- **Chips: a chip destroyed while it has focus hands focus to its neighbour (FLO-542).**
+  `chip.destroy()` called directly on a focused chip of a set left focus on the page, so a
+  keyboard user lost their place. Focus now moves to the chip that takes its place, or to
+  the one before when it was the last, as it does when the set removes a chip.
 - **A dialog destroyed right after `open()` no longer locks the page's scroll (FLO-548).** The
   default-layer dialog shows its surface 10 ms after `open()`. `destroy()` in that window left
   the timer running: it then set `overflow: hidden` on the body for a dialog that was gone,

@@ -273,8 +273,9 @@ try {
     // FLO-406 contrast CSS: 5,266 -> 7,189 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 8,156 -> 7,631 gzip bytes (same packer).
     // 7,429 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    // FLO-539 typography leaves the base: 7,429 -> 6,409. 6,409 + 100 = 6,550.
-    { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 6550 },
+    // FLO-539 typography leaves the base: 7,429 -> 6,409. Ceiling was 6,550.
+    // FLO-540 merged tree: 5,255. 5,255 + 100 = 5,355, rounded up to 5,400. Node 22.23.3 / npm 10.9.9.
+    { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 5400 },
     // FLO-301 (the required asterisk, the live error, the trailing icon button): 8,456 to
     // 9,058 against 7cd57a6, Node 22 / npm 10.
     // 9,138 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
@@ -294,10 +295,12 @@ try {
     // FLO-406 contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 8,069 -> 7,542 gzip bytes (same packer).
     // 7,338 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    // FLO-539 the base stylesheet alone, once typography has left: 4,075. 4,075 + 100 = 4,200.
-    { name: "base-css", code: "import 'mtrl/styles/base';", gzip: 4200 },
-    // FLO-539 typography leaves the base: 7,338 -> 6,329. 6,329 + 100 = 6,450.
-    { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 6450 },
+    // FLO-539 the base stylesheet alone, once typography has left: 4,075. Ceiling was 4,200.
+    // FLO-540 merged tree: 2,922. 2,922 + 100 = 3,022, rounded up to 3,050. Node 22.23.3 / npm 10.9.9.
+    { name: "base-css", code: "import 'mtrl/styles/base';", gzip: 3050 },
+    // FLO-539 typography leaves the base: 7,338 -> 6,329. Ceiling was 6,450.
+    // FLO-540 merged tree: 5,168. 5,168 + 100 = 5,268, rounded up to 5,300. Node 22.23.3 / npm 10.9.9.
+    { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 5300 },
     // The outlined text field's notched outline (#234) adds 202, 7,863 to 8,065: three
     // segments with their corners each way round, and the outline colour and width per
     // state, in place of an input border and a focus overlay. The resting label shown
@@ -307,14 +310,16 @@ try {
     // FLO-406 contrast CSS: 8,426 -> 10,377 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 11,342 -> 10,811 gzip bytes (same packer).
     // 10,602 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    // FLO-539 typography leaves the base: 10,602 -> 9,589. 9,589 + 100 = 9,700.
-    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 9700 },
+    // FLO-539 typography leaves the base: 10,602 -> 9,589. Ceiling was 9,700.
+    // FLO-540 merged tree: 8,440. 8,440 + 100 = 8,540, already a multiple of 50. Node 22.23.3 / npm 10.9.9.
+    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 8540 },
     // FLO-406 contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 7,639 -> 7,111 gzip bytes (same packer).
     // 6,918 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // 6,918; 100 B floor, 7,050 against b9dab36e, Node 22.23.3 / npm 10.9.9.
-    // FLO-539 typography leaves the base: 6,918 -> 5,894. 5,894 + 100 = 6,000.
-    { name: "slider-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/slider';", gzip: 6000 },
+    // FLO-539 typography leaves the base: 6,918 -> 5,894. Ceiling was 6,000.
+    // FLO-540 merged tree: 4,722. 4,722 + 100 = 4,822, rounded up to 4,850. Node 22.23.3 / npm 10.9.9.
+    { name: "slider-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/slider';", gzip: 4850 },
     // The .43 rail-motion baseline is 47,117 bytes; core ripple adds about 20 bytes.
     // The tooltip stylesheet adds 486 (measured): it was authored but registered in no
     // bundle, so every budget before this one was set with its CSS missing, not excluded.
@@ -352,6 +357,7 @@ try {
     // merge: 53,593 -> 65,790 against 294100fe, Node 22 / npm 10.
     // FLO-428 removed four themes from the full stylesheet: 65,790 -> 62,120.
     // 62,087 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+    // FLO-540 merged tree: 62,120. 62,120 + 1% = 62,741, rounded up to 62,750, next's ceiling.
     { name: "full-css", code: "import 'mtrl/styles';", gzip: 62750 },
   ];
   for (const fixture of fixtures) {
