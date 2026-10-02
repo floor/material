@@ -260,7 +260,8 @@ export interface TimePickerConfig {
   onClose?: () => void;
 
   /**
-   * Callback when time is confirmed; receives the same 24-hour value as getValue()
+   * Callback when time is confirmed; receives the same 24-hour value as getValue().
+   * In 1.0 it receives `{ value }`, the object a `confirm` listener receives.
    */
   onConfirm?: (time: string) => void;
 

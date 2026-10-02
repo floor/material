@@ -331,5 +331,5 @@ export {
 //
 //   import { BUTTON_VARIANTS } from 'mtrl/components/button/constants'
 //
-// Or use the component's index which re-exports its constants:
-//   import { BUTTON_VARIANTS } from 'mtrl/components/button'
+// The constants subpath is the one place every component's constants are
+// exported from: most component indexes do not re-export them.
