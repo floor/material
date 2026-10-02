@@ -1222,7 +1222,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
-- **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"` (FLO-592).**
+- **A list row's hover, focus and pressed corners follow the expressive list.** An unselected row was square, so the state layer painted square across it while a selected row was rounded at 16px. An unselected row is now 4px on the corners that meet another row and 16px on the outer corners of a run. Hovering it rounds the row and its state layer to 12px; focus and press round them to 16px. A selected row stays 16px on every corner, including while hovered, focused or pressed, and the focus ring follows the row. M3 Lists specs: "Unselected corner radius: 4dp inner, 16dp outer" and "Selected corner radius: 16dp"; the hovered, focused and pressed container shapes are the medium (12dp) and large (16dp) corners.
+
   The `touch-target` mixin anchored its `::after` with `inset-inline-start: 50%` and then moved it
   with the physical `translate(-50%, -50%)`. Right-to-left, the logical inset pins the box's right
   edge at the button's centre and the translate then pushes it another 24px left: the 48 x 48 box

@@ -24,6 +24,9 @@ $component: "#{base.$prefix}-list";
     min-height: 56px;
     padding: 8px 16px;
     background: t.color("surface");
+    // Expressive rest shape: extra-small where a row meets another row.
+    // The outer corners of a run are large, below.
+    border-radius: v.shape('extra-small');
     transform: translateY(var(--#{base.$prefix}-list-item-offset));
     &--two-line { min-height: 72px; }
     &--three-line { min-height: 88px; padding-block: 12px; align-items: flex-start; }
@@ -80,8 +83,30 @@ $component: "#{base.$prefix}-list";
   }
   // Slotted controls are siblings of the row action and remain independently operable.
   &__item :is(button, input, select, textarea, a, [contenteditable="true"], [data-list-control]):not(.#{$component}__action) { position: relative; z-index: 1; }
+  // Outer corners of a run (the first row, the last, and a row beside a
+  // divider or subheader) are large. Corners that meet another row stay
+  // extra-small. Specs, 2026-10-02: 4dp inner, 16dp outer.
+  &__content > &__item:first-child,
+  &__content > :not(&__item) + &__item {
+    border-start-start-radius: v.shape('large');
+    border-start-end-radius: v.shape('large');
+  }
+  &__content > &__item:last-child,
+  &__content > &__item:has(+ :not(&__item)) {
+    border-end-start-radius: v.shape('large');
+    border-end-end-radius: v.shape('large');
+  }
+  // Hover, focus and press replace that shape. The tokens are medium, then large.
+  // A selected or disabled row is excluded: selected stays large, disabled stays at rest.
+  &__content > &__item:hover:not(&__item--disabled):not(&__item--selected) {
+    border-radius: v.shape('medium');
+  }
+  &__content > &__item:is(:focus-within, :active):not(&__item--disabled):not(&__item--selected) {
+    border-radius: v.shape('large');
+  }
   &__item--selected {
-    // The expressive selected row; on the scale, so the large step moves it
+    // The expressive selected row; on the scale, so the large step moves it.
+    // Large on every corner, including hover, focus and press.
     border-radius: v.shape('large');
     background: t.color("secondary-container");
     .#{$component}__headline, .#{$component}__overline, .#{$component}__supporting, .#{$component}__leading, .#{$component}__trailing { color: t.color("on-secondary-container"); }
