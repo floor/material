@@ -215,13 +215,15 @@ $content-color: (
   }
 
   // Small button next to an icon: 12dp on the icon side on pointer devices
-  // (ButtonDefaults.getSmallContentPadding)
+  // (ButtonDefaults.getSmallContentPadding). Logical, so the start side follows
+  // direction. Direction inherits into a shadow root; a [dir] selector does not
+  // see a direction set outside one, which is how the icon already mirrors.
   &--s.#{$component}--icon {
-    padding-left: v.button('padding-icon');
+    padding-inline-start: v.button('padding-icon');
 
     &:has(.#{$component}__icon--end) {
-      padding-left: v.button('padding-s');
-      padding-right: v.button('padding-icon');
+      padding-inline-start: v.button('padding-s');
+      padding-inline-end: v.button('padding-icon');
     }
   }
 
@@ -338,15 +340,16 @@ $content-color: (
 
   // Text: no container, 12dp horizontal padding, 16dp beside the label when
   // there is an icon (ButtonDefaults.TextButtonContentPadding,
-  // TextButtonWithIconContentPadding). Larger sizes use the size's spacing.
+  // TextButtonWithIconContentPadding). The icon insets are logical, for the
+  // same reason as the small button. Larger sizes use the size's spacing.
   &--text {
     padding: 0 v.button('padding-horizontal-small');
 
     &.#{$component}--icon {
-      padding: 0 v.button('padding-s') 0 v.button('padding-horizontal-small');
+      padding-inline: v.button('padding-horizontal-small') v.button('padding-s');
 
       &:has(.#{$component}__icon--end) {
-        padding: 0 v.button('padding-horizontal-small') 0 v.button('padding-s');
+        padding-inline: v.button('padding-s') v.button('padding-horizontal-small');
       }
     }
 
