@@ -1,4 +1,4 @@
-/** Layout of a radio group: a wrapping label, a one-line label, an unlabelled circle. */
+/** Layout of a radio group: two wrapping labels, a one-line label, an unlabelled circle. */
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
 
@@ -12,8 +12,11 @@ type GroupMeasure = {
   root: Rect;
   textHits: Hit[];
   circleHits: Hit[];
-  outside: string[];
-  middle: { text: Rect; deltaBlock: number; deltaFirst: number };
+  /** Text rects that paint outside their own row. */
+  textOutsideRow: string[];
+  /** Row rects that paint outside the group. */
+  rowsOutside: string[];
+  longs: Array<{ text: Rect; deltaBlock: number; deltaFirst: number }>;
   one: { circleTop: number; circleStart: number; circleW: number; circleH: number; textTop: number; textH: number; gap: number; labelH: number };
 };
 
@@ -102,24 +105,22 @@ const mount = (api: "factory" | "element") => {
     wrap.style.cssText = "width:160px";
     host.append(wrap);
     // Three lines (72px) in a 160px container, both directions, on this machine.
+    // Two adjacent options carry it; the first option stays one line.
     const label = "Example Example Example";
+    const options = [
+      { value: "a", label: "One" },
+      { value: "b", label },
+      { value: "c", label },
+    ];
     let root: HTMLElement;
     if (api === "factory") {
-      root = createRadios({
-        name: `layout-${direction}-${dir}-${n++}`,
-        direction,
-        options: [
-          { value: "a", label: "One" },
-          { value: "b", label },
-          { value: "c", label: "Three" },
-        ],
-      }).element;
+      root = createRadios({ name: `layout-${direction}-${dir}-${n++}`, direction, options }).element;
       wrap.append(root);
     } else {
       const element = document.createElement("m-radios");
       if (direction === "horizontal") element.setAttribute("direction", "horizontal");
       element.setAttribute("aria-label", "Layout");
-      element.innerHTML = `<m-radio value="a">One</m-radio><m-radio value="b">${label}</m-radio><m-radio value="c">Three</m-radio>`;
+      element.innerHTML = options.map((option) => `<m-radio value="${option.value}">${option.label}</m-radio>`).join("");
       wrap.append(element);
       root = element.shadowRoot!.querySelector(".mtrl-radios") as HTMLElement;
     }
@@ -138,10 +139,12 @@ const mount = (api: "factory" | "element") => {
       const hit = overlap(texts[i].getBoundingClientRect(), circles[j].getBoundingClientRect());
       if (hit) circleHits.push({ pair: `text${i}+circle${j}`, ...hit });
     }
-    const outside: string[] = [];
+    const textOutsideRow: string[] = [];
+    const rowsOutside: string[] = [];
     items.forEach((item, i) => {
-      if (!contained(rootBox, item.getBoundingClientRect())) outside.push(`row${i}`);
-      if (!contained(rootBox, texts[i].getBoundingClientRect())) outside.push(`label${i}`);
+      const row = item.getBoundingClientRect();
+      if (!contained(rootBox, row)) rowsOutside.push(`row${i}`);
+      if (!contained(row, texts[i].getBoundingClientRect())) textOutsideRow.push(`label${i}`);
     });
     const one = items[0];
     const oneCircle = circles[0].getBoundingClientRect();
@@ -151,20 +154,24 @@ const mount = (api: "factory" | "element") => {
     const oneBox = one.getBoundingClientRect();
     const rtl = getComputedStyle(one).direction === "rtl";
     const startOf = (box: DOMRect) => rtl ? oneBox.right - box.right : box.left - oneBox.left;
-    const midCircle = circles[1].getBoundingClientRect();
-    const midText = texts[1].getBoundingClientRect();
+    const longOf = (index: number) => {
+      const circle = circles[index].getBoundingClientRect();
+      const text = texts[index].getBoundingClientRect();
+      return {
+        text: rect(texts[index]),
+        deltaBlock: r2((circle.top + circle.bottom) / 2 - (text.top + text.bottom) / 2),
+        deltaFirst: r2((circle.top + circle.bottom) / 2 - (text.top + 12)),
+      };
+    };
     groups.push({
       direction,
       dir,
       root: rect(root),
       textHits,
       circleHits,
-      outside,
-      middle: {
-        text: rect(texts[1]),
-        deltaBlock: r2((midCircle.top + midCircle.bottom) / 2 - (midText.top + midText.bottom) / 2),
-        deltaFirst: r2((midCircle.top + midCircle.bottom) / 2 - (midText.top + 12)),
-      },
+      textOutsideRow,
+      rowsOutside,
+      longs: [longOf(1), longOf(2)],
       one: {
         circleTop: r2(oneCircle.top - oneBox.top),
         circleStart: r2(startOf(oneCircle)),
@@ -223,7 +230,15 @@ const mount = (api: "factory" | "element") => {
   return { groups, bare, checkbox };
 };
 
-/** Factory (`core:check`) or `<m-radios>` (`elements:check`). */
+/**
+ * Factory (`core:check`) or `<m-radios>` (`elements:check`).
+ *
+ * Checkbox, three lines, 160px wide, label "A label much longer than its container"
+ * (printed below, not asserted): root 160×80 at (0,0); icon 18×18 at (0,31),
+ * centre Y 40; label 130×72 at (30,4), centre Y 40; first-line centre Y 16;
+ * deltaBlock 0, deltaFirst 24; the icon and the label do not overlap. The box is
+ * centred on the label block, so a radio keeps its circle centred on the label block.
+ */
 export async function checkRadiosLayout(page: Page, api: "factory" | "element", check: (name: string) => void): Promise<void> {
   const measured = await page.evaluate(mount, api);
   if (measured.checkbox) {
@@ -237,10 +252,11 @@ export async function checkRadiosLayout(page: Page, api: "factory" | "element", 
     );
   }
   for (const group of measured.groups) {
+    const longs = group.longs.map((long) => `${long.text.w}x${long.text.h} deltaBlock ${long.deltaBlock} deltaFirst ${long.deltaFirst}`).join(" | ");
     console.log(
       `radios layout ${api} ${group.direction} ${group.dir}: root ${group.root.w}x${group.root.h} ` +
-      `middle ${group.middle.text.w}x${group.middle.text.h} deltaBlock ${group.middle.deltaBlock} deltaFirst ${group.middle.deltaFirst} ` +
-      `textHits ${JSON.stringify(group.textHits)} circleHits ${JSON.stringify(group.circleHits)} outside ${JSON.stringify(group.outside)} ` +
+      `longs ${longs} textHits ${JSON.stringify(group.textHits)} circleHits ${JSON.stringify(group.circleHits)} ` +
+      `textOutsideRow ${JSON.stringify(group.textOutsideRow)} rowsOutside ${JSON.stringify(group.rowsOutside)} ` +
       `one circle ${group.one.circleStart},${group.one.circleTop} ${group.one.circleW}x${group.one.circleH} textTop ${group.one.textTop} gap ${group.one.gap} labelH ${group.one.labelH}`,
     );
   }
@@ -251,41 +267,46 @@ export async function checkRadiosLayout(page: Page, api: "factory" | "element", 
     );
   }
 
+  const failures: string[] = [];
   try {
     for (const group of measured.groups) {
       const where = `${api} ${group.direction} ${group.dir}`;
-      assert.equal(group.middle.text.h, 72, `${where}: the middle label wraps to three lines`);
-      assert.deepEqual(group.textHits, [], `${where}: label rects intersect`);
-      assert.deepEqual(group.circleHits, [], `${where}: a label intersects another option's circle`);
-      assert.deepEqual(group.outside, [], `${where}: the group does not contain a row or a label`);
-      // The checkbox centres its box on the label block (deltaBlock 0, 24px off
-      // the first line) and the icon does not overlap the text. The radio takes
-      // that rule: the circle's centre is the text block's centre.
-      assert.ok(Math.abs(group.middle.deltaBlock) <= 0.5, `${where}: circle centred on the label block, delta ${group.middle.deltaBlock} (first line ${group.middle.deltaFirst})`);
-      check(`radios: a three-line label stays inside the group and the circle centres on the text (${where})`);
-
+      for (const [index, long] of group.longs.entries()) {
+        if (long.text.h !== 72) failures.push(`${where}: long label ${index + 1} is ${long.text.h}px, not three lines`);
+        if (Math.abs(long.deltaBlock) > 0.5) failures.push(`${where}: long label ${index + 1} circle off the label block by ${long.deltaBlock} (first line ${long.deltaFirst})`);
+      }
+      if (group.textHits.length) failures.push(`${where}: label rects intersect ${JSON.stringify(group.textHits)}`);
+      if (group.circleHits.length) failures.push(`${where}: a label intersects another option's circle ${JSON.stringify(group.circleHits)}`);
+      if (group.textOutsideRow.length) failures.push(`${where}: a row does not contain its text ${JSON.stringify(group.textOutsideRow)}`);
+      if (group.rowsOutside.length) failures.push(`${where}: the group does not contain a row ${JSON.stringify(group.rowsOutside)}`);
       // Measured before the fix (this machine, Chromium, device pixel ratio 1;
       // the same figures as the 2026-10-02 radios sweep). A one-line label keeps
       // them: circle 14px from the row top and 10px from its inline start, text
       // 12px from the top, 8px between the 40px control and the text, row 48px.
-      assert.equal(group.one.circleTop, 14, `${where}: one-line circle top`);
-      assert.equal(group.one.circleStart, 10, `${where}: one-line circle inline start`);
-      assert.equal(group.one.circleW, 20, `${where}: one-line circle width`);
-      assert.equal(group.one.circleH, 20, `${where}: one-line circle height`);
-      assert.equal(group.one.textTop, 12, `${where}: one-line text top`);
-      assert.equal(group.one.textH, 24, `${where}: one-line text height`);
-      assert.equal(group.one.gap, 8, `${where}: one-line gap`);
-      assert.equal(group.one.labelH, 48, `${where}: one-line row`);
-      check(`radios: a one-line label keeps its measured circle and text (${where})`);
+      const one = group.one;
+      if (one.circleTop !== 14) failures.push(`${where}: one-line circle top ${one.circleTop}`);
+      if (one.circleStart !== 10) failures.push(`${where}: one-line circle inline start ${one.circleStart}`);
+      if (one.circleW !== 20 || one.circleH !== 20) failures.push(`${where}: one-line circle ${one.circleW}x${one.circleH}`);
+      if (one.textTop !== 12) failures.push(`${where}: one-line text top ${one.textTop}`);
+      if (one.textH !== 24) failures.push(`${where}: one-line text height ${one.textH}`);
+      if (one.gap !== 8) failures.push(`${where}: one-line gap ${one.gap}`);
+      if (one.labelH !== 48) failures.push(`${where}: one-line row ${one.labelH}`);
     }
     for (const row of measured.bare) {
       const where = `${api} ${row.direction} ${row.dir}`;
-      assert.equal(row.label.w, 48, `${where}: unlabelled target width`);
-      assert.equal(row.label.h, 48, `${where}: unlabelled target height`);
-      assert.ok(row.ripple, `${where}: state layer`);
-      assert.ok(Math.abs(row.circle.dx) <= 0.5 && Math.abs(row.circle.dy) <= 0.5, `${where}: circle centred in the 48px target, dx ${row.circle.dx} dy ${row.circle.dy}`);
-      assert.ok(Math.abs(row.ripple.dx) <= 0.5 && Math.abs(row.ripple.dy) <= 0.5, `${where}: state layer centred in the 48px target, dx ${row.ripple.dx} dy ${row.ripple.dy}`);
-      check(`radios: an unlabelled circle and its state layer are centred (${where})`);
+      if (row.label.w !== 48 || row.label.h !== 48) failures.push(`${where}: unlabelled target ${row.label.w}x${row.label.h}`);
+      if (!row.ripple) failures.push(`${where}: state layer missing`);
+      else if (Math.abs(row.circle.dx) > 0.5 || Math.abs(row.circle.dy) > 0.5) failures.push(`${where}: circle centred in the 48px target, dx ${row.circle.dx} dy ${row.circle.dy}`);
+      if (row.ripple && (Math.abs(row.ripple.dx) > 0.5 || Math.abs(row.ripple.dy) > 0.5)) failures.push(`${where}: state layer centred in the 48px target, dx ${row.ripple.dx} dy ${row.ripple.dy}`);
+    }
+    assert.deepEqual(failures, []);
+    for (const group of measured.groups) {
+      const where = `${api} ${group.direction} ${group.dir}`;
+      check(`radios: two three-line labels stay in their rows and the circle centres on the text (${where})`);
+      check(`radios: a one-line label keeps its measured circle and text (${where})`);
+    }
+    for (const row of measured.bare) {
+      check(`radios: an unlabelled circle and its state layer are centred (${api} ${row.direction} ${row.dir})`);
     }
   } finally {
     await page.evaluate(() => document.getElementById("radios-layout")?.remove());
