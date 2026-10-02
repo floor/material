@@ -4,13 +4,19 @@
 // split: they need `$contrast-emit` in themes/_base-theme.scss. Until that
 // switch exists, the base file still carries both, and there is no contrast
 // sheet. The cascade test then fails its "without the import" assertion.
+// The compilers are the build's (`scripts/build-styles.ts`), so the resolver
+// reads the strings the build writes.
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import * as sass from "sass";
-import { baseStyles, componentStyles, resolveStyleDependencies } from "../../scripts/style-manifest";
+import {
+  compileExplicitContrast, compileThemeSources, inBaseLayer, styleLayerOrder,
+} from "../../scripts/build-styles";
+import { baseStyles } from "../../scripts/style-manifest";
 import { hexOf, resolveColors, type ElementState, type OsState } from "./contrast-cascade";
 import { THEME_ROLES } from "../../src/core/theme/tokens";
+
+export { inBaseLayer, styleLayerOrder };
 
 export const ORIGIN_COMMIT = "b475ea5dc88c68b888c947399403f682b05a6ba2";
 
@@ -18,8 +24,6 @@ export const ORIGIN_COMMIT = "b475ea5dc88c68b888c947399403f682b05a6ba2";
 export const STATE_COUNT = 2 * 3 * 3 * 4 * 2 * 2 * 2;
 
 const stylesDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../src/styles");
-const MARKER = "// contrast roles: generated, do not edit";
-const options: sass.StringOptions<"sync"> = { loadPaths: [stylesDir], style: "compressed", logger: sass.Logger.silent };
 const cache = new Map<string, string>();
 
 export type Target = "root" | "element";
@@ -29,65 +33,42 @@ export function splitEnabled(): boolean {
   return readFileSync(resolve(stylesDir, "themes/_base-theme.scss"), "utf8").includes("$contrast-emit");
 }
 
-/** Same prelude as scripts/build-styles.ts. Contrast uses `mtrl.base`, not its own layer. */
-export function styleLayerOrder(): string {
-  const layers = ["base", "utilities", ...resolveStyleDependencies(Object.keys(componentStyles))];
-  return `@layer ${layers.map(layer => `mtrl.${layer}`).join(",")};`;
-}
-
-export function inBaseLayer(css: string): string {
-  return `${styleLayerOrder()}@layer mtrl.base{${css}}`;
-}
-
-function compile(emit: "all" | "preference", sources: string[]): string {
-  const key = `${emit}\n${sources.join("\n")}`;
+function cached(key: string, produce: () => string): string {
   const hit = cache.get(key);
   if (hit) return hit;
-  const config = emit === "all" ? ""
-    : `@use "themes/base-theme" as contrast-config with ($contrast-emit: ${emit});\n`;
-  const body = sources.map((source, i) => `@use "${source}" as entry${i};`).join("\n");
-  const css = sass.compileString(config + body, options).css;
+  const css = produce();
   cache.set(key, css);
   return css;
 }
 
 /** Explicit attribute rules only, from the generated contrast block of one theme. */
 export function compileExplicit(name: string): string {
-  const key = `explicit:${name}`;
-  const hit = cache.get(key);
-  if (hit) return hit;
-  const source = readFileSync(resolve(stylesDir, `themes/_${name}.scss`), "utf8");
-  const at = source.indexOf(MARKER);
-  if (at < 0) throw new Error(`${name} has no contrast block`);
-  const scss = `@use "themes/base-theme" as * with ($contrast-emit: explicit);\n${source.slice(at)}`;
-  const css = sass.compileString(scss, options).css;
-  cache.set(key, css);
-  return css;
+  return cached(`explicit:${name}`, () => compileExplicitContrast(name));
 }
 
 export function compileAll(sources: string[]): string {
-  return compile("all", sources);
+  return cached(`all\n${sources.join("\n")}`, () => compileThemeSources(sources, "all"));
 }
 
 export function compilePreference(sources: string[]): string {
-  return compile("preference", sources);
+  return cached(`preference\n${sources.join("\n")}`, () => compileThemeSources(sources, "preference"));
 }
 
-const baseToday = () => inBaseLayer(compile("all", baseStyles));
-const basePreference = () => inBaseLayer(compile("preference", baseStyles));
+const baseToday = () => inBaseLayer(compileAll(baseStyles));
+const basePreference = () => inBaseLayer(compilePreference(baseStyles));
 const baseExplicit = () => inBaseLayer(compileExplicit("baseline"));
 
 /** `today` is origin/next. `with` loads the contrast sheet. `without` does not. */
 export function sheets(theme: string, mode: SheetMode, contrastFirst = false): string[] {
-  const today = [baseToday(), compile("all", [`themes/${theme}`])];
+  const today = [baseToday(), compileAll([`themes/${theme}`])];
   if (!splitEnabled()) return today;
   if (mode === "today") return today;
   const base = contrastFirst ? [baseExplicit(), basePreference()] : [basePreference(), baseExplicit()];
   const themed = contrastFirst
-    ? [compileExplicit(theme), compile("preference", [`themes/${theme}`])]
-    : [compile("preference", [`themes/${theme}`]), compileExplicit(theme)];
+    ? [compileExplicit(theme), compilePreference([`themes/${theme}`])]
+    : [compilePreference([`themes/${theme}`]), compileExplicit(theme)];
   if (mode === "with") return [...base, ...themed];
-  return [basePreference(), compile("preference", [`themes/${theme}`])];
+  return [basePreference(), compilePreference([`themes/${theme}`])];
 }
 
 export type GridState = { target: Target; el: ElementState; os: OsState };
