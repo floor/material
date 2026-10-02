@@ -19,8 +19,11 @@
 // The mutation check runs the same cases without the pre-upgrade stylesheet:
 // it must fail most elements, or the check is not measuring anything.
 // Then the same through the React adapter's server render, `renderToString`
-// and hydration, with and without the stylesheet; and the CSS modules
-// applying the rules themselves, for a prefix given to `configure()`.
+// and hydration, with and without the stylesheet. One element's file alone
+// must reserve that element's box. A phase-B page (declarative roots) that
+// loads the stylesheet, with the element script still held back, must not
+// paint the pre-upgrade rules over those roots, and a host on the same page
+// without a root must still keep its reserved box.
 //
 //   bun run build && bun run scripts/check-preupgrade.ts [element…]
 
@@ -28,6 +31,13 @@ import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
 import { cases, type PreupgradeCase } from "./fixtures/preupgrade-cases";
 import { elements } from "../src/elements";
+import { renderElement } from "../dist/ssr/index.js";
+
+const phaseB = [
+  renderElement("m-textfield", { label: "Name", value: "Ada" }),
+  renderElement("m-button", {}, "Save"),
+  renderElement("m-select", { label: "Pet", value: "Dog" }),
+].join("");
 
 const THRESHOLD = 0.01;
 const STAGE_WIDTH = 360;
@@ -76,12 +86,17 @@ const server = Bun.serve({
         return new Response(Bun.file("dist/styles/base.css"));
       case "/preupgrade.css":
         return new Response(Bun.file("dist/elements/preupgrade.css"));
+      case "/preupgrade/button.css":
+        return new Response(Bun.file("dist/elements/preupgrade/button.css"));
+      case "/one":
+        return html(page(stage(`<m-button>Save</m-button><m-switch id="switch">Wi-Fi</m-switch>`), false)
+          .replace("</head>", '<link rel="stylesheet" href="/preupgrade/button.css"></head>'));
+      case "/phase-b":
+        return html(page(stage(`${phaseB}<m-button id="bare">Bare</m-button>`), true));
       case "/elements.js":
         return js(elementsJs);
       case "/react.js":
         return js(reactClientJs);
-      case "/modules":
-        return html(page(stage(`<x-button>Save</x-button>`), false));
       case "/react":
         return html(page(`<div id="stage"><div id="root">${reactHtml}</div><div id="block">Following text</div></div>`, preupgrade));
       default: {
@@ -281,40 +296,92 @@ try {
     console.log(`\nReact renderToString + hydration: ${react.withStyles.toFixed(4)} with, ${react.without.toFixed(4)} without.`);
   }
 
-  // Without the stylesheet in <head>: the CSS modules apply the rules
-  // themselves, for the prefix given to configure(), until define() runs.
-  let modules = 0;
+  // One element's file, and nothing else, reserves that element's box.
+  // The script stays held back until the box is measured.
+  let one = 0;
   if (!only.length) {
     const p = await browser.newPage({ viewport: { width: 400, height: 800 } });
     try {
-      await p.goto(`http://127.0.0.1:${server.port}/modules`);
-      await p.addScriptTag({
-        type: "module",
-        content: `import { configure } from "/dist/elements/index.js";
-configure({ prefix: "x" });
-await import("/dist/elements/css/index.js");
-window.modules = true;`,
-      });
-      await p.waitForFunction(() => (window as unknown as { modules?: boolean }).modules === true);
+      await p.goto(`http://127.0.0.1:${server.port}/one`);
       await settle(p);
       const before = await snapshot(p, "#stage > :first-child", "#inline, #block");
-      await p.addScriptTag({
-        type: "module",
-        content: `import { defineAll } from "/dist/elements/index.js"; defineAll({ prefix: "x" }); window.ready = true;`,
+      const reserved = await p.evaluate(() => {
+        const button = document.querySelector("m-button")!;
+        const sw = document.querySelector("m-switch")!;
+        const sheets = Array.from(document.styleSheets, (sheet) => {
+          try { return Array.from(sheet.cssRules, (rule) => rule.cssText).join(""); }
+          catch { return ""; }
+        }).join("");
+        return {
+          button: button.getBoundingClientRect().height,
+          sw: sw.getBoundingClientRect().height,
+          buttonRule: sheets.includes("m-button:not(:defined)"),
+          switchRule: sheets.includes("m-switch:not(:defined)"),
+        };
       });
+      assert(reserved.button > 30, "button.css did not reserve the button");
+      assert(reserved.buttonRule, "button.css did not apply the button rule");
+      assert(!reserved.switchRule, "button.css included another element's rules");
+      await p.addScriptTag({ url: "/elements.js", type: "module" });
       await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true && !document.querySelector("#stage :not(:defined)"));
       await settle(p);
       const after = await snapshot(p, "#stage > :first-child", "#inline, #block");
-      modules = score(before, after);
-      assert(before.hosts[0].h > 30, "The CSS modules did not apply the rules for the configured prefix");
-      console.log(`CSS modules, prefix "x", no stylesheet in <head>: ${modules.toFixed(4)} (${size(before.hosts[0])} -> ${size(after.hosts[0])})`);
+      one = score(before, after);
+      console.log(`One file, button.css: ${one.toFixed(4)} (button ${reserved.button.toFixed(1)}px, switch ${reserved.sw.toFixed(1)}px before the script)`);
+    } finally {
+      await p.close();
+    }
+  }
+
+  // Phase B: the stylesheet is loaded and the script is still held back.
+  // A rendered host must not take the pre-upgrade paint; a bare host must.
+  if (!only.length) {
+    const p = await browser.newPage({ viewport: { width: 400, height: 800 } });
+    try {
+      await p.goto(`http://127.0.0.1:${server.port}/phase-b`);
+      await settle(p);
+      const before = await p.evaluate(() => {
+        const field = document.querySelector("m-textfield")!;
+        const button = document.querySelector("m-button:not(#bare)")!;
+        const select = document.querySelector("m-select")!;
+        const bare = document.querySelector("#bare")!;
+        const style = getComputedStyle(field);
+        return {
+          root: !!field.shadowRoot && !!button.shadowRoot && !!select.shadowRoot && !bare.shadowRoot,
+          padding: style.padding,
+          background: style.backgroundColor,
+          before: getComputedStyle(field, "::before").content,
+          after: getComputedStyle(field, "::after").content,
+          button: button.getBoundingClientRect().width,
+          select: select.getBoundingClientRect().width,
+          bare: bare.getBoundingClientRect().height,
+        };
+      });
+      assert(before.root, "phase B hosts did not render the roots the page asked for");
+      assert(before.padding !== "22px 16px 0px", `text field still has pre-upgrade padding (${before.padding})`);
+      assert(before.before === "none", `text field ::before is pre-upgrade text (${before.before})`);
+      assert(before.after === "none", `text field ::after is pre-upgrade text (${before.after})`);
+      assert(before.bare > 30, "a host without a declarative root lost its reserved box");
+      await p.addScriptTag({ url: "/elements.js", type: "module" });
+      await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true && !document.querySelector("#stage :not(:defined)"));
+      await p.waitForTimeout(300);
+      await settle(p);
+      const after = await p.evaluate(() => ({
+        button: document.querySelector("m-button:not(#bare)")!.getBoundingClientRect().width,
+        select: document.querySelector("m-select")!.getBoundingClientRect().width,
+        background: getComputedStyle(document.querySelector("m-textfield")!).backgroundColor,
+      }));
+      assert(Math.abs(before.button - after.button) < 0.5, `button width ${before.button} before the script, ${after.button} after`);
+      assert(Math.abs(before.select - after.select) < 0.5, `select width ${before.select} before the script, ${after.select} after`);
+      assert.equal(before.background, after.background, "text field background changed when the script ran");
+      console.log(`Phase B, stylesheet loaded, script held back: field padding ${before.padding}, button ${before.button.toFixed(1)}px, select ${before.select.toFixed(1)}px, bare ${before.bare.toFixed(1)}px`);
     } finally {
       await p.close();
     }
   }
 
   assert.deepEqual(failing.map((r) => r.name), [], "Cases that shift on upgrade");
-  assert(modules < THRESHOLD, "The CSS modules' rules shift on upgrade");
+  assert(one < THRESHOLD, "One element's pre-upgrade file shifts on upgrade");
   if (!only.length) {
     // Most elements must shift without the styles, or the score measures nothing.
     assert(caught.length > defaults.length / 2, `Only ${caught.length} of ${defaults.length} elements shift without the styles`);
