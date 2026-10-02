@@ -2747,6 +2747,7 @@ try {
       await new Promise((r) => setTimeout(r, 300));
       const pixels = (canvas: HTMLCanvasElement): Uint8ClampedArray =>
         (canvas.getContext("2d") as CanvasRenderingContext2D).getImageData(0, 0, canvas.width, canvas.height).data;
+      const read = (): { trackColor: string; factory: number; element: number } => {
       // The most frequent opaque colour of the empty ring is its track
       const counts = new Map<string, number>();
       const ring = pixels(empty.element.querySelector("canvas") as HTMLCanvasElement);
@@ -2766,7 +2767,17 @@ try {
       };
       const inShadow = (id: string): HTMLCanvasElement =>
         (document.getElementById(id) as HTMLElement).shadowRoot?.querySelector("canvas") as HTMLCanvasElement;
-      const result = { trackColor, factory: count(spinning.element.querySelector("canvas") as HTMLCanvasElement), element: count(inShadow("pc")) };
+      return { trackColor, factory: count(spinning.element.querySelector("canvas") as HTMLCanvasElement), element: count(inShadow("pc")) };
+      };
+      // A detached factory keeps its fallback colours until a ResizeObserver reports
+      // it, and the canvas is drawn in a frame after that: 300ms was only long
+      // enough for both. Read again, for 5s at most, until the track is drawn; the
+      // assertion below reports the last reading.
+      let result = read();
+      for (let i = 0; i < 100 && !(result.trackColor !== "" && result.factory > 20 && result.element > 20); i++) {
+        await new Promise((r) => setTimeout(r, 50));
+        result = read();
+      }
       empty.element.remove();
       spinning.element.remove();
       return result;
@@ -2918,8 +2929,20 @@ try {
         assert.equal(counts[not.track] ?? 0, 0, `${what} draws no ${not.track}`);
       }
     };
-    const dark = await sample();
-    expectPalette(dark, light, "dark section");
+    // The factories were appended just before: their colours arrive from a
+    // ResizeObserver and their pixels in a frame after it. Sample again, for 5s at
+    // most, until the section's colours are drawn; the last failure is the one reported.
+    const dark = await (async (): Promise<Palette> => {
+      for (const end = Date.now() + 5000; ;) {
+        const palette = await sample();
+        try {
+          expectPalette(palette, light, "dark section");
+          return palette;
+        } catch (error) {
+          if (Date.now() > end) throw error;
+        }
+      }
+    })();
     check("canvas theme: progress (linear, circular, determinate, indeterminate) and loading indicator draw a dark section's colours with :root light, factory and element");
 
     await page.evaluate(() => document.getElementById("themed")?.setAttribute("data-theme-mode", "light"));
@@ -3427,11 +3450,17 @@ try {
       const is = (): boolean => root().className.includes("top-app-bar--scrolled");
       const before = is();
       const scroller = document.getElementById("scroller") as HTMLElement;
+      // The bar follows the `scroll` event, which the browser sends in its next
+      // rendering step, not at the assignment: 5s at most for it, then the reading
+      // is asserted below.
+      const until = async (ready: () => boolean): Promise<void> => {
+        for (let i = 0; i < 250 && !ready(); i++) await new Promise((r) => setTimeout(r, 20));
+      };
       scroller.scrollTop = 100;
-      await new Promise((r) => setTimeout(r, 50));
+      await until(() => is());
       const down = is();
       scroller.scrollTop = 0;
-      await new Promise((r) => setTimeout(r, 50));
+      await until(() => !is());
       const up = is();
       bar.setScrollState(true);
       return { before, down, up, manual: is() };
@@ -3613,8 +3642,21 @@ try {
       return { anchored, popup: popup === "true" || popup === "menu", open: menu.hasAttribute("open") };
     });
     assert.deepEqual(overflow, { anchored: true, popup: true, open: true });
+    // The menu handles keys once it has taken focus, about 120ms after it opens,
+    // later than the 100ms above. Escape used to be sent regardless, with nothing
+    // asserted, and a menu left open reached the checks that follow.
+    // (Focus is read in the menu's shadow root: its host does not match :focus-within
+    // while the surface is in the top layer.)
+    const overflowMenu = (): Promise<{ focused: boolean; open: boolean }> => page.evaluate(() => {
+      const menu = (document.getElementById("tb") as HTMLElement).querySelector("m-menu") as HTMLElement;
+      return { focused: !!menu.shadowRoot?.activeElement?.closest('[role="menu"]'), open: menu.hasAttribute("open") };
+    });
+    for (const end = Date.now() + 5000; Date.now() < end && !(await overflowMenu()).focused;) await settle();
+    assert.equal((await overflowMenu()).focused, true, "toolbar: the open overflow menu takes focus");
     await page.keyboard.press("Escape");
-    check("toolbar: slot=overflow's <m-menu> is anchored to the overflow button and opens from it");
+    for (const end = Date.now() + 5000; Date.now() < end && (await overflowMenu()).open;) await settle();
+    assert.equal((await overflowMenu()).open, false, "toolbar: Escape closes the overflow menu");
+    check("toolbar: slot=overflow's <m-menu> is anchored to the overflow button, opens from it and closes on Escape");
 
     const colours = await page.evaluate(() => {
       const tb = document.getElementById("tb") as Tb;
@@ -4693,6 +4735,14 @@ try {
       });
     const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
 
+    // Menus, dialogs, the search and the drawer move focus, or close, on timers and
+    // frames of their own. The fixed waits of this section were only long enough for
+    // them; `until` then waits, 5s at most, for the state the next step reads or
+    // sends keys to. It does not fail by itself: the assertion that follows names
+    // the step and reports what was found.
+    const until = async (ready: () => Promise<boolean>): Promise<void> => {
+      for (const end = Date.now() + 5000; Date.now() < end && !(await ready());) await wait(20);
+    };
     await stage();
     await page.evaluate(() => {
       const root = document.getElementById("shadow")?.shadowRoot as ShadowRoot;
@@ -4707,6 +4757,7 @@ try {
     await page.evaluate(() => (document.getElementById("shadow")?.shadowRoot?.getElementById("opener") as HTMLElement).focus());
     await page.keyboard.press("ArrowDown");
     await wait(350);
+    await until(async () => (await inShadow()) === "Cut");
     const menu: unknown[] = [await inShadow()];
     for (const key of ["ArrowDown", "ArrowDown", "ArrowDown", "ArrowUp"]) {
       await page.keyboard.press(key);
@@ -4733,6 +4784,12 @@ try {
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
     await wait(350);
+    // The menu's "close" comes 50ms after Enter, and the select looks at its focused
+    // styling again 10ms after that: read once the menu has closed and that turn has
+    // passed, or the class read is the one left from the open menu.
+    await until(() => page.evaluate(() =>
+      ((window as unknown as Win).__select as { element: HTMLElement }).element.querySelector("[aria-expanded]")?.getAttribute("aria-expanded") === "false"));
+    await wait(50);
     const select = await page.evaluate(() => {
       const s = (window as unknown as Win).__select as { element: HTMLElement; getValue: () => unknown };
       const root = document.getElementById("shadow")?.shadowRoot as ShadowRoot;
@@ -4759,9 +4816,11 @@ try {
       }, create);
       await page.locator("#shadow").getByRole("button", { name: "Open", exact: true }).click();
       await wait(400);
+      await until(async () => (await inShadow()) === null);
       const moved = await inShadow();
       await page.evaluate(() => void ((window as unknown as Win).__overlay as { close: () => unknown }).close());
       await wait(400);
+      await until(async () => (await inShadow()) === "opener");
       assert.deepEqual({ moved, back: await inShadow() }, { moved: null, back: "opener" }, `${name}: focus returns to the opener`);
     };
     await returnsFocus("dialog", "createDialog");
@@ -4780,8 +4839,13 @@ try {
       (window as unknown as Win).__search = search;
     });
     const input = page.locator("#shadow input:not(#first)").first();
+    const isExpanded = (): Promise<boolean> => page.evaluate(() => ((window as unknown as Win).__search as { isExpanded: () => boolean }).isExpanded());
     await input.focus();
     await wait(50);
+    // Expanding puts focus back on the input in the next frame: let that frame run
+    // before focus is moved away on purpose.
+    await until(isExpanded);
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     // Focus leaves and comes back within the collapse delay: still expanded.
     await page.locator("#shadow #first").focus();
     await input.focus();
@@ -4789,6 +4853,7 @@ try {
     const expanded = await page.evaluate(() => ((window as unknown as Win).__search as { isExpanded: () => boolean }).isExpanded());
     await page.locator("#shadow #first").focus();
     await wait(300);
+    await until(async () => !(await isExpanded()));
     const collapsed = await page.evaluate(() => !((window as unknown as Win).__search as { isExpanded: () => boolean }).isExpanded());
     assert.deepEqual({ expanded, collapsed }, { expanded: true, collapsed: true });
     check("factories in a shadow root: search stays expanded when focus comes back in time, and collapses when it leaves");
@@ -4822,9 +4887,11 @@ try {
     });
     await page.locator("#shadow").getByRole("button", { name: "Open", exact: true }).click();
     await wait(100);
+    await until(async () => (await landed()) === "a");
     const drawerTabs = [await landed(), ...(await tabs(["Tab", "Tab", "Tab", "Shift+Tab", "Shift+Tab"]))];
     await page.evaluate(() => void ((window as unknown as Win).__overlay as { close: () => unknown }).close());
     await wait(100);
+    await until(async () => (await landed()) === "opener");
     assert.deepEqual({ drawerTabs, back: await landed() }, { drawerTabs: ["a", "b", "c", "a", "c", "b"], back: "opener" });
     check("factories in a shadow root: a modal drawer keeps Tab inside and returns focus to its opener");
 
