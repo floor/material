@@ -6,7 +6,7 @@
 //
 // Compiled by `bun run tooling:check` via test/types/tsconfig.json.
 import type { ComponentProps as ReactProps } from "react";
-import type { Button, Dialog, Switch, Tab, Tabs, Textfield } from "../../src/react";
+import type { Button, Dialog, Switch, Tab, Tabs, TextField } from "../../src/react";
 import type { SwitchElement } from "../../src/elements";
 
 /** true when A and B are the same type */
@@ -38,7 +38,7 @@ assert<Equals<ButtonProps["variant"], string | undefined>>();
 assert<Equals<ButtonProps["className"], string | undefined>>();
 assert<Equals<ButtonProps["onClick"], React.MouseEventHandler<HTMLElement> | undefined>>();
 
-type TextfieldProps = ReactProps<typeof Textfield>;
+type TextfieldProps = ReactProps<typeof TextField>;
 // `value` is the live text; the attribute it shadows is `defaultValue`.
 assert<Equals<TextfieldProps["value"], string | undefined>>();
 assert<Equals<TextfieldProps["defaultValue"], string | undefined>>();

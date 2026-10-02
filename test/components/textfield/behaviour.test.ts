@@ -24,10 +24,10 @@ g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date
 g.cancelAnimationFrame = () => {};
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
-import createTextfield from "../../../src/components/textfield";
+import createTextField from "../../../src/components/textfield";
 
 const mount = (config: Record<string, unknown> = {}) => {
-  const field = createTextfield({ label: "Name", ...config } as never);
+  const field = createTextField({ label: "Name", ...config } as never);
   document.body.append(field.element);
   return field;
 };

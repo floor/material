@@ -86,13 +86,13 @@ interface SnackbarComponent {
   emit?: (event: string, data: any) => any;
 }
 
-// Textfield component extensions
-interface TextfieldConfig {
+// TextField component extensions
+interface TextFieldConfig {
   size?: string;
   placeholder?: string;
 }
 
-interface TextfieldComponent {
+interface TextFieldComponent {
   config?: any;
 }
 
