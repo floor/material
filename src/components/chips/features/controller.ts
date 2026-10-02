@@ -213,6 +213,29 @@ export const withController =
     }
   };
 
+  // chip.destroy() outside removeChip used to leave the chip in this list, so
+  // the set still counted it and the arrows stopped on it (FLO-533). Drop it
+  // the way removeChip unwires a chip, without remove or change. removeChip
+  // and the set's own teardown destroy the chip themselves and must not take
+  // this path as well.
+  let managedDestroy = false;
+  const dropDestroyedChip = (chip: ChipComponent) => {
+    const index = component.chipInstances.indexOf(chip);
+    if (index < 0) return;
+    chip.element.removeEventListener("keydown", handleKeyboardNavigation);
+    component.chipInstances.splice(index, 1);
+    if (index === focusedChipIndex) focusedChipIndex = -1;
+    else if (index < focusedChipIndex) focusedChipIndex--;
+    syncTabStop();
+  };
+  const watchChipDestroy = (chip: ChipComponent) => {
+    const destroy = chip.destroy.bind(chip);
+    chip.destroy = () => {
+      if (!managedDestroy) dropDestroyedChip(chip);
+      destroy();
+    };
+  };
+
   /**
    * Adds a chip to the chips container
    * @param {Object} chipConfig - Configuration for the chip
@@ -265,6 +288,7 @@ export const withController =
     });
     chipInstance.element.addEventListener("keydown", handleKeyboardNavigation);
     syncTabStop();
+    watchChipDestroy(chipInstance);
 
     // Dispatch add event
     dispatchEvent(CHIPS_EVENTS.ADD, { value: currentValue(), chip: chipInstance });
@@ -288,7 +312,8 @@ export const withController =
       const hadFocus = chip.element.contains(activeElementOf(chip.element));
 
       chip.element.removeEventListener("keydown", handleKeyboardNavigation);
-      chip.destroy();
+      managedDestroy = true;
+      try { chip.destroy(); } finally { managedDestroy = false; }
       component.chipInstances.splice(index, 1);
 
       // Update focused index if needed
@@ -444,6 +469,7 @@ export const withController =
 
   // Share the base resource scope; withLifecycle is composed after this feature.
   getCleanup(component).add(() => {
+    managedDestroy = true;
     component.element.removeEventListener("keydown", handleKeyboardNavigation);
     component.element.removeEventListener("focusin", trackFocus);
     component.chipInstances.forEach(chip => {
