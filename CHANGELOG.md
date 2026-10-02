@@ -15,7 +15,7 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 ## [Unreleased]
 
 ### Added
-- `material/components/chips` and `material/components/divider` now have their factory as the default export, as the other component entries do.
+- Every `material/components/<name>` entry exports its factory as the default export and by its name.
 
 ### Migrating from 0.10.x
 
