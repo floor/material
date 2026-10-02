@@ -32,6 +32,9 @@ the new name exists only in 3.0.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `T
   (`import { pipe } from 'material/core/compose'`). The
   [migration table](https://github.com/floor/material/blob/main/scripts/fixtures/root-exports.md)
   gives every one.
+- **`material/core/<area>` only.** A path under an area no longer resolves:
+  `mtrl/core/compose/features` becomes `material/core/compose`, which exports the same names
+  (`withLifecycle` among them).
 - **Folders inside a component no longer resolve** (`mtrl/components/chips/chip`,
   `…/features`): they held internals, with no replacement.
 - **Vue 3.4.20 or newer.** With `skipLibCheck: false`, `@types/react` 18.2.71 or newer.
@@ -346,17 +349,24 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed (breaking)
 
-- **`material/core/<area>` is an explicit list: seven areas, no wildcard (FLO-414).** The export
-  map listed `./core/*`, and a `*` in an exports pattern crosses slashes: besides the areas
-  it made every folder inside one importable (`material/core/compose/features`), which was
-  never documented. The map now names `material/core` and its seven areas, the ones the
-  README and the migration table teach: `material/core/canvas`, `/compose`, `/dom`,
-  `/shapes`, `/state`, `/theme` and `/utils`. Any other path under `material/core` throws
-  `ERR_PACKAGE_PATH_NOT_EXPORTED`. Migration: import from the area. Everything
-  `material/core/compose/features` exported is exported by `material/core/compose` under the
-  same name, except `withBadge` and the types `BadgeComponent`, `BadgeConfig` and
-  `LabelManager` of that feature, which were reachable only through the nested path and
-  are internal: for a badge, use `createBadge` from `material`.
+- **`material/core/<area>` is an explicit list: seven areas, and no path under them (FLO-414).**
+  The export map listed `./core/*`, and a `*` in an exports pattern crosses slashes: besides
+  the areas it resolved a folder inside one, `material/core/compose/features`, which the
+  README's "Building your own components" imported `withLifecycle()` from (in 0.10.x too).
+  The map now names `material/core` and its seven areas: `material/core/canvas`, `/compose`,
+  `/dom`, `/shapes`, `/state`, `/theme` and `/utils`. Any other path under `material/core`
+  throws `ERR_PACKAGE_PATH_NOT_EXPORTED`, and TypeScript reports the import (TS2307).
+  Migration:
+
+  | 0.10 | 3.0 |
+  |---|---|
+  | `import { withLifecycle } from 'mtrl/core/compose/features'` (and any other name from that path) | `import { withLifecycle } from 'material/core/compose'`: the same name, the same function |
+
+  Every name `material/core/compose/features` exported is an export of
+  `material/core/compose`, except `withBadge` and the types `BadgeComponent` and
+  `BadgeConfig` of that feature, which no document named: they are internal; for a badge,
+  use `createBadge` from `material`. `LabelManager`, the type of `LabelComponent`'s `label`,
+  was only in the nested path and is now exported from `material/core/compose`.
 - **Progress: `canvas`, `resize`, `track`, `indicator` and `buffer` are no longer on
   `ProgressComponent`.** They named how the indicator is drawn (one canvas; `track`,
   `indicator` and `buffer` were that same canvas under the names of an older SVG), which

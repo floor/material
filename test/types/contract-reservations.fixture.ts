@@ -10,6 +10,12 @@ import type { ProgressComponent } from "../../src/components/progress";
 import type { ProgressComponent as RootProgressComponent } from "../../src/index";
 import type { TabComponent } from "../../src/components/tabs";
 import type { SliderComponent } from "../../src/components/slider";
+import type { LabelComponent, LabelManager, LifecycleComponent } from "../../src/core/compose";
+import type { withLifecycle } from "../../src/core/compose";
+import type { withLifecycle as withLifecycleFromFeatures } from "../../src/core/compose/features";
+
+/** true when A and B are the same type */
+type Equals<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 
 // --- Progress: how the indicator is drawn is not public -----------------------
 //
@@ -61,6 +67,19 @@ export const sliderKeepsItsApi: "element" | "setValue" | "getValue" extends keyo
 export type { SliderStateComponent } from "../../src/components/slider";
 // @ts-expect-error SliderElements is internal: not an export of the entry
 export type { SliderElements } from "../../src/components/slider";
+
+// --- Core: a public type's own parts are importable from the same entry -------
+//
+// `LabelComponent`, from `material/core/compose`, is `{ label: LabelManager }`.
+// `LabelManager` was exported only from the nested `core/compose/features`; it
+// is an export of `core/compose` too, beside the type that names it.
+
+export const labelManagerIsImportable: Equals<LabelComponent["label"], LabelManager> = true;
+
+// What the README imported from the closed `core/compose/features` comes from
+// `core/compose`, with its types: the function and the component it returns.
+export const lifecycleIsTheSameFunction: Equals<typeof withLifecycle, typeof withLifecycleFromFeatures> = true;
+export type LifecycleFromCompose = LifecycleComponent;
 
 // The internal type is not an export of the component's entry point
 // @ts-expect-error ProgressInternals is internal: reachable from ./types, not from the entry

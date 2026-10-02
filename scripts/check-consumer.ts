@@ -86,11 +86,13 @@ console.log(JSON.stringify(out));
   console.log(`Component subpaths: ${componentSubpaths.length} resolve to files in the packed package, ${nestedSubpaths.length} nested ones do not`);
 
   // The core subpaths are an explicit list too (FLO-414): `material/core` and
-  // its seven areas resolve, and what the old `./core/*` pattern also matched
-  // across slashes (a folder inside an area) or by accident does not.
+  // its seven areas resolve, and no path under an area does. The old
+  // `./core/*` pattern matched across slashes, so `core/compose/features`
+  // resolved, and the README taught it; it is closed with the rest, and what
+  // the README imported from it is asserted to come from `core/compose`.
   const coreSubpaths = Object.keys((await Bun.file("package.json").json()).exports)
     .filter(key => key === "./core" || key.startsWith("./core/")).map(key => `material${key.slice(1)}`);
-  const closedCorePaths = ["compose/features", "compose/utils", "config", "navigation", "dom/html", "nothing"].map(path => `material/core/${path}`);
+  const closedCorePaths = ["compose/features", "compose/features/badge", "compose/utils", "config", "navigation", "dom/html", "nothing"].map(path => `material/core/${path}`);
   const coreProbe = join(directory, "resolve-core.mjs");
   await writeFile(coreProbe, (await readFile(probe, "utf8")).replace(/for \(const specifier of \[[^\n]*\]\) \{/,
     `for (const specifier of ${JSON.stringify([...coreSubpaths, ...closedCorePaths])}) {`));
@@ -101,6 +103,18 @@ console.log(JSON.stringify(out));
   assert.deepEqual(closedCorePaths.filter(specifier => core[specifier] !== "ERR_PACKAGE_PATH_NOT_EXPORTED"), [],
     "paths under material/core that still resolve (or fail for another reason)");
   console.log(`Core subpaths: ${coreSubpaths.length} resolve to files in the packed package, ${closedCorePaths.length} others under material/core do not`);
+
+  // What public text imported from the closed `material/core/compose/features`
+  // (the README's "Building your own components", in 0.10.x too): from the
+  // packed package, each name is an export of `material/core/compose`.
+  const taught = ["withLifecycle"];
+  const composeProbe = join(directory, "compose-names.mjs");
+  await writeFile(composeProbe, `import * as compose from "material/core/compose";
+console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof compose[name] !== "function")));
+`);
+  assert.deepEqual(JSON.parse(Bun.spawnSync(["node", composeProbe], { cwd: directory }).stdout.toString()), [],
+    "names the README imported from material/core/compose/features that material/core/compose does not export");
+  console.log(`material/core/compose exports what was taught from core/compose/features: ${taught.join(", ")}`);
 
   // Library mode retains exports for measurement; an HTML fixture below tests
   // actual application mode, CSS extraction, network loading, and rendering.
