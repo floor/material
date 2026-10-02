@@ -441,7 +441,7 @@ try {
       await settle(p);
       const after = await boxes();
       const buttonBox = span(before.button, after.button);
-      const region = (box: Box): Snapshot => ({ frame: buttonBox, hosts: [box], siblings: [] });
+      const region = (box: Box): Snapshot => ({ frame: buttonBox, hosts: [box], siblings: [], labels: [] });
       one = score(region(before.button), region(after.button), buttonBox);
       buttonMove = shiftOf(before.button, after.button);
       switchMove = shiftOf(before.sw, after.sw);
