@@ -1207,7 +1207,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
-- **The outlined text field's notch leaves the floated label clear in forced colours (FLO-566).**
+- **The outlined text field's notch leaves the floated label clear in forced colours.**
   Forced colours repaints a declared-`transparent` border in the line's own colour, so the notch's
   open top edge — the gap the floated label sits in — was drawn as part of the top line, straight
   through the label: 31 of 31 pixels of the line's colour across the label's box, in the factory and

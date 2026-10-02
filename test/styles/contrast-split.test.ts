@@ -121,9 +121,8 @@ describe("explicit contrast levels are opt-in", () => {
     // menu's width, mark and selected colours (styles/components/_select.scss,
     // styles/components/_menu.scss), the chip's secondary-action floor
     // (styles/components/_chips.scss), the touch target centred physically
-    // (styles/abstract/_mixins.scss, FLO-592), and the outlined field's open
-    // notch unpainted in forced colours (styles/components/_text-field.scss,
-    // FLO-566).
+    // (styles/abstract/_mixins.scss), and the outlined field's open
+    // notch unpainted in forced colours (styles/components/_text-field.scss).
     expect(createHash("sha256").update(css).digest("hex"))
       .toBe("1e7aee550e64e2085cb34a9085dd93ce989d0cfbb928fdf0be7e3c449688f669");
     expect(css.length).toBe(525192);

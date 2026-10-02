@@ -2219,7 +2219,7 @@ try {
     await page.evaluate(() => ((document.getElementById("factory") as HTMLElement).innerHTML = ""));
     check("text field: focus opens the notch of an empty outlined field and blur closes it");
 
-    // FLO-566. Forced colours repaints a declared-`transparent` border in the
+    // Forced colours repaints a declared-`transparent` border in the
     // line's own colour, so with the notch open the top line was drawn through
     // the floated label. In the mode the floated label must be clear of the
     // line, and the outline must still be drawn on the rest of the top edge and
@@ -2316,7 +2316,7 @@ try {
     for (const line of forcedFailures) console.log(`  FAIL ${line}`);
     assert.deepEqual(forcedFailures, [], "forced colours: the notch leaves the floated label clear and the outline drawn");
     await forcedContext.close();
-    check("text field: in forced colours the notch leaves the floated label clear and the outline is still drawn (FLO-566)");
+    check("text field: in forced colours the notch leaves the floated label clear and the outline is still drawn");
 
     // FLO-562. A [dir='rtl'] ancestor outside a shadow root is invisible to the
     // stylesheet inside it, so the mirroring must follow the --rtl class

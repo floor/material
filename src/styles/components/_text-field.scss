@@ -568,7 +568,7 @@ $component: "#{base.$prefix}-text-field";
             border-top-color: transparent;
         }
 
-        // FLO-566: forced colours paints a declared-`transparent` border in the
+        // Forced colours paints a declared-`transparent` border in the
         // line's own colour, so the open notch's gap was drawn as part of the
         // top line, across the floated label. In the mode the open notch has no
         // top edge at all; the leading and trailing segments still draw theirs.
