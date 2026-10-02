@@ -76,8 +76,8 @@ describe("theme utils", () => {
     expect(getThemeColor("sys-color-primary", { alpha: 0.5 })).toBe("rgba(103, 80, 164, 0.5)");
   });
 
-  // FLO-311: the themes no longer declare --mtrl-sys-color-*-rgb. The deprecated
-  // '-rgb' names still answer, derived from the colour role.
+  // FLO-311: the themes no longer declare --mtrl-sys-color-*-rgb, and 1.0 no
+  // longer derives them: an '-rgb' name is an undeclared variable like any other.
   test("1.0 derives no -rgb twin: the role with alpha replaces it (FLO-311)", () => {
     document.documentElement.style.setProperty("--mtrl-sys-color-on-primary", "#fff");
     expect(getThemeColor("sys-color-on-primary-rgb")).toBe("");

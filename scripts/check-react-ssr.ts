@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 // scripts/check-react-ssr.ts
 // Built-package SSR, parser consumption, hydration and browser isolation on both React versions.
+// Known limit (FLO-517): mtrl/ssr/react children cannot see providers above their host until upgrade.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
@@ -9,6 +10,7 @@ import { assertGlobalHost, GLOBAL_HOST_DOM, readGlobalHost } from "./fixtures/ss
 declare global {
   interface Window {
     reactSSR: { ready: boolean; recoverable: string[] };
+    reactContextSSR: { ready: boolean; recoverable: string[] };
     reactSuspense?: { ready: boolean; recoverable: string[] };
     __ssrRoots?: { late: ShadowRoot | null; sync: ShadowRoot | null };
   }
@@ -35,6 +37,12 @@ const mtrlWarnings = async <T>(run: () => Promise<T>): Promise<{ result: T; warn
 };
 const browser = await chromium.launch();
 const summaries: object[] = [];
+const contextFailures: string[] = [];
+const expectContextKnownLimit = (label: string, known: boolean, fixed: boolean, observed: string) => {
+  assert.equal(fixed, false, `${label}: provider context reached the shadow; remove the expected-failure marker (FLO-517)`);
+  assert.equal(known, true, `${label}: expected ${observed}; the shadow has an unexpected outcome`);
+  console.log(`known limit, FLO-517 (expected to fail until the page-level integration): ${label}: ${observed}`);
+};
 await mkdir("analysis/react-ssr", { recursive: true });
 try {
   for (const version of [18, 19]) {
@@ -42,18 +50,78 @@ try {
       build.onResolve({ filter: /^react(-dom)?(\/.*)?$/ }, args => ({ path: Bun.resolveSync(
         args.path.replace(/^react-dom(?=\/|$)/, "react-dom-18").replace(/^react(?=\/|$)/, "react-18"), process.cwd()) }));
     } }] : [];
-    const bundle = async (entry: string, target: "browser" | "bun", nodeEnv: "development" | "production" = "development") => {
+    const bundle = async (entry: string, target: "browser" | "bun", environment: "development" | "production" = "development") => {
       const loaded: string[] = [];
       const result = await Bun.build({ entrypoints: [entry], target, plugins: [...plugins, {
         name: "ssr-isolation", setup(build) { build.onLoad({ filter: /.*/ }, args => {
           loaded.push(args.path);
           return undefined;
         }); },
-      }], define: { "process.env.NODE_ENV": `"${nodeEnv}"` } });
+      }], define: { "process.env.NODE_ENV": JSON.stringify(environment) } });
       assert(result.success, String(result.logs));
       if (target === "browser") assert(!loaded.some(path => /\/(?:ssr|linkedom)\//.test(path)), "Client loaded server code");
       return result.outputs[0].text();
     };
+    // These cases exercise children under providers above the host. A second
+    // React root cannot see either provider, even though the page render can.
+    for (const environment of ["development", "production"] as const) {
+      const label = `React ${version} ${environment} context`;
+      try {
+        const contextServer = `${process.cwd()}/analysis/react-ssr/context-server-${version}-${environment}.js`;
+        await Bun.write(contextServer, await bundle("scripts/fixtures/react-ssr-context-server.ts", "bun", environment));
+        const { render: renderContext } = await import(contextServer);
+        const contextHtml: string = renderContext();
+        const contextClient = await bundle("scripts/fixtures/react-ssr-context-client.ts", "browser", environment);
+        assert.doesNotMatch(contextClient, /linkedom|DOMParser|SSR element nesting/, `${label} client isolation`);
+        const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
+          if (new URL(request.url).pathname === "/client.js") return new Response(contextClient, { headers: { "Content-Type": "text/javascript" } });
+          return new Response(`<!doctype html><div id="root">${contextHtml}</div><script type="module" src="/client.js"></script>`,
+            { headers: { "Content-Type": "text/html" } });
+        } });
+        try {
+          const shadows = await (async () => {
+            const inert = await browser.newPage({ javaScriptEnabled: false });
+            try {
+              await inert.goto(server.url.href);
+              return await inert.evaluate(() => ["provided-tabs", "required-tabs"].map(id => {
+                const host = document.getElementById(id);
+                return {
+                  host: !!host,
+                  root: !!host?.shadowRoot,
+                  text: host?.shadowRoot?.textContent ?? null,
+                  light: host?.textContent ?? null,
+                };
+              }));
+            } finally { await inert.close(); }
+          })();
+          const page = await browser.newPage();
+          try {
+            const warnings: string[] = [], errors: string[] = [];
+            page.on("console", message => { if (["warning", "error"].includes(message.type())) warnings.push(message.text()); });
+            page.on("pageerror", error => errors.push(error.message));
+            await page.goto(server.url.href);
+            await page.waitForFunction(() => window.reactContextSSR?.ready);
+            const recoverable = await page.evaluate(() => window.reactContextSSR.recoverable);
+            assert.deepEqual({ warnings, errors, recoverable }, { warnings: [], errors: [], recoverable: [] }, `${label} hydration`);
+          } finally { await page.close(); }
+          assert.equal(shadows[0].host && shadows[1].host, true, `${label}: context hosts exist`);
+          assert.equal(shadows[0].light, "from provider", `${label}: light DOM saw the default-valued provider`);
+          assert.equal(shadows[1].light, "required provider", `${label}: light DOM saw the required provider`);
+          expectContextKnownLimit(`${label} default-valued context`,
+            shadows[0].root && shadows[0].text?.includes("DEFAULT") === true,
+            shadows[0].text?.includes("from provider") === true, "shadow contains DEFAULT");
+          expectContextKnownLimit(`${label} required context`,
+            !shadows[1].root, shadows[1].text?.includes("required provider") === true, "shadow root missing");
+          console.log(`${label}: hydration clean`);
+        } finally { server.stop(true); }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        const line = message.split("\n")[0] ?? message;
+        contextFailures.push(line.startsWith(label) ? line : `${label}: ${line}`);
+      }
+    }
+    // The context production bundle replaced Symbol.for("mtrl.ssr"). The development
+    // bundles imported below install their own bridge before those cases run.
     const path = `${process.cwd()}/analysis/react-ssr/server-${version}.js`;
     await Bun.write(path, await bundle("scripts/fixtures/react-ssr-server.ts", "bun"));
     const { render } = await import(path);
@@ -224,4 +292,5 @@ try {
     } finally { server.stop(true); }
   }
   await Bun.write("analysis/react-ssr/summary.json", JSON.stringify(summaries, null, 2));
+  assert.deepEqual(contextFailures, [], `React context regressions: ${contextFailures.join("; ")}`);
 } finally { await browser.close(); }
