@@ -4936,7 +4936,7 @@ try {
     ];
 
     /** Mounts a menu on the stage's opener; the top layer when asked. */
-    const mount = (layer: "top" | undefined): Promise<void> =>
+    const mount = (layer: "top" | undefined, items = ITEMS): Promise<void> =>
       page.evaluate(({ layer, items }) => {
         const w = window as unknown as TopWin;
         const host = document.getElementById("tl") as HTMLElement;
@@ -4946,7 +4946,7 @@ try {
         const menu = w.mtrl.createMenu({ opener, items, ...(layer ? { layer } : {}) });
         w.__tl = { menu, closes: 0, root };
         menu.on("close", () => void w.__tl.closes++);
-      }, { layer, items: ITEMS });
+      }, { layer, items });
 
     const openMenu = async (): Promise<void> => {
       await page.evaluate(() => void (window as unknown as TopWin).__tl.menu.open());
@@ -4960,6 +4960,13 @@ try {
         while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
         return { open: menu.isOpen(), closes, connected: menu.element.isConnected, focus: active?.id || null };
       });
+    // A menu gives focus back to its opener in the animation frame after it closes.
+    // The fixed waits below are for the close itself, and long enough to see a second
+    // close; a page that got no frame in that time has not moved focus yet, and the
+    // read came back with `focus: null`. This waits for the frame, after the fixed wait.
+    const focusBack = async (): Promise<void> => {
+      for (const end = Date.now() + 5000; Date.now() < end && (await state()).focus !== "tl-opener";) await wait(20);
+    };
     const center = (selector: string): Promise<{ x: number; y: number }> =>
       page.evaluate((selector) => {
         const { root, menu } = (window as unknown as TopWin).__tl;
@@ -5036,6 +5043,7 @@ try {
       await openMenu();
       await page.keyboard.press("Escape");
       await wait(450);
+      await focusBack();
       assert.deepEqual(await state(), { open: false, closes: 2, connected: false, focus: "tl-opener" }, `${where}: Escape`);
 
       // An item
@@ -5043,6 +5051,7 @@ try {
       const copy = await center('[data-id="copy"]');
       await page.mouse.click(copy.x, copy.y);
       await wait(450);
+      await focusBack();
       assert.deepEqual(await state(), { open: false, closes: 3, connected: false, focus: "tl-opener" }, `${where}: an item`);
 
       // Two dismissals at once: the opener has focus when the pointer goes
@@ -5096,6 +5105,7 @@ try {
       assert.deepEqual(afterOne, { menu: true, submenus: 0 }, `${where}: Escape closes the submenu only`);
       await page.keyboard.press("Escape");
       await wait(450);
+      await focusBack();
       assert.deepEqual(await state(), { open: false, closes: 6, connected: false, focus: "tl-opener" }, `${where}: then the menu`);
 
       // An item of the submenu closes both, once
@@ -5105,6 +5115,7 @@ try {
       const link = await center('[data-id="link"]');
       await page.mouse.click(link.x, link.y);
       await wait(450);
+      await focusBack();
       const both = await page.evaluate(() => (window as unknown as TopWin).__tl.root.querySelectorAll('[class*="mtrl-menu"]').length);
       assert.deepEqual({ ...(await state()), both }, { open: false, closes: 7, connected: false, focus: "tl-opener", both: 0 }, `${where}: a submenu item`);
       check(`menu top layer ${where}: a submenu opens above it, Escape closes it then the menu, and its item closes both once`);
@@ -5143,19 +5154,18 @@ try {
       check(`menu top layer ${where}: ArrowRight opens the submenu on its first item, ArrowLeft returns to Share, a hover opens it`);
 
       // An item id is data, including characters with meaning in CSS selectors.
-      ITEMS[0].id = 'share"quoted';
-      await mount("top");
+      const quoted = 'share"quoted';
+      await mount("top", [{ ...ITEMS[0], id: quoted }, ...ITEMS.slice(1)]);
       await page.evaluate(() => void (window as unknown as TopWin).__tl.menu.open(new KeyboardEvent("keydown")));
       await wait(450);
-      assert.equal(await focusedItem(), ITEMS[0].id, `${where}: quoted parent id has focus`);
+      assert.equal(await focusedItem(), quoted, `${where}: quoted parent id has focus`);
       await page.keyboard.press("ArrowRight");
       await wait(450);
       assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 1, focus: "link" }, `${where}: quoted id opens its submenu`);
       await page.keyboard.press("ArrowLeft");
       await wait(300);
-      assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 0, focus: ITEMS[0].id }, `${where}: ArrowLeft returns to the quoted id`);
+      assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 0, focus: quoted }, `${where}: ArrowLeft returns to the quoted id`);
       check(`menu top layer ${where}: quoted item id survives ArrowRight and ArrowLeft`);
-      ITEMS[0].id = "share";
 
       await page.evaluate(() => (window as unknown as TopWin).__tl.menu.destroy());
     }
