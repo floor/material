@@ -86,7 +86,7 @@ name.destroy();
 save.destroy();
 ```
 
-Two rules hold for every factory's events. A config `on*` option (`onChange`, `onOpen`, …) is the listener registered at creation: it gets the same argument as a listener passed to `on()`, and runs before one added later. And when `open()` or `close()` returns, the state has changed (`isOpen()`) and the event has been emitted, a cancellable `beforeopen` or `beforeclose` first where the component has one; the classes, the paint, focus and the animation may follow, so add an `open` listener before calling `open()`. Opening an open component, or closing a closed one, does nothing and emits nothing, and the event that opened it never dismisses it. The dialog, the menu, the select, the split button, the snackbar (`show()` and `hide()`), the date picker and the time picker follow the second rule; the other overlays join them before 1.0. The tooltip is outside it, by design: its `show()` and `hide()` wait for their delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`.
+Two rules hold for every factory's events. A config `on*` option (`onChange`, `onOpen`, …) is the listener registered at creation: it gets the same argument as a listener passed to `on()`, and runs before one added later. And when `open()` or `close()` returns, the state has changed (`isOpen()`) and the event has been emitted, a cancellable `beforeopen` or `beforeclose` first where the component has one; the classes, the paint, focus and the animation may follow, so add an `open` listener before calling `open()`. Opening an open component, or closing a closed one, does nothing and emits nothing, and the event that opened it never dismisses it. The dialog, the menu, the select, the split button, the snackbar (`show()` and `hide()`), the date picker and the time picker follow the second rule; the other overlays join them before 1.0. The tooltip is outside it, by design: its `show()` and `hide()` wait for their delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`. The state getter is a method on every component that has one: `isOpen()` on the dialog, the menu, the select, the FAB menu, the sheets, the drawer, the snackbar and both pickers; `isExpanded()` on the search, the split button, the navigation rail and the card; `isVisible()` on the tooltip, the bottom app bar and the toolbar; `isHidden()` on the navigation bar.
 
 The factories are the fastest way to render hundreds of components at once, such as a long editable table; the elements style a shadow root each. `mtrl/styles` loads every component's styles; for a smaller bundle, import only what you use (see [Styles](#styles)).
 
@@ -129,6 +129,8 @@ The base includes the baseline theme in light and dark, the colour, shape and ty
 ```typescript
 import 'mtrl/styles/typography';
 ```
+
+It has to load after the base: both sheets style `h1`–`h6` and `p`, and the later one wins. The import above takes care of it (the module imports `mtrl/styles/base` first, in whatever order your own imports are). If your bundler splits the two into different chunks, make sure the base's CSS loads first: an import order is not a CSS order in every bundler. With `<link>` tags, put `dist/styles/typography.css` after `dist/styles/base.css`.
 
 Import it when the page uses those classes or utilities, when it relies on mtrl's heading and paragraph styles, or when its own CSS reads a `--mtrl-sys-typescale-*` token. Without it a `.mtrl-headline-small` element keeps the body's font size, and a `var(--mtrl-sys-typescale-*)` with no fallback is invalid at computed-value time. Body text keeps its font. The full stylesheet includes typography, so `import 'mtrl/styles'` is unchanged.
 
@@ -230,6 +232,15 @@ Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, 
 ## Server rendering
 
 `renderElement` from `mtrl/ssr` renders an element to declarative shadow DOM. Import `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` in the server bootstrap and that framework's components emit the same roots. Node and Bun are supported in 1.0. Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one.
+
+**Styles: inline by default.** Each root carries its whole CSS as a `<style>`, so it is styled at first paint in every engine with no extra request. That has two costs:
+
+- **How well it compresses depends on the compressor.** gzip cannot see a repeat further back than its 32 KB window. A select's root is about 44 KB of style text, so gzip never finds the previous select: 30 selects measured 141.0 KB with gzip against 5.0 KB with brotli. Smaller roots compress well when the same element repeats (30 buttons, at 16 KB a root: 6.4 KB with gzip; 30 dialogs: 10.3 KB), and badly when large roots of different types alternate, because the previous copy of each is then out of the window: selects, text fields, dialogs and buttons in turn measured 83.9 KB with gzip against 8.1 KB with brotli. Serve brotli, or use link mode for pages with many selects, or that mix large roots (text fields, dialogs) in turn.
+- **Uncompressed it is large:** 0.5 to 0.9 MB for 30 to 44 roots (489 KB for 30 buttons, 671 KB for a list page of 44 roots, 878 KB for the 30 large roots). That matters for anything that stores or streams the HTML uncompressed.
+
+**Link mode** (`renderElement(tag, attributes, children, { styles: 'link', cssBase: '/css' })`, with `dist/elements/css` served at that base) writes `<link>` tags in place of the style text: the same pages are 15 to 40 KB of HTML, and the stylesheets are fetched once and cached. Its caveat: WebKit paints the roots unstyled until the stylesheets arrive (about 470 ms with each stylesheet 300 ms away; a preload in the head does not help), where Chromium and Firefox wait for them before painting.
+
+Measured on Playwright's engines (Chromium 153, Firefox 155, WebKit 26.6); sizes are of the HTML `renderElement` returns, gzip at level 9, brotli at its default.
 
 Worker and edge runtimes are unsupported in 1.0. Each server entry lists the `browser` condition first. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers does) loads the browser stub: `renderElement` throws "mtrl/ssr is server-only", and importing a bridge does nothing, so the page renders with no declarative roots and no error.
 
