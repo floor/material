@@ -208,7 +208,8 @@ try {
   // 1,000, is 6,476,000, above 6,458,000, so the ceiling stays.
   // Merged with FLO-299 (a8c24f7f), same packer: 6,410,644. Under 6,458,000,
   // so the ceiling stays.
-  // What publish.yml publishes (the short README, the stripped manifest): 6,379,050.
+  // What publish.yml publishes (the short README, the stripped manifest): 6,379,275,
+  // Node 22.23.3 / npm 10.9.9. Under 6,458,000, so the ceiling stays.
   assert(pack.unpackedSize < 6_458_000, "Unpacked package exceeds 6,458,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
