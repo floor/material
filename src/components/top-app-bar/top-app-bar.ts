@@ -10,76 +10,15 @@ import {
   withElement,
   withEvents,
   withLifecycle,
-  ElementComponent,
 } from "../../core/compose";
 
 import { createConfig } from "./config";
-import { TopAppBarConfig, TopAppBarType } from "./types";
+import type { TopAppBar, TopAppBarConfig, TopAppBarType } from "./types";
 import { TOP_APP_BAR_DEFAULTS } from "./constants";
 
-/**
- * Top app bar component interface
- */
-export interface TopAppBar extends ElementComponent {
-  /**
-   * Sets the title of the top app bar
-   * @param {string} title - Title text
-   * @returns {TopAppBar} TopAppBar instance for chaining
-   */
-  setTitle: (title: string) => TopAppBar;
-
-  /**
-   * Gets the current title
-   * @returns {string} Current title text
-   */
-  getTitle: () => string;
-
-  /**
-   * Adds a leading navigation icon or element
-   * @param {HTMLElement} element - Element to add to the leading section
-   * @returns {TopAppBar} TopAppBar instance for chaining
-   */
-  addLeadingElement: (element: HTMLElement) => TopAppBar;
-
-  /**
-   * Adds a trailing action icon or element
-   * @param {HTMLElement} element - Element to add to the trailing section
-   * @returns {TopAppBar} TopAppBar instance for chaining
-   */
-  addTrailingElement: (element: HTMLElement) => TopAppBar;
-
-  /**
-   * Changes the top app bar type
-   * @param {TopAppBarType} type - New app bar type
-   * @returns {TopAppBar} TopAppBar instance for chaining
-   */
-  setType: (type: TopAppBarType) => TopAppBar;
-
-  /**
-   * Manually sets the scrolled state
-   * @param {boolean} scrolled - Whether to show the scrolled state
-   * @returns {TopAppBar} TopAppBar instance for chaining
-   */
-  setScrollState: (scrolled: boolean) => TopAppBar;
-
-  /**
-   * Gets the headline element
-   * @returns {HTMLElement} Headline element
-   */
-  getHeadlineElement: () => HTMLElement;
-
-  /**
-   * Gets the leading container element
-   * @returns {HTMLElement} Leading container element
-   */
-  getLeadingContainer: () => HTMLElement;
-
-  /**
-   * Gets the trailing container element
-   * @returns {HTMLElement} Trailing container element
-   */
-  getTrailingContainer: () => HTMLElement;
-}
+// The one TopAppBar declaration is the public one in types.ts (FLO-383); this
+// module re-exports it for the element, which imports it from here.
+export type { TopAppBar };
 
 /**
  * Creates a top app bar component

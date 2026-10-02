@@ -371,6 +371,9 @@ export interface IconButtonComponent {
    */
   disable: () => IconButtonComponent;
 
+  /** Whether the icon button is disabled (FLO-384) */
+  isDisabled: () => boolean;
+
   /**
    * Sets the IconButton's icon
    * @param icon - Icon HTML content

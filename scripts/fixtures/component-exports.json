@@ -31,9 +31,37 @@
       "status": "public"
     }
   ],
+  "badge/constants": [
+    {
+      "name": "BADGE_COLORS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BADGE_MAX_CHARACTERS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BADGE_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BADGE_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "bottom-app-bar": [
     {
       "name": "BottomAppBar",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Use BottomAppBarComponent, the name every component type has. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "BottomAppBarComponent",
       "kind": "type",
       "status": "public"
     },
@@ -49,6 +77,23 @@
     },
     {
       "name": "default",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
+  "bottom-app-bar/constants": [
+    {
+      "name": "BOTTOM_APP_BAR_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DEFAULT_TRANSITION_DURATION",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_POSITIONS",
       "kind": "value",
       "status": "public"
     }
@@ -95,6 +140,33 @@
       "status": "public"
     }
   ],
+  "bottom-sheet/constants": [
+    {
+      "name": "BOTTOM_SHEET_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BOTTOM_SHEET_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BOTTOM_SHEET_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BOTTOM_SHEET_STATES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BOTTOM_SHEET_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "button": [
     {
       "name": "ButtonChangePayload",
@@ -108,6 +180,11 @@
     },
     {
       "name": "ButtonConfig",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ButtonEvents",
       "kind": "type",
       "status": "public"
     },
@@ -164,6 +241,11 @@
       "status": "public"
     },
     {
+      "name": "ButtonGroupChangeEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "ButtonGroupComponent",
       "kind": "type",
       "status": "public"
@@ -194,7 +276,17 @@
       "status": "public"
     },
     {
+      "name": "ButtonGroupKind",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "ButtonGroupOrientation",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ButtonGroupSelection",
       "kind": "type",
       "status": "public"
     },
@@ -214,6 +306,140 @@
       "status": "public"
     }
   ],
+  "button-group/constants": [
+    {
+      "name": "BUTTON_GROUP_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_COMPRESSION_LIMIT",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_CONNECTED_GAP",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_CONNECTED_MIN_WIDTH",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_CONNECTED_PRESSED_CORNER",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_DENSITY",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_DENSITY_STEP",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_EXPANDED_RATIO",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_KINDS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_LABELS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_ORIENTATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_SELECTION",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_SHAPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_SIZE_TOKENS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_GROUP_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
+  "button/constants": [
+    {
+      "name": "BUTTON_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_SHAPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "BUTTON_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ButtonShape",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ButtonSize",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "DEFAULT_RIPPLE_CONFIG",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "card": [
     {
       "name": "CardActionsConfig",
@@ -227,6 +453,11 @@
     },
     {
       "name": "CardComponent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "CardConfig",
       "kind": "type",
       "status": "public"
     },
@@ -258,7 +489,8 @@
     {
       "name": "CardSchema",
       "kind": "type",
-      "status": "public"
+      "status": "deprecated",
+      "note": "Use CardConfig. Removed in 1.0 (FLO-383)."
     },
     {
       "name": "CardVariant",
@@ -287,6 +519,48 @@
     },
     {
       "name": "default",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
+  "card/constants": [
+    {
+      "name": "CARD_ACTION_ALIGNMENT",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CARD_ASPECT_RATIOS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CARD_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CARD_CORNER_RADIUS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CARD_ELEVATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CARD_MEDIA_POSITION",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CARD_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CARD_WIDTHS",
       "kind": "value",
       "status": "public"
     }
@@ -353,6 +627,23 @@
       "status": "public"
     }
   ],
+  "carousel/constants": [
+    {
+      "name": "CAROUSEL_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CAROUSEL_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CAROUSEL_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "checkbox": [
     {
       "name": "CHECKBOX_CLASSES",
@@ -410,6 +701,29 @@
       "status": "public"
     }
   ],
+  "checkbox/constants": [
+    {
+      "name": "CHECKBOX_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CHECKBOX_LABEL_POSITION",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CHECKBOX_STATES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CHECKBOX_VARIANTS",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "M3 has one checkbox style, and the `variant` option has no\neffect (FLO-94, FLO-265)."
+    }
+  ],
   "chips": [
     {
       "name": "AssistChipConfig",
@@ -437,6 +751,11 @@
       "status": "public"
     },
     {
+      "name": "ChipsAddEvent",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "ChipsChangeEvent",
       "kind": "type",
       "status": "public"
@@ -453,6 +772,11 @@
     },
     {
       "name": "ChipsEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ChipsRemoveEvent",
       "kind": "type",
       "status": "public"
     },
@@ -499,6 +823,23 @@
     {
       "name": "SuggestionChipConfig",
       "kind": "type",
+      "status": "public"
+    }
+  ],
+  "chips/constants": [
+    {
+      "name": "CHIP_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CHIP_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "CHIPS_EVENTS",
+      "kind": "value",
       "status": "public"
     }
   ],
@@ -579,6 +920,58 @@
       "status": "public"
     }
   ],
+  "datepicker/constants": [
+    {
+      "name": "DATEPICKER_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DATEPICKER_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DATEPICKER_ICONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DATEPICKER_SELECTION_MODES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DATEPICKER_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DATEPICKER_VIEWS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DAY_NAMES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DEFAULT_DATE_FORMAT",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MONTH_NAMES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MONTH_NAMES_SHORT",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "dialog": [
     {
       "name": "default",
@@ -631,6 +1024,58 @@
       "status": "public"
     }
   ],
+  "dialog/constants": [
+    {
+      "name": "DEFAULT_ANIMATION_DURATION",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DEFAULT_CANCEL_BUTTON_TEXT",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DEFAULT_CONFIRM_BUTTON_TEXT",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DEFAULT_Z_INDEX",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DIALOG_ANIMATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DIALOG_BUTTON_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DIALOG_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DIALOG_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DIALOG_FOOTER_ALIGNMENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DIALOG_SIZES",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "divider": [
     {
       "name": "createDivider",
@@ -645,6 +1090,33 @@
     {
       "name": "DividerConfig",
       "kind": "type",
+      "status": "public"
+    }
+  ],
+  "divider/constants": [
+    {
+      "name": "DEFAULT_DIVIDER_THICKNESS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DEFAULT_INSET_VALUE",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DIVIDER_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DIVIDER_ORIENTATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DIVIDER_VARIANTS",
+      "kind": "value",
       "status": "public"
     }
   ],
@@ -687,6 +1159,43 @@
     {
       "name": "DrawerVariant",
       "kind": "type",
+      "status": "public"
+    }
+  ],
+  "drawer/constants": [
+    {
+      "name": "DRAWER_ANIMATION",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DRAWER_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DRAWER_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DRAWER_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DRAWER_ITEM_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DRAWER_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "DRAWER_VARIANTS",
+      "kind": "value",
       "status": "public"
     }
   ],
@@ -734,6 +1243,48 @@
     {
       "name": "ExtendedFabWidth",
       "kind": "type",
+      "status": "public"
+    }
+  ],
+  "extended-fab/constants": [
+    {
+      "name": "EXTENDED_FAB_ANIMATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "EXTENDED_FAB_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "EXTENDED_FAB_ICON_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "EXTENDED_FAB_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "EXTENDED_FAB_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "EXTENDED_FAB_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "EXTENDED_FAB_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "EXTENDED_FAB_WIDTH",
+      "kind": "value",
       "status": "public"
     }
   ],
@@ -861,6 +1412,115 @@
       "status": "public"
     }
   ],
+  "fab-menu/constants": [
+    {
+      "name": "FAB_MENU_COLORS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_MENU_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_MENU_ITEM_EXIT",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_MENU_ITEMS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_MENU_LIST_GAP",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_MENU_MENU_FROM",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_MENU_MENU_GAP",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_MENU_PLACEMENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_MENU_PRESENTATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_MENU_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FabMenuColor",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabMenuPlacement",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabMenuPresentation",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "FabMenuSize",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "fab/constants": [
+    {
+      "name": "FAB_ANIMATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_ICON_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "FAB_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "icon-button": [
     {
       "name": "createIconButton",
@@ -968,6 +1628,83 @@
       "status": "public"
     }
   ],
+  "icon-button/constants": [
+    {
+      "name": "DEFAULT_RIPPLE_CONFIG",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_CONTAINER_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_CORNER_RADIUS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_ICON_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_SHAPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_WIDTH_VALUES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ICON_BUTTON_WIDTHS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "IconButtonShape",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "IconButtonSize",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "IconButtonVariant",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "IconButtonWidth",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
   "list": [
     {
       "name": "default",
@@ -1035,6 +1772,38 @@
       "status": "public"
     }
   ],
+  "list/constants": [
+    {
+      "name": "LIST_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LIST_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LIST_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LIST_SCROLL_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LIST_SELECTION_MODES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LIST_TYPES",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "loading-indicator": [
     {
       "name": "default",
@@ -1059,6 +1828,33 @@
     {
       "name": "LoadingIndicatorConfig",
       "kind": "type",
+      "status": "public"
+    }
+  ],
+  "loading-indicator/constants": [
+    {
+      "name": "LOADING_INDICATOR_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LOADING_INDICATOR_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LOADING_INDICATOR_DETERMINATE_SHAPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LOADING_INDICATOR_SHAPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "LOADING_INDICATOR_SPRING",
+      "kind": "value",
       "status": "public"
     }
   ],
@@ -1124,6 +1920,11 @@
       "status": "public"
     },
     {
+      "name": "MenuEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "MenuGap",
       "kind": "type",
       "status": "public"
@@ -1141,6 +1942,48 @@
     {
       "name": "MenuSelectEvent",
       "kind": "type",
+      "status": "public"
+    }
+  ],
+  "menu/constants": [
+    {
+      "name": "MENU_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MENU_COLORS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MENU_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MENU_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MENU_INTERACTION_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MENU_ITEM_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MENU_POSITION",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "MENU_VARIANTS",
+      "kind": "value",
       "status": "public"
     }
   ],
@@ -1223,6 +2066,18 @@
       "status": "public"
     }
   ],
+  "navigation-rail/constants": [
+    {
+      "name": "NAVIGATION_RAIL_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "NAVIGATION_RAIL_ICONS",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "progress": [
     {
       "name": "default",
@@ -1252,6 +2107,63 @@
     {
       "name": "ProgressShape",
       "kind": "type",
+      "status": "public"
+    }
+  ],
+  "progress/constants": [
+    {
+      "name": "PROGRESS_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "PROGRESS_COLORS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "PROGRESS_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "PROGRESS_EASING",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "PROGRESS_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "PROGRESS_MEASUREMENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "PROGRESS_MOTION",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "PROGRESS_SHAPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "PROGRESS_THICKNESS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "PROGRESS_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "PROGRESS_WAVE",
+      "kind": "value",
       "status": "public"
     }
   ],
@@ -1327,6 +2239,52 @@
       "status": "public"
     }
   ],
+  "radios/constants": [
+    {
+      "name": "RADIO_CLASSES",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Read by nothing: the component builds its class names itself\nand has one size and variant (FLO-266)."
+    },
+    {
+      "name": "RADIO_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "RADIO_DIRECTIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "RADIO_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "RADIO_LABEL_POSITIONS",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Read by nothing: the component builds its class names itself\nand has one size and variant (FLO-266)."
+    },
+    {
+      "name": "RADIO_SIZES",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Read by nothing: the component builds its class names itself\nand has one size and variant (FLO-266)."
+    },
+    {
+      "name": "RADIO_STATES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "RADIO_VARIANTS",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Read by nothing: the component builds its class names itself\nand has one size and variant (FLO-266)."
+    }
+  ],
   "search": [
     {
       "name": "default",
@@ -1376,6 +2334,53 @@
     {
       "name": "SearchViewMode",
       "kind": "type",
+      "status": "public"
+    }
+  ],
+  "search/constants": [
+    {
+      "name": "SEARCH_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SEARCH_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SEARCH_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SEARCH_ICONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SEARCH_KEYS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SEARCH_MEASUREMENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SEARCH_STATES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SEARCH_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SEARCH_VIEW_MODES",
+      "kind": "value",
       "status": "public"
     }
   ],
@@ -1441,8 +2446,50 @@
       "status": "public"
     },
     {
+      "name": "SelectEvents",
+      "kind": "type",
+      "status": "public"
+    },
+    {
       "name": "SelectOption",
       "kind": "type",
+      "status": "public"
+    }
+  ],
+  "select/constants": [
+    {
+      "name": "SELECT_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SELECT_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SELECT_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SELECT_ICONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SELECT_INTERACTION",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SELECT_PLACEMENT",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SELECT_VARIANTS",
+      "kind": "value",
       "status": "public"
     }
   ],
@@ -1483,6 +2530,33 @@
       "status": "public"
     }
   ],
+  "side-sheet/constants": [
+    {
+      "name": "SIDE_SHEET_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SIDE_SHEET_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SIDE_SHEET_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SIDE_SHEET_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SIDE_SHEET_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "slider": [
     {
       "name": "default",
@@ -1506,6 +2580,48 @@
     },
     {
       "name": "SliderEvents",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
+  "slider/constants": [
+    {
+      "name": "SLIDER_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SLIDER_COLORS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SLIDER_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SLIDER_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SLIDER_MEASUREMENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SLIDER_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SLIDER_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SliderSize",
       "kind": "type",
       "status": "public"
     }
@@ -1582,6 +2698,58 @@
       "status": "public"
     }
   ],
+  "snackbar/constants": [
+    {
+      "name": "SNACKBAR_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SNACKBAR_CLOSE_ICON",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SNACKBAR_CLOSE_REASONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SNACKBAR_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SNACKBAR_DURATION_MS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SNACKBAR_DURATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SNACKBAR_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SNACKBAR_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SNACKBAR_QUEUE_BEHAVIORS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SNACKBAR_STATES",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "split-button": [
     {
       "name": "default",
@@ -1626,6 +2794,38 @@
     {
       "name": "SplitButtonVariant",
       "kind": "type",
+      "status": "public"
+    }
+  ],
+  "split-button/constants": [
+    {
+      "name": "SPLIT_BUTTON_CHEVRON",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SPLIT_BUTTON_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SPLIT_BUTTON_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SPLIT_BUTTON_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SPLIT_BUTTON_SIZES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SPLIT_BUTTON_VARIANTS",
+      "kind": "value",
       "status": "public"
     }
   ],
@@ -1681,7 +2881,39 @@
       "status": "public"
     }
   ],
+  "switch/constants": [
+    {
+      "name": "SWITCH_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SWITCH_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SWITCH_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SWITCH_LABEL_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "SWITCH_STATES",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "tabs": [
+    {
+      "name": "createTab",
+      "kind": "value",
+      "status": "public"
+    },
     {
       "name": "default",
       "kind": "value",
@@ -1743,8 +2975,18 @@
       "status": "public"
     },
     {
+      "name": "tabIdFor",
+      "kind": "value",
+      "status": "public"
+    },
+    {
       "name": "TabIndicator",
       "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "tabPanelIdFor",
+      "kind": "value",
       "status": "public"
     },
     {
@@ -1773,7 +3015,59 @@
       "status": "public"
     }
   ],
+  "tabs/constants": [
+    {
+      "name": "TAB_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TAB_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TAB_INDICATOR_WIDTH_STRATEGIES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TAB_LAYOUT",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TAB_STATES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TAB_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TABS_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TABS_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TABS_EVENTS",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "textfield": [
+    {
+      "name": "createTextField",
+      "kind": "value",
+      "status": "public"
+    },
     {
       "name": "default",
       "kind": "value",
@@ -1782,10 +3076,22 @@
     {
       "name": "TextfieldComponent",
       "kind": "type",
+      "status": "deprecated",
+      "note": "Use TextFieldComponent: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TextFieldComponent",
+      "kind": "type",
       "status": "public"
     },
     {
       "name": "TextfieldConfig",
+      "kind": "type",
+      "status": "deprecated",
+      "note": "Use TextFieldConfig: M3 writes \"text field\" as two words. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TextFieldConfig",
       "kind": "type",
       "status": "public"
     },
@@ -1812,6 +3118,43 @@
     {
       "name": "TextfieldValuePayload",
       "kind": "type",
+      "status": "public"
+    }
+  ],
+  "textfield/constants": [
+    {
+      "name": "TEXTFIELD_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXTFIELD_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXTFIELD_DENSITY",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXTFIELD_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXTFIELD_STATES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXTFIELD_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TEXTFIELD_VARIANTS",
+      "kind": "value",
       "status": "public"
     }
   ],
@@ -1952,6 +3295,71 @@
       "status": "public"
     }
   ],
+  "timepicker/constants": [
+    {
+      "name": "TIMEPICKER_CLASSES",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Unused by the picker, and without the prefix: use\n`TIMEPICKER_SELECTORS`. Two values that named nothing now match the DOM\n(`DIAL_CENTER`, `PERIOD_ACTIVE`). Kept for compatibility (FLO-281)."
+    },
+    {
+      "name": "TIMEPICKER_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_DIAL",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Unused, and not the dial's geometry: the DOM dial (FLO-279) is\nsized in CSS, a 256dp face with numbers on 101dp and 69dp rings and a 48dp\nhandle. Kept for compatibility (FLO-281)."
+    },
+    {
+      "name": "TIMEPICKER_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_FORMATS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_ICONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_ORIENTATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_PERIODS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_SELECTORS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_TYPES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_VALUES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TIMEPICKER_Z_INDEX",
+      "kind": "value",
+      "status": "deprecated",
+      "note": "Unused: the picker is a native modal `<dialog>` in the top layer\n(FLO-278), which needs no z-index. Kept for compatibility (FLO-281)."
+    }
+  ],
   "toolbar": [
     {
       "name": "createToolbar",
@@ -2064,6 +3472,83 @@
       "status": "public"
     }
   ],
+  "toolbar/constants": [
+    {
+      "name": "TOOLBAR_ARRANGEMENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLBAR_COLORS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLBAR_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLBAR_ORIENTATIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLBAR_PLACEMENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLBAR_SCROLL_BEHAVIORS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLBAR_SCROLL_THRESHOLD",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLBAR_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarArrangement",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarColor",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarFabPosition",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarOrientation",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarPlacement",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarScrollBehavior",
+      "kind": "type",
+      "status": "public"
+    },
+    {
+      "name": "ToolbarVariant",
+      "kind": "type",
+      "status": "public"
+    }
+  ],
   "tooltip": [
     {
       "name": "default",
@@ -2106,6 +3591,33 @@
       "status": "public"
     }
   ],
+  "tooltip/constants": [
+    {
+      "name": "TOOLTIP_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLTIP_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLTIP_EVENTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLTIP_POSITIONS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOOLTIP_VARIANTS",
+      "kind": "value",
+      "status": "public"
+    }
+  ],
   "top-app-bar": [
     {
       "name": "createTopAppBar",
@@ -2140,11 +3652,39 @@
     {
       "name": "TopAppBar",
       "kind": "type",
+      "status": "deprecated",
+      "note": "Use TopAppBarComponent, the name every component type has. Removed in 1.0 (FLO-383)."
+    },
+    {
+      "name": "TopAppBarComponent",
+      "kind": "type",
       "status": "public"
     },
     {
       "name": "TopAppBarConfig",
       "kind": "type",
+      "status": "public"
+    }
+  ],
+  "top-app-bar/constants": [
+    {
+      "name": "TOP_APP_BAR_CLASSES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOP_APP_BAR_DEFAULTS",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOP_APP_BAR_STATES",
+      "kind": "value",
+      "status": "public"
+    },
+    {
+      "name": "TOP_APP_BAR_TYPES",
+      "kind": "value",
       "status": "public"
     }
   ]
