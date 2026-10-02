@@ -11,7 +11,7 @@
  */
 
 // Export main component factory
-export { default } from './select';
+export { default, default as createSelect } from './select';
 // The event map `on` and `off` are typed with (FLO-384)
 export type { SelectEvents } from './types';
 

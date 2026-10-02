@@ -15,7 +15,7 @@ import {
 } from "../../scripts/build-styles";
 import { elements } from "../../src/elements";
 import { preupgradeRollback, preupgradeSheet, retagPreupgrade } from "../../src/elements/styles";
-import { assertRollbackBeats, repeatedAttributeBytes, ruleSelectors, selectorSpecificity, subjectShape } from "../../scripts/preupgrade-specificity";
+import { assertRollbackBeats, repeatedAttributeBytes, ruleSelectors, selectorSpecificity, splitSelectors, subjectShape } from "../../scripts/preupgrade-specificity";
 
 const options: sass.StringOptions<"sync"> = {
   loadPaths: [resolve("src/styles")], style: "compressed", logger: sass.Logger.silent,
@@ -25,7 +25,7 @@ const rules = await preupgradeStyles(names, options);
 
 /** The selectors of compressed CSS without nested at-rules. */
 const selectors = (css: string): string[] =>
-  Array.from(css.matchAll(/([^{}]+)\{[^{}]*\}/g), (match) => match[1].split(",")).flat();
+  Array.from(css.matchAll(/([^{}]+)\{[^{}]*\}/g), (match) => splitSelectors(match[1])).flat();
 
 // jsdom's engine (nwsapi) does not implement `:defined`. This applies the
 // child selector the sheet emits: the parent compound, then `>`, then the

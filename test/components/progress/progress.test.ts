@@ -72,7 +72,14 @@ dom.window.HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasEl
   } as unknown as CanvasRenderingContext2D;
 } as any;
 
-import createProgress from '../../../src/components/progress';
+import create from '../../../src/components/progress';
+import type { ProgressComponent, ProgressConfig, ProgressInternals } from '../../../src/components/progress/types';
+
+// The canvas is off the public type (3.0.0, a contract reservation) and still
+// on the object: these tests look at what is drawn, so they read it through
+// the internal type.
+const createProgress = (config?: ProgressConfig): ProgressComponent & ProgressInternals =>
+  create(config) as ProgressComponent & ProgressInternals;
 
 const shapes = (p: { canvas?: unknown }): Shape[] => recordings.get(p.canvas as HTMLCanvasElement) ?? [];
 // JSDOM lays nothing out: give every element the width a browser would

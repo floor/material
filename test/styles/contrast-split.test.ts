@@ -109,10 +109,21 @@ describe("explicit contrast levels are opt-in", () => {
       loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent,
     }).css;
     // `@use "main"` compressed, before the banner the build adds.
-    // The hash is this sheet with the text field's insets mirrored by one block (FLO-562).
+    // The hash is this sheet with the text field's layout at the M3 measurements (FLO-299),
+    // its insets mirrored by one block (FLO-562), the unlabelled checkbox's centring
+    // (styles/components/_checkbox.scss), the icon button's inner padding
+    // (styles/components/_icon-button.scss), the unlabelled switch's 52 x 48 box
+    // (styles/components/_switch.scss), the close target of the side sheet and the
+    // dialog (styles/components/_side-sheet.scss, styles/components/_dialog.scss),
+    // a radio row that grows with its label
+    // with an unlabelled radio centred (styles/components/_radios.scss), the slider's
+    // label at Body Large, not 18px (styles/components/_slider.scss), the select
+    // menu's width, mark and selected colours (styles/components/_select.scss,
+    // styles/components/_menu.scss), and the chip's secondary-action floor
+    // (styles/components/_chips.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("8df8789837d814bcc83d346bd29ebaaff0b4d5eaa18c9e045aae15a650e17ae2");
-    expect(css.length).toBe(525027);
+      .toBe("0b0ee5ff38de02517a5436da622ceb0da3c5a063c5ced85c6c58c4bdd920bc94");
+    expect(css.length).toBe(525086);
   });
 
   test("today's sheets still resolve to the fixture", () => {

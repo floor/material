@@ -32,12 +32,6 @@ export type TextFieldElementComponent = TextFieldComponent & {
 const create = (config: TextFieldConfig & { ariaLabel?: string }): TextFieldElementComponent => {
   const field = createTextField(config);
   const input = field.input;
-  // The factory writes the value as a `value` attribute, which a textarea
-  // ignores: a multiline field would start empty. Its default value is set here.
-  if (config.value && input instanceof HTMLTextAreaElement) {
-    input.defaultValue = config.value;
-    field.updatePositions();
-  }
   // The factory takes no aria-label; it names the inner input.
   if (config.ariaLabel) input.setAttribute("aria-label", config.ariaLabel);
   return Object.assign(field, { select: () => input.select() });

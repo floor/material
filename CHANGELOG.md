@@ -32,6 +32,9 @@ the new name exists only in 3.0.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `T
   (`import { pipe } from 'material/core/compose'`). The
   [migration table](https://github.com/floor/material/blob/main/scripts/fixtures/root-exports.md)
   gives every one.
+- **`material/core/<area>` only.** A path under an area no longer resolves:
+  `mtrl/core/compose/features` becomes `material/core/compose`, which exports the same names
+  (`withLifecycle` among them).
 - **Folders inside a component no longer resolve** (`mtrl/components/chips/chip`,
   `…/features`): they held internals, with no replacement.
 - **Vue 3.4.20 or newer.** With `skipLibCheck: false`, `@types/react` 18.2.71 or newer.
@@ -158,6 +161,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `.mtrl-textfield…` or `::part(textfield)` matches nothing, a `classList` call with the old
   class changes nothing, and defaults set under `'textfield'` are ignored. Nothing warns.
   Search your CSS and your code for `textfield`.
+- **A select made with `createSelect()` no longer fills its container.** Unsized, it is
+  280px wide, as a text field is; it was as wide as what held it. Nothing warns: a form
+  whose selects spanned their column now shows them 280px wide. Search for `createSelect(`
+  and give each select that should fill its container a width
+  (`.mtrl-select { width: 100%; }`).
 - **A text field with a prefix or a suffix has no inline padding (FLO-299).**
   `field.input.style.paddingLeft` and `paddingRight` read `''`, and the label has no inline
   `left`: the stylesheet pads the input from `--mtrl-text-field-prefix-width` and
@@ -341,6 +349,33 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed (breaking)
 
+- **`material/core/<area>` is an explicit list: seven areas, and no path under them (FLO-414).**
+  The export map listed `./core/*`, and a `*` in an exports pattern crosses slashes: besides
+  the areas it resolved a folder inside one, `material/core/compose/features`, which the
+  README's "Building your own components" imported `withLifecycle()` from (in 0.10.x too).
+  The map now names `material/core` and its seven areas: `material/core/canvas`, `/compose`,
+  `/dom`, `/shapes`, `/state`, `/theme` and `/utils`. Any other path under `material/core`
+  throws `ERR_PACKAGE_PATH_NOT_EXPORTED`, and TypeScript reports the import (TS2307).
+  Migration:
+
+  | 0.10 | 3.0 |
+  |---|---|
+  | `import { withLifecycle } from 'mtrl/core/compose/features'` (and any other name from that path) | `import { withLifecycle } from 'material/core/compose'`: the same name, the same function |
+
+  Every name `material/core/compose/features` exported is an export of
+  `material/core/compose`, except `withBadge` and the types `BadgeComponent` and
+  `BadgeConfig` of that feature, which no document named: they are internal; for a badge,
+  use `createBadge` from `material`. `LabelManager`, the type of `LabelComponent`'s `label`,
+  was only in the nested path and is now exported from `material/core/compose`.
+- **Progress: `canvas`, `resize`, `track`, `indicator` and `buffer` are no longer on
+  `ProgressComponent`.** They named how the indicator is drawn (one canvas; `track`,
+  `indicator` and `buffer` were that same canvas under the names of an older SVG), which
+  tied the public type to one way of drawing it. The objects are unchanged at run time;
+  the type no longer promises them, and how the indicator is drawn may change in a later
+  release. Reading `progress.canvas` in TypeScript is now an error (TS2339). Migration:
+  for the canvas, `progress.element.querySelector('canvas')`; nothing replaces `resize()`,
+  as the component observes its own size; `setBuffer()` and `getBuffer()`, the buffer's
+  value, are unchanged.
 - **Explicit contrast levels are opt-in (FLO-540).** `material/styles/base` and `material/themes/<name>`
   keep standard contrast and `prefers-contrast: more`. `data-theme-contrast="medium"` and `"high"`
   (material-color-utilities contrast 0.5 and 1.0; the values are unchanged) move to
@@ -979,6 +1014,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `v.shape(<step>)`.
 
 ### Added
+- `material/components/chips` and `material/components/divider` now have their factory as the default export, as the other component entries do. Every `material/components/<name>` entry exports its factory as the default export and by its name.
 
 - **`isOpen()` on the snackbar and the date picker (FLO-548)**, as on every other overlay.
 - **Split button `setItems(items)` and `getItems()` (FLO-543).** `setItems` replaces the menu's
@@ -1049,7 +1085,51 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **The package's README on npm is a short one.** `npm-readme.md` is packed as the package's
   `README.md` (install, one example, the component list, and links to md3.io); the full
   README stays on GitHub. Nothing in the API changes.
+- **The slider's label takes the Body Large role, and a labelled horizontal slider is 4px
+  taller (FLO-587).** The label on a slider is this library's — the specification puts no label
+  on a slider — so the form controls' label role decides, as it does for the checkbox, radio
+  and switch labels: the label's text is now 16px on a 24px line (was 18px on an inherited 20px
+  line). A horizontal slider with a label is 4px taller: 72 → 76px at XS and S, 76 → 80 at M,
+  92 → 96 at L, 132 → 136 at XL; a vertical slider's height is unchanged. A layout that
+  reserved the old height gains 4px per labelled slider.
+- **The element authoring API is experimental.** `defineElement`, `ElementSpec`,
+  `registerStyles`, `hasStyles` and `SHADOW_BASE_STYLES` (from `material/elements`), the API
+  for writing custom elements of your own on material's machinery, are tagged
+  `@experimental` in their TSDoc and are outside semantic versioning in 3.x: they may change
+  in a minor release. Nothing about them changes in this release. The elements material
+  defines (`<m-button>`, `<m-text-field>` and the rest), their attributes, properties and
+  events, and the `define…()` functions are covered by semantic versioning as before. If
+  you build your own elements on this API, pin the minor version (`~3.0.0`).
+- **Slider: the `components` bag is internal.** The slider's controller reads an older
+  `components` object as a fallback for its elements; nothing in the library fills it, the
+  public `SliderComponent` never had it, and it is now marked internal and outside the
+  public contract: it may go in any release. Use the slider's own API (`setValue()`,
+  `getValue()` and the rest of `SliderComponent`) and `slider.element`.
+- **Tabs: `tab.badge` may be `undefined` until the badge is shown.** The type always allowed
+  it (`badge?: BadgeComponent`); it is now the documented contract, on `tab.badge` and on
+  `getBadgeComponent()`: a tab creates its badge no later than when it shows it, so a later
+  release can create it only then. Nothing changes at run time in this release: the badge
+  still exists from the first `setBadge()`, or from creation with the `badge` option. Use
+  `setBadge()`, `getBadge()`, `showBadge()` and `hideBadge()`, which work whether the badge
+  exists yet or not, and check `tab.badge` for `undefined` before reading it.
+- **A short chip with a secondary action is wider, by the specification.** Material 3, Chips:
+  "Secondary actions (such as a trailing icon button for Remove) must have a 48x48dp
+  interaction target that doesn't interfere with the chip's primary action (such as Edit or
+  Drag). To achieve this, apply a minimum width of 88dp to the chip, or 42dp to the label
+  text." A chip with a remove or trailing button is therefore at least 88px wide, its label
+  at least 42px: the last 48px of the chip are the secondary action's target, by the
+  specification, and the chip's own action owns the rest, at least 40px. An input chip
+  labelled "Label" is 88px (was 80.05) and one labelled "OK" 88px (was 64.5); a filter chip,
+  whose action starts 16px in, measures 92px (was 84.05 for "Label" and 68.5 for "OK"). A
+  chip whose label already filled the 88px floor is unchanged.
 - **An extra-small button's space between its icon and its label is 4px.** It was 8px. Material 3's token `md.comp.button.xsmall.icon-label-space` is 4, and Compose's `ButtonDefaults.ExtraSmallIconSpacing` is 4.
+- **An unsized select is 280px wide, as an unsized text field is.** `createSelect()` made a
+  select that took its container's whole width (200px in a 200px container, 400px in a
+  400px one), where the text field, on both paths, and `<m-select>` are 280px whatever holds
+  them. The factory's select now sizes as they do. Migration: to keep a select filling its
+  container, give it the width: `select.element.style.width = '100%'` or the rule
+  `.mtrl-select { width: 100%; }`; for the element, `m-select { width: 100%; }`. There is
+  no option for it.
 - **Text field: the spacing follows the M3 measurements (FLO-299).** A field's layout shifts
   by the amounts below; nothing in the API changes. Sources: the measurement tables on
   m3.material.io's text fields page, and Compose's `TextFieldImpl.kt` for the positions the
@@ -1127,7 +1207,64 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **The side sheet's and the dialog's close buttons reach 48 x 48.** Both were hand-built 40px
+  buttons with no expanded target, so a pointer 4px outside an edge — the outer band of the M3
+  target — hit nothing, left-to-right and right-to-left alike. Each now carries the icon button's
+  own mechanism: a `::after` box 48 x 48 centred on it, so the reachable target is 48 x 48 while
+  the button still paints 40 x 40, in place. M3 "Density": "The default target size should be at
+  least 48x48 CSS pixels."
+- **A multiline text field uses the value it was created with (FLO-577).** `createTextField({ type: 'multiline', value })` wrote that string as a `value` attribute. A textarea does not take its value from that attribute, so `getValue()` was empty, the label stayed down, and a reset restored nothing. The value is now the textarea's default value, which is its text: the field shows it, the label floats, and a reset restores it. A single-line field still uses the `value` attribute. `<m-text-field>` no longer sets the default a second time.
+- **An unlabelled switch is its 52 x 48 track box, not the label's row.** With no label the root
+  kept the label's 12px gap, so it was 64px wide (12 + the 52px track) and 56px tall: in a 48px
+  slot the track ran 16px past the end and the checked 40px state layer 20px past it. The gap
+  belongs between a label and the track, and with no label the root is now the track's width and
+  48px tall with the 32px track centred. M3 "Switch" -> Specs -> Measurements gives the track
+  32x52dp and "Target: Size 48dp", and no height for a label row; its Accessibility section:
+  "Don't apply density to switches by default — this lowers their targets below our best
+  practice of 48x48 CSS pixels." So the unlabelled row is 48 tall, and a labelled switch keeps
+  its 56px row, unchanged. A switch with supporting text and no label is not unlabelled: its
+  helper stands where the label would, keeping the 12px gap and the 56px row. A label made only
+  of spaces is not empty, so the factory still treats `label: " "` as a labelled switch (the
+  element trims its text, so this is the factory only). Factory and element, left-to-right and
+  right-to-left. Before upgrade,
+  write the tag with nothing between its tags: a whitespace-only text node (a space, a line
+  break) is not `:empty`, so such a host keeps the labelled layout although the element then
+  builds no label.
+- **A radio row grows with a wrapping label, and the circle stays centred on the label block.** The row was a fixed 48px, so a three-line label painted 12px above and below it, and two adjacent wrapping labels overlapped. The row is now at least 48px (`min-height`) with 4px of vertical padding, so it grows with the text and a one-line row stays 48px (circle 14px from the top and 10px from the inline start, text 12px from the top, 8px gap). The circle stays centred on the label block, as a labelled checkbox's box is. A horizontal group keeps `align-items: flex-start` and sets no `align-self`: options on one line share the start edge, and the next line starts after the tallest row. The pre-upgrade `<m-radio>` reserves the same minimum (`min-height: 48px`); a short label stays 48px.
+- **An unlabelled radio is centred in its 48px target.** The factory always appends `.mtrl-radios__text`, and an empty label still took the 8px inline-start margin, so the 40px control sat flush at the start: the 20px circle's centre was at 20 rather than 24 (inset 10/18) and the state layer's inset was 0/8. An empty text span now takes no space. The row would then be 40px wide, so the unlabelled row sets `min-width: 48px` and centres the control. The circle's inset is 14/14 and the state layer's inset is 4/4, in both directions. A label made only of spaces is not empty, so the factory still treats `label: " "` as a labelled option (the element trims its text, so this is the factory only). Material 3 radio button, Specs, Measurements: icon size 20dp, state layer size 40dp, target size 48dp.
+- **An unlabelled checkbox centres its box in its 48px target, state layer inside.** The 18px
+  box sat flush at the inline-start (start inset 0, end inset 30), so the 40px state layer
+  (`::before`, centred on the box) spanned −11 to 29 — 11px outside the target — and the
+  focus ring reached 16px before the root's edge. Factory and element, left-to-right and
+  right-to-left. With no label the root is its own target, so the box now keeps 15px on both
+  sides (M3 "Icon alignment Center-aligned", "Target size 48dp") and the state layer
+  ("State-layer size 40dp") lies 4px inside the root on all sides. A labelled checkbox, whose
+  root hugs box, gap and label, is unchanged. Before upgrade, write the tag with nothing between
+  its tags: a whitespace-only text node (a space, a line break) is not `:empty`, so such a host
+  keeps the labelled layout although the element then builds no label.
+- **An `<m-icon-button>`'s icon keeps its size token.** The element's inner `<button>` kept Chrome's
+  default padding, `1px 6px`, because the page reset's `button { padding: 0 }` is not in the shadow
+  root's adopted stylesheets, while the factory, which the page's global stylesheet does reach,
+  computes `0px`. Where the container left no room for icon and padding, the icon, a shrinkable flex
+  item, was drawn under its token: outlined xs narrow 14 against 20, outlined s narrow 18 against 24,
+  filled, tonal and standard xs narrow 16 against 20 and their s narrow 20 against 24, outlined xs
+  default width 18 against 20. The component stylesheet the element adopts now repeats the reset.
 - The package no longer contains a second copy of the README and licence under `dist/`.
+- **Select: the menu, measured against the field in every layer.** Three defects from a
+  measurement of the select, in the factory's default layer (the menu inside the select's
+  element), with `layer: "top"`, and in `<m-select>`:
+  - **Right to left, the selected option's check mark was drawn over its text.** It stayed at
+    the item's right, where right-to-left text begins: 18px of overlap. It is at the item's
+    end in both directions. The same holds for a selected item of any menu.
+  - **The menu is its field's width in both layers.** In the default layer it kept a menu's
+    280px maximum, so under a 400px field it was 280px wide and stopped 120px short; in the
+    top layer it was 400px. The rule is one: the menu is as wide as its field (Compose's
+    exposed dropdown matches its anchor's width), and never under the 112px the M3 site gives
+    a menu as its minimum.
+  - **The selected option has one look, the M3 token's:** secondary-container with
+    on-secondary-container text (`md.comp.menu.list-item.selected.container.color` and
+    `.label-text.color`). In the top layer, and so in `<m-select>`, it was the primary colour
+    at 12% with primary text.
 - **A button's asymmetric icon padding mirrors in right-to-left.** A size `s` button with a leading icon, and a text button at `xs` or `s` with a leading icon, keep 12px before the icon and 16px after the label in both directions. Under `dir="rtl"` those insets had stayed physical, so the start side was 16px and the end side 12px. The insets are logical and follow the direction the icon already follows, including into a shadow root whose `dir` ancestor is outside it.
 - **`<m-text-field>` in a right-to-left page is mirrored (FLO-562).** A `dir="rtl"` on an
   ancestor is outside the element's shadow root, where the stylesheet's `[dir]` selectors do

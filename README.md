@@ -283,6 +283,14 @@ A server-rendered page sends each element as its tag and light DOM, and the elem
 
 With a bundler, import `material/elements/preupgrade.css`. What the stylesheet does, its per-element files and its limits are in the [Server rendering guide](https://md3.io/docs/server-rendering/#avoiding-layout-shift); attributes, events, slots and forms are in the [Web Components guide](https://md3.io/docs/web-components/).
 
+The API for writing elements of your own is experimental: it is outside semantic versioning in 3.x and may change in a minor release. The elements material defines, and their attributes, properties and events, are not. The experimental names, all from `material/elements`:
+
+- `defineElement`
+- `ElementSpec`
+- `registerStyles`
+- `hasStyles`
+- `SHADOW_BASE_STYLES`
+
 ## React, Vue, Svelte and Solid
 
 The framework components render the elements, so everything above holds: forms, the top layer, the styling. Each entry loads the elements' CSS and registers each element the first time it mounts.
@@ -402,7 +410,7 @@ What the pipe built:
 - `withEvents` adds the three event methods, `on()` among them;
 - `destroy()` removes the element.
 
-Add `withLifecycle()` when features need to register cleanup; it comes from `material/core/compose/features`. The [Architecture guide](https://md3.io/docs/architecture/) explains the building blocks.
+Add `withLifecycle()` when features need to register cleanup; it comes from `material/core/compose`, with the others. The [Architecture guide](https://md3.io/docs/architecture/) explains the building blocks.
 
 ## Markup and sanitizing
 

@@ -73,9 +73,15 @@ describe('state layer opacities follow M3', () => {
     }
   });
 
-  test('a selected container fill keeps 12% as well', () => {
-    const selected = rulesOf('select').filter((rule) => /--selected/.test(withoutNegations(rule.selector)));
-    expect(selected.flatMap((rule) => alphaPercents(rule.body))).toContain(12);
+  // The select had a selected fill of its own, the primary colour at 12%, which
+  // only the top layer's menu took. The selected option is the menu's now, in
+  // every layer: md.comp.menu.list-item.selected.container.color, a solid
+  // secondary-container, so there is no alpha left here to drift.
+  test("a select's selected option is the menu's secondary-container, with no fill of its own", () => {
+    const own = rulesOf('select').filter((rule) => /--selected/.test(withoutNegations(rule.selector)));
+    expect(own.flatMap((rule) => alphaPercents(rule.body))).toEqual([]);
+    const menu = rulesOf('menu').filter((rule) => /__item--selected$/.test(withoutNegations(rule.selector).trim()));
+    expect(menu.map((rule) => rule.body).join(' ')).toMatch(/background-color:\s*var\(--mtrl-sys-color-secondary-container\)/);
   });
 
   // Not search: its `--selected` suggestion is the option the arrows reach, the

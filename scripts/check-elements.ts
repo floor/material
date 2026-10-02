@@ -15,7 +15,10 @@ import { chromium, type Page } from "playwright";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
+import { ICON_BUTTON_ICON_SIZES } from "../src/components/icon-button/constants";
 import { checkTextFieldLayout, checkTextFieldReducedMotion } from "./check-text-field-browser";
+import { checkRadiosLayout } from "./check-radios-layout";
+import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
 
 // Runs against the build: `bun run build` first, as CI does.
@@ -157,6 +160,7 @@ try {
   });
   await page.goto(`http://127.0.0.1:${server.port}`);
   await page.waitForFunction(() => (window as unknown as Win).ready === true);
+  await checkRadiosLayout(page, "element", check);
   await checkCheckableValues(page, "element");
   await checkRegistryEvents(page, fresh, check);
 
@@ -427,6 +431,220 @@ try {
     });
     assert.deepEqual(parity.element, parity.factory);
     check("switch: renders as the factory does with the global stylesheet");
+  }
+
+  // A switch with no label is its own target: the 12px gap belongs between a
+  // label and the track and there is none, so the root is the 52px track wide
+  // and 48px tall with the 32px track centred — M3 "Switch" -> Specs ->
+  // Measurements (m3-switch.txt:52): Track 32x52dp, "Target: Size 48dp", and no
+  // height for a label row; its accessibility section (m3-switch.txt:130) calls
+  // 48x48 CSS pixels "our best practice". A labelled root keeps the 56px row
+  // (the root's 4px above and below the 48px container) and hugs label + 12px +
+  // track, so its measured layout below must not move. A switch whose only text
+  // is its supporting text is not unlabelled: its helper stands where the label
+  // would, so the 12px gap and the 56px row stay — what origin/main gave it
+  // before the unlabelled fix. The sweep at 1dc3bc72 measured the unlabelled
+  // root at 64 = 12 + 52 and the labelled one at 105.19 = 41.19 + 64
+  // (analysis/sweep/switch/measure.json).
+  {
+    const dirs = ["ltr", "rtl"] as const;
+    const states = ["unchecked", "checked", "disabled"] as const;
+    const elements = (dir: string): string => {
+      const sw = (id: string, state: string): string =>
+        `<m-switch id="${id}" aria-label="Switch"${state === "checked" ? " checked" : ""}${state === "disabled" ? " disabled" : ""}></m-switch>`;
+      return (
+        states.map((state) => sw(`u-${dir}-${state}`, state)).join("") +
+        states.map((state) => `<div style="width:52px">${sw(`s-${dir}-${state}`, state)}</div>`).join("") +
+        `<m-switch id="l-${dir}">Label</m-switch>` +
+        `<m-switch id="h-${dir}" aria-label="Switch" supporting-text="Helps"></m-switch>`
+      );
+    };
+    await fresh(
+      page,
+      `${dirs.map((dir) => `<div dir="${dir}">${elements(dir)}</div>`).join("")}<section id="factory"></section>`
+    );
+
+    const measured = await page.evaluate(
+      ({ dirs, states }: { dirs: string[]; states: string[] }) => {
+        type Box = { left: number; top: number; right: number; bottom: number };
+        const w = window as unknown as Win & { mtrl: { createSwitch: (c: object) => { element: HTMLElement } } };
+        const factory = document.getElementById("factory") as HTMLElement;
+        const r2 = (n: number): number => Math.round(n * 100) / 100;
+        const show = (r: Box): string => `[${r2(r.left)}, ${r2(r.top)}, ${r2(r.right)}, ${r2(r.bottom)}]`;
+        /** The element's component root inside its shadow root (the host is what the page holds). */
+        const inner = (host: HTMLElement): HTMLElement => (host.shadowRoot?.firstElementChild as HTMLElement) ?? host;
+        const trackOf = (root: HTMLElement): HTMLElement => root.querySelector('[class*="switch__track"]') as HTMLElement;
+        const failures: string[] = [];
+        const labelFailures: string[] = [];
+        const supportFailures: string[] = [];
+
+        /** The unlabelled contract: a 52 x 48 root, the track flush with it
+            horizontally and centred vertically, and — with a slot — the track
+            inside the slot. */
+        const unlabelled = (root: HTMLElement, slot: HTMLElement | null, what: string): void => {
+          const rootRect = root.getBoundingClientRect();
+          const trackRect = trackOf(root).getBoundingClientRect();
+          if (Math.abs(rootRect.width - 52) > 0.5) failures.push(`${what}: root is ${r2(rootRect.width)}px wide (want 52)`);
+          if (Math.abs(rootRect.height - 48) > 0.5) failures.push(`${what}: root is ${r2(rootRect.height)}px tall (want 48)`);
+          if (Math.abs(trackRect.left - rootRect.left) > 0.5 || Math.abs(trackRect.right - rootRect.right) > 0.5) {
+            failures.push(`${what}: track ${show(trackRect)} is not flush with the root ${show(rootRect)} horizontally`);
+          }
+          const dy = Math.abs((trackRect.top + trackRect.bottom - rootRect.top - rootRect.bottom) / 2);
+          if (dy > 0.5) failures.push(`${what}: track ${show(trackRect)} is ${r2(dy)}px off the root ${show(rootRect)} vertically`);
+          if (slot) {
+            const slotRect = slot.getBoundingClientRect();
+            if (
+              trackRect.left < slotRect.left - 0.5 || trackRect.right > slotRect.right + 0.5 ||
+              trackRect.top < slotRect.top - 0.5 || trackRect.bottom > slotRect.bottom + 0.5
+            ) {
+              failures.push(`${what}: track ${show(trackRect)} runs outside the 52px slot ${show(slotRect)}`);
+            }
+          }
+        };
+
+        // The labelled layout the fix must keep: the root hugs the label, the
+        // 12px gap and the 52px track. Every expectation below is derived from
+        // the label's own rendered width in this run (root = label + 64, the far
+        // insets 64), so it holds on any machine's sans-serif. The word "Label"
+        // rendered 41.19px here; that number is not asserted.
+        const labelled = (root: HTMLElement, position: "start" | "end", what: string): void => {
+          const rootRect = root.getBoundingClientRect();
+          const rtl = getComputedStyle(root).direction === "rtl";
+          const trackRect = trackOf(root).getBoundingClientRect();
+          const labelRect = (root.querySelector(".mtrl-switch__label") as HTMLElement).getBoundingClientRect();
+          const labelW = r2(labelRect.width);
+          /** A rect edge's inset from the root's, on the inline axis. */
+          const inset = (rect: Box, side: "start" | "end"): number => {
+            if (side === "start") return rtl ? rootRect.right - rect.right : rect.left - rootRect.left;
+            return rtl ? rect.left - rootRect.left : rootRect.right - rect.right;
+          };
+          const got = {
+            rootW: r2(rootRect.width),
+            rootH: r2(rootRect.height),
+            labelStart: r2(inset(labelRect, "start")),
+            labelEnd: r2(inset(labelRect, "end")),
+            trackStart: r2(inset(trackRect, "start")),
+            trackEnd: r2(inset(trackRect, "end")),
+            trackTop: r2(trackRect.top - rootRect.top),
+          };
+          // start: label [0, labelW], gap 12, track [labelW + 12, ...]. end: the
+          // row is reversed — track [0, 52], gap, label [64, ...]. The row is
+          // 56 tall (4 + the 48px container + 4), so the track starts 12 in.
+          const want = position === "start"
+            ? { rootW: labelW + 64, rootH: 56, labelStart: 0, labelEnd: 64, trackStart: labelW + 12, trackEnd: 0, trackTop: 12 }
+            : { rootW: labelW + 64, rootH: 56, labelStart: 64, labelEnd: 0, trackStart: 0, trackEnd: labelW + 12, trackTop: 12 };
+          const off = (a: number, b: number): boolean => Math.abs(a - b) > 0.5;
+          if (
+            off(got.rootW, want.rootW) || off(got.rootH, want.rootH) ||
+            off(got.labelStart, want.labelStart) || off(got.labelEnd, want.labelEnd) ||
+            off(got.trackStart, want.trackStart) || off(got.trackEnd, want.trackEnd) ||
+            off(got.trackTop, want.trackTop)
+          ) {
+            labelFailures.push(
+              `${what}: root ${got.rootW}x${got.rootH} (want ${want.rootW}x${want.rootH}), ` +
+                `label start ${got.labelStart} / end ${got.labelEnd} (want ${want.labelStart} / ${want.labelEnd}), ` +
+                `track start ${got.trackStart} / end ${got.trackEnd} / top ${got.trackTop} (want ${want.trackStart} / ${want.trackEnd} / ${want.trackTop})`
+            );
+          }
+        };
+
+        /** A switch whose only text is its supporting text: the helper takes
+            the label's place, so the labelled row and its 12px gap must hold
+            — origin/main's layout for this switch before the unlabelled fix,
+            which the guard must not reach. As the labelled rows: every
+            expectation is derived from the helper's own rendered width in
+            this run, so no font is pinned. */
+        const supporting = (root: HTMLElement, what: string): void => {
+          const rootRect = root.getBoundingClientRect();
+          const rtl = getComputedStyle(root).direction === "rtl";
+          const trackRect = trackOf(root).getBoundingClientRect();
+          const helperRect = (root.querySelector(".mtrl-switch__helper") as HTMLElement).getBoundingClientRect();
+          const helperW = r2(helperRect.width);
+          /** A rect edge's inset from the root's, on the inline axis. */
+          const inset = (rect: Box, side: "start" | "end"): number => {
+            if (side === "start") return rtl ? rootRect.right - rect.right : rect.left - rootRect.left;
+            return rtl ? rect.left - rootRect.left : rootRect.right - rect.right;
+          };
+          const got = {
+            rootW: r2(rootRect.width),
+            rootH: r2(rootRect.height),
+            helperStart: r2(inset(helperRect, "start")),
+            helperEnd: r2(inset(helperRect, "end")),
+            trackStart: r2(inset(trackRect, "start")),
+            trackEnd: r2(inset(trackRect, "end")),
+            trackTop: r2(trackRect.top - rootRect.top),
+            gap: r2(rtl ? helperRect.left - trackRect.right : trackRect.left - helperRect.right),
+          };
+          // The labelled row with the helper standing where the label would:
+          // root = helper + 64 (the 12px gap and the 52px track), 56 tall, the
+          // track 12 in.
+          const want = {
+            rootW: helperW + 64, rootH: 56, helperStart: 0, helperEnd: 64,
+            trackStart: helperW + 12, trackEnd: 0, trackTop: 12, gap: 12,
+          };
+          const off = (a: number, b: number): boolean => Math.abs(a - b) > 0.5;
+          if (
+            off(got.rootW, want.rootW) || off(got.rootH, want.rootH) ||
+            off(got.helperStart, want.helperStart) || off(got.helperEnd, want.helperEnd) ||
+            off(got.trackStart, want.trackStart) || off(got.trackEnd, want.trackEnd) ||
+            off(got.trackTop, want.trackTop) || off(got.gap, want.gap)
+          ) {
+            supportFailures.push(
+              `${what}: root ${got.rootW}x${got.rootH} (want ${want.rootW}x${want.rootH}), ` +
+                `helper start ${got.helperStart} / end ${got.helperEnd} (want 0 / 64), gap ${got.gap} (want 12), ` +
+                `track start ${got.trackStart} / end ${got.trackEnd} / top ${got.trackTop} (want ${want.trackStart} / 0 / 12)`
+            );
+          }
+        };
+
+        /** A shrink-to-fit holder, as the sweep's page: the root's width:100%
+            must resolve to its content, not to a block's width. */
+        const hold = (dir: string, child: HTMLElement): HTMLElement => {
+          const holder = document.createElement("div");
+          holder.dir = dir;
+          holder.style.display = "inline-block";
+          holder.append(child);
+          factory.append(holder);
+          return child;
+        };
+        /** A 52px wide slot: the whole track must stay inside it. */
+        const slot = (dir: string, child: HTMLElement, what: string): void => {
+          const box = document.createElement("div");
+          box.dir = dir;
+          box.style.width = "52px";
+          box.append(child);
+          factory.append(box);
+          unlabelled(inner(child), box, `${what} in a 52px slot`);
+        };
+
+        for (const dir of dirs) {
+          for (const state of states) {
+            unlabelled(inner(document.getElementById(`u-${dir}-${state}`) as HTMLElement), null, `element ${dir} ${state}`);
+            const slotted = document.getElementById(`s-${dir}-${state}`) as HTMLElement;
+            unlabelled(inner(slotted), slotted.parentElement as HTMLElement, `element ${dir} ${state} in a 52px slot`);
+            unlabelled(
+              hold(dir, w.mtrl.createSwitch({ checked: state === "checked", disabled: state === "disabled" }).element),
+              null,
+              `factory ${dir} ${state}`
+            );
+            slot(dir, w.mtrl.createSwitch({ checked: state === "checked", disabled: state === "disabled" }).element, `factory ${dir} ${state}`);
+          }
+          labelled(inner(document.getElementById(`l-${dir}`) as HTMLElement), "start", `element ${dir} labelled`);
+          labelled(hold(dir, w.mtrl.createSwitch({ label: "Label" }).element), "start", `factory ${dir} labelled`);
+          labelled(hold(dir, w.mtrl.createSwitch({ label: "Label", labelPosition: "end" }).element), "end", `factory ${dir} labelled-end`);
+          supporting(inner(document.getElementById(`h-${dir}`) as HTMLElement), `element ${dir} with supporting text`);
+          supporting(hold(dir, w.mtrl.createSwitch({ supportingText: "Helps" }).element), `factory ${dir} with supporting text`);
+        }
+        return { failures, labelFailures, supportFailures };
+      },
+      { dirs: [...dirs], states: [...states] }
+    );
+    for (const line of [...measured.failures, ...measured.labelFailures, ...measured.supportFailures]) console.log(`  FAIL ${line}`);
+    assert.deepEqual(measured.failures, [], "the unlabelled switch must be the 52px track wide and 48px tall, the track inside a 52px slot");
+    assert.deepEqual(measured.labelFailures, [], "the labelled layout must not move");
+    assert.deepEqual(measured.supportFailures, [], "a switch with supporting text and no label keeps the gap to the track and the labelled row");
+    check("switch: an unlabelled switch is its 52 x 48 track box, the track inside a 52px slot, and the labelled layout is unchanged");
+    check("switch: a switch with supporting text and no label keeps its 12px gap and the labelled row");
   }
 
   // ---------------------------------------------------------------- button
@@ -729,6 +947,81 @@ try {
     }, ICON);
     assert.deepEqual(parity.element, parity.factory);
     check("icon button: renders as the factory does with the global stylesheet");
+  }
+
+  // A shadow root adopts the host's sheet, the ripple's and the
+  // component's; the page reset that zeroes a button's padding
+  // (src/styles/base/_reset.scss) is in none of them, so Chrome's user-agent
+  // padding (1px 6px) survives on the inner button and the icon, a shrinkable
+  // flex item, is drawn under its size token where the container has no room
+  // for both. Every variant, size and width, against the factory twin, which
+  // the page's global stylesheet does reach.
+  const iconButtonCases = ["standard", "filled", "tonal", "outlined"].flatMap((variant) =>
+    ["xs", "s", "m", "l", "xl"].flatMap((size) =>
+      ["narrow", "default", "wide"].map((width) => ({ variant, size, width }))));
+  await fresh(
+    page,
+    `${iconButtonCases
+      .map((c, i) => `<m-icon-button id="ip-${i}" aria-label="Icon" variant="${c.variant}" size="${c.size}" width="${c.width}" icon='${ICON}'></m-icon-button>`)
+      .join("")}<section id="factory"></section>`
+  );
+  {
+    const measured = await page.evaluate(
+      ({ cases, icon, tokens }) => {
+        type TwinWin = Window & { mtrl: { createIconButton: (c: object) => { element: HTMLElement } } };
+        const w = window as unknown as TwinWin;
+        const factory = document.getElementById("factory") as HTMLElement;
+        const tenth = (value: number): number => Math.round(value * 10) / 10;
+        const iconBox = (button: HTMLElement): { w: number; h: number } => {
+          const rect = (button.querySelector("svg") as SVGElement).getBoundingClientRect();
+          return { w: rect.width, h: rect.height };
+        };
+        const differences = new Set<string>();
+        const failures: string[] = [];
+        for (const [index, c] of cases.entries()) {
+          const host = document.getElementById(`ip-${index}`) as HTMLElement;
+          const element = host.shadowRoot?.querySelector("button") as HTMLElement;
+          const twin = w.mtrl.createIconButton({ icon, variant: c.variant, size: c.size, width: c.width, ariaLabel: "Icon" }).element;
+          factory.append(twin);
+          // Every standard property the element's button computes differently
+          // from the factory twin's: the page reset's work, which the shadow
+          // sheet has to repeat for the two to render alike.
+          const elementStyle = getComputedStyle(element);
+          const twinStyle = getComputedStyle(twin);
+          for (let i = 0; i < elementStyle.length; i++) {
+            const name = elementStyle[i];
+            if (name.startsWith("--")) continue;
+            if (elementStyle.getPropertyValue(name) !== twinStyle.getPropertyValue(name)) differences.add(name);
+          }
+          const token = (tokens as Record<string, number>)[c.size.toUpperCase()];
+          const elementIcon = iconBox(element);
+          const twinIcon = iconBox(twin);
+          const padding = `${elementStyle.paddingTop} ${elementStyle.paddingRight} ${elementStyle.paddingBottom} ${elementStyle.paddingLeft}`;
+          const noPadding =
+            elementStyle.paddingTop === "0px" &&
+            elementStyle.paddingRight === "0px" &&
+            elementStyle.paddingBottom === "0px" &&
+            elementStyle.paddingLeft === "0px";
+          const twinSized = Math.abs(elementIcon.w - twinIcon.w) <= 0.5 && Math.abs(elementIcon.h - twinIcon.h) <= 0.5;
+          const tokenSized = Math.abs(elementIcon.w - token) <= 0.5 && Math.abs(elementIcon.h - token) <= 0.5;
+          if (!noPadding || !twinSized || !tokenSized) {
+            failures.push(
+              `${c.variant} ${c.size} ${c.width}: element icon ${tenth(elementIcon.w)}x${tenth(elementIcon.h)} ` +
+                `(padding ${padding}), factory icon ${tenth(twinIcon.w)}x${tenth(twinIcon.h)}, token ${token}`
+            );
+          }
+        }
+        return { failures, differences: [...differences].sort() };
+      },
+      { cases: iconButtonCases, icon: ICON, tokens: ICON_BUTTON_ICON_SIZES }
+    );
+    if (measured.failures.length > 0) {
+      for (const line of measured.failures) console.log(`  FAIL ${line}`);
+      console.log(`  FAIL the inner button's computed properties that differ from the factory twin's: ${measured.differences.join(", ") || "none"}`);
+    }
+    assert.deepEqual(measured.failures, []);
+    assert.deepEqual(measured.differences, []);
+    check("icon button: every variant, size and width keeps the icon at its size token, as the factory does");
   }
 
   // ---------------------------------------------------------------- fab
@@ -1064,6 +1357,142 @@ try {
       [true, true, "on", null],
     ]);
     check("checkbox: a set leaves validity and FormData exact at once, and a valid one skips setting it again");
+  }
+
+  // A checkbox with no label is its own 48x48 target (M3 "Checkbox" -> Specs
+  // -> Measurements: "Target size 48dp", "Icon alignment Center-aligned",
+  // "State-layer size 40dp"; Compose centres the 18dp box in the 48dp minimum
+  // interactive size). A labelled root instead hugs box + 12px + label, so it
+  // has no free space and keeps the box at the inline-start: its measured
+  // layout below must not move.
+  {
+    const dirs = ["ltr", "rtl"] as const;
+    const states = ["unchecked", "checked", "indeterminate", "disabled"] as const;
+    const elements = (dir: string): string =>
+      states
+        .map(
+          (state) =>
+            `<m-checkbox id="u-${dir}-${state}" aria-label="Check"${state === "checked" ? " checked" : ""}${state === "disabled" ? " disabled" : ""}></m-checkbox>`
+        )
+        .join("") + `<m-checkbox id="l-${dir}">Label</m-checkbox>`;
+    await fresh(
+      page,
+      `${dirs.map((dir) => `<div dir="${dir}">${elements(dir)}</div>`).join("")}<section id="factory"></section>`
+    );
+
+    const measured = await page.evaluate(
+      ({ dirs, states }: { dirs: string[]; states: string[] }) => {
+        type Box = { left: number; top: number; right: number; bottom: number };
+        type Cb = HTMLElement & { indeterminate: boolean };
+        const w = window as unknown as Win & { mtrl: { createCheckbox: (c: object) => { element: HTMLElement } } };
+        const factory = document.getElementById("factory") as HTMLElement;
+        const r2 = (n: number): number => Math.round(n * 100) / 100;
+        const show = (r: Box): string => `[${r2(r.left)}, ${r2(r.top)}, ${r2(r.right)}, ${r2(r.bottom)}]`;
+        /** The element's component root inside its shadow root (the host is what the page holds). */
+        const inner = (host: HTMLElement): HTMLElement => (host.shadowRoot?.firstElementChild as HTMLElement) ?? host;
+        /** The state layer is the icon's ::before: inset -13px on the icon's padding box (2px border), 40x40. */
+        const layerRect = (icon: HTMLElement): Box => {
+          const iconRect = icon.getBoundingClientRect();
+          const outer = getComputedStyle(icon);
+          const layer = getComputedStyle(icon, "::before");
+          return {
+            left: iconRect.left + parseFloat(outer.borderLeftWidth) + parseFloat(layer.left),
+            top: iconRect.top + parseFloat(outer.borderTopWidth) + parseFloat(layer.top),
+            right: iconRect.left + parseFloat(outer.borderLeftWidth) + parseFloat(layer.left) + parseFloat(layer.width),
+            bottom: iconRect.top + parseFloat(outer.borderTopWidth) + parseFloat(layer.top) + parseFloat(layer.height),
+          };
+        };
+        const failures: string[] = [];
+        const layerFailures: string[] = [];
+        const labelFailures: string[] = [];
+
+        const centred = (root: HTMLElement, what: string): void => {
+          const rootRect = root.getBoundingClientRect();
+          const icon = root.querySelector(".mtrl-checkbox__icon") as HTMLElement;
+          const iconRect = icon.getBoundingClientRect();
+          const dx = Math.abs((iconRect.left + iconRect.right - rootRect.left - rootRect.right) / 2);
+          const dy = Math.abs((iconRect.top + iconRect.bottom - rootRect.top - rootRect.bottom) / 2);
+          if (dx > 0.5 || dy > 0.5) {
+            failures.push(
+              `${what}: box ${show(iconRect)} is off the root ${show(rootRect)} (centre by ${r2(dx)}px, ${r2(dy)}px)`
+            );
+          }
+          const layer = layerRect(icon);
+          if (layer.left < rootRect.left - 0.5 || layer.right > rootRect.right + 0.5 || layer.top < rootRect.top - 0.5 || layer.bottom > rootRect.bottom + 0.5) {
+            layerFailures.push(`${what}: state layer ${show(layer)} is not inside the root ${show(rootRect)}`);
+          }
+        };
+
+        // The labelled layout the fix must keep, as the sweep at 1dc3bc72 measured it
+        // (analysis/sweep/checkbox/measure.json, case "label": identical for the
+        // factory and the element and in both directions; the commits to 47a3ebcd are
+        // rename, docs and CI only). The pinned pixels carry no font: the box at the
+        // start, the label 30px in (the 18px box + the 12px gap), nothing after the
+        // label. The root's width and the box's end inset are derived from the label's
+        // own rendered width in this run (root = 30 + width, end = width + 12), so the
+        // check holds on any machine's sans-serif. The word "Label" rendered 41.19px
+        // here; that number is not asserted.
+        const labelled = (root: HTMLElement, what: string): void => {
+          const rootRect = root.getBoundingClientRect();
+          const rtl = getComputedStyle(root).direction === "rtl";
+          const iconRect = (root.querySelector(".mtrl-checkbox__icon") as HTMLElement).getBoundingClientRect();
+          const labelRect = (root.querySelector(".mtrl-checkbox__label") as HTMLElement).getBoundingClientRect();
+          const labelW = r2(labelRect.width);
+          const got = {
+            rootW: r2(rootRect.width),
+            boxStart: r2(rtl ? rootRect.right - iconRect.right : iconRect.left - rootRect.left),
+            boxEnd: r2(rtl ? iconRect.left - rootRect.left : rootRect.right - iconRect.right),
+            labelStart: r2(rtl ? rootRect.right - labelRect.right : labelRect.left - rootRect.left),
+            labelEnd: r2(rtl ? labelRect.left - rootRect.left : rootRect.right - labelRect.right),
+          };
+          const want = { rootW: 30 + labelW, boxStart: 0, boxEnd: labelW + 12, labelStart: 30, labelEnd: 0 };
+          const off = (a: number, b: number): boolean => Math.abs(a - b) > 0.5;
+          if (
+            off(got.rootW, want.rootW) || off(got.boxStart, want.boxStart) || off(got.boxEnd, want.boxEnd) ||
+            off(got.labelStart, want.labelStart) || off(got.labelEnd, want.labelEnd)
+          ) {
+            labelFailures.push(
+              `${what}: root ${got.rootW} (want 30 + label ${labelW}), box start ${got.boxStart} / end ${got.boxEnd} (want 0 / ${want.boxEnd}), ` +
+                `label start ${got.labelStart} / end ${got.labelEnd} (want 30 / 0)`
+            );
+          }
+        };
+
+        const hold = (dir: string, child: HTMLElement): HTMLElement => {
+          const holder = document.createElement("div");
+          holder.dir = dir;
+          holder.append(child);
+          factory.append(holder);
+          return child;
+        };
+        for (const dir of dirs) {
+          for (const state of states) {
+            const host = document.getElementById(`u-${dir}-${state}`) as Cb;
+            if (state === "indeterminate") host.indeterminate = true;
+            centred(inner(host), `element ${dir} ${state}`);
+            const twin = hold(
+              dir,
+              w.mtrl.createCheckbox({
+                ariaLabel: "Check",
+                checked: state === "checked",
+                indeterminate: state === "indeterminate",
+                disabled: state === "disabled",
+              }).element
+            );
+            centred(twin, `factory ${dir} ${state}`);
+          }
+          labelled(inner(document.getElementById(`l-${dir}`) as HTMLElement), `element ${dir} labelled`);
+          labelled(hold(dir, w.mtrl.createCheckbox({ label: "Label" }).element), `factory ${dir} labelled`);
+        }
+        return { failures, layerFailures, labelFailures };
+      },
+      { dirs: [...dirs], states: [...states] }
+    );
+    for (const line of [...measured.failures, ...measured.layerFailures, ...measured.labelFailures]) console.log(`  FAIL ${line}`);
+    assert.deepEqual(measured.failures, [], "the box must be centred in an unlabelled root");
+    assert.deepEqual(measured.layerFailures, [], "the state layer must lie inside an unlabelled root");
+    assert.deepEqual(measured.labelFailures, [], "the labelled layout must not move");
+    check("checkbox: an unlabelled box is centred in its 48px target, its state layer inside it, and the labelled layout is unchanged");
   }
 
   // ---------------------------------------------------------------- slider
@@ -1654,6 +2083,12 @@ try {
     check("text field: the layout at the M3 measurements, 112 fields, in both directions (FLO-299, FLO-562)");
     await checkTextFieldReducedMotion(page, "element", null);
     check("text field: the filled indicator's fade stops with reduced motion (FLO-299)");
+
+    // The select's menu in the top layer, inside the shadow root: its width, its
+    // selected option's mark in both directions, and its colours
+    await checkSelectMenu(page, "element");
+    await checkSelectWidth(page, "element");
+    check("select: the menu is its field's width, the selected mark at the item's end in both directions, the selected option on secondary-container");
 
     // FLO-301: the required attribute moves the input's required and the label's asterisk together
     const required = await page.evaluate(() => {
@@ -3198,6 +3633,189 @@ try {
     assert.equal(parity.element.length, 5);
     assert.deepEqual(parity.element, parity.factory);
     check("chips: renders as the factory does with the global stylesheet");
+  }
+
+  // ---------------------------------------------------------------- chips: the secondary action's 88 px floor
+  // m3.material.io, Chips: "Secondary actions (such as a trailing icon button
+  // for Remove) must have a 48x48dp interaction target that doesn't interfere
+  // with the chip's primary action (such as Edit or Drag). To achieve this,
+  // apply a minimum width of 88dp to the chip, or 42dp to the label text." A
+  // chip with a secondary action is at least 88 px wide: the target takes the
+  // last 48 px, the primary action the first 40 at the floor, and no point on
+  // the centre line of either falls inside the other's region.
+  await fresh(
+    page,
+    `<div><m-chips id="sec-in-ltr" aria-label="Input chips left to right">
+       <m-chip variant="input" value="ok">OK</m-chip>
+       <m-chip variant="input" value="label">Label</m-chip>
+       <m-chip variant="input" value="long">A considerably longer chip label</m-chip>
+     </m-chips></div>
+     <div dir="rtl"><m-chips id="sec-in-rtl" aria-label="Input chips right to left">
+       <m-chip variant="input" value="ok">OK</m-chip>
+       <m-chip variant="input" value="label">Label</m-chip>
+       <m-chip variant="input" value="long">A considerably longer chip label</m-chip>
+     </m-chips></div>
+     <section id="factory"></section>`
+  );
+  {
+    const measured = await page.evaluate(async () => {
+      type Factory = { element: HTMLElement };
+      const w = window as unknown as Win & { mtrl: {
+        createInputChip: (c: object) => Factory;
+        createFilterChip: (c: object) => Factory;
+      } };
+      // The factory chips: input chips, and filter chips whose trailing icon has
+      // its own action (the factory's onTrailingClick; the element has no
+      // attribute for a trailing action).
+      const factory = document.getElementById("factory") as HTMLElement;
+      const wraps: Array<[string, HTMLElement]> = [];
+      for (const dir of ["ltr", "rtl"] as const) {
+        const wrap = document.createElement("div");
+        if (dir === "rtl") wrap.setAttribute("dir", "rtl");
+        for (const label of ["OK", "Label", "A considerably longer chip label"]) {
+          wrap.append(w.mtrl.createInputChip({ label }).element);
+          wrap.append(w.mtrl.createFilterChip({ label, onTrailingClick: () => {} }).element);
+        }
+        factory.append(wrap);
+        wraps.push([dir, wrap]);
+      }
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+
+      type Case = { api: string; dir: string; kind: string; root: HTMLElement; area: DocumentOrShadowRoot };
+      const cases: Case[] = [];
+      for (const [dir, id] of [["ltr", "sec-in-ltr"], ["rtl", "sec-in-rtl"]] as const) {
+        const shadow = (document.getElementById(id) as HTMLElement).shadowRoot as ShadowRoot;
+        for (const root of Array.from(shadow.querySelectorAll('[class~="mtrl-chip"]'))) {
+          cases.push({ api: "element", dir, kind: "input", root: root as HTMLElement, area: shadow });
+        }
+      }
+      for (const [dir, wrap] of wraps) {
+        for (const root of Array.from(wrap.querySelectorAll('[class~="mtrl-chip"]'))) {
+          const kind = root.querySelector(".mtrl-chip__remove") ? "input" : "filter trailing action";
+          cases.push({ api: "factory", dir, kind, root: root as HTMLElement, area: document });
+        }
+      }
+
+      const round = (value: number): string => value.toFixed(2);
+      const failures: string[] = [];
+      const boundaries: string[] = [];
+      for (const { api, dir, kind, root, area } of cases) {
+        const label = root.querySelector('[class~="mtrl-chip__label"]')?.textContent ?? "";
+        const where = `${api} ${dir} ${kind} "${label}"`;
+        const rect = root.getBoundingClientRect();
+        const width = rect.width;
+        const issues: string[] = [];
+        // (a) the 88 px floor: the target's 48 px leave the action at least 40.
+        if (width < 88) issues.push(`${round(width)} px wide (the floor is 88; the action's share ${round(width - 48)} < 40)`);
+        // (b) the secondary control's 48 x 48 target, and the box the
+        // stylesheet claims: the ::before is 48 px wide with an inset of 0 on
+        // the reading end and the button sits flush at the chip's end, so the
+        // box is exactly [W - 48, W] along the reading direction.
+        const secondary = root.querySelector(".mtrl-chip__remove, .mtrl-chip__trailing-action") as HTMLElement | null;
+        if (secondary) {
+          const target = getComputedStyle(secondary, "::before");
+          const targetWidth = parseFloat(target.width);
+          const targetHeight = parseFloat(target.height);
+          if (Math.round(targetWidth) !== 48 || Math.round(targetHeight) !== 48) {
+            issues.push(`the secondary target is ${targetWidth} x ${targetHeight} (expected 48 x 48)`);
+          }
+          const endInset = parseFloat(target.getPropertyValue("inset-inline-end"));
+          const button = secondary.getBoundingClientRect();
+          const chipEnd = dir === "ltr" ? rect.right : rect.left;
+          const buttonEnd = dir === "ltr" ? button.right : button.left;
+          const flush = Math.abs(chipEnd - buttonEnd);
+          if (Math.abs(targetWidth - 48) > 0.01 || Math.abs(endInset) > 0.01 || flush > 0.01) {
+            issues.push(`the target's box is not [${round(width - 48)}, ${round(width)}] along the reading direction: ${round(targetWidth)} px wide, inset-inline-end ${round(endInset)}, the button's end ${round(flush)} px from the chip's end`);
+          }
+        } else {
+          issues.push("the chip is missing its remove or trailing button");
+        }
+        // (c) the two regions tile the centre line; (d) neither takes hits inside
+        // the other. Find the boundary between them: walk the centre line in
+        // 0.05 px steps from 8 px before the box's edge (W - 48) to 8 px after it,
+        // in the direction of reading, and take b, the last point the chip's own
+        // action still answers. The target's hit region begins at b, and
+        // 0 <= (W - 48) - b <= 1: the box's edge, or at most the one pixel
+        // Chromium adds to the box's left (measured 2026-10-02; the stylesheet
+        // places the box exactly, (b)) -- never past the box's edge, and a target
+        // that grows fails. The probes then sample the regions clear of the
+        // boundary, the scan every half pixel of the line.
+        const boundary = width - 48;
+        const x = (fromStart: number): number => (dir === "ltr" ? rect.left + fromStart : rect.right - fromStart);
+        const hit = (fromStart: number): string => {
+          const el = area.elementFromPoint(x(fromStart), rect.top + rect.height / 2);
+          if (!el) return "nothing";
+          if (el !== root && !root.contains(el)) return "another element";
+          if (el.closest(".mtrl-chip__remove, .mtrl-chip__trailing-action")) return "the secondary control";
+          if (el.closest(".mtrl-chip__action")) return "the primary action";
+          return `${el.localName} (neither)`;
+        };
+        const expect = (fromStart: number, wanted: string): void => {
+          const got = hit(fromStart);
+          if (got !== wanted) issues.push(`a hit ${round(fromStart)} px from the start (${round(width - fromStart)} from the end) returns ${got} (expected ${wanted})`);
+        };
+        expect(4, "the primary action");
+        expect(boundary / 2, "the primary action");
+        expect(width - 24, "the secondary control");
+        expect(width - 4, "the secondary control");
+        // The boundary, found rather than skipped: b is the walk's last sample
+        // returning the action, every later one the secondary control.
+        const step = 0.05;
+        const walkFrom = boundary - 8;
+        const walkTo = boundary + 8;
+        const samples = Math.round((walkTo - walkFrom) / step);
+        let b: number | null = null;
+        let walkIssue: string | null = null;
+        for (let i = 0; i <= samples; i++) {
+          const at = walkFrom + i * step;
+          const got = hit(at);
+          if (got === "the primary action") continue;
+          if (got !== "the secondary control") {
+            walkIssue = `a hit ${round(at)} px from the start (${round(width - at)} from the end) in the boundary walk returns ${got}`;
+          } else if (i === 0) {
+            walkIssue = `the walk starts on the secondary control at ${round(at)} px from the start, before the action's region has ended`;
+          } else {
+            // Floating-point dust off the 0.05 grid, no more: b is placed
+            // within the step.
+            b = Math.round((at - step) * 1e6) / 1e6;
+          }
+          break;
+        }
+        if (walkIssue !== null) issues.push(walkIssue);
+        else if (b === null) issues.push(`no hit between ${round(walkFrom)} and ${round(walkTo)} px from the start returns the secondary control`);
+        else {
+          // Rounded off the 0.05 grid: fractional chip widths leave
+          // floating-point dust, no more.
+          const off = Math.round((boundary - b) * 1e6) / 1e6;
+          if (off < 0 || off > 1) issues.push(`the hit boundary is ${round(b)} px from the start, ${round(off)} px before the box's edge (0 to 1 expected)`);
+        }
+        boundaries.push(`  chips ${where}: the box is [${round(boundary)}, ${round(width)}], the hit boundary is ${b === null ? "not found" : `${round(b)} px from the start`}`);
+        // (e) the half-pixel scan, which excludes only the one physical pixel
+        // Chromium's hit testing adds on the left of the target's box (measured
+        // 2026-10-02: the hit region is one pixel wider than the 48 px box on its
+        // left; the stylesheet places the box exactly). Left to right that pixel
+        // is (W - 49, W - 48] from the start; right to left it lies just outside
+        // the chip's end, past where this scan stops. Skipping exactly it keeps a
+        // later engine that drops the pixel passing (0 is in range) and fails a
+        // target that grows.
+        const boxLeft = x(dir === "ltr" ? width - 48 : width);
+        for (let px = 0; px + 0.5 < width; px++) {
+          const at = px + 0.5;
+          if (at < 1 || at > width - 1) continue; // the chip's own ends
+          if (x(at) > boxLeft - 1 && x(at) <= boxLeft) continue; // the one extra pixel
+          const got = hit(at);
+          const wanted = at < boundary ? "the primary action" : "the secondary control";
+          if (got !== wanted) issues.push(`the centre line at ${round(at)} px from the start is ${got}, inside the ${wanted === "the primary action" ? "secondary control's" : "primary action's"} region`);
+        }
+        if (issues.length > 0) failures.push(`chips ${where}: ${issues.join("; ")}`);
+      }
+      return { failures, cases: cases.length, boundaries };
+    });
+    assert.equal(measured.cases, 18, "the chips under test");
+    for (const line of measured.boundaries) console.log(line);
+    for (const line of measured.failures) console.log(`  FAIL ${line}`);
+    assert.deepEqual(measured.failures, []);
+    check("chips: a chip with a secondary action keeps the 88 px floor, its 48 x 48 target, and the two regions tile");
   }
 
   // ---------------------------------------------------------------- progress
@@ -9501,6 +10119,128 @@ try {
       card: "3px",
     });
     check("tokens: --mtrl-ref-typeface-plain and --mtrl-sys-shape-corner-medium reach <m-button> and the factories");
+  }
+
+  // ---------------------------------------------------------------- the sheets' and the dialog's close target
+  // FLO-579: the side sheet's and the dialog's close buttons are hand-built
+  // 40 x 40 buttons with no expanded target, so a click a few pixels outside
+  // them does not reach them. m3.material.io, Density: "The default target size
+  // should be at least 48x48 CSS pixels". The case, ltr and rtl: on every side
+  // the target reaches at least 4 px past the visible 40 px button (a hit 3 px
+  // outside reaches the button, and the outward walk finds the change no sooner
+  // than 4 px out and prints its x or y); the visible button stays 40 x 40 where
+  // it was (16 px from the header's inline end, centred on the side sheet's
+  // header row and 16 px from the top of the dialog's); and the header holds no
+  // other control the
+  // target could cover — the side sheet's neighbour is its title, the dialog's
+  // the header-content block with the title and subtitle, and neither is
+  // focusable.
+  await fresh(page, `<div id="close-ltr" dir="ltr"></div><div id="close-rtl" dir="rtl"></div>`);
+  {
+    const measured = await page.evaluate(async () => {
+      type Close = { element: HTMLElement; open: () => void; close: () => void; destroy: () => void };
+      const w = window as unknown as Window & { mtrl: {
+        createSideSheet: (config: object) => Close;
+        createDialog: (config: object) => Close;
+      } };
+      const failures: string[] = [];
+      const measured: string[] = [];
+      const round = (value: number): string => value.toFixed(2);
+      const controls = 'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+      const show = (el: Element): string => `${el.localName}.${(el.className || "").toString().split(" ")[0]}`;
+      /** Let the open motion finish: a fixed wait, then two stable samples. */
+      const settle = async (el: HTMLElement): Promise<void> => {
+        await new Promise((r) => setTimeout(r, 700));
+        let last = "";
+        for (let i = 0; i < 40; i++) {
+          const r = el.getBoundingClientRect();
+          const now = `${r.left},${r.top}`;
+          if (now === last) return;
+          last = now;
+          await new Promise((r2) => setTimeout(r2, 50));
+        }
+      };
+      const checkTarget = (where: string, button: HTMLElement): void => {
+        const r = button.getBoundingClientRect();
+        const cx = (r.left + r.right) / 2;
+        const cy = (r.top + r.bottom) / 2;
+        const reaches = (x: number, y: number): boolean => {
+          const el = document.elementFromPoint(x, y);
+          return !!el && (el === button || button.contains(el));
+        };
+        if (Math.round(r.width) !== 40 || Math.round(r.height) !== 40) {
+          failures.push(`${where}: the visible button is ${round(r.width)} x ${round(r.height)}, not 40 x 40`);
+        }
+        const changes: string[] = [];
+        for (const side of ["left", "right", "top", "bottom"] as const) {
+          const at = (d: number): [number, number] =>
+            side === "left" ? [r.left - d, cy] : side === "right" ? [r.right + d, cy] : side === "top" ? [cx, r.top - d] : [cx, r.bottom + d];
+          const axis = side === "left" || side === "right" ? "x" : "y";
+          const coordinateOf = (d: number): number =>
+            side === "left" ? r.left - d : side === "right" ? r.right + d : side === "top" ? r.top - d : r.bottom + d;
+          const [x3, y3] = at(3);
+          if (!reaches(x3, y3)) failures.push(`${where}: the hit 3 px past the ${side} edge (${axis} ${round(coordinateOf(3))}) does not reach the button`);
+          // Walk outward and assert where the hit changes, not the last integer
+          // that hits: a 48 box centred on the 40 px button spans
+          // [edge - 4, edge + 4], Chromium covers integer points only up to
+          // edge + 3 on a box whose right edge falls on an integer, and the
+          // change on that side sits exactly 4 px out.
+          let change: number | null = null;
+          for (let d = 1; d <= 64; d++) {
+            const [x, y] = at(d);
+            if (!reaches(x, y)) { change = d; break; }
+          }
+          if (change !== null && change < 4) failures.push(`${where}: the hit changes ${change} px past the ${side} edge (${axis} ${round(coordinateOf(change))}), under the 4 px a 48 box needs`);
+          changes.push(change === null
+            ? `${side}: the hit still reaches 64 px out`
+            : `${side}: changes at ${axis} ${round(coordinateOf(change))} (${change} px out)`);
+        }
+        measured.push(`${where}: ${changes.join("; ")}`);
+      };
+      for (const dir of ["ltr", "rtl"] as const) {
+        const wrap = document.getElementById(`close-${dir}`) as HTMLElement;
+
+        const sheet = w.mtrl.createSideSheet({ title: "Data tools", variant: "standard", content: "<p>Data tools</p>", width: 360, container: wrap });
+        sheet.open();
+        const sheetButton = sheet.element.querySelector(".mtrl-side-sheet__close") as HTMLElement;
+        await settle(sheetButton);
+        const sheetHeader = sheet.element.querySelector(".mtrl-side-sheet__header") as HTMLElement;
+        checkTarget(`side sheet ${dir}`, sheetButton);
+        const sb = sheetButton.getBoundingClientRect();
+        const sh = sheetHeader.getBoundingClientRect();
+        const endGap = dir === "ltr" ? sh.right - sb.right : sb.left - sh.left;
+        if (Math.abs(endGap - 16) > 0.5) failures.push(`side sheet ${dir}: the visible button is ${round(endGap)} px from the header's inline end, not 16`);
+        const offCentre = Math.abs((sb.top + sb.bottom) / 2 - (sh.top + sh.bottom) / 2);
+        if (offCentre > 0.5) failures.push(`side sheet ${dir}: the visible button is ${round(offCentre)} px off the header's row centre`);
+        const sheetOthers = Array.from(sheetHeader.querySelectorAll(controls)).filter((el) => el !== sheetButton);
+        if (sheetOthers.length > 0) failures.push(`side sheet ${dir}: the header holds another control (${sheetOthers.map(show).join(", ")})`);
+        sheet.close();
+        sheet.destroy();
+        sheet.element.remove();
+
+        const dialog = w.mtrl.createDialog({ title: "Discard draft?", subtitle: "This cannot be undone.", closeButton: true, content: "<p>Your changes will be lost.</p>", container: wrap });
+        dialog.open();
+        const dialogButton = dialog.element.querySelector(".mtrl-dialog__header-close") as HTMLElement;
+        await settle(dialogButton);
+        const dialogHeader = dialog.element.querySelector(".mtrl-dialog__header") as HTMLElement;
+        checkTarget(`dialog ${dir}`, dialogButton);
+        const db = dialogButton.getBoundingClientRect();
+        const dh = dialogHeader.getBoundingClientRect();
+        const dialogEndGap = dir === "ltr" ? dh.right - db.right : db.left - dh.left;
+        if (Math.abs(dialogEndGap - 16) > 0.5) failures.push(`dialog ${dir}: the visible button is ${round(dialogEndGap)} px from the header's inline end, not 16`);
+        if (Math.abs(db.top - dh.top - 16) > 0.5) failures.push(`dialog ${dir}: the visible button is ${round(db.top - dh.top)} px from the header's top, not 16`);
+        const dialogOthers = Array.from(dialogHeader.querySelectorAll(controls)).filter((el) => el !== dialogButton);
+        if (dialogOthers.length > 0) failures.push(`dialog ${dir}: the header holds another control (${dialogOthers.map(show).join(", ")})`);
+        dialog.close();
+        dialog.destroy();
+        dialog.element.remove();
+      }
+      return { failures, measured };
+    });
+    for (const line of measured.measured) console.log(`  ${line}`);
+    for (const line of measured.failures) console.log(`  FAIL ${line}`);
+    assert.deepEqual(measured.failures, []);
+    check("side sheet and dialog: the close button's target reaches at least 4 px past the 40 px button on all four sides, ltr and rtl");
   }
 
   assert.deepEqual(errors, [], "no page errors");

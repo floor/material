@@ -32,7 +32,7 @@
 
 // Use a more explicit export to avoid bundler confusion
 import { createDivider } from './divider';
-export { createDivider };
+export { createDivider, createDivider as default };
 
 // Export types
 export type { DividerConfig } from './config';
