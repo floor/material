@@ -28,8 +28,8 @@ export type Gone = [typeof createTextfield, TextfieldConfig, CardSchema, TopAppB
 // The select's text field is a property a user reads (FLO-383): textField only
 const select = createSelect({ label: "Size", options: [] });
 export const selectField: TextFieldComponent = select.textField;
-// select.textfield stays a deprecated alias of select.textField through 1.x
-export const oldSelectField: TextFieldComponent = select.textfield;
+// @ts-expect-error select.textfield is select.textField in 1.0, with no alias
+export const oldSelectField = select.textfield;
 
 // Every public variant option's type is exported (FLO-383 follow-up)
 import type { TextFieldVariant, SelectVariant, TextFieldConfig as FieldConfig, SelectConfig } from "../../src";

@@ -43,13 +43,7 @@ export const RADIO_EVENTS = {
  * Default configuration values
  */
 export const RADIO_DEFAULTS = {
-  /** Default radio variant */
-  VARIANT: 'standard',
   /** Default radio direction */
-  DIRECTION: RADIO_DIRECTIONS.VERTICAL,
-  /** Default label position */
-  LABEL_POSITION: 'right',
-  /** Default radio size */
-  SIZE: 'medium'
+  DIRECTION: RADIO_DIRECTIONS.VERTICAL
 } as const;
 

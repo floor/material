@@ -512,13 +512,13 @@ export interface TabsComponent {
   off: <K extends keyof TabsEvents>(event: K, handler: TabsEvents[K]) => TabsComponent;
   
   /**
-   * Emit an event. `emit` accepts any event name; listeners typed through
-   * `on`/`off` cover the component's own events ({@link TabsEvents}).
-   * @param event - Event name
-   * @param data - Event data
+   * Emit one of the group's own events ({@link TabsEvents}), with its payload:
+   * the names and payloads `on` and `off` accept.
+   * @param event - One of the events in {@link TabsEvents}
+   * @param data - The payload declared for that event
    * @returns Tabs component for chaining
    */
-  emit?(event: string, data: unknown): this;
+  emit?<K extends keyof TabsEvents>(event: K, data: Parameters<TabsEvents[K]>[0]): this;
   
   /**
    * Destroys the tabs component and all tabs
