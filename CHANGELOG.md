@@ -1026,6 +1026,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Added
 
+- **`icon-position` on `<m-button>`.** The attribute passes the factory's `iconPosition`
+  option on; `"end"` places the icon after the label instead of before it, with
+  `mtrl-button__icon--end`. It has no setter: changing it recreates the element, as the
+  extended FAB's does.
 - **Every `material/components/<name>` entry exports its factory both ways:** as the default
   export and by its name (`import createButton from 'material/components/button'` and
   `import { createButton } from 'material/components/button'` are the same function, and the
@@ -1222,6 +1226,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A text button with an icon keeps its box before upgrade.** The pre-upgrade stylesheet
+  reserved the text button's 12/12 padding, but the button is 12/16 beside its icon after
+  upgrade (16/12 with the icon at the end), so a server-rendered host grew 4px and moved what
+  followed it on upgrade. The reserved padding now matches, from the same tokens, at the sizes
+  whose spacing is the text button's (the default, `xs` and `s`).
 - **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"` (FLO-592).**
   The `touch-target` mixin anchored its `::after` with `inset-inline-start: 50%` and then moved it
   with the physical `translate(-50%, -50%)`. Right-to-left, the logical inset pins the box's right
