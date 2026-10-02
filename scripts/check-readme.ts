@@ -162,7 +162,12 @@ for (const doc of docs) {
 }
 if (online) {
   for (const link of [...external].sort()) {
-    const response = await fetch(link, { redirect: "manual" }).catch((error: Error) => error);
+    // GitHub answers 429 or 503 to a burst of requests: ask those once more.
+    let response = await fetch(link, { redirect: "manual" }).catch((error: Error) => error);
+    if (!(response instanceof Error) && [429, 503].includes(response.status)) {
+      await Bun.sleep(5_000);
+      response = await fetch(link, { redirect: "manual" }).catch((error: Error) => error);
+    }
     const status = response instanceof Error ? response.message : String(response.status);
     console.log(`${status}  ${link}`);
     const pending = PENDING.some(prefix => link.startsWith(prefix));
