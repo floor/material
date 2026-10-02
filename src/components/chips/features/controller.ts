@@ -94,14 +94,9 @@ export const withController =
     const selectedValues = selectedChips.map((chip) => chip.getValue());
     const changedValue = selectedChip ? selectedChip.getValue() : null;
 
-    // Call onChange callback if provided
-    const event = changeEvent(selectedValues, changedValue);
-    if (typeof config.onChange === "function") {
-      config.onChange(event);
-    }
-
-    // Dispatch change event to all registered handlers
-    dispatchEvent(CHIPS_EVENTS.CHANGE, event);
+    // onChange is registered with on("change") in chips.ts, so dispatch is the
+    // only call. It hears selectByValue(values, true) the same way.
+    dispatchEvent(CHIPS_EVENTS.CHANGE, changeEvent(selectedValues, changedValue));
   };
 
   // The set is an ARIA grid with one Tab stop (the m3.material.io chips' web roles,
@@ -275,7 +270,12 @@ export const withController =
         chipInstance.toggleSelected();
 
         handleSelection(chipInstance);
-        chipConfig.onChange?.(chipInstance.isSelected(), chipInstance);
+        // The chip's own change is not emitted in a set (managedSelection).
+        // The item's onChange stays this call — (selected, chip) — until that
+        // choice is made. The type is the change listener's, for a chip alone.
+        const itemChange = chipConfig.onChange as unknown as
+          ((selected: boolean, chip: ChipComponent) => void) | undefined;
+        itemChange?.(chipInstance.isSelected(), chipInstance);
         chipConfig.onSelect?.(chipInstance);
 
         // Update focus tracking
@@ -477,7 +477,9 @@ export const withController =
       chip.destroy();
     });
     component.chipInstances.length = 0;
-    Object.keys(eventListeners).forEach(event => { eventListeners[event] = []; });
+    // Empty the arrays in place. Replacing them would leave a dispatch that is
+    // already walking the old array free to call listeners after destroy.
+    Object.keys(eventListeners).forEach(event => { eventListeners[event].length = 0; });
   });
 
   return {

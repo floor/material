@@ -57,7 +57,9 @@ const createChips = (config: ChipsConfig = {}): ChipsComponent => {
     // Apply the public API layer
     const chips = withAPI(apiOptions)(component);
 
-    // Register event handlers from config for convenience
+    // Register event handlers from config for convenience. onChange is the
+    // same listener as on("change"), registered after the on map, so a handler
+    // in `on` runs first.
     if (baseConfig.on && typeof chips.on === "function") {
       Object.entries(baseConfig.on).forEach(([event, handler]) => {
         if (typeof handler === "function") {
@@ -66,6 +68,7 @@ const createChips = (config: ChipsConfig = {}): ChipsComponent => {
         }
       });
     }
+    if (baseConfig.onChange) chips.on("change", baseConfig.onChange);
 
     // Initialize chips from config after component is fully composed
     // This ensures chips.addChip is available from withController

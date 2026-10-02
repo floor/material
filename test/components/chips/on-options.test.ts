@@ -94,6 +94,7 @@ describe("chips set onChange is an on(change) listener", () => {
     const onChange = () => calls.push("option");
     const listener = () => calls.push("listener");
     const set = mountSet({
+      multiSelect: false,
       chips: [{ value: "a", ripple: false }, { value: "b", ripple: false }],
       onChange,
     });
@@ -150,7 +151,7 @@ describe("a chip alone: on* options are the event listeners", () => {
     const option: ChipChangePayload[] = [];
     const listener: ChipChangePayload[] = [];
     const order: string[] = [];
-    let leftover: { length: number; selected: unknown; chip: unknown } | undefined;
+    const leftover: { length: number; selected: unknown; chip: unknown }[] = [];
     const chip = mountChip(createFilterChip({
       label: "Filter",
       value: "f",
@@ -169,12 +170,13 @@ describe("a chip alone: on* options are the event listeners", () => {
       value: "old",
       ripple: false,
       onChange: function (selected: unknown, instance: unknown) {
-        leftover = { length: arguments.length, selected, chip: instance };
+        leftover.push({ length: arguments.length, selected, chip: instance });
       } as ChipEvents["change"],
     }));
 
     chip.action.click();
     chip.action.click();
+    old.action.click();
     old.action.click();
 
     expect(option).toHaveLength(2);
@@ -186,11 +188,10 @@ describe("a chip alone: on* options are the event listeners", () => {
       { selected: false, chip, value: "f" },
     ]);
     expect(order).toEqual(["option", "listener", "option", "listener"]);
-    expect(leftover).toEqual({
-      length: 1,
-      selected: { selected: true, chip: old, value: "old" },
-      chip: undefined,
-    });
+    expect(leftover).toEqual([
+      { length: 1, selected: { selected: true, chip: old, value: "old" }, chip: undefined },
+      { length: 1, selected: { selected: false, chip: old, value: "old" }, chip: undefined },
+    ]);
     chip.setSelected(true);
     expect(option).toHaveLength(2);
   });

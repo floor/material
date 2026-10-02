@@ -29,20 +29,26 @@ export interface ChipConfig {
    * used to be a request the owner had to act on, and without it there was no
    * remove button. FLO-257.
    */
-  onRemove?: (chip: ChipComponent) => void;
+  onRemove?: ChipEvents["remove"];
   removeLabel?: string;
   /**
    * Filter chips: gives the trailing icon its own button, which calls this (the
    * m3.material.io chips' trailing icon that "can be used to open a menu or remove
    * the chip"). The chip's own action is unaffected. FLO-259.
    */
-  onTrailingClick?: (chip: ChipComponent) => void;
+  onTrailingClick?: ChipEvents["trailing"];
   /** The trailing button's accessible name; "{label} options" for a menu, "Remove {label}" otherwise. */
   trailingLabel?: string;
   /** The trailing button opens a menu: aria-haspopup="menu", and a drop-down arrow unless trailingIcon is set. */
   trailingMenu?: boolean;
-  onClick?: (chip: ChipComponent) => void;
-  onChange?: (selected: boolean, chip: ChipComponent) => void;
+  /** Same payload as a `click` listener. */
+  onClick?: ChipEvents["click"];
+  /** Same payload as a `change` listener: `{ selected, chip, value }`. */
+  onChange?: ChipEvents["change"];
+  /**
+   * Called with the chip when the user toggles a selectable chip. No matching
+   * event: this is not an `on(event)` listener.
+   */
   onSelect?: (chip: ChipComponent) => void;
   class?: string;
   prefix?: string;
@@ -175,12 +181,11 @@ export interface ChipsConfig {
   selectionRequired?: boolean;
 
   /**
-   * Callback function when a user changes the chip selection. It is called for
-   * a user's change only: a change made by a method (`selectByValue(values, true)`)
-   * goes to `on("change")` listeners, not to this callback. Listen to `change`
-   * for every change.
+   * Same payload as an `on("change")` listener registered at this point.
+   * `selectByValue(values, true)` reaches it, with `changed: null`.
+   * `selectByValue(values)` and `clearSelection()` stay silent.
    */
-  onChange?: (event: ChipsChangeEvent) => void;
+  onChange?: ChipsEvents["change"];
 
   /**
    * Component prefix for class names

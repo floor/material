@@ -189,6 +189,10 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     off<K extends keyof ChipEvents>(event: K, handler: ChipEvents[K]) { base.off(event, handler); return api; },
     addClass(...classes) { root.classList.add(...classes); return api; },
   };
+  if (options.onChange) api.on("change", options.onChange);
+  if (options.onClick) api.on("click", options.onClick);
+  if (options.onRemove) api.on("remove", options.onRemove);
+  if (options.onTrailingClick) api.on("trailing", options.onTrailingClick);
 
   const listen = <K extends keyof HTMLElementEventMap>(element: HTMLElement, name: K, handler: (event: HTMLElementEventMap[K]) => void) => {
     element.addEventListener(name, handler);
@@ -199,11 +203,9 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     if (selectable && !options.managedSelection) {
       api.toggleSelected();
       base.emit("change", { selected, chip: api, value: api.getValue() });
-      options.onChange?.(selected, api);
       options.onSelect?.(api);
     }
     base.emit("click", { event, originalEvent: event, element: root });
-    options.onClick?.(api);
   });
   // Backspace and Delete remove a focused removable chip (m3.material.io chips
   // accessibility, keyboard table). FLO-256.
@@ -225,7 +227,6 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
       event.stopPropagation();
       if (disabled) return;
       base.emit("remove", api);
-      options.onRemove?.(api);
       // On its own the chip leaves the page; in a set, the set's onRemove has
       // already destroyed it. FLO-257.
       if (!resources.destroyed) root.remove();
@@ -242,7 +243,6 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
       event.stopPropagation();
       if (disabled) return;
       base.emit("trailing", api);
-      options.onTrailingClick?.(api);
     });
     // As for the remove button: Enter and Space stay here, the arrows go on to the set.
     listen(trailingAction, "keydown", event => {
