@@ -136,7 +136,7 @@ $component: "#{base.$prefix}-select";
                     content: "";
                     display: block;
                     position: absolute;
-                    right: 12px;
+                    inset-inline-end: 12px;
                     width: 18px;
                     height: 18px;
                     // Use mask-image instead of background-image
