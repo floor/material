@@ -12,6 +12,31 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **The chips set's `change` payload is a plain object and has one argument (FLO-530).**
+  Both `chips.on("change", handler)` and the config's `onChange` receive
+  `{ value, selected, changed }`. `value` keeps the set's single or multi value
+  shape, `selected` keeps the selected chip values, and `changed` is the toggled
+  chip's value (or `null` for a method-triggered change). `<m-chips>` still emits
+  `change` with `{ value }` detail. Migration:
+
+  ```ts
+  // 0.10: the event was an array, and changedValue was a second argument.
+  chips.on("change", (selectedValues, changedValue) => {
+    use(selectedValues[0], changedValue);
+  });
+  // 1.0: on("change") and onChange each receive one object.
+  chips.on("change", ({ selected, changed }) => {
+    use(selected[0], changed);
+  });
+  ```
+
+  | Leftover 0.10 handler expression | 1.0 runtime result on the built package (Bun) |
+  |---|---|
+  | `event[0]`, `event.length` | Both are `undefined`. |
+  | `[...event]` | `TypeError: Spread syntax requires ...iterable[Symbol.iterator] to be a function` |
+  | `event.includes("a")` | `TypeError: event.includes is not a function. (In 'event.includes("a")', 'event.includes' is undefined)` |
+  | Second `changedValue` parameter | `undefined` in both `on("change")` and `onChange`; each handler receives exactly one argument. |
+
 - **The options 0.10 deprecated are removed**, first those it promised to remove in 1.0. Migration:
 
   | 0.10 | 1.0 |
