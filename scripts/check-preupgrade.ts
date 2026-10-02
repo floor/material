@@ -35,13 +35,13 @@ import { elements } from "../src/elements";
 import { renderElement } from "../dist/ssr/index.js";
 
 const phaseB = [
-  renderElement("m-textfield", { label: "Name", value: "Ada" }),
+  renderElement("m-text-field", { label: "Name", value: "Ada" }),
   renderElement("m-button", {}, "Save"),
   renderElement("m-select", { label: "Pet", value: "Dog" }),
   // The deep text-field rule (multiline, supporting text, outlined, compact)
   // is one of the highest-specificity pre-upgrade selectors. The rollback has
-  // to beat it, not only `m-textfield:not(:defined)`.
-  renderElement("m-textfield", {
+  // to beat it, not only `m-text-field:not(:defined)`.
+  renderElement("m-text-field", {
     id: "variant", label: "Name", value: "Ada", type: "multiline", variant: "outlined",
     density: "compact", "supporting-text": "Help",
   }),
@@ -51,7 +51,7 @@ const phaseB = [
   // toolbar it is still an undefined custom element, and its own rule reserves
   // the 56px box. A bare twin beside it is that rule with no rendered parent.
   renderElement("m-toolbar", { id: "toolbar" }, '<m-fab-menu slot="fab"></m-fab-menu>'),
-].join("") + '<m-textfield id="variant-bare" label="Name" value="Ada" type="multiline" variant="outlined" density="compact" supporting-text="Help"></m-textfield>'
+].join("") + '<m-text-field id="variant-bare" label="Name" value="Ada" type="multiline" variant="outlined" density="compact" supporting-text="Help"></m-text-field>'
   + '<m-navigation-rail id="rail-bare"><div slot="header">Menu</div></m-navigation-rail>'
   + '<m-card id="card-bare"><span slot="headline">Title</span></m-card>'
   + '<m-fab-menu id="fab-bare"></m-fab-menu>';
@@ -388,7 +388,7 @@ try {
       await p.goto(`http://127.0.0.1:${server.port}/phase-b`);
       await settle(p);
       const before = await p.evaluate(() => {
-        const field = document.querySelector("m-textfield")!;
+        const field = document.querySelector("m-text-field")!;
         const button = document.querySelector("m-button:not(#bare)")!;
         const select = document.querySelector("m-select")!;
         const bare = document.querySelector("#bare")!;
@@ -467,7 +467,7 @@ try {
       const after = await p.evaluate(() => ({
         button: document.querySelector("m-button:not(#bare)")!.getBoundingClientRect().width,
         select: document.querySelector("m-select")!.getBoundingClientRect().width,
-        background: getComputedStyle(document.querySelector("m-textfield")!).backgroundColor,
+        background: getComputedStyle(document.querySelector("m-text-field")!).backgroundColor,
       }));
       assert(Math.abs(before.button - after.button) < 0.5, `button width ${before.button} before the script, ${after.button} after`);
       assert(Math.abs(before.select - after.select) < 0.5, `select width ${before.select} before the script, ${after.select} after`);

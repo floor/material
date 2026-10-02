@@ -217,7 +217,7 @@ A server-rendered page sends each element as its tag and light DOM; the element 
 <link rel="stylesheet" href="/node_modules/mtrl/dist/elements/preupgrade.css">
 ```
 
-A page that uses one element can load that element's file instead: `mtrl/elements/preupgrade/<name>.css`, named by the spec (`textfield`, `select`, `icon-button`). Each file is that element's rules in the same `@layer mtrl.preupgrade`. With a bundler, `import 'mtrl/elements/preupgrade.css'` or `import 'mtrl/elements/preupgrade/button.css'`.
+A page that uses one element can load that element's file instead: `mtrl/elements/preupgrade/<name>.css`, named by the spec (`text-field`, `select`, `icon-button`). Each file is that element's rules in the same `@layer mtrl.preupgrade`. With a bundler, `import 'mtrl/elements/preupgrade.css'` or `import 'mtrl/elements/preupgrade/button.css'`.
 
 With another tag prefix, `preupgradeStyles('x')` from `mtrl/elements/preupgrade` returns the whole stylesheet for `<x-*>`, to inline on the server. The element CSS modules do not apply these rules.
 

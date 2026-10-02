@@ -169,11 +169,11 @@ describe("pre-upgrade styles", () => {
     expect(retagPreupgrade(rollback, "x-y")).toBe(rollback);
     expect(selectorSpecificity("[data-mtrl-ssr]:not(:defined):not(#\\0)")).toEqual([1, 2, 0]);
     expect(selectorSpecificity("[data-mtrl-ssr]:not(:defined):not(#\\0) > :defined")).toEqual([1, 3, 0]);
-    expect(selectorSpecificity("m-textfield:not(:defined)[type=multiline][supporting-text]:not([supporting-text=''])[variant=outlined]")).toEqual([0, 5, 1]);
+    expect(selectorSpecificity("m-text-field:not(:defined)[type=multiline][supporting-text]:not([supporting-text=''])[variant=outlined]")).toEqual([0, 5, 1]);
     expect(subjectShape("m-navigation-rail:not(:defined)>*+*")).toBe("child");
     expect(subjectShape("m-card:not(:defined)>[slot=headline]")).toBe("child");
     expect(subjectShape("m-tabs:not(:defined):has(>[icon])")).toBe("host");
-    expect(subjectShape("m-textfield:not(:defined)::before")).toBe("host::before");
+    expect(subjectShape("m-text-field:not(:defined)::before")).toBe("host::before");
     expect(subjectShape("[data-mtrl-ssr]:not(:defined):not(#\\0) > :defined")).toBe("child");
   });
 

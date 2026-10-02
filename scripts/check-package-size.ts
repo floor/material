@@ -112,6 +112,8 @@ try {
       // block is in the linked host sheet, so this HTML does not grow for it.
       // Raw crosses next's 42,450, so its ceiling follows the rule (measured + 1%,
       // up to 50): 43,200. Gzip stays under 1,150. Floors follow the measurement.
+      // After the text-field rename merge the four numbers are unchanged:
+      // inline 700,921 / 11,166, link 42,741 / 1,038. Floors and ceilings stay.
       link: { options: { styles: "link", cssBase: "/css" }, raw: [42_300, 43_200], gzip: [900, 1_150] },
     } as const;
     for (const [mode, budget] of Object.entries(budgets)) {
@@ -151,6 +153,8 @@ try {
   // Measured + 1%, up to 1,000, is 1,085,000, above 1,078,000, so it stays.
   // The child subject is :defined: 1,073,624. Measured + 1%, up to 1,000,
   // is 1,085,000, above 1,078,000, so it stays.
+  // The text-field rename merged in: 1,073,789. Measured + 1%, up to 1,000,
+  // is 1,085,000, above 1,078,000, so it stays.
   assert(pack.size < 1_078_000, "npm tarball exceeds 1,078,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
@@ -176,6 +180,8 @@ try {
   // files. Measured + 1%, up to 1,000, is 6,499,000, above 6,458,000, so it stays.
   // The child subject is :defined: 6,435,269. Measured + 1%, up to 1,000,
   // is 6,500,000, above 6,458,000, so it stays.
+  // The text-field rename merged in: 6,438,071. Measured + 1%, up to 1,000,
+  // is 6,503,000, above 6,458,000, so it stays.
   assert(pack.unpackedSize < 6_458_000, "Unpacked package exceeds 6,458,000 bytes");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
@@ -317,6 +323,9 @@ try {
     // isDisabled() on eleven components and the type exports (FLO-384): 129,650 to 129,773
     // against 3f9ca0c7, Node 22.23.3 / npm 10.9.9; the budget keeps the headroom it had.
     // 125,723 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+    // The text-field rename merged in: 126,962, the same figure main packed.
+    // 38 B left under 127,000. Measured + 1% or 100 B, rounded up to 50, is
+    // 128,250, above 127,000, so the ceiling stays.
     { name: "all-js", code: "export * from 'mtrl';", gzip: 127000 },
     // FLO-406 contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 8,069 -> 7,542 gzip bytes (same packer).
