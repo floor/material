@@ -3833,8 +3833,8 @@ try {
   //   components/_split-button.scss:211 height: v.button("touch-target");   (the token, not the mixin)
   //   abstract/_config.scss:26, abstract/_mixins.scss:353, abstract/_variables.scss:345  (the export, the definition, the token)
   // so the button is the only target the mixin draws, and it is measured here
-  // in both directions. The element has no attribute for `trailingIconLabel`,
-  // so the button exists on the factory only; its cases record that.
+  // in both directions, on the factory and on `<m-text-field>` through its
+  // `trailing-icon-label` attribute (FLO-532).
   await fresh(page, `<section id="tt-field"></section>`);
   {
     const measured = await page.evaluate(async () => {
@@ -3854,6 +3854,7 @@ try {
         el.setAttribute("variant", "outlined");
         el.setAttribute("label", "Email");
         el.setAttribute("trailing-icon", icon);
+        el.setAttribute("trailing-icon-label", "Clear");
         wrap.append(el);
         host.append(wrap);
         cases.push({ where: `factory ${dir}`, button: field.element.querySelector(".mtrl-text-field__trailing-icon--button"), area: document });
@@ -3867,8 +3868,7 @@ try {
       const lines: string[] = [];
       for (const { where, button, area } of cases) {
         if (!button) {
-          // Only the factory renders the button: <m-text-field> has no attribute for the label.
-          lines.push(`  text field trailing target ${where}: no button (the element has no attribute for the label)`);
+          failures.push(`text field trailing target ${where}: no button`);
           continue;
         }
         const rect = button.getBoundingClientRect();
@@ -3938,6 +3938,68 @@ try {
     for (const line of measured.failures) console.log(`  FAIL ${line}`);
     assert.deepEqual(measured.failures, []);
     check("text field: the trailing icon button's 48 px target is centred on the button in both directions");
+  }
+
+  // ---------------------------------------------------------------- text field: the trailing icon's label attribute (FLO-532)
+  // `<m-text-field trailing-icon-label>` is the element's spelling of the
+  // factory's `trailingIconLabel` (FLO-301): with it the trailing icon is a
+  // button named by the value, reachable by assistive technology, and the 48
+  // px target case above measures it on the element too. Without it — and with
+  // an empty value, which the factory reads as no label — the icon stays a
+  // decorative span hidden from assistive technology. The attribute is
+  // config-only, as `label` and `type` are: a change after upgrade recreates
+  // the component from the attributes, keeping the value.
+  await fresh(page, `<m-text-field id="tl" label="Email" trailing-icon='${ICON}'></m-text-field>`);
+  {
+    type TrailingHost = HTMLElement & { value: string };
+    const partState = (): Promise<unknown> =>
+      page.evaluate(() => {
+        const host = document.getElementById("tl") as TrailingHost;
+        const node = (host.shadowRoot as ShadowRoot).querySelector('[class*="trailing-icon"]');
+        return {
+          tag: node?.tagName ?? null,
+          hidden: node?.getAttribute("aria-hidden") ?? null,
+          name: node?.getAttribute("aria-label") ?? null,
+          type: (node as HTMLButtonElement | null)?.type ?? null,
+        };
+      });
+    const namedButtons = (name: string): Promise<number> => page.getByRole("button", { name }).count();
+    const value = (): Promise<string> => page.evaluate(() => (document.getElementById("tl") as TrailingHost).value);
+    const set = (attribute: string, next: string | null): Promise<void> =>
+      page.evaluate(({ attribute, next }) => {
+        const host = document.getElementById("tl");
+        if (next === null) host?.removeAttribute(attribute);
+        else host?.setAttribute(attribute, next);
+      }, { attribute, next });
+
+    assert.deepEqual(await partState(), { tag: "SPAN", hidden: "true", name: null, type: null });
+    assert.equal(await namedButtons("Clear"), 0);
+    check("text field: without the label the trailing icon is a decorative span, not a button (element)");
+
+    await set("trailing-icon-label", "");
+    assert.deepEqual(await partState(), { tag: "SPAN", hidden: "true", name: null, type: null });
+    check("text field: an empty trailing-icon-label stays decorative (element, as the factory)");
+
+    await page.evaluate(() => {
+      (document.getElementById("tl") as TrailingHost).value = "typed";
+    });
+    await set("trailing-icon-label", "Clear");
+    assert.deepEqual(await partState(), { tag: "BUTTON", hidden: null, name: "Clear", type: "button" });
+    assert.equal(await namedButtons("Clear"), 1);
+    assert.equal(await value(), "typed");
+    check("text field: setting trailing-icon-label after upgrade makes the button, named by its value, and keeps the value (element)");
+
+    await set("trailing-icon-label", "Show password");
+    assert.deepEqual(await partState(), { tag: "BUTTON", hidden: null, name: "Show password", type: "button" });
+    assert.equal(await namedButtons("Show password"), 1);
+    assert.equal(await namedButtons("Clear"), 0);
+    check("text field: changing trailing-icon-label changes the button's accessible name (element)");
+
+    await set("trailing-icon-label", null);
+    assert.deepEqual(await partState(), { tag: "SPAN", hidden: "true", name: null, type: null });
+    assert.equal(await namedButtons("Show password"), 0);
+    assert.equal(await value(), "typed");
+    check("text field: removing trailing-icon-label makes the icon decorative again, and keeps the value (element)");
   }
 
   // ---------------------------------------------------------------- progress
