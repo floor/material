@@ -32,6 +32,19 @@ export const cases: PreupgradeCase[] = [
   c("switch", "default", `<m-switch>Wi-Fi</m-switch>`),
   c("switch", "supporting-text", `<m-switch supporting-text="Saves power">Wi-Fi</m-switch>`),
   c("switch", "checked", `<m-switch checked>Wi-Fi</m-switch>`),
+  // No slotted text and no label attribute: the host is the 52 x 48 track box
+  // itself, as the upgraded root is.
+  c("switch", "unlabelled", `<m-switch aria-label="Switch"></m-switch>`),
+  // An empty label attribute matches [label] but the element reads it as no
+  // label, so the pre-upgrade rule must size this host too.
+  c("switch", "label=''", `<m-switch aria-label="Switch" label=""></m-switch>`),
+  // Supporting text and no label: the helper stands where the label would, so
+  // the host reserves the labelled 56px row and its 12px gap, not the 52 x 48
+  // track box.
+  c("switch", "supporting-text no label", `<m-switch aria-label="Switch" supporting-text="Helps"></m-switch>`),
+  // An empty supporting-text builds no helper (the element reads it as none,
+  // as with `label=""`), so this host is the track box too.
+  c("switch", "supporting-text=''", `<m-switch aria-label="Switch" supporting-text=""></m-switch>`),
   c("tabs", "default", `<m-tabs value="a"><m-tab value="a">Flights</m-tab><m-tab value="b">Trips</m-tab><m-tab value="c">Explore</m-tab></m-tabs>`),
   c("tabs", "icon", `<m-tabs value="a"><m-tab value="a" icon="${ICON}">Flights</m-tab><m-tab value="b" icon="${ICON}">Trips</m-tab></m-tabs>`),
   c("progress", "default", `<m-progress value="40" aria-label="Upload"></m-progress>`),
