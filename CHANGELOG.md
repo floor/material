@@ -40,8 +40,13 @@ exists only in 1.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
 | `textfieldElement`, `defineTextfield`, `TextfieldSpec`, `TextfieldElement`, `TextfieldElementComponent` (`mtrl/elements`) | `textFieldElement`, `defineTextField`, `TextFieldSpec`, `TextFieldElement`, `TextFieldElementComponent` |
 | `Textfield` (`mtrl/react`, `mtrl/solid`, `mtrl/svelte`), `MTextfield` (`mtrl/vue`) | `TextField`, `MTextField` |
 | Sass `$textfield`, `textfield()` | `$text-field`, `text-field()` |
-| `SELECT_CLASSES.TEXTFIELD` | `SELECT_CLASSES.TEXT_FIELD`, the same value. A recorded exception: 0.10.x flags the old key but has no new one, so change it when you upgrade. In 1.0 the old key reads `undefined`. |
+| `SELECT_CLASSES.TEXTFIELD` | `SELECT_CLASSES.TEXT_FIELD`, its value is `select__text-field`. A recorded exception: 0.10.x flags the old key but has no new one, so change it when you upgrade. In 1.0 the old key reads `undefined`. |
 | `select.textfield` | `select.textField`. A recorded exception, like the key above: 0.10.x flags the old name but has no `textField`, so rename it when you upgrade. In 1.0 `select.textfield` reads `undefined`. |
+| `<m-textfield>` | `<m-text-field>`. The old tag is not defined: it renders nothing. |
+| the classes `mtrl-textfield`, `mtrl-textfield__…`, `mtrl-textfield--…` | `mtrl-text-field`, `mtrl-text-field__…`, `mtrl-text-field--…` |
+| `::part(textfield)` on the text field and on `<m-select>` | `::part(text-field)` |
+| `mtrl/components/textfield`, `mtrl/components/textfield/constants`, `mtrl/styles/textfield`, `mtrl/elements/css/textfield` | the same with `text-field`. 0.10.7 resolves both spellings. |
+| `setComponentDefaults('textfield', …)`, `setGlobalDefaults({ textfield: … })` | the key `'text-field'` |
 | `CardSchema` | `CardConfig` |
 | the time picker's config option `isOpen`, and its default `TIMEPICKER_DEFAULTS.IS_OPEN` | `open` and `TIMEPICKER_DEFAULTS.OPEN`, as on the dialog and the drawer. `isOpen()` is the method that reads the state |
 | `TopAppBar`, `BottomAppBar` (the factory types) | `TopAppBarComponent`, `BottomAppBarComponent` |
@@ -51,9 +56,6 @@ exists only in 1.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
 | `createElement({ rawClass })` | `class` or `className` |
 | the tooltip's `rich` | `variant: 'rich'` |
 | `onToggle` on the icon button (`mtrl/react`, `mtrl/vue`, `mtrl/solid`; `ontoggle` in `mtrl/svelte`) | `onChange` (`onchange`), whose `event.detail` is `{ selected, value }`. A leftover is a type error: `… is not assignable to type '"onToggle was removed in 1.0: use onChange"'`. |
-
-The text field's tag, element name, CSS classes, event names and constant values keep
-`textfield`.
 
 **Removed, with what to use instead**
 
@@ -147,6 +149,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   toggles. Listen to `change`. In the React, Vue, Svelte and Solid components the compiler does
   catch it: `onToggle` (Svelte: `ontoggle`) on the icon button is a type error.
 - **`select.textfield`** in JavaScript is `undefined`.
+- **The text field's classes, parts and defaults key are `text-field`.** A page rule on
+  `.mtrl-textfield…` or `::part(textfield)` matches nothing, a `classList` call with the old
+  class changes nothing, and defaults set under `'textfield'` are ignored. Nothing warns.
+  Search your CSS and your code for `textfield`.
 - **A FAB's `'surface'` or `'small'`** (the options take any string) renders as the default
   `primary-container`, or at the default 56dp.
 - **`data-theme="winter"`** (or `material`, `browngreen`, `legacy`) on the root element gets the
@@ -281,7 +287,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `getValueAttribute()` / `setValueAttribute()`. No `value` event is emitted.
 - **A trailing icon without `trailingIconLabel`** is hidden from screen readers and loses its
   pointer cursor; a click listener you added to it is out of their reach. The label is the
-  factory's (`trailingIconLabel`, or `setTrailingIcon(html, label)`); on `<m-textfield>` and in
+  factory's (`trailingIconLabel`, or `setTrailingIcon(html, label)`); on `<m-text-field>` and in
   the framework components a trailing icon is decorative.
 - **The button group's `select(value)`** with a value no button carries clears the selection,
   with a warning in development and no event.
@@ -399,17 +405,16 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   compile with `skipLibCheck: false`, with or without mtrl.
 - **Only the canonical names (FLO-383).** For every row below but the last two, 0.10.5 exported
   both spellings, the old ones deprecated; 1.0 has only the canonical ones. Every exported identifier writes "text field" as
-  two words; string values are unchanged (the `<m-textfield>` tag, the `textfield` element name,
-  CSS classes, event strings and the constants' values). The declarations are renamed too, so the
+  two words; the strings follow: see 'Text field in two words in every string' below. The declarations are renamed too, so the
   types read the same in an editor. Svelte's component file is `TextField.svelte`. Migration:
 
   | 0.10 | 1.0 | Entry |
   |---|---|---|
-  | `createTextfield` | `createTextField` | `mtrl` (`mtrl/components/textfield` exports `createTextField` too) |
-  | `TextfieldConfig`, `TextfieldComponent` | `TextFieldConfig`, `TextFieldComponent` | `mtrl`, `mtrl/components/textfield` |
-  | `TextfieldDensity`, `TextfieldEvents` | `TextFieldDensity`, `TextFieldEvents` | `mtrl/components/textfield` |
-  | `TextfieldValuePayload`, `TextfieldFocusPayload`, `TextfieldTrailingPayload` | `TextFieldValuePayload`, `TextFieldFocusPayload`, `TextFieldTrailingPayload` | `mtrl/components/textfield` |
-  | `TEXTFIELD_VARIANTS`, `TEXTFIELD_STATES`, `TEXTFIELD_TYPES`, `TEXTFIELD_EVENTS`, `TEXTFIELD_DENSITY`, `TEXTFIELD_DEFAULTS`, `TEXTFIELD_CLASSES` | `TEXT_FIELD_VARIANTS`, `TEXT_FIELD_STATES`, `TEXT_FIELD_TYPES`, `TEXT_FIELD_EVENTS`, `TEXT_FIELD_DENSITY`, `TEXT_FIELD_DEFAULTS`, `TEXT_FIELD_CLASSES` | `mtrl/components/textfield/constants` |
+  | `createTextfield` | `createTextField` | `mtrl` (`mtrl/components/text-field` exports `createTextField` too) |
+  | `TextfieldConfig`, `TextfieldComponent` | `TextFieldConfig`, `TextFieldComponent` | `mtrl`, `mtrl/components/text-field` |
+  | `TextfieldDensity`, `TextfieldEvents` | `TextFieldDensity`, `TextFieldEvents` | `mtrl/components/text-field` |
+  | `TextfieldValuePayload`, `TextfieldFocusPayload`, `TextfieldTrailingPayload` | `TextFieldValuePayload`, `TextFieldFocusPayload`, `TextFieldTrailingPayload` | `mtrl/components/text-field` |
+  | `TEXTFIELD_VARIANTS`, `TEXTFIELD_STATES`, `TEXTFIELD_TYPES`, `TEXTFIELD_EVENTS`, `TEXTFIELD_DENSITY`, `TEXTFIELD_DEFAULTS`, `TEXTFIELD_CLASSES` | `TEXT_FIELD_VARIANTS`, `TEXT_FIELD_STATES`, `TEXT_FIELD_TYPES`, `TEXT_FIELD_EVENTS`, `TEXT_FIELD_DENSITY`, `TEXT_FIELD_DEFAULTS`, `TEXT_FIELD_CLASSES` | `mtrl/components/text-field/constants` |
   | `CardSchema` | `CardConfig` | `mtrl`, `mtrl/components/card` |
   | `TopAppBar` (type) | `TopAppBarComponent` | `mtrl`, `mtrl/components/top-app-bar` |
   | `BottomAppBar` (type) | `BottomAppBarComponent` | `mtrl`, `mtrl/components/bottom-app-bar` |
@@ -418,12 +423,30 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | `Textfield` (component) | `TextField` | `mtrl/react`, `mtrl/solid`, `mtrl/svelte` |
   | `MTextfield` | `MTextField` | `mtrl/vue` |
   | Sass `$textfield`, `textfield()` (`abstract/variables`) | `$text-field`, `v.text-field()`, the same map (both names in 0.10.5); the built CSS is unchanged |
-  | `SELECT_CLASSES.TEXTFIELD` (deprecated in 0.10.5) | `SELECT_CLASSES.TEXT_FIELD`, the same value `"select__textfield"`: no overlap, the key is new in 1.0. A recorded exception to the rule that 0.10.x carries the replacement: a class-name key users rarely type, where an alias on 0.10.x would cost the select's last bytes. |
+  | `SELECT_CLASSES.TEXTFIELD` (deprecated in 0.10.5) | `SELECT_CLASSES.TEXT_FIELD`, `"select__text-field"`: no overlap, the key is new in 1.0. A recorded exception to the rule that 0.10.x carries the replacement: a class-name key users rarely type, where an alias on 0.10.x would cost the select's last bytes. |
   | `select.textfield` (deprecated in 0.10.5) | `select.textField` | the select's property: no overlap, `textField` is new in 1.0, and reading `select.textfield` in JavaScript now gives `undefined` rather than an error. The same recorded exception as the row above. |
 
   Each is a rename of the import; the values and types are the same. The React, Solid and
   Svelte `TopAppBar` and `BottomAppBar` components keep their names: only the factory's types
   were renamed.
+- **Text field in two words in every string (FLO-560).** FLO-383 renamed the identifiers
+  (`createTextField`, `TextFieldConfig`, `defineTextField`); the strings now follow, so the name
+  is written one way everywhere. The tag is `<m-text-field>`. The classes are `mtrl-text-field`,
+  `mtrl-text-field__input`, `mtrl-text-field--focused` and so on, on the text field and inside
+  the select. The CSS part is `::part(text-field)`, as parts are named after the classes. The
+  subpaths are `mtrl/components/text-field`, `mtrl/components/text-field/constants`,
+  `mtrl/styles/text-field`, `mtrl/elements/css/text-field` and
+  `mtrl/elements/preupgrade/text-field.css`. The global defaults key is `'text-field'`, as
+  `'navigation-rail'` and `'side-sheet'` are. The values of `TEXT_FIELD_CLASSES` change with the
+  classes, and `SELECT_CLASSES.TEXT_FIELD` is `select__text-field`. The registry key in
+  `elements` is `textField`. Generated ids start with `mtrl-text-field-`. Nothing else changes:
+  the identifiers, the options, the events and the rendered structure are the same, and
+  `type="text"` is untouched. The old strings have no alias: the old tag is not defined, an old
+  subpath throws `ERR_PACKAGE_PATH_NOT_EXPORTED`, and an old class, part or defaults key is
+  silently ignored. Migration: replace `m-textfield` with `m-text-field` in markup and
+  selectors, `mtrl-textfield` with `mtrl-text-field` in CSS and class calls, `part(textfield)`
+  with `part(text-field)`, and `/textfield` with `/text-field` in imports (0.10.7 resolves the
+  new subpaths, so imports can move first).
 - **Time picker, select and radio events agree with their getters (FLO-380).**
 
   | Event | 0.10 payload | 1.0 payload |
@@ -583,7 +606,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   built a clear or show-password control from that span with its own click listener lost it for
   screen-reader users. Migration: an interactive trailing icon needs `trailingIconLabel` (or
   `setTrailingIcon(html, label)`), which makes it a button and emits `trailing`. The label is a
-  factory option: `<m-textfield>` and the React, Vue, Svelte and Solid components have no label
+  factory option: `<m-text-field>` and the React, Vue, Svelte and Solid components have no label
   attribute or prop, so a trailing icon there is decorative.
 - **The dialog is open when `open()` returns, and closed when `close()` returns (FLO-548).**
   The rule, for the dialog first and for every overlay by 1.0: when `open()` or `close()`

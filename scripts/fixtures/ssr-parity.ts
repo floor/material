@@ -6,7 +6,7 @@ import { setHTML } from "../../dist/core/dom/html.js";
 
 export type Snapshot = Record<string, string>;
 // Only generated ID families, never arbitrary authored IDs or ARIA values.
-const generated = /^(?:mtrl-|textfield-|select-|tabs-|tab-|radio-|checkbox-|switch-|menu-|search-|datepicker-|timepicker-|dialog-|card-)/;
+const generated = /^(?:mtrl-|text-field-|select-|tabs-|tab-|radio-|checkbox-|switch-|menu-|search-|datepicker-|timepicker-|dialog-|card-)/;
 export const snapshot = (host: Element, authoredIds: string[]): Snapshot => {
   const result: Snapshot = {};
   const ids = new Map<string, string>();

@@ -10,7 +10,7 @@ import { withServerScope, removeEmptyStyles, type ServerScope } from "../../src/
 import type { ServerResources } from "../../src/ssr/resources";
 import { setHTML } from "../../src/core/dom/html";
 import { cases } from "../../scripts/fixtures/preupgrade-cases";
-import createTextField from "../../src/components/textfield";
+import createTextField from "../../src/components/text-field";
 
 const nativeTimeout = setTimeout;
 const nativeMicrotask = queueMicrotask;
@@ -317,8 +317,8 @@ test("all 37 defaults repeatedly mount detached and leave no late work, listener
   restored();
 });
 
-test("textfield and select disposal reset the shared batch for a subsequent normal DOM lifecycle", async () => {
-  for (const definition of [elements.textfield, elements.select, elements.textfield, elements.select]) {
+test("text field and select disposal reset the shared batch for a subsequent normal DOM lifecycle", async () => {
+  for (const definition of [elements.textField, elements.select, elements.textField, elements.select]) {
     withServerScope((scope) => scope.mount(hostFor(scope, definition.spec as ElementSpec<ElementComponent>)));
   }
   const view = new JSDOM("<!doctype html><html><body></body></html>").window;
@@ -329,10 +329,10 @@ test("textfield and select disposal reset the shared batch for a subsequent norm
     for (const key of keys) Object.defineProperty(globalThis, key, { configurable: true, writable: true, value: Reflect.get(view, key) });
     field = createTextField({ label: "Label", variant: "outlined", value: "Value" });
     document.body.append(field.element);
-    const label = field.element.querySelector(".mtrl-textfield__label")!;
+    const label = field.element.querySelector(".mtrl-text-field__label")!;
     Object.defineProperty(label, "offsetWidth", { value: 100 });
     await new Promise((resolve) => nativeTimeout(resolve, 30));
-    expect((field.element.querySelector(".mtrl-textfield__outline-notch") as HTMLElement).style.width).toBe("83px");
+    expect((field.element.querySelector(".mtrl-text-field__outline-notch") as HTMLElement).style.width).toBe("83px");
   } finally {
     field!?.destroy(); view.close();
     keys.forEach((key, index) => previous[index] ? Object.defineProperty(globalThis, key, previous[index]!) : Reflect.deleteProperty(globalThis, key));

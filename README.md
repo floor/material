@@ -40,7 +40,7 @@ import 'mtrl/styles/base';
 </script>
 
 <form>
-  <m-textfield name="email" type="email" label="Email" required></m-textfield>
+  <m-text-field name="email" type="email" label="Email" required></m-text-field>
   <m-switch name="news" checked>Newsletter</m-switch>
   <m-button type="submit">Sign up</m-button>
 </form>
@@ -117,7 +117,7 @@ Or import the base once, followed by the components you use:
 ```typescript
 import 'mtrl/styles/base';
 import 'mtrl/styles/button';
-import 'mtrl/styles/textfield';
+import 'mtrl/styles/text-field';
 
 // Optional: an alternate theme and the utility classes
 import 'mtrl/themes/ocean';
@@ -364,8 +364,8 @@ On the element:
 - `inset-icon-at-min` on `<m-slider>` — the same, while the value is at the minimum
 - `icon` on `<m-split-button>`
 - `icon` on `<m-switch>`
-- `leading-icon` on `<m-textfield>`
-- `trailing-icon` on `<m-textfield>`
+- `leading-icon` on `<m-text-field>`
+- `trailing-icon` on `<m-text-field>`
 
 On a declaration child:
 

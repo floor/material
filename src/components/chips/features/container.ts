@@ -17,7 +17,7 @@ export const withContainer =
   (config: ChipsConfig) =>
   // Generic, so the accumulated pipeline type survives to the features after
   // this one. A concrete parameter type would erase it — the defect fixed in
-  // textfield's withDensity (#109).
+  // text field's withDensity (#109).
   <C extends ContainerHost>(component: C) => {
   // Track current layout state
   const state = {

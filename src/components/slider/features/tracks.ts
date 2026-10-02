@@ -137,7 +137,7 @@ export const withTracks =
   (config: SliderConfig) =>
   // Generic, so the accumulated pipeline type survives to the features after
   // this one. A concrete parameter type would erase it — the defect fixed in
-  // textfield's withDensity (#109).
+  // text field's withDensity (#109).
   <C extends TracksHost>(component: C) => {
   const container: HTMLElement = component.container;
   // The class is passed whole rather than assembled from a fragment. It was

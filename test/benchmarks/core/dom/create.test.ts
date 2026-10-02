@@ -431,7 +431,7 @@ benchmark("DOM Create Performance Benchmarks", () => {
         // Text field
         const textField = createElement({
           tag: "div",
-          className: "textfield",
+          className: "text-field",
           container: form,
         });
 

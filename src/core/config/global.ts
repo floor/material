@@ -67,7 +67,7 @@ export function getComponentDefaults<K extends keyof ComponentConfigMap>(
  * ```typescript
  * setGlobalDefaults({
  *   button: { shape: 'square', size: 'm' },
- *   textfield: { variant: 'outlined' }
+ *   "text-field": { variant: 'outlined' }
  * });
  * ```
  */

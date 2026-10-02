@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createCheckbox from "../src/components/checkbox";
 import type createSwitch from "../src/components/switch";
-import type createTextField from "../src/components/textfield";
+import type createTextField from "../src/components/text-field";
 
 type InputWindow = Window & {
   inputs: { createCheckbox: typeof createCheckbox; createSwitch: typeof createSwitch; createTextField: typeof createTextField };
@@ -34,7 +34,7 @@ export async function checkInputBEM(page: Page): Promise<void> {
   }
   assert.equal(await page.locator(".mtrl-switch__content").count(), 1);
   assert.equal(await page.locator(".mtrl-switch__content .mtrl-switch__helper").textContent(), "Updated");
-  const field = page.locator(".mtrl-textfield__input");
+  const field = page.locator(".mtrl-text-field__input");
   assert.equal(await field.evaluate(element => getComputedStyle(element).fontSize), "16px");
   assert.equal(await field.evaluate(element => element.getBoundingClientRect().height), 56);
   await field.fill("Grace");

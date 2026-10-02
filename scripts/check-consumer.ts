@@ -19,7 +19,7 @@ const scenarios = [
   { name: "button", component: "button" },
   { name: "button-hover", component: "button", state: "hover" },
   { name: "button-focus", component: "button", state: "focus" },
-  { name: "textfield", component: "textfield" },
+  { name: "text-field", component: "text-field" },
   { name: "select", component: "select" },
   { name: "select-open", component: "select", state: "open" },
   { name: "select-error", component: "select", state: "error" },
@@ -61,7 +61,7 @@ try {
   const nestedSubpaths = [
     "bottom-sheet/features", "carousel/features", "chips/chip", "chips/chip/constants", "chips/features",
     "drawer/features", "list/features", "menu/features", "progress/features", "search/features",
-    "side-sheet/features", "slider/features", "textfield/features",
+    "side-sheet/features", "slider/features", "text-field/features",
   ].map(path => `mtrl/components/${path}`);
   const probe = join(directory, "resolve-components.mjs");
   // import.meta.resolve maps a specifier through exports without opening the
@@ -88,15 +88,15 @@ console.log(JSON.stringify(out));
   // Library mode retains exports for measurement; an HTML fixture below tests
   // actual application mode, CSS extraction, network loading, and rendering.
   const sizes: Record<string, { initialGzip: number; totalGzip: number }> = {};
-  // textfield 9,600 to 9,700 with no headroom left: next c7858870 measures 9,604 locally
+  // text field 9,600 to 9,700 with no headroom left: next c7858870 measures 9,604 locally
   // (FLO-416's multiline SSR fix), the forward merge 9,603; CI read just under 9,600.
-  // textfield 9,000 to 9,600 for FLO-301 (the asterisk, the live error, the trailing button):
+  // text field 9,000 to 9,600 for FLO-301 (the asterisk, the live error, the trailing button):
   // 8,953 to 9,520 against 7cd57a6.
   // addClass from its subpath since 1.0.0 removed it from the root (FLO-351)
   // addClass 603 and button 8,447 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
   // addClass 603; 100 B floor, 750 against b9dab36e, Node 22.23.3 / npm 10.9.9.
   for (const [name, symbol, budget, from] of [
-    ["addClass", "addClass", 750, "mtrl/core/dom"], ["textfield", "createTextField", 9700, "mtrl"], ["button", "createButton", 8550, "mtrl"],
+    ["addClass", "addClass", 750, "mtrl/core/dom"], ["text-field", "createTextField", 9700, "mtrl"], ["button", "createButton", 8550, "mtrl"],
   ] as const) {
     const entry = join(directory, `${name}.ts`);
     await writeFile(entry, `export { ${symbol} } from '${from}';`);

@@ -298,13 +298,13 @@
       "types": "./dist/components/tabs/constants.d.ts",
       "import": "./dist/components/tabs/constants.js"
     },
-    "./components/textfield": {
-      "types": "./dist/components/textfield/index.d.ts",
-      "import": "./dist/components/textfield/index.js"
+    "./components/text-field": {
+      "types": "./dist/components/text-field/index.d.ts",
+      "import": "./dist/components/text-field/index.js"
     },
-    "./components/textfield/constants": {
-      "types": "./dist/components/textfield/constants.d.ts",
-      "import": "./dist/components/textfield/constants.js"
+    "./components/text-field/constants": {
+      "types": "./dist/components/text-field/constants.d.ts",
+      "import": "./dist/components/text-field/constants.js"
     },
     "./components/timepicker": {
       "types": "./dist/components/timepicker/index.d.ts",

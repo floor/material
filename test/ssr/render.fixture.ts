@@ -58,13 +58,13 @@ test("a rendered host carries the pre-upgrade attribute; an opted-out host does 
   expect(links).not.toContain("<style>");
 });
 test("a prefilled multiline text field renders alone", () => {
-  const field = renderElement("m-textfield", { label: "Name", type: "multiline", value: "Ada" });
+  const field = renderElement("m-text-field", { label: "Name", type: "multiline", value: "Ada" });
   expect(field).toContain('<textarea');
   expect(field).toContain('Ada</textarea>');
-  expect(field).toContain('mtrl-textfield--multiline');
+  expect(field).toContain('mtrl-text-field--multiline');
 });
 test("a prefilled multiline text field renders inside a card", () => {
-  const card = renderElement("m-card", {}, '<m-textfield label="Name" type="multiline" value="Ada"></m-textfield>');
+  const card = renderElement("m-card", {}, '<m-text-field label="Name" type="multiline" value="Ada"></m-text-field>');
   expect(card.match(/shadowrootmode="open"/g)).toHaveLength(2);
   expect(card).toContain('Ada</textarea>');
 });

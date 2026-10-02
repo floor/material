@@ -12,7 +12,7 @@ import { createBaseConfig, getApiConfig } from './config';
  * Creates a new Select component with the specified configuration.
  * 
  * The Select component implements a Material Design dropdown select control,
- * combining a textfield and menu to provide a user-friendly selection interface.
+ * combining a text field and menu to provide a user-friendly selection interface.
  * 
  * @param {SelectConfig} config - Configuration options for the select
  *  This must include an array of selection options. See {@link SelectConfig} for all available options.

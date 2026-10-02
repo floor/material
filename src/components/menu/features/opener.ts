@@ -94,7 +94,7 @@ const withOpener =
         }
       }
 
-      // Case 3: Component with input property (like textfield)
+      // Case 3: Component with input property (like text field)
       if ("input" in opener && opener.input instanceof HTMLElement) {
         return { element: opener.input, component: opener };
       }
@@ -126,10 +126,10 @@ const withOpener =
     } else if (element.classList.contains(`${classPrefix}-chip`)) {
       return `${classPrefix}-chip--selected`;
     } else if (
-      element.classList.contains(`${classPrefix}-textfield`) ||
+      element.classList.contains(`${classPrefix}-text-field`) ||
       element.classList.contains(`${classPrefix}-select`)
     ) {
-      return `${classPrefix}-textfield--focused`;
+      return `${classPrefix}-text-field--focused`;
     } else {
       // Default active class for other elements
       return `${classPrefix}-menu__opener--active`;
@@ -254,7 +254,7 @@ const withOpener =
 
     // Case
 
-    // Case 2: Component with input that can be focused (like textfield)
+    // Case 2: Component with input that can be focused (like text field)
     if (
       openerComponent &&
       "input" in openerComponent &&

@@ -55,7 +55,7 @@ const mount = async (config: Record<string, unknown> = {}) => {
   return select;
 };
 const inputOf = (select: { element: HTMLElement }) => select.element.querySelector('input')!;
-const helper = (select: { element: HTMLElement }) => select.element.querySelector('.mtrl-textfield__helper');
+const helper = (select: { element: HTMLElement }) => select.element.querySelector('.mtrl-text-field__helper');
 
 describe('select', () => {
   test('its readonly input carries the name and shows the selected option', async () => {
@@ -139,10 +139,10 @@ describe('select', () => {
   test('setError shows its message and clearError restores the helper text', async () => {
     const select = await mount({ supportingText: 'Pick one' });
     select.setError(true, 'Required');
-    expect(select.element.classList.contains('mtrl-textfield--error')).toBe(true);
+    expect(select.element.classList.contains('mtrl-text-field--error')).toBe(true);
     expect(helper(select)?.textContent).toBe('Required');
     select.clearError();
-    expect(select.element.classList.contains('mtrl-textfield--error')).toBe(false);
+    expect(select.element.classList.contains('mtrl-text-field--error')).toBe(false);
     expect(helper(select)?.textContent).toBe('Pick one');
   });
 
@@ -159,7 +159,7 @@ describe('select', () => {
 
   test('variant follows config', async () => {
     const select = await mount({ variant: 'outlined' });
-    expect(select.element.classList.contains('mtrl-textfield--outlined')).toBe(true);
+    expect(select.element.classList.contains('mtrl-text-field--outlined')).toBe(true);
   });
 
   test('destroy removes the select and its menu', async () => {

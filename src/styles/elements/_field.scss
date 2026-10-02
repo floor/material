@@ -1,5 +1,5 @@
 // src/styles/elements/_field.scss
-// The text field's box before upgrade, shared by <m-textfield>, <m-select>
+// The text field's box before upgrade, shared by <m-text-field>, <m-select>
 // and <m-datepicker>: the container (filled or outlined, default or
 // compact), the label and the value on the input's line.
 @use '../abstract/variables' as v;
@@ -7,7 +7,7 @@
 @use '../abstract/theme' as t;
 
 // 4dp under the field plus one body-small line (16dp). The multiline field
-// adds the same row (elements/_textfield.scss).
+// adds the same row (elements/_text-field.scss).
 $supporting-row: 20px;
 
 /**
@@ -18,7 +18,7 @@ $supporting-row: 20px;
   display: inline-block;
   position: relative;
   box-sizing: border-box;
-  // The unsized field's width, as components/_textfield.scss sets it.
+  // The unsized field's width, as components/_text-field.scss sets it.
   width: v.text-field('width');
   height: v.text-field('height');
   // The input's line: its text is centred in the space its padding leaves.

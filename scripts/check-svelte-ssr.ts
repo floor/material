@@ -17,7 +17,7 @@ import { pascal } from "./element-modules";
 import { assertGlobalHost, GLOBAL_HOST_DOM, readGlobalHost } from "./fixtures/ssr-global-host";
 
 const OPT_OUT = new Set(["carousel", "fab-menu"]);
-// Component names as the adapters export them: textfield is TextField (FLO-383)
+// Component names as the adapters export them: text field is TextField (FLO-383)
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
 interface SpecAttributes { attributes?: Record<string, { type?: string }> }

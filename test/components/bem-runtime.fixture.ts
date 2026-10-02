@@ -4,8 +4,8 @@ import createButton from "../../src/components/button";
 import { BUTTON_CLASSES } from "../../src/components/button/constants";
 import createCheckbox from "../../src/components/checkbox";
 import createSwitch from "../../src/components/switch";
-import createTextField from "../../src/components/textfield";
-import { TEXT_FIELD_CLASSES } from "../../src/components/textfield/constants";
+import createTextField from "../../src/components/text-field";
+import { TEXT_FIELD_CLASSES } from "../../src/components/text-field/constants";
 import createMenu from "../../src/components/menu";
 
 let dom: JSDOM;
@@ -26,7 +26,7 @@ test("shared inputs expose the BEM classes their styles target", () => {
   const controls = [createCheckbox({ label: "Agree" }), createSwitch({ label: "Wi-Fi" }), createTextField({ label: "Email" })];
   for (const [index, control] of controls.entries()) {
     cleanup.push(() => control.destroy());
-    const block = ["checkbox", "switch", "textfield"][index];
+    const block = ["checkbox", "switch", "text-field"][index];
     expect(control.input.classList.contains(`mtrl-${block}__input`)).toBe(true);
     expect(control.input.classList.contains(`mtrl-${block}-input`)).toBe(false);
   }
@@ -43,7 +43,7 @@ test("switch supporting text reuses the existing BEM content wrapper", () => {
   expect(control.element.querySelector(".mtrl-switch-content")).toBeNull();
 });
 
-test("textfield constants select live slots and their error state", () => {
+test("text field constants select live slots and their error state", () => {
   const field = createTextField({ label: "Cost", prefixText: "$", suffixText: "USD", supportingText: "Required", error: true });
   cleanup.push(() => field.destroy());
   for (const [key, text] of [["PREFIX_TEXT", "$"], ["SUFFIX_TEXT", "USD"], ["SUPPORTING_TEXT", "Required"], ["SUPPORTING_TEXT_ERROR", "Required"]] as const) {
@@ -53,16 +53,16 @@ test("textfield constants select live slots and their error state", () => {
   expect(field.element.querySelector(`.mtrl-${TEXT_FIELD_CLASSES.SUPPORTING_TEXT_ERROR}`)).toBeNull();
 });
 
-test("textfield icon setters add and remove BEM input modifiers", () => {
+test("text field icon setters add and remove BEM input modifiers", () => {
   const field = createTextField();
   cleanup.push(() => field.destroy());
   field.setLeadingIcon("<svg></svg>"); field.setTrailingIcon("<svg></svg>");
   for (const side of ["leading", "trailing"]) {
-    expect(field.input.classList.contains(`mtrl-textfield__input--with-${side}-icon`)).toBe(true);
-    expect(field.input.classList.contains(`mtrl-textfield-input--with-${side}-icon`)).toBe(false);
+    expect(field.input.classList.contains(`mtrl-text-field__input--with-${side}-icon`)).toBe(true);
+    expect(field.input.classList.contains(`mtrl-text-field-input--with-${side}-icon`)).toBe(false);
   }
   field.removeLeadingIcon(); field.removeTrailingIcon();
-  expect(field.input.className).toBe("mtrl-textfield__input");
+  expect(field.input.className).toBe("mtrl-text-field__input");
 });
 
 test("button disabled constant follows the real disabled state", () => {

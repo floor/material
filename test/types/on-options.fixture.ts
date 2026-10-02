@@ -9,7 +9,7 @@ import type { SearchConfig, SearchEvents, SearchSuggestion } from "../../src/com
 import type { NavigationRailConfig, NavigationRailEvents } from "../../src/components/navigation-rail/types";
 import type { NavigationBarConfig, NavigationBarEvents } from "../../src/components/navigation-bar/types";
 import type { DrawerConfig, DrawerEvents } from "../../src/components/drawer/types";
-import type { TextFieldConfig, TextFieldEvents } from "../../src/components/textfield/types";
+import type { TextFieldConfig, TextFieldEvents } from "../../src/components/text-field/types";
 
 type Equals<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 type Fn<T> = NonNullable<T>;

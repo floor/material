@@ -19,7 +19,7 @@ export const withRange =
   // Generic, so the accumulated pipeline type survives. Annotating the
   // parameter with a concrete shape instead would erase everything applied
   // before this feature from the type of everything after it — the defect
-  // fixed in textfield's withDensity (#109).
+  // fixed in text field's withDensity (#109).
   <C extends RangeHost>(component: C): C => {
   // If not a range slider or missing structure definition, return unmodified
   if (!config.range || !config.secondValue || !component.schema) {

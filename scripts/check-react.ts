@@ -217,11 +217,11 @@ const run = async (version: 18 | 19): Promise<void> => {
     await page.waitForFunction(() => document.getElementById("level")?.textContent === "51");
     assert.equal(await page.getByRole("slider", { name: "Level", exact: true }).getAttribute("aria-valuenow"), "51");
     check("slider: controlled value and onChange");
-    // ------------------------------------------------------------- textfield
+    // ------------------------------------------------------------- text field
     await page.getByRole("textbox", { name: "Name", exact: true }).pressSequentially("Ada");
     await page.waitForFunction(() => document.getElementById("text")?.textContent === "Ada");
     assert.equal(await page.getByRole("textbox", { name: "Name", exact: true }).inputValue(), "Ada");
-    check("textfield: controlled value and onInput");
+    check("text field: controlled value and onInput");
     // ------------------------------------------------------------- radios
     const sizes = page.getByRole("radiogroup", { name: "Size" });
     assert.equal(await sizes.getByRole("radio", { name: "Medium", exact: true, checked: true }).count(), 1);

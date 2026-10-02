@@ -17,7 +17,7 @@ interface RadioHost {
 export const withRadio =
   (config: RadiosConfig) =>
   // Generic, so the accumulated pipeline type survives to the features after
-  // this one (see textfield's withDensity, #109).
+  // this one (see text field's withDensity, #109).
   <C extends RadioHost>(component: C) => {
   const radios: RadioItem[] = [];
   const radiosClass = component.getClass('radios');

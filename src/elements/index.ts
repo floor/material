@@ -23,7 +23,7 @@ import { fabElement, defineFab } from "./fab";
 import { extendedFabElement, defineExtendedFab } from "./extended-fab";
 import { checkboxElement, defineCheckbox } from "./checkbox";
 import { sliderElement, defineSlider } from "./slider";
-import { textFieldElement, defineTextField } from "./textfield";
+import { textFieldElement, defineTextField } from "./text-field";
 import { radiosElement, radioDeclaration, defineRadios } from "./radios";
 import { navigationBarElement, navigationBarItemDeclaration, defineNavigationBar } from "./navigation-bar";
 import { navigationRailElement, navigationRailItemDeclaration, defineNavigationRail } from "./navigation-rail";
@@ -86,12 +86,12 @@ export { checkboxElement, defineCheckbox } from "./checkbox";
 export type { CheckboxSpec, CheckboxElement } from "./checkbox";
 export { sliderElement, defineSlider } from "./slider";
 export type { SliderSpec, SliderElement } from "./slider";
-export { textFieldElement, defineTextField } from "./textfield";
+export { textFieldElement, defineTextField } from "./text-field";
 export type {
   TextFieldSpec,
   TextFieldElement,
   TextFieldElementComponent,
-} from "./textfield";
+} from "./text-field";
 export { radiosElement, radioDeclaration, defineRadios } from "./radios";
 export type { RadiosSpec, RadiosElement, RadioAttributes } from "./radios";
 export { navigationBarElement, navigationBarItemDeclaration, defineNavigationBar } from "./navigation-bar";
@@ -158,7 +158,7 @@ export const elements = {
   extendedFab: extendedFabElement,
   checkbox: checkboxElement,
   slider: sliderElement,
-  textfield: textFieldElement,
+  textField: textFieldElement,
   radios: radiosElement,
   navigationBar: navigationBarElement,
   navigationRail: navigationRailElement,
