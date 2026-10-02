@@ -12,6 +12,16 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Changed (breaking)
 
+- **1.0 exports nothing deprecated.** What 0.10.0 deprecated and 0.10.x already replaced (or
+  never used) is removed. Migration:
+
+  | 0.10 | 1.0 |
+  |---|---|
+  | `CHECKBOX_VARIANTS` (`mtrl/components/checkbox`, `/constants`) | nothing: M3 has one checkbox style, and `variant` had no effect (FLO-94, FLO-265) |
+  | `RADIO_VARIANTS`, `RADIO_LABEL_POSITIONS`, `RADIO_SIZES`, `RADIO_CLASSES` (`mtrl/components/radios`, `/constants`) | nothing: no component read them (FLO-266). `RADIO_DEFAULTS` keeps its values. |
+  | `TIMEPICKER_DIAL`, `TIMEPICKER_Z_INDEX` (`mtrl/components/timepicker`, `/constants`) | nothing: the dial is sized in CSS and the picker is a modal `<dialog>` in the top layer (FLO-278, FLO-279, FLO-281) |
+  | `TIMEPICKER_CLASSES` | `TIMEPICKER_SELECTORS` (public since 0.9.0) |
+  | `getThemeColor('sys-color-X-rgb')` (`mtrl/core/utils`): the `'r, g, b'` triplet, derived | `getThemeColor('sys-color-X', { alpha })` for rgba(); the `-rgb` name now returns `''` or the `fallback`, as for any undeclared variable (FLO-311) |
 - **Only the canonical names (FLO-383).** For every row below but the last, 0.10.5 exported
   both spellings, the old ones deprecated; 1.0 has only the canonical ones. Every exported identifier writes "text field" as
   two words; string values are unchanged (the `<m-textfield>` tag, the `textfield` element name,
