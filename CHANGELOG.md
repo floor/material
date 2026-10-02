@@ -1147,6 +1147,18 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"` (FLO-592).**
+  The `touch-target` mixin anchored its `::after` with `inset-inline-start: 50%` and then moved it
+  with the physical `translate(-50%, -50%)`. Right-to-left, the logical inset pins the box's right
+  edge at the button's centre and the translate then pushes it another 24px left: the 48 x 48 box
+  sat with its centre 48px left of the button's centre and its right edge 4px left of the button's
+  left edge, so the button's hit area was its own 40px box (plus the engine's one pixel), measured
+  by walking `elementFromPoint` out from each edge in headless Chromium. The mixin now anchors with
+  physical offsets (`left: 50%`), as the icon button's own rule does, so the physical translate
+  centres it in both directions; left-to-right measures the same as before. Only the trailing-icon
+  target rule changes in the compiled sheet (2,744 rules before and after, one changed). The
+  mixin's only live user is the text field's trailing icon button, which only the factory renders
+  (the `<m-text-field>` element has no attribute for the label that makes the icon a button).
 - **A multiline text field uses the value it was created with (FLO-577).** `createTextField({ type: 'multiline', value })` wrote that string as a `value` attribute. A textarea does not take its value from that attribute, so `getValue()` was empty, the label stayed down, and a reset restored nothing. The value is now the textarea's default value, which is its text: the field shows it, the label floats, and a reset restores it. A single-line field still uses the `value` attribute. `<m-text-field>` no longer sets the default a second time.
 - **An unlabelled switch is its 52 x 48 track box, not the label's row.** With no label the root
   kept the label's 12px gap, so it was 64px wide (12 + the 52px track) and 56px tall: in a 48px
