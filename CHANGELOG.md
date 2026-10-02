@@ -12,7 +12,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Migrating from 0.10.x
 
-Upgrade to 0.10.5 first. It exports the 1.0 names beside the old ones, and marks deprecated the
+Upgrade to 0.10.6 first. It exports the 1.0 names beside the old ones, and marks deprecated the
 TypeScript names, options and constants that 1.0 removes, so your editor flags each use with its
 replacement. Two of those warnings can't be cleared before you upgrade, because the new name
 exists only in 1.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `TEXT_FIELD`) and
@@ -141,8 +141,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   remaining selection, and the removed id is `chipValue`.
 - **The time picker's `input`** carries the committed time in `value` while the picker is open;
   the live draft is `draftValue`. Factory `confirm` listeners receive `{ value }`.
-- **An empty option id** makes the select's and `<m-radios>`' `change` report `value: null`,
-  not `""`.
+- **An empty selection is `null`, not `""`,** in the select and the radios, factory and element:
+  the `change` payload's `value`, and the radio factory's `getValue()`. A comparison with `""`
+  is never true.
+- **The carousel's `change`** carries `value` alone: `event.index` (and `event.detail.index` on
+  `<m-carousel>`) is `undefined`. Read `value`.
+- **A `withInput` you compose yourself** (`mtrl/core/compose`) reports the checked boolean as
+  `change.value`, like the checkbox and the switch; the input's string is `valueAttribute`.
 - **A trailing icon without `trailingIconLabel`** is hidden from screen readers and loses its
   pointer cursor; a click listener you added to it is out of their reach. The label is the
   factory's (`trailingIconLabel`, or `setTrailingIcon(html, label)`); on `<m-textfield>` and in
@@ -203,7 +208,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | `MTextfield` | `MTextField` | `mtrl/vue` |
   | Sass `$textfield`, `textfield()` (`abstract/variables`) | `$text-field`, `v.text-field()`, the same map (both names in 0.10.5); the built CSS is unchanged |
   | `SELECT_CLASSES.TEXTFIELD` (deprecated in 0.10.5) | `SELECT_CLASSES.TEXT_FIELD`, the same value `"select__textfield"`: no overlap, the key is new in 1.0. A recorded exception to the rule that 0.10.x carries the replacement: a class-name key users rarely type, where an alias on 0.10.x would cost the select's last bytes. |
-  | `select.textfield` (deprecated in 0.10.x) | `select.textField` | the select's property: no overlap, `textField` is new in 1.0, and reading `select.textfield` in JavaScript now gives `undefined` rather than an error. The same recorded exception as the row above. |
+  | `select.textfield` (deprecated in 0.10.5) | `select.textField` | the select's property: no overlap, `textField` is new in 1.0, and reading `select.textfield` in JavaScript now gives `undefined` rather than an error. The same recorded exception as the row above. |
 
   Each is a rename of the import; the values and types are the same. The React, Solid and
   Svelte `TopAppBar` and `BottomAppBar` components keep their names: only the factory's types
@@ -219,6 +224,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | Factory select `change` on empty ID | `{ value: "", ... }` | `{ value: null, ... }` |
   | `<m-select>` `change` on empty ID | `{ value: "" }` | `{ value: null }` |
   | `<m-radios>` `change` on empty ID | `{ value: "" }` | `{ value: null }` |
+  | Factory radios `change` on empty ID | `{ value: "", ... }` | `{ value: null, ... }` |
+  | Factory radios `getValue()` with nothing selected | `""` | `null` |
 
   While the time picker is open, `input.value` no longer moves with the dial:
   it is the committed time. Read `draftValue` for live edits. The factory's
@@ -226,8 +233,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   described by the newly exported `TimePickerInputEvent` type. `onConfirm(string)`
   in the time picker config still receives a string; factory `confirm` listeners
   now destructure `{ value }`. `SelectChangeEvent["value"]` is now `string | null`
-  for an empty option ID. The radio factory still reports its string getter,
-  including `""`; handle `null` for empty select or radio element selections.
+  for an empty option ID. The radio factory reports `null` too: `getValue()` returns
+  `string | null`, and `RadiosChangePayload["value"]` is `string | null`. Handle `null`
+  for an empty selection in the select and the radios, factory and element alike.
 - **Chip-set `add` and `remove` report the live selection (FLO-380).** Factory
   callbacks receive one object instead of a bare chip:
 
@@ -251,7 +259,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   and custom-element details now carry `{ checked, value, valueAttribute, nativeEvent }`;
   `value` matches the checked model, and `valueAttribute` holds the HTML string token.
   Native forms still submit that token only while checked; setters remain silent and
-  element/framework bindings remain `checked`-based. Standalone `withInput` keeps strings.
+  element/framework bindings remain `checked`-based. A standalone `withInput`
+  (`mtrl/core/compose`) emits the same payload: 0.10 sent `{ checked, value: <the input's string>,
+  nativeEvent }`.
   Migration: read checked state from `value` (or `checked`), and replace reads of the
   old string `value` with `valueAttribute`, including `event.detail` in adapters.
 - **List event types match native forwarding (FLO-380).** `scroll` carries
@@ -264,12 +274,14 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   |---|---|
   | button, icon button (toggle) | `{ selected }` → `{ selected, value: string }` (the button's value) |
   | selectable chips (filter and input) | `{ selected, chip }` → `{ selected, chip, value: string \| null }` |
-  | carousel | `{ index }` → `{ value: number, index }` |
+  | carousel | `{ index }` → `{ value: number }`: `value` is the index, and `index` is gone |
 
   The custom elements' `event.detail` carries the same fields, and `<m-button>` now dispatches
   `change` for a toggle button. `ButtonChangePayload` and `IconButtonChangePayload` are
-  exported. Migration: keep reading `selected` for the toggled state and `index` for the
-  carousel; code that builds these payloads (mocks, test doubles) adds `value`. In React and
+  exported. Migration: keep reading `selected` for the toggled state; in a carousel handler
+  read `value` where you read `index` (`event.index`, or `event.detail.index` on
+  `<m-carousel>`, is now `undefined`); code that builds these payloads (mocks, test doubles)
+  adds `value`. In React and
   Solid, `Button` now types its own `onChange` (the element's `change`): code that spreads a
   full `React.HTMLAttributes` (or Solid's `JSX.HTMLAttributes`) into `Button` must omit
   `onChange`.
@@ -390,7 +402,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   |---|---|
   | `CHECKBOX_VARIANTS` (`mtrl/components/checkbox`, `/constants`) | nothing: M3 has one checkbox style, and `variant` had no effect (FLO-94, FLO-265) |
   | `RADIO_VARIANTS`, `RADIO_LABEL_POSITIONS`, `RADIO_SIZES`, `RADIO_CLASSES` (`mtrl/components/radios`, `/constants`) | nothing: no component read them (FLO-266) |
-  | `RADIO_DEFAULTS.VARIANT`, `.LABEL_POSITION`, `.SIZE` (deprecated in 0.10.x) | nothing: the radios have no such options, and nothing read the keys. `RADIO_DEFAULTS.DIRECTION` stays. In JavaScript a removed key reads `undefined`. |
+  | `RADIO_DEFAULTS.VARIANT`, `.LABEL_POSITION`, `.SIZE` (deprecated in 0.10.6) | nothing: the radios have no such options, and nothing read the keys. `RADIO_DEFAULTS.DIRECTION` stays. In JavaScript a removed key reads `undefined`. |
   | the icon button's DOM `toggle` event, from the factory's button and from `<m-icon-button>` (deprecated in 0.10.0, FLO-295) | `change`, which carries `{ selected, value }`. A leftover `toggle` listener never fires, with no error. In the React, Vue, Svelte and Solid components the icon button refuses `onToggle` (Svelte: `ontoggle`), and the compiler's error says what to do: `Type '() => void' is not assignable to type '"onToggle was removed in 1.0: use onChange"'`. Without that guard the name would fall through to the host's native `toggle` handler, compile, and never fire. |
   | `TIMEPICKER_DIAL`, `TIMEPICKER_Z_INDEX` (`mtrl/components/timepicker`, `/constants`) | nothing: the dial is sized in CSS and the picker is a modal `<dialog>` in the top layer (FLO-278, FLO-279, FLO-281) |
   | `TIMEPICKER_CLASSES` | `TIMEPICKER_SELECTORS` (public since 0.9.0), which is not a like-for-like swap: its values are prefixed selectors (`".mtrl-time-picker__dial"`) where the old were bare class names (`"time-picker__dial"`), and 13 of the 33 old keys have no selector of the same name (`ROOT`, `OPEN`, the six `DIALOG_*`, `DIAL_NUMBER_ACTIVE`, `PERIOD_ACTIVE`, `TOGGLE_TYPE`, `CANCEL`, `CONFIRM`) |
