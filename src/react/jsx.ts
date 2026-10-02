@@ -3,7 +3,7 @@
 "use client";
 /**
  * Types the bare `m-*` tags in React's JSX, for the elements used directly
- * rather than through the components. Types only, opt in once: `import type {} from "mtrl/react/jsx";`
+ * rather than through the components. Types only, opt in once: `import type {} from "material/react/jsx";`
  *
  * @module react/jsx
  */

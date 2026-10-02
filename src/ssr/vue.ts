@@ -1,6 +1,6 @@
 // src/ssr/vue.ts
 /**
- * Enable declarative shadow DOM for mtrl/vue in this server process.
+ * Enable declarative shadow DOM for material/vue in this server process.
  * The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup.
  * @module ssr/vue
  */

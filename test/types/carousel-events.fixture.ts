@@ -20,7 +20,7 @@ export const blur: Equals<Parameters<CarouselEvents["blur"]>[0], ForwardedEventP
 export const inferredChange: Equals<Parameters<Parameters<typeof carousel.on<"change">>[1]>[0], CarouselChangePayload> = true;
 
 const onChange: CarouselEvents["change"] = ({ value }) => { const current: number = value; void current; };
-// @ts-expect-error 1.0 dropped index, which always equalled value
+// @ts-expect-error 3.0.0 dropped index, which always equalled value
 export const oldIndex: CarouselEvents["change"] = ({ index }) => void index;
 export const chained: CarouselComponent = carousel.on(CAROUSEL_EVENTS.CHANGE, onChange).off("change", onChange);
 carousel.on("change", () => {});

@@ -1,6 +1,6 @@
 // test/types/emit-closed.fixture.ts
 //
-// 1.0 closes `emit` on the two public component types that declare it, the
+// 3.0.0 closes `emit` on the two public component types that declare it, the
 // card and the tabs, to the component's own event map: the names and payloads
 // `on` and `off` already accept. A component built with `withEvents` keeps its
 // open `emit(event: string, …)`.

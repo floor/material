@@ -73,7 +73,7 @@ describe('withInput', () => {
     expect(emitCalls.length).toBe(1);
     expect(emitCalls[0][0]).toBe('change');
     expect(emitCalls[0][1].checked).toBe(true);
-    // 1.0: value is the checked boolean; the input's string is valueAttribute
+    // 3.0.0: value is the checked boolean; the input's string is valueAttribute
     expect(emitCalls[0][1].value).toBe(true);
     expect(emitCalls[0][1].valueAttribute).toBe('on');
     expect(emitCalls[0][1].nativeEvent).toBeDefined();
@@ -93,7 +93,7 @@ describe('withInput', () => {
     expect(enhanced.input.checked).toBe(true);
   });
   
-  // 1.0: getValue and setValue work on the checked boolean, what change.value
+  // 3.0.0: getValue and setValue work on the checked boolean, what change.value
   // carries; the input's string is getValueAttribute and setValueAttribute, the
   // names the checkbox and the switch use.
   test('getValue returns the checked state, getValueAttribute the input value', () => {

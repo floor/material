@@ -153,8 +153,8 @@ test("server rendering docs name unsupported runtimes, Suspense fallbacks, and e
   const svelte = readFileSync("src/ssr/svelte.ts", "utf8");
   const unreleased = changelog.split("## [Unreleased]")[1]?.split("\n## [")[0] ?? "";
   for (const text of [readme, unreleased]) {
-    expect(text).toContain("Worker and edge runtimes are unsupported in 1.0");
-    expect(text).toContain("mtrl/ssr is server-only");
+    expect(text).toContain("Worker and edge runtimes are unsupported in `material` 3.0.0");
+    expect(text).toContain("material/ssr is server-only");
   }
   expect(readme).toContain("put a `Suspense` boundary outside the component");
   expect(readme).toContain("a button with an empty fallback has no label slot, while a text fallback gives it a slot");
@@ -165,7 +165,7 @@ test("server rendering docs name unsupported runtimes, Suspense fallbacks, and e
     expect(text).toContain(shadowRoot);
     expect(text).toContain("The Vue and Solid bridges see the provided value in both the shadow root and light DOM.");
   }
-  expect(readme).toContain("With `mtrl/ssr/react` and `mtrl/ssr/svelte`");
+  expect(readme).toContain("With `material/ssr/react` and `material/ssr/svelte`");
   expect(readme).toContain("a child requiring its context leaves that component without a declarative shadow root, while the page still renders");
   expect(readme).toContain("React and Svelte each log a development-only warning naming the element");
   expect(unreleased).toContain("The React and Svelte bridges build the server-rendered shadow root without the context");

@@ -12,7 +12,7 @@
  * registers when the action first runs, never at import.
  *
  * Each component can also emit a declarative shadow root on the server
- * (FLO-375). `shadowMarkup` reads the renderer `mtrl/ssr/svelte` installs on
+ * (FLO-375). `shadowMarkup` reads the renderer `material/ssr/svelte` installs on
  * `Symbol.for("mtrl.ssr")` — the same bridge as React — and returns the
  * `<template shadowrootmode>` string there, or `""` in the browser, when no
  * renderer is registered, and when the element opts out of SSR. The client
@@ -85,9 +85,9 @@ type SvelteHostAttributes = HTMLAttributes<HTMLElement> & Missing<HTMLAttributes
  */
 export type SvelteProps<S> = OwnProps<S> &
   Omit<SvelteHostAttributes, keyof OwnProps<S> | "children" | RetiredProps<S>> &
-  { [K in RetiredProps<S>]?: `${K} was removed in 1.0: use onchange` } & { children?: Snippet };
+  { [K in RetiredProps<S>]?: `${K} was removed in material 3.0.0: use onchange` } & { children?: Snippet };
 
-/** The handler props of events 1.0 removed (`ontoggle` on the icon button): refused, see `RetiredEvents`. */
+/** The handler props of events material 3.0.0 removed (`ontoggle` on the icon button): refused, see `RetiredEvents`. */
 type RetiredProps<S> = `on${RetiredEvents<S>}`;
 
 /** The live properties a generated component binds (`bind:checked`). */
@@ -219,7 +219,7 @@ export const declaration = (
 };
 
 /**
- * Installed only by `mtrl/ssr/svelte` on `Symbol.for("mtrl.ssr")`. Returns the
+ * Installed only by `material/ssr/svelte` on `Symbol.for("mtrl.ssr")`. Returns the
  * `<template shadowrootmode>` for one host, or `""` when the host opts out.
  */
 export type SvelteShadowRenderer = (
@@ -232,7 +232,7 @@ export type SvelteShadowRenderer = (
 
 /**
  * The declarative shadow template for a host, or `""` in the browser, when
- * `mtrl/ssr/svelte` was not imported, and when the element opts out of SSR.
+ * `material/ssr/svelte` was not imported, and when the element opts out of SSR.
  * Generated components emit it with `{#if shadow}{@html shadow}{/if}`.
  */
 export const shadowMarkup = (

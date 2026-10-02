@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
 /**
  * The framework adapters tree-shake (FLO-327): importing one component from
- * `mtrl/react`, `mtrl/vue`, `mtrl/solid` or `mtrl/svelte` ships that
+ * `material/react`, `material/vue`, `material/solid` or `material/svelte` ships that
  * component's element and CSS, and the adapter's runtime, not the library.
  *
  * Measured on the packed package, installed the way an app installs it, so
  * the published `sideEffects` list is what the bundler reads. The framework
  * is external. Budget: a component's adapter import is within ADAPTER_MARGIN
- * of its element's import (`define*` from `mtrl/elements` and its CSS
+ * of its element's import (`define*` from `material/elements` and its CSS
  * modules), and two components ship only those two. Every component with Bun;
  * the switch and the pair with Vite (Rolldown) too.
  *
@@ -39,7 +39,7 @@ import { elementModules, pascal } from "./element-modules";
 /**
  * The adapter's own runtime (create.ts or runtime.js) and wrapper, brotli
  * bytes, on top of the element: the largest measured, +1587, and headroom.
- * The largest over is +1626 (Svelte switch + button), tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+ * The largest over is +1626 (Svelte switch + button), tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
  * +1,615 against b9dab36e, Node 22.23.3 / npm 10.9.9. The 100 B floor would be
  * 1,750, above the ceiling next had before this PR (1,700), so it stays 1,700.
  */
@@ -105,14 +105,14 @@ const elementImport = (names: string[]): string => {
   const picked = elementModules.filter((element) => names.includes(element.name));
   const styles = [...new Set(picked.flatMap((element) => element.styles))];
   const defines = picked.map((element) => `define${pascal(element.name)}`);
-  return `${styles.map((style) => `import "mtrl/elements/css/${style}";`).join("\n")}
-import { ${defines.join(", ")} } from "mtrl/elements";
+  return `${styles.map((style) => `import "material/elements/css/${style}";`).join("\n")}
+import { ${defines.join(", ")} } from "material/elements";
 console.log(${defines.join(", ")});`;
 };
 
 const adapterImport = (framework: (typeof FRAMEWORKS)[number], names: string[]): string => {
   const components = names.map(framework.component);
-  return `import { ${components.join(", ")} } from "mtrl/${framework.dir}";
+  return `import { ${components.join(", ")} } from "material/${framework.dir}";
 console.log(${components.join(", ")});`;
 };
 

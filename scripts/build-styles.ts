@@ -35,7 +35,7 @@ export function sassOptions(): sass.StringOptions<"sync"> {
 }
 
 /**
- * The cascade-layer prelude on every `mtrl/styles/*` asset, including
+ * The cascade-layer prelude on every `material/styles/*` asset, including
  * `styles/contrast`. Pre-upgrade is first: a file that only opens
  * `@layer mtrl.preupgrade` and is parsed earlier stays first, because this
  * statement appends the names it does not yet know. The same string in
@@ -156,7 +156,7 @@ export async function buildStyles(outdir: string, banner: string) {
   await mkdir(`${outdir}/styles`, { recursive: true });
   await mkdir(`${outdir}/themes`, { recursive: true });
   await writeFile(`${outdir}/styles.css`, `${banner}\n${full.css}\n`);
-  // `import 'mtrl/styles'` resolves through the types condition under NodeNext,
+  // `import 'material/styles'` resolves through the types condition under NodeNext,
   // as the per-component entries do
   await writeFile(`${outdir}/styles.d.ts`, "export {};\n");
   await emit("styles/base", baseStyles, [], "preference");
@@ -175,7 +175,7 @@ export async function buildStyles(outdir: string, banner: string) {
 
 /**
  * CSS for the elements' shadow roots, as modules that register it: importing
- * `mtrl/elements/css/switch` registers the switch's CSS and its dependencies.
+ * `material/elements/css/switch` registers the switch's CSS and its dependencies.
  * Emitted for the components that have an element; importing the module
  * also proves the elements import without a DOM.
  * The shadow base (`ripple`) is what the global base stylesheet gives a
@@ -226,7 +226,7 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
     await writeFile(`${outdir}/elements/preupgrade/${name}.css`, preupgradeStylesheet(rules, banner));
   }
   await writeFile(`${outdir}/elements/preupgrade.css`, preupgradeStylesheet(all, banner));
-  // `import 'mtrl/elements/preupgrade.css'` resolves through the types condition, as `mtrl/styles` does
+  // `import 'material/elements/preupgrade.css'` resolves through the types condition, as `material/styles` does
   await writeFile(`${outdir}/elements/preupgrade.css.d.ts`, "export {};\n");
   await writeFile(`${outdir}/elements/preupgrade.js`,
     `import { DEFAULT_PREFIX, preupgradeSheet } from "./styles.js";\nconst css = ${JSON.stringify(all)};\n` +

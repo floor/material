@@ -12,7 +12,7 @@ const tsc = (file: string, jsx: string[]): { code: number; output: string } => {
 const REACT = ["--jsx", "react-jsx"];
 const SOLID = ["--jsx", "preserve", "--jsxImportSource", "solid-js"];
 
-describe("mtrl/react/jsx and mtrl/solid/jsx", () => {
+describe("material/react/jsx and material/solid/jsx", () => {
   for (const [name, flags] of [["react", REACT], ["solid", SOLID]] as const) {
     test(`${name}: the bare tags type-check with the entry imported`, () => {
       const { code, output } = tsc(`test/types/jsx/${name}-with.tsx`, [...flags]);

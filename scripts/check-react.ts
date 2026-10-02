@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// mtrl/react in a real browser, on React 18 and on React 19.
+// material/react in a real browser, on React 18 and on React 19.
 //
 // The same app (scripts/fixtures/react-app.ts) is rendered to a string on the
 // server, with no DOM, then hydrated in Chromium: the adapter must import
@@ -54,7 +54,7 @@ type Win = Window & {
 const browser = await chromium.launch({ headless: true });
 let checks = 0;
 
-// Every module of mtrl/react is a client module, so a React Server Component
+// Every module of material/react is a client module, so a React Server Component
 // can import one (FLO-327 split the index into a module per component): its
 // first statement is the directive, only comments before it.
 const modules = [...new Bun.Glob("*.js").scanSync("dist/react")];

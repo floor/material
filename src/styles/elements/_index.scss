@@ -1,7 +1,7 @@
 // src/styles/elements/_index.scss
 // Every element's pre-upgrade rules, for a page that compiles mtrl's SCSS:
-//   @use 'mtrl/src/styles/elements' with ($tag-prefix: 'x');
-// The build emits the same rules as mtrl/elements/preupgrade.css.
+//   @use 'material/src/styles/elements' with ($tag-prefix: 'x');
+// The build emits the same rules as material/elements/preupgrade.css.
 @forward 'config';
 @use 'badge';
 @use 'bottom-app-bar';

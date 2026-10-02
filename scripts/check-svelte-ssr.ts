@@ -100,7 +100,7 @@ pieces.push(`<Button id="globals" label="Globals" popover="auto" inputmode="nume
 // The switch above is built before the checked binding is added. Add it on the host.
 const switchHost = `id=${expr("host-switch")}`;
 const app = `<script lang="ts">
-  import { ${[...used].sort().join(", ")} } from "mtrl/svelte";
+  import { ${[...used].sort().join(", ")} } from "material/svelte";
   let clicks = $state(0);
   let checked = $state(true);
 </script>
@@ -110,7 +110,7 @@ ${pieces.join("\n").replace(switchHost, `${switchHost} checked={checked} onchang
 const dir = join(process.cwd(), "analysis/svelte-ssr");
 await mkdir(dir, { recursive: true });
 await Bun.write(join(dir, "App.svelte"), app);
-await Bun.write(join(dir, "server.ts"), `import "mtrl/ssr/svelte";
+await Bun.write(join(dir, "server.ts"), `import "material/ssr/svelte";
 import { render } from "svelte/server";
 import App from "./App.svelte";
 export const renderBody = (): string => render(App).body;
@@ -162,7 +162,7 @@ const bundle = async (entry: string, target: "browser" | "bun", environment: "de
     assert(!loaded.some((path) => /\/(?:ssr|linkedom)\//.test(path)), `Client loaded server code:\n${loaded.filter((path) => /ssr|linkedom/.test(path)).join("\n")}`);
   }
   const code = await result.outputs[0].text();
-  if (target === "browser") assert.doesNotMatch(code, /linkedom|from"mtrl\/ssr"|from 'mtrl\/ssr'/);
+  if (target === "browser") assert.doesNotMatch(code, /linkedom|from"material\/ssr"|from 'material\/ssr'/);
   return code;
 };
 
@@ -316,7 +316,7 @@ for (const report of summary) {
   console.log(`${report.element}: template=${report.template ? "yes" : "no"} shadow=${report.shadowBeforeScript ? "yes" : "no"} sameRoot=${root} warnings=${report.warnings} errors=${report.errors}`);
 }
 console.log(`named snippets: ${SLOTTED.map(({ host, slot }) => `${host.slice("snippet-".length)}/${slot}`).join(", ")}: slotted before script and after hydration, nodes adopted`);
-console.log(`svelte-ssr: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no mtrl/ssr or linkedom`);
+console.log(`svelte-ssr: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no material/ssr or linkedom`);
 
 const expectContextKnownLimit = (label: string, known: boolean, fixed: boolean, observed: string): void => {
   assert.equal(fixed, false, `${label}: provider context reached the shadow; remove the expected-failure marker (FLO-517)`);

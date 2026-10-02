@@ -66,7 +66,7 @@ import type { NormalizedEvent, SwipePayload } from "../../src/core/utils/mobile"
 export const tapShape: Equals<Parameters<SwitchEvents["tap"]>[0], NormalizedEvent> = true;
 export const swipeShape: Equals<Parameters<SwitchEvents["swipe"]>[0], SwipePayload> = true;
 
-// @ts-expect-error pre-1.0 string model values are rejected
+// @ts-expect-error pre-3.0.0 string model values are rejected
 export const oldValue: SwitchChangePayload = { checked: true, value: "yes", valueAttribute: "yes" };
 // @ts-expect-error the HTML token is a required, separate field
 export const missingToken: SwitchChangePayload = { checked: true, value: true };

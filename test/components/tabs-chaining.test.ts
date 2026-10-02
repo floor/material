@@ -48,7 +48,7 @@ const tabs = () =>
     ],
   });
 
-// 1.0 types emit with the group's event map, so change takes its whole payload
+// 3.0.0 types emit with the group's event map, so change takes its whole payload
 const change = (component: ReturnType<typeof tabs>, value: string) =>
   ({ tab: component.getTabs().find((tab) => tab.getValue() === value)!, value });
 

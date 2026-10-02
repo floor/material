@@ -1,4 +1,4 @@
-// With mtrl/solid/jsx, the bare tags and their prop: and on: forms type-check in Solid's JSX (FLO-333).
+// With material/solid/jsx, the bare tags and their prop: and on: forms type-check in Solid's JSX (FLO-333).
 // Solid types prop: and on: for every tag at once: on:change is any element's change.
 import type {} from "../../../src/solid/jsx";
 

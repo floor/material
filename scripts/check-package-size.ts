@@ -70,9 +70,9 @@ try {
   // FLO-364: linkedom and its dependencies plus the renderer, measured at
   // 306,706 B raw / 111,726 B gzip, including dependency license notices.
   // Client budgets below are unchanged.
-  // 307,059 raw tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+  // 307,059 raw tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
   assert(sizes.ssr.raw < 311_000, "SSR entry exceeds 311,000 raw bytes");
-  // 111,838 gzip tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+  // 111,838 gzip tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
   assert(sizes.ssr.gzip < 113_000, "SSR entry exceeds 113,000 gzip bytes");
   // What a server-rendered page weighs, by style mode. No other check asserts it.
   // The page: 30 buttons, 10 icon buttons and 4 chip sets of 5 chips, 44 roots, the
@@ -131,7 +131,7 @@ try {
   // overlay elements of wave 2; 830,286 measured after wave 1 (#245). Raised to
   // 1,010,000 for the 35 public Material shapes (FLO-346): 994,762 to 1,000,150,
   // measured with CI's Node 22 / npm 10.
-  // Lowered to 885,000 when 1.0.0 dropped the CommonJS bundle (FLO-358): 997,366 to 872,414
+  // Lowered to 885,000 when 3.0.0 dropped the CommonJS bundle (FLO-358): 997,366 to 872,414
   // against 073eeeb, Node 22 / npm 10, keeping the headroom it had.
   // Raised to 900,000 for the element CSS as .css files (FLO-365), which SSR's <link>
   // styles need: 876,697 on next to 886,448 with them, Node 22 / npm 10, keeping the
@@ -155,11 +155,15 @@ try {
   // is 1,085,000, above 1,078,000, so it stays.
   // The text-field rename merged in: 1,073,789. Measured + 1%, up to 1,000,
   // is 1,085,000, above 1,078,000, so it stays.
-  assert(pack.size < 1_078_000, "npm tarball exceeds 1,078,000 bytes");
+  // Name wording, Node 22.23.3 / npm 10.9.9: 1,084,820. The README (packed at
+  // the root and in dist/), the name:check script and the React SSR module
+  // comment. The same tree without those edits packed to 1,074,305, under
+  // 1,078,000. Measured + 1%, up to 1,000, is 1,096,000.
+  assert(pack.size < 1_096_000, "npm tarball exceeds 1,096,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
   // per-component CSS; 4,936,491 measured after wave 1. Of the rest: types 35%,
-  // ESM 23%, CSS 18%, SCSS sources 11%, the CommonJS bundle 8%, which 1.0.0 drops (FLO-358).
+  // ESM 23%, CSS 18%, SCSS sources 11%, the CommonJS bundle 8%, which 3.0.0 drops (FLO-358).
   // Lowered to 5,600,000 for that: 5,660,400 to 5,249,221, keeping the headroom it had.
   // FLO-364: 5,567,538 to 5,875,963 with SSR, same packer, preserving headroom.
   // The navigation bar (FLO-305): its component, element, adapters and CSS, 5,880,623 to
@@ -168,7 +172,7 @@ try {
   // 5,716,236 -> 6,272,030 there. On next, with the forward merge: 5,931,197 ->
   // 6,483,417 against 294100fe, same packer; the budget keeps next's headroom.
   // FLO-428 removed four themes: 6,483,417 -> 6,334,330, same packer; lowered with the headroom.
-  // The 1.0 contract work filled the headroom: 6,389,493 on next 66444315 (3,507 left), mostly
+  // The 3.0.0 contract work filled the headroom: 6,389,493 on next 66444315 (3,507 left), mostly
   // README and declaration text. The SSR style-modes docs (FLO-554) add 4,458 (the README is
   // packed twice, at the root and in dist/: 3,600; RenderOptions' TSDoc in the .d.ts: 858), to
   // 6,393,951 against b06e5ae1, Node 22.23.3 / npm 10.9.9. Raised by the rule for explicit
@@ -189,19 +193,19 @@ try {
   await writeFile(smoke, `
     import assert from 'node:assert/strict';
     import { createRequire } from 'node:module';
-    import * as esm from 'mtrl';
-    import { createButton, createTextField, createCard } from 'mtrl';
-    import button from 'mtrl/components/button';
-    import rail from 'mtrl/components/navigation-rail';
-    import { BUTTON_VARIANTS } from 'mtrl/components/button/constants';
-    import { addClass } from 'mtrl/core/dom';
+    import * as esm from 'material';
+    import { createButton, createTextField, createCard } from 'material';
+    import button from 'material/components/button';
+    import rail from 'material/components/navigation-rail';
+    import { BUTTON_VARIANTS } from 'material/components/button/constants';
+    import { addClass } from 'material/core/dom';
     import { JSDOM } from ${JSON.stringify(pathToFileURL(resolve("node_modules/jsdom/lib/api.js")).href)};
     assert.equal(button, createButton);
     assert.equal(rail, esm.createNavigationRail);
-    // 1.0.0: the core helpers are at their subpath only, not on the root (FLO-351)
+    // 3.0.0: the core helpers are at their subpath only, not on the root (FLO-351)
     assert.equal(esm.addClass, undefined);
-    // 1.0.0 is ESM-only (FLO-358): no require condition, so require('mtrl') does not resolve
-    assert.throws(() => createRequire(import.meta.url)('mtrl'), { code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });
+    // 3.0.0 is ESM-only (FLO-358): no require condition, so require('material') does not resolve
+    assert.throws(() => createRequire(import.meta.url)('material'), { code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });
     const dom = new JSDOM('<!doctype html><html><body></body></html>', { pretendToBeVisual: true });
     for (const key of ['window', 'document', 'Node', 'Element', 'HTMLElement', 'HTMLInputElement', 'HTMLButtonElement', 'Event', 'CustomEvent', 'MutationObserver']) {
       globalThis[key] = dom.window[key];
@@ -241,16 +245,16 @@ try {
   // Check declaration resolution using strict NodeNext semantics.
   const typeFixture = join(temporary, "types.ts");
   await writeFile(typeFixture, `
-    import 'mtrl/styles';
-    import 'mtrl/styles/button';
-    import { createButton, type ButtonConfig, type NavigationRailConfig, type NavigationRailComponent } from 'mtrl';
-    import rail from 'mtrl/components/navigation-rail';
+    import 'material/styles';
+    import 'material/styles/button';
+    import { createButton, type ButtonConfig, type NavigationRailConfig, type NavigationRailComponent } from 'material';
+    import rail from 'material/components/navigation-rail';
     const railConfig: NavigationRailConfig = { expanded: true, layout: 'modal', items: [] };
     const navigation: NavigationRailComponent = rail(railConfig);
     navigation.on('select', event => event.originalEvent.preventDefault());
-    import button from 'mtrl/components/button';
-    import { BUTTON_VARIANTS } from 'mtrl/components/button/constants';
-    import { addClass } from 'mtrl/core/dom';
+    import button from 'material/components/button';
+    import { BUTTON_VARIANTS } from 'material/components/button/constants';
+    import { addClass } from 'material/core/dom';
     const config: ButtonConfig = { text: 'Save', variant: BUTTON_VARIANTS.FILLED };
     const a: ReturnType<typeof createButton> = button(config);
     addClass(a.element, 'ready');
@@ -258,14 +262,14 @@ try {
   await run(["node", resolve("node_modules/typescript/bin/tsc"), typeFixture,
     "--noEmit", "--strict", "--module", "NodeNext", "--moduleResolution", "NodeNext",
     // Side-effect imports are unchecked by default; this is the setting under
-    // which `import 'mtrl/styles'` needs its types condition
+    // which `import 'material/styles'` needs its types condition
     "--noUncheckedSideEffectImports",
     "--target", "ES2020", "--types", "node", "--typeRoots", resolve("node_modules/@types")]);
 
   const fixtures = [
-    // From its subpath since 1.0.0 removed it from the root (FLO-351)
-    { name: "addClass", code: "export { addClass } from 'mtrl/core/dom';", gzip: 550 }, // 428 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9; 428, 100 B floor, 550 against b9dab36e, Node 22.23.3 / npm 10.9.9
-    { name: "button", code: "export { createButton } from 'mtrl';", gzip: 13900 }, // 13,744 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
+    // From its subpath since 3.0.0 removed it from the root (FLO-351)
+    { name: "addClass", code: "export { addClass } from 'material/core/dom';", gzip: 550 }, // 428 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9; 428, 100 B floor, 550 against b9dab36e, Node 22.23.3 / npm 10.9.9
+    { name: "button", code: "export { createButton } from 'material';", gzip: 13900 }, // 13,744 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // The URL scheme allowlist is reached through core/dom, so every bundle that builds
     // an element carries it: +260 here, +256 button, +267 rail, +260 text field, +243 form,
     // measured against 0.9.0. The slider simply had the least headroom (10,934 of 11,000).
@@ -299,20 +303,20 @@ try {
     // Raised from 12,900 for FLO-331: the track's corner reads its shape token (12,983 measured).
     // Raised from 13,090 for FLO-369: the track, stops and inset icon are a percentage
     // of the value, so the first paint does not wait on a measurement (13,356 measured).
-    // 13,242 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-    { name: "slider", code: "export { createSlider } from 'mtrl';", gzip: 13400 },
-    { name: "navigation-rail", code: "export { createNavigationRail } from 'mtrl';", gzip: 6950 }, // 6,841 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
+    // 13,242 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+    { name: "slider", code: "export { createSlider } from 'material';", gzip: 13400 },
+    { name: "navigation-rail", code: "export { createNavigationRail } from 'material';", gzip: 6950 }, // 6,841 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // FLO-406 contrast CSS: 5,266 -> 7,189 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 8,156 -> 7,631 gzip bytes (same packer).
-    // 7,429 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+    // 7,429 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // FLO-539 typography leaves the base: 7,429 -> 6,409. Ceiling was 6,550.
     // FLO-540 merged tree: 5,255. 5,255 + 100 = 5,355, rounded up to 5,400. Node 22.23.3 / npm 10.9.9.
-    { name: "navigation-rail-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/navigation-rail';", gzip: 5400 },
+    { name: "navigation-rail-css", code: "import 'material/styles/base'; import 'material/styles/navigation-rail';", gzip: 5400 },
     // FLO-301 (the required asterisk, the live error, the trailing icon button): 8,456 to
     // 9,058 against 7cd57a6, Node 22 / npm 10.
     // 9,138 raised to the rule, not grown, against b9dab36e, Node 22.23.3 / npm 10.9.9.
-    { name: "text-field", code: "export { createTextField } from 'mtrl';", gzip: 9250 },
-    { name: "form", code: "export { createButton, createTextField, createCheckbox } from 'mtrl';", gzip: 20100 }, // 19,865 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9
+    { name: "text-field", code: "export { createTextField } from 'material';", gzip: 9250 },
+    { name: "form", code: "export { createButton, createTextField, createCheckbox } from 'material';", gzip: 20100 }, // 19,865 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9
     // The toolbar (FLO-304): 123,080 to 125,176, measured against b1dbf77.
     // The FAB menu (FLO-306): 125,245 to 127,714, measured against 1bd8343.
     // The Material shapes' geometry in the loading indicator (FLO-346): 127,894 to 128,195, measured against 5b314c5.
@@ -322,20 +326,20 @@ try {
     // FLO-406/main merge with FLO-403: 129,634 B measured under Node 22.23.3 / npm 10.9.9.
     // isDisabled() on eleven components and the type exports (FLO-384): 129,650 to 129,773
     // against 3f9ca0c7, Node 22.23.3 / npm 10.9.9; the budget keeps the headroom it had.
-    // 125,723 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+    // 125,723 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // The text-field rename merged in: 126,962, the same figure main packed.
     // 38 B left under 127,000. Measured + 1% or 100 B, rounded up to 50, is
     // 128,250, above 127,000, so the ceiling stays.
-    { name: "all-js", code: "export * from 'mtrl';", gzip: 127000 },
+    { name: "all-js", code: "export * from 'material';", gzip: 127000 },
     // FLO-406 contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 8,069 -> 7,542 gzip bytes (same packer).
-    // 7,338 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+    // 7,338 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // FLO-539 the base stylesheet alone, once typography has left: 4,075. Ceiling was 4,200.
     // FLO-540 merged tree: 2,922. 2,922 + 100 = 3,022, rounded up to 3,050. Node 22.23.3 / npm 10.9.9.
-    { name: "base-css", code: "import 'mtrl/styles/base';", gzip: 3050 },
+    { name: "base-css", code: "import 'material/styles/base';", gzip: 3050 },
     // FLO-539 typography leaves the base: 7,338 -> 6,329. Ceiling was 6,450.
     // FLO-540 merged tree: 5,168. 5,168 + 100 = 5,268, rounded up to 5,300. Node 22.23.3 / npm 10.9.9.
-    { name: "button-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/button';", gzip: 5300 },
+    { name: "button-css", code: "import 'material/styles/base'; import 'material/styles/button';", gzip: 5300 },
     // The outlined text field's notched outline (#234) adds 202, 7,863 to 8,065: three
     // segments with their corners each way round, and the outline colour and width per
     // state, in place of an input border and a focus overlay. The resting label shown
@@ -344,17 +348,17 @@ try {
     // The text field's trailing icon button and asterisk (FLO-301): 8,245 to 8,426 against 7cd57a6.
     // FLO-406 contrast CSS: 8,426 -> 10,377 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 11,342 -> 10,811 gzip bytes (same packer).
-    // 10,602 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+    // 10,602 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // FLO-539 typography leaves the base: 10,602 -> 9,589. Ceiling was 9,700.
     // FLO-540 merged tree: 8,440. 8,440 + 100 = 8,540, rounded up to 8,550. Node 22.23.3 / npm 10.9.9.
-    { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 8550 },
+    { name: "select-css", code: "import 'material/styles/base'; import 'material/styles/select';", gzip: 8550 },
     // FLO-406 contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 7,639 -> 7,111 gzip bytes (same packer).
-    // 6,918 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+    // 6,918 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // 6,918; 100 B floor, 7,050 against b9dab36e, Node 22.23.3 / npm 10.9.9.
     // FLO-539 typography leaves the base: 6,918 -> 5,894. Ceiling was 6,000.
     // FLO-540 merged tree: 4,722. 4,722 + 100 = 4,822, rounded up to 4,850. Node 22.23.3 / npm 10.9.9.
-    { name: "slider-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/slider';", gzip: 4850 },
+    { name: "slider-css", code: "import 'material/styles/base'; import 'material/styles/slider';", gzip: 4850 },
     // The .43 rail-motion baseline is 47,117 bytes; core ripple adds about 20 bytes.
     // The tooltip stylesheet adds 486 (measured): it was authored but registered in no
     // bundle, so every budget before this one was set with its CSS missing, not excluded.
@@ -391,9 +395,9 @@ try {
     // FLO-406 contrast CSS on main: 53,072 -> 65,291 there. On next, with the forward
     // merge: 53,593 -> 65,790 against 294100fe, Node 22 / npm 10.
     // FLO-428 removed four themes from the full stylesheet: 65,790 -> 62,120.
-    // 62,087 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+    // 62,087 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // FLO-540 merged tree: 62,120. 62,120 + 1% = 62,741, rounded up to 62,750, next's ceiling.
-    { name: "full-css", code: "import 'mtrl/styles';", gzip: 62750 },
+    { name: "full-css", code: "import 'material/styles';", gzip: 62750 },
   ];
   for (const fixture of fixtures) {
     const entry = join(temporary, `${fixture.name}.ts`);
@@ -454,7 +458,7 @@ try {
     const chunk = measure(new Uint8Array(await byPath.get(path)!.arrayBuffer()));
     for (const metric of ["raw", "gzip", "brotli"] as const) sizes["button-initial"][metric] += chunk[metric];
   }
-  // 7,429 tightened before 1.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
+  // 7,429 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
   assert(sizes["button-initial"].gzip < 7550, "Button initial payload exceeds 7,550 gzip bytes");
 
   console.table(sizes);

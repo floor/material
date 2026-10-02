@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// mtrl/vue in a real browser.
+// material/vue in a real browser.
 //
 // The same app (scripts/fixtures/vue-app.ts) is rendered to a string with
 // Vue's server renderer, with no DOM, then hydrated in Chromium: the adapter
