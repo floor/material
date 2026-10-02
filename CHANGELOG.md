@@ -1118,6 +1118,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **Text field: with reduced motion, the filled field's focus indicator no longer fades
+  (FLO-299).** Its 0.2s transition was not in the field's reduced-motion rule, where the
+  label, the outline, the icons and the affixes are. It also runs on the motion tokens now
+  (`duration-short4`, `easing-standard`: the same 0.2s, on the standard curve, where it was the
+  browser's `ease`).
 - **Text field, right to left: a compact filled field with a leading icon keeps its compact
   padding (FLO-299).** The right-to-left rule beside an icon set all four sides, so the
   field took the default density's top and bottom padding and its text sat 2.5px low.

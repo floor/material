@@ -353,7 +353,8 @@ try {
     // field has them, per variant and density: 8,595. The M3 insets, with the outlined input's
     // side borders and the filled floated label's own rule gone: 8,542. The vertical metrics,
     // with the affix's place no longer a rule per state: 8,499.
-    // 8,499 + 100 = 8,599, rounded up to 8,600.
+    // 8,499 + 100 = 8,599, rounded up to 8,600. The filled indicator's reduced-motion rule
+    // brings it to 8,511, under that.
     { name: "select-css", code: "import 'mtrl/styles/base'; import 'mtrl/styles/select';", gzip: 8600 },
     // FLO-406 contrast CSS: 4,740 -> 6,661 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 7,639 -> 7,111 gzip bytes (same packer).

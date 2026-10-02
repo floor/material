@@ -678,3 +678,40 @@ export async function checkTextFieldLayout(page: Page, api: "factory" | "element
   assert.deepEqual(failures, [], `${failures.length} of the layout assertions failed`);
   console.log(`Passed text field layout (${api}): ${rows.length} fields, filled and outlined, default and compact${api === "factory" ? ", left to right and right to left" : ""} — icons 12dp in and 16dp from the content, an affix 2dp from the text, the label at the content's start; 8dp above the filled label's line and under the text, the outlined label on the edge; a multiline field's first line clear of its label.`);
 }
+
+/**
+ * The filled field's focus indicator and reduced motion (FLO-299): its fade
+ * runs on the motion tokens, and with `prefers-reduced-motion: reduce` it does
+ * not run, as the label, the outline, the icons and the affixes already do not.
+ * No M3 source gives a number here: the tokens are the library's.
+ */
+export async function checkTextFieldReducedMotion(page: Page, api: "factory" | "element"): Promise<void> {
+  const read = () => page.evaluate((api) => {
+    let root: HTMLElement;
+    let destroy: () => void;
+    if (api === "factory") {
+      const field = (window as unknown as FieldWindow).inputs.createTextField({ label: "Name", variant: "filled" });
+      document.body.append(field.element);
+      root = field.element;
+      destroy = () => field.destroy();
+    } else {
+      const host = document.createElement("m-text-field");
+      host.setAttribute("label", "Name");
+      document.body.append(host);
+      root = host.shadowRoot?.firstElementChild as HTMLElement;
+      destroy = () => host.remove();
+    }
+    const indicator = getComputedStyle(root.querySelector(".mtrl-text-field__field") as HTMLElement, "::before");
+    const result = { property: indicator.transitionProperty, duration: indicator.transitionDuration, easing: indicator.transitionTimingFunction };
+    destroy();
+    return result;
+  }, api);
+  const moving = await read();
+  assert.deepEqual(moving, { property: "opacity", duration: "0.2s", easing: "cubic-bezier(0.2, 0, 0, 1)" },
+    "the indicator fades on the motion tokens: duration-short4, easing-standard");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const reduced = await read();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  assert.equal(reduced.duration, "0s", `with reduced motion the indicator has no transition (${reduced.property} ${reduced.duration})`);
+  console.log(`Passed text field reduced motion (${api}): the filled indicator fades on the motion tokens, and not at all with reduced motion.`);
+}

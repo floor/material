@@ -496,7 +496,13 @@ $component: "#{base.$prefix}-text-field";
             background-color: t.color("primary");
             border-radius: 0;
             pointer-events: none;
-            transition: 0.2s opacity ease;
+            transition: opacity v.motion("duration-short4") v.motion("easing-standard");
+
+            // Here, not in the block above with the label and the outline:
+            // this rule comes later and would win over it (FLO-299)
+            @include m.reduced-motion {
+                transition: none;
+            }
         }
 
         // Populated field (not empty) or focused field label position
