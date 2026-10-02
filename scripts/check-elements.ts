@@ -4853,9 +4853,9 @@ try {
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
     await wait(350);
-    // The menu's "close" comes 50ms after Enter, and the select looks at its focused
-    // styling again 10ms after that: read once the menu has closed and that turn has
-    // passed, or the class read is the one left from the open menu.
+    // The menu's "close" comes with Enter (FLO-548; it came 50ms after), and the select
+    // looks at its focused styling again 10ms after that: read once the menu has closed
+    // and that turn has passed, or the class read is the one left from the open menu.
     await until(() => page.evaluate(() =>
       ((window as unknown as Win).__select as { element: HTMLElement }).element.querySelector("[aria-expanded]")?.getAttribute("aria-expanded") === "false"));
     await wait(50);
@@ -5548,8 +5548,9 @@ try {
       fm.addEventListener("select", (e) => seen.push((e as CustomEvent<{ value: string }>).detail.value));
       (fm.shadowRoot?.querySelectorAll(".mtrl-menu__item")[1] as HTMLElement).click();
       await new Promise((r) => setTimeout(r, 400));
-      // The menu's "close" comes on a 50ms timer of its own: after the fixed wait,
-      // give it 5s more to arrive. The assertion below reports an `open` that stayed.
+      // The menu's "close" comes with the click since FLO-548 (it came on a 50ms timer),
+      // so this loop should find the attribute gone at once; it stays as the guard it
+      // was. The assertion below reports an `open` that stayed.
       for (const end = Date.now() + 5000; fm.hasAttribute("open") && Date.now() < end;) await new Promise((r) => setTimeout(r, 20));
       return { seen, open: fm.hasAttribute("open") };
     });
@@ -5749,7 +5750,7 @@ try {
     const settle = (): Promise<unknown> => wait(450);
     // `settle()` is the menu's open or close transition. What the next step needs
     // comes on the menu's own timers and frames (focus 120ms after opening, the
-    // "close" event 50ms after a dismissal, focus back on the anchor a frame later, a
+    // "close" event with a dismissal since FLO-548, focus back on the anchor a frame later, a
     // submenu's focus a frame and 300ms after it opens), and on a runner that paused
     // the fixed wait ended first. `eventually` waits for that state, after the fixed
     // wait, for 5s at most. When it never comes, the failure says at which step,
