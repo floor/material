@@ -31,7 +31,7 @@
 
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
-import { THRESHOLD, MOVE_LIMIT, SIBLINGS, markOf, validateKnownMoves } from "./preupgrade-moves";
+import { THRESHOLD, MOVE_LIMIT, SIBLINGS, markOf, validateKnownMoves, type KnownMove } from "./preupgrade-moves";
 import { cases, type PreupgradeCase } from "./fixtures/preupgrade-cases";
 import { elements } from "../src/elements";
 import { renderElement } from "../dist/ssr/index.js";
@@ -90,8 +90,8 @@ const page = (body: string, preupgrade: boolean): string =>
 <style>body{margin:0;min-height:0}#stage{width:${STAGE_WIDTH}px}</style></head>
 <body>${body}</body></html>`;
 
-const stage = (html: string): string =>
-  `<div id="stage">${html}<span id="inline">Next</span><div id="block">Following text</div></div>`;
+const stage = (html: string, item?: PreupgradeCase): string =>
+  `<div id="stage" style="${item?.style ?? ""};width:${item?.width ?? STAGE_WIDTH}px">${html}<span id="inline">Next</span><div id="block">Following text</div></div>`;
 
 const server = Bun.serve({
   hostname: "127.0.0.1",
@@ -124,7 +124,7 @@ const server = Bun.serve({
         // the elements must share their registry.
         if (url.pathname.startsWith("/dist/")) return new Response(Bun.file(url.pathname.slice(1)));
         const index = Number(url.pathname.slice(1));
-        return html(page(stage(cases[index].html), preupgrade));
+        return html(page(stage(cases[index].html, cases[index]), preupgrade));
       }
     }
   },
@@ -232,7 +232,7 @@ const shiftOf = (a: Box, b: Box): number =>
 
 /** Impact fraction times distance fraction, over a frame that holds both states. */
 const score = (before: Snapshot, after: Snapshot, bounds?: Box): number => {
-  const frame = bounds ?? { x: before.frame.x, y: before.frame.y, w: STAGE_WIDTH, h: Math.max(before.frame.h, after.frame.h, 1) };
+  const frame = bounds ?? { x: before.frame.x, y: before.frame.y, w: before.frame.w, h: Math.max(before.frame.h, after.frame.h, 1) };
   const impact: Box[] = [];
   let distance = 0;
   const shifted = (a: Box, b: Box, resized: boolean): void => {
@@ -258,16 +258,30 @@ interface Result {
   moved: string;
   /** The same per sibling, for the move limit: x and y in px. */
   moves: { dx: number; dy: number }[];
+  siblings?: readonly string[];
+  knownMoves?: readonly KnownMove[];
+  boxMove?: number;
 }
 
-const measure = async (path: string, preupgrade: boolean, hosts: string, script: string): Promise<[Snapshot, Snapshot]> => {
-  const p = await browser.newPage({ viewport: { width: 400, height: 800 } });
+const measure = async (path: string, preupgrade: boolean, hosts: string, script: string, item?: PreupgradeCase): Promise<[Snapshot, Snapshot]> => {
+  const p = await browser.newPage({ viewport: { width: (item?.width ?? STAGE_WIDTH) + 40, height: 800 } });
   const errors: string[] = [];
   p.on("pageerror", (error) => errors.push(error.message));
   try {
     await p.goto(`http://127.0.0.1:${server.port}${path}?pre=${preupgrade ? 1 : 0}`);
     await settle(p);
-    const siblings = SIBLINGS.join(", ");
+    if (item?.prepareNeighbors) {
+      await p.evaluate(async () => {
+        const css = "/dist/elements/css/index.js";
+        const entry = "/dist/elements/index.js";
+        await import(css);
+        const elements = await import(entry);
+        elements.defineButton();
+        elements.defineTextField();
+      });
+      await settle(p);
+    }
+    const siblings = (item?.siblings ?? SIBLINGS).join(", ");
     const before = await snapshot(p, hosts, siblings);
     await p.addScriptTag({ url: script, type: "module" });
     await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
@@ -287,10 +301,10 @@ const runCases = async (preupgrade: boolean): Promise<Result[]> => {
   const results: Result[] = [];
   for (const [index, item] of cases.entries()) {
     if (only.length && !only.includes(item.element)) continue;
-    const [before, after] = await measure(`/${index}`, preupgrade, "#stage > :first-child", "/elements.js");
+    const [before, after] = await measure(`/${index}`, preupgrade, item.host ?? "#stage > :first-child", "/elements.js", item);
     const moves = before.siblings.map((b, i) => ({ dx: after.siblings[i].x - b.x, dy: after.siblings[i].y - b.y }));
     const moved = moves.map(({ dx, dy }) => `${dx.toFixed(1)},${dy.toFixed(1)}`).join(" ");
-    results.push({ name: label(item), score: score(before, after), before: before.hosts[0], after: after.hosts[0], moved, moves });
+    results.push({ name: label(item), score: score(before, after), before: before.hosts[0], after: after.hosts[0], moved, moves, siblings: item.siblings, knownMoves: item.knownMoves, boxMove: item.strictBox ? shiftOf(before.hosts[0], after.hosts[0]) : undefined });
   }
   return results;
 };
@@ -302,7 +316,9 @@ const size = (b: Box): string => `${b.w.toFixed(1)}x${b.h.toFixed(1)}`;
 const report = (results: Result[], checkMoves: boolean): string[] => {
   const failed: string[] = [];
   for (const r of results) {
-    const { mark, note } = markOf(r, checkMoves);
+    const { mark, note } = checkMoves && r.boxMove !== undefined && r.boxMove > MOVE_LIMIT
+      ? { mark: "FAIL", note: `  (host moved or resized ${r.boxMove.toFixed(6)}px; over ${MOVE_LIMIT}px)` }
+      : markOf(r, checkMoves);
     if (mark === "FAIL") failed.push(r.name);
     console.log(`  ${mark.padEnd(5)} ${r.name.padEnd(34)} ${r.score.toFixed(4)}  ${size(r.before)} -> ${size(r.after)}  siblings moved ${r.moved}${note}`);
   }
@@ -319,6 +335,7 @@ try {
   console.log(`With the pre-upgrade styles (score < ${THRESHOLD}, siblings within ${MOVE_LIMIT}px):`);
   const withStyles = await runCases(true);
   const failing = report(withStyles, true);
+  if (process.env.PREUPGRADE_RESULTS) await Bun.write(process.env.PREUPGRADE_RESULTS, JSON.stringify(withStyles, null, 2));
 
   validateKnownMoves(withStyles, only);
 

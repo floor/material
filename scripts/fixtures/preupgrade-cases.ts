@@ -1,3 +1,5 @@
+import type { KnownMove } from "../preupgrade-moves";
+
 // The server-style HTML scripts/check-preupgrade.ts renders for each element:
 // the host and its light DOM, as a framework adapter's server render emits it.
 // One case per element in its default configuration, then the attribute
@@ -14,6 +16,15 @@ export interface PreupgradeCase {
   /** The variant, or "default". */
   variant: string;
   html: string;
+  /** Consumer typography/layout, outside the element's own styles. */
+  style?: string;
+  host?: string;
+  siblings?: readonly string[];
+  width?: number;
+  /** Define button/text-field neighbours before measuring a switch upgrade. */
+  prepareNeighbors?: boolean;
+  strictBox?: boolean;
+  knownMoves?: readonly KnownMove[];
 }
 
 const c = (element: string, variant: string, html: string): PreupgradeCase => ({ element, variant, html });
@@ -158,3 +169,47 @@ export const cases: PreupgradeCase[] = [
   c("search", "default", `<m-search placeholder="Search" aria-label="Search"><m-search-suggestion value="apple">Apple</m-search-suggestion></m-search>`),
   c("search", "value", `<m-search placeholder="Search" value="apple" aria-label="Search"></m-search>`),
 ];
+
+
+// The host and neighbours must remain stable outside the default body type.
+// Five content families, both directions, inline flow and both flex alignments.
+const switchFamilies = ["default", "supporting-text", "unlabelled", "supporting-text no label", "supporting-text=''"];
+const switchRows = cases.filter(c => c.element === "switch");
+for (const dir of ["ltr", "rtl"]) {
+  for (const typography of ["default", "12/1", "12/2", "24/1", "24/2"]) {
+    const [size, height] = typography.split("/");
+    const style = typography === "default" ? "" : `font-size:${size}px;line-height:${height}`;
+    for (const layout of ["inline", "baseline", "center"]) {
+      for (const row of switchRows.filter(row => switchFamilies.includes(row.variant))) {
+        const host = row.html.replace("<m-switch", '<m-switch id="subject"');
+        const inline = layout === "inline";
+        cases.push({
+          element: "switch", variant: `${row.variant}; ${dir}; ${layout}; ${typography}`,
+          html: `<div dir="${dir}" style="${inline ? "" : `display:flex;gap:16px;align-items:${layout}`}">${inline ? '<span id="lead">Text before </span>' : ""}${host}${inline ? '<span id="next"> text after</span>' : '<m-button id="button">Save</m-button><m-text-field id="field" label="Name" value="Ada"></m-text-field>'}</div>`,
+          style, width: 850, host: "#subject", strictBox: true,
+          siblings: inline ? ["#lead", "#next", "#block"] : ["#button", "#field", "#block"],
+          prepareNeighbors: !inline,
+        });
+      }
+    }
+    // All controls upgrade together here: the button's own baseline is a
+    // separate follow-up, rather than a reason to weaken the switch-only rows.
+    cases.push({
+      element: "switch", variant: `peer upgrades; ${dir}; baseline; ${typography}`,
+      html: `<div dir="${dir}" style="display:flex;gap:16px;align-items:baseline"><m-switch id="subject" aria-label="Switch"></m-switch><m-button id="button">Save</m-button><m-text-field id="field" label="Name" value="Ada"></m-text-field></div>`,
+      style, width: 850, host: "#subject", siblings: ["#button", "#field", "#block"],
+    });
+  }
+  // State-specific controls at the typography that exposed the host line box.
+  for (const row of switchRows.filter(row => /(?:checked|disabled|icon)$/.test(row.variant) && row.variant.includes("unlabelled"))) {
+    cases.push({ ...row, variant: `${row.variant}; ${dir}; 24/2`,
+      html: `<div dir="${dir}">${row.html.replace("<m-switch", '<m-switch id="subject"')}<span id="next">Next</span></div>`,
+      style: "font-size:24px;line-height:2", host: "#subject", siblings: ["#next", "#block"], strictBox: true });
+  }
+  for (const element of ["button", "text-field"]) {
+    const row = cases.find(row => row.element === element && row.variant === "default")!;
+    cases.push({ ...row, variant: `${dir}; 24/2`,
+      html: row.html.replace(`<m-${element}`, `<m-${element} dir="${dir}"`),
+      style: "font-size:24px;line-height:2" });
+  }
+}
