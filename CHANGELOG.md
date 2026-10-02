@@ -107,8 +107,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `primary-container`, or at the default 56dp.
 - **`data-theme="winter"`** (or `material`, `browngreen`, `legacy`) on the root element gets the
   baseline colours in the OS's colour scheme, and `data-theme-mode` and `data-theme-contrast` on
-  that element are ignored. On a nested element it matches no rule, so that element keeps its
-  ancestor's colours.
+  that element are ignored. The OS contrast preference (`prefers-contrast: more`) is not applied
+  there either: a user who asked for more contrast gets standard contrast. On a nested element
+  it matches no rule, so that element keeps its ancestor's colours.
 - **`getThemeColor('sys-color-primary-rgb')`** returns `''` (or the `fallback`), so
   `rgba(${…}, 0.12)` yields `rgba(, 0.12)`, a colour CSS and canvas drop silently.
 - **A removed constant key** reads `undefined` in JavaScript, with no error:
@@ -394,8 +395,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   their rules in the full stylesheet are gone. A leftover `data-theme="winter"` (or any of the
   four) on the root element gets the baseline colours in the OS's colour scheme, and
   `data-theme-mode` and `data-theme-contrast` on that element are ignored: an app with its own
-  dark toggle follows the OS until it renames the theme. On a nested element a removed name
-  matches no rule, so that element keeps its ancestor's colours. Migration: `material` → `baseline`,
+  dark toggle follows the OS until it renames the theme. The OS contrast preference
+  (`prefers-contrast: more`) is not applied there either, so a user who asked for more contrast
+  gets standard contrast. On a nested element a removed name matches no rule, so that element
+  keeps its ancestor's colours. Migration: `material` → `baseline`,
   `winter` → `ocean`, `browngreen` → `brownbeige`; `legacy` has no replacement (pick any theme,
   or keep its colours as custom properties of your own).
 - **The shape scale is M3's and nothing else (FLO-345).** The mtrl-only steps `extra-tiny` (1px),
