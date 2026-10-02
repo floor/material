@@ -155,19 +155,62 @@ describe("dialog, date picker, time picker: what open() has done when it returns
     picker.on("open", () => { seen.push("open"); });
     const trigger = picker.element.querySelector("[aria-expanded]")!;
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    expect(picker.isOpen()).toBe(false);
     expect(picker.open()).toBe(picker);
     expect(seen).toEqual(["open"]);
+    expect(picker.isOpen()).toBe(true);
     expect(trigger.getAttribute("aria-expanded")).toBe("true");
+    picker.on("close", () => { seen.push("close"); });
+    expect(picker.close()).toBe(picker);
+    expect(picker.isOpen()).toBe(false);
+    expect(seen).toEqual(["open", "close"]);
+    picker.close();
+    picker.open();
+    picker.open();
+    expect(seen).toEqual(["open", "close", "open"]);
   });
 
-  test("time picker: isOpen and the open event are there when open() returns", async () => {
+  // FLO-548: the event that opened an overlay never dismisses it. The docked
+  // date picker closes on a click outside, a listener on the document, which
+  // the click that called open() reaches next.
+  test("date picker: a click outside that calls open() does not close it; the next one does", async () => {
+    for (const variant of ["docked", "modal"] as const) {
+      const picker = mount(createDatePicker({ label: "Date", variant }));
+      await wait();
+      const seen: string[] = [];
+      picker.on("open", () => { seen.push("open"); });
+      picker.on("close", () => { seen.push("close"); });
+      const button = document.createElement("button");
+      document.body.append(button);
+      button.addEventListener("click", () => { picker.open(); });
+      button.click();
+      expect([variant, picker.isOpen(), seen]).toEqual([variant, true, ["open"]]);
+      if (variant === "docked") {
+        await wait();
+        document.body.click();
+        expect([picker.isOpen(), seen]).toEqual([false, ["open", "close"]]);
+      }
+      button.remove();
+    }
+  });
+
+  test("time picker: isOpen() and the open event are there when open() returns", async () => {
     const picker = mount(createTimePicker({ value: "09:30" }));
     await wait();
     const seen: string[] = [];
     picker.on("open", () => { seen.push("open"); });
-    expect(picker.isOpen).toBe(false);
+    picker.on("close", () => { seen.push("close"); });
+    expect(picker.isOpen()).toBe(false);
     expect(picker.open()).toBe(picker);
-    expect(picker.isOpen).toBe(true);
+    expect(picker.isOpen()).toBe(true);
     expect(seen).toEqual(["open"]);
+    expect(picker.close()).toBe(picker);
+    expect(picker.isOpen()).toBe(false);
+    expect(seen).toEqual(["open", "close"]);
+    // open on an open one and close on a closed one: nothing
+    picker.close();
+    picker.open();
+    picker.open();
+    expect(seen).toEqual(["open", "close", "open"]);
   });
 });
