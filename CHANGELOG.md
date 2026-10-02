@@ -140,6 +140,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- A search view dismissed before its opening focus frame runs stays closed (FLO-514).
 - The top-layer menu steps of `elements:check` no longer read focus before the menu has given it
   back. A menu returns focus to its opener in the animation frame after it closes; the check read
   the state after a fixed 450ms, and on a runner that produced no frame in that time it found
