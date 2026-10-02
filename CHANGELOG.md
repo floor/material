@@ -24,7 +24,9 @@ Comments only: nothing changes at run time. Each is removed or changed in 1.0.0.
 - **`RADIO_DEFAULTS.VARIANT`, `.LABEL_POSITION` and `.SIZE`** (`mtrl/components/radios/constants`):
   the radios have no such options, and nothing reads the keys. `DIRECTION` stays.
 - **Told in the TSDoc, for 1.0:** `emit` on the card and the tabs accepts only the component's
-  own events; the radio factory's `change` reports `null`, not `""`, when nothing is selected.
+  own events; the radio factory's `change` reports `null`, not `""`, when nothing is selected;
+  `withInput`'s `change` reports the checked boolean as `value`, with the input's string value
+  as `valueAttribute`.
 
 ## [0.10.5] - 2026-10-02
 
