@@ -75,3 +75,18 @@ test("an unregistered server returns no template; registration renders one and o
   expect(tabsHtml).toContain("Flights");
   expect(tabsHtml).toContain("Trips");
 });
+
+test("a detached child render failure omits the shadow and warns once in development", async () => {
+  await import("../../scripts/fixtures/ssr-css");
+  await import("../../src/ssr/svelte");
+  const tabs = adapter(tabsElement.spec, () => "m-tabs");
+  const original = console.warn;
+  const warnings: string[] = [];
+  console.warn = (...args) => { warnings.push(args.map(String).join(" ")); };
+  try {
+    const missing = (): never => { throw new Error("Required context is missing"); };
+    expect(shadowMarkup(tabs, { id: "context-tabs" }, missing as never, {})).toBe("");
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toMatch(/<m-tabs id="context-tabs">.*no shadow root/i);
+  } finally { console.warn = original; }
+});

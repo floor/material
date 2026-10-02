@@ -145,7 +145,7 @@ const plugin = (generate: "client" | "server"): BunPlugin => ({
   },
 });
 
-const bundle = async (entry: string, target: "browser" | "bun"): Promise<string> => {
+const bundle = async (entry: string, target: "browser" | "bun", environment: "development" | "production" = "development"): Promise<string> => {
   const loaded: string[] = [];
   const result = await Bun.build({
     entrypoints: [entry], target, conditions: ["development"],
@@ -154,7 +154,7 @@ const bundle = async (entry: string, target: "browser" | "bun"): Promise<string>
         build.onLoad({ filter: /.*/ }, (args) => { loaded.push(args.path); return undefined; });
       },
     }],
-    define: { "process.env.NODE_ENV": '"development"' },
+    define: { "process.env.NODE_ENV": JSON.stringify(environment) },
   });
   assert(result.success, result.logs.map(String).join("\n"));
   if (target === "browser") {
@@ -316,3 +316,74 @@ for (const report of summary) {
 }
 console.log(`named snippets: ${SLOTTED.map(({ host, slot }) => `${host.slice("snippet-".length)}/${slot}`).join(", ")}: slotted before script and after hydration, nodes adopted`);
 console.log(`svelte-ssr: ${summary.length} elements, ${summary.filter((report) => report.warnings === 0 && report.errors === 0).length} with 0 warnings and 0 errors; click and checked state passed; client bundle has no mtrl/ssr or linkedom`);
+
+const expectContextKnownLimit = (label: string, known: boolean, fixed: boolean, observed: string): void => {
+  assert.equal(fixed, false, `${label}: provider context reached the shadow; remove the expected-failure marker (FLO-517)`);
+  assert.equal(known, true, `${label}: expected ${observed}; the shadow has an unexpected outcome`);
+  console.log(`known limit, FLO-517 (expected to fail until the page-level integration): ${label}: ${observed}`);
+};
+
+const contextClient = await bundle("scripts/fixtures/svelte-ssr-context-client.ts", "browser");
+for (const environment of ["development", "production"] as const) {
+  const label = `Svelte ${environment} context`;
+  const contextPath = join(dir, `context-server-${environment}.js`);
+  await Bun.write(contextPath, await bundle("scripts/fixtures/svelte-ssr-context-server.ts", "bun", environment));
+  const { renderContext } = await import(contextPath) as { renderContext: (mode: "default" | "required" | "error") => string };
+  const renderWithWarnings = (mode: "default" | "required" | "error") => {
+    const warnings: string[] = [];
+    const original = console.warn;
+    console.warn = (...args) => { warnings.push(args.map(String).join(" ")); };
+    try { return { html: renderContext(mode), warnings }; }
+    finally { console.warn = original; }
+  };
+  const provided = renderWithWarnings("default");
+  const required = renderWithWarnings("required");
+  assert.deepEqual(provided.warnings, [], `${label} default warnings`);
+  assert.equal(required.warnings.length, environment === "development" ? 1 : 0, `${label} required warnings`);
+  if (environment === "development") assert.match(required.warnings[0] ?? "", /<m-tabs id="context-tabs">.*no shadow root/i, `${label} warning names the element`);
+  assert.throws(() => renderWithWarnings("error"), /Real child error/, `${label}: a real child error must surface`);
+
+  const contextServer = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
+    if (new URL(request.url).pathname === "/client.js") return new Response(contextClient, { headers: { "Content-Type": "text/javascript" } });
+    const mode = new URL(request.url).searchParams.get("mode") === "required" ? "required" : "default";
+    return new Response(`<!doctype html><div id="root">${mode === "required" ? required.html : provided.html}</div><script type="module" src="/client.js"></script>`, { headers: { "Content-Type": "text/html" } });
+  } });
+  try {
+    const inert = await chromium.launch();
+    try {
+      for (const mode of ["default", "required"] as const) {
+        const page = await inert.newPage({ javaScriptEnabled: false });
+        try {
+          await page.goto(`${contextServer.url.href}?mode=${mode}`);
+          const state = await page.evaluate(() => {
+            const host = document.getElementById("context-tabs");
+            return { root: !!host?.shadowRoot, shadow: host?.shadowRoot?.textContent ?? null, light: host?.querySelector("#context-label")?.textContent ?? null };
+          });
+          assert.equal(state.light, mode === "required" ? "required provider" : "from provider", `${label} ${mode}: light DOM provider`);
+          if (mode === "default") {
+            expectContextKnownLimit(`${label} default-valued context`, state.root && state.shadow?.includes("DEFAULT") === true,
+              state.shadow?.includes("from provider") === true, "shadow contains DEFAULT");
+          } else {
+            assert.equal(state.root, false, `${label} required context: no declarative shadow root`);
+          }
+        } finally { await page.close(); }
+      }
+      const page = await inert.newPage();
+      try {
+        const warnings: string[] = [], errors: string[] = [];
+        page.on("console", (message) => { if (["warning", "error"].includes(message.type())) warnings.push(message.text()); });
+        page.on("pageerror", (error) => errors.push(error.message));
+        await page.goto(`${contextServer.url.href}?mode=required`);
+        await page.waitForFunction(() => (window as unknown as { svelteContextSSR?: { ready: boolean } }).svelteContextSSR?.ready);
+        await page.waitForFunction(() => !!(document.getElementById("context-tabs") as HTMLElement & { component?: unknown }).component);
+        const hydrated = await page.evaluate(() => (window as unknown as { svelteContextSSR: { sameRoot: boolean } }).svelteContextSSR);
+        assert.deepEqual({ warnings, errors }, { warnings: [], errors: [] }, `${label} required hydration`);
+        assert.equal(hydrated.sameRoot, true, `${label}: hydration kept absent root`);
+        assert.equal(await page.evaluate(() => !!(document.getElementById("context-tabs") as HTMLElement & { component?: unknown }).component), true,
+          `${label}: host upgraded`);
+        assert.equal(await page.locator("#context-label").textContent(), "required provider", `${label}: light DOM after hydration`);
+      } finally { await page.close(); }
+    } finally { await inert.close(); }
+  } finally { contextServer.stop(true); }
+  console.log(`${label}: required child rendered without shadow, hydration clean, ${required.warnings.length} server warning(s); real child error surfaced`);
+}

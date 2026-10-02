@@ -28,6 +28,14 @@ const TAG = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const NAME = /^[a-zA-Z_:][a-zA-Z0-9_.:-]*$/;
 const SLOT = /^[a-z][a-z0-9-]*$/;
 
+const isDevelopment = (): boolean => {
+  try {
+    return typeof process !== "undefined" && process.env != null && process.env.NODE_ENV !== "production";
+  } catch {
+    return false;
+  }
+};
+
 const escapeAttr = (value: string): string =>
   value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -69,13 +77,23 @@ bridge.svelte = (tag, attributes, children, slots, prefix) => {
   // again would declare a shadow root twice, which the renderer rejects.
   if (serializingChildren) return "";
   if (!TAG.test(tag)) throw new TypeError(`Invalid tag: ${tag}`);
-  let markup: string;
+  let light: string;
   serializingChildren = true;
   try {
-    markup = `<${tag}${attributeText(attributes)}>${childrenMarkup(children, slots)}</${tag}>`;
+    // The detached renderer has no access to providers above this host. The
+    // page renders these snippets again in its own tree, where a real child
+    // error still escapes through Svelte's normal server render.
+    light = childrenMarkup(children, slots);
+  } catch {
+    if (isDevelopment()) {
+      const id = typeof attributes.id === "string" && attributes.id ? ` id=${JSON.stringify(attributes.id)}` : "";
+      console.warn(`[mtrl] <${tag}${id}> child snapshot failed, so this response has no shadow root for it.`);
+    }
+    return "";
   } finally {
     serializingChildren = false;
   }
+  const markup = `<${tag}${attributeText(attributes)}>${light}</${tag}>`;
   // An opted-out host has no shadow content and must not get an empty template.
   const html = bridge.shadow(tag, markup, prefix);
   return html ? `<template shadowrootmode="open" shadowrootdelegatesfocus="">${html}</template>` : "";
