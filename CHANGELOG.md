@@ -234,8 +234,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **The button group's `select(value)`** with a value no button carries clears the selection,
   with a warning in development and no event.
 - **`<m-button>`** dispatches `change` for a toggle button.
+- **A bundle that evaluates an element CSS module (`mtrl/elements/css/…`) in an earlier task than `define…()`** (a lazy route, a deferred hydration) no longer reserves that element's box in between. On a framework SSR page that does not load the `mtrl/ssr` bridge (Next.js, Nuxt, SvelteKit, SolidStart), the hosts arrive with no shadow root, and the reserved box between the server HTML and hydration is gone. Put `<link rel="stylesheet" href="…/mtrl/elements/preupgrade.css">` in `<head>`, or `import 'mtrl/elements/preupgrade.css'` (one element: `mtrl/elements/preupgrade/<name>.css`). The link also reserves the box from the first paint, before any script. With the bridge loaded, the hosts already have their shadow roots and nothing is lost.
 
 ### Changed (breaking)
+
+- **Pre-upgrade rules leave the element CSS modules (FLO-546).** `mtrl/elements/css/<name>` no longer applies `:not(:defined)` rules when the module is evaluated. The reserved box comes from `mtrl/elements/preupgrade.css` or `mtrl/elements/preupgrade/<name>.css` (the element's spec name), in `<head>` or as an import. A host `renderElement` or a bridge renders with a shadow root carries a rule that undoes those styles, so the stylesheet does not paint over an element that is already rendered. Without the stylesheet, an element has no reserved box until it is defined.
+
+  **Migration:** a bundle that evaluates the element CSS module in an earlier task than `define…()` (a lazy route, a deferred hydration), including a framework SSR page that does not load the `mtrl/ssr` bridge, loads `mtrl/elements/preupgrade.css` in `<head>`.
 
 - **mtrl is ESM-only (FLO-358).** The CommonJS bundle (`dist/index.cjs`) and the root's `require`
   condition are gone; `main` is the ESM entry. Every subpath was already import-only, and with
