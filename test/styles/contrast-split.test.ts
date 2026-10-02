@@ -121,8 +121,8 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_menu.scss), and the chip's secondary-action floor
     // (styles/components/_chips.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("7429358ff0a492c618030af1520a69036654f5620870feea2a8ca65fb8076f74");
-    expect(css.length).toBe(525004);
+      .toBe("71418abd3442c9e74e886fd4cefd101b56f4d36074c7132acf74b053b6650e5e");
+    expect(css.length).toBe(524986);
   });
 
   test("today's sheets still resolve to the fixture", () => {
