@@ -399,18 +399,21 @@ The package was published as `mtrl` up to 0.10.x. The history before 3.0.0 was d
 `floor/mtrl`; `#numbers` in commit subjects before 3.0.0 refer to
 [pull requests there](https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed).
 
+Versions of `material` up to 1.0.4 are an earlier, separate library (GPL-3). Its code is on the
+`v1` branch of this repository, and it stays installable with `npm install material@legacy`.
+
 What a page meets keeps the name: the `mtrl-` class prefix, the `--mtrl-` custom properties,
 the `m-` tags and the `mtrl.*` cascade layers are unchanged.
 
-## Upgrading from 0.10
+## Upgrading from `mtrl` 0.10
 
 `material` 3.0.0 removes what 0.10 deprecated. Upgrade to the latest `mtrl` 0.10.x first: it has the 3.0.0 names beside the old ones and flags in your editor each name, option and constant 3.0.0 removes. Then change the package name to `material` and follow the [3.0.0 migration guide](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-010x): `material` is ESM-only, the package root keeps the components (the internals move to their subpaths), "text field" is two words in every identifier, and a few leftovers fail silently instead of at compile time, such as a chip's `{ text }`, which renders an empty chip.
 
-## Upgrading from 0.9
+## Upgrading from `mtrl` 0.9
 
 0.10.0 adds the elements and framework components; for factory users, most apps need nothing. The changes to check are listed in the [0.10.0 changelog's migration section](https://github.com/floor/material/blob/main/CHANGELOG.md#migrating-from-09x): setters no longer emit `change`, the time picker's events pass `{ value }`, the `--mtrl-sys-color-*-rgb` properties are gone, disabled non-form roots use `aria-disabled`, cards are `article`s, and the text field's DOM gained a `__field` wrapper.
 
-## Upgrading from 0.7
+## Upgrading from `mtrl` 0.7
 
 0.8.0 aligns the components with Material 3 expressive, and some of that changes the API or the styles:
 
