@@ -512,7 +512,8 @@ export interface TabsComponent {
   off: <K extends keyof TabsEvents>(event: K, handler: TabsEvents[K]) => TabsComponent;
   
   /**
-   * Emit an event
+   * Emit an event. `emit` accepts any event name; listeners typed through
+   * `on`/`off` cover the component's own events ({@link TabsEvents}).
    * @param event - Event name
    * @param data - Event data
    * @returns Tabs component for chaining
