@@ -224,6 +224,10 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 - `mtrl/ssr`: `renderElement` renders elements as declarative shadow DOM on a server (Node, Bun); server-only, with no runtime dependencies (FLO-363, FLO-364).
 - `mtrl/ssr/react`: an opt-in, server-only entry. Imported in the server bootstrap, it makes the React adapters emit styled declarative shadow roots during SSR (React 18 and 19), with no server code in the client bundle. Without it, React output is unchanged (FLO-372).
+  Known limit (FLO-517): the declarative shadow root is rendered without the React context of
+  providers above the component. Until the component upgrades in the browser, shadow content that
+  depends on such a context shows the context's default value, and a child that requires the
+  provider leaves the component without a declarative shadow root.
 - `mtrl/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Svelte output gains only the empty branch marker (FLO-375).
 - `mtrl/ssr/vue`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Vue component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Vue output is unchanged (FLO-373).
 - `mtrl/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Solid output is unchanged (FLO-374).
