@@ -7,10 +7,11 @@
  *   bun run scripts/check-adapter-types.ts react
  *
  * The `*-types:floor` scripts install the lowest version `peerDependencies`
- * allows (react and `@types/react` together, at react's floor) and then run
- * this. The consumer in `scripts/fixtures/peer-types` uses a component with a
- * prop and an event, and `@ts-expect-error` on a wrong prop type, so a
- * declaration that collapsed to `any` fails here.
+ * allows and then run this. `@types/react` is pinned in
+ * `check-at-peer-floor.ts` rather than at react's floor. The consumer in
+ * `scripts/fixtures/peer-types` uses a component with a prop and an event,
+ * reads `event.detail.value`, and has `@ts-expect-error` on a wrong prop and
+ * a wrong payload, so a declaration that collapsed to `any` fails here.
  */
 import { spawnSync } from "node:child_process";
 

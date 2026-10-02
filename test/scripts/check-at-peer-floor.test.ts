@@ -5,7 +5,7 @@
 // (scripts/check-at-peer-floor.ts). The version comes from the range, so a range
 // it cannot read must stop the run, not pick a version.
 import { describe, expect, test } from "bun:test";
-import { floorOf } from "../../scripts/check-at-peer-floor";
+import { floorOf, versionsFor } from "../../scripts/check-at-peer-floor";
 
 describe("floorOf", () => {
   test("is the lowest version a >= range allows", () => {
@@ -33,5 +33,23 @@ describe("floorOf", () => {
     expect(floorOf(peerDependencies.vue)).toBe("3.4.20");
     expect(floorOf(peerDependencies.react)).toBe("18.0.0");
     expect(floorOf(peerDependencies.svelte)).toBe("5.0.0");
+  });
+
+  test("the React types floor installs react at its range floor and @types/react at 18.2.71", async () => {
+    const { scripts, peerDependencies } = await Bun.file("package.json").json() as { scripts: Record<string, string>; peerDependencies: Record<string, string> };
+    const parts = scripts["react-types:floor"].split(" ");
+    const tokens = parts.slice(parts.indexOf("scripts/check-at-peer-floor.ts") + 1, parts.indexOf("--"));
+    const plan = versionsFor(tokens, peerDependencies.react);
+    expect(plan.map(({ name, version }) => `${name}@${version}`)).toEqual(["react@18.0.0", "@types/react@18.2.71"]);
+    expect(plan[1]?.reason).toContain("scheduler/tracing");
+    const vue = scripts["vue-types:floor"].split(" ");
+    const vueTokens = vue.slice(vue.indexOf("scripts/check-at-peer-floor.ts") + 1, vue.indexOf("--"));
+    expect(versionsFor(vueTokens, peerDependencies.vue).map(({ name, version }) => `${name}@${version}`)).toEqual([
+      "vue@3.4.20", "@vue/server-renderer@3.4.20",
+    ]);
+  });
+
+  test("an unknown override name is an error", () => {
+    expect(() => versionsFor(["react", "@types/nope@override"], ">=18")).toThrow(TypeError);
   });
 });

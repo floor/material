@@ -485,8 +485,8 @@
     "vue-types:check": "bun run scripts/check-adapter-types.ts vue",
     "solid-types:check": "bun run scripts/check-adapter-types.ts solid",
     "svelte-types:check": "bun run scripts/check-adapter-types.ts svelte",
-    "react-types:floor": "bun run scripts/check-at-peer-floor.ts react @types/react -- react-types:check",
-    "vue-types:floor": "bun run scripts/check-at-peer-floor.ts vue -- vue-types:check",
+    "react-types:floor": "bun run scripts/check-at-peer-floor.ts react @types/react@override -- react-types:check",
+    "vue-types:floor": "bun run scripts/check-at-peer-floor.ts vue @vue/server-renderer -- vue-types:check",
     "solid-types:floor": "bun run scripts/check-at-peer-floor.ts solid-js -- solid-types:check",
     "svelte-types:floor": "bun run scripts/check-at-peer-floor.ts svelte -- svelte-types:check"
   },
