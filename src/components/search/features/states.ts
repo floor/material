@@ -184,9 +184,6 @@ export const withStates =
         viewMode: currentViewMode,
       });
     }
-    // The other config callbacks are called beside their events by the input
-    // feature; expand and collapse were emitted here and their callbacks never.
-    config.onExpand?.();
   };
 
   /**
@@ -227,7 +224,6 @@ export const withStates =
         viewMode: currentViewMode,
       });
     }
-    config.onCollapse?.();
   };
 
   /**

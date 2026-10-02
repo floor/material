@@ -38,11 +38,11 @@ test("onOpen and onClose match their listeners for open, close and toggle", () =
   const opened = optionPair();
   const closed = optionPair();
   const drawer = create({
-    onOpen: (event) => opened.option(event),
-    onClose: (event) => closed.option(event),
+    onOpen: opened.option,
+    onClose: closed.option,
   });
-  drawer.on("open", (event) => opened.listener(event));
-  drawer.on("close", (event) => closed.listener(event));
+  drawer.on("open", opened.listener);
+  drawer.on("close", closed.listener);
   drawer.open();
   drawer.open();
   drawer.close();

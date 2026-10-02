@@ -64,11 +64,11 @@ test("onOpen and onClose match their listeners for open and close", () => {
   const opened = optionPair();
   const closed = optionPair();
   const time = create({
-    onOpen: (event) => opened.option(event),
-    onClose: (event) => closed.option(event),
+    onOpen: opened.option,
+    onClose: closed.option,
   });
-  time.on("open", (event) => opened.listener(event));
-  time.on("close", (event) => closed.listener(event));
+  time.on("open", opened.listener);
+  time.on("close", closed.listener);
   time.open();
   time.close();
   expectSameListener(opened);
@@ -81,11 +81,11 @@ test("onCancel matches its listener for the Cancel button, which also closes", (
   const cancelled = optionPair();
   const closed = optionPair();
   const time = create({
-    onCancel: (event) => cancelled.option(event),
-    onClose: (event) => closed.option(event),
+    onCancel: cancelled.option,
+    onClose: closed.option,
   });
-  time.on("cancel", (event) => cancelled.listener(event));
-  time.on("close", (event) => closed.listener(event));
+  time.on("cancel", cancelled.listener);
+  time.on("close", closed.listener);
   time.open();
   click(time, TIMEPICKER_SELECTORS.CANCEL_BUTTON);
   expectSameListener(cancelled);

@@ -93,7 +93,12 @@ a type your code may rely on: tabs' `on` and `off` take a closed event map, and 
 payload is wrapped (FLO-523); React's and Solid's `Button` type their own `onChange`, so a
 spread of full `HTMLAttributes` must omit it (FLO-380); `SelectChangeEvent["value"]` is
 `string | null` (FLO-380); and the chip set's `change` listener takes one object, not an array
-and a second argument (FLO-530).
+and a second argument (FLO-530). A config `on*` option is its event's listener
+type: `onConfirm: (time: string) => void`, search `onInput` / `onSubmit:
+(value: string) => void`, and `onSuggestionSelect: (suggestion: SearchSuggestion)
+=> void` are errors. A `() => void` callback is still assignable, so search
+`onClear`, `onExpand` and `onCollapse`, and the navigation rail's `onExpand`
+and `onCollapse`, are not.
 
 **Changes your compiler won't catch**
 
@@ -134,7 +139,32 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `{ value, chip, chipValue }`, not the chip; `<m-chips>`'s `remove` detail `value` is the
   remaining selection, and the removed id is `chipValue`.
 - **The time picker's `input`** carries the committed time in `value` while the picker is open;
-  the live draft is `draftValue`. Factory `confirm` listeners receive `{ value }`.
+  the live draft is `draftValue`. Factory `confirm` listeners and `onConfirm` receive `{ value }`.
+  A leftover `onConfirm: (time) => { input.value = time }` stores `"[object Object]"` (measured).
+- **Search `onInput` and `onSubmit`** receive the `SearchEvent`. A leftover
+  `` onSubmit: (query) => `${query}` `` is `"[object Object]"` (measured); read `event.value`.
+- **Search `onClear`** receives the `SearchEvent`. It was declared with no argument and was
+  called with the query string, `""` after a clear. A leftover template of the argument is
+  `"[object Object]"` and `.length` is `undefined` (measured). The query is `event.value`, `""`
+  after a clear.
+- **Search `onSuggestionSelect`** receives the `SearchEvent`. `` `${suggestion}` `` was already
+  `"[object Object]"`; `suggestion.text` is now `undefined` (measured). The text is
+  `event.suggestion.text` (measured `"Apple"`).
+- **Search `onExpand` and `onCollapse`, and the navigation rail's `onExpand` and `onCollapse`,**
+  were called with no argument, so a template of it was `"undefined"`. Each now receives the
+  event's object, and a template of that argument is `"[object Object]"` (measured). The rail's
+  object is `{ expanded: true }` or `{ expanded: false }`. Search `expand` and `collapse` emit
+  `{ component, state, viewMode }` and are declared as `(event: SearchEvent) => void`, which is
+  what `on("expand")` accepts; that emitted object is unchanged, so `event.value` is not on it.
+- **The button group's `on` map** (`click`, `focus`, `blur`, `change`) was accepted and never
+  called. Those handlers now run, with the listener's argument. The type is unchanged, so this
+  is not a compile error. The segmented-button note that `on.change` keeps its meaning describes
+  this.
+- **Options whose argument was already the event's** now run first, before a listener added with
+  `on()`: time picker `onChange`, `onInput`, `onOpen`, `onClose` and `onCancel`; navigation rail
+  and navigation bar `onSelect`; drawer `onSelect`, `onOpen` and `onClose`; text field
+  `onTrailingClick`. Time picker `onChange` is also the same `{ value }` object `change` emits,
+  not a second one.
 - **An empty option id** makes the select's and `<m-radios>`' `change` report `value: null`,
   not `""`.
 - **A trailing icon without `trailingIconLabel`** is hidden from screen readers and loses its
@@ -218,9 +248,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   While the time picker is open, `input.value` no longer moves with the dial:
   it is the committed time. Read `draftValue` for live edits. The factory's
   `onInput` callback also receives the new `{ value, draftValue }` object,
-  described by the newly exported `TimePickerInputEvent` type. `onConfirm(string)`
-  in the time picker config still receives a string; factory `confirm` listeners
-  now destructure `{ value }`. `SelectChangeEvent["value"]` is now `string | null`
+  described by the newly exported `TimePickerInputEvent` type. `onConfirm` receives
+  `{ value }` as well: see "A config `on*` option is the listener registered at
+  creation." `SelectChangeEvent["value"]` is now `string | null`
   for an empty option ID. The radio factory still reports its string getter,
   including `""`; handle `null` for empty select or radio element selections.
 - **Chip-set `add` and `remove` report the live selection (FLO-380).** Factory
@@ -338,6 +368,55 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `setTrailingIcon(html, label)`), which makes it a button and emits `trailing`. The label is a
   factory option: `<m-textfield>` and the React, Vue, Svelte and Solid components have no label
   attribute or prop, so a trailing icon there is decorative.
+- **A config `on*` option is the listener registered at creation.** It runs with the same
+  argument, the same number of times, as a listener passed to `on(event)` at that point, and it
+  runs before a listener added afterwards. Whether a method notifies is unchanged (a silent
+  `setValue`, `setActive`, `clear()` or button-group `select` stays silent). Chips are not part
+  of this change. The bottom app bar's `onVisibilityChange` and the top app bar's `onScroll`
+  have no matching event, so they stay callbacks and are not in the table.
+
+  | Component | Option | Old argument | New argument |
+  |---|---|---|---|
+  | Time picker | `onConfirm` | the 24-hour string | `{ value }` |
+  | Time picker | `onChange` | `{ value }`, a second object from the one `change` emitted | the same `{ value }` object `change` emits |
+  | Time picker | `onInput` | the `input` event | the same object |
+  | Time picker | `onOpen`, `onClose`, `onCancel` | no argument | no argument |
+  | Search | `onInput`, `onSubmit` | the query string | the `SearchEvent` |
+  | Search | `onClear` | the query string (declared with no argument; `""` after a clear) | the `SearchEvent` |
+  | Search | `onSuggestionSelect` | the suggestion | the `SearchEvent` (`suggestion` holds it) |
+  | Search | `onExpand`, `onCollapse` | no argument | `{ component, state, viewMode }`, declared as `SearchEvent` |
+  | Navigation rail | `onExpand` | no argument | `{ expanded: true }` |
+  | Navigation rail | `onCollapse` | no argument | `{ expanded: false }` |
+  | Navigation rail, navigation bar | `onSelect` | the select event | the same object |
+  | Drawer | `onSelect` | the select event | the same object |
+  | Drawer | `onOpen`, `onClose` | no argument | no argument |
+  | Text field | `onTrailingClick` | the trailing payload | the same object |
+  | Button group | `on.click`, `on.focus`, `on.blur`, `on.change` | accepted, never called | the listener's argument |
+
+  ```ts
+  createTimePicker({ onConfirm: (time) => { input.value = time; } });          // 0.10
+  createTimePicker({ onConfirm: ({ value }) => { input.value = value; } });    // 1.0
+  createSearch({                                                                // 0.10
+    onSubmit: (query) => console.log(query),
+    onSuggestionSelect: (suggestion) => console.log(suggestion.text),
+  });
+  createSearch({                                                                // 1.0
+    onSubmit: (event) => console.log(event.value),
+    onSuggestionSelect: (event) => console.log(event.suggestion?.text),
+  });
+  ```
+
+  A listener added with `on()` used to run before the option, which was called after `emit`.
+  The option is now first. `component.off(event, theSameFunction)` removes it: the option is
+  that function, not a wrapper. A navigation rail or bar listener that destroys the component
+  during `select`, or the rail during `expand`, used to skip the option. The option now runs
+  first, so it is called; listeners already taken for that `emit` still run.
+
+  In JavaScript, a leftover template of an argument that is now an object is `"[object Object]"`
+  (measured), including assigning the time picker's `onConfirm` argument to an input's `value`.
+  Search `onClear`'s `.length` is `undefined`; the query is `event.value`. Search
+  `suggestion.text` is `undefined`; the text is `event.suggestion.text`. The navigation rail's
+  expand and collapse templates were `"undefined"` when the option was called with no argument.
 
 ### Removed
 
