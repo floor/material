@@ -2600,6 +2600,26 @@ try {
     assert.deepEqual(layout, { classes: [true, true], labelled: true, same: true });
     check("chips: scrollable, label and aria-label update the set in place");
 
+    // FLO-550: a refused deselect changes nothing, so the host dispatches nothing.
+    const refusedDeselect = await page.evaluate(async () => {
+      const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
+      const host = document.createElement("m-chips") as Chips;
+      host.setAttribute("selection-required", "");
+      host.setAttribute("aria-label", "Required");
+      host.innerHTML = `<m-chip value="only" selected>Only</m-chip>`;
+      const seen: string[] = [];
+      for (const type of ["change", "click"]) host.addEventListener(type, () => seen.push(type));
+      document.body.append(host);
+      await frame();
+      (host.shadowRoot?.querySelector('[role="gridcell"]') as HTMLElement).click();
+      await frame();
+      const result = { seen, value: host.value };
+      host.remove();
+      return result;
+    });
+    assert.deepEqual(refusedDeselect, { seen: ["click"], value: ["only"] });
+    check("chips: a refused deselect in a selection-required set dispatches no change");
+
     const dirty = await page.evaluate(async () => {
       const frame = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => r(null)));
       const host = document.getElementById("host") as HTMLElement;
@@ -4835,6 +4855,43 @@ try {
     };
     await returnsFocus("dialog", "createDialog");
     check("factories in a shadow root: a dialog returns focus to its opener inside the shadow root");
+
+    // The event that opened an overlay never dismisses it (FLO-548). A dialog
+    // opened from an Escape keydown gets its Escape listener (or, in the top
+    // layer, becomes the browser's topmost modal) while that key press is
+    // still being handled. Both layers are read before the assertion, so a
+    // failure shows whether they agree.
+    const opensOnEscape = async (layer?: "top"): Promise<{ afterTheKeyThatOpenedIt: boolean; afterTheNextEscape: boolean }> => {
+      await fresh(page, `<button id="opener" type="button">Discard</button>`);
+      await page.evaluate((layer) => {
+        const mtrl = (window as unknown as { mtrl: Factories }).mtrl;
+        const dialog = mtrl.createDialog({ title: "Discard draft?", content: "Your changes will be lost.", closeOnEscape: true, ...(layer ? { layer } : {}) });
+        (window as unknown as Win).__overlay = dialog;
+        (document.getElementById("opener") as HTMLElement).addEventListener("keydown", (event) => {
+          if (event.key === "Escape") dialog.open();
+        });
+      }, layer);
+      const isOpen = (): Promise<boolean> =>
+        page.evaluate(() => ((window as unknown as Win).__overlay as { isOpen: () => boolean }).isOpen());
+      await page.focus("#opener");
+      await page.keyboard.press("Escape");
+      await wait(400);
+      const afterTheKeyThatOpenedIt = await isOpen();
+      await page.keyboard.press("Escape");
+      await until(async () => !(await isOpen()));
+      const afterTheNextEscape = await isOpen();
+      await page.evaluate(() => void ((window as unknown as Win).__overlay as { destroy: () => unknown }).destroy());
+      return { afterTheKeyThatOpenedIt, afterTheNextEscape };
+    };
+    assert.deepEqual(
+      { default: await opensOnEscape(), top: await opensOnEscape("top") },
+      {
+        default: { afterTheKeyThatOpenedIt: true, afterTheNextEscape: false },
+        top: { afterTheKeyThatOpenedIt: true, afterTheNextEscape: false },
+      },
+      "a dialog opened from an Escape keydown: open after that key press, closed by the next one, in both layers",
+    );
+    check("dialog: the Escape key press that opened it does not close it, and the next one does, in both layers");
     await returnsFocus("bottom sheet", "createBottomSheet");
     check("factories in a shadow root: a modal bottom sheet returns focus to its opener inside the shadow root");
     await returnsFocus("side sheet", "createSideSheet");

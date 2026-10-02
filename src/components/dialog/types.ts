@@ -45,12 +45,20 @@ export type DialogFooterAlignment = 'right' | 'left' | 'center' | 'space-between
  * 
  * @category Components
  * @remarks
- * - open: Fired when the dialog begins opening
- * - close: Fired when the dialog begins closing
- * - beforeopen: Fired before the dialog starts opening (can be prevented)
- * - beforeclose: Fired before the dialog starts closing (can be prevented)
- * - afteropen: Fired after the dialog has fully opened (animation complete)
- * - afterclose: Fired after the dialog has fully closed (animation complete)
+ * - beforeopen: Fired inside `open()`, before anything changes (can be prevented)
+ * - open: Fired inside `open()`, once the dialog is open: `isOpen()` is true.
+ *   The surface may not be visible yet, and focus may not be in it
+ * - afteropen: Fired later, never inside `open()`: the dialog is visible and
+ *   focus is in it (`animationDuration` after it was shown). Not fired when
+ *   the dialog closes first
+ * - beforeclose: Fired inside `close()`, before anything changes (can be prevented)
+ * - close: Fired inside `close()`, once the dialog is closed: `isOpen()` is false
+ * - afterclose: Fired later, never inside `close()`: the dialog is removed
+ *   (`animationDuration` after it closed). Not fired when the dialog opens
+ *   again first
+ *
+ * A listener hears the events emitted after it was added: add an `open`
+ * listener before calling `open()`, or listen to `afteropen`.
  */
 export type DialogEventType = 'open' | 'close' | 'beforeopen' | 'beforeclose' | 'afteropen' | 'afterclose';
 
@@ -403,18 +411,38 @@ export interface DialogComponent {
   overlay: HTMLElement;
   
   /**
-   * Opens the dialog
-   * Displays the dialog with animation. When it returns, `beforeopen` has run
-   * (a listener can cancel the opening there). With `layer: "top"`, `isOpen()`
-   * is true and `open` has been emitted too. The surface may be painted after
-   * `open()` returns.
+   * Opens the dialog.
+   *
+   * When it returns, `isOpen()` is true and `open` has been emitted
+   * (`beforeopen` first; a listener that prevents it leaves the dialog closed,
+   * with no `open`). The surface is shown, focus moves in and the animation
+   * runs after that; `afteropen` is emitted once they have, never inside this
+   * call. On an open dialog it does nothing and emits nothing.
+   *
+   * From then on Escape and a click on the scrim close it (`closeOnEscape`,
+   * `closeOnOverlayClick`). The event that opened it never does: a dialog
+   * opened from an Escape `keydown` stays open through that key press.
    * @returns Dialog component for method chaining
+   * @example
+   * // An `open` listener must be added before the call to hear it
+   * dialog.on('open', build);
+   * dialog.open();
    */
   open: () => DialogComponent;
-  
+
   /**
-   * Closes the dialog
-   * Hides the dialog with animation
+   * Closes the dialog.
+   *
+   * When it returns, `isOpen()` is false and `close` has been emitted
+   * (`beforeclose` first; a listener that prevents it leaves the dialog open,
+   * with no `close`). The surface animates out and is removed after that;
+   * `afterclose` is emitted once it is, never inside this call. On a closed
+   * dialog it does nothing and emits nothing.
+   *
+   * `close()` then `open()` at once ends open, and `open()` then `close()`
+   * ends closed: the later call wins, and what the earlier one still had to
+   * do (its `afterclose`, or showing the surface and its `afteropen`) is
+   * dropped.
    * @returns Dialog component for method chaining
    */
   close: () => DialogComponent;
@@ -430,7 +458,9 @@ export interface DialogComponent {
   toggle: (open?: boolean) => DialogComponent;
   
   /**
-   * Checks if dialog is currently open
+   * Checks if dialog is currently open. It changes inside `open()` and
+   * `close()`, before their `open` and `close` events, and does not wait for
+   * the animation.
    * @returns True if dialog is open, false otherwise
    */
   isOpen: () => boolean;
