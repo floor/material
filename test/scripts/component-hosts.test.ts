@@ -55,4 +55,12 @@ describe("comparableAttributes", () => {
   test("still ignores style serialization and nonce", () => {
     agree(host({ style: "margin-top:4px", nonce: "abc" }), host({ style: "margin-top: 4px;" }));
   });
+
+  // No attribute: each element's own property. Two defaults agree. A hydrated
+  // element with nothing recorded does not take the client's value.
+  test("compares an absent attribute with each element's property", () => {
+    agree(host({}, { value: 0 }), host({}, { value: 0 }));
+    differ(host({}, { value: 0 }), host({}, { value: 2 }));
+    differ(host({}), host({}, { value: "b" }));
+  });
 });
