@@ -52,11 +52,6 @@ export interface InputConfig {
    * @default true
    */
   enterToggles?: boolean;
-
-  /** Use checked state for change.value, retaining the HTML token as valueAttribute.
-   * @internal Checkbox and switch opt in; standalone inputs keep string values.
-   */
-  checkedValue?: boolean;
 }
 
 /**
@@ -118,6 +113,11 @@ export interface InputComponent extends ElementComponent, InputFeature {}
  * Creates an input element and adds it to a component
  * Handles both input creation and event emission for state changes
  *
+ * `change` carries `{ checked, value, valueAttribute, nativeEvent }`: `value` is
+ * the checked boolean, as the checkbox and the switch report it, and
+ * `valueAttribute` the input's string value. `getValue()`, `setValue()` and the
+ * `value` event are the input's string value.
+ *
  * @param config - Input configuration
  * @returns Function that enhances a component with input functionality
  */
@@ -172,9 +172,9 @@ export const withInput =
       if (hasEmit(component)) {
         component.emit("change", {
           checked: input.checked,
-          ...(config.checkedValue
-            ? { value: input.checked, valueAttribute: input.value }
-            : { value: input.value }),
+          // The checked state, as every model event's value; the HTML token is valueAttribute
+          value: input.checked,
+          valueAttribute: input.value,
           nativeEvent: event,
         });
       }
