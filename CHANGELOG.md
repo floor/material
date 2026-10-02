@@ -484,8 +484,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   The rule, for the dialog first and for every overlay by 1.0: when `open()` or `close()`
   returns, `isOpen()` has changed and the event has been emitted (the cancellable `beforeopen`
   or `beforeclose` first). The classes, the paint, the focus trap and the animation may follow.
-  A dialog created with `layer: "top"` and `<m-dialog>` already worked this way and are
-  unchanged; this is the factory dialog without `layer`, which emitted `open` and turned
+  A dialog created with `layer: "top"` and `<m-dialog>` already worked this way, and change
+  in two points only, marked "both layers" below; this is the factory dialog without `layer`, which emitted `open` and turned
   `isOpen()` true 10 ms after the call. Migration: add every `open` listener before calling
   `open()` (or pass it in the config's `on`), and move to `afteropen` what needs the dialog
   visible or focus inside it.
@@ -513,10 +513,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   - **Repeat calls do nothing and emit nothing,** in both layers. `close()` on a closed dialog
     emitted `beforeclose`, `close` and `afterclose` each time, and a second `open()` within
     the 10 ms emitted `beforeopen` and `open` again.
-  - **The later call wins.** `open()` then `close()` at once ends closed and the surface is
+  - **The later call wins,** in both layers. `open()` then `close()` at once ends closed and the surface is
     never shown (it was shown 10 ms later, on a dialog that had emitted `close`); `close()`
     then `open()` at once ends open and stays in the document (the pending removal took it
-    out). The call that lost emits no `afteropen` or `afterclose`.
+    out). The call that lost emits no `afteropen` or `afterclose`: a dialog closed before its
+    `afteropen` was due never emits it, and one opened again before its `afterclose` was due
+    emits no `afterclose`. Both used to arrive late, about a dialog in the other state, in
+    the top layer as well.
   - **An open dialog can be dismissed as soon as `open()` returns:** Escape and a click on the
     scrim close it from then, not 10 ms later. One exception, the same for every overlay: the
     event that opened it never dismisses it. A dialog opened from an Escape `keydown` handler

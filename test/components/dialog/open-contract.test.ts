@@ -411,6 +411,18 @@ describe('dialog: open means it can be dismissed', () => {
       await after(SETTLED);
       expect(watched.count('keydown')).toBe(0);
       expect(watched.count('mouseup')).toBe(0);
+
+      // And a dialog that was shown: destroy() is not close(), and has to
+      // remove them itself
+      const shown = make().dialog;
+      shown.open();
+      await after(SETTLED);
+      expect(shown.element.classList.contains(VISIBLE)).toBe(true);
+      expect(watched.count('keydown')).toBe(1);
+      expect(watched.count('mouseup')).toBe(1);
+      shown.destroy();
+      expect(watched.count('keydown')).toBe(0);
+      expect(watched.count('mouseup')).toBe(0);
     } finally {
       watched.stop();
     }
