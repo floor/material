@@ -143,8 +143,16 @@ export const reactInput: ReactProps<typeof TextField> = {
     return value;
   },
 };
+// 1.0 removed the icon button's own `toggle` event: onToggle is the host's native
+// ToggleEvent (a popover's), and the selected state comes with change.
 export const reactToggle: ReactProps<typeof IconButton> = {
   onToggle: (event) => {
+    const state: string = event.newState;
+    // @ts-expect-error -- the native ToggleEvent has no component detail
+    void event.detail;
+    return state;
+  },
+  onChange: (event) => {
     const selected: boolean = event.detail.selected;
     return selected;
   },
@@ -191,8 +199,16 @@ export const solidInput: SolidProps<typeof SolidTextField> = {
     return value;
   },
 };
+// 1.0 removed the icon button's own `toggle` event: onToggle is the host's native
+// ToggleEvent (a popover's), and the selected state comes with change.
 export const solidToggle: SolidProps<typeof SolidIconButton> = {
   onToggle: (event) => {
+    const state: string = event.newState;
+    // @ts-expect-error -- the native ToggleEvent has no component detail
+    void event.detail;
+    return state;
+  },
+  onChange: (event) => {
     const selected: boolean = event.detail.selected;
     return selected;
   },
@@ -239,8 +255,16 @@ export const svelteInput: SvelteProps<TextFieldSpec> = {
     return value;
   },
 };
+// 1.0 removed the icon button's own `toggle` event: ontoggle is the host's native
+// ToggleEvent (a popover's), and the selected state comes with change.
 export const svelteToggle: SvelteProps<IconButtonSpec> = {
   ontoggle: (event) => {
+    const state: string = event.newState;
+    // @ts-expect-error -- the native ToggleEvent has no component detail
+    void event.detail;
+    return state;
+  },
+  onchange: (event) => {
     const selected: boolean = event.detail.selected;
     return selected;
   },
@@ -287,8 +311,16 @@ export const vueInput: InstanceType<typeof MTextField>["$props"] = {
     return value;
   },
 };
+// 1.0 removed the icon button's own `toggle` event: onToggle is the host's native
+// ToggleEvent (a popover's), and the selected state comes with change.
 export const vueToggle: InstanceType<typeof MIconButton>["$props"] = {
   onToggle: (event) => {
+    const state: string = event.newState;
+    // @ts-expect-error -- the native ToggleEvent has no component detail
+    void event.detail;
+    return state;
+  },
+  onChange: (event) => {
     const selected: boolean = event.detail.selected;
     return selected;
   },
