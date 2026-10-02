@@ -5,7 +5,7 @@
  * @module components/drawer
  */
 
-export { default } from './drawer';
+export { default, default as createDrawer } from './drawer';
 export type {
   DrawerConfig,
   DrawerComponent,

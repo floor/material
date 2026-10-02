@@ -158,6 +158,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `.mtrl-textfield…` or `::part(textfield)` matches nothing, a `classList` call with the old
   class changes nothing, and defaults set under `'textfield'` are ignored. Nothing warns.
   Search your CSS and your code for `textfield`.
+- **A select made with `createSelect()` no longer fills its container.** Unsized, it is
+  280px wide, as a text field is; it was as wide as what held it. Nothing warns: a form
+  whose selects spanned their column now shows them 280px wide. Search for `createSelect(`
+  and give each select that should fill its container a width
+  (`.mtrl-select { width: 100%; }`).
 - **A text field with a prefix or a suffix has no inline padding (FLO-299).**
   `field.input.style.paddingLeft` and `paddingRight` read `''`, and the label has no inline
   `left`: the stylesheet pads the input from `--mtrl-text-field-prefix-width` and
@@ -979,6 +984,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `v.shape(<step>)`.
 
 ### Added
+- `material/components/chips` and `material/components/divider` now have their factory as the default export, as the other component entries do. Every `material/components/<name>` entry exports its factory as the default export and by its name.
 
 - **`isOpen()` on the snackbar and the date picker (FLO-548)**, as on every other overlay.
 - **Split button `setItems(items)` and `getItems()` (FLO-543).** `setItems` replaces the menu's
@@ -1047,6 +1053,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 ### Changed
 
 - **An extra-small button's space between its icon and its label is 4px.** It was 8px. Material 3's token `md.comp.button.xsmall.icon-label-space` is 4, and Compose's `ButtonDefaults.ExtraSmallIconSpacing` is 4.
+- **An unsized select is 280px wide, as an unsized text field is.** `createSelect()` made a
+  select that took its container's whole width (200px in a 200px container, 400px in a
+  400px one), where the text field, on both paths, and `<m-select>` are 280px whatever holds
+  them. The factory's select now sizes as they do. Migration: to keep a select filling its
+  container, give it the width: `select.element.style.width = '100%'` or the rule
+  `.mtrl-select { width: 100%; }`; for the element, `m-select { width: 100%; }`. There is
+  no option for it.
 - **Text field: the spacing follows the M3 measurements (FLO-299).** A field's layout shifts
   by the amounts below; nothing in the API changes. Sources: the measurement tables on
   m3.material.io's text fields page, and Compose's `TextFieldImpl.kt` for the positions the
@@ -1144,6 +1157,21 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   filled, tonal and standard xs narrow 16 against 20 and their s narrow 20 against 24, outlined xs
   default width 18 against 20. The component stylesheet the element adopts now repeats the reset.
 - The package no longer contains a second copy of the README and licence under `dist/`.
+- **Select: the menu, measured against the field in every layer.** Three defects from a
+  measurement of the select, in the factory's default layer (the menu inside the select's
+  element), with `layer: "top"`, and in `<m-select>`:
+  - **Right to left, the selected option's check mark was drawn over its text.** It stayed at
+    the item's right, where right-to-left text begins: 18px of overlap. It is at the item's
+    end in both directions. The same holds for a selected item of any menu.
+  - **The menu is its field's width in both layers.** In the default layer it kept a menu's
+    280px maximum, so under a 400px field it was 280px wide and stopped 120px short; in the
+    top layer it was 400px. The rule is one: the menu is as wide as its field (Compose's
+    exposed dropdown matches its anchor's width), and never under the 112px the M3 site gives
+    a menu as its minimum.
+  - **The selected option has one look, the M3 token's:** secondary-container with
+    on-secondary-container text (`md.comp.menu.list-item.selected.container.color` and
+    `.label-text.color`). In the top layer, and so in `<m-select>`, it was the primary colour
+    at 12% with primary text.
 - **A button's asymmetric icon padding mirrors in right-to-left.** A size `s` button with a leading icon, and a text button at `xs` or `s` with a leading icon, keep 12px before the icon and 16px after the label in both directions. Under `dir="rtl"` those insets had stayed physical, so the start side was 16px and the end side 12px. The insets are logical and follow the direction the icon already follows, including into a shadow root whose `dir` ancestor is outside it.
 - **`<m-text-field>` in a right-to-left page is mirrored (FLO-562).** A `dir="rtl"` on an
   ancestor is outside the element's shadow root, where the stylesheet's `[dir]` selectors do

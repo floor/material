@@ -112,11 +112,13 @@ describe("explicit contrast levels are opt-in", () => {
     // The hash is this sheet with the text field's layout at the M3 measurements (FLO-299),
     // its insets mirrored by one block (FLO-562), the unlabelled checkbox's centring
     // (styles/components/_checkbox.scss), the icon button's inner padding
-    // (styles/components/_icon-button.scss), and a radio row that grows with its label
-    // with an unlabelled radio centred (styles/components/_radios.scss).
+    // (styles/components/_icon-button.scss), a radio row that grows with its label
+    // with an unlabelled radio centred (styles/components/_radios.scss), and the
+    // select menu's width, mark and selected colours (styles/components/_select.scss,
+    // styles/components/_menu.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("7eb660d17cbe394ce61a4a2a8a251105c7c783fdfd95ad90eeb36297c0e75738");
-    expect(css.length).toBe(525240);
+      .toBe("c154fb5f07b85e6adc42c6b44bd4ec376bbc2223a3ad059cceae89ee2e1e9f8f");
+    expect(css.length).toBe(524397);
   });
 
   test("today's sheets still resolve to the fixture", () => {

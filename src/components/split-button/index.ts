@@ -1,5 +1,5 @@
 // src/components/split-button/index.ts
-export { default } from "./split-button";
+export { default, default as createSplitButton } from "./split-button";
 
 // Export types
 export type {

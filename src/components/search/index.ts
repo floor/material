@@ -1,7 +1,7 @@
 // src/components/search/index.ts
 
 // Export main component creator
-export { default } from "./search";
+export { default, default as createSearch } from "./search";
 
 // Export types for TypeScript users
 export type {
