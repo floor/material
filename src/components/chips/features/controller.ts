@@ -178,7 +178,9 @@ export const withController =
       const chipElement = component.chipInstances[index].element;
       const container = component.chipContainer || component.element;
 
-      // Calculate scroll position to center the chip
+      // Calculate scroll position to center the chip. No `behavior`: the
+      // stylesheet scrolls a scrollable set smoothly, and the reduced-motion
+      // reset turns that off; an explicit "smooth" would override it (FLO-553).
       const containerRect = container.getBoundingClientRect();
       const chipRect = chipElement.getBoundingClientRect();
 
@@ -194,7 +196,6 @@ export const withController =
 
         container.scrollTo({
           top: Math.max(0, scrollTop),
-          behavior: "smooth",
         });
       } else {
         // For horizontal scroll
@@ -206,7 +207,6 @@ export const withController =
 
         container.scrollTo({
           left: Math.max(0, scrollLeft),
-          behavior: "smooth",
         });
       }
     }

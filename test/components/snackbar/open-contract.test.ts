@@ -142,4 +142,20 @@ describe('snackbar: a queued one is not open', () => {
     b.show();
     expect([b.state, b.isOpen(), onPage(b)]).toEqual(['visible', true, true]);
   });
+
+  // From #476's review: destroying the one on screen left the queue pointing
+  // at it, so the ones behind stayed "queued" until some other snackbar was shown.
+  test('destroy() on the visible one lets the next take its turn', async () => {
+    const log: string[] = [];
+    const a = make('a', log);
+    const b = make('b', log);
+    a.show();
+    b.show();
+    a.destroy();
+    expect([a.state, b.state]).toEqual(['hidden', 'queued']);
+    await after(400);
+    expect([b.state, b.isOpen(), onPage(b)]).toEqual(['visible', true, true]);
+    // destroy() emits nothing for the one it removes
+    expect(log).toEqual(['a open visible true', 'b open visible true']);
+  });
 });
