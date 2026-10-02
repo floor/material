@@ -121,11 +121,12 @@ export interface SplitButtonComponent {
 
   /**
    * Replaces the menu's items. A split button created without `items` has no
-   * menu, and this does nothing: create it with items.
+   * menu: the first non-empty list creates it, and opens it if the split
+   * button is expanded. An empty list empties the menu and keeps it.
    */
   setItems: (items: MenuContent[]) => SplitButtonComponent;
 
-  /** The menu's items; empty for a split button created without any */
+  /** The menu's items; empty while the split button has no menu */
   getItems: () => MenuContent[];
 
   /**

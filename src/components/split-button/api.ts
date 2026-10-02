@@ -8,6 +8,8 @@ import {
 } from "./types";
 import type { MenuContent } from "../menu/types";
 import { MENU, type MenuOwner } from "../menu/inner";
+import { makeMenu } from "./features/menu";
+import type { MenuComponent } from "../menu/types";
 import { SPLIT_BUTTON_CLASSES, SPLIT_BUTTON_EVENTS } from "./constants";
 
 interface ApiOptions {
@@ -26,14 +28,10 @@ export const withAPI =
     const element = component.element;
     const prefix = config.prefix || "mtrl";
     const { leading, trailing } = component;
-    const menu = component[MENU];
+    let menu = component[MENU];
     const expandedClass = `${prefix}-${SPLIT_BUTTON_CLASSES.EXPANDED}`;
 
     let expanded = false;
-
-    // A trailing button that opens this component's own menu says so. The
-    // menu's opener wiring sets a plain "true", so this comes after it.
-    if (menu) trailing.element.setAttribute("aria-haspopup", "menu");
 
     const emit = (type: SplitButtonEventType, extra: Partial<SplitButtonEvent> = {}): void => {
       component.emit?.(type, {
@@ -67,7 +65,11 @@ export const withAPI =
       [MENU]: menu,
 
       setItems(items: MenuContent[]): SplitButtonComponent {
-        menu?.setItems(items);
+        if (menu) menu.setItems(items);
+        else if (items.length) {
+          wire((api[MENU] = menu = makeMenu(config, trailing.element, items)));
+          if (expanded) menu.open();
+        }
         return this;
       },
 
@@ -152,7 +154,11 @@ export const withAPI =
 
     // A menu closed from the outside, by Escape or a click elsewhere, has to
     // bring the button's state back with it
-    if (menu) {
+    // Runs for the menu made at creation, or by the first setItems (FLO-543)
+    const wire = (menu: MenuComponent): void => {
+      // A trailing button that opens this component's own menu says so. The
+      // menu's opener wiring sets a plain "true", so this comes after it.
+      trailing.element.setAttribute("aria-haspopup", "menu");
       menu.on?.("close", () => {
         if (!expanded) return;
         expanded = false;
@@ -165,7 +171,8 @@ export const withAPI =
         const item = event?.item;
         emit(SPLIT_BUTTON_EVENTS.SELECT, { item, value: item && "id" in item ? (item.id ?? null) : null });
       });
-    }
+    };
+    if (menu) wire(menu);
 
     // Configured callbacks
     if (config.onClick) api.on(SPLIT_BUTTON_EVENTS.CLICK, config.onClick);

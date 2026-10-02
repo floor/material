@@ -589,7 +589,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 - **Split button `setItems(items)` and `getItems()` (FLO-543).** `setItems` replaces the menu's
   items and returns the split button; `getItems` returns them. A split button created without
-  `items` has no menu: `setItems` does nothing there and `getItems` returns `[]`.
+  `items` has no menu and `getItems` returns `[]`: the first non-empty `setItems` creates the
+  menu, which then works as one created with items (and opens at once if the split button is
+  expanded). `setItems([])` empties the menu and keeps it.
 - **The navigation bar (FLO-305).** `createNavigationBar` and `<m-navigation-bar>` (with
   `<m-navigation-bar-item>`), and the React, Vue, Svelte and Solid components: M3 Expressive's bar
   for compact and medium windows, three to five destinations, from Compose's `ShortNavigationBar`.
