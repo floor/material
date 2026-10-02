@@ -110,10 +110,10 @@ describe("explicit contrast levels are opt-in", () => {
     }).css;
     // `@use "main"` compressed, before the banner the build adds.
     // The hash is this sheet after the filled text field's RTL rules follow
-    // the --rtl class, not only a [dir] ancestor (FLO-562).
+    // the --rtl class, not only a [dir] ancestor, each written once (FLO-562).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("7acf03b8a711b9af1107502a5ed6c8cd95e4648467487e8307ab3acbc0822542");
-    expect(css.length).toBe(533717);
+      .toBe("c8764cfbd985e2bc5bc1fed7ce7fb1771681a1be022564e77d689004ecbc6b6c");
+    expect(css.length).toBe(532619);
   });
 
   test("today's sheets still resolve to the fixture", () => {

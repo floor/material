@@ -415,34 +415,57 @@ $component: "#{base.$prefix}-text-field";
         }
     }
 
-    // RTL support
+    // RTL support. Each rule carries both selectors, and its declarations
+    // once: the [dir] ancestor serves a light-DOM field without JavaScript,
+    // the --rtl class (which placement.ts sets from the computed direction)
+    // a field whose direction is decided outside its shadow root, where
+    // [dir] selectors stop at the boundary (FLO-562).
+    [dir='rtl'] &__label,
+    &.#{$component}--rtl .#{$component}__label {
+        left: auto;
+        right: 16px;
+        transform-origin: right top;
+    }
+
+    [dir='rtl'] &__prefix,
+    &.#{$component}--rtl .#{$component}__prefix {
+        left: auto;
+        right: 16px;
+    }
+
+    [dir='rtl'] &__suffix,
+    &.#{$component}--rtl .#{$component}__suffix {
+        right: auto;
+        left: 16px;
+    }
+
+    [dir='rtl'] &__leading-icon,
+    &.#{$component}--rtl .#{$component}__leading-icon {
+        left: auto;
+        right: 12px;
+    }
+
+    [dir='rtl'] &__trailing-icon,
+    &.#{$component}--rtl .#{$component}__trailing-icon {
+        right: auto;
+        left: 12px;
+    }
+
+    [dir='rtl'] &--with-leading-icon.#{$component}--with-prefix .#{$component}__prefix,
+    &.#{$component}--rtl .#{$component}--with-leading-icon.#{$component}--with-prefix .#{$component}__prefix {
+        left: auto;
+        right: 44px;
+    }
+
+    [dir='rtl'] &--with-trailing-icon.#{$component}--with-suffix .#{$component}__suffix,
+    &.#{$component}--rtl .#{$component}--with-trailing-icon.#{$component}--with-suffix .#{$component}__suffix {
+        right: auto;
+        left: 44px;
+    }
+
+    // The modifier defaults below; the per-variant padding sits in each
+    // variant's own block.
     @include m.rtl {
-        &__label {
-            left: auto;
-            right: 16px;
-            transform-origin: right top;
-        }
-
-        &__prefix {
-            left: auto;
-            right: 16px;
-        }
-
-        &__suffix {
-            right: auto;
-            left: 16px;
-        }
-
-        &__leading-icon {
-            left: auto;
-            right: 12px;
-        }
-
-        &__trailing-icon {
-            right: auto;
-            left: 12px;
-        }
-
         &--with-prefix {
             .#{$component}__label {
                 left: auto;
@@ -477,11 +500,6 @@ $component: "#{base.$prefix}-text-field";
             }
 
             &.#{$component}--with-prefix {
-                .#{$component}__prefix {
-                    left: auto;
-                    right: 44px;
-                }
-
                 .#{$component}__label {
                     left: auto;
                     // Default value - will be overridden by JS for precise positioning
@@ -501,65 +519,13 @@ $component: "#{base.$prefix}-text-field";
                 padding-left: 44px;
             }
 
-            // Both icons: the start side keeps the leading icon's inset
-            &:not(.#{$component}--with-leading-icon) .#{$component}__input {
-                padding-right: 16px;
-            }
-
             &.#{$component}--with-suffix {
-                .#{$component}__suffix {
-                    right: auto;
-                    left: 44px;
-                }
-
                 .#{$component}__input {
                     padding-right: 16px;
                     // Default value - will be overridden by JS for precise padding
                     padding-left: 76px;
                 }
             }
-        }
-    }
-
-    // The five positions above, and the icon-beside-affix ones, for a field
-    // inside a shadow root, where the [dir] selectors stop at the boundary:
-    // they follow --rtl instead (FLO-562). The per-variant padding and the
-    // modifier defaults follow in each variant's own block below.
-    &.#{$component}--rtl {
-        .#{$component}__label {
-            left: auto;
-            right: 16px;
-            transform-origin: right top;
-        }
-
-        .#{$component}__prefix {
-            left: auto;
-            right: 16px;
-        }
-
-        .#{$component}__suffix {
-            right: auto;
-            left: 16px;
-        }
-
-        .#{$component}__leading-icon {
-            left: auto;
-            right: 12px;
-        }
-
-        .#{$component}__trailing-icon {
-            right: auto;
-            left: 12px;
-        }
-
-        .#{$component}--with-leading-icon.#{$component}--with-prefix .#{$component}__prefix {
-            left: auto;
-            right: 44px;
-        }
-
-        .#{$component}--with-trailing-icon.#{$component}--with-suffix .#{$component}__suffix {
-            right: auto;
-            left: 44px;
         }
     }
 
@@ -755,11 +721,6 @@ $component: "#{base.$prefix}-text-field";
                 .#{$component}__input {
                     padding-left: 44px;
                 }
-
-                // Both icons: the start side keeps the leading icon's inset
-                &:not(.#{$component}--with-leading-icon) .#{$component}__input {
-                    padding-right: 16px;
-                }
             }
         }
     }
@@ -954,12 +915,6 @@ $component: "#{base.$prefix}-text-field";
         // outside a shadow root, and bundlers lower logical insets, corners
         // and :dir() into :lang() lists that miss dir="rtl"
         &.#{$component}--rtl {
-            .#{$component}__label {
-                left: auto;
-                right: 16px;
-                transform-origin: right top;
-            }
-
             &.#{$component}--with-leading-icon .#{$component}__label {
                 left: auto;
                 right: 44px;
@@ -996,11 +951,6 @@ $component: "#{base.$prefix}-text-field";
             &.#{$component}--with-trailing-icon {
                 .#{$component}__input {
                     padding-left: 44px;
-                }
-
-                // Both icons: the start side keeps the leading icon's inset
-                &:not(.#{$component}--with-leading-icon) .#{$component}__input {
-                    padding-right: 16px;
                 }
             }
         }
@@ -1204,11 +1154,6 @@ $component: "#{base.$prefix}-text-field";
                     padding-left: 40px;
                 }
 
-                // Both icons: the start side keeps the leading icon's inset
-                &:not(.#{$component}--with-leading-icon) .#{$component}__input {
-                    padding-right: 16px;
-                }
-
                 &.#{$component}--with-suffix {
                     .#{$component}__suffix {
                         right: auto;
@@ -1283,4 +1228,17 @@ $component: "#{base.$prefix}-text-field";
         right: auto;
         left: 4px;
     }
+}
+
+// ============================================================================
+// The trailing icon's end-side inset, right to left (FLO-562)
+// ============================================================================
+// A field with a trailing icon but no leading icon keeps its own end-side
+// inset in right-to-left, whatever the variant: the leading icon's start-side
+// inset stands when both are present. Each variant used to carry a copy of
+// this rule; one here, last, outranks every variant's left-to-right
+// padding-right, and the variant rules still set the other three sides.
+[dir='rtl'] .#{$component}--with-trailing-icon:not(.#{$component}--with-leading-icon) .#{$component}__input,
+.#{$component}--rtl .#{$component}--with-trailing-icon:not(.#{$component}--with-leading-icon) .#{$component}__input {
+    padding-right: 16px;
 }
