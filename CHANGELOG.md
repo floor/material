@@ -1125,6 +1125,21 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 ### Fixed
 
 - The package no longer contains a second copy of the README and licence under `dist/`.
+- **Select: the menu, measured against the field in every layer.** Three defects from a
+  measurement of the select, in the factory's default layer (the menu inside the select's
+  element), with `layer: "top"`, and in `<m-select>`:
+  - **Right to left, the selected option's check mark was drawn over its text.** It stayed at
+    the item's right, where right-to-left text begins: 18px of overlap. It is at the item's
+    end in both directions. The same holds for a selected item of any menu.
+  - **The menu is its field's width in both layers.** In the default layer it kept a menu's
+    280px maximum, so under a 400px field it was 280px wide and stopped 120px short; in the
+    top layer it was 400px. The rule is one: the menu is as wide as its field (Compose's
+    exposed dropdown matches its anchor's width), and never under the 112px the M3 site gives
+    a menu as its minimum.
+  - **The selected option has one look, the M3 token's:** secondary-container with
+    on-secondary-container text (`md.comp.menu.list-item.selected.container.color` and
+    `.label-text.color`). In the top layer, and so in `<m-select>`, it was the primary colour
+    at 12% with primary text.
 - **A button's asymmetric icon padding mirrors in right-to-left.** A size `s` button with a leading icon, and a text button at `xs` or `s` with a leading icon, keep 12px before the icon and 16px after the label in both directions. Under `dir="rtl"` those insets had stayed physical, so the start side was 16px and the end side 12px. The insets are logical and follow the direction the icon already follows, including into a shadow root whose `dir` ancestor is outside it.
 - **`<m-text-field>` in a right-to-left page is mirrored (FLO-562).** A `dir="rtl"` on an
   ancestor is outside the element's shadow root, where the stylesheet's `[dir]` selectors do
