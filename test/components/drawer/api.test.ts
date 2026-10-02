@@ -164,7 +164,7 @@ describe('drawer open and close', () => {
 
   test('Escape does not close a standard drawer', () => {
     const drawer = make({ open: true });
-    document.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+    document.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
     expect(drawer.isOpen()).toBe(true);
   });
 });

@@ -99,7 +99,14 @@ export interface DrawerConfig extends BaseComponentConfig {
   open?: boolean;
 
   /**
-   * Whether the modal drawer can be dismissed by clicking the scrim
+   * Whether the modal drawer can be dismissed by clicking the scrim, or with
+   * Escape.
+   *
+   * Escape is a key press, handled by the topmost open modal only, after
+   * whatever is open inside it has had the key: `false` holds for any number
+   * of presses. The remaining limit, with `layer: "top"`: a close request
+   * that is not a key press (a back gesture) is the browser's `cancel`, which
+   * it forces on the third refusal in a row.
    * @default true
    */
   dismissible?: boolean;
