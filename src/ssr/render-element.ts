@@ -11,7 +11,21 @@ import { renderStyles } from "./styles";
 
 /** true emits an empty attribute; false, null and undefined omit it. Numbers must be finite. */
 export type RenderAttributes = Readonly<Record<string, string | number | boolean | null | undefined>>;
-/** Tag prefix defaults to "m". Link styles may flash while their CSS loads. */
+/**
+ * Tag prefix defaults to "m".
+ *
+ * `styles: "inline"` (the default) writes each root's whole CSS as a `<style>`:
+ * styled at first paint in every engine, at two costs. gzip cannot absorb a
+ * root larger than its 32 KB window (a select's is about 45 KB: 30 large roots
+ * measured 83.9 KB gzip against 8.1 KB brotli), so serve brotli or use link
+ * mode for pages with many selects, dialogs or text fields; and the HTML is
+ * 0.5 to 0.9 MB uncompressed for 30 to 44 roots.
+ *
+ * `styles: "link"` writes `<link>` tags to the stylesheets under `cssBase`
+ * (`dist/elements/css`). WebKit paints the roots unstyled until they arrive
+ * (about 470 ms with each sheet 300 ms away; a preload does not help);
+ * Chromium and Firefox wait for them. Measured on Playwright's engines.
+ */
 export type RenderOptions = { prefix?: string } & (
   | { styles?: "inline" }
   | { styles: "link"; cssBase: string }

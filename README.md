@@ -231,6 +231,15 @@ Each framework has a guide on [md3.io](https://md3.io/docs/): props and events, 
 
 `renderElement` from `mtrl/ssr` renders an element to declarative shadow DOM. Import `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` in the server bootstrap and that framework's components emit the same roots. Node and Bun are supported in 1.0. Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one.
 
+**Styles: inline by default.** Each root carries its whole CSS as a `<style>`, so it is styled at first paint in every engine with no extra request. That has two costs:
+
+- **How well it compresses depends on the compressor.** gzip cannot see a repeat further back than its 32 KB window, and a select's root is about 45 KB of style text. A page of 30 large roots (selects, text fields, dialogs and buttons in turn) measured 83.9 KB with gzip against 8.1 KB with brotli; 30 buttons, at 16 KB a root, measured 6.4 KB with gzip. Serve brotli, or use link mode for pages with many selects, dialogs or text fields.
+- **Uncompressed it is large:** 0.5 to 0.9 MB for 30 to 44 roots (489 KB for 30 buttons, 671 KB for a list page of 44 roots, 878 KB for the 30 large roots). That matters for anything that stores or streams the HTML uncompressed.
+
+**Link mode** (`renderElement(tag, attributes, children, { styles: 'link', cssBase: '/css' })`, with `dist/elements/css` served at that base) writes `<link>` tags in place of the style text: the same pages are 15 to 40 KB of HTML, and the stylesheets are fetched once and cached. Its caveat: WebKit paints the roots unstyled until the stylesheets arrive (about 470 ms with each stylesheet 300 ms away; a preload in the head does not help), where Chromium and Firefox wait for them before painting.
+
+Measured on Playwright's engines (Chromium 153, Firefox 155, WebKit 26.6); sizes are of the HTML `renderElement` returns, gzip at level 9, brotli at its default.
+
 Worker and edge runtimes are unsupported in 1.0. Each server entry lists the `browser` condition first. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers does) loads the browser stub: `renderElement` throws "mtrl/ssr is server-only", and importing a bridge does nothing, so the page renders with no declarative roots and no error.
 
 With `mtrl/ssr/react`, put a `Suspense` boundary outside the component when its server-rendered shadow root needs the resolved child. A boundary inside the component contributes its fallback to that root: a button with an empty fallback has no label slot, while a text fallback gives it a slot and shows the fallback text. In tabs, a boundary around a tab leaves the server-rendered root without that tab with either fallback; a boundary inside a tab label keeps the tab, with an empty or fallback-text label.
