@@ -337,6 +337,7 @@ Earlier versions are in the [git history](https://github.com/floor/mtrl/commits/
 
 ### Fixed
 
+- Arrow keys used soon after opening a menu keep their selected focus when the initial-focus timer runs (FLO-515).
 - A search view dismissed before its opening focus frame runs stays closed (FLO-514).
 - The menu keyboard step of `elements:check` no longer ends one item short when a runner pauses
   (FLO-423). It waited a fixed 450ms after opening the menu with a key, then sent the arrows; it

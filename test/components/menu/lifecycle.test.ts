@@ -118,6 +118,53 @@ test("destroy before initialization cancels work, including initially visible me
     released();
   }
 });
+test("initial keyboard focus does not undo an arrow pressed before its timer", () => {
+  const menu = make(false, FLAT);
+  tick(); // Initialize the menu.
+  menu.open(new KeyboardEvent("keydown", { key: "Enter" }));
+  tick(); // Place the menu and schedule initial focus.
+  const items = Array.from(menu.element.querySelectorAll<HTMLElement>(".mtrl-menu__item"));
+  items[0].focus();
+  items[0].dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+  expect(document.activeElement).toBe(items[1]);
+  tick(); // Run the delayed initial-focus callback.
+  expect(document.activeElement).toBe(items[1]);
+});
+test("initial focus respects an arrow inside a shadow-root menu", () => {
+  const host = document.createElement("div");
+  const root = host.attachShadow({ mode: "open" });
+  document.body.append(host);
+  root.append(opener);
+  const menu = createMenu({ opener, items: FLAT });
+  menus.push(menu);
+  tick();
+  menu.open(new KeyboardEvent("keydown", { key: "Enter" }));
+  tick();
+  root.append(menu.element);
+  const items = Array.from(menu.element.querySelectorAll<HTMLElement>(".mtrl-menu__item"));
+  items[0].focus();
+  expect(menu.element.getRootNode() === root).toBe(true);
+  expect(root.activeElement === items[0]).toBe(true);
+  items[0].dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+  expect(root.activeElement).toBe(items[1]);
+  tick();
+  expect(root.activeElement).toBe(items[1]);
+});
+test("initial focus does not pull focus out of an opened submenu", async () => {
+  const menu = make();
+  await submenuLoaded();
+  tick();
+  menu.open(new KeyboardEvent("keydown", { key: "Enter" }));
+  tick();
+  const parent = menu.element.querySelector<HTMLElement>(".mtrl-menu__item")!;
+  parent.focus();
+  parent.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+  const submenuItem = document.querySelector<HTMLElement>(".mtrl-menu--submenu .mtrl-menu__item")!;
+  expect(submenuItem).not.toBeNull();
+  submenuItem.focus();
+  tick(); // Root initial focus and submenu opening frame.
+  expect(document.activeElement).toBe(submenuItem);
+});
 test("destroy releases document listeners and cancels Tab detection and typeahead", () => {
   const menu = make();
   tick();
