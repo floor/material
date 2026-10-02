@@ -23,9 +23,13 @@ const ICON = '<svg viewBox="0 0 24 24"><path d="M1 1h10v10z"/></svg>';
 describe("Material chip factories", () => {
   test("a caller-supplied onSelected on a public factory is never called", () => {
     const calls: string[] = [];
+    // @ts-expect-error onSelected is not a public option: the test proves a caller's one is ignored
     const filter = createFilterChip({ label: "Filter", ripple: false, onSelected() { calls.push("filter"); } });
+    // @ts-expect-error onSelected is not a public option: the test proves a caller's one is ignored
     const input = createInputChip({ label: "Input", ripple: false, onSelected() { calls.push("input"); } });
+    // @ts-expect-error onSelected is not a public option: the test proves a caller's one is ignored
     const assist = createAssistChip({ label: "Assist", ripple: false, onSelected() { calls.push("assist"); } });
+    // @ts-expect-error onSelected is not a public option: the test proves a caller's one is ignored
     const suggestion = createSuggestionChip({ label: "Suggestion", ripple: false, onSelected() { calls.push("suggestion"); } });
     filter.setSelected(true);
     input.setSelected(true);
