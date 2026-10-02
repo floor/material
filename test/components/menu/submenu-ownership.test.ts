@@ -59,12 +59,34 @@ const after = async (ms: number): Promise<void> => {
  * under it a real turn cannot be waited for either: Bun's fake timers fake
  * Date, performance, hrtime, `Bun.sleep`, and even a `setTimeout` captured
  * before the clock went fake. So a test that opens a submenu awaits the same
- * module its loader does; reactions on one module record run in registration
- * order, so when this returns the loader has installed the feature, and
- * replayed anything a queued interaction left, before the test acts.
+ * module its loader does.
+ *
+ * That returns once the module is evaluated, which is not the same as the
+ * loader having installed the feature: on a cold chunk -- nothing before this
+ * file has used it -- the loader's own reaction can still be pending on a turn
+ * the fake clock's waits never take, so the interaction would be queued and
+ * never replayed. A test acting on a submenu waits for the element itself
+ * (`until`), which covers the load and the menu's own timers alike.
  */
 const submenuFeatureLoaded = async (): Promise<void> => {
   await import("../../../src/components/menu/features/submenu");
+};
+
+/**
+ * Advances the clock in 10 ms steps until `ready()` is true, for 5 s of clock
+ * time at most, taking a real turn each step. The menu's own waits are on the
+ * fake clock and are exact; a cold submenu chunk's load is not, so each step
+ * also lets the loop turn -- where a pending import, and the loader's install
+ * queued behind it, settles. Wait on the element the test needs, not a
+ * duration.
+ */
+const until = async (what: string, ready: () => boolean, found: () => unknown = () => undefined): Promise<void> => {
+  for (let elapsed = 0; elapsed <= 5000; elapsed += 10) {
+    if (ready()) return;
+    await after(10);
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+  throw new Error(`still waiting after 5s for ${what}; found ${JSON.stringify(found())}`);
 };
 
 const ITEMS = [
@@ -120,6 +142,9 @@ describe("a submenu knows which menu owns it", () => {
       expect(document.activeElement).toBe(parent);
       expect(parent.getAttribute("data-id")).toBe(id);
       parent.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+      // The chunk's first, cold load can still be settling: wait for the
+      // submenu itself, then let its focus timer run.
+      await until("the submenu to open", () => submenus().length > 0, () => ({ submenus: submenus().length }));
       await after(400);
       const submenu = submenus()[0]!;
       expect(submenu.getAttribute("data-parent-item")).toBe(id);
