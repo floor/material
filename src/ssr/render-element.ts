@@ -92,7 +92,7 @@ const validateOptions = (options: RenderOptions): string => {
  * render their own roots. Load mtrl/elements/preupgrade.css in the page to
  * preserve the host's box until normal browser upgrade.
  *
- * Carousel, FAB menu and toolbar opt out; menu and split-button opt out when
+ * Carousel and FAB menu opt out; menu and split-button opt out when
  * they declare nested submenus. Async button `showProgress` or card `buttons`
  * global defaults conservatively opt out every element in the call, since
  * those factories can also be created inside other components.

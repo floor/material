@@ -89,12 +89,13 @@ the card, tabs and switch internals on their subpaths, `ChipConfig`'s `managedSe
 ship for reference; configuring them with `@use … with` is not a supported API in 1.0. Theme
 with CSS custom properties.
 
-**Type changes the compiler reports.** Besides renames and removals, five entries below change
+**Type changes the compiler reports.** Besides renames and removals, seven entries below change
 a type your code may rely on: tabs' `on` and `off` take a closed event map, and a tab's `click`
 payload is wrapped (FLO-523); React's and Solid's `Button` type their own `onChange`, so a
 spread of full `HTMLAttributes` must omit it (FLO-380); `SelectChangeEvent["value"]` is
 `string | null` (FLO-380); the chip set's `change` listener takes one object, not an array
-and a second argument (FLO-530); and `emit` on the card and the tabs takes only the
+and a second argument (FLO-530); a standalone chip's `onChange` and `onClick` take their
+event's payload; and `emit` on the card and the tabs takes only the
 component's own events, with their payloads. A config `on*` option is its event's listener
 type: `onConfirm: (time: string) => void`, search `onInput` / `onSubmit:
 (value: string) => void`, and `onSuggestionSelect: (suggestion: SearchSuggestion)
@@ -111,7 +112,14 @@ a listener annotated `(event: SearchEvent) => void` on those two is an error. Th
 `<m-timepicker>` component's `on` and `off` take the time picker's event map
 (`TimePickerEvents`) in place of any string and an untyped handler (FLO-547): a name outside
 it is an error, and each handler's argument is typed, so one annotated with another type, or
-an argument on `open`, `close` or `cancel`, is an error.
+an argument on `open`, `close` or `cancel`, is an error. The time picker's `isOpen` is a
+method (FLO-548): `picker.isOpen === true` and assigning it to a `boolean` are errors.
+`SnackbarState` gains `"queued"`, so a `switch` over it that had to be exhaustive is not.
+The menu's and the select's `open` and `close` payloads (`MenuEvent`, `SelectEvent`) and the
+select's `change` payload (`SelectChangeEvent`) have no `preventDefault` and no
+`defaultPrevented` (FLO-548): none of these events could ever be cancelled, so
+`event.preventDefault()` in such a listener is an error. The menu's `select`, where it keeps
+the menu open, keeps both.
 
 **Changes your compiler won't catch**
 
@@ -122,7 +130,9 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `data-theme-contrast="medium"` or `"high"` changes no colour, and nothing warns (FLO-540).
   Measured on the unthemed root: with the OS asking for more contrast, `data-theme-contrast="high"`
   stays standard primary `#6750a4`, not high `#312259`. The OS preference (`prefers-contrast: more`)
-  still selects high contrast from `mtrl/styles/base`.
+  still selects high contrast from `mtrl/styles/base`. Import `mtrl/styles/contrast` after
+  `mtrl/styles/base`, as with `mtrl/styles/typography`: the opt-in sheets share that cascade
+  layer. The contrast colours are the same in either order.
 - **A chip's `{ text }`** renders an empty chip, silently: no label, no error, no warning.
 - **Tabs `indicatorHeight` / `indicatorWidthStrategy`** are ignored: the indicator falls back to
   its variant's height (3px on a primary row, 2px on a secondary one) and automatic width.
@@ -149,6 +159,22 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **Your own CSS reading `var(--mtrl-sys-shape-corner-pill)`** (or `-tiny`, `-extra-tiny`): mtrl's
   stylesheet no longer declares the property, and a `var()` of an undeclared property without a
   fallback gives no value, so the radius is lost silently.
+- **`mtrl/styles/base` no longer carries typography (FLO-539).** Without
+  `import 'mtrl/styles/typography'`, `.mtrl-display-large` … `.mtrl-label-small`,
+  `.mtrl-text-center` / `left` / `right`, `.mtrl-font-thin` / `light` / `regular` /
+  `medium` / `bold`, and `.mtrl-truncate`, `-2` and `-3` do nothing, and `h1`–`h6` and `p`
+  lose mtrl's type styles. Measured in Chromium with only the base stylesheet: a
+  `<div class="mtrl-headline-small">` computed `font-size: 14px`, inherited from `body`
+  (with the import it is `24px`).
+  `getPropertyValue('--mtrl-sys-typescale-title-large-font-size')` returned `""`, and an
+  element styled `font-size: var(--mtrl-sys-typescale-title-large-font-size)` inside a parent
+  at `32px` computed `32px`: the custom property is undefined, so the declaration is invalid
+  at computed-value time and `font-size` inherits (with the import the property is `22px`
+  and the element computes `22px`). Body text keeps its font: `body` stayed `14px`
+  `Roboto, sans-serif`. `import 'mtrl/styles'` is unchanged. The typography sheet has to
+  load after the base (both style `h1`–`h6` and `p`; loaded first, it loses its bottom
+  margins to the reset): `import 'mtrl/styles/typography'` imports the base first itself, and
+  a page using `<link>` tags puts `styles/typography.css` after `styles/base.css`.
 - **Tab and panel ids** change for any value with a character outside `[A-Za-z0-9_-]`
   (`a.b` → `tabx-g-a_2e_b`); a hand-written panel with the old id is never linked. Build ids with
   `tabIdFor` and `tabPanelIdFor`.
@@ -158,8 +184,51 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `{ value, selected, changed }`, not an array with the changed value as a second argument. In
   a leftover handler `event[0]` and `event.length` are `undefined`, `[...event]` and
   `event.includes(x)` each throw a `TypeError` (the message is the engine's), and a second
-  parameter is `undefined`. Read `selected` and `changed`. `onChange` is called for a user's
-  change only; `on("change")` listeners get a method's change too, with `changed: null`.
+  parameter is `undefined`. Read `selected` and `changed`. `onChange` hears the same changes
+  as `on("change")`, including `selectByValue(values, true)`, with `changed: null`.
+  `selectByValue(values)` and `clearSelection()` stay silent.
+- **A chip's config `on*` options** are the matching event's listener. A leftover
+  `onChange(selected, chip)` on a chip alone is called with one object: `selected` is
+  `{ selected, chip, value }` (so `selected` is always truthy, and the boolean is
+  `selected.selected`; deselecting a chip valued `"old"` passes
+  `{ selected: false, chip, value: "old" }`), and the second parameter is `undefined`.
+  A leftover `onClick(chip)` is called with `{ event, originalEvent, element }`:
+  `element` is the chip's root, and the value is not the chip (`focus` is `undefined`).
+  The set's `onChange` now hears `selectByValue(values, true)`. A chip in a set emits
+  its own `change` when it is clicked, and the item's `onChange` receives that payload.
+  A leftover `onChange(selected, chip)` on that item is called with one object, as on a
+  chip alone: `selected` is `{ selected, chip, value }` (measured on a filter chip valued
+  `"old"`: selecting passes `{ selected: true, chip, value: "old" }`, deselecting passes
+  `{ selected: false, chip, value: "old" }`), and the second parameter is `undefined`.
+  `setSelected` and `selectByValue` do not emit the chip's `change`. A single-select click
+  emits `change` on the clicked chip only; the chip it replaces is updated with
+  `setSelected`, which stays silent.
+- **A chip's `onClick` and `click` listeners run before the chip toggles**, alone or in a
+  set: `chip.isSelected()` inside them is the state before the click. A chip alone used to
+  toggle and emit `change` first. Read the new state in `onChange` or a `change` listener,
+  which follows.
+- **A chip's `change` is emitted only when the selection changed (FLO-550).** In a
+  `selectionRequired` set, a click on the last selected chip is refused: it used to emit
+  `change` on the chip and on the set, with the chip still selected, and call both `onChange`.
+  It now emits none, the item's `onSelect` is not called, and `<m-chips>` dispatches no
+  `change`; `click` and `onClick` still report the press.
+- **A chip's `remove` listeners in a set run before the set removes the chip.** The item's
+  `onRemove` and a `chip.on("remove")` listener find the chip still in `getChips()` and on the
+  page; the set then destroys it and emits its own `remove`. A listener added with `on` used
+  to run after the set had destroyed and unlisted the chip.
+- **The time picker's `isOpen` is a method, `isOpen()` (FLO-548).** A leftover
+  `if (picker.isOpen)` compiles in JavaScript and is always true: `picker.isOpen` is now a
+  function. Call it.
+- **A snackbar waiting behind another is `"queued"`, not `"visible"` (FLO-548).** Right after
+  `show()`, `snackbar.state === "visible"` is true only if nothing else was on screen; it was
+  true at once. Use `snackbar.isOpen()`, or listen to `open`, which is emitted together with
+  the state turning `"visible"`.
+- **A snackbar hidden while it is queued emits no `close` and no `dismiss` (FLO-548).** It
+  was never open. It used to emit both, and was then shown anyway at its turn, with
+  `state` `"hidden"` and no way to hide it (measured). It now leaves the queue.
+- **A docked date picker opened with `open()` from a click outside it stays open.** That
+  click used to count as a click outside and closed it in the same task (measured: `open`,
+  then `close`). The next click outside closes it.
 - **Chip-set `add` and `remove`** factory handlers receive `{ value, chip }` and
   `{ value, chip, chipValue }`, not the chip; `<m-chips>`'s `remove` detail `value` is the
   remaining selection, and the removed id is `chipValue`.
@@ -189,7 +258,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **Options whose argument was already the event's** now run first, before a listener added with
   `on()`: time picker `onChange`, `onInput`, `onOpen`, `onClose` and `onCancel`; navigation rail
   and navigation bar `onSelect`; drawer `onSelect`, `onOpen` and `onClose`; text field
-  `onTrailingClick`. Time picker `onChange` is also the same `{ value }` object `change` emits,
+  `onTrailingClick`; the chip set's `onChange`, and a chip's `onRemove` and `onTrailingClick`.
+  Time picker `onChange` is also the same `{ value }` object `change` emits,
   not a second one.
 - **An empty selection is `null`, not `""`,** in the select and the radios, factory and element:
   the `change` payload's `value`, and the radio factory's `getValue()`. A comparison with `""`
@@ -208,6 +278,29 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **The button group's `select(value)`** with a value no button carries clears the selection,
   with a warning in development and no event.
 - **`<m-button>`** dispatches `change` for a toggle button.
+- **A dialog's `open` listener added after calling `open()`** never runs: `open` is emitted
+  inside the call. `dialog.open(); dialog.on('open', build)` opens an empty dialog, with no
+  error. Add the listener before `open()`, or listen to `afteropen`.
+- **A dialog's `open` listener** runs before the surface is visible and before focus is in it:
+  one that measures the dialog or moves focus belongs on `afteropen`.
+- **An open dialog answers Escape as soon as `open()` returns,** except the key press that
+  opened it. It ignored Escape and the scrim for its first 10 ms.
+- **`dialog.close()` on a closed dialog and `dialog.open()` on an open one** emit nothing. Code
+  that counted on `close` or `afterclose` from a `close()` called "to be sure" no longer hears
+  them.
+- **A menu's `close` listener** runs inside `close()`, 50 ms earlier than it did: the menu is
+  still in the document and still has its visible class. One that read the DOM expecting the
+  menu gone must wait for the fade (350 ms). The same for a select's `close`, a split
+  button's `collapse` when the user dismisses its menu, and a FAB menu's `close` in its
+  `menu` presentation.
+- **`event.preventDefault()` in a menu's or a select's `open` or `close` listener, or in a
+  select's `change` listener,** throws a `TypeError` in JavaScript: the payload has no such
+  method any more. It never did anything there; remove the call.
+- **`menu.close(); menu.open()`** reopens the menu. The `open()` was ignored for the 50 ms
+  the close took, so the menu ended closed.
+- **`menu.isOpen()` right after `close()`** is false. Code that waited 50 ms for it no
+  longer needs to; code that relied on it still being true (two menus open at once for a
+  moment, a toggle read just after a dismissal) now sees the closed state.
 
 ### Changed (breaking)
 
@@ -216,6 +309,38 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   (material-color-utilities contrast 0.5 and 1.0; the values are unchanged) move to
   `mtrl/styles/contrast` and `mtrl/themes/<name>-contrast`. The full stylesheet `mtrl/styles`
   still includes them. Without the new import the attribute changes no colour and nothing warns.
+  Import `mtrl/styles/contrast` after `mtrl/styles/base`, as with `mtrl/styles/typography`:
+  the opt-in sheets share that cascade layer. The contrast colours are the same in either
+  order (an explicit level is more specific than the standard rule, and the preference rule
+  does not match once the attribute is set).
+- **Typography leaves `mtrl/styles/base` (FLO-539).** The base no longer carries the type
+  classes (`.mtrl-display-large` … `.mtrl-label-small`), the text utilities (`.mtrl-text-*`,
+  `.mtrl-font-*`, `.mtrl-truncate*`), mtrl's styles for `h1`–`h6` and `p`, or the
+  `--mtrl-sys-typescale-*` tokens, except the three the `body` rule reads
+  (`--mtrl-sys-typescale-body-medium-font`, `-font-size` and `-line-height`).
+  `import 'mtrl/styles/typography'` restores what left. The full stylesheet `mtrl/styles`
+  is unchanged. Migration: without the import, a `<div class="mtrl-headline-small">`
+  computed `font-size: 14px` (inherited from `body`; `24px` with the import), and
+  `font-size: var(--mtrl-sys-typescale-title-large-font-size)` computed the parent's `32px`
+  because the property is undefined and the declaration is invalid at computed-value time
+  (`22px` with the import). Body text keeps its font (`14px`, `Roboto, sans-serif`).
+- **Snackbar, time picker and date picker follow the overlays' one open and close rule
+  (FLO-548).** When `open()` or `close()` (the snackbar's `show()` or `hide()`) returns, the
+  state getter has changed and the event has been emitted; opening an open one and closing a
+  closed one do nothing and emit nothing; `isOpen()` is a method on every overlay.
+  - **Snackbar:** `state` is `"queued"` between `show()` and its turn on screen, then
+    `"visible"`, with `open` emitted at that moment; it said `"visible"` while waiting. New
+    `isOpen()`, true only while visible; `state` stays. `hide()` on a queued snackbar gives up
+    its turn and emits nothing. A queued snackbar dropped by a `queueBehavior: 'replace'`
+    snackbar or by `clearSnackbars()` is `"hidden"` and can be shown again; it used to stay
+    `"visible"` for good, and `show()` on it did nothing. After `destroy()` the state is
+    `"hidden"` (it was left as it was), and a queued snackbar that is destroyed is not shown
+    at its turn.
+  - **Time picker:** the `isOpen` property is the method `isOpen()`.
+  - **Date picker:** new `isOpen()`. The click that calls `open()` no longer closes a docked
+    picker: the event that opened an overlay never dismisses it.
+  - **The tooltip is outside the rule, by design:** `show()` and `hide()` wait for their
+    delays (300 and 100 ms unless called with `true`) and emit no event; read `isVisible()`.
 - **mtrl is ESM-only (FLO-358).** The CommonJS bundle (`dist/index.cjs`) and the root's `require`
   condition are gone; `main` is the ESM entry. Every subpath was already import-only, and with
   the internals off the root the bundle would have been a partial API. `require('mtrl')` no longer
@@ -360,7 +485,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   shape, `selected` keeps the selected chip values, and `changed` is the toggled
   chip's value. `on("change")` listeners get every change, with `changed: null`
   for one made by a method (`selectByValue(values, true)`); the config's
-  `onChange` is called for a user's change only. `<m-chips>` still emits
+  `onChange` hears those method changes too. `<m-chips>` still emits
   `change` with `{ value }` detail. Migration:
 
   ```ts
@@ -432,12 +557,110 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `setTrailingIcon(html, label)`), which makes it a button and emits `trailing`. The label is a
   factory option: `<m-textfield>` and the React, Vue, Svelte and Solid components have no label
   attribute or prop, so a trailing icon there is decorative.
+- **The dialog is open when `open()` returns, and closed when `close()` returns (FLO-548).**
+  The rule, for the dialog first and for every overlay by 1.0: when `open()` or `close()`
+  returns, `isOpen()` has changed and the event has been emitted (the cancellable `beforeopen`
+  or `beforeclose` first). The classes, the paint, the focus trap and the animation may follow.
+  A dialog created with `layer: "top"` and `<m-dialog>` already worked this way, and change
+  in two points only, marked "both layers" below; this is the factory dialog without `layer`, which emitted `open` and turned
+  `isOpen()` true 10 ms after the call. Migration: add every `open` listener before calling
+  `open()` (or pass it in the config's `on`), and move to `afteropen` what needs the dialog
+  visible or focus inside it.
+
+  ```ts
+  // 0.10: the listener was added in time, because `open` came 10 ms later
+  dialog.open();
+  dialog.on('open', build); // 1.0: never runs, so the dialog opens empty
+
+  // 1.0: add it before the call
+  dialog.on('open', build);
+  dialog.open();
+  ```
+
+  - **`open` is emitted inside `open()`.** A listener added after the call does not hear it:
+    add it before, or listen to `afteropen`. It runs before the surface is visible and before
+    focus is trapped; `afteropen` is the "visible, and focus is in" event.
+  - **`isOpen()` is the dialog's own state,** true on the line after `open()`. It no longer
+    reads the `--visible` class, which is still added 10 ms later so the surface has a state to
+    animate from.
+  - **`afteropen` and `afterclose` are unchanged in timing and are never emitted inside the
+    call,** even with `animationDuration: 0`: `afteropen` when the dialog is visible and focus
+    is in it, `afterclose` when it is removed. A listener added right after `open()` still
+    hears `afteropen`.
+  - **Repeat calls do nothing and emit nothing,** in both layers. `close()` on a closed dialog
+    emitted `beforeclose`, `close` and `afterclose` each time, and a second `open()` within
+    the 10 ms emitted `beforeopen` and `open` again.
+  - **The later call wins,** in both layers. `open()` then `close()` at once ends closed and the surface is
+    never shown (it was shown 10 ms later, on a dialog that had emitted `close`); `close()`
+    then `open()` at once ends open and stays in the document (the pending removal took it
+    out). The call that lost emits no `afteropen` or `afterclose`: a dialog closed before its
+    `afteropen` was due never emits it, and one opened again before its `afterclose` was due
+    emits no `afterclose`. Both used to arrive late, about a dialog in the other state, in
+    the top layer as well.
+  - **An open dialog can be dismissed as soon as `open()` returns:** Escape and a click on the
+    scrim close it from then, not 10 ms later. One exception, the same for every overlay: the
+    event that opened it never dismisses it. A dialog opened from an Escape `keydown` handler
+    stays open through that key press, and the next Escape closes it. This holds in both
+    layers: a `layer: "top"` dialog and `<m-dialog>` opened that way used to close at once,
+    on the `cancel` the browser sends for that same key press.
+  - **`destroy()` right after `open()`** leaves nothing behind (see Fixed).
+- **The menu is closed when `close()` returns (FLO-548).** The same rule as the dialog's, for
+  the menu in both layers and for the two components that hold one, the select and the split
+  button. `open()` already worked this way; `close()` set the state and emitted `close` on a
+  50 ms timer. Migration: move out of a `close` listener anything that needs the menu gone
+  from the document (it leaves 350 ms later), and drop `event.preventDefault()` from `open`
+  and `close` listeners and from the select's `change` listeners.
+
+  ```ts
+  menu.close();
+  menu.isOpen(); // 0.10: true for another 50 ms. 1.0: false
+  menu.open();   // 0.10: ignored, the menu ended closed. 1.0: it reopens
+  ```
+
+  - **`close` is emitted inside `close()`,** and `isOpen()` is false on the next line. The
+    listener runs while the menu is still in the document with its visible class: the class
+    and `aria-hidden` follow 50 ms later, the removal 300 ms after that, as before.
+  - **Repeat calls do nothing and emit nothing.** Two `close()` calls within 50 ms emitted
+    `close` twice outside the top layer.
+  - **The later call wins.** `close()` then `open()` at once reopens the menu, with one
+    `close` and one `open`; `open()` then `close()` at once ends closed and the surface
+    is never shown.
+  - **One menu at a time, in the call:** opening a menu closes the one that was open before
+    its own `open` is emitted. The other's `close` used to come 50 ms after.
+  - **An open menu can be dismissed as soon as `open()` returns:** a click outside and
+    Escape close it from then, not 20 ms later. The event that opened it never dismisses it:
+    a menu opened by code from a click or a key press on another element ignores that click
+    or key press, and the next one counts.
+  - **Select:** `close()`, Escape and a chosen option set `isOpen()` false, emit `close` and
+    set `aria-expanded="false"` in that call or event.
+  - **Split button:** when the user dismisses the menu, `isExpanded()` turns false and
+    `collapse` and `change` are emitted in that event, not 50 ms later; `collapse()` then
+    `expand()` at once ends expanded (the menu ignored the reopening and collapsed the
+    button again).
+  - **FAB menu, `menu` presentation:** `close()` sets `isOpen()` false and emits `close` in
+    the call. Its `open()` is unchanged here.
+  - **`MenuEvent` and `SelectEvent`,** the payloads of `open` and `close`, and
+    `SelectChangeEvent` lose `preventDefault` and `defaultPrevented`, in the types and on
+    the objects passed at run time: nothing read them, and none of these events can be
+    cancelled. A leftover call throws; it never did anything. The menu's `select` keeps
+    both: preventing it keeps a `closeOnSelect` menu open.
 - **A config `on*` option is the listener registered at creation.** It runs with the same
   argument, the same number of times, as a listener passed to `on(event)` at that point, and it
   runs before a listener added afterwards. Whether a method notifies is unchanged (a silent
-  `setValue`, `setActive`, `clear()` or button-group `select` stays silent). Chips are not part
-  of this change. The bottom app bar's `onVisibilityChange` and the top app bar's `onScroll`
-  have no matching event, so they stay callbacks and are not in the table.
+  `setValue`, `setActive`, `clear()` or button-group `select` stays silent). The bottom app bar's
+  `onVisibilityChange` and the top app bar's `onScroll` have no matching event, so they stay
+  callbacks and are not in the table. A chip's `onSelect`
+  has no matching event either, so it stays a callback. A chip option used to be called beside
+  the emit, with its own arguments. A chip set registers `onChange` before a handler supplied
+  in `on`, and before a listener added after `createChips`. A chip's `onChange` and `onClick`
+  are registered first: a chip's config has no `on` map. A chip in a set emits its own `change`
+  on a click, after the set has toggled it, and the item's `onChange` receives that payload
+  (`{ selected, chip, value }`). The calls on that click run in this order: the item's
+  `onClick`, the set's `onChange`, a set `change` listener added after `createChips`, the
+  item's `onSelect`, a chip `click` listener added after the chip was created, the item's
+  `onChange`, and a chip `change` listener added after the chip was created. `setSelected`
+  and `selectByValue` do not emit the chip's `change`. A single-select click emits it on the
+  clicked chip only.
 
   | Component | Option | Old argument | New argument |
   |---|---|---|---|
@@ -456,6 +679,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   | Drawer | `onOpen`, `onClose` | no argument | no argument |
   | Text field | `onTrailingClick` | the trailing payload | the same object |
   | Button group | `on.click`, `on.focus`, `on.blur`, `on.change` | accepted, never called | the listener's argument |
+  | Chips | `onChange` | `{ value, selected, changed }`, and only for a user's change | The same object as `on("change")`. The set's `onChange` now hears `selectByValue(values, true)`, with `changed: null`. `selectByValue(values)` and `clearSelection()` stay silent. |
+  | Chip | `onChange` (a chip alone) | `(selected, chip)` | `{ selected, chip, value }`, the `change` payload |
+  | Chip | `onChange` (a chip in a set) | `(selected, chip)`, and the chip did not emit `change` | `{ selected, chip, value }`, the chip's `change` payload. A click emits that `change`. `setSelected` and `selectByValue` do not. |
+  | Chip | `onClick` | the chip | `{ event, originalEvent, element }`, the `click` payload |
+  | Chip | `onRemove` | the chip | the chip |
+  | Chip | `onTrailingClick` | the chip | the chip |
+  | Chip | `onSelect` | the chip | the chip. No matching event. |
 
   ```ts
   createTimePicker({ onConfirm: (time) => { input.value = time; } });          // 0.10
@@ -481,6 +711,28 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   Search `onClear`'s `.length` is `undefined`; the query is `event.value`. Search
   `suggestion.text` is `undefined`; the text is `event.suggestion.text`. The navigation rail's
   expand and collapse templates were `"undefined"` when the option was called with no argument.
+
+  A leftover chip `onChange(selected, chip)` receives one object, measured on a filter chip
+  valued `"old"`:
+
+  | Call | `arguments.length` | First parameter | Second parameter |
+  |---|---|---|---|
+  | Selecting | 1 | `{ selected: true, chip, value: "old" }` | `undefined` |
+  | Deselecting | 1 | `{ selected: false, chip, value: "old" }` | `undefined` |
+
+  A leftover `onChange(selected, chip)` on a chip in a set gets the same object, measured
+  on a filter chip valued `"old"`: selecting passes `{ selected: true, chip, value: "old" }`
+  and deselecting passes `{ selected: false, chip, value: "old" }`, `arguments.length` is 1,
+  and the second parameter is `undefined`.
+
+  The object is always truthy, so a leftover `if (selected)` stays true when the chip is
+  deselected. The boolean is `selected.selected`. A leftover `onClick(chip)` receives one
+  argument, `{ event, originalEvent, element }`, where `element` is the chip's root; it is
+  not the chip component (`focus` is `undefined`), and a second parameter is `undefined`.
+  `onRemove` and `onTrailingClick` still receive the chip. `chips.off("change", onChange)`
+  removes the set's option. A handler that calls `selectByValue(x, true)` for one fixed
+  value runs twice — the change that was not that value, then the move onto it — and then
+  stops, because `selectByValue` emits only when the selection changed.
 
 ### Removed
 
@@ -602,11 +854,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Added
 
+- **`isOpen()` on the snackbar and the date picker (FLO-548)**, as on every other overlay.
 - **Split button `setItems(items)` and `getItems()` (FLO-543).** `setItems` replaces the menu's
   items and returns the split button; `getItems` returns them. A split button created without
   `items` has no menu and `getItems` returns `[]`: the first non-empty `setItems` creates the
   menu, which then works as one created with items (and opens at once if the split button is
-  expanded). `setItems([])` empties the menu and keeps it.
+  expanded). `setItems([])` empties the menu and keeps it. After `destroy()` it does nothing.
 - **The navigation bar (FLO-305).** `createNavigationBar` and `<m-navigation-bar>` (with
   `<m-navigation-bar-item>`), and the React, Vue, Svelte and Solid components: M3 Expressive's bar
   for compact and medium windows, three to five destinations, from Compose's `ShortNavigationBar`.
@@ -645,14 +898,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   button group (FLO-380); existing accessors remain. Button toggle `change`, card
   `expandedChanged`, list `keydown`, and interactive touch events now have their
   actual payload types, including both slider touch delivery shapes.
-- `mtrl/ssr`: `renderElement` renders elements as declarative shadow DOM on Node or Bun; server-only, with no runtime dependencies (FLO-363, FLO-364). It inlines the CSS by default, or links the stylesheets in the same order as the browser and the inline styles (without adding build-manifest dependencies), renders nested elements, and applies the shared HTML policy; each call defines only the host tags it meets, including nested authored and factory-generated elements, instead of recreating all 36 classes. Asynchronous FAB-menu and submenu configurations use the host-only fallback (FLO-370). The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup. The React, Svelte, Solid and Vue bridges render a host that carries ordinary HTML attributes (`popover`, `inputmode`, `enterkeyhint`, `itemprop`, `nonce`, `is`, and the rest of the host's HTML attributes): the framework emits those attributes on the host, and the shared renderer skips names outside its allowlist, including event-handler names and `srcdoc`, so they never enter the shadow markup. Calling `renderElement` directly rejects an unknown host attribute (FLO-418). Underneath are an internal detached element lifecycle, style registry seams, and a synchronous server DOM scope with inert scheduling and complete resource teardown. Worker and edge runtimes are unsupported in 1.0. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers) loads the browser stub: `renderElement` throws "mtrl/ssr is server-only", and importing `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` does nothing, so the page has no declarative roots and no error.
+- `mtrl/ssr`: `renderElement` renders elements as declarative shadow DOM on Node or Bun; server-only, with no runtime dependencies (FLO-363, FLO-364). `<m-toolbar>` renders a declarative shadow root like the other elements (FLO-387). Before upgrade, each toolbar item is its own tab stop; after upgrade, the toolbar is one. Carousel and FAB menu stay opted out. It inlines the CSS by default, or links the stylesheets in the same order as the browser and the inline styles (without adding build-manifest dependencies), renders nested elements, and applies the shared HTML policy; each call defines only the host tags it meets, including nested authored and factory-generated elements, instead of recreating all 36 classes. Asynchronous FAB-menu and submenu configurations use the host-only fallback (FLO-370). The identity HTML policy is not a sanitizer; configure a synchronous sanitizer for untrusted markup. The React, Svelte, Solid and Vue bridges render a host that carries ordinary HTML attributes (`popover`, `inputmode`, `enterkeyhint`, `itemprop`, `nonce`, `is`, and the rest of the host's HTML attributes): the framework emits those attributes on the host, and the shared renderer skips names outside its allowlist, including event-handler names and `srcdoc`, so they never enter the shadow markup. Calling `renderElement` directly rejects an unknown host attribute (FLO-418). Underneath are an internal detached element lifecycle, style registry seams, and a synchronous server DOM scope with inert scheduling and complete resource teardown. Worker and edge runtimes are unsupported in 1.0. A resolver that tries `workerd` or `worker` before `browser` (Cloudflare Workers) loads the browser stub: `renderElement` throws "mtrl/ssr is server-only", and importing `mtrl/ssr/react`, `mtrl/ssr/vue`, `mtrl/ssr/svelte` or `mtrl/ssr/solid` does nothing, so the page has no declarative roots and no error.
 - `mtrl/ssr/react`: an opt-in, server-only entry. Imported in the server bootstrap, it makes the React adapters emit styled declarative shadow roots during SSR (React 18 and 19), with no server code in the client bundle. Without it, React output is unchanged (FLO-372). A `Suspense` boundary inside a component contributes its fallback to the server-rendered shadow root: a button has no label slot with an empty fallback but has one with a text fallback; a boundary around a tab leaves the root without that tab with either fallback. Put the boundary outside the component when the server root needs resolved content. A child that suspends stays on the server: the static pass retries the host only when that render suspended, and the shadow root is built from the children once they can render (FLO-415). A child that throws is not retried: the page render reaches it, so the error is reported as it is without the bridge. When that separate render throws something other than a suspension, development logs one warning per host in the response, naming the element and the error; production logs nothing. Retries wait on a backoff (doubling to 250ms) and stop after 40 attempts, about eight seconds; past that the host has no shadow root and the page keeps streaming, so a slower child still arrives. The suspension is recognised from the throw site of whichever React build this process loaded, not from the error text, so a production build that minifies the message still retries. At the cap, development logs one warning naming the element; production logs nothing. When no stack frame can be read, development logs one warning that suspending children render without a server shadow root; production logs nothing. The server-rendered shadow root is built in a separate render, without the context of providers above the component. The page's own render (the light DOM) sees the provided value. Until upgrade, a child reading context with a default shows that default in the painted shadow root; a child requiring its context leaves this component without a declarative shadow root while the page still renders. Pass the resolved string as a prop or attribute, or accept client-rendered text until upgrade. A fix is planned for 1.1 (FLO-517). The Vue and Solid bridges see the provided value in both the shadow root and light DOM.
-- `mtrl/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Svelte output gains only the empty branch marker (FLO-375). Like React, its shadow root is built in a separate render without provider context; the page's light DOM sees the provided value. A child reading context with a default shows that default in the painted shadow root until upgrade. A child requiring context leaves that component without a declarative shadow root while the page still renders: the host falls back to light DOM, then upgrades normally in the browser. Development logs once per affected host in each response, naming the element and including the child render error; production logs nothing (FLO-525).
-- `mtrl/ssr/vue`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Vue component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Vue output is unchanged (FLO-373). A host's child may use `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`: the shadow bridge serializes those children once. A host whose `v-html` contains an unclosed `<template>` renders, and `mtrl/ssr/vue` imports the server renderer from `vue/server-renderer`.
-- `mtrl/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel, FAB menu and toolbar emit no template. Without the import, Solid output is unchanged (FLO-374). Async and streaming SSR finish when a component inside a host creates a resource under an outer `Suspense`: the shadow bridge reuses the page's serialized children, preserving its resource ownership and hydration keys without rendering children twice.
+- `mtrl/ssr/svelte`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Svelte component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Svelte output gains only the empty branch marker (FLO-375). Like React, its shadow root is built in a separate render without provider context; the page's light DOM sees the provided value. A child reading context with a default shows that default in the painted shadow root until upgrade. A child requiring context leaves that component without a declarative shadow root while the page still renders: the host falls back to light DOM, then upgrades normally in the browser. Development logs once per affected host in each response, naming the element and including the child render error; production logs nothing (FLO-525).
+- `mtrl/ssr/vue`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Vue component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Vue output is unchanged (FLO-373). A host's child may use `async setup()` under `Suspense`, including data created outside that child and `renderToWebStream`: the shadow bridge serializes those children once. A host whose `v-html` contains an unclosed `<template>` renders, and `mtrl/ssr/vue` imports the server renderer from `vue/server-renderer`.
+- `mtrl/ssr/solid`: an opt-in, server-only entry. Imported in the server bootstrap, it makes every generated Solid component emit a styled declarative shadow root during SSR, on the same `Symbol.for("mtrl.ssr")` bridge as React, with no server code in the client bundle. Carousel and FAB menu emit no template. Without the import, Solid output is unchanged (FLO-374). Async and streaming SSR finish when a component inside a host creates a resource under an outer `Suspense`: the shadow bridge reuses the page's serialized children, preserving its resource ownership and hydration keys without rendering children twice.
 - Per-element SSR opt-out (FLO-370): specs accept `ssr: false` or a synchronous host
-  predicate. Carousel, FAB menu and toolbar emit their host and light DOM without a
-  declarative root; menu and split-button do the same for nested submenus. Async
+  predicate. Carousel and FAB menu emit their host and light DOM without a
+  declarative root; menu and split-button do the same for nested submenus. `<m-toolbar>`
+  renders a declarative shadow root (FLO-387). Async
   button/card global defaults conservatively use this fallback for the whole render.
   Eligible light-DOM descendants still render their own roots. Pre-upgrade CSS keeps
   the host's box until browser upgrade, and these paths no longer throw. React SSR
@@ -687,6 +941,26 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A dialog destroyed right after `open()` no longer locks the page's scroll (FLO-548).** The
+  default-layer dialog shows its surface 10 ms after `open()`. `destroy()` in that window left
+  the timer running: it then set `overflow: hidden` on the body for a dialog that was gone,
+  with nothing left to undo it. `destroy()` now cancels what `open()` and
+  `close()` left pending, and removes the dialog's document listeners.
+- **Snackbar: a queued snackbar dropped from the queue can be shown again (FLO-548).** One
+  waiting behind another and then dropped by a `queueBehavior: 'replace'` snackbar or by
+  `clearSnackbars()` kept `state` `"visible"` without ever being shown, and `show()` on it
+  did nothing from then on. It is now hidden when dropped. Also on 0.10.x.
+- **Date picker: `open()` called from a click outside a docked picker opens it (FLO-548).**
+  The same click then reached the picker's outside-click listener and closed it at once. A
+  click in the task that called `open()` no longer closes it. Also on 0.10.x.
+- **Accessibility: scrolling from script honours reduced motion in the chips, the tabs and the
+  search (FLO-553).** The chip set's `scrollToChip`, the tabs' scroll buttons and the search's
+  arrow keys through the suggestions each asked for a smooth scroll explicitly, which overrides
+  the stylesheet, so they glided with the reduced-motion preference on. They now name no
+  behaviour: each scroller scrolls smoothly from its stylesheet (`scroll-behavior: smooth`,
+  new on the tabs' scroller and the suggestion list), and jumps at once under reduced motion.
+  A script of yours that scrolls the tabs' scroller or the suggestion list now scrolls it
+  smoothly too.
 - **Tooltip placement (FLO-535):** With motion enabled, a tooltip could settle 5% of its width off
   centre while animating in and be squeezed at the viewport edge. Placement now uses its full
   layout size; reduced-motion placement is unchanged.

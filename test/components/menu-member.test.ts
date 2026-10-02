@@ -67,13 +67,19 @@ test("setItems on a split button created without items creates its menu, which t
   const seen: string[] = [];
   split.on("select", event => { selected.push(event.value); });
   for (const name of ["expand", "collapse"] as const) split.on(name, () => { seen.push(name); });
-  split.expand();
+  // One menu is open at a time, and opening one closes the other in that call
+  // (FLO-548): the two are expanded in turn. They used to overlap for the
+  // 50ms a close took.
   made.expand();
+  await wait();
+  const madeControls = made.trailingElement.hasAttribute("aria-controls");
+  made.collapse();
+  split.expand();
   await wait();
   const menu = innerMenu(split)!;
   expect(menu.isOpen()).toBe(true);
   expect(split.trailingElement.getAttribute("aria-controls")).not.toBeNull();
-  expect(split.trailingElement.hasAttribute("aria-controls")).toBe(made.trailingElement.hasAttribute("aria-controls"));
+  expect(split.trailingElement.hasAttribute("aria-controls")).toBe(madeControls);
   expect([...menu.element.querySelectorAll<HTMLElement>("[data-id]")].map(item => item.dataset.id)).toEqual(["csv", "json"]);
   menu.element.querySelector<HTMLElement>('[data-id="json"]')!.click();
   await wait(250);
@@ -90,6 +96,15 @@ test("setItems on an expanded split button without a menu opens the menu it crea
   expect(split.isExpanded()).toBe(true);
   split.setItems([{ id: "csv", text: "CSV" }]);
   expect(innerMenu(split)!.isOpen()).toBe(true);
+});
+
+test("setItems after destroy() creates no menu", () => {
+  const split = mount(createSplitButton({ text: "Export" }));
+  split.destroy();
+  expect(split.setItems([{ id: "csv", text: "CSV" }])).toBe(split);
+  expect(innerMenu(split)).toBeUndefined();
+  expect(split.getItems()).toEqual([]);
+  expect(document.querySelector(".mtrl-menu")).toBeNull();
 });
 
 test("setItems([]) empties the menu and keeps it; on a split button without a menu it creates none", async () => {

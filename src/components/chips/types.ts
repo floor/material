@@ -27,22 +27,44 @@ export interface ChipConfig {
    * Delete. Input chips are always removable (m3.material.io chips): on its own the
    * chip then leaves the page; in a set, the set removes it and emits `remove`. It
    * used to be a request the owner had to act on, and without it there was no
-   * remove button. FLO-257.
+   * remove button. FLO-257. It and every `remove` listener run first, with the chip
+   * still in the set and on the page; the removal follows.
    */
-  onRemove?: (chip: ChipComponent) => void;
+  onRemove?: ChipEvents["remove"];
   removeLabel?: string;
   /**
    * Filter chips: gives the trailing icon its own button, which calls this (the
    * m3.material.io chips' trailing icon that "can be used to open a menu or remove
    * the chip"). The chip's own action is unaffected. FLO-259.
    */
-  onTrailingClick?: (chip: ChipComponent) => void;
+  onTrailingClick?: ChipEvents["trailing"];
   /** The trailing button's accessible name; "{label} options" for a menu, "Remove {label}" otherwise. */
   trailingLabel?: string;
   /** The trailing button opens a menu: aria-haspopup="menu", and a drop-down arrow unless trailingIcon is set. */
   trailingMenu?: boolean;
-  onClick?: (chip: ChipComponent) => void;
-  onChange?: (selected: boolean, chip: ChipComponent) => void;
+  /**
+   * Same payload as a `click` listener. It runs before the chip toggles, alone or
+   * in a set: `isSelected()` here is the state before the click. Read the new
+   * state in `onChange`, which follows when the selection changed.
+   */
+  onClick?: ChipEvents["click"];
+  /**
+   * Same payload as a `change` listener: `{ selected, chip, value }`.
+   * On its own, a click emits `change` before `click`. In a set, the set
+   * toggles the chip during `click`, and the chip then emits `change` once.
+   * That click runs, in order: the item's `onClick`, the set's `onChange`,
+   * a set `change` listener added after `createChips`, the item's `onSelect`,
+   * a chip `click` listener added after the chip was created, the item's
+   * `onChange`, and a chip `change` listener added after the chip was created.
+   * `setSelected` does not emit `change`, and neither does the set's
+   * `selectByValue`.
+   */
+  onChange?: ChipEvents["change"];
+  /**
+   * Called with the chip when the user toggles a selectable chip, not when a
+   * `selectionRequired` set refuses the click. No matching event: this is not
+   * an `on(event)` listener.
+   */
   onSelect?: (chip: ChipComponent) => void;
   class?: string;
   prefix?: string;
@@ -59,6 +81,8 @@ export interface ChipOptions extends ChipConfig {
   managedSelection?: boolean;
   /** Notify the owning set when a chip becomes selected. */
   onSelected?: (chip: ChipComponent) => void;
+  /** The owning set removes the chip, once its `remove` listeners have run. */
+  onRemoved?: (chip: ChipComponent) => void;
   /**
    * The chip is a cell of a chip set's grid (FLO-261): the root is a
    * `gridcell`, and a one-action chip's cell is its focus target.
@@ -168,19 +192,20 @@ export interface ChipsConfig {
 
   /**
    * Whether the set keeps at least one chip selected: deselecting the last selected
-   * chip is refused. Off by default, as in Material; single-select sets used to
+   * chip is refused, and a refused click emits no `change`, on the chip or on the set.
+   * Off by default, as in Material; single-select sets used to
    * enforce it without a way to opt out. FLO-257.
    * @default false
    */
   selectionRequired?: boolean;
 
   /**
-   * Callback function when a user changes the chip selection. It is called for
-   * a user's change only: a change made by a method (`selectByValue(values, true)`)
-   * goes to `on("change")` listeners, not to this callback. Listen to `change`
-   * for every change.
+   * Same payload as an `on("change")` listener. Registered before the `on`
+   * map and before a listener added after `createChips`.
+   * `selectByValue(values, true)` reaches it, with `changed: null`.
+   * `selectByValue(values)` and `clearSelection()` stay silent.
    */
-  onChange?: (event: ChipsChangeEvent) => void;
+  onChange?: ChipsEvents["change"];
 
   /**
    * Component prefix for class names
@@ -403,7 +428,8 @@ export interface ChipsComponent {
   getLabelPosition: () => string;
 
   /**
-   * Scrolls to a specific chip
+   * Scrolls to a specific chip. A scrollable set scrolls smoothly, from its
+   * stylesheet, and at once under reduced motion.
    * @param chipOrIndex - Chip instance or index to scroll to
    * @returns The chips instance for chaining
    */

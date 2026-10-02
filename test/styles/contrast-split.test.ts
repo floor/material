@@ -106,10 +106,11 @@ describe("explicit contrast levels are opt-in", () => {
     const css = sass.compileString('@use "main";', {
       loadPaths: ["src/styles"], style: "compressed", logger: sass.Logger.silent,
     }).css;
-    // Sass output of main.scss at ORIGIN_COMMIT, before the banner the build adds.
+    // `@use "main"` on origin/next 66444315, before the banner the build adds.
+    // The contrast split leaves this compile byte-equal to that next (project Sass 1.85.1).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("3d810c622fd1a56da8d9e2f1b1e5e9c4629f6994ca509bc4cce5c931baa0a6f5");
-    expect(css.length).toBe(529569);
+      .toBe("39d240798df8718bdb222998abdcaa96eb01583a504db5c15f5cd4d8f0510c56");
+    expect(css.length).toBe(529615);
   });
 
   test("today's sheets still resolve to the fixture", () => {

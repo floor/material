@@ -131,6 +131,10 @@ describe("dialog, layer: top", () => {
   test("Escape reaches it as cancel: it closes once, the browser's own close is refused", async () => {
     const { dialog, closes } = make();
     dialog.open();
+    // A later key press. A cancel in the task open() ran in is the one the
+    // browser sends for the key that opened the dialog, which never closes it
+    // (FLO-548, dialog/open-contract.test.ts).
+    await after(0);
     const event = escape(dialog.element);
     expect(event.defaultPrevented).toBe(true);
     expect(dialog.isOpen()).toBe(false);

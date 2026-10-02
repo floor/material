@@ -78,13 +78,17 @@ export const withController =
     });
   };
 
-  const handleSelection = (selectedChip: ChipComponent) => {
+  /** Applies a click's toggle to the set. True when the set refused it. */
+  const handleSelection = (selectedChip: ChipComponent): boolean | void => {
     if (selectedChip.isSelected()) selectSingle(selectedChip);
 
     // With selectionRequired, deselecting the last selected chip is refused, in either
     // mode. It used to be forced on every single-select set. FLO-257.
+    // Nothing changed, so nothing is emitted, here or on the chip, and no
+    // onSelect is called. FLO-550.
     if (config.selectionRequired && !selectedChip.isSelected() && getSelectedChips().length === 0) {
       selectedChip.setSelected(true);
+      return true;
     }
 
     // Get all currently selected chips and their values
@@ -94,14 +98,9 @@ export const withController =
     const selectedValues = selectedChips.map((chip) => chip.getValue());
     const changedValue = selectedChip ? selectedChip.getValue() : null;
 
-    // Call onChange callback if provided
-    const event = changeEvent(selectedValues, changedValue);
-    if (typeof config.onChange === "function") {
-      config.onChange(event);
-    }
-
-    // Dispatch change event to all registered handlers
-    dispatchEvent(CHIPS_EVENTS.CHANGE, event);
+    // onChange is registered with on("change") in chips.ts, so dispatch is the
+    // only call. It hears selectByValue(values, true) the same way.
+    dispatchEvent(CHIPS_EVENTS.CHANGE, changeEvent(selectedValues, changedValue));
   };
 
   // The set is an ARIA grid with one Tab stop (the m3.material.io chips' web roles,
@@ -179,7 +178,9 @@ export const withController =
       const chipElement = component.chipInstances[index].element;
       const container = component.chipContainer || component.element;
 
-      // Calculate scroll position to center the chip
+      // Calculate scroll position to center the chip. No `behavior`: the
+      // stylesheet scrolls a scrollable set smoothly, and the reduced-motion
+      // reset turns that off; an explicit "smooth" would override it (FLO-553).
       const containerRect = container.getBoundingClientRect();
       const chipRect = chipElement.getBoundingClientRect();
 
@@ -195,7 +196,6 @@ export const withController =
 
         container.scrollTo({
           top: Math.max(0, scrollTop),
-          behavior: "smooth",
         });
       } else {
         // For horizontal scroll
@@ -207,7 +207,6 @@ export const withController =
 
         container.scrollTo({
           left: Math.max(0, scrollLeft),
-          behavior: "smooth",
         });
       }
     }
@@ -249,10 +248,7 @@ export const withController =
       managedSelection: true,
       onSelected: selectSingle,
       cell: true,
-      onRemove: chipConfig.type === "input" ? chip => {
-        chipConfig.onRemove?.(chip);
-        removeChip(chip);
-      } : undefined,
+      onRemoved: removeChip,
     });
 
     // Get the container element to append to
@@ -274,9 +270,7 @@ export const withController =
       if (!chipInstance.isDisabled() && ["filter", "input"].includes(chipInstance.getType())) {
         chipInstance.toggleSelected();
 
-        handleSelection(chipInstance);
-        chipConfig.onChange?.(chipInstance.isSelected(), chipInstance);
-        chipConfig.onSelect?.(chipInstance);
+        if (!handleSelection(chipInstance)) chipConfig.onSelect?.(chipInstance);
 
         // Update focus tracking
         focusedChipIndex = component.chipInstances.indexOf(chipInstance);
@@ -477,7 +471,9 @@ export const withController =
       chip.destroy();
     });
     component.chipInstances.length = 0;
-    Object.keys(eventListeners).forEach(event => { eventListeners[event] = []; });
+    // Empty the arrays in place. Replacing them would leave a dispatch that is
+    // already walking the old array free to call listeners after destroy.
+    Object.keys(eventListeners).forEach(event => { eventListeners[event].length = 0; });
   });
 
   return {
