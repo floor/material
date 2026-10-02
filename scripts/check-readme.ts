@@ -9,8 +9,9 @@
  *
  * - every `typescript` and `tsx` block, and the module script of every `html`
  *   block, compiles under `--strict` against the package's own declarations;
- * - a block that follows `<!-- example: run -->` also runs, in Node with a JSDOM
- *   document: it must not throw, and what it appends to the page must arrive;
+ * - a fence marked `example: continues` compiles together with the one before it;
+ *   the fences marked `example: run` are run by readme-browser:check, in Chromium
+ *   (scripts/readme-blocks.ts has the marks);
  * - every `material/…` specifier, in a block or in inline code, resolves through
  *   the package's `exports` to a file the package ships, and every `dist/…` path
  *   named in inline code exists;
@@ -37,46 +38,12 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { mkdir, symlink, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
 
 import { createPackageFixture, run } from "./package-fixture";
+import { FILES, headingSlugs, parse, type Block } from "./readme-blocks";
 
-const FILES = ["README.md", "npm-readme.md"] as const;
 const REPOSITORY = "https://github.com/floor/material";
 const online = process.argv.includes("--online");
-
-interface Block { file: string; line: number; lang: string; code: string; run: boolean }
-interface Doc { file: string; text: string; blocks: Block[]; prose: string; spans: string[]; links: string[]; slugs: Set<string> }
-
-/** GitHub's heading anchor: lower case, punctuation dropped, spaces to hyphens. */
-const slug = (heading: string): string =>
-  heading.trim().toLowerCase().replace(/[^\p{L}\p{N} _-]/gu, "").replace(/ /g, "-");
-
-const headingSlugs = (text: string): Set<string> =>
-  new Set([...text.replace(/^```[\s\S]*?^```/gm, "").matchAll(/^#{1,6} (.+)$/gm)].map(match => slug(match[1])));
-
-const parse = async (file: string): Promise<Doc> => {
-  const text = await Bun.file(file).text();
-  const blocks: Block[] = [];
-  const lines = text.split("\n");
-  const proseLines: string[] = [];
-  for (let index = 0; index < lines.length; index++) {
-    const open = /^```(\w+)\s*$/.exec(lines[index]);
-    if (!open) { proseLines.push(lines[index]); continue; }
-    const start = index;
-    const code: string[] = [];
-    for (index++; index < lines.length && lines[index] !== "```"; index++) code.push(lines[index]);
-    assert(index < lines.length, `${file}:${start + 1}: the code block is not closed`);
-    blocks.push({ file, line: start + 1, lang: open[1], code: code.join("\n"), run: lines[start - 1] === "<!-- example: run -->" });
-  }
-  const prose = proseLines.join("\n");
-  return {
-    file, text, blocks, prose,
-    spans: [...prose.matchAll(/`([^`\n]+)`/g)].map(match => match[1]),
-    links: [...prose.matchAll(/\]\(([^)\s]+)\)/g)].map(match => match[1]),
-    slugs: headingSlugs(text),
-  };
-};
 
 const docs = await Promise.all(FILES.map(parse));
 const failures: string[] = [];
@@ -228,7 +195,10 @@ try {
   for (const doc of docs) {
     for (const block of doc.blocks) {
       const where = `${block.file}:${block.line}`;
-      if (["typescript", "ts", "tsx"].includes(block.lang)) scripts.push({ block, code: block.code, tsx: block.lang === "tsx" });
+      if (["typescript", "ts", "tsx"].includes(block.lang)) {
+        const previous = doc.blocks[doc.blocks.indexOf(block) - 1];
+        scripts.push({ block, code: block.continues ? `${previous.code}\n${block.code}` : block.code, tsx: block.lang === "tsx" });
+      }
       if (block.lang === "html") {
         collectTags(where, block.code);
         for (const match of block.code.matchAll(/<script type="module">([\s\S]*?)<\/script>/g)) scripts.push({ block, code: match[1], tsx: false });
@@ -273,11 +243,11 @@ try {
   for (const name of ["react", "react-dom", "@types/react", "@types/react-dom", "csstype", "vue", "svelte", "solid-js"]) {
     await symlink(resolve("node_modules", name), join(directory, "node_modules", name), "dir").catch(() => {});
   }
-  // What an example names and does not define: the reader's own sanitizer, and
+  // What an example imports and this repository does not install: the reader's sanitizer. And
   // Trusted Types, which the DOM library of the installed TypeScript (5.8) does
   // not declare (an app gets them from @types/trusted-types or a later library).
   await writeFile(join(directory, "ambient.d.ts"), `
-    declare const DOMPurify: { sanitize(html: string): string };
+    declare module 'dompurify' { const DOMPurify: { sanitize(html: string): string }; export default DOMPurify; }
     interface Window {
       trustedTypes: {
         createPolicy(name: string, rules: { createHTML(html: string): string }): { createHTML(html: string): { toString(): string } };
@@ -297,39 +267,7 @@ try {
   ], { cwd: directory, stdout: "pipe", stderr: "pipe" });
   if (tsc.exitCode !== 0) fail(`The examples do not compile against the packed package (example-<n>-<file>-<line>):\n${tsc.stdout}${tsc.stderr}`);
 
-  // Run the blocks marked to run. The stylesheet imports are the bundler's part.
-  const jsdom = pathToFileURL(resolve("node_modules/jsdom/lib/api.js")).href;
-  const runnable = scripts.filter(script => script.block.run);
-  assert(runnable.some(script => script.block.file === "npm-readme.md"), "npm-readme.md has no example marked <!-- example: run -->");
-  for (const [index, script] of runnable.entries()) {
-    const where = `${script.block.file}:${script.block.line}`;
-    const javascript = new Bun.Transpiler({ loader: "ts" }).transformSync(script.code.replace(/^import 'material\/styles[\w/-]*';\n/gm, ""));
-    const file = join(directory, `run-${index}.mjs`);
-    await writeFile(file, `
-      import { JSDOM } from ${JSON.stringify(jsdom)};
-      const dom = new JSDOM('<!doctype html><html><body></body></html>', { pretendToBeVisual: true });
-      for (const key of ['window', 'document', 'Node', 'Element', 'HTMLElement', 'HTMLInputElement', 'HTMLButtonElement', 'Event', 'CustomEvent', 'MutationObserver']) {
-        globalThis[key] = dom.window[key];
-      }
-      globalThis.requestAnimationFrame = dom.window.requestAnimationFrame.bind(dom.window);
-      globalThis.cancelAnimationFrame = dom.window.cancelAnimationFrame.bind(dom.window);
-      // What the example puts in the page, counted as it is appended: an example may
-      // also take it out again (destroy()).
-      let appended = 0;
-      const append = document.body.append.bind(document.body);
-      document.body.append = (...nodes) => { appended += nodes.length; append(...nodes); };
-      await import(${JSON.stringify(pathToFileURL(join(directory, `run-${index}-example.mjs`)).href)});
-      if (${JSON.stringify(script.code.includes("document.body.append"))} && !appended) throw new Error('the example put nothing in the page');
-      console.log(appended + ' elements appended to the page');
-      dom.window.close();
-    `);
-    await writeFile(join(directory, `run-${index}-example.mjs`), javascript);
-    const child = Bun.spawnSync(["node", file], { cwd: directory, stdout: "pipe", stderr: "pipe" });
-    if (child.exitCode !== 0) fail(`${where}: the example does not run:\n${child.stdout}${child.stderr}`);
-    else console.log(`${where}: ran, ${child.stdout.toString().trim().split("\n").pop()}`);
-  }
-
-  console.log(`${FILES.join(" and ")}: ${scripts.length} scripts compiled, ${runnable.length} run, ${specifiers.size} specifiers resolved, ` +
+  console.log(`${FILES.join(" and ")}: ${scripts.length} scripts compiled, ${specifiers.size} specifiers resolved, ` +
     `${tags.length} tags checked, ${docs.reduce((count, doc) => count + doc.links.length, 0)} links${online ? ` (${external.size} fetched)` : ""}`);
 } finally {
   await fixture.cleanup();

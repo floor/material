@@ -22,7 +22,7 @@ npm install material@next
 
 ## Quick start
 
-<!-- example: run -->
+<!-- example: run, shows "Save" -->
 ```typescript
 import 'material/styles';
 import { createButton, createTextField } from 'material';

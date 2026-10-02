@@ -21,7 +21,7 @@ const COMMANDS = [
   "react-types:check", "vue-types:check", "solid-types:check", "svelte-types:check",
   "react-types:floor", "vue-types:floor", "solid-types:floor", "svelte-types:floor",
   "consumer:check", "tabs:check", "slider:check", "drawer:check", "navigation-bar:check", "navigation-rail:check",
-  "core:check", "preupgrade:check", "tokens:check", "ssr:check",
+  "core:check", "readme-browser:check", "preupgrade:check", "tokens:check", "ssr:check",
 ];
 
 interface Step { run?: string; if?: string; "continue-on-error"?: unknown }

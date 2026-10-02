@@ -52,6 +52,7 @@ import 'material/styles/base';
 
 **Web components**: register them once, then write HTML.
 
+<!-- example: run, shows "Sign up" -->
 ```html
 <script type="module">
   import 'material/styles/base';
@@ -67,9 +68,13 @@ import 'material/styles/base';
 </form>
 ```
 
+The script imports bare specifiers and stylesheets, so the page goes through a bundler such as Vite. Opened straight from disk, the browser cannot resolve them and the form stays unstyled.
+
 **React** (Vue, Svelte and Solid work the same way, see [below](#react-vue-svelte-and-solid)):
 
+<!-- example: run, shows "Sign up" -->
 ```tsx
+import { createRoot } from 'react-dom/client';
 import 'material/styles/base';
 import { Button, Switch, TextField } from 'material/react';
 
@@ -82,11 +87,15 @@ export function Signup() {
     </form>
   );
 }
+
+createRoot(document.getElementById('root')!).render(<Signup />);
 ```
+
+`react` and `react-dom` are yours to install, and the page has a `<div id="root">`. In an app that already renders, leave out the import and the last line, and use `<Signup />` where you need it.
 
 **Vanilla**: each component is a function that returns a DOM element and a small API.
 
-<!-- example: run -->
+<!-- example: run, shows "Save" -->
 ```typescript
 import 'material/styles';
 import { createButton, createTextField } from 'material';
@@ -102,8 +111,12 @@ name.on('input', ({ value }: { value: string }) => {
 save.on('click', () => console.log('Saved', name.getValue()));
 
 document.body.append(name.element, save.element);
+```
 
-// When the view goes away, release listeners and DOM
+When the view goes away, release the listeners and the DOM:
+
+<!-- example: continues -->
+```typescript
 name.destroy();
 save.destroy();
 ```
@@ -168,7 +181,6 @@ The baseline theme applies by default and follows the system light or dark prefe
 <html data-theme="ocean" data-theme-mode="dark">
 ```
 
-<!-- example: run -->
 ```typescript
 document.documentElement.dataset.theme = 'ocean';
 document.documentElement.dataset.themeMode = 'dark';
@@ -323,8 +335,9 @@ material publishes ESM only, with type declarations, so bundlers drop unused exp
 
 Constants are not exported from the root; import them from the component's `constants` entry:
 
-<!-- example: run -->
+<!-- example: run, shows "Submit" -->
 ```typescript
+import 'material/styles';
 import { createButton } from 'material';
 import { BUTTON_VARIANTS, BUTTON_SIZES } from 'material/components/button/constants';
 
@@ -333,6 +346,8 @@ const button = createButton({
   variant: BUTTON_VARIANTS.FILLED,
   size: BUTTON_SIZES.L,
 });
+
+document.body.append(button.element);
 ```
 
 Some parts load on demand: a button's progress indicator, a card's action buttons, a menu's submenus and the FAB menu's desktop menu. Enable code splitting in your build to keep them out of the initial chunk.
@@ -341,7 +356,7 @@ Some parts load on demand: a button's progress indicator, a card's action button
 
 Components are composed from small features with `pipe`. The same building blocks are public:
 
-<!-- example: run -->
+<!-- example: run, shows "Saved" -->
 ```typescript
 import { pipe, createBase, withEvents, withElement } from 'material/core/compose';
 
@@ -373,9 +388,10 @@ The element gets the `mtrl-note` class, `withEvents` adds `on`, `off` and `emit`
 Icons and `content` options are markup strings, written with `innerHTML`. Every such write goes through one sink, so you can decide once how markup is treated. Set a policy when the strings can come from users or a CMS, or when your page enforces Trusted Types:
 
 ```typescript
+import DOMPurify from 'dompurify';
 import { configureHTML } from 'material';
 
-// A sanitizer
+// A sanitizer (DOMPurify here; any function from markup to markup)
 configureHTML({ sanitize: (html) => DOMPurify.sanitize(html) });
 
 // Trusted Types: under `require-trusted-types-for 'script'` a plain string
@@ -454,9 +470,6 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 
 `bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size.
 
-<!-- size-comparison: if the measured table against Material Web (@material/web) is shown, it goes
-     here, whole: the cases where material is larger beside the ones where it is smaller. No
-     comparative size claim anywhere else in this file. -->
 
 ## Browser support
 
