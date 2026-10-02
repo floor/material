@@ -2379,6 +2379,9 @@ try {
      <m-chips id="so" selection="single" aria-label="Sort">
        <m-chip value="new" selected>Newest</m-chip><m-chip value="old">Oldest</m-chip>
      </m-chips>
+     <m-chips id="ss" selection="single" aria-label="Single selection">
+       <m-chip value="first" selected>First</m-chip><m-chip value="last" selected>Last</m-chip>
+     </m-chips>
      <m-chips id="to" aria-label="Recipients" value="ada,bob">
        <m-chip variant="input" value="ada">Ada</m-chip><m-chip variant="input" value="bob">Bob</m-chip>
      </m-chips>
@@ -2394,6 +2397,11 @@ try {
     }
     const sort = page.getByRole("grid", { name: "Sort" });
     assert.equal(await sort.getByRole("gridcell", { name: "Newest", selected: true }).count(), 1);
+    const single = page.getByRole("grid", { name: "Single selection" });
+    assert.equal(await single.getByRole("gridcell", { name: "First", selected: false }).count(), 1);
+    assert.equal(await single.getByRole("gridcell", { name: "Last", selected: true }).count(), 1);
+    assert.equal(await page.evaluate(() => (document.getElementById("ss") as Chips).value), "last");
+    check("chips: the last selected declaration wins in a single-select set (FLO-518)");
     check("chips: a grid named by aria-label; chips declare the cells, value and selected select them");
 
     await page.evaluate(() => {
