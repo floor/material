@@ -10,7 +10,7 @@
 
 import { mkdir, writeFile } from "node:fs/promises";
 import { elements } from "../src/elements";
-import { declarationModules, elementModules } from "./element-modules";
+import { CANONICAL, declarationModules, elementModules } from "./element-modules";
 
 const pascal = (name: string): string =>
   name.replace(/(^|-)([a-z])/g, (_, __: string, c: string) => c.toUpperCase());
@@ -82,6 +82,10 @@ declare const ${P}: Component<SvelteProps<${P}Spec>, { readonly element: ${P}Ele
 export default ${P};
 `);
     exports.push(`export { default as ${P} } from "./${P}.svelte";`);
+    // The canonical name (FLO-383), the convention's one deprecated until 1.0
+    if (CANONICAL[name]) {
+      exports[exports.length - 1] = `export { default as ${CANONICAL[name]} } from "./${P}.svelte";\nexport {\n  /** @deprecated Use ${CANONICAL[name]}: M3 writes "text field" as two words. Removed in 1.0 (FLO-383). */\n  default as ${P},\n} from "./${P}.svelte";`;
+    }
   }
   for (const { name, module } of declarationModules) {
     const P = pascal(name);
