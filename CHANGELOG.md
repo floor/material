@@ -1061,6 +1061,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **Slider: the `components` bag is internal.** The slider's controller reads an older
+  `components` object as a fallback for its elements; nothing in the library fills it, the
+  public `SliderComponent` never had it, and it is now marked internal and outside the
+  public contract: it may go in any release. Use the slider's own API (`setValue()`,
+  `getValue()` and the rest of `SliderComponent`) and `slider.element`.
 - **Tabs: `tab.badge` may be `undefined` until the badge is shown.** The type always allowed
   it (`badge?: BadgeComponent`); it is now the documented contract, on `tab.badge` and on
   `getBadgeComponent()`: a tab creates its badge no later than when it shows it, so a later

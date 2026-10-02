@@ -9,6 +9,7 @@
 import type { ProgressComponent } from "../../src/components/progress";
 import type { ProgressComponent as RootProgressComponent } from "../../src/index";
 import type { TabComponent } from "../../src/components/tabs";
+import type { SliderComponent } from "../../src/components/slider";
 
 // --- Progress: how the indicator is drawn is not public -----------------------
 //
@@ -47,6 +48,19 @@ export const badgeGetterMayReturnUndefined: undefined extends ReturnType<TabComp
 export const tabKeepsItsBadgeMethods: "setBadge" | "getBadge" | "showBadge" | "hideBadge" extends keyof TabComponent
   ? true
   : false = true;
+
+// --- Slider: the `components` bag is internal ---------------------------------
+//
+// It is a fallback the controller reads on its internal state type. The
+// public component has no such member, and the internal types that name it
+// are not exports of the slider's entry.
+
+export const sliderHasNoComponentsBag: "components" extends keyof SliderComponent ? false : true = true;
+export const sliderKeepsItsApi: "element" | "setValue" | "getValue" extends keyof SliderComponent ? true : false = true;
+// @ts-expect-error SliderStateComponent is internal: not an export of the entry
+export type { SliderStateComponent } from "../../src/components/slider";
+// @ts-expect-error SliderElements is internal: not an export of the entry
+export type { SliderElements } from "../../src/components/slider";
 
 // The internal type is not an export of the component's entry point
 // @ts-expect-error ProgressInternals is internal: reachable from ./types, not from the entry
