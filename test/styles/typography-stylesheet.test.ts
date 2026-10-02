@@ -67,7 +67,7 @@ const typographySources = (await import("../../scripts/style-manifest") as { typ
 describe("mtrl/styles/typography", () => {
   test("the build emits dist/styles/typography.css in the base cascade layer", () => {
     const build = readFileSync("scripts/build-styles.ts", "utf8");
-    expect(build).toContain('emit("styles/typography", typographyStyles)');
+    expect(build).toContain('emit("styles/typography", typographyStyles, typographyDependencies)');
     // The rules lived in mtrl.base. A new layer name would change the order
     // every stylesheet declares, which is what keeps load order from mattering.
     expect(build).toContain('name === "typography" ? "base"');

@@ -156,7 +156,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   at `32px` computed `32px`: the custom property is undefined, so the declaration is invalid
   at computed-value time and `font-size` inherits (with the import the property is `22px`
   and the element computes `22px`). Body text keeps its font: `body` stayed `14px`
-  `Roboto, sans-serif`. `import 'mtrl/styles'` is unchanged.
+  `Roboto, sans-serif`. `import 'mtrl/styles'` is unchanged. The typography sheet has to
+  load after the base (both style `h1`–`h6` and `p`; loaded first, it loses its bottom
+  margins to the reset): `import 'mtrl/styles/typography'` imports the base first itself, and
+  a page using `<link>` tags puts `styles/typography.css` after `styles/base.css`.
 - **Tab and panel ids** change for any value with a character outside `[A-Za-z0-9_-]`
   (`a.b` → `tabx-g-a_2e_b`); a hand-written panel with the old id is never linked. Build ids with
   `tabIdFor` and `tabPanelIdFor`.
