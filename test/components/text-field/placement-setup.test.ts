@@ -1,8 +1,10 @@
 // test/components/text-field/placement-setup.test.ts
 //
 // FLO-378: a filled field with nothing to place installs no observers and no
-// resize listener, and schedules no measure. The first request for placement,
-// from any setter that can give it something to place, sets them up.
+// resize listener. The first request for placement, from any setter that can
+// give it something to place, sets them up. It does join the batch once, for
+// its direction: the --rtl class is all a plain field needs from the script,
+// and inside a shadow root nothing else can give it (FLO-562).
 import { describe, test, expect, beforeEach, afterAll } from "bun:test";
 import { JSDOM } from "jsdom";
 
@@ -49,7 +51,8 @@ const mount = (config: Record<string, unknown> = {}) => {
 };
 const reset = () => { observed = 0; resized = 0; timers = 0; };
 const setUp = () => ({ observed: observed > 0, resized: resized > 0, scheduled: timers > 0 });
-const NOTHING = { observed: false, resized: false, scheduled: false };
+// One measure in the shared batch, for the direction; nothing that stays
+const NOTHING = { observed: false, resized: false, scheduled: true };
 const EVERYTHING = { observed: true, resized: true, scheduled: true };
 
 // A measure another test scheduled runs first, so each test starts with no batch pending
@@ -61,7 +64,7 @@ beforeEach(async () => {
 afterAll(() => dom.window.close());
 
 describe("placement waits for something to place (FLO-378)", () => {
-  test("a filled field with no prefix, suffix or icon sets nothing up", () => {
+  test("a filled field with no prefix, suffix or icon sets up no observer and no listener: one measure, for its direction", () => {
     mount({ variant: "filled" });
     expect(setUp()).toEqual(NOTHING);
   });
@@ -104,10 +107,14 @@ describe("placement waits for something to place (FLO-378)", () => {
     expect({ observed, resized }).toEqual(first);
   });
 
-  test("destroyed before any request, a plain field leaves nothing to tear down, and a later request does nothing", () => {
+  test("destroyed before any request, a plain field leaves nothing to tear down, and a later request does nothing", async () => {
     const field = mount({ variant: "filled" });
+    field.element.style.direction = "rtl";
     field.destroy();
     field.updatePositions();
     expect(setUp()).toEqual(NOTHING);
+    // Its pending measure went with it
+    await new Promise((resolve) => realSetTimeout(resolve, 5));
+    expect(field.element.classList.contains("mtrl-text-field--rtl")).toBe(false);
   });
 });
