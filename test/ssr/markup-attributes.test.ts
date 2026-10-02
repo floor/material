@@ -167,7 +167,7 @@ test("server rendering docs name unsupported runtimes, Suspense fallbacks, and e
   }
   expect(readme).toContain("With `mtrl/ssr/react` and `mtrl/ssr/svelte`");
   expect(readme).toContain("a child requiring its context leaves that component without a declarative shadow root, while the page still renders");
-  expect(readme).toContain("Svelte logs a development-only warning naming the element");
+  expect(readme).toContain("React and Svelte each log a development-only warning naming the element");
   expect(unreleased).toContain("The React and Svelte bridges build the server-rendered shadow root without the context");
   expect(readme).not.toContain("The Solid, Vue and Svelte bridges are not affected.");
 });

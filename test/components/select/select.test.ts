@@ -82,3 +82,10 @@ describe('select', () => {
     }
   });
 });
+
+test('select.textfield is the same text field as select.textField, the 0.10 name kept through 1.x (FLO-383)', () => {
+  const select = createSelect({ label: 'Fruit', options });
+  expect(select.textField).toBeDefined();
+  expect(select.textfield).toBe(select.textField);
+  select.destroy();
+});
