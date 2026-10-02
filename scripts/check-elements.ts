@@ -5273,6 +5273,21 @@ try {
       assert.deepEqual({ submenus: await submenus(), focus: await focusedItem() }, { submenus: 0, focus: quoted }, `${where}: ArrowLeft returns to the quoted id`);
       check(`menu top layer ${where}: quoted item id survives ArrowRight and ArrowLeft`);
 
+      // ArrowUp on the opener opens the menu on its last item (FLO-524), for the
+      // factory, in a shadow root and in light DOM. The opener puts focus there
+      // 100ms after the key; the menu's own initial focus, 20ms later, used to move
+      // it to the first item. The fixed wait is the assertion: focus is still on the
+      // last item once every opening timer has run.
+      await mount("top");
+      await page.evaluate(() => ((window as unknown as TopWin).__tl.root.querySelector("#tl-opener") as HTMLElement).focus());
+      await page.keyboard.press("ArrowUp");
+      await wait(450);
+      assert.deepEqual({ open: (await state()).open, focus: await focusedItem() }, { open: true, focus: "paste" }, `${where}: ArrowUp on the opener opens on the last item, and focus stays there`);
+      await page.keyboard.press("Escape");
+      await wait(450);
+      assert.equal((await state()).open, false, `${where}: Escape closes the menu opened with ArrowUp`);
+      check(`menu top layer ${where}: ArrowUp on the opener opens it on the last item`);
+
       await page.evaluate(() => (window as unknown as TopWin).__tl.menu.destroy());
     }
   }
@@ -5641,6 +5656,21 @@ try {
     assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
     assert.equal(await focused(), "mb");
     check("menu: Enter on the anchor focuses the first item; Escape closes once and returns focus");
+
+    // ArrowUp on the anchor opens the menu on its last item (FLO-524). The anchor puts
+    // focus there 100ms after the key, and the menu's own initial focus, which runs
+    // 20ms later, used to move it to the first item. The fixed wait is the assertion:
+    // focus is still on the last item once every opening timer has run.
+    await page.focus("#mb");
+    await page.keyboard.press("ArrowUp");
+    await focusOn("PasteCtrl+V");
+    await settle();
+    assert.equal(await focused(), "PasteCtrl+V", "opened with ArrowUp, the last item has focus, and keeps it");
+    await page.keyboard.press("Escape");
+    await settle();
+    assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
+    assert.equal(await focused(), "mb");
+    check("menu: ArrowUp on the anchor opens it on the last item");
 
     await page.click("#mb");
     await settle();
