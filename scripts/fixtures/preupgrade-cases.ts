@@ -40,6 +40,13 @@ export const cases: PreupgradeCase[] = [
   c("button", "icon", `<m-button icon="${ICON}">Save</m-button>`),
   c("button", "size=m icon", `<m-button size="m" icon="${ICON}">Save</m-button>`),
   c("button", "variant=tonal", `<m-button variant="tonal">Save</m-button>`),
+  // A text button with a leading icon keeps its box at every size on upgrade.
+  c("button", "variant=text icon", `<m-button variant="text" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=xs icon", `<m-button variant="text" size="xs" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=s icon", `<m-button variant="text" size="s" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=m icon", `<m-button variant="text" size="m" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=l icon", `<m-button variant="text" size="l" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=xl icon", `<m-button variant="text" size="xl" icon="${ICON}">Save</m-button>`),
   c("switch", "default", `<m-switch>Wi-Fi</m-switch>`),
   c("switch", "supporting-text", `<m-switch supporting-text="Saves power">Wi-Fi</m-switch>`),
   c("switch", "checked", `<m-switch checked>Wi-Fi</m-switch>`),
@@ -211,12 +218,16 @@ for (const dir of ["ltr", "rtl"]) {
   }
   for (const element of ["button", "text-field"]) {
     const row = cases.find(row => row.element === element && row.variant === "default")!;
+    const button = element === "button";
+    const reason = "Button host grows at 24px/2: floor/material#42.";
+    const knownMoves: KnownMove[] = button ? ["#inline", "#block"].map(sibling => ({
+      sibling, axis: "y" as const, value: 8, reason,
+    })) : [];
+    if (button) knownMoves.push({ subject: true, value: 8, reason });
     cases.push({ ...row, variant: `${dir}; 24/2`,
       html: `<div style="display:flex">${row.html.replace(`<m-${element}`, `<m-${element} id="subject" dir="${dir}"`)}</div>`,
       host: "#subject", width: 850, style: "font-size:24px;line-height:2",
-      knownMoves: element === "text-field" ? [] : ["#inline", "#block"].map(sibling => ({ sibling, axis: "y" as const,
-        value: 8,
-        reason: "Button host grows at 24px/2: floor/material#42." })) });
+      knownMoves });
   }
 }
 
