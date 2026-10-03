@@ -11321,6 +11321,71 @@ try {
     check("side sheet and dialog: the close button's target reaches at least 4 px past the 40 px button on all four sides, ltr and rtl");
   }
 
+  // ---------------------------------------------------------------- the side-sheet close under a page reset
+  // Round 2 (#55): the close button got its `position` only from the state
+  // layer's zero-specificity `:where()` rule, which a page rule like
+  // `button { position: static }` (0,0,1) outranks. The button then went
+  // static: the layer (`inset: 0`) covered the nearest positioned ancestor —
+  // the whole sheet panel — and the 48 px target centred on that ancestor.
+  // The button now carries its own `position: relative`, so both stay on it.
+  await page.addStyleTag({ content: "button { position: static }" });
+  await fresh(page, `<div id="reset-ltr" dir="ltr"></div><div id="reset-rtl" dir="rtl"></div>`);
+  {
+    const measured = await page.evaluate(async () => {
+      type Close = { element: HTMLElement; open: () => void; close: () => void; destroy: () => void };
+      const w = window as unknown as Window & { mtrl: { createSideSheet: (config: object) => Close } };
+      const failures: string[] = [];
+      const measured: string[] = [];
+      const round = (value: number): string => value.toFixed(2);
+      for (const dir of ["ltr", "rtl"] as const) {
+        const wrap = document.getElementById(`reset-${dir}`) as HTMLElement;
+        const sheet = w.mtrl.createSideSheet({ title: "Data tools", variant: "standard", content: "<p>Data tools</p>", width: 360, container: wrap });
+        sheet.open();
+        await new Promise((r) => setTimeout(r, 700));
+        const button = sheet.element.querySelector(".mtrl-side-sheet__close") as HTMLElement;
+        const box = button.getBoundingClientRect();
+        const position = getComputedStyle(button).position;
+        measured.push(`side sheet ${dir}: close button ${round(box.width)} x ${round(box.height)} at position ${position}`);
+        if (position === "static") failures.push(`side sheet ${dir}: the close button is static under a page 'button { position: static }'`);
+        const layer = getComputedStyle(button, "::before");
+        measured.push(`side sheet ${dir}: layer ${layer.width} x ${layer.height} at position ${layer.position}`);
+        if (Math.abs(parseFloat(layer.width) - box.width) > 0.5 || Math.abs(parseFloat(layer.height) - box.height) > 0.5) {
+          failures.push(`side sheet ${dir}: the layer is ${layer.width} x ${layer.height}, not the button's own ${round(box.width)} x ${round(box.height)}`);
+        }
+        const reaches = (x: number, y: number): boolean => {
+          const el = document.elementFromPoint(x, y);
+          return !!el && (el === button || button.contains(el));
+        };
+        const cx = (box.left + box.right) / 2;
+        const cy = (box.top + box.bottom) / 2;
+        for (const side of ["left", "right", "top", "bottom"] as const) {
+          const at = (d: number): [number, number] =>
+            side === "left" ? [box.left - d, cy] : side === "right" ? [box.right + d, cy] : side === "top" ? [cx, box.top - d] : [cx, box.bottom + d];
+          const [x3, y3] = at(3);
+          if (!reaches(x3, y3)) failures.push(`side sheet ${dir}: the hit 3 px past the ${side} edge does not reach the button`);
+          // As in the case above: a 48 box centred on the 40 px button changes
+          // the hit exactly 4 px out; a target that escaped to the ancestor
+          // changes it at the button's own edge instead.
+          let change: number | null = null;
+          for (let d = 1; d <= 64; d++) {
+            const [x, y] = at(d);
+            if (!reaches(x, y)) { change = d; break; }
+          }
+          if (change !== null && change < 4) failures.push(`side sheet ${dir}: the target's hit changes ${change} px past the ${side} edge, under the 4 px a 48 box needs`);
+          measured.push(`side sheet ${dir}: target hit changes ${change === null ? "> 64 px" : `${change} px`} past the ${side} edge`);
+        }
+        sheet.close();
+        sheet.destroy();
+        sheet.element.remove();
+      }
+      return { failures, measured };
+    });
+    for (const line of measured.measured) console.log(`  ${line}`);
+    for (const line of measured.failures) console.log(`  FAIL ${line}`);
+    assert.deepEqual(measured.failures, []);
+    check("side sheet: under a page 'button { position: static }', the close button keeps its own position, layer and 48 px target, ltr and rtl");
+  }
+
   assert.deepEqual(errors, [], "no page errors");
   check("no page errors");
 } finally {

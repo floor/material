@@ -130,8 +130,8 @@ describe("explicit contrast levels are opt-in", () => {
     // outranks it and a positioned host keeps its position
     // (styles/abstract/_mixins.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("f19efc2cd7b74179dd7fddc78959b754a12f7d9d7441cd2553a7cf5f97764d14");
-    expect(css.length).toBe(527222);
+      .toBe("117d3bcf8b57043df1bc420c69fc67b9bbcfd5553744a759d005519f0387ee8a");
+    expect(css.length).toBe(527240);
   });
 
   test("today's sheets still resolve to the fixture", () => {
