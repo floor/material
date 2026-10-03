@@ -88,6 +88,12 @@ $component: "#{base.$prefix}-side-sheet";
 
     // 16dp on the icon side, per the specs' start padding with an icon
     &__close {
+        // The button is the layer's and the 48px target's containing block. That
+        // cannot come from the state layer's `:where()` rule alone: it adds no
+        // specificity, so a page reset like `button { position: static }` would
+        // win, and the layer and the target would anchor to the sheet's
+        // container instead.
+        position: relative;
         flex: 0 0 auto;
         display: inline-flex;
         align-items: center;
@@ -111,8 +117,8 @@ $component: "#{base.$prefix}-side-sheet";
 
         // FLO-579: the 40px button carries a 48px target, the icon button's own
         // mechanism (its --xs/--s ::after): the box reaches 4px past each edge.
-        // The state layer above already positions the button, so the box anchors
-        // to it without a second declaration.
+        // The `position: relative` above is the button's own, so the box anchors
+        // to the button whatever the page does to buttons.
         // m3.material.io, Density: "The default target size should be at least
         // 48x48 CSS pixels".
         &::after {

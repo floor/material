@@ -76,7 +76,7 @@ describe("the component subpaths' exports (FLO-381)", () => {
       if (!existsSync(file)) return [];
       return [...readFileSync(file, "utf8").matchAll(/^export type ([A-Z][A-Za-z]*Variant)\b/gm)].map((m) => [component, m[1]!] as const);
     }));
-    expect(declared.length).toBe(21);
+    expect(declared.length).toBe(22);
     expect(declared.filter(([component, name]) => !now[component]?.some((e) => e.name === name)).map(([c, n]) => `${c}:${n}`)).toEqual([]);
     expect(declared.filter(([, name]) => !root.has(name)).map(([, n]) => `root:${n}`)).toEqual([]);
   }, 60_000);

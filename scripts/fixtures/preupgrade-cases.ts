@@ -121,6 +121,18 @@ export const cases: PreupgradeCase[] = [
   c("text-field", "density=compact", `<m-text-field density="compact" label="Name"></m-text-field>`),
   c("text-field", "outlined compact value", `<m-text-field variant="outlined" density="compact" label="Name" value="Ada"></m-text-field>`),
   c("text-field", "width set by the page", `<m-text-field label="Name" style="width:300px"></m-text-field>`),
+  // A password paints no value (public issue #53): its box is the empty
+  // password field's, so nothing moves when the masked input arrives.
+  c("text-field", "type=password", `<m-text-field label="Password" type="password"></m-text-field>`),
+  c("text-field", "type=password value", `<m-text-field label="Password" type="password" value="hunter2"></m-text-field>`),
+  c("text-field", "type=PASSWORD value", `<m-text-field label="Password" type="PASSWORD" value="hunter2"></m-text-field>`),
+  c("text-field", "type=Password value", `<m-text-field label="Password" type="Password" value="hunter2"></m-text-field>`),
+  // A hidden field paints no value either, and takes no space at all — before
+  // upgrade (this rule) or after (the upgraded host's own rule) — so the token
+  // cannot leak and nothing moves at upgrade.
+  c("text-field", "type=hidden", `<m-text-field type="hidden"></m-text-field>`),
+  c("text-field", "type=hidden value", `<m-text-field type="hidden" value="synthetic-token"></m-text-field>`),
+  c("text-field", "type=HIDDEN value", `<m-text-field type="HIDDEN" value="synthetic-token"></m-text-field>`),
   // FLO-299: without a label the text is centred, in both densities
   c("text-field", "no label value", `<m-text-field aria-label="Name" value="Ada"></m-text-field>`),
   c("text-field", "no label compact value", `<m-text-field density="compact" aria-label="Name" value="Ada"></m-text-field>`),
@@ -228,6 +240,43 @@ for (const dir of ["ltr", "rtl"]) {
       html: `<div style="display:flex">${row.html.replace(`<m-${element}`, `<m-${element} id="subject" dir="${dir}"`)}</div>`,
       host: "#subject", width: 850, style: "font-size:24px;line-height:2",
       knownMoves });
+  }
+}
+
+// The default text group keeps its baseline and inherited line box. Keep
+// formatted markup too: whitespace between items must not add inline width.
+const buttonGroup = cases.find(row => row.element === "button-group" && row.variant === "default")!;
+for (const dir of ["ltr", "rtl"]) {
+  // Keep xs no worse than main while its size reservation remains in #49.
+  // Main moves the inline neighbour up 2.703125px and the block up 8px.
+  // The same main baseline also shifts the inline neighbour on x with the
+  // platform font: 0.0625px here, 0.75px on Linux. The pin value is their
+  // midpoint, ±0.40625, and the band is ±0.375px, so both readings pass, a
+  // reading that has gone fails, and one extra pixel fails.
+  const reason = "Extra-small button group size reservation: floor/material#49 (main baseline).";
+  const width = "Extra-small button group width follows the platform font: floor/material#49 (main baseline).";
+  const inlineX = dir === "ltr" ? -0.40625 : 0.40625;
+  cases.push({
+    ...buttonGroup, variant: `size=xs; ${dir}; default`,
+    html: buttonGroup.html.replace("<m-button-group ", '<m-button-group size="xs" '),
+    width: 850, style: `direction:${dir}`,
+    knownMoves: [
+      { sibling: "#inline", axis: "x", value: inlineX, tolerance: 0.375, reason: width },
+      { sibling: "#inline", axis: "y", value: -2.703125, reason },
+      { sibling: "#block", axis: "y", value: -8, reason },
+    ],
+  });
+  for (const typography of ["default", "24/2"]) {
+    for (const formatted of [false, true]) {
+      const html = formatted
+        ? buttonGroup.html.replaceAll("><m-button-group-item", ">\n  <m-button-group-item").replace("</m-button-group>", "\n</m-button-group>")
+        : buttonGroup.html;
+      cases.push({
+        ...buttonGroup, variant: `${dir}; ${typography}; ${formatted ? "formatted" : "compact"}`,
+        html, style: `direction:${dir};${typography === "default" ? "" : "font-size:24px;line-height:2"}`,
+        strictBox: true,
+      });
+    }
   }
 }
 
