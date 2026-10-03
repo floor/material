@@ -77,4 +77,11 @@ $containers: (
   &[icon][size='s'] {
     padding-inline-start: v.button('padding-icon');
   }
+
+  // Match the text button's leading-icon insets at its small sizes.
+  &[variant='text'][icon]:not([size]),
+  &[variant='text'][icon][size='xs'],
+  &[variant='text'][icon][size='s'] {
+    padding-inline: v.button('padding-horizontal-small') v.button('padding-s');
+  }
 }

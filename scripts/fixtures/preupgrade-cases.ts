@@ -29,6 +29,13 @@ export const cases: PreupgradeCase[] = [
   c("button", "icon", `<m-button icon="${ICON}">Save</m-button>`),
   c("button", "size=m icon", `<m-button size="m" icon="${ICON}">Save</m-button>`),
   c("button", "variant=tonal", `<m-button variant="tonal">Save</m-button>`),
+  // A text button with a leading icon keeps its box at every size on upgrade.
+  c("button", "variant=text icon", `<m-button variant="text" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=xs icon", `<m-button variant="text" size="xs" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=s icon", `<m-button variant="text" size="s" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=m icon", `<m-button variant="text" size="m" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=l icon", `<m-button variant="text" size="l" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=xl icon", `<m-button variant="text" size="xl" icon="${ICON}">Save</m-button>`),
   c("switch", "default", `<m-switch>Wi-Fi</m-switch>`),
   c("switch", "supporting-text", `<m-switch supporting-text="Saves power">Wi-Fi</m-switch>`),
   c("switch", "checked", `<m-switch checked>Wi-Fi</m-switch>`),
