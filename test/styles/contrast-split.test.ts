@@ -126,9 +126,12 @@ describe("explicit contrast levels are opt-in", () => {
     // that the list does not declare, so they inherit, with keyboard focus on
     // the row action, and the container rounded by the same outer property
     // (styles/components/_list.scss).
+    // The state layer's position sits in `:where()`, so a corner FAB's fixed
+    // outranks it and a positioned host keeps its position
+    // (styles/abstract/_mixins.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("eb8919f3d6b2fbd26089acb58a4aae44a382b23bd40163aa6141877cbd4d6d5f");
-    expect(css.length).toBe(526446);
+      .toBe("f19efc2cd7b74179dd7fddc78959b754a12f7d9d7441cd2553a7cf5f97764d14");
+    expect(css.length).toBe(527222);
   });
 
   test("today's sheets still resolve to the fixture", () => {

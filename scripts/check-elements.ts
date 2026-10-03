@@ -1156,6 +1156,93 @@ try {
     check("extended fab: renders as the factory does with the global stylesheet");
   }
 
+  // ---------------------------------------------------------------- fab corners
+  // A FAB in a corner keeps that corner in every state. The state layer sets
+  // `position: relative` on its host; written inside a state rule that is
+  // (0,2,0), so it outranked the corner class (0,1,0) and the button left its
+  // corner for the flow while hovered, focused or pressed. Both components,
+  // element and factory, four corners, left-to-right and right-to-left.
+  const corners = ["top-left", "top-right", "bottom-left", "bottom-right"] as const;
+  const fabState = (id: string): Promise<{ position: string; box: number[] }> =>
+    page.evaluate((id) => {
+      const host = document.getElementById(id) as HTMLElement;
+      const el = (host.shadowRoot?.querySelector("button") as HTMLElement | null) ?? host;
+      const r = el.getBoundingClientRect();
+      return { position: getComputedStyle(el).position, box: [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)] };
+    }, id);
+  const deepFocus = (): Promise<{ id: string | null; focusVisible: boolean } | null> =>
+    page.evaluate(() => {
+      let el: Element | null = document.activeElement;
+      while (el?.shadowRoot?.activeElement) el = el.shadowRoot.activeElement;
+      if (!el || el === document.body) return null;
+      const root = el.getRootNode();
+      const host = (root instanceof ShadowRoot ? root.host : el) as HTMLElement;
+      return { id: host.id || null, focusVisible: el.matches(":focus-visible") };
+    });
+  const focusByTab = async (id: string): Promise<boolean> => {
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    for (let press = 0; press < 8; press++) {
+      await page.keyboard.press("Tab");
+      const active = await deepFocus();
+      if (active?.id === id) return active.focusVisible;
+    }
+    return false;
+  };
+  const settle = (): Promise<unknown> => page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve(null))));
+  for (const dir of ["ltr", "rtl"] as const) {
+    for (const [kind, tag] of [["fab", "m-fab"], ["extended-fab", "m-extended-fab"]] as const) {
+      const label = (corner: string): string => (kind === "fab" ? `Fab ${corner}` : `Ext ${corner}`);
+      for (const form of ["element", "factory"] as const) {
+        const ids = corners.map((corner) => `${kind}-${form}-${corner}`);
+        const markup = form === "element"
+          ? corners.map((corner, index) => kind === "fab"
+              ? `<${tag} id="${ids[index]}" position="${corner}" aria-label="${label(corner)}" icon='${ICON}'></${tag}>`
+              : `<${tag} id="${ids[index]}" position="${corner}" icon='${ICON}'>${label(corner)}</${tag}>`
+            ).join("")
+          : `<section id="factory"></section>`;
+        await fresh(page, `<div dir="${dir}">${markup}</div>`);
+        if (form === "factory") {
+          await page.evaluate(({ kind, corners, icon }) => {
+            const w = window as unknown as Win & {
+              mtrl: { createFab: (config: object) => { element: HTMLElement }; createExtendedFab: (config: object) => { element: HTMLElement } };
+            };
+            for (const corner of corners) {
+              const made = kind === "fab"
+                ? w.mtrl.createFab({ position: corner, icon, ariaLabel: `Fab ${corner}` })
+                : w.mtrl.createExtendedFab({ position: corner, icon, text: `Ext ${corner}` });
+              made.element.id = `${kind}-factory-${corner}`;
+              document.getElementById("factory")?.append(made.element);
+            }
+          }, { kind, corners: [...corners], icon: ICON });
+          await settle();
+        }
+        for (const [index, corner] of corners.entries()) {
+          const id = ids[index]!;
+          const rest = await fabState(id);
+          assert.equal(rest.position, "fixed", `${id}: the corner class is not fixed at rest`);
+          const [left, top, width, height] = rest.box;
+          const centre = { x: left + width / 2, y: top + height / 2 };
+          await page.mouse.move(centre.x, centre.y);
+          await settle();
+          const hovered = await fabState(id);
+          assert.deepEqual(hovered, rest, `${id} left its corner while hovered: ${JSON.stringify(hovered)}`);
+          await page.mouse.move(450, 350);
+          assert.equal(await focusByTab(id), true, `${id}: Tab does not focus it with :focus-visible`);
+          const focused = await fabState(id);
+          assert.deepEqual(focused, rest, `${id} left its corner while focused: ${JSON.stringify(focused)}`);
+          await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+          await page.mouse.move(centre.x, centre.y);
+          await page.mouse.down();
+          const pressed = await fabState(id);
+          await page.mouse.up();
+          assert.deepEqual(pressed, rest, `${id} left its corner while pressed: ${JSON.stringify(pressed)}`);
+          await page.mouse.move(450, 350);
+        }
+        check(`${kind} (${form}, ${dir}): every corner keeps its position and box at rest, hovered, focused and pressed`);
+      }
+    }
+  }
+
   // ---------------------------------------------------------------- checkbox
   await fresh(
     page,

@@ -1433,6 +1433,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - SSR security reparsing runs in the Chromium CI job while unit tests remain browser-free;
   SSR parity and benchmark tooling load the source renderer and source CSS registry (FLO-363).
 - Source SSR reads the element CSS registry without resolving built package exports; source tests register real Sass output without mocking the CSS import (FLO-363).
+- **A FAB in a corner keeps that corner in every state (#54).** The state layer's mixin set
+  `position: relative` on its host. Written beside the state selector, that is `(0,2,0)`, so
+  a corner FAB's `:hover` outranked its corner class's `position: fixed` `(0,1,0)`: computed
+  `position` was `fixed` at rest and `relative` while hovered, focused or pressed, which took
+  the button out of its corner and into the page's flow. The mixin now writes the declaration
+  in `:where()`, which adds no specificity: any other position wins — the corner classes', or
+  the position a page gives its own fixed, absolute or sticky host — while a static host still
+  gets the position the layer's `::before` needs. FAB and extended FAB, factory and element,
+  four corners, left-to-right and right-to-left, the same at rest, hovered, focused and pressed.
 
 `material` 3.0.0 is MIT; `material` 1.x was GPL-3.
 
