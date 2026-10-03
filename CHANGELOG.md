@@ -1000,11 +1000,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `material/components/list/constants` and `material/components/list`; an unknown value is the
   default. `<m-list variant="segmented">` is the attribute, reflected by the `variant` property,
   and the React, Vue, Svelte and Solid components take the same `variant` prop. The list's root
-  carries `mtrl-list--standard` or `mtrl-list--segmented`. Two new custom properties for a
-  segmented list: `--mtrl-list-segmented-gap` (2 px, the space between rows) and
-  `--mtrl-list-item-container-color` (the unselected row's colour, `surface-container`). Like
-  the four shape properties, the list reads them and declares none, so set them on the list,
-  on any ancestor, or on the `<m-list>` element.
+  carries `mtrl-list--standard` or `mtrl-list--segmented`. Two new custom properties:
+  `--mtrl-list-segmented-gap` (2 px, the space between a segmented list's rows) and
+  `--mtrl-list-item-container-color`, the unselected row's colour in both variants (`surface`
+  by default in standard, `surface-container` in segmented); set it to `transparent` for rows
+  without their own colour. Like the four shape properties, the list reads them and declares
+  none, so set them on the list, on any ancestor, or on the `<m-list>` element.
 - **`isOpen()` on the snackbar and the date picker (FLO-548)**, as on every other overlay.
 - **Split button `setItems(items)` and `getItems()` (FLO-543).** `setItems` replaces the menu's
   items and returns the split button; `getItems` returns them. A split button created without
@@ -1082,7 +1083,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   beside it take their outer corners. A selected row is 16 px on every corner whatever its
   place in the list. The four shape properties (`--mtrl-list-item-shape`,
   `--mtrl-list-item-shape-outer`, `--mtrl-list-item-shape-hover`,
-  `--mtrl-list-item-shape-active`) apply to a segmented list; a standard list reads none.
+  `--mtrl-list-item-shape-active`) apply to a segmented list; a standard list does not read them.
   **The rounded list container of 3.0.0-next.1 is gone**, in both variants: the list has no
   background and no radius of its own, so `--mtrl-list-item-shape-outer` rounds rows only, and
   a list given a height scrolls in a square box.

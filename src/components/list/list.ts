@@ -19,16 +19,17 @@ import type { ListComponent, ListConfig, ListItem } from "./types";
  * expressive list: each row paints its own container colour and shape, with
  * a gap between rows; the list itself has no background and no radius.
  *
- * A segmented list reads six custom properties, named as the button's
+ * A segmented list reads five custom properties, named as the button's
  * `--mtrl-button-shape` and `--mtrl-button-shape-pressed`:
  * `--mtrl-list-item-shape` (4px at rest), `--mtrl-list-item-shape-outer`
  * (16px, the outer corners of the first and the last row),
  * `--mtrl-list-item-shape-hover` (12px), `--mtrl-list-item-shape-active`
- * (16px focused, pressed or selected), `--mtrl-list-segmented-gap` (2px
- * between rows) and `--mtrl-list-item-container-color` (the unselected
- * row's colour, `surface-container`). The list reads them and does not
- * declare them, so set them on the list, on any ancestor, or on the
- * `<m-list>` element. A standard list reads none of them.
+ * (16px focused, pressed or selected) and `--mtrl-list-segmented-gap` (2px
+ * between rows). The row colour is `--mtrl-list-item-container-color` in
+ * both variants (surface by default in standard, surface-container in
+ * segmented); set it to `transparent` for rows without their own colour.
+ * The list reads these and does not declare them, so set them on the list,
+ * on any ancestor, or on the `<m-list>` element.
  *
  * @param config - Configuration options for the list
  * @returns List component instance

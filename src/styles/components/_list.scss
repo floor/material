@@ -10,7 +10,8 @@
 // (`--<prefix>-button-shape`, `--<prefix>-button-shape-pressed`,
 // `--<prefix>-button-shape-selected`): the row at rest, the outer corners of
 // the first and the last row, the hovered row, the active row (focused,
-// pressed, selected), the gap between rows and the row's colour. The rules
+// pressed, selected) and the gap between rows. The row's colour,
+// `--<prefix>-list-item-container-color`, is read in both variants. The rules
 // read them and do not declare them, so a value on the list, on any
 // ancestor, or on the `<m-list>` element inherits.
 @use "../abstract/base" as base;
@@ -35,7 +36,9 @@ $component: "#{base.$prefix}-list";
     min-width: 0;
     min-height: 56px;
     padding: 8px 16px;
-    background: t.color("surface");
+    // The row's colour, in both variants: surface here, surface-container on a
+    // segmented row. `transparent` leaves a row without a colour of its own.
+    background: var(--#{base.$prefix}-list-item-container-color, t.color("surface"));
     transform: translateY(var(--#{base.$prefix}-list-item-offset));
     &--two-line { min-height: 72px; }
     &--three-line { min-height: 88px; padding-block: 12px; align-items: flex-start; }

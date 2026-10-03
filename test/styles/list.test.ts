@@ -48,6 +48,10 @@ describe('list stylesheet: standard', () => {
     // The action and its ::before follow the row: `inherit`, which is 0 on a square row.
     expect(values.filter((value) => value !== 'inherit')).toEqual([]);
   });
+  test('a row paints surface, or --mtrl-list-item-container-color', () => {
+    expect(declared('.mtrl-list__item', 'background'))
+      .toBe('var(--mtrl-list-item-container-color, var(--mtrl-sys-color-surface))');
+  });
   test('no gap between rows', () => {
     expect(declared('.mtrl-list__content', 'gap')).toBeUndefined();
   });

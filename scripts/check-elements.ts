@@ -6358,6 +6358,37 @@ try {
       }
     }
 
+    // The row's colour is --mtrl-list-item-container-color in both variants, and
+    // inherits: `transparent` on a wrapper leaves the unselected rows unpainted.
+    for (const variant of ["standard", "segmented"] as const) {
+      for (const kind of ["element", "factory"] as const) {
+        await fresh(page, `<div id="tint" style="--mtrl-list-item-container-color:transparent">${markup("ltr", variant)}</div>`);
+        if (kind === "factory") {
+          await page.evaluate((variant) => {
+            const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+            document.getElementById("factory")?.append(w.mtrl.createList({
+              variant, ariaLabel: "Trio", trackSelection: true,
+              items: [{ id: "a", headline: "First" }, { id: "b", headline: "Middle" }, { id: "c", headline: "Last" }],
+            }).element);
+            document.getElementById("elements")?.remove();
+          }, variant);
+        }
+        await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))));
+        await park();
+        const clear = (await look("Trio")).rows.map((row) => row.background);
+        assert.deepEqual(clear, ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)"], `${variant} ${kind}: transparent rows`);
+        await button("Trio", "Middle").click();
+        await park();
+        await blur();
+        const picked = (await look("Trio")).rows.map((row) => row.background);
+        assert.deepEqual(picked, ["rgba(0, 0, 0, 0)", await role("secondary-container"), "rgba(0, 0, 0, 0)"], `${variant} ${kind}: the selected row keeps its colour`);
+        await page.evaluate(() => document.getElementById("tint")?.style.setProperty("--mtrl-list-item-container-color", "rgb(1, 2, 3)"));
+        const tinted = (await look("Trio")).rows.map((row) => row.background);
+        assert.deepEqual(tinted, ["rgb(1, 2, 3)", await role("secondary-container"), "rgb(1, 2, 3)"], `${variant} ${kind}: a colour on a wrapper`);
+        check(`list: ${variant} ${kind}, --mtrl-list-item-container-color set to transparent on a wrapper paints no row background; the selected row keeps secondary-container`);
+      }
+    }
+
     // The attribute and the property reflect each other; a change recreates the
     // list with the variant's class; an unknown value is the default.
     await fresh(page, `<m-list id="v" aria-label="Reflect"><m-list-item value="a">Alpha</m-list-item><m-list-item value="b">Bravo</m-list-item></m-list>`);
