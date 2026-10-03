@@ -136,9 +136,11 @@ describe("explicit contrast levels are opt-in", () => {
     // The outlined field's open notch stays unpainted in forced colours,
     // from the script's class and the input's own state.
     // The menu's submenu arrow also mirrors inside a shadow root.
+    // A search field's own trailing icon hides the browser's clear button
+    // (styles/components/_text-field.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("877882ed728907c60914191858e167a422128fcbea652157ddfc59a6ac0c06aa");
-    expect(css.length).toBe(528739);
+      .toBe("edb11560074008dd9c00b39320b4010fb86b722391baaa07dd00fbcb8b607dc1");
+    expect(css.length).toBe(528858);
   });
 
   test("today's sheets still resolve to the fixture", () => {
