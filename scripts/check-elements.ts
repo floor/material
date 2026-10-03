@@ -5657,6 +5657,117 @@ try {
         check(`list: ${where}, the four shape properties at 0 square every state`);
       }
     }
+
+    // The four are read, not declared, so they inherit: :root, a wrapper, the
+    // <m-list> host and ::part(list). A list with nothing set keeps 4 / 16 / 12 / 16.
+    const PROPS = ["--mtrl-list-item-shape", "--mtrl-list-item-shape-outer", "--mtrl-list-item-shape-hover", "--mtrl-list-item-shape-active"];
+    const inheritMarkup = (dir: string): string => `<div id="wrap" dir="${dir}">
+      <m-list aria-label="Inherit element ${dir}">
+        <m-list-item value="1">One</m-list-item>
+        <m-list-item value="2">Two</m-list-item>
+        <m-list-item value="3">Three</m-list-item>
+      </m-list>
+    </div>`;
+    const containerOf = (listName: string): Promise<string> => page.evaluate((listName) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`) as HTMLElement | null;
+      const root = (list?.classList.contains("mtrl-list") ? list : list?.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement | null;
+      if (!root) throw new Error(`no list root for ${listName}`);
+      const style = getComputedStyle(root);
+      return [style.borderTopLeftRadius, style.borderTopRightRadius, style.borderBottomRightRadius, style.borderBottomLeftRadius].join(" ");
+    }, listName);
+    const setInherited = (place: "root" | "wrap" | "host" | "part", listName: string): Promise<void> => page.evaluate(({ place, listName, props }) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`) as HTMLElement | null;
+      const target = place === "root" ? document.documentElement
+        : place === "wrap" ? document.getElementById("wrap")
+        : place === "host" ? list
+        : (list?.classList.contains("mtrl-list") ? list : list?.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement | null;
+      if (!target) throw new Error(`no ${place} for ${listName}`);
+      for (const name of props) target.style.setProperty(name, "0");
+    }, { place, listName, props: PROPS });
+    const clearRoot = (): Promise<void> => page.evaluate((props) => {
+      for (const name of props) document.documentElement.style.removeProperty(name);
+    }, PROPS);
+    const expectUnset = async (where: string, listName: string, failures: string[]): Promise<void> => {
+      await park();
+      matches(where, await readRows(listName), { One: "16px 16px 4px 4px", Two: "4px 4px 4px 4px", Three: "4px 4px 16px 16px" }, failures);
+      const block = await containerOf(listName);
+      if (block !== R16) failures.push(`${where} container ${block} != ${R16}`);
+      await named(listName, "One").hover();
+      matches(where, await readRows(listName), { One: R12 }, failures);
+      await park();
+      await focusNamed(listName, "Two");
+      matches(where, await readRows(listName), { Two: R16 }, failures);
+      const box = await named(listName, "Three").boundingBox();
+      if (!box) throw new Error(`no box for ${listName} / Three`);
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      matches(where, await readRows(listName), { Three: R16 }, failures);
+      await page.mouse.up();
+      await named(listName, "One").click();
+      matches(where, await readRows(listName), { One: R16 }, failures);
+    };
+    const expectSquare = async (where: string, listName: string, failures: string[]): Promise<void> => {
+      const square = { One: ZERO, Two: ZERO, Three: ZERO };
+      await park();
+      matches(where, await readRows(listName), square, failures);
+      const block = await containerOf(listName);
+      if (block !== ZERO) failures.push(`${where} container ${block} != ${ZERO}`);
+      await named(listName, "One").hover();
+      matches(where, await readRows(listName), square, failures);
+      await park();
+      await focusNamed(listName, "Two");
+      matches(where, await readRows(listName), square, failures);
+      const box = await named(listName, "Two").boundingBox();
+      if (!box) throw new Error(`no box for ${listName} / Two`);
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      matches(where, await readRows(listName), square, failures);
+      await page.mouse.up();
+      await named(listName, "One").click();
+      matches(where, await readRows(listName), square, failures);
+      await named(listName, "Three").click();
+      matches(where, await readRows(listName), square, failures);
+    };
+
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const kind of ["element", "factory"] as const) {
+        const where = `${kind} ${dir}`;
+        const listName = `Inherit ${kind} ${dir}`;
+        const places: Array<"unset" | "root" | "wrap" | "host" | "part"> = kind === "element"
+          ? ["unset", "root", "wrap", "host", "part"]
+          : ["unset", "root", "wrap"];
+        for (const place of places) {
+          await fresh(page, inheritMarkup(dir));
+          if (kind === "factory") {
+            await page.evaluate((dir) => {
+              const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+              const wrap = document.getElementById("wrap") as HTMLElement;
+              wrap.querySelector("m-list")?.remove();
+              wrap.append(w.mtrl.createList({
+                ariaLabel: `Inherit factory ${dir}`,
+                trackSelection: true,
+                items: [
+                  { id: "1", headline: "One" },
+                  { id: "2", headline: "Two" },
+                  { id: "3", headline: "Three" },
+                ],
+              }).element);
+            }, dir);
+            await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+          }
+          if (place !== "unset") await setInherited(place, listName);
+          const failures: string[] = [];
+          if (place === "unset") await expectUnset(where, listName, failures);
+          else await expectSquare(`${where} ${place}`, listName, failures);
+          if (place === "root") await clearRoot();
+          const label = place === "unset"
+            ? "the four properties stay 4, 16, 12 and 16 when unset"
+            : `the four properties set to 0 on ${place} square every state`;
+          assert.deepEqual(failures, [], `${where}: ${label}`);
+          check(`list: ${where}, ${label}`);
+        }
+      }
+    }
   }
 
   // The container uses the rows' outer property. The focus ring stays whole.

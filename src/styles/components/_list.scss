@@ -5,9 +5,10 @@
 // (`--<prefix>-button-shape`, `--<prefix>-button-shape-pressed`,
 // `--<prefix>-button-shape-selected`): the row at rest, the list's outer
 // corners, the hovered row, and the active row (focused, pressed, selected).
-// The same outer property rounds the list's own container. Set the four to 0
-// on `.mtrl-list` for square rows and a square container. On `<m-list>` that
-// element is `::part(list)`.
+// The rules read them and do not declare them, so a value on the list, on
+// any ancestor, or on the `<m-list>` element inherits. The same outer
+// property rounds the list's own container. Set the four to 0 for square
+// rows and a square container.
 @use "../abstract/base" as base;
 @use "../abstract/mixins" as m;
 @use "../abstract/theme" as t;
@@ -16,10 +17,6 @@
 $component: "#{base.$prefix}-list";
 .#{$component} {
   --#{base.$prefix}-list-item-offset: 0px;
-  --#{base.$prefix}-list-item-shape: #{v.shape('extra-small')};
-  --#{base.$prefix}-list-item-shape-outer: #{v.shape('large')};
-  --#{base.$prefix}-list-item-shape-hover: #{v.shape('medium')};
-  --#{base.$prefix}-list-item-shape-active: #{v.shape('large')};
   position: relative;
   overflow: auto;
   background: t.color("surface");
