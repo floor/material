@@ -18,6 +18,16 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ### Fixed
 
+- **A menu in a shadow root mirrors its submenu arrow under `dir="rtl"`.**
+  The arrow, the submenu item's padding and the menu's transform origin followed an ancestor
+  `dir`. That selector does not cross a shadow boundary, so `<m-menu>` kept the arrow on the
+  right. The same declarations now also match `mtrl-menu--rtl`, which the menu sets from the
+  computed direction.
+- **In right-to-left, a top-layer menu wider than its field now aligns to the field's start edge
+  (its right edge), mirroring left-to-right.**
+  Under a field narrower than the menu's 112px minimum, placement kept the field's left edge in
+  both directions. Right-to-left, a menu wider than the field now meets the field's right edge.
+  A menu as wide as the field still meets both edges, and a submenu still opens on its own side.
 - **A slider reserves its row before upgrade at every size, with and without a label.** The
   pre-upgrade stylesheet gave every `<m-slider>` the 48px row of the unlabelled default size,
   but a horizontal slider is taller once its script runs. With a `label` it is 76px at XS and
