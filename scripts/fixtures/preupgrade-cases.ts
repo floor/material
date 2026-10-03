@@ -232,3 +232,21 @@ for (const dir of ["ltr", "rtl"]) {
       knownMoves });
   }
 }
+
+// The default text group keeps its baseline and inherited line box. Keep
+// formatted markup too: whitespace between items must not add inline width.
+const buttonGroup = cases.find(row => row.element === "button-group" && row.variant === "default")!;
+for (const dir of ["ltr", "rtl"]) {
+  for (const typography of ["default", "24/2"]) {
+    for (const formatted of [false, true]) {
+      const html = formatted
+        ? buttonGroup.html.replaceAll("><m-button-group-item", ">\n  <m-button-group-item").replace("</m-button-group>", "\n</m-button-group>")
+        : buttonGroup.html;
+      cases.push({
+        ...buttonGroup, variant: `${dir}; ${typography}; ${formatted ? "formatted" : "compact"}`,
+        html, style: `direction:${dir};${typography === "default" ? "" : "font-size:24px;line-height:2"}`,
+        strictBox: true,
+      });
+    }
+  }
+}

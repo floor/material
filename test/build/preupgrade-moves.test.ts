@@ -2,7 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { markOf, validateKnownMoves } from "../../scripts/preupgrade-moves";
 
 const row = (inlineY = 1.296875, blockX = 0, inlineX = 0) => ({
-  name: "button-group", score: 0.0001,
+  name: "pinned fixture", score: 0.0001,
+  knownMoves: [{ sibling: "#inline", axis: "y" as const, value: 1.296875, reason: "Synthetic baseline defect." }],
   moves: [{ dx: inlineX, dy: inlineY }, { dx: blockX, dy: 0 }],
 });
 
@@ -29,7 +30,7 @@ describe("preupgrade sibling exceptions", () => {
   test("a disappeared defect requires removing the exception", () => {
     expect(markOf(row(0), true).mark).toBe("FAIL");
   });
-  for (const filter of [[], ["button-group"]]) {
+  for (const filter of [[], ["pinned fixture"]]) {
     test(`oversized known movement fails with filter ${JSON.stringify(filter)}`, () => {
       const r = row(4.296875);
       expect(markOf(r, true).mark).toBe("FAIL");
@@ -42,12 +43,16 @@ describe("preupgrade sibling exceptions", () => {
   test("a filtered run need not contain excluded rows", () => {
     expect(() => validateKnownMoves([], ["switch"])).not.toThrow();
   });
-  test("a full run rejects a stale row name", () => {
-    expect(() => validateKnownMoves([], [])).toThrow();
+  test("a full run has no remaining global exceptions", () => {
+    expect(() => validateKnownMoves([], [])).not.toThrow();
+  });
+  test("the button group no longer has a baseline exception", () => {
+    expect(markOf({ ...row(), name: "button-group", knownMoves: undefined }, true).mark).toBe("FAIL");
+    expect(markOf({ ...row(0), name: "button-group", knownMoves: undefined }, true).mark).toBe("ok");
   });
   test("ordinary movements use the same exact half-pixel boundary", () => {
-    expect(markOf({ ...row(.5), name: "switch" }, true).mark).toBe("ok");
-    expect(markOf({ ...row(.515625), name: "switch" }, true).mark).toBe("FAIL");
+    expect(markOf({ ...row(.5), name: "switch", knownMoves: undefined }, true).mark).toBe("ok");
+    expect(markOf({ ...row(.515625), name: "switch", knownMoves: undefined }, true).mark).toBe("FAIL");
   });
   test("negative expected moves keep their sign and tolerance", () => {
     const knownMoves = [{ sibling: "#inline", axis: "y" as const, value: -7, reason: "button baseline" }];
