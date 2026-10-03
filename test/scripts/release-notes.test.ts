@@ -98,6 +98,22 @@ test("the real CHANGELOG has a section for the package's version", async () => {
   expect(changelogSection(changelog, pkg.version).length).toBeGreaterThan(0);
 });
 
+test("3.0.0 includes every prerelease entry exactly once by its bold opening sentence", async () => {
+  const changelog = await Bun.file(new URL("../../CHANGELOG.md", import.meta.url)).text();
+  const openings = (section: string): string[] =>
+    [...section.matchAll(/^[ \t]*- \*\*([\s\S]*?)\*\*/gm)].map(match => match[1].replace(/\s+/g, " "));
+  const stable = openings(changelogSection(changelog, "3.0.0"));
+  const entries = ["3.0.0-next.0", "3.0.0-next.1"].flatMap(version =>
+    openings(changelogSection(changelog, version)).map(opening => ({ version, opening })),
+  );
+  expect(entries.length).toBeGreaterThan(0);
+  const missingOrRepeated = entries.flatMap(({ version, opening }) => {
+    const count = stable.filter(candidate => candidate === opening).length;
+    return count === 1 ? [] : [{ version, opening, count }];
+  });
+  expect(missingOrRepeated).toEqual([]);
+});
+
 describe("release body size", () => {
   const fixture = Bun.file(new URL("../fixtures/release-notes-large.md", import.meta.url));
   const legacyFooter = (version: string): string =>
