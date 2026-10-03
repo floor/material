@@ -2,6 +2,12 @@
 
 Material Design 3 components for the web: as web components, as React, Vue, Svelte and Solid components, and as plain JavaScript. Written in TypeScript, with zero dependencies.
 
+**Documentation, live playgrounds and examples: [md3.io](https://md3.io)**
+
+[![npm version](https://img.shields.io/npm/v/material.svg)](https://www.npmjs.com/package/material)
+[![CI](https://github.com/floor/material/actions/workflows/ci.yml/badge.svg)](https://github.com/floor/material/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/material.svg)](https://github.com/floor/material/blob/main/LICENSE)
+
 ```html
 <form>
   <m-text-field name="email" type="email" label="Email" required></m-text-field>

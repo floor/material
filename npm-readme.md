@@ -2,6 +2,12 @@
 
 Material Design 3 components for the web: as web components, as React, Vue, Svelte and Solid components, and as plain JavaScript. Written in TypeScript, with zero dependencies.
 
+**Documentation, live playgrounds and examples: [md3.io](https://md3.io)**
+
+[![npm version](https://img.shields.io/npm/v/material.svg)](https://www.npmjs.com/package/material)
+[![CI](https://github.com/floor/material/actions/workflows/ci.yml/badge.svg)](https://github.com/floor/material/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/material.svg)](https://github.com/floor/material/blob/main/LICENSE)
+
 - **Material 3 Expressive.** Component sizes, shapes, colours and spring motion follow the Material 3 tokens.
 - **One implementation, every stack.** A button looks and behaves the same as an element, as a framework component and as a factory.
 - **Zero dependencies.** Installing `material` installs nothing else; the frameworks are optional peers.
