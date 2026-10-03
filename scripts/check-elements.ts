@@ -5657,6 +5657,458 @@ try {
         check(`list: ${where}, the four shape properties at 0 square every state`);
       }
     }
+
+    // The four are read, not declared, so they inherit: :root, a wrapper, the
+    // <m-list> host and ::part(list). A list with nothing set keeps 4 / 16 / 12 / 16.
+    const PROPS = ["--mtrl-list-item-shape", "--mtrl-list-item-shape-outer", "--mtrl-list-item-shape-hover", "--mtrl-list-item-shape-active"];
+    const inheritMarkup = (dir: string): string => `<div id="wrap" dir="${dir}">
+      <m-list aria-label="Inherit element ${dir}">
+        <m-list-item value="1">One</m-list-item>
+        <m-list-item value="2">Two</m-list-item>
+        <m-list-item value="3">Three</m-list-item>
+      </m-list>
+    </div>`;
+    const containerOf = (listName: string): Promise<string> => page.evaluate((listName) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`) as HTMLElement | null;
+      const root = (list?.classList.contains("mtrl-list") ? list : list?.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement | null;
+      if (!root) throw new Error(`no list root for ${listName}`);
+      const style = getComputedStyle(root);
+      return [style.borderTopLeftRadius, style.borderTopRightRadius, style.borderBottomRightRadius, style.borderBottomLeftRadius].join(" ");
+    }, listName);
+    const setInherited = (place: "root" | "wrap" | "host" | "part", listName: string): Promise<void> => page.evaluate(({ place, listName, props }) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`) as HTMLElement | null;
+      const target = place === "root" ? document.documentElement
+        : place === "wrap" ? document.getElementById("wrap")
+        : place === "host" ? list
+        : (list?.classList.contains("mtrl-list") ? list : list?.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement | null;
+      if (!target) throw new Error(`no ${place} for ${listName}`);
+      for (const name of props) target.style.setProperty(name, "0");
+    }, { place, listName, props: PROPS });
+    const clearRoot = (): Promise<void> => page.evaluate((props) => {
+      for (const name of props) document.documentElement.style.removeProperty(name);
+    }, PROPS);
+    const expectUnset = async (where: string, listName: string, failures: string[]): Promise<void> => {
+      await park();
+      matches(where, await readRows(listName), { One: "16px 16px 4px 4px", Two: "4px 4px 4px 4px", Three: "4px 4px 16px 16px" }, failures);
+      const block = await containerOf(listName);
+      if (block !== R16) failures.push(`${where} container ${block} != ${R16}`);
+      await named(listName, "One").hover();
+      matches(where, await readRows(listName), { One: R12 }, failures);
+      await park();
+      await focusNamed(listName, "Two");
+      matches(where, await readRows(listName), { Two: R16 }, failures);
+      const box = await named(listName, "Three").boundingBox();
+      if (!box) throw new Error(`no box for ${listName} / Three`);
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      matches(where, await readRows(listName), { Three: R16 }, failures);
+      await page.mouse.up();
+      await named(listName, "One").click();
+      matches(where, await readRows(listName), { One: R16 }, failures);
+    };
+    const expectSquare = async (where: string, listName: string, failures: string[]): Promise<void> => {
+      const square = { One: ZERO, Two: ZERO, Three: ZERO };
+      await park();
+      matches(where, await readRows(listName), square, failures);
+      const block = await containerOf(listName);
+      if (block !== ZERO) failures.push(`${where} container ${block} != ${ZERO}`);
+      await named(listName, "One").hover();
+      matches(where, await readRows(listName), square, failures);
+      await park();
+      await focusNamed(listName, "Two");
+      matches(where, await readRows(listName), square, failures);
+      const box = await named(listName, "Two").boundingBox();
+      if (!box) throw new Error(`no box for ${listName} / Two`);
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      matches(where, await readRows(listName), square, failures);
+      await page.mouse.up();
+      await named(listName, "One").click();
+      matches(where, await readRows(listName), square, failures);
+      await named(listName, "Three").click();
+      matches(where, await readRows(listName), square, failures);
+    };
+
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const kind of ["element", "factory"] as const) {
+        const where = `${kind} ${dir}`;
+        const listName = `Inherit ${kind} ${dir}`;
+        const places: Array<"unset" | "root" | "wrap" | "host" | "part"> = kind === "element"
+          ? ["unset", "root", "wrap", "host", "part"]
+          : ["unset", "root", "wrap"];
+        for (const place of places) {
+          await fresh(page, inheritMarkup(dir));
+          if (kind === "factory") {
+            await page.evaluate((dir) => {
+              const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+              const wrap = document.getElementById("wrap") as HTMLElement;
+              wrap.querySelector("m-list")?.remove();
+              wrap.append(w.mtrl.createList({
+                ariaLabel: `Inherit factory ${dir}`,
+                trackSelection: true,
+                items: [
+                  { id: "1", headline: "One" },
+                  { id: "2", headline: "Two" },
+                  { id: "3", headline: "Three" },
+                ],
+              }).element);
+            }, dir);
+            await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+          }
+          if (place !== "unset") await setInherited(place, listName);
+          const failures: string[] = [];
+          if (place === "unset") await expectUnset(where, listName, failures);
+          else await expectSquare(`${where} ${place}`, listName, failures);
+          if (place === "root") await clearRoot();
+          const label = place === "unset"
+            ? "the four properties stay 4, 16, 12 and 16 when unset"
+            : `the four properties set to 0 on ${place} square every state`;
+          assert.deepEqual(failures, [], `${where}: ${label}`);
+          check(`list: ${where}, ${label}`);
+        }
+      }
+    }
+  }
+
+  // The container uses the rows' outer property. The focus ring stays whole.
+  {
+    const R16 = "16px 16px 16px 16px";
+    const PAGE = [255, 0, 170];
+    const near = (pixel: number[], color: number[], tol: number): boolean =>
+      pixel.every((channel, index) => Math.abs(channel - color[index]) <= tol);
+    const markup = (dir: string): string => {
+      const rows = (n: number): string => Array.from({ length: n }, (_, i) =>
+        `<m-list-item value="${i}">Row ${i + 1}</m-list-item>`).join("");
+      const list = (name: string, body: string): string =>
+        `<m-list aria-label="${name} element ${dir}">${body}</m-list>`;
+      return `<div id="stage" dir="${dir}" style="background:#ff00aa;padding:16px">
+        <div id="elements">
+          ${list("Box", "<m-list-item value=\"a\">Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item><m-list-item value=\"c\">Charlie</m-list-item>")}
+          ${list("Outer", "<m-list-item value=\"a\">Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item>")}
+          ${list("Lead", "<m-list-item kind=\"divider\"></m-list-item><m-list-item value=\"a\">Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item>")}
+          ${list("Tail", "<m-list-item value=\"a\">Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item><m-list-item kind=\"divider\"></m-list-item>")}
+          ${list("Head", "<m-list-item kind=\"subheader\">Section</m-list-item><m-list-item value=\"a\">Alpha</m-list-item>")}
+          ${list("Off", "<m-list-item value=\"a\" disabled>Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item>")}
+          ${list("Pick", "<m-list-item value=\"a\" selected>Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item>")}
+          ${list("Solo", "<m-list-item value=\"s\">Solo</m-list-item>")}
+          ${list("Inset", "<m-list-item value=\"a\">Alpha</m-list-item><m-list-item kind=\"divider\" inset></m-list-item><m-list-item value=\"b\">Bravo</m-list-item>")}
+          ${list("Scroll", rows(10))}
+          ${list("Nest", "<m-list-item value=\"a\">Alpha</m-list-item>")}
+        </div>
+        <section id="factory"></section>
+      </div>`;
+    };
+    const pixels = async (points: number[][]): Promise<number[][]> => {
+      const png = (await page.screenshot()).toString("base64");
+      return page.evaluate(async ({ png, points }) => {
+        const image = new Image();
+        image.src = `data:image/png;base64,${png}`;
+        await image.decode();
+        if (!image.width) throw new Error("the screenshot did not decode");
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+        context.drawImage(image, 0, 0);
+        return points.map(([x, y]) => {
+          const data = context.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
+          return [data[0], data[1], data[2]];
+        });
+      }, { png, points });
+    };
+    const savedDocument = await page.evaluate(() => ({
+      htmlBackground: document.documentElement.style.background,
+      htmlOverflow: document.documentElement.style.overflow,
+      htmlPosition: document.documentElement.style.position,
+      htmlTop: document.documentElement.style.top,
+      bodyOverflow: document.body.style.overflow,
+      bodyPosition: document.body.style.position,
+      bodyTop: document.body.style.top,
+    }));
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const kind of ["element", "factory"] as const) {
+        const where = `${kind} ${dir}`;
+        const name = (label: string): string => `${label} ${kind} ${dir}`;
+        await fresh(page, markup(dir));
+        if (kind === "factory") {
+          await page.evaluate((dir) => {
+            const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+            const host = document.getElementById("factory") as HTMLElement;
+            const add = (ariaLabel: string, items: object[]): HTMLElement => {
+              const list = w.mtrl.createList({ ariaLabel, trackSelection: true, items }).element;
+              host.append(list);
+              return list;
+            };
+            add(`Box factory ${dir}`, [
+              { id: "a", headline: "Alpha" }, { id: "b", headline: "Bravo" }, { id: "c", headline: "Charlie" },
+            ]);
+            add(`Outer factory ${dir}`, [{ id: "a", headline: "Alpha" }, { id: "b", headline: "Bravo" }]);
+            add(`Lead factory ${dir}`, [{ kind: "divider" }, { id: "a", headline: "Alpha" }, { id: "b", headline: "Bravo" }]);
+            add(`Tail factory ${dir}`, [{ id: "a", headline: "Alpha" }, { id: "b", headline: "Bravo" }, { kind: "divider" }]);
+            add(`Head factory ${dir}`, [{ kind: "subheader", headline: "Section" }, { id: "a", headline: "Alpha" }]);
+            add(`Off factory ${dir}`, [{ id: "a", headline: "Alpha", disabled: true }, { id: "b", headline: "Bravo" }]);
+            add(`Pick factory ${dir}`, [{ id: "a", headline: "Alpha", selected: true }, { id: "b", headline: "Bravo" }]);
+            add(`Solo factory ${dir}`, [{ id: "s", headline: "Solo" }]);
+            add(`Inset factory ${dir}`, [{ id: "a", headline: "Alpha" }, { kind: "divider", inset: true }, { id: "b", headline: "Bravo" }]);
+            add(`Scroll factory ${dir}`, Array.from({ length: 10 }, (_, i) => ({ id: String(i), headline: `Row ${i + 1}` })));
+            const nest = add(`Nest factory ${dir}`, [{ id: "a", headline: "Alpha" }]);
+            const inner = w.mtrl.createList({
+              ariaLabel: `Inner factory ${dir}`, trackSelection: true, items: [{ id: "i", headline: "Inner" }],
+            }).element;
+            nest.querySelector('[role="listitem"]')?.append(inner);
+            document.getElementById("elements")?.remove();
+          }, dir);
+        } else {
+          await page.evaluate((dir) => {
+            const nest = document.querySelector(`[aria-label="Nest element ${dir}"]`);
+            const row = nest?.shadowRoot?.querySelector('[role="listitem"]');
+            const inner = document.createElement("m-list");
+            inner.setAttribute("aria-label", `Inner element ${dir}`);
+            const item = document.createElement("m-list-item");
+            item.setAttribute("value", "i");
+            item.textContent = "Inner";
+            inner.append(item);
+            row?.append(inner);
+          }, dir);
+        }
+        await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))));
+        const read = (): Promise<{
+          box: string; overflow: string; hostRadius: string; hostBackground: string;
+          outerFirst: string; outerLast: string; lead: string; tail: string; head: string;
+          off: string; pick: string; solo: string; inset: string; nest: string; inner: string;
+        }> => page.evaluate((names) => {
+          const four = (style: CSSStyleDeclaration): string => [
+            style.borderTopLeftRadius, style.borderTopRightRadius,
+            style.borderBottomRightRadius, style.borderBottomLeftRadius,
+          ].join(" ");
+          const hostOf = (label: string): HTMLElement => {
+            const host = document.querySelector(`[aria-label="${label}"]`);
+            if (!(host instanceof HTMLElement)) throw new Error(`no list ${label}`);
+            return host;
+          };
+          const rootOf = (label: string): HTMLElement => {
+            const host = hostOf(label);
+            const root = host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list");
+            if (!(root instanceof HTMLElement)) throw new Error(`no root ${label}`);
+            return root;
+          };
+          const rowRadius = (label: string, headline: string): string => {
+            const root = rootOf(label);
+            const row = [...root.querySelectorAll('[role="listitem"]')].find((item) =>
+              item.querySelector('[class*="headline"]')?.textContent === headline);
+            if (!(row instanceof HTMLElement)) throw new Error(`no row ${label} ${headline}`);
+            return four(getComputedStyle(row));
+          };
+          const boxHost = hostOf(names.box);
+          const boxRoot = rootOf(names.box);
+          return {
+            box: four(getComputedStyle(boxRoot)),
+            overflow: getComputedStyle(boxRoot).overflow,
+            hostRadius: four(getComputedStyle(boxHost)),
+            hostBackground: getComputedStyle(boxHost).backgroundColor,
+            outerFirst: rowRadius(names.outer, "Alpha"),
+            outerLast: rowRadius(names.outer, "Bravo"),
+            lead: rowRadius(names.lead, "Alpha"),
+            tail: rowRadius(names.tail, "Bravo"),
+            head: rowRadius(names.head, "Alpha"),
+            off: rowRadius(names.off, "Alpha"),
+            pick: rowRadius(names.pick, "Alpha"),
+            solo: rowRadius(names.solo, "Solo"),
+            inset: rowRadius(names.inset, "Alpha"),
+            nest: four(getComputedStyle(rootOf(names.nest))),
+            inner: four(getComputedStyle((() => {
+              const host = rootOf(names.nest).querySelector(".mtrl-list, m-list");
+              if (!(host instanceof HTMLElement)) throw new Error(`no nested list in ${names.nest}`);
+              const root = host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list");
+              if (!(root instanceof HTMLElement)) throw new Error(`no nested root in ${names.nest}`);
+              return root;
+            })())),
+          };
+        }, {
+          box: name("Box"), outer: name("Outer"), lead: name("Lead"), tail: name("Tail"),
+          head: name("Head"), off: name("Off"), pick: name("Pick"), solo: name("Solo"),
+          inset: name("Inset"), nest: name("Nest"),
+        });
+        const failures: string[] = [];
+        const got = await read();
+        if (got.box !== R16) failures.push(`${where} container ${got.box}`);
+        if (got.overflow !== "auto") failures.push(`${where} overflow ${got.overflow}`);
+        if (kind === "element") {
+          if (got.hostRadius !== "0px 0px 0px 0px") failures.push(`${where} host radius ${got.hostRadius}`);
+          if (got.hostBackground !== "rgba(0, 0, 0, 0)") failures.push(`${where} host background ${got.hostBackground}`);
+        } else if (got.hostRadius !== R16) failures.push(`${where} factory radius ${got.hostRadius}`);
+        if (got.outerFirst !== "16px 16px 4px 4px") failures.push(`${where} outer first ${got.outerFirst}`);
+        await page.evaluate((label) => {
+          const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+          const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+          root.style.setProperty("--mtrl-list-item-shape-outer", "0");
+        }, name("Outer"));
+        const squared = await read();
+        if (squared.box === "0px 0px 0px 0px") failures.push(`${where} zeroing one list squared the other`);
+        const outerZero = await page.evaluate((label) => {
+          const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+          const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+          const four = (style: CSSStyleDeclaration): string => [
+            style.borderTopLeftRadius, style.borderTopRightRadius,
+            style.borderBottomRightRadius, style.borderBottomLeftRadius,
+          ].join(" ");
+          const rows = [...root.querySelectorAll('[role="listitem"]')].map((row) => four(getComputedStyle(row)));
+          return { container: four(getComputedStyle(root)), rows };
+        }, name("Outer"));
+        if (outerZero.container !== "0px 0px 0px 0px" || outerZero.rows[0] !== "0px 0px 4px 4px" || outerZero.rows[1] !== "4px 4px 0px 0px") {
+          failures.push(`${where} outer 0 container ${outerZero.container} rows ${outerZero.rows.join(" | ")}`);
+        }
+        await page.evaluate((label) => {
+          const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+          const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+          root.style.setProperty("--mtrl-list-item-shape-outer", "28px");
+        }, name("Outer"));
+        const outerWide = await page.evaluate((label) => {
+          const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+          const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+          const four = (style: CSSStyleDeclaration): string => [
+            style.borderTopLeftRadius, style.borderTopRightRadius,
+            style.borderBottomRightRadius, style.borderBottomLeftRadius,
+          ].join(" ");
+          const rows = [...root.querySelectorAll('[role="listitem"]')].map((row) => four(getComputedStyle(row)));
+          return { container: four(getComputedStyle(root)), rows };
+        }, name("Outer"));
+        if (outerWide.container !== "28px 28px 28px 28px" || outerWide.rows[0] !== "28px 28px 4px 4px" || outerWide.rows[1] !== "4px 4px 28px 28px") {
+          failures.push(`${where} outer 28px container ${outerWide.container} rows ${outerWide.rows.join(" | ")}`);
+        }
+        assert.deepEqual(failures.slice(), [], `${where}: the container follows the outer property`);
+        check(`list: ${where}, the container is 16px and follows the outer property`);
+
+        const focusNamed = async (label: string, item: string): Promise<void> => {
+          await page.evaluate(() => {
+            const active = document.activeElement as HTMLElement | null;
+            (active?.shadowRoot?.activeElement as HTMLElement | null)?.blur();
+            active?.blur();
+          });
+          for (let i = 0; i < 24; i++) {
+            await page.keyboard.press("Tab");
+            const hit = await page.evaluate(({ label, item }) => {
+              const list = document.querySelector(`[aria-label="${label}"]`);
+              const light = document.activeElement as HTMLElement | null;
+              const button = (list?.shadowRoot?.activeElement ?? (list?.contains(light) ? light : null)) as HTMLElement | null;
+              const headline = button?.closest('[role="listitem"]')?.querySelector('[class*="headline"]')?.textContent;
+              return button?.matches(":focus-visible") === true && headline === item;
+            }, { label, item });
+            if (hit) return;
+          }
+          throw new Error(`no focus-visible on ${label} / ${item}`);
+        };
+        const ringSample = async (label: string, item: string): Promise<void> => {
+          await page.mouse.move(880, 680);
+          await focusNamed(label, item);
+          const points = await page.evaluate(({ label, item }) => {
+            document.documentElement.style.background = "#ff00aa";
+            for (const el of [document.documentElement, document.body]) {
+              el.style.overflow = "visible";
+              el.style.position = "static";
+              el.style.top = "auto";
+            }
+            const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+            const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+            const scrolling = document.scrollingElement ?? document.documentElement;
+            window.scrollTo({ top: Math.max(0, scrolling.scrollTop + root.getBoundingClientRect().top - 24), left: 0, behavior: "instant" });
+            const row = [...root.querySelectorAll('[role="listitem"]')].find((entry) =>
+              entry.querySelector('[class*="headline"]')?.textContent === item) as HTMLElement;
+            const action = row.querySelector("button") as HTMLElement;
+            const box = action.getBoundingClientRect();
+            const list = root.getBoundingClientRect();
+            if (list.top < 0 || box.top < 0) {
+              const body = getComputedStyle(document.body);
+              throw new Error(`list is above the viewport at ${list.top}, scroll ${scrolling.scrollTop}, body ${body.position} ${body.top} ${body.overflow} ${body.transform}`);
+            }
+            const outline = getComputedStyle(action).outlineColor;
+            const along = 15 * Math.SQRT1_2;
+            const corner = (xSign: number, ySign: number): number[] => {
+              const cx = xSign < 0 ? box.left + 16 : box.right - 16;
+              const cy = ySign < 0 ? box.top + 16 : box.bottom - 16;
+              return [cx + xSign * along, cy + ySign * along];
+            };
+            return {
+              outline,
+              page: [Math.max(list.left - 6, 1), list.top + list.height / 2],
+              container: [list.left + 1, list.top + 1],
+              ring: [corner(-1, -1), corner(1, -1), corner(-1, 1), corner(1, 1)],
+            };
+          }, { label, item });
+          const [pagePixel, containerPixel, ...ringPixels] = await pixels([
+            points.page, points.container, ...points.ring,
+          ]);
+          const outline = points.outline.match(/\d+/g)?.slice(0, 3).map(Number) ?? [];
+          if (!near(pagePixel, PAGE, 2)) failures.push(`${where} ${item} page pixel ${pagePixel.join(",")} at ${points.page.join(",")}`);
+          if (!near(containerPixel, PAGE, 2)) failures.push(`${where} ${item} container corner ${containerPixel.join(",")} at ${points.container.join(",")} is not the page`);
+          ringPixels.forEach((pixel, index) => {
+            if (near(pixel, PAGE, 12)) failures.push(`${where} ${item} ring corner ${index} is the page ${pixel.join(",")}`);
+            if (!near(pixel, outline, 48)) failures.push(`${where} ${item} ring corner ${index} ${pixel.join(",")} outline ${outline.join(",")}`);
+          });
+        };
+        await ringSample(name("Box"), "Alpha");
+        await ringSample(name("Box"), "Charlie");
+        assert.deepEqual(failures.slice(), [], `${where}: the focus ring is not clipped`);
+        check(`list: ${where}, the first and last focus rings are not clipped`);
+
+        if (got.lead !== "16px 16px 4px 4px") failures.push(`${where} divider first ${got.lead}`);
+        if (got.tail !== "4px 4px 16px 16px") failures.push(`${where} divider last ${got.tail}`);
+        if (got.head !== R16) failures.push(`${where} subheader ${got.head}`);
+        if (got.off !== "16px 16px 4px 4px") failures.push(`${where} disabled first ${got.off}`);
+        if (got.pick !== R16) failures.push(`${where} selected first ${got.pick}`);
+        if (got.solo !== R16) failures.push(`${where} single ${got.solo}`);
+        if (got.inset !== R16) failures.push(`${where} inset divider ${got.inset}`);
+        if (got.nest !== R16 || got.inner !== R16) failures.push(`${where} nested outer ${got.nest} inner ${got.inner}`);
+        const at = async (scroll: "start" | "middle" | "end"): Promise<void> => {
+          await page.evaluate(({ label, scroll }) => {
+            const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+            const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+            root.style.maxHeight = "140px";
+            if (scroll === "start") root.scrollTop = 0;
+            else if (scroll === "middle") root.scrollTop = root.scrollHeight / 2;
+            else root.scrollTop = root.scrollHeight;
+            for (const el of [document.documentElement, document.body]) {
+              el.style.overflow = "visible";
+              el.style.position = "static";
+              el.style.top = "auto";
+            }
+            const scrolling = document.scrollingElement ?? document.documentElement;
+            window.scrollTo({ top: Math.max(0, scrolling.scrollTop + root.getBoundingClientRect().top - 24), left: 0, behavior: "instant" });
+          }, { label: name("Scroll"), scroll });
+          const spot = await page.evaluate((label) => {
+            const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+            const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+            const box = root.getBoundingClientRect();
+            if (box.top < 0) throw new Error(`scrolled list is above the viewport at ${box.top}`);
+            return {
+              scrollTop: root.scrollTop,
+              page: [box.left - 6, box.top + 8],
+              top: [box.left + 1, box.top + 1],
+              bottom: [box.left + 1, box.bottom - 2],
+              end: [box.right - 2, box.top + 1],
+            };
+          }, name("Scroll"));
+          const [background, top, bottom, end] = await pixels([spot.page, spot.top, spot.bottom, spot.end]);
+          for (const [place, pixel] of [["top", top], ["bottom", bottom], ["end", end]] as const) {
+            if (!near(pixel, background, 2)) failures.push(`${where} scrolled ${scroll} ${place} ${pixel.join(",")} page ${background.join(",")} scroll ${spot.scrollTop}`);
+          }
+        };
+        await at("start");
+        await at("middle");
+        await at("end");
+        assert.deepEqual(failures.slice(), [], `${where}: the container's edges`);
+        check(`list: ${where}, a divider, a header, a disabled row, a selected row, one row, an inset divider, a nested list, and a scrolled list`);
+      }
+    }
+    await page.evaluate((saved) => {
+      document.documentElement.style.background = saved.htmlBackground;
+      document.documentElement.style.overflow = saved.htmlOverflow;
+      document.documentElement.style.position = saved.htmlPosition;
+      document.documentElement.style.top = saved.htmlTop;
+      document.body.style.overflow = saved.bodyOverflow;
+      document.body.style.position = saved.bodyPosition;
+      document.body.style.top = saved.bodyTop;
+    }, savedDocument);
   }
 
   // ---------------------------------------------------------------- list defaults

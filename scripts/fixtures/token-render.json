@@ -161,9 +161,9 @@
  "list-selected": [
   [
    "0:div.mtrl-list",
-   "0px 0px 0px 0px",
+   "16px 16px 16px 16px",
    "Roboto, sans-serif",
-   false,
+   true,
    true
   ],
   [
@@ -233,9 +233,9 @@
  "list-video": [
   [
    "0:div.mtrl-list",
-   "0px 0px 0px 0px",
+   "16px 16px 16px 16px",
    "Roboto, sans-serif",
-   false,
+   true,
    true
   ],
   [
