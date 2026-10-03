@@ -97,3 +97,55 @@ test("the real CHANGELOG has a section for the package's version", async () => {
   const changelog = await Bun.file(new URL("../../CHANGELOG.md", import.meta.url)).text();
   expect(changelogSection(changelog, pkg.version).length).toBeGreaterThan(0);
 });
+
+describe("release body size", () => {
+  const fixture = Bun.file(new URL("../fixtures/release-notes-large.md", import.meta.url));
+  const legacyFooter = (version: string): string =>
+    "\n\n---\n\n" +
+    `npm: [\`material@${version}\`](https://www.npmjs.com/package/material/v/${version}) · Docs: [md3.io](https://md3.io) · ` +
+    "Full history: [CHANGELOG.md](https://github.com/floor/material/blob/main/CHANGELOG.md)\n\n" +
+    "The history before 3.0.0 was developed in `floor/mtrl`; `#numbers` in commit subjects before 3.0.0 refer to " +
+    "[pull requests there](https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed).\n";
+
+  test("real release notes over the cap end at the last complete subsection and link to the requested tag", async () => {
+    // A copy of the 3.0.0 notes, with internal ticket references removed.
+    const section = changelogSection(await fixture.text(), "3.0.0");
+    expect(section.length).toBeGreaterThan(130_000);
+    expect(section.length).toBeLessThan(140_000);
+    for (const version of ["3.0.0", "3.1.0-next.2"]) {
+      const output = releaseNotes(`## [${version}]\n\n${section}\n`, version);
+      const link = `Full release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v${version}/CHANGELOG.md)\n`;
+      const cut = section.indexOf("\n### Fixed");
+      expect(cut).toBeGreaterThan(100_000);
+      expect(output).toBe(section.slice(0, cut).trimEnd() + "\n\n" + link);
+      expect(output.length).toBeLessThan(125_000);
+      expect(output.trimEnd().split("\n").at(-1)).toBe(link.trimEnd());
+      // The omitted suffix starts at a heading; including its entire subsection is too large.
+      expect(section.slice(cut).trimStart()).toStartWith("### Fixed\n");
+      expect((section + "\n\n" + link).length).toBeGreaterThanOrEqual(125_000);
+    }
+  });
+
+  test("the same real fixture below the cap keeps today's output byte for byte", async () => {
+    const section = changelogSection(await fixture.text(), "3.0.0");
+    const under = section.slice(0, section.indexOf("\n### Fixed")).trimEnd();
+    const expected = under + legacyFooter("3.0.0");
+    expect(expected.length).toBeLessThan(125_000);
+    expect(releaseNotes(`## [3.0.0]\n\n${under}\n`, "3.0.0")).toBe(expected);
+  });
+
+  test("the cap is strict and includes the footer, retaining the full section when the shorter link fits", () => {
+    const heading = "### Added\n\n";
+    const section = heading + "x".repeat(125_000 - legacyFooter("3.0.0").length - heading.length);
+    expect((section + legacyFooter("3.0.0")).length).toBe(125_000);
+    const output = releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0");
+    expect(output.length).toBeLessThan(125_000);
+    expect(output).toBe(section + "\n\nFull release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md)\n");
+  });
+
+  test("an oversized subsection falls back to the link, never a heading inside a fenced example", () => {
+    const section = "### Added\n\n" + "x".repeat(120_000) + "\n\n~~~markdown\n### Example heading\n" + "y".repeat(10_000) + "\n~~~";
+    const output = releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0");
+    expect(output).toBe("Full release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md)\n");
+  });
+});

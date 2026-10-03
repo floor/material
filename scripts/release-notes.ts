@@ -35,7 +35,8 @@ export function changelogSection(changelog: string, version: string): string {
 /**
  * The section and the footer: npm, the docs, the full history, and where the
  * history before 3.0.0 lives (the same sentence README.md's "Where this came
- * from" carries).
+ * from" carries). Large bodies keep whole subsections below 125,000 characters
+ * and finish with a link to the complete changelog at the requested tag.
  */
 export function releaseNotes(changelog: string, version: string): string {
   const footer = [
@@ -46,7 +47,33 @@ export function releaseNotes(changelog: string, version: string): string {
   const history =
     "The history before 3.0.0 was developed in `floor/mtrl`; `#numbers` in commit subjects before 3.0.0 refer to " +
     "[pull requests there](https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed).";
-  return `${changelogSection(changelog, version)}\n\n---\n\n${footer}\n\n${history}\n`;
+  const section = changelogSection(changelog, version);
+  const complete = `${section}\n\n---\n\n${footer}\n\n${history}\n`;
+  const cap = 125_000;
+  if (complete.length < cap) return complete;
+
+  // Keep whole subsections, and reserve space for the final tag-specific link.
+  // A heading in a fenced code example is not a safe place to cut Markdown.
+  const link = `Full release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v${version}/CHANGELOG.md)\n`;
+  const withLink = `${section}\n\n${link}`;
+  if (withLink.length < cap) return withLink;
+  let result = link;
+  let offset = 0;
+  let fence: { marker: string; length: number } | undefined;
+  for (const line of section.split("\n")) {
+    const delimiter = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+    if (delimiter) {
+      const marker = delimiter[1][0];
+      if (!fence) fence = { marker, length: delimiter[1].length };
+      else if (marker === fence.marker && delimiter[1].length >= fence.length && !delimiter[2].trim()) fence = undefined;
+    } else if (!fence && /^ {0,3}#{1,6}\s+\S/.test(line)) {
+      const head = section.slice(0, offset).trimEnd();
+      const candidate = head ? `${head}\n\n${link}` : link;
+      if (candidate.length < cap) result = candidate;
+    }
+    offset += line.length + 1;
+  }
+  return result;
 }
 
 if (import.meta.main) {
