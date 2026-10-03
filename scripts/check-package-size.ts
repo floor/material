@@ -32,6 +32,19 @@ function measure(data: Uint8Array) {
 try {
   assert(!pack.files.some((file: { path: string }) => file.path.endsWith(".map")), "Unexpected source maps in npm package");
   assert(pack.files.some((file: { path: string }) => file.path === "dist/ssr/index.js"), "Missing SSR bundle");
+  // Which README and manifest ship. The fixture packs what publish.yml's step
+  // makes of the tree, so these hold for a release: npm's page shows the short
+  // README, the repository's long one stays on GitHub, and the manifest carries
+  // nothing only the repository uses.
+  const paths = (pack.files as { path: string }[]).map(file => file.path);
+  assert.deepEqual(paths.filter(path => /readme/i.test(path)), ["README.md"], "The package ships one README, at its root");
+  const shipped = await Bun.file(join(fixture.installed, "README.md")).text();
+  assert.equal(shipped, await Bun.file("npm-readme.md").text(), "The packed README.md is not npm-readme.md");
+  assert.notEqual(shipped, await Bun.file("README.md").text(), "npm-readme.md and README.md are the same file");
+  const published = await Bun.file(join(fixture.installed, "package.json")).json() as Record<string, unknown>;
+  for (const key of ["scripts", "eslintConfig", "typedocOptions"]) {
+    assert(!(key in published), `The packed manifest still has "${key}"`);
+  }
   // The SSR bundle owns linkedom; every other shipped module (including its
   // browser stub) must remain outside the server graph. Resolve relative paths
   // as well as public subpaths, so ../ssr/index.js cannot bypass the guard.
@@ -160,6 +173,9 @@ try {
   // 1,000, is 1,086,000, above 1,078,000, so the ceiling returns to 1,078,000 and
   // stays (this file's convention, stated in the comments above it: the rule's figure
   // caps a raise; it does not move a ceiling the measurement is under).
+  // The fixture packs what publish.yml publishes, the short npm-readme.md as README.md
+  // and the manifest without its repository-only fields: 1,066,725 with main at 593162e0 in, same packer.
+  // Under 1,078,000, so the ceiling stays.
   assert(pack.size < 1_078_000, "npm tarball exceeds 1,078,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
@@ -192,6 +208,8 @@ try {
   // 1,000, is 6,476,000, above 6,458,000, so the ceiling stays.
   // Merged with FLO-299 (a8c24f7f), same packer: 6,410,644. Under 6,458,000,
   // so the ceiling stays.
+  // What publish.yml publishes (the short README, the stripped manifest): 6,371,223 with main at 593162e0 in,
+  // Node 22.23.3 / npm 10.9.9. Under 6,458,000, so the ceiling stays.
   assert(pack.unpackedSize < 6_458_000, "Unpacked package exceeds 6,458,000 bytes");
 
   // The component entries the probe imports, and how many package.json exports,
@@ -357,9 +375,9 @@ try {
     // against 3f9ca0c7, Node 22.23.3 / npm 10.9.9; the budget keeps the headroom it had.
     // 125,723 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // The text-field rename merged in: 126,962, the same figure main packed.
-    // 38 B left under 127,000. Measured + 1% or 100 B, rounded up to 50, is
-    // 128,250, above 127,000, so the ceiling stays.
-    { name: "all-js", code: "export * from 'material';", gzip: 127000 },
+    // 38 B left under 127,000.
+    // 3.0.1, the shadow-root menu RTL fix: 127,014. Raised to 127,100 by the coordinator's bounded rule.
+    { name: "all-js", code: "export * from 'material';", gzip: 127100 },
     // FLO-406 contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 8,069 -> 7,542 gzip bytes (same packer).
     // 7,338 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.

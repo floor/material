@@ -113,6 +113,15 @@
       ]
     },
     {
+      "id": "release-notes-changelog-copy",
+      "reason": "the release-notes fixture is a CHANGELOG copy; its migration imports describe historical package names",
+      "file": "test/fixtures/release-notes-large.md",
+      "guard": true,
+      "examples": [
+        { "file": "test/fixtures/release-notes-large.md", "text": "`import 'mtrl/styles/base'`" }
+      ]
+    },
+    {
       "id": "package-name-test",
       "reason": "the script's own unit test: its inputs and expectations are the mapping's literal data, written in the source name, and must survive the rename they test",
       "file": "test/scripts/package-name.test.ts",
@@ -237,28 +246,16 @@
       "reason": "the pulls URL in \"Where this came from\" names the repository the history was developed in, not a specifier"
     },
     {
-      "id": "readme-upgrade-from-010",
-      "file": "README.md",
-      "text": "## Upgrading from `mtrl` 0.10",
-      "reason": "the heading names which mtrl release a page upgrades from, not an import specifier. The word from before a quoted name matches the import-form rule"
-    },
-    {
-      "id": "readme-upgrade-from-09",
-      "file": "README.md",
-      "text": "## Upgrading from `mtrl` 0.9",
-      "reason": "the heading names which mtrl release a page upgrades from, not an import specifier. The word from before a quoted name matches the import-form rule"
-    },
-    {
-      "id": "readme-upgrade-from-07",
-      "file": "README.md",
-      "text": "## Upgrading from `mtrl` 0.7",
-      "reason": "the heading names which mtrl release a page upgrades from, not an import specifier. The word from before a quoted name matches the import-form rule"
-    },
-    {
       "id": "release-notes-history-link",
       "file": "scripts/release-notes.ts",
       "text": "https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed",
       "reason": "the pulls URL in the release footer's history sentence names the repository the history was developed in, not a specifier"
+    },
+    {
+      "id": "release-notes-test-cap-history-link",
+      "file": "test/scripts/release-notes.test.ts",
+      "text": "\"[pull requests there](https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed).\\n\";",
+      "reason": "the capped CHANGELOG-copy fixture expects the same historical footer; this is the second literal URL in the test"
     },
     {
       "id": "release-notes-test-history-link",

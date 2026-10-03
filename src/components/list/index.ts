@@ -8,6 +8,7 @@ export { default, default as createList } from "./list";
 // Export constants
 export {
   LIST_DEFAULTS,
+  LIST_VARIANTS,
   LIST_TYPES,
   LIST_SELECTION_MODES,
   LIST_EVENTS,
@@ -18,6 +19,7 @@ export {
 // Export types for TypeScript
 export type {
   ListConfig,
+  ListVariant,
   ListItem,
   ListSlot,
   ListComponent,

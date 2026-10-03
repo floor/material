@@ -9,6 +9,8 @@
  * instead. The list reads them into the factory's config and updates in place
  * when they change; the children stay where the framework put them.
  *
+ * `variant` is the factory's style: `standard` (the default) or `segmented`.
+ *
  * `selection` is the factory's mode: `single` (the default), `multiple`, or
  * `none` (rows are not interactive). `value` on `<m-list>` and the items'
  * `selected` are the default selection, which moves the live one until the
@@ -201,6 +203,7 @@ const listSpec = {
   styles: ["list"],
   hostStyles: ":host{display:block}",
   attributes: {
+    variant: { type: "string", config: "variant" },
     selection: { type: "string", config: "selection" },
     value: { type: "string", config: "selectedValue", update: (c, v) => select(c, toValues(v)) },
     disabled: { type: "boolean", update: (c, _v, host) => void updateList(host, c) },
