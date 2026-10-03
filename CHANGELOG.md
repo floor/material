@@ -16,7 +16,7 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
-## [3.0.0] - YYYY-MM-DD
+## [3.0.0] - 2026-10-03
 
 `material` 3.0.0 is the first stable release of the library published as `mtrl` 0.10.x.
 The new package name is `material`. For upgrade steps, see
