@@ -1434,6 +1434,22 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   SSR parity and benchmark tooling load the source renderer and source CSS registry (FLO-363).
 - Source SSR reads the element CSS registry without resolving built package exports; source tests register real Sass output without mocking the CSS import (FLO-363).
 
+### Security
+
+- **A password field no longer paints its value before it upgrades
+  (#53).** The pre-upgrade stylesheet paints a field's `value` attribute on the
+  input's line for every type, so `<m-text-field type="password" value="…">`
+  showed the password in clear text until its script defined it — and on a page
+  that never loads one, or in a crawler's screenshot of it, for as long as the
+  page exists. A password host now paints the empty field's line box alone: no
+  value, and no mask either (a mask's length is information too). The box is
+  unchanged, so nothing moves at upgrade; every other type is unchanged. Fixed
+  in `material` 3.0.0-next.1. Affected, each with the rule in its pre-upgrade
+  stylesheet: `material` 3.0.0-next.0, and `mtrl` 0.10.0 through 0.10.7 (the
+  0.10.0 pre-releases shipped no pre-upgrade stylesheet). On an affected
+  version a page can neutralize it with
+  `m-text-field:not(:defined)[type='password' i]::before{content:' '}`.
+
 `material` 3.0.0 is MIT; `material` 1.x was GPL-3.
 
 ## [3.0.0-next.1] - 2026-10-03

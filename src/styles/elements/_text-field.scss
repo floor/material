@@ -8,6 +8,16 @@
 @include c.host('text-field') {
   @include field.field;
 
+  // A password paints no value (public issue #53): the value attribute is the
+  // password in clear text, and the shared rule above paints it for every type.
+  // The space is the empty field's line box, so the box does not move at
+  // upgrade; no mask either — its length is information too. `i`: HTML reads an
+  // input's type case-insensitively, so `type="PASSWORD"` upgrades to a masked
+  // input and must not paint here.
+  &[type='password' i]::before {
+    content: ' ';
+  }
+
   // Multiline is the textarea's box, not the single-line 56px one (FLO-425).
   // Height and padding-top are the component's (&--multiline). The padding-top
   // is where the first line starts: the inline sibling on this line aligns to

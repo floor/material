@@ -116,6 +116,13 @@ const server = Bun.serve({
           .replace("</head>", '<link rel="stylesheet" href="/preupgrade/button.css"></head>'));
       case "/phase-b":
         return html(page(stage(`${phaseB}<m-button id="bare">Bare</m-button>`), true));
+      // A filled password field beside an empty one, both undefined: the value
+      // must not be painted, and the two boxes must be the same.
+      case "/password":
+        return html(page(stage(
+          `<m-text-field id="password" type="password" label="Password" value="hunter2"></m-text-field><m-text-field id="empty-password" type="password" label="Password"></m-text-field>`,
+          { element: "text-field", variant: "type=password", html: "", width: 840 },
+        ), true));
       case "/elements.js":
         return js(elementsJs);
       case "/react.js":
@@ -515,6 +522,48 @@ try {
       assert(Math.abs(before.select - after.select) < 0.5, `select width ${before.select} before the script, ${after.select} after`);
       assert.equal(before.background, after.background, "text field background changed when the script ran");
       console.log(`Phase B, stylesheet loaded, script held back: field padding ${before.padding}, button ${before.button.toFixed(1)}px, select ${before.select.toFixed(1)}px, bare ${before.bare.toFixed(1)}px, header ${before.header.visibility} ${before.header.h.toFixed(1)}px (bare ${before.headerBare.visibility} ${before.headerBare.h.toFixed(1)}px), headline ${before.headline.visibility} ${before.headline.h.toFixed(1)}px order ${before.headline.order} (bare ${before.headlineBare.visibility} ${before.headlineBare.h.toFixed(1)}px order ${before.headlineBare.order}), fab ${before.fab.w.toFixed(1)}×${before.fab.h.toFixed(1)} (bare ${before.fabBare.w.toFixed(1)}×${before.fabBare.h.toFixed(1)})`);
+    } finally {
+      await p.close();
+    }
+  }
+
+  // A password field paints no value before upgrade (public issue #53). The
+  // value attribute holds the password in clear text, and the stylesheet paints
+  // it with `content: attr(value) ' '` for every type; the password exception
+  // paints the space alone. The line box is the empty field's, so the filled
+  // field's box — width, height and, as the field clips, the bottom edge the
+  // baseline sits on — is the empty one's, and nothing moves at upgrade.
+  if (!only.length || only.includes("text-field")) {
+    const p = await browser.newPage({ viewport: { width: 900, height: 800 } });
+    try {
+      await p.goto(`http://127.0.0.1:${server.port}/password`);
+      await settle(p);
+      const before = await p.evaluate(() => {
+        const box = (element: Element): Box => {
+          const r = element.getBoundingClientRect();
+          return { x: r.x, y: r.y, w: r.width, h: r.height };
+        };
+        const filled = document.querySelector("#password")!;
+        const empty = document.querySelector("#empty-password")!;
+        return {
+          filled: getComputedStyle(filled, "::before").content,
+          empty: getComputedStyle(empty, "::before").content,
+          filledBox: box(filled),
+          emptyBox: box(empty),
+        };
+      });
+      assert(!before.filled.includes("hunter2"), `a password field paints its value before upgrade (::before content ${before.filled})`);
+      assert.equal(before.filled, before.empty, "a filled password field paints a different ::before than an empty one");
+      const { filledBox, emptyBox } = before;
+      assert.equal(filledBox.w, emptyBox.w, "a filled password field is not as wide as an empty one");
+      assert.equal(filledBox.h, emptyBox.h, "a filled password field is not as tall as an empty one");
+      // Both are inline boxes on one line, so the same y is the same baseline.
+      assert.equal(filledBox.y, emptyBox.y, "a filled password field does not sit on the empty one's baseline");
+      assert(
+        Math.abs(emptyBox.x - (filledBox.x + filledBox.w)) < 0.5,
+        `a filled password field's box is not its own (${filledBox.w}px wide, the next field at ${emptyBox.x - filledBox.x})`,
+      );
+      console.log(`Password before upgrade: filled field ::before ${before.filled}, box ${filledBox.w}×${filledBox.h} at (${filledBox.x}, ${filledBox.y}); empty field ::before ${before.empty}, box ${emptyBox.w}×${emptyBox.h} at (${emptyBox.x}, ${emptyBox.y})`);
     } finally {
       await p.close();
     }
