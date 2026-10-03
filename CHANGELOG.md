@@ -1002,7 +1002,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `progress/features`, `search/features` (the low-level `withInput`), `side-sheet/features`,
   `slider/features`, `textfield/features`. Every other `material/components/<name>` and
   `material/components/<name>/constants` that existed in 0.10 still resolves, except
-  `segmented-button` and `segmented-button/constants`, removed with segmented buttons (see above).
+  `segmented-button` and `segmented-button/constants`, removed with segmented buttons (see below).
 - **Segmented buttons are removed.** `createSegmentedButton` and `createSegment`
   (deprecated since 0.8.0), their types, `mtrl/components/segmented-button`,
   `mtrl/styles/segmented-button` and the `--mtrl-segmented-button-*` properties are gone. M3
