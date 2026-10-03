@@ -8,6 +8,14 @@ export interface KnownSiblingMove {
   sibling: string;
   axis: "x" | "y";
   value: number;
+  /**
+   * Half-width of the accepted band, in px. Omit it to use MOVE_LIMIT.
+   * Name it when one pin must cover the same move on two platforms whose
+   * fonts disagree by more than half a pixel. The band is then the whole
+   * rule, so a reading inside it stays known even when it is under the
+   * noise floor.
+   */
+  tolerance?: number;
   /** The component that owns the follow-up and why this move is not fixed here. */
   reason: string;
 }
@@ -38,11 +46,22 @@ type Verdict = { fail?: string; note?: string };
 const isSiblingMove = (move: KnownMove): move is KnownSiblingMove => "sibling" in move;
 const isSubjectMove = (move: KnownMove): move is KnownSubjectMove => "subject" in move;
 
-/** A pinned measurement: the signed value, still present, within half a pixel. */
-const pinned = (where: string, value: number, expected: number, reason: string): Verdict => {
+/**
+ * A pinned measurement. With no tolerance the signed value must still exceed
+ * the half-pixel noise floor and stay within half a pixel of the pin. A pin
+ * that names its own tolerance accepts every reading inside that band.
+ */
+const pinned = (where: string, value: number, expected: number, reason: string, tolerance?: number): Verdict => {
+  const limit = tolerance ?? MOVE_LIMIT;
+  const outside = Math.abs(value - expected) > limit;
+  if (tolerance === undefined) {
+    if (Math.abs(value) <= MOVE_LIMIT) return { fail: `${where}: defect disappeared; remove its exception` };
+    if (outside) return { fail: `${where}: expected ${expected}px ± ${limit}px` };
+    return { note: `${where}: known; ${reason}` };
+  }
+  if (!outside) return { note: `${where}: known; ${reason}` };
   if (Math.abs(value) <= MOVE_LIMIT) return { fail: `${where}: defect disappeared; remove its exception` };
-  if (Math.abs(value - expected) > MOVE_LIMIT) return { fail: `${where}: expected ${expected}px ± ${MOVE_LIMIT}px` };
-  return { note: `${where}: known; ${reason}` };
+  return { fail: `${where}: expected ${expected}px ± ${limit}px` };
 };
 
 /** The button's own box. A subject pin uses the sibling rule; nothing else is exempt. */
@@ -91,7 +110,7 @@ export const markOf = (r: MoveResult, checkMoves: boolean): Mark => {
         isSiblingMove(k) && k.sibling === sibling && k.axis === axis);
       const where = `${sibling} ${axis} ${value.toFixed(6)}px`;
       if (expected) {
-        const verdict = pinned(where, value, expected.value, expected.reason);
+        const verdict = pinned(where, value, expected.value, expected.reason, expected.tolerance);
         if (verdict.fail) failures.push(verdict.fail);
         else if (verdict.note) notes.push(verdict.note);
       } else if (Math.abs(value) > MOVE_LIMIT) failures.push(`${where}: over ${MOVE_LIMIT}px`);

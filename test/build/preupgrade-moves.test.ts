@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { markOf, validateKnownMoves } from "../../scripts/preupgrade-moves";
+import { cases } from "../../scripts/fixtures/preupgrade-cases";
+import { markOf, validateKnownMoves, type KnownSiblingMove } from "../../scripts/preupgrade-moves";
 
 const row = (inlineY = 1.296875, blockX = 0, inlineX = 0) => ({
   name: "pinned fixture", score: 0.0001,
@@ -65,6 +66,82 @@ describe("preupgrade sibling exceptions", () => {
   });
   test("the missing-styles mutation does not enforce exceptions", () => {
     expect(markOf(row(-16), false).mark).toBe("ok");
+  });
+});
+
+const widthReason = "Extra-small button group width follows the platform font: floor/material#49 (main baseline).";
+const sizeReason = "Extra-small button group size reservation: floor/material#49 (main baseline).";
+const siblingPin = (axis: "x" | "y", value: number, tolerance?: number): KnownSiblingMove => ({
+  sibling: "#inline", axis, value, ...(tolerance === undefined ? {} : { tolerance }),
+  reason: axis === "x" ? widthReason : sizeReason,
+});
+const xsRow = (dx: number, dy = -2.703125, blockY = -8) => ({
+  name: "button-group [size=xs; ltr; default]", score: 0.0058,
+  moves: [{ dx, dy }, { dx: 0, dy: blockY }],
+  knownMoves: [
+    siblingPin("x", -0.40625, 0.375),
+    siblingPin("y", -2.703125),
+    { sibling: "#block", axis: "y" as const, value: -8, reason: sizeReason },
+  ],
+});
+
+describe("a pin with its own tolerance", () => {
+  test("accepts both platform readings of the extra-small inline shift", () => {
+    for (const dx of [-0.0625, -0.75]) {
+      const result = markOf(xsRow(dx), true);
+      expect(result.mark).toBe("known");
+      expect(result.note).toContain(`#inline x ${dx.toFixed(6)}px: known; ${widthReason}`);
+    }
+    const rtl = markOf({
+      ...xsRow(0.75),
+      moves: [{ dx: 0.0625, dy: -2.703125 }, { dx: 0, dy: -8 }],
+      knownMoves: [siblingPin("x", 0.40625, 0.375), siblingPin("y", -2.703125),
+        { sibling: "#block", axis: "y" as const, value: -8, reason: sizeReason }],
+    }, true);
+    expect(rtl.mark).toBe("known");
+    const linuxRtl = markOf({
+      ...xsRow(0.75),
+      knownMoves: [siblingPin("x", 0.40625, 0.375), siblingPin("y", -2.703125),
+        { sibling: "#block", axis: "y" as const, value: -8, reason: sizeReason }],
+    }, true);
+    expect(linuxRtl.mark).toBe("known");
+  });
+  test("the default half-pixel rule still calls the smaller reading a disappeared defect", () => {
+    const knownMoves = [siblingPin("x", -0.75)];
+    const result = markOf({ ...xsRow(-0.0625), knownMoves }, true);
+    expect(result.mark).toBe("FAIL");
+    expect(result.note).toContain("defect disappeared");
+  });
+  test("a reading one pixel past either platform fails, and so does a vanished move", () => {
+    for (const dx of [-0.0625 - 1, -0.75 - 1]) {
+      const result = markOf(xsRow(dx), true);
+      expect(result.mark).toBe("FAIL");
+      expect(result.note).toContain("expected -0.40625px ± 0.375px");
+    }
+    const gone = markOf(xsRow(0), true);
+    expect(gone.mark).toBe("FAIL");
+    expect(gone.note).toContain("#inline x 0.000000px: defect disappeared; remove its exception");
+  });
+  test("the named band does not widen the other axis", () => {
+    const result = markOf(xsRow(-0.0625, -2.703125 - 1), true);
+    expect(result.mark).toBe("FAIL");
+    expect(result.note).toContain("#inline y -3.703125px: expected -2.703125px ± 0.5px");
+    expect(result.note).not.toContain("± 0.375px");
+  });
+  test("the extra-small rows carry that band, and only on inline x", () => {
+    const rows = cases.filter(row => row.element === "button-group" && row.variant.startsWith("size=xs"));
+    expect(rows.map(row => row.variant)).toEqual(["size=xs; ltr; default", "size=xs; rtl; default"]);
+    for (const row of rows) {
+      const pins = (row.knownMoves ?? []).filter((pin): pin is KnownSiblingMove => "sibling" in pin);
+      const x = pins.filter(pin => pin.axis === "x");
+      expect(x).toEqual([{
+        sibling: "#inline", axis: "x",
+        value: row.variant.includes("ltr") ? -0.40625 : 0.40625,
+        tolerance: 0.375, reason: widthReason,
+      }]);
+      expect(pins.filter(pin => pin.tolerance !== undefined)).toEqual(x);
+      expect(pins.some(pin => pin.axis === "y" && pin.tolerance === undefined)).toBe(true);
+    }
   });
 });
 

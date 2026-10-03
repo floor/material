@@ -239,12 +239,19 @@ const buttonGroup = cases.find(row => row.element === "button-group" && row.vari
 for (const dir of ["ltr", "rtl"]) {
   // Keep xs no worse than main while its size reservation remains in #49.
   // Main moves the inline neighbour up 2.703125px and the block up 8px.
+  // The same main baseline also shifts the inline neighbour on x with the
+  // platform font: 0.0625px here, 0.75px on Linux. The pin value is their
+  // midpoint, ±0.40625, and the band is ±0.375px, so both readings pass, a
+  // reading that has gone fails, and one extra pixel fails.
   const reason = "Extra-small button group size reservation: floor/material#49 (main baseline).";
+  const width = "Extra-small button group width follows the platform font: floor/material#49 (main baseline).";
+  const inlineX = dir === "ltr" ? -0.40625 : 0.40625;
   cases.push({
     ...buttonGroup, variant: `size=xs; ${dir}; default`,
     html: buttonGroup.html.replace("<m-button-group ", '<m-button-group size="xs" '),
     width: 850, style: `direction:${dir}`,
     knownMoves: [
+      { sibling: "#inline", axis: "x", value: inlineX, tolerance: 0.375, reason: width },
       { sibling: "#inline", axis: "y", value: -2.703125, reason },
       { sibling: "#block", axis: "y", value: -8, reason },
     ],
