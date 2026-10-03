@@ -110,6 +110,29 @@ export const cases: PreupgradeCase[] = [
   // label, so the pre-upgrade rule must centre this host too.
   c("checkbox", "label=''", `<m-checkbox aria-label="Agree" label=""></m-checkbox>`),
   c("slider", "default", `<m-slider value="40" aria-label="Volume"></m-slider>`),
+  // Without a label the host is the container's row itself, and the size names
+  // lift the container above the 48px minimum from M up (52/68/108), so every
+  // size reserves its own height. The element reads a size name in any case
+  // (`xs` to `xl`) or a pixel height.
+  c("slider", "size=xs", `<m-slider size="xs" value="40" aria-label="Volume"></m-slider>`),
+  c("slider", "size=s", `<m-slider size="s" value="40" aria-label="Volume"></m-slider>`),
+  c("slider", "size=m", `<m-slider size="m" value="40" aria-label="Volume"></m-slider>`),
+  c("slider", "size=l", `<m-slider size="l" value="40" aria-label="Volume"></m-slider>`),
+  c("slider", "size=xl", `<m-slider size="xl" value="40" aria-label="Volume"></m-slider>`),
+  // A label builds a body-large line and a 4px gutter over the container's row.
+  // `label-position` is start (the default) or end. An icon adds a 40px column,
+  // which the container's row already covers. An empty `label=""` builds no
+  // label, as `supporting-text=""` builds none on the switch.
+  c("slider", "label", `<m-slider label="Volume" value="40"></m-slider>`),
+  c("slider", "label label-position=start", `<m-slider label="Volume" label-position="start" value="40"></m-slider>`),
+  c("slider", "label label-position=end", `<m-slider label="Volume" label-position="end" value="40"></m-slider>`),
+  c("slider", "label size=xs", `<m-slider label="Volume" size="xs" value="40"></m-slider>`),
+  c("slider", "label size=s", `<m-slider label="Volume" size="s" value="40"></m-slider>`),
+  c("slider", "label size=m", `<m-slider label="Volume" size="m" value="40"></m-slider>`),
+  c("slider", "label size=l", `<m-slider label="Volume" size="l" value="40"></m-slider>`),
+  c("slider", "label size=xl", `<m-slider label="Volume" size="xl" value="40"></m-slider>`),
+  c("slider", "label icon", `<m-slider label="Volume" icon="${ICON}" value="40"></m-slider>`),
+  c("slider", "label=''", `<m-slider aria-label="Volume" label="" value="40"></m-slider>`),
   c("text-field", "default", `<m-text-field label="Name"></m-text-field>`),
   c("text-field", "variant=outlined", `<m-text-field variant="outlined" label="Name"></m-text-field>`),
   c("text-field", "supporting-text", `<m-text-field label="Name" supporting-text="As on your passport"></m-text-field>`),

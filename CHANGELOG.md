@@ -18,6 +18,20 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ### Fixed
 
+- **A slider reserves its row before upgrade at every size, with and without a label.** The
+  pre-upgrade stylesheet gave every `<m-slider>` the 48px row of the unlabelled default size,
+  but a horizontal slider is taller once its script runs. With a `label` it is 76px at XS and
+  S, 80 at M, 96 at L and 136 at XL — the label's body-large 24px line and its 4px gutter over
+  the container. Without one it is the container's own height, which the factory sets to
+  `max(handle height, 48)`: 48, 52, 68 and 108. A labelled slider pushed what followed it down
+  by 28px or more mid-upgrade, and an unlabelled one at L or XL by 20px and 60px. The reserved
+  height is now keyed on the size (in any case, as the element reads it) and on whether the
+  host carries a label, with the label's line taken from the body-large typescale and the
+  container heights the factory sets. An empty `label=""` builds no label and takes its
+  container's row, like an unlabelled host. `preupgrade:check` now covers every size, with and
+  without a label, both label positions, an icon and an empty label; each passes with the
+  host's box equal before and after. A vertical slider's length is the page's, and numeric
+  sizes are not reserved.
 - **The outlined text field's notch leaves the floated label clear in forced colours.**
   Forced colours repaints a declared-`transparent` border in the line's own colour, so the notch's
   open top edge — the gap the floated label sits in — was drawn as part of the top line, straight
