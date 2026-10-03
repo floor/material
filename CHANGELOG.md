@@ -1239,6 +1239,8 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   in the pre-upgrade flex rule removes the 1.296875 px inline-neighbour baseline
   move at default typography and the group's 8 px height growth at 24 px font
   size with line-height 2, in LTR and RTL, including newline-indented item markup.
+  The strut applies only to the default and `s` sizes, keeping `xs` at its existing
+  2.703125 px inline-neighbour move instead of increasing it to 4 px.
   Full size, density and content reservation is tracked separately in #49.
 
 - **A text button with an icon no longer moves when it upgrades.** The pre-upgrade

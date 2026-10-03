@@ -237,6 +237,18 @@ for (const dir of ["ltr", "rtl"]) {
 // formatted markup too: whitespace between items must not add inline width.
 const buttonGroup = cases.find(row => row.element === "button-group" && row.variant === "default")!;
 for (const dir of ["ltr", "rtl"]) {
+  // Keep xs no worse than main while its size reservation remains in #49.
+  // Main moves the inline neighbour up 2.703125px and the block up 8px.
+  const reason = "Extra-small button group size reservation: floor/material#49 (main baseline).";
+  cases.push({
+    ...buttonGroup, variant: `size=xs; ${dir}; default`,
+    html: buttonGroup.html.replace("<m-button-group ", '<m-button-group size="xs" '),
+    width: 850, style: `direction:${dir}`,
+    knownMoves: [
+      { sibling: "#inline", axis: "y", value: -2.703125, reason },
+      { sibling: "#block", axis: "y", value: -8, reason },
+    ],
+  });
   for (const typography of ["default", "24/2"]) {
     for (const formatted of [false, true]) {
       const html = formatted
