@@ -9,9 +9,20 @@
 // outlined buttons of the small size.
 @include c.host('button-group') {
   display: inline-flex;
-  vertical-align: middle;
+  vertical-align: baseline;
+  align-items: baseline;
   gap: 12px;
   white-space: nowrap;
+
+  // Preserve the inherited line box and baseline used after upgrade. A space
+  // with white-space: pre creates the text strut; zero width and the cancelled
+  // gap keep it from adding any inline space between the buttons.
+  &::before {
+    content: " ";
+    white-space: pre;
+    width: 0;
+    margin-inline-end: -12px;
+  }
 }
 
 @include c.declarations('button-group') {

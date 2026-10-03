@@ -1235,6 +1235,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **The default button group stays in place when it upgrades (#44).** A text strut
+  in the pre-upgrade flex rule removes the 1.296875 px inline-neighbour baseline
+  move at default typography and the group's 8 px height growth at 24 px font
+  size with line-height 2, in LTR and RTL, including newline-indented item markup.
+  Full size, density and content reservation is tracked separately in #49.
+
 - **A text button with an icon no longer moves when it upgrades.** The pre-upgrade
   stylesheet now reserves the same inline padding as the upgraded button at the
   default size and every explicit size, keeping the button and following content in
