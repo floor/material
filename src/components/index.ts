@@ -178,6 +178,7 @@ export type { IconButtonVariant } from "./icon-button/constants";
 // List
 export type {
   ListConfig,
+  ListVariant,
   ListItem,
   ListSlot,
   ListComponent,

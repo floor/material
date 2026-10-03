@@ -2,6 +2,12 @@
 
 Material Design 3 components for the web: as web components, as React, Vue, Svelte and Solid components, and as plain JavaScript. Written in TypeScript, with zero dependencies.
 
+**Documentation, live playgrounds and examples: [md3.io](https://md3.io)**
+
+[![npm version](https://img.shields.io/npm/v/material.svg)](https://www.npmjs.com/package/material)
+[![CI](https://github.com/floor/material/actions/workflows/ci.yml/badge.svg)](https://github.com/floor/material/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/material.svg)](https://github.com/floor/material/blob/main/LICENSE)
+
 - **Material 3 Expressive.** Component sizes, shapes, colours and spring motion follow the Material 3 tokens.
 - **One implementation, every stack.** A button looks and behaves the same as an element, as a framework component and as a factory.
 - **Zero dependencies.** Installing `material` installs nothing else; the frameworks are optional peers.
@@ -14,10 +20,8 @@ Documentation, a live playground and examples in every framework: **[md3.io](htt
 
 <!-- install -->
 ```bash
-npm install material@next
+npm install material
 ```
-
-3.0.0 is in pre-release, on the `next` tag. Until it is released, `npm install material` without the tag installs 1.0.4, an earlier and separate library (see [Where this came from](#where-this-came-from)).
 <!-- /install -->
 
 ## Quick start
@@ -95,7 +99,7 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | Everything the root exports (`export * from 'material'`), without code splitting | 126.9 kB |
 | `material/styles/base` | 2.9 kB |
 | `material/styles/base` and `material/styles/button` | 5.2 kB |
-| `material/styles`, the full stylesheet | 61.8 kB |
+| `material/styles`, the full stylesheet | 62.5 kB |
 <!-- /sizes -->
 
 `material` publishes ESM only, so bundlers drop what you do not import. Each component's page on [md3.io/components](https://md3.io/components/) gives its size.

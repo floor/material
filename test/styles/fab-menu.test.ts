@@ -56,6 +56,20 @@ describe('fab menu stylesheet', () => {
     expect(value('.mtrl-fab-menu--large', 'height')).toBe('96px');
   });
 
+  test('bottom-start anchors the FAB, the list and the items to the inline start', () => {
+    const fab = '.mtrl-fab-menu--bottom-start .mtrl-fab.mtrl-fab-menu__fab';
+    const list = '.mtrl-fab-menu--bottom-start .mtrl-fab-menu__list';
+    const item = '.mtrl-fab-menu--bottom-start .mtrl-fab-menu__item';
+    expect(value(fab, 'inset-inline-start')).toBe('0');
+    expect(value(fab, 'inset-inline-end')).toBe('auto');
+    expect(value(list, 'inset-inline-start')).toBe('0');
+    expect(value(list, 'inset-inline-end')).toBe('auto');
+    expect(value(list, 'align-items')).toBe('flex-start');
+    expect(value(item, 'justify-content')).toBe('flex-start');
+    expect(value('.mtrl-fab-menu--bottom-end', 'inset-inline-end')).toBe('var(--mtrl-fab-menu-margin)');
+    expect(value('.mtrl-fab-menu--bottom-end', 'inset-inline-start')).toBeUndefined();
+  });
+
   test('the list: 8dp above the close button, items 4dp apart, end-aligned', () => {
     expect(value('.mtrl-fab-menu__list', 'bottom')).toBe('calc(100% + 8px)');
     expect(value('.mtrl-fab-menu__list', 'gap')).toBe('4px');

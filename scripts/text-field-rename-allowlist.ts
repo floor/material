@@ -156,7 +156,8 @@ const changelogLineKept = (line: string, inHistory: boolean): boolean => {
 /** True when this line is allowed to contain the one-word spelling. */
 export const lineKept = (file: string, line: string, inChangelogHistory: boolean): boolean => {
   if (exemptFiles.includes(file)) return true;
-  if (file === "CHANGELOG.md") return changelogLineKept(line, inChangelogHistory);
+  // The release-notes fixture is a CHANGELOG copy, with the same migration spellings.
+  if (file === "CHANGELOG.md" || file === "test/fixtures/release-notes-large.md") return changelogLineKept(line, inChangelogHistory);
   const rule = keeps.find((entry) => entry.file === file);
   if (!rule) return false;
   return covered(line, oneWordHits(line), rule.snippets);

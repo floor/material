@@ -5,7 +5,9 @@
 // - list: the FAB turns into a 56dp round close button, pinned to its top
 //   trailing corner, on the colour set's role; the items rise above it, 8dp
 //   away and 4dp apart, pill-shaped, 56dp high, end-aligned, on the role's
-//   container, nearest the FAB first
+//   container, nearest the FAB first. At bottom-start that corner, the list
+//   and the items are pinned to the inline start instead, so they open into
+//   the page; bottom-end keeps the end
 // - menu: the FAB stays; the baseline menu opens from it
 @use '../../styles/abstract/base' as base;
 @use '../../styles/abstract/variables' as v;
@@ -69,6 +71,23 @@ $swap: 48ms;
 
   &--bottom-start {
     inset-inline-start: var(--#{$component}-margin);
+
+    // Into the page from this edge. The shared rules stay on the inline end,
+    // which is where bottom-end and an unplaced menu already open.
+    .#{$fab}.#{$component}__fab {
+      inset-inline-start: 0;
+      inset-inline-end: auto;
+    }
+
+    .#{$component}__list {
+      inset-inline-start: 0;
+      inset-inline-end: auto;
+      align-items: flex-start;
+    }
+
+    .#{$component}__item {
+      justify-content: flex-start;
+    }
   }
 
   // The FAB, pinned to the top trailing corner it shrinks towards. Doubled
