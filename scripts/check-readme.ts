@@ -21,8 +21,9 @@
  * - the install line follows the version: `material@next` while package.json is a
  *   3.0.0 pre-release, `material` once it is not (the release pull request that
  *   sets 3.0.0 fails here until both files are changed);
- * - the numbers between the `sizes` markers are within 2% of what size:check
- *   measured (the release pull request refreshes them);
+ * - the numbers between the `sizes` markers are what size:check measured,
+ *   rounded to the 0.1 kB the table prints (the release pull request refreshes
+ *   them);
  * - readability: no paragraph or list item over about four rendered lines, no
  *   sentence with more than two inline code spans (tables and fences apart);
  * - links: an anchor names a heading of the same file, a relative link names a
@@ -30,9 +31,11 @@
  *   to this repository's CHANGELOG.md on GitHub names one of its headings.
  *
  * With `--online` it also fetches every external link and fails on anything but
- * a 200, and on an md3.io anchor the fetched page has no heading for. CI does not
- * pass the flag: a pull request must not fail because another site is down. Run
- * it by hand when a link changes.
+ * a 200, and on an md3.io anchor the fetched page has no heading for. A 403 from
+ * npmjs.com that carries its Cloudflare challenge is unverifiable: reported,
+ * counted apart, and neither a pass nor a failure. CI does not pass the flag: a
+ * pull request must not fail because another site is down. Run it by hand when a
+ * link changes.
  *
  * Not checked here: `css` and `bash` blocks other than the install line, and the
  * prose. A reviewer reads those.
@@ -44,6 +47,7 @@ import { join, resolve } from "node:path";
 
 import { createPackageFixture, run } from "./package-fixture";
 import { FILES, headingSlugs, parse, type Block } from "./readme-blocks";
+import { classifyLink } from "./readme-links";
 
 const REPOSITORY = "https://github.com/floor/material";
 const online = process.argv.includes("--online");
@@ -83,11 +87,12 @@ for (const doc of docs) {
 
 // ── The sizes ─────────────────────────────────────────────────────
 // Each row of the table, in order, and the size:check measurement it states.
-// A stated figure may be up to 2% (and at least 100 bytes) from the measurement:
-// a pull request that moves a bundle by a few bytes must not fail because a row
-// now rounds differently. The release pull request refreshes the table
-// (.github/CONTRIBUTING.md), and a row that has drifted is printed until then.
-const SIZE_TOLERANCE = 0.02;
+// A README number is a claim: a row passes only when it equals the measurement
+// rounded to the 0.1 kB the table prints — the function below, which the failure
+// message formats with too. The release pull request refreshes the table
+// (.github/CONTRIBUTING.md).
+/** What the table prints: kB of 1,000 bytes, one decimal. */
+const tableSize = (bytes: number): string => (bytes / 1000).toFixed(1);
 const SIZE_ROWS = ["button-initial", "button", "form", "all-js", "base-css", "button-css", "full-css"] as const;
 const measuredFile = Bun.file("analysis/package-size.json");
 assert(await measuredFile.exists(), "analysis/package-size.json is missing: run `bun run size:check` first");
@@ -99,12 +104,9 @@ for (const doc of docs) {
   if (stated.length !== SIZE_ROWS.length) { fail(`${doc.file}: the sizes table has ${stated.length} rows, expected ${SIZE_ROWS.length}`); continue; }
   SIZE_ROWS.forEach((key, index) => {
     const bytes = measured.sizes[key].gzip;
-    const current = (bytes / 1000).toFixed(1);
-    const drift = Math.abs(stated[index] * 1000 - bytes);
-    if (drift > Math.max(SIZE_TOLERANCE * bytes, 100)) {
-      fail(`${doc.file}: sizes row ${index + 1} (${key}) says ${stated[index]} kB; size:check measured ${bytes} bytes, ${current} kB, more than 2% away`);
-    } else if (stated[index].toFixed(1) !== current) {
-      console.log(`${doc.file}: sizes row ${index + 1} (${key}) says ${stated[index]} kB and the build is ${current} kB: within the tolerance, to refresh at the release`);
+    const printed = tableSize(bytes);
+    if (stated[index] !== Number(printed)) {
+      fail(`${doc.file}: sizes row ${index + 1} (${key}) says ${stated[index]} kB; size:check measured ${bytes} bytes, ${printed} kB`);
     }
   });
 }
@@ -161,6 +163,9 @@ for (const doc of docs) {
     }
   }
 }
+// Links npm's Cloudflare challenge answered: neither a pass nor a failure.
+// Each is reported where it is fetched, and counted apart in the summary.
+let unverifiable = 0;
 if (online) {
   for (const link of [...external].sort()) {
     // GitHub answers 429 or 503 to a burst of requests: ask those once more.
@@ -170,6 +175,13 @@ if (online) {
       response = await fetch(link, { redirect: "manual" }).catch((error: Error) => error);
     }
     const status = response instanceof Error ? response.message : String(response.status);
+    // npm answers a burst with Cloudflare's challenge: a 403 that says nothing
+    // about the link. It is unverifiable — reported, counted apart, not failed.
+    if (!(response instanceof Error) && classifyLink(link, response.status, response.headers) === "unverifiable") {
+      unverifiable += 1;
+      console.log(`${status}  ${link}  (unverifiable: npm's Cloudflare challenge)`);
+      continue;
+    }
     const pending = PENDING.includes(link);
     const anchor = link.startsWith("https://md3.io/") ? link.split("#")[1] : undefined;
     // An md3.io link with an anchor names a heading of the page it fetched.
@@ -320,7 +332,8 @@ try {
   if (tsc.exitCode !== 0) fail(`The examples do not compile against the packed package (example-<n>-<file>-<line>):\n${tsc.stdout}${tsc.stderr}`);
 
   console.log(`${FILES.join(" and ")}: ${scripts.length} scripts compiled, ${specifiers.size} specifiers resolved, ` +
-    `${tags.length} tags checked, ${docs.reduce((count, doc) => count + doc.links.length, 0)} links${online ? ` (${external.size} fetched)` : ""}`);
+    `${tags.length} tags checked, ${docs.reduce((count, doc) => count + doc.links.length, 0)} links` +
+    `${online ? ` (${external.size} fetched${unverifiable ? `, ${unverifiable} unverifiable` : ""})` : ""}`);
 } finally {
   await fixture.cleanup();
 }
