@@ -18,10 +18,7 @@ export interface MoveResult {
   siblings?: readonly string[];
   knownMoves?: readonly KnownMove[];
 }
-const KNOWN_MOVES: Record<string, readonly KnownMove[]> = {
-  "button-group": [{ sibling: "#inline", axis: "y", value: 1.296875,
-    reason: "Button group pre-upgrade baseline: floor/material#44." }],
-};
+const KNOWN_MOVES: Record<string, readonly KnownMove[]> = {};
 type Mark = { mark: "ok" | "known" | "FAIL"; note: string };
 
 /** Every present row uses the same policy, including in a filtered run. */

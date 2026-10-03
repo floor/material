@@ -1,25 +1,240 @@
 // src/styles/elements/_button-group.scss
-// <m-button-group> before upgrade: a box per <m-button-group-item>, the size
-// of its button, which is drawn on upgrade.
+// <m-button-group> before upgrade: one box per <m-button-group-item>, the
+// size of the button the group draws on upgrade.
+//
+// The upgraded host is an inline-block (the element base) with the default
+// baseline. That baseline is the buttons' text, and the host is as tall as
+// its line box: the buttons, or the surrounding line's strut when the strut
+// is taller. At font-size 24px and line-height 2 the strut is 48px, so a
+// 40px group is 48px tall once upgraded. The old rule was an inline-flex
+// with vertical-align: middle, which centres the group on the line's middle
+// and has no strut: text on the line moved at upgrade (1.3px at the default
+// type; the block below did not), and a tall line left the reserved box
+// short of the upgraded one.
+//
+// An inline-block host has that same line box. The gap is margin on the
+// items, because an inline-block does not take `gap`. Sizes, density, the
+// connected gap, a column, and the text button's padding follow
+// components/_button-group.scss and the button tokens.
+//
+// A column is the inner inline-flex (its baseline is the first button's
+// text). The upgraded host is an inline-block around that column, so the
+// line's strut is inside the host: when the strut's ascent is below the
+// first button's baseline the box grows above the column. `baseline` is
+// that text baseline at the default density; each density step moves it
+// up by half the step. The ascent is Roboto's, half the extra leading
+// plus 5/6 of the em.
+@use 'sass:map';
+@use 'sass:string';
 @use '../abstract/variables' as v;
 @use '../abstract/mixins' as m;
 @use 'config' as c;
 
-// As components/_button-group.scss: the standard group's 12px between
-// outlined buttons of the small size.
+// Height, standard gap, padding, outline, label role and icon, per size.
+// The same numbers as BUTTON_GROUP_SIZE_TOKENS and $button (height, padding,
+// outline). The s row is the default, including a missing size attribute.
+$group: (
+  'xs': ('height': 32px, 'gap': 18px, 'padding': 12px, 'outline': 1px, 'type': 'label-large', 'icon': 20px, 'glyph': 20px, 'icon-gap': 4px, 'baseline': 21px),
+  's': ('height': 40px, 'gap': 12px, 'padding': 16px, 'outline': 1px, 'type': 'label-large', 'icon': 20px, 'glyph': 24px, 'icon-gap': 8px, 'baseline': 25px),
+  'm': ('height': 56px, 'gap': 8px, 'padding': 24px, 'outline': 1px, 'type': 'title-medium', 'icon': 24px, 'glyph': 24px, 'icon-gap': 8px, 'baseline': 33px),
+  'l': ('height': 96px, 'gap': 8px, 'padding': 48px, 'outline': 2px, 'type': 'headline-small', 'icon': 32px, 'glyph': 32px, 'icon-gap': 12px, 'baseline': 56px),
+  'xl': ('height': 136px, 'gap': 8px, 'padding': 64px, 'outline': 3px, 'type': 'headline-large', 'icon': 40px, 'glyph': 40px, 'icon-gap': 16px, 'baseline': 79px)
+);
+
+// Padding the column needs above it so the host matches the inline-block
+// strut. Sass must not evaluate max(); the lengths are for the browser.
+@function strut-pad($baseline) {
+  @return string.unquote('max(0px, calc((1lh - 1em) / 2 + 5em / 6 - #{$baseline}))');
+}
+
+// How far below the text baseline the centred icon's bottom sits. The
+// upgraded button's baseline is that bottom (the icon is the first flex
+// item). Density shortens the button and raises the text by the same
+// amount, so one shift fits every density.
+@function icon-shift($height, $icon, $baseline) {
+  @return ($height + $icon) * 0.5 - $baseline;
+}
+
+// An empty item's baseline is its bottom edge. The icon button's graphic
+// sits this far above that edge.
+@function glyph-shift($height, $glyph) {
+  @return ($glyph - $height) * 0.5;
+}
+
+@mixin item($size) {
+  $s: map.get($group, $size);
+  height: map.get($s, 'height');
+  padding: 0 map.get($s, 'padding');
+  border-width: map.get($s, 'outline');
+  margin-inline-end: map.get($s, 'gap');
+  @include m.typography(map.get($s, 'type'));
+}
+
+// :not([size]) and [size=s] are the default row.
+@mixin at($size) {
+  @if $size == 's' {
+    &:not([size]),
+    &[size='s'] { @content; }
+  } @else {
+    &[size='#{$size}'] { @content; }
+  }
+}
+
 @include c.host('button-group') {
-  display: inline-flex;
-  vertical-align: middle;
-  gap: 12px;
+  display: inline-block;
+  vertical-align: baseline;
   white-space: nowrap;
+
+  @each $size, $s in $group {
+    @include at($size) {
+      > * { @include item($size); }
+
+      // The icon's width and the gap are start padding: a pseudo on the
+      // child is not covered by the rollback. The item then shifts so the
+      // text baseline lines up with the icon's bottom. A `label` attribute
+      // with no text content is not reserved; drawing it needs that pseudo.
+      &:not([labels='selected']) > *[icon]:not(:empty) {
+        padding-inline-start: map.get($s, 'padding') + map.get($s, 'icon') + map.get($s, 'icon-gap');
+        vertical-align: icon-shift(map.get($s, 'height'), map.get($s, 'icon'), map.get($s, 'baseline'));
+      }
+
+      // No text and no label: an icon button, square, the container height.
+      // Its graphic is the icon button's, which at s is 24px, not the 20px
+      // icon of a text button.
+      > *:empty:not([label]) {
+        width: map.get($s, 'height');
+        min-width: 0;
+        padding: 0;
+        vertical-align: glyph-shift(map.get($s, 'height'), map.get($s, 'glyph'));
+      }
+
+      @each $density, $step in ('comfortable': 4px, 'compact': 8px) {
+        &[density='#{$density}'] > * {
+          height: map.get($s, 'height') - $step;
+        }
+
+        &[density='#{$density}'] > *:empty:not([label]) {
+          width: map.get($s, 'height') - $step;
+          vertical-align: glyph-shift(map.get($s, 'height') - $step, map.get($s, 'glyph'));
+        }
+      }
+
+      // Labels on the selected button only: the others are the container square
+      // and their text is clipped, not removed, so the line's baseline stays
+      // the text's. A selected item keeps its label. The group reads `selected`
+      // on the item when it has no `value` of its own.
+      &[labels='selected'] > * {
+        width: map.get($s, 'height');
+        min-width: map.get($s, 'height');
+        padding-inline: (map.get($s, 'height') - map.get($s, 'icon')) * 0.5;
+        overflow: clip;
+      }
+
+      &[labels='selected'] > [selected] {
+        width: auto;
+        padding-inline: map.get($s, 'padding');
+        overflow: visible;
+      }
+    }
+  }
+
+  // The small button's icon side is 12px, not the 16px text padding
+  // (ButtonDefaults.getSmallContentPadding), then the icon and its gap.
+  // xs is already 12px. A selected labels item keeps the size's padding.
+  &:not([size]):not([labels='selected']) > *[icon]:not([selected]):not(:empty),
+  &[size='s']:not([labels='selected']) > *[icon]:not([selected]):not(:empty) {
+    padding-inline-start: v.button('padding-icon') + v.button('icon-size-s') + v.button('icon-gap-s');
+  }
+
+  // Outlined is the default and keeps the outline. The other variants have
+  // no border, so the outline must not widen them.
+  &[variant='filled'] > *,
+  &[variant='tonal'] > *,
+  &[variant='elevated'] > *,
+  &[variant='text'] > * {
+    border-width: 0;
+  }
+
+  // Text buttons at xs and s use the 12px text padding. m, l and xl keep
+  // the size's padding (components/_button.scss). With an icon the end side
+  // stays the size's padding.
+  &[variant='text']:not([size]) > *:not([icon]),
+  &[variant='text'][size='xs'] > *:not([icon]),
+  &[variant='text'][size='s'] > *:not([icon]) {
+    padding-inline: v.button('padding-horizontal-small');
+  }
+
+  &[variant='text']:not([size]):not([labels='selected']) > *[icon]:not(:empty),
+  &[variant='text'][size='s']:not([labels='selected']) > *[icon]:not(:empty) {
+    padding-inline: (v.button('padding-horizontal-small') + v.button('icon-size-s') + v.button('icon-gap-s')) v.button('padding-s');
+  }
+
+  // Connected groups: 2px between buttons, and 48px minimum at xs and s.
+  &[kind='connected'] > * {
+    margin-inline-end: 2px;
+  }
+
+  &[kind='connected']:not([size]) > *,
+  &[kind='connected'][size='xs'] > *,
+  &[kind='connected'][size='s'] > *,
+  &[kind='connected']:not([size]) > *:empty:not([label]),
+  &[kind='connected'][size='xs'] > *:empty:not([label]),
+  &[kind='connected'][size='s'] > *:empty:not([label]) {
+    min-width: 48px;
+  }
+
+  // A column's baseline is its first button. Block children would put it on
+  // the last button instead, and the inline sibling would jump.
+  &[orientation='vertical'] {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: stretch;
+    vertical-align: baseline;
+
+    > * {
+      display: inline-flex;
+      width: auto;
+      margin-inline-end: 0;
+    }
+  }
+
+  @each $size, $s in $group {
+    @include at($size) {
+      &[orientation='vertical'] {
+        padding-top: strut-pad(map.get($s, 'baseline'));
+      }
+
+      &[orientation='vertical'] > * {
+        margin-block-end: map.get($s, 'gap');
+      }
+
+      @each $density, $step in ('comfortable': 4px, 'compact': 8px) {
+        &[density='#{$density}'][orientation='vertical'] {
+          padding-top: strut-pad(map.get($s, 'baseline') - $step * 0.5);
+        }
+      }
+    }
+  }
+
+  &[kind='connected'][orientation='vertical'] > * {
+    margin-inline-end: 0;
+    margin-block-end: 2px;
+  }
+
+  > *:last-child,
+  &[kind='connected'] > *:last-child,
+  &[orientation='vertical'] > *:last-child,
+  &[kind='connected'][orientation='vertical'] > *:last-child {
+    margin-inline-end: 0;
+    margin-block-end: 0;
+  }
 }
 
 @include c.declarations('button-group') {
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
-  height: v.button('height-s');
-  padding: 0 v.button('padding-s');
+  min-width: v.button('min-width');
   border: v.button('outline-width-s') solid transparent;
-  @include m.typography('label-large');
+  @include item('s');
 }

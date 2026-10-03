@@ -221,3 +221,56 @@ for (const dir of ["ltr", "rtl"]) {
           : "Text field host grows at 24px/2: floor/material#43." })) });
   }
 }
+
+// Button group: the same line, both directions, at the default type and at
+// 12px and 24px with line-height 1 and 2. Every size and every variant that
+// changes the box, plus density, a connected group, a column, icon buttons
+// and labels that show on the selected button only.
+const buttonGroupItems = `<m-button-group-item value="a">One</m-button-group-item><m-button-group-item value="b">Two</m-button-group-item><m-button-group-item value="c">Three</m-button-group-item>`;
+const buttonGroupFamilies: { variant: string; attrs: string; items?: string }[] = [
+  { variant: "default", attrs: "" },
+  { variant: "size=xs", attrs: 'size="xs"' },
+  { variant: "size=s", attrs: 'size="s"' },
+  { variant: "size=m", attrs: 'size="m"' },
+  { variant: "size=l", attrs: 'size="l"' },
+  { variant: "size=xl", attrs: 'size="xl"' },
+  { variant: "variant=filled", attrs: 'variant="filled"' },
+  { variant: "variant=tonal", attrs: 'variant="tonal"' },
+  { variant: "variant=elevated", attrs: 'variant="elevated"' },
+  { variant: "variant=text", attrs: 'variant="text"' },
+  { variant: "density=comfortable", attrs: 'density="comfortable"' },
+  { variant: "density=compact", attrs: 'density="compact"' },
+  { variant: "kind=connected", attrs: 'kind="connected"' },
+  { variant: "orientation=vertical", attrs: 'orientation="vertical"' },
+  { variant: "labels=selected", attrs: 'selection="single" labels="selected"' },
+  { variant: "labels=selected one", attrs: 'selection="single" labels="selected"',
+    items: `<m-button-group-item value="a">One</m-button-group-item><m-button-group-item value="b" selected>Two</m-button-group-item><m-button-group-item value="c">Three</m-button-group-item>` },
+  { variant: "icon", attrs: "",
+    items: `<m-button-group-item value="a" icon="${ICON}" aria-label="One"></m-button-group-item><m-button-group-item value="b" icon="${ICON}" aria-label="Two"></m-button-group-item><m-button-group-item value="c" icon="${ICON}" aria-label="Three"></m-button-group-item>` },
+  { variant: "icon and text", attrs: "",
+    items: `<m-button-group-item value="a" icon="${ICON}">One</m-button-group-item><m-button-group-item value="b" icon="${ICON}">Two</m-button-group-item><m-button-group-item value="c" icon="${ICON}">Three</m-button-group-item>` },
+  { variant: "disabled", attrs: "disabled" },
+  { variant: "shape=square", attrs: 'shape="square"' },
+  { variant: "equal-width", attrs: 'equal-width style="width:320px"' },
+  { variant: "connected xs", attrs: 'kind="connected" size="xs"',
+    items: `<m-button-group-item value="a">A</m-button-group-item><m-button-group-item value="b">B</m-button-group-item>` },
+  { variant: "compact m", attrs: 'density="compact" size="m"' },
+  { variant: "vertical l", attrs: 'orientation="vertical" size="l"' },
+];
+for (const dir of ["ltr", "rtl"]) {
+  for (const typography of ["default", "12/1", "12/2", "24/1", "24/2"]) {
+    const [size, height] = typography.split("/");
+    const style = typography === "default" ? "" : `font-size:${size}px;line-height:${height}`;
+    for (const family of buttonGroupFamilies) {
+      if (family.variant === "default" && dir === "ltr" && typography === "default") continue;
+      const host = `<m-button-group id="subject" dir="${dir}" ${family.attrs} aria-label="Actions">${family.items ?? buttonGroupItems}</m-button-group>`;
+      cases.push({
+        element: "button-group",
+        variant: `${family.variant}; ${dir}; ${typography}`,
+        html: `<div dir="${dir}">${host}<span id="next">Next</span></div>`,
+        style, width: 980, host: "#subject", strictBox: true,
+        siblings: ["#next", "#block"],
+      });
+    }
+  }
+}

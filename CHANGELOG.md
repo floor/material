@@ -1235,6 +1235,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **Text beside a button group stays put when the group upgrades.** The group reserved an inline flex centred on the line. The upgraded group is an inline block on the text baseline, so at the default type the text beside it dropped 1.296875px; the block below did not move. The reserved box now has that baseline, in both directions, at the default type and at 12px and 24px with line-height 1 and 2. A 40px group at 24px and line-height 2 reserves 48px, which is the line's strut and the height the upgraded group has. Sizes, variants, density, a connected row, a column and icon buttons reserve the upgraded box. A column's following text lines up with the first button. The upgraded group is unchanged.
 - **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"` (FLO-592).**
   The `touch-target` mixin anchored its `::after` with `inset-inline-start: 50%` and then moved it
   with the physical `translate(-50%, -50%)`. Right-to-left, the logical inset pins the box's right
