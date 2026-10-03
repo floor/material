@@ -1235,6 +1235,14 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A button keeps its neighbours in place when it upgrades under the page's own typography.**
+  The upgraded host was an inline-block, so it built a line box from the page's font. At
+  `font-size: 24px; line-height: 2` that line box is 48px: a default button grew from 40px to
+  48px and the siblings moved 8px, and an `xs` button grew from 32px to 48px. In a baseline
+  row beside a switch the button moved 1.3px at the default type, 1.8px at 12px, −1.3px at
+  24px with line-height 1, and −7px at 24px with line-height 2. The host is now inline-flex,
+  the box the pre-upgrade rule already reserves, and those moves are 0. At the default type
+  the upgraded box is unchanged.
 - **A text button with an icon no longer moves when it upgrades.** The pre-upgrade
   stylesheet now reserves the same inline padding as the upgraded button at the
   default size and every explicit size, keeping the button and following content in
