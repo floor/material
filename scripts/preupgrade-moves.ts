@@ -20,7 +20,7 @@ export interface MoveResult {
 }
 const KNOWN_MOVES: Record<string, readonly KnownMove[]> = {
   "button-group": [{ sibling: "#inline", axis: "y", value: 1.296875,
-    reason: "Button-group pre-upgrade baseline: its own follow-up must match the upgraded baseline." }],
+    reason: "Button group pre-upgrade baseline: floor/material#44." }],
 };
 type Mark = { mark: "ok" | "known" | "FAIL"; note: string };
 

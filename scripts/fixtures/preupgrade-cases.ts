@@ -200,7 +200,7 @@ for (const dir of ["ltr", "rtl"]) {
       style, width: 850, host: "#subject", strictBox: true, siblings: ["#button", "#field", "#block"],
       knownMoves: [{ sibling: "#button", axis: "y",
         value: ({ default: 1.296875, "12/1": 1.828125, "12/2": 1.828125, "24/1": -1.34375, "24/2": -7 } as Record<string, number>)[typography],
-        reason: "Button pre-upgrade baseline under consumer typography; fix in the button's own change." }],
+        reason: "Button pre-upgrade baseline under consumer typography: floor/material#42." }],
     });
   }
   // State-specific controls at the typography that exposed the host line box.
@@ -216,6 +216,8 @@ for (const dir of ["ltr", "rtl"]) {
       host: "#subject", width: 850, style: "font-size:24px;line-height:2",
       knownMoves: ["#inline", "#block"].map(sibling => ({ sibling, axis: "y" as const,
         value: element === "button" ? 8 : 1.5,
-        reason: `${element} host line box grows at 24px/2; fix in that element's own change.` })) });
+        reason: element === "button"
+          ? "Button host grows at 24px/2: floor/material#42."
+          : "Text field host grows at 24px/2: floor/material#43." })) });
   }
 }
