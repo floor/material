@@ -121,6 +121,16 @@ export const cases: PreupgradeCase[] = [
   c("text-field", "density=compact", `<m-text-field density="compact" label="Name"></m-text-field>`),
   c("text-field", "outlined compact value", `<m-text-field variant="outlined" density="compact" label="Name" value="Ada"></m-text-field>`),
   c("text-field", "width set by the page", `<m-text-field label="Name" style="width:300px"></m-text-field>`),
+  // A password paints no value (public issue #53): its box is the empty
+  // password field's, so nothing moves when the masked input arrives.
+  c("text-field", "type=password", `<m-text-field label="Password" type="password"></m-text-field>`),
+  c("text-field", "type=password value", `<m-text-field label="Password" type="password" value="hunter2"></m-text-field>`),
+  // A hidden field paints no value either, and takes no space at all — before
+  // upgrade (this rule) or after (the upgraded host's own rule) — so the token
+  // cannot leak and nothing moves at upgrade.
+  c("text-field", "type=hidden", `<m-text-field type="hidden"></m-text-field>`),
+  c("text-field", "type=hidden value", `<m-text-field type="hidden" value="synthetic-token"></m-text-field>`),
+  c("text-field", "type=HIDDEN value", `<m-text-field type="HIDDEN" value="synthetic-token"></m-text-field>`),
   // FLO-299: without a label the text is centred, in both densities
   c("text-field", "no label value", `<m-text-field aria-label="Name" value="Ada"></m-text-field>`),
   c("text-field", "no label compact value", `<m-text-field density="compact" aria-label="Name" value="Ada"></m-text-field>`),

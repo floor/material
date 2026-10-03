@@ -54,7 +54,16 @@ $icons: (
 
 // State Layers
 @mixin state-layer($color, $state: 'hover', $selector: false) {
-  position: relative;
+  // The host is the layer's containing block, so a static host needs a
+  // position. A host that already has one (a fixed corner FAB, an absolute or
+  // sticky element of the app's own) keeps it: `:where()` gives this
+  // declaration no specificity, so any other position wins, here or in the
+  // page. Written beside the state selector it was (0,2,0) and beat the
+  // corner classes' (0,1,0), which took the button out of its corner while
+  // hovered, focused or pressed.
+  @at-root :where(&) {
+    position: relative;
+  }
 
   // The ripple is the press (FLO-260, as Compose draws it: one pressed indication at
   // 0.10). An element that carries a ripple leaves its pressed layer to the wave, so
