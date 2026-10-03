@@ -129,9 +129,11 @@ describe("explicit contrast levels are opt-in", () => {
     // The state layer's position sits in `:where()`, so a corner FAB's fixed
     // outranks it and a positioned host keeps its position
     // (styles/abstract/_mixins.scss).
+    // A FAB menu at bottom-start anchors its list, its items and its FAB to
+    // the inline start (styles/components/_fab-menu.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("117d3bcf8b57043df1bc420c69fc67b9bbcfd5553744a759d005519f0387ee8a");
-    expect(css.length).toBe(527240);
+      .toBe("f6aa5701c7783bfab08da66608daa7360fe139c222892aa5733bc47ae06763ba");
+    expect(css.length).toBe(527534);
   });
 
   test("today's sheets still resolve to the fixture", () => {
