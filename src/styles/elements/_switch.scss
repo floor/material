@@ -49,6 +49,26 @@
     @include m.typography('body-medium');
   }
 
+  // No slotted text and no label, so the supporting text is the only text and
+  // there is no label row above it: the spanning track is then the first row's
+  // only item, and an empty box synthesizes its baseline at its bottom edge —
+  // the track's bottom, 44px — so that was the host's baseline, 11px below the
+  // supporting text's own (33px) that the element's helper keeps after
+  // upgrade, and inline text beside the switch moved 11px at upgrade (the
+  // check's `[supporting-text no label]` rows). With no label above it the
+  // track belongs beside the text, in the row `[supporting-text]::before`
+  // places the text in: without it the first row keeps no height, the track's
+  // box does not move, and the text's baseline — the first row with one — is
+  // the host's before upgrade too. The labelled case keeps the span there: its
+  // label leads the first row and carries the baseline. An empty
+  // `supporting-text` is no supporting text (the element builds no helper from
+  // an empty value) and is the track box below, not this.
+  &:empty:is(:not([label]), [label=''])[supporting-text]:not([supporting-text='']) {
+    &::after {
+      grid-row: 2;
+    }
+  }
+
   // No slotted text, and no `label` attribute or an empty one (the element
   // reads `label=""` as no label and builds none), and no supporting text
   // (`supporting-text` absent or empty: the element builds no helper from an
@@ -62,5 +82,22 @@
   &:empty:is(:not([label]), [label='']):is(:not([supporting-text]), [supporting-text='']) {
     column-gap: 0;
     min-height: 48px;
+
+    // The container's baseline is its first row's first item's, and the track
+    // was the only item: an empty box synthesizes a baseline at its bottom
+    // edge, so the host's baseline was the track's bottom, 40px from the
+    // host's top — 16px below the 24px the element's own container has after
+    // upgrade (4px above and below the 32px track, centred: the centre). A
+    // zero-height item centred with the track carries that centre as the
+    // baseline before upgrade too; it is 0 x 0, so the host's box, the track's
+    // box and the zero gap do not change. `span 2` matches the empty
+    // `supporting-text`'s spanning `::after` above: with an item in the first
+    // row, that span gives the first row none of the track's 32px, so the item
+    // has to span with it to stay centred in the track.
+    &::before {
+      content: '';
+      grid-column: 1;
+      grid-row: 1 / span 2;
+    }
   }
 }
