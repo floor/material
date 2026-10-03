@@ -47,9 +47,15 @@ const after = async (ms: number): Promise<void> => {
  * under it a real turn cannot be waited for either: Bun's fake timers fake
  * Date, performance, hrtime, `Bun.sleep`, and even a `setTimeout` captured
  * before the clock went fake. So a test that opens a submenu awaits the same
- * module its loader does; reactions on one module record run in registration
- * order, so when this returns the loader has installed the feature, and
- * replayed anything a queued interaction left, before the test acts.
+ * module its loader does.
+ *
+ * That returns once the module is evaluated, which is not the same as the
+ * loader having installed the feature: on a cold chunk -- nothing before this
+ * file has used it -- the loader's own reaction can still be pending on a turn
+ * the fake clock's waits never take, so the interaction would be queued and
+ * never replayed. This file opens a submenu only later: `opened` awaits the
+ * module, then the menu's own timers, and the case waits `after(400)` before
+ * it reads the element.
  */
 const submenuFeatureLoaded = async (): Promise<void> => {
   await import('../../../src/components/menu/features/submenu');

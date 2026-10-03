@@ -77,8 +77,8 @@ const submenuFeatureLoaded = async (): Promise<void> => {
  * time at most, taking a real turn each step. The menu's own waits are on the
  * fake clock and are exact; a cold submenu chunk's load is not, so each step
  * also lets the loop turn -- where a pending import, and the loader's install
- * queued behind it, settles. Wait on the element the test needs, not a
- * duration.
+ * queued behind it, settles. `setImmediate` stays real under Bun's fake timers.
+ * Wait on the element the test needs, not a duration.
  */
 const until = async (what: string, ready: () => boolean, found: () => unknown = () => undefined): Promise<void> => {
   for (let elapsed = 0; elapsed <= 5000; elapsed += 10) {
