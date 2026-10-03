@@ -1,62 +1,159 @@
-// src/styles/elements/_text-field.scss
-// <m-text-field> before upgrade: the field's container, the label at rest and
-// the value on the input's line.
+// <m-text-field> keeps the consumer's line box around its inline field,
+// just as the upgraded host does. The surrogate carries the field's own
+// typography, box and baseline; a tall inherited strut can enlarge the host.
 @use 'config' as c;
 @use 'field';
 @use '../abstract/variables' as v;
+@use '../abstract/mixins' as m;
+@use '../abstract/theme' as t;
 
 @include c.host('text-field') {
-  @include field.field;
+  display: inline-block;
+  position: relative;
+  width: v.text-field('width');
 
-  // Multiline is the textarea's box, not the single-line 56px one (FLO-425).
-  // Height and padding-top are the component's (&--multiline). The padding-top
-  // is where the first line starts: the inline sibling on this line aligns to
-  // it. It is the single-line field's text (FLO-299): 16px, 24px under a
-  // filled field's label, and outlined the same 16px less its own border.
+  // The value (or a space holding its baseline) paints the inner field.
+  // Its half-pixel inset matches the input's baseline. The outer host must
+  // retain the page's typography, including the space below that baseline.
+  &::before {
+    content: attr(value) ' ';
+    display: inline-block;
+    box-sizing: border-box;
+    width: 100%;
+    height: v.text-field('height');
+    padding: 24.5px v.text-field('padding-horizontal') 0;
+    border-radius: v.text-field('border-radius') v.text-field('border-radius') 0 0;
+    border-bottom: v.text-field('border-width') solid t.color('on-surface-variant');
+    background-color: t.color('surface-container-highest');
+    color: t.color('on-surface');
+    white-space: pre;
+    // Clip the value without replacing its baseline with the bottom edge.
+    overflow: clip;
+    @include m.typography('body-large');
+  }
+
+  &:not([label])::before {
+    padding-top: 16.5px;
+  }
+
+  &[variant='outlined']::before {
+    padding-top: 15.5px;
+    border: v.text-field('border-width') solid t.color('outline');
+    border-radius: v.text-field('border-radius');
+    background: none;
+  }
+
+  &[density='compact'] {
+    &::before {
+      height: 40px;
+      padding-top: 13.5px;
+      @include m.typography('body-medium');
+    }
+
+    &:not([label])::before { padding-top: 10px; }
+    &[variant='outlined']::before { padding-top: 9px; }
+  }
+
+  // Reserve the helper/counter row under the field, keeping the fill and
+  // indicator inside the field's own box.
+  &[supporting-text]:not([supporting-text='']),
+  &[maxlength] {
+    &::before {
+      height: calc(#{v.text-field('height')} + #{field.$supporting-row});
+      border-bottom: field.$supporting-row solid transparent;
+      background-clip: padding-box;
+      background-image: linear-gradient(to top, #{t.color('on-surface-variant')} v.text-field('border-width'), transparent v.text-field('border-width'));
+    }
+
+    &[variant='outlined']::before {
+      padding-top: calc(15.5px + #{v.text-field('border-width')});
+      padding-left: calc(#{v.text-field('padding-horizontal')} + #{v.text-field('border-width')});
+      border-width: 0 0 field.$supporting-row;
+      border-radius: v.text-field('border-radius') / v.text-field('border-radius') v.text-field('border-radius') calc(#{v.text-field('border-radius')} + #{field.$supporting-row}) calc(#{v.text-field('border-radius')} + #{field.$supporting-row});
+      background-image: none;
+      box-shadow: inset 0 0 0 v.text-field('border-width') t.color('outline');
+    }
+
+    &[density='compact']::before {
+      height: calc(40px + #{field.$supporting-row});
+    }
+  }
+
+  &[label]::after {
+    content: attr(label);
+    white-space: nowrap;
+    position: absolute;
+    top: v.text-field('padding-vertical');
+    left: v.text-field('padding-horizontal');
+    color: t.color('on-surface-variant');
+    @include m.typography('body-large');
+  }
+
+  &[label][value]:not([value=''])::after {
+    top: 8px;
+    @include m.typography('body-small');
+  }
+
+  &[variant='outlined'][label][value]:not([value=''])::after {
+    top: -8px;
+    padding: 0 4px;
+    left: 12px;
+  }
+
+  &[density='compact']::after {
+    top: 10px;
+    @include m.typography('body-medium');
+  }
+
+  // Multiline reserves the textarea's box and first line. Compact multiline
+  // keeps the compact single-line height, as the upgraded input does.
   &[type='multiline'] {
-    height: v.text-field('height-multiline');
-    padding-top: v.text-field('padding-top-multiline');
+    &::before {
+      height: v.text-field('height-multiline');
+      padding-top: v.text-field('padding-top-multiline');
+    }
 
-    &[label] {
+    &[label]::before {
       padding-top: v.text-field('padding-top-multiline-label');
     }
 
-    &[variant='outlined'] {
+    &[variant='outlined']::before {
       padding-top: calc(#{v.text-field('padding-top-multiline')} - #{v.text-field('border-width')});
     }
 
-    // Compact multiline stays the compact field (40px), with the compact
-    // single-line field's first line.
     &[density='compact'] {
-      height: 40px;
-      padding-top: v.text-field('padding-top-multiline-compact');
+      &::before {
+        height: 40px;
+        padding-top: v.text-field('padding-top-multiline-compact');
+      }
 
-      &[label] {
+      &[label]::before {
         padding-top: v.text-field('padding-top-multiline-compact-label');
       }
 
-      &[variant='outlined'] {
+      &[variant='outlined']::before {
         padding-top: calc(#{v.text-field('padding-top-multiline-compact')} - #{v.text-field('border-width')});
       }
     }
 
-    // The supporting row is the single-line field's. Outlined drops its top
-    // border for an inset ring, so the whole inset is padding there.
     &[supporting-text]:not([supporting-text='']),
     &[maxlength] {
-      height: calc(#{v.text-field('height-multiline')} + #{field.$supporting-row});
+      &::before {
+        height: calc(#{v.text-field('height-multiline')} + #{field.$supporting-row});
+      }
 
-      &[variant='outlined'] {
+      &[variant='outlined']::before {
         padding-top: v.text-field('padding-top-multiline');
       }
 
       &[density='compact'] {
-        height: calc(40px + #{field.$supporting-row});
-
-        &[variant='outlined'] {
+        &::before { height: calc(40px + #{field.$supporting-row}); }
+        &[variant='outlined']::before {
           padding-top: v.text-field('padding-top-multiline-compact');
         }
       }
     }
   }
+
+  > * { display: none; }
 }
