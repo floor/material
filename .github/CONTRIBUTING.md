@@ -234,10 +234,10 @@ Install the stable release with `npm install material`.
    **Every release pull request refreshes the size table** of both files,
    between `<!-- sizes -->` and `<!-- /sizes -->`, from `bun run size:check`
    (under CI's Node 22: `npx -y -p node@22 -p npm@10 -- bun run size:check`),
-   in kB of 1,000 bytes to one decimal. Between releases `readme:check` lets a
-   figure be up to 2% (and at least 100 bytes) from the current build, so an
-   unrelated pull request does not fail on a rounding; it prints each row that
-   has drifted, and fails past the tolerance.
+   in kB of 1,000 bytes to one decimal. `readme:check` holds each figure to
+   exactly that measurement rounded to the printed decimal, so a pull request
+   that moves a bundle updates the table too, or fails naming the stated and
+   measured figures.
 2. Tag the merge commit `vx.y.z` and push the tag:
 
    ```bash
