@@ -35,7 +35,9 @@ export function changelogSection(changelog: string, version: string): string {
 /**
  * The section and the footer: npm, the docs, the full history, and where the
  * history before 3.0.0 lives (the same sentence README.md's "Where this came
- * from" carries).
+ * from" carries). Large bodies keep whole subsections below 125,000 characters
+ * and name omitted subsections before the tag-specific link and normal footer. Security
+ * is mandatory: keep the prefix through it even when that exceeds the cap.
  */
 export function releaseNotes(changelog: string, version: string): string {
   const footer = [
@@ -46,7 +48,54 @@ export function releaseNotes(changelog: string, version: string): string {
   const history =
     "The history before 3.0.0 was developed in `floor/mtrl`; `#numbers` in commit subjects before 3.0.0 refer to " +
     "[pull requests there](https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed).";
-  return `${changelogSection(changelog, version)}\n\n---\n\n${footer}\n\n${history}\n`;
+  const section = changelogSection(changelog, version);
+  const normalFooter = `\n\n---\n\n${footer}\n\n${history}\n`;
+  const complete = section + normalFooter;
+  const cap = 125_000;
+  if (complete.length < cap) return complete;
+
+  // Keep whole subsections, reserving space for the omission notice, link and footer.
+  // A heading in a fenced code example is not a safe place to cut Markdown.
+  const link = `Full release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v${version}/CHANGELOG.md)`;
+  const subsections: { offset: number; name: string; entries: number }[] = [];
+  let offset = 0;
+  let fence: { marker: string; length: number } | undefined;
+  for (const line of section.split("\n")) {
+    const delimiter = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+    if (delimiter) {
+      const marker = delimiter[1][0];
+      if (!fence) fence = { marker, length: delimiter[1].length };
+      else if (marker === fence.marker && delimiter[1].length >= fence.length && !delimiter[2].trim()) fence = undefined;
+    } else if (!fence && /^ {0,3}###\s+\S/.test(line)) {
+      // Deeper headings belong to this subsection; they cannot split it.
+      const name = line.replace(/^ {0,3}###\s+/, "").replace(/\s+#+\s*$/, "").trim();
+      subsections.push({ offset, name, entries: 0 });
+    } else if (!fence && /^[-*+]\s+/.test(line) && subsections.length) {
+      subsections[subsections.length - 1].entries += 1;
+    }
+    offset += line.length + 1;
+  }
+  let requiredEnd = 0;
+  for (const [index, subsection] of subsections.entries()) {
+    if (/^Security$/i.test(subsection.name)) requiredEnd = subsections[index + 1]?.offset ?? section.length;
+  }
+  const capped = (end: number): string => {
+    const head = section.slice(0, end).trimEnd();
+    const dropped = subsections.filter(subsection => subsection.offset >= end);
+    const counts = dropped.map(({ name, entries }) => `\`### ${name}\`, ${entries} ${entries === 1 ? "entry" : "entries"}`).join("; ");
+    const subject = dropped.length === 1 && dropped[0].name === "Fixed" ? "The fixes" : "The subsections";
+    const notice = dropped.length
+      ? `${subject} (${counts}) are not shown here: GitHub limits a release to 125,000 characters.\n\n`
+      : !head ? "The release summary is not shown here: GitHub limits a release to 125,000 characters.\n\n" : "";
+    return (head ? `${head}\n\n` : "") + notice + link + normalFooter;
+  };
+  let result = capped(requiredEnd);
+  for (const subsection of subsections) {
+    if (subsection.offset < requiredEnd) continue;
+    const candidate = capped(subsection.offset);
+    if (candidate.length < cap) result = candidate;
+  }
+  return result;
 }
 
 if (import.meta.main) {
