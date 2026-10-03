@@ -16,6 +16,16 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+### Fixed
+
+- **The default button group stays in place when it upgrades (#44).** A text strut
+  in the pre-upgrade flex rule removes the 1.296875 px inline-neighbour baseline
+  move at default typography and the group's 8 px height growth at 24 px font
+  size with line-height 2, in LTR and RTL, including newline-indented item markup.
+  The strut applies only to the default and `s` sizes, keeping `xs` at its existing
+  2.703125 px inline-neighbour move instead of increasing it to 4 px.
+  Full size, density and content reservation is tracked separately in #49.
+
 ## [3.0.0] - 2026-10-03
 
 `material` 3.0.0 is the first stable release of the library published as `mtrl` 0.10.x.
