@@ -1,14 +1,18 @@
 // Standard Compose ListItem.kt: 56/72/88px rows, 16px horizontal spacing,
 // 8px vertical padding (12px for three-line rows). ListTokens.kt supplies roles/media.
 //
-// Shape hooks, named the way the button names its container shape
+// Two variants. Standard (the default) is the baseline list: no container,
+// square rows in every state. Segmented is the expressive list, as Compose's
+// SegmentedListItem: each row paints its own colour and shape, a gap apart.
+// The list itself has no background and no radius in either.
+//
+// Segmented hooks, named the way the button names its container shape
 // (`--<prefix>-button-shape`, `--<prefix>-button-shape-pressed`,
-// `--<prefix>-button-shape-selected`): the row at rest, the list's outer
-// corners, the hovered row, and the active row (focused, pressed, selected).
-// The rules read them and do not declare them, so a value on the list, on
-// any ancestor, or on the `<m-list>` element inherits. The same outer
-// property rounds the list's own container. Set the four to 0 for square
-// rows and a square container.
+// `--<prefix>-button-shape-selected`): the row at rest, the outer corners of
+// the first and the last row, the hovered row, the active row (focused,
+// pressed, selected), the gap between rows and the row's colour. The rules
+// read them and do not declare them, so a value on the list, on any
+// ancestor, or on the `<m-list>` element inherits.
 @use "../abstract/base" as base;
 @use "../abstract/mixins" as m;
 @use "../abstract/theme" as t;
@@ -19,13 +23,8 @@ $component: "#{base.$prefix}-list";
   --#{base.$prefix}-list-item-offset: 0px;
   position: relative;
   overflow: auto;
-  background: t.color("surface");
   color: t.color("on-surface");
   padding-block: 8px;
-  // The block and the rows' outer corners are one value. The 8px block
-  // padding keeps a row's outer radius, its state layer and its focus ring
-  // inside this curve, so the scrollport does not cut them.
-  border-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
   &__content { display: flex; flex-direction: column; }
   &__item {
     position: relative;
@@ -37,9 +36,6 @@ $component: "#{base.$prefix}-list";
     min-height: 56px;
     padding: 8px 16px;
     background: t.color("surface");
-    // Expressive rest shape: extra-small where a row meets another row.
-    // The outer corners of a run are large, below.
-    border-radius: var(--#{base.$prefix}-list-item-shape, v.shape('extra-small'));
     transform: translateY(var(--#{base.$prefix}-list-item-offset));
     &--two-line { min-height: 72px; }
     &--three-line { min-height: 88px; padding-block: 12px; align-items: flex-start; }
@@ -96,34 +92,38 @@ $component: "#{base.$prefix}-list";
   }
   // Slotted controls are siblings of the row action and remain independently operable.
   &__item :is(button, input, select, textarea, a, [contenteditable="true"], [data-list-control]):not(.#{$component}__action) { position: relative; z-index: 1; }
-  // Outer corners of a run (the first row, the last, and a row beside a
-  // divider or subheader) are large. Corners that meet another row stay
-  // extra-small. Specs, 2026-10-02: 4dp inner, 16dp outer.
-  &__content > &__item:first-child,
-  &__content > :not(&__item) + &__item {
-    border-start-start-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
-    border-start-end-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
-  }
-  &__content > &__item:last-child,
-  &__content > &__item:has(+ :not(&__item)) {
-    border-end-start-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
-    border-end-end-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
-  }
-  // Hover, keyboard focus and press replace that shape. Focus is the row's own
-  // action under :focus-visible, so a click or a trailing control does not take
-  // it; press stays :active. A selected or disabled row is excluded: selected
-  // stays on the active shape, disabled stays at rest.
-  &__content > &__item:hover:not(&__item--disabled):not(&__item--selected) {
-    border-radius: var(--#{base.$prefix}-list-item-shape-hover, v.shape('medium'));
-  }
-  &__content > &__item:has(&__action:focus-visible):not(&__item--disabled):not(&__item--selected),
-  &__content > &__item:active:not(&__item--disabled):not(&__item--selected) {
-    border-radius: var(--#{base.$prefix}-list-item-shape-active, v.shape('large'));
+  // Segmented. The child combinators keep a list nested in a row out of it.
+  &--segmented > &__content {
+    gap: var(--#{base.$prefix}-list-segmented-gap, 2px);
+    // Rest shape: extra-small where a row meets another row.
+    > .#{$component}__item { border-radius: var(--#{base.$prefix}-list-item-shape, v.shape('extra-small')); }
+    > .#{$component}__item:not(.#{$component}__item--selected) { background: var(--#{base.$prefix}-list-item-container-color, t.color("surface-container")); }
+    // Outer corners of a group (the first row, the last, and a row beside a
+    // divider or subheader) are large. Specs, 2026-10-02: 4dp inner, 16dp outer.
+    > .#{$component}__item:first-child,
+    > :not(.#{$component}__item) + .#{$component}__item {
+      border-start-start-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
+      border-start-end-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
+    }
+    > .#{$component}__item:last-child,
+    > .#{$component}__item:has(+ :not(.#{$component}__item)) {
+      border-end-start-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
+      border-end-end-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
+    }
+    // Hover, keyboard focus, press and selection replace that shape on every
+    // corner. Focus is the row's own action under :focus-visible, so a click
+    // or a trailing control does not take it; press stays :active. A selected
+    // row stays on the active shape; a disabled row stays at rest.
+    > .#{$component}__item:hover:not(.#{$component}__item--disabled):not(.#{$component}__item--selected) {
+      border-radius: var(--#{base.$prefix}-list-item-shape-hover, v.shape('medium'));
+    }
+    > .#{$component}__item:has(.#{$component}__action:focus-visible):not(.#{$component}__item--disabled):not(.#{$component}__item--selected),
+    > .#{$component}__item:active:not(.#{$component}__item--disabled):not(.#{$component}__item--selected),
+    > .#{$component}__item.#{$component}__item--selected {
+      border-radius: var(--#{base.$prefix}-list-item-shape-active, v.shape('large'));
+    }
   }
   &__item--selected {
-    // The expressive selected row; on the scale, so the large step moves it.
-    // The active shape on every corner, including hover, focus and press.
-    border-radius: var(--#{base.$prefix}-list-item-shape-active, v.shape('large'));
     background: t.color("secondary-container");
     .#{$component}__headline, .#{$component}__overline, .#{$component}__supporting, .#{$component}__leading, .#{$component}__trailing { color: t.color("on-secondary-container"); }
     .#{$component}__action::before { background: t.color("on-secondary-container"); }
