@@ -36,7 +36,8 @@ export function changelogSection(changelog: string, version: string): string {
  * The section and the footer: npm, the docs, the full history, and where the
  * history before 3.0.0 lives (the same sentence README.md's "Where this came
  * from" carries). Large bodies keep whole subsections below 125,000 characters
- * and finish with a link to the complete changelog at the requested tag.
+ * and finish with a link to the complete changelog at the requested tag. Security
+ * is mandatory: keep the prefix through it even when that exceeds the cap.
  */
 export function releaseNotes(changelog: string, version: string): string {
   const footer = [
@@ -57,7 +58,7 @@ export function releaseNotes(changelog: string, version: string): string {
   const link = `Full release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v${version}/CHANGELOG.md)\n`;
   const withLink = `${section}\n\n${link}`;
   if (withLink.length < cap) return withLink;
-  let result = link;
+  const subsections: { offset: number; security: boolean }[] = [];
   let offset = 0;
   let fence: { marker: string; length: number } | undefined;
   for (const line of section.split("\n")) {
@@ -66,12 +67,25 @@ export function releaseNotes(changelog: string, version: string): string {
       const marker = delimiter[1][0];
       if (!fence) fence = { marker, length: delimiter[1].length };
       else if (marker === fence.marker && delimiter[1].length >= fence.length && !delimiter[2].trim()) fence = undefined;
-    } else if (!fence && /^ {0,3}#{1,6}\s+\S/.test(line)) {
-      const head = section.slice(0, offset).trimEnd();
-      const candidate = head ? `${head}\n\n${link}` : link;
-      if (candidate.length < cap) result = candidate;
+    } else if (!fence && /^ {0,3}###\s+\S/.test(line)) {
+      // Deeper headings belong to this subsection; they cannot split it.
+      subsections.push({ offset, security: /^ {0,3}###\s+Security\s*#*\s*$/i.test(line) });
     }
     offset += line.length + 1;
+  }
+  let requiredEnd = 0;
+  for (const [index, subsection] of subsections.entries()) {
+    if (subsection.security) requiredEnd = subsections[index + 1]?.offset ?? section.length;
+  }
+  const prefixWithLink = (end: number): string => {
+    const head = section.slice(0, end).trimEnd();
+    return head ? `${head}\n\n${link}` : link;
+  };
+  let result = prefixWithLink(requiredEnd);
+  for (const subsection of subsections) {
+    if (subsection.offset < requiredEnd) continue;
+    const candidate = prefixWithLink(subsection.offset);
+    if (candidate.length < cap) result = candidate;
   }
   return result;
 }

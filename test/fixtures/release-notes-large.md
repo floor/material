@@ -1,5 +1,15 @@
 ## [3.0.0] - YYYY-MM-DD
 
+`material` 3.0.0 is the first stable release of the library published as `mtrl` 0.10.x.
+The new package name is `material`. For upgrade steps, see
+[Migrating from 0.10.x](#migrating-from-010x) in this changelog.
+
+### Security
+
+- **A password or hidden field's value is no longer painted before it upgrades (#53).**
+  `material` 3.0.0-next.0 and `mtrl` 0.10.0 to 0.10.7 show a password or a hidden field's value in
+  clear text before the element upgrades; upgrading fixes it.
+
 ### Migrating from 0.10.x
 
 Upgrade to the latest `mtrl` 0.10.x first, then change the package name to `material` (version 3) and

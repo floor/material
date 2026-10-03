@@ -118,6 +118,12 @@ describe("release body size", () => {
       const cut = section.indexOf("\n### Fixed");
       expect(cut).toBeGreaterThan(100_000);
       expect(output).toBe(section.slice(0, cut).trimEnd() + "\n\n" + link);
+      const security = section.slice(section.indexOf("### Security"), section.indexOf("### Migrating"));
+      expect(security).toContain("(#53)");
+      expect(output).toContain(security);
+      expect([...output.matchAll(/^### (.+)$/gm)].map(match => match[1])).toEqual([
+        "Security", "Migrating from 0.10.x", "Changed (breaking)", "Removed", "Added", "Changed",
+      ]);
       expect(output.length).toBeLessThan(125_000);
       expect(output.trimEnd().split("\n").at(-1)).toBe(link.trimEnd());
       // The omitted suffix starts at a heading; including its entire subsection is too large.
@@ -147,5 +153,29 @@ describe("release body size", () => {
     const section = "### Added\n\n" + "x".repeat(120_000) + "\n\n~~~markdown\n### Example heading\n" + "y".repeat(10_000) + "\n~~~";
     const output = releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0");
     expect(output).toBe("Full release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md)\n");
+  });
+
+  test("Security stays whole when it and the summary exceed the cap, then the notes cut after it", () => {
+    const summary = "First stable release.\n\n";
+    const security = "### Security\n\n- " + "x".repeat(125_000) + "\n\n#### Mitigation\n\n- Upgrade to the fixed release.";
+    const section = summary + security + "\n\n### Changed\n\n- A small change.";
+    const output = releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0");
+    expect(output).toBe(summary + security + "\n\nFull release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md)\n");
+    expect(output.length).toBeGreaterThan(125_000);
+  });
+
+  test("a nested heading never lets the cap retain only part of a subsection", () => {
+    const kept = "Summary.\n\n### Security\n\n- Upgrade.";
+    const section = kept + "\n\n### Changed\n\n- A small change.\n\n#### Details\n\n" + "x".repeat(125_000);
+    expect(releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0")).toBe(
+      kept + "\n\nFull release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md)\n",
+    );
+  });
+
+  test("Security at the end cannot be dropped to satisfy the cap", () => {
+    const section = "Summary.\n\n### Changed\n\n" + "x".repeat(125_000) + "\n\n### Security\n\n- Upgrade.";
+    expect(releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0")).toBe(
+      section + "\n\nFull release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md)\n",
+    );
   });
 });
