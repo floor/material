@@ -1108,6 +1108,13 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   baseline. The upgraded switch host uses the control's box directly, so 12px or 24px
   surrounding text with line-height 1 or 2 cannot add an extra host line box. Inline and
   baseline/center flex layouts are checked in both text directions.
+- **An upgraded `<m-button>` is shorter under a tall line height than in the 3.0.0 prereleases.**
+  At a page's `font-size: 24px; line-height: 2` the upgraded button no longer grows with the
+  line height: `xs` is 32 px tall instead of 48, `s` 40 instead of 48 (`m`, `l` and `xl`
+  unchanged), so content beside or after it in a row moves accordingly. At the default type
+  nothing moves. The baseline no longer shifts at upgrade: beside a switch it had moved 1.3 px
+  at the default type, 1.8 px at 12 px, −1.3 px at 24 px with line-height 1, and −7 px at 24 px
+  with line-height 2 (#42).
 - **A list row takes the expressive shape.** A row is 4 px at rest, 16 px on the list's outer corners, 12 px hovered, and 16 px focused, pressed or selected. With the default colours nothing changes at rest on screen: the row and the list are both the surface colour. Hover, focus and press look different, and rows given their own background show the corners. Set `--mtrl-list-item-shape`, `--mtrl-list-item-shape-outer`, `--mtrl-list-item-shape-hover` and `--mtrl-list-item-shape-active` to `0` on the list, on any ancestor, or on the `<m-list>` element for square rows. M3 Lists specs: "Unselected corner radius: 4dp inner, 16dp outer" and "Selected corner radius: 16dp".
 - **The list's container is rounded, 16 px, by the same property as the rows' outer corners** (`--mtrl-list-item-shape-outer`). It is visible at rest on a list placed over a background that is not the surface colour. Set `--mtrl-list-item-shape-outer` to `0` on the list, on any ancestor, or on the `<m-list>` element to square the container and the rows' outer corners. M3 Lists specs, read 2026-10-03 (https://m3.material.io/components/lists/specs): "An expressive list has a segmented style and round corners". That page gives the item's corners and no value for the container.
 - **The package's README on npm is a short one.** `npm-readme.md` is packed as the package's
