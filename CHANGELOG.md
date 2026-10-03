@@ -1166,6 +1166,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A text field's leading or trailing icon with `hidden` is hidden (#60).** The parts' own
+  `display: flex` is an author rule, so it beat the user agent's `[hidden] { display: none }`
+  and the icon stayed displayed — 24×24 for a decorative icon, 40×40 for an interactive
+  trailing one — and the two parts now take the hidden state themselves; the padding the icon
+  reserved stays, as M3 has no hidden-icon state.
 - **A FAB menu at `bottom-start` opens its items into the page (#59).** The list, its
   items and the FAB were anchored to the inline end, so at the start corner they
   grew off the screen. They are now anchored to the inline start: left to right the
