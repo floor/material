@@ -110,6 +110,29 @@ export const cases: PreupgradeCase[] = [
   // label, so the pre-upgrade rule must centre this host too.
   c("checkbox", "label=''", `<m-checkbox aria-label="Agree" label=""></m-checkbox>`),
   c("slider", "default", `<m-slider value="40" aria-label="Volume"></m-slider>`),
+  // Without a label the host is the container's row itself, and the size names
+  // lift the container above the 48px minimum from M up (52/68/108), so every
+  // size reserves its own height. The element reads a size name in any case
+  // (`xs` to `xl`) or a pixel height.
+  c("slider", "size=xs", `<m-slider size="xs" value="40" aria-label="Volume"></m-slider>`),
+  c("slider", "size=s", `<m-slider size="s" value="40" aria-label="Volume"></m-slider>`),
+  c("slider", "size=m", `<m-slider size="m" value="40" aria-label="Volume"></m-slider>`),
+  c("slider", "size=l", `<m-slider size="l" value="40" aria-label="Volume"></m-slider>`),
+  c("slider", "size=xl", `<m-slider size="xl" value="40" aria-label="Volume"></m-slider>`),
+  // A label builds a body-large line and a 4px gutter over the container's row.
+  // `label-position` is start (the default) or end. An icon adds a 40px column,
+  // which the container's row already covers. An empty `label=""` builds no
+  // label, as `supporting-text=""` builds none on the switch.
+  c("slider", "label", `<m-slider label="Volume" value="40"></m-slider>`),
+  c("slider", "label label-position=start", `<m-slider label="Volume" label-position="start" value="40"></m-slider>`),
+  c("slider", "label label-position=end", `<m-slider label="Volume" label-position="end" value="40"></m-slider>`),
+  c("slider", "label size=xs", `<m-slider label="Volume" size="xs" value="40"></m-slider>`),
+  c("slider", "label size=s", `<m-slider label="Volume" size="s" value="40"></m-slider>`),
+  c("slider", "label size=m", `<m-slider label="Volume" size="m" value="40"></m-slider>`),
+  c("slider", "label size=l", `<m-slider label="Volume" size="l" value="40"></m-slider>`),
+  c("slider", "label size=xl", `<m-slider label="Volume" size="xl" value="40"></m-slider>`),
+  c("slider", "label icon", `<m-slider label="Volume" icon="${ICON}" value="40"></m-slider>`),
+  c("slider", "label=''", `<m-slider aria-label="Volume" label="" value="40"></m-slider>`),
   c("text-field", "default", `<m-text-field label="Name"></m-text-field>`),
   c("text-field", "variant=outlined", `<m-text-field variant="outlined" label="Name"></m-text-field>`),
   c("text-field", "supporting-text", `<m-text-field label="Name" supporting-text="As on your passport"></m-text-field>`),
@@ -121,6 +144,18 @@ export const cases: PreupgradeCase[] = [
   c("text-field", "density=compact", `<m-text-field density="compact" label="Name"></m-text-field>`),
   c("text-field", "outlined compact value", `<m-text-field variant="outlined" density="compact" label="Name" value="Ada"></m-text-field>`),
   c("text-field", "width set by the page", `<m-text-field label="Name" style="width:300px"></m-text-field>`),
+  // A password paints no value (public issue #53): its box is the empty
+  // password field's, so nothing moves when the masked input arrives.
+  c("text-field", "type=password", `<m-text-field label="Password" type="password"></m-text-field>`),
+  c("text-field", "type=password value", `<m-text-field label="Password" type="password" value="hunter2"></m-text-field>`),
+  c("text-field", "type=PASSWORD value", `<m-text-field label="Password" type="PASSWORD" value="hunter2"></m-text-field>`),
+  c("text-field", "type=Password value", `<m-text-field label="Password" type="Password" value="hunter2"></m-text-field>`),
+  // A hidden field paints no value either, and takes no space at all — before
+  // upgrade (this rule) or after (the upgraded host's own rule) — so the token
+  // cannot leak and nothing moves at upgrade.
+  c("text-field", "type=hidden", `<m-text-field type="hidden"></m-text-field>`),
+  c("text-field", "type=hidden value", `<m-text-field type="hidden" value="synthetic-token"></m-text-field>`),
+  c("text-field", "type=HIDDEN value", `<m-text-field type="HIDDEN" value="synthetic-token"></m-text-field>`),
   // FLO-299: without a label the text is centred, in both densities
   c("text-field", "no label value", `<m-text-field aria-label="Name" value="Ada"></m-text-field>`),
   c("text-field", "no label compact value", `<m-text-field density="compact" aria-label="Name" value="Ada"></m-text-field>`),
@@ -219,16 +254,71 @@ for (const dir of ["ltr", "rtl"]) {
   for (const element of ["button", "text-field"]) {
     const row = cases.find(row => row.element === element && row.variant === "default")!;
     const button = element === "button";
-    const reason = button
-      ? "Button host grows at 24px/2: floor/material#42."
-      : "Text field host grows at 24px/2: floor/material#43.";
-    const knownMoves: KnownMove[] = ["#inline", "#block"].map(sibling => ({
-      sibling, axis: "y" as const, value: button ? 8 : 1.5, reason,
-    }));
+    const reason = "Button host grows at 24px/2: floor/material#42.";
+    const knownMoves: KnownMove[] = button ? ["#inline", "#block"].map(sibling => ({
+      sibling, axis: "y" as const, value: 8, reason,
+    })) : [];
     if (button) knownMoves.push({ subject: true, value: 8, reason });
     cases.push({ ...row, variant: `${dir}; 24/2`,
       html: `<div style="display:flex">${row.html.replace(`<m-${element}`, `<m-${element} id="subject" dir="${dir}"`)}</div>`,
       host: "#subject", width: 850, style: "font-size:24px;line-height:2",
       knownMoves });
+  }
+}
+
+// The default text group keeps its baseline and inherited line box. Keep
+// formatted markup too: whitespace between items must not add inline width.
+const buttonGroup = cases.find(row => row.element === "button-group" && row.variant === "default")!;
+for (const dir of ["ltr", "rtl"]) {
+  // Keep xs no worse than main while its size reservation remains in #49.
+  // Main moves the inline neighbour up 2.703125px and the block up 8px.
+  // The same main baseline also shifts the inline neighbour on x with the
+  // platform font: 0.0625px here, 0.75px on Linux. The pin value is their
+  // midpoint, ±0.40625, and the band is ±0.375px, so both readings pass, a
+  // reading that has gone fails, and one extra pixel fails.
+  const reason = "Extra-small button group size reservation: floor/material#49 (main baseline).";
+  const width = "Extra-small button group width follows the platform font: floor/material#49 (main baseline).";
+  const inlineX = dir === "ltr" ? -0.40625 : 0.40625;
+  cases.push({
+    ...buttonGroup, variant: `size=xs; ${dir}; default`,
+    html: buttonGroup.html.replace("<m-button-group ", '<m-button-group size="xs" '),
+    width: 850, style: `direction:${dir}`,
+    knownMoves: [
+      { sibling: "#inline", axis: "x", value: inlineX, tolerance: 0.375, reason: width },
+      { sibling: "#inline", axis: "y", value: -2.703125, reason },
+      { sibling: "#block", axis: "y", value: -8, reason },
+    ],
+  });
+  for (const typography of ["default", "24/2"]) {
+    for (const formatted of [false, true]) {
+      const html = formatted
+        ? buttonGroup.html.replaceAll("><m-button-group-item", ">\n  <m-button-group-item").replace("</m-button-group>", "\n</m-button-group>")
+        : buttonGroup.html;
+      cases.push({
+        ...buttonGroup, variant: `${dir}; ${typography}; ${formatted ? "formatted" : "compact"}`,
+        html, style: `direction:${dir};${typography === "default" ? "" : "font-size:24px;line-height:2"}`,
+        strictBox: true,
+      });
+    }
+  }
+}
+
+// The host inherits the page's line box around the field's own typography.
+// Exercise every field family in inline flow (baseline) and a flex row (host
+// height), including compact, outlined, multiline and the supporting row.
+const textFieldRows = cases.filter(row => row.element === "text-field" && !row.variant.includes(";"));
+for (const dir of ["ltr", "rtl"]) {
+  for (const typography of ["default", "12/1", "12/2", "24/1", "24/2"]) {
+    const [size, height] = typography.split("/");
+    for (const layout of ["inline", "flex"]) {
+      for (const row of textFieldRows) {
+        cases.push({
+          ...row, variant: `${row.variant}; ${dir}; ${layout}; ${typography}`,
+          html: `<div dir="${dir}" style="${layout === "flex" ? "display:flex;align-items:baseline" : ""}">${row.html.replace("<m-text-field", '<m-text-field id="subject"')}<span id="next">Next</span></div>`,
+          style: typography === "default" ? "" : `font-size:${size}px;line-height:${height}`,
+          width: 850, host: "#subject", strictBox: true, siblings: ["#next", "#inline", "#block"],
+        });
+      }
+    }
   }
 }

@@ -37,8 +37,9 @@ const CASES: Record<string, { make: string }> = {
   },
   "switch-off": { make: `m.createSwitch({ label: "Off" }).element` },
   "switch-on": { make: `m.createSwitch({ label: "On", checked: true }).element` },
+  // Segmented: the variant whose rows read the shape tokens. A standard list's rows are square.
   "list-selected": {
-    make: `m.createList({ trackSelection: true, items: [{ id: "a", headline: "Alpha" }, { id: "b", headline: "Beta", selected: true }] }).element`
+    make: `m.createList({ variant: "segmented", trackSelection: true, items: [{ id: "a", headline: "Alpha" }, { id: "b", headline: "Beta", selected: true }] }).element`
   },
   "list-video": {
     make: `m.createList({ items: [{ id: "v", headline: "Video", leading: { type: "video", content: ${BLOCK("#345", 56)} } }] }).element`

@@ -122,15 +122,23 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_menu.scss), the chip's secondary-action floor
     // (styles/components/_chips.scss), and the touch target centred physically
     // (styles/abstract/_mixins.scss, FLO-592).
-    // The list row's expressive corners, read from four list custom properties
-    // that the list does not declare, so they inherit, with keyboard focus on
-    // the row action, and the container rounded by the same outer property
+    // The list's two variants: standard has no container and square rows;
+    // segmented rows read six list custom properties that the list does not
+    // declare, so they inherit, with keyboard focus on the row action
     // (styles/components/_list.scss).
-    // The menu's submenu arrow is mirrored inside a shadow root
-    // (styles/components/_menu.scss).
+    // The state layer's position sits in `:where()`, so a corner FAB's fixed
+    // outranks it and a positioned host keeps its position
+    // (styles/abstract/_mixins.scss).
+    // The text field's hidden icon parts: `[hidden]` on the leading and
+    // trailing parts (styles/components/_text-field.scss).
+    // A FAB menu at bottom-start anchors its list, its items and its FAB to
+    // the inline start (styles/components/_fab-menu.scss).
+    // The outlined field's open notch stays unpainted in forced colours,
+    // from the script's class and the input's own state.
+    // The menu's submenu arrow also mirrors inside a shadow root.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("f5c94e5c99d194dc080dbbb155da299997ced487f56d6b6cfb0f5b133fb72290");
-    expect(css.length).toBe(526743);
+      .toBe("877882ed728907c60914191858e167a422128fcbea652157ddfc59a6ac0c06aa");
+    expect(css.length).toBe(528739);
   });
 
   test("today's sheets still resolve to the fixture", () => {
