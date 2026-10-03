@@ -1296,7 +1296,7 @@ entries are below; this is what changed since `3.0.0-next.0`.
 
 ### Changed (breaking)
 
-- **`material/core/<area>` is an explicit list: seven areas, and no path under them (FLO-414).**
+- **`material/core/<area>` is an explicit list: seven areas, and no path under them.**
   The export map listed `./core/*`, and a `*` in an exports pattern crosses slashes: besides
   the areas it resolved a folder inside one, `material/core/compose/features`, which the
   README's "Building your own components" imported `withLifecycle()` from (in 0.10.x too).
@@ -1354,7 +1354,7 @@ entries are below; this is what changed since `3.0.0-next.0`.
   `README.md` (install, one example, the component list, and links to md3.io); the full
   README stays on GitHub. Nothing in the API changes.
 - **The slider's label takes the Body Large role, and a labelled horizontal slider is 4px
-  taller (FLO-587).** The label on a slider is this library's — the specification puts no label
+  taller.** The label on a slider is this library's — the specification puts no label
   on a slider — so the form controls' label role decides, as it does for the checkbox, radio
   and switch labels: the label's text is now 16px on a 24px line (was 18px on an inherited 20px
   line). A horizontal slider with a label is 4px taller: 72 → 76px at XS and S, 76 → 80 at M,
@@ -1406,7 +1406,7 @@ entries are below; this is what changed since `3.0.0-next.0`.
   default size and every explicit size, keeping the button and following content in
   place. It had moved 4 px at the default, `xs` and `s` sizes, and 24, 72 and 104 px
   at `m`, `l` and `xl`, where the layout-shift scores were 0.017, 0.091 and 0.180.
-- **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"` (FLO-592).**
+- **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"`.**
   The `touch-target` mixin anchored its `::after` with `inset-inline-start: 50%` and then moved it
   with the physical `translate(-50%, -50%)`. Right-to-left, the logical inset pins the box's right
   edge at the button's centre and the translate then pushes it another 24px left: the 48 x 48 box
@@ -1424,7 +1424,7 @@ entries are below; this is what changed since `3.0.0-next.0`.
   own mechanism: a `::after` box 48 x 48 centred on it, so the reachable target is 48 x 48 while
   the button still paints 40 x 40, in place. M3 "Density": "The default target size should be at
   least 48x48 CSS pixels."
-- **A multiline text field uses the value it was created with (FLO-577).** `createTextField({ type: 'multiline', value })` wrote that string as a `value` attribute. A textarea does not take its value from that attribute, so `getValue()` was empty, the label stayed down, and a reset restored nothing. The value is now the textarea's default value, which is its text: the field shows it, the label floats, and a reset restores it. A single-line field still uses the `value` attribute. `<m-text-field>` no longer sets the default a second time.
+- **A multiline text field uses the value it was created with.** `createTextField({ type: 'multiline', value })` wrote that string as a `value` attribute. A textarea does not take its value from that attribute, so `getValue()` was empty, the label stayed down, and a reset restored nothing. The value is now the textarea's default value, which is its text: the field shows it, the label floats, and a reset restores it. A single-line field still uses the `value` attribute. `<m-text-field>` no longer sets the default a second time.
 - **An unlabelled switch is its 52 x 48 track box, not the label's row.** With no label the root
   kept the label's 12px gap, so it was 64px wide (12 + the 52px track) and 56px tall: in a 48px
   slot the track ran 16px past the end and the checked 40px state layer 20px past it. The gap
@@ -1477,7 +1477,7 @@ entries are below; this is what changed since `3.0.0-next.0`.
     `.label-text.color`). In the top layer, and so in `<m-select>`, it was the primary colour
     at 12% with primary text.
 - **A button's asymmetric icon padding mirrors in right-to-left.** A size `s` button with a leading icon, and a text button at `xs` or `s` with a leading icon, keep 12px before the icon and 16px after the label in both directions. Under `dir="rtl"` those insets had stayed physical, so the start side was 16px and the end side 12px. The insets are logical and follow the direction the icon already follows, including into a shadow root whose `dir` ancestor is outside it.
-- **`<m-text-field>` in a right-to-left page is mirrored (FLO-562).** A `dir="rtl"` on an
+- **`<m-text-field>` in a right-to-left page is mirrored.** A `dir="rtl"` on an
   ancestor is outside the element's shadow root, where the stylesheet's `[dir]` selectors do
   not reach, and the class that stands in for it was set for the outlined variant only: a
   filled `<m-text-field>` kept its left-to-right layout (label, icons, prefix and suffix on
