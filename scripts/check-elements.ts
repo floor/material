@@ -2306,6 +2306,177 @@ try {
     await page.evaluate(() => ((document.getElementById("factory") as HTMLElement).innerHTML = ""));
     check("text field: focus opens the notch of an empty outlined field and blur closes it");
 
+    // Forced colours repaints a declared-`transparent` border in the
+    // line's own colour, so with the notch open the top line was drawn through
+    // the floated label. In the mode the floated label must be clear of the
+    // line, and the outline must still be drawn: the leading and trailing
+    // segments' top borders and every segment's bottom read computed, because
+    // the input's own forced border paints the same rows the top and bottom
+    // edges do and cannot stand in for them. The floated label is held from a
+    // value, from the input's own state (a value set with no event, which the
+    // script has not seen), and in the focused, error, disabled, required and
+    // multiline states. Its own context, forced colours being one.
+    const forcedContext = await browser.newContext({ forcedColors: "active", deviceScaleFactor: 1, viewport: { width: 900, height: 1200 } });
+    const forcedPage = await forcedContext.newPage();
+    await forcedPage.goto(`http://127.0.0.1:${server.port}`);
+    await forcedPage.waitForFunction(() => (window as unknown as Win).ready === true);
+    const forcedFields = await forcedPage.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement; input: HTMLInputElement } } };
+      const host = document.getElementById("host") as HTMLElement;
+      const attrs = 'variant="outlined" label="Label" value="Ada" style="width:280px"';
+      host.innerHTML = `<div style="padding:24px;display:grid;gap:24px;width:280px">
+          <div id="fc-fl"></div>
+          <m-text-field id="fc-el" ${attrs}></m-text-field>
+        </div>
+        <div dir="rtl" style="padding:24px;display:grid;gap:24px;width:280px">
+          <div id="fc-fr"></div>
+          <m-text-field id="fc-er" ${attrs}></m-text-field>
+        </div>
+        <div id="fc-states" style="padding:24px;display:grid;gap:24px;width:280px"></div>`;
+      for (const id of ["fc-fl", "fc-fr"]) {
+        const factory = w.mtrl.createTextField({ variant: "outlined", label: "Label", value: "Ada" });
+        factory.element.style.width = "280px";
+        (document.getElementById(id) as HTMLElement).append(factory.element);
+      }
+      // The floated label from the input's own state, and each outlined state
+      // the mode must keep clear: focused (the 2px line), error, disabled,
+      // required (the asterisk) and multiline.
+      const stateBox = document.getElementById("fc-states") as HTMLElement;
+      const stateField = (id: string, config: object) => {
+        const field = w.mtrl.createTextField({ variant: "outlined", label: "Label", ...config });
+        field.element.id = id;
+        field.element.style.width = "280px";
+        stateBox.append(field.element);
+        return field;
+      };
+      const noEvent = stateField("fc-nv", {});
+      const focused = stateField("fc-foc", {});
+      stateField("fc-err", { error: true, value: "Ada" });
+      stateField("fc-dis", { disabled: true, value: "Ada" });
+      stateField("fc-req", { required: true, value: "Ada" });
+      stateField("fc-ml", { type: "multiline", value: "Ada" });
+      // placement.ts, the labels' float and the border transitions
+      await new Promise((r) => setTimeout(r, 600));
+      // A value with no event floats the label and opens the notch through the
+      // input's own state: the script's --notched is never set, so the
+      // stylesheet's fallback selector is what must leave the label clear in
+      // the mode. Focus follows placement for the same reason: the class the
+      // script reads arrives with the browser's focus.
+      noEvent.input.value = "Ada";
+      focused.input.focus({ preventScroll: true });
+      await new Promise((r) => setTimeout(r, 400));
+      const box = (el: Element): { left: number; right: number; top: number; bottom: number } => {
+        const { left, right, top, bottom } = el.getBoundingClientRect();
+        return { left, right, top, bottom };
+      };
+      const edge = (el: HTMLElement): { top: string; topWidth: number; bottom: string; bottomWidth: number } => {
+        const style = getComputedStyle(el);
+        return {
+          top: style.borderTopStyle,
+          topWidth: parseFloat(style.borderTopWidth),
+          bottom: style.borderBottomStyle,
+          bottomWidth: parseFloat(style.borderBottomWidth),
+        };
+      };
+      const measure = (id: string) => {
+        const field = document.getElementById(id) as HTMLElement;
+        const root = (field.shadowRoot?.firstElementChild as HTMLElement | null) ?? field;
+        const label = root.querySelector("label") as HTMLElement;
+        const segment = (part: string): HTMLElement => root.querySelector(`[class*="text-field__outline-${part}"]`) as HTMLElement;
+        return {
+          root: box(root),
+          label: box(label),
+          line: getComputedStyle(segment("leading")).borderTopColor,
+          edges: {
+            leading: edge(segment("leading")),
+            notch: edge(segment("notch")),
+            trailing: edge(segment("trailing")),
+          },
+        };
+      };
+      return {
+        "factory ltr": measure("fc-fl"),
+        "factory rtl": measure("fc-fr"),
+        "element ltr": measure("fc-el"),
+        "element rtl": measure("fc-er"),
+        "value with no event": measure("fc-nv"),
+        focused: measure("fc-foc"),
+        error: measure("fc-err"),
+        disabled: measure("fc-dis"),
+        required: measure("fc-req"),
+        multiline: measure("fc-ml"),
+      };
+    });
+    const forcedPng = (await forcedPage.screenshot()).toString("base64");
+    const forced = await forcedPage.evaluate(async ({ png, fields }) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${png}`;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+      context.drawImage(image, 0, 0);
+      const px = (x: number, y: number): number[] =>
+        Array.from(context.getImageData(Math.floor(x), Math.floor(y), 1, 1).data.slice(0, 3));
+      const drawn = (style: string, width: number): boolean => style !== "none" && width >= 1;
+      return Object.entries(fields).map(([name, field]) => {
+        const line = (field.line.match(/\d+/g) ?? []).slice(0, 3).map(Number);
+        const near = (pixel: number[]): boolean => pixel.every((v, i) => Math.abs(v - (line[i] ?? 0)) <= 16);
+        const row = Math.round(field.root.top);
+        const middle = Math.round(field.root.top + (field.root.bottom - field.root.top) / 2);
+        let run = 0;
+        let longest = 0;
+        for (let x = Math.ceil(field.label.left); x <= Math.floor(field.label.right); x++) {
+          run = near(px(x, row)) ? run + 1 : 0;
+          longest = Math.max(longest, run);
+        }
+        return {
+          name,
+          line: field.line,
+          onLabel: field.label.top < field.root.top && field.label.bottom > field.root.top,
+          longest,
+          width: Math.floor(field.label.right) - Math.ceil(field.label.left) + 1,
+          drawn: {
+            "the leading segment's top edge": drawn(field.edges.leading.top, field.edges.leading.topWidth),
+            "the trailing segment's top edge": drawn(field.edges.trailing.top, field.edges.trailing.topWidth),
+            "the leading side": near(px(field.root.left, middle)),
+            "the trailing side": near(px(field.root.right - 1, middle)),
+            "the bottom edge": [field.edges.leading, field.edges.notch, field.edges.trailing]
+              .every((edge) => drawn(edge.bottom, edge.bottomWidth)),
+          },
+        };
+      });
+    }, { png: forcedPng, fields: forcedFields });
+    const forcedFailures: string[] = [];
+    for (const field of forced) {
+      const edges = Object.entries(field.drawn);
+      const missing = edges.filter(([, isDrawn]) => !isDrawn).map(([edge]) => edge);
+      console.log(`  forced colours ${field.name}: the outline's colour runs ${field.longest}px of ${field.width}px across the label; ${edges.length - missing.length}/${edges.length} edges drawn`);
+      if (!field.onLabel) forcedFailures.push(`${field.name}: the label is not floated onto the top edge`);
+      if (field.longest >= 8) forcedFailures.push(`${field.name}: the outline crosses the floated label (${field.longest}px of ${field.width}px in ${field.line})`);
+      if (missing.length > 0) forcedFailures.push(`${field.name}: the outline is not drawn on ${missing.join(", ")}`);
+    }
+    for (const line of forcedFailures) console.log(`  FAIL ${line}`);
+    assert.deepEqual(forcedFailures, [], "forced colours: the notch leaves the floated label clear and the outline drawn");
+    await forcedContext.close();
+    // :autofill and :-webkit-autofill cannot be produced from a page: the
+    // browser fills a field, not a script (Playwright does not autofill). The
+    // two selectors are asserted on the compiled sheets instead: in the mode,
+    // each opens the notch with no top edge. `border-top-style:none` on the
+    // input-state selectors exists only inside the media query, so the exact
+    // rule is what is looked for — factory sheet and element sheet alike.
+    const inputStateRule = [
+      ".mtrl-text-field__input:not(:placeholder-shown)~.mtrl-text-field__outline .mtrl-text-field__outline-notch",
+      ".mtrl-text-field__input:-webkit-autofill~.mtrl-text-field__outline .mtrl-text-field__outline-notch",
+      ".mtrl-text-field__input:autofill~.mtrl-text-field__outline .mtrl-text-field__outline-notch",
+    ].join(",") + "{border-top-style:none}";
+    for (const file of ["dist/styles.css", "dist/elements/css/text-field.css"]) {
+      const sheet = await Bun.file(file).text();
+      assert(sheet.includes(inputStateRule), `forced colours: ${file} opens the input-state notch with no top edge`);
+    }
+    check("text field: in forced colours the notch leaves the floated label clear and the outline is still drawn");
+
     // FLO-562. A [dir='rtl'] ancestor outside a shadow root is invisible to the
     // stylesheet inside it, so the mirroring must follow the --rtl class
     // placement.ts sets from the computed direction. Four fields under

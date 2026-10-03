@@ -18,10 +18,18 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ### Fixed
 
+- **The outlined text field's notch leaves the floated label clear in forced colours.**
+  Forced colours repaints a declared-`transparent` border in the line's own colour, so the notch's
+  open top edge — the gap the floated label sits in — was drawn as part of the top line, straight
+  across the whole label, in the factory and in `<m-text-field>`, left-to-right and right-to-left,
+  and both when the script opened the notch and when the input's own state floated the label first
+  (a value set without an event, an autofilled field). Inside `@media (forced-colors: active)` an
+  open notch now has no top border at all, under the class the script sets and under the selectors
+  that read the input's own state; the leading and trailing segments still draw theirs, and nothing
+  outside the media query changes.
 - **Text fields keep neighbouring content in place when they upgrade under a tall page line height.**
   The pre-upgrade styles now reserve the host’s inherited line box around the field, including
   compact, outlined and multiline fields, in both text directions.
-
 - **The default button group stays in place when it upgrades (#44).** A text strut
   in the pre-upgrade flex rule removes the 1.296875 px inline-neighbour baseline
   move at default typography and the group's 8 px height growth at 24 px font
