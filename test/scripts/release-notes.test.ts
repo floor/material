@@ -98,6 +98,11 @@ test("the real CHANGELOG has a section for the package's version", async () => {
   expect(changelogSection(changelog, pkg.version).length).toBeGreaterThan(0);
 });
 
+test("the stable release notes contain no internal ticket references", async () => {
+  const changelog = await Bun.file(new URL("../../CHANGELOG.md", import.meta.url)).text();
+  expect(changelogSection(changelog, "3.0.0")).not.toMatch(/FLO\x2d/);
+});
+
 test("3.0.0 includes every prerelease entry exactly once by its bold opening sentence", async () => {
   const changelog = await Bun.file(new URL("../../CHANGELOG.md", import.meta.url)).text();
   const openings = (section: string): string[] =>
