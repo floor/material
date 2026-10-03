@@ -1216,7 +1216,7 @@ try {
           }, { kind, corners: [...corners], icon: ICON });
           await settle();
         }
-        for (const [index, corner] of corners.entries()) {
+        for (const [index] of corners.entries()) {
           const id = ids[index]!;
           const rest = await fabState(id);
           assert.equal(rest.position, "fixed", `${id}: the corner class is not fixed at rest`);
