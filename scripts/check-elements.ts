@@ -2433,6 +2433,74 @@ try {
     });
     assert.deepEqual(layout, { inline: "inline-block", width: 400, focused: "INPUT", blurred: null });
     check("text field: an inline-block host whose width the field fills; focus() and blur() reach the input");
+
+    // [#60] `hidden` on an icon part must hide it. The parts' own
+    // `display: flex` is an author rule, so it beats the user agent's
+    // `[hidden] { display: none }` and the icon stays displayed — a hidden
+    // interactive icon keeps its 40px box. The padding the icon's presence
+    // reserved stays: M3 has no hidden-icon state ("Left/right padding with
+    // icons 12dp", "Padding between icons and text 16dp"), and Compose's icon
+    // slot keeps its room whatever it draws. Factory and element, both icons
+    // and an interactive trailing one; the no-icon field is the reference.
+    const iconHidden = await page.evaluate(async (icon) => {
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement } } };
+      const host = document.getElementById("factory") as HTMLElement;
+      host.innerHTML = `<m-text-field id="h-both" variant="filled" label="Both" value="Ada" leading-icon='${icon}' trailing-icon='${icon}'></m-text-field>
+        <m-text-field id="h-none" variant="filled" label="None" value="Ada"></m-text-field>`;
+      const factoryBoth = w.mtrl.createTextField({ variant: "filled", label: "Both", value: "Ada", leadingIcon: icon, trailingIcon: icon });
+      const factoryButton = w.mtrl.createTextField({ variant: "filled", label: "Clear", value: "Ada", trailingIcon: icon, trailingIconLabel: "Clear" });
+      const factoryNone = w.mtrl.createTextField({ variant: "filled", label: "None", value: "Ada" });
+      host.append(factoryBoth.element, factoryButton.element, factoryNone.element);
+      await new Promise((r) => setTimeout(r, 50));
+      const rootOf = (el: HTMLElement): HTMLElement => (el.shadowRoot?.firstElementChild as HTMLElement | null) ?? el;
+      const iconsOf = (root: HTMLElement): HTMLElement[] =>
+        ["leading-icon", "trailing-icon"]
+          .map((part) => root.querySelector(`[class*="text-field__${part}"]`) as HTMLElement | null)
+          .filter((el): el is HTMLElement => el !== null);
+      const pads = (root: HTMLElement): number[] => {
+        const style = getComputedStyle(root.querySelector("input") as HTMLInputElement);
+        return [style.paddingLeft, style.paddingRight].map((p) => Math.round(parseFloat(p) * 100) / 100);
+      };
+      const fields: Array<[string, HTMLElement]> = [
+        ["factory, both icons", factoryBoth.element],
+        ["factory, interactive trailing", factoryButton.element],
+        ["factory, no icon", factoryNone.element],
+        ["element, both icons", document.getElementById("h-both") as HTMLElement],
+        ["element, no icon", document.getElementById("h-none") as HTMLElement],
+      ];
+      const before: Record<string, number[]> = {};
+      for (const [name, el] of fields) before[name] = pads(rootOf(el));
+      for (const [, el] of fields) for (const el2 of iconsOf(rootOf(el))) el2.hidden = true;
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const after: Record<string, { display: string[]; box: number[][]; padding: number[] }> = {};
+      for (const [name, el] of fields) {
+        const root = rootOf(el);
+        after[name] = {
+          display: iconsOf(root).map((el2) => getComputedStyle(el2).display),
+          box: iconsOf(root).map((el2) => {
+            const r = el2.getBoundingClientRect();
+            return [Math.round(r.width * 100) / 100, Math.round(r.height * 100) / 100];
+          }),
+          padding: pads(root),
+        };
+      }
+      return { before, after };
+    }, ICON);
+    const hiddenFailures: string[] = [];
+    for (const [name, { display, box, padding }] of Object.entries(iconHidden.after)) {
+      display.forEach((value, i) => {
+        if (value !== "none") hiddenFailures.push(`${name}: hidden icon ${i} computes display: ${value}`);
+      });
+      box.forEach(([width, height], i) => {
+        if (width !== 0 || height !== 0) hiddenFailures.push(`${name}: hidden icon ${i} is ${width}x${height}`);
+      });
+      const [start, end] = iconHidden.before[name];
+      if (padding[0] !== start || padding[1] !== end)
+        hiddenFailures.push(`${name}: the input's padding moved ${start}/${end} -> ${padding[0]}/${padding[1]}`);
+      console.log(`  hidden icon ${name}: padding ${start}/${end} -> ${padding[0]}/${padding[1]}, ${display.length} icon(s) ${display.join("/")}`);
+    }
+    assert.deepEqual(hiddenFailures, [], hiddenFailures.join("\n"));
+    check("text field: a leading or trailing icon with hidden is not displayed, and the padding it reserved stays (#60)");
   }
 
   // ---------------------------------------------------------------- tabs
