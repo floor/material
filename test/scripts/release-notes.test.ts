@@ -96,6 +96,8 @@ test("the real CHANGELOG has a section for the package's version", async () => {
   const pkg = await Bun.file(new URL("../../package.json", import.meta.url)).json();
   const changelog = await Bun.file(new URL("../../CHANGELOG.md", import.meta.url)).text();
   expect(changelogSection(changelog, pkg.version).length).toBeGreaterThan(0);
+  const intro = changelogSection(changelog, "3.0.0").split("### Security")[0];
+  expect(intro).toContain("[Migrating from 0.10.x](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md#migrating-from-010x) in the changelog");
 });
 
 test("the stable release notes contain no internal ticket references", async () => {

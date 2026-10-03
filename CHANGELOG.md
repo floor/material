@@ -20,7 +20,7 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 `material` 3.0.0 is the first stable release of the library published as `mtrl` 0.10.x.
 The new package name is `material`. For upgrade steps, see
-[Migrating from 0.10.x](#migrating-from-010x) in this changelog.
+[Migrating from 0.10.x](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md#migrating-from-010x) in the changelog.
 
 ### Security
 
