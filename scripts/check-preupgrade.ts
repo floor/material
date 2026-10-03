@@ -122,7 +122,7 @@ const server = Bun.serve({
       // and the value it carries still reaches the form and reads back.
       case "/secret":
         return html(page(stage(
-          `<m-text-field id="password" type="password" label="Password" value="hunter2"></m-text-field><m-text-field id="empty-password" type="password" label="Password"></m-text-field><form id="secret-form"><m-text-field id="hidden" type="hidden" name="token" value="synthetic-token"></m-text-field><m-text-field id="hidden-upper" type="HIDDEN" name="token-upper" value="synthetic-token-2"></m-text-field><m-text-field id="hidden-title" type="Hidden" name="token-title" value="synthetic-token-3"></m-text-field></form>`,
+          `<m-text-field id="password" type="password" label="Password" value="hunter2"></m-text-field><m-text-field id="empty-password" type="password" label="Password"></m-text-field><div><m-text-field id="password-upper" type="PASSWORD" label="Password" value="hunter2"></m-text-field><m-text-field id="empty-password-upper" type="PASSWORD" label="Password"></m-text-field></div><div><m-text-field id="password-title" type="Password" label="Password" value="hunter2"></m-text-field><m-text-field id="empty-password-title" type="Password" label="Password"></m-text-field></div><form id="secret-form"><m-text-field id="hidden" type="hidden" name="token" value="synthetic-token"></m-text-field><m-text-field id="hidden-upper" type="HIDDEN" name="token-upper" value="synthetic-token-2"></m-text-field><m-text-field id="hidden-title" type="Hidden" name="token-title" value="synthetic-token-3"></m-text-field></form>`,
           { element: "text-field", variant: "type=password", html: "", width: 840 },
         ), true));
       case "/elements.js":
@@ -461,17 +461,17 @@ try {
         const style = getComputedStyle(field);
         return {
           root: !!field.shadowRoot && !!button.shadowRoot && !!select.shadowRoot && !!variant.shadowRoot && !!rail.shadowRoot && !!card.shadowRoot && !!toolbar.shadowRoot && !bare.shadowRoot && !variantBare.shadowRoot && !fieldBare.shadowRoot && !railBare.shadowRoot && !cardBare.shadowRoot && !fab.shadowRoot && !fabBare.shadowRoot,
-          padding: style.padding,
-          fieldBarePadding: getComputedStyle(fieldBare).padding,
+          padding: getComputedStyle(field, "::before").padding,
+          fieldBarePadding: getComputedStyle(fieldBare, "::before").padding,
           background: style.backgroundColor,
           before: getComputedStyle(field, "::before").content,
           after: getComputedStyle(field, "::after").content,
           button: button.getBoundingClientRect().width,
           select: select.getBoundingClientRect().width,
           bare: bare.getBoundingClientRect().height,
-          variantPadding: getComputedStyle(variant).padding,
+          variantPadding: getComputedStyle(variant, "::before").padding,
           variantBefore: getComputedStyle(variant, "::before").content,
-          barePadding: getComputedStyle(variantBare).padding,
+          barePadding: getComputedStyle(variantBare, "::before").padding,
           bareBefore: getComputedStyle(variantBare, "::before").content,
           header: { visibility: getComputedStyle(header).visibility, ...box(header) },
           headerBare: { visibility: getComputedStyle(headerBare).visibility, ...box(headerBare) },
@@ -548,7 +548,7 @@ try {
           const r = element.getBoundingClientRect();
           return { x: r.x, y: r.y, w: r.width, h: r.height };
         };
-        const ids = ["password", "empty-password", "hidden", "hidden-upper", "hidden-title"];
+        const ids = ["password", "empty-password", "password-upper", "empty-password-upper", "password-title", "empty-password-title", "hidden", "hidden-upper", "hidden-title"];
         const form = document.getElementById("secret-form") as HTMLFormElement | null;
         const submitted = form ? new FormData(form) : null;
         return Object.fromEntries(ids.map((id) => {
@@ -577,6 +577,22 @@ try {
         Math.abs(emptyBox.x - (filledBox.x + filledBox.w)) < 0.5,
         `a filled password field's box is not its own (${filledBox.w}px wide, the next field at ${emptyBox.x - filledBox.x})`,
       );
+      // The type selector is case-insensitive for passwords as well as hidden fields.
+      for (const [filled, empty, type] of [
+        ["password", "empty-password", "password"],
+        ["password-upper", "empty-password-upper", "PASSWORD"],
+        ["password-title", "empty-password-title", "Password"],
+      ]) {
+        const field = before[filled];
+        const blank = before[empty];
+        assert.equal(field.content, '" "', `${type} paints more than the empty line-box space`);
+        assert.equal(blank.content, '" "', `empty ${type} paints more than the empty line-box space`);
+        assert.equal(field.box.w, blank.box.w, `${type} filled/empty widths differ`);
+        assert.equal(field.box.h, blank.box.h, `${type} filled/empty heights differ`);
+        assert.equal(field.box.y, blank.box.y, `${type} filled/empty baselines differ`);
+        assert(Math.abs(blank.box.x - (field.box.x + field.box.w)) < 0.5, `${type} filled/empty fields overlap`);
+        console.log(`Password ${type} before upgrade: ::before ${field.content}, filled ${field.box.w}×${field.box.h}, empty ${blank.box.w}×${blank.box.h}; no value painted`);
+      }
       for (const id of ["hidden", "hidden-upper", "hidden-title"]) {
         assert(!before[id].content.includes("synthetic-token"), `a ${id.includes("upper") ? "HIDDEN" : "hidden"} field paints its value before upgrade (::before content ${before[id].content})`);
         assert.equal(before[id].display, "none", `a ${id} field is rendered before upgrade (display ${before[id].display})`);

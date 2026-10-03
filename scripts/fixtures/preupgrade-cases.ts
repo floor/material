@@ -125,6 +125,8 @@ export const cases: PreupgradeCase[] = [
   // password field's, so nothing moves when the masked input arrives.
   c("text-field", "type=password", `<m-text-field label="Password" type="password"></m-text-field>`),
   c("text-field", "type=password value", `<m-text-field label="Password" type="password" value="hunter2"></m-text-field>`),
+  c("text-field", "type=PASSWORD value", `<m-text-field label="Password" type="PASSWORD" value="hunter2"></m-text-field>`),
+  c("text-field", "type=Password value", `<m-text-field label="Password" type="Password" value="hunter2"></m-text-field>`),
   // A hidden field paints no value either, and takes no space at all — before
   // upgrade (this rule) or after (the upgraded host's own rule) — so the token
   // cannot leak and nothing moves at upgrade.
@@ -229,12 +231,10 @@ for (const dir of ["ltr", "rtl"]) {
   for (const element of ["button", "text-field"]) {
     const row = cases.find(row => row.element === element && row.variant === "default")!;
     const button = element === "button";
-    const reason = button
-      ? "Button host grows at 24px/2: floor/material#42."
-      : "Text field host grows at 24px/2: floor/material#43.";
-    const knownMoves: KnownMove[] = ["#inline", "#block"].map(sibling => ({
-      sibling, axis: "y" as const, value: button ? 8 : 1.5, reason,
-    }));
+    const reason = "Button host grows at 24px/2: floor/material#42.";
+    const knownMoves: KnownMove[] = button ? ["#inline", "#block"].map(sibling => ({
+      sibling, axis: "y" as const, value: 8, reason,
+    })) : [];
     if (button) knownMoves.push({ subject: true, value: 8, reason });
     cases.push({ ...row, variant: `${dir}; 24/2`,
       html: `<div style="display:flex">${row.html.replace(`<m-${element}`, `<m-${element} id="subject" dir="${dir}"`)}</div>`,
@@ -276,6 +276,26 @@ for (const dir of ["ltr", "rtl"]) {
         html, style: `direction:${dir};${typography === "default" ? "" : "font-size:24px;line-height:2"}`,
         strictBox: true,
       });
+    }
+  }
+}
+
+// The host inherits the page's line box around the field's own typography.
+// Exercise every field family in inline flow (baseline) and a flex row (host
+// height), including compact, outlined, multiline and the supporting row.
+const textFieldRows = cases.filter(row => row.element === "text-field" && !row.variant.includes(";"));
+for (const dir of ["ltr", "rtl"]) {
+  for (const typography of ["default", "12/1", "12/2", "24/1", "24/2"]) {
+    const [size, height] = typography.split("/");
+    for (const layout of ["inline", "flex"]) {
+      for (const row of textFieldRows) {
+        cases.push({
+          ...row, variant: `${row.variant}; ${dir}; ${layout}; ${typography}`,
+          html: `<div dir="${dir}" style="${layout === "flex" ? "display:flex;align-items:baseline" : ""}">${row.html.replace("<m-text-field", '<m-text-field id="subject"')}<span id="next">Next</span></div>`,
+          style: typography === "default" ? "" : `font-size:${size}px;line-height:${height}`,
+          width: 850, host: "#subject", strictBox: true, siblings: ["#next", "#inline", "#block"],
+        });
+      }
     }
   }
 }

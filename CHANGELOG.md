@@ -18,6 +18,10 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ### Fixed
 
+- **Text fields keep neighbouring content in place when they upgrade under a tall page line height.**
+  The pre-upgrade styles now reserve the host’s inherited line box around the field, including
+  compact, outlined and multiline fields, in both text directions.
+
 - **The default button group stays in place when it upgrades (#44).** A text strut
   in the pre-upgrade flex rule removes the 1.296875 px inline-neighbour baseline
   move at default typography and the group's 8 px height growth at 24 px font
