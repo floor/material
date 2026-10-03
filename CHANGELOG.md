@@ -18,6 +18,12 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ### Fixed
 
+- **A search field with a trailing icon of its own no longer shows the browser's clear button too.**
+  WebKit and Blink draw `::-webkit-search-cancel-button` into every `type="search"` input — a
+  user-agent shadow part `appearance: none` on the input does not remove — so a field with a
+  trailing icon showed two clears side by side at the input's end. A search field with a trailing
+  icon now hides the browser's button; a search field without one keeps it, its only clear
+  affordance.
 - **A menu in a shadow root mirrors its submenu arrow under `dir="rtl"`.**
   The arrow, the submenu item's padding and the menu's transform origin followed an ancestor
   `dir`. That selector does not cross a shadow boundary, so `<m-menu>` kept the arrow on the
