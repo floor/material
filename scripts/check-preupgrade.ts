@@ -14,7 +14,11 @@
 // component is diluted; against its stage, a shift that moves what follows it
 // counts. The host counts as shifted when what it shows (its box, with what
 // its shadow root renders) moves or changes size, a sibling when it moves.
-// Every case must stay under 0.01.
+// Every case must stay under 0.01, and a case fails outright when a sibling
+// moves more than MOVE_LIMIT, whatever the score reads (see the constant).
+// A button's own box must also move or resize by less than that limit, unless a
+// subject pin records the expected change: a 4px inset mismatch can move
+// adjacent content while scoring below the threshold.
 //
 // The mutation check runs the same cases without the pre-upgrade stylesheet:
 // it must fail most elements, or the check is not measuring anything.
@@ -30,6 +34,7 @@
 
 import assert from "node:assert/strict";
 import { chromium, type Page } from "playwright";
+import { THRESHOLD, MOVE_LIMIT, SIBLINGS, markOf, validateKnownMoves, type KnownMove } from "./preupgrade-moves";
 import { cases, type PreupgradeCase } from "./fixtures/preupgrade-cases";
 import { elements } from "../src/elements";
 import { renderElement } from "../dist/ssr/index.js";
@@ -57,8 +62,8 @@ const phaseB = [
   + '<m-card id="card-bare"><span slot="headline">Title</span></m-card>'
   + '<m-fab-menu id="fab-bare"></m-fab-menu>';
 
-const THRESHOLD = 0.01;
 const STAGE_WIDTH = 360;
+
 const only = process.argv.slice(2);
 
 const build = async (entry: string, target: "browser" | "bun"): Promise<string> => {
@@ -88,8 +93,8 @@ const page = (body: string, preupgrade: boolean): string =>
 <style>body{margin:0;min-height:0}#stage{width:${STAGE_WIDTH}px}</style></head>
 <body>${body}</body></html>`;
 
-const stage = (html: string): string =>
-  `<div id="stage">${html}<span id="inline">Next</span><div id="block">Following text</div></div>`;
+const stage = (html: string, item?: PreupgradeCase): string =>
+  `<div id="stage" style="${item?.style ?? ""};width:${item?.width ?? STAGE_WIDTH}px">${html}<span id="inline">Next</span><div id="block">Following text</div></div>`;
 
 const server = Bun.serve({
   hostname: "127.0.0.1",
@@ -111,6 +116,15 @@ const server = Bun.serve({
           .replace("</head>", '<link rel="stylesheet" href="/preupgrade/button.css"></head>'));
       case "/phase-b":
         return html(page(stage(`${phaseB}<m-button id="bare">Bare</m-button>`), true));
+      // A filled password field beside an empty one, both undefined: the value
+      // must not be painted, and the two boxes must be the same. A hidden field
+      // beside them, in a real form: no value, no box before upgrade or after,
+      // and the value it carries still reaches the form and reads back.
+      case "/secret":
+        return html(page(stage(
+          `<m-text-field id="password" type="password" label="Password" value="hunter2"></m-text-field><m-text-field id="empty-password" type="password" label="Password"></m-text-field><div><m-text-field id="password-upper" type="PASSWORD" label="Password" value="hunter2"></m-text-field><m-text-field id="empty-password-upper" type="PASSWORD" label="Password"></m-text-field></div><div><m-text-field id="password-title" type="Password" label="Password" value="hunter2"></m-text-field><m-text-field id="empty-password-title" type="Password" label="Password"></m-text-field></div><form id="secret-form"><m-text-field id="hidden" type="hidden" name="token" value="synthetic-token"></m-text-field><m-text-field id="hidden-upper" type="HIDDEN" name="token-upper" value="synthetic-token-2"></m-text-field><m-text-field id="hidden-title" type="Hidden" name="token-title" value="synthetic-token-3"></m-text-field></form>`,
+          { element: "text-field", variant: "type=password", html: "", width: 840 },
+        ), true));
       case "/elements.js":
         return js(elementsJs);
       case "/react.js":
@@ -122,7 +136,7 @@ const server = Bun.serve({
         // the elements must share their registry.
         if (url.pathname.startsWith("/dist/")) return new Response(Bun.file(url.pathname.slice(1)));
         const index = Number(url.pathname.slice(1));
-        return html(page(stage(cases[index].html), preupgrade));
+        return html(page(stage(cases[index].html, cases[index]), preupgrade));
       }
     }
   },
@@ -230,7 +244,7 @@ const shiftOf = (a: Box, b: Box): number =>
 
 /** Impact fraction times distance fraction, over a frame that holds both states. */
 const score = (before: Snapshot, after: Snapshot, bounds?: Box): number => {
-  const frame = bounds ?? { x: before.frame.x, y: before.frame.y, w: STAGE_WIDTH, h: Math.max(before.frame.h, after.frame.h, 1) };
+  const frame = bounds ?? { x: before.frame.x, y: before.frame.y, w: before.frame.w, h: Math.max(before.frame.h, after.frame.h, 1) };
   const impact: Box[] = [];
   let distance = 0;
   const shifted = (a: Box, b: Box, resized: boolean): void => {
@@ -254,16 +268,34 @@ interface Result {
   after: Box;
   /** How far each sibling moved, for the report. */
   moved: string;
+  /** The same per sibling, for the move limit: x and y in px. */
+  moves: { dx: number; dy: number }[];
+  siblings?: readonly string[];
+  knownMoves?: readonly KnownMove[];
+  boxMove?: number;
+  /** The button's own box, for the subject check. */
+  subjectMove?: number;
 }
 
-const measure = async (path: string, preupgrade: boolean, hosts: string, script: string): Promise<[Snapshot, Snapshot]> => {
-  const p = await browser.newPage({ viewport: { width: 400, height: 800 } });
+const measure = async (path: string, preupgrade: boolean, hosts: string, script: string, item?: PreupgradeCase): Promise<[Snapshot, Snapshot]> => {
+  const p = await browser.newPage({ viewport: { width: (item?.width ?? STAGE_WIDTH) + 40, height: 800 } });
   const errors: string[] = [];
   p.on("pageerror", (error) => errors.push(error.message));
   try {
     await p.goto(`http://127.0.0.1:${server.port}${path}?pre=${preupgrade ? 1 : 0}`);
     await settle(p);
-    const siblings = "#inline, #block";
+    if (item?.prepareNeighbors) {
+      await p.evaluate(async () => {
+        const css = "/dist/elements/css/index.js";
+        const entry = "/dist/elements/index.js";
+        await import(css);
+        const elements = await import(entry);
+        elements.defineButton();
+        elements.defineTextField();
+      });
+      await settle(p);
+    }
+    const siblings = (item?.siblings ?? SIBLINGS).join(", ");
     const before = await snapshot(p, hosts, siblings);
     await p.addScriptTag({ url: script, type: "module" });
     await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
@@ -283,22 +315,35 @@ const runCases = async (preupgrade: boolean): Promise<Result[]> => {
   const results: Result[] = [];
   for (const [index, item] of cases.entries()) {
     if (only.length && !only.includes(item.element)) continue;
-    const [before, after] = await measure(`/${index}`, preupgrade, "#stage > :first-child", "/elements.js");
-    const moved = before.siblings
-      .map((b, i) => `${(after.siblings[i].x - b.x).toFixed(1)},${(after.siblings[i].y - b.y).toFixed(1)}`)
-      .join(" ");
-    results.push({ name: label(item), score: score(before, after), before: before.hosts[0], after: after.hosts[0], moved });
+    const [before, after] = await measure(`/${index}`, preupgrade, item.host ?? "#stage > :first-child", "/elements.js", item);
+    const moves = before.siblings.map((b, i) => ({ dx: after.siblings[i].x - b.x, dy: after.siblings[i].y - b.y }));
+    const moved = moves.map(({ dx, dy }) => `${dx.toFixed(1)},${dy.toFixed(1)}`).join(" ");
+    const box = shiftOf(before.hosts[0], after.hosts[0]);
+    results.push({
+      name: label(item), score: score(before, after), before: before.hosts[0], after: after.hosts[0],
+      moved, moves, siblings: item.siblings, knownMoves: item.knownMoves,
+      boxMove: item.strictBox ? box : undefined,
+      subjectMove: item.element === "button" ? box : undefined,
+    });
   }
   return results;
 };
 
 const label = (item: PreupgradeCase): string => (item.variant === "default" ? item.element : `${item.element} [${item.variant}]`);
 const size = (b: Box): string => `${b.w.toFixed(1)}x${b.h.toFixed(1)}`;
-const report = (results: Result[]): void => {
+
+/** Print the rows; return the names that failed. */
+const report = (results: Result[], checkMoves: boolean): string[] => {
+  const failed: string[] = [];
   for (const r of results) {
-    const mark = r.score < THRESHOLD ? "ok" : "FAIL";
-    console.log(`  ${mark.padEnd(4)} ${r.name.padEnd(34)} ${r.score.toFixed(4)}  ${size(r.before)} -> ${size(r.after)}  siblings moved ${r.moved}`);
+    const { mark, note } = checkMoves && r.boxMove !== undefined && r.boxMove > MOVE_LIMIT
+      ? { mark: "FAIL", note: `  (host moved or resized ${r.boxMove.toFixed(6)}px; over ${MOVE_LIMIT}px)` }
+      : markOf(r, checkMoves);
+    if (mark === "FAIL") failed.push(r.name);
+    const box = r.subjectMove !== undefined ? `  box shift ${r.subjectMove.toFixed(2)}px` : "";
+    console.log(`  ${mark.padEnd(5)} ${r.name.padEnd(34)} ${r.score.toFixed(4)}  ${size(r.before)} -> ${size(r.after)}  siblings moved ${r.moved}${note}${box}`);
   }
+  return failed;
 };
 
 const browser = await chromium.launch({ headless: true });
@@ -308,15 +353,17 @@ try {
   const covered = new Set(cases.filter((item) => item.variant === "default").map((item) => item.element));
   assert.deepEqual(Object.keys(elements).map(kebab).filter((name) => !covered.has(name)), [], "Elements without a case");
 
-  console.log(`With the pre-upgrade styles (score < ${THRESHOLD}):`);
+  console.log(`With the pre-upgrade styles (score < ${THRESHOLD}, siblings within ${MOVE_LIMIT}px, button box under ${MOVE_LIMIT}px):`);
   const withStyles = await runCases(true);
-  report(withStyles);
+  const failing = report(withStyles, true);
+  if (process.env.PREUPGRADE_RESULTS) await Bun.write(process.env.PREUPGRADE_RESULTS, JSON.stringify(withStyles, null, 2));
+
+  validateKnownMoves(withStyles, only);
 
   console.log("\nMutation: without the pre-upgrade styles:");
   const without = await runCases(false);
-  report(without);
+  report(without, false);
 
-  const failing = withStyles.filter((r) => r.score >= THRESHOLD);
   const defaults = without.filter((r) => !r.name.includes("["));
   const caught = defaults.filter((r) => r.score >= THRESHOLD);
   console.log(`\nMutation: ${caught.length} of ${defaults.length} elements shift without the pre-upgrade styles.`);
@@ -414,17 +461,17 @@ try {
         const style = getComputedStyle(field);
         return {
           root: !!field.shadowRoot && !!button.shadowRoot && !!select.shadowRoot && !!variant.shadowRoot && !!rail.shadowRoot && !!card.shadowRoot && !!toolbar.shadowRoot && !bare.shadowRoot && !variantBare.shadowRoot && !fieldBare.shadowRoot && !railBare.shadowRoot && !cardBare.shadowRoot && !fab.shadowRoot && !fabBare.shadowRoot,
-          padding: style.padding,
-          fieldBarePadding: getComputedStyle(fieldBare).padding,
+          padding: getComputedStyle(field, "::before").padding,
+          fieldBarePadding: getComputedStyle(fieldBare, "::before").padding,
           background: style.backgroundColor,
           before: getComputedStyle(field, "::before").content,
           after: getComputedStyle(field, "::after").content,
           button: button.getBoundingClientRect().width,
           select: select.getBoundingClientRect().width,
           bare: bare.getBoundingClientRect().height,
-          variantPadding: getComputedStyle(variant).padding,
+          variantPadding: getComputedStyle(variant, "::before").padding,
           variantBefore: getComputedStyle(variant, "::before").content,
-          barePadding: getComputedStyle(variantBare).padding,
+          barePadding: getComputedStyle(variantBare, "::before").padding,
           bareBefore: getComputedStyle(variantBare, "::before").content,
           header: { visibility: getComputedStyle(header).visibility, ...box(header) },
           headerBare: { visibility: getComputedStyle(headerBare).visibility, ...box(headerBare) },
@@ -482,7 +529,108 @@ try {
     }
   }
 
-  assert.deepEqual(failing.map((r) => r.name), [], "Cases that shift on upgrade");
+  // A password or hidden field paints no value before upgrade (#53). The value
+  // attribute holds the password or the token in clear text, and the stylesheet
+  // paints it with `content: attr(value) ' '` for every type; both exceptions
+  // paint the space alone. The password keeps the empty field's line box, so
+  // the filled field's box — width, height and, as the field clips, the bottom
+  // edge the baseline sits on — is the empty one's, and nothing moves at
+  // upgrade. A hidden field takes no space at all, before upgrade or after (the
+  // upgraded host is not rendered), and stays form-associated: the same page
+  // proves the value reaches a real form and reads back.
+  if (!only.length || only.includes("text-field")) {
+    const p = await browser.newPage({ viewport: { width: 900, height: 800 } });
+    try {
+      await p.goto(`http://127.0.0.1:${server.port}/secret`);
+      await settle(p);
+      const fields = async () => p.evaluate(() => {
+        const box = (element: Element): Box => {
+          const r = element.getBoundingClientRect();
+          return { x: r.x, y: r.y, w: r.width, h: r.height };
+        };
+        const ids = ["password", "empty-password", "password-upper", "empty-password-upper", "password-title", "empty-password-title", "hidden", "hidden-upper", "hidden-title"];
+        const form = document.getElementById("secret-form") as HTMLFormElement | null;
+        const submitted = form ? new FormData(form) : null;
+        return Object.fromEntries(ids.map((id) => {
+          const host = document.getElementById(id)! as HTMLElement & { value?: string };
+          const input = host.shadowRoot?.querySelector("input") as HTMLInputElement | null;
+          return [id, {
+            content: getComputedStyle(host, "::before").content,
+            display: getComputedStyle(host).display,
+            box: box(host),
+            value: host.value,
+            submitted: submitted?.get(host.getAttribute("name") ?? "") ?? null,
+            input: input && { type: input.type, display: getComputedStyle(input).display, box: box(input) },
+          }];
+        }));
+      });
+      const before = await fields();
+      assert(!before.password.content.includes("hunter2"), `a password field paints its value before upgrade (::before content ${before.password.content})`);
+      assert.equal(before.password.content, before["empty-password"].content, "a filled password field paints a different ::before than an empty one");
+      const { box: filledBox } = before.password;
+      const { box: emptyBox } = before["empty-password"];
+      assert.equal(filledBox.w, emptyBox.w, "a filled password field is not as wide as an empty one");
+      assert.equal(filledBox.h, emptyBox.h, "a filled password field is not as tall as an empty one");
+      // Both are inline boxes on one line, so the same y is the same baseline.
+      assert.equal(filledBox.y, emptyBox.y, "a filled password field does not sit on the empty one's baseline");
+      assert(
+        Math.abs(emptyBox.x - (filledBox.x + filledBox.w)) < 0.5,
+        `a filled password field's box is not its own (${filledBox.w}px wide, the next field at ${emptyBox.x - filledBox.x})`,
+      );
+      // The type selector is case-insensitive for passwords as well as hidden fields.
+      for (const [filled, empty, type] of [
+        ["password", "empty-password", "password"],
+        ["password-upper", "empty-password-upper", "PASSWORD"],
+        ["password-title", "empty-password-title", "Password"],
+      ]) {
+        const field = before[filled];
+        const blank = before[empty];
+        assert.equal(field.content, '" "', `${type} paints more than the empty line-box space`);
+        assert.equal(blank.content, '" "', `empty ${type} paints more than the empty line-box space`);
+        assert.equal(field.box.w, blank.box.w, `${type} filled/empty widths differ`);
+        assert.equal(field.box.h, blank.box.h, `${type} filled/empty heights differ`);
+        assert.equal(field.box.y, blank.box.y, `${type} filled/empty baselines differ`);
+        assert(Math.abs(blank.box.x - (field.box.x + field.box.w)) < 0.5, `${type} filled/empty fields overlap`);
+        console.log(`Password ${type} before upgrade: ::before ${field.content}, filled ${field.box.w}×${field.box.h}, empty ${blank.box.w}×${blank.box.h}; no value painted`);
+      }
+      for (const id of ["hidden", "hidden-upper", "hidden-title"]) {
+        assert(!before[id].content.includes("synthetic-token"), `a ${id.includes("upper") ? "HIDDEN" : "hidden"} field paints its value before upgrade (::before content ${before[id].content})`);
+        assert.equal(before[id].display, "none", `a ${id} field is rendered before upgrade (display ${before[id].display})`);
+        assert.equal(before[id].box.w, 0, `a ${id} field takes space before upgrade (${before[id].box.w}px wide)`);
+        assert.equal(before[id].box.h, 0, `a ${id} field takes space before upgrade (${before[id].box.h}px tall)`);
+        assert.equal(before[id].submitted, null, `a ${id} field submits before upgrade, and cannot: the element is not defined yet`);
+      }
+      // The upgraded element in the same page: no space either, and the value
+      // still reads and still reaches the form.
+      await p.addScriptTag({ url: "/elements.js", type: "module" });
+      await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
+      await p.waitForFunction(() => !document.querySelector("#stage :not(:defined)"));
+      await p.waitForTimeout(300);
+      await settle(p);
+      const after = await fields();
+      const tokens: Record<string, [string, string]> = {
+        hidden: ["token", "synthetic-token"],
+        "hidden-upper": ["token-upper", "synthetic-token-2"],
+        "hidden-title": ["token-title", "synthetic-token-3"],
+      };
+      for (const [id, [name, token]] of Object.entries(tokens)) {
+        assert.equal(after[id].display, "none", `the upgraded ${id} is rendered (display ${after[id].display})`);
+        assert.equal(after[id].box.w, 0, `the upgraded ${id} takes space (${after[id].box.w}px wide)`);
+        assert.equal(after[id].box.h, 0, `the upgraded ${id} takes space (${after[id].box.h}px tall)`);
+        assert.equal(after[id].input?.type, "hidden", `the upgraded ${id} is not a hidden input`);
+        assert.equal(after[id].input?.display, "none", `the upgraded ${id}'s input is rendered (${after[id].input?.display})`);
+        assert.equal(after[id].value, token, `the upgraded ${id}'s value does not read back (${after[id].value})`);
+        assert.equal(after[id].submitted, token, `the upgraded ${id} does not submit its value under ${name} (FormData has ${after[id].submitted})`);
+      }
+      console.log(`Password before upgrade: filled field ::before ${before.password.content}, box ${filledBox.w}×${filledBox.h} at (${filledBox.x}, ${filledBox.y}); empty field ::before ${before["empty-password"].content}, box ${emptyBox.w}×${emptyBox.h} at (${emptyBox.x}, ${emptyBox.y})`);
+      console.log(`Hidden before upgrade: filled field ::before ${before.hidden.content}, box ${before.hidden.box.w}×${before.hidden.box.h}, display ${before.hidden.display}; HIDDEN ::before ${before["hidden-upper"].content}, box ${before["hidden-upper"].box.w}×${before["hidden-upper"].box.h}, display ${before["hidden-upper"].display}; Hidden ::before ${before["hidden-title"].content}, box ${before["hidden-title"].box.w}×${before["hidden-title"].box.h}, display ${before["hidden-title"].display}`);
+      console.log(`Hidden after upgrade: box ${after.hidden.box.w}×${after.hidden.box.h}, display ${after.hidden.display}, input type ${after.hidden.input?.type} display ${after.hidden.input?.display} at ${after.hidden.input?.box.w}×${after.hidden.input?.box.h}; the form sees token=${after.hidden.submitted}, value reads ${after.hidden.value}`);
+    } finally {
+      await p.close();
+    }
+  }
+
+  assert.deepEqual(failing, [], "Cases that shift on upgrade: score over the threshold, a sibling over the move limit, or a button box at or over the move limit");
   // The button's own box. A move of at least 0.5 px counts even when the
   // region score stays under the threshold.
   assert(buttonMove < 0.5 && one < THRESHOLD, "One element's pre-upgrade file shifts on upgrade");

@@ -4,7 +4,8 @@
 // close() returns, isOpen() has changed and the event has been emitted (the
 // cancellable before* first). Classes, painting and the focus trap follow.
 // Open on an open dialog and close on a closed one do nothing and emit nothing.
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach, jest } from 'bun:test';
+import { advanceTimersByTime } from '../../utils/fake-clock';
 import { JSDOM } from 'jsdom';
 
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
@@ -45,7 +46,14 @@ Object.defineProperty(dom.window.HTMLElement.prototype, 'offsetHeight', { get: (
 import createDialog from '../../../src/components/dialog';
 import type { DialogConfig, DialogComponent } from '../../../src/components/dialog/types';
 
-const after = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+// The clock is the tests' own (FLO-569). `afteropen` is on a timer that starts
+// only when the 10ms show timer has run, so waiting on the wall clock for it
+// raced: a stall after open() delays the first timer, the second starts from
+// there, and a real 80ms wait can end before it. `after(ms)` moves the fake
+// clock by exactly ms, running every timer due on the way, in order.
+const after = async (ms: number): Promise<void> => {
+  advanceTimersByTime(ms);
+};
 
 const EVENTS = ['beforeopen', 'open', 'afteropen', 'beforeclose', 'close', 'afterclose'] as const;
 const VISIBLE = 'mtrl-dialog--visible';
@@ -67,6 +75,7 @@ const make = (config: DialogConfig = {}) => {
 };
 
 beforeEach(() => {
+  jest.useFakeTimers();
   document.body.innerHTML = '';
   document.body.style.overflow = '';
   dialogs = [];
@@ -77,10 +86,16 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-  for (const dialog of dialogs) dialog.destroy();
-  await after(SETTLED);
-  document.body.innerHTML = '';
-  document.body.style.overflow = '';
+  // The real clock comes back even when a destroy() throws: a fake clock left
+  // installed makes the next file's real waits time out
+  try {
+    for (const dialog of dialogs) dialog.destroy();
+    await after(SETTLED);
+    document.body.innerHTML = '';
+    document.body.style.overflow = '';
+  } finally {
+    jest.useRealTimers();
+  }
 });
 
 describe('dialog open(): the state and the event are there when it returns', () => {

@@ -2,10 +2,27 @@
 import type { ForwardedEventPayload } from "../../core/dom";
 
 /**
+ * List variant types following Material Design 3 guidelines.
+ * - standard: the baseline list: no container, square rows (default)
+ * - segmented: the expressive list: each row paints its own container and
+ *   shape, 2px apart
+ *
+ * @category Components
+ */
+export type ListVariant = 'standard' | 'segmented';
+
+/**
  * Configuration for the List component
  * @interface ListConfig
  */
 export interface ListConfig<T = unknown> {
+  /**
+   * The list's visual style. It does not change the list's behavior.
+   * An unknown value is the default.
+   * @default 'standard'
+   */
+  variant?: ListVariant;
+
   /**
    * Static array of items to display
    * @required

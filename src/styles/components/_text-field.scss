@@ -226,6 +226,18 @@ $component: "#{base.$prefix}-text-field";
         }
     }
 
+    // A hidden icon is hidden (#60): an author rule beats the user agent's
+    // `[hidden] { display: none }`, so the parts' `display: flex` above must
+    // yield to their own hidden state. Scoped to the two parts, not a global
+    // `[hidden]` rule. The padding an icon's presence reserved stays: M3 has
+    // no hidden-icon state ("Left/right padding with icons 12dp", "Padding
+    // between icons and text 16dp"), and Compose's icon slot keeps its room
+    // whatever it draws.
+    &__leading-icon[hidden],
+    &__trailing-icon[hidden] {
+        display: none;
+    }
+
     // Where the content starts and ends: 16dp in (TextFieldPadding), or after
     // an icon, which is 12dp in with 16dp after it ("Left/right padding with
     // icons 12dp", "Padding between icons and text 16dp", m3.material.io text
@@ -566,6 +578,25 @@ $component: "#{base.$prefix}-text-field";
 
         &--notched .#{$component}__outline-notch {
             border-top-color: transparent;
+        }
+
+        // Forced colours paints a declared-`transparent` border in the
+        // line's own colour, so the open notch's gap was drawn as part of the
+        // top line, across the floated label. In the mode the open notch has no
+        // top edge at all, whether placement.ts has opened it (--notched) or
+        // the input's own state has and the script has not caught up: a value
+        // set without an event, an autofilled field. The leading and trailing
+        // segments still draw theirs.
+        @include m.high-contrast {
+            &--notched .#{$component}__outline-notch {
+                border-top-style: none;
+            }
+
+            .#{$component}__input:not(:placeholder-shown) ~ & .#{$component}__outline-notch,
+            .#{$component}__input:-webkit-autofill ~ & .#{$component}__outline-notch,
+            .#{$component}__input:autofill ~ & .#{$component}__outline-notch {
+                border-top-style: none;
+            }
         }
     }
 

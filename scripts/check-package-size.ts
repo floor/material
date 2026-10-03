@@ -32,6 +32,19 @@ function measure(data: Uint8Array) {
 try {
   assert(!pack.files.some((file: { path: string }) => file.path.endsWith(".map")), "Unexpected source maps in npm package");
   assert(pack.files.some((file: { path: string }) => file.path === "dist/ssr/index.js"), "Missing SSR bundle");
+  // Which README and manifest ship. The fixture packs what publish.yml's step
+  // makes of the tree, so these hold for a release: npm's page shows the short
+  // README, the repository's long one stays on GitHub, and the manifest carries
+  // nothing only the repository uses.
+  const paths = (pack.files as { path: string }[]).map(file => file.path);
+  assert.deepEqual(paths.filter(path => /readme/i.test(path)), ["README.md"], "The package ships one README, at its root");
+  const shipped = await Bun.file(join(fixture.installed, "README.md")).text();
+  assert.equal(shipped, await Bun.file("npm-readme.md").text(), "The packed README.md is not npm-readme.md");
+  assert.notEqual(shipped, await Bun.file("README.md").text(), "npm-readme.md and README.md are the same file");
+  const published = await Bun.file(join(fixture.installed, "package.json")).json() as Record<string, unknown>;
+  for (const key of ["scripts", "eslintConfig", "typedocOptions"]) {
+    assert(!(key in published), `The packed manifest still has "${key}"`);
+  }
   // The SSR bundle owns linkedom; every other shipped module (including its
   // browser stub) must remain outside the server graph. Resolve relative paths
   // as well as public subpaths, so ../ssr/index.js cannot bypass the guard.
@@ -160,6 +173,9 @@ try {
   // 1,000, is 1,086,000, above 1,078,000, so the ceiling returns to 1,078,000 and
   // stays (this file's convention, stated in the comments above it: the rule's figure
   // caps a raise; it does not move a ceiling the measurement is under).
+  // The fixture packs what publish.yml publishes, the short npm-readme.md as README.md
+  // and the manifest without its repository-only fields: 1,066,725 with main at 593162e0 in, same packer.
+  // Under 1,078,000, so the ceiling stays.
   assert(pack.size < 1_078_000, "npm tarball exceeds 1,078,000 bytes");
   // Raised from 4,500,000 on 2026-09-28 and from 5,000,000 on 2026-09-29 (Dr Jones) for
   // the elements and framework adapters, whose shadow-root CSS repeats the
@@ -192,7 +208,17 @@ try {
   // 1,000, is 6,476,000, above 6,458,000, so the ceiling stays.
   // Merged with FLO-299 (a8c24f7f), same packer: 6,410,644. Under 6,458,000,
   // so the ceiling stays.
+  // What publish.yml publishes (the short README, the stripped manifest): 6,371,223 with main at 593162e0 in,
+  // Node 22.23.3 / npm 10.9.9. Under 6,458,000, so the ceiling stays.
   assert(pack.unpackedSize < 6_458_000, "Unpacked package exceeds 6,458,000 bytes");
+
+  // The component entries the probe imports, and how many package.json exports,
+  // counted another way: every "./components/<name>" key. Which keys those must
+  // be is test/component-exports.test.ts's check, so the number is read, not written here.
+  const exportKeys = Object.keys(JSON.parse(await Bun.file("package.json").text()).exports);
+  const componentKeys = exportKeys.filter(k => k.startsWith("./components/") && k.split("/").length === 3 && !k.endsWith("constants"));
+  const componentEntryCount = exportKeys.filter(k => /^\.\/components\/[^/]+$/.test(k)).length;
+  assert(componentEntryCount > 0, "package.json exports no component entry");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
   const smoke = join(temporary, "smoke.mjs");
@@ -213,7 +239,9 @@ try {
     // 3.0.0 is ESM-only (FLO-358): no require condition, so require('material') does not resolve
     assert.throws(() => createRequire(import.meta.url)('material'), { code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });
 
-    const componentKeys = ${JSON.stringify(Object.keys(JSON.parse(await Bun.file("package.json").text()).exports).filter(k => k.startsWith("./components/") && k.split("/").length === 3 && !k.endsWith("constants")))};
+    const componentKeys = ${JSON.stringify(componentKeys)};
+    // A filter that matches nothing would loop over nothing and pass (FLO-569)
+    assert.equal(componentKeys.length, ${componentEntryCount}, 'the component entries checked are not the component entries package.json exports');
     for (const key of componentKeys) {
       const name = key.slice(13); // remove "./components/"
       const module = await import(\`material/components/\${name}\`);
@@ -259,7 +287,7 @@ try {
     card.destroy(); loading.destroy(); b.destroy(); field.destroy(); dom.window.close();
   `);
   await run(["node", smoke], temporary);
-  console.log("component entries: 37 default exports, each also exported by the root's name");
+  console.log(`component entries: ${componentKeys.length} default exports, each also exported by the root's name`);
 
   // Check declaration resolution using strict NodeNext semantics.
   const typeFixture = join(temporary, "types.ts");

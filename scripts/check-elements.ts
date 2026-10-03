@@ -1156,6 +1156,93 @@ try {
     check("extended fab: renders as the factory does with the global stylesheet");
   }
 
+  // ---------------------------------------------------------------- fab corners
+  // A FAB in a corner keeps that corner in every state. The state layer sets
+  // `position: relative` on its host; written inside a state rule that is
+  // (0,2,0), so it outranked the corner class (0,1,0) and the button left its
+  // corner for the flow while hovered, focused or pressed. Both components,
+  // element and factory, four corners, left-to-right and right-to-left.
+  const corners = ["top-left", "top-right", "bottom-left", "bottom-right"] as const;
+  const fabState = (id: string): Promise<{ position: string; box: number[] }> =>
+    page.evaluate((id) => {
+      const host = document.getElementById(id) as HTMLElement;
+      const el = (host.shadowRoot?.querySelector("button") as HTMLElement | null) ?? host;
+      const r = el.getBoundingClientRect();
+      return { position: getComputedStyle(el).position, box: [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)] };
+    }, id);
+  const deepFocus = (): Promise<{ id: string | null; focusVisible: boolean } | null> =>
+    page.evaluate(() => {
+      let el: Element | null = document.activeElement;
+      while (el?.shadowRoot?.activeElement) el = el.shadowRoot.activeElement;
+      if (!el || el === document.body) return null;
+      const root = el.getRootNode();
+      const host = (root instanceof ShadowRoot ? root.host : el) as HTMLElement;
+      return { id: host.id || null, focusVisible: el.matches(":focus-visible") };
+    });
+  const focusByTab = async (id: string): Promise<boolean> => {
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    for (let press = 0; press < 8; press++) {
+      await page.keyboard.press("Tab");
+      const active = await deepFocus();
+      if (active?.id === id) return active.focusVisible;
+    }
+    return false;
+  };
+  const settle = (): Promise<unknown> => page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve(null))));
+  for (const dir of ["ltr", "rtl"] as const) {
+    for (const [kind, tag] of [["fab", "m-fab"], ["extended-fab", "m-extended-fab"]] as const) {
+      const label = (corner: string): string => (kind === "fab" ? `Fab ${corner}` : `Ext ${corner}`);
+      for (const form of ["element", "factory"] as const) {
+        const ids = corners.map((corner) => `${kind}-${form}-${corner}`);
+        const markup = form === "element"
+          ? corners.map((corner, index) => kind === "fab"
+              ? `<${tag} id="${ids[index]}" position="${corner}" aria-label="${label(corner)}" icon='${ICON}'></${tag}>`
+              : `<${tag} id="${ids[index]}" position="${corner}" icon='${ICON}'>${label(corner)}</${tag}>`
+            ).join("")
+          : `<section id="factory"></section>`;
+        await fresh(page, `<div dir="${dir}">${markup}</div>`);
+        if (form === "factory") {
+          await page.evaluate(({ kind, corners, icon }) => {
+            const w = window as unknown as Win & {
+              mtrl: { createFab: (config: object) => { element: HTMLElement }; createExtendedFab: (config: object) => { element: HTMLElement } };
+            };
+            for (const corner of corners) {
+              const made = kind === "fab"
+                ? w.mtrl.createFab({ position: corner, icon, ariaLabel: `Fab ${corner}` })
+                : w.mtrl.createExtendedFab({ position: corner, icon, text: `Ext ${corner}` });
+              made.element.id = `${kind}-factory-${corner}`;
+              document.getElementById("factory")?.append(made.element);
+            }
+          }, { kind, corners: [...corners], icon: ICON });
+          await settle();
+        }
+        for (const [index] of corners.entries()) {
+          const id = ids[index]!;
+          const rest = await fabState(id);
+          assert.equal(rest.position, "fixed", `${id}: the corner class is not fixed at rest`);
+          const [left, top, width, height] = rest.box;
+          const centre = { x: left + width / 2, y: top + height / 2 };
+          await page.mouse.move(centre.x, centre.y);
+          await settle();
+          const hovered = await fabState(id);
+          assert.deepEqual(hovered, rest, `${id} left its corner while hovered: ${JSON.stringify(hovered)}`);
+          await page.mouse.move(450, 350);
+          assert.equal(await focusByTab(id), true, `${id}: Tab does not focus it with :focus-visible`);
+          const focused = await fabState(id);
+          assert.deepEqual(focused, rest, `${id} left its corner while focused: ${JSON.stringify(focused)}`);
+          await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+          await page.mouse.move(centre.x, centre.y);
+          await page.mouse.down();
+          const pressed = await fabState(id);
+          await page.mouse.up();
+          assert.deepEqual(pressed, rest, `${id} left its corner while pressed: ${JSON.stringify(pressed)}`);
+          await page.mouse.move(450, 350);
+        }
+        check(`${kind} (${form}, ${dir}): every corner keeps its position and box at rest, hovered, focused and pressed`);
+      }
+    }
+  }
+
   // ---------------------------------------------------------------- checkbox
   await fresh(
     page,
@@ -2219,6 +2306,177 @@ try {
     await page.evaluate(() => ((document.getElementById("factory") as HTMLElement).innerHTML = ""));
     check("text field: focus opens the notch of an empty outlined field and blur closes it");
 
+    // Forced colours repaints a declared-`transparent` border in the
+    // line's own colour, so with the notch open the top line was drawn through
+    // the floated label. In the mode the floated label must be clear of the
+    // line, and the outline must still be drawn: the leading and trailing
+    // segments' top borders and every segment's bottom read computed, because
+    // the input's own forced border paints the same rows the top and bottom
+    // edges do and cannot stand in for them. The floated label is held from a
+    // value, from the input's own state (a value set with no event, which the
+    // script has not seen), and in the focused, error, disabled, required and
+    // multiline states. Its own context, forced colours being one.
+    const forcedContext = await browser.newContext({ forcedColors: "active", deviceScaleFactor: 1, viewport: { width: 900, height: 1200 } });
+    const forcedPage = await forcedContext.newPage();
+    await forcedPage.goto(`http://127.0.0.1:${server.port}`);
+    await forcedPage.waitForFunction(() => (window as unknown as Win).ready === true);
+    const forcedFields = await forcedPage.evaluate(async () => {
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement; input: HTMLInputElement } } };
+      const host = document.getElementById("host") as HTMLElement;
+      const attrs = 'variant="outlined" label="Label" value="Ada" style="width:280px"';
+      host.innerHTML = `<div style="padding:24px;display:grid;gap:24px;width:280px">
+          <div id="fc-fl"></div>
+          <m-text-field id="fc-el" ${attrs}></m-text-field>
+        </div>
+        <div dir="rtl" style="padding:24px;display:grid;gap:24px;width:280px">
+          <div id="fc-fr"></div>
+          <m-text-field id="fc-er" ${attrs}></m-text-field>
+        </div>
+        <div id="fc-states" style="padding:24px;display:grid;gap:24px;width:280px"></div>`;
+      for (const id of ["fc-fl", "fc-fr"]) {
+        const factory = w.mtrl.createTextField({ variant: "outlined", label: "Label", value: "Ada" });
+        factory.element.style.width = "280px";
+        (document.getElementById(id) as HTMLElement).append(factory.element);
+      }
+      // The floated label from the input's own state, and each outlined state
+      // the mode must keep clear: focused (the 2px line), error, disabled,
+      // required (the asterisk) and multiline.
+      const stateBox = document.getElementById("fc-states") as HTMLElement;
+      const stateField = (id: string, config: object) => {
+        const field = w.mtrl.createTextField({ variant: "outlined", label: "Label", ...config });
+        field.element.id = id;
+        field.element.style.width = "280px";
+        stateBox.append(field.element);
+        return field;
+      };
+      const noEvent = stateField("fc-nv", {});
+      const focused = stateField("fc-foc", {});
+      stateField("fc-err", { error: true, value: "Ada" });
+      stateField("fc-dis", { disabled: true, value: "Ada" });
+      stateField("fc-req", { required: true, value: "Ada" });
+      stateField("fc-ml", { type: "multiline", value: "Ada" });
+      // placement.ts, the labels' float and the border transitions
+      await new Promise((r) => setTimeout(r, 600));
+      // A value with no event floats the label and opens the notch through the
+      // input's own state: the script's --notched is never set, so the
+      // stylesheet's fallback selector is what must leave the label clear in
+      // the mode. Focus follows placement for the same reason: the class the
+      // script reads arrives with the browser's focus.
+      noEvent.input.value = "Ada";
+      focused.input.focus({ preventScroll: true });
+      await new Promise((r) => setTimeout(r, 400));
+      const box = (el: Element): { left: number; right: number; top: number; bottom: number } => {
+        const { left, right, top, bottom } = el.getBoundingClientRect();
+        return { left, right, top, bottom };
+      };
+      const edge = (el: HTMLElement): { top: string; topWidth: number; bottom: string; bottomWidth: number } => {
+        const style = getComputedStyle(el);
+        return {
+          top: style.borderTopStyle,
+          topWidth: parseFloat(style.borderTopWidth),
+          bottom: style.borderBottomStyle,
+          bottomWidth: parseFloat(style.borderBottomWidth),
+        };
+      };
+      const measure = (id: string) => {
+        const field = document.getElementById(id) as HTMLElement;
+        const root = (field.shadowRoot?.firstElementChild as HTMLElement | null) ?? field;
+        const label = root.querySelector("label") as HTMLElement;
+        const segment = (part: string): HTMLElement => root.querySelector(`[class*="text-field__outline-${part}"]`) as HTMLElement;
+        return {
+          root: box(root),
+          label: box(label),
+          line: getComputedStyle(segment("leading")).borderTopColor,
+          edges: {
+            leading: edge(segment("leading")),
+            notch: edge(segment("notch")),
+            trailing: edge(segment("trailing")),
+          },
+        };
+      };
+      return {
+        "factory ltr": measure("fc-fl"),
+        "factory rtl": measure("fc-fr"),
+        "element ltr": measure("fc-el"),
+        "element rtl": measure("fc-er"),
+        "value with no event": measure("fc-nv"),
+        focused: measure("fc-foc"),
+        error: measure("fc-err"),
+        disabled: measure("fc-dis"),
+        required: measure("fc-req"),
+        multiline: measure("fc-ml"),
+      };
+    });
+    const forcedPng = (await forcedPage.screenshot()).toString("base64");
+    const forced = await forcedPage.evaluate(async ({ png, fields }) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${png}`;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+      context.drawImage(image, 0, 0);
+      const px = (x: number, y: number): number[] =>
+        Array.from(context.getImageData(Math.floor(x), Math.floor(y), 1, 1).data.slice(0, 3));
+      const drawn = (style: string, width: number): boolean => style !== "none" && width >= 1;
+      return Object.entries(fields).map(([name, field]) => {
+        const line = (field.line.match(/\d+/g) ?? []).slice(0, 3).map(Number);
+        const near = (pixel: number[]): boolean => pixel.every((v, i) => Math.abs(v - (line[i] ?? 0)) <= 16);
+        const row = Math.round(field.root.top);
+        const middle = Math.round(field.root.top + (field.root.bottom - field.root.top) / 2);
+        let run = 0;
+        let longest = 0;
+        for (let x = Math.ceil(field.label.left); x <= Math.floor(field.label.right); x++) {
+          run = near(px(x, row)) ? run + 1 : 0;
+          longest = Math.max(longest, run);
+        }
+        return {
+          name,
+          line: field.line,
+          onLabel: field.label.top < field.root.top && field.label.bottom > field.root.top,
+          longest,
+          width: Math.floor(field.label.right) - Math.ceil(field.label.left) + 1,
+          drawn: {
+            "the leading segment's top edge": drawn(field.edges.leading.top, field.edges.leading.topWidth),
+            "the trailing segment's top edge": drawn(field.edges.trailing.top, field.edges.trailing.topWidth),
+            "the leading side": near(px(field.root.left, middle)),
+            "the trailing side": near(px(field.root.right - 1, middle)),
+            "the bottom edge": [field.edges.leading, field.edges.notch, field.edges.trailing]
+              .every((edge) => drawn(edge.bottom, edge.bottomWidth)),
+          },
+        };
+      });
+    }, { png: forcedPng, fields: forcedFields });
+    const forcedFailures: string[] = [];
+    for (const field of forced) {
+      const edges = Object.entries(field.drawn);
+      const missing = edges.filter(([, isDrawn]) => !isDrawn).map(([edge]) => edge);
+      console.log(`  forced colours ${field.name}: the outline's colour runs ${field.longest}px of ${field.width}px across the label; ${edges.length - missing.length}/${edges.length} edges drawn`);
+      if (!field.onLabel) forcedFailures.push(`${field.name}: the label is not floated onto the top edge`);
+      if (field.longest >= 8) forcedFailures.push(`${field.name}: the outline crosses the floated label (${field.longest}px of ${field.width}px in ${field.line})`);
+      if (missing.length > 0) forcedFailures.push(`${field.name}: the outline is not drawn on ${missing.join(", ")}`);
+    }
+    for (const line of forcedFailures) console.log(`  FAIL ${line}`);
+    assert.deepEqual(forcedFailures, [], "forced colours: the notch leaves the floated label clear and the outline drawn");
+    await forcedContext.close();
+    // :autofill and :-webkit-autofill cannot be produced from a page: the
+    // browser fills a field, not a script (Playwright does not autofill). The
+    // two selectors are asserted on the compiled sheets instead: in the mode,
+    // each opens the notch with no top edge. `border-top-style:none` on the
+    // input-state selectors exists only inside the media query, so the exact
+    // rule is what is looked for — factory sheet and element sheet alike.
+    const inputStateRule = [
+      ".mtrl-text-field__input:not(:placeholder-shown)~.mtrl-text-field__outline .mtrl-text-field__outline-notch",
+      ".mtrl-text-field__input:-webkit-autofill~.mtrl-text-field__outline .mtrl-text-field__outline-notch",
+      ".mtrl-text-field__input:autofill~.mtrl-text-field__outline .mtrl-text-field__outline-notch",
+    ].join(",") + "{border-top-style:none}";
+    for (const file of ["dist/styles.css", "dist/elements/css/text-field.css"]) {
+      const sheet = await Bun.file(file).text();
+      assert(sheet.includes(inputStateRule), `forced colours: ${file} opens the input-state notch with no top edge`);
+    }
+    check("text field: in forced colours the notch leaves the floated label clear and the outline is still drawn");
+
     // FLO-562. A [dir='rtl'] ancestor outside a shadow root is invisible to the
     // stylesheet inside it, so the mirroring must follow the --rtl class
     // placement.ts sets from the computed direction. Four fields under
@@ -2346,6 +2604,74 @@ try {
     });
     assert.deepEqual(layout, { inline: "inline-block", width: 400, focused: "INPUT", blurred: null });
     check("text field: an inline-block host whose width the field fills; focus() and blur() reach the input");
+
+    // [#60] `hidden` on an icon part must hide it. The parts' own
+    // `display: flex` is an author rule, so it beats the user agent's
+    // `[hidden] { display: none }` and the icon stays displayed — a hidden
+    // interactive icon keeps its 40px box. The padding the icon's presence
+    // reserved stays: M3 has no hidden-icon state ("Left/right padding with
+    // icons 12dp", "Padding between icons and text 16dp"), and Compose's icon
+    // slot keeps its room whatever it draws. Factory and element, both icons
+    // and an interactive trailing one; the no-icon field is the reference.
+    const iconHidden = await page.evaluate(async (icon) => {
+      const w = window as unknown as Win & { mtrl: { createTextField: (c: object) => { element: HTMLElement } } };
+      const host = document.getElementById("factory") as HTMLElement;
+      host.innerHTML = `<m-text-field id="h-both" variant="filled" label="Both" value="Ada" leading-icon='${icon}' trailing-icon='${icon}'></m-text-field>
+        <m-text-field id="h-none" variant="filled" label="None" value="Ada"></m-text-field>`;
+      const factoryBoth = w.mtrl.createTextField({ variant: "filled", label: "Both", value: "Ada", leadingIcon: icon, trailingIcon: icon });
+      const factoryButton = w.mtrl.createTextField({ variant: "filled", label: "Clear", value: "Ada", trailingIcon: icon, trailingIconLabel: "Clear" });
+      const factoryNone = w.mtrl.createTextField({ variant: "filled", label: "None", value: "Ada" });
+      host.append(factoryBoth.element, factoryButton.element, factoryNone.element);
+      await new Promise((r) => setTimeout(r, 50));
+      const rootOf = (el: HTMLElement): HTMLElement => (el.shadowRoot?.firstElementChild as HTMLElement | null) ?? el;
+      const iconsOf = (root: HTMLElement): HTMLElement[] =>
+        ["leading-icon", "trailing-icon"]
+          .map((part) => root.querySelector(`[class*="text-field__${part}"]`) as HTMLElement | null)
+          .filter((el): el is HTMLElement => el !== null);
+      const pads = (root: HTMLElement): number[] => {
+        const style = getComputedStyle(root.querySelector("input") as HTMLInputElement);
+        return [style.paddingLeft, style.paddingRight].map((p) => Math.round(parseFloat(p) * 100) / 100);
+      };
+      const fields: Array<[string, HTMLElement]> = [
+        ["factory, both icons", factoryBoth.element],
+        ["factory, interactive trailing", factoryButton.element],
+        ["factory, no icon", factoryNone.element],
+        ["element, both icons", document.getElementById("h-both") as HTMLElement],
+        ["element, no icon", document.getElementById("h-none") as HTMLElement],
+      ];
+      const before: Record<string, number[]> = {};
+      for (const [name, el] of fields) before[name] = pads(rootOf(el));
+      for (const [, el] of fields) for (const el2 of iconsOf(rootOf(el))) el2.hidden = true;
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const after: Record<string, { display: string[]; box: number[][]; padding: number[] }> = {};
+      for (const [name, el] of fields) {
+        const root = rootOf(el);
+        after[name] = {
+          display: iconsOf(root).map((el2) => getComputedStyle(el2).display),
+          box: iconsOf(root).map((el2) => {
+            const r = el2.getBoundingClientRect();
+            return [Math.round(r.width * 100) / 100, Math.round(r.height * 100) / 100];
+          }),
+          padding: pads(root),
+        };
+      }
+      return { before, after };
+    }, ICON);
+    const hiddenFailures: string[] = [];
+    for (const [name, { display, box, padding }] of Object.entries(iconHidden.after)) {
+      display.forEach((value, i) => {
+        if (value !== "none") hiddenFailures.push(`${name}: hidden icon ${i} computes display: ${value}`);
+      });
+      box.forEach(([width, height], i) => {
+        if (width !== 0 || height !== 0) hiddenFailures.push(`${name}: hidden icon ${i} is ${width}x${height}`);
+      });
+      const [start, end] = iconHidden.before[name];
+      if (padding[0] !== start || padding[1] !== end)
+        hiddenFailures.push(`${name}: the input's padding moved ${start}/${end} -> ${padding[0]}/${padding[1]}`);
+      console.log(`  hidden icon ${name}: padding ${start}/${end} -> ${padding[0]}/${padding[1]}, ${display.length} icon(s) ${display.join("/")}`);
+    }
+    assert.deepEqual(hiddenFailures, [], hiddenFailures.join("\n"));
+    check("text field: a leading or trailing icon with hidden is not displayed, and the padding it reserved stays (#60)");
   }
 
   // ---------------------------------------------------------------- tabs
@@ -5242,6 +5568,1107 @@ try {
     check("list: rows match the factory's size and colours, selected and not");
   }
 
+  // The segmented list's shape (m3.material.io/components/lists/specs, 2026-10-02).
+  // An unselected row is 4px where it meets another row and 16px on the outer
+  // corners of a run; hover is 12px; focus and press are 16px. A selected row
+  // is 16px on every corner, including hover, focus and press. The state layer
+  // and the focus ring take that same radius. Factory and element, both directions.
+  {
+    const items = ["Network", "Connected", "Sound", "Privacy"] as const;
+    const rest = {
+      Network: "16px 16px 4px 4px",
+      Connected: "4px 4px 4px 4px",
+      Sound: "16px 16px 16px 16px",
+      Privacy: "4px 4px 16px 16px",
+    };
+    const markup = (dir: string): string =>
+      `<div dir="${dir}"><m-list id="shape-${dir}" variant="segmented" aria-label="Element ${dir}" value="c">${
+        items.map((label, i) => `<m-list-item value="${"abcd"[i]}">${label}</m-list-item>`).join("")
+      }</m-list></div>`;
+    type RowShape = {
+      headline: string; row: string; action: string; layer: string;
+      opacity: string; inset: string; outlineWidth: string; outlineStyle: string;
+      focusVisible: boolean; boxDelta: number;
+    };
+    const read = (listName: string): Promise<RowShape[]> => page.evaluate((listName) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`);
+      const root = (list?.shadowRoot ?? list) as ParentNode;
+      const four = (style: CSSStyleDeclaration): string => [
+        style.borderTopLeftRadius, style.borderTopRightRadius,
+        style.borderBottomRightRadius, style.borderBottomLeftRadius,
+      ].join(" ");
+      return [...root.querySelectorAll('[role="listitem"]')].map((row) => {
+        const action = row.querySelector("button") as HTMLElement;
+        const layer = getComputedStyle(action, "::before");
+        const actionStyle = getComputedStyle(action);
+        const rowBox = row.getBoundingClientRect();
+        const actionBox = action.getBoundingClientRect();
+        return {
+          headline: row.querySelector('[class*="headline"]')?.textContent ?? "",
+          row: four(getComputedStyle(row)),
+          action: four(actionStyle),
+          layer: four(layer),
+          opacity: layer.opacity,
+          inset: [layer.top, layer.right, layer.bottom, layer.left].join(" "),
+          outlineWidth: actionStyle.outlineWidth,
+          outlineStyle: actionStyle.outlineStyle,
+          focusVisible: action.matches(":focus-visible"),
+          boxDelta: Math.max(
+            Math.abs(rowBox.left - actionBox.left), Math.abs(rowBox.top - actionBox.top),
+            Math.abs(rowBox.width - actionBox.width), Math.abs(rowBox.height - actionBox.height),
+          ),
+        };
+      });
+    }, listName);
+    const away = (): Promise<void> => page.mouse.move(880, 680);
+    const button = (listName: string, item: string) =>
+      page.getByRole("list", { name: listName }).getByRole("button", { name: item, exact: true });
+    const focusItem = async (listName: string, item: string): Promise<void> => {
+      await page.evaluate(() => {
+        const active = document.activeElement as HTMLElement | null;
+        (active?.shadowRoot?.activeElement as HTMLElement | null)?.blur();
+        active?.blur();
+      });
+      for (let i = 0; i < 8; i++) {
+        await page.keyboard.press("Tab");
+        const hit = await page.evaluate(({ listName, item }) => {
+          const list = document.querySelector(`[aria-label="${listName}"]`);
+          const light = document.activeElement as HTMLElement | null;
+          const button = (list?.shadowRoot?.activeElement ?? (list?.contains(light) ? light : null)) as HTMLElement | null;
+          const headline = button?.closest('[role="listitem"]')?.querySelector('[class*="headline"]')?.textContent;
+          return button?.matches(":focus-visible") === true && headline === item;
+        }, { listName, item });
+        if (hit) return;
+      }
+      throw new Error(`no focus-visible on ${listName} / ${item}`);
+    };
+    const hold = async (listName: string, item: string): Promise<void> => {
+      const box = await button(listName, item).boundingBox();
+      if (!box) throw new Error(`no box for ${listName} / ${item}`);
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+    };
+
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const kind of ["element", "factory"] as const) {
+        const listName = kind === "element" ? `Element ${dir}` : `Factory ${dir}`;
+        await fresh(page, `${markup(dir)}<section id="factory"></section>`);
+        if (kind === "factory") {
+          await page.evaluate(({ dir, items }) => {
+            const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+            const list = w.mtrl.createList({
+              variant: "segmented",
+              ariaLabel: `Factory ${dir}`,
+              trackSelection: true,
+              items: items.map((headline, i) => ({ id: "abcd"[i], headline })),
+              initialSelection: ["c"],
+            });
+            document.getElementById("factory")?.append(list.element);
+            document.getElementById(`shape-${dir}`)?.remove();
+          }, { dir, items: [...items] });
+          await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+        }
+        const where = `${kind} ${dir}`;
+        const failures: string[] = [];
+        const expectRows = (rows: RowShape[], want: Record<string, string>, interactive?: string): void => {
+          for (const row of rows) {
+            const radius = want[row.headline];
+            if (!radius) { failures.push(`${where}: unexpected row ${row.headline}`); continue; }
+            if (row.row !== radius) failures.push(`${where} ${row.headline} row ${row.row} != ${radius}`);
+            if (row.action !== radius) failures.push(`${where} ${row.headline} action ${row.action} != ${radius}`);
+            if (row.layer !== radius) failures.push(`${where} ${row.headline} layer ${row.layer} != ${radius}`);
+            if (row.inset !== "0px 0px 0px 0px") failures.push(`${where} ${row.headline} layer inset ${row.inset}`);
+            if (row.boxDelta > 0.5) failures.push(`${where} ${row.headline} layer box is ${row.boxDelta}px off the row`);
+            if (interactive === row.headline) {
+              if (!(Number(row.opacity) > 0)) failures.push(`${where} ${row.headline} layer opacity ${row.opacity}`);
+            }
+          }
+        };
+        await away();
+        expectRows(await read(listName), rest);
+
+        await button(listName, "Connected").hover();
+        expectRows(await read(listName), { ...rest, Connected: "12px 12px 12px 12px" }, "Connected");
+        await away();
+        await button(listName, "Sound").hover();
+        expectRows(await read(listName), rest, "Sound");
+        await away();
+
+        await focusItem(listName, "Connected");
+        const focused = await read(listName);
+        expectRows(focused, { ...rest, Connected: "16px 16px 16px 16px" }, "Connected");
+        const connected = focused.find((row) => row.headline === "Connected");
+        if (!connected?.focusVisible || connected.outlineWidth !== "2px" || connected.outlineStyle !== "solid") {
+          failures.push(`${where} Connected focus ring ${connected?.outlineWidth} ${connected?.outlineStyle} visible=${connected?.focusVisible}`);
+        }
+        await focusItem(listName, "Sound");
+        const focusedSelected = await read(listName);
+        expectRows(focusedSelected, rest, "Sound");
+        const sound = focusedSelected.find((row) => row.headline === "Sound");
+        if (!sound?.focusVisible || sound.outlineWidth !== "2px" || sound.outlineStyle !== "solid") {
+          failures.push(`${where} Sound focus ring ${sound?.outlineWidth} ${sound?.outlineStyle} visible=${sound?.focusVisible}`);
+        }
+        await page.evaluate(() => {
+          const active = document.activeElement as HTMLElement | null;
+          (active?.shadowRoot?.activeElement as HTMLElement | null)?.blur();
+          active?.blur();
+        });
+
+        await hold(listName, "Sound");
+        expectRows(await read(listName), rest, "Sound");
+        await page.mouse.up();
+        await hold(listName, "Connected");
+        const pressed = await read(listName);
+        const pressedRow = pressed.find((row) => row.headline === "Connected");
+        if (pressedRow?.row !== "16px 16px 16px 16px" || pressedRow.layer !== pressedRow.row || pressedRow.action !== pressedRow.row) {
+          failures.push(`${where} Connected pressed row ${pressedRow?.row} action ${pressedRow?.action} layer ${pressedRow?.layer}`);
+        }
+        if (!(Number(pressedRow?.opacity) > 0)) failures.push(`${where} Connected pressed opacity ${pressedRow?.opacity}`);
+        await page.mouse.up();
+
+        assert.deepEqual(failures.slice(), [], `${where}: the state layer must take the row's expressive shape`);
+        check(`list: ${where}, the state layer takes the row's expressive shape`);
+
+        // The press above clicked Connected, so it is selected. Clicking it
+        // again clears that and leaves the action focused without :focus-visible.
+        // Hovering it is then the hover shape, not the focused one.
+        await away();
+        await button(listName, "Connected").click();
+        await button(listName, "Connected").hover();
+        const clicked = (await read(listName)).find((row) => row.headline === "Connected");
+        if (clicked?.focusVisible) failures.push(`${where} Connected is focus-visible after a mouse click`);
+        if (clicked?.row !== "12px 12px 12px 12px" || clicked.layer !== clicked.row || clicked.action !== clicked.row) {
+          failures.push(`${where} Connected after a click then hover ${clicked?.row} action ${clicked?.action} layer ${clicked?.layer}`);
+        }
+        assert.deepEqual(failures, [], `${where}: a mouse click then a hover is 12px`);
+        check(`list: ${where}, a mouse click then a hover is 12px`);
+      }
+    }
+  }
+
+  // Runs, a single row, a trailing control, and square rows from the four properties.
+  {
+    const ZERO = "0px 0px 0px 0px";
+    const R12 = "12px 12px 12px 12px";
+    const R16 = "16px 16px 16px 16px";
+    const runsRest: Record<string, string> = {
+      Alpha: "16px 16px 4px 4px",
+      Bravo: "4px 4px 16px 16px",
+      Charlie: "16px 16px 16px 16px",
+      Delta: "16px 16px 4px 4px",
+      Echo: "4px 4px 16px 16px",
+    };
+    const runsMarkup = (dir: string): string => `<div id="park" style="height:24px"></div><div dir="${dir}">
+      <m-list variant="segmented" aria-label="Runs element ${dir}">
+        <m-list-item value="a">Alpha</m-list-item>
+        <m-list-item value="b">Bravo</m-list-item>
+        <m-list-item kind="divider"></m-list-item>
+        <m-list-item value="c">Charlie</m-list-item>
+        <m-list-item kind="subheader">Group</m-list-item>
+        <m-list-item value="d">Delta</m-list-item>
+        <m-list-item value="e" disabled>Echo</m-list-item>
+      </m-list>
+      <m-list variant="segmented" aria-label="Solo element ${dir}"><m-list-item value="s">Solo</m-list-item></m-list>
+      <m-list variant="segmented" aria-label="Ends element ${dir}">
+        <m-list-item value="f">First</m-list-item>
+        <m-list-item value="l">Last</m-list-item>
+      </m-list>
+      <m-list variant="segmented" aria-label="Trail element ${dir}">
+        <m-list-item value="a">Alpha</m-list-item>
+        <m-list-item value="b">Bravo</m-list-item>
+        <m-list-item value="c">Charlie</m-list-item>
+      </m-list>
+      <m-list variant="segmented" aria-label="Square element ${dir}">
+        <m-list-item value="1">One</m-list-item>
+        <m-list-item value="2">Two</m-list-item>
+        <m-list-item value="3">Three</m-list-item>
+      </m-list>
+      <m-list variant="segmented" aria-label="Only element ${dir}"><m-list-item value="o">Only</m-list-item></m-list>
+    </div><section id="factory"></section>`;
+    type ShapeRow = { headline: string; row: string; action: string; layer: string; opacity: string; focusVisible: boolean };
+    const readRows = (listName: string): Promise<ShapeRow[]> => page.evaluate((listName) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`);
+      const root = (list?.shadowRoot ?? list) as ParentNode;
+      const four = (style: CSSStyleDeclaration): string => [
+        style.borderTopLeftRadius, style.borderTopRightRadius,
+        style.borderBottomRightRadius, style.borderBottomLeftRadius,
+      ].join(" ");
+      return [...root.querySelectorAll('[role="listitem"]')].map((row) => {
+        const action = row.querySelector("button") as HTMLElement;
+        const layer = getComputedStyle(action, "::before");
+        return {
+          headline: row.querySelector('[class*="headline"]')?.textContent ?? "",
+          row: four(getComputedStyle(row)),
+          action: four(getComputedStyle(action)),
+          layer: four(layer),
+          opacity: layer.opacity,
+          focusVisible: action.matches(":focus-visible"),
+        };
+      });
+    }, listName);
+    const rowOf = (rows: ShapeRow[], headline: string): ShapeRow | undefined => rows.find((row) => row.headline === headline);
+    const matches = (where: string, rows: ShapeRow[], want: Record<string, string>, failures: string[]): void => {
+      for (const [headline, radius] of Object.entries(want)) {
+        const row = rowOf(rows, headline);
+        if (!row) { failures.push(`${where}: missing ${headline}`); continue; }
+        if (row.row !== radius) failures.push(`${where} ${headline} row ${row.row} != ${radius}`);
+        if (row.action !== row.row) failures.push(`${where} ${headline} action ${row.action} != row ${row.row}`);
+        if (row.layer !== row.row) failures.push(`${where} ${headline} layer ${row.layer} != row ${row.row}`);
+      }
+    };
+    // An empty strip above the lists: (880, 680) is over a row once the lists are tall enough.
+    const park = (): Promise<void> => page.locator("#park").hover();
+    const named = (listName: string, item: string) =>
+      page.getByRole("list", { name: listName }).getByRole("button", { name: item, exact: true });
+    const focusNamed = async (listName: string, item: string): Promise<void> => {
+      await page.evaluate(() => {
+        const active = document.activeElement as HTMLElement | null;
+        (active?.shadowRoot?.activeElement as HTMLElement | null)?.blur();
+        active?.blur();
+      });
+      for (let i = 0; i < 16; i++) {
+        await page.keyboard.press("Tab");
+        const hit = await page.evaluate(({ listName, item }) => {
+          const list = document.querySelector(`[aria-label="${listName}"]`);
+          const light = document.activeElement as HTMLElement | null;
+          const button = (list?.shadowRoot?.activeElement ?? (list?.contains(light) ? light : null)) as HTMLElement | null;
+          const headline = button?.closest('[role="listitem"]')?.querySelector('[class*="headline"]')?.textContent;
+          const name = button?.getAttribute("aria-label") ?? button?.textContent;
+          return button?.matches(":focus-visible") === true && (headline === item || name === item);
+        }, { listName, item });
+        if (hit) return;
+      }
+      throw new Error(`no focus-visible on ${listName} / ${item}`);
+    };
+    const zeroList = (listName: string): Promise<void> => page.evaluate((listName) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`) as HTMLElement;
+      const root = (list.classList.contains("mtrl-list") ? list : list.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement | null;
+      if (!root) throw new Error(`no list root for ${listName}`);
+      for (const name of ["--mtrl-list-item-shape", "--mtrl-list-item-shape-outer", "--mtrl-list-item-shape-hover", "--mtrl-list-item-shape-active"]) {
+        root.style.setProperty(name, "0");
+      }
+    }, listName);
+
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const kind of ["element", "factory"] as const) {
+        const where = `${kind} ${dir}`;
+        const runs = `Runs ${kind} ${dir}`;
+        const solo = `Solo ${kind} ${dir}`;
+        const ends = `Ends ${kind} ${dir}`;
+        const trail = `Trail ${kind} ${dir}`;
+        const square = `Square ${kind} ${dir}`;
+        const only = `Only ${kind} ${dir}`;
+        await fresh(page, runsMarkup(dir));
+        if (kind === "factory") {
+          await page.evaluate((dir) => {
+            const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+            const host = document.getElementById("factory") as HTMLElement;
+            const add = (ariaLabel: string, items: object[]): void => {
+              host.append(w.mtrl.createList({ variant: "segmented", ariaLabel, trackSelection: true, items }).element);
+            };
+            add(`Runs factory ${dir}`, [
+              { id: "a", headline: "Alpha" },
+              { id: "b", headline: "Bravo" },
+              { kind: "divider" },
+              { id: "c", headline: "Charlie" },
+              { kind: "subheader", headline: "Group" },
+              { id: "d", headline: "Delta" },
+              { id: "e", headline: "Echo", disabled: true },
+            ]);
+            add(`Solo factory ${dir}`, [{ id: "s", headline: "Solo" }]);
+            add(`Ends factory ${dir}`, [{ id: "f", headline: "First" }, { id: "l", headline: "Last" }]);
+            const sw = document.createElement("button");
+            sw.type = "button";
+            sw.textContent = "Switch";
+            add(`Trail factory ${dir}`, [
+              { id: "a", headline: "Alpha" },
+              { id: "b", headline: "Bravo", trailing: { type: "control", content: sw } },
+              { id: "c", headline: "Charlie" },
+            ]);
+            add(`Square factory ${dir}`, [
+              { id: "1", headline: "One" },
+              { id: "2", headline: "Two" },
+              { id: "3", headline: "Three" },
+            ]);
+            add(`Only factory ${dir}`, [{ id: "o", headline: "Only" }]);
+            document.querySelector(`[aria-label="Runs element ${dir}"]`)?.closest("div")?.remove();
+          }, dir);
+          await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+        } else {
+          await page.evaluate((dir) => {
+            const list = document.querySelector(`[aria-label="Trail element ${dir}"]`);
+            const bravo = [...(list?.shadowRoot?.querySelectorAll('[role="listitem"]') ?? [])]
+              .find((row) => row.querySelector('[class*="headline"]')?.textContent === "Bravo");
+            const sw = document.createElement("button");
+            sw.type = "button";
+            sw.textContent = "Switch";
+            bravo?.append(sw);
+          }, dir);
+        }
+        const failures: string[] = [];
+        await park();
+        matches(where, await readRows(runs), runsRest, failures);
+        matches(where, await readRows(solo), { Solo: R16 }, failures);
+        await named(runs, "Alpha").hover();
+        matches(where, await readRows(runs), { ...runsRest, Alpha: R12 }, failures);
+        await park();
+        // A disabled action is not the hit target (the headline is), so the pointer
+        // moves onto the row itself. The row stays at rest: hover does not apply.
+        const echoBox = await page.evaluate((listName) => {
+          const list = document.querySelector(`[aria-label="${listName}"]`);
+          const root = (list?.shadowRoot ?? list) as ParentNode;
+          const row = [...root.querySelectorAll('[role="listitem"]')].find((item) => item.querySelector('[class*="headline"]')?.textContent === "Echo");
+          const box = row?.getBoundingClientRect();
+          return box ? { x: box.x, y: box.y, width: box.width, height: box.height } : null;
+        }, runs);
+        if (!echoBox) throw new Error(`no box for ${runs} / Echo`);
+        await page.mouse.move(echoBox.x + echoBox.width / 2, echoBox.y + echoBox.height / 2);
+        matches(where, await readRows(runs), runsRest, failures);
+        const echo = rowOf(await readRows(runs), "Echo");
+        if (echo && Number(echo.opacity) !== 0) failures.push(`${where} Echo disabled hover opacity ${echo.opacity}`);
+        await park();
+        await named(ends, "First").hover();
+        matches(where, await readRows(ends), { First: R12, Last: "4px 4px 16px 16px" }, failures);
+        await park();
+        await named(ends, "Last").hover();
+        matches(where, await readRows(ends), { First: "16px 16px 4px 4px", Last: R12 }, failures);
+        await park();
+        await named(ends, "First").click();
+        await named(ends, "First").hover();
+        matches(where, await readRows(ends), { First: R16, Last: "4px 4px 16px 16px" }, failures);
+        await named(ends, "Last").click();
+        await named(ends, "Last").hover();
+        matches(where, await readRows(ends), { First: "16px 16px 4px 4px", Last: R16 }, failures);
+        await park();
+        assert.deepEqual(failures.slice(), [], `${where}: runs, a single row, and the first and last rows`);
+        check(`list: ${where}, a divider, a subheader, a single row, a disabled row, and the first and last rows`);
+
+        await park();
+        await focusNamed(trail, "Switch");
+        const trailed = rowOf(await readRows(trail), "Bravo");
+        if (trailed?.row !== "4px 4px 4px 4px" || trailed.layer !== trailed.row) {
+          failures.push(`${where} Bravo with the switch focused ${trailed?.row} layer ${trailed?.layer}`);
+        }
+        assert.deepEqual(failures.slice(), [], `${where}: a trailing control leaves the row at rest`);
+        check(`list: ${where}, focus in a trailing control leaves the row at rest`);
+
+        await zeroList(square);
+        await zeroList(only);
+        await park();
+        const squareRest = { One: ZERO, Two: ZERO, Three: ZERO };
+        matches(where, await readRows(square), squareRest, failures);
+        matches(where, await readRows(only), { Only: ZERO }, failures);
+        await named(square, "One").hover();
+        matches(where, await readRows(square), squareRest, failures);
+        await park();
+        await named(square, "Three").hover();
+        matches(where, await readRows(square), squareRest, failures);
+        await park();
+        await named(only, "Only").hover();
+        matches(where, await readRows(only), { Only: ZERO }, failures);
+        await park();
+        await focusNamed(square, "Two");
+        matches(where, await readRows(square), squareRest, failures);
+        const twoBox = await named(square, "Two").boundingBox();
+        if (!twoBox) throw new Error(`no box for ${square} / Two`);
+        await page.mouse.move(twoBox.x + twoBox.width / 2, twoBox.y + twoBox.height / 2);
+        await page.mouse.down();
+        matches(where, await readRows(square), squareRest, failures);
+        await page.mouse.up();
+        await named(square, "One").click();
+        matches(where, await readRows(square), squareRest, failures);
+        await named(square, "Three").click();
+        matches(where, await readRows(square), squareRest, failures);
+        await named(only, "Only").click();
+        matches(where, await readRows(only), { Only: ZERO }, failures);
+        assert.deepEqual(failures, [], `${where}: the four shape properties at 0`);
+        check(`list: ${where}, the four shape properties at 0 square every state`);
+      }
+    }
+
+    // The four are read, not declared, so they inherit: :root, a wrapper, the
+    // <m-list> host and ::part(list). A segmented list with nothing set keeps 4 / 16 / 12 / 16.
+    const PROPS = ["--mtrl-list-item-shape", "--mtrl-list-item-shape-outer", "--mtrl-list-item-shape-hover", "--mtrl-list-item-shape-active"];
+    const inheritMarkup = (dir: string): string => `<div id="park" style="height:24px"></div><div id="wrap" dir="${dir}">
+      <m-list variant="segmented" aria-label="Inherit element ${dir}">
+        <m-list-item value="1">One</m-list-item>
+        <m-list-item value="2">Two</m-list-item>
+        <m-list-item value="3">Three</m-list-item>
+      </m-list>
+    </div>`;
+    const containerOf = (listName: string): Promise<string> => page.evaluate((listName) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`) as HTMLElement | null;
+      const root = (list?.classList.contains("mtrl-list") ? list : list?.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement | null;
+      if (!root) throw new Error(`no list root for ${listName}`);
+      const style = getComputedStyle(root);
+      return [style.borderTopLeftRadius, style.borderTopRightRadius, style.borderBottomRightRadius, style.borderBottomLeftRadius].join(" ");
+    }, listName);
+    const setInherited = (place: "root" | "wrap" | "host" | "part", listName: string): Promise<void> => page.evaluate(({ place, listName, props }) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`) as HTMLElement | null;
+      const target = place === "root" ? document.documentElement
+        : place === "wrap" ? document.getElementById("wrap")
+        : place === "host" ? list
+        : (list?.classList.contains("mtrl-list") ? list : list?.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement | null;
+      if (!target) throw new Error(`no ${place} for ${listName}`);
+      for (const name of props) target.style.setProperty(name, "0");
+    }, { place, listName, props: PROPS });
+    const clearRoot = (): Promise<void> => page.evaluate((props) => {
+      for (const name of props) document.documentElement.style.removeProperty(name);
+    }, PROPS);
+    const expectUnset = async (where: string, listName: string, failures: string[]): Promise<void> => {
+      await park();
+      matches(where, await readRows(listName), { One: "16px 16px 4px 4px", Two: "4px 4px 4px 4px", Three: "4px 4px 16px 16px" }, failures);
+      const block = await containerOf(listName);
+      if (block !== ZERO) failures.push(`${where} container ${block} != ${ZERO}`);
+      await named(listName, "One").hover();
+      matches(where, await readRows(listName), { One: R12 }, failures);
+      await park();
+      await focusNamed(listName, "Two");
+      matches(where, await readRows(listName), { Two: R16 }, failures);
+      const box = await named(listName, "Three").boundingBox();
+      if (!box) throw new Error(`no box for ${listName} / Three`);
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      matches(where, await readRows(listName), { Three: R16 }, failures);
+      await page.mouse.up();
+      await named(listName, "One").click();
+      matches(where, await readRows(listName), { One: R16 }, failures);
+    };
+    const expectSquare = async (where: string, listName: string, failures: string[]): Promise<void> => {
+      const square = { One: ZERO, Two: ZERO, Three: ZERO };
+      await park();
+      matches(where, await readRows(listName), square, failures);
+      const block = await containerOf(listName);
+      if (block !== ZERO) failures.push(`${where} container ${block} != ${ZERO}`);
+      await named(listName, "One").hover();
+      matches(where, await readRows(listName), square, failures);
+      await park();
+      await focusNamed(listName, "Two");
+      matches(where, await readRows(listName), square, failures);
+      const box = await named(listName, "Two").boundingBox();
+      if (!box) throw new Error(`no box for ${listName} / Two`);
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      matches(where, await readRows(listName), square, failures);
+      await page.mouse.up();
+      await named(listName, "One").click();
+      matches(where, await readRows(listName), square, failures);
+      await named(listName, "Three").click();
+      matches(where, await readRows(listName), square, failures);
+    };
+
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const kind of ["element", "factory"] as const) {
+        const where = `${kind} ${dir}`;
+        const listName = `Inherit ${kind} ${dir}`;
+        const places: Array<"unset" | "root" | "wrap" | "host" | "part"> = kind === "element"
+          ? ["unset", "root", "wrap", "host", "part"]
+          : ["unset", "root", "wrap"];
+        for (const place of places) {
+          await fresh(page, inheritMarkup(dir));
+          if (kind === "factory") {
+            await page.evaluate((dir) => {
+              const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+              const wrap = document.getElementById("wrap") as HTMLElement;
+              wrap.querySelector("m-list")?.remove();
+              wrap.append(w.mtrl.createList({
+                variant: "segmented",
+                ariaLabel: `Inherit factory ${dir}`,
+                trackSelection: true,
+                items: [
+                  { id: "1", headline: "One" },
+                  { id: "2", headline: "Two" },
+                  { id: "3", headline: "Three" },
+                ],
+              }).element);
+            }, dir);
+            await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+          }
+          if (place !== "unset") await setInherited(place, listName);
+          const failures: string[] = [];
+          if (place === "unset") await expectUnset(where, listName, failures);
+          else await expectSquare(`${where} ${place}`, listName, failures);
+          if (place === "root") await clearRoot();
+          const label = place === "unset"
+            ? "the four properties stay 4, 16, 12 and 16 when unset"
+            : `the four properties set to 0 on ${place} square every state`;
+          assert.deepEqual(failures, [], `${where}: ${label}`);
+          check(`list: ${where}, ${label}`);
+        }
+      }
+    }
+  }
+
+  // The list has no radius and no background of its own: the outer property
+  // rounds the first and the last row only. The focus ring stays whole.
+  {
+    const R16 = "16px 16px 16px 16px";
+    const ZERO = "0px 0px 0px 0px";
+    const PAGE = [255, 0, 170];
+    const near = (pixel: number[], color: number[], tol: number): boolean =>
+      pixel.every((channel, index) => Math.abs(channel - color[index]) <= tol);
+    const markup = (dir: string): string => {
+      const rows = (n: number): string => Array.from({ length: n }, (_, i) =>
+        `<m-list-item value="${i}">Row ${i + 1}</m-list-item>`).join("");
+      const list = (name: string, body: string): string =>
+        `<m-list variant="segmented" aria-label="${name} element ${dir}">${body}</m-list>`;
+      return `<div id="stage" dir="${dir}" style="background:#ff00aa;padding:16px">
+        <div id="park" style="height:24px"></div>
+        <div id="elements">
+          ${list("Box", "<m-list-item value=\"a\">Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item><m-list-item value=\"c\">Charlie</m-list-item>")}
+          ${list("Outer", "<m-list-item value=\"a\">Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item>")}
+          ${list("Lead", "<m-list-item kind=\"divider\"></m-list-item><m-list-item value=\"a\">Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item>")}
+          ${list("Tail", "<m-list-item value=\"a\">Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item><m-list-item kind=\"divider\"></m-list-item>")}
+          ${list("Head", "<m-list-item kind=\"subheader\">Section</m-list-item><m-list-item value=\"a\">Alpha</m-list-item>")}
+          ${list("Off", "<m-list-item value=\"a\" disabled>Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item>")}
+          ${list("Pick", "<m-list-item value=\"a\" selected>Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item>")}
+          ${list("Solo", "<m-list-item value=\"s\">Solo</m-list-item>")}
+          ${list("Inset", "<m-list-item value=\"a\">Alpha</m-list-item><m-list-item kind=\"divider\" inset></m-list-item><m-list-item value=\"b\">Bravo</m-list-item>")}
+          ${list("Scroll", rows(10))}
+          ${list("Nest", "<m-list-item value=\"a\">Alpha</m-list-item>")}
+        </div>
+        <section id="factory"></section>
+      </div>`;
+    };
+    const pixels = async (points: number[][]): Promise<number[][]> => {
+      const png = (await page.screenshot()).toString("base64");
+      return page.evaluate(async ({ png, points }) => {
+        const image = new Image();
+        image.src = `data:image/png;base64,${png}`;
+        await image.decode();
+        if (!image.width) throw new Error("the screenshot did not decode");
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+        context.drawImage(image, 0, 0);
+        return points.map(([x, y]) => {
+          const data = context.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
+          return [data[0], data[1], data[2]];
+        });
+      }, { png, points });
+    };
+    const savedDocument = await page.evaluate(() => ({
+      htmlBackground: document.documentElement.style.background,
+      htmlOverflow: document.documentElement.style.overflow,
+      htmlPosition: document.documentElement.style.position,
+      htmlTop: document.documentElement.style.top,
+      bodyOverflow: document.body.style.overflow,
+      bodyPosition: document.body.style.position,
+      bodyTop: document.body.style.top,
+    }));
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const kind of ["element", "factory"] as const) {
+        const where = `${kind} ${dir}`;
+        const name = (label: string): string => `${label} ${kind} ${dir}`;
+        await fresh(page, markup(dir));
+        if (kind === "factory") {
+          await page.evaluate((dir) => {
+            const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+            const host = document.getElementById("factory") as HTMLElement;
+            const add = (ariaLabel: string, items: object[]): HTMLElement => {
+              const list = w.mtrl.createList({ variant: "segmented", ariaLabel, trackSelection: true, items }).element;
+              host.append(list);
+              return list;
+            };
+            add(`Box factory ${dir}`, [
+              { id: "a", headline: "Alpha" }, { id: "b", headline: "Bravo" }, { id: "c", headline: "Charlie" },
+            ]);
+            add(`Outer factory ${dir}`, [{ id: "a", headline: "Alpha" }, { id: "b", headline: "Bravo" }]);
+            add(`Lead factory ${dir}`, [{ kind: "divider" }, { id: "a", headline: "Alpha" }, { id: "b", headline: "Bravo" }]);
+            add(`Tail factory ${dir}`, [{ id: "a", headline: "Alpha" }, { id: "b", headline: "Bravo" }, { kind: "divider" }]);
+            add(`Head factory ${dir}`, [{ kind: "subheader", headline: "Section" }, { id: "a", headline: "Alpha" }]);
+            add(`Off factory ${dir}`, [{ id: "a", headline: "Alpha", disabled: true }, { id: "b", headline: "Bravo" }]);
+            add(`Pick factory ${dir}`, [{ id: "a", headline: "Alpha", selected: true }, { id: "b", headline: "Bravo" }]);
+            add(`Solo factory ${dir}`, [{ id: "s", headline: "Solo" }]);
+            add(`Inset factory ${dir}`, [{ id: "a", headline: "Alpha" }, { kind: "divider", inset: true }, { id: "b", headline: "Bravo" }]);
+            add(`Scroll factory ${dir}`, Array.from({ length: 10 }, (_, i) => ({ id: String(i), headline: `Row ${i + 1}` })));
+            const nest = add(`Nest factory ${dir}`, [{ id: "a", headline: "Alpha" }]);
+            const inner = w.mtrl.createList({
+              variant: "segmented",
+              ariaLabel: `Inner factory ${dir}`, trackSelection: true, items: [{ id: "i", headline: "Inner" }],
+            }).element;
+            nest.querySelector('[role="listitem"]')?.append(inner);
+            document.getElementById("elements")?.remove();
+          }, dir);
+        } else {
+          await page.evaluate((dir) => {
+            const nest = document.querySelector(`[aria-label="Nest element ${dir}"]`);
+            const row = nest?.shadowRoot?.querySelector('[role="listitem"]');
+            const inner = document.createElement("m-list");
+            inner.setAttribute("variant", "segmented");
+            inner.setAttribute("aria-label", `Inner element ${dir}`);
+            const item = document.createElement("m-list-item");
+            item.setAttribute("value", "i");
+            item.textContent = "Inner";
+            inner.append(item);
+            row?.append(inner);
+          }, dir);
+        }
+        await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))));
+        const read = (): Promise<{
+          box: string; background: string; overflow: string; hostRadius: string; hostBackground: string;
+          outerFirst: string; outerLast: string; lead: string; tail: string; head: string;
+          off: string; pick: string; solo: string; inset: string; nest: string; inner: string;
+        }> => page.evaluate((names) => {
+          const four = (style: CSSStyleDeclaration): string => [
+            style.borderTopLeftRadius, style.borderTopRightRadius,
+            style.borderBottomRightRadius, style.borderBottomLeftRadius,
+          ].join(" ");
+          const hostOf = (label: string): HTMLElement => {
+            const host = document.querySelector(`[aria-label="${label}"]`);
+            if (!(host instanceof HTMLElement)) throw new Error(`no list ${label}`);
+            return host;
+          };
+          const rootOf = (label: string): HTMLElement => {
+            const host = hostOf(label);
+            const root = host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list");
+            if (!(root instanceof HTMLElement)) throw new Error(`no root ${label}`);
+            return root;
+          };
+          const rowRadius = (label: string, headline: string): string => {
+            const root = rootOf(label);
+            const row = [...root.querySelectorAll('[role="listitem"]')].find((item) =>
+              item.querySelector('[class*="headline"]')?.textContent === headline);
+            if (!(row instanceof HTMLElement)) throw new Error(`no row ${label} ${headline}`);
+            return four(getComputedStyle(row));
+          };
+          const boxHost = hostOf(names.box);
+          const boxRoot = rootOf(names.box);
+          return {
+            box: four(getComputedStyle(boxRoot)),
+            background: getComputedStyle(boxRoot).backgroundColor,
+            overflow: getComputedStyle(boxRoot).overflow,
+            hostRadius: four(getComputedStyle(boxHost)),
+            hostBackground: getComputedStyle(boxHost).backgroundColor,
+            outerFirst: rowRadius(names.outer, "Alpha"),
+            outerLast: rowRadius(names.outer, "Bravo"),
+            lead: rowRadius(names.lead, "Alpha"),
+            tail: rowRadius(names.tail, "Bravo"),
+            head: rowRadius(names.head, "Alpha"),
+            off: rowRadius(names.off, "Alpha"),
+            pick: rowRadius(names.pick, "Alpha"),
+            solo: rowRadius(names.solo, "Solo"),
+            inset: rowRadius(names.inset, "Alpha"),
+            nest: four(getComputedStyle(rootOf(names.nest))),
+            inner: four(getComputedStyle((() => {
+              const host = rootOf(names.nest).querySelector(".mtrl-list, m-list");
+              if (!(host instanceof HTMLElement)) throw new Error(`no nested list in ${names.nest}`);
+              const root = host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list");
+              if (!(root instanceof HTMLElement)) throw new Error(`no nested root in ${names.nest}`);
+              return root;
+            })())),
+          };
+        }, {
+          box: name("Box"), outer: name("Outer"), lead: name("Lead"), tail: name("Tail"),
+          head: name("Head"), off: name("Off"), pick: name("Pick"), solo: name("Solo"),
+          inset: name("Inset"), nest: name("Nest"),
+        });
+        const failures: string[] = [];
+        // Off the rows: the pointer is where the previous pass left it.
+        await page.locator("#park").hover();
+        const got = await read();
+        if (got.box !== ZERO) failures.push(`${where} container ${got.box}`);
+        if (got.background !== "rgba(0, 0, 0, 0)") failures.push(`${where} container background ${got.background}`);
+        if (got.overflow !== "auto") failures.push(`${where} overflow ${got.overflow}`);
+        if (kind === "element") {
+          if (got.hostRadius !== "0px 0px 0px 0px") failures.push(`${where} host radius ${got.hostRadius}`);
+          if (got.hostBackground !== "rgba(0, 0, 0, 0)") failures.push(`${where} host background ${got.hostBackground}`);
+        }
+        if (got.outerFirst !== "16px 16px 4px 4px") failures.push(`${where} outer first ${got.outerFirst}`);
+        await page.evaluate((label) => {
+          const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+          const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+          root.style.setProperty("--mtrl-list-item-shape-outer", "0");
+        }, name("Outer"));
+        const squared = await read();
+        if (squared.solo !== R16) failures.push(`${where} zeroing one list squared another: ${squared.solo}`);
+        const outerZero = await page.evaluate((label) => {
+          const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+          const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+          const four = (style: CSSStyleDeclaration): string => [
+            style.borderTopLeftRadius, style.borderTopRightRadius,
+            style.borderBottomRightRadius, style.borderBottomLeftRadius,
+          ].join(" ");
+          const rows = [...root.querySelectorAll('[role="listitem"]')].map((row) => four(getComputedStyle(row)));
+          return { container: four(getComputedStyle(root)), rows };
+        }, name("Outer"));
+        if (outerZero.container !== "0px 0px 0px 0px" || outerZero.rows[0] !== "0px 0px 4px 4px" || outerZero.rows[1] !== "4px 4px 0px 0px") {
+          failures.push(`${where} outer 0 container ${outerZero.container} rows ${outerZero.rows.join(" | ")}`);
+        }
+        await page.evaluate((label) => {
+          const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+          const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+          root.style.setProperty("--mtrl-list-item-shape-outer", "28px");
+        }, name("Outer"));
+        const outerWide = await page.evaluate((label) => {
+          const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+          const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+          const four = (style: CSSStyleDeclaration): string => [
+            style.borderTopLeftRadius, style.borderTopRightRadius,
+            style.borderBottomRightRadius, style.borderBottomLeftRadius,
+          ].join(" ");
+          const rows = [...root.querySelectorAll('[role="listitem"]')].map((row) => four(getComputedStyle(row)));
+          return { container: four(getComputedStyle(root)), rows };
+        }, name("Outer"));
+        if (outerWide.container !== ZERO || outerWide.rows[0] !== "28px 28px 4px 4px" || outerWide.rows[1] !== "4px 4px 28px 28px") {
+          failures.push(`${where} outer 28px container ${outerWide.container} rows ${outerWide.rows.join(" | ")}`);
+        }
+        assert.deepEqual(failures.slice(), [], `${where}: the container is square and unpainted`);
+        check(`list: ${where}, the container has no radius and no background; the outer property rounds the rows`);
+
+        const focusNamed = async (label: string, item: string): Promise<void> => {
+          await page.evaluate(() => {
+            const active = document.activeElement as HTMLElement | null;
+            (active?.shadowRoot?.activeElement as HTMLElement | null)?.blur();
+            active?.blur();
+          });
+          for (let i = 0; i < 24; i++) {
+            await page.keyboard.press("Tab");
+            const hit = await page.evaluate(({ label, item }) => {
+              const list = document.querySelector(`[aria-label="${label}"]`);
+              const light = document.activeElement as HTMLElement | null;
+              const button = (list?.shadowRoot?.activeElement ?? (list?.contains(light) ? light : null)) as HTMLElement | null;
+              const headline = button?.closest('[role="listitem"]')?.querySelector('[class*="headline"]')?.textContent;
+              return button?.matches(":focus-visible") === true && headline === item;
+            }, { label, item });
+            if (hit) return;
+          }
+          throw new Error(`no focus-visible on ${label} / ${item}`);
+        };
+        const ringSample = async (label: string, item: string): Promise<void> => {
+          await page.mouse.move(880, 680);
+          await focusNamed(label, item);
+          const points = await page.evaluate(({ label, item }) => {
+            document.documentElement.style.background = "#ff00aa";
+            for (const el of [document.documentElement, document.body]) {
+              el.style.overflow = "visible";
+              el.style.position = "static";
+              el.style.top = "auto";
+            }
+            const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+            const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+            const scrolling = document.scrollingElement ?? document.documentElement;
+            window.scrollTo({ top: Math.max(0, scrolling.scrollTop + root.getBoundingClientRect().top - 24), left: 0, behavior: "instant" });
+            const row = [...root.querySelectorAll('[role="listitem"]')].find((entry) =>
+              entry.querySelector('[class*="headline"]')?.textContent === item) as HTMLElement;
+            const action = row.querySelector("button") as HTMLElement;
+            const box = action.getBoundingClientRect();
+            const list = root.getBoundingClientRect();
+            if (list.top < 0 || box.top < 0) {
+              const body = getComputedStyle(document.body);
+              throw new Error(`list is above the viewport at ${list.top}, scroll ${scrolling.scrollTop}, body ${body.position} ${body.top} ${body.overflow} ${body.transform}`);
+            }
+            const outline = getComputedStyle(action).outlineColor;
+            const along = 15 * Math.SQRT1_2;
+            const corner = (xSign: number, ySign: number): number[] => {
+              const cx = xSign < 0 ? box.left + 16 : box.right - 16;
+              const cy = ySign < 0 ? box.top + 16 : box.bottom - 16;
+              return [cx + xSign * along, cy + ySign * along];
+            };
+            return {
+              outline,
+              page: [Math.max(list.left - 6, 1), list.top + list.height / 2],
+              container: [list.left + 1, list.top + 1],
+              ring: [corner(-1, -1), corner(1, -1), corner(-1, 1), corner(1, 1)],
+            };
+          }, { label, item });
+          const [pagePixel, containerPixel, ...ringPixels] = await pixels([
+            points.page, points.container, ...points.ring,
+          ]);
+          const outline = points.outline.match(/\d+/g)?.slice(0, 3).map(Number) ?? [];
+          if (!near(pagePixel, PAGE, 2)) failures.push(`${where} ${item} page pixel ${pagePixel.join(",")} at ${points.page.join(",")}`);
+          if (!near(containerPixel, PAGE, 2)) failures.push(`${where} ${item} container corner ${containerPixel.join(",")} at ${points.container.join(",")} is not the page`);
+          ringPixels.forEach((pixel, index) => {
+            if (near(pixel, PAGE, 12)) failures.push(`${where} ${item} ring corner ${index} is the page ${pixel.join(",")}`);
+            if (!near(pixel, outline, 48)) failures.push(`${where} ${item} ring corner ${index} ${pixel.join(",")} outline ${outline.join(",")}`);
+          });
+        };
+        await ringSample(name("Box"), "Alpha");
+        await ringSample(name("Box"), "Charlie");
+        assert.deepEqual(failures.slice(), [], `${where}: the focus ring is not clipped`);
+        check(`list: ${where}, the first and last focus rings are not clipped`);
+
+        if (got.lead !== "16px 16px 4px 4px") failures.push(`${where} divider first ${got.lead}`);
+        if (got.tail !== "4px 4px 16px 16px") failures.push(`${where} divider last ${got.tail}`);
+        if (got.head !== R16) failures.push(`${where} subheader ${got.head}`);
+        if (got.off !== "16px 16px 4px 4px") failures.push(`${where} disabled first ${got.off}`);
+        if (got.pick !== R16) failures.push(`${where} selected first ${got.pick}`);
+        if (got.solo !== R16) failures.push(`${where} single ${got.solo}`);
+        if (got.inset !== R16) failures.push(`${where} inset divider ${got.inset}`);
+        if (got.nest !== ZERO || got.inner !== ZERO) failures.push(`${where} nested outer ${got.nest} inner ${got.inner}`);
+        // A list given a max-height scrolls inside a square scrollport: the list
+        // has no radius, so rows scrolled to its edge are cut straight.
+        const scrolled = await page.evaluate((label) => {
+          const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+          const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+          root.style.maxHeight = "140px";
+          root.scrollTop = root.scrollHeight;
+          const style = getComputedStyle(root);
+          return { scrolls: root.scrollTop > 0, radius: [style.borderTopLeftRadius, style.borderTopRightRadius, style.borderBottomRightRadius, style.borderBottomLeftRadius].join(" ") };
+        }, name("Scroll"));
+        if (!scrolled.scrolls || scrolled.radius !== ZERO) failures.push(`${where} scrolled list scrolls=${scrolled.scrolls} radius ${scrolled.radius}`);
+        assert.deepEqual(failures.slice(), [], `${where}: the rows beside structure, and the scrollport`);
+        check(`list: ${where}, a divider, a header, a disabled row, a selected row, one row, an inset divider, a nested list, and a scrolled list`);
+      }
+    }
+    await page.evaluate((saved) => {
+      document.documentElement.style.background = saved.htmlBackground;
+      document.documentElement.style.overflow = saved.htmlOverflow;
+      document.documentElement.style.position = saved.htmlPosition;
+      document.documentElement.style.top = saved.htmlTop;
+      document.body.style.overflow = saved.bodyOverflow;
+      document.body.style.position = saved.bodyPosition;
+      document.body.style.top = saved.bodyTop;
+    }, savedDocument);
+  }
+
+  // ---------------------------------------------------------------- list variants
+  // `variant`: standard (the default) and segmented. Per variant, direction and
+  // layer (factory, <m-list>): every corner of the row and of its state layer
+  // at rest, hovered, keyboard-focused, pressed and selected, on the first, a
+  // middle, the last and a single row; the gap between the rows' boxes; the
+  // row's colour; and a list that paints no background. Standard: 0 everywhere.
+  {
+    const ZERO = "0px 0px 0px 0px";
+    const R12 = "12px 12px 12px 12px";
+    const R16 = "16px 16px 16px 16px";
+    const TOP = "16px 16px 4px 4px";
+    const BOTTOM = "4px 4px 16px 16px";
+    type Variant = "standard" | "segmented";
+    type Row = { headline: string; row: string; action: string; layer: string; background: string };
+    type Look = { rows: Row[]; gaps: number[]; container: string; containerBackground: string; classes: string };
+    const body = {
+      Trio: [["a", "First"], ["b", "Middle"], ["c", "Last"]],
+      Single: [["s", "Single"]],
+      Split: [["a", "Alpha"], ["b", "Bravo"], ["", "divider"], ["c", "Charlie"], ["d", "Delta"], ["", "subheader"], ["e", "Echo"], ["f", "Foxtrot"]],
+    } as const;
+    const markup = (dir: string, variant: Variant | null): string => `<div id="park" style="height:24px"></div><div dir="${dir}" style="padding:16px">
+      <div id="elements">${Object.entries(body).map(([name, rows]) =>
+        `<m-list ${variant ? `variant="${variant}" ` : ""}aria-label="${name}">${rows.map(([value, label]) =>
+          label === "divider" || label === "subheader"
+            ? `<m-list-item kind="${label}">${label === "subheader" ? "Group" : ""}</m-list-item>`
+            : `<m-list-item value="${value}">${label}</m-list-item>`).join("")}</m-list>`).join("")}</div>
+      <section id="factory"></section>
+    </div>`;
+    const look = (listName: string): Promise<Look> => page.evaluate((listName) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`) as HTMLElement | null;
+      const root = (list?.classList.contains("mtrl-list") ? list : list?.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement | null;
+      if (!root) throw new Error(`no list root for ${listName}`);
+      const four = (style: CSSStyleDeclaration): string => [
+        style.borderTopLeftRadius, style.borderTopRightRadius,
+        style.borderBottomRightRadius, style.borderBottomLeftRadius,
+      ].join(" ");
+      const content = root.querySelector('[class*="list__content"]') as HTMLElement;
+      const boxes = [...content.children].map((child) => child.getBoundingClientRect());
+      return {
+        rows: [...root.querySelectorAll('[role="listitem"]')].map((row) => {
+          const action = row.querySelector("button") as HTMLElement;
+          return {
+            headline: row.querySelector('[class*="headline"]')?.textContent ?? "",
+            row: four(getComputedStyle(row)),
+            action: four(getComputedStyle(action)),
+            layer: four(getComputedStyle(action, "::before")),
+            background: getComputedStyle(row).backgroundColor,
+          };
+        }),
+        gaps: boxes.slice(1).map((box, index) => Math.round((box.top - boxes[index].bottom) * 100) / 100),
+        container: four(getComputedStyle(root)),
+        containerBackground: getComputedStyle(root).backgroundColor,
+        classes: [...root.classList].filter((name) => name.startsWith("mtrl-list--")).join(" "),
+      };
+    }, listName);
+    const role = (name: string): Promise<string> => page.evaluate((name) => {
+      const probe = document.createElement("div");
+      probe.style.backgroundColor = `var(--mtrl-sys-color-${name})`;
+      document.body.append(probe);
+      const color = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return color;
+    }, name);
+    // An empty strip above the lists: (880, 680) is over a row once the lists are tall enough.
+    const park = (): Promise<void> => page.locator("#park").hover();
+    const button = (listName: string, item: string) =>
+      page.getByRole("list", { name: listName, exact: true }).getByRole("button", { name: item, exact: true });
+    const blur = (): Promise<void> => page.evaluate(() => {
+      const active = document.activeElement as HTMLElement | null;
+      (active?.shadowRoot?.activeElement as HTMLElement | null)?.blur();
+      active?.blur();
+    });
+    const focusItem = async (listName: string, item: string): Promise<void> => {
+      await blur();
+      for (let i = 0; i < 24; i++) {
+        await page.keyboard.press("Tab");
+        const hit = await page.evaluate(({ listName, item }) => {
+          const list = document.querySelector(`[aria-label="${listName}"]`);
+          const light = document.activeElement as HTMLElement | null;
+          const control = (list?.shadowRoot?.activeElement ?? (list?.contains(light) ? light : null)) as HTMLElement | null;
+          const headline = control?.closest('[role="listitem"]')?.querySelector('[class*="headline"]')?.textContent;
+          return control?.matches(":focus-visible") === true && headline === item;
+        }, { listName, item });
+        if (hit) return;
+      }
+      throw new Error(`no focus-visible on ${listName} / ${item}`);
+    };
+
+    for (const variant of ["standard", "segmented", "default"] as const) {
+      const segmented = variant === "segmented";
+      for (const dir of ["ltr", "rtl"] as const) {
+        for (const kind of ["element", "factory"] as const) {
+          const where = `${variant} ${kind} ${dir}`;
+          await fresh(page, markup(dir, variant === "default" ? null : variant));
+          if (kind === "factory") {
+            await page.evaluate(({ body, variant }) => {
+              const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+              const host = document.getElementById("factory") as HTMLElement;
+              for (const [ariaLabel, rows] of Object.entries(body)) {
+                host.append(w.mtrl.createList({
+                  ...(variant === "default" ? {} : { variant }),
+                  ariaLabel,
+                  trackSelection: true,
+                  items: rows.map(([id, headline]) => headline === "divider" ? { kind: "divider" }
+                    : headline === "subheader" ? { kind: "subheader", headline: "Group" } : { id, headline }),
+                }).element);
+              }
+              document.getElementById("elements")?.remove();
+            }, { body, variant });
+          }
+          await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))));
+          const failures: string[] = [];
+          const surface = await role("surface");
+          const container = await role("surface-container");
+          const selectedColor = await role("secondary-container");
+          const expectLook = (state: string, got: Look, want: Record<string, string>, selected?: string): void => {
+            for (const row of got.rows) {
+              const radius = want[row.headline];
+              if (!radius) { failures.push(`${where} ${state}: unexpected row ${row.headline}`); continue; }
+              if (row.row !== radius) failures.push(`${where} ${state} ${row.headline} row ${row.row} != ${radius}`);
+              if (row.action !== radius) failures.push(`${where} ${state} ${row.headline} action ${row.action} != ${radius}`);
+              if (row.layer !== radius) failures.push(`${where} ${state} ${row.headline} layer ${row.layer} != ${radius}`);
+              const color = row.headline === selected ? selectedColor : segmented ? container : surface;
+              if (row.background !== color) failures.push(`${where} ${state} ${row.headline} background ${row.background} != ${color}`);
+            }
+            const gap = segmented ? 2 : 0;
+            if (got.gaps.some((value) => value !== gap)) failures.push(`${where} ${state} gaps ${got.gaps.join(",")} != ${gap}`);
+            if (got.container !== ZERO) failures.push(`${where} ${state} list radius ${got.container}`);
+            if (got.containerBackground !== "rgba(0, 0, 0, 0)") failures.push(`${where} ${state} list background ${got.containerBackground}`);
+            const modifier = `mtrl-list--${segmented ? "segmented" : "standard"}`;
+            if (got.classes !== modifier) failures.push(`${where} ${state} classes "${got.classes}" != ${modifier}`);
+          };
+          const shape = (value: string): string => (segmented ? value : ZERO);
+          const rest: Record<string, Record<string, string>> = {
+            Trio: { First: shape(TOP), Middle: shape("4px 4px 4px 4px"), Last: shape(BOTTOM) },
+            Single: { Single: shape(R16) },
+            // A divider or a subheader ends a group: the rows beside it take their outer corners.
+            Split: { Alpha: shape(TOP), Bravo: shape(BOTTOM), Charlie: shape(TOP), Delta: shape(BOTTOM), Echo: shape(TOP), Foxtrot: shape(BOTTOM) },
+          };
+          await park();
+          for (const listName of ["Trio", "Single", "Split"]) expectLook("rest", await look(listName), rest[listName]);
+          for (const [listName, item] of [["Trio", "First"], ["Trio", "Middle"], ["Trio", "Last"], ["Single", "Single"]] as const) {
+            await button(listName, item).hover();
+            expectLook(`${item} hovered`, await look(listName), { ...rest[listName], [item]: shape(R12) });
+            await park();
+            await focusItem(listName, item);
+            expectLook(`${item} focused`, await look(listName), { ...rest[listName], [item]: shape(R16) });
+            await blur();
+            const box = await button(listName, item).boundingBox();
+            if (!box) throw new Error(`no box for ${listName} / ${item}`);
+            await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+            await page.mouse.down();
+            expectLook(`${item} pressed`, await look(listName), { ...rest[listName], [item]: shape(R16) });
+            await page.mouse.up();
+            // The press selected the row. Selected is the active shape on every
+            // corner, whatever the row's index, hovered or not.
+            expectLook(`${item} selected and hovered`, await look(listName), { ...rest[listName], [item]: shape(R16) }, item);
+            await park();
+            await blur();
+            expectLook(`${item} selected`, await look(listName), { ...rest[listName], [item]: shape(R16) }, item);
+            // A second press deselects it: back to the rest shape of its index.
+            await button(listName, item).click();
+            await park();
+            await blur();
+            expectLook(`${item} deselected`, await look(listName), rest[listName]);
+          }
+          assert.deepEqual(failures, [], `${where}: the rows' and state layers' corners, the gap and the colours`);
+          check(segmented
+            ? `list: ${where}, rows 4 / 16 outer / 12 hovered / 16 focused, pressed and selected, 2px apart, on surface-container; a divider and a subheader end a group; the list paints nothing`
+            : `list: ${where}, every corner 0 in every state, no gap, and the list paints nothing`);
+        }
+      }
+    }
+
+    // The row's colour is --mtrl-list-item-container-color in both variants, and
+    // inherits: `transparent` on a wrapper leaves the unselected rows unpainted.
+    for (const variant of ["standard", "segmented"] as const) {
+      for (const kind of ["element", "factory"] as const) {
+        await fresh(page, `<div id="tint" style="--mtrl-list-item-container-color:transparent">${markup("ltr", variant)}</div>`);
+        if (kind === "factory") {
+          await page.evaluate((variant) => {
+            const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+            document.getElementById("factory")?.append(w.mtrl.createList({
+              variant, ariaLabel: "Trio", trackSelection: true,
+              items: [{ id: "a", headline: "First" }, { id: "b", headline: "Middle" }, { id: "c", headline: "Last" }],
+            }).element);
+            document.getElementById("elements")?.remove();
+          }, variant);
+        }
+        await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))));
+        await park();
+        const clear = (await look("Trio")).rows.map((row) => row.background);
+        assert.deepEqual(clear, ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)"], `${variant} ${kind}: transparent rows`);
+        await button("Trio", "Middle").click();
+        await park();
+        await blur();
+        const picked = (await look("Trio")).rows.map((row) => row.background);
+        assert.deepEqual(picked, ["rgba(0, 0, 0, 0)", await role("secondary-container"), "rgba(0, 0, 0, 0)"], `${variant} ${kind}: the selected row keeps its colour`);
+        await page.evaluate(() => document.getElementById("tint")?.style.setProperty("--mtrl-list-item-container-color", "rgb(1, 2, 3)"));
+        const tinted = (await look("Trio")).rows.map((row) => row.background);
+        assert.deepEqual(tinted, ["rgb(1, 2, 3)", await role("secondary-container"), "rgb(1, 2, 3)"], `${variant} ${kind}: a colour on a wrapper`);
+        check(`list: ${variant} ${kind}, --mtrl-list-item-container-color set to transparent on a wrapper paints no row background; the selected row keeps secondary-container`);
+      }
+    }
+
+    // The attribute and the property reflect each other; a change recreates the
+    // list with the variant's class; an unknown value is the default.
+    await fresh(page, `<m-list id="v" aria-label="Reflect"><m-list-item value="a">Alpha</m-list-item><m-list-item value="b">Bravo</m-list-item></m-list>`);
+    const reflected = await page.evaluate(async () => {
+      const list = document.getElementById("v") as HTMLElement & { variant: string | null; value: string | null };
+      const settle = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
+      const state = (): string => [
+        String(list.variant), String(list.getAttribute("variant")),
+        [...(list.shadowRoot?.querySelector(".mtrl-list")?.classList ?? [])].filter((name) => name.startsWith("mtrl-list--")).join(" "),
+      ].join(" | ");
+      const seen: string[] = [state()];
+      list.value = "b";
+      list.variant = "segmented";
+      await settle();
+      seen.push(state(), `kept ${list.value}`);
+      list.setAttribute("variant", "standard");
+      await settle();
+      seen.push(state());
+      list.variant = "expressive";
+      await settle();
+      seen.push(state());
+      list.setAttribute("variant", "segmented");
+      await settle();
+      seen.push(state());
+      list.variant = null;
+      await settle();
+      seen.push(state());
+      return seen;
+    });
+    assert.deepEqual(reflected, [
+      "null | null | mtrl-list--standard",
+      "segmented | segmented | mtrl-list--segmented",
+      "kept b",
+      "standard | standard | mtrl-list--standard",
+      "expressive | expressive | mtrl-list--standard",
+      "segmented | segmented | mtrl-list--segmented",
+      "null | null | mtrl-list--standard",
+    ]);
+    check("list: variant is an attribute and a property that reflect each other; a change keeps the selection; an unknown value is standard");
+  }
+
   // ---------------------------------------------------------------- list defaults
   {
     type List = HTMLElement & { value: string | null; values: string[]; component: unknown };
@@ -7382,6 +8809,144 @@ try {
     const peaks = finals.map((_, index) => Math.max(...(motion.opening as Frame[]).map((f) => f.items[index]!.width)));
     assert.ok(peaks.every((peak, index) => peak > finals[index]! * 1.05), `width peaks ${peaks} against ${finals}`);
     check("FAB menu: the close corner lerps to 28px, colours stay in range, items reveal as end-anchored pills with overshoot");
+  }
+
+  // A placed FAB menu opens into the page. The list, the items and the FAB were
+  // anchored to the inline end, so at bottom-start they crossed the start edge,
+  // left to right and right to left. bottom-end already opens inward.
+  {
+    const placements = ["bottom-end", "bottom-start"] as const;
+    const failures: string[] = [];
+    const rows: string[] = [];
+    const note = (name: string, problems: string[]): void => {
+      const line = problems.length ? `FAIL ${name}: ${problems.join("; ")}` : `ok ${name}`;
+      rows.push(line);
+      console.log(`  ${line}`);
+      if (problems.length) failures.push(line);
+    };
+    const three = `<m-fab-menu-item value="reply" icon='${ICON}'>Reply</m-fab-menu-item><m-fab-menu-item value="forward">Forward</m-fab-menu-item><m-fab-menu-item value="archive">Archive</m-fab-menu-item>`;
+    const placed = async (dir: "ltr" | "rtl", form: "element" | "factory", placement: "bottom-end" | "bottom-start", size: "default" | "large"): Promise<{
+      view: { width: number; height: number };
+      fab: { left: number; right: number; top: number; bottom: number; width: number };
+      boxes: { text: string; left: number; right: number; top: number; bottom: number; width: number; height: number }[];
+      motion?: { closed: { left: number; right: number; width: number }; opening: { left: number; right: number; width: number }[]; closing: { left: number; right: number; width: number }[] };
+    }> => {
+      const markup = form === "element"
+        ? `<div dir="${dir}"><m-fab-menu id="placed" placement="${placement}" presentation="list" size="${size}" icon='${ICON}' aria-label="Compose">${three}</m-fab-menu></div>`
+        : `<div dir="${dir}" id="placed-slot"></div>`;
+      await fresh(page, markup);
+      return page.evaluate(async ({ form, placement, size, icon, motion }) => {
+        type Made = { element: HTMLElement; open: () => void; close: () => void };
+        type Host = HTMLElement & { show: () => void; hide: () => void };
+        const w = window as unknown as Win & { mtrl: { createFabMenu: (config: object) => Made } };
+        const items = [
+          { id: "reply", text: "Reply", icon },
+          { id: "forward", text: "Forward" },
+          { id: "archive", text: "Archive" },
+        ];
+        let root: HTMLElement;
+        let open: () => void;
+        let close: () => void;
+        if (form === "factory") {
+          const made = w.mtrl.createFabMenu({ placement, presentation: "list", size, icon, ariaLabel: "Compose", items });
+          made.element.id = "placed";
+          document.getElementById("placed-slot")?.append(made.element);
+          root = made.element;
+          open = () => made.open();
+          close = () => made.close();
+        } else {
+          const host = document.getElementById("placed") as Host;
+          root = host.shadowRoot?.querySelector(".mtrl-fab-menu") as HTMLElement;
+          open = () => host.show();
+          close = () => host.hide();
+        }
+        const buttons = () => [...root.querySelectorAll<HTMLElement>(".mtrl-fab-menu__item")];
+        const fabOf = () => root.querySelector(".mtrl-fab-menu__fab") as HTMLElement;
+        const boxOf = (el: HTMLElement) => {
+          const box = el.getBoundingClientRect();
+          return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height };
+        };
+        const settle = async (): Promise<void> => {
+          for (const end = Date.now() + 2000; Date.now() < end;) {
+            for (const animation of root.getAnimations({ subtree: true })) animation.finish();
+            if (buttons().length === 3 && buttons().every((item) => item.getBoundingClientRect().width > 40)) return;
+            await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+          }
+        };
+        const seek = async (): Promise<{ left: number; right: number; width: number }[]> => {
+          await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+          const animations = root.getAnimations({ subtree: true });
+          const frames: { left: number; right: number; width: number }[] = [];
+          for (let t = 0; t <= 700; t += 50) {
+            for (const animation of animations) { animation.pause(); animation.currentTime = t; }
+            const box = fabOf().getBoundingClientRect();
+            frames.push({ left: box.left, right: box.right, width: box.width });
+          }
+          for (const animation of animations) animation.finish();
+          return frames;
+        };
+        if (!motion) {
+          open();
+          await settle();
+          const fab = boxOf(fabOf());
+          return {
+            view: { width: innerWidth, height: innerHeight },
+            fab: { left: fab.left, right: fab.right, top: fab.top, bottom: fab.bottom, width: fab.width },
+            boxes: buttons().map((item) => ({ text: (item.textContent ?? "").trim(), ...boxOf(item) })),
+          };
+        }
+        const closed = boxOf(fabOf());
+        open();
+        const opening = await seek();
+        close();
+        const closing = await seek();
+        return {
+          view: { width: innerWidth, height: innerHeight },
+          fab: { left: closed.left, right: closed.right, top: closed.top, bottom: closed.bottom, width: closed.width },
+          boxes: [],
+          motion: { closed: { left: closed.left, right: closed.right, width: closed.width }, opening, closing },
+        };
+      }, { form, placement, size, icon: ICON, motion: size === "large" });
+    };
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const form of ["element", "factory"] as const) {
+        for (const placement of placements) {
+          const measured = await placed(dir, form, placement, "default");
+          const problems: string[] = [];
+          const outerIsLeft = (dir === "ltr" && placement === "bottom-start") || (dir === "rtl" && placement === "bottom-end");
+          if (measured.boxes.length !== 3) problems.push(`expected 3 items, got ${measured.boxes.length}`);
+          for (const box of measured.boxes) {
+            const outside = box.left < -0.5 || box.right > measured.view.width + 0.5 || box.top < -0.5 || box.bottom > measured.view.height + 0.5;
+            if (outside) problems.push(`${box.text} ${box.left.toFixed(1)},${box.top.toFixed(1)} ${box.width.toFixed(1)}×${box.height.toFixed(1)} is outside ${measured.view.width}×${measured.view.height}`);
+            if (outerIsLeft && box.left < measured.fab.left - 0.5) problems.push(`${box.text} left ${box.left.toFixed(1)} is left of the FAB ${measured.fab.left.toFixed(1)}`);
+            if (!outerIsLeft && box.right > measured.fab.right + 0.5) problems.push(`${box.text} right ${box.right.toFixed(1)} is right of the FAB ${measured.fab.right.toFixed(1)}`);
+          }
+          note(`FAB menu ${placement} (${form}, ${dir})`, problems);
+        }
+      }
+    }
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const form of ["element", "factory"] as const) {
+        const measured = await placed(dir, form, "bottom-start", "large");
+        const problems: string[] = [];
+        const motion = measured.motion;
+        if (!motion) problems.push("no motion sample");
+        else {
+          const edge = dir === "ltr" ? "left" : "right";
+          const drift = (frames: { left: number; right: number }[]) => Math.max(...frames.map((frame) => Math.abs(frame[edge] - motion.closed[edge])));
+          const widths = [...motion.opening, ...motion.closing].map((frame) => frame.width);
+          const openingDrift = drift(motion.opening);
+          const closingDrift = drift(motion.closing);
+          if (openingDrift > 0.5) problems.push(`opening, the ${edge} edge moves ${openingDrift.toFixed(1)}px from ${motion.closed[edge].toFixed(1)}`);
+          if (closingDrift > 0.5) problems.push(`closing, the ${edge} edge moves ${closingDrift.toFixed(1)}px from ${motion.closed[edge].toFixed(1)}`);
+          if (Math.max(...widths) - Math.min(...widths) < 20) problems.push(`the FAB did not shrink: width ${Math.min(...widths).toFixed(1)}..${Math.max(...widths).toFixed(1)}`);
+          console.log(`  motion bottom-start (${form}, ${dir}): closed ${edge} ${motion.closed[edge].toFixed(1)} width ${motion.closed.width.toFixed(1)}; opening drift ${openingDrift.toFixed(2)}px; closing drift ${closingDrift.toFixed(2)}px; width ${Math.min(...widths).toFixed(1)}..${Math.max(...widths).toFixed(1)}`);
+        }
+        note(`FAB menu bottom-start motion (${form}, ${dir})`, problems);
+      }
+    }
+    assert.equal(failures.length, 0, rows.join("\n"));
+    check("FAB menu: bottom-end and bottom-start open into the page, in both directions, factory and element");
   }
 
   // ---------------------------------------------------------------- chips right to left (FLO-343 follow-up)
@@ -10363,6 +11928,71 @@ try {
     for (const line of measured.failures) console.log(`  FAIL ${line}`);
     assert.deepEqual(measured.failures, []);
     check("side sheet and dialog: the close button's target reaches at least 4 px past the 40 px button on all four sides, ltr and rtl");
+  }
+
+  // ---------------------------------------------------------------- the side-sheet close under a page reset
+  // Round 2 (#55): the close button got its `position` only from the state
+  // layer's zero-specificity `:where()` rule, which a page rule like
+  // `button { position: static }` (0,0,1) outranks. The button then went
+  // static: the layer (`inset: 0`) covered the nearest positioned ancestor —
+  // the whole sheet panel — and the 48 px target centred on that ancestor.
+  // The button now carries its own `position: relative`, so both stay on it.
+  await page.addStyleTag({ content: "button { position: static }" });
+  await fresh(page, `<div id="reset-ltr" dir="ltr"></div><div id="reset-rtl" dir="rtl"></div>`);
+  {
+    const measured = await page.evaluate(async () => {
+      type Close = { element: HTMLElement; open: () => void; close: () => void; destroy: () => void };
+      const w = window as unknown as Window & { mtrl: { createSideSheet: (config: object) => Close } };
+      const failures: string[] = [];
+      const measured: string[] = [];
+      const round = (value: number): string => value.toFixed(2);
+      for (const dir of ["ltr", "rtl"] as const) {
+        const wrap = document.getElementById(`reset-${dir}`) as HTMLElement;
+        const sheet = w.mtrl.createSideSheet({ title: "Data tools", variant: "standard", content: "<p>Data tools</p>", width: 360, container: wrap });
+        sheet.open();
+        await new Promise((r) => setTimeout(r, 700));
+        const button = sheet.element.querySelector(".mtrl-side-sheet__close") as HTMLElement;
+        const box = button.getBoundingClientRect();
+        const position = getComputedStyle(button).position;
+        measured.push(`side sheet ${dir}: close button ${round(box.width)} x ${round(box.height)} at position ${position}`);
+        if (position === "static") failures.push(`side sheet ${dir}: the close button is static under a page 'button { position: static }'`);
+        const layer = getComputedStyle(button, "::before");
+        measured.push(`side sheet ${dir}: layer ${layer.width} x ${layer.height} at position ${layer.position}`);
+        if (Math.abs(parseFloat(layer.width) - box.width) > 0.5 || Math.abs(parseFloat(layer.height) - box.height) > 0.5) {
+          failures.push(`side sheet ${dir}: the layer is ${layer.width} x ${layer.height}, not the button's own ${round(box.width)} x ${round(box.height)}`);
+        }
+        const reaches = (x: number, y: number): boolean => {
+          const el = document.elementFromPoint(x, y);
+          return !!el && (el === button || button.contains(el));
+        };
+        const cx = (box.left + box.right) / 2;
+        const cy = (box.top + box.bottom) / 2;
+        for (const side of ["left", "right", "top", "bottom"] as const) {
+          const at = (d: number): [number, number] =>
+            side === "left" ? [box.left - d, cy] : side === "right" ? [box.right + d, cy] : side === "top" ? [cx, box.top - d] : [cx, box.bottom + d];
+          const [x3, y3] = at(3);
+          if (!reaches(x3, y3)) failures.push(`side sheet ${dir}: the hit 3 px past the ${side} edge does not reach the button`);
+          // As in the case above: a 48 box centred on the 40 px button changes
+          // the hit exactly 4 px out; a target that escaped to the ancestor
+          // changes it at the button's own edge instead.
+          let change: number | null = null;
+          for (let d = 1; d <= 64; d++) {
+            const [x, y] = at(d);
+            if (!reaches(x, y)) { change = d; break; }
+          }
+          if (change !== null && change < 4) failures.push(`side sheet ${dir}: the target's hit changes ${change} px past the ${side} edge, under the 4 px a 48 box needs`);
+          measured.push(`side sheet ${dir}: target hit changes ${change === null ? "> 64 px" : `${change} px`} past the ${side} edge`);
+        }
+        sheet.close();
+        sheet.destroy();
+        sheet.element.remove();
+      }
+      return { failures, measured };
+    });
+    for (const line of measured.measured) console.log(`  ${line}`);
+    for (const line of measured.failures) console.log(`  FAIL ${line}`);
+    assert.deepEqual(measured.failures, []);
+    check("side sheet: under a page 'button { position: static }', the close button keeps its own position, layer and 48 px target, ltr and rtl");
   }
 
   assert.deepEqual(errors, [], "no page errors");

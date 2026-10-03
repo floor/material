@@ -191,6 +191,12 @@ bun run test:coverage                      # with a coverage report
 
 - TypeDoc comments on every public function and type, with an `@example`.
 - The file path as a comment on the first line of each file.
+- `README.md` is the GitHub page and `npm-readme.md` the npm page; a change to what one says usually belongs in both. Two checks hold them to the packed package. `bun run readme:check` (after `bun run build` and `bun run size:check`) compiles every TypeScript example, resolves every `material/…` specifier, and checks the `<m-…>` tags and attributes, the install line, the size table and the links; with `--online` it also fetches the external links. `bun run readme-browser:check` runs the examples as a reader would: a fence under `<!-- example: run, shows "…" -->` is built with Vite exactly as written, opened in Chromium, and must show that text with its elements upgraded and no error. A whole example carries that mark; a fence that goes on from the previous one carries `<!-- example: continues -->`; a fence with no mark is a fragment, and the text beside it should read that way.
+- Both READMEs are written to be read, not consulted. Four rules, the first two held by `readme:check`:
+  - no paragraph or list item over about four rendered lines (440 characters as rendered);
+  - no sentence with more than two inline code spans (tables and fences apart);
+  - three or more parallel items are a list or a table;
+  - what reads as a specification (a contract, its exceptions, measurements) lives on md3.io, and the README says the rule in a line or two and links the page.
 - User documentation lives in md3.io's `docs/components/<name>.md`, where `bun run docs:check` type-checks and runs every example against your material checkout. Add or update the page with the change.
 
 ## Community and Communication
@@ -212,14 +218,26 @@ Thank you for contributing to material! Your efforts help make this library bett
 Releases are published by GitHub Actions with npm trusted publishing
 (`.github/workflows/publish.yml`); no npm token is involved.
 
-Until 3.0.0 is `latest`, `npm install material` installs 1.0.4, the earlier
-1.x library that lived under this name; the 3.0.0 pre-releases are on the
-`next` tag (`npm install material@next`).
+Install the stable release with `npm install material`.
 
 1. Open a release pull request that bumps `package.json` (`x.y.z`, or
    `x.y.z-next.N` for a pre-release), turns `[Unreleased]` in `CHANGELOG.md`
-   into the version's section, and updates the README where the release
-   changes it. Merge it when CI passes.
+   into the version's section, and updates `README.md` and `npm-readme.md`
+   where the release changes them. Merge it when CI passes.
+
+   **Keep the install sections consistent with the version**, between
+   `<!-- install -->` and `<!-- /install -->` in both files.
+   `bun run readme:check` requires `npm install material` for stable versions
+   and `npm install material@next` for a 3.0.0 pre-release. A stable version
+   must have no paragraph about the `next` tag in its install section.
+
+   **Every release pull request refreshes the size table** of both files,
+   between `<!-- sizes -->` and `<!-- /sizes -->`, from `bun run size:check`
+   (under CI's Node 22: `npx -y -p node@22 -p npm@10 -- bun run size:check`),
+   in kB of 1,000 bytes to one decimal. Between releases `readme:check` lets a
+   figure be up to 2% (and at least 100 bytes) from the current build, so an
+   unrelated pull request does not fail on a rounding; it prints each row that
+   has drifted, and fails past the tolerance.
 2. Tag the merge commit `vx.y.z` and push the tag:
 
    ```bash
@@ -230,3 +248,8 @@ Until 3.0.0 is `latest`, `npm install material` installs 1.0.4, the earlier
 3. The workflow checks that the tag matches the version, builds, and
    publishes: a pre-release under the `next` dist-tag, a release under
    `latest`. `npm view material dist-tags` confirms.
+   What it publishes is the root manifest without its repository-only fields,
+   and `npm-readme.md` as the package's `README.md`: npm's page shows the
+   short README, GitHub the long one. `scripts/package-fixture.ts` runs that
+   same workflow step on a copy of the tree for every packed check, and
+   `size:check` asserts which README and manifest are in the tarball.
