@@ -242,3 +242,40 @@ for (const dir of ["ltr", "rtl"]) {
       knownMoves });
   }
 }
+
+// The default text group keeps its baseline and inherited line box. Keep
+// formatted markup too: whitespace between items must not add inline width.
+const buttonGroup = cases.find(row => row.element === "button-group" && row.variant === "default")!;
+for (const dir of ["ltr", "rtl"]) {
+  // Keep xs no worse than main while its size reservation remains in #49.
+  // Main moves the inline neighbour up 2.703125px and the block up 8px.
+  // The same main baseline also shifts the inline neighbour on x with the
+  // platform font: 0.0625px here, 0.75px on Linux. The pin value is their
+  // midpoint, ±0.40625, and the band is ±0.375px, so both readings pass, a
+  // reading that has gone fails, and one extra pixel fails.
+  const reason = "Extra-small button group size reservation: floor/material#49 (main baseline).";
+  const width = "Extra-small button group width follows the platform font: floor/material#49 (main baseline).";
+  const inlineX = dir === "ltr" ? -0.40625 : 0.40625;
+  cases.push({
+    ...buttonGroup, variant: `size=xs; ${dir}; default`,
+    html: buttonGroup.html.replace("<m-button-group ", '<m-button-group size="xs" '),
+    width: 850, style: `direction:${dir}`,
+    knownMoves: [
+      { sibling: "#inline", axis: "x", value: inlineX, tolerance: 0.375, reason: width },
+      { sibling: "#inline", axis: "y", value: -2.703125, reason },
+      { sibling: "#block", axis: "y", value: -8, reason },
+    ],
+  });
+  for (const typography of ["default", "24/2"]) {
+    for (const formatted of [false, true]) {
+      const html = formatted
+        ? buttonGroup.html.replaceAll("><m-button-group-item", ">\n  <m-button-group-item").replace("</m-button-group>", "\n</m-button-group>")
+        : buttonGroup.html;
+      cases.push({
+        ...buttonGroup, variant: `${dir}; ${typography}; ${formatted ? "formatted" : "compact"}`,
+        html, style: `direction:${dir};${typography === "default" ? "" : "font-size:24px;line-height:2"}`,
+        strictBox: true,
+      });
+    }
+  }
+}
