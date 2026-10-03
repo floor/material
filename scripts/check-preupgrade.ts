@@ -15,6 +15,8 @@
 // counts. The host counts as shifted when what it shows (its box, with what
 // its shadow root renders) moves or changes size, a sibling when it moves.
 // Every case must stay under 0.01.
+// Button boxes must also move or resize by less than 0.5px: their 4px inset
+// mismatch can move adjacent content while scoring below the CLS threshold.
 //
 // The mutation check runs the same cases without the pre-upgrade stylesheet:
 // it must fail most elements, or the check is not measuring anything.
@@ -248,6 +250,7 @@ const score = (before: Snapshot, after: Snapshot, bounds?: Box): number => {
 };
 
 interface Result {
+  element: string;
   name: string;
   score: number;
   before: Box;
@@ -287,17 +290,20 @@ const runCases = async (preupgrade: boolean): Promise<Result[]> => {
     const moved = before.siblings
       .map((b, i) => `${(after.siblings[i].x - b.x).toFixed(1)},${(after.siblings[i].y - b.y).toFixed(1)}`)
       .join(" ");
-    results.push({ name: label(item), score: score(before, after), before: before.hosts[0], after: after.hosts[0], moved });
+    results.push({ element: item.element, name: label(item), score: score(before, after), before: before.hosts[0], after: after.hosts[0], moved });
   }
   return results;
 };
 
 const label = (item: PreupgradeCase): string => (item.variant === "default" ? item.element : `${item.element} [${item.variant}]`);
 const size = (b: Box): string => `${b.w.toFixed(1)}x${b.h.toFixed(1)}`;
+const shiftsOnUpgrade = (r: Result): boolean =>
+  r.score >= THRESHOLD || (r.element === "button" && shiftOf(r.before, r.after) >= 0.5);
 const report = (results: Result[]): void => {
   for (const r of results) {
-    const mark = r.score < THRESHOLD ? "ok" : "FAIL";
-    console.log(`  ${mark.padEnd(4)} ${r.name.padEnd(34)} ${r.score.toFixed(4)}  ${size(r.before)} -> ${size(r.after)}  siblings moved ${r.moved}`);
+    const mark = shiftsOnUpgrade(r) ? "FAIL" : "ok";
+    const buttonShift = r.element === "button" ? `  box shift ${shiftOf(r.before, r.after).toFixed(2)}px` : "";
+    console.log(`  ${mark.padEnd(4)} ${r.name.padEnd(34)} ${r.score.toFixed(4)}  ${size(r.before)} -> ${size(r.after)}  siblings moved ${r.moved}${buttonShift}`);
   }
 };
 
@@ -308,7 +314,7 @@ try {
   const covered = new Set(cases.filter((item) => item.variant === "default").map((item) => item.element));
   assert.deepEqual(Object.keys(elements).map(kebab).filter((name) => !covered.has(name)), [], "Elements without a case");
 
-  console.log(`With the pre-upgrade styles (score < ${THRESHOLD}):`);
+  console.log(`With the pre-upgrade styles (score < ${THRESHOLD}; button box shift < 0.5px):`);
   const withStyles = await runCases(true);
   report(withStyles);
 
@@ -316,7 +322,7 @@ try {
   const without = await runCases(false);
   report(without);
 
-  const failing = withStyles.filter((r) => r.score >= THRESHOLD);
+  const failing = withStyles.filter(shiftsOnUpgrade);
   const defaults = without.filter((r) => !r.name.includes("["));
   const caught = defaults.filter((r) => r.score >= THRESHOLD);
   console.log(`\nMutation: ${caught.length} of ${defaults.length} elements shift without the pre-upgrade styles.`);
