@@ -16,51 +16,6 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
-## [3.0.0-next.1] - 2026-10-03
-
-The second prerelease of 3.0.0, on the npm `next` tag (`npm install material@next`). Its full
-entries are below; this is what changed since `3.0.0-next.0`.
-
-**Breaking since next.0**
-
-- `material/core/<area>` is an explicit list: `material/core` and its seven areas (`canvas`,
-  `compose`, `dom`, `shapes`, `state`, `theme`, `utils`). `material/core/compose/features` no
-  longer resolves: import the same names from `material/core/compose`.
-- `ProgressComponent` no longer has `canvas`, `resize`, `track`, `indicator` and `buffer`
-  (TS2339). For the canvas: `progress.element.querySelector('canvas')`.
-
-**Layout changes since next.0: check your pages**
-
-- A select made with `createSelect()` is 280px wide unless you size it; it filled its
-  container. To keep that: `.mtrl-select { width: 100%; }`.
-- A select's menu is as wide as its field in both layers (it stopped at 280px in the default
-  layer).
-- A chip with a remove or trailing button is at least 88px wide, its label at least 42px
-  ("OK": 64.5 → 88px).
-- A labelled horizontal slider is 4px taller (72 → 76px at XS and S, 76 → 80 at M, 92 → 96
-  at L, 132 → 136 at XL); its label is 16px on a 24px line (was 18px).
-- An unlabelled switch is 52 x 48 (was 64 x 56).
-- An unlabelled checkbox's box is centred in its 48px target (15px on each side; it sat at
-  the start). An unlabelled radio is centred the same way.
-- A radio row grows with a wrapping label (it was a fixed 48px, and the text overflowed it);
-  a one-line row stays 48px.
-- An extra-small button has 4px between its icon and its label (was 8px).
-- Right to left: a small button's icon padding, the text field's trailing icon button's
-  target, a selected menu item's check mark and `<m-text-field>` are mirrored.
-
-**Also since next.0**
-
-- Every `material/components/<name>` entry exports its factory as the default export and by
-  its name.
-- The element authoring API (`defineElement`, `ElementSpec`, `registerStyles`, `hasStyles`,
-  `SHADOW_BASE_STYLES`) is experimental: outside semantic versioning in 3.x.
-- `tab.badge` may be `undefined` until the badge is shown; the slider's `components` object is
-  internal.
-- The side sheet's and the dialog's close buttons reach a 48 x 48 target; an
-  `<m-icon-button>`'s icon keeps its size; a multiline text field uses the value it was
-  created with; a select's selected option has one look in both layers; the package no
-  longer carries a second README and licence under `dist/`.
-
 ### Migrating from 0.10.x
 
 Upgrade to the latest `mtrl` 0.10.x first, then change the package name to `material` (version 3) and
@@ -79,9 +34,6 @@ the new name exists only in 3.0.0: `SELECT_CLASSES.TEXTFIELD` (its new key is `T
   (`import { pipe } from 'material/core/compose'`). The
   [migration table](https://github.com/floor/material/blob/main/scripts/fixtures/root-exports.md)
   gives every one.
-- **`material/core/<area>` only.** A path under an area no longer resolves:
-  `mtrl/core/compose/features` becomes `material/core/compose`, which exports the same names
-  (`withLifecycle` among them).
 - **Folders inside a component no longer resolve** (`mtrl/components/chips/chip`,
   `…/features`): they held internals, with no replacement.
 - **Vue 3.4.20 or newer.** With `skipLibCheck: false`, `@types/react` 18.2.71 or newer.
@@ -221,11 +173,6 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   `.mtrl-textfield…` or `::part(textfield)` matches nothing, a `classList` call with the old
   class changes nothing, and defaults set under `'textfield'` are ignored. Nothing warns.
   Search your CSS and your code for `textfield`.
-- **A select made with `createSelect()` no longer fills its container.** Unsized, it is
-  280px wide, as a text field is; it was as wide as what held it. Nothing warns: a form
-  whose selects spanned their column now shows them 280px wide. Search for `createSelect(`
-  and give each select that should fill its container a width
-  (`.mtrl-select { width: 100%; }`).
 - **A text field with a prefix or a suffix has no inline padding (FLO-299).**
   `field.input.style.paddingLeft` and `paddingRight` read `''`, and the label has no inline
   `left`: the stylesheet pads the input from `--mtrl-text-field-prefix-width` and
@@ -409,33 +356,6 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed (breaking)
 
-- **`material/core/<area>` is an explicit list: seven areas, and no path under them (FLO-414).**
-  The export map listed `./core/*`, and a `*` in an exports pattern crosses slashes: besides
-  the areas it resolved a folder inside one, `material/core/compose/features`, which the
-  README's "Building your own components" imported `withLifecycle()` from (in 0.10.x too).
-  The map now names `material/core` and its seven areas: `material/core/canvas`, `/compose`,
-  `/dom`, `/shapes`, `/state`, `/theme` and `/utils`. Any other path under `material/core`
-  throws `ERR_PACKAGE_PATH_NOT_EXPORTED`, and TypeScript reports the import (TS2307).
-  Migration:
-
-  | 0.10 | 3.0 |
-  |---|---|
-  | `import { withLifecycle } from 'mtrl/core/compose/features'` (and any other name from that path) | `import { withLifecycle } from 'material/core/compose'`: the same name, the same function |
-
-  Every name `material/core/compose/features` exported is an export of
-  `material/core/compose`, except `withBadge` and the types `BadgeComponent` and
-  `BadgeConfig` of that feature, which no document named: they are internal; for a badge,
-  use `createBadge` from `material`. `LabelManager`, the type of `LabelComponent`'s `label`,
-  was only in the nested path and is now exported from `material/core/compose`.
-- **Progress: `canvas`, `resize`, `track`, `indicator` and `buffer` are no longer on
-  `ProgressComponent`.** They named how the indicator is drawn (one canvas; `track`,
-  `indicator` and `buffer` were that same canvas under the names of an older SVG), which
-  tied the public type to one way of drawing it. The objects are unchanged at run time;
-  the type no longer promises them, and how the indicator is drawn may change in a later
-  release. Reading `progress.canvas` in TypeScript is now an error (TS2339). Migration:
-  for the canvas, `progress.element.querySelector('canvas')`; nothing replaces `resize()`,
-  as the component observes its own size; `setBuffer()` and `getBuffer()`, the buffer's
-  value, are unchanged.
 - **Explicit contrast levels are opt-in (FLO-540).** `material/styles/base` and `material/themes/<name>`
   keep standard contrast and `prefers-contrast: more`. `data-theme-contrast="medium"` and `"high"`
   (material-color-utilities contrast 0.5 and 1.0; the values are unchanged) move to
@@ -1075,11 +995,6 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Added
 
-- **Every `material/components/<name>` entry exports its factory both ways:** as the default
-  export and by its name (`import createButton from 'material/components/button'` and
-  `import { createButton } from 'material/components/button'` are the same function, and the
-  same one the root exports). 21 entries had only the default and gain the name; `chips` and
-  `divider` had only the name and gain the default. Nothing is removed.
 - **`isOpen()` on the snackbar and the date picker (FLO-548)**, as on every other overlay.
 - **Split button `setItems(items)` and `getItems()` (FLO-543).** `setItems` replaces the menu's
   items and returns the split button; `getItems` returns them. A split button created without
@@ -1146,70 +1061,6 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
-- **An `<m-text-field type="hidden">` takes no space, before upgrade or after.** The upgraded
-  hidden field was an inline-block host taking a line box, with its `display: none` input inside;
-  it is now not rendered at all, as an element with the `hidden` attribute is not. Its value still
-  submits with its form and still reads from `value`. Every other type is unchanged.
-
-- **An upgraded `<m-switch>` is shorter under a tall line height than in the 3.0.0 prereleases.**
-  At a page's `font-size: 24px; line-height: 2` the upgraded switch is 52 × 56 → 52 × 48
-  unlabelled, and 65 → 56 tall with supporting text, so in a flex row centred on it the text
-  beside rises 4–4.5 px and what follows 8–9 px. At the default type nothing moves. Text beside
-  an unlabelled `<m-switch>` no longer moves when the element upgrades. Its pre-upgrade
-  baseline now matches the control's center; a supporting-text-only switch uses its text
-  baseline. The upgraded switch host uses the control's box directly, so 12px or 24px
-  surrounding text with line-height 1 or 2 cannot add an extra host line box. Inline and
-  baseline/center flex layouts are checked in both text directions.
-- **A list row takes the expressive shape.** A row is 4 px at rest, 16 px on the list's outer corners, 12 px hovered, and 16 px focused, pressed or selected. With the default colours nothing changes at rest on screen: the row and the list are both the surface colour. Hover, focus and press look different, and rows given their own background show the corners. Set `--mtrl-list-item-shape`, `--mtrl-list-item-shape-outer`, `--mtrl-list-item-shape-hover` and `--mtrl-list-item-shape-active` to `0` on the list, on any ancestor, or on the `<m-list>` element for square rows. M3 Lists specs: "Unselected corner radius: 4dp inner, 16dp outer" and "Selected corner radius: 16dp".
-- **The list's container is rounded, 16 px, by the same property as the rows' outer corners** (`--mtrl-list-item-shape-outer`). It is visible at rest on a list placed over a background that is not the surface colour. Set `--mtrl-list-item-shape-outer` to `0` on the list, on any ancestor, or on the `<m-list>` element to square the container and the rows' outer corners. M3 Lists specs, read 2026-10-03 (https://m3.material.io/components/lists/specs): "An expressive list has a segmented style and round corners". That page gives the item's corners and no value for the container.
-- **The package's README on npm is a short one.** `npm-readme.md` is packed as the package's
-  `README.md` (install, one example, the component list, and links to md3.io); the full
-  README stays on GitHub. Nothing in the API changes.
-- **The slider's label takes the Body Large role, and a labelled horizontal slider is 4px
-  taller (FLO-587).** The label on a slider is this library's — the specification puts no label
-  on a slider — so the form controls' label role decides, as it does for the checkbox, radio
-  and switch labels: the label's text is now 16px on a 24px line (was 18px on an inherited 20px
-  line). A horizontal slider with a label is 4px taller: 72 → 76px at XS and S, 76 → 80 at M,
-  92 → 96 at L, 132 → 136 at XL; a vertical slider's height is unchanged. A layout that
-  reserved the old height gains 4px per labelled slider.
-- **The element authoring API is experimental.** `defineElement`, `ElementSpec`,
-  `registerStyles`, `hasStyles` and `SHADOW_BASE_STYLES` (from `material/elements`), the API
-  for writing custom elements of your own on material's machinery, are tagged
-  `@experimental` in their TSDoc and are outside semantic versioning in 3.x: they may change
-  in a minor release. Nothing about them changes in this release. The elements material
-  defines (`<m-button>`, `<m-text-field>` and the rest), their attributes, properties and
-  events, and the `define…()` functions are covered by semantic versioning as before. If
-  you build your own elements on this API, pin the minor version (`~3.0.0`).
-- **Slider: the `components` bag is internal.** The slider's controller reads an older
-  `components` object as a fallback for its elements; nothing in the library fills it, the
-  public `SliderComponent` never had it, and it is now marked internal and outside the
-  public contract: it may go in any release. Use the slider's own API (`setValue()`,
-  `getValue()` and the rest of `SliderComponent`) and `slider.element`.
-- **Tabs: `tab.badge` may be `undefined` until the badge is shown.** The type always allowed
-  it (`badge?: BadgeComponent`); it is now the documented contract, on `tab.badge` and on
-  `getBadgeComponent()`: a tab creates its badge no later than when it shows it, so a later
-  release can create it only then. Nothing changes at run time in this release: the badge
-  still exists from the first `setBadge()`, or from creation with the `badge` option. Use
-  `setBadge()`, `getBadge()`, `showBadge()` and `hideBadge()`, which work whether the badge
-  exists yet or not, and check `tab.badge` for `undefined` before reading it.
-- **A short chip with a secondary action is wider, by the specification.** Material 3, Chips:
-  "Secondary actions (such as a trailing icon button for Remove) must have a 48x48dp
-  interaction target that doesn't interfere with the chip's primary action (such as Edit or
-  Drag). To achieve this, apply a minimum width of 88dp to the chip, or 42dp to the label
-  text." A chip with a remove or trailing button is therefore at least 88px wide, its label
-  at least 42px: the last 48px of the chip are the secondary action's target, by the
-  specification, and the chip's own action owns the rest, at least 40px. An input chip
-  labelled "Label" is 88px (was 80.05) and one labelled "OK" 88px (was 64.5); a filter chip,
-  whose action starts 16px in, measures 92px (was 84.05 for "Label" and 68.5 for "OK"). A
-  chip whose label already filled the 88px floor is unchanged.
-- **An extra-small button's space between its icon and its label is 4px.** It was 8px. Material 3's token `md.comp.button.xsmall.icon-label-space` is 4, and Compose's `ButtonDefaults.ExtraSmallIconSpacing` is 4.
-- **An unsized select is 280px wide, as an unsized text field is.** `createSelect()` made a
-  select that took its container's whole width (200px in a 200px container, 400px in a
-  400px one), where the text field, on both paths, and `<m-select>` are 280px whatever holds
-  them. The factory's select now sizes as they do. Migration: to keep a select filling its
-  container, give it the width: `select.element.style.width = '100%'` or the rule
-  `.mtrl-select { width: 100%; }`; for the element, `m-select { width: 100%; }`. There is
-  no option for it.
 - **Text field: the spacing follows the M3 measurements (FLO-299).** A field's layout shifts
   by the amounts below; nothing in the API changes. Sources: the measurement tables on
   m3.material.io's text fields page, and Compose's `TextFieldImpl.kt` for the positions the
@@ -1284,6 +1135,269 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   and their system packages come from a cache that every pull request can read (a slow Ubuntu
   mirror made one install step take 26 minutes). `test/build/ci-commands.test.ts` lists the
   commands CI runs and fails when one is dropped.
+
+### Fixed
+
+- **Text field: with reduced motion, the filled field's focus indicator no longer fades
+  (FLO-299).** Its 0.2s transition was not in the field's reduced-motion rule, where the
+  label, the outline, the icons and the affixes are. It also runs on the motion tokens now
+  (`duration-short4`, `easing-standard`: the same 0.2s, on the standard curve, where it was the
+  browser's `ease`).
+- **Text field, right to left: a compact filled field with a leading icon keeps its compact
+  padding (FLO-299).** The right-to-left rule beside an icon set all four sides, so the
+  field took the default density's top and bottom padding and its text sat 2.5px low.
+- **A filled multiline text field's first line no longer runs under its floated label
+  (FLO-299).** The textarea padded its text 12px from the top whatever the variant, and the
+  floated label's box ends 19.2px down: they overlapped by 7.2px (13px at compact density).
+  The first line now starts under the label, at the single-line field's text (the values are
+  under "Changed"). `<m-text-field type="multiline">` reserves the same first line before it
+  upgrades, so a sibling on its line does not move when the element is defined.
+- **Text field: beside an icon, a prefix or a suffix no longer leaves the value under the icon
+  (FLO-299).** The input's padding was sized from the affix alone. With a leading icon and a
+  prefix the value began 25.5px in, under the icon (12 to 36px) and before the prefix (44px);
+  a trailing icon with a suffix did the same at the other end; right to left, the padding was
+  on the wrong side. The text now starts 2px after the prefix and ends 2px before the suffix,
+  whatever stands outside them, in both variants, both densities and both directions
+  (measured: with the icon, the text starts at 63.5px, after a 9.5px prefix at 52px). The
+  script no longer writes `padding-left` and `padding-right` on the input or `left` on the
+  label. It writes each affix's measured width on the field's root, as
+  `--mtrl-text-field-prefix-width` and `--mtrl-text-field-suffix-width`, and the stylesheet
+  adds the icon's inset. The insets themselves, the gap to the text and the label, which no
+  longer follows the prefix, are under "Changed".
+- **A top-layer dialog that refuses Escape stays open, however often it is pressed
+  (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
+  listener that refused, the third Escape made the browser close the `<dialog>` while
+  `isOpen()` stayed true and no `close` was emitted (measured in Chromium, Firefox and
+  WebKit: the browser lets a page refuse `cancel` twice in a row and forces the third). Escape
+  is now a key press the dialog prevents, so no `cancel` is sent. And when the browser does
+  close the `<dialog>` itself, the dialog's state follows: `isOpen()` is false and `close` is
+  emitted, without `beforeclose`. The defect is also in 0.10.x; the fix is in material 3.0.0.
+- **Escape with a menu open inside a default-layer dialog closes the menu only (FLO-548).** It
+  closed the dialog as well, under the menu: the dialog's listener ran before the menu's.
+- **Chips: a chip destroyed while it has focus hands focus to its neighbour (FLO-542).**
+  `chip.destroy()` called directly on a focused chip of a set left focus on the page, so a
+  keyboard user lost their place. Focus now moves to the chip that takes its place, or to
+  the one before when it was the last, as it does when the set removes a chip.
+- **A dialog destroyed right after `open()` no longer locks the page's scroll (FLO-548).** The
+  default-layer dialog shows its surface 10 ms after `open()`. `destroy()` in that window left
+  the timer running: it then set `overflow: hidden` on the body for a dialog that was gone,
+  with nothing left to undo it. `destroy()` now cancels what `open()` and
+  `close()` left pending, and removes the dialog's document listeners.
+- **Snackbar: a queued snackbar dropped from the queue can be shown again (FLO-548).** One
+  waiting behind another and then dropped by a `queueBehavior: 'replace'` snackbar or by
+  `clearSnackbars()` kept `state` `"visible"` without ever being shown, and `show()` on it
+  did nothing from then on. It is now hidden when dropped. The defect is also in 0.10.x; the
+  fix is in material 3.0.0.
+- **Date picker: `open()` called from a click outside a docked picker opens it (FLO-548).**
+  The same click then reached the picker's outside-click listener and closed it at once. A
+  click in the task that called `open()` no longer closes it. The defect is also in 0.10.x;
+  the fix is in material 3.0.0.
+- **Snackbar: destroying the one on screen lets the next take its turn (FLO-548).**
+  `destroy()` on the visible snackbar left the queue waiting for it, so snackbars shown behind
+  it stayed queued until some other snackbar was shown. The queue now moves on, after its
+  usual gap.
+- **Accessibility: scrolling from script honours reduced motion in the chips, the tabs and the
+  search (FLO-553).** The chip set's `scrollToChip`, the tabs' scroll buttons and the search's
+  arrow keys through the suggestions each asked for a smooth scroll explicitly, which overrides
+  the stylesheet, so they glided with the reduced-motion preference on. They now name no
+  behaviour: each scroller scrolls smoothly from its stylesheet (`scroll-behavior: smooth`,
+  new on the tabs' scroller and the suggestion list), and jumps at once under reduced motion.
+  A script of yours that scrolls the tabs' scroller or the suggestion list now scrolls it
+  smoothly too.
+- **A chip destroyed on its own leaves its chip set (FLO-533).** Calling `destroy()` on a chip, rather than removing it through the set, used to leave that chip in the set. The set could then count it as selected beside another chip, including two selected chips in a single-select set, and the arrow keys stopped on it. The set now drops that chip. Dropping it does not emit `remove` or `change`. Removing a chip through the set is unchanged.
+- Checkboxes keep their check icon, and pre-upgrade element styles appear, when one process uses multiple documents (FLO-528).
+- A multiline text field reserves its textarea box before it upgrades, so the field and the line beside it no longer jump when the element is defined (FLO-425).
+- **Single-select chip sets keep one selected chip (FLO-518).** Adding a chip
+  with `selected: true` selects it and deselects the previous chip, including
+  initial factory config and `<m-chip selected>` declarations. The last selected
+  chip wins; `add.value` reports the resulting selection. Programmatic additions
+  emit `add` and no `change`. Selecting a chip through its `setSelected(true)`
+  also replaces the previous selection silently. A chip the set has removed or
+  destroyed no longer clears that selection: destroying the chip drops the set's
+  hook. The public chip factories ignore a caller-supplied `onSelected`.
+- **Progress indicators size their canvas when they are created (FLO-368).** A linear canvas is as tall as its track (4dp, 8dp thick, 10dp wavy at the default thickness) and fills its container; a circular one is its token size (40dp, 48dp wavy, or the configured size from 24dp to 240dp). The size comes from those tokens, not from measuring the element, so the canvas no longer reserves the default 300×150 until it upgrades.
+- **Sliders, tabs and loading indicators take their first position from configuration (FLO-369).** A slider's track, stops and inset icon are a percentage of the value, so they no longer wait on a measurement that is 0 before layout. A tab's indicator anchors to the active label, or to the tab itself when it is secondary. A loading indicator's canvas is its token size (48dp, or the configured size) when it is created.
+- Element upgrade removes leftover direct declarative shadow templates, including when definitions precede parsing; those templates no longer count as label content (FLO-366).
+- Elements construct on a server DOM (linkedom) without browser-only APIs (FLO-362).
+- Element teardown finishes cleanup after an individual cleanup throws (FLO-363).
+- Text field and select placement cancel and reset their shared measurement timer when the
+  last pending field is destroyed, allowing the next lifecycle to schedule again (FLO-363).
+- Prefilled multiline text fields render in SSR, including inside another custom element (FLO-416).
+- `consumer:check` no longer fails on the open split button's screenshot pair. One of the two
+  captures sometimes blended the menu's shadow a few levels lighter where it falls on the buttons
+  (26 to 29 pixels, either build). The comparison fixture now keeps an open menu on a compositor
+  layer of its own, and a pair that differs in pixels only is captured once more before it counts.
+- `ssr:check` no longer depends on whether the browser has applied `:hover` at the page origin
+  when it captures. The fixture sat there, under a new page's resting pointer, and CI captured a
+  button group hovered before the upgrade and not after. The stage now starts 32px down, and both
+  passes assert that no control of the fixture is under the pointer.
+- SSR parity now requires exact Chromium matches for progress, sliders, tabs and loading
+  indicators after FLO-368/FLO-369; their 22 resolved exceptions are removed (FLO-363).
+- Element CSS file and export checks run after the CI build, so unit tests pass without `dist/` (FLO-365).
+- SSR security reparsing runs in the Chromium CI job while unit tests remain browser-free;
+  SSR parity and benchmark tooling load the source renderer and source CSS registry (FLO-363).
+- Source SSR reads the element CSS registry without resolving built package exports; source tests register real Sass output without mocking the CSS import (FLO-363).
+
+## [3.0.0-next.1] - 2026-10-03
+
+The second prerelease of 3.0.0, on the npm `next` tag (`npm install material@next`). Its full
+entries are below; this is what changed since `3.0.0-next.0`.
+
+**Breaking since next.0**
+
+- `material/core/<area>` is an explicit list: `material/core` and its seven areas (`canvas`,
+  `compose`, `dom`, `shapes`, `state`, `theme`, `utils`). `material/core/compose/features` no
+  longer resolves: import the same names from `material/core/compose`.
+- `ProgressComponent` no longer has `canvas`, `resize`, `track`, `indicator` and `buffer`
+  (TS2339). For the canvas: `progress.element.querySelector('canvas')`.
+
+**Layout changes since next.0: check your pages**
+
+- A select made with `createSelect()` is 280px wide unless you size it; it filled its
+  container. To keep that: `.mtrl-select { width: 100%; }`.
+- A select's menu is as wide as its field in both layers (it stopped at 280px in the default
+  layer).
+- A chip with a remove or trailing button is at least 88px wide, its label at least 42px
+  ("OK": 64.5 → 88px).
+- A labelled horizontal slider is 4px taller (72 → 76px at XS and S, 76 → 80 at M, 92 → 96
+  at L, 132 → 136 at XL); its label is 16px on a 24px line (was 18px).
+- An unlabelled switch is 52 x 48 (was 64 x 56).
+- An unlabelled checkbox's box is centred in its 48px target (15px on each side; it sat at
+  the start). An unlabelled radio is centred the same way.
+- A radio row grows with a wrapping label (it was a fixed 48px, and the text overflowed it);
+  a one-line row stays 48px.
+- An extra-small button has 4px between its icon and its label (was 8px).
+- Right to left: a small button's icon padding, the text field's trailing icon button's
+  target, a selected menu item's check mark and `<m-text-field>` are mirrored.
+
+**Also since next.0**
+
+- Every `material/components/<name>` entry exports its factory as the default export and by
+  its name.
+- The element authoring API (`defineElement`, `ElementSpec`, `registerStyles`, `hasStyles`,
+  `SHADOW_BASE_STYLES`) is experimental: outside semantic versioning in 3.x.
+- `tab.badge` may be `undefined` until the badge is shown; the slider's `components` object is
+  internal.
+- The side sheet's and the dialog's close buttons reach a 48 x 48 target; an
+  `<m-icon-button>`'s icon keeps its size; a multiline text field uses the value it was
+  created with; a select's selected option has one look in both layers; the package no
+  longer carries a second README and licence under `dist/`.
+
+### Migrating from 0.10.x
+
+- **`material/core/<area>` only.** A path under an area no longer resolves:
+  `mtrl/core/compose/features` becomes `material/core/compose`, which exports the same names
+  (`withLifecycle` among them).
+- **A select made with `createSelect()` no longer fills its container.** Unsized, it is
+  280px wide, as a text field is; it was as wide as what held it. Nothing warns: a form
+  whose selects spanned their column now shows them 280px wide. Search for `createSelect(`
+  and give each select that should fill its container a width
+  (`.mtrl-select { width: 100%; }`).
+
+### Changed (breaking)
+
+- **`material/core/<area>` is an explicit list: seven areas, and no path under them (FLO-414).**
+  The export map listed `./core/*`, and a `*` in an exports pattern crosses slashes: besides
+  the areas it resolved a folder inside one, `material/core/compose/features`, which the
+  README's "Building your own components" imported `withLifecycle()` from (in 0.10.x too).
+  The map now names `material/core` and its seven areas: `material/core/canvas`, `/compose`,
+  `/dom`, `/shapes`, `/state`, `/theme` and `/utils`. Any other path under `material/core`
+  throws `ERR_PACKAGE_PATH_NOT_EXPORTED`, and TypeScript reports the import (TS2307).
+  Migration:
+
+  | 0.10 | 3.0 |
+  |---|---|
+  | `import { withLifecycle } from 'mtrl/core/compose/features'` (and any other name from that path) | `import { withLifecycle } from 'material/core/compose'`: the same name, the same function |
+
+  Every name `material/core/compose/features` exported is an export of
+  `material/core/compose`, except `withBadge` and the types `BadgeComponent` and
+  `BadgeConfig` of that feature, which no document named: they are internal; for a badge,
+  use `createBadge` from `material`. `LabelManager`, the type of `LabelComponent`'s `label`,
+  was only in the nested path and is now exported from `material/core/compose`.
+- **Progress: `canvas`, `resize`, `track`, `indicator` and `buffer` are no longer on
+  `ProgressComponent`.** They named how the indicator is drawn (one canvas; `track`,
+  `indicator` and `buffer` were that same canvas under the names of an older SVG), which
+  tied the public type to one way of drawing it. The objects are unchanged at run time;
+  the type no longer promises them, and how the indicator is drawn may change in a later
+  release. Reading `progress.canvas` in TypeScript is now an error (TS2339). Migration:
+  for the canvas, `progress.element.querySelector('canvas')`; nothing replaces `resize()`,
+  as the component observes its own size; `setBuffer()` and `getBuffer()`, the buffer's
+  value, are unchanged.
+
+### Added
+
+- **Every `material/components/<name>` entry exports its factory both ways:** as the default
+  export and by its name (`import createButton from 'material/components/button'` and
+  `import { createButton } from 'material/components/button'` are the same function, and the
+  same one the root exports). 21 entries had only the default and gain the name; `chips` and
+  `divider` had only the name and gain the default. Nothing is removed.
+
+### Changed
+
+- **An `<m-text-field type="hidden">` takes no space, before upgrade or after.** The upgraded
+  hidden field was an inline-block host taking a line box, with its `display: none` input inside;
+  it is now not rendered at all, as an element with the `hidden` attribute is not. Its value still
+  submits with its form and still reads from `value`. Every other type is unchanged.
+
+- **An upgraded `<m-switch>` is shorter under a tall line height than in the 3.0.0 prereleases.**
+  At a page's `font-size: 24px; line-height: 2` the upgraded switch is 52 × 56 → 52 × 48
+  unlabelled, and 65 → 56 tall with supporting text, so in a flex row centred on it the text
+  beside rises 4–4.5 px and what follows 8–9 px. At the default type nothing moves. Text beside
+  an unlabelled `<m-switch>` no longer moves when the element upgrades. Its pre-upgrade
+  baseline now matches the control's center; a supporting-text-only switch uses its text
+  baseline. The upgraded switch host uses the control's box directly, so 12px or 24px
+  surrounding text with line-height 1 or 2 cannot add an extra host line box. Inline and
+  baseline/center flex layouts are checked in both text directions.
+- **A list row takes the expressive shape.** A row is 4 px at rest, 16 px on the list's outer corners, 12 px hovered, and 16 px focused, pressed or selected. With the default colours nothing changes at rest on screen: the row and the list are both the surface colour. Hover, focus and press look different, and rows given their own background show the corners. Set `--mtrl-list-item-shape`, `--mtrl-list-item-shape-outer`, `--mtrl-list-item-shape-hover` and `--mtrl-list-item-shape-active` to `0` on the list, on any ancestor, or on the `<m-list>` element for square rows. M3 Lists specs: "Unselected corner radius: 4dp inner, 16dp outer" and "Selected corner radius: 16dp".
+- **The list's container is rounded, 16 px, by the same property as the rows' outer corners** (`--mtrl-list-item-shape-outer`). It is visible at rest on a list placed over a background that is not the surface colour. Set `--mtrl-list-item-shape-outer` to `0` on the list, on any ancestor, or on the `<m-list>` element to square the container and the rows' outer corners. M3 Lists specs, read 2026-10-03 (https://m3.material.io/components/lists/specs): "An expressive list has a segmented style and round corners". That page gives the item's corners and no value for the container.
+- **The package's README on npm is a short one.** `npm-readme.md` is packed as the package's
+  `README.md` (install, one example, the component list, and links to md3.io); the full
+  README stays on GitHub. Nothing in the API changes.
+- **The slider's label takes the Body Large role, and a labelled horizontal slider is 4px
+  taller (FLO-587).** The label on a slider is this library's — the specification puts no label
+  on a slider — so the form controls' label role decides, as it does for the checkbox, radio
+  and switch labels: the label's text is now 16px on a 24px line (was 18px on an inherited 20px
+  line). A horizontal slider with a label is 4px taller: 72 → 76px at XS and S, 76 → 80 at M,
+  92 → 96 at L, 132 → 136 at XL; a vertical slider's height is unchanged. A layout that
+  reserved the old height gains 4px per labelled slider.
+- **The element authoring API is experimental.** `defineElement`, `ElementSpec`,
+  `registerStyles`, `hasStyles` and `SHADOW_BASE_STYLES` (from `material/elements`), the API
+  for writing custom elements of your own on material's machinery, are tagged
+  `@experimental` in their TSDoc and are outside semantic versioning in 3.x: they may change
+  in a minor release. Nothing about them changes in this release. The elements material
+  defines (`<m-button>`, `<m-text-field>` and the rest), their attributes, properties and
+  events, and the `define…()` functions are covered by semantic versioning as before. If
+  you build your own elements on this API, pin the minor version (`~3.0.0`).
+- **Slider: the `components` bag is internal.** The slider's controller reads an older
+  `components` object as a fallback for its elements; nothing in the library fills it, the
+  public `SliderComponent` never had it, and it is now marked internal and outside the
+  public contract: it may go in any release. Use the slider's own API (`setValue()`,
+  `getValue()` and the rest of `SliderComponent`) and `slider.element`.
+- **Tabs: `tab.badge` may be `undefined` until the badge is shown.** The type always allowed
+  it (`badge?: BadgeComponent`); it is now the documented contract, on `tab.badge` and on
+  `getBadgeComponent()`: a tab creates its badge no later than when it shows it, so a later
+  release can create it only then. Nothing changes at run time in this release: the badge
+  still exists from the first `setBadge()`, or from creation with the `badge` option. Use
+  `setBadge()`, `getBadge()`, `showBadge()` and `hideBadge()`, which work whether the badge
+  exists yet or not, and check `tab.badge` for `undefined` before reading it.
+- **A short chip with a secondary action is wider, by the specification.** Material 3, Chips:
+  "Secondary actions (such as a trailing icon button for Remove) must have a 48x48dp
+  interaction target that doesn't interfere with the chip's primary action (such as Edit or
+  Drag). To achieve this, apply a minimum width of 88dp to the chip, or 42dp to the label
+  text." A chip with a remove or trailing button is therefore at least 88px wide, its label
+  at least 42px: the last 48px of the chip are the secondary action's target, by the
+  specification, and the chip's own action owns the rest, at least 40px. An input chip
+  labelled "Label" is 88px (was 80.05) and one labelled "OK" 88px (was 64.5); a filter chip,
+  whose action starts 16px in, measures 92px (was 84.05 for "Label" and 68.5 for "OK"). A
+  chip whose label already filled the 88px floor is unchanged.
+- **An extra-small button's space between its icon and its label is 4px.** It was 8px. Material 3's token `md.comp.button.xsmall.icon-label-space` is 4, and Compose's `ButtonDefaults.ExtraSmallIconSpacing` is 4.
+- **An unsized select is 280px wide, as an unsized text field is.** `createSelect()` made a
+  select that took its container's whole width (200px in a 200px container, 400px in a
+  400px one), where the text field, on both paths, and `<m-select>` are 280px whatever holds
+  them. The factory's select now sizes as they do. Migration: to keep a select filling its
+  container, give it the width: `select.element.style.width = '100%'` or the rule
+  `.mtrl-select { width: 100%; }`; for the element, `m-select { width: 100%; }`. There is
+  no option for it.
 
 ### Fixed
 
@@ -1381,110 +1495,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   field does not watch for either. Also fixed, in the light DOM too: **right to left, a
   field with both a leading and a trailing icon** padded its text 16px on the leading icon's
   side, under the icon; it is 52px on both.
-- **Text field: with reduced motion, the filled field's focus indicator no longer fades
-  (FLO-299).** Its 0.2s transition was not in the field's reduced-motion rule, where the
-  label, the outline, the icons and the affixes are. It also runs on the motion tokens now
-  (`duration-short4`, `easing-standard`: the same 0.2s, on the standard curve, where it was the
-  browser's `ease`).
-- **Text field, right to left: a compact filled field with a leading icon keeps its compact
-  padding (FLO-299).** The right-to-left rule beside an icon set all four sides, so the
-  field took the default density's top and bottom padding and its text sat 2.5px low.
-- **A filled multiline text field's first line no longer runs under its floated label
-  (FLO-299).** The textarea padded its text 12px from the top whatever the variant, and the
-  floated label's box ends 19.2px down: they overlapped by 7.2px (13px at compact density).
-  The first line now starts under the label, at the single-line field's text (the values are
-  under "Changed"). `<m-text-field type="multiline">` reserves the same first line before it
-  upgrades, so a sibling on its line does not move when the element is defined.
-- **Text field: beside an icon, a prefix or a suffix no longer leaves the value under the icon
-  (FLO-299).** The input's padding was sized from the affix alone. With a leading icon and a
-  prefix the value began 25.5px in, under the icon (12 to 36px) and before the prefix (44px);
-  a trailing icon with a suffix did the same at the other end; right to left, the padding was
-  on the wrong side. The text now starts 2px after the prefix and ends 2px before the suffix,
-  whatever stands outside them, in both variants, both densities and both directions
-  (measured: with the icon, the text starts at 63.5px, after a 9.5px prefix at 52px). The
-  script no longer writes `padding-left` and `padding-right` on the input or `left` on the
-  label. It writes each affix's measured width on the field's root, as
-  `--mtrl-text-field-prefix-width` and `--mtrl-text-field-suffix-width`, and the stylesheet
-  adds the icon's inset. The insets themselves, the gap to the text and the label, which no
-  longer follows the prefix, are under "Changed".
-- **A top-layer dialog that refuses Escape stays open, however often it is pressed
-  (FLO-556).** With `closeOnEscape: false` the third Escape closed it; with a `beforeclose`
-  listener that refused, the third Escape made the browser close the `<dialog>` while
-  `isOpen()` stayed true and no `close` was emitted (measured in Chromium, Firefox and
-  WebKit: the browser lets a page refuse `cancel` twice in a row and forces the third). Escape
-  is now a key press the dialog prevents, so no `cancel` is sent. And when the browser does
-  close the `<dialog>` itself, the dialog's state follows: `isOpen()` is false and `close` is
-  emitted, without `beforeclose`. The defect is also in 0.10.x; the fix is in material 3.0.0.
-- **Escape with a menu open inside a default-layer dialog closes the menu only (FLO-548).** It
-  closed the dialog as well, under the menu: the dialog's listener ran before the menu's.
-- **Chips: a chip destroyed while it has focus hands focus to its neighbour (FLO-542).**
-  `chip.destroy()` called directly on a focused chip of a set left focus on the page, so a
-  keyboard user lost their place. Focus now moves to the chip that takes its place, or to
-  the one before when it was the last, as it does when the set removes a chip.
-- **A dialog destroyed right after `open()` no longer locks the page's scroll (FLO-548).** The
-  default-layer dialog shows its surface 10 ms after `open()`. `destroy()` in that window left
-  the timer running: it then set `overflow: hidden` on the body for a dialog that was gone,
-  with nothing left to undo it. `destroy()` now cancels what `open()` and
-  `close()` left pending, and removes the dialog's document listeners.
-- **Snackbar: a queued snackbar dropped from the queue can be shown again (FLO-548).** One
-  waiting behind another and then dropped by a `queueBehavior: 'replace'` snackbar or by
-  `clearSnackbars()` kept `state` `"visible"` without ever being shown, and `show()` on it
-  did nothing from then on. It is now hidden when dropped. The defect is also in 0.10.x; the
-  fix is in material 3.0.0.
-- **Date picker: `open()` called from a click outside a docked picker opens it (FLO-548).**
-  The same click then reached the picker's outside-click listener and closed it at once. A
-  click in the task that called `open()` no longer closes it. The defect is also in 0.10.x;
-  the fix is in material 3.0.0.
-- **Snackbar: destroying the one on screen lets the next take its turn (FLO-548).**
-  `destroy()` on the visible snackbar left the queue waiting for it, so snackbars shown behind
-  it stayed queued until some other snackbar was shown. The queue now moves on, after its
-  usual gap.
-- **Accessibility: scrolling from script honours reduced motion in the chips, the tabs and the
-  search (FLO-553).** The chip set's `scrollToChip`, the tabs' scroll buttons and the search's
-  arrow keys through the suggestions each asked for a smooth scroll explicitly, which overrides
-  the stylesheet, so they glided with the reduced-motion preference on. They now name no
-  behaviour: each scroller scrolls smoothly from its stylesheet (`scroll-behavior: smooth`,
-  new on the tabs' scroller and the suggestion list), and jumps at once under reduced motion.
-  A script of yours that scrolls the tabs' scroller or the suggestion list now scrolls it
-  smoothly too.
-- **A chip destroyed on its own leaves its chip set (FLO-533).** Calling `destroy()` on a chip, rather than removing it through the set, used to leave that chip in the set. The set could then count it as selected beside another chip, including two selected chips in a single-select set, and the arrow keys stopped on it. The set now drops that chip. Dropping it does not emit `remove` or `change`. Removing a chip through the set is unchanged.
-- Checkboxes keep their check icon, and pre-upgrade element styles appear, when one process uses multiple documents (FLO-528).
-- A multiline text field reserves its textarea box before it upgrades, so the field and the line beside it no longer jump when the element is defined (FLO-425).
-- **Single-select chip sets keep one selected chip (FLO-518).** Adding a chip
-  with `selected: true` selects it and deselects the previous chip, including
-  initial factory config and `<m-chip selected>` declarations. The last selected
-  chip wins; `add.value` reports the resulting selection. Programmatic additions
-  emit `add` and no `change`. Selecting a chip through its `setSelected(true)`
-  also replaces the previous selection silently. A chip the set has removed or
-  destroyed no longer clears that selection: destroying the chip drops the set's
-  hook. The public chip factories ignore a caller-supplied `onSelected`.
-- **Progress indicators size their canvas when they are created (FLO-368).** A linear canvas is as tall as its track (4dp, 8dp thick, 10dp wavy at the default thickness) and fills its container; a circular one is its token size (40dp, 48dp wavy, or the configured size from 24dp to 240dp). The size comes from those tokens, not from measuring the element, so the canvas no longer reserves the default 300×150 until it upgrades.
-- **Sliders, tabs and loading indicators take their first position from configuration (FLO-369).** A slider's track, stops and inset icon are a percentage of the value, so they no longer wait on a measurement that is 0 before layout. A tab's indicator anchors to the active label, or to the tab itself when it is secondary. A loading indicator's canvas is its token size (48dp, or the configured size) when it is created.
-- Element upgrade removes leftover direct declarative shadow templates, including when definitions precede parsing; those templates no longer count as label content (FLO-366).
-- Elements construct on a server DOM (linkedom) without browser-only APIs (FLO-362).
-- Element teardown finishes cleanup after an individual cleanup throws (FLO-363).
-- Text field and select placement cancel and reset their shared measurement timer when the
-  last pending field is destroyed, allowing the next lifecycle to schedule again (FLO-363).
-- Prefilled multiline text fields render in SSR, including inside another custom element (FLO-416).
-- `consumer:check` no longer fails on the open split button's screenshot pair. One of the two
-  captures sometimes blended the menu's shadow a few levels lighter where it falls on the buttons
-  (26 to 29 pixels, either build). The comparison fixture now keeps an open menu on a compositor
-  layer of its own, and a pair that differs in pixels only is captured once more before it counts.
-- `ssr:check` no longer depends on whether the browser has applied `:hover` at the page origin
-  when it captures. The fixture sat there, under a new page's resting pointer, and CI captured a
-  button group hovered before the upgrade and not after. The stage now starts 32px down, and both
-  passes assert that no control of the fixture is under the pointer.
 - `preupgrade:check` fails a row when a sibling moves more than 0.5px on either axis,
   regardless of its layout-shift score. Known movements name the sibling, axis and signed
   measured value with a 0.5px tolerance; other movements in that row still fail. Filtered
   runs enforce the same checks, and a disappeared defect requires removing its exception.
   Consumer-typography switch cases also reject host movement or resizing over 0.5px.
-- SSR parity now requires exact Chromium matches for progress, sliders, tabs and loading
-  indicators after FLO-368/FLO-369; their 22 resolved exceptions are removed (FLO-363).
-- Element CSS file and export checks run after the CI build, so unit tests pass without `dist/` (FLO-365).
-- SSR security reparsing runs in the Chromium CI job while unit tests remain browser-free;
-  SSR parity and benchmark tooling load the source renderer and source CSS registry (FLO-363).
-- Source SSR reads the element CSS registry without resolving built package exports; source tests register real Sass output without mocking the CSS import (FLO-363).
 
 ### Security
 
@@ -1497,7 +1512,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 The first prerelease of 3.0.0, on the npm `next` tag (`npm install material@next`).
 `npm install material` gives `material` 1.0.4, the older 1.x library that lived under this
 name (also the `legacy` tag), until 3.0.0 is released. Published without notes: its changes
-are described in the `[3.0.0-next.1]` section above.
+are described under Unreleased.
 
 ## [0.10.6] - 2026-10-02
 
