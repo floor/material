@@ -131,9 +131,11 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/abstract/_mixins.scss).
     // The text field's hidden icon parts: `[hidden]` on the leading and
     // trailing parts (styles/components/_text-field.scss).
+    // A FAB menu at bottom-start anchors its list, its items and its FAB to
+    // the inline start (styles/components/_fab-menu.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("1b2f811284feecad2b2f6ff3ea04f2dff887c9f01fe3f5d4c77ce2dfe4896069");
-    expect(css.length).toBe(527332);
+      .toBe("9f16422c0c6fd595b83dd7bf321427f15241b121f0bd20564cecc6c0a949a8ea");
+    expect(css.length).toBe(527626);
   });
 
   test("today's sheets still resolve to the fixture", () => {

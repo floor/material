@@ -8408,6 +8408,144 @@ try {
     check("FAB menu: the close corner lerps to 28px, colours stay in range, items reveal as end-anchored pills with overshoot");
   }
 
+  // A placed FAB menu opens into the page. The list, the items and the FAB were
+  // anchored to the inline end, so at bottom-start they crossed the start edge,
+  // left to right and right to left. bottom-end already opens inward.
+  {
+    const placements = ["bottom-end", "bottom-start"] as const;
+    const failures: string[] = [];
+    const rows: string[] = [];
+    const note = (name: string, problems: string[]): void => {
+      const line = problems.length ? `FAIL ${name}: ${problems.join("; ")}` : `ok ${name}`;
+      rows.push(line);
+      console.log(`  ${line}`);
+      if (problems.length) failures.push(line);
+    };
+    const three = `<m-fab-menu-item value="reply" icon='${ICON}'>Reply</m-fab-menu-item><m-fab-menu-item value="forward">Forward</m-fab-menu-item><m-fab-menu-item value="archive">Archive</m-fab-menu-item>`;
+    const placed = async (dir: "ltr" | "rtl", form: "element" | "factory", placement: "bottom-end" | "bottom-start", size: "default" | "large"): Promise<{
+      view: { width: number; height: number };
+      fab: { left: number; right: number; top: number; bottom: number; width: number };
+      boxes: { text: string; left: number; right: number; top: number; bottom: number; width: number; height: number }[];
+      motion?: { closed: { left: number; right: number; width: number }; opening: { left: number; right: number; width: number }[]; closing: { left: number; right: number; width: number }[] };
+    }> => {
+      const markup = form === "element"
+        ? `<div dir="${dir}"><m-fab-menu id="placed" placement="${placement}" presentation="list" size="${size}" icon='${ICON}' aria-label="Compose">${three}</m-fab-menu></div>`
+        : `<div dir="${dir}" id="placed-slot"></div>`;
+      await fresh(page, markup);
+      return page.evaluate(async ({ form, placement, size, icon, motion }) => {
+        type Made = { element: HTMLElement; open: () => void; close: () => void };
+        type Host = HTMLElement & { show: () => void; hide: () => void };
+        const w = window as unknown as Win & { mtrl: { createFabMenu: (config: object) => Made } };
+        const items = [
+          { id: "reply", text: "Reply", icon },
+          { id: "forward", text: "Forward" },
+          { id: "archive", text: "Archive" },
+        ];
+        let root: HTMLElement;
+        let open: () => void;
+        let close: () => void;
+        if (form === "factory") {
+          const made = w.mtrl.createFabMenu({ placement, presentation: "list", size, icon, ariaLabel: "Compose", items });
+          made.element.id = "placed";
+          document.getElementById("placed-slot")?.append(made.element);
+          root = made.element;
+          open = () => made.open();
+          close = () => made.close();
+        } else {
+          const host = document.getElementById("placed") as Host;
+          root = host.shadowRoot?.querySelector(".mtrl-fab-menu") as HTMLElement;
+          open = () => host.show();
+          close = () => host.hide();
+        }
+        const buttons = () => [...root.querySelectorAll<HTMLElement>(".mtrl-fab-menu__item")];
+        const fabOf = () => root.querySelector(".mtrl-fab-menu__fab") as HTMLElement;
+        const boxOf = (el: HTMLElement) => {
+          const box = el.getBoundingClientRect();
+          return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height };
+        };
+        const settle = async (): Promise<void> => {
+          for (const end = Date.now() + 2000; Date.now() < end;) {
+            for (const animation of root.getAnimations({ subtree: true })) animation.finish();
+            if (buttons().length === 3 && buttons().every((item) => item.getBoundingClientRect().width > 40)) return;
+            await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+          }
+        };
+        const seek = async (): Promise<{ left: number; right: number; width: number }[]> => {
+          await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+          const animations = root.getAnimations({ subtree: true });
+          const frames: { left: number; right: number; width: number }[] = [];
+          for (let t = 0; t <= 700; t += 50) {
+            for (const animation of animations) { animation.pause(); animation.currentTime = t; }
+            const box = fabOf().getBoundingClientRect();
+            frames.push({ left: box.left, right: box.right, width: box.width });
+          }
+          for (const animation of animations) animation.finish();
+          return frames;
+        };
+        if (!motion) {
+          open();
+          await settle();
+          const fab = boxOf(fabOf());
+          return {
+            view: { width: innerWidth, height: innerHeight },
+            fab: { left: fab.left, right: fab.right, top: fab.top, bottom: fab.bottom, width: fab.width },
+            boxes: buttons().map((item) => ({ text: (item.textContent ?? "").trim(), ...boxOf(item) })),
+          };
+        }
+        const closed = boxOf(fabOf());
+        open();
+        const opening = await seek();
+        close();
+        const closing = await seek();
+        return {
+          view: { width: innerWidth, height: innerHeight },
+          fab: { left: closed.left, right: closed.right, top: closed.top, bottom: closed.bottom, width: closed.width },
+          boxes: [],
+          motion: { closed: { left: closed.left, right: closed.right, width: closed.width }, opening, closing },
+        };
+      }, { form, placement, size, icon: ICON, motion: size === "large" });
+    };
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const form of ["element", "factory"] as const) {
+        for (const placement of placements) {
+          const measured = await placed(dir, form, placement, "default");
+          const problems: string[] = [];
+          const outerIsLeft = (dir === "ltr" && placement === "bottom-start") || (dir === "rtl" && placement === "bottom-end");
+          if (measured.boxes.length !== 3) problems.push(`expected 3 items, got ${measured.boxes.length}`);
+          for (const box of measured.boxes) {
+            const outside = box.left < -0.5 || box.right > measured.view.width + 0.5 || box.top < -0.5 || box.bottom > measured.view.height + 0.5;
+            if (outside) problems.push(`${box.text} ${box.left.toFixed(1)},${box.top.toFixed(1)} ${box.width.toFixed(1)}×${box.height.toFixed(1)} is outside ${measured.view.width}×${measured.view.height}`);
+            if (outerIsLeft && box.left < measured.fab.left - 0.5) problems.push(`${box.text} left ${box.left.toFixed(1)} is left of the FAB ${measured.fab.left.toFixed(1)}`);
+            if (!outerIsLeft && box.right > measured.fab.right + 0.5) problems.push(`${box.text} right ${box.right.toFixed(1)} is right of the FAB ${measured.fab.right.toFixed(1)}`);
+          }
+          note(`FAB menu ${placement} (${form}, ${dir})`, problems);
+        }
+      }
+    }
+    for (const dir of ["ltr", "rtl"] as const) {
+      for (const form of ["element", "factory"] as const) {
+        const measured = await placed(dir, form, "bottom-start", "large");
+        const problems: string[] = [];
+        const motion = measured.motion;
+        if (!motion) problems.push("no motion sample");
+        else {
+          const edge = dir === "ltr" ? "left" : "right";
+          const drift = (frames: { left: number; right: number }[]) => Math.max(...frames.map((frame) => Math.abs(frame[edge] - motion.closed[edge])));
+          const widths = [...motion.opening, ...motion.closing].map((frame) => frame.width);
+          const openingDrift = drift(motion.opening);
+          const closingDrift = drift(motion.closing);
+          if (openingDrift > 0.5) problems.push(`opening, the ${edge} edge moves ${openingDrift.toFixed(1)}px from ${motion.closed[edge].toFixed(1)}`);
+          if (closingDrift > 0.5) problems.push(`closing, the ${edge} edge moves ${closingDrift.toFixed(1)}px from ${motion.closed[edge].toFixed(1)}`);
+          if (Math.max(...widths) - Math.min(...widths) < 20) problems.push(`the FAB did not shrink: width ${Math.min(...widths).toFixed(1)}..${Math.max(...widths).toFixed(1)}`);
+          console.log(`  motion bottom-start (${form}, ${dir}): closed ${edge} ${motion.closed[edge].toFixed(1)} width ${motion.closed.width.toFixed(1)}; opening drift ${openingDrift.toFixed(2)}px; closing drift ${closingDrift.toFixed(2)}px; width ${Math.min(...widths).toFixed(1)}..${Math.max(...widths).toFixed(1)}`);
+        }
+        note(`FAB menu bottom-start motion (${form}, ${dir})`, problems);
+      }
+    }
+    assert.equal(failures.length, 0, rows.join("\n"));
+    check("FAB menu: bottom-end and bottom-start open into the page, in both directions, factory and element");
+  }
+
   // ---------------------------------------------------------------- chips right to left (FLO-343 follow-up)
   // <m-chips> renders its chips in a shadow root: a `dir="rtl"` above the host
   // reverses Left and Right there too, which closest("[dir]") did not see.
