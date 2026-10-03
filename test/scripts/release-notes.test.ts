@@ -130,7 +130,11 @@ describe("release body size", () => {
     "The history before 3.0.0 was developed in `floor/mtrl`; `#numbers` in commit subjects before 3.0.0 refer to " +
     "[pull requests there](https://github.com/floor/mtrl/pulls?q=is%3Apr+is%3Aclosed).\n";
 
-  test("real release notes over the cap end at the last complete subsection and link to the requested tag", async () => {
+  const omitted = (names: string, version = "3.0.0"): string =>
+    names + " are not shown here: GitHub limits a release to 125,000 characters.\n\n" +
+    `Full release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v${version}/CHANGELOG.md)` + legacyFooter(version);
+
+  test("real release notes over the cap name omitted entries and keep the full footer", async () => {
     // A copy of the 3.0.0 notes, with internal ticket references removed.
     const section = changelogSection(await fixture.text(), "3.0.0");
     expect(section.length).toBeGreaterThan(130_000);
@@ -140,7 +144,9 @@ describe("release body size", () => {
       const link = `Full release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v${version}/CHANGELOG.md)\n`;
       const cut = section.indexOf("\n### Fixed");
       expect(cut).toBeGreaterThan(100_000);
-      expect(output).toBe(section.slice(0, cut).trimEnd() + "\n\n" + link);
+      const count = section.slice(cut).match(/^- /gm)!.length;
+      const closing = omitted(`The fixes (\`### Fixed\`, ${count} entries)`, version);
+      expect(output).toBe(section.slice(0, cut).trimEnd() + "\n\n" + closing);
       const security = section.slice(section.indexOf("### Security"), section.indexOf("### Migrating"));
       expect(security).toContain("(#53)");
       expect(output).toContain(security);
@@ -148,7 +154,7 @@ describe("release body size", () => {
         "Security", "Migrating from 0.10.x", "Changed (breaking)", "Removed", "Added", "Changed",
       ]);
       expect(output.length).toBeLessThan(125_000);
-      expect(output.trimEnd().split("\n").at(-1)).toBe(link.trimEnd());
+      expect(output).toEndWith(legacyFooter(version));
       // The omitted suffix starts at a heading; including its entire subsection is too large.
       expect(section.slice(cut).trimStart()).toStartWith("### Fixed\n");
       expect((section + "\n\n" + link).length).toBeGreaterThanOrEqual(125_000);
@@ -163,19 +169,20 @@ describe("release body size", () => {
     expect(releaseNotes(`## [3.0.0]\n\n${under}\n`, "3.0.0")).toBe(expected);
   });
 
-  test("the cap is strict and includes the footer, retaining the full section when the shorter link fits", () => {
-    const heading = "### Added\n\n";
-    const section = heading + "x".repeat(125_000 - legacyFooter("3.0.0").length - heading.length);
+  test("the cap includes the omission notice, tag link and normal footer", () => {
+    const kept = "### Security\n\n- Upgrade.";
+    const heading = "\n\n### Added\n\n- ";
+    const section = kept + heading + "x".repeat(125_000 - legacyFooter("3.0.0").length - kept.length - heading.length);
     expect((section + legacyFooter("3.0.0")).length).toBe(125_000);
     const output = releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0");
     expect(output.length).toBeLessThan(125_000);
-    expect(output).toBe(section + "\n\nFull release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md)\n");
+    expect(output).toBe(kept + "\n\n" + omitted("The subsections (`### Added`, 1 entry)"));
   });
 
   test("an oversized subsection falls back to the link, never a heading inside a fenced example", () => {
     const section = "### Added\n\n" + "x".repeat(120_000) + "\n\n~~~markdown\n### Example heading\n" + "y".repeat(10_000) + "\n~~~";
     const output = releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0");
-    expect(output).toBe("Full release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md)\n");
+    expect(output).toBe(omitted("The subsections (`### Added`, 0 entries)"));
   });
 
   test("Security stays whole when it and the summary exceed the cap, then the notes cut after it", () => {
@@ -183,7 +190,7 @@ describe("release body size", () => {
     const security = "### Security\n\n- " + "x".repeat(125_000) + "\n\n#### Mitigation\n\n- Upgrade to the fixed release.";
     const section = summary + security + "\n\n### Changed\n\n- A small change.";
     const output = releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0");
-    expect(output).toBe(summary + security + "\n\nFull release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md)\n");
+    expect(output).toBe(summary + security + "\n\n" + omitted("The subsections (`### Changed`, 1 entry)"));
     expect(output.length).toBeGreaterThan(125_000);
   });
 
@@ -191,14 +198,23 @@ describe("release body size", () => {
     const kept = "Summary.\n\n### Security\n\n- Upgrade.";
     const section = kept + "\n\n### Changed\n\n- A small change.\n\n#### Details\n\n" + "x".repeat(125_000);
     expect(releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0")).toBe(
-      kept + "\n\nFull release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md)\n",
+      kept + "\n\n" + omitted("The subsections (`### Changed`, 1 entry)"),
     );
   });
 
   test("Security at the end cannot be dropped to satisfy the cap", () => {
     const section = "Summary.\n\n### Changed\n\n" + "x".repeat(125_000) + "\n\n### Security\n\n- Upgrade.";
     expect(releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0")).toBe(
-      section + "\n\nFull release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md)\n",
+      section + "\n\nFull release notes: [CHANGELOG.md](https://github.com/floor/material/blob/v3.0.0/CHANGELOG.md)" + legacyFooter("3.0.0"),
     );
   });
+  test("multiple omissions count top-level bullets only, outside fenced examples", () => {
+    const kept = "Summary.\n\n### Security\n\n- Upgrade.";
+    const section = kept + "\n\n### Added\n\n- " + "x".repeat(125_000) +
+      "\n  - Nested detail.\n\n~~~md\n- Example bullet.\n### Example heading\n~~~\n\n### Fixed\n\n- One.\n- Two.";
+    expect(releaseNotes(`## [3.0.0]\n\n${section}\n`, "3.0.0")).toBe(
+      kept + "\n\n" + omitted("The subsections (`### Added`, 1 entry; `### Fixed`, 2 entries)"),
+    );
+  });
+
 });
