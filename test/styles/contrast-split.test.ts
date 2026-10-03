@@ -129,8 +129,8 @@ describe("explicit contrast levels are opt-in", () => {
     // The menu's submenu arrow is mirrored inside a shadow root
     // (styles/components/_menu.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("ee074dc7a6c392808149626561a876013f723aabf101cab5799d3643ec511448");
-    expect(css.length).toBe(527558);
+      .toBe("f5c94e5c99d194dc080dbbb155da299997ced487f56d6b6cfb0f5b133fb72290");
+    expect(css.length).toBe(526743);
   });
 
   test("today's sheets still resolve to the fixture", () => {
