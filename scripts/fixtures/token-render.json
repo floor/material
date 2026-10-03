@@ -160,10 +160,10 @@
  ],
  "list-selected": [
   [
-   "0:div.mtrl-list",
-   "16px 16px 16px 16px",
+   "0:div.mtrl-list.mtrl-list--segmented",
+   "0px 0px 0px 0px",
    "Roboto, sans-serif",
-   true,
+   false,
    true
   ],
   [
@@ -232,10 +232,10 @@
  ],
  "list-video": [
   [
-   "0:div.mtrl-list",
-   "16px 16px 16px 16px",
+   "0:div.mtrl-list.mtrl-list--standard",
+   "0px 0px 0px 0px",
    "Roboto, sans-serif",
-   true,
+   false,
    true
   ],
   [
@@ -247,16 +247,16 @@
   ],
   [
    "2:div.mtrl-list__item--one-line.mtrl-list__item",
-   "16px 16px 16px 16px",
+   "0px 0px 0px 0px",
    "Roboto, sans-serif",
-   true,
+   false,
    true
   ],
   [
    "3:button.mtrl-list__action",
-   "16px 16px 16px 16px",
+   "0px 0px 0px 0px",
    "Roboto, sans-serif",
-   true,
+   false,
    true
   ],
   [

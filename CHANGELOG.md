@@ -374,10 +374,12 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   longer needs to; code that relied on it still being true (two menus open at once for a
   moment, a toggle read just after a dismissal) now sees the closed state.
 
-- **List corners:** rows are 4px at rest, 16px at outer corners, 12px hovered and 16px
-  focused, pressed or selected; the container is 16px. For square rows and container, set
-  `--mtrl-list-item-shape`, `--mtrl-list-item-shape-outer`, `--mtrl-list-item-shape-hover`
-  and `--mtrl-list-item-shape-active` to `0` on the list, an ancestor or `<m-list>`.
+- **List styles:** for a 0.10.x app, the default is the baseline list: square rows and
+  state layers in every state, with no gap. Neither variant gives the list container a
+  background or a radius. To opt into rounded rows with their own colour and a 2px gap,
+  set `variant: 'segmented'` (`<m-list variant="segmented">`). This choice is also needed
+  by a 3.0.0-next.1 user who wants to keep rounded rows; its rounded list container is gone
+  in both variants. The four row-shape properties apply only to `segmented`.
 - **Switch and text-button layouts changed after next.1.** At `font-size: 24px; line-height: 2`,
   an upgraded unlabelled `<m-switch>` is 52 × 48px (was 52 × 56); with supporting text its
   height is 56px (was 65). Default typography is unchanged. A text button with an icon now
@@ -1049,6 +1051,17 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Added
 
+- **The list's `variant`: `'standard'` (the default) or `'segmented'`.** `createList({ variant })`,
+  with the type `ListVariant` and the constant `LIST_VARIANTS` (`STANDARD`, `SEGMENTED`) from
+  `material/components/list/constants` and `material/components/list`; an unknown value is the
+  default. `<m-list variant="segmented">` is the attribute, reflected by the `variant` property,
+  and the React, Vue, Svelte and Solid components take the same `variant` prop. The list's root
+  carries `mtrl-list--standard` or `mtrl-list--segmented`. Two new custom properties:
+  `--mtrl-list-segmented-gap` (2 px, the space between a segmented list's rows) and
+  `--mtrl-list-item-container-color`, the unselected row's colour in both variants (`surface`
+  by default in standard, `surface-container` in segmented); set it to `transparent` for rows
+  without their own colour. Like the four shape properties, the list reads them and declares
+  none, so set them on the list, on any ancestor, or on the `<m-list>` element.
 - **`isOpen()` on the snackbar and the date picker**, as on every other overlay.
 - **Split button `setItems(items)` and `getItems()`.** `setItems` replaces the menu's
   items and returns the split button; `getItems` returns them. A split button created without
@@ -1120,6 +1133,21 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **Lists are the baseline list by default; the expressive style is `variant: 'segmented'`.**
+  A list has two styles, as on m3.material.io ("The standard and segmented styles are a visual
+  choice, and don't affect a list's behavior"). `standard`, the default, has square rows and
+  square state layers in every state, and no gap. `segmented` is the expressive list, as
+  Compose's `SegmentedListItem`: each row paints its own colour (`surface-container`;
+  `secondary-container` when selected) and its own shape (4 px where it meets another row,
+  16 px on the outer corners of the first and the last row, 12 px hovered, 16 px focused,
+  pressed or selected), with 2 px between rows. A divider or a subheader ends a group: the rows
+  beside it take their outer corners. A selected row is 16 px on every corner whatever its
+  place in the list. The four shape properties (`--mtrl-list-item-shape`,
+  `--mtrl-list-item-shape-outer`, `--mtrl-list-item-shape-hover`,
+  `--mtrl-list-item-shape-active`) apply to a segmented list; a standard list does not read them.
+  **The rounded list container of 3.0.0-next.1 is gone**, in both variants: the list has no
+  background and no radius of its own, so `--mtrl-list-item-shape-outer` rounds rows only, and
+  a list given a height scrolls in a square box.
 - **Text field: the spacing follows the M3 measurements.** A field's layout shifts
   by the amounts below; nothing in the API changes. Sources: the measurement tables on
   m3.material.io's text fields page, and Compose's `TextFieldImpl.kt` for the positions the
@@ -1207,8 +1235,6 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   baseline. The upgraded switch host uses the control's box directly, so 12px or 24px
   surrounding text with line-height 1 or 2 cannot add an extra host line box. Inline and
   baseline/center flex layouts are checked in both text directions.
-- **A list row takes the expressive shape.** A row is 4 px at rest, 16 px on the list's outer corners, 12 px hovered, and 16 px focused, pressed or selected. With the default colours nothing changes at rest on screen: the row and the list are both the surface colour. Hover, focus and press look different, and rows given their own background show the corners. Set `--mtrl-list-item-shape`, `--mtrl-list-item-shape-outer`, `--mtrl-list-item-shape-hover` and `--mtrl-list-item-shape-active` to `0` on the list, on any ancestor, or on the `<m-list>` element for square rows. M3 Lists specs: "Unselected corner radius: 4dp inner, 16dp outer" and "Selected corner radius: 16dp".
-- **The list's container is rounded, 16 px, by the same property as the rows' outer corners** (`--mtrl-list-item-shape-outer`). It is visible at rest on a list placed over a background that is not the surface colour. Set `--mtrl-list-item-shape-outer` to `0` on the list, on any ancestor, or on the `<m-list>` element to square the container and the rows' outer corners. M3 Lists specs, read 2026-10-03 (https://m3.material.io/components/lists/specs): "An expressive list has a segmented style and round corners". That page gives the item's corners and no value for the container.
 - **The package's README on npm is a short one.** `npm-readme.md` is packed as the package's
   `README.md` (install, one example, the component list, and links to md3.io); the full
   README stays on GitHub. Nothing in the API changes.
@@ -1260,6 +1286,15 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A text field's leading or trailing icon with `hidden` is hidden (#60).** The parts' own
+  `display: flex` is an author rule, so it beat the user agent's `[hidden] { display: none }`
+  and the icon stayed displayed — 24×24 for a decorative icon, 40×40 for an interactive
+  trailing one — and the two parts now take the hidden state themselves; the padding the icon
+  reserved stays, as M3 has no hidden-icon state.
+- **A FAB menu at `bottom-start` opens its items into the page (#59).** The list, its
+  items and the FAB were anchored to the inline end, so at the start corner they
+  grew off the screen. They are now anchored to the inline start: left to right the
+  items open to the right, and right to left they open to the left.
 - **Text field: with reduced motion, the filled field's focus indicator no longer fades.** Its 0.2s transition was not in the field's reduced-motion rule, where the
   label, the outline, the icons and the affixes are. It also runs on the motion tokens now
   (`duration-short4`, `easing-standard`: the same 0.2s, on the standard curve, where it was the

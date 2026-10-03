@@ -119,9 +119,21 @@ test("3.0.0 includes every complete prerelease entry exactly once in its subsect
   };
   const stable = entriesBySubsection(changelogSection(changelog, "3.0.0"));
   const prerelease = entriesBySubsection(changelogSection(changelog, "3.0.0-next.1"));
+  const superseded = [
+    // Replaced by "Lists are the baseline list by default; the expressive style is `variant: 'segmented'`."
+    "A list row takes the expressive shape.",
+    // The same later entry removes the rounded container in both variants.
+    "The list's container is rounded, 16 px, by the same property as the rows' outer corners",
+  ];
+  for (const opening of superseded) {
+    const prefix = `- **${opening}**`;
+    expect((prerelease.get("Changed") ?? []).filter(entry => entry.startsWith(prefix))).toHaveLength(1);
+    expect([...stable.values()].flat().filter(entry => entry.includes(`**${opening}**`))).toHaveLength(0);
+  }
   expect([...prerelease.values()].flat().length).toBeGreaterThan(0);
   const missingOrRepeated = [...prerelease].flatMap(([subsection, entries]) =>
     entries.flatMap(entry => {
+      if (subsection === "Changed" && superseded.some(opening => entry.startsWith(`- **${opening}**`))) return [];
       const count = (stable.get(subsection) ?? []).filter(candidate => candidate === entry).length;
       return count === 1 ? [] : [{ subsection, entry, count }];
     }),
