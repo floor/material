@@ -161,9 +161,9 @@
  "list-selected": [
   [
    "0:div.mtrl-list",
-   "0px 0px 0px 0px",
+   "16px 16px 16px 16px",
    "Roboto, sans-serif",
-   false,
+   true,
    true
   ],
   [
@@ -175,16 +175,16 @@
   ],
   [
    "2:div.mtrl-list__item--one-line.mtrl-list__item",
-   "0px 0px 0px 0px",
+   "16px 16px 4px 4px",
    "Roboto, sans-serif",
-   false,
+   true,
    true
   ],
   [
    "3:button.mtrl-list__action",
-   "0px 0px 0px 0px",
+   "16px 16px 4px 4px",
    "Roboto, sans-serif",
-   false,
+   true,
    true
   ],
   [
@@ -233,9 +233,9 @@
  "list-video": [
   [
    "0:div.mtrl-list",
-   "0px 0px 0px 0px",
+   "16px 16px 16px 16px",
    "Roboto, sans-serif",
-   false,
+   true,
    true
   ],
   [
@@ -247,16 +247,16 @@
   ],
   [
    "2:div.mtrl-list__item--one-line.mtrl-list__item",
-   "0px 0px 0px 0px",
+   "16px 16px 16px 16px",
    "Roboto, sans-serif",
-   false,
+   true,
    true
   ],
   [
    "3:button.mtrl-list__action",
-   "0px 0px 0px 0px",
+   "16px 16px 16px 16px",
    "Roboto, sans-serif",
-   false,
+   true,
    true
   ],
   [
