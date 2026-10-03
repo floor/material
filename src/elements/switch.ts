@@ -20,6 +20,9 @@ const switchSpec = {
   name: "switch",
   create: (config) => createSwitch(config as SwitchConfig),
   styles: ["switch"],
+  // The host must use the control's baseline and box, without an inline-block
+  // line box that grows when surrounding text has a taller line height.
+  hostStyles: ":host{display:inline-flex}",
   attributes: {
     checked: { type: "boolean", config: "checked", update: (c, v) => void c.setValue(!!v) },
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },
