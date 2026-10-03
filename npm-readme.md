@@ -6,15 +6,13 @@ Material Design 3 components for the web: as web components, as React, Vue, Svel
 
 [![npm version](https://img.shields.io/npm/v/material.svg)](https://www.npmjs.com/package/material)
 [![CI](https://github.com/floor/material/actions/workflows/ci.yml/badge.svg)](https://github.com/floor/material/actions/workflows/ci.yml)
-[![license](https://img.shields.io/npm/l/material.svg)](https://github.com/floor/material/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/material.svg?cacheSeconds=86400)](https://github.com/floor/material/blob/main/LICENSE)
 
 - **Material 3 Expressive.** Component sizes, shapes, colours and spring motion follow the Material 3 tokens.
 - **One implementation, every stack.** A button looks and behaves the same as an element, as a framework component and as a factory.
 - **Zero dependencies.** Installing `material` installs nothing else; the frameworks are optional peers.
 - **Server rendering.** Elements and framework components render to declarative shadow DOM on Node and Bun.
 - **Measured sizes.** A size budget per component, enforced on every pull request.
-
-Documentation, a live playground and examples in every framework: **[md3.io](https://md3.io)**.
 
 ## Install
 
