@@ -1235,6 +1235,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A text button with an icon no longer moves when it upgrades.** The pre-upgrade
+  stylesheet now reserves the same inline padding as the upgraded button at the
+  default size and every explicit size, keeping the button and following content in
+  place. It had moved 4 px at the default, `xs` and `s` sizes, and 24, 72 and 104 px
+  at `m`, `l` and `xl`, where the layout-shift scores were 0.017, 0.091 and 0.180.
 - **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"` (FLO-592).**
   The `touch-target` mixin anchored its `::after` with `inset-inline-start: 50%` and then moved it
   with the physical `translate(-50%, -50%)`. Right-to-left, the logical inset pins the box's right
