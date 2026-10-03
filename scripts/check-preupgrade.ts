@@ -116,6 +116,15 @@ const server = Bun.serve({
           .replace("</head>", '<link rel="stylesheet" href="/preupgrade/button.css"></head>'));
       case "/phase-b":
         return html(page(stage(`${phaseB}<m-button id="bare">Bare</m-button>`), true));
+      // A filled password field beside an empty one, both undefined: the value
+      // must not be painted, and the two boxes must be the same. A hidden field
+      // beside them, in a real form: no value, no box before upgrade or after,
+      // and the value it carries still reaches the form and reads back.
+      case "/secret":
+        return html(page(stage(
+          `<m-text-field id="password" type="password" label="Password" value="hunter2"></m-text-field><m-text-field id="empty-password" type="password" label="Password"></m-text-field><form id="secret-form"><m-text-field id="hidden" type="hidden" name="token" value="synthetic-token"></m-text-field><m-text-field id="hidden-upper" type="HIDDEN" name="token-upper" value="synthetic-token-2"></m-text-field><m-text-field id="hidden-title" type="Hidden" name="token-title" value="synthetic-token-3"></m-text-field></form>`,
+          { element: "text-field", variant: "type=password", html: "", width: 840 },
+        ), true));
       case "/elements.js":
         return js(elementsJs);
       case "/react.js":
@@ -515,6 +524,91 @@ try {
       assert(Math.abs(before.select - after.select) < 0.5, `select width ${before.select} before the script, ${after.select} after`);
       assert.equal(before.background, after.background, "text field background changed when the script ran");
       console.log(`Phase B, stylesheet loaded, script held back: field padding ${before.padding}, button ${before.button.toFixed(1)}px, select ${before.select.toFixed(1)}px, bare ${before.bare.toFixed(1)}px, header ${before.header.visibility} ${before.header.h.toFixed(1)}px (bare ${before.headerBare.visibility} ${before.headerBare.h.toFixed(1)}px), headline ${before.headline.visibility} ${before.headline.h.toFixed(1)}px order ${before.headline.order} (bare ${before.headlineBare.visibility} ${before.headlineBare.h.toFixed(1)}px order ${before.headlineBare.order}), fab ${before.fab.w.toFixed(1)}×${before.fab.h.toFixed(1)} (bare ${before.fabBare.w.toFixed(1)}×${before.fabBare.h.toFixed(1)})`);
+    } finally {
+      await p.close();
+    }
+  }
+
+  // A password or hidden field paints no value before upgrade (#53). The value
+  // attribute holds the password or the token in clear text, and the stylesheet
+  // paints it with `content: attr(value) ' '` for every type; both exceptions
+  // paint the space alone. The password keeps the empty field's line box, so
+  // the filled field's box — width, height and, as the field clips, the bottom
+  // edge the baseline sits on — is the empty one's, and nothing moves at
+  // upgrade. A hidden field takes no space at all, before upgrade or after (the
+  // upgraded host is not rendered), and stays form-associated: the same page
+  // proves the value reaches a real form and reads back.
+  if (!only.length || only.includes("text-field")) {
+    const p = await browser.newPage({ viewport: { width: 900, height: 800 } });
+    try {
+      await p.goto(`http://127.0.0.1:${server.port}/secret`);
+      await settle(p);
+      const fields = async () => p.evaluate(() => {
+        const box = (element: Element): Box => {
+          const r = element.getBoundingClientRect();
+          return { x: r.x, y: r.y, w: r.width, h: r.height };
+        };
+        const ids = ["password", "empty-password", "hidden", "hidden-upper", "hidden-title"];
+        const form = document.getElementById("secret-form") as HTMLFormElement | null;
+        const submitted = form ? new FormData(form) : null;
+        return Object.fromEntries(ids.map((id) => {
+          const host = document.getElementById(id)! as HTMLElement & { value?: string };
+          const input = host.shadowRoot?.querySelector("input") as HTMLInputElement | null;
+          return [id, {
+            content: getComputedStyle(host, "::before").content,
+            display: getComputedStyle(host).display,
+            box: box(host),
+            value: host.value,
+            submitted: submitted?.get(host.getAttribute("name") ?? "") ?? null,
+            input: input && { type: input.type, display: getComputedStyle(input).display, box: box(input) },
+          }];
+        }));
+      });
+      const before = await fields();
+      assert(!before.password.content.includes("hunter2"), `a password field paints its value before upgrade (::before content ${before.password.content})`);
+      assert.equal(before.password.content, before["empty-password"].content, "a filled password field paints a different ::before than an empty one");
+      const { box: filledBox } = before.password;
+      const { box: emptyBox } = before["empty-password"];
+      assert.equal(filledBox.w, emptyBox.w, "a filled password field is not as wide as an empty one");
+      assert.equal(filledBox.h, emptyBox.h, "a filled password field is not as tall as an empty one");
+      // Both are inline boxes on one line, so the same y is the same baseline.
+      assert.equal(filledBox.y, emptyBox.y, "a filled password field does not sit on the empty one's baseline");
+      assert(
+        Math.abs(emptyBox.x - (filledBox.x + filledBox.w)) < 0.5,
+        `a filled password field's box is not its own (${filledBox.w}px wide, the next field at ${emptyBox.x - filledBox.x})`,
+      );
+      for (const id of ["hidden", "hidden-upper", "hidden-title"]) {
+        assert(!before[id].content.includes("synthetic-token"), `a ${id.includes("upper") ? "HIDDEN" : "hidden"} field paints its value before upgrade (::before content ${before[id].content})`);
+        assert.equal(before[id].display, "none", `a ${id} field is rendered before upgrade (display ${before[id].display})`);
+        assert.equal(before[id].box.w, 0, `a ${id} field takes space before upgrade (${before[id].box.w}px wide)`);
+        assert.equal(before[id].box.h, 0, `a ${id} field takes space before upgrade (${before[id].box.h}px tall)`);
+        assert.equal(before[id].submitted, null, `a ${id} field submits before upgrade, and cannot: the element is not defined yet`);
+      }
+      // The upgraded element in the same page: no space either, and the value
+      // still reads and still reaches the form.
+      await p.addScriptTag({ url: "/elements.js", type: "module" });
+      await p.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
+      await p.waitForFunction(() => !document.querySelector("#stage :not(:defined)"));
+      await p.waitForTimeout(300);
+      await settle(p);
+      const after = await fields();
+      const tokens: Record<string, [string, string]> = {
+        hidden: ["token", "synthetic-token"],
+        "hidden-upper": ["token-upper", "synthetic-token-2"],
+        "hidden-title": ["token-title", "synthetic-token-3"],
+      };
+      for (const [id, [name, token]] of Object.entries(tokens)) {
+        assert.equal(after[id].display, "none", `the upgraded ${id} is rendered (display ${after[id].display})`);
+        assert.equal(after[id].box.w, 0, `the upgraded ${id} takes space (${after[id].box.w}px wide)`);
+        assert.equal(after[id].box.h, 0, `the upgraded ${id} takes space (${after[id].box.h}px tall)`);
+        assert.equal(after[id].input?.type, "hidden", `the upgraded ${id} is not a hidden input`);
+        assert.equal(after[id].input?.display, "none", `the upgraded ${id}'s input is rendered (${after[id].input?.display})`);
+        assert.equal(after[id].value, token, `the upgraded ${id}'s value does not read back (${after[id].value})`);
+        assert.equal(after[id].submitted, token, `the upgraded ${id} does not submit its value under ${name} (FormData has ${after[id].submitted})`);
+      }
+      console.log(`Password before upgrade: filled field ::before ${before.password.content}, box ${filledBox.w}×${filledBox.h} at (${filledBox.x}, ${filledBox.y}); empty field ::before ${before["empty-password"].content}, box ${emptyBox.w}×${emptyBox.h} at (${emptyBox.x}, ${emptyBox.y})`);
+      console.log(`Hidden before upgrade: filled field ::before ${before.hidden.content}, box ${before.hidden.box.w}×${before.hidden.box.h}, display ${before.hidden.display}; HIDDEN ::before ${before["hidden-upper"].content}, box ${before["hidden-upper"].box.w}×${before["hidden-upper"].box.h}, display ${before["hidden-upper"].display}; Hidden ::before ${before["hidden-title"].content}, box ${before["hidden-title"].box.w}×${before["hidden-title"].box.h}, display ${before["hidden-title"].display}`);
+      console.log(`Hidden after upgrade: box ${after.hidden.box.w}×${after.hidden.box.h}, display ${after.hidden.display}, input type ${after.hidden.input?.type} display ${after.hidden.input?.display} at ${after.hidden.input?.box.w}×${after.hidden.input?.box.h}; the form sees token=${after.hidden.submitted}, value reads ${after.hidden.value}`);
     } finally {
       await p.close();
     }
