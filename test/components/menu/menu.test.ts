@@ -2,7 +2,8 @@
 //
 // The real component in a JSDOM document: what it renders, how it is
 // labelled, where focus goes, and what the keyboard does.
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach, jest } from 'bun:test';
+import { advanceTimersByTime } from '../../utils/fake-clock';
 import { JSDOM } from 'jsdom';
 
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'http://localhost/', pretendToBeVisual: true });
@@ -19,13 +20,50 @@ g.CustomEvent = dom.window.CustomEvent;
 g.MutationObserver = dom.window.MutationObserver;
 g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
 g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0);
+// `tasks.requestAnimationFrame` goes through `window.requestAnimationFrame`,
+// and jsdom's own keeps a counter of outstanding frames per window that
+// outlives a test: a frame left outstanding when the real clock comes back
+// stops the 60 Hz interval jsdom runs, and every later frame is never run.
+// The same stub on the window puts frames on the test's own clock, run by an
+// advance like every other wait; its cancel clears the fake timeout.
+dom.window.requestAnimationFrame = g.requestAnimationFrame;
+dom.window.cancelAnimationFrame = (frame: number) => clearTimeout(frame);
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
 import createMenu from '../../../src/components/menu';
 
-const after = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+// The clock is the tests' own. The menu is placed 20 ms after open()
+// and focuses itself 100 ms after that; a close hides at 50 ms and leaves the
+// document 300 ms later. Waiting for those on the wall clock raced a busy
+// runner: the focus timer starts only when the placement timer has run, so a
+// late first timer moves everything after it.
+const after = async (ms: number): Promise<void> => {
+  advanceTimersByTime(ms);
+};
+
+/**
+ * The submenu feature is a chunk of its own, loaded on first use
+ * (features/loader.ts). The fake clock drives timers, not module loading, and
+ * under it a real turn cannot be waited for either: Bun's fake timers fake
+ * Date, performance, hrtime, `Bun.sleep`, and even a `setTimeout` captured
+ * before the clock went fake. So a test that opens a submenu awaits the same
+ * module its loader does.
+ *
+ * That returns once the module is evaluated, which is not the same as the
+ * loader having installed the feature: on a cold chunk -- nothing before this
+ * file has used it -- the loader's own reaction can still be pending on a turn
+ * the fake clock's waits never take, so the interaction would be queued and
+ * never replayed. This file opens a submenu only later: `opened` awaits the
+ * module, then the menu's own timers, and the case waits `after(400)` before
+ * it reads the element.
+ */
+const submenuFeatureLoaded = async (): Promise<void> => {
+  await import('../../../src/components/menu/features/submenu');
+};
+
 /** the menu positions and focuses itself on a timer */
 const opened = async (menu: { open: (e?: unknown) => unknown }) => {
+  await submenuFeatureLoaded();
   menu.open();
   await after(200);
 };
@@ -40,6 +78,7 @@ const items = [
 let opener: HTMLButtonElement;
 
 beforeEach(() => {
+  jest.useFakeTimers();
   document.body.innerHTML = '';
   opener = document.createElement('button');
   opener.textContent = 'Edit';
@@ -48,7 +87,13 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  document.body.innerHTML = '';
+  // The real clock comes back even if clearing the document throws: a fake
+  // clock left installed makes the next file's real waits time out
+  try {
+    document.body.innerHTML = '';
+  } finally {
+    jest.useRealTimers();
+  }
 });
 
 const menuItems = (menu: { element: HTMLElement }): HTMLElement[] =>

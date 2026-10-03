@@ -9,7 +9,8 @@
 // Each submenu now records the menu that owns it. These tests pin that, since
 // it is the only thing tying a portaled submenu back to its menu.
 
-import { describe, test, expect, beforeEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach, jest } from "bun:test";
+import { advanceTimersByTime } from "../../utils/fake-clock";
 import { JSDOM } from "jsdom";
 
 const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>", {
@@ -31,11 +32,62 @@ g.CustomEvent = dom.window.CustomEvent;
 g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
 g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0);
 g.cancelAnimationFrame = () => {};
+// `tasks.requestAnimationFrame` goes through `window.requestAnimationFrame`,
+// and jsdom's own keeps a counter of outstanding frames per window that
+// outlives a test: a frame left outstanding when the real clock comes back
+// stops the 60 Hz interval jsdom runs, and every later frame is never run.
+// The same stub on the window puts frames on the test's own clock, run by an
+// advance like every other wait; its cancel clears the fake timeout.
+dom.window.requestAnimationFrame = g.requestAnimationFrame;
+dom.window.cancelAnimationFrame = (frame: number) => clearTimeout(frame);
 g.ResizeObserver = class { observe() {} disconnect() {} unobserve() {} };
 
 import createMenu from "../../../src/components/menu";
 
-const after = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+// The clock is the tests' own. A menu is placed 20 ms after open()
+// and focuses itself 100 ms after that; a submenu opens on a frame and focuses
+// itself 300 ms later. Waiting for those on the wall clock raced a busy
+// runner: each timer starts only when the one before it has run, so a late
+// first timer moves everything after it.
+const after = async (ms: number): Promise<void> => {
+  advanceTimersByTime(ms);
+};
+
+/**
+ * The submenu feature is a chunk of its own, loaded on first use
+ * (features/loader.ts). The fake clock drives timers, not module loading, and
+ * under it a real turn cannot be waited for either: Bun's fake timers fake
+ * Date, performance, hrtime, `Bun.sleep`, and even a `setTimeout` captured
+ * before the clock went fake. So a test that opens a submenu awaits the same
+ * module its loader does.
+ *
+ * That returns once the module is evaluated, which is not the same as the
+ * loader having installed the feature: on a cold chunk -- nothing before this
+ * file has used it -- the loader's own reaction can still be pending on a turn
+ * the fake clock's waits never take, so the interaction would be queued and
+ * never replayed. A test acting on a submenu waits for the element itself
+ * (`until`), which covers the load and the menu's own timers alike.
+ */
+const submenuFeatureLoaded = async (): Promise<void> => {
+  await import("../../../src/components/menu/features/submenu");
+};
+
+/**
+ * Advances the clock in 10 ms steps until `ready()` is true, for 5 s of clock
+ * time at most, taking a real turn each step. The menu's own waits are on the
+ * fake clock and are exact; a cold submenu chunk's load is not, so each step
+ * also lets the loop turn -- where a pending import, and the loader's install
+ * queued behind it, settles. `setImmediate` stays real under Bun's fake timers.
+ * Wait on the element the test needs, not a duration.
+ */
+const until = async (what: string, ready: () => boolean, found: () => unknown = () => undefined): Promise<void> => {
+  for (let elapsed = 0; elapsed <= 5000; elapsed += 10) {
+    if (ready()) return;
+    await after(10);
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+  throw new Error(`still waiting after 5s for ${what}; found ${JSON.stringify(found())}`);
+};
 
 const ITEMS = [
   { id: "share", text: "Share", hasSubmenu: true, submenu: [{ id: "link", text: "Copy link" }] },
@@ -47,6 +99,7 @@ const openMenu = async () => {
   const opener = document.createElement("button");
   document.body.append(opener);
   const menu = createMenu({ opener, items: ITEMS } as never);
+  await submenuFeatureLoaded();
   menu.open();
   // The menu positions and focuses itself on a timer.
   await after(200);
@@ -58,7 +111,20 @@ const itemsOf = (menu: { element: HTMLElement }) =>
 
 const submenus = () => [...document.querySelectorAll(".mtrl-menu--submenu")] as HTMLElement[];
 
-beforeEach(() => { document.body.innerHTML = ""; });
+beforeEach(() => {
+  jest.useFakeTimers();
+  document.body.innerHTML = "";
+});
+
+afterEach(() => {
+  // The real clock comes back even if clearing the document throws: a fake
+  // clock left installed makes the next file's real waits time out
+  try {
+    document.body.innerHTML = "";
+  } finally {
+    jest.useRealTimers();
+  }
+});
 
 describe("a submenu knows which menu owns it", () => {
   test.each(['quote"id', 'slash\\id', 'bracket]id', 'space id', 'line\nid'])(
@@ -69,12 +135,16 @@ describe("a submenu knows which menu owns it", () => {
         { id, text: "Parent", hasSubmenu: true, submenu: [{ id: "child", text: "Child" }] },
       ] });
       menu.element.id = 'owner"\\] id\n';
+      await submenuFeatureLoaded();
       menu.open(new dom.window.KeyboardEvent("keydown", { key: "Enter" }));
       await after(200);
       const parent = itemsOf(menu)[0]!;
       expect(document.activeElement).toBe(parent);
       expect(parent.getAttribute("data-id")).toBe(id);
       parent.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+      // The chunk's first, cold load can still be settling: wait for the
+      // submenu itself, then let its focus timer run.
+      await until("the submenu to open", () => submenus().length > 0, () => ({ submenus: submenus().length }));
       await after(400);
       const submenu = submenus()[0]!;
       expect(submenu.getAttribute("data-parent-item")).toBe(id);
@@ -97,6 +167,7 @@ describe("a submenu knows which menu owns it", () => {
       ] },
     ] });
     menu.element.id = 'owner"\\] id\n';
+    await submenuFeatureLoaded();
     menu.open(new dom.window.KeyboardEvent("keydown", { key: "Enter" }));
     await after(200);
     itemsOf(menu)[0]!.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
