@@ -135,9 +135,10 @@ describe("explicit contrast levels are opt-in", () => {
     // the inline start (styles/components/_fab-menu.scss).
     // The outlined field's open notch stays unpainted in forced colours,
     // from the script's class and the input's own state.
+    // The menu's submenu arrow also mirrors inside a shadow root.
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("578b0d5049c54038114cd5125d0ec2e6f68dd2617a1e8c5cb75fbfa83dc93ddc");
-    expect(css.length).toBe(528442);
+      .toBe("877882ed728907c60914191858e167a422128fcbea652157ddfc59a6ac0c06aa");
+    expect(css.length).toBe(528739);
   });
 
   test("today's sheets still resolve to the fixture", () => {

@@ -33,6 +33,14 @@ export const createPositioner = (
   ): void => {
     if (!menuElement || !openerElement) return;
 
+    // [dir=rtl] does not cross a shadow boundary. The sheet also matches
+    // menu--rtl, from the computed direction, which does. Set before
+    // measuring: the mirror changes the submenu item's padding.
+    menuElement.classList.toggle(
+      component.getClass("menu--rtl"),
+      getComputedStyle(menuElement).direction === "rtl",
+    );
+
     // In the top layer the menu is fixed to the viewport: its coordinates are
     // the opener's client rect, with no scroll and no container offset
     const topLayer = config.layer === "top";
@@ -215,6 +223,17 @@ export const createPositioner = (
     // The fitted height, else the configured one; none left over from a
     // previous placement where it no longer applies
     menuElement.style.maxHeight = fitted !== null ? `${fitted}px` : (config.maxHeight ?? "");
+
+    // A menu wider than its opener, placed at the start, keeps the opener's
+    // left in both directions. Right-to-left, that edge is the right. Only
+    // when the menu is wider, so a menu as wide as its field stays put, and
+    // not a submenu, which has its own side.
+    if (
+      !isSubmenu &&
+      menuRect.width > openerRect.width &&
+      (calculatedPosition === "top-start" || calculatedPosition === "bottom-start") &&
+      getComputedStyle(openerElement).direction === "rtl"
+    ) calculatedPosition = calculatedPosition.replace("start", "end");
 
     // Reset any existing position classes
     const positionClasses = [

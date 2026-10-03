@@ -9,6 +9,18 @@ $prefix: base.$prefix;
 
 $component: "#{$prefix}-menu";
 
+// Right to left. An ancestor's dir, which needs no script, and
+// --rtl, which position.ts sets from the computed direction, for a menu in
+// a shadow root, where a dir outside it does not reach. Physical sides:
+// bundlers lower logical insets and :dir() into :lang() lists that miss
+// dir="rtl".
+@mixin mirrored {
+    [dir='rtl'] &,
+    &.#{$component}--rtl {
+        @content;
+    }
+}
+
 .#{$component} {
     // Base styles
     @include m.typography("body-medium");
@@ -592,25 +604,30 @@ $component: "#{$prefix}-menu";
         }
     }
 
-    @include m.rtl {
+    @include mirrored {
         transform-origin: top right;
+    }
 
-        &--position-top,
-        &--position-top-start,
-        &--position-top-end {
-            transform-origin: bottom right;
-        }
+    // --position-top is its own class. A suffix on the --rtl compound would
+    // compile to menu--rtl--position-top, which nothing carries.
+    [dir='rtl'] &--position-top,
+    [dir='rtl'] &--position-top-start,
+    [dir='rtl'] &--position-top-end,
+    &.#{$component}--rtl.#{$component}--position-top,
+    &.#{$component}--rtl.#{$component}--position-top-start,
+    &.#{$component}--rtl.#{$component}--position-top-end {
+        transform-origin: bottom right;
+    }
 
-        .#{$component}__item {
-            &--submenu {
-                padding-right: 16px;
-                padding-left: 48px;
+    @include mirrored {
+        .#{$component}__item--submenu {
+            padding-right: 16px;
+            padding-left: 48px;
 
-                &::after {
-                    right: auto;
-                    left: 16px;
-                    transform: translateY(-50%) rotate(180deg);
-                }
+            &::after {
+                right: auto;
+                left: 16px;
+                transform: translateY(-50%) rotate(180deg);
             }
         }
     }
