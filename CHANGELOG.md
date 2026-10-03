@@ -1165,6 +1165,10 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A FAB menu at `bottom-start` opens its items into the page (#59).** The list, its
+  items and the FAB were anchored to the inline end, so at the start corner they
+  grew off the screen. They are now anchored to the inline start: left to right the
+  items open to the right, and right to left they open to the left.
 - **Text field: with reduced motion, the filled field's focus indicator no longer fades
   (FLO-299).** Its 0.2s transition was not in the field's reduced-motion rule, where the
   label, the outline, the icons and the affixes are. It also runs on the motion tokens now
