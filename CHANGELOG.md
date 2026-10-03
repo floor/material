@@ -995,6 +995,17 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Added
 
+- **The list's `variant`: `'standard'` (the default) or `'segmented'`.** `createList({ variant })`,
+  with the type `ListVariant` and the constant `LIST_VARIANTS` (`STANDARD`, `SEGMENTED`) from
+  `material/components/list/constants` and `material/components/list`; an unknown value is the
+  default. `<m-list variant="segmented">` is the attribute, reflected by the `variant` property,
+  and the React, Vue, Svelte and Solid components take the same `variant` prop. The list's root
+  carries `mtrl-list--standard` or `mtrl-list--segmented`. Two new custom properties:
+  `--mtrl-list-segmented-gap` (2 px, the space between a segmented list's rows) and
+  `--mtrl-list-item-container-color`, the unselected row's colour in both variants (`surface`
+  by default in standard, `surface-container` in segmented); set it to `transparent` for rows
+  without their own colour. Like the four shape properties, the list reads them and declares
+  none, so set them on the list, on any ancestor, or on the `<m-list>` element.
 - **`isOpen()` on the snackbar and the date picker (FLO-548)**, as on every other overlay.
 - **Split button `setItems(items)` and `getItems()` (FLO-543).** `setItems` replaces the menu's
   items and returns the split button; `getItems` returns them. A split button created without
@@ -1061,6 +1072,23 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **Lists are the baseline list by default; the expressive style is `variant: 'segmented'`.**
+  A list has two styles, as on m3.material.io ("The standard and segmented styles are a visual
+  choice, and don't affect a list's behavior"). `standard`, the default, has square rows and
+  square state layers in every state, and no gap. `segmented` is the expressive list, as
+  Compose's `SegmentedListItem`: each row paints its own colour (`surface-container`;
+  `secondary-container` when selected) and its own shape (4 px where it meets another row,
+  16 px on the outer corners of the first and the last row, 12 px hovered, 16 px focused,
+  pressed or selected), with 2 px between rows. A divider or a subheader ends a group: the rows
+  beside it take their outer corners. A selected row is 16 px on every corner whatever its
+  place in the list. The four shape properties (`--mtrl-list-item-shape`,
+  `--mtrl-list-item-shape-outer`, `--mtrl-list-item-shape-hover`,
+  `--mtrl-list-item-shape-active`) apply to a segmented list; a standard list does not read them.
+  **The rounded list container of 3.0.0-next.1 is gone**, in both variants: the list has no
+  background and no radius of its own, so `--mtrl-list-item-shape-outer` rounds rows only, and
+  a list given a height scrolls in a square box.
+  Migration from 3.0.0-next.1, to keep its rounded rows: set `variant: 'segmented'`
+  (`<m-list variant="segmented">`).
 - **Text field: the spacing follows the M3 measurements (FLO-299).** A field's layout shifts
   by the amounts below; nothing in the API changes. Sources: the measurement tables on
   m3.material.io's text fields page, and Compose's `TextFieldImpl.kt` for the positions the

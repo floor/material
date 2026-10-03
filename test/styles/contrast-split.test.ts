@@ -122,9 +122,9 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_menu.scss), the chip's secondary-action floor
     // (styles/components/_chips.scss), and the touch target centred physically
     // (styles/abstract/_mixins.scss, FLO-592).
-    // The list row's expressive corners, read from four list custom properties
-    // that the list does not declare, so they inherit, with keyboard focus on
-    // the row action, and the container rounded by the same outer property
+    // The list's two variants: standard has no container and square rows;
+    // segmented rows read six list custom properties that the list does not
+    // declare, so they inherit, with keyboard focus on the row action
     // (styles/components/_list.scss).
     // The state layer's position sits in `:where()`, so a corner FAB's fixed
     // outranks it and a positioned host keeps its position
@@ -134,8 +134,8 @@ describe("explicit contrast levels are opt-in", () => {
     // A FAB menu at bottom-start anchors its list, its items and its FAB to
     // the inline start (styles/components/_fab-menu.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("9f16422c0c6fd595b83dd7bf321427f15241b121f0bd20564cecc6c0a949a8ea");
-    expect(css.length).toBe(527626);
+      .toBe("49608a7ee059a4bb46a26a155ebbb58d9986d92ac27113b5740d2d9c34a367b6");
+    expect(css.length).toBe(528004);
   });
 
   test("today's sheets still resolve to the fixture", () => {
