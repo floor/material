@@ -16,6 +16,15 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+### Fixed
+
+- **A search text field with a trailing icon of its own (such as a clear button) no longer also shows the browser's clear button.**
+  WebKit and Blink draw `::-webkit-search-cancel-button` into every `type="search"` input — a
+  user-agent shadow part `appearance: none` on the input does not remove — so a field with a
+  trailing icon showed two clears side by side at the input's end. A search field with a trailing
+  icon now hides the browser's button; a search field without one keeps it, its only clear
+  affordance.
+
 ## [3.0.1] - 2026-10-03
 
 ### Fixed

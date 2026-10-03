@@ -17,7 +17,7 @@ import { checkButtonStateLayers } from "./check-button-browser";
 import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
 import { checkMenuOpeners } from "./check-menu-opener-browser";
-import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextFieldPlaceholder, checkTextFieldA11y, checkTextFieldLatePlacement, checkTextFieldLayout, checkTextFieldReducedMotion } from "./check-text-field-browser";
+import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextFieldPlaceholder, checkTextFieldA11y, checkTextFieldLatePlacement, checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkControls } from "./check-controls-browser";
 import { checkRadiosLayout } from "./check-radios-layout";
 import { checkMenu } from "./check-menu-browser";
@@ -114,6 +114,7 @@ try {
   await checkTextFieldA11y(page);
   await checkTextFieldLatePlacement(page);
   await checkTextFieldLayout(page, "factory");
+  await checkTextFieldSearchCancel(page, "factory");
   await checkTextFieldReducedMotion(page, "factory", "reduce");
   await checkMenuOpeners(page);
   await checkControls(page);

@@ -16,7 +16,7 @@ import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
 import { checkRegistryEvents } from "./check-elements-registry";
 import { ICON_BUTTON_ICON_SIZES } from "../src/components/icon-button/constants";
-import { checkTextFieldLayout, checkTextFieldReducedMotion } from "./check-text-field-browser";
+import { checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
 import { checkRadiosLayout } from "./check-radios-layout";
 import { checkSelectMenu, checkSelectWidth } from "./check-select-browser";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
@@ -2170,6 +2170,8 @@ try {
     check("text field: the layout at the M3 measurements, 112 fields, in both directions (FLO-299, FLO-562)");
     await checkTextFieldReducedMotion(page, "element", null);
     check("text field: the filled indicator's fade stops with reduced motion (FLO-299)");
+    await checkTextFieldSearchCancel(page, "element");
+    check("text field: a search field's own trailing icon hides the browser's clear button");
 
     // The select's menu in the top layer, inside the shadow root: its width, its
     // selected option's mark in both directions, and its colours

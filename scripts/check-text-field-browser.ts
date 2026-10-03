@@ -722,3 +722,101 @@ export async function checkTextFieldReducedMotion(page: Page, api: "factory" | "
   assert.equal(reduced.duration, "0s", `with reduced motion the indicator has no transition (${reduced.property} ${reduced.duration})`);
   console.log(`Passed text field reduced motion (${api}): the filled indicator fades on the motion tokens, and not at all with reduced motion.`);
 }
+
+/** The part of a DevTools DOM node this check walks. */
+type DevtoolsNode = {
+  nodeId: number;
+  nodeName: string;
+  attributes?: string[];
+  children?: DevtoolsNode[];
+  shadowRoots?: DevtoolsNode[];
+};
+
+/** The UA cancel button under `input`: a shadow part no page selector or style read can see. */
+const devtoolsCancelButton = (node: DevtoolsNode): DevtoolsNode | null => {
+  const attributes = node.attributes ?? [];
+  for (let i = 0; i < attributes.length; i += 2) if (attributes[i] === "pseudo" && attributes[i + 1] === "-webkit-search-cancel-button") return node;
+  for (const child of [...(node.children ?? []), ...(node.shadowRoots ?? [])]) {
+    const found = devtoolsCancelButton(child);
+    if (found) return found;
+  }
+  return null;
+};
+
+/**
+ * Chromium draws its own clear button into a `type="search"` input — the
+ * `::-webkit-search-cancel-button` shadow part, which `appearance: none` on
+ * the input does not remove. A field that draws a trailing icon of its own
+ * shows both (the double × on md3.io's Search scenario), so it must hide the
+ * browser's; a search field without one keeps it. The part lives in the
+ * input's user-agent shadow root, invisible to `getComputedStyle` on the
+ * input, so its computed display is read over the DevTools protocol (this
+ * check is Chromium's; the part is Blink's and WebKit's).
+ */
+export async function checkTextFieldSearchCancel(page: Page, api: "factory" | "element"): Promise<void> {
+  const ids = await page.evaluate(async (api) => {
+    const icon = '<svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/></svg>';
+    const stage = document.createElement("div");
+    stage.id = "search-cancel-stage";
+    document.body.append(stage);
+    const mounted: { destroy: () => void }[] = [];
+    const make = (id: string, config: Record<string, string>) => {
+      const cell = document.createElement("div");
+      cell.style.cssText = "width:280px;margin:0 0 8px";
+      stage.append(cell);
+      if (api === "factory") {
+        const field = (window as unknown as FieldWindow).inputs.createTextField({ label: "Search", value: "Trail", ...config } as never);
+        field.element.id = id;
+        cell.append(field.element);
+        mounted.push({ destroy: () => field.destroy() });
+      } else {
+        const host = document.createElement("m-text-field");
+        for (const [key, value] of Object.entries({ label: "Search", value: "Trail", ...config })) host.setAttribute(key.replace(/[A-Z]/g, (character) => `-${character.toLowerCase()}`), value);
+        host.id = id;
+        cell.append(host);
+      }
+    };
+    make("search-cancel-with-icon", { type: "search", trailingIcon: icon, trailingIconLabel: "Clear" });
+    make("search-cancel-without-icon", { type: "search" });
+    // Past the element upgrade and the field's placement pass
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    (window as unknown as FieldWindow).fields = mounted;
+    return ["search-cancel-with-icon", "search-cancel-without-icon"];
+  }, api);
+
+  const client = await page.context().newCDPSession(page);
+  await client.send("DOM.enable");
+  await client.send("CSS.enable");
+  const { root } = await client.send("DOM.getDocument", { depth: -1, pierce: true }) as unknown as { root: DevtoolsNode };
+  // The input under each mounted field, by the nearest ancestor or host id
+  const inputs = new Map<string, DevtoolsNode>();
+  const visit = (node: DevtoolsNode, owner: string): void => {
+    let current = owner;
+    const attributes = node.attributes ?? [];
+    for (let i = 0; i < attributes.length; i += 2) if (attributes[i] === "id" && ids.includes(attributes[i + 1]!)) current = attributes[i + 1]!;
+    if (node.nodeName === "INPUT") inputs.set(current, node);
+    for (const child of node.children ?? []) visit(child, current);
+    for (const shadow of node.shadowRoots ?? []) visit(shadow, current);
+  };
+  visit(root, "");
+  const display = async (id: string): Promise<string> => {
+    const input = inputs.get(id);
+    assert.ok(input, `${id}: the field's input is in the DevTools tree`);
+    const cancel = devtoolsCancelButton(input);
+    assert.ok(cancel, `${id}: Chromium's search cancel button is under the input`);
+    const { computedStyle } = await client.send("CSS.getComputedStyleForNode", { nodeId: cancel.nodeId }) as unknown as { computedStyle: { name: string; value: string }[] };
+    return computedStyle.find((entry) => entry.name === "display")?.value ?? "";
+  };
+  const withIcon = await display("search-cancel-with-icon");
+  const withoutIcon = await display("search-cancel-without-icon");
+  await client.detach();
+  await page.evaluate(() => {
+    const state = window as unknown as FieldWindow;
+    state.fields.forEach((field) => field.destroy());
+    state.fields = [];
+    document.getElementById("search-cancel-stage")?.remove();
+  });
+  assert.equal(withIcon, "none", `the field's own trailing icon must hide the browser's clear button (display: ${withIcon})`);
+  assert.notEqual(withoutIcon, "none", "a field with no trailing icon of its own keeps the browser's clear button");
+  console.log(`Passed text field search (${api}): a trailing icon of its own hides the browser's clear button; without one the field keeps it.`);
+}

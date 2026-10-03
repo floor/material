@@ -251,6 +251,17 @@ $component: "#{base.$prefix}-text-field";
 
     &--with-trailing-icon {
         --#{$component}-end: 52px;
+
+        // A search input with a trailing icon of its own must not also show the
+        // browser's clear button. WebKit and Blink draw it into the input — the
+        // `::-webkit-search-cancel-button` user-agent shadow part — beside ours
+        // (two clears), and `appearance: none` on the input does not remove it.
+        // A search field with no icon of its own keeps the browser's button,
+        // its only clear affordance. `type` is enumerated, so the `i` flag
+        // follows an uppercase `type="SEARCH"` too.
+        .#{$component}__input[type="search" i]::-webkit-search-cancel-button {
+            display: none;
+        }
     }
 
     // What a prefix or a suffix adds before the text: its width, which
