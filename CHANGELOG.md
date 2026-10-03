@@ -1138,6 +1138,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Fixed
 
+- **A text field's leading or trailing icon with `hidden` is hidden (#60).** The parts' own
+  `display: flex` is an author rule, so it beat the user agent's `[hidden] { display: none }`
+  and the icon stayed displayed — 24×24 for a decorative icon, 40×40 for an interactive
+  trailing one — and the two parts now take the hidden state themselves; the padding the icon
+  reserved stays, as M3 has no hidden-icon state.
 - **Text field: with reduced motion, the filled field's focus indicator no longer fades
   (FLO-299).** Its 0.2s transition was not in the field's reduced-motion rule, where the
   label, the outline, the icons and the affixes are. It also runs on the motion tokens now
