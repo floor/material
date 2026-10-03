@@ -105,19 +105,27 @@ test("the stable release notes contain no internal ticket references", async () 
   expect(changelogSection(changelog, "3.0.0")).not.toMatch(/FLO\x2d/);
 });
 
-test("3.0.0 includes every prerelease entry exactly once by its bold opening sentence", async () => {
+test("3.0.0 includes every complete prerelease entry exactly once in its subsection", async () => {
   const changelog = await Bun.file(new URL("../../CHANGELOG.md", import.meta.url)).text();
-  const openings = (section: string): string[] =>
-    [...section.matchAll(/^[ \t]*- \*\*([\s\S]*?)\*\*/gm)].map(match => match[1].replace(/\s+/g, " "));
-  const stable = openings(changelogSection(changelog, "3.0.0"));
-  const entries = ["3.0.0-next.0", "3.0.0-next.1"].flatMap(version =>
-    openings(changelogSection(changelog, version)).map(opening => ({ version, opening })),
+  const entriesBySubsection = (section: string): Map<string, string[]> => {
+    const sections = section.split(/^### (.+)$/m);
+    const result = new Map<string, string[]>();
+    for (let index = 1; index < sections.length; index += 2) {
+      const entries = [...sections[index + 1].matchAll(/^- [\s\S]*?(?=^- |$(?![\s\S]))/gm)]
+        .map(match => match[0].replace(/\s+/g, " ").trim());
+      result.set(sections[index], entries);
+    }
+    return result;
+  };
+  const stable = entriesBySubsection(changelogSection(changelog, "3.0.0"));
+  const prerelease = entriesBySubsection(changelogSection(changelog, "3.0.0-next.1"));
+  expect([...prerelease.values()].flat().length).toBeGreaterThan(0);
+  const missingOrRepeated = [...prerelease].flatMap(([subsection, entries]) =>
+    entries.flatMap(entry => {
+      const count = (stable.get(subsection) ?? []).filter(candidate => candidate === entry).length;
+      return count === 1 ? [] : [{ subsection, entry, count }];
+    }),
   );
-  expect(entries.length).toBeGreaterThan(0);
-  const missingOrRepeated = entries.flatMap(({ version, opening }) => {
-    const count = stable.filter(candidate => candidate === opening).length;
-    return count === 1 ? [] : [{ version, opening, count }];
-  });
   expect(missingOrRepeated).toEqual([]);
 });
 
