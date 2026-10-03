@@ -1237,6 +1237,7 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - SSR security reparsing runs in the Chromium CI job while unit tests remain browser-free;
   SSR parity and benchmark tooling load the source renderer and source CSS registry (FLO-363).
 - Source SSR reads the element CSS registry without resolving built package exports; source tests register real Sass output without mocking the CSS import (FLO-363).
+
 ## [3.0.0-next.1] - 2026-10-03
 
 The second prerelease of 3.0.0, on the npm `next` tag (`npm install material@next`). Its full
