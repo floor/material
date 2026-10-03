@@ -16,6 +16,8 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.0.1] - 2026-10-03
+
 ### Fixed
 
 - **A menu in a shadow root mirrors its submenu arrow under `dir="rtl"`.**
@@ -51,7 +53,7 @@ below are kept as they were published, and the release they announce as 1.0.0 is
   open notch now has no top border at all, under the class the script sets and under the selectors
   that read the input's own state; the leading and trailing segments still draw theirs, and nothing
   outside the media query changes.
-- **Text fields keep neighbouring content in place when they upgrade under a tall page line height.**
+- **Text fields keep neighbouring content in place when they upgrade under a tall page line height (#43).**
   The pre-upgrade styles now reserve the host’s inherited line box around the field, including
   compact, outlined and multiline fields, in both text directions.
 - **The default button group stays in place when it upgrades (#44).** A text strut
@@ -3825,7 +3827,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.0.1...HEAD
+[3.0.1]: https://github.com/floor/material/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/floor/material/compare/v3.0.0-next.1...v3.0.0
 [3.0.0-next.1]: https://github.com/floor/material/compare/v3.0.0-next.0...v3.0.0-next.1
 [3.0.0-next.0]: https://github.com/floor/material/releases/tag/v3.0.0-next.0
