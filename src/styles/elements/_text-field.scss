@@ -8,14 +8,25 @@
 @include c.host('text-field') {
   @include field.field;
 
-  // A password paints no value (public issue #53): the value attribute is the
-  // password in clear text, and the shared rule above paints it for every type.
-  // The space is the empty field's line box, so the box does not move at
-  // upgrade; no mask either — its length is information too. `i`: HTML reads an
-  // input's type case-insensitively, so `type="PASSWORD"` upgrades to a masked
-  // input and must not paint here.
-  &[type='password' i]::before {
+  // A password or hidden field paints no value (#53): the value attribute can
+  // hold a password or a token in clear text, and the shared rule above paints
+  // it for every type. The space is the empty field's line box, so a password's
+  // box does not move at upgrade; no mask either — its length is information
+  // too. `i`: HTML reads an input's type case-insensitively, so
+  // `type="PASSWORD"` upgrades to a masked input and must not paint here.
+  &[type='password' i]::before,
+  &[type='hidden' i]::before {
     content: ' ';
+  }
+
+  // A hidden field takes no space, before upgrade or after: the upgraded host
+  // is not rendered at all — a host rule for `type="hidden"` in the element's
+  // host styles, as for `[hidden]` — so reserving a box here would move the
+  // page twice, at paint and at upgrade. `display: none` is that, and with it
+  // the field's chrome never renders either; the value still submits with the
+  // form, the element being form-associated.
+  &[type='hidden' i] {
+    display: none;
   }
 
   // Multiline is the textarea's box, not the single-line 56px one (FLO-425).

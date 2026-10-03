@@ -1099,6 +1099,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **An `<m-text-field type="hidden">` takes no space, before upgrade or after.** The upgraded
+  hidden field was an inline-block host taking a line box, with its `display: none` input inside;
+  it is now not rendered at all, as an element with the `hidden` attribute is not. Its value still
+  submits with its form and still reads from `value`. Every other type is unchanged.
+
 - **An upgraded `<m-switch>` is shorter under a tall line height than in the 3.0.0 prereleases.**
   At a page's `font-size: 24px; line-height: 2` the upgraded switch is 52 × 56 → 52 × 48
   unlabelled, and 65 → 56 tall with supporting text, so in a flex row centred on it the text
@@ -1436,19 +1441,22 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Security
 
-- **A password field no longer paints its value before it upgrades
-  (#53).** The pre-upgrade stylesheet paints a field's `value` attribute on the
-  input's line for every type, so `<m-text-field type="password" value="…">`
-  showed the password in clear text until its script defined it — and on a page
+- **A password or hidden field's value is no longer painted before it
+  upgrades (#53).** The pre-upgrade stylesheet paints a field's `value`
+  attribute on the input's line for every type, so `<m-text-field
+  type="password" value="…">` showed the password, and a `type="hidden"` field
+  a token, in clear text until the element's script defined it — and on a page
   that never loads one, or in a crawler's screenshot of it, for as long as the
   page exists. A password host now paints the empty field's line box alone: no
-  value, and no mask either (a mask's length is information too). The box is
-  unchanged, so nothing moves at upgrade; every other type is unchanged. Fixed
-  in `material` 3.0.0-next.1. Affected, each with the rule in its pre-upgrade
-  stylesheet: `material` 3.0.0-next.0, and `mtrl` 0.10.0 through 0.10.7 (the
-  0.10.0 pre-releases shipped no pre-upgrade stylesheet). On an affected
-  version a page can neutralize it with
-  `m-text-field:not(:defined)[type='password' i]::before{content:' '}`.
+  value, and no mask either (a mask's length is information too), its box
+  unchanged, so nothing moves at upgrade. A hidden host paints no value and
+  takes no space at all, before upgrade or after. Every other
+  type is unchanged. Fixed in `material` 3.0.0-next.1. Affected, each with the
+  rule in its pre-upgrade stylesheet: `material` 3.0.0-next.0, and `mtrl`
+  0.10.0 through 0.10.7 (the 0.10.0 pre-releases shipped no pre-upgrade
+  stylesheet). On an affected version a page can stop the value being painted
+  with `m-text-field:not(:defined)[type='password' i]::before,
+  m-text-field:not(:defined)[type='hidden' i]::before{content:' '}`.
 
 `material` 3.0.0 is MIT; `material` 1.x was GPL-3.
 
