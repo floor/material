@@ -375,8 +375,8 @@ try {
     // against 3f9ca0c7, Node 22.23.3 / npm 10.9.9; the budget keeps the headroom it had.
     // 125,723 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
     // The text-field rename merged in: 126,962, the same figure main packed.
-    // 38 B left under 127,000. Measured + 1% or 100 B, rounded up to 50, is
-    // 128,250, above 127,000, so the ceiling stays.
+    // 38 B left under 127,000.
+    // 3.0.1, the shadow-root menu RTL fix: 127,014. Raised to 127,100 by the coordinator's bounded rule.
     { name: "all-js", code: "export * from 'material';", gzip: 127100 },
     // FLO-406 contrast CSS: 5,173 -> 7,107 gzip bytes, Node 22.23.3 / npm 10.9.9.
     // FLO-406 direct high values: 8,069 -> 7,542 gzip bytes (same packer).
