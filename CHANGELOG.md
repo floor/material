@@ -1099,6 +1099,17 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 
 ### Changed
 
+- **An upgraded `<m-switch>` is shorter under a tall line height than in the 3.0.0 prereleases.**
+  At a page's `font-size: 24px; line-height: 2` the upgraded switch is 52 × 56 → 52 × 48
+  unlabelled, and 65 → 56 tall with supporting text, so in a flex row centred on it the text
+  beside rises 4–4.5 px and what follows 8–9 px. At the default type nothing moves. Text beside
+  an unlabelled `<m-switch>` no longer moves when the element upgrades. Its pre-upgrade
+  baseline now matches the control's center; a supporting-text-only switch uses its text
+  baseline. The upgraded switch host uses the control's box directly, so 12px or 24px
+  surrounding text with line-height 1 or 2 cannot add an extra host line box. Inline and
+  baseline/center flex layouts are checked in both text directions.
+- **A list row takes the expressive shape.** A row is 4 px at rest, 16 px on the list's outer corners, 12 px hovered, and 16 px focused, pressed or selected. With the default colours nothing changes at rest on screen: the row and the list are both the surface colour. Hover, focus and press look different, and rows given their own background show the corners. Set `--mtrl-list-item-shape`, `--mtrl-list-item-shape-outer`, `--mtrl-list-item-shape-hover` and `--mtrl-list-item-shape-active` to `0` on the list, on any ancestor, or on the `<m-list>` element for square rows. M3 Lists specs: "Unselected corner radius: 4dp inner, 16dp outer" and "Selected corner radius: 16dp".
+- **The list's container is rounded, 16 px, by the same property as the rows' outer corners** (`--mtrl-list-item-shape-outer`). It is visible at rest on a list placed over a background that is not the surface colour. Set `--mtrl-list-item-shape-outer` to `0` on the list, on any ancestor, or on the `<m-list>` element to square the container and the rows' outer corners. M3 Lists specs, read 2026-10-03 (https://m3.material.io/components/lists/specs): "An expressive list has a segmented style and round corners". That page gives the item's corners and no value for the container.
 - **The package's README on npm is a short one.** `npm-readme.md` is packed as the package's
   `README.md` (install, one example, the component list, and links to md3.io); the full
   README stays on GitHub. Nothing in the API changes.
@@ -1233,6 +1244,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   Under a field narrower than the menu's 112px minimum, placement kept the field's left edge in
   both directions. Right-to-left, a menu wider than the field now meets the field's right edge.
   A menu as wide as the field still meets both edges, and a submenu still opens on its own side.
+- **A text button with an icon no longer moves when it upgrades.** The pre-upgrade
+  stylesheet now reserves the same inline padding as the upgraded button at the
+  default size and every explicit size, keeping the button and following content in
+  place. It had moved 4 px at the default, `xs` and `s` sizes, and 24, 72 and 104 px
+  at `m`, `l` and `xl`, where the layout-shift scores were 0.017, 0.091 and 0.180.
 - **The text field's trailing icon button keeps its 48px target centred under `dir="rtl"` (FLO-592).**
   The `touch-target` mixin anchored its `::after` with `inset-inline-start: 50%` and then moved it
   with the physical `translate(-50%, -50%)`. Right-to-left, the logical inset pins the box's right
@@ -1415,6 +1431,11 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   when it captures. The fixture sat there, under a new page's resting pointer, and CI captured a
   button group hovered before the upgrade and not after. The stage now starts 32px down, and both
   passes assert that no control of the fixture is under the pointer.
+- `preupgrade:check` fails a row when a sibling moves more than 0.5px on either axis,
+  regardless of its layout-shift score. Known movements name the sibling, axis and signed
+  measured value with a 0.5px tolerance; other movements in that row still fail. Filtered
+  runs enforce the same checks, and a disappeared defect requires removing its exception.
+  Consumer-typography switch cases also reject host movement or resizing over 0.5px.
 - SSR parity now requires exact Chromium matches for progress, sliders, tabs and loading
   indicators after FLO-368/FLO-369; their 22 resolved exceptions are removed (FLO-363).
 - Element CSS file and export checks run after the CI build, so unit tests pass without `dist/` (FLO-365).

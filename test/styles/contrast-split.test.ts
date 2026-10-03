@@ -122,11 +122,15 @@ describe("explicit contrast levels are opt-in", () => {
     // styles/components/_menu.scss), the chip's secondary-action floor
     // (styles/components/_chips.scss), and the touch target centred physically
     // (styles/abstract/_mixins.scss, FLO-592).
+    // The list row's expressive corners, read from four list custom properties
+    // that the list does not declare, so they inherit, with keyboard focus on
+    // the row action, and the container rounded by the same outer property
+    // (styles/components/_list.scss).
     // The menu's submenu arrow is mirrored inside a shadow root
     // (styles/components/_menu.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("c0b6aca0054aa3c34e6e65a097a14d463840f2f4459b6a718828c999e7afc79a");
-    expect(css.length).toBe(525369);
+      .toBe("ee074dc7a6c392808149626561a876013f723aabf101cab5799d3643ec511448");
+    expect(css.length).toBe(527558);
   });
 
   test("today's sheets still resolve to the fixture", () => {
