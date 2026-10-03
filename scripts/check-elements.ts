@@ -8223,6 +8223,203 @@ try {
     check("factories in a shadow root: a snackbar's action takes focus and hands it back to the opener");
   }
 
+  // A [dir=rtl] ancestor outside a shadow root does not reach the
+  // menu sheet. The arrow sits at the item's inline end, as the factory
+  // already does: 12px from the right left-to-right, 16px from the left
+  // right-to-left. The item is clicked before the submenu's side is read.
+  // That side is the placement script's physical right at the first level,
+  // in both directions, including the factory under dir="rtl"; the element
+  // matches the factory. The inline end would be a new side. A top-layer
+  // select under a field narrower than 112px keeps the edge the 200px
+  // field's menu keeps in that direction.
+  {
+    type ArrowRow = { name: string; dir: "ltr" | "rtl"; side: string; inset: number; submenuSide: string; paddingLeft: string; paddingRight: string };
+    type FieldRow = { name: string; dir: "ltr" | "rtl"; width: number; leftDelta: number; rightDelta: number; menuWidth: number; fieldWidth: number };
+    const menuRtl = await page.evaluate(async () => {
+      const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+      const round = (n: number) => Math.round(n * 100) / 100;
+      const host = document.getElementById("host") as HTMLElement;
+      const w = window as unknown as {
+        mtrl: {
+          createMenu: (config: Record<string, unknown>) => { element: HTMLElement; open: () => void; destroy: () => void };
+          createSelect: (config: Record<string, unknown>) => {
+            element: HTMLElement; open: () => void; close: () => void; destroy: () => void;
+            textField: { field: HTMLElement };
+          };
+        };
+      };
+      const items = [
+        { id: "share", text: "Share", hasSubmenu: true, submenu: [{ id: "link", text: "Copy link" }] },
+        { id: "copy", text: "Copy" },
+      ];
+      const arrowOf = (item: HTMLElement) => {
+        const box = item.getBoundingClientRect();
+        const after = getComputedStyle(item, "::after");
+        const width = parseFloat(after.width);
+        let fromLeft = NaN;
+        let fromRight = NaN;
+        if (after.left !== "auto") {
+          fromLeft = parseFloat(after.left);
+          fromRight = box.width - fromLeft - width;
+        } else {
+          fromRight = parseFloat(after.right);
+          fromLeft = box.width - fromRight - width;
+        }
+        const style = getComputedStyle(item);
+        return {
+          side: fromRight < fromLeft - 0.5 ? "right" : "left",
+          inset: round(Math.min(fromLeft, fromRight)),
+          paddingLeft: style.paddingLeft,
+          paddingRight: style.paddingRight,
+        };
+      };
+      const submenuSideOf = (item: HTMLElement) => {
+        const submenu = (item.getRootNode() as ParentNode).querySelector(".mtrl-menu--submenu");
+        const itemBox = item.getBoundingClientRect();
+        const sub = submenu?.getBoundingClientRect();
+        return !sub ? "missing" : sub.left >= itemBox.right - 2 ? "right" : sub.right <= itemBox.left + 2 ? "left" : "overlap";
+      };
+      const arrows: ArrowRow[] = [];
+      const clear = () => { host.replaceChildren(); };
+      for (const spec of [
+        { name: "factory ltr", path: "factory", dir: "ltr", where: "page" },
+        { name: "factory rtl", path: "factory", dir: "rtl", where: "ancestor" },
+        { name: "element ltr", path: "element", dir: "ltr", where: "page" },
+        { name: "element rtl", path: "element", dir: "rtl", where: "ancestor" },
+        { name: "element host rtl", path: "element", dir: "rtl", where: "host" },
+      ] as const) {
+        clear();
+        const cell = document.createElement("div");
+        if (spec.where !== "host") cell.dir = spec.dir;
+        cell.style.cssText = "position:absolute;left:280px;top:80px";
+        host.append(cell);
+        const opener = document.createElement("button");
+        opener.id = spec.name.replace(/ /g, "-");
+        opener.textContent = "Open";
+        cell.append(opener);
+        let item: HTMLElement;
+        let destroy = () => {};
+        if (spec.path === "factory") {
+          const menu = w.mtrl.createMenu({ opener, items, layer: "top" });
+          destroy = () => menu.destroy();
+          menu.open();
+          await sleep(400);
+          item = menu.element.querySelector(".mtrl-menu__item--submenu") as HTMLElement;
+        } else {
+          const element = document.createElement("m-menu");
+          element.setAttribute("anchor", opener.id);
+          if (spec.where === "host") element.setAttribute("dir", "rtl");
+          const parent = document.createElement("m-menu-item");
+          parent.setAttribute("value", "share");
+          parent.setAttribute("label", "Share");
+          const child = document.createElement("m-menu-item");
+          child.setAttribute("value", "link");
+          child.setAttribute("label", "Copy link");
+          parent.append(child);
+          element.append(parent);
+          cell.append(element);
+          await sleep(50);
+          const menu = (element as unknown as { component: { element: HTMLElement; show: () => void; destroy?: () => void } }).component;
+          destroy = () => menu.destroy?.();
+          menu.show();
+          await sleep(400);
+          item = menu.element.querySelector(".mtrl-menu__item--submenu") as HTMLElement;
+        }
+        const arrow = arrowOf(item);
+        item.click();
+        for (let i = 0; i < 20 && submenuSideOf(item) === "missing"; i++) await sleep(50);
+        arrows.push({ name: spec.name, dir: spec.dir, ...arrow, submenuSide: submenuSideOf(item) });
+        destroy();
+      }
+      const fields: FieldRow[] = [];
+      const edges = (scope: ParentNode, fieldEl: Element, menuSelector: string) => {
+        const field = fieldEl.getBoundingClientRect();
+        const menu = (scope.querySelector(menuSelector) as HTMLElement).getBoundingClientRect();
+        return {
+          leftDelta: round(menu.left - field.left),
+          rightDelta: round(field.right - menu.right),
+          menuWidth: round(menu.width),
+          fieldWidth: round(field.width),
+        };
+      };
+      for (const dir of ["ltr", "rtl"] as const) for (const width of [80, 200]) {
+        clear();
+        const cell = document.createElement("div");
+        cell.dir = dir;
+        cell.style.cssText = "position:absolute;left:280px;top:80px";
+        host.append(cell);
+        const select = w.mtrl.createSelect({
+          label: "Pet", value: "a", layer: "top",
+          options: [{ id: "a", text: "Alpha" }, { id: "b", text: "Beta" }],
+        });
+        select.element.style.width = `${width}px`;
+        cell.append(select.element);
+        select.open();
+        await sleep(400);
+        fields.push({ name: `select factory ${width} ${dir}`, dir, width, ...edges(cell, select.textField.field, ".mtrl-select__menu") });
+        select.close();
+        select.destroy();
+        clear();
+        const element = document.createElement("m-select");
+        element.setAttribute("label", "Pet");
+        element.setAttribute("value", "a");
+        element.style.width = `${width}px`;
+        for (const [id, text] of [["a", "Alpha"], ["b", "Beta"]] as const) {
+          const option = document.createElement("m-select-option");
+          option.setAttribute("value", id);
+          option.setAttribute("label", text);
+          element.append(option);
+        }
+        cell.replaceChildren();
+        host.append(cell);
+        cell.append(element);
+        await sleep(80);
+        const component = (element as unknown as { component: { open: () => void; close: () => void; destroy?: () => void } }).component;
+        component.open();
+        await sleep(400);
+        const scope = element.shadowRoot as ShadowRoot;
+        fields.push({
+          name: `select element ${width} ${dir}`, dir, width,
+          ...edges(scope, scope.querySelector(".mtrl-text-field__field") as HTMLElement, ".mtrl-select__menu"),
+        });
+        component.close();
+        component.destroy?.();
+      }
+      clear();
+      return { arrows, fields };
+    }) as { arrows: ArrowRow[]; fields: FieldRow[] };
+    const menuFailures: string[] = [];
+    const factorySide = Object.fromEntries(menuRtl.arrows.filter((row) => row.name.startsWith("factory")).map((row) => [row.dir, row.submenuSide]));
+    for (const row of menuRtl.arrows) {
+      console.log(`  rtl menu ${row.name}: arrow ${row.inset}px from the ${row.side} (padding ${row.paddingLeft}/${row.paddingRight}), submenu ${row.submenuSide}`);
+      const end = row.dir === "rtl" ? "left" : "right";
+      const inset = row.dir === "rtl" ? 16 : 12;
+      if (row.side !== end || Math.abs(row.inset - inset) > 1)
+        menuFailures.push(`${row.name}: arrow ${row.inset}px from the ${row.side}, expected ${inset}px from the ${end}`);
+      if (row.submenuSide === "missing")
+        menuFailures.push(`${row.name}: submenu did not open`);
+      else if (row.submenuSide !== factorySide[row.dir])
+        menuFailures.push(`${row.name}: submenu opens on the ${row.submenuSide}, the factory opens on the ${factorySide[row.dir]}`);
+    }
+    const wide = (name: string, dir: "ltr" | "rtl") => menuRtl.fields.find((row) => row.name === `select ${name} 200 ${dir}`)!;
+    for (const row of menuRtl.fields) {
+      console.log(`  rtl menu ${row.name}: field ${row.fieldWidth} menu ${row.menuWidth} left ${row.leftDelta} right ${row.rightDelta}`);
+      if (row.width !== 80) continue;
+      const control = wide(row.name.includes("element") ? "element" : "factory", row.dir);
+      // The 200px menu meets both edges. The 80px menu is wider than its field,
+      // so it keeps the inline-start edge that control meets: the left, or the
+      // right when the direction is right to left.
+      const edge = row.dir === "rtl" ? "right" : "left";
+      const delta = edge === "right" ? row.rightDelta : row.leftDelta;
+      if (Math.abs(control.leftDelta) > 0.5 || Math.abs(control.rightDelta) > 0.5)
+        menuFailures.push(`${row.name}: the 200px control does not meet both edges (left ${control.leftDelta}, right ${control.rightDelta})`);
+      if (Math.abs(delta) > 0.5)
+        menuFailures.push(`${row.name}: menu meets the ${edge === "right" ? "left" : "right"} (left ${row.leftDelta}, right ${row.rightDelta}), expected the ${edge}, as the 200px control does`);
+    }
+    assert.deepEqual(menuFailures, [], menuFailures.join("\n"));
+    check("menu: the submenu arrow is at the inline end across the shadow boundary, and a narrow top-layer menu keeps the wide field's edge ");
+  }
+
   // ---------------------------------------------------------------- menu in the top layer
   // `layer: "top"` renders the menu next to its opener and shows it as a
   // popover: inside the opener's shadow root, with that root's adopted menu
