@@ -5329,7 +5329,7 @@ try {
     check("list: rows match the factory's size and colours, selected and not");
   }
 
-  // Expressive list shape (m3.material.io/components/lists/specs, 2026-10-02).
+  // The segmented list's shape (m3.material.io/components/lists/specs, 2026-10-02).
   // An unselected row is 4px where it meets another row and 16px on the outer
   // corners of a run; hover is 12px; focus and press are 16px. A selected row
   // is 16px on every corner, including hover, focus and press. The state layer
@@ -5343,7 +5343,7 @@ try {
       Privacy: "4px 4px 16px 16px",
     };
     const markup = (dir: string): string =>
-      `<div dir="${dir}"><m-list id="shape-${dir}" aria-label="Element ${dir}" value="c">${
+      `<div dir="${dir}"><m-list id="shape-${dir}" variant="segmented" aria-label="Element ${dir}" value="c">${
         items.map((label, i) => `<m-list-item value="${"abcd"[i]}">${label}</m-list-item>`).join("")
       }</m-list></div>`;
     type RowShape = {
@@ -5418,6 +5418,7 @@ try {
           await page.evaluate(({ dir, items }) => {
             const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
             const list = w.mtrl.createList({
+              variant: "segmented",
               ariaLabel: `Factory ${dir}`,
               trackSelection: true,
               items: items.map((headline, i) => ({ id: "abcd"[i], headline })),
@@ -5518,8 +5519,8 @@ try {
       Delta: "16px 16px 4px 4px",
       Echo: "4px 4px 16px 16px",
     };
-    const runsMarkup = (dir: string): string => `<div dir="${dir}">
-      <m-list aria-label="Runs element ${dir}">
+    const runsMarkup = (dir: string): string => `<div id="park" style="height:24px"></div><div dir="${dir}">
+      <m-list variant="segmented" aria-label="Runs element ${dir}">
         <m-list-item value="a">Alpha</m-list-item>
         <m-list-item value="b">Bravo</m-list-item>
         <m-list-item kind="divider"></m-list-item>
@@ -5528,22 +5529,22 @@ try {
         <m-list-item value="d">Delta</m-list-item>
         <m-list-item value="e" disabled>Echo</m-list-item>
       </m-list>
-      <m-list aria-label="Solo element ${dir}"><m-list-item value="s">Solo</m-list-item></m-list>
-      <m-list aria-label="Ends element ${dir}">
+      <m-list variant="segmented" aria-label="Solo element ${dir}"><m-list-item value="s">Solo</m-list-item></m-list>
+      <m-list variant="segmented" aria-label="Ends element ${dir}">
         <m-list-item value="f">First</m-list-item>
         <m-list-item value="l">Last</m-list-item>
       </m-list>
-      <m-list aria-label="Trail element ${dir}">
+      <m-list variant="segmented" aria-label="Trail element ${dir}">
         <m-list-item value="a">Alpha</m-list-item>
         <m-list-item value="b">Bravo</m-list-item>
         <m-list-item value="c">Charlie</m-list-item>
       </m-list>
-      <m-list aria-label="Square element ${dir}">
+      <m-list variant="segmented" aria-label="Square element ${dir}">
         <m-list-item value="1">One</m-list-item>
         <m-list-item value="2">Two</m-list-item>
         <m-list-item value="3">Three</m-list-item>
       </m-list>
-      <m-list aria-label="Only element ${dir}"><m-list-item value="o">Only</m-list-item></m-list>
+      <m-list variant="segmented" aria-label="Only element ${dir}"><m-list-item value="o">Only</m-list-item></m-list>
     </div><section id="factory"></section>`;
     type ShapeRow = { headline: string; row: string; action: string; layer: string; opacity: string; focusVisible: boolean };
     const readRows = (listName: string): Promise<ShapeRow[]> => page.evaluate((listName) => {
@@ -5576,7 +5577,8 @@ try {
         if (row.layer !== row.row) failures.push(`${where} ${headline} layer ${row.layer} != row ${row.row}`);
       }
     };
-    const park = (): Promise<void> => page.mouse.move(880, 680);
+    // An empty strip above the lists: (880, 680) is over a row once the lists are tall enough.
+    const park = (): Promise<void> => page.locator("#park").hover();
     const named = (listName: string, item: string) =>
       page.getByRole("list", { name: listName }).getByRole("button", { name: item, exact: true });
     const focusNamed = async (listName: string, item: string): Promise<void> => {
@@ -5623,7 +5625,7 @@ try {
             const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
             const host = document.getElementById("factory") as HTMLElement;
             const add = (ariaLabel: string, items: object[]): void => {
-              host.append(w.mtrl.createList({ ariaLabel, trackSelection: true, items }).element);
+              host.append(w.mtrl.createList({ variant: "segmented", ariaLabel, trackSelection: true, items }).element);
             };
             add(`Runs factory ${dir}`, [
               { id: "a", headline: "Alpha" },
@@ -5746,10 +5748,10 @@ try {
     }
 
     // The four are read, not declared, so they inherit: :root, a wrapper, the
-    // <m-list> host and ::part(list). A list with nothing set keeps 4 / 16 / 12 / 16.
+    // <m-list> host and ::part(list). A segmented list with nothing set keeps 4 / 16 / 12 / 16.
     const PROPS = ["--mtrl-list-item-shape", "--mtrl-list-item-shape-outer", "--mtrl-list-item-shape-hover", "--mtrl-list-item-shape-active"];
-    const inheritMarkup = (dir: string): string => `<div id="wrap" dir="${dir}">
-      <m-list aria-label="Inherit element ${dir}">
+    const inheritMarkup = (dir: string): string => `<div id="park" style="height:24px"></div><div id="wrap" dir="${dir}">
+      <m-list variant="segmented" aria-label="Inherit element ${dir}">
         <m-list-item value="1">One</m-list-item>
         <m-list-item value="2">Two</m-list-item>
         <m-list-item value="3">Three</m-list-item>
@@ -5778,7 +5780,7 @@ try {
       await park();
       matches(where, await readRows(listName), { One: "16px 16px 4px 4px", Two: "4px 4px 4px 4px", Three: "4px 4px 16px 16px" }, failures);
       const block = await containerOf(listName);
-      if (block !== R16) failures.push(`${where} container ${block} != ${R16}`);
+      if (block !== ZERO) failures.push(`${where} container ${block} != ${ZERO}`);
       await named(listName, "One").hover();
       matches(where, await readRows(listName), { One: R12 }, failures);
       await park();
@@ -5831,6 +5833,7 @@ try {
               const wrap = document.getElementById("wrap") as HTMLElement;
               wrap.querySelector("m-list")?.remove();
               wrap.append(w.mtrl.createList({
+                variant: "segmented",
                 ariaLabel: `Inherit factory ${dir}`,
                 trackSelection: true,
                 items: [
@@ -5857,9 +5860,11 @@ try {
     }
   }
 
-  // The container uses the rows' outer property. The focus ring stays whole.
+  // The list has no radius and no background of its own: the outer property
+  // rounds the first and the last row only. The focus ring stays whole.
   {
     const R16 = "16px 16px 16px 16px";
+    const ZERO = "0px 0px 0px 0px";
     const PAGE = [255, 0, 170];
     const near = (pixel: number[], color: number[], tol: number): boolean =>
       pixel.every((channel, index) => Math.abs(channel - color[index]) <= tol);
@@ -5867,8 +5872,9 @@ try {
       const rows = (n: number): string => Array.from({ length: n }, (_, i) =>
         `<m-list-item value="${i}">Row ${i + 1}</m-list-item>`).join("");
       const list = (name: string, body: string): string =>
-        `<m-list aria-label="${name} element ${dir}">${body}</m-list>`;
+        `<m-list variant="segmented" aria-label="${name} element ${dir}">${body}</m-list>`;
       return `<div id="stage" dir="${dir}" style="background:#ff00aa;padding:16px">
+        <div id="park" style="height:24px"></div>
         <div id="elements">
           ${list("Box", "<m-list-item value=\"a\">Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item><m-list-item value=\"c\">Charlie</m-list-item>")}
           ${list("Outer", "<m-list-item value=\"a\">Alpha</m-list-item><m-list-item value=\"b\">Bravo</m-list-item>")}
@@ -5922,7 +5928,7 @@ try {
             const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
             const host = document.getElementById("factory") as HTMLElement;
             const add = (ariaLabel: string, items: object[]): HTMLElement => {
-              const list = w.mtrl.createList({ ariaLabel, trackSelection: true, items }).element;
+              const list = w.mtrl.createList({ variant: "segmented", ariaLabel, trackSelection: true, items }).element;
               host.append(list);
               return list;
             };
@@ -5940,6 +5946,7 @@ try {
             add(`Scroll factory ${dir}`, Array.from({ length: 10 }, (_, i) => ({ id: String(i), headline: `Row ${i + 1}` })));
             const nest = add(`Nest factory ${dir}`, [{ id: "a", headline: "Alpha" }]);
             const inner = w.mtrl.createList({
+              variant: "segmented",
               ariaLabel: `Inner factory ${dir}`, trackSelection: true, items: [{ id: "i", headline: "Inner" }],
             }).element;
             nest.querySelector('[role="listitem"]')?.append(inner);
@@ -5950,6 +5957,7 @@ try {
             const nest = document.querySelector(`[aria-label="Nest element ${dir}"]`);
             const row = nest?.shadowRoot?.querySelector('[role="listitem"]');
             const inner = document.createElement("m-list");
+            inner.setAttribute("variant", "segmented");
             inner.setAttribute("aria-label", `Inner element ${dir}`);
             const item = document.createElement("m-list-item");
             item.setAttribute("value", "i");
@@ -5960,7 +5968,7 @@ try {
         }
         await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))));
         const read = (): Promise<{
-          box: string; overflow: string; hostRadius: string; hostBackground: string;
+          box: string; background: string; overflow: string; hostRadius: string; hostBackground: string;
           outerFirst: string; outerLast: string; lead: string; tail: string; head: string;
           off: string; pick: string; solo: string; inset: string; nest: string; inner: string;
         }> => page.evaluate((names) => {
@@ -5990,6 +5998,7 @@ try {
           const boxRoot = rootOf(names.box);
           return {
             box: four(getComputedStyle(boxRoot)),
+            background: getComputedStyle(boxRoot).backgroundColor,
             overflow: getComputedStyle(boxRoot).overflow,
             hostRadius: four(getComputedStyle(boxHost)),
             hostBackground: getComputedStyle(boxHost).backgroundColor,
@@ -6017,13 +6026,16 @@ try {
           inset: name("Inset"), nest: name("Nest"),
         });
         const failures: string[] = [];
+        // Off the rows: the pointer is where the previous pass left it.
+        await page.locator("#park").hover();
         const got = await read();
-        if (got.box !== R16) failures.push(`${where} container ${got.box}`);
+        if (got.box !== ZERO) failures.push(`${where} container ${got.box}`);
+        if (got.background !== "rgba(0, 0, 0, 0)") failures.push(`${where} container background ${got.background}`);
         if (got.overflow !== "auto") failures.push(`${where} overflow ${got.overflow}`);
         if (kind === "element") {
           if (got.hostRadius !== "0px 0px 0px 0px") failures.push(`${where} host radius ${got.hostRadius}`);
           if (got.hostBackground !== "rgba(0, 0, 0, 0)") failures.push(`${where} host background ${got.hostBackground}`);
-        } else if (got.hostRadius !== R16) failures.push(`${where} factory radius ${got.hostRadius}`);
+        }
         if (got.outerFirst !== "16px 16px 4px 4px") failures.push(`${where} outer first ${got.outerFirst}`);
         await page.evaluate((label) => {
           const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
@@ -6031,7 +6043,7 @@ try {
           root.style.setProperty("--mtrl-list-item-shape-outer", "0");
         }, name("Outer"));
         const squared = await read();
-        if (squared.box === "0px 0px 0px 0px") failures.push(`${where} zeroing one list squared the other`);
+        if (squared.solo !== R16) failures.push(`${where} zeroing one list squared another: ${squared.solo}`);
         const outerZero = await page.evaluate((label) => {
           const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
           const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
@@ -6060,11 +6072,11 @@ try {
           const rows = [...root.querySelectorAll('[role="listitem"]')].map((row) => four(getComputedStyle(row)));
           return { container: four(getComputedStyle(root)), rows };
         }, name("Outer"));
-        if (outerWide.container !== "28px 28px 28px 28px" || outerWide.rows[0] !== "28px 28px 4px 4px" || outerWide.rows[1] !== "4px 4px 28px 28px") {
+        if (outerWide.container !== ZERO || outerWide.rows[0] !== "28px 28px 4px 4px" || outerWide.rows[1] !== "4px 4px 28px 28px") {
           failures.push(`${where} outer 28px container ${outerWide.container} rows ${outerWide.rows.join(" | ")}`);
         }
-        assert.deepEqual(failures.slice(), [], `${where}: the container follows the outer property`);
-        check(`list: ${where}, the container is 16px and follows the outer property`);
+        assert.deepEqual(failures.slice(), [], `${where}: the container is square and unpainted`);
+        check(`list: ${where}, the container has no radius and no background; the outer property rounds the rows`);
 
         const focusNamed = async (label: string, item: string): Promise<void> => {
           await page.evaluate(() => {
@@ -6145,45 +6157,19 @@ try {
         if (got.pick !== R16) failures.push(`${where} selected first ${got.pick}`);
         if (got.solo !== R16) failures.push(`${where} single ${got.solo}`);
         if (got.inset !== R16) failures.push(`${where} inset divider ${got.inset}`);
-        if (got.nest !== R16 || got.inner !== R16) failures.push(`${where} nested outer ${got.nest} inner ${got.inner}`);
-        const at = async (scroll: "start" | "middle" | "end"): Promise<void> => {
-          await page.evaluate(({ label, scroll }) => {
-            const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
-            const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
-            root.style.maxHeight = "140px";
-            if (scroll === "start") root.scrollTop = 0;
-            else if (scroll === "middle") root.scrollTop = root.scrollHeight / 2;
-            else root.scrollTop = root.scrollHeight;
-            for (const el of [document.documentElement, document.body]) {
-              el.style.overflow = "visible";
-              el.style.position = "static";
-              el.style.top = "auto";
-            }
-            const scrolling = document.scrollingElement ?? document.documentElement;
-            window.scrollTo({ top: Math.max(0, scrolling.scrollTop + root.getBoundingClientRect().top - 24), left: 0, behavior: "instant" });
-          }, { label: name("Scroll"), scroll });
-          const spot = await page.evaluate((label) => {
-            const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
-            const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
-            const box = root.getBoundingClientRect();
-            if (box.top < 0) throw new Error(`scrolled list is above the viewport at ${box.top}`);
-            return {
-              scrollTop: root.scrollTop,
-              page: [box.left - 6, box.top + 8],
-              top: [box.left + 1, box.top + 1],
-              bottom: [box.left + 1, box.bottom - 2],
-              end: [box.right - 2, box.top + 1],
-            };
-          }, name("Scroll"));
-          const [background, top, bottom, end] = await pixels([spot.page, spot.top, spot.bottom, spot.end]);
-          for (const [place, pixel] of [["top", top], ["bottom", bottom], ["end", end]] as const) {
-            if (!near(pixel, background, 2)) failures.push(`${where} scrolled ${scroll} ${place} ${pixel.join(",")} page ${background.join(",")} scroll ${spot.scrollTop}`);
-          }
-        };
-        await at("start");
-        await at("middle");
-        await at("end");
-        assert.deepEqual(failures.slice(), [], `${where}: the container's edges`);
+        if (got.nest !== ZERO || got.inner !== ZERO) failures.push(`${where} nested outer ${got.nest} inner ${got.inner}`);
+        // A list given a max-height scrolls inside a square scrollport: the list
+        // has no radius, so rows scrolled to its edge are cut straight.
+        const scrolled = await page.evaluate((label) => {
+          const host = document.querySelector(`[aria-label="${label}"]`) as HTMLElement;
+          const root = (host.classList.contains("mtrl-list") ? host : host.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement;
+          root.style.maxHeight = "140px";
+          root.scrollTop = root.scrollHeight;
+          const style = getComputedStyle(root);
+          return { scrolls: root.scrollTop > 0, radius: [style.borderTopLeftRadius, style.borderTopRightRadius, style.borderBottomRightRadius, style.borderBottomLeftRadius].join(" ") };
+        }, name("Scroll"));
+        if (!scrolled.scrolls || scrolled.radius !== ZERO) failures.push(`${where} scrolled list scrolls=${scrolled.scrolls} radius ${scrolled.radius}`);
+        assert.deepEqual(failures.slice(), [], `${where}: the rows beside structure, and the scrollport`);
         check(`list: ${where}, a divider, a header, a disabled row, a selected row, one row, an inset divider, a nested list, and a scrolled list`);
       }
     }
@@ -6196,6 +6182,221 @@ try {
       document.body.style.position = saved.bodyPosition;
       document.body.style.top = saved.bodyTop;
     }, savedDocument);
+  }
+
+  // ---------------------------------------------------------------- list variants
+  // `variant`: standard (the default) and segmented. Per variant, direction and
+  // layer (factory, <m-list>): every corner of the row and of its state layer
+  // at rest, hovered, keyboard-focused, pressed and selected, on the first, a
+  // middle, the last and a single row; the gap between the rows' boxes; the
+  // row's colour; and a list that paints no background. Standard: 0 everywhere.
+  {
+    const ZERO = "0px 0px 0px 0px";
+    const R12 = "12px 12px 12px 12px";
+    const R16 = "16px 16px 16px 16px";
+    const TOP = "16px 16px 4px 4px";
+    const BOTTOM = "4px 4px 16px 16px";
+    type Variant = "standard" | "segmented";
+    type Row = { headline: string; row: string; action: string; layer: string; background: string };
+    type Look = { rows: Row[]; gaps: number[]; container: string; containerBackground: string; classes: string };
+    const body = {
+      Trio: [["a", "First"], ["b", "Middle"], ["c", "Last"]],
+      Single: [["s", "Single"]],
+      Split: [["a", "Alpha"], ["b", "Bravo"], ["", "divider"], ["c", "Charlie"], ["d", "Delta"], ["", "subheader"], ["e", "Echo"], ["f", "Foxtrot"]],
+    } as const;
+    const markup = (dir: string, variant: Variant | null): string => `<div id="park" style="height:24px"></div><div dir="${dir}" style="padding:16px">
+      <div id="elements">${Object.entries(body).map(([name, rows]) =>
+        `<m-list ${variant ? `variant="${variant}" ` : ""}aria-label="${name}">${rows.map(([value, label]) =>
+          label === "divider" || label === "subheader"
+            ? `<m-list-item kind="${label}">${label === "subheader" ? "Group" : ""}</m-list-item>`
+            : `<m-list-item value="${value}">${label}</m-list-item>`).join("")}</m-list>`).join("")}</div>
+      <section id="factory"></section>
+    </div>`;
+    const look = (listName: string): Promise<Look> => page.evaluate((listName) => {
+      const list = document.querySelector(`[aria-label="${listName}"]`) as HTMLElement | null;
+      const root = (list?.classList.contains("mtrl-list") ? list : list?.shadowRoot?.querySelector(".mtrl-list")) as HTMLElement | null;
+      if (!root) throw new Error(`no list root for ${listName}`);
+      const four = (style: CSSStyleDeclaration): string => [
+        style.borderTopLeftRadius, style.borderTopRightRadius,
+        style.borderBottomRightRadius, style.borderBottomLeftRadius,
+      ].join(" ");
+      const content = root.querySelector('[class*="list__content"]') as HTMLElement;
+      const boxes = [...content.children].map((child) => child.getBoundingClientRect());
+      return {
+        rows: [...root.querySelectorAll('[role="listitem"]')].map((row) => {
+          const action = row.querySelector("button") as HTMLElement;
+          return {
+            headline: row.querySelector('[class*="headline"]')?.textContent ?? "",
+            row: four(getComputedStyle(row)),
+            action: four(getComputedStyle(action)),
+            layer: four(getComputedStyle(action, "::before")),
+            background: getComputedStyle(row).backgroundColor,
+          };
+        }),
+        gaps: boxes.slice(1).map((box, index) => Math.round((box.top - boxes[index].bottom) * 100) / 100),
+        container: four(getComputedStyle(root)),
+        containerBackground: getComputedStyle(root).backgroundColor,
+        classes: [...root.classList].filter((name) => name.startsWith("mtrl-list--")).join(" "),
+      };
+    }, listName);
+    const role = (name: string): Promise<string> => page.evaluate((name) => {
+      const probe = document.createElement("div");
+      probe.style.backgroundColor = `var(--mtrl-sys-color-${name})`;
+      document.body.append(probe);
+      const color = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return color;
+    }, name);
+    // An empty strip above the lists: (880, 680) is over a row once the lists are tall enough.
+    const park = (): Promise<void> => page.locator("#park").hover();
+    const button = (listName: string, item: string) =>
+      page.getByRole("list", { name: listName, exact: true }).getByRole("button", { name: item, exact: true });
+    const blur = (): Promise<void> => page.evaluate(() => {
+      const active = document.activeElement as HTMLElement | null;
+      (active?.shadowRoot?.activeElement as HTMLElement | null)?.blur();
+      active?.blur();
+    });
+    const focusItem = async (listName: string, item: string): Promise<void> => {
+      await blur();
+      for (let i = 0; i < 24; i++) {
+        await page.keyboard.press("Tab");
+        const hit = await page.evaluate(({ listName, item }) => {
+          const list = document.querySelector(`[aria-label="${listName}"]`);
+          const light = document.activeElement as HTMLElement | null;
+          const control = (list?.shadowRoot?.activeElement ?? (list?.contains(light) ? light : null)) as HTMLElement | null;
+          const headline = control?.closest('[role="listitem"]')?.querySelector('[class*="headline"]')?.textContent;
+          return control?.matches(":focus-visible") === true && headline === item;
+        }, { listName, item });
+        if (hit) return;
+      }
+      throw new Error(`no focus-visible on ${listName} / ${item}`);
+    };
+
+    for (const variant of ["standard", "segmented", "default"] as const) {
+      const segmented = variant === "segmented";
+      for (const dir of ["ltr", "rtl"] as const) {
+        for (const kind of ["element", "factory"] as const) {
+          const where = `${variant} ${kind} ${dir}`;
+          await fresh(page, markup(dir, variant === "default" ? null : variant));
+          if (kind === "factory") {
+            await page.evaluate(({ body, variant }) => {
+              const w = window as unknown as Win & { mtrl: { createList: (c: object) => { element: HTMLElement } } };
+              const host = document.getElementById("factory") as HTMLElement;
+              for (const [ariaLabel, rows] of Object.entries(body)) {
+                host.append(w.mtrl.createList({
+                  ...(variant === "default" ? {} : { variant }),
+                  ariaLabel,
+                  trackSelection: true,
+                  items: rows.map(([id, headline]) => headline === "divider" ? { kind: "divider" }
+                    : headline === "subheader" ? { kind: "subheader", headline: "Group" } : { id, headline }),
+                }).element);
+              }
+              document.getElementById("elements")?.remove();
+            }, { body, variant });
+          }
+          await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))));
+          const failures: string[] = [];
+          const surface = await role("surface");
+          const container = await role("surface-container");
+          const selectedColor = await role("secondary-container");
+          const expectLook = (state: string, got: Look, want: Record<string, string>, selected?: string): void => {
+            for (const row of got.rows) {
+              const radius = want[row.headline];
+              if (!radius) { failures.push(`${where} ${state}: unexpected row ${row.headline}`); continue; }
+              if (row.row !== radius) failures.push(`${where} ${state} ${row.headline} row ${row.row} != ${radius}`);
+              if (row.action !== radius) failures.push(`${where} ${state} ${row.headline} action ${row.action} != ${radius}`);
+              if (row.layer !== radius) failures.push(`${where} ${state} ${row.headline} layer ${row.layer} != ${radius}`);
+              const color = row.headline === selected ? selectedColor : segmented ? container : surface;
+              if (row.background !== color) failures.push(`${where} ${state} ${row.headline} background ${row.background} != ${color}`);
+            }
+            const gap = segmented ? 2 : 0;
+            if (got.gaps.some((value) => value !== gap)) failures.push(`${where} ${state} gaps ${got.gaps.join(",")} != ${gap}`);
+            if (got.container !== ZERO) failures.push(`${where} ${state} list radius ${got.container}`);
+            if (got.containerBackground !== "rgba(0, 0, 0, 0)") failures.push(`${where} ${state} list background ${got.containerBackground}`);
+            const modifier = `mtrl-list--${segmented ? "segmented" : "standard"}`;
+            if (got.classes !== modifier) failures.push(`${where} ${state} classes "${got.classes}" != ${modifier}`);
+          };
+          const shape = (value: string): string => (segmented ? value : ZERO);
+          const rest: Record<string, Record<string, string>> = {
+            Trio: { First: shape(TOP), Middle: shape("4px 4px 4px 4px"), Last: shape(BOTTOM) },
+            Single: { Single: shape(R16) },
+            // A divider or a subheader ends a group: the rows beside it take their outer corners.
+            Split: { Alpha: shape(TOP), Bravo: shape(BOTTOM), Charlie: shape(TOP), Delta: shape(BOTTOM), Echo: shape(TOP), Foxtrot: shape(BOTTOM) },
+          };
+          await park();
+          for (const listName of ["Trio", "Single", "Split"]) expectLook("rest", await look(listName), rest[listName]);
+          for (const [listName, item] of [["Trio", "First"], ["Trio", "Middle"], ["Trio", "Last"], ["Single", "Single"]] as const) {
+            await button(listName, item).hover();
+            expectLook(`${item} hovered`, await look(listName), { ...rest[listName], [item]: shape(R12) });
+            await park();
+            await focusItem(listName, item);
+            expectLook(`${item} focused`, await look(listName), { ...rest[listName], [item]: shape(R16) });
+            await blur();
+            const box = await button(listName, item).boundingBox();
+            if (!box) throw new Error(`no box for ${listName} / ${item}`);
+            await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+            await page.mouse.down();
+            expectLook(`${item} pressed`, await look(listName), { ...rest[listName], [item]: shape(R16) });
+            await page.mouse.up();
+            // The press selected the row. Selected is the active shape on every
+            // corner, whatever the row's index, hovered or not.
+            expectLook(`${item} selected and hovered`, await look(listName), { ...rest[listName], [item]: shape(R16) }, item);
+            await park();
+            await blur();
+            expectLook(`${item} selected`, await look(listName), { ...rest[listName], [item]: shape(R16) }, item);
+            // A second press deselects it: back to the rest shape of its index.
+            await button(listName, item).click();
+            await park();
+            await blur();
+            expectLook(`${item} deselected`, await look(listName), rest[listName]);
+          }
+          assert.deepEqual(failures, [], `${where}: the rows' and state layers' corners, the gap and the colours`);
+          check(segmented
+            ? `list: ${where}, rows 4 / 16 outer / 12 hovered / 16 focused, pressed and selected, 2px apart, on surface-container; a divider and a subheader end a group; the list paints nothing`
+            : `list: ${where}, every corner 0 in every state, no gap, and the list paints nothing`);
+        }
+      }
+    }
+
+    // The attribute and the property reflect each other; a change recreates the
+    // list with the variant's class; an unknown value is the default.
+    await fresh(page, `<m-list id="v" aria-label="Reflect"><m-list-item value="a">Alpha</m-list-item><m-list-item value="b">Bravo</m-list-item></m-list>`);
+    const reflected = await page.evaluate(async () => {
+      const list = document.getElementById("v") as HTMLElement & { variant: string | null; value: string | null };
+      const settle = (): Promise<unknown> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
+      const state = (): string => [
+        String(list.variant), String(list.getAttribute("variant")),
+        [...(list.shadowRoot?.querySelector(".mtrl-list")?.classList ?? [])].filter((name) => name.startsWith("mtrl-list--")).join(" "),
+      ].join(" | ");
+      const seen: string[] = [state()];
+      list.value = "b";
+      list.variant = "segmented";
+      await settle();
+      seen.push(state(), `kept ${list.value}`);
+      list.setAttribute("variant", "standard");
+      await settle();
+      seen.push(state());
+      list.variant = "expressive";
+      await settle();
+      seen.push(state());
+      list.setAttribute("variant", "segmented");
+      await settle();
+      seen.push(state());
+      list.variant = null;
+      await settle();
+      seen.push(state());
+      return seen;
+    });
+    assert.deepEqual(reflected, [
+      "null | null | mtrl-list--standard",
+      "segmented | segmented | mtrl-list--segmented",
+      "kept b",
+      "standard | standard | mtrl-list--standard",
+      "expressive | expressive | mtrl-list--standard",
+      "segmented | segmented | mtrl-list--segmented",
+      "null | null | mtrl-list--standard",
+    ]);
+    check("list: variant is an attribute and a property that reflect each other; a change keeps the selection; an unknown value is standard");
   }
 
   // ---------------------------------------------------------------- list defaults
