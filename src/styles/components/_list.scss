@@ -5,8 +5,10 @@
 // (`--<prefix>-button-shape`, `--<prefix>-button-shape-pressed`,
 // `--<prefix>-button-shape-selected`): the row at rest, the list's outer
 // corners, the hovered row, and the active row (focused, pressed, selected).
-// Set the four to 0 on `.mtrl-list` for square rows. On `<m-list>` that
-// element is `::part(list)`.
+// The rules read them and do not declare them, so a value on the list, on
+// any ancestor, or on the `<m-list>` element inherits. The same outer
+// property rounds the list's own container. Set the four to 0 for square
+// rows and a square container.
 @use "../abstract/base" as base;
 @use "../abstract/mixins" as m;
 @use "../abstract/theme" as t;
@@ -15,15 +17,15 @@
 $component: "#{base.$prefix}-list";
 .#{$component} {
   --#{base.$prefix}-list-item-offset: 0px;
-  --#{base.$prefix}-list-item-shape: #{v.shape('extra-small')};
-  --#{base.$prefix}-list-item-shape-outer: #{v.shape('large')};
-  --#{base.$prefix}-list-item-shape-hover: #{v.shape('medium')};
-  --#{base.$prefix}-list-item-shape-active: #{v.shape('large')};
   position: relative;
   overflow: auto;
   background: t.color("surface");
   color: t.color("on-surface");
   padding-block: 8px;
+  // The block and the rows' outer corners are one value. The 8px block
+  // padding keeps a row's outer radius, its state layer and its focus ring
+  // inside this curve, so the scrollport does not cut them.
+  border-radius: var(--#{base.$prefix}-list-item-shape-outer, v.shape('large'));
   &__content { display: flex; flex-direction: column; }
   &__item {
     position: relative;
