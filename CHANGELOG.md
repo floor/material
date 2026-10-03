@@ -12,7 +12,54 @@ Up to 0.10.x the package was published as `mtrl`, from `floor/mtrl`: the section
 below are kept as they were published, and the release they announce as 1.0.0 is this one,
 `material` 3.0.0.
 
+`material` 3.0.0 is MIT; `material` 1.x was GPL-3.
+
 ## [Unreleased]
+
+## [3.0.0-next.1] - 2026-10-03
+
+The second prerelease of 3.0.0, on the npm `next` tag (`npm install material@next`). Its full
+entries are below; this is what changed since `3.0.0-next.0`.
+
+**Breaking since next.0**
+
+- `material/core/<area>` is an explicit list: `material/core` and its seven areas (`canvas`,
+  `compose`, `dom`, `shapes`, `state`, `theme`, `utils`). `material/core/compose/features` no
+  longer resolves: import the same names from `material/core/compose`.
+- `ProgressComponent` no longer has `canvas`, `resize`, `track`, `indicator` and `buffer`
+  (TS2339). For the canvas: `progress.element.querySelector('canvas')`.
+
+**Layout changes since next.0: check your pages**
+
+- A select made with `createSelect()` is 280px wide unless you size it; it filled its
+  container. To keep that: `.mtrl-select { width: 100%; }`.
+- A select's menu is as wide as its field in both layers (it stopped at 280px in the default
+  layer).
+- A chip with a remove or trailing button is at least 88px wide, its label at least 42px
+  ("OK": 64.5 → 88px).
+- A labelled horizontal slider is 4px taller (72 → 76px at XS and S, 76 → 80 at M, 92 → 96
+  at L, 132 → 136 at XL); its label is 16px on a 24px line (was 18px).
+- An unlabelled switch is 52 x 48 (was 64 x 56).
+- An unlabelled checkbox's box is centred in its 48px target (15px on each side; it sat at
+  the start). An unlabelled radio is centred the same way.
+- A radio row grows with a wrapping label (it was a fixed 48px, and the text overflowed it);
+  a one-line row stays 48px.
+- An extra-small button has 4px between its icon and its label (was 8px).
+- Right to left: a small button's icon padding, the text field's trailing icon button's
+  target, a selected menu item's check mark and `<m-text-field>` are mirrored.
+
+**Also since next.0**
+
+- Every `material/components/<name>` entry exports its factory as the default export and by
+  its name.
+- The element authoring API (`defineElement`, `ElementSpec`, `registerStyles`, `hasStyles`,
+  `SHADOW_BASE_STYLES`) is experimental: outside semantic versioning in 3.x.
+- `tab.badge` may be `undefined` until the badge is shown; the slider's `components` object is
+  internal.
+- The side sheet's and the dialog's close buttons reach a 48 x 48 target; an
+  `<m-icon-button>`'s icon keeps its size; a multiline text field uses the value it was
+  created with; a select's selected option has one look in both layers; the package no
+  longer carries a second README and licence under `dist/`.
 
 ### Migrating from 0.10.x
 
@@ -1439,53 +1486,6 @@ Check these by searching your code: they compile, or come from plain JavaScript,
   SSR parity and benchmark tooling load the source renderer and source CSS registry (FLO-363).
 - Source SSR reads the element CSS registry without resolving built package exports; source tests register real Sass output without mocking the CSS import (FLO-363).
 
-`material` 3.0.0 is MIT; `material` 1.x was GPL-3.
-
-## [3.0.0-next.1] - 2026-10-03
-
-The second prerelease of 3.0.0, on the npm `next` tag (`npm install material@next`). Its full
-entries are under Unreleased; this is what changed since `3.0.0-next.0`.
-
-**Breaking since next.0**
-
-- `material/core/<area>` is an explicit list: `material/core` and its seven areas (`canvas`,
-  `compose`, `dom`, `shapes`, `state`, `theme`, `utils`). `material/core/compose/features` no
-  longer resolves: import the same names from `material/core/compose`.
-- `ProgressComponent` no longer has `canvas`, `resize`, `track`, `indicator` and `buffer`
-  (TS2339). For the canvas: `progress.element.querySelector('canvas')`.
-
-**Layout changes since next.0: check your pages**
-
-- A select made with `createSelect()` is 280px wide unless you size it; it filled its
-  container. To keep that: `.mtrl-select { width: 100%; }`.
-- A select's menu is as wide as its field in both layers (it stopped at 280px in the default
-  layer).
-- A chip with a remove or trailing button is at least 88px wide, its label at least 42px
-  ("OK": 64.5 → 88px).
-- A labelled horizontal slider is 4px taller (72 → 76px at XS and S, 76 → 80 at M, 92 → 96
-  at L, 132 → 136 at XL); its label is 16px on a 24px line (was 18px).
-- An unlabelled switch is 52 x 48 (was 64 x 56).
-- An unlabelled checkbox's box is centred in its 48px target (15px on each side; it sat at
-  the start). An unlabelled radio is centred the same way.
-- A radio row grows with a wrapping label (it was a fixed 48px, and the text overflowed it);
-  a one-line row stays 48px.
-- An extra-small button has 4px between its icon and its label (was 8px).
-- Right to left: a small button's icon padding, the text field's trailing icon button's
-  target, a selected menu item's check mark and `<m-text-field>` are mirrored.
-
-**Also since next.0**
-
-- Every `material/components/<name>` entry exports its factory as the default export and by
-  its name.
-- The element authoring API (`defineElement`, `ElementSpec`, `registerStyles`, `hasStyles`,
-  `SHADOW_BASE_STYLES`) is experimental: outside semantic versioning in 3.x.
-- `tab.badge` may be `undefined` until the badge is shown; the slider's `components` object is
-  internal.
-- The side sheet's and the dialog's close buttons reach a 48 x 48 target; an
-  `<m-icon-button>`'s icon keeps its size; a multiline text field uses the value it was
-  created with; a select's selected option has one look in both layers; the package no
-  longer carries a second README and licence under `dist/`.
-
 ### Security
 
 - **A password or hidden field's value is no longer painted before it upgrades (#53).**
@@ -1497,7 +1497,7 @@ entries are under Unreleased; this is what changed since `3.0.0-next.0`.
 The first prerelease of 3.0.0, on the npm `next` tag (`npm install material@next`).
 `npm install material` gives `material` 1.0.4, the older 1.x library that lived under this
 name (also the `legacy` tag), until 3.0.0 is released. Published without notes: its changes
-are described under Unreleased.
+are described in the `[3.0.0-next.1]` section above.
 
 ## [0.10.6] - 2026-10-02
 
