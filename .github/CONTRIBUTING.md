@@ -218,22 +218,18 @@ Thank you for contributing to material! Your efforts help make this library bett
 Releases are published by GitHub Actions with npm trusted publishing
 (`.github/workflows/publish.yml`); no npm token is involved.
 
-Until 3.0.0 is `latest`, `npm install material` installs 1.0.4, the earlier
-1.x library that lived under this name; the 3.0.0 pre-releases are on the
-`next` tag (`npm install material@next`).
+Install the stable release with `npm install material`.
 
 1. Open a release pull request that bumps `package.json` (`x.y.z`, or
    `x.y.z-next.N` for a pre-release), turns `[Unreleased]` in `CHANGELOG.md`
    into the version's section, and updates `README.md` and `npm-readme.md`
    where the release changes them. Merge it when CI passes.
 
-   **The 3.0.0 release pull request changes the install section** of both
-   files, between `<!-- install -->` and `<!-- /install -->`: the command
-   becomes `npm install material` and the paragraph about the `next` tag
-   goes. `bun run readme:check` holds the two to the version: it requires
-   `npm install material@next` while `package.json` is a 3.0.0 pre-release
-   and `npm install material` once it is not, so the pull request that sets
-   `3.0.0` is red until both files are changed.
+   **Keep the install sections consistent with the version**, between
+   `<!-- install -->` and `<!-- /install -->` in both files.
+   `bun run readme:check` requires `npm install material` for stable versions
+   and `npm install material@next` for a 3.0.0 pre-release. A stable version
+   must have no paragraph about the `next` tag in its install section.
 
    **Every release pull request refreshes the size table** of both files,
    between `<!-- sizes -->` and `<!-- /sizes -->`, from `bun run size:check`

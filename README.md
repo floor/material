@@ -2,6 +2,12 @@
 
 Material Design 3 components for the web: as web components, as React, Vue, Svelte and Solid components, and as plain JavaScript. Written in TypeScript, with zero dependencies.
 
+**Documentation, live playgrounds and examples: [md3.io](https://md3.io)**
+
+[![npm version](https://img.shields.io/npm/v/material.svg)](https://www.npmjs.com/package/material)
+[![CI](https://github.com/floor/material/actions/workflows/ci.yml/badge.svg)](https://github.com/floor/material/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/material.svg)](https://github.com/floor/material/blob/main/LICENSE)
+
 ```html
 <form>
   <m-text-field name="email" type="email" label="Email" required></m-text-field>
@@ -25,10 +31,8 @@ Once the elements are registered ([below](#use-it-your-way)), these controls tak
 
 <!-- install -->
 ```bash
-npm install material@next
+npm install material
 ```
-
-3.0.0 is in pre-release, on the `next` tag. Until it is released, `npm install material` without the tag installs 1.0.4, an earlier and separate library (see [Where this came from](#where-this-came-from)).
 <!-- /install -->
 
 React, Vue, Svelte and Solid are optional peer dependencies: material uses the one your app has and installs none of them.
@@ -492,7 +496,7 @@ What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from th
 | Everything the root exports (`export * from 'material'`), without code splitting | 126.9 kB |
 | `material/styles/base` | 2.9 kB |
 | `material/styles/base` and `material/styles/button` | 5.2 kB |
-| `material/styles`, the full stylesheet | 61.8 kB |
+| `material/styles`, the full stylesheet | 62.5 kB |
 <!-- /sizes -->
 
 `bun run size` measures the initial JavaScript of each of the 37 components and fails when one goes over its budget; CI runs both on every pull request. Each component's page on [md3.io](https://md3.io/components/) gives its size.
