@@ -218,13 +218,17 @@ for (const dir of ["ltr", "rtl"]) {
   }
   for (const element of ["button", "text-field"]) {
     const row = cases.find(row => row.element === element && row.variant === "default")!;
+    const button = element === "button";
+    const reason = button
+      ? "Button host grows at 24px/2: floor/material#42."
+      : "Text field host grows at 24px/2: floor/material#43.";
+    const knownMoves: KnownMove[] = ["#inline", "#block"].map(sibling => ({
+      sibling, axis: "y" as const, value: button ? 8 : 1.5, reason,
+    }));
+    if (button) knownMoves.push({ subject: true, value: 8, reason });
     cases.push({ ...row, variant: `${dir}; 24/2`,
       html: `<div style="display:flex">${row.html.replace(`<m-${element}`, `<m-${element} id="subject" dir="${dir}"`)}</div>`,
       host: "#subject", width: 850, style: "font-size:24px;line-height:2",
-      knownMoves: ["#inline", "#block"].map(sibling => ({ sibling, axis: "y" as const,
-        value: element === "button" ? 8 : 1.5,
-        reason: element === "button"
-          ? "Button host grows at 24px/2: floor/material#42."
-          : "Text field host grows at 24px/2: floor/material#43." })) });
+      knownMoves });
   }
 }

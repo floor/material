@@ -16,8 +16,9 @@
 // its shadow root renders) moves or changes size, a sibling when it moves.
 // Every case must stay under 0.01, and a case fails outright when a sibling
 // moves more than MOVE_LIMIT, whatever the score reads (see the constant).
-// A button's own box must also move or resize by less than that limit: a 4px
-// inset mismatch can move adjacent content while scoring below the threshold.
+// A button's own box must also move or resize by less than that limit, unless a
+// subject pin records the expected change: a 4px inset mismatch can move
+// adjacent content while scoring below the threshold.
 //
 // The mutation check runs the same cases without the pre-upgrade stylesheet:
 // it must fail most elements, or the check is not measuring anything.
