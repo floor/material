@@ -1401,6 +1401,18 @@ entries are below; this is what changed since `3.0.0-next.0`.
 
 ### Fixed
 
+- **A FAB in a corner keeps that corner in every state (#54).** The state layer's mixin set
+  `position: relative` on its host. Written beside the state selector, that is `(0,2,0)`, so
+  a corner FAB's `:hover` outranked its corner class's `position: fixed` `(0,1,0)`: computed
+  `position` was `fixed` at rest and `relative` while hovered, focused or pressed, which took
+  the button out of its corner and into the page's flow. The mixin now writes the declaration
+  in `:where()`, which adds no specificity: any other position wins — the corner classes', or
+  the position a page gives its own fixed, absolute or sticky host — while a static host still
+  gets the position the layer's `::before` needs. The side sheet's close button, which had no
+  position of its own, now carries `position: relative`: without it a page rule like
+  `button { position: static }` made it static and anchored its state layer and its 48px target
+  to the sheet's container. FAB and extended FAB, factory and element, four corners,
+  left-to-right and right-to-left, the same at rest, hovered, focused and pressed.
 - **A text button with an icon no longer moves when it upgrades.** The pre-upgrade
   stylesheet now reserves the same inline padding as the upgraded button at the
   default size and every explicit size, keeping the button and following content in
