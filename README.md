@@ -6,7 +6,7 @@ Material Design 3 components for the web: as web components, as React, Vue, Svel
 
 [![npm version](https://img.shields.io/npm/v/material.svg)](https://www.npmjs.com/package/material)
 [![CI](https://github.com/floor/material/actions/workflows/ci.yml/badge.svg)](https://github.com/floor/material/actions/workflows/ci.yml)
-[![license](https://img.shields.io/npm/l/material.svg)](https://github.com/floor/material/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/material.svg?cacheSeconds=86400)](https://github.com/floor/material/blob/main/LICENSE)
 
 ```html
 <form>
@@ -16,7 +16,7 @@ Material Design 3 components for the web: as web components, as React, Vue, Svel
 </form>
 ```
 
-Once the elements are registered ([below](#use-it-your-way)), these controls take part in the form as native ones do: its value, reset and validation. Try every component in the playground on **[md3.io](https://md3.io)**, with examples in each framework.
+Once the elements are registered ([below](#use-it-your-way)), these controls take part in the form as native ones do: its value, reset and validation.
 
 ## Why material
 
