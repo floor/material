@@ -1,3 +1,5 @@
+import type { KnownMove } from "../preupgrade-moves";
+
 // The server-style HTML scripts/check-preupgrade.ts renders for each element:
 // the host and its light DOM, as a framework adapter's server render emits it.
 // One case per element in its default configuration, then the attribute
@@ -14,6 +16,15 @@ export interface PreupgradeCase {
   /** The variant, or "default". */
   variant: string;
   html: string;
+  /** Consumer typography/layout, outside the element's own styles. */
+  style?: string;
+  host?: string;
+  siblings?: readonly string[];
+  width?: number;
+  /** Define button/text-field neighbours before measuring a switch upgrade. */
+  prepareNeighbors?: boolean;
+  strictBox?: boolean;
+  knownMoves?: readonly KnownMove[];
 }
 
 const c = (element: string, variant: string, html: string): PreupgradeCase => ({ element, variant, html });
@@ -29,6 +40,13 @@ export const cases: PreupgradeCase[] = [
   c("button", "icon", `<m-button icon="${ICON}">Save</m-button>`),
   c("button", "size=m icon", `<m-button size="m" icon="${ICON}">Save</m-button>`),
   c("button", "variant=tonal", `<m-button variant="tonal">Save</m-button>`),
+  // A text button with a leading icon keeps its box at every size on upgrade.
+  c("button", "variant=text icon", `<m-button variant="text" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=xs icon", `<m-button variant="text" size="xs" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=s icon", `<m-button variant="text" size="s" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=m icon", `<m-button variant="text" size="m" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=l icon", `<m-button variant="text" size="l" icon="${ICON}">Save</m-button>`),
+  c("button", "variant=text size=xl icon", `<m-button variant="text" size="xl" icon="${ICON}">Save</m-button>`),
   c("switch", "default", `<m-switch>Wi-Fi</m-switch>`),
   c("switch", "supporting-text", `<m-switch supporting-text="Saves power">Wi-Fi</m-switch>`),
   c("switch", "checked", `<m-switch checked>Wi-Fi</m-switch>`),
@@ -45,6 +63,25 @@ export const cases: PreupgradeCase[] = [
   // An empty supporting-text builds no helper (the element reads it as none,
   // as with `label=""`), so this host is the track box too.
   c("switch", "supporting-text=''", `<m-switch aria-label="Switch" supporting-text=""></m-switch>`),
+  // The four track-box families again with the states and the one attribute
+  // (the handle icon) that changes the upgraded switch's structure. None of
+  // them changes the box: the thumb sits inside the track and the disabled and
+  // checked rules are colours and geometry there. `checked`, `disabled` and
+  // `icon` on the labelled row are the controls.
+  c("switch", "disabled", `<m-switch disabled>Wi-Fi</m-switch>`),
+  c("switch", "icon", `<m-switch icon="${ICON}">Wi-Fi</m-switch>`),
+  c("switch", "unlabelled checked", `<m-switch checked aria-label="Switch"></m-switch>`),
+  c("switch", "unlabelled disabled", `<m-switch disabled aria-label="Switch"></m-switch>`),
+  c("switch", "unlabelled icon", `<m-switch icon="${ICON}" aria-label="Switch"></m-switch>`),
+  c("switch", "label='' checked", `<m-switch checked aria-label="Switch" label=""></m-switch>`),
+  c("switch", "label='' disabled", `<m-switch disabled aria-label="Switch" label=""></m-switch>`),
+  c("switch", "label='' icon", `<m-switch icon="${ICON}" aria-label="Switch" label=""></m-switch>`),
+  c("switch", "supporting-text no label checked", `<m-switch checked aria-label="Switch" supporting-text="Helps"></m-switch>`),
+  c("switch", "supporting-text no label disabled", `<m-switch disabled aria-label="Switch" supporting-text="Helps"></m-switch>`),
+  c("switch", "supporting-text no label icon", `<m-switch icon="${ICON}" aria-label="Switch" supporting-text="Helps"></m-switch>`),
+  c("switch", "supporting-text='' checked", `<m-switch checked aria-label="Switch" supporting-text=""></m-switch>`),
+  c("switch", "supporting-text='' disabled", `<m-switch disabled aria-label="Switch" supporting-text=""></m-switch>`),
+  c("switch", "supporting-text='' icon", `<m-switch icon="${ICON}" aria-label="Switch" supporting-text=""></m-switch>`),
   c("tabs", "default", `<m-tabs value="a"><m-tab value="a">Flights</m-tab><m-tab value="b">Trips</m-tab><m-tab value="c">Explore</m-tab></m-tabs>`),
   c("tabs", "icon", `<m-tabs value="a"><m-tab value="a" icon="${ICON}">Flights</m-tab><m-tab value="b" icon="${ICON}">Trips</m-tab></m-tabs>`),
   c("progress", "default", `<m-progress value="40" aria-label="Upload"></m-progress>`),
@@ -139,3 +176,59 @@ export const cases: PreupgradeCase[] = [
   c("search", "default", `<m-search placeholder="Search" aria-label="Search"><m-search-suggestion value="apple">Apple</m-search-suggestion></m-search>`),
   c("search", "value", `<m-search placeholder="Search" value="apple" aria-label="Search"></m-search>`),
 ];
+
+
+// The host and neighbours must remain stable outside the default body type.
+// Five content families, both directions, inline flow and both flex alignments.
+const switchFamilies = ["default", "supporting-text", "unlabelled", "supporting-text no label", "supporting-text=''"];
+const switchRows = cases.filter(c => c.element === "switch");
+for (const dir of ["ltr", "rtl"]) {
+  for (const typography of ["default", "12/1", "12/2", "24/1", "24/2"]) {
+    const [size, height] = typography.split("/");
+    const style = typography === "default" ? "" : `font-size:${size}px;line-height:${height}`;
+    for (const layout of ["inline", "baseline", "center"]) {
+      for (const row of switchRows.filter(row => switchFamilies.includes(row.variant))) {
+        const host = row.html.replace("<m-switch", '<m-switch id="subject"');
+        const inline = layout === "inline";
+        cases.push({
+          element: "switch", variant: `${row.variant}; ${dir}; ${layout}; ${typography}`,
+          html: `<div dir="${dir}" style="${inline ? "" : `display:flex;gap:16px;align-items:${layout}`}">${inline ? '<span id="lead">Text before </span>' : ""}${host}${inline ? '<span id="next"> text after</span>' : '<m-button id="button">Save</m-button><m-text-field id="field" label="Name" value="Ada"></m-text-field>'}</div>`,
+          style, width: 850, host: "#subject", strictBox: true,
+          siblings: inline ? ["#lead", "#next", "#block"] : ["#button", "#field", "#block"],
+          prepareNeighbors: !inline,
+        });
+      }
+    }
+    // All controls upgrade together here: the button's own baseline is a
+    // separate follow-up, rather than a reason to weaken the switch-only rows.
+    cases.push({
+      element: "switch", variant: `peer upgrades; ${dir}; baseline; ${typography}`,
+      html: `<div dir="${dir}" style="display:flex;gap:16px;align-items:baseline"><m-switch id="subject" aria-label="Switch"></m-switch><m-button id="button">Save</m-button><m-text-field id="field" label="Name" value="Ada"></m-text-field></div>`,
+      style, width: 850, host: "#subject", strictBox: true, siblings: ["#button", "#field", "#block"],
+      knownMoves: [{ sibling: "#button", axis: "y",
+        value: ({ default: 1.296875, "12/1": 1.828125, "12/2": 1.828125, "24/1": -1.34375, "24/2": -7 } as Record<string, number>)[typography],
+        reason: "Button pre-upgrade baseline under consumer typography: floor/material#42." }],
+    });
+  }
+  // State-specific controls at the typography that exposed the host line box.
+  for (const row of switchRows.filter(row => /(?:checked|disabled|icon)$/.test(row.variant) && row.variant.includes("unlabelled"))) {
+    cases.push({ ...row, variant: `${row.variant}; ${dir}; 24/2`,
+      html: `<div dir="${dir}">${row.html.replace("<m-switch", '<m-switch id="subject"')}<span id="next">Next</span></div>`,
+      style: "font-size:24px;line-height:2", host: "#subject", siblings: ["#next", "#block"], strictBox: true });
+  }
+  for (const element of ["button", "text-field"]) {
+    const row = cases.find(row => row.element === element && row.variant === "default")!;
+    const button = element === "button";
+    const reason = button
+      ? "Button host grows at 24px/2: floor/material#42."
+      : "Text field host grows at 24px/2: floor/material#43.";
+    const knownMoves: KnownMove[] = ["#inline", "#block"].map(sibling => ({
+      sibling, axis: "y" as const, value: button ? 8 : 1.5, reason,
+    }));
+    if (button) knownMoves.push({ subject: true, value: 8, reason });
+    cases.push({ ...row, variant: `${dir}; 24/2`,
+      html: `<div style="display:flex">${row.html.replace(`<m-${element}`, `<m-${element} id="subject" dir="${dir}"`)}</div>`,
+      host: "#subject", width: 850, style: "font-size:24px;line-height:2",
+      knownMoves });
+  }
+}

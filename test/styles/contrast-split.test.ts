@@ -120,13 +120,17 @@ describe("explicit contrast levels are opt-in", () => {
     // label at Body Large, not 18px (styles/components/_slider.scss), the select
     // menu's width, mark and selected colours (styles/components/_select.scss,
     // styles/components/_menu.scss), the chip's secondary-action floor
-    // (styles/components/_chips.scss), the touch target centred physically
-    // (styles/abstract/_mixins.scss), and the outlined field's open
-    // notch unpainted in forced colours, from the script's class and from the
-    // input's own state (styles/components/_text-field.scss).
+    // (styles/components/_chips.scss), and the touch target centred physically
+    // (styles/abstract/_mixins.scss, FLO-592).
+    // The list row's expressive corners, read from four list custom properties
+    // that the list does not declare, so they inherit, with keyboard focus on
+    // the row action, and the container rounded by the same outer property
+    // (styles/components/_list.scss), and the outlined field's open notch
+    // unpainted in forced colours, from the script's class and from the input's
+    // own state (styles/components/_text-field.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("091c470efac80c86d5c514ef38e5c1a2098bd77288dd55e915456d3700d54d23");
-    expect(css.length).toBe(525510);
+      .toBe("4934a0fadce051c96a7fcfa6eabe16da5b80bb2475a0e8187362f713913eb71e");
+    expect(css.length).toBe(526884);
   });
 
   test("today's sheets still resolve to the fixture", () => {
