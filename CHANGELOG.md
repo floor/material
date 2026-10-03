@@ -14,6 +14,8 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.0.0] - YYYY-MM-DD
+
 ### Migrating from 0.10.x
 
 Upgrade to the latest `mtrl` 0.10.x first, then change the package name to `material` (version 3) and
@@ -359,6 +361,16 @@ Check these by searching your code: they compile, or come from plain JavaScript,
 - **`menu.isOpen()` right after `close()`** is false. Code that waited 50 ms for it no
   longer needs to; code that relied on it still being true (two menus open at once for a
   moment, a toggle read just after a dismissal) now sees the closed state.
+
+- **List corners:** rows are 4px at rest, 16px at outer corners, 12px hovered and 16px
+  focused, pressed or selected; the container is 16px. For square rows and container, set
+  `--mtrl-list-item-shape`, `--mtrl-list-item-shape-outer`, `--mtrl-list-item-shape-hover`
+  and `--mtrl-list-item-shape-active` to `0` on the list, an ancestor or `<m-list>`.
+- **Switch and text-button layouts changed after next.1.** At `font-size: 24px; line-height: 2`,
+  an upgraded unlabelled `<m-switch>` is 52 × 48px (was 52 × 56); with supporting text its
+  height is 56px (was 65). Default typography is unchanged. A text button with an icon now
+  reserves its upgraded insets before upgrade, removing shifts of 4px at default/XS/S,
+  24px at M, 72px at L and 104px at XL. Check neighbouring content in your layouts.
 
 ### Changed (breaking)
 
@@ -3477,7 +3489,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.0.0-next.1...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/floor/material/compare/v3.0.0-next.1...v3.0.0
 [3.0.0-next.1]: https://github.com/floor/material/compare/v3.0.0-next.0...v3.0.0-next.1
 [3.0.0-next.0]: https://github.com/floor/material/releases/tag/v3.0.0-next.0
 [0.10.6]: https://github.com/floor/mtrl/compare/v0.10.5...v0.10.6
