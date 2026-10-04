@@ -12,7 +12,7 @@ export interface ComponentConfigMap {
   // Deliberately empty. Each component adds its own key by augmenting this
   // interface from its own types.ts, so core imports nothing from components
   // -- mtrl-addons builds on core, and core importing leaf component types
-  // was a layering inversion. FLO-115.
+  // was a layering inversion.
   //
   // A component's key exists only when that component is imported, which is
   // the right answer for a tree-shaken build rather than a gap.

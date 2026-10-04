@@ -425,9 +425,9 @@ export interface ExtendedFabEvents extends TouchEvents {
   focus: (payload: ForwardedEventPayload<FocusEvent, HTMLButtonElement>) => void;
   /** The button lost focus. */
   blur: (payload: ForwardedEventPayload<FocusEvent, HTMLButtonElement>) => void;
-  /** `collapse()` ran, by call or on scroll (FLO-319) */
+  /** `collapse()` ran, by call or on scroll */
   collapse: () => void;
-  /** `expand()` ran, by call or on scroll (FLO-319) */
+  /** `expand()` ran, by call or on scroll */
   expand: () => void;
 }
 
@@ -571,7 +571,7 @@ export interface ExtendedFabComponent {
    */
   disable: () => ExtendedFabComponent;
 
-  /** Whether the extended FAB is disabled (FLO-384) */
+  /** Whether the extended FAB is disabled */
   isDisabled: () => boolean;
 
   /**

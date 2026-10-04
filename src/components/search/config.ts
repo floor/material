@@ -121,7 +121,7 @@ interface InternalComponent {
   // `EventCallback`, not `Function`. This host is handed the component the
   // pipe has built, whose `on` takes an EventCallback; `Function` is a
   // supertype of it, so the host promises to call a handler with anything
-  // and cannot accept one that takes a typed payload. FLO-114.
+  // and cannot accept one that takes a typed payload.
   on?: (event: string, handler: EventCallback) => void;
   off?: (event: string, handler: EventCallback) => void;
   lifecycle?: {
@@ -169,7 +169,7 @@ export const getApiConfig = (comp: InternalComponent) => ({
     isDisabled: () => comp.disabled?.isDisabled?.() ?? false,
   },
 
-  // The leading icon and trailing items (FLO-291)
+  // The leading icon and trailing items
   content: {
     setLeadingIcon: (html: string) => comp.setLeadingIcon?.(html),
     setTrailingItems: (items: SearchTrailingItem[]) => comp.trailing?.set?.(items),

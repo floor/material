@@ -115,7 +115,7 @@ $component: "#{base.$prefix}-side-sheet";
             outline-offset: 2px;
         }
 
-        // FLO-579: the 40px button carries a 48px target, the icon button's own
+        // The 40px button carries a 48px target, the icon button's own
         // mechanism (its --xs/--s ::after): the box reaches 4px past each edge.
         // The `position: relative` above is the button's own, so the box anchors
         // to the button whatever the page does to buttons.
@@ -170,7 +170,7 @@ $component: "#{base.$prefix}-side-sheet";
 
         // Only the modal sheet rounds, on its inner edge: CornerLarge where it
         // faces the page. The standard one is square (MDC
-        // Sheet.Side.Docked.Container.Shape = Corner.None), FLO-324.
+        // Sheet.Side.Docked.Container.Shape = Corner.None),
         &.#{$component}--end .#{$component}__container {
             box-shadow: f.get-elevation(1), m.$sheet-overshoot-guard 0 0 0 t.color("surface-container-low");
             border-start-start-radius: v.shape("large");

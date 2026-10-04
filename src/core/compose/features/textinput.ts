@@ -195,7 +195,7 @@ export const withTextInput =
 
     // Whether the browser has autofilled the input: its :autofill state (the
     // prefixed name in older WebKit). No computed style is read, which in a
-    // shadow root forced a style recalculation per field (FLO-335).
+    // shadow root forced a style recalculation per field.
     const isAutofilled = (): boolean => {
       try {
         return input.matches(":autofill");
@@ -303,7 +303,7 @@ export const withTextInput =
     // the EventTarget signature that types the event as a plain Event.
     // Annotating the parameter AnimationEvent was the previous answer and is
     // unsound -- a listener requiring one cannot be registered where any
-    // Event may arrive. The event name picks the type instead. FLO-114.
+    // Event may arrive. The event name picks the type instead.
     const animationTarget: HTMLElement = input;
     animationTarget.addEventListener("animationstart", (e) => {
       if (
@@ -319,7 +319,7 @@ export const withTextInput =
 
     // An autofill before this runs is reported by the stylesheet's
     // onAutoFillStart animation, which starts when the autofilled input is
-    // first styled; a value already there set --empty above (FLO-335).
+    // first styled; a value already there set --empty above.
 
     // Add multiline class to the component if it's a textarea
     if (isMultiline) {
@@ -329,7 +329,7 @@ export const withTextInput =
     }
 
     // Into the component's field, where it has one (the text field's
-    // container, FLO-300), else the root
+    // container), else the root
     ((component as { field?: HTMLElement }).field ?? component.element).appendChild(input);
 
     // Cleanup

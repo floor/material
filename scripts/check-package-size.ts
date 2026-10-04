@@ -8,6 +8,7 @@ import { pathToFileURL } from "node:url";
 import ts from "typescript";
 
 import { createPackageFixture, run } from "./package-fixture";
+import { internalIdRefs } from "./internal-ids";
 
 const fixture = await createPackageFixture();
 const { directory: temporary, pack } = fixture;
@@ -44,6 +45,13 @@ try {
   const published = await Bun.file(join(fixture.installed, "package.json")).json() as Record<string, unknown>;
   for (const key of ["scripts", "eslintConfig", "typedocOptions"]) {
     assert(!(key in published), `The packed manifest still has "${key}"`);
+  }
+  // The public-history rule: no internal ticket reference may reach a shipped
+  // file. Comments in src are copied verbatim into dist's .d.ts, .svelte and
+  // .scss files, so this walks everything the tarball actually carries.
+  for (const file of pack.files as { path: string }[]) {
+    const refs = internalIdRefs(await Bun.file(join(fixture.installed, file.path)).text());
+    assert.equal(refs.length, 0, `${file.path} ships internal ticket references: ${refs.join(", ")}`);
   }
   // The SSR bundle owns linkedom; every other shipped module (including its
   // browser stub) must remain outside the server graph. Resolve relative paths

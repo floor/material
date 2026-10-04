@@ -61,7 +61,7 @@ export const getElementConfig = (config: DialogConfig) => {
   }
 
   // `title` is the headline: passed on, it became the native tooltip over
-  // the whole surface (FLO-347). The headline names it through aria-labelledby.
+  // the whole surface. The headline names it through aria-labelledby.
   return createElementConfig({ ...config, title: undefined }, {
     // In the top layer the dialog is a native <dialog>, shown with showModal()
     tag: config.layer === 'top' ? 'dialog' : 'div',

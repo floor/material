@@ -196,7 +196,7 @@ export const withAPI = ({ disabled, lifecycle, text, className }: ApiOptions) =>
       });
       component.element.dispatchEvent(event);
       // And through the emitter, which `on()` and <m-extended-fab> listen to:
-      // the DOM event alone never left the element's shadow root (FLO-319)
+      // the DOM event alone never left the element's shadow root
       component.emit?.('collapse');
       
       return this;

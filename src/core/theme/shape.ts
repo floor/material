@@ -1,7 +1,7 @@
 // src/core/theme/shape.ts
 /**
  * The shape scale's corner tokens, for a radius a component writes from
- * script (FLO-331): as the stylesheets read it, the token with the compiled
+ * script: as the stylesheets read it, the token with the compiled
  * value as its fallback, so a theme's corners reach inline styles too.
  */
 

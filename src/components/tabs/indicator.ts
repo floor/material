@@ -58,7 +58,7 @@ const DEFAULT_CONFIG: TabIndicatorConfig = {
 
 // m3.material.io tabs specs: the primary indicator is 3dp and "inset 2dp on each
 // side" of its content, at least 24dp long; the secondary one is 2dp (Compose's
-// SecondaryIndicator takes the primary 3dp; the site wins). FLO-262.
+// SecondaryIndicator takes the primary 3dp; the site wins).
 const PRIMARY_HEIGHT = 3;
 const SECONDARY_HEIGHT = 2;
 const PRIMARY_INSET = 2;
@@ -81,7 +81,7 @@ export const createTabIndicator = (config: TabIndicatorConfig = {}): TabIndicato
   // passes a duration or an easing gets that instead.
   // null when the document has no CSS API (a server): the stylesheet anchor is
   // what both sides record, and nothing is measured. false is an older browser,
-  // which still measures. FLO-369.
+  // which still measures.
   const anchorSupport = (): boolean | null => {
     const host = (element.ownerDocument.defaultView ?? globalThis) as { CSS?: { supports?: (property: string, value: string) => boolean } };
     const supports = host.CSS?.supports;
@@ -106,7 +106,7 @@ export const createTabIndicator = (config: TabIndicatorConfig = {}): TabIndicato
   if (mergedConfig.visible === false) {
     element.style.opacity = '0';
   }
-  // Accepted and never read; only setColor() coloured it (FLO-264).
+  // Accepted and never read; only setColor() coloured it.
   if (mergedConfig.color) {
     element.style.backgroundColor = mergedConfig.color;
   }

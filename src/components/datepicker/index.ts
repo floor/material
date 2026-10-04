@@ -14,6 +14,6 @@ export type {
   DatePickerVariant,
   DatePickerView,
   DatePickerSelectionMode,
-  // Public: DatePickerComponent.calendar is typed with it (FLO-381)
+  // Public: DatePickerComponent.calendar is typed with it
   CalendarAPI,
 } from "./types";

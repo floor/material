@@ -45,7 +45,7 @@ export const withDrag =
     /** The pointer moved the sheet, so the click that follows is not a press */
     let dragged = false;
 
-    // Activating the handle does what Compose's does (FLO-324): a partially
+    // Activating the handle does what Compose's does: a partially
     // open sheet expands, an expanded one closes, a hidden one opens. Its name
     // says which, for the state it is in.
     const label = (): void => {

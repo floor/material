@@ -55,7 +55,7 @@ export interface DrawerItemConfig {
 export interface DrawerSelectEvent {
   /** The selected item's id */
   id: string;
-  /** The id again, as the `value` of the `<m-drawer>` element's `change` (FLO-320) */
+  /** The id again, as the `value` of the `<m-drawer>` element's `change` */
   value: string;
   /** The selected item's label */
   label: string;

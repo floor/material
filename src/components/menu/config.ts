@@ -89,7 +89,7 @@ export const getElementConfig = (config: MenuConfig) => {
     // Styles go through the style option, not the style attribute. The
     // attribute took a joined string, and CSS text has no camelCase, so
     // `maxHeight` was dropped there by the parser -- harmlessly, because
-    // features/position.ts applies config.maxHeight on open. FLO-111.
+    // features/position.ts applies config.maxHeight on open.
     style: styles,
     attributes,
     className: [
@@ -145,7 +145,7 @@ export const getApiConfig = (component: MenuApiHost): ApiOptions => ({
     // The cast is a known lie, kept where it is findable. The opener element
     // is null until one is set, and MenuComponent.getOpener is declared
     // `() => HTMLElement`. Making that honest is a public signature change, so
-    // it is a decision rather than a fix -- noted on FLO-114.
+    // it is a decision rather than a fix.
     getOpener: () => component.opener.getOpener() as HTMLElement,
   },
   submenu: {

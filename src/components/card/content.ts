@@ -50,7 +50,7 @@ export const createCardContent = (config: CardContentConfig = {}): HTMLElement =
           config.padding === false ? `${PREFIX}-card__content--no-padding` : null
         ].filter((name): name is string => Boolean(name)),
         attributes: {
-          // No role: an unnamed region per block is a landmark with no name (FLO-109)
+          // No role: an unnamed region per block is a landmark with no name
           // Add explicit style attributes to ensure visibility
           'style': 'display: block; color: inherit;'
         }
@@ -121,7 +121,7 @@ export const createCardHeader = (config: CardHeaderConfig = {}): HTMLElement => 
         componentName: 'card__header',
         className: config.class,
         // No role: the title is the heading, its own h3; a heading role here
-        // made the h3 presentational and folded the subtitle in (FLO-109)
+        // made the h3 presentational and folded the subtitle in
       })
     )(baseConfig);
 
@@ -148,7 +148,7 @@ export const createCardHeader = (config: CardHeaderConfig = {}): HTMLElement => 
 
     // Add subtitle if provided
     if (config.subtitle) {
-      // Supporting text for the title, not a heading of its own (FLO-109)
+      // Supporting text for the title, not a heading of its own
       createElement({
         tag: 'p',
         className: `${PREFIX}-card__header-subtitle`,

@@ -24,7 +24,7 @@ export const setAttributes = <E extends HTMLElement | SVGElement>(
   // `style` is refused here. Writing it as an attribute takes a whole CSS
   // string, so one interpolated value can carry further declarations -- the
   // same injection route closed on createElement's own style option in
-  // FLO-111. Leaving it open here would be a door beside a locked one.
+  // Leaving it open here would be a door beside a locked one.
   // Inline styles go through `style`, which assigns per property.
 
   // href, src and action are scheme-checked wherever they are set, so a javascript:

@@ -1,6 +1,6 @@
 // src/components/fab/config.ts
 // Class names are written out in full. The class helpers no longer add the
-// `mtrl-` prefix for you (FLO-117), so a modifier built here carries it.
+// `mtrl-` prefix for you, so a modifier built here carries it.
 import { PREFIX } from "../../core/config";
 import {
   createComponentConfig,
@@ -58,7 +58,7 @@ export const getElementConfig = (config: FabConfig) => {
     type: config.type || "button",
     // No fallback. This used to be `|| (config.icon ? "action" : undefined)`,
     // which gave every unlabelled FAB the name "action" -- enough to pass axe
-    // and Lighthouse while telling a screen-reader user nothing. FLO-110.
+    // and Lighthouse while telling a screen-reader user nothing.
     "aria-label": config.ariaLabel,
   };
 

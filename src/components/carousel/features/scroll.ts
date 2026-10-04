@@ -59,7 +59,7 @@ export const withScroll = (config: CarouselConfig) =>
     };
     const cornerRadius = config.cornerRadius ?? CAROUSEL_DEFAULTS.CORNER_RADIUS;
     // The default corner reads the extra-large token, so a theme's corners
-    // reach the items; a radius given in the config stays as given (FLO-331).
+    // reach the items; a radius given in the config stays as given.
     const corner = cornerRadius === CAROUSEL_DEFAULTS.CORNER_RADIUS
       ? cornerToken("extra-large", cornerRadius, config.prefix)
       : `${cornerRadius}px`;

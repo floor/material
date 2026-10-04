@@ -53,7 +53,7 @@ interface InputHost {
     // producer does not accept. Under strictFunctionTypes that is the
     // parameter position, so it is contravariant and unsound: it is what
     // stopped the pipe at search.ts:54 resolving, and the two `unknown`
-    // errors after it were that one failure cascading. FLO-114.
+    // errors after it were that one failure cascading.
     setViewMode: (mode: SearchViewMode) => void;
     getViewMode: () => SearchViewMode;
     updatePopulatedState: (hasValue: boolean) => void;
@@ -196,7 +196,7 @@ export const withInput =
    */
   const clear = (triggerEvent = true): void => {
     // Emptying the query is an input, as in a native field, then a clear: a
-    // consumer filtering on input kept its results (FLO-291).
+    // consumer filtering on input kept its results.
     setValue("", triggerEvent);
 
     // Focus input after clearing
@@ -281,7 +281,7 @@ export const withInput =
     if (!input) return;
 
     // Opens the view where focus alone cannot: the input already has focus
-    // after a suggestion was chosen (FLO-291).
+    // after a suggestion was chosen.
     // Only with focus: a script setting the value and dispatching `input` is
     // not someone typing.
     const reopen = (): void => {
@@ -322,7 +322,7 @@ export const withInput =
         setTimeout(() => {
           // Only once focus has left the search: moving to its own back or
           // clear button, or a suggestion, closed the view under the person
-          // using it, so the keyboard could never reach them. FLO-285.
+          // using it, so the keyboard could never reach them.
           const root = component.structure?.surface ?? input;
           if (!root.contains(activeElementOf(input))) {
             component.states.collapse();
@@ -338,7 +338,6 @@ export const withInput =
           e.preventDefault();
           // Enter on the suggestion the arrows reached selects it (the
           // suggestions feature does); it submitted the typed text first.
-          // FLO-291.
           if (!input.hasAttribute("aria-activedescendant")) submit();
           break;
 

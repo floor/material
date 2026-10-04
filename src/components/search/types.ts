@@ -15,7 +15,7 @@ export type SearchState = "bar" | "view";
 export type SearchViewMode = "docked" | "fullscreen";
 
 /**
- * Search variant, M3's style (FLO-287)
+ * Search variant, M3's style
  * - 'contained': M3 Expressive. The bar keeps its pill and filled container
  *   when focused, and the results sit in their own container
  * - 'divided': the baseline. The bar squares off and a divider separates the
@@ -58,7 +58,7 @@ export interface SearchSuggestion {
   value?: string;
   /** Optional leading icon HTML. Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
   icon?: string;
-  /** A second line under the text: a two-line list item (FLO-291) */
+  /** A second line under the text: a two-line list item */
   supportingText?: string;
   /** Optional group identifier for dividers */
   group?: string;
@@ -220,7 +220,7 @@ export interface SearchComponent {
 
   // === Value Management ===
 
-  /** Sets the search input value. Silent unless `triggerEvent` is true (FLO-328). */
+  /** Sets the search input value. Silent unless `triggerEvent` is true. */
   setValue: (value: string, triggerEvent?: boolean) => SearchComponent;
 
   /** Gets the current search input value */
@@ -331,7 +331,7 @@ export interface SearchComponent {
 export interface SearchStructure {
   /**
    * The bar and, when expanded, its results: what shows in the top layer while
-   * the view is open (FLO-285)
+   * the view is open
    */
   surface: HTMLElement;
   /** Main container element */
@@ -352,7 +352,7 @@ export interface SearchStructure {
   suggestionsContainer: HTMLElement | null;
   /** Suggestions list element */
   suggestionsList: HTMLElement | null;
-  /** The live region that announces the suggestion count (FLO-286) */
+  /** The live region that announces the suggestion count */
   status: HTMLElement;
 }
 

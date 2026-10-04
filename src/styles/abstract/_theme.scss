@@ -35,7 +35,7 @@ $mtrl-sys-motion: (
 
 /**
  * A colour role at an opacity, as color-mix on the role's custom property.
- * The themes define the colour roles only (no `-rgb` twins since FLO-311).
+ * The themes define the colour roles only (no `-rgb` twins).
  * @param {String} $key - Color token name
  * @param {Number} $opacity - Opacity value (0-1)
  * @return {String} color-mix CSS function with variable

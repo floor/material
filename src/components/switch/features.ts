@@ -59,7 +59,7 @@ export interface SupportingTextComponent extends BaseComponent {
    */
   removeSupportingText: () => SupportingTextComponent;
 
-  /** Puts the switch in or out of the error state (FLO-318) */
+  /** Puts the switch in or out of the error state */
   setError: (error: boolean) => SupportingTextComponent;
 
   /** Whether the switch is in the error state */
@@ -170,9 +170,9 @@ export const withSupportingText =
     const input = (component as { input?: HTMLElement }).input;
     // The error state shows on the track and reaches assistive tech through
     // aria-invalid, with or without supporting text; `error` alone was ignored.
-    // The supporting text describes the input. FLO-267.
-    // The error state has one owner, setError (FLO-318, as the text field's
-    // since FLO-303): replacing or removing the supporting text used to end it.
+    // The supporting text describes the input.
+    // The error state has one owner, setError, as the text field's
+    // error state does: replacing or removing the supporting text used to end it.
     let errorState = !!config.error;
     const setError = (isError: boolean): void => {
       errorState = isError;

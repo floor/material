@@ -148,7 +148,7 @@ const datepickerSpec = {
       detail: (payload) => {
         const { value, rangeEndDate } = payload as { value: DatePickerValue; rangeEndDate?: Date | null };
         // `date`: the Date form of `value`, as a native input's valueAsDate
-        // (FLO-320): the pair for a range, however the factory reported it.
+        // The pair for a range, however the factory reported it.
         const date = Array.isArray(value) ? value : value && rangeEndDate ? [value, rangeEndDate] : (value ?? null);
         return { value: toValue(value, rangeEndDate), date };
       },

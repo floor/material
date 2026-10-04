@@ -173,7 +173,7 @@ export const withAPI =
       /**
        * Selects chips by their values
        * @param values - Value or array of values to select
-       * @param triggerEvent - Emits `change` when true; silent by default (FLO-328)
+       * @param triggerEvent - Emits `change` when true; silent by default
        * @returns The chips instance for chaining
        */
       selectByValue(values, triggerEvent = false) {
@@ -264,7 +264,7 @@ export const withAPI =
         return this;
       },
 
-      // The controller's keyboard switch, typed (FLO-352): the spread above
+      // The controller's keyboard switch, typed: the spread above
       // carried it untyped
       keyboard: {
         enable: () => options.keyboard?.enableKeyboardNavigation?.(),

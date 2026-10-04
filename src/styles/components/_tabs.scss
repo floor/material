@@ -28,7 +28,7 @@ $container: "#{base.$prefix}-tabs";
         }
 
         // Primary indicator: m3.material.io tabs specs, shape "3, 3, 0, 0" (the top
-        // corners only; Compose rounds all four) at 3dp, set by indicator.ts. FLO-262.
+        // corners only; Compose rounds all four) at 3dp, set by indicator.ts.
         .#{$container}__indicator {
             border-radius: 3px 3px 0 0;
             background-color: t.color("primary");
@@ -40,7 +40,7 @@ $container: "#{base.$prefix}-tabs";
         // Tab indicator styling for secondary variant
         .#{$container}__indicator {
             // 2dp, set by indicator.ts: the site's secondary indicator height (Compose's
-            // SecondaryIndicator takes the primary 3dp; the site wins). FLO-262.
+            // SecondaryIndicator takes the primary 3dp; the site wins).
             border-radius: 0;
             background-color: t.color("primary");
         }
@@ -62,7 +62,7 @@ $container: "#{base.$prefix}-tabs";
     // container the tabs inherited that and stacked vertically -- `flex: 1`
     // below was dividing the height rather than the row the comment above
     // describes. The divider and the indicator are both absolutely
-    // positioned, so neither depends on the container's direction. FLO-241.
+    // positioned, so neither depends on the container's direction.
     &:not(&--scrollable) {
         flex-direction: row;
     }
@@ -82,7 +82,7 @@ $container: "#{base.$prefix}-tabs";
             // tabs inside the row.
             padding-inline: 52px;
             overflow-x: auto;
-            // The scroll buttons name no behaviour, so that reduced motion can stop it (FLO-553)
+            // The scroll buttons name no behaviour, so that reduced motion can stop it
             scroll-behavior: smooth;
             scrollbar-width: none; // Firefox
             -ms-overflow-style: none; // IE and Edge
@@ -108,7 +108,7 @@ $container: "#{base.$prefix}-tabs";
     // Tab indicator styling - base styles
     &__indicator {
         position: absolute;
-        // On the row's bottom edge, over the divider, as the site draws it. FLO-262.
+        // On the row's bottom edge, over the divider, as the site draws it.
         bottom: 0;
         // indicator.ts measures from the scroll container's left edge and moves the
         // indicator with translateX, so it has to start there. Without `left` an
@@ -117,7 +117,7 @@ $container: "#{base.$prefix}-tabs";
         left: 0;
         // Compose springs the indicator's offset and width (damping 0.9, stiffness
         // 700): the default spatial spring. indicator.ts moves it without motion on
-        // the first render and on resize. FLO-262.
+        // the first render and on resize.
         transition: m.spring(transform, default-spatial), m.spring(width, default-spatial);
         z-index: 1; // Ensure indicator appears above divider
     }
@@ -125,7 +125,7 @@ $container: "#{base.$prefix}-tabs";
     // Resting position where anchor positioning exists (Baseline 2026). `left: 0`
     // above stays the fallback, and older browsers keep the transform spring.
     // The name is scoped to this component. The active tab carries it; a primary
-    // label replaces it so the indicator insets that text. FLO-369.
+    // label replaces it so the indicator insets that text.
     @supports (#{string.unquote("anchor-name: --a")}) {
         anchor-scope: string.unquote("--#{base.$prefix}-tabs-indicator");
         $anchor: string.unquote("--#{base.$prefix}-tabs-indicator");
@@ -228,7 +228,7 @@ $container: "#{base.$prefix}-tabs";
     }
 
     // A tab with an icon is a button with an icon, whose text-button padding is
-    // 12dp on the icon side: the stacked icon sat 2px off-centre. FLO-262.
+    // 12dp on the icon side: the stacked icon sat 2px off-centre.
     &.#{base.$prefix}-button--icon {
         padding: 0 16px;
     }
@@ -239,7 +239,7 @@ $container: "#{base.$prefix}-tabs";
     }
 
     // md.comp.focus-ring: 3dp in secondary, drawn inward because a tab sits at the
-    // row's edge and inside a scroll container that would clip it. FLO-262.
+    // row's edge and inside a scroll container that would clip it.
     &:focus-visible {
         outline: 3px solid t.color("secondary");
         outline-offset: -3px;
@@ -331,7 +331,7 @@ $container: "#{base.$prefix}-tabs";
             }
 
             // Pressed state for active tabs
-            // A rippled tab leaves the press to its ripple (FLO-260).
+            // A rippled tab leaves the press to its ripple.
             &:active:not(:has(> .#{base.$prefix}-ripple)),
             &.#{$component}--pressed {
                 background-color: t.alpha("primary", v.state("pressed-state-layer-opacity"));
@@ -346,7 +346,7 @@ $container: "#{base.$prefix}-tabs";
 
             // An inactive tab's label and icon turn on-surface in every interaction
             // state (InactiveHover/Focus/PressedLabelTextColor = OnSurface), over an
-            // on-surface layer; FLO-262.
+            // on-surface layer;
             &:hover,
             &.#{$component}--hover {
                 color: t.color("on-surface");
@@ -360,7 +360,7 @@ $container: "#{base.$prefix}-tabs";
             }
 
             // The press is primary: "tapping a non-selected tab will select it"
-            // (MDC inactive_pressed_state_layer_color). The ripple draws it (FLO-260).
+            // (MDC inactive_pressed_state_layer_color). The ripple draws it.
             &:active,
             &.#{$component}--pressed {
                 color: t.color("on-surface");
@@ -400,7 +400,7 @@ $container: "#{base.$prefix}-tabs";
             }
 
             // Pressed state for active tabs - secondary
-            // A rippled tab leaves the press to its ripple (FLO-260).
+            // A rippled tab leaves the press to its ripple.
             &:active:not(:has(> .#{base.$prefix}-ripple)),
             &.#{$component}--pressed {
                 background-color: t.alpha("on-surface", v.state("pressed-state-layer-opacity"));
@@ -414,7 +414,7 @@ $container: "#{base.$prefix}-tabs";
             color: t.color("on-surface-variant");
 
             // Secondary tabs: label, icon and layer on-surface in every interaction
-            // state, active or not (SecondaryNavigationTabTokens). FLO-262.
+            // state, active or not (SecondaryNavigationTabTokens).
             &:hover,
             &.#{$component}--hover {
                 color: t.color("on-surface");
@@ -432,7 +432,7 @@ $container: "#{base.$prefix}-tabs";
                 color: t.color("on-surface");
             }
 
-            // A rippled tab leaves the press to its ripple (FLO-260).
+            // A rippled tab leaves the press to its ripple.
             &:active:not(:has(> .#{base.$prefix}-ripple)),
             &.#{$component}--pressed {
                 background-color: t.alpha("on-surface", v.state("pressed-state-layer-opacity"));

@@ -53,7 +53,7 @@ type BaseProps<S> = ElementProps<S> & DefaultProps<S> & EventProps<S>;
 /**
  * Each named slot as a prop taking nodes (`actions={<Button />}`), rendered
  * into a `<span slot="…">` the adapter owns; a text prop of the same name
- * (`headline`) takes its text or nodes (FLO-333).
+ * (`headline`) takes its text or nodes.
  */
 type SlotProps<S> = { [K in ElementSlotProp<S>]?: React.ReactNode };
 

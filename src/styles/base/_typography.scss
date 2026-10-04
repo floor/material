@@ -8,7 +8,7 @@ $prefix: base.$prefix;
 
 // The typescale classes, one per role of the same map the tokens come from,
 // each reading its role's custom properties rather than fixed values, so a
-// typeface or size set on the tokens reaches them (FLO-315)
+// typeface or size set on the tokens reaches them
 @each $role, $spec in v.$typescale {
   .#{$prefix}-#{$role} {
     @include m.typescale($role);

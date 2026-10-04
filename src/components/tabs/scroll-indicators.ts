@@ -64,7 +64,7 @@ export const addScrollIndicators = (
     
     // Add button click handlers. No `behavior`: the scroller's stylesheet
     // scrolls it smoothly, and the reduced-motion reset turns that off; an
-    // explicit "smooth" would override it (FLO-553).
+    // explicit "smooth" would override it.
     leftButton.addEventListener('click', () => {
       scrollContainer.scrollBy({ left: -100 });
     });

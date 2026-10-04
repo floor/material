@@ -1,7 +1,7 @@
 // src/components/icon-button/config.ts
 
 // Class names are written out in full. The class helpers no longer add the
-// `mtrl-` prefix for you (FLO-117), so a modifier built here carries it.
+// `mtrl-` prefix for you, so a modifier built here carries it.
 import { PREFIX } from "../../core/config";
 import {
   createComponentConfig,

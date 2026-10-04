@@ -26,7 +26,7 @@ function lockScroll(doc: Document): () => void {
 
 /** M3 calendar/input modes share a draft; modal acceptance is the commit boundary. */
 /**
- * The value's type follows a literal selectionMode (FLO-295): `'range'` makes
+ * The value's type follows a literal selectionMode: `'range'` makes
  * it a pair, the default a date.
  */
 const createDatePicker = <M extends string = "single">(
@@ -41,7 +41,7 @@ const createDatePicker = <M extends string = "single">(
   const today = parseDate(new Date())!;
   const state: DatePickerState = {
     id, prefix: PREFIX, label: settings.label || "Select date", selectedDate: null, rangeEndDate: null,
-    // The full-screen list has no month or year views. FLO-276.
+    // The full-screen list has no month or year views.
     currentView: settings.variant !== "fullscreen" && ["month", "year"].includes(settings.initialView ?? "") ? settings.initialView as DatePickerView : "day",
     currentMonth: today.getMonth(), currentYear: today.getFullYear(), focusedDate: today,
     minDate: parseDate(settings.minDate ?? null), maxDate: parseDate(settings.maxDate ?? null),
@@ -54,7 +54,7 @@ const createDatePicker = <M extends string = "single">(
   let opened = false, destroyed = false, navigationRequested = false, readOnly = false;
   // While it is open: a modal picker's place among the open modals (Escape is
   // a key press handled there, for the topmost one), and for a docked one the
-  // marker that tells the click that opened it from every later one (FLO-548)
+  // marker that tells the click that opened it from every later one
   let escape: ModalEscape | undefined, from: EventsFrom | undefined;
   const release = () => { escape?.stop(); from?.stop(); escape = from = undefined; };
   let committed: Date | null = null, committedEnd: Date | null = null;
@@ -69,7 +69,7 @@ const createDatePicker = <M extends string = "single">(
   input.setAttribute("aria-describedby", `${id}-help ${id}-error`);
   const trigger = doc.createElement("button"); trigger.type = "button"; trigger.className = cls("trigger"); setHTML(trigger, DATEPICKER_ICONS.calendar);
   trigger.dataset.action = "open"; trigger.setAttribute("aria-label", "Choose date"); trigger.setAttribute("aria-haspopup", "dialog"); trigger.setAttribute("aria-controls", `${id}-dialog`); trigger.setAttribute("aria-expanded", "false");
-  // The supporting text, the date format unless given (FLO-289).
+  // The supporting text, the date format unless given.
   const help = createElement({ tag: "div", className: cls("help"), text: settings.supportingText || state.dateFormat, attributes: { id: `${id}-help` } });
   const error = createElement({ tag: "div", className: cls("error"), attributes: { id: `${id}-error`, "aria-live": "polite" } });
   const dialog = doc.createElement("dialog"); dialog.id = `${id}-dialog`; dialog.className = cls("calendar");
@@ -96,7 +96,7 @@ const createDatePicker = <M extends string = "single">(
   const track = () => dialog.querySelector<HTMLElement>(`.${cls("track")}`);
   const rtl = (element: HTMLElement) => view.getComputedStyle(element).direction === "rtl";
   // The current month is the middle page; re-centred without motion after each render.
-  // The year list opens with the selected year in its middle. FLO-274, FLO-275.
+  // The year list opens with the selected year in its middle.
   const centre = () => {
     const element = track();
     if (element?.clientWidth) element.scrollLeft = (rtl(element) ? -1 : 1) * element.clientWidth;
@@ -107,7 +107,7 @@ const createDatePicker = <M extends string = "single">(
   // Full screen: the rendered months are a window around the focused month, clamped
   // to minDate and maxDate, and extended by a year as the list nears either end. The
   // list keeps its scroll position across renders; months added above shift it by
-  // their height. FLO-276.
+  // their height.
   const monthIndex = (date: Date) => date.getFullYear() * 12 + date.getMonth();
   const fromIndex = (index: number) => new Date(Math.floor(index / 12), index % 12, 1);
   const list = () => dialog.querySelector<HTMLElement>(`.${cls("list")}`);
@@ -133,7 +133,7 @@ const createDatePicker = <M extends string = "single">(
       state.listLength = Math.min(max, end + 12) - start + 1;
     } else return;
     // Focus is read from the picker's own root: inside a shadow root the
-    // document only sees the host. FLO-284.
+    // document only sees the host.
     const focused = activeElementOf(dialog);
     const active = focused instanceof HTMLElement ? focused.dataset.date : undefined;
     render();
@@ -161,8 +161,8 @@ const createDatePicker = <M extends string = "single">(
   };
   // One shape, whatever committed it: a range's value is the pair, and
   // rangeEndDate its end, kept for compatibility. The docked calendar sent the
-  // start as the value and the end apart; the dialog's Save, the pair. FLO-295.
-  // `iso`: the value as the <m-datepicker> element's `value` carries it. FLO-320.
+  // start as the value and the end apart; the dialog's Save, the pair.
+  // `iso`: the value as the <m-datepicker> element's `value` carries it.
   const emitChange = () => {
     const rangeEndDate = committedEnd && new Date(committedEnd);
     base.emit("change", { value: getValue(), rangeEndDate, formattedValue: formatted(committed, committedEnd), iso: toIsoValue(getValue(), rangeEndDate) });
@@ -190,7 +190,7 @@ const createDatePicker = <M extends string = "single">(
     if (state.maxDate && initial > state.maxDate) initial = state.maxDate;
     if (!navigationRequested) setDisplayDate(initial);
     navigationRequested = false;
-    // Whatever really had focus, through any shadow roots, gets it back. FLO-284.
+    // Whatever really had focus, through any shadow roots, gets it back.
     const opener = deepActiveElement();
     returnFocus = opener instanceof HTMLElement && opener !== doc.body ? opener : trigger;
     render();
@@ -204,10 +204,10 @@ const createDatePicker = <M extends string = "single">(
     trigger.setAttribute("aria-expanded", "true"); focusCurrent(); base.emit("open", { value: getValue() });
   };
   const assignValue = (input: DatePickerInput, emit: boolean) => {
-    // A range as { start, end } too (FLO-289), besides the pair.
+    // A range as { start, end } too, besides the pair.
     const given = isRangeObject(input) ? [input.start, input.end] as [Date | string, Date | string] : input;
     // In range mode a lone date is a one-day range, so a range's value is
-    // always a pair (FLO-295): it was the start alone.
+    // always a pair: it was the start alone.
     const value = state.selectionMode === "range" && !Array.isArray(given) ? [given, given] as [Date | string, Date | string] : given;
     if (destroyed || Array.isArray(value) && state.selectionMode !== "range") return;
     const start = parseDate(Array.isArray(value) ? value[0] : value);
@@ -217,7 +217,7 @@ const createDatePicker = <M extends string = "single">(
     resetDraft(); setDisplayDate(committed); syncInput(); render(); if (emit) emitChange();
   };
   // setValue() and clear() are silent, as a native input set by script; the
-  // user's entry and the calendar emit `change` (FLO-328).
+  // user's entry and the calendar emit `change`.
   const clearValue = (emit: boolean) => {
     if (destroyed) return;
     committed = null; committedEnd = null; resetDraft(); syncInput(); render(); if (emit) emitChange();
@@ -265,7 +265,7 @@ const createDatePicker = <M extends string = "single">(
     if (settings.closeOnSelect && (state.selectionMode !== "range" || state.rangeEndDate)) close(); else render(true);
   };
   const navigate = (amount: number) => {
-    // The year view has no arrows: its list scrolls. FLO-275.
+    // The year view has no arrows: its list scrolls.
     const count = state.currentView === "day" ? amount : amount * 12;
     const anchor = new Date(state.currentYear, state.currentMonth, 1);
     anchor.setDate(Math.min(state.focusedDate.getDate(), new Date(state.currentYear, state.currentMonth + 1, 0).getDate()));
@@ -313,7 +313,7 @@ const createDatePicker = <M extends string = "single">(
     if (target?.dataset.date) {
       const date = parseDate(target.dataset.date)!;
       let next: Date;
-      // Left and right follow the reading direction. FLO-277.
+      // Left and right follow the reading direction.
       const ahead = rtl(dialog) ? -1 : 1;
       if (event.key === "ArrowLeft") next = addDays(date, -ahead);
       else if (event.key === "ArrowRight") next = addDays(date, ahead);
@@ -344,7 +344,7 @@ const createDatePicker = <M extends string = "single">(
     if (target?.dataset.date) { state.focusedDate = parseDate(target.dataset.date)!; dialog.querySelectorAll<HTMLElement>('[data-date]').forEach(el => el.tabIndex = el === target ? 0 : -1); }
   };
   // A settled swipe, or an arrow's slide: the page it rests on becomes the month.
-  // scrollend where there is one; otherwise the scroll going quiet. FLO-274.
+  // scrollend where there is one; otherwise the scroll going quiet.
   let quiet: ReturnType<typeof setTimeout> | undefined;
   const settle = () => {
     const element = track();
@@ -369,7 +369,7 @@ const createDatePicker = <M extends string = "single">(
   const onCancel = (event: Event) => { event.preventDefault(); if (!escape?.opening) close(); };
   const onOutside = (event: MouseEvent) => {
     // The click that called open() reaches the document after it: the event
-    // that opened the picker never dismisses it, and only that one (FLO-548)
+    // that opened the picker never dismisses it, and only that one
     if (!opened || (from && !from.after(event))) return;
     if (!modal && event.target instanceof Node && !event.composedPath().includes(base.element)) close(false);
     if (modal && event.target === dialog) { const bounds = dialog.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) close(); }
@@ -391,7 +391,7 @@ const createDatePicker = <M extends string = "single">(
     if (disabled) { close(); base.disabled.disable(); } else base.disabled.enable();
     input.disabled = disabled; trigger.disabled = disabled || readOnly;
   };
-  // Read-only (FLO-289): the value shows and cannot change; the field takes
+  // Read-only: the value shows and cannot change; the field takes
   // no typing and the calendar does not open.
   const setReadOnly = (value: boolean) => {
     if (destroyed) return;
@@ -401,7 +401,7 @@ const createDatePicker = <M extends string = "single">(
     trigger.disabled = value || base.disabled.isDisabled();
     base.element.classList.toggle(base.getClass("datepicker--readonly"), value);
   };
-  // Required (FLO-289): on the input for forms, where the docked field is
+  // Required: on the input for forms, where the docked field is
   // typed in; a dialog variant's input is read-only, which forms do not
   // validate. checkValidity() says whether a required date is missing, and
   // reportValidity() shows it on the field as well, as native inputs do.

@@ -170,7 +170,7 @@ export const getElementConfig = (config: CardConfig) => {
   // A clickable card is a button. Any other card is an article: self-contained
   // content its headline can name, which a region landmark per card is not
   // (it floods landmark navigation). `interactive` alone is the hover and
-  // press states, not a control: no role of button, no tab stop (FLO-109).
+  // press states, not a control: no role of button, no tab stop.
   const defaultRole = config.clickable ? "button" : "article";
 
   // Prepare ARIA attributes
@@ -285,7 +285,6 @@ export const withInteractiveBehavior = <C extends ElementComponent & EventCompon
 
     // Elevation follows the classes in the stylesheet (hover, --dragging);
     // the --card-elevation property these handlers wrote was read by nothing
-    // (FLO-323)
     comp.element.addEventListener("dragstart", (e: DragEvent) => {
       comp.element.classList.add(`${comp.getClass("card")}--dragging`);
       comp.emit?.("dragstart", { event: e });

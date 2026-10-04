@@ -289,7 +289,7 @@ export const withCanvas =
     };
 
     const complete = (value: number): void => {
-      // The emitter's `complete`, with `{ value, max }` (FLO-295).
+      // The emitter's `complete`, with `{ value, max }`.
       component.emit?.("complete", { value, max: max() });
     };
 

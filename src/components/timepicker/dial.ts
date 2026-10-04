@@ -15,7 +15,7 @@ export interface DialOptions {
    */
   onSelect: (value: number, final: boolean, pointer: boolean) => void;
   /**
-   * Whether a value can be picked (minTime, maxTime and the steps, FLO-281).
+   * Whether a value can be picked (minTime, maxTime and the steps).
    * Numbers it rejects are disabled; all can be picked without it.
    */
   allowed?: (selector: DialSelector, value: number) => boolean;
@@ -67,7 +67,7 @@ export const nameFor = (selector: DialSelector, format: TimeFormat, value: numbe
 let dials = 0;
 
 /**
- * The clock dial, in the DOM (FLO-279). It was a canvas: hidden from assistive
+ * The clock dial, in the DOM. It was a canvas: hidden from assistive
  * tech, unreachable by keyboard, click-only, and coloured from the document root.
  *
  * The face is a listbox of its labelled numbers. The arrows move between them and
@@ -148,7 +148,7 @@ export const createDial = (options: DialOptions): Dial => {
     // Rebuilding the face removes the focused number; focus moves to the new
     // face's tab stop rather than falling back to the dialog.
     // Read from the dial's own root: inside a shadow root the document sees only
-    // the host (FLO-284).
+    // the host.
     const focused = activeElementOf(element);
     const refocus = next !== selector && numbers.contains(focused);
     if (next !== selector) build(next);

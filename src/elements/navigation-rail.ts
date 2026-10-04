@@ -40,7 +40,7 @@ import {
 
 /**
  * The declared destinations, `active` as given; the navigation bar reads its
- * items the same way (FLO-305). The factory throws on an item
+ * items the same way. The factory throws on an item
  * without a label or an icon and on a repeated id, which a framework can
  * render on the way to a complete item: such an item is left out until it is
  * complete.

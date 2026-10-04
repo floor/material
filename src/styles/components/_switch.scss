@@ -56,7 +56,7 @@ $component: '#{base.$prefix}-switch';
     flex-grow: 1;
   }
 
-  // labelPosition 'end' only added this class, and the label stayed first. FLO-267.
+  // labelPosition 'end' only added this class, and the label stayed first.
   &--label-end &__container {
     flex-direction: row-reverse;
   }
@@ -83,7 +83,7 @@ $component: '#{base.$prefix}-switch';
     }
 
     // md.comp.focus-ring around the track (material-web's switch ring), 3dp
-    // secondary at a 2dp offset. FLO-267.
+    // secondary at a 2dp offset.
     &:focus-visible ~ .#{$component}__track {
       outline: 3px solid t.color('secondary');
       outline-offset: 2px;
@@ -92,7 +92,7 @@ $component: '#{base.$prefix}-switch';
 
   // The track (52 x 32dp, a 2dp outline). The handle and its state layer are
   // placed with inset-inline-start, so both mirror in right-to-left layouts: a
-  // physical left plus translateX put the selected handle off the track. FLO-267.
+  // physical left plus translateX put the selected handle off the track.
   &__track {
     position: relative;
     flex-shrink: 0;
@@ -140,7 +140,7 @@ $component: '#{base.$prefix}-switch';
     pointer-events: none;
 
     // Icons: 16dp. The selected one is on-primary-container, the unselected one
-    // surface-container-highest (SwitchTokens). FLO-267.
+    // surface-container-highest (SwitchTokens).
     &-icon {
       position: absolute;
       display: flex;
@@ -270,7 +270,7 @@ $component: '#{base.$prefix}-switch';
 
   // Interaction states. The handle takes on-surface-variant (unselected) or
   // primary-container (selected) on hover, focus and press, over an on-surface or
-  // primary layer at the hover, focus and pressed opacities. FLO-267.
+  // primary layer at the hover, focus and pressed opacities.
   &:not(.#{$component}--disabled) {
     .#{$component}__input:is(:hover, :focus-visible, :active) ~ .#{$component}__track .#{$component}__thumb {
       background-color: t.color('on-surface-variant');

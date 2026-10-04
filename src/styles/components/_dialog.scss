@@ -327,7 +327,7 @@ dialog.#{$component} {
             height: 24px;
         }
 
-        // FLO-579: the 40px button carries a 48px target, the icon button's own
+        // The 40px button carries a 48px target, the icon button's own
         // mechanism (its --xs/--s ::after): the box reaches 4px past each edge.
         // m3.material.io, Density: "The default target size should be at least
         // 48x48 CSS pixels".

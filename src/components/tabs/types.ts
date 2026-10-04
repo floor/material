@@ -74,7 +74,7 @@ export interface TabChangeEventData {
  *
  * `click` is not the DOM click. The tab re-emits the payload its button
  * already forwarded (`{ event, element, originalEvent }`). `focus` and `blur`
- * are the native events from the button element. FLO-523.
+ * are the native events from the button element.
  */
 export interface TabEvents {
   click: (payload: ForwardedEventPayload<MouseEvent, HTMLElement>) => void;
@@ -84,7 +84,7 @@ export interface TabEvents {
 
 /**
  * Events a tabs group emits. A click or a key selects a tab and emits
- * `change`; selecting from code does not. FLO-523.
+ * `change`; selecting from code does not.
  */
 export interface TabsEvents {
   change: (event: TabChangeEventData) => void;
@@ -98,14 +98,14 @@ export interface TabConfig {
   /**
    * Id of the tab group this tab belongs to. Set by the group when it builds
    * its tabs; a tab created on its own gets an empty one, which still yields
-   * a stable id. It is what makes tab ids unique across tablists. FLO-229.
+   * a stable id. It is what makes tab ids unique across tablists.
    * @internal
    */
   groupId?: string;
 
   /**
    * Accessible name for a tab with an icon and no text, which otherwise has
-   * none. FLO-263.
+   * none.
    */
   ariaLabel?: string;
 
@@ -210,11 +210,11 @@ export interface TabsConfig {
    * `tab-<groupId>-<value>` and to find panels as
    * `tabpanel-<groupId>-<value>`; a value with characters outside
    * `[A-Za-z0-9_-]` gets a derived id instead (`tabIdFor`, `tabPanelIdFor`,
-   * FLO-430). The group id itself is not encoded: keep a pinned one to
+   * The group id itself is not encoded: keep a pinned one to
    * `[A-Za-z0-9_]` (generated ones are), or `tabIdFor("a-b", "c")` and
    * `tabIdFor("a", "b-c")` coincide and a space makes an unsafe id. Allocated
    * automatically when omitted; pin it when a page needs ids that survive a
-   * re-render. FLO-229.
+   * re-render.
    */
   groupId?: string;
 
@@ -222,7 +222,6 @@ export interface TabsConfig {
    * Whether an arrow key also selects the tab it moves to. By default it only
    * moves focus, and Space or Enter selects, as m3.material.io's tabs
    * accessibility guidance has it: "Don't use Space/Enter for navigating tabs".
-   * FLO-263.
    * @default false
    */
   autoActivate?: boolean;
@@ -370,7 +369,7 @@ export interface TabComponent {
   /** Disables the tab (adds disabled attribute) */
   disable: () => TabComponent;
 
-  /** Whether the tab is disabled (FLO-384) */
+  /** Whether the tab is disabled */
   isDisabled: () => boolean;
   
   /** Sets the tab's text content */

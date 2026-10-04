@@ -1,6 +1,6 @@
 // src/components/slider/config.ts
 // Class names are written out in full. The class helpers no longer add the
-// `mtrl-` prefix for you (FLO-117), so a modifier built here carries it.
+// `mtrl-` prefix for you, so a modifier built here carries it.
 import { PREFIX } from "../../core/config";
 import type { EventCallback } from "../../core/state/emitter";
 import {
@@ -13,7 +13,7 @@ import { SLIDER_DEFAULTS, SliderSize } from "./constants";
 
 /**
  * The root's size modifier: none for the default XS, the lowercase name otherwise, or
- * the pixel height for a numeric size. Shared with setSize, which swaps it. FLO-107.
+ * the pixel height for a numeric size. Shared with setSize, which swaps it.
  */
 export const sliderSizeClass = (size: SliderSize): string =>
   size === "XS" ? "" : `${PREFIX}-slider--${typeof size === "string" ? size.toLowerCase() : size}`;
@@ -74,7 +74,7 @@ export const getElementConfig = (config: SliderConfig) => {
     config.orientation === "vertical" ? `${PREFIX}-slider--vertical` : "",
     config.icon ? `${PREFIX}-slider--icon` : "",
     // Where the icon and the label go: the icon before or after the track (the M3
-    // guidelines' icons at either end), the label above or below it. FLO-107.
+    // guidelines' icons at either end), the label above or below it.
     config.icon && config.iconPosition === "end" ? `${PREFIX}-slider--icon-end` : "",
     config.label && config.labelPosition === "end" ? `${PREFIX}-slider--label-end` : "",
   ]

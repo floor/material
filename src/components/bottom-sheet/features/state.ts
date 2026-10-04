@@ -52,7 +52,7 @@ export const withState =
 
     // A modal sheet outside the top layer does what showModal() does for one
     // inside it: the page goes inert and Tab stays in the sheet. It did
-    // neither (FLO-324).
+    // neither.
     const trap = (on: boolean): void => {
       if (!isModal || top) return;
       if (on && !restorePage) {
@@ -100,7 +100,7 @@ export const withState =
       if (state === BOTTOM_SHEET_STATES.HIDDEN) return;
       if (!config.closeOnEscape) return;
       // A standard sheet (a modal one is on the stack) sits beside the page,
-      // not over it: Escape pressed elsewhere (closing a menu, say) is not meant for it (FLO-324)
+      // not over it: Escape pressed elsewhere (closing a menu, say) is not meant for it
       if (!event.composedPath().includes(element)) return;
       event.preventDefault();
       close();

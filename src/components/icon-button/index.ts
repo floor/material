@@ -52,7 +52,7 @@ export type {
   IconButtonComponent,
   IconButtonEvents,
   IconButtonChangePayload,
-  // Public: IconButtonComponent.icon and toggle() are typed with them (FLO-381 keeps them)
+  // Public and kept: IconButtonComponent.icon and toggle() are typed with them
   IconAPI,
   ToggleManager
 } from './types';

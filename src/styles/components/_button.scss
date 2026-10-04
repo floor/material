@@ -116,7 +116,7 @@ $content-color: (
   // State layer: one ::before in currentColor, the content role each colour
   // style and toggle state sets as `color`. Hover, focus and pressed change
   // only its opacity (m3.material.io state layers: 0.08, 0.10, 0.10). The
-  // ripple is the press (FLO-260): a button that carries one leaves its
+  // ripple is the press: a button that carries one leaves its
   // pressed layer to the wave, as m.state-layer does.
   &::before {
     content: '';

@@ -300,7 +300,7 @@ const renderFixed = (source: string): string => {
   const block = [
     FIXED_START,
     "    // (tones 90, 80, 10, 30 of this theme's primary, secondary and tertiary;",
-    "    // the same in dark, so declared once, FLO-315)",
+    "    // the same in dark, so declared once)",
     ...Object.entries(fixedRoles({ primary: key("primary"), secondary: key("secondary"), tertiary: key("tertiary") }))
       .map(([role, hex]) => `    --#{$prefix}-sys-color-${role}: ${hex};`),
     FIXED_END,

@@ -152,7 +152,7 @@ const dialogSpec = {
   slots: ["headline", "actions"] as const,
   create: (config) => create(config as DialogElementConfig),
   // Its actions are mtrl buttons and its dividers mtrl dividers, drawn in this
-  // shadow root: their sheets come with it (FLO-386)
+  // shadow root: their sheets come with it
   styles: ["progress", "button", "divider", "dialog"],
   hostStyles: ":host{display:contents}",
   attributes: {

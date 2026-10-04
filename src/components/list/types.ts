@@ -246,7 +246,7 @@ export interface SelectEvent<T = unknown> {
 
   /**
    * The item's id as a string, the `value` of the `<m-list>` element's
-   * `activate` (FLO-320)
+   * `activate`
    */
   value: string;
 

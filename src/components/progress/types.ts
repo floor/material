@@ -344,7 +344,7 @@ export interface ProgressComponent {
 
   /**
    * Adds an event listener: `change` when the value is set, `complete` when it
-   * reaches the maximum. Handlers get `{ value, max }` (FLO-295: they got a DOM
+   * reaches the maximum. Handlers get `{ value, max }` (they got a DOM
    * CustomEvent, the payload in `event.detail`).
    */
   on: <K extends keyof ProgressEvents>(event: K, handler: ProgressEvents[K]) => ProgressComponent;

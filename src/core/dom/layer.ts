@@ -120,7 +120,7 @@ export const onTopLayerClose = (
 };
 
 /**
- * A modal outside the top layer (FLO-324): makes everything but `keep` inert,
+ * A modal outside the top layer: makes everything but `keep` inert,
  * as showModal() does for a top-layer dialog. The siblings of `keep` and of
  * each of its ancestors, up to the body, crossing shadow roots, get `inert`;
  * elements already inert are left alone. Returns the undo, which removes

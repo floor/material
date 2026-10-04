@@ -15,7 +15,7 @@
  * When `material/ssr/solid` is loaded, a server render prepends the declarative
  * shadow template. The client renders nothing in its place: the HTML parser
  * has already moved that template into the shadow root. Without the import
- * the markup is unchanged (FLO-374).
+ * the markup is unchanged.
  *
  * @module solid
  */
@@ -55,7 +55,7 @@ type BaseProps<S> = ElementProps<S> & DefaultProps<S> & FormProps<S> & EventProp
 /**
  * Each named slot as a prop taking JSX (`actions={<Button />}`), rendered
  * into a `<span slot="…">` the adapter owns; a text prop of the same name
- * (`headline`) takes its text or JSX (FLO-333).
+ * (`headline`) takes its text or JSX.
  */
 type SlotProps<S> = { [K in ElementSlotProp<S>]?: JSX.Element };
 
@@ -167,7 +167,7 @@ export const createComponent = <S, E extends HTMLElement>(
     // The default slot's children, then a `<span slot="…">` per named slot
     // given nodes (text for a same-named attribute stays the attribute).
     // Each wrapper is its own memo, rebuilt only when its slot's prop
-    // changes, not when the default slot's children do (FLO-334).
+    // changes, not when the default slot's children do.
     const wrappers = slots.map(([key, slot]) =>
       createMemo(() => {
         const value = slotted.get(key)?.();

@@ -12,7 +12,7 @@
  * registers when the action first runs, never at import.
  *
  * Each component can also emit a declarative shadow root on the server
- * (FLO-375). `shadowMarkup` reads the renderer `material/ssr/svelte` installs on
+ * `shadowMarkup` reads the renderer `material/ssr/svelte` installs on
  * `Symbol.for("mtrl.ssr")` — the same bridge as React — and returns the
  * `<template shadowrootmode>` string there, or `""` in the browser, when no
  * renderer is registered, and when the element opts out of SSR. The client
@@ -55,7 +55,7 @@ type BaseProps<S> = ElementProps<S> & DefaultProps<S> & FormProps<S> & EventProp
 
 /**
  * Each named slot as a snippet prop (`{#snippet actions()}`); a text prop of
- * the same name (`headline`) takes its text or a snippet (FLO-325).
+ * the same name (`headline`) takes its text or a snippet.
  */
 type SnippetProps<S, P> = {
   [K in ElementSlotProp<S>]?: (K extends keyof P ? Exclude<P[K], undefined> : never) | Snippet;
@@ -125,7 +125,7 @@ export const adapter = (spec: ComponentSpec, define: (options?: DefineOptions) =
   const eventProps = new Set(events.map((event) => `on${event}`));
   // A named snippet is a function prop named after a slot the element
   // declares (`headerAction` for `header-action`); any other function, a
-  // handler or a spread callback, is not rendered (FLO-334).
+  // handler or a spread callback, is not rendered.
   const slots = new Map(described.slots.map((slot) => [camel(slot), slot]));
   const isSnippet = (key: string, value: unknown): boolean => typeof value === "function" && slots.has(key);
 
@@ -134,7 +134,7 @@ export const adapter = (spec: ComponentSpec, define: (options?: DefineOptions) =
     for (const [key, value] of Object.entries(props)) {
       const attribute = attributes.get(key);
       if (eventProps.has(key)) continue; // the action listens
-      if (isSnippet(key, value)) continue; // rendered into its slot (FLO-325)
+      if (isSnippet(key, value)) continue; // rendered into its slot
       if (attribute) {
         // Svelte writes a key the element has as a property; a shadowed
         // attribute (`checked`) shares its name with the live property, so
@@ -150,7 +150,7 @@ export const adapter = (spec: ComponentSpec, define: (options?: DefineOptions) =
     // client spread omits, so the server-only value stays through hydration.
     if (shadow) result[RENDERED_HOST_ATTRIBUTE] = "";
     // Attachments (`{@attach}`) are symbol-keyed props: Svelte applies them
-    // from the spread, which `Object.entries` does not see (FLO-325).
+    // from the spread, which `Object.entries` does not see.
     for (const symbol of Object.getOwnPropertySymbols(props)) result[symbol as unknown as string] = props[symbol as unknown as string];
     return result;
   };

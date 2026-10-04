@@ -83,7 +83,7 @@ interface SearchElementConfig extends SearchConfig {
 /** The factory's events each element event is made of. */
 const ALIASES: Record<string, readonly SearchEventType[]> = {
   // The factory emits `input` when the clear button or Escape empties the
-  // query as well (FLO-291).
+  // query as well.
   input: ["input"],
   change: ["submit"],
   select: ["suggestionSelect"],
@@ -112,7 +112,7 @@ const applied = new WeakMap<SearchElementComponent, string>();
 
 /**
  * `min-width` / `max-width`: a number of pixels or a CSS length, on the custom
- * property the factory's minWidth / maxWidth set (FLO-290). Removed, the
+ * property the factory's minWidth / maxWidth set. Removed, the
  * stylesheet's M3 360 and 720dp apply.
  */
 const setWidth = (c: Pick<SearchComponent, "element">, edge: "min" | "max", value: AttributeValue | undefined): void => {
@@ -127,7 +127,7 @@ const create = (config: SearchElementConfig): SearchElementComponent => {
   if (trailingIcon) trailingItems.push({ id: "trailing-icon", type: "icon", content: trailingIcon, ariaLabel: trailingLabel });
   // The avatar is an action here (`action`), so a button: the factory draws an
   // avatar with onClick as one, and one without as an image out of the tab
-  // order (FLO-291). The click itself is handled by `action` in setup.
+  // order. The click itself is handled by `action` in setup.
   if (avatar) trailingItems.push({ id: "avatar", type: "avatar", content: avatar, ariaLabel: avatarLabel, onClick: () => {} });
   // A button needs a name, and none is invented for it.
   if (avatar && !avatarLabel) console.warn("[mtrl] search: an avatar without avatar-label is a button with no accessible name.");

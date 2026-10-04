@@ -305,7 +305,7 @@ export interface SelectComponent {
    */
   disable: () => SelectComponent;
 
-  /** Whether the select is disabled (FLO-384) */
+  /** Whether the select is disabled */
   isDisabled: () => boolean;
 
   /**
@@ -435,7 +435,6 @@ export interface BaseComponent extends MenuOwner {
   // strictFunctionTypes a host promising to call a handler with anything
   // cannot take one that accepts a typed payload -- which is what made the
   // pipe in select.ts fail to resolve, typing every stage after it `unknown`.
-  // FLO-114.
   on?: <T extends keyof SelectEvents>(
     event: T,
     handler: SelectEvents[T]

@@ -44,7 +44,7 @@ ${styles.map((style) => `  import "${pkg.name}/elements/css/${style}";\n`).join(
 ${bindable}    children,
     ...props
   }: { ${live.map((p) => `${p}?: unknown; `).join("")}children?: Snippet; [key: string]: unknown } = $props();
-  // \`bind:this\` on the component reads \`element\`, as Vue's template ref does (FLO-325).
+  // \`bind:this\` on the component reads \`element\`, as Vue's template ref does.
   let node = $state<HTMLElement | null>(null);
   export { node as element };
   let shadow = $derived(shadowMarkup(runtime, props, children, ${liveObject}));

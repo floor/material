@@ -39,7 +39,7 @@ export const withDom =
     const root = component.element;
     const createLabel = (text: string): HTMLElement => {
       const created = createElement({ tag: "label", className: getClass("chips__label"), text });
-      // The visible label names the grid; a <label> alone names nothing. FLO-256.
+      // The visible label names the grid; a <label> alone names nothing.
       created.id = `${getClass("chips")}-label-${Math.random().toString(36).slice(2, 9)}`;
       // First in the DOM whatever the position: --label-end moves it with CSS,
       // so the grid's name is read before its chips either way.
@@ -63,10 +63,10 @@ export const withDom =
       className: getClass("chips__container"),
       container: component.element,
     });
-    // The grid's one row of chip cells (FLO-261).
+    // The grid's one row of chip cells.
     chipContainer.setAttribute("role", "row");
 
-    // The set's label API (FLO-231): setLabel adds, renames or, with an empty
+    // The set's label API: setLabel adds, renames or, with an empty
     // text, removes the label, keeping the grid's aria-labelledby in step.
     const labelControl: ChipsLabelControl = {
       setText(text) {

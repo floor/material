@@ -60,7 +60,7 @@ export const renderTimePicker = (
 
   // In dial mode the hour and minute boxes choose which part the dial sets, so
   // they are radios, "Select hour" and "Select minutes", as in Compose; typing
-  // a time is the input mode's. They were number fields in both modes. FLO-283.
+  // a time is the input mode's. They were number fields in both modes.
   const dialMode = config.type === TIME_PICKER_TYPE.DIAL;
   // The fields and their separators: a box of their own, kept left to right in
   // any direction, as a time is written (Compose); the AM/PM selector follows the
@@ -118,7 +118,7 @@ export const renderTimePicker = (
     show(field, value);
     wrapper.appendChild(field);
     // Input mode labels its fields below them: Hour, Minute (M3's supporting
-    // text). Only a seconds field had one, in both modes. FLO-280.
+    // text). Only a seconds field had one, in both modes.
     if (!dialMode) {
       field.id = `${config.prefix}-time-picker-${unit}-${++fieldIds}`;
       const label = document.createElement("label");
@@ -194,7 +194,7 @@ export const renderTimePicker = (
 
   // The dial, in the DOM: a listbox of its numbers, operable by pointer and by
   // keyboard, with a hand that springs between values. It was a canvas hidden
-  // from assistive tech. FLO-279.
+  // from assistive tech.
   const dial = createDial({
     prefix: config.prefix,
     format: config.format,
@@ -266,7 +266,7 @@ export const renderTimePicker = (
   };
 
   // minTime, maxTime, minuteStep and secondStep, which were accepted and never
-  // applied (FLO-281). A dial number or AM/PM that cannot be reached is disabled,
+  // applied. A dial number or AM/PM that cannot be reached is disabled,
   // a pick lands on the step, and a time outside the limits moves to the nearest
   // one inside.
   const limits = limitsOf(config.minTime, config.maxTime);
@@ -330,7 +330,7 @@ export const renderTimePicker = (
 
   // The mode toggle is handled once, by the API, which re-renders the picker and
   // keeps focus on the toggle. This listener switched the view in place as well,
-  // and its delayed focus landed on nodes the re-render had replaced. FLO-278.
+  // and its delayed focus landed on nodes the re-render had replaced.
 
   // Handle input time changes
   const handleInputChange = (e: Event) => {
@@ -501,7 +501,7 @@ export const renderTimePicker = (
         ) {
           event.preventDefault();
           // A period outside minTime and maxTime is skipped: with two, the
-          // selection stays. FLO-281.
+          // selection stays.
           if (!periodAllowed(other)) return;
           handlePeriodChange(other);
           // The selection carries focus with it, which is what makes the group
@@ -521,7 +521,7 @@ export const renderTimePicker = (
   // A value picked on the dial: by pointer (dragging updates the fields and the
   // dial as it goes, and notifies on release) or by keyboard. After a pointer
   // picks an hour, the dial moves on to minutes once the hand has landed, as in
-  // Compose; not from the keyboard. FLO-279.
+  // Compose; not from the keyboard.
   // The value before a drag began: what a release compares against to notify.
   let started: TimeValue | null = null;
   function selectFromDial(value: number, final: boolean, pointer: boolean): void {

@@ -28,7 +28,7 @@ export const withAPI = ({ lifecycle, config }: ApiOptions) => (component: Compon
   element: component.element,
   config,
 
-  // The events the card emits, typed (FLO-323): withEvents gave the card
+  // The events the card emits, typed: withEvents gave the card
   // on/off, which the public type never declared
   on<K extends keyof CardEvents>(event: K, handler: CardEvents[K]): CardComponent {
     component.on(event, handler);

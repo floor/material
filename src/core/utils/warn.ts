@@ -1,6 +1,6 @@
 // Development-only warnings.
 //
-// FLO-106. The rule for selection components is that a value no option
+// The rule for selection components is that a value no option
 // carries clears the selection, the same as native `<select>` setting
 // `selectedIndex = -1`. Clearing silently is indistinguishable from a typo,
 // so it warns -- but only where a warning helps, which is not production.

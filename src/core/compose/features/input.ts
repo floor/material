@@ -167,7 +167,7 @@ export const withInput =
 
     Object.entries(attributes).forEach(([key, value]) => {
       // `false` on a boolean attribute fell through to String(value) below
-      // and wrote "false", which is present and therefore true. FLO-240.
+      // and wrote "false", which is present and therefore true.
       if (value !== null && value !== undefined && !omitsAttribute(key, value)) {
         if (key === "disabled" && value === true) {
           input.disabled = true;
@@ -201,7 +201,7 @@ export const withInput =
         // Native activation, as a click: it clears `indeterminate`, toggles
         // `checked` and fires input then change, and does nothing while
         // disabled. Flipping `checked` by hand left a mixed box mixed, with
-        // its dash and class, and fired no input event (FLO-316).
+        // its dash and class, and fired no input event.
         input.click();
       }
     });

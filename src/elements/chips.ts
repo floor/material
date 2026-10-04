@@ -228,7 +228,7 @@ const chipsSpec = {
   model: "value" as const,
   events: {
     change: {
-      // The set's change carries the `value` property's shape (FLO-320).
+      // The set's change carries the `value` property's shape.
       detail: (payload) => ({ value: (payload as ChipsChangeEvent).value }),
     },
     // Removal changes the set model, so it marks the element dirty without a

@@ -12,7 +12,7 @@
 
 // Export main component factory
 export { default, default as createMenu } from './menu';
-// The event map `on` and `off` are typed with (FLO-384)
+// The event map `on` and `off` are typed with
 export type { MenuEvents } from './types';
 
 // Export types and interfaces

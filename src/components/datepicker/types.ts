@@ -6,16 +6,16 @@ import type { NormalizedEvent } from "../../core/utils/mobile";
 export type DatePickerValue = Date | [Date, Date] | null;
 
 /**
- * The value as the selection mode shapes it (FLO-295): a range is a pair, a
+ * The value as the selection mode shapes it: a range is a pair, a
  * single date a date; an unknown mode, either.
  */
 export type DatePickerValueOf<M> = M extends "range" ? [Date, Date] | null : M extends "single" ? Date | null : DatePickerValue;
 
-/** What setValue and `value` take: a date, a range as a pair, or as { start, end } (FLO-289). */
+/** What setValue and `value` take: a date, a range as a pair, or as { start, end }. */
 export type DatePickerInput = Date | string | [Date | string, Date | string] | { start: Date | string; end: Date | string };
 
 /**
- * One shape whatever committed the value (FLO-295): a range's `value` is the
+ * One shape whatever committed the value: a range's `value` is the
  * pair, and `rangeEndDate` its end, kept for compatibility (null otherwise).
  * The docked calendar sent the start as the value and the end apart.
  */
@@ -25,7 +25,7 @@ export interface DatePickerChangePayload<V = DatePickerValue> {
   formattedValue: string;
   /**
    * The value as ISO 8601 text, the `value` of the `<m-datepicker>` element's
-   * `change`: a date (`2026-09-10`), a `start/end` interval, or "" (FLO-320)
+   * `change`: a date (`2026-09-10`), a `start/end` interval, or ""
    */
   iso: string;
 }
@@ -173,13 +173,13 @@ export interface DatePickerConfig {
    */
   value?: DatePickerInput;
 
-  /** The value shows and cannot change: no typing, no calendar (FLO-289). */
+  /** The value shows and cannot change: no typing, no calendar. */
   readOnly?: boolean;
 
-  /** A date is required: on the input for forms, and checkValidity() (FLO-289). */
+  /** A date is required: on the input for forms, and checkValidity(). */
   required?: boolean;
 
-  /** The supporting text under the field. Default: the date format (FLO-289). */
+  /** The supporting text under the field. Default: the date format. */
   supportingText?: string;
   
   /** 
@@ -385,13 +385,13 @@ export interface DatePickerComponent<V = DatePickerValue> {
    */
   setValue: (value: DatePickerInput) => DatePickerComponent<V>;
 
-  /** Read-only: the value shows and cannot change (FLO-289) */
+  /** Read-only: the value shows and cannot change */
   setReadOnly: (readOnly: boolean) => DatePickerComponent<V>;
 
   /** Whether the picker is read-only */
   isReadOnly: () => boolean;
 
-  /** Whether a date is required (FLO-289) */
+  /** Whether a date is required */
   setRequired: (required: boolean) => DatePickerComponent<V>;
 
   /**
@@ -403,7 +403,7 @@ export interface DatePickerComponent<V = DatePickerValue> {
   /** As checkValidity(), and shows the error on the field when false */
   reportValidity: () => boolean;
 
-  /** The supporting text; empty or null shows the date format (FLO-289) */
+  /** The supporting text; empty or null shows the date format */
   setSupportingText: (text: string | null) => DatePickerComponent<V>;
   
   /**
@@ -485,7 +485,7 @@ export interface DatePickerState {
   label: string;
   specialDates: NonNullable<DatePickerConfig["specialDates"]>;
   isAllowed(date: Date): boolean;
-  /** Full screen: the first month of the rendered list, and how many follow. FLO-276. */
+  /** Full screen: the first month of the rendered list, and how many follow. */
   listStart?: Date;
   listLength?: number;
 }

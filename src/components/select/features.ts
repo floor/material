@@ -420,13 +420,13 @@ export const withMenu =
     const menu = createMenu({
       opener: component.textField,
       // Placed against the field, not the root: the supporting text row sits
-      // under it (FLO-300)
+      // under it
       positionTarget: component.textField.field,
       items: menuItems,
       position: (config.placement || "bottom-start") as MenuPosition,
       width: "100%",
-      // Prefixed: `class` is not (FLO-117), so the menu carried a bare
-      // `select__menu` and `.mtrl-select__menu` matched nothing (FLO-295).
+      // Prefixed: `class` is not, so the menu carried a bare
+      // `select__menu` and `.mtrl-select__menu` matched nothing.
       class: `${config.prefix || "mtrl"}-select__menu`,
       closeOnSelect: true,
       closeOnClickOutside: true,
@@ -632,8 +632,8 @@ export const withMenu =
           // A value no option carries clears the selection, the same as
           // native `<select>` setting selectedIndex = -1. This used to keep
           // the previous selection and say nothing, so a typo left the select
-          // showing a value the caller had not asked for. FLO-106. Silently,
-          // as native `<select>`: a programmatic change emits no `change` (FLO-328).
+          // showing a value the caller had not asked for. Silently,
+          // as native `<select>`: a programmatic change emits no `change`.
           state.selectedOption = null;
           textField.setValue("");
           menu.setSelected(null);

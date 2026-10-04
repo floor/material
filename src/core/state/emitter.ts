@@ -7,7 +7,7 @@
  * An event handler. A handler that declares its payload type is accepted as
  * one, and a handler that doesn't gets `unknown` to narrow. It was
  * `(...args: never[]) => void`, which inferred every such payload as `never`
- * (FLO-295). The method-signature form keeps parameter bivariance, which is
+ * The method-signature form keeps parameter bivariance, which is
  * what lets a typed handler through.
  */
 export type EventCallback = { handler(...args: unknown[]): void }["handler"];

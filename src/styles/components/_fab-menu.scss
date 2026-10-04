@@ -136,7 +136,7 @@ $swap: 48ms;
     // Half the close button, not the full-shape token: the corner lerps from
     // the FAB's 16/20/28dp to 28dp (Compose FabFinalCornerRadius). Towards
     // 9999px it went round in one frame, and the spring's undershoot on
-    // closing took it below 0, a square corner (FLO-348).
+    // closing took it below 0, a square corner.
     border-radius: 28px;
     background-color: var(--#{$component}-close);
     color: var(--#{$component}-on-close);

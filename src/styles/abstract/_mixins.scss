@@ -31,7 +31,7 @@ $icons: (
 @mixin typography($scale) {
   $styles: f.get-typography($scale);
   // The role's face as its reference token, the compiled family as the fallback
-  // (FLO-330): an app or theme sets --{prefix}-ref-typeface-brand or -plain
+  // An app or theme sets --{prefix}-ref-typeface-brand or -plain
   font-family: var(--#{base.$prefix}-ref-typeface-#{f.typeface($scale)}, #{map.get($styles, 'font-family')});
   font-size: map.get($styles, 'font-size');
   line-height: map.get($styles, 'line-height');
@@ -39,7 +39,7 @@ $icons: (
   font-weight: map.get($styles, 'font-weight');
 }
 
-/// A typescale role through its custom properties (FLO-315): the
+/// A typescale role through its custom properties: the
 /// `--{prefix}-sys-typescale-{role}-*` tokens base/_tokens.scss emits from the
 /// same map, so setting `--{prefix}-ref-typeface-brand`/`-plain`, or a size
 /// token, reaches everything that uses it.
@@ -65,7 +65,7 @@ $icons: (
     position: relative;
   }
 
-  // The ripple is the press (FLO-260, as Compose draws it: one pressed indication at
+  // The ripple is the press (as Compose draws it: one pressed indication at
   // 0.10). An element that carries a ripple leaves its pressed layer to the wave, so
   // the two no longer add up to about 0.18; one without a ripple keeps it.
   @if $state == 'pressed' {
@@ -366,7 +366,7 @@ $sheet-overshoot-guard: 32px;
   &::after {
     content: '';
     position: absolute;
-    // Centred physically, as the icon button's own rule is (FLO-592). The
+    // Centred physically, as the icon button's own rule is. The
     // translate is physical, so the offsets must be: a logical inline-start
     // inset pinned the box's inline-start edge to the centre, and the translate
     // then moved the whole box a further 24px past it — a full box-width off

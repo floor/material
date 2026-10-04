@@ -1,6 +1,6 @@
 // src/core/theme/tokens.ts
 /**
- * M3 colour roles to mtrl's colour tokens (FLO-308).
+ * M3 colour roles to mtrl's colour tokens.
  *
  * One function turns a scheme's role colours into the `--mtrl-sys-color-*`
  * declarations a theme sets, light and dark. The theme generator

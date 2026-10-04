@@ -52,7 +52,7 @@ export interface EventComponent<E extends EventMap<E> = AnyEvents> extends BaseC
  * Adds event handling capabilities to a component
  * Returns event system ready to use immediately
  *
- * `withEvents<Events>()` names the component's events (FLO-295): `on` and
+ * `withEvents<Events>()` names the component's events: `on` and
  * `off` then check each name and its handler's payload.
  *
  * @returns Function that enhances a component with event capabilities

@@ -54,7 +54,7 @@ const createMenu = (config: MenuConfig): MenuComponent => {
       withPosition(baseConfig), // Position management
       withKeyboard(), // Keyboard navigation
       // Submenus are not a pipe stage: withController loads that feature on
-      // demand, only for a menu with nested items (FLO-310)
+      // demand, only for a menu with nested items
       withController(baseConfig, (): MenuComponent => menu), // Menu controller
       withOpener(baseConfig), // Opener management
       (comp) => withAPI(getApiConfig(comp))(comp), // Public API
