@@ -17,6 +17,17 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+### Fixed
+
+- **A selected toggle icon button inside a toolbar keeps its round shape.**
+  A standalone toggle morphs round to square when selected (icon buttons specs),
+  and toolbar items inherited that morph, so the selected Bold of a formatting
+  toolbar turned a rounded square — a shape the toolbars specs warn against in
+  the floating container. Selection inside a toolbar is shown by colour roles
+  alone (the toolbar token set has no item shape tokens), so the round radius
+  now stays in every state, pressed included; standalone toggles, square buttons
+  and explicit `--mtrl-button-shape-*` overrides are unchanged.
+
 ## [3.0.2] - 2026-10-04
 
 ### Fixed

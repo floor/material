@@ -21,7 +21,7 @@ const value = (selector: string, property: string) =>
     .filter(([, selectors]) => selectors.split(',').some(s => s.trim() === selector))
     .flatMap(([, , declarations]) => Array.from(declarations.matchAll(/([\w-]+):\s*([^;]+);/g)))
     .filter(([, name]) => name === property)
-    .map(([, , result]) => result.trim()).pop();
+    .map(([, , result]) => result.replace(/\s+/g, ' ').trim()).pop();
 
 beforeAll(() => {
   css = compileString("@use 'components/icon-button';", { loadPaths: ['src/styles'] }).css.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -52,9 +52,14 @@ describe('icon button geometry tokens', () => {
         });
       }
       test(`${row.size} ${shape}: pressed and selected shape tokens remain unchanged`, () => {
-        expect(value(`${root}:active${root}--${shape}${suffix}`, 'border-radius')).toBe(`var(--mtrl-button-shape-pressed, ${corner(row.pressed)})`);
+        // A round button reads the icon button's own override between the
+        // explicit --mtrl-button-shape-* and the radius: a toolbar pins it to
+        // keep the item round, so only the outer two stand alone.
+        const middle = (name: string, radius: string) =>
+          shape === 'round' ? `var(--mtrl-icon-button-shape-${name}, ${radius})` : radius;
+        expect(value(`${root}:active${root}--${shape}${suffix}`, 'border-radius')).toBe(`var(--mtrl-button-shape-pressed, ${middle('pressed', corner(row.pressed))})`);
         const selectedSelector = `${root}--selected${root}--${shape}:not(:active)${suffix}`;
-        expect(value(selectedSelector, 'border-radius')).toBe(`var(--mtrl-button-shape-selected, ${shape === 'round' ? corner(row.square) : `${row.container / 2}px`})`);
+        expect(value(selectedSelector, 'border-radius')).toBe(`var(--mtrl-button-shape-selected, ${middle('selected', shape === 'round' ? corner(row.square) : `${row.container / 2}px`)})`);
       });
     }
     test(`${row.size}: public constants match the token dimensions`, () => {
