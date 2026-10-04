@@ -138,9 +138,13 @@ describe("explicit contrast levels are opt-in", () => {
     // The menu's submenu arrow also mirrors inside a shadow root.
     // A search field's own trailing icon hides the browser's clear button
     // (styles/components/_text-field.scss).
+    // A toolbar keeps its round icon buttons round in every state: the
+    // morph targets read the icon button's own shape override, which the
+    // toolbar context pins to the resting radius
+    // (styles/components/_icon-button.scss, styles/components/_toolbar.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("edb11560074008dd9c00b39320b4010fb86b722391baaa07dd00fbcb8b607dc1");
-    expect(css.length).toBe(528858);
+      .toBe("12e1275973f3c0a8f0d8bb71fa6f937cc605ff990a9c259fcfad6d7e1f3fa0cb");
+    expect(css.length).toBe(530004);
   });
 
   test("today's sheets still resolve to the fixture", () => {
