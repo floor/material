@@ -140,11 +140,12 @@ describe("explicit contrast levels are opt-in", () => {
     // (styles/components/_text-field.scss).
     // A toolbar keeps its round icon buttons round in every state: the
     // morph targets read the icon button's own shape override, which the
-    // toolbar context pins to the resting radius
-    // (styles/components/_icon-button.scss, styles/components/_toolbar.scss).
+    // toolbar context pins to the resting radius of the bar's direct items
+    // only (styles/components/_icon-button.scss,
+    // styles/components/_toolbar.scss).
     expect(createHash("sha256").update(css).digest("hex"))
-      .toBe("12e1275973f3c0a8f0d8bb71fa6f937cc605ff990a9c259fcfad6d7e1f3fa0cb");
-    expect(css.length).toBe(530004);
+      .toBe("cf3b2593f9559b830ff70ede78ba25e5cd0d44582b59f030c6b82dfc846a918c");
+    expect(css.length).toBe(530259);
   });
 
   test("today's sheets still resolve to the fixture", () => {

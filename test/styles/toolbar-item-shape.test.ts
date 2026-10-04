@@ -9,6 +9,13 @@
 // The morph rules read --mtrl-icon-button-shape-selected/-pressed between
 // the explicit --mtrl-button-shape-* override and their own fallback, so a
 // standalone button is unchanged and a toolbar pins the resting radius.
+//
+// The pin reaches only the bar's direct items: a round icon button that is a
+// child of the bar in the same tree, and a host assigned to the bar's
+// default slot (matched by ::slotted() where it is assigned, per [size=…]
+// for the sizes). Content deeper than that — the overflow slot's, a dialog
+// opened from the bar, a composite child — matches nothing and keeps the
+// standalone morphs; nothing is declared on the toolbar root to inherit.
 import { beforeAll, describe, expect, test } from 'bun:test';
 import { compileString } from 'sass';
 
@@ -26,6 +33,13 @@ const value = (css: string, selector: string, property: string): string | undefi
     .filter(([, name]) => name === property)
     .map(([, , result]) => result.trim())
     .pop();
+};
+
+/** The bar's direct items of one size, both channels in one rule. */
+const items = (size: keyof typeof round): string => {
+  const suffix = size === 's' ? '' : `.mtrl-icon-button--${size}`;
+  const attr = size === 's' ? '' : `[size=${size}]`;
+  return `.mtrl-toolbar .mtrl-toolbar__bar > .mtrl-icon-button--round${suffix}, slot:not([name])::slotted(m-icon-button${attr})`;
 };
 
 let buttons = '';
@@ -55,29 +69,25 @@ describe('icon button morphs read the toolbar context', () => {
 });
 
 describe('a toolbar keeps its round items round', () => {
-  test('inside a toolbar the selected and pressed radii equal the resting radius per size', () => {
-    // The resting radius per size is `round` above; the toolbar stylesheet
-    // (which an m-toolbar root loads with the icon button's) pins the morph
-    // targets to it, so selected and pressed resolve to the radius the
-    // unselected button already has.
-    const at = (size: keyof typeof round, selector: string) => {
-      const pins = [value(toolbar, selector, '--mtrl-icon-button-shape-selected'),
-        value(toolbar, selector, '--mtrl-icon-button-shape-pressed')];
+  test('the bar\'s direct items pin selected and pressed to their own resting radius per size', () => {
+    // The radii mirror the icon button's round radii, half the container
+    // height per size (styles/components/_icon-button.scss, which owns
+    // them), for both channels: the same-tree child of the bar and the host
+    // assigned to the bar's default slot.
+    for (const size of Object.keys(round) as Array<keyof typeof round>) {
+      const pins = [value(toolbar, items(size), '--mtrl-icon-button-shape-selected'),
+        value(toolbar, items(size), '--mtrl-icon-button-shape-pressed')];
       expect(pins).toEqual([round[size], round[size]]);
-    };
-    at('s', '.mtrl-toolbar .mtrl-icon-button--round');
-    at('xs', '.mtrl-toolbar .mtrl-icon-button--round.mtrl-icon-button--xs');
-    at('m', '.mtrl-toolbar .mtrl-icon-button--round.mtrl-icon-button--m');
-    at('l', '.mtrl-toolbar .mtrl-icon-button--round.mtrl-icon-button--l');
-    at('xl', '.mtrl-toolbar .mtrl-icon-button--round.mtrl-icon-button--xl');
+    }
   });
 
-  test('the toolbar root declares the default its slotted hosts inherit', () => {
-    // <m-icon-button> slotted into <m-toolbar> lives behind its own shadow
-    // root, which no descendant selector reaches: it inherits the toolbar
-    // root's pin, the radius of the toolbar's 40dp items.
-    expect(value(toolbar, '.mtrl-toolbar', '--mtrl-icon-button-shape-selected')).toBe(round.s);
-    expect(value(toolbar, '.mtrl-toolbar', '--mtrl-icon-button-shape-pressed')).toBe(round.s);
+  test('the pin is not inherited from the toolbar root', () => {
+    // Nothing is declared on .mtrl-toolbar itself: an inherited pin would
+    // follow the flat tree past the direct items, into the overflow slot's
+    // content and everything opened from the bar.
+    expect(value(toolbar, '.mtrl-toolbar', '--mtrl-icon-button-shape-selected')).toBeUndefined();
+    expect(value(toolbar, '.mtrl-toolbar', '--mtrl-icon-button-shape-pressed')).toBeUndefined();
+    expect(toolbar).not.toContain('.mtrl-toolbar .mtrl-icon-button');
   });
 
   test('square items keep their morphs inside a toolbar', () => {
