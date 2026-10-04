@@ -55,8 +55,6 @@ describe("the component subpaths' exports", () => {
       expect(names(component!)).toContain(to);
       expect(names(component!)).not.toContain(old);
     }
-    const renamed = ["FLO", "383"].join("-");
-    expect(Object.values(now).flat().filter((e) => e.note?.includes(renamed)).map((e) => e.name)).toEqual([]);
   });
 
   test("3.0.0 exports nothing deprecated: the constants 0.10.0 deprecated are gone from every subpath", () => {

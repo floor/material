@@ -53,7 +53,7 @@ test("3.0.0 exports only the canonical names: every old spelling is gone from it
 }, 60_000);
 
 // The one-word spelling is the nine letters in any case except textField and
-// TextField. The allowlist is the same data the rename script reads.
+// TextField.
 test("no tracked path or line keeps the one-word spelling outside the allowlist", () => {
   const listed = spawnSync("git", ["ls-files", "-z"], { cwd: ROOT, encoding: "utf8" });
   if (listed.status !== 0) throw new Error(listed.stderr || "git ls-files failed");

@@ -3394,7 +3394,7 @@ try {
         const buttons = [...(host.shadowRoot?.querySelectorAll("button") ?? [])] as HTMLButtonElement[];
         const group = buttons[0]?.parentElement as HTMLElement;
         const state = { frames: [] as Array<{ phase: "press" | "release"; groupWidth: number; buttons: Array<{ scroll: number; client: number; width: number; paddingLeft: number; paddingRight: number }> }>, phase: "press" as "press" | "release", pressSettled: false, done: false, presses: 0 };
-        (window as unknown as { __flo537: typeof state }).__flo537 = state;
+        (window as unknown as { __pressProbe: typeof state }).__pressProbe = state;
         const sample = (): void => {
           state.frames.push({
             phase: state.phase,
@@ -3450,11 +3450,11 @@ try {
         return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
       };
       const framesOf = (): Promise<Frame[]> =>
-        page.evaluate(() => (window as unknown as { __flo537: { frames: Frame[] } }).__flo537.frames);
+        page.evaluate(() => (window as unknown as { __pressProbe: { frames: Frame[] } }).__pressProbe.frames);
       const settled = (): Promise<unknown> =>
-        page.waitForFunction(() => (window as unknown as { __flo537: { pressSettled: boolean } }).__flo537.pressSettled);
+        page.waitForFunction(() => (window as unknown as { __pressProbe: { pressSettled: boolean } }).__pressProbe.pressSettled);
       const finished = (): Promise<unknown> =>
-        page.waitForFunction(() => (window as unknown as { __flo537: { done: boolean } }).__flo537.done);
+        page.waitForFunction(() => (window as unknown as { __pressProbe: { done: boolean } }).__pressProbe.done);
 
       const press = async (name: string): Promise<Frame[]> => {
         await install();
@@ -3490,7 +3490,7 @@ try {
           if (frame.phase === "press") groupDrift = Math.max(groupDrift, Math.abs(frame.groupWidth - base));
         });
         const pressFrames = frames.filter((frame) => frame.phase === "press").length;
-        console.log(`  flo537 ${id} press ${name}: worst ${worstShort}px (${worstButton || "none"} frame ${worstFrame}), ${pressFrames} press frames, ${frames.length - pressFrames} release frames, group drift ${groupDrift.toFixed(2)}px`);
+        console.log(`  pressProbe ${id} press ${name}: worst ${worstShort}px (${worstButton || "none"} frame ${worstFrame}), ${pressFrames} press frames, ${frames.length - pressFrames} release frames, group drift ${groupDrift.toFixed(2)}px`);
         const previous = worst.get(id);
         const previousPx = previous ? Number.parseInt(previous, 10) : 0;
         if (worstShort > previousPx) worst.set(id, `${worstShort}px ${worstButton} while ${name} pressed, frame ${worstFrame}, ${shortFrames} frames`);
@@ -3542,7 +3542,7 @@ try {
         const button = host.shadowRoot?.querySelector("button") as HTMLElement;
         return { width: button.getBoundingClientRect().width, inline: button.style.width };
       });
-      console.log(`  flo537 relabel: ${beforeRelabel.toFixed(2)}px -> ${afterRelabel.width.toFixed(2)}px inline "${afterRelabel.inline}"`);
+      console.log(`  pressProbe relabel: ${beforeRelabel.toFixed(2)}px -> ${afterRelabel.width.toFixed(2)}px inline "${afterRelabel.inline}"`);
       if (afterRelabel.inline !== "") failures.push(`relabel: inline width stayed "${afterRelabel.inline}"`);
       if (afterRelabel.width <= beforeRelabel + 1) failures.push(`relabel: width ${afterRelabel.width.toFixed(2)} did not grow from ${beforeRelabel.toFixed(2)}`);
       judge("l relabel", "ExtraBold", await press("ExtraBold"));
@@ -3552,7 +3552,7 @@ try {
       const bold = await buttonBox("Bold");
       await page.mouse.move(bold.x, bold.y);
       await page.mouse.down();
-      await page.waitForFunction(() => (window as unknown as { __flo537: { frames: unknown[] } }).__flo537.frames.length >= 3);
+      await page.waitForFunction(() => (window as unknown as { __pressProbe: { frames: unknown[] } }).__pressProbe.frames.length >= 3);
       await page.mouse.up();
       const italic = await buttonBox("Italic");
       await page.mouse.move(italic.x, italic.y);
@@ -3622,7 +3622,7 @@ try {
       await inlineCleared();
       await page.emulateMedia({ reducedMotion: "no-preference" });
 
-      console.log(`  flo537 worst: ${[...worst.entries()].map(([id, detail]) => `${id} ${detail}`).join("; ")}`);
+      console.log(`  pressProbe worst: ${[...worst.entries()].map(([id, detail]) => `${id} ${detail}`).join("; ")}`);
       assert.equal(failures.length, 0, `button group press:\n${failures.join("\n")}`);
       check("button group: a press never ellipsizes a label, at every size, with motion on");
     } finally {

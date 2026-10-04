@@ -8,23 +8,17 @@ import { resolve } from "node:path";
  * keeps them out walks the packed files (see check-package-size.ts). The same
  * rule covers the repository everyone reads, which check-internal-ids.ts walks
  * over the tracked files.
+ *
+ * The pattern catches the lowercase and the hyphenless spellings too: the
+ * tracker spells a ticket one way, code and labels had drifted to the others
+ * (and `\b` keeps words like `floor` or `float` out of it).
  */
-const INTERNAL_ID = /FLO-\d+/g;
+const INTERNAL_ID = /\bflo-?\d+/gi;
 
 /** Every internal ticket reference in `text`, in the order they appear. */
 export function internalIdRefs(text: string): string[] {
   return text.match(INTERNAL_ID) ?? [];
 }
-
-/**
- * Lines one file is exempt on, and why. The text-field rename table's `old`
- * values must byte-match the trees scripts/rename-text-field.ts rewrites, so
- * the references those trees carry have to stay; its `new` and `reason` values
- * follow the rule like any other text.
- */
-export const ID_EXEMPT_LINES = new Map<string, RegExp>([
-  ["scripts/text-field-rename-entries.ts", /^\s*old: /],
-]);
 
 export interface IdFinding {
   file: string;
@@ -32,14 +26,12 @@ export interface IdFinding {
   text: string;
 }
 
-/** References in one file's text, skipping the lines the file is exempt on. */
+/** References in one file's text. */
 export function scanInternalIds(file: string, text: string): IdFinding[] {
-  const exempt = ID_EXEMPT_LINES.get(file);
   const findings: IdFinding[] = [];
   const lines = text.split("\n");
   for (let i = 0; i < lines.length; i++) {
     if (internalIdRefs(lines[i]).length === 0) continue;
-    if (exempt?.test(lines[i])) continue;
     findings.push({ file, line: i + 1, text: lines[i].trim() });
   }
   return findings;

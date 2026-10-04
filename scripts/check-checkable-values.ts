@@ -16,7 +16,7 @@ export async function checkCheckableValues(page: Page, surface: "factory" | "ele
     await page.evaluate(({ kind, surface }) => {
       const w = window as unknown as ProbeWindow;
       const form = document.createElement("form");
-      form.id = "flo380-form";
+      form.id = "checkable-form";
       document.body.append(form);
       let host: CheckboxElement | SwitchElement | undefined;
       let control: Control;
@@ -33,7 +33,7 @@ export async function checkCheckableValues(page: Page, surface: "factory" | "ele
       }
       const probe: Probe = { form, host, control, input: control.input, events: [], native: [], references: [] };
       w.checkableProbe = probe;
-      control.input.id = "flo380-input";
+      control.input.id = "checkable-input";
       control.input.addEventListener("change", event => probe.native.push(event));
       const record = (detail: Detail, event?: CustomEvent): void => {
         probe.references.push(detail.nativeEvent!);
@@ -45,8 +45,8 @@ export async function checkCheckableValues(page: Page, surface: "factory" | "ele
         emitter.on("change", record);
       }
     }, { kind, surface });
-    await page.locator("#flo380-input").click();
-    await page.locator("#flo380-input").focus();
+    await page.locator("#checkable-input").click();
+    await page.locator("#checkable-input").focus();
     await page.keyboard.press("Space");
     const changed = await page.evaluate(() => {
       const p = (window as unknown as ProbeWindow).checkableProbe;

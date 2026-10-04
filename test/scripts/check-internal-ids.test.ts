@@ -1,7 +1,6 @@
 // test/scripts/check-internal-ids.test.ts
 /**
- * The repository-wide half of the internal-id guard: what a finding carries,
- * and the one file exempt on one kind of line.
+ * The repository-wide half of the internal-id guard: what a finding carries.
  */
 
 import { describe, test, expect } from 'bun:test';
@@ -28,10 +27,10 @@ describe('repo-wide internal id guard', () => {
     expect(scanInternalIds('src/example.ts', 'const b = 2;\n')).toEqual([]);
   });
 
-  test('the rename table is exempt only on its old values', () => {
-    const file = 'scripts/text-field-rename-entries.ts';
-    expect(scanInternalIds(file, `  old: "keeps ${reference(999998)}",`)).toEqual([]);
-    expect(scanInternalIds(file, `  new: "no ${reference(999998)}",`)).toHaveLength(1);
-    expect(scanInternalIds(file, `  // ${reference(999998)} in a comment`)).toHaveLength(1);
+  test('every spelling is a finding, on its line', () => {
+    const lower = reference(999998).toLowerCase();
+    expect(scanInternalIds('scripts/check-elements.ts', `const a = 1;\n  // ${lower}\n`)).toEqual([
+      { file: 'scripts/check-elements.ts', line: 2, text: `// ${lower}` },
+    ]);
   });
 });
