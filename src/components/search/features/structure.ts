@@ -89,7 +89,7 @@ export const withStructure =
   component.element.className = rootClasses.filter(Boolean).join(" ");
   component.element.setAttribute("role", "search");
 
-  // minWidth and maxWidth, which nothing read (FLO-290): custom properties the
+  // minWidth and maxWidth, which nothing read: custom properties the
   // stylesheet takes over its M3 360 and 720dp.
   const prefix = config.prefix ?? PREFIX;
   if (typeof config.minWidth === "number") component.element.style.setProperty(`--${prefix}-search-min-width`, `${config.minWidth}px`);
@@ -100,7 +100,7 @@ export const withStructure =
   );
 
   // The bar and its results, which leave the page for the top layer together
-  // while the view is open. FLO-285.
+  // while the view is open.
   // A <dialog>, shown with showModal() when the view is full screen. Closed, it
   // is only the bar's box, and says so.
   const surface = createElement({
@@ -142,7 +142,7 @@ export const withStructure =
   });
 
   // The input is a combobox that owns the suggestions listbox; the arrows move
-  // aria-activedescendant through it (FLO-286). It was a plain text field, so
+  // aria-activedescendant through it. It was a plain text field, so
   // a screen reader heard neither the list nor the suggestion the arrows
   // reached.
   const id = `${getClass(SEARCH_CLASSES.ROOT)}-${++searches}`;
@@ -204,7 +204,7 @@ export const withStructure =
     });
   }
 
-  // Trailing icon buttons and the avatar (FLO-291). onClick was never wired,
+  // Trailing icon buttons and the avatar. onClick was never wired,
   // and the avatar was a focusable div with no role or keyboard use: it is a
   // button when it does something, and otherwise an image out of the tab
   // order.
@@ -296,7 +296,7 @@ export const withStructure =
   });
 
   // Always in the DOM, hidden by CSS while collapsed: the combobox's
-  // aria-controls names the listbox, which must exist (FLO-286).
+  // aria-controls names the listbox, which must exist.
   surface.appendChild(divider);
   surface.appendChild(contentArea);
 

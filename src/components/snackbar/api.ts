@@ -105,7 +105,7 @@ export const withAPI =
 
     const close = (reason: SnackbarCloseReason, originalEvent: Event | null = null): void => {
       // Queued, it was never open: it gives up its turn, and there is nothing
-      // to close (FLO-548).
+      // to close.
       if (api.state === 'queued') {
         api.state = 'hidden';
         if (entry) queue.remove(entry);
@@ -130,7 +130,7 @@ export const withAPI =
     };
 
     const open = (): void => {
-      // Its turn: the state and the event together (FLO-548)
+      // Its turn: the state and the event together
       api.state = 'visible';
       cancelRemoval();
       previouslyFocused = deepActiveElement();

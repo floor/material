@@ -113,7 +113,7 @@ export const withController =
   };
 
   // A discrete slider puts its interior steps on a scale inset by the track's corner
-  // radius; a continuous one spans the whole track (see trackPosition). FLO-250.
+  // radius; a continuous one spans the whole track (see trackPosition).
   // Read at each use: a right-to-left layout is known only once the slider is placed.
   const axisNow = () => getAxis(config, isRtl(component.element));
   const inset = () => config.ticks ? getExternalTrackRadius(component.getSize?.() ?? config.size) : 0;
@@ -282,7 +282,7 @@ export const withController =
    */
   // A value change that does not follow a pointer settles on the default spatial
   // spring; the stylesheet animates only while the root carries `--settling`, so a
-  // drag and a layout render (the first one, a resize) move nothing. FLO-250.
+  // drag and a layout render (the first one, a resize) move nothing.
   // The timer is the spring's duration, by design: it takes the class off again.
   const SETTLE_MS = 450; // spring-default-spatial-duration
   let rendered: { value: number; secondValue: number | null } | null = null;
@@ -418,15 +418,15 @@ export const withController =
       /**
        * Sets slider value
        * @param value New value
-       * @param triggerEvent Emits `change` when true; silent by default, as a native input (FLO-328)
+       * @param triggerEvent Emits `change` when true; silent by default, as a native input
        * @returns Slider controller for chaining
        */
       setValue(value: number, triggerEvent = false) {
         // A range slider's first value stops at its second, as Compose's
-        // RangeSliderState coerces activeRangeStart. FLO-251.
+        // RangeSliderState coerces activeRangeStart.
         const ceiling = config.range && state.secondValue !== null ? state.secondValue : state.max;
         // Snapped to the step, as keys and the pointer are and as Compose's
-        // SliderState snaps a value it is given (shouldAutoSnap). FLO-107.
+        // SliderState snaps a value it is given (shouldAutoSnap).
         const newValue = clamp(roundToStep(clamp(value, state.min, state.max)), state.min, ceiling);
 
         state.value = newValue;
@@ -450,7 +450,7 @@ export const withController =
       /**
        * Sets secondary slider value (for range slider)
        * @param value New secondary value
-       * @param triggerEvent Emits `change` when true; silent by default, as a native input (FLO-328)
+       * @param triggerEvent Emits `change` when true; silent by default, as a native input
        * @returns Slider controller for chaining
        */
       setSecondValue(value: number, triggerEvent = false) {

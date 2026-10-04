@@ -3,7 +3,7 @@
 @use '../abstract/mixins' as m;
 @use '../abstract/variables' as v;
 
-// M3 Expressive navigation bar (FLO-305): Compose ShortNavigationBar with
+// M3 Expressive navigation bar: Compose ShortNavigationBar with
 // NavigationBarTokens, NavigationBarVerticalItemTokens and
 // NavigationBarHorizontalItemTokens (v0_11_0); MDC-Android BottomNavigation as a
 // cross-check. 64dp tall, surface container, no elevation (ShortNavigationBar

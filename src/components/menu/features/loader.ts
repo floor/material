@@ -20,7 +20,7 @@ export const hasNestedItems = (items: MenuContent[] | undefined): boolean =>
   !!items?.some((item) => "hasSubmenu" in item && item.hasSubmenu === true);
 
 /**
- * Loads the submenu feature on demand (FLO-310).
+ * Loads the submenu feature on demand.
  *
  * The feature is most of what a menu with nested items adds, and a menu
  * without them never uses it, so it is a chunk of its own rather than part of

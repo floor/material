@@ -171,7 +171,7 @@ export interface MenuConfig {
   /**
    * The element the menu is placed against, when it is not the opener's: a
    * select's field, so its supporting text row never pushes the menu down
-   * (FLO-300). The opener still opens, closes and gets focus back.
+   * The opener still opens, closes and gets focus back.
    */
   positionTarget?: HTMLElement;
 
@@ -370,7 +370,7 @@ export interface MenuSelectEvent<TData = unknown> extends MenuEvent {
   /** ID of the selected menu item */
   itemId: string;
 
-  /** The item's id again, as the `value` of the `<m-menu>` element's `select` (FLO-320) */
+  /** The item's id again, as the `value` of the `<m-menu>` element's `select` */
   value: string;
 
   /** Data associated with the menu item (if any) */
@@ -575,7 +575,7 @@ export interface MenuEvents {
  *
  * Declared here rather than in features/keyboard.ts so the host below can
  * name it: a host that types its manager methods needs their parameter types
- * in scope. FLO-114.
+ * in scope.
  */
 export interface KeyboardMenuState {
   items: MenuContent[];
@@ -680,7 +680,7 @@ export interface MenuFeatureHost {
   // call a method with anything cannot accept one that takes typed
   // parameters -- which is what made the pipe in menu.ts fail to resolve and
   // typed every stage after it `unknown`. The signatures below are taken
-  // from the implementations in features/, not invented. FLO-114.
+  // from the implementations in features/, not invented.
   position?: {
     positionMenu: (openerElement: HTMLElement) => void;
     positionSubmenu: (

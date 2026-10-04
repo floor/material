@@ -48,7 +48,7 @@ export const withState =
     let restorePage: (() => void) | null = null;
 
     // A modal sheet outside the top layer does what showModal() does for one
-    // inside it: the page goes inert and Tab stays in the sheet (FLO-324)
+    // inside it: the page goes inert and Tab stays in the sheet
     const trap = (on: boolean): void => {
       if (!isModal || top) return;
       if (on && !restorePage) {
@@ -116,7 +116,7 @@ export const withState =
     const handleKeydown = (event: KeyboardEvent): void => {
       if (event.key !== "Escape" || !open || !config.closeOnEscape) return;
       // A standard sheet (a modal one is on the stack) sits beside the page,
-      // not over it: Escape pressed elsewhere is not meant for it (FLO-324)
+      // not over it: Escape pressed elsewhere is not meant for it
       if (!event.composedPath().includes(element)) return;
       event.preventDefault();
       hide();

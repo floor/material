@@ -16,7 +16,7 @@ $component: "#{base.$prefix}-search";
 $bar-height: 56px;
 // SearchBarTokens.ContainerShape is CornerFull. Half the height, so the
 // radius animates to the view's corners; min() keeps a theme's full corner
-// in charge when it is smaller (FLO-345).
+// in charge when it is smaller.
 $bar-shape: min(var(--#{base.$prefix}-sys-shape-corner-full, 9999px), calc(#{$bar-height} / 2));
 $bar-min-width: 360px;
 $bar-max-width: 720px;
@@ -59,7 +59,7 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
 
 // The root keeps the bar's place in the page. While the view is open, the bar
 // and its results show in the top layer as one surface, placed over it
-// (FLO-285): a docked view no longer pushes the page down, and a full-screen
+// A docked view no longer pushes the page down, and a full-screen
 // search no longer covers the page while it is a bar.
 .#{$component} {
     position: relative;
@@ -187,7 +187,7 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
 
 
 // ============================================================================
-// Styles (FLO-287)
+// Styles
 // ============================================================================
 
 // The rules above draw the divided style, the baseline: the bar squares off
@@ -237,7 +237,7 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     @include contained-fullscreen;
 }
 
-// The results reveal on the emphasized decelerate curve (FLO-287: the
+// The results reveal on the emphasized decelerate curve (the
 // --expanding and --collapsing classes were never driven, and are gone).
 .#{$component}--view .#{$component}__content {
     animation: #{$component}-reveal v.motion("duration-medium2") v.motion("easing-emphasized-decelerate");
@@ -284,7 +284,7 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
 // Icon buttons: leading, clear, trailing
 // ============================================================================
 
-// 48dp tap targets around 24dp icons (FLO-286: they were 24dp buttons), with
+// 48dp tap targets around 24dp icons (they were 24dp buttons), with
 // state layers in their icon colour and md.comp.focus-ring.
 .#{$component}__leading-icon,
 .#{$component}__clear-button,
@@ -300,7 +300,7 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     padding: 0;
     border: none;
     border-radius: 50%;
-    // A shadow root does not get the page's font reset (FLO-291).
+    // A shadow root does not get the page's font reset.
     font: inherit;
     background-color: color-mix(in srgb, currentColor var(--#{$component}-layer), transparent);
     cursor: pointer;
@@ -442,7 +442,7 @@ $transition-easing: cubic-bezier(0.2, 0, 0, 1);
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    // The arrows name no behaviour, so that reduced motion can stop it (FLO-553)
+    // The arrows name no behaviour, so that reduced motion can stop it
     scroll-behavior: smooth;
 }
 

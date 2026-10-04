@@ -22,7 +22,7 @@
 
     // fixed roles: generated, do not edit
     // (tones 90, 80, 10, 30 of this theme's primary, secondary and tertiary;
-    // the same in dark, so declared once, FLO-315)
+    // the same in dark, so declared once)
     --#{$prefix}-sys-color-primary-fixed: #ffdbcf;
     --#{$prefix}-sys-color-primary-fixed-dim: #ebbcac;
     --#{$prefix}-sys-color-on-primary-fixed: #2e150b;
@@ -54,7 +54,7 @@
     --#{$prefix}-sys-color-outline: #85736c;
     --#{$prefix}-sys-color-outline-variant: #d7c1ba;
     // Inverse roles (M3: inverse-surface N20, inverse-on-surface N95,
-    // inverse-primary P80), from this theme's neutral and primary palettes. FLO-254.
+    // inverse-primary P80), from this theme's neutral and primary palettes.
     --#{$prefix}-sys-color-inverse-surface: #3a2e27;
     --#{$prefix}-sys-color-inverse-on-surface: #ffede5;
     --#{$prefix}-sys-color-inverse-primary: #ebbcac;
@@ -111,7 +111,7 @@
         --#{$prefix}-sys-color-outline: #a08c85;
         --#{$prefix}-sys-color-outline-variant: #53433c;
         // Inverse roles (M3: inverse-surface N90 = on-surface, inverse-on-surface N20,
-        // inverse-primary P40). FLO-254.
+        // inverse-primary P40).
         --#{$prefix}-sys-color-inverse-surface: #ede0d9;
         --#{$prefix}-sys-color-inverse-on-surface: #3a2e27;
         --#{$prefix}-sys-color-inverse-primary: #7a5649;

@@ -83,7 +83,7 @@ export const BUTTON_GROUP_SIZES = {
 /**
  * Material 3 button group tokens per size (dp): container height, button
  * icon size, standard between-space, connected inner corner and its shape
- * scale step (FLO-331) (m3.material.io button group specs; ButtonGroupSmallTokens.kt and
+ * scale step (m3.material.io button group specs; ButtonGroupSmallTokens.kt and
  * ConnectedButtonGroupSmallTokens.kt for the s size)
  */
 export const BUTTON_GROUP_SIZE_TOKENS = {

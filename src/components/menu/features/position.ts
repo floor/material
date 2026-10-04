@@ -82,7 +82,7 @@ export const createPositioner = (
     // Measured at the height it will have: without its max height a long
     // list measured as tall as every row, never "fit" below the opener,
     // flipped above it and was clamped to the top of the viewport.
-    // Not the height a previous placement fitted it to (FLO-272): a menu
+    // Not the height a previous placement fitted it to: a menu
     // measured at that cap fits exactly and would lose it on the next pass.
     tempMenu.style.maxHeight = config.maxHeight ?? "";
     tempMenu.classList.add(`${component.getClass("menu--visible")}`); // Add visible class for proper dimensions
@@ -203,7 +203,7 @@ export const createPositioner = (
 
     // The menu's height, capped to the room on its side of the anchor, so a
     // long list scrolls inside the viewport wherever the menu is mounted: the
-    // body, a container or the top layer (FLO-272). For a main menu above or
+    // body, a container or the top layer. For a main menu above or
     // below its anchor; one beside it and submenus keep their own rules.
     let height = menuRect.height;
     let fitted: number | null = null;

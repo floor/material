@@ -82,7 +82,6 @@ const createText = (element: HTMLElement, config: TextConfig = {}): TextManager 
     const span = document.createElement('span');
     // BEM, as with withIcon and withTextLabel: this text belongs to whichever
     // component applied the feature -- button, extended-fab or snackbar.
-    // FLO-120.
     span.className = `${PREFIX}-${config.componentName || 'component'}__text`;
     if (typeof content === "string") span.textContent = content;
     else span.append(content);

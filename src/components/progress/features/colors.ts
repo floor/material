@@ -7,7 +7,7 @@
 //
 // They are read on the indicator's own element, so a theme set on a section,
 // a card or a shadow host reaches the canvas too, not only the page's
-// (FLO-389). A detached element has no theme yet: the fallbacks stand until
+// A detached element has no theme yet: the fallbacks stand until
 // it is in a document.
 
 import { getThemeColor } from "../../../core/utils";

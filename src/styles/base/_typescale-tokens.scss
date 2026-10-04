@@ -1,7 +1,7 @@
 // The typescale custom properties, one mixin so the full stylesheet, the base
 // and material/styles/typography emit the same declarations.
 // `all` is every role. `body` is the three body-medium tokens the base body
-// rule reads; the other 72 leave the base (FLO-539).
+// rule reads; the other 72 leave the base.
 
 @use 'sass:map';
 @use '../abstract/base' as base;

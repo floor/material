@@ -8,7 +8,7 @@
 // name with `mtrl-`, which meant a consumer's `class: "custom-button"` landed
 // as `mtrl-custom-button` and could not be styled by the name they wrote.
 // Prefixing belongs to `getClass()`, which internal code already uses at the
-// call site. FLO-117.
+// call site.
 
 // Cache for frequently used class combinations to avoid repeated processing
 const classCache = new Map<string, string[]>();

@@ -139,7 +139,7 @@ $component: '#{base.$prefix}-radios';
 
   // The 20dp icon: a 2dp ring (RadioStrokeWidth; it was 1.5px, which Chromium
   // paints as 1px) in on-surface-variant, and a 10dp dot (Compose and material-web;
-  // it was 12px) that springs in on the fast spatial spring. FLO-266.
+  // it was 12px) that springs in on the fast spatial spring.
   &__circle {
     position: relative;
     width: 20px;
@@ -167,7 +167,7 @@ $component: '#{base.$prefix}-radios';
   // The state layer (md-comp-radio-button): unselected on-surface on hover and
   // focus, selected primary; a press takes the colour of the state it leads to. The
   // unselected ring turns on-surface. Hover was primary even when unselected, a
-  // plain :focus showed on mouse clicks, and there was no press. FLO-266.
+  // plain :focus showed on mouse clicks, and there was no press.
   &__ripple {
     position: absolute;
     inset: 0;
@@ -201,7 +201,7 @@ $component: '#{base.$prefix}-radios';
   }
 
   // Radio text: the gap follows the reading direction (it was a physical
-  // margin-left, 0px in right-to-left layouts). FLO-266.
+  // margin-left, 0px in right-to-left layouts).
   &__text {
     margin-inline-start: 8px;
 

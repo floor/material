@@ -78,7 +78,7 @@ const textFieldSpec = {
     "supporting-text": {
       type: "string",
       config: "supportingText",
-      // The field's error state is the factory's own (FLO-303): the text only
+      // The field's error state is the factory's own: the text only
       // takes the error colour while the field is in error.
       update: (c, v) => void (v ? c.setSupportingText(String(v), c.isError()) : c.removeSupportingText()),
     },
@@ -106,7 +106,7 @@ const textFieldSpec = {
     },
     maxlength: { type: "number", config: "maxLength", update: inputAttribute("maxlength") },
     pattern: { type: "string", config: "pattern", update: inputAttribute("pattern") },
-    // The input's required and the label's asterisk together (FLO-301)
+    // The input's required and the label's asterisk together
     required: { type: "boolean", config: "required", update: (c, v) => void c.setRequired(!!v) },
     readonly: { type: "boolean", config: "readonly", update: inputAttribute("readonly") },
     disabled: { type: "boolean", config: "disabled", update: (c, v) => void (v ? c.disable() : c.enable()) },

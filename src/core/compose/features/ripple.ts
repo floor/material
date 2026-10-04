@@ -56,7 +56,7 @@ export interface RippleComponent extends BaseComponent {
 const RELEASE = ["pointerup", "pointercancel", "mouseleave"] as const;
 
 export const createRipple = (config: RippleConfig = {}): RippleController => {
-  // The wave's motion and opacity come from the stylesheet (FLO-268).
+  // The wave's motion and opacity come from the stylesheet.
   const options = { duration: config.duration ?? RIPPLE_CONFIG.duration };
 
   const mounts = new WeakMap<HTMLElement, () => void>();
@@ -76,7 +76,7 @@ export const createRipple = (config: RippleConfig = {}): RippleController => {
       const waves = new Set<() => void>();
 
       // Pointer events, so a touch shows its press while the finger is down: the ripple
-      // is the press (FLO-260), and mousedown only fires on touch after the finger lifts.
+      // is the press, and mousedown only fires on touch after the finger lifts.
       const press = (event: PointerEvent): void => {
         const bounds = element.getBoundingClientRect();
         const size = Math.max(bounds.width, bounds.height) * 2;

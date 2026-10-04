@@ -13,7 +13,7 @@
  * minute, as on `<input type=time>`; empty is `""`. The dial starts on the
  * value, or on the current time when there is none.
  *
- * The dial edits a draft (FLO-288): `input` is dispatched with `{ value, draftValue }`
+ * The dial edits a draft: `input` is dispatched with `{ value, draftValue }`
  * as it moves, and OK commits it, dispatching `change` with `{ value }` when
  * the time differs and `confirm` with `{ value }` on every OK. Cancel, Escape
  * and the backdrop discard the draft. `open`
@@ -77,7 +77,7 @@ const steps = (step: number | undefined): Partial<TimePickerConfig> => {
 };
 
 /**
- * The factory keeps the draft and the committed time (FLO-288), but always
+ * The factory keeps the draft and the committed time, but always
  * holds a time: the element adds only whether its value is empty, as
  * `<input type=time>`'s can be. The first OK fills it, with a `change` even
  * when the factory's committed time did not move.

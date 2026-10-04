@@ -56,7 +56,7 @@ export interface NavigationBarComponent {
     getClass: (name: string) => string;
     lifecycle: { destroy: () => void };
     getActive: () => string | null;
-    /** The active destination's id, as getActive(): the value getter every component has (FLO-380) */
+    /** The active destination's id, as getActive(): the value getter every component has */
     getValue: () => string | null;
     /** Marks a destination active, silently (no `select`); `null` clears it */
     setActive: (id: string | null) => NavigationBarComponent;

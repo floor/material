@@ -5,8 +5,8 @@
  *
  * The parser does not read their value: `disabled="false"`, `disabled=""` and
  * `disabled="disabled"` are all a disabled control. So writing `String(false)`
- * for one of these produces the opposite of what the caller asked for, which
- * is FLO-240 — `createElement({ disabled: false })` returned a disabled
+ * for one of these produces the opposite of what the caller asked for:
+ * `createElement({ disabled: false })` returned a disabled
  * button, and the same inversion reached `checked`, `required` and `hidden`.
  *
  * The list is the HTML boolean attributes a component configuration is

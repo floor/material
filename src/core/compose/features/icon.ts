@@ -97,7 +97,7 @@ const createIcon = (
     // Add component-specific class. BEM: this is the component's icon
     // element, and it is emitted for every component applying withIcon --
     // button, extended-fab, fab, icon-button and slider -- so the name is
-    // settled here rather than five times over. FLO-120.
+    // settled here rather than five times over.
     const componentClass = `${PREFIX}-${
       config.componentName || "component"
     }__icon`;

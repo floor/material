@@ -50,7 +50,7 @@ export const createTimePickerAPI = (
   options: ApiOptions,
   formValue: HTMLInputElement | null = null
 ): TimePickerComponent => {
-  // A draft and a committed value (FLO-288). The renderer edits `timeValue`
+  // A draft and a committed value. The renderer edits `timeValue`
   // in place: that is the draft, shown while the picker is open. OK commits
   // it; Cancel, Escape and the backdrop put the committed value back. M3's
   // Cancel discards, as the date picker's does; here every move of the dial
@@ -91,7 +91,7 @@ export const createTimePickerAPI = (
   markDisabled();
   // Selectors from the picker's own prefix: TIMEPICKER_SELECTORS spells `.mtrl-`,
   // so with a custom prefix cancel, confirm, the toggle and setTitle found
-  // nothing. FLO-278.
+  // nothing.
   const part = (name: string) => `.${config.prefix}-time-picker__${name}`;
   const dialog = dialogElement as HTMLDialogElement;
   // Track open state
@@ -106,16 +106,16 @@ export const createTimePickerAPI = (
     timePickerAPI.close();
   };
   // OK commits the draft: one `change` if it differs, then `confirm`, both
-  // while the picker is open; it emitted confirm after closing (FLO-288).
+  // while the picker is open; it emitted confirm after closing.
   const confirm = () => {
     commit();
     options.events.emit(EVENTS.CONFIRM, { value: getValue() });
     timePickerAPI.close();
   };
   // The picker's place among the open modals, while it is open: Escape is a
-  // key press handled there, for the topmost one only (FLO-548). It was the
+  // key press handled there, for the topmost one only. It was the
   // dialog's cancel event, and before that a document listener that closed
-  // every open picker (FLO-278).
+  // every open picker.
   let escape: ModalEscape | undefined;
   // A close request that is not a key press (a back gesture) still arrives as
   // the dialog's cancel. The browser's cancel in the task the picker opened in
@@ -130,10 +130,10 @@ export const createTimePickerAPI = (
   // a modal <dialog> must not be moved once it is shown.
   const show = () => {
     if (!isOpen) return;
-    // The dialog is in the component's own element (FLO-288); an app that
+    // The dialog is in the component's own element; an app that
     // only calls open() never put that element in the page.
     if (!baseComponent.element.isConnected && !dialog.isConnected) document.body.append(baseComponent.element);
-    // Whatever really had focus, through any shadow roots (FLO-284).
+    // Whatever really had focus, through any shadow roots.
     const active = deepActiveElement();
     returnFocus = active instanceof HTMLElement && active !== document.body ? active : null;
     // The top layer, scrim and inert page are the browser's; environments
@@ -160,7 +160,7 @@ export const createTimePickerAPI = (
     modalElement,
     dialogElement,
 
-    // A method, as on every overlay (FLO-548); it was a getter property.
+    // A method, as on every overlay; it was a getter property.
     isOpen: () => isOpen,
 
     
@@ -240,7 +240,7 @@ export const createTimePickerAPI = (
 
         // Re-render time picker, which writes the form value. Silently: a
         // value set by script emits neither `change` nor onChange, as a
-        // native input's; OK does (FLO-328).
+        // native input's; OK does.
         render();
       } catch (error) {
         console.error('Error setting time value:', error);
@@ -297,7 +297,7 @@ export const createTimePickerAPI = (
       
       // Re-render time picker. The value is 24-hour whatever the display, so a
       // format change is not a change of value, and emits nothing: it emitted
-      // `change` without calling onChange. FLO-281.
+      // `change` without calling onChange.
       render();
       
       return this;
@@ -349,7 +349,7 @@ export const createTimePickerAPI = (
       return config.title || '';
     },
 
-    // A disabled picker does not open (FLO-288); disabling closes an open one.
+    // A disabled picker does not open; disabling closes an open one.
     enable() {
       disabled = false;
       markDisabled();

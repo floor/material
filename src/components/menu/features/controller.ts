@@ -41,7 +41,7 @@ const withController =
   // feature from the pipeline type. The host type requires the element.
   const tasks = createMenuTasks();
 
-  // Nested menus are a lazy chunk (FLO-310): a menu without nested items never
+  // Nested menus are a lazy chunk: a menu without nested items never
   // loads it, and one with them starts the load now, so it is normally there
   // before the menu opens. Until then `submenu` queues what the user does.
   const loader = createSubmenuLoader(config, component);
@@ -389,7 +389,7 @@ const withController =
       {
         item,
         itemId: item.id,
-        // The <m-menu> element's field (FLO-320)
+        // The <m-menu> element's field
         value: item.id,
         itemData: item.data,
       },
@@ -745,7 +745,7 @@ const withController =
   /**
    * Follows the opener as the page or any panel around it scrolls: element
    * scroll events do not bubble, so the listener is on the capture phase
-   * (FLO-272). The menu's own list scrolling is not a reason to move it.
+   * The menu's own list scrolling is not a reason to move it.
    */
   const handleWindowScroll = (event?: Event): void => {
     if (event?.composedPath().includes(component.element)) return;

@@ -8,7 +8,7 @@
 // Define the component once
 $component: "#{base.$prefix}-text-field";
 
-// Right to left (FLO-562). Every horizontal inset is a custom property, set
+// Right to left. Every horizontal inset is a custom property, set
 // once whatever the direction, and the rules in this mixin, at the end of the
 // component's block, are the whole mirror. Two selectors: an ancestor's `dir`,
 // which needs no script, and --rtl, which placement.ts sets from the computed
@@ -49,13 +49,13 @@ $component: "#{base.$prefix}-text-field";
     // Unsized, the field is 280px wide (TextFieldDefaults.MinWidth), not as
     // wide as its input's 20 average characters, which Chrome measures
     // differently per platform for the same font: 167px on macOS, 220px on
-    // Linux (FLO-293). A width from the page still applies.
+    // Linux. A width from the page still applies.
     contain: inline-size;
     contain-intrinsic-inline-size: v.text-field('width');
     // align-self: flex-start; // Prevents growing to fill the container's height
     flex: 0 0 auto; // Don't grow or shrink; keep natural size
     // The container: the label, input, outline, icons and affixes are placed
-    // against it, so the supporting text row under it never moves them (FLO-300)
+    // against it, so the supporting text row under it never moves them
     &__field {
         position: relative;
         display: flex;
@@ -100,7 +100,7 @@ $component: "#{base.$prefix}-text-field";
         transition: background-color 0s ease-out 50000000s;
 
         // InputPlaceholderColor, shown while the field is focused or has no
-        // label: under a resting label it would collide with it (FLO-298)
+        // label: under a resting label it would collide with it
         &::placeholder {
             color: t.color("on-surface-variant");
             opacity: 1;
@@ -114,7 +114,7 @@ $component: "#{base.$prefix}-text-field";
             transition: background-color 5000s ease-in-out 0s; // Long transition to keep the background
         }
 
-        // Firefox autofill; the animation reports it as on WebKit (FLO-335)
+        // Firefox autofill; the animation reports it as on WebKit
         &:autofill {
             animation-name: onAutoFillStart;
             animation-duration: 10ms;
@@ -123,14 +123,14 @@ $component: "#{base.$prefix}-text-field";
     }
 
     // The disabled input's -webkit-text-fill-color is inherited by its
-    // placeholder and paints over color, so both are cleared (FLO-354)
+    // placeholder and paints over color, so both are cleared
     &:has(> .#{$component}__field > .#{$component}__label):not(.#{$component}--focused) .#{$component}__input::placeholder {
         color: transparent;
         -webkit-text-fill-color: transparent;
     }
 
     // While the label rests in the input area it is all that area shows: the
-    // prefix and suffix appear as it floats, like the placeholder (FLO-355).
+    // prefix and suffix appear as it floats, like the placeholder.
     // Resting is the float rules' complement: empty to the script and to the
     // input itself, and not focused.
     &--empty:has(> .#{$component}__field > .#{$component}__label):not(.#{$component}--focused):not(:has(.#{$component}__input:is(:not(:placeholder-shown), :autofill, :-webkit-autofill))) {
@@ -153,7 +153,7 @@ $component: "#{base.$prefix}-text-field";
         max-width: 40%; // Prevent extreme overflow
         overflow: hidden;
         text-overflow: ellipsis;
-        // opacity as the label floats (FLO-355); top where a label is added
+        // opacity as the label floats; top where a label is added
         // or removed
         transition:
             top v.motion("duration-short4") v.motion("easing-emphasized"),
@@ -196,7 +196,7 @@ $component: "#{base.$prefix}-text-field";
         transition: top v.motion("duration-short4")
             v.motion("easing-emphasized"); // Add transition for top position
 
-        // LeadingIconSize / TrailingIconSize: 24dp, the whole box (FLO-298)
+        // LeadingIconSize / TrailingIconSize: 24dp, the whole box
         svg {
             width: 24px;
             height: 24px;
@@ -219,7 +219,7 @@ $component: "#{base.$prefix}-text-field";
         transition: top v.motion("duration-short4")
             v.motion("easing-emphasized"); // Add transition for top position
 
-        // LeadingIconSize / TrailingIconSize: 24dp, the whole box (FLO-298)
+        // LeadingIconSize / TrailingIconSize: 24dp, the whole box
         svg {
             width: 24px;
             height: 24px;
@@ -266,7 +266,7 @@ $component: "#{base.$prefix}-text-field";
 
     // What a prefix or a suffix adds before the text: its width, which
     // placement.ts measures into a custom property (32px until it has), and
-    // the 2dp to the text (PrefixSuffixTextPadding) (FLO-299)
+    // the 2dp to the text (PrefixSuffixTextPadding)
     &--with-prefix {
         --#{$component}-prefix-space: calc(var(--#{$component}-prefix-width, 32px) + 2px);
     }
@@ -291,7 +291,7 @@ $component: "#{base.$prefix}-text-field";
 
     // Disabled state
     // Disabled: the roles at 38%, not the element faded, which also faded
-    // the filled container's 4% (FLO-298). The fill is the filled variant's.
+    // the filled container's 4%. The fill is the filled variant's.
     &--disabled {
         .#{$component}__input {
             color: t.alpha("on-surface", 0.38);
@@ -319,7 +319,7 @@ $component: "#{base.$prefix}-text-field";
     }
 
     // The label comes before the input, so no sibling selector reaches it:
-    // the root reads the input's state instead (FLO-303).
+    // the root reads the input's state instead.
     &:has(.#{$component}__input:disabled) {
         .#{$component}__label,
         .#{$component}__supporting {
@@ -347,7 +347,6 @@ $component: "#{base.$prefix}-text-field";
     // the start, the counter at the end, 4dp below the field and 16dp in from
     // each side (TextFieldDefaults.supportingTextPadding). It was absolute,
     // 18px under the field, so it overlapped what followed and never wrapped
-    // (FLO-300).
     &__supporting {
         @include m.typography("body-small");
         display: flex;
@@ -376,7 +375,7 @@ $component: "#{base.$prefix}-text-field";
         color: t.color("error");
     }
 
-    // The required asterisk (FLO-301): part of the label, in its colour and
+    // The required asterisk: part of the label, in its colour and
     // straight after its text, as Material Web appends it. It was the error
     // colour with a 4px gap, a style no element carried until now.
     &__required {
@@ -439,7 +438,7 @@ $component: "#{base.$prefix}-text-field";
             transition: opacity v.motion("duration-short4") v.motion("easing-standard");
 
             // Here, not in the block above with the label and the outline:
-            // this rule comes later and would win over it (FLO-299)
+            // this rule comes later and would win over it
             @include m.reduced-motion {
                 transition: none;
             }
@@ -455,7 +454,7 @@ $component: "#{base.$prefix}-text-field";
 
         // Floated from the input's own state too: a value, or autofill before
         // the script has seen it. The label precedes the input, so the root
-        // reads it (FLO-303).
+        // reads it.
         &:has(.#{$component}__input:is(:not(:placeholder-shown), :autofill, :-webkit-autofill)) .#{$component}__label {
             transform: translateY(calc(-12px - 37.5%)) scale(0.75);
         }
@@ -650,7 +649,7 @@ $component: "#{base.$prefix}-text-field";
             }
         }
 
-        // LabelColor at full strength: faded to 0.5 it failed 4.5:1 (FLO-298)
+        // LabelColor at full strength: faded to 0.5 it failed 4.5:1
         .#{$component}__label {
             top: 50%;
         }
@@ -723,7 +722,7 @@ $component: "#{base.$prefix}-text-field";
 
     // Multiline styles
     // The first line and the label are where a single-line field has them
-    // (FLO-299): Compose places the text with no singleLine branch,
+    // Compose places the text with no singleLine branch,
     // `textPosition = topPaddingValue + labelPlaceable.height`. The textarea's
     // own 12px put the first line under the filled field's floated label.
     &--multiline {
@@ -939,7 +938,7 @@ $component: "#{base.$prefix}-text-field";
 }
 
 // ============================================================================
-// An interactive trailing icon (FLO-301)
+// An interactive trailing icon
 // ============================================================================
 // With `trailingIconLabel` the trailing icon is a button: M3 draws an
 // interactive trailing icon as an icon button, as Compose's trailing slot holds
@@ -990,7 +989,7 @@ $component: "#{base.$prefix}-text-field";
     }
 
     // The field's mirror, for the button: an ancestor's `dir`, or the
-    // field's --rtl inside a shadow root (FLO-562)
+    // field's --rtl inside a shadow root
     [dir='rtl'] &,
     .#{$component}--rtl & {
         right: auto;

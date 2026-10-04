@@ -4,7 +4,7 @@ import type { BaseComponent, ElementComponent } from "../../../core/compose/comp
 import type { LabelManager } from "../../../core/compose/features/textlabel";
 
 /**
- * A required field's asterisk (FLO-301). M3's text field guidelines mark a
+ * A required field's asterisk. M3's text field guidelines mark a
  * required field with an asterisk after its label, and Material's own web
  * text field appends it to the label text in the label's colour. Here it is a
  * span after the text, hidden from screen readers: the input's native

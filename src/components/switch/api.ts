@@ -101,7 +101,7 @@ export const withAPI =
       return this;
     },
 
-    // The error state, owned here alone (FLO-318)
+    // The error state, owned here alone
     setError(error: boolean): SwitchComponent {
       component.setError?.(error);
       return this;

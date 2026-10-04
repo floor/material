@@ -285,9 +285,9 @@ export const withToggle =
       toggleState.toggle();
 
       // `change` through the emitter, as a switch or checkbox reports its
-      // state (FLO-295). The DOM `toggle` 0.10 also dispatched is gone in material 3.0.0:
+      // state. The DOM `toggle` 0.10 also dispatched is gone in material 3.0.0:
       // it shared its name with the native ToggleEvent.
-      // `value` is the button's value, as every model event carries (FLO-380).
+      // `value` is the button's value, as every model event carries.
       const value = (component.element as HTMLButtonElement).value;
       component.emit?.("change", { selected: isSelected, value });
     };

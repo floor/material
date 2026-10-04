@@ -27,7 +27,7 @@ $arrow-size: 8px;
   transform: scale(0.9);
   transform-origin: center;
   box-sizing: border-box;
-  // M3's plain tooltip has no elevation (PlainTooltipTokens), FLO-324
+  // M3's plain tooltip has no elevation (PlainTooltipTokens)
   
   // Typography
   @include m.typography('body-small');
@@ -81,7 +81,7 @@ $arrow-size: 8px;
 
   // Plain is M3's plain tooltip, which the base already is (PlainTooltipTokens:
   // inverse-surface, inverse-on-surface). It had its own surface-container-high
-  // with an outline, which no M3 source has (FLO-324).
+  // with an outline, which no M3 source has.
   &--plain {
     background-color: t.color('inverse-surface');
     color: t.color('inverse-on-surface');

@@ -21,7 +21,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
   const resources = getCleanup(base);
   // The set's selection hook. removeChip and the set's teardown both destroy
   // the chip, which is what drops the hook: a later setSelected cannot reach
-  // a set that no longer has this chip. FLO-518.
+  // a set that no longer has this chip.
   resources.add(() => { options.onSelected = undefined; });
   root.classList.add(base.getClass(`chip--${type}`));
   if (options.elevated && type !== "input") root.classList.add(base.getClass("chip--elevated"));
@@ -71,7 +71,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
   }
   // A filter chip's trailing icon can have its own action: open a menu or remove the
   // chip (m3.material.io chips). Built like the remove button, beside the action,
-  // never inside it. FLO-259.
+  // never inside it.
   let trailingAction: HTMLButtonElement | undefined;
   if (type === "filter" && options.onTrailingClick) {
     trailingAction = document.createElement("button");
@@ -86,7 +86,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     root.setAttribute("role", "group");
   }
 
-  // In a chip set's grid (the m3.material.io chips' web roles, FLO-261) the chip is a
+  // In a chip set's grid (the m3.material.io chips' web roles) the chip is a
   // gridcell. A chip with one action is itself the focus target: the cell carries
   // the selection and answers Space and Enter, and its inner button stays for the
   // pointer but leaves the accessibility tree, so the chip is announced once. A chip
@@ -202,7 +202,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     if (disabled || resources.destroyed) return;
     // One order, alone or in a set: click reports the press, with the state
     // as it was; change follows, only if the selection changed. A set toggles
-    // the chip from its own click listener, and may refuse (FLO-550).
+    // the chip from its own click listener, and may refuse.
     // setSelected itself stays silent, so a chip replaced by a single-select
     // click does not emit change.
     const was = selected;
@@ -213,7 +213,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     if (!options.managedSelection) options.onSelect?.(api);
   });
   // Backspace and Delete remove a focused removable chip (m3.material.io chips
-  // accessibility, keyboard table). FLO-256.
+  // accessibility, keyboard table).
   const removeFromKeyboard = (event: KeyboardEvent) => {
     if (!remove || disabled || (event.key !== "Backspace" && event.key !== "Delete")) return false;
     event.preventDefault();
@@ -233,7 +233,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
       if (disabled) return;
       base.emit("remove", api);
       // After the listeners, which read a chip that is still there: in a set
-      // the set removes it, on its own the chip leaves the page. FLO-257.
+      // the set removes it, on its own the chip leaves the page.
       if (resources.destroyed) return;
       if (options.onRemoved) options.onRemoved(api);
       else root.remove();
@@ -281,7 +281,7 @@ const createChip = (config: ChipOptions = {}): ChipComponent => {
     listen(root, "blur", () => root.classList.remove(pointerClass));
   }
   // The dragged state (Compose DraggedContainerElevation, DraggedStateLayerOpacity) for
-  // a chip the app makes draggable; mtrl does no dragging itself. FLO-259.
+  // a chip the app makes draggable; mtrl does no dragging itself.
   listen(root, "dragstart", () => root.classList.add(base.getClass("chip--dragged")));
   listen(root, "dragend", () => root.classList.remove(base.getClass("chip--dragged")));
   label.textContent = options.label ?? "";

@@ -14,7 +14,7 @@
  * template and the light DOM from a single pass over the slots, including an
  * `async setup()` child under Suspense. The client renders the slots and not
  * the template: the HTML parser has already moved that template into the
- * shadow root. Without the import the markup is unchanged (FLO-373).
+ * shadow root. Without the import the markup is unchanged.
  *
  * @module vue
  */
@@ -135,7 +135,7 @@ export interface Exposed<E extends HTMLElement> {
  */
 export type MComponent<S, _E extends HTMLElement> = DefineSetupFnComponent<VueProps<S>, VueEmits<S>, VueSlots<S>>;
 
-/** Its slots: the default one, and each named slot the element reads (`<template #actions>`, FLO-325). */
+/** Its slots: the default one, and each named slot the element reads (`<template #actions>`). */
 export type VueSlots<S> = SlotsType<{ default?: () => VNodeChild } & { [K in ElementSlots<S>]?: () => VNodeChild }>;
 
 /** A named slot's nodes, each carrying `slot="<name>"` for the element; text is wrapped to carry it. */
@@ -147,7 +147,7 @@ const tag = (nodes: VNode[], slot: string): VNode[] =>
     return [cloneVNode(node, { slot })];
   });
 
-/** The default slot's nodes, then every named slot's, tagged (FLO-325). */
+/** The default slot's nodes, then every named slot's, tagged. */
 const slotted = (slots: Slots): VNode[] => [
   ...(slots.default?.() ?? []),
   ...Object.entries(slots).flatMap(([name, render]) =>

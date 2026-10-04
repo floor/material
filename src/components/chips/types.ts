@@ -27,7 +27,7 @@ export interface ChipConfig {
    * Delete. Input chips are always removable (m3.material.io chips): on its own the
    * chip then leaves the page; in a set, the set removes it and emits `remove`. It
    * used to be a request the owner had to act on, and without it there was no
-   * remove button. FLO-257. It and every `remove` listener run first, with the chip
+   * remove button. It and every `remove` listener run first, with the chip
    * still in the set and on the page; the removal follows.
    */
   onRemove?: ChipEvents["remove"];
@@ -35,7 +35,7 @@ export interface ChipConfig {
   /**
    * Filter chips: gives the trailing icon its own button, which calls this (the
    * m3.material.io chips' trailing icon that "can be used to open a menu or remove
-   * the chip"). The chip's own action is unaffected. FLO-259.
+   * the chip"). The chip's own action is unaffected.
    */
   onTrailingClick?: ChipEvents["trailing"];
   /** The trailing button's accessible name; "{label} options" for a menu, "Remove {label}" otherwise. */
@@ -74,7 +74,7 @@ export interface ChipConfig {
 
 /**
  * @internal What the chip set passes a chip on top of its config; not part of
- * ChipConfig, so apps cannot set it (FLO-381).
+ * ChipConfig, so apps cannot set it.
  */
 export interface ChipOptions extends ChipConfig {
   /** Selection belongs to the chips container. */
@@ -84,7 +84,7 @@ export interface ChipOptions extends ChipConfig {
   /** The owning set removes the chip, once its `remove` listeners have run. */
   onRemoved?: (chip: ChipComponent) => void;
   /**
-   * The chip is a cell of a chip set's grid (FLO-261): the root is a
+   * The chip is a cell of a chip set's grid: the root is a
    * `gridcell`, and a one-action chip's cell is its focus target.
    */
   cell?: boolean;
@@ -100,7 +100,7 @@ export type InputChipConfig = Omit<FilterChipConfig, "elevated" | "onTrailingCli
 export interface ChipChangePayload {
   selected: boolean;
   chip: ChipComponent;
-  /** The chip's value, as `getValue()` returns it; every model event carries it (FLO-380) */
+  /** The chip's value, as `getValue()` returns it; every model event carries it */
   value: string | null;
 }
 export interface ChipEvents {
@@ -110,7 +110,7 @@ export interface ChipEvents {
   blur: (payload: ForwardedEventPayload<FocusEvent, HTMLElement>) => void;
   change: (payload: ChipChangePayload) => void;
   remove: (chip: ChipComponent) => void;
-  /** A filter chip's trailing button was activated (FLO-259). */
+  /** A filter chip's trailing button was activated. */
   trailing: (chip: ChipComponent) => void;
 }
 
@@ -121,7 +121,7 @@ export interface ChipComponent {
   action: HTMLButtonElement;
   /**
    * A filter chip's trailing button, when it has one (`onTrailingClick`): anchor a
-   * menu to it and keep its aria-expanded in step. FLO-259.
+   * menu to it and keep its aria-expanded in step.
    */
   trailingAction?: HTMLButtonElement;
   getType: () => ChipType;
@@ -185,7 +185,7 @@ export interface ChipsConfig {
 
   /**
    * Whether several chips can be selected at once. Multi-select is the default, as
-   * Material's chip groups are (single-select is opt-in). FLO-257.
+   * Material's chip groups are (single-select is opt-in).
    * @default true
    */
   multiSelect?: boolean;
@@ -194,7 +194,7 @@ export interface ChipsConfig {
    * Whether the set keeps at least one chip selected: deselecting the last selected
    * chip is refused, and a refused click emits no `change`, on the chip or on the set.
    * Off by default, as in Material; single-select sets used to
-   * enforce it without a way to opt out. FLO-257.
+   * enforce it without a way to opt out.
    * @default false
    */
   selectionRequired?: boolean;
@@ -373,7 +373,7 @@ export interface ChipsComponent {
   /**
    * Selects chips by their values
    * @param values - Value or array of values to select
-   * @param triggerEvent - Emits `change` when true; silent by default (FLO-328)
+   * @param triggerEvent - Emits `change` when true; silent by default
    * @returns The chips instance for chaining
    */
   selectByValue: (
@@ -443,7 +443,7 @@ export interface ChipsComponent {
 
   /**
    * Turns keyboard navigation between the chips on and off: while disabled,
-   * the arrows, Home and End no longer move focus in the set (FLO-352)
+   * the arrows, Home and End no longer move focus in the set
    */
   keyboard: {
     /** Moves focus with the arrows, Home and End again */
@@ -478,7 +478,7 @@ export interface ChipsComponent {
 /**
  * Registers ChipConfig with the global defaults map, so
  * `setComponentDefaults("chip", ...)` is typed without core
- * importing anything from this component. FLO-115.
+ * importing anything from this component.
  */
 declare module "../../core/config/global" {
   interface ComponentConfigMap {

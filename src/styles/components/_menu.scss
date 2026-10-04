@@ -313,7 +313,6 @@ $component: "#{$prefix}-menu";
         height: 1px;
         // The list is a flex column: in a menu that scrolls, a divider that
         // may shrink is the one item without a minimum, and collapses to 0
-        // (FLO-273)
         flex-shrink: 0;
         margin: 8px 0;
         background-color: t.color("outline-variant");

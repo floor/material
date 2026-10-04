@@ -2,7 +2,7 @@
 //
 // The menu a select or a split button holds. It is not a member of either
 // component: a public handle on an inner component is what would stop the menu
-// from being loaded on demand (FLO-543, FLO-544). The owner keeps it under
+// from being loaded on demand. The owner keeps it under
 // this symbol, for mtrl's own elements and tests. A plain symbol, not a
 // registry one: the package ships one copy of this module, which every reader
 // imports, so nothing has to spell the key. The description is for the

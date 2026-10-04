@@ -56,7 +56,7 @@ type GroupButton = ButtonComponent & {
  * The Button Group component provides a container for grouping related action buttons.
  * A standard group holds related actions, each button acting on its own; a
  * connected group (`kind: "connected"`, with `selection`) is M3's replacement for
- * the segmented button, which material 3.0.0 removed (FLO-382).
+ * the segmented button, which material 3.0.0 removed.
  *
  * Per Material Design 3 specifications:
  * - Standard groups space their buttons (18/12/8/8/8dp by size) and a
@@ -169,7 +169,7 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
     // m3.material.io button group states). Compose animates those widths on
     // the spatial spring (ButtonGroup.kt). A width written straight from
     // `auto` to a length cannot: it jumps in one frame while the padding
-    // eases, and the label shows an ellipsis in between (FLO-537).
+    // eases, and the label shows an ellipsis in between.
     const expandedRatio = baseConfig.expandedRatio ?? BUTTON_GROUP_EXPANDED_RATIO;
     // Width and the facing padding go back to the stylesheet together. Width
     // becomes auto in that same frame, so a later label or container change
@@ -204,7 +204,7 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       // Targets are applied after one layout read. Writing the measured width
       // and the target in the same turn would leave the used value at `auto`,
       // which cannot ease, so the width would jump while the padding eases
-      // (FLO-537). The read does not paint, and the measured length is the
+      // The read does not paint, and the measured length is the
       // border box already on screen.
       const apply: Array<() => void> = [];
       // A neighbour narrows by up to the compression limit, whatever its own
@@ -257,7 +257,7 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
     /**
      * Applies a selection change; returns false when nothing changed. Emits
      * `change` for a click, which passes the button; select(), deselect() and
-     * toggle() pass none and are silent, as a native control set by script (FLO-328).
+     * toggle() pass none and are silent, as a native control set by script.
      */
     const setSelected = (value: string, selected: boolean, button?: ButtonComponent, originalEvent?: Event): boolean => {
       if (selection === 'none') return false;
@@ -519,8 +519,8 @@ const createButtonGroup = (config: ButtonGroupConfig = {}): ButtonGroupComponent
       },
       select(value: string) {
         // A value no button carries clears the selection, as for the other
-        // selection components (FLO-328), silently, with a warning in
-        // development; the segmented button did the same (FLO-382). A required
+        // selection components, silently, with a warning in
+        // development; the segmented button did the same. A required
         // group cannot be emptied, so there it changes nothing: collapsing the
         // selection to one value is a side effect the caller did not ask for.
         if (selection !== 'none' && !buttons.some(button => valueOf(button) === value)) {

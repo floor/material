@@ -42,7 +42,7 @@ export const createBaseConfig = (config: SideSheetConfig = {}): SideSheetConfig 
  */
 export const getElementConfig = (config: SideSheetConfig) =>
   // `title` is the headline: passed on, it became the native tooltip over
-  // the whole surface (FLO-347). The headline names it through aria-labelledby.
+  // the whole surface. The headline names it through aria-labelledby.
   createElementConfig({ ...config, title: undefined }, {
     // In the top layer the root is a native <dialog>, shown with showModal()
     tag: config.layer === "top" ? "dialog" : "div",

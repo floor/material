@@ -40,7 +40,7 @@ export const getHandleHeight = (size?: SliderSize): number => {
  *
  * It is also the inset of the value positions: Compose lays the values out over the
  * track less one corner radius at each end (Slider.kt drawTrack), so the first and
- * last values sit at the centres of the rounded ends. FLO-250.
+ * last values sit at the centres of the rounded ends.
  */
 /** The steps of the track's corner radii (Compose SliderTokens: small to extra-large). */
 const TRACK_STEPS: Record<number, ShapeStep> = { 8: "small", 12: "medium", 16: "large", 28: "extra-large" };
@@ -127,7 +127,7 @@ interface TracksHost {
   // VisualState, not unknown: the producer below takes one, and under
   // strictFunctionTypes a host promising to call it with anything cannot
   // accept that. VisualState is declared in this file, which is the same
-  // place the producer lives. FLO-114.
+  // place the producer lives.
   renderTracks?: (state?: VisualState) => void;
   setInsetIcon?: (icon: string, atMin?: string) => void;
   lifecycle: { destroy: () => void };
@@ -352,7 +352,7 @@ export const withTracks =
   const setSize = (next: SliderSize) => {
     if (destroyed) return;
     // The root's size modifier follows the size: it kept the one from config,
-    // so a slider made at M and set to XL wore both. FLO-107.
+    // so a slider made at M and set to XL wore both.
     const previous = sliderSizeClass(size), current = sliderSizeClass(next);
     if (previous) component.element.classList.remove(previous);
     if (current) component.element.classList.add(current);
@@ -361,7 +361,7 @@ export const withTracks =
     // Sizes are thicknesses: across the axis. A vertical slider's length is its CSS height.
     container.style[axis.cross] = `${Math.max(handleHeight, SLIDER_MEASUREMENTS.MIN_HEIGHT)}px`;
     track.style[axis.cross] = `${getTrackHeight(size)}px`;
-    // The track's corner step (small to extra-large), read through its token (FLO-331)
+    // The track's corner step (small to extra-large), read through its token
     track.style.borderRadius = cornerToken(TRACK_STEPS[getExternalTrackRadius(size)]!, getExternalTrackRadius(size), PREFIX);
     for (const handle of [component.handle, component.secondHandle]) {
       if (handle) handle.style[axis.cross] = `${handleHeight}px`;

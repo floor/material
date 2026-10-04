@@ -120,7 +120,7 @@ const withOpener =
     // An mtrl button keeps its pressed shape while its menu is open. Any other
     // <button> (a FAB, an icon button) is not a button component: the button's
     // pressed rule would reshape it, as it turned the FAB menu's FAB from 16 to
-    // 8px corners and dropped its shadow (FLO-386), so it gets the generic class.
+    // 8px corners and dropped its shadow, so it gets the generic class.
     if (element.tagName === "BUTTON" && element.classList.contains(`${classPrefix}-button`)) {
       return `${classPrefix}-button--active`;
     } else if (element.classList.contains(`${classPrefix}-chip`)) {

@@ -54,7 +54,7 @@ export const withStructure =
     // be a gesture with nothing to suggest it
     let handle: HTMLElement | null = null;
     if (config.dragHandle) {
-      // A button, as Compose's drag handle is clickable (FLO-324): reachable by
+      // A button, as Compose's drag handle is clickable: reachable by
       // keyboard and named for what it does; the drag feature wires it
       const button = document.createElement("button");
       button.type = "button";

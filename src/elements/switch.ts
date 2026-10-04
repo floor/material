@@ -30,7 +30,7 @@ const switchSpec = {
     value: { type: "string", config: "value", update: (c, v) => void c.setValueAttribute(String(v ?? "")) },
     /** Markup (HTML). Not sanitized by default: see Markup and sanitizing. */
     icon: { type: "string", config: "icon" },
-    // The error state has one owner, setError; the text only takes its colour (FLO-318)
+    // The error state has one owner, setError; the text only takes its colour
     error: { type: "boolean", config: "error", update: (c, v) => void c.setError(!!v) },
     "supporting-text": {
       type: "string",

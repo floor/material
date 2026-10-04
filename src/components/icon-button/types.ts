@@ -162,7 +162,6 @@ export interface IconButtonConfig extends BaseComponentConfig {
   /**
    * Accessible name. Required: an icon-only control has no text for a screen
    * reader to announce, so without this it is just "button" (WCAG 4.1.2).
-   * FLO-110.
    */
   ariaLabel: string;
 
@@ -230,7 +229,7 @@ export interface ToggleManager {
   isSelected: () => boolean;
 }
 
-/** A toggle icon button's `change` (FLO-380). */
+/** A toggle icon button's `change`. */
 export interface IconButtonChangePayload {
   /** Whether the button is now selected */
   selected: boolean;
@@ -244,10 +243,10 @@ export interface IconButtonChangePayload {
  */
 export interface IconButtonEvents extends TouchEvents {
   /**
-   * A toggle button's selected state changed on a click (FLO-295). The DOM
+   * A toggle button's selected state changed on a click. The DOM
    * `toggle` event on `element` is deprecated and goes in the next release.
    * `value` is the button's value (`getValue()`), as every model event
-   * carries (FLO-380); `selected` is the toggled state.
+   * carries; `selected` is the toggled state.
    */
   change: (payload: IconButtonChangePayload) => void;
   /** Clicks are not forwarded while the button is disabled. */
@@ -369,7 +368,7 @@ export interface IconButtonComponent {
    */
   disable: () => IconButtonComponent;
 
-  /** Whether the icon button is disabled (FLO-384) */
+  /** Whether the icon button is disabled */
   isDisabled: () => boolean;
 
   /**

@@ -207,7 +207,7 @@ export const roundedPolygon = (
     features.push(run, [straightLine(last[6], last[7], first[0], first[1])]);
   }
 
-  // Flattened as graphics-shapes' RoundedPolygon.cubics does (FLO-346): a rounded
+  // Flattened as graphics-shapes' RoundedPolygon.cubics does: a rounded
   // first corner is split in the middle of its arc, so the outline starts there
   // and ends with the corner's first half; zero-length cubics are dropped, the
   // cubic before them taking their end point; the last cubic ends exactly on

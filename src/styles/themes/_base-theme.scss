@@ -100,11 +100,11 @@ $contrast-emit: all !default;
 }
 
 // Success, warning and info: not M3 scheme roles, so no scheme generates them.
-// Every theme takes these values, baseline included (FLO-329).
+// Every theme takes these values, baseline included.
 // Each keeps its colour's HCT hue and chroma (material-color-utilities) at the
 // tones M3 uses for a role and its on-role: light tone 40 on 100, dark tone 80
 // on 20 (ColorSpec2021 primary / onPrimary). Those tones clear 4.5:1, so none
-// is shifted further (FLO-407).
+// is shifted further.
 @mixin status-roles-light() {
   // Success: #007B5A (hue 169, chroma 43) brought from tone 46 to 40. 6.45:1.
   --#{$prefix}-sys-color-success: #006C4E;

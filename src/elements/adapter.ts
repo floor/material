@@ -95,7 +95,7 @@ export interface Described {
   form: boolean;
   /** Live property name to the attribute it shadows (`checked` → the `checked` attribute). */
   shadowedBy: Map<string, AttributeProp>;
-  /** The named slots, as `slot="…"` names them (FLO-325). */
+  /** The named slots, as `slot="…"` names them. */
   slots: readonly string[];
 }
 

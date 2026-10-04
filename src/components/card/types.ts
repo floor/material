@@ -68,14 +68,14 @@ export interface CardConfig {
   /**
    * The hover and press states and their elevation, for a card the app
    * makes interactive itself. Not a control: no role of button and no tab
-   * stop; `clickable` is (FLO-109).
+   * stop; `clickable` is.
    */
   interactive?: boolean;
   /** Whether the card should take full width */
   fullWidth?: boolean;
   /**
    * A card that acts on activation: a button (role, tab stop, Enter and
-   * Space click it) with the ripple (FLO-109)
+   * Space click it) with the ripple
    */
   clickable?: boolean;
   /** Whether the card is draggable */
@@ -237,7 +237,7 @@ export interface BaseComponent {
   // Card was the only place declaring the optional form, and under
   // strictFunctionTypes a host promising to accept a call with no argument
   // cannot take a function that requires one -- which is what stopped the
-  // pipe in card.ts:103 resolving. FLO-114.
+  // pipe in card.ts:103 resolving.
   /** Get class name with prefix */
   getClass: (name: string) => string;
   /** Get modifier class */
@@ -312,7 +312,7 @@ export interface CardComponentConfig extends CardConfig {
 }
 
 /**
- * The card's events (FLO-323). A clickable card forwards `click`; an
+ * The card's events. A clickable card forwards `click`; an
  * interactive one `mouseenter`, `mouseleave`, `keydown`, `focus` and `blur`;
  * a draggable one emits `dragstart` and `dragend`.
  */
@@ -338,7 +338,7 @@ export interface CardEvents extends TouchEvents {
  * @category Components
  */
 export interface CardComponent extends BaseComponent {
-  /** Subscribes to one of the card's events (FLO-323) */
+  /** Subscribes to one of the card's events */
   on: <K extends keyof CardEvents>(event: K, handler: CardEvents[K]) => CardComponent;
 
   /** Removes a handler added with `on` */
@@ -536,7 +536,7 @@ export interface ApiOptions {
 /**
  * Registers CardConfig with the global defaults map, so
  * `setComponentDefaults("card", ...)` is typed without core
- * importing anything from this component. FLO-115.
+ * importing anything from this component.
  */
 declare module "../../core/config/global" {
   interface ComponentConfigMap {

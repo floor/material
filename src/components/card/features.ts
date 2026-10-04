@@ -4,7 +4,7 @@ import { PREFIX } from "../../core/config";
 /**
  * Off-screen but still in the accessibility tree, for the two buttons that
  * give swipe actions a keyboard route. Declared once, as an object: the style
- * option takes properties, not a string (FLO-111).
+ * option takes properties, not a string.
  */
 const HIDDEN_ACTION_STYLE = {
   position: "absolute",

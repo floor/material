@@ -78,7 +78,7 @@ export const withTextLabel =
     const position = config.labelPosition || "start";
     // BEM, for the same reason as withIcon: this label belongs to whichever
     // component applied the feature -- checkbox, slider, switch or
-    // text field. FLO-120.
+    // text field.
     labelElement.className = `${config.prefix}-${config.componentName}__label ${config.prefix}-${config.componentName}__label--${position}`;
     if (typeof config.label === "string") labelElement.textContent = config.label;
     else labelElement.append(config.label);
@@ -96,7 +96,7 @@ export const withTextLabel =
     }
 
     // Into the component's field, where it has one (the text field's
-    // container, FLO-300), else the root
+    // container), else the root
     const host = (component as { field?: HTMLElement }).field ?? component.element;
     if (position === "start") {
       // Insert label as the first child

@@ -148,7 +148,7 @@ interface ButtonGroupItemBase extends Omit<ButtonConfig, "variant"> {
  *
  * Expressed as a union rather than a flat required field, because requiring
  * it on text items too is over-broad -- it would make 67 call sites in this
- * component's own tests pass a label that duplicates the text. FLO-110.
+ * component's own tests pass a label that duplicates the text.
  */
 export type ButtonGroupItemConfig =
   | (ButtonGroupItemBase & { text: string })
@@ -335,7 +335,7 @@ export interface ButtonGroupComponent {
    */
   disable: () => ButtonGroupComponent;
 
-  /** Whether the whole group is disabled (FLO-384) */
+  /** Whether the whole group is disabled */
   isDisabled: () => boolean;
 
   /**

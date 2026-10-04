@@ -25,7 +25,7 @@ $container: "#{base.$prefix}-chips";
     max-width: 100%;
     // The outline is drawn over the container, as Compose draws a chip's border, so
     // it takes no room: as a 1px border it moved every padding 1px further in than
-    // M3 measures (the remove icon sat 9px from the edge). FLO-256.
+    // M3 measures (the remove icon sat 9px from the edge).
     border: 0;
     outline: 1px solid t.color("outline-variant");
     outline-offset: -1px;
@@ -59,11 +59,11 @@ $container: "#{base.$prefix}-chips";
         margin: 0;
         border-radius: inherit;
         &:disabled { cursor: default; }
-        // md.comp.focus-ring: 3dp at a 2dp outward offset (it was 2px). FLO-261.
+        // md.comp.focus-ring: 3dp at a 2dp outward offset (it was 2px).
         &:focus-visible { outline: 3px solid t.color("secondary"); outline-offset: 2px; }
     }
     // The 8dp between an icon and the label is the icon's margin, not the action's
-    // gap, so it can open and close with the icon (FLO-256).
+    // gap, so it can open and close with the icon.
     &__action {
         flex-shrink: 1;
         min-width: 0;
@@ -77,7 +77,7 @@ $container: "#{base.$prefix}-chips";
     &--input.#{$component}--avatar &__action { padding-inline-start: 4px; }
     // The remove icon sits 8dp from the label (the action's end padding) and 8dp from
     // the chip's edge (site, Compose): 18 + 8, the icon at the start.
-    // A filter chip's trailing button (FLO-259) takes the same place and target.
+    // A filter chip's trailing button takes the same place and target.
     &__remove, &__trailing-action {
         width: calc(#{v.chip("icon-size")} + 8px);
         padding: 0;
@@ -117,7 +117,7 @@ $container: "#{base.$prefix}-chips";
     // Only under --motion, which the chip sets on its first change after it was made:
     // @starting-style also applies to an element's first render, so without it every
     // chip grew its icons on page load. A chip appears finished and animates what
-    // changes after. FLO-256 follow-up.
+    // changes after.
     &--motion &__action {
         transition: m.spring(padding-inline-start, fast-spatial), m.spring(padding-inline-end, fast-spatial);
     }
@@ -171,7 +171,7 @@ $container: "#{base.$prefix}-chips";
     &:is(:has(:focus-visible), :focus-visible):not(.#{$component}--disabled):not(.#{$component}--selected):not(.#{$component}--elevated):not(.#{$component}--pointer-focus) { outline-color: t.color("on-surface-variant"); }
     &--assist:is(:has(:focus-visible), :focus-visible):not(.#{$component}--disabled):not(.#{$component}--elevated):not(.#{$component}--pointer-focus) { outline-color: t.color("on-surface"); }
     // A focused cell draws the focus ring itself: its outline is the chip's stroke, so
-    // the ring is a ::before 2dp outside the chip, 3dp wide. FLO-261.
+    // the ring is a ::before 2dp outside the chip, 3dp wide.
     &:focus-visible:not(.#{$component}--pointer-focus)::before {
         content: "";
         position: absolute;
@@ -190,13 +190,13 @@ $container: "#{base.$prefix}-chips";
         opacity: 0;
     }
     &:hover:not(.#{$component}--disabled)::after { opacity: v.state("hover-state-layer-opacity"); }
-    // Keyboard focus only: a click leaves no focus layer (FLO-256).
+    // Keyboard focus only: a click leaves no focus layer.
     &:is(:has(:focus-visible), :focus-visible):not(.#{$component}--disabled):not(.#{$component}--pointer-focus)::after { opacity: v.state("focus-state-layer-opacity"); }
-    // A press on a rippled action is the ripple's to draw (FLO-260); the remove and
+    // A press on a rippled action is the ripple's to draw; the remove and
     // trailing buttons have none, so a press on them keeps the layer.
     &:active:not(.#{$component}--disabled):not(:has(> .#{$component}__action:active > .#{base.$prefix}-ripple))::after { opacity: v.state("pressed-state-layer-opacity"); }
     // Dragged (Compose DraggedContainerElevation Level4, DraggedStateLayerOpacity),
-    // set while an app drags a draggable chip. FLO-259.
+    // set while an app drags a draggable chip.
     &--dragged { box-shadow: f.get-elevation(4); }
     &--dragged:not(.#{$component}--disabled)::after { opacity: v.state("dragged-state-layer-opacity"); }
     &--disabled {

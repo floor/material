@@ -73,7 +73,7 @@ export interface CheckboxConfig {
 
   /**
    * Error state: the outline, the selected container and the state layers
-   * take the error role, and the input is marked `aria-invalid`. FLO-265.
+   * take the error role, and the input is marked `aria-invalid`.
    * @default false
    */
   error?: boolean;
@@ -84,7 +84,7 @@ export interface CheckboxConfig {
   ariaLabel?: string;
 
   /**
-   * Whether Enter toggles as Space does. Off for a checkbox (FLO-265).
+   * Whether Enter toggles as Space does. Off for a checkbox.
    * @internal
    */
   enterToggles?: boolean;
@@ -258,7 +258,7 @@ export interface CheckboxComponent {
    */
   disable: () => CheckboxComponent;
 
-  /** Whether the checkbox is disabled (FLO-384) */
+  /** Whether the checkbox is disabled */
   isDisabled: () => boolean;
 
   /**
@@ -341,7 +341,7 @@ export type ApiComponent = BaseComponent &
 /**
  * Registers CheckboxConfig with the global defaults map, so
  * `setComponentDefaults("checkbox", ...)` is typed without core
- * importing anything from this component. FLO-115.
+ * importing anything from this component.
  */
 declare module "../../core/config/global" {
   interface ComponentConfigMap {

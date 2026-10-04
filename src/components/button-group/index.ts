@@ -6,7 +6,7 @@
  * The Button Group component provides a container for grouping related action buttons.
  * A standard group holds related actions, each button acting on its own; a
  * connected group (`kind: "connected"`, with `selection`) is M3's replacement for
- * the segmented button, which material 3.0.0 removed (FLO-382).
+ * the segmented button, which material 3.0.0 removed.
  *
  * @packageDocumentation
  */
@@ -26,7 +26,7 @@ export type {
   ButtonGroupOrientation,
   ButtonGroupDensity
 } from './types';
-// The kind, selection and change payload its config and events use (FLO-384)
+// The kind, selection and change payload its config and events use
 export type { ButtonGroupKind, ButtonGroupSelection, ButtonGroupChangeEvent } from './types';
 
 // Export constants

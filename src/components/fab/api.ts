@@ -48,7 +48,7 @@ interface ComponentWithElements
   // pipe has built, whose `on` takes an EventCallback, and `Function` is a
   // supertype of that -- so under strictFunctionTypes a host promising to
   // call a handler with anything cannot accept one taking a typed payload.
-  // That is what stopped the pipe in fab.ts:71 resolving. FLO-114.
+  // That is what stopped the pipe in fab.ts:71 resolving.
   /** Subscribes to an event; the API returns the component itself */
   on: (event: string, handler: EventCallback) => unknown;
   

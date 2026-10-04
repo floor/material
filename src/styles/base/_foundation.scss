@@ -1,4 +1,4 @@
 // Tokens on the base stylesheet: shape, the two typefaces, and the three
 // body-medium typescale tokens the body rule reads. The rest of the
-// typescale is material/styles/typography (FLO-539).
+// typescale is material/styles/typography.
 @use "tokens" with ($typescale-tokens: "body");

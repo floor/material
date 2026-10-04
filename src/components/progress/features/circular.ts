@@ -8,7 +8,7 @@
 // indicators move along a fixed track") and as the Expressive
 // CircularWavyProgressIndicator draws it (WavyProgressIndicatorDefaults
 // trackColor and CircularIndicatorTrackGapSize): around the rest of the
-// circle, turning with the arc, never waved (FLO-338). Pre-Expressive
+// circle, turning with the arc, never waved. Pre-Expressive
 // Compose left it out (circularIndeterminateTrackColor transparent).
 
 import { CanvasContext } from "./canvas";

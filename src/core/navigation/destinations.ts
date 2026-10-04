@@ -1,7 +1,7 @@
 // src/core/navigation/destinations.ts
 /**
  * Navigation destinations, shared by the navigation rail and the navigation
- * bar (FLO-305): each is a link (`href`) or a button with an indicator pill,
+ * bar: each is a link (`href`) or a button with an indicator pill,
  * an icon, a label and an optional badge; one at most is active and carries
  * `aria-current="page"`. The arrow keys move focus between them along the
  * component's axis; every destination stays a tab stop, as links in a `nav`.

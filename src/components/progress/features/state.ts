@@ -87,7 +87,7 @@ export const withState =
     }
 
     // Initialize state values
-    // Clamped to 0…max from the start, as setValue clamps (FLO-324)
+    // Clamped to 0…max from the start, as setValue clamps
     const max = config.max ?? 100;
     const clamp = (value: number): number => Math.max(0, Math.min(max, value));
     const state: ProgressState = {

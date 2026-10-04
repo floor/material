@@ -66,7 +66,7 @@ export const getElementConfig = (config: ProgressConfig) => {
 
   // Only add aria-valuenow if not indeterminate
   if (!isIndeterminate && config.value !== undefined) {
-    // The value the bar draws, clamped to 0…max (FLO-324)
+    // The value the bar draws, clamped to 0…max
     attributes["aria-valuenow"] = Math.max(0, Math.min(config.max || 100, config.value)).toString();
   }
 
@@ -77,7 +77,7 @@ export const getElementConfig = (config: ProgressConfig) => {
 
   // Only the caller's classes: the prefixed block, type and shape classes are
   // set by the component. These unprefixed copies (`progress progress--linear`)
-  // doubled them since `class` stopped being prefixed (FLO-117, FLO-295).
+  // doubled them since `class` stopped being prefixed.
   const classList = [config.class].filter(Boolean);
 
   return createElementConfig(config, {

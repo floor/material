@@ -43,7 +43,7 @@ export const createHandlers = (
   // the empty object made every lookup below a union no property existed on.
   const components = state.component.components || {};
   const component = state.component;
-  // The coordinate along the slider's axis: y for a vertical slider. FLO-252.
+  // The coordinate along the slider's axis: y for a vertical slider.
   const pointerOf = config.orientation === "vertical" ? clientYOf : clientXOf;
   // The values a handle may take: a range handle stops at the other one.
   const rangeBounds = (isSecondHandle: boolean): [number, number] => {
@@ -342,7 +342,7 @@ export const createHandlers = (
 
       // A range handle stops at the other one rather than crossing it (Compose's
       // RangeSlider coerces each value to the other). The handles used to swap
-      // roles mid-drag. FLO-251.
+      // roles mid-drag.
       const isSecondHandle = state.activeHandle === "second";
 
       if (config.range && state.secondValue !== null) {
@@ -420,7 +420,7 @@ export const createHandlers = (
     // top-to-bottom vertical slider); across it they keep ARIA's meaning. PageUp and
     // PageDown move a tenth of the steps, one to ten of them (Compose's
     // `(steps + 1) / 10`, coerced to 1..10), raising on a horizontal slider and
-    // following the track on a vertical one. FLO-251.
+    // following the track on a vertical one.
     const axis = getAxis(config, isRtl(state.component.element));
     const sign = arrowSign(axis);
     const intervals = Math.max(1, Math.floor((state.max - state.min) / step));
@@ -523,7 +523,7 @@ export const createHandlers = (
   // Each handle's listeners, made once and kept, so cleanup removes the very
   // functions setup added. Both used to be written inline, and removeEventListener
   // matches by reference, so no handle listener was ever removed: after destroy a
-  // key still moved the value and focus still showed the bubble. FLO-253.
+  // key still moved the value and focus still showed the bubble.
   const listenersFor = (isSecondHandle: boolean) => ({
     press: (e: SliderPointerEvent) => handleHandleMouseDown(e, isSecondHandle),
     keydown: (e: KeyboardEvent) => handleKeyDown(e, isSecondHandle),
